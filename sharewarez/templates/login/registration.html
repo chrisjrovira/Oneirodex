@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ 'css/login/registration.css'|theme_asset }}">
+
+<html>
+<head>
+    <title>Registration</title>
+</head>
+<body>
+
+    <div class="container-login">
+
+                <div class="content-login">
+                    <img src="{{ url_for('static', filename='newstyle/sharewarez_logo.png') }}" alt="ShareWareZ Logo" class="login-logo">
+
+                    <h2 style="text-align: center; margin-top: 5px;">Register now!</h1>
+                        (You can only register if your email has been whitelisted)
+
+
+
+                        <form action="{{ url_for('login.register', token=request.args.get('token')) }}" method="post">
+
+                        {{ form.csrf_token }}
+                        <div class="form-group">
+                            {{ form.username.label }}
+                            {{ form.username(class_="input-glass") }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.email.label }}
+                            {{ form.email(class_="input-glass") }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.password.label }}
+                            {{ form.password(class_="input-glass") }}
+                        </div>
+                        <input type="submit" value="Register" class="btn btn-success">
+                    </form>
+                </div>
+        </div>
+    </div>
+</body>
+{% endblock %}

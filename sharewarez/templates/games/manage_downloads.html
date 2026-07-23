@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<div class="glass-panel">
+    <div class="content-download">
+        <div class="logo-download">
+            <img src="{{ url_for('static', filename='newstyle/download/download_banner.png') }}" alt="My Downloads" style="vertical-align: middle;">
+        </div>
+        <h2 class="text-center">Download yer Booty</h2>
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Game Name</th>
+						<th>File Name</th>
+                        <th>Status</th>
+                        <th>Size</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for download in download_requests %}
+                    <tr data-download-id="{{ download.id }}">
+                        <td>{{ download.game.name }}</td>
+						{% if download.zip_file_path %}
+							{% set download_file_name = download.zip_file_path.split('\\')[-1] %}
+							{% set download_file_name = download_file_name.split('/')[-1] %}
+						{% endif %}
+						<td class="file-name-cell">
+							{{ download_file_name }}
+						</td>
+                        <td class="status-cell">
+                            <div class="status-value" {% if download.status == 'failed' %}style="color: #ff0000; background-color: #ffe8e8; border: 2px solid #ff0000; padding: 2px 6px; border-radius: 4px; font-weight: bold;"{% endif %}>
+                                {{ download.status }}
+                            </div>
+                        </td>
+                        <td>{{ download.formatted_size }}</td>
+                        <td class="actions-cell">
+                            {% if download.status == 'available' %}
+                            <a href="{{ url_for('download.download_zip', download_id=download.id) }}" class="btn btn-primary">Download</a>
+                            {% endif %}
+                            <form action="{{ url_for('download.delete_download', download_id=download.id) }}" method="post" class="inline-form">
+                                {{ form.csrf_token }}
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {{ form.csrf_token }}
+    </div>
+</div>
+<script src="{{ 'js/downloads_manager.js'|theme_asset }}"></script>
+
+{% endblock %}

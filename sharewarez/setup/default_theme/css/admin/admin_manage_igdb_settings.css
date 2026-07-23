@@ -1,0 +1,189 @@
+.table {
+    background-color: #333;
+    color: var(--text-white);
+}
+.table th {
+    background-color: #444;
+}
+
+.instructions-toggle {
+    margin-bottom: 1rem;
+}
+
+.instructions-toggle button {
+    width: 100%;
+    text-align: left;
+    position: relative;
+    background-color: var(--btn-info);
+    border: 1px solid rgba(23, 162, 184, 0.3);
+    color: var(--text-white);
+}
+
+.instructions-toggle button i {
+    position: absolute;
+    right: 1rem;
+    transition: transform var(--transition-normal);
+}
+
+.instructions-toggle button[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+.instructions-panel {
+    background-color: var(--bg-dark-tertiary);
+    padding: 1.5rem;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-light);
+}
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: var(--text-white);
+    font-weight: 500;
+}
+
+.input-glass {
+    background: var(--bg-dark-tertiary);
+    border: 1px solid var(--border-light-strong);
+    color: var(--text-white);
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.input-glass:focus {
+    outline: none;
+    border-color: #0096ff;
+    box-shadow: 0 0 5px rgba(0, 150, 255, 0.3);
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px var(--bg-dark-tertiary);
+}
+
+.last-tested {
+    color: #888;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+}
+
+#testResults {
+    margin-top: 1rem;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.2);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    color: var(--text-white);
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.2);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    color: var(--text-white);
+}
+
+.alert-info {
+    background-color: var(--btn-info);
+    border: 1px solid rgba(23, 162, 184, 0.3);
+    color: var(--text-white);
+}
+
+.note {
+    background-color: #333;
+    padding: 1rem;
+    border-left: 4px solid #17a2b8;
+    margin-top: 1rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.note strong {
+    color: #17a2b8;
+}
+
+/* Loading Spinner Overlay */
+#loadingSpinner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--shadow-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#loadingSpinner img {
+    border-radius: var(--border-radius-lg);
+    max-width: 100px;
+    max-height: 100px;
+}
+
+/* Password visibility toggle styling */
+.password-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-password {
+    position: absolute;
+    right: var(--spacing-sm);
+    background: none;
+    border: none;
+    color: rgba(67, 64, 74, 0.733);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    transition: color var(--transition-normal);
+}
+
+.toggle-password:hover {
+    color: rgba(0, 0, 0, 0.8);
+}
+
+.toggle-password:focus {
+    outline: none;
+}
+.card {
+    width: 70%;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}

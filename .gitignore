@@ -1,0 +1,102 @@
+__pycache__
+config.portainer
+config.backup
+config.py.backup
+.env
+.env.bak
+/db_data/
+/db_data/*
+app.db
+instance/app.db
+/logs/*
+/logs
+sharewarez/static/library/images
+/sharewarez/static/images/*.jpg
+/venv
+/.venv
+/.codebuddy
+/.codebuddy/*
+.codebuddy
+/.git
+/.github
+/sharewarez/static/library/zips/
+CLAUDE.md
+/.claude/*
+.claude/settings.local.json
+letsrebuild.md
+.claude/settings.local.json
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+ENV/
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment & Config
+.env
+.env.*
+!.env.example
+!.env.docker.example
+
+config.backup
+config.py.backup
+config.portainer
+*.env
+!*.env.example
+
+# Database
+db_data/
+*.db
+instance/
+
+# Logs
+logs/
+*.log
+
+# Node
+node_modules/
+
+# Development
+.git/
+.gitignore
+.github/
+.claude/
+.codebuddy/
+CLAUDE.md
+letsrebuild.md
+*.md
+!README.md
+.vscode
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing (keep tests/ for unit testing, but exclude test artifacts)
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Static uploads and generated files (these should be mounted as volumes or generated)
+sharewarez/static/library/images/
+sharewarez/static/library/zips/
+sharewarez/static/library/themes/
+
+# Docker library host path (default mount point for persistent library data)
+data/
+
+# OS
+.DS_Store
+Thumbs.db
+# Git worktrees
+.worktrees/
+

@@ -1,0 +1,191 @@
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { fetchBrowseGames } from './api/browse'
+import { cleanFilters, FilterBar } from './components/FilterBar'
+import { GameGrid } from './components/GameGrid'
+import { GameGridSkeleton } from './components/GameGridSkeleton'
+import { PaginationBar } from './components/PaginationBar'
+import { readLibraryFilters, writeLibraryFilters } from './utils/cookies'
+
+function EmptyState({ initialConfig }) {
+  if (initialConfig.libraryCount === 0) {
+    return (
+      <p>
+        {initialConfig.isAdmin
+          ? 'No libraries found. Add a library to get started.'
+          : 'No libraries are available.'}
+      </p>
+    )
+  }
+
+  if (initialConfig.gamesCount === 0) {
+    return <p>No games found in your libraries.</p>
+  }
+
+  return <p>No games match the current filters.</p>
+}
+
+export function LibraryApp({ initialConfig }) {
+  const [page, setPage] = useState(1)
+  const [perPage, setPerPage] = useState(initialConfig.perPage)
+  const defaultFilters = {
+    sort_by: initialConfig.defaultSort,
+    sort_order: initialConfig.defaultSortOrder,
+  }
+  const [filters, setFilters] = useState(() =>
+    cleanFilters({
+      ...defaultFilters,
+      ...initialConfig.currentFilters,
+      ...readLibraryFilters(),
+    }),
+  )
+  const [result, setResult] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [retryCount, setRetryCount] = useState(0)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    let active = true
+
+    setLoading(true)
+    setError(null)
+    fetchBrowseGames(
+      {
+        ...filters,
+        page,
+        per_page: perPage,
+      },
+      { signal: controller.signal },
+    )
+      .then((nextResult) => {
+        if (active) {
+          setResult(nextResult)
+          setLoading(false)
+        }
+      })
+      .catch((requestError) => {
+        if (active && requestError.name !== 'AbortError') {
+          setError(requestError)
+          setLoading(false)
+        }
+      })
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [filters, page, perPage, retryCount])
+
+  const retry = () => {
+    setRetryCount((count) => count + 1)
+  }
+
+  const applyFilters = (nextFilters) => {
+    writeLibraryFilters(nextFilters)
+    setPage(1)
+    setFilters(nextFilters)
+  }
+
+  const clearFilters = () => {
+    writeLibraryFilters(defaultFilters)
+    setPage(1)
+    setFilters(defaultFilters)
+  }
+
+  const pages = Math.max(result?.pages ?? 1, 1)
+  const games = result?.games ?? []
+  const showSkeleton = loading && !result
+  const showRefreshing = loading && Boolean(result)
+
+  let content
+  if (error && !result) {
+    content = (
+      <div role="alert">
+        <p>Unable to load games.</p>
+        <button type="button" onClick={retry}>
+          Retry
+        </button>
+      </div>
+    )
+  } else if (showSkeleton) {
+    content = (
+      <>
+        <GameGridSkeleton count={perPage} />
+        <PaginationBar
+          page={page}
+          pages={1}
+          perPage={perPage}
+          onPageChange={setPage}
+          onPerPageChange={(nextPerPage) => {
+            setPage(1)
+            setPerPage(nextPerPage)
+          }}
+        />
+      </>
+    )
+  } else {
+    content = (
+      <>
+        {error && (
+          <div role="alert">
+            <p>Unable to refresh games.</p>
+            <button type="button" onClick={retry}>
+              Retry
+            </button>
+          </div>
+        )}
+        <div className={showRefreshing ? 'library-grid-loading' : undefined}>
+          {games.length === 0 ? (
+            <>
+              <GameGrid
+                games={games}
+                showPlayStatus={initialConfig.showPlayStatus}
+                isAdmin={initialConfig.isAdmin}
+                enableDeleteOnDisk={initialConfig.enableDeleteOnDisk}
+                discordConfigured={initialConfig.discordConfigured}
+                discordManualTrigger={initialConfig.discordManualTrigger}
+              />
+              <EmptyState initialConfig={initialConfig} />
+            </>
+          ) : (
+            <GameGrid
+              games={games}
+              showPlayStatus={initialConfig.showPlayStatus}
+              isAdmin={initialConfig.isAdmin}
+              enableDeleteOnDisk={initialConfig.enableDeleteOnDisk}
+              discordConfigured={initialConfig.discordConfigured}
+              discordManualTrigger={initialConfig.discordManualTrigger}
+            />
+          )}
+        </div>
+        <PaginationBar
+          page={page}
+          pages={pages}
+          perPage={perPage}
+          onPageChange={setPage}
+          onPerPageChange={(nextPerPage) => {
+            setPage(1)
+            setPerPage(nextPerPage)
+          }}
+        />
+      </>
+    )
+  }
+
+  const filterBar = (
+    <FilterBar
+      filters={filters}
+      onApply={applyFilters}
+      onClear={clearFilters}
+    />
+  )
+  const filtersRoot = document.getElementById('library-filters-root')
+
+  return (
+    <>
+      {filtersRoot ? createPortal(filterBar, filtersRoot) : filterBar}
+      {content}
+    </>
+  )
+}

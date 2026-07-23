@@ -1,0 +1,124 @@
+<!-- in templates/admin/admin_newsletter.html -->
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ 'css/admin/admin_newsletter.css'|theme_asset }}">
+
+
+<!-- Back to Dashboard Button -->
+
+<div class="container">
+    <div class="glass-panel">
+        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+        <!-- Add CKEditor CDN -->
+        <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+        <style>
+            .ck-editor__editable { min-height: 300px; background: rgba(255, 255, 255, 0.1) !important; }
+        </style>
+    </div>
+</div>
+<div class="container-settings">        
+    <div class="card">        
+        <h1>Newsletter</h1>
+        <form action="" method="post" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                <label for="subject" class="form-label">{{ form.subject.label }}</label>
+                {{ form.subject(size=32, class="form-control input-glass", id="subject") }}
+            </div>
+            
+            <div class="mb-3">
+                <label for="content" class="form-label">{{ form.content.label }}</label>
+                {{ form.content(id="content", class="form-control input-glass") }}
+            </div>
+            
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="selectAll">
+                <label class="form-check-label" for="selectAll">Select All/Select None</label>
+            </div>
+            
+            <div class="list-group mb-3">
+            {% for user in users %}
+                <label class="list-group-item">
+                    <input class="form-check-input me-1 userCheckbox" type="checkbox" name="user" value="{{ user.email }}" checked onchange="updateRecipients()">
+                    {{ user.email }}
+                </label>
+            {% endfor %}
+            </div>
+            
+            {{ form.recipients(style="display:none") }}  <!-- hidden input field -->
+            <button type="submit" class="btn btn-primary">{{ form.send.label }}</button>
+        </form>
+        
+       <!-- Newsletter History Table -->
+       <div class="newsletter-history mt-5">
+           <h2>Newsletter History</h2>
+           <table class="table table-dark">
+               <thead>
+                   <tr>
+                       <th>Subject</th>
+                       <th>Sent Date</th>
+                       <th>Status</th>
+                       <th>Recipients</th>
+                       <th>Action</th>
+                   </tr>
+               </thead>
+               <tbody>
+                   {% for newsletter in newsletters %}
+                   <tr>
+                       <td>{{ newsletter.subject }}</td>
+                       <td>{{ newsletter.sent_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                       <td>
+                           {% if newsletter.status == 'sent' %}
+                               <span class="badge bg-success">Sent</span>
+                           {% else %}
+                               <span class="badge bg-danger">Failed</span>
+                           {% endif %}
+                       </td>
+                       <td>{{ newsletter.recipient_count }}</td>
+                       <td><a href="{{ url_for('admin2.view_newsletter', newsletter_id=newsletter.id) }}" class="btn btn-sm btn-primary">View</a></td>
+                   </tr>
+                   {% endfor %}
+               </tbody>
+           </table>
+       </div>
+    </div>
+
+<script>
+    document.getElementById("selectAll").addEventListener("click", function(e) {
+    var userCheckboxes = document.getElementsByClassName("userCheckbox");
+    for(var i = 0; i < userCheckboxes.length; i++) {
+        userCheckboxes[i].checked = e.target.checked;
+    }
+    updateRecipients();
+});
+
+function updateRecipients() {
+    var recipients = [];
+    var checkboxes = document.querySelectorAll('input[name="user"]:checked');
+
+    for (var i = 0; i < checkboxes.length; i++) {
+        recipients.push(checkboxes[i].value);
+    }
+
+    document.querySelector('input[name="recipients"]').value = recipients.join(',');
+
+    console.log('Recipients: ' + document.querySelector('input[name="recipients"]').value);
+}
+
+// Initialize CKEditor
+ClassicEditor
+    .create(document.querySelector('#editor'), {
+        toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|', 'undo', 'redo'],
+        placeholder: 'Write your newsletter content here...',
+    })
+    .then(editor => {
+        console.log('Editor initialized');
+    })
+    .catch(error => {
+        console.error(error);
+    });
+
+updateRecipients(); 
+</script>
+{% endblock %}

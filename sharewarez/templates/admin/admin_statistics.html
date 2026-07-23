@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-settings">
+    <div class="glass-panel">
+        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>SharewareZ Statistics</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="downloadsPerUserChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="topGamesChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <canvas id="downloadTrendsChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="inviteTokensChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <canvas id="topDownloadersChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="topCollectorsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='library/themes/default/js/chart-utils.js') }}"></script>
+<script src="{{ url_for('static', filename='library/themes/default/js/admin-statistics.js') }}"></script>
+
+{% endblock %}

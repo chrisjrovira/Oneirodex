@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ 'css/admin/admin_settings_shell.css'|theme_asset }}">
+
+<div class="container-settings-dashboard">
+    <div class="settings-shell-header">
+        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <h1><i class="fas fa-sliders-h"></i> Settings</h1>
+    </div>
+
+    <div class="settings-shell-layout">
+        <nav class="settings-shell-nav" aria-label="Settings sections">
+            <ul>
+                {% for key, section in sections.items() %}
+                <li>
+                    <a href="{{ url_for('admin2.settings', section=key) }}"
+                       class="settings-shell-nav-link{% if key == active_section %} active{% endif %}"
+                       aria-current="{{ 'true' if key == active_section else 'false' }}">
+                        <i class="fas {{ section.icon }}"></i> {{ section.label }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+
+        <div class="settings-shell-main">
+            {% set active = sections[active_section] %}
+            <div class="settings-shell-active-card">
+                <h2><i class="fas {{ active.icon }}"></i> {{ active.label }}</h2>
+                <p>{{ active.description }}</p>
+                <a href="{{ url_for(active.endpoint) }}" class="btn btn-primary">
+                    Open {{ active.label }} <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="settings-shell-cards">
+                {% for key, section in sections.items() %}
+                <a href="{{ url_for(section.endpoint) }}"
+                   class="settings-shell-card{% if key == active_section %} is-active{% endif %}">
+                    <div class="settings-shell-card-icon"><i class="fas {{ section.icon }}"></i></div>
+                    <h3>{{ section.label }}</h3>
+                    <p>{{ section.description }}</p>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

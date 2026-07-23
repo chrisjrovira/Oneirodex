@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ 'css/login/registration_already_confirmed.css'|theme_asset }}">
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+    <div class="alert alert-info" role="alert">
+        {% for message in messages %}
+            {{ message }}<br>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endwith %}
+<div class="container-base">
+    <div class="messages">
+        <div class="ai">
+            <div class="speech-bubble ai">
+                <h1>Already Confirmed</h1>
+                <p>Your account is already activated. You can log in and continue using our services.</p>
+                <a href="{{ url_for('login.login') }}" class="btn btn-success">Login</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

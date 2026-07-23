@@ -1,0 +1,98 @@
+body {
+    background-color: var(--admin-bg-dark);
+    color: var(--text-white);
+}
+
+/* Use the unified .admin-section from base.css */
+
+.hackplanet_titles {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.hackplanet_titles h1 {
+    color: var(--text-white);
+    font-size: 2.5em;
+    font-weight: bold;
+    text-shadow: 0 0 10px var(--primary-brand-50);
+}
+
+.admin-section h3 {
+    color: var(--text-white);
+    font-size: 1.3em;
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: var(--spacing-sm);
+}
+
+.admin-section h3 i {
+    margin-right: var(--spacing-sm);
+    color: var(--btn-primary);
+}
+
+.admin-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.admin-button-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100px;
+}
+
+.btn-circle {
+    width: 60px;
+    height: 60px;
+    padding: 0;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 24px;
+    line-height: 60px;
+    background: var(--primary-brand-20);
+    color: var(--text-white);
+    border: 1px solid var(--primary-brand-30);
+    transition: all 0.3s ease;
+}
+
+.btn-circle:hover {
+    transform: translateY(-3px);
+    background: var(--primary-brand-40);
+    box-shadow: 0 0 20px var(--primary-brand-30);
+    color: var(--text-white);
+}
+
+.button-label {
+    margin-top: 8px;
+    font-size: 0.9em;
+    color: var(--text-white);
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .admin-panel {
+        padding: 15px;
+        margin: 10px;
+    }
+
+    .admin-buttons {
+        gap: 15px;
+    }
+
+    .admin-button-item {
+        width: 80px;
+    }
+
+    .btn-circle {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+        line-height: 50px;
+    }
+
+    .button-label {
+        font-size: 0.8em;
+    }
+}

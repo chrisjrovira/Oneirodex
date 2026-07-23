@@ -1,0 +1,304 @@
+/* === LOGIN COMPONENTS === */
+
+.container-buttons-login {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    font-size: var(--font-size-20px);
+    gap: var(--spacing-lg);
+}
+
+/* Game Card Component */
+.game-card-container {
+    position: relative;
+    transition: transform var(--transition-normal);
+}
+
+.game-card {
+    cursor: pointer;
+    transition: transform var(--transition-normal);
+    position: relative;
+    margin: var(--spacing-xs);
+    max-width: 250px;
+    max-height: 332px;
+}
+
+.game-card:hover {
+    transform: scale(1.2);
+    z-index: 6;
+    box-shadow: 10px 10px 15px var(--shadow-dark-strong);
+}
+
+.game-cover {
+    display: block;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    object-fit: cover;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    box-shadow: 5px 5px 9px var(--shadow-dark-strong);
+    border: 1px solid var(--game-border-gray);
+    border-radius: var(--border-radius-xs);
+    max-width: 250px;
+    /* Always show a placeholder so missing/broken covers never leave empty tiles */
+    background-color: var(--bg-dark-secondary, #1a1a22);
+    background-image: url('/static/newstyle/default_cover.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Shimmer Effect */
+.game-cover::before {
+    z-index: 12;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%;
+    visibility: hidden;
+    opacity: 1;
+    pointer-events: none;
+}
+
+.game-card:hover .game-cover::before {
+    animation: shimmerAnimation 1s linear forwards;
+    visibility: visible;
+}
+
+@keyframes shimmerAnimation {
+    0% {
+        background-position: -1000px 0;
+        opacity: 1;
+    }
+    100% {
+        background-position: 1000px 0;
+        opacity: 0;
+    }
+}
+
+/* Popup Menu Button */
+.button-glass-hamburger {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 13;
+    background-color: var(--btn-hamburger-bg);
+    border-radius: 50%;
+    padding: 1px 6px;
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.button-glass-hamburger:hover {
+    background-color: var(--btn-hamburger-hover);
+}
+
+.button-glass-hamburger i {
+    color: var(--text-white);
+}
+
+.game-card:hover .button-glass-hamburger {
+    opacity: 1; 
+}
+
+/* Favorite Button */
+.favorite-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    background-color: var(--btn-hamburger-bg);
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 13;
+}
+
+.favorite-btn i {
+    color: var(--text-white);
+    transition: color 0.3s ease;
+}
+
+.favorite-btn:hover {
+    background-color: var(--btn-hamburger-hover);
+}
+
+.game-card:hover .favorite-btn {
+    opacity: 1;
+}
+
+.favorite-btn.favorited i {
+    color: var(--color-pink-favorite);
+}
+
+.favorite-btn.processing {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* Local Metadata Badge */
+.local-metadata-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0, 123, 255, 0.9);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-family: monospace;
+}
+
+/* Game Info Popup */
+.popup-game-details {
+    position: absolute;
+    top: 0%;
+    z-index: 5;
+    background: var(--pagination-bg);
+    padding: var(--spacing-md);
+    animation: fadein 0.5s;
+    display: none;
+    border-radius: 5px;
+    box-sizing: content-box;
+}
+
+.popup-game-details img {
+    border: 1px solid var(--color-black-pure);
+    width: 300px;
+}
+
+.popup-game-details:not(.hidden) {
+    display: block;
+}
+
+.game-info-box {
+    background: var(--pagination-bg);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    animation: fadein 0.5s;
+    height: 95%;
+}
+
+.game-name {
+    font-size: 1.2rem;
+    color: var(--text-white);
+}
+
+.game-name, .game-size, .game-genres {
+    margin-bottom: 5px;
+    margin-left: 0px;
+}
+
+.chip {
+    display: inline-block;
+    padding: 0 15px;
+    height: 25px;
+    font-size: 0.8rem;
+    line-height: 25px;
+    border-radius: 25px;
+    background-color: var(--chip-bg-dark);
+    color: var(--text-white);
+    margin: 2px;
+    white-space: nowrap;
+}
+
+.file-size-chip {
+    background-color: var(--chip-bg-blue);
+    max-width: 50%;
+    margin-bottom: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+
+.submenu-libraries {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background-color: var(--submenu-bg);
+    box-shadow: 0px 8px 16px 0px var(--bg-dark-tertiary);
+    padding: 8px;
+    z-index: 13;
+    min-width: 150px;
+}
+
+.loading-libraries {
+    padding: 8px;
+    color: var(--color-gray-ddd);
+}
+
+.library-item {
+    padding: 8px;
+    cursor: pointer;
+    color: var(--color-gray-ddd);
+}
+
+.library-item:hover {
+    background-color: var(--submenu-hover);
+}
+
+.move-library-container {
+    position: relative;
+}
+
+/* === IMAGE REFRESH PROGRESS SPINNER === */
+.image-refresh-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-left: 8px;
+    vertical-align: middle;
+    position: relative;
+}
+
+.image-refresh-spinner svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.spinner-circle-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.2);
+    stroke-width: 3;
+}
+
+.spinner-circle-progress {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 62.83;
+    stroke-dashoffset: 62.83;
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.alert-image-refresh {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}

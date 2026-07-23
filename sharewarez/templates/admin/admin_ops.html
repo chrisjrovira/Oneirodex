@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+{# Dist CSS is authoritative (Vite); theme CSS is a best-effort duplicate for older deploys. #}
+<link rel="stylesheet" href="{{ url_for('static', filename='dist/ops-glance/ops-glance.css') }}">
+<link rel="stylesheet" href="{{ 'css/admin/admin_ops.css'|theme_asset }}">
+<div class="container-settings-dashboard">
+  <h1>Ops</h1>
+  {# Deep-link nav is rendered by the React ops-glance bundle (DeepLinks component). #}
+  <div
+    id="ops-glance-root"
+    data-poll-ms="15000"
+    data-enable-server-status="{{ enable_server_status|default(false)|lower }}"
+  >
+    <p class="ops-glance-fallback">Loading operations glance…</p>
+  </div>
+</div>
+<script type="module" src="{{ url_for('static', filename='dist/ops-glance/ops-glance.js') }}"></script>
+{% endblock %}

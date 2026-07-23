@@ -1,0 +1,104 @@
+/* Base styling for the whitelist page */
+.image-whitelist img {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transform: rotate(-3deg);
+}
+
+.image-whitelist img:hover {
+    transform: rotate(0deg) scale(1.05);
+}
+
+.image-whitelist {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Dark theme table styling */
+.whitelist-table {
+    margin-top: 20px;
+}
+
+.table {
+    background: rgba(40, 40, 40, 0.3);
+    color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    font-weight: 500;
+    padding: 12px;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Form styling */
+.whitelist-controls {
+    margin: 20px 0;
+}
+
+.add-whitelist-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.input-group {
+    background: rgba(40, 40, 40, 0.5);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+
+/* Badge styling */
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 500;
+}
+
+
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: #fff;
+    font-weight: 500;
+}
+
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+
+.last-tested {
+    color: #888;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}

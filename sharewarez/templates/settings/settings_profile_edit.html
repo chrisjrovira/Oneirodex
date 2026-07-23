@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+{% block head %}
+<link rel="stylesheet" href="{{ 'css/settings/settings_profile_edit.css'|theme_asset }}">
+<script src="{{ url_for('static', filename='library/themes/default/js/settings_profile_edit.js') }}"></script>
+{% endblock %}
+
+<!-- Breadcrumb navigation -->
+<div class="breadcrumb-container glass-panel mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('settings.settings_panel') }}"><i class="fas fa-cog"></i> Settings</a></li>
+            <li class="breadcrumb-item active"><i class="fas fa-user-edit"></i> Edit Profile</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- Main Content -->
+<div class="profile-edit-container glass-panel">
+    <h2 class="section-title"><i class="fas fa-user-circle"></i> Change User Avatar</h2>
+    
+    <div class="row">
+        <!-- Left Column - Avatar Preview -->
+        <div class="col-md-5">
+            <div class="avatar-section">
+                <div class="current-avatar">
+                    <h4><i class="fas fa-image"></i> Current Avatar</h4>
+                    <img src="{{ url_for('static', filename=avatarpath) }}" alt="Current Avatar" class="avatar-preview">
+                </div>
+                
+                <div class="avatar-thumbnail">
+                    <h4><i class="fas fa-crop"></i> Thumbnail Preview</h4>
+                    {% set thumbnail_path = avatarpath | replace('.', '_thumbnail.') %}
+                    <img src="{{ url_for('static', filename=thumbnail_path) if thumbnail_path else url_for('static', filename='nothumbnail.jpg') }}" 
+                         alt="Avatar Thumbnail" class="thumbnail-preview">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column - Upload Form -->
+        <div class="col-md-7">
+            <div class="upload-section">
+                <h4><i class="fas fa-upload"></i> Upload New Avatar</h4>
+                <form method="POST" enctype="multipart/form-data" class="upload-form">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-4">
+                        <div class="upload-zone">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            {{ form.avatar(class="form-control", style="display: none;", id="avatarInput") }}
+                            <p class="upload-hint">Click to select or drag an image here</p>
+                            <p class="upload-requirements">Supported formats: JPG, PNG, GIF (Max 5MB)</p>
+                        </div>
+                        <!-- Image Preview Section -->
+                        <div class="preview-section mt-3" style="display: none;">
+                            <h5>Preview:</h5>
+                            <img id="avatarPreview" src="#" alt="Avatar Preview" class="avatar-preview">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary save-button">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

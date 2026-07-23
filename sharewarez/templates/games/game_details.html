@@ -1,0 +1,544 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+{# Helper Macros #}
+
+{% macro get_file_icon(file_name) %}
+    {% set file_extension = file_name.split('.')[-1] if '.' in file_name else '' %}
+    {% set icon_mapping = {
+        '': 'fa-folder',
+        'exe': 'fa-file-code',
+        'rar': 'fa-file-archive',
+        'zip': 'fa-file-archive',
+        'iso': 'fa-compact-disc',
+        'doc': 'fa-file-word',
+        'docx': 'fa-file-word',
+        'json': 'fa-file-code',
+        'pdf': 'fa-file-pdf',
+        'png': 'fa-file-image',
+        'txt': 'fa-file-lines',
+        'gif': 'fa-file-image',
+        'jpg': 'fa-file-image',
+        'jpeg': 'fa-file-image'
+    } %}
+    <i class="fas {{ icon_mapping.get(file_extension, 'fa-file') }}"></i>
+{% endmacro %}
+
+{% macro render_file_row(file, game_uuid, file_type) %}
+    <tr>
+        <td>
+            {% set file_name = file.file_path.split('/')[-1] %}
+            {{ get_file_icon(file_name) }}
+            <a href="{{ url_for('download.download_other', 
+                               file_type=file_type,
+                               game_uuid=game_uuid,
+                               file_id=file.id) }}" 
+               class="download-form">
+                <span class="file-name">{{ file_name }}</span>
+            </a>
+            <span class="file-size">({{ file.file_size|default('0') }})</span>
+        </td>
+    </tr>
+{% endmacro %}
+
+
+{% macro list_items(items, label, filter_type) %}
+    <div class="game-card-labels">{{ label }}:</div>
+    <div class="game-card-chips-list">
+        {% if items %}
+            {% for item in items %}
+                <a href="{{ url_for('library.library', **{filter_type: item}) }}" class="chip-detailspage">{{ item }}</a>
+            {% endfor %}
+        {% else %}
+            <p class="chip-detailspage">N/A</p>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro detail_item(label, value) %}
+    <div class="flex-col-vertic">
+        <div class="game-card-labels">{{ label }}:</div>
+        <div class="chip">{{ value or 'N/A' }}</div>
+    </div>
+{% endmacro %}
+
+{% macro show_rating(rating_value, label) %}
+    <div class="rating-row">
+        <div class="game-card-labels-rating">{{ label }}</div>
+        {% if rating_value %}
+            <div class="rating-value">{{ "%.1f"|format(rating_value) }}/100</div>
+        {% else %}
+            <div class="emptyrating">Not rated</div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+
+
+{# Load Theme Resources #}
+<link rel="stylesheet" href="{{ 'css/games/game_details.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/games/game_status.css'|theme_asset }}">
+<script src="{{ 'js/popup_menu.js'|theme_asset }}"></script>
+<script src="{{ 'js/game_details.js'|theme_asset }}"></script>
+<script src="{{ 'js/favorites_manager.js'|theme_asset }}"></script>
+<script src="{{ 'js/game_status_manager.js'|theme_asset }}"></script>
+
+
+{# Modals #}
+<div id="summaryModal" class="summary-modal">
+    <div class="summary-modal-content">
+        <span class="summary-close">&times;</span>
+        <p class="summary-modal-text"></p>
+    </div>
+</div>
+
+<div id="myModal" class="modal-details">
+    <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+    <a class="next" onclick="plusSlides(1)">&#10095;</a>
+    <span class="close cursor" onclick="closeModal()">&times;</span>
+    <div class="modal-content">
+        {% for image in game.images if 'cover' not in image.url %}
+            <div class="mySlides">
+                <img src="{{ url_for('static', filename='library/images/' + image.url) }}" 
+                        class="screenshot-browser-image">
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+{# Updates & Extras Modal - Custom Implementation #}
+{% if game.updates or game.extras %}
+<div id="extrasModal" class="modal-extras">
+    <span class="close cursor" onclick="closeExtrasModal()">&times;</span>
+    <div class="modal-extras-content">
+        <div class="modal-extras-header">
+            <h3>Updates & Extras for {{ game.name }}</h3>
+        </div>
+        <div class="modal-extras-body">
+            {% if game.updates and game.extras %}
+                <div class="extras-tabs">
+                    <button class="extras-tab-button active" onclick="showExtrasTab('updates')">Updates</button>
+                    <button class="extras-tab-button" onclick="showExtrasTab('extras')">Extras</button>
+                </div>
+            {% endif %}
+            
+            {% if game.updates %}
+                <div id="updates-content" class="extras-tab-content {% if game.updates and game.extras %}active{% elif game.updates %}active single-tab{% endif %}">
+                    {% if not (game.updates and game.extras) %}
+                        <h4 class="extras-single-title">Updates</h4>
+                    {% endif %}
+                    <table class="extras-table table table-dark table-hover">
+                        <tbody>
+                            {% for update in game.updates %}
+                                {{ render_file_row(update, game.uuid, 'update') }}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+            
+            {% if game.extras %}
+                <div id="extras-content" class="extras-tab-content {% if not game.updates %}active single-tab{% endif %}">
+                    {% if not (game.updates and game.extras) %}
+                        <h4 class="extras-single-title">Extra Content</h4>
+                    {% endif %}
+                    <table class="extras-table table table-dark table-hover">
+                        <tbody>
+                            {% for extra in game.extras %}
+                                {{ render_file_row(extra, game.uuid, 'extra') }}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# Game Details #}
+
+{% if game %}
+    <div class="glass-panel-gamecard">
+        <head>
+            <meta name="csrf-token" content="{{ csrf_token() }}">
+            <title>{{ game.name or 'Game Details' }}</title>
+        </head>
+
+        <body>
+            {# NFO Modal #}
+            {% if game.nfo_content and game.nfo_content.lower() != 'none' %}
+                <div id="nfoModal" class="modal-nfo">
+                    <span class="close cursor" onclick="closeNfoModal()">&times;</span>
+                    <div class="modal-nfo-content">
+                        <div class="modal-nfo-header">
+                            <h3>{{ game.name }} - NFO</h3>
+                        </div>
+                        <div class="modal-nfo-body">
+                            <pre>{{ game.nfo_content }}</pre>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="game-card-gamename">
+                <h1>{{ game.name or 'Game Name Not Available' }}</h1>
+            </div>
+
+            <div class="game-card-topq">
+                <div class="game-card-q1">
+                    {# Cover Image #}
+                    {% if game.images and game.images|length > 0 %}
+                        <div class="game-card-coverimage">
+                            {# Hamburger menu button on cover #}
+                            <button id="menuButton-{{ game.uuid }}" class="button-glass-hamburger button-glass-hamburger-cover">
+                                <i class="fas fa-bars"></i>
+                            </button>
+
+                            {# Popup menu (triggered by hamburger button) #}
+                            {% with game_uuid=game.uuid, game_url=game.url %}
+                                {% include 'games/popup_menu.html' %}
+                            {% endwith %}
+
+                            {% for image in game.images if 'cover' in image.url %}
+                                <img src="{{ url_for('static', filename='library/images/' + image.url) }}"
+                                     alt="{{ game.name }} Cover Image"
+                                     class="game-card-coverimage animated-entry">
+                            {% endfor %}
+
+                            {# Favorite button on cover #}
+                            <button class="favorite-btn favorite-btn-cover" data-game-uuid="{{ game.uuid }}" data-is-favorite="{{ is_favorite|lower }}">
+                                <i class="fas fa-heart"></i>
+                            </button>
+
+                            {% if show_play_status %}
+                            {# Game status button on cover #}
+                            <button class="game-status-btn game-status-btn-cover" data-game-uuid="{{ game.uuid }}" data-current-status="{{ user_status or '' }}" title="{{ status_label or 'No Status' }}">
+                                <i class="fas {{ status_icon or 'fa-circle' }}"></i>
+                            </button>
+
+                            {# Status dropdown menu #}
+                            <div class="status-dropdown" data-game-uuid="{{ game.uuid }}" style="display: none;">
+                                <div class="status-dropdown-option" data-status="unplayed">
+                                    <i class="fas fa-box" style="color: #808080;"></i>
+                                    <span class="status-label">Unplayed</span>
+                                </div>
+                                <div class="status-dropdown-option" data-status="unfinished">
+                                    <i class="fas fa-gamepad" style="color: #4A90E2;"></i>
+                                    <span class="status-label">Unfinished</span>
+                                </div>
+                                <div class="status-dropdown-option" data-status="beaten">
+                                    <i class="fas fa-flag-checkered" style="color: #50C878;"></i>
+                                    <span class="status-label">Beaten</span>
+                                </div>
+                                <div class="status-dropdown-option" data-status="completed">
+                                    <i class="fas fa-trophy" style="color: #FFD700;"></i>
+                                    <span class="status-label">Completed</span>
+                                </div>
+                                <div class="status-dropdown-option" data-status="null">
+                                    <i class="fas fa-ban" style="color: #DC3545;"></i>
+                                    <span class="status-label">Won't Play</span>
+                                </div>
+                                <div class="status-dropdown-option" data-status="" style="border-top: 1px solid rgba(255, 255, 255, 0.2);">
+                                    <i class="fas fa-times" style="color: #808080;"></i>
+                                    <span class="status-label">Clear Status</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {# Summary #}
+                    <div class="game-card-text-summary">
+                        {% if game.summary and game.summary|length > 340 %}
+                            <span class="summary-short">{{ game.summary[:340] }}...</span>
+                            <a href="#" class="read-more-link">Read More</a>
+                            <span class="summary-full" style="display: none;">{{ game.summary }}</span>
+                        {% else %}
+                            <span>{{ game.summary or 'Summary Not Available' }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="game-card-q2">
+                    <div class="game-card-meta">
+                        {# Ratings #}
+                        <div class="rating-container">
+                            {{ show_rating(game.rating, 'Critics') }}
+                            {{ show_rating(game.aggregated_rating, 'Users') }}
+                        </div>
+
+                        {# Web Links #}
+                        {% if game.urls and game.urls|length > 0 and enable_web_links %}
+                            <div class="game-card-links">
+                                {% for link in game.urls %}
+                                    <div class="game-link-icon-container">
+                                        <a href="{{ link.url }}" target="_blank" class="game-link-icon" title="{{ link.type|capitalize }}">
+                                            <i class="{{ link.icon }}"></i>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {# Game Details #}
+                        {{ list_items(game.genres, "Genres", "genre") }}
+                        {{ list_items(game.themes, "Themes", "theme") }}
+                        {{ list_items(game.game_modes, "Game Modes", "game_mode") }}
+                        {{ list_items(game.player_perspectives, "Player Perspectives", "player_perspective") }}
+
+                        <div class="flex-row-horiz">
+                            {{ detail_item("Category", game.category) }}
+                            {{ detail_item("Released", game.first_release_date) }}
+                            {{ detail_item("Developer", game.developer) }}
+                        </div>
+
+                        {% if game.last_updated != "N/A" %}
+                            <div class="flex-row-horiz">
+                                {{ detail_item("Last Updated", game.last_updated) }}
+                            </div>
+                        {% endif %}
+
+                        {# HowLongToBeat Section #}
+                        {% if game.hltb_main_story or game.hltb_main_extra or game.hltb_completionist %}
+                            <div class="flex-row-horiz" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                                <div class="flex-col-vertic" style="width: 100%;">
+                                    <div class="game-card-labels" style="margin-bottom: 5px;">
+                                        <i class="fas fa-clock"></i> Time to Beat:
+                                    </div>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        {% if game.hltb_main_story %}
+                                            <div class="chip" title="Main Story">
+                                                <i class="fas fa-flag-checkered"></i> {{ "%.1f"|format(game.hltb_main_story) }}h
+                                            </div>
+                                        {% endif %}
+                                        {% if game.hltb_main_extra %}
+                                            <div class="chip" title="Main + Extras">
+                                                <i class="fas fa-plus-circle"></i> {{ "%.1f"|format(game.hltb_main_extra) }}h
+                                            </div>
+                                        {% endif %}
+                                        {% if game.hltb_completionist %}
+                                            <div class="chip" title="Completionist">
+                                                <i class="fas fa-trophy"></i> {{ "%.1f"|format(game.hltb_completionist) }}h
+                                            </div>
+                                        {% endif %}
+                                        {% if current_user.is_admin %}
+                                            <button class="chip" onclick="refreshHLTB('{{ game.uuid }}')" title="Refresh HLTB data" style="cursor: pointer; background: rgba(100, 100, 255, 0.3);">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {# Download Section #}
+                    <div class="game-card-downloads">
+                        {% if game.size %}
+                            <div class="chip-size">{{ game.size }}</div>
+                        {% endif %}
+                        <div class="download-buttons">
+                            <form action="{{ url_for('download.download_game', game_uuid=game.uuid) }}" method="get" class="download-form">
+                                <input type="submit" value="Download" class="button-glass-download" data-game-uuid="{{ game.uuid }}">
+                                {{ form.csrf_token }}
+                            </form>
+
+                            <div class="download-buttons-spacer">
+                                <script>
+                                // List of supported platforms for WebRetro emulation
+                                const supportedPlatforms = [
+                                    'PCDOS', 'NES', 'SNES', 'N64', 'GB', 'GBA', 'GBC', 'NDS', 
+                                    'PSX', 'SEGA_MD', 'SEGA_MS', 'SEGA_32X', 'SEGA_GG', 
+                                    'SEGA_SATURN', 'ATARI_7800', 'ATARI_5200', 'ATARI_2600', 
+                                    'LYNX', 'JAGUAR', 'WS', 'COLECO', 'VECTREX'
+                                ];
+                                
+                                // Function to get emulator core for the current platform
+                                async function getEmulatorCore() {
+                                    try {
+                                        // Get the platform from the library
+                                        const libraryUuid = "{{ library_uuid }}";
+                                        const response = await fetch(`/api/library/${libraryUuid}`);
+                                        const libraryData = await response.json();
+                                        
+                                        // Check if platform is supported
+                                        if (!supportedPlatforms.includes(libraryData.platform)) {
+                                            // Hide the play button if platform is not supported
+                                            console.log(`Platform '${libraryData.platform}' is not supported by WebRetro`);
+                                            const playButton = document.getElementById('play-now-button');
+                                            if (playButton) {
+                                                playButton.style.display = 'none';
+                                            }
+                                            return null;
+                                        }
+                                        
+                                        // Get emulators for this platform
+                                        const emulatorsResponse = await fetch(`/api/emulators/${libraryData.platform}`);
+                                        const emulatorsData = await emulatorsResponse.json();
+                                        const emulators = emulatorsData.emulators || [];
+                                        
+                                        // Only return a valid emulator core if we have one
+                                        if (emulators.length > 0) {
+                                            console.log(`Using emulator core '${emulators[0]}' for platform '${libraryData.platform}'`);
+                                            return emulators[0];
+                                        } else {
+                                            // No emulators available for this platform - hide play button
+                                            console.log(`No emulators configured for platform '${libraryData.platform}'`);
+                                            const playButton = document.getElementById('play-now-button');
+                                            if (playButton) {
+                                                playButton.style.display = 'none';
+                                            }
+                                            return null;
+                                        }
+                                    } catch (error) {
+                                        console.error('Error fetching emulator core:', error);
+                                        // Hide play button on error
+                                        const playButton = document.getElementById('play-now-button');
+                                        if (playButton) {
+                                            playButton.style.display = 'none';
+                                        }
+                                        return null;
+                                    }
+                                }
+
+                                // Set up the Play Now button with the correct emulator core
+                                document.addEventListener('DOMContentLoaded', async () => {
+                                    const playButton = document.getElementById('play-now-button');
+                                    if (!playButton) return;
+                                    
+                                    const emulatorCore = await getEmulatorCore();
+                                    // Only set up the button if we have a valid emulator core
+                                    if (emulatorCore && emulatorCore !== 'auto') {
+                                        playButton.href = `/static/vendor/webretro/webretro.html?guid={{ game.uuid }}&core=${emulatorCore}`;
+                                        console.log(`Play button configured with WebRetro URL: ${playButton.href}`);
+                                    } else {
+                                        // Hide the button if no valid emulator core is available
+                                        console.log('Play button hidden - no valid emulator core available');
+                                        playButton.style.display = 'none';
+                                    }
+                                });
+                                </script>
+                                
+                                <a id="play-now-button" href="#" class="button-glass-play">Play Now!</a>                                    
+                            </div>
+                            
+                            {% if (enable_game_updates and game.updates) or (enable_game_extras and game.extras) %}
+                                <button type="button" class="button-glass-extras" onclick="openExtrasModal()">
+                                    Updates & Extras
+                                    {% if game.updates or game.extras %}
+                                        ({% if game.updates %}{{ game.updates|length }}{% endif %}{% if game.updates and game.extras %} + {% endif %}{% if game.extras %}{{ game.extras|length }}{% endif %})
+                                    {% endif %}
+                                </button>
+                            {% endif %}
+                        </div>
+                        {% if game.nfo_content and game.nfo_content.lower() != 'none' %}
+                            <div class="nfo-button" onclick="openNfoModal()" title="View NFO">
+                                <i class="fa fa-file-alt nfo-icon"></i>
+                                <span class="nfo-text">NFO</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    
+                </div>
+
+
+            </div>
+
+            {# Screenshots Gallery #}
+            {% if game.images and game.images|length > 0 %}
+                <div class="screenshot-gallery">
+                    {% for image in game.images if 'cover' not in image.url %}
+                        <img src="{{ url_for('static', filename='library/images/' + image.url) }}" 
+                             alt="{{ game.name }} Screenshot" 
+                             class="screenshot-image" 
+                             onclick="openModal({{ loop.index }})">
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {# Videos #}
+            {% if game.video_urls %}
+                <div class="game-videos-row">
+                    {% for url in game.video_urls.split(',') %}
+                        <iframe src="{{ url }}" class="game-video" frameborder="0" allowfullscreen></iframe>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </body>
+    </div>
+{% else %}
+    <div class="alert alert-warning" role="alert">
+        Game information is not available at the moment.
+    </div>
+{% endif %}
+
+<script>
+// Function to refresh HLTB data for a game
+async function refreshHLTB(gameUuid) {
+    try {
+        const button = event.target.closest('button');
+        const icon = button.querySelector('i');
+
+        // Show loading state
+        icon.classList.remove('fa-sync-alt');
+        icon.classList.add('fa-spinner', 'fa-spin');
+        button.disabled = true;
+
+        const response = await fetch(`/admin2/api/hltb/refresh/${gameUuid}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRFUtils.getToken()
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Show success message
+            Notify.create({
+                title: 'Success',
+                text: result.message,
+                status: 'success'
+            });
+
+            // Reload page to show updated data
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            // Show error message
+            Notify.create({
+                title: 'Error',
+                text: result.error || 'Failed to refresh HLTB data',
+                status: 'error'
+            });
+
+            // Reset button state
+            icon.classList.remove('fa-spinner', 'fa-spin');
+            icon.classList.add('fa-sync-alt');
+            button.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error refreshing HLTB data:', error);
+        Notify.create({
+            title: 'Error',
+            text: 'An error occurred while refreshing HLTB data',
+            status: 'error'
+        });
+
+        // Reset button state
+        const button = event.target.closest('button');
+        const icon = button.querySelector('i');
+        icon.classList.remove('fa-spinner', 'fa-spin');
+        icon.classList.add('fa-sync-alt');
+        button.disabled = false;
+    }
+}
+</script>
+
+{% endblock %}
