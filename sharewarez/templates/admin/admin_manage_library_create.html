@@ -51,6 +51,18 @@
 				</div>
 			{% endif %}
 		</div>
+		<div class="admin_manage_library_create-form-scan-depth mb-3">
+			{{ form.scan_depth.label(class="form-label") }}
+			{{ form.scan_depth(class="form-select") }}
+			<small class="form-text text-muted">Use depth 2 when games live under letter buckets like <code>_a</code> … <code>_z</code>.</small>
+			{% if form.scan_depth.errors %}
+				<div class="text-danger small mt-1">
+					{% for error in form.scan_depth.errors %}
+						<div>{{ error }}</div>
+					{% endfor %}
+				</div>
+			{% endif %}
+		</div>
 		<div class="admin_manage_library_create-form-library-image mb-3">
 			{{ form.image.label(class="form-label") }}
 			{{ form.image(class="form-control", id="imageInput") }}

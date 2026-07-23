@@ -50,6 +50,12 @@
 
                 
                 {% if libraries|length > 0 %}
+                <div class="mb-3 d-flex gap-2 flex-wrap">
+                    <button type="button" id="refreshAllLibrariesBtn" class="btn btn-secondary">
+                        <i class="fas fa-sync"></i> Refresh all libraries
+                    </button>
+                    <small class="text-muted align-self-center">Re-scans each library’s last scan folder for new games (one at a time).</small>
+                </div>
                 <form id="autoScanForm" action="" method="post">
                     {{ auto_form.hidden_tag() }}
 
@@ -131,6 +137,11 @@
                                         {{ auto_form.force_hltb_refetch(class="form-check-input", id="force-hltb-refetch-auto") }}
                                         {{ auto_form.force_hltb_refetch.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Force refetch HLTB data for games that already exist in the database"}) }}
                                     </div>
+                                </div>
+
+                                <div class="option-item">
+                                    {{ auto_form.schedule.label(class="config-label", **{"data-toggle": "tooltip", "title": "Optionally repeat this scan on a timer after it completes"}) }}
+                                    {{ auto_form.schedule(class="form-control config-input") }}
                                 </div>
                             </div>
                         </div>

@@ -495,6 +495,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    const refreshAllBtn = document.getElementById('refreshAllLibrariesBtn');
+    if (refreshAllBtn) {
+        refreshAllBtn.addEventListener('click', function() {
+            if (!confirm('Refresh all libraries using each library’s last scan folder?')) {
+                return;
+            }
+            refreshAllBtn.disabled = true;
+            fetch('/api/admin/libraries/refresh_all', {
+                method: 'POST',
+                headers: CSRFUtils.getHeaders({
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                })
+            })
+                .then(r => r.json().then(data => ({ ok: r.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok) {
+                        alert(data.error || 'Refresh failed');
+                        return;
+                    }
+                    showSuccessNotification(`Queued ${data.count} library refresh job(s)`);
+                })
+                .catch(err => console.error('Refresh all failed:', err))
+                .finally(() => { refreshAllBtn.disabled = false; });
+        });
+    }
+
     // Set up filter controls
     setupUnmatchedFilters();
 

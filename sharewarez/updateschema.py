@@ -324,6 +324,13 @@ class DatabaseManager:
         ALTER TABLE games
         ADD COLUMN IF NOT EXISTS freshness_payload JSONB;
 
+        -- Library scan depth + last scan folder
+        ALTER TABLE libraries
+        ADD COLUMN IF NOT EXISTS scan_depth INTEGER DEFAULT 1;
+
+        ALTER TABLE libraries
+        ADD COLUMN IF NOT EXISTS last_scan_folder VARCHAR(512);
+
         -- Remove unused library_name column from games table (replaced by library relationship via library_uuid)
         DO $$
         BEGIN

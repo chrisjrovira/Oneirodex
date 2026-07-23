@@ -72,6 +72,17 @@ class AutoScanForm(FlaskForm):
     force_updates_extras_scan = BooleanField('Force scan for new updates and extras on existing games')
     fetch_hltb = BooleanField('Fetch HowLongToBeat data', default=True)
     force_hltb_refetch = BooleanField('Force refetch HLTB for existing games')
+    schedule = SelectField(
+        'Repeat schedule',
+        choices=[
+            ('', 'Once (no repeat)'),
+            ('8_hours', 'Every 8 hours'),
+            ('24_hours', 'Every 24 hours'),
+            ('48_hours', 'Every 48 hours'),
+        ],
+        default='',
+        validators=[Optional()],
+    )
     submit = SubmitField('AutoScan')
 
 
@@ -230,12 +241,11 @@ class RegistrationForm(FlaskForm):
 
 class UserPreferencesForm(FlaskForm):
     items_per_page_choices = [
-        ('16', '16'),
         ('20', '20'),
         ('50', '50'),
         ('100', '100'),
+        ('250', '250'),
         ('500', '500'),
-        ('1000', '1000')
     ]
     default_sort_choices = [
         ('name', 'Name'),
@@ -265,6 +275,16 @@ class UserPreferencesForm(FlaskForm):
 class LibraryForm(FlaskForm):
     name = StringField('Library Name', validators=[DataRequired()])
     platform = SelectField('Platform', choices=[(choice.value, choice.name) for choice in LibraryPlatform], validators=[DataRequired()])
+    scan_depth = SelectField(
+        'Scan depth',
+        choices=[
+            ('1', '1 — game folders directly in the scan root'),
+            ('2', '2 — unwrap letter buckets (_a … _z, _#) then games'),
+        ],
+        default='1',
+        coerce=int,
+        validators=[DataRequired()],
+    )
     image = FileField('Library Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Images only!')])
 
 class ThemeUploadForm(FlaskForm):

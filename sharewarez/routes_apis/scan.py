@@ -1,5 +1,5 @@
 # /sharewarez/routes_apis/scan.py
-from flask import jsonify
+from flask import jsonify, current_app, request
 from flask_login import login_required
 from sharewarez import db
 from sharewarez.models import ScanJob, UnmatchedFolder, Library
@@ -90,3 +90,47 @@ def reclassify_duplicate_unmatched():
         'changed_count': len(changed),
         'kept_count': len(kept),
     })
+
+
+@apis_bp.route('/admin/libraries/refresh_all', methods=['POST'])
+@login_required
+@admin_required
+def refresh_all_libraries():
+    """Queue a re-scan for each library that has a remembered last_scan_folder."""
+    from threading import Thread
+    from sharewarez.models import Library
+    from sharewarez.utilities import scan_and_add_games
+    from sharewarez.utils.scanning import is_scan_job_running
+
+    if is_scan_job_running():
+        return jsonify({'error': 'A scan is already running'}), 409
+
+    libraries = db.session.execute(select(Library).order_by(Library.name.asc())).scalars().all()
+    queue = [
+        {'uuid': lib.uuid, 'name': lib.name, 'folder': lib.last_scan_folder}
+        for lib in libraries
+        if lib.last_scan_folder
+    ]
+    if not queue:
+        return jsonify({
+            'error': 'No libraries have a remembered scan folder yet. Run one Auto Scan per library first.',
+            'queued': [],
+        }), 400
+
+    app = current_app._get_current_object()
+
+    def _run_queue():
+        with app.app_context():
+            for item in queue:
+                try:
+                    scan_and_add_games(
+                        item['folder'],
+                        scan_mode='folders',
+                        library_uuid=item['uuid'],
+                        remove_missing=False,
+                    )
+                except Exception as exc:
+                    print(f"[REFRESH ALL] Failed for {item['name']}: {exc}")
+
+    Thread(target=_run_queue, daemon=True, name='gametheca-refresh-all').start()
+    return jsonify({'queued': queue, 'count': len(queue)})

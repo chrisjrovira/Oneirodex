@@ -106,6 +106,10 @@ class Library(db.Model):
     image_url = db.Column(db.String(255), nullable=True)
     platform = db.Column(db.Enum(LibraryPlatform), nullable=False)
     display_order = db.Column(db.Integer, default=0)
+    # 1 = immediate children are games; 2 = unwrap letter buckets (_a…_z, _#)
+    scan_depth = db.Column(db.Integer, default=1, nullable=False)
+    # Last successful scan root (used by refresh-all / scheduled scans)
+    last_scan_folder = db.Column(db.String(512), nullable=True)
     games = db.relationship('Game', backref='library', lazy=True)
     unmatched_folders = relationship("UnmatchedFolder", backref='library', cascade="all, delete-orphan")
 

@@ -96,6 +96,8 @@ def add_library():
             flash(f'Invalid platform selected: {form.platform.data}', 'error')
             return render_template('admin/admin_manage_library_create.html', form=form, library=None, page_title=page_title)
 
+        library.scan_depth = int(form.scan_depth.data or 1)
+
         # Process image upload
         file = form.image.data
         image_result = _process_library_image(file, library)
@@ -128,6 +130,7 @@ def edit_library(library_uuid):
 
     # Set the initial value for existing library
     form.platform.data = library.platform.name
+    form.scan_depth.data = getattr(library, 'scan_depth', 1) or 1
     print(f"Setting initial platform value: {form.platform.data}")
 
     if form.validate_on_submit():
@@ -138,6 +141,8 @@ def edit_library(library_uuid):
         except KeyError:
             flash(f'Invalid platform selected: {form.platform.data}', 'error')
             return render_template('admin/admin_manage_library_create.html', form=form, library=library, page_title=page_title)
+
+        library.scan_depth = int(form.scan_depth.data or 1)
 
         # Process image upload
         file = form.image.data

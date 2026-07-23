@@ -1,4 +1,4 @@
-const PER_PAGE_OPTIONS = [20, 50, 100]
+const PER_PAGE_OPTIONS = [20, 50, 100, 250, 500]
 
 export function PaginationBar({
   page,

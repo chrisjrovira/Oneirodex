@@ -6,18 +6,46 @@ from sharewarez.models import Game
 from sqlalchemy import select
 from sharewarez.utils.game_name_parse import parse_game_label
 
-def get_game_names_from_folder(folder_path, insensitive_patterns, sensitive_patterns):
+LETTER_BUCKET_RE = re.compile(r'^_[a-z0-9#if]$', re.IGNORECASE)
+
+
+def _list_game_dirs(folder_path, scan_depth=1):
+    """Return list of (item_name, full_path) game directories honoring scan_depth."""
+    depth = int(scan_depth or 1)
+    results = []
+    try:
+        entries = sorted(os.listdir(folder_path), key=str.lower)
+    except OSError as exc:
+        print(f"Error listing '{folder_path}': {exc}")
+        return results
+
+    for item in entries:
+        full_path = os.path.join(folder_path, item)
+        if not os.path.isdir(full_path):
+            continue
+        if depth >= 2 and LETTER_BUCKET_RE.match(item):
+            try:
+                children = sorted(os.listdir(full_path), key=str.lower)
+            except OSError:
+                continue
+            for child in children:
+                child_path = os.path.join(full_path, child)
+                if os.path.isdir(child_path):
+                    results.append((child, child_path))
+        else:
+            results.append((item, full_path))
+    return results
+
+
+def get_game_names_from_folder(folder_path, insensitive_patterns, sensitive_patterns, scan_depth=1):
     if not os.path.exists(folder_path) or not os.access(folder_path, os.R_OK):
         print(f"Error: The folder '{folder_path}' does not exist or is not readable.")
         flash(f"Error: The folder '{folder_path}' does not exist or is not readable.")
         return []
-    folder_contents = os.listdir(folder_path)
     game_names_with_paths = []
-    for item in folder_contents:
-        full_path = os.path.join(folder_path, item)
-        if os.path.isdir(full_path):
-            game_name = clean_game_name(item, insensitive_patterns, sensitive_patterns)
-            game_names_with_paths.append({'name': game_name, 'full_path': full_path})
+    for item, full_path in _list_game_dirs(folder_path, scan_depth=scan_depth):
+        game_name = clean_game_name(item, insensitive_patterns, sensitive_patterns)
+        game_names_with_paths.append({'name': game_name, 'full_path': full_path})
     return game_names_with_paths
 
 def get_game_names_from_files(folder_path, extensions, insensitive_patterns, sensitive_patterns):

@@ -35,17 +35,6 @@
                     Open {{ active.label }} <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
-
-            <div class="settings-shell-cards">
-                {% for key, section in sections.items() %}
-                <a href="{{ url_for(section.endpoint) }}"
-                   class="settings-shell-card{% if key == active_section %} is-active{% endif %}">
-                    <div class="settings-shell-card-icon"><i class="fas {{ section.icon }}"></i></div>
-                    <h3>{{ section.label }}</h3>
-                    <p>{{ section.description }}</p>
-                </a>
-                {% endfor %}
-            </div>
         </div>
     </div>
 </div>

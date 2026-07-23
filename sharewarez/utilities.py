@@ -1,6 +1,6 @@
 #/sharewarez/utilities.py
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from sqlalchemy.exc import SQLAlchemyError
@@ -19,8 +19,24 @@ from sharewarez.utils.scanning import process_game_with_fallback, process_game_u
 from sharewarez.utils.igdb_api import IGDBRateLimiter
 from sharewarez.utils.security import is_safe_path, get_allowed_base_directories
 
+SCHEDULE_HOURS = {
+    '8_hours': 8,
+    '24_hours': 24,
+    '48_hours': 48,
+}
 
-def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remove_missing=False, existing_job=None, download_missing_images=False, force_updates_extras_scan=False, fetch_hltb=False, force_hltb_refetch=False):
+
+def compute_next_run(schedule_key, from_time=None):
+    hours = SCHEDULE_HOURS.get(schedule_key)
+    if not hours:
+        return None
+    base = from_time or datetime.now(timezone.utc)
+    if base.tzinfo is None:
+        base = base.replace(tzinfo=timezone.utc)
+    return base + timedelta(hours=hours)
+
+
+def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remove_missing=False, existing_job=None, download_missing_images=False, force_updates_extras_scan=False, fetch_hltb=False, force_hltb_refetch=False, schedule=None):
     # Only check for running jobs if we're not restarting an existing job
     if not existing_job and is_scan_job_running():
         print("A scan is already in progress. Please wait for it to complete.")
@@ -40,7 +56,8 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
         'use_local_metadata': settings_obj.use_local_metadata if settings_obj else False,
         'write_local_metadata': settings_obj.write_local_metadata if settings_obj else False,
         'use_local_images': settings_obj.use_local_images if settings_obj else False,
-        'local_metadata_filename': settings_obj.local_metadata_filename if settings_obj else 'gametheca.json'
+        'local_metadata_filename': settings_obj.local_metadata_filename if settings_obj else 'gametheca.json',
+        'propose_only_scan': getattr(settings_obj, 'propose_only_scan', False) if settings_obj else False,
     }
 
     # Log local metadata settings once at scan start
@@ -101,7 +118,8 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
             setting_remove=remove_missing,
             setting_filefolder=(scan_mode == 'files'),
             setting_download_missing_images=download_missing_images,
-            setting_force_updates_extras=force_updates_extras_scan
+            setting_force_updates_extras=force_updates_extras_scan,
+            schedule=schedule if schedule in ('8_hours', '24_hours', '48_hours') else None,
         )
         
         db.session.add(scan_job_entry)
@@ -129,7 +147,10 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
     try:
         # Use database-stored allowed extensions
         if scan_mode == 'folders':
-            game_names_with_paths = get_game_names_from_folder(folder_path, insensitive_patterns, sensitive_patterns)
+            scan_depth = getattr(library, 'scan_depth', 1) or 1
+            game_names_with_paths = get_game_names_from_folder(
+                folder_path, insensitive_patterns, sensitive_patterns, scan_depth=scan_depth
+            )
         elif scan_mode == 'files':
             game_names_with_paths = get_game_names_from_files(folder_path, allowed_extensions, insensitive_patterns, sensitive_patterns)
 
@@ -430,6 +451,17 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
 
     if scan_job_entry.status != 'Failed':
         scan_job_entry.status = 'Completed'
+        # Remember last scan root for refresh-all
+        if library is not None:
+            library.last_scan_folder = folder_path
+        # Schedule next run when configured
+        job_schedule = schedule or getattr(scan_job_entry, 'schedule', None)
+        if job_schedule in SCHEDULE_HOURS:
+            scan_job_entry.schedule = job_schedule
+            scan_job_entry.next_run = compute_next_run(job_schedule)
+            scan_job_entry.status = 'Scheduled'
+            scan_job_entry.is_enabled = True
+            print(f"Scheduled next scan for {scan_job_entry.next_run} ({job_schedule})")
     
     # If remove_missing is enabled, check for games that no longer exist
     if remove_missing:
@@ -495,6 +527,7 @@ def handle_auto_scan(auto_form):
         force_updates_extras_scan = auto_form.force_updates_extras_scan.data
         fetch_hltb = auto_form.fetch_hltb.data
         force_hltb_refetch = auto_form.force_hltb_refetch.data
+        schedule = (auto_form.schedule.data or '').strip() or None
         
         running_job = db.session.execute(select(ScanJob).filter_by(status='Running')).scalars().first()
         if running_job:
@@ -542,7 +575,17 @@ def handle_auto_scan(auto_form):
 
         @copy_current_request_context
         def start_scan():
-            scan_and_add_games(full_path, scan_mode, library_uuid, remove_missing, download_missing_images=download_missing_images, force_updates_extras_scan=force_updates_extras_scan, fetch_hltb=fetch_hltb, force_hltb_refetch=force_hltb_refetch)
+            scan_and_add_games(
+                full_path,
+                scan_mode,
+                library_uuid,
+                remove_missing,
+                download_missing_images=download_missing_images,
+                force_updates_extras_scan=force_updates_extras_scan,
+                fetch_hltb=fetch_hltb,
+                force_hltb_refetch=force_hltb_refetch,
+                schedule=schedule,
+            )
 
         thread = Thread(target=start_scan, daemon=True)
         thread.start()
@@ -622,7 +665,11 @@ def handle_manual_scan(manual_form):
             print("Folder exists and can be accessed.")
             insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
             if scan_mode == 'folders':
-                games_with_paths = get_game_names_from_folder(full_path, insensitive_patterns, sensitive_patterns)
+                lib = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
+                scan_depth = getattr(lib, 'scan_depth', 1) or 1 if lib else 1
+                games_with_paths = get_game_names_from_folder(
+                    full_path, insensitive_patterns, sensitive_patterns, scan_depth=scan_depth
+                )
             else:  # files mode
                 # Load allowed file types from database
                 allowed_file_types = db.session.execute(select(AllowedFileType)).scalars().all()

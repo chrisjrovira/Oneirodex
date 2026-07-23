@@ -147,4 +147,11 @@ def create_app():
             # This should only happen in development or if initialization wasn't run
             print("⚠️  Initialization not completed - this may cause issues")
 
+        if ('pytest' not in sys.modules and 'PYTEST_CURRENT_TEST' not in os.environ):
+            try:
+                from sharewarez.utils.scan_scheduler import start_scan_scheduler
+                start_scan_scheduler(app)
+            except Exception as exc:
+                print(f"[SCAN SCHEDULER] Could not start: {exc}")
+
     return app
