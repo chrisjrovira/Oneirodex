@@ -360,6 +360,7 @@
                             {{ csrf_form.csrf_token }}
                             <input type="hidden" name="submit" value="DeleteOnlyUnmatched">
                             <button type="submit" class="admin_manage_scanjobs-clearunmatched-btn btn btn-warning" data-toggle="tooltip" title="Remove only folders with 'Unmatched' status, keeping identified items" onclick="return confirm('Are you sure you want to clear all unmatched folders? This cannot be undone.');">Clear Unmatched</button>
+                            <button type="button" id="reclassifyDuplicatesBtn" class="btn btn-secondary" data-toggle="tooltip" title="Change false Duplicate rows (different folder titles, same IGDB) back to Unmatched">Fix false duplicates</button>
                         </form>
                     </div>
 
@@ -369,7 +370,7 @@
                             <div class="filter-buttons">
                                 <button class="filter-btn active" data-filter="all">All</button>
                                 <button class="filter-btn" data-filter="Unmatched">Unmatched</button>
-                                <button class="filter-btn" data-filter="Duplicate">Duplicates</button>
+                                <button class="filter-btn" data-filter="Duplicate" title="Same title already in library (IGDB copy)">Duplicates</button>
                                 <button class="filter-btn" data-filter="Ignore">Ignored</button>
                                 <button class="filter-btn" data-filter="Pending">Pending</button>
                             </div>

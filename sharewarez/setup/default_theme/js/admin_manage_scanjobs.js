@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     row.setAttribute('data-platform-name', folder.platform_name.toLowerCase());
                     row.innerHTML = `
                         <td><i class="fas fa-folder"></i> ${folder.folder_path}</td>
-                        <td><span class="status-${folder.status.toLowerCase()}">${folder.status}</span></td>
+                        <td><span class="status-${folder.status.toLowerCase()}" title="${folder.status === 'Duplicate' ? 'Another library game already uses this IGDB match and the folder title looks like the same game' : (folder.status === 'Unmatched' ? 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder)' : '')}">${folder.status === 'Duplicate' ? 'Duplicate (same title)' : folder.status}</span></td>
                         <td>${folder.library_name}</td>
                         <td>${folder.platform_name}</td>
                         <td>${actionsColumn}</td>
@@ -463,6 +463,34 @@ document.addEventListener('DOMContentLoaded', function() {
             searchInput.addEventListener('input', function() {
                 currentSearch = this.value.toLowerCase();
                 filterUnmatchedRows();
+            });
+        }
+
+        const reclassifyBtn = document.getElementById('reclassifyDuplicatesBtn');
+        if (reclassifyBtn) {
+            reclassifyBtn.addEventListener('click', function() {
+                if (!confirm('Reclassify false Duplicate rows (different folder titles) as Unmatched?')) {
+                    return;
+                }
+                reclassifyBtn.disabled = true;
+                fetch('/api/unmatched_folders/reclassify_duplicates', {
+                    method: 'POST',
+                    headers: CSRFUtils.getHeaders({
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    })
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        showSuccessNotification(
+                            `Fixed ${data.changed_count || 0} false duplicates` +
+                            (data.kept_count ? `; kept ${data.kept_count} true duplicates` : '')
+                        );
+                        return updateUnmatchedFolders();
+                    })
+                    .then(() => filterUnmatchedRows())
+                    .catch(err => console.error('Reclassify failed:', err))
+                    .finally(() => { reclassifyBtn.disabled = false; });
             });
         }
     }

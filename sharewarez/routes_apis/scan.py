@@ -56,3 +56,37 @@ def unmatched_folders():
     } for folder, library_name, platform in unmatched]
     
     return jsonify(unmatched_data)
+
+
+@apis_bp.route('/unmatched_folders/reclassify_duplicates', methods=['POST'])
+@login_required
+@admin_required
+def reclassify_duplicate_unmatched():
+    """Downgrade false 'Duplicate' rows to Unmatched when folder titles differ."""
+    from sharewarez.models import Game
+    from sharewarez.utils.duplicate_check import should_mark_as_duplicate
+
+    rows = db.session.execute(
+        select(UnmatchedFolder).filter_by(status='Duplicate')
+    ).scalars().all()
+    changed = []
+    kept = []
+    games = db.session.execute(select(Game)).scalars().all()
+    for folder in rows:
+        is_true = False
+        for game in games:
+            if should_mark_as_duplicate(game, folder.folder_path):
+                is_true = True
+                break
+        if is_true:
+            kept.append(folder.folder_path)
+            continue
+        folder.status = 'Unmatched'
+        changed.append(folder.folder_path)
+    db.session.commit()
+    return jsonify({
+        'reclassified_to_unmatched': changed,
+        'kept_as_duplicate': kept,
+        'changed_count': len(changed),
+        'kept_count': len(kept),
+    })

@@ -31,6 +31,7 @@ from sharewarez.utils.metadata_enrichment import apply_enriched_metadata
 from sharewarez.utils.discord import discord_webhook
 from sharewarez.utils.scanning import log_unmatched_folder, delete_game_images
 from sharewarez.utils.event_logging import log_system_event
+from sharewarez.utils.duplicate_check import should_mark_as_duplicate
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -61,6 +62,58 @@ status_mapping = {
     6: Status.OFFLINE,
     7: Status.CANCELLED
 }
+
+
+def handle_existing_igdb_collision(
+    *,
+    existing_game,
+    igdb_id,
+    full_disk_path,
+    game_name,
+    scan_job_id,
+    library_uuid,
+    candidates=None,
+    steam_title=None,
+):
+    """
+    Same IGDB ID already in library. Mark Duplicate only for true title/path
+    copies; otherwise Unmatched + proposal so remasters/collections can be reviewed.
+    Returns None (caller should abort import).
+    """
+    if should_mark_as_duplicate(existing_game, full_disk_path, game_name):
+        print(
+            f"Duplicate folder for IGDB ID {igdb_id}: "
+            f"'{game_name}' ≈ existing '{existing_game.name}' "
+            f"({existing_game.full_disk_path})"
+        )
+        log_unmatched_folder(scan_job_id, full_disk_path, 'Duplicate', library_uuid=library_uuid)
+        return None
+
+    print(
+        f"IGDB ID {igdb_id} already used by '{existing_game.name}' "
+        f"at {existing_game.full_disk_path}, but folder '{game_name}' looks different — "
+        "logging Unmatched for review (not Duplicate)."
+    )
+    log_unmatched_folder(scan_job_id, full_disk_path, 'Unmatched', library_uuid=library_uuid)
+    try:
+        proposal = build_match_proposal(
+            game_name,
+            candidates or [{'id': igdb_id, 'name': existing_game.name}],
+            steam_title=steam_title,
+            confidence='low',
+        )
+        proposal['proposal']['already_in_library'] = {
+            'uuid': existing_game.uuid,
+            'name': existing_game.name,
+            'path': existing_game.full_disk_path,
+            'igdb_id': igdb_id,
+            'reason': 'igdb_id_collision_different_folder_title',
+        }
+        write_match_proposal(full_disk_path, proposal)
+    except Exception as proposal_err:
+        print(f"⚠️ Failed to write collision proposal for {full_disk_path}: {proposal_err}")
+    return None
+
 
 def get_or_create_entity(model_class, name_field="name", **kwargs):
     """
@@ -594,9 +647,15 @@ def retrieve_and_save_game(game_name, full_disk_path, scan_job_id=None, library_
                 ).scalar_one_or_none()
 
                 if existing_game_with_same_igdb_id:
-                    print(f"Duplicate game found with same IGDB ID {igdb_id} but different folder path.")
-                    log_unmatched_folder(scan_job_id, full_disk_path, 'Duplicate', library_uuid=library_uuid)
-                    return None
+                    return handle_existing_igdb_collision(
+                        existing_game=existing_game_with_same_igdb_id,
+                        igdb_id=igdb_id,
+                        full_disk_path=full_disk_path,
+                        game_name=game_name,
+                        scan_job_id=scan_job_id,
+                        library_uuid=library_uuid,
+                        candidates=response_json,
+                    )
 
                 # Create game from IGDB data (continue with existing logic at line 472)
                 nfo_content = read_first_nfo_content(full_disk_path)
@@ -785,10 +844,16 @@ def retrieve_and_save_game(game_name, full_disk_path, scan_job_id=None, library_
         # Check for existing game with the same IGDB ID but different folder path
         existing_game_with_same_igdb_id = db.session.execute(select(Game).filter(Game.igdb_id == igdb_id, Game.full_disk_path != full_disk_path)).scalar_one_or_none()
         if existing_game_with_same_igdb_id:
-            print(f"Duplicate game found with same IGDB ID {igdb_id} but different folder path. Logging as duplicate.")
-            matched_status = 'Duplicate'
-            log_unmatched_folder(scan_job_id, full_disk_path, matched_status, library_uuid=library_uuid)
-            return None
+            return handle_existing_igdb_collision(
+                existing_game=existing_game_with_same_igdb_id,
+                igdb_id=igdb_id,
+                full_disk_path=full_disk_path,
+                game_name=game_name,
+                scan_job_id=scan_job_id,
+                library_uuid=library_uuid,
+                candidates=high_confidence_candidates or [selected_game],
+                steam_title=steam_title,
+            )
         else:
             nfo_content = read_first_nfo_content(full_disk_path)            
             folder_size_bytes = get_folder_size_in_bytes_updates(full_disk_path)
