@@ -1,6 +1,6 @@
 # library-grid
 
-React library browser bundle for SharewareZ.
+React library browser bundle for GameTheca.
 
 ## Build
 

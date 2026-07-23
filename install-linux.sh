@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #═══════════════════════════════════════════════
-#   SharewareZ Linux Auto-Installer v1.0
+#   GameTheca Linux Auto-Installer v1.0
 #   Automated installation script for Linux systems
 #   Compatible with bash, zsh, and other POSIX shells
 #═══════════════════════════════════════════════
@@ -62,7 +62,7 @@ log() {
 print_header() {
     clear
     echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
-    echo -e "${WHITE}    SharewareZ Linux Auto-Installer v1.0${NC}"
+    echo -e "${WHITE}    GameTheca Linux Auto-Installer v1.0${NC}"
     echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
     echo
 }
@@ -248,7 +248,7 @@ parse_arguments() {
 
 # Show help information
 show_help() {
-    echo "SharewareZ Linux Auto-Installer"
+    echo "GameTheca Linux Auto-Installer"
     echo
     echo "USAGE:"
     echo "  ./install-linux.sh [OPTIONS]"
@@ -497,18 +497,18 @@ configure_postgresql_auth() {
         return 0
     }
 
-    # Add password authentication for sharewarez database
-    print_verbose "Adding password authentication for sharewarez database..."
+    # Add password authentication for gametheca database
+    print_verbose "Adding password authentication for gametheca database..."
 
     # Add our rules at the top (before default rules)
     {
-        echo "# Added by SharewareZ installer - $(date)"
-        echo "local   sharewarez   sharewarezuser   md5"
-        echo "local   sharewarez   postgres         md5"
-        echo "host    sharewarez   sharewarezuser   127.0.0.1/32   md5"
-        echo "host    sharewarez   postgres         127.0.0.1/32   md5"
-        echo "host    sharewarez   sharewarezuser   ::1/128        md5"
-        echo "host    sharewarez   postgres         ::1/128        md5"
+        echo "# Added by GameTheca installer - $(date)"
+        echo "local   gametheca   gamethecauser   md5"
+        echo "local   gametheca   postgres         md5"
+        echo "host    gametheca   gamethecauser   127.0.0.1/32   md5"
+        echo "host    gametheca   postgres         127.0.0.1/32   md5"
+        echo "host    gametheca   gamethecauser   ::1/128        md5"
+        echo "host    gametheca   postgres         ::1/128        md5"
         echo ""
     } | sudo tee "$PG_HBA_CONF.new" >/dev/null
 
@@ -539,13 +539,13 @@ test_database_connection() {
         print_info "Connection attempt $attempt/$max_attempts"
 
         # Method 1: TCP/IP with localhost
-        if PGPASSWORD="$DB_PASSWORD" psql -h localhost -U sharewarezuser -d sharewarez -c "SELECT 1;" >/dev/null 2>&1; then
+        if PGPASSWORD="$DB_PASSWORD" psql -h localhost -U gamethecauser -d gametheca -c "SELECT 1;" >/dev/null 2>&1; then
             print_success "Database connection test successful (localhost TCP/IP)"
             return 0
         fi
 
         # Method 2: TCP/IP with 127.0.0.1
-        if PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U sharewarezuser -d sharewarez -c "SELECT 1;" >/dev/null 2>&1; then
+        if PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U gamethecauser -d gametheca -c "SELECT 1;" >/dev/null 2>&1; then
             print_success "Database connection test successful (127.0.0.1 TCP/IP)"
             return 0
         fi
@@ -553,10 +553,10 @@ test_database_connection() {
         # Method 3: Create .pgpass file for authentication
         if [ "$attempt" -eq $max_attempts ]; then
             print_info "Trying .pgpass authentication method..."
-            echo "localhost:5432:sharewarez:sharewarezuser:$DB_PASSWORD" > ~/.pgpass
+            echo "localhost:5432:gametheca:gamethecauser:$DB_PASSWORD" > ~/.pgpass
             chmod 600 ~/.pgpass
 
-            if psql -h localhost -U sharewarezuser -d sharewarez -c "SELECT 1;" >/dev/null 2>&1; then
+            if psql -h localhost -U gamethecauser -d gametheca -c "SELECT 1;" >/dev/null 2>&1; then
                 rm ~/.pgpass 2>/dev/null
                 print_success "Database connection test successful (.pgpass method)"
                 return 0
@@ -648,29 +648,29 @@ ALTER USER postgres WITH ENCRYPTED PASSWORD 'postgres';
 -- Create user
 DO \$\$
 BEGIN
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'sharewarezuser') THEN
-        CREATE USER sharewarezuser WITH ENCRYPTED PASSWORD '$DB_PASSWORD';
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'gamethecauser') THEN
+        CREATE USER gamethecauser WITH ENCRYPTED PASSWORD '$DB_PASSWORD';
     END IF;
 END
 \$\$;
 
 -- Create database
-SELECT 'CREATE DATABASE sharewarez OWNER sharewarezuser'
-WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'sharewarez')\gexec
+SELECT 'CREATE DATABASE gametheca OWNER gamethecauser'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'gametheca')\gexec
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE sharewarez TO sharewarezuser;
-GRANT CREATE ON SCHEMA public TO sharewarezuser;
+GRANT ALL PRIVILEGES ON DATABASE gametheca TO gamethecauser;
+GRANT CREATE ON SCHEMA public TO gamethecauser;
 
--- Also grant postgres user access to sharewarez database as fallback
-GRANT ALL PRIVILEGES ON DATABASE sharewarez TO postgres;
+-- Also grant postgres user access to gametheca database as fallback
+GRANT ALL PRIVILEGES ON DATABASE gametheca TO postgres;
 
 -- Exit without testing connection here (avoids peer auth issues)
 \q
 EOF
 
     if [ $? -eq 0 ]; then
-        print_success "Database 'sharewarez' created with user 'sharewarezuser'"
+        print_success "Database 'gametheca' created with user 'gamethecauser'"
     else
         print_error "Failed to create database or user"
         return 1
@@ -683,7 +683,7 @@ EOF
     if ! test_database_connection; then
         print_warning "Database connection test failed"
         print_info "The database and user were created, but connection testing failed"
-        print_info "This may not prevent SharewareZ from working if the application can connect"
+        print_info "This may not prevent GameTheca from working if the application can connect"
         print_info "You can continue with the installation"
 
         # Ask user if they want to continue
@@ -731,7 +731,7 @@ setup_python_environment() {
 
 # Configure application settings
 configure_application() {
-    print_step "Configuring SharewareZ application..."
+    print_step "Configuring GameTheca application..."
 
     # Copy configuration files
     if [ ! -f "$SCRIPT_DIR/config.py" ] || [ "$FORCE_INSTALL" = true ]; then
@@ -772,13 +772,13 @@ configure_application() {
     print_verbose "Creating environment configuration..."
 
     cat > "$SCRIPT_DIR/.env" << EOF
-# SharewareZ Configuration - Generated by auto-installer $(date)
+# GameTheca Configuration - Generated by auto-installer $(date)
 
 # Database connection
-DATABASE_URL=postgresql://sharewarezuser:$DB_PASSWORD@localhost:5432/sharewarez
+DATABASE_URL=postgresql://gamethecauser:$DB_PASSWORD@localhost:5432/gametheca
 
 # Test database (only needed if running unit tests)
-TEST_DATABASE_URL=postgresql://sharewarezuser:$DB_PASSWORD@localhost:5432/sharewareztest
+TEST_DATABASE_URL=postgresql://gamethecauser:$DB_PASSWORD@localhost:5432/gamethecatest
 
 # Game files directory
 DATA_FOLDER_WAREZ=$GAMES_DIR
@@ -833,7 +833,7 @@ validate_installation() {
             print_success "Database connection validated"
         else
             print_warning "Database connection validation failed"
-            print_info "This may not prevent SharewareZ from functioning"
+            print_info "This may not prevent GameTheca from functioning"
         fi
     fi
 
@@ -858,7 +858,7 @@ show_summary() {
     echo -e "${CYAN}📌 Access URL:${NC} http://localhost:$CUSTOM_PORT"
     echo -e "${CYAN}📌 Games Directory:${NC} $GAMES_DIR"
     if [ "$SKIP_DB" != true ]; then
-        echo -e "${CYAN}📌 Database:${NC} sharewarez (credentials stored in .env)"
+        echo -e "${CYAN}📌 Database:${NC} gametheca (credentials stored in .env)"
     fi
     echo -e "${CYAN}📌 Start Command:${NC} ./startweb.sh"
     echo -e "${CYAN}📌 Stop:${NC} Press Ctrl+C"
@@ -867,7 +867,7 @@ show_summary() {
     echo
 
     # Ask if user wants to start the application
-    read -p "Start SharewareZ now? [Y/n]: " start_now
+    read -p "Start GameTheca now? [Y/n]: " start_now
     case "${start_now:-Y}" in
         [Yy]|[Yy][Ee][Ss])
             start_it=true
@@ -878,7 +878,7 @@ show_summary() {
     esac
     if [ "$start_it" = true ]; then
         echo
-        print_info "Starting SharewareZ..."
+        print_info "Starting GameTheca..."
         print_info "Open your browser to http://localhost:$CUSTOM_PORT when ready"
         print_info "Press Ctrl+C to stop the application"
         echo
@@ -888,7 +888,7 @@ show_summary() {
         exec ./startweb.sh
     else
         echo
-        print_info "To start SharewareZ later, run: ./startweb.sh"
+        print_info "To start GameTheca later, run: ./startweb.sh"
         print_info "Then open your browser to: http://localhost:$CUSTOM_PORT"
     fi
 }
@@ -896,7 +896,7 @@ show_summary() {
 # Main installation function
 main() {
     # Initialize log file
-    echo "SharewareZ Linux Auto-Installer - $(date)" > "$LOG_FILE"
+    echo "GameTheca Linux Auto-Installer - $(date)" > "$LOG_FILE"
 
     print_header
 
@@ -908,7 +908,7 @@ main() {
     print_info "  • Install system packages (Python, PostgreSQL, build tools)"
     print_info "  • Configure PostgreSQL database"
     print_info "  • Set up Python virtual environment"
-    print_info "  • Configure SharewareZ application"
+    print_info "  • Configure GameTheca application"
     echo
     print_info "Administrative privileges are required for system package installation."
 
@@ -931,12 +931,12 @@ main() {
         exit 1
     fi
 
-    # Check if already in SharewareZ directory
+    # Check if already in GameTheca directory
     if [ ! -f "$SCRIPT_DIR/startweb.sh" ] || [ ! -f "$SCRIPT_DIR/requirements.txt" ]; then
-        print_error "This script must be run from the SharewareZ directory"
+        print_error "This script must be run from the GameTheca directory"
         print_info "Please clone the repository first:"
-        print_info "  git clone https://github.com/axewater/sharewarez.git"
-        print_info "  cd sharewarez"
+        print_info "  git clone https://github.com/chrisjrovira/gametheca.git"
+        print_info "  cd gametheca"
         print_info "  ./install-linux.sh"
         exit 1
     fi

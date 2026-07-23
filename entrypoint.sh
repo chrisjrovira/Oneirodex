@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 SharewareZ container starting up..."
+echo "🚀 GameTheca container starting up..."
 
 if [[ ! -f /app/sharewarez/static/dist/library-grid/library-grid.js ]]; then
     echo "⚠️  Warning: library-grid.js not found — React library grid may not load. Rebuild the Docker image to include the library-grid build stage."
@@ -48,7 +48,7 @@ try:
             port=${DB_PORT},
             user='${DB_USER}',
             password=os.environ.get('POSTGRES_PASSWORD', 'postgres'),
-            database=os.environ.get('POSTGRES_DB', 'sharewarez'),
+            database=os.environ.get('POSTGRES_DB', 'gametheca'),
             connect_timeout=5
         )
     conn.close()
@@ -66,7 +66,7 @@ except Exception as e:
 # Wait for PostgreSQL to come online
 wait_for_postgres
 
-echo "🎮 Starting SharewareZ Docker container..."
+echo "🎮 Starting GameTheca Docker container..."
 
 # Pass all arguments through to startweb-docker.sh
 /app/startweb-docker.sh "$@"

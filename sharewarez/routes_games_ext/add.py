@@ -167,7 +167,7 @@ def add_game_manual():
             print(f"[LOCAL METADATA] Settings check - settings exists: {settings is not None}, write_local_metadata: {settings.write_local_metadata if settings else 'N/A'}")
 
             if settings and settings.write_local_metadata:
-                metadata_filename = settings.local_metadata_filename or 'sharewarez.json'
+                metadata_filename = settings.local_metadata_filename or 'gametheca.json'
                 success = write_local_metadata(
                     full_disk_path=form.full_disk_path.data,
                     igdb_id=form.igdb_id.data,

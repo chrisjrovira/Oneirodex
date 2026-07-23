@@ -8,7 +8,34 @@ from sharewarez.utils.match_scoring import rank_candidates
 from sharewarez.utils.game_name_parse import parse_game_label
 
 
-PROPOSAL_FILENAME = 'sharewarez.proposal.json'
+PROPOSAL_FILENAME = 'gametheca.proposal.json'
+LEGACY_PROPOSAL_FILENAME = 'sharewarez.proposal.json'
+
+
+def resolve_proposal_path(folder_path: str) -> str | None:
+    """Return path to an existing proposal sidecar (new or legacy), or None."""
+    if not folder_path:
+        return None
+    primary = os.path.join(folder_path, PROPOSAL_FILENAME)
+    if os.path.isfile(primary):
+        return primary
+    legacy = os.path.join(folder_path, LEGACY_PROPOSAL_FILENAME)
+    if os.path.isfile(legacy):
+        return legacy
+    return None
+
+
+def remove_proposal_files(folder_path: str) -> None:
+    """Remove new and legacy proposal sidecars if present."""
+    if not folder_path:
+        return
+    for name in (PROPOSAL_FILENAME, LEGACY_PROPOSAL_FILENAME):
+        path = os.path.join(folder_path, name)
+        try:
+            if os.path.isfile(path):
+                os.remove(path)
+        except OSError:
+            pass
 
 
 def build_match_proposal(

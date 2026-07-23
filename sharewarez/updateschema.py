@@ -296,7 +296,7 @@ class DatabaseManager:
         ADD COLUMN IF NOT EXISTS use_local_images BOOLEAN DEFAULT FALSE;
 
         ALTER TABLE global_settings
-        ADD COLUMN IF NOT EXISTS local_metadata_filename VARCHAR(50) DEFAULT 'sharewarez.json';
+        ADD COLUMN IF NOT EXISTS local_metadata_filename VARCHAR(50) DEFAULT 'gametheca.json';
 
         -- Add Propose-Only Scan setting to global_settings table
         ALTER TABLE global_settings

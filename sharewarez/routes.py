@@ -146,7 +146,7 @@ def browse_games():
 
         has_local_override = False
         if settings:
-            if (settings.use_local_metadata and has_local_metadata(game.full_disk_path, settings.local_metadata_filename or 'sharewarez.json')) or \
+            if (settings.use_local_metadata and has_local_metadata(game.full_disk_path, settings.local_metadata_filename or 'gametheca.json')) or \
                (settings.use_local_images and has_local_images(game.full_disk_path)):
                 has_local_override = True
 

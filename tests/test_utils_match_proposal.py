@@ -29,7 +29,7 @@ def test_write_match_proposal_roundtrip():
     with tempfile.TemporaryDirectory() as tmp:
         payload = build_match_proposal('Test Game', [{'id': 5, 'name': 'Test Game'}])
         assert write_match_proposal(tmp, payload) is True
-        path = os.path.join(tmp, 'sharewarez.proposal.json')
+        path = os.path.join(tmp, 'gametheca.proposal.json')
         with open(path, encoding='utf-8') as handle:
             loaded = json.load(handle)
         assert loaded['proposal']['cleaned_name'] == 'Test Game'

@@ -1,6 +1,6 @@
-# 🎮 SharewareZ v2.9.8
+# 🎮 GameTheca v2.9.8
 
-SharewareZ transforms any game folder into a searchable library with IGDB integration, adding cover images, screenshots, and metadata for enhanced filtering.
+GameTheca transforms any game folder into a searchable library with IGDB integration, adding cover images, screenshots, and metadata for enhanced filtering.
 Invite your friends securely and share your favorite games!
 
 ## 📢 Important Notes
@@ -8,7 +8,7 @@ Invite your friends securely and share your favorite games!
 - 🔄 Updating from older versions: Automatic update supported - simply overwrite files and run 'pip install -r requirements.txt' again.
 - ⚠️ For versions below 2.0: Database reset required
 - Run `./startweb.sh --force-setup` to recreate database and run setup wizard
-- ⚖️ SharewareZ promotes and encourages the legal use of software. We do not condone or support any unauthorized distribution or use of copyrighted material.
+- ⚖️ GameTheca promotes and encourages the legal use of software. We do not condone or support any unauthorized distribution or use of copyrighted material.
 - 📝 You must install version >2.5.2 before August 2025 or lose the ability to connect to IGDB for any lookups.
 
 ## ✨ Core Features
@@ -49,8 +49,8 @@ Invite your friends securely and share your favorite games!
 
 **One-Command Installation:**
 ```bash
-git clone --depth 1 https://github.com/axewater/sharewarez.git
-cd sharewarez
+git clone --depth 1 https://github.com/chrisjrovira/gametheca.git
+cd gametheca
 # IMPORTANT: Make install script executable first
 chmod +x install-linux.sh
 ./install-linux.sh
@@ -116,17 +116,17 @@ sudo -u postgres psql
 ```
 ```sql
 -- In PostgreSQL shell, create database and user
-CREATE DATABASE sharewarez;
-CREATE USER sharewarezuser WITH ENCRYPTED PASSWORD 'your_password_here';
-GRANT ALL PRIVILEGES ON DATABASE sharewarez TO sharewarezuser;
+CREATE DATABASE gametheca;
+CREATE USER gamethecauser WITH ENCRYPTED PASSWORD 'your_password_here';
+GRANT ALL PRIVILEGES ON DATABASE gametheca TO gamethecauser;
 \q
 ```
 
-**Step 3: Clone and Set up SharewareZ**
+**Step 3: Clone and Set up GameTheca**
 ```bash
 # Clone the repository
-git clone --depth 1 https://github.com/axewater/sharewarez.git
-cd sharewarez
+git clone --depth 1 https://github.com/chrisjrovira/gametheca.git
+cd gametheca
 
 # IMPORTANT: Make shell scripts executable first
 chmod +x *.sh
@@ -150,7 +150,7 @@ nano .env
 ```
 
 **Important**: Update these values in your `.env` file:
-- `DATABASE_URL=postgresql://sharewarezuser:your_password_here@localhost:5432/sharewarez`
+- `DATABASE_URL=postgresql://gamethecauser:your_password_here@localhost:5432/gametheca`
 - `DATA_FOLDER_WAREZ=/path/to/your/games/folder`
 - `SECRET_KEY=your_secure_random_key_here`
 
@@ -167,7 +167,7 @@ nano .env
 > key per deployment, and never commit it to version control. (The test suite is
 > exempt and auto-generates a throwaway key when running under `pytest`.)
 
-**Step 5: Start SharewareZ**
+**Step 5: Start GameTheca**
 ```bash
 # IMPORTANT: Make all shell scripts executable first
 chmod +x *.sh
@@ -204,14 +204,14 @@ chmod +x *.sh
 Open pgAdmin (installed with PostgreSQL):
 1. Connect to your PostgreSQL server
 2. Right-click "Databases" → "Create" → "Database"
-3. Name: `sharewarez` → Click "Save"
+3. Name: `gametheca` → Click "Save"
 
-**Step 3: Clone and Set up SharewareZ**
+**Step 3: Clone and Set up GameTheca**
 Open PowerShell and run:
 ```powershell
 # Clone the repository
-git clone --depth 1 https://github.com/axewater/sharewarez.git
-cd sharewarez
+git clone --depth 1 https://github.com/chrisjrovira/gametheca.git
+cd gametheca
 
 # Create and activate virtual environment
 python -m venv venv
@@ -231,7 +231,7 @@ notepad .env
 ```
 
 **Important**: Update these values in your `.env` file:
-- `DATABASE_URL=postgresql://postgres:your_postgres_password@localhost:5432/sharewarez`
+- `DATABASE_URL=postgresql://postgres:your_postgres_password@localhost:5432/gametheca`
 - `DATA_FOLDER_WAREZ=C:\Path\To\Your\Games\Folder`
 - `SECRET_KEY=your_secure_random_key_here`
 
@@ -248,7 +248,7 @@ notepad .env
 > key per deployment, and never commit it to version control. (The test suite is
 > exempt and auto-generates a throwaway key when running under `pytest`.)
 
-**Step 5: Start SharewareZ**
+**Step 5: Start GameTheca**
 ```powershell
 # Start the application
 .\startweb_windows.cmd
@@ -265,8 +265,8 @@ notepad .env
 **Quick Docker Setup:**
 ```bash
 # Clone the repository
-git clone https://github.com/axewater/sharewarez.git
-cd sharewarez
+git clone https://github.com/chrisjrovira/gametheca.git
+cd gametheca
 
 # Copy and configure environment file
 cp .env.docker.example .env
@@ -315,7 +315,7 @@ docker-compose exec web /app/startweb-docker.sh --force-setup
 - Linux: `./startweb.sh --force-setup`
 - Windows: `.\startweb_windows.cmd --force-setup`
 
-**Updating SharewareZ:**
+**Updating GameTheca:**
 1. Stop the application (Ctrl+C)
 2. `git pull` → `pip install -r requirements.txt`
 3. Restart with startup script
@@ -331,12 +331,12 @@ docker-compose exec web /app/startweb-docker.sh --force-setup
 
 ## 🌐 Changing the Port Number
 
-SharewareZ runs on port `5006` by default. To change this:
+GameTheca runs on port `5006` by default. To change this:
 
 **For Linux/Windows installations:**
 1. Edit your `.env` file
 2. Add or modify: `PORT=8080` (replace 8080 with your desired port)
-3. Restart SharewareZ
+3. Restart GameTheca
 
 **For Docker installations:**
 - Docker containers always use port `5006` internally
@@ -356,7 +356,7 @@ PORT=3000
 - Most 8, 16 and 32 bit retro consoles work, see webretro repo for more full list
 - PSX, Sega MS, Sega 32x not working at the moment
 - Sega Saturn working on single file games and some audio issues
-- Files must be unzipped. ZIP, 7z and RAR are not (yet) supported. This is not a webretro issues, so it will be fixed in a future Sharewarez update.
+- Files must be unzipped. ZIP, 7z and RAR are not (yet) supported. This is not a webretro issues, so it will be fixed in a future GameTheca update.
 
 ## 💬 Support
 - 📝 Open an issue on GitHub

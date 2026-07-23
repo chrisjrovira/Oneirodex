@@ -650,7 +650,7 @@
             <div class="modal-body">
                 <div class="alert alert-danger">
                     <h6><strong>Cannot Start Scan: Write Permissions Required</strong></h6>
-                    <p>The setting <strong>"Write Metadata File on Manual ID"</strong> is enabled in Server Settings, but SharewareZ cannot write to the following path(s):</p>
+                    <p>The setting <strong>"Write Metadata File on Manual ID"</strong> is enabled in Server Settings, but GameTheca cannot write to the following path(s):</p>
                 </div>
 
                 {% if session.get('permission_errors') %}
@@ -671,9 +671,9 @@
                     <h6><strong>How to Fix:</strong></h6>
                     <p>You have two options:</p>
                     <ol>
-                        <li><strong>Fix Permissions (Recommended):</strong> Grant write permissions to the SharewareZ user for the game folders:
+                        <li><strong>Fix Permissions (Recommended):</strong> Grant write permissions to the GameTheca user for the game folders:
                             <pre class="mt-2"><code>sudo chmod -R u+w {{ session.get('permission_check_path', '/path/to/games') }}</code></pre>
-                            Or for the SharewareZ user specifically:
+                            Or for the GameTheca user specifically:
                             <pre><code>sudo chown -R sharewarez:sharewarez {{ session.get('permission_check_path', '/path/to/games') }}</code></pre>
                         </li>
                         <li><strong>Disable Feature:</strong> Go to <strong>Admin Dashboard → Manage Server Settings</strong> and turn off <strong>"Write Metadata File on Manual ID"</strong> under the "Local Metadata & Images" section.</li>

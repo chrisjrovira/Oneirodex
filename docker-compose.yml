@@ -1,4 +1,4 @@
-# SharewareZ Docker Compose Configuration
+# GameTheca Docker Compose Configuration
 #
 # Setup Instructions:
 # 1. Copy .env.docker.example to .env and customize your settings
@@ -13,8 +13,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: kapitanczarnobrod/sharewarez:latest
-    container_name: sharewarez-app
+    image: chrisjrovira/gametheca:latest
+    container_name: gametheca-app
     restart: unless-stopped
     ports:
       - "5006:5006"
@@ -42,7 +42,7 @@ services:
 
   db:
     image: postgres:17.6
-    container_name: sharewarez-db
+    container_name: gametheca-db
     restart: unless-stopped
     shm_size: 128mb
     environment:

@@ -53,14 +53,14 @@ print('Database reset complete. Run ./startweb.sh to start the server.')
     exit 0
 fi
 
-echo "Starting SharewareZ with uvicorn..."
+echo "Starting GameTheca with uvicorn..."
 
 # Run complete startup initialization once before starting workers
 python3 -c "
 from sharewarez.init_manager import run_complete_startup_initialization
 import sys
 
-print('🚀 Starting SharewareZ initialization...')
+print('🚀 Starting GameTheca initialization...')
 if not run_complete_startup_initialization():
     print('❌ Startup initialization failed!')
     sys.exit(1)

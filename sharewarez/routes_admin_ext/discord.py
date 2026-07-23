@@ -64,7 +64,7 @@ def discord_settings():
 
     # Set default values if no settings exist or if fields are None
     webhook_url = (settings.discord_webhook_url if settings and settings.discord_webhook_url else 'insert_webhook_url_here')
-    bot_name = (settings.discord_bot_name if settings and settings.discord_bot_name else 'SharewareZ Bot')
+    bot_name = (settings.discord_bot_name if settings and settings.discord_bot_name else 'GameTheca Bot')
     bot_avatar_url = (settings.discord_bot_avatar_url if settings and settings.discord_bot_avatar_url else 'insert_bot_avatar_url_here')
 
     return render_template('admin/admin_manage_discord_settings.html',
@@ -101,7 +101,7 @@ def test_discord_webhook():
     try:
         embed = handler.create_embed(
             title="Discord Webhook Test",
-            description="This is a test message from your SharewareZ instance.",
+            description="This is a test message from your GameTheca instance.",
             color="03b2f8"
         )
         success = handler.send_webhook(embed)

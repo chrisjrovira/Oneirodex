@@ -91,7 +91,7 @@ def discover():
                     settings.use_local_metadata
                     and has_local_metadata(
                         game.full_disk_path,
-                        settings.local_metadata_filename or 'sharewarez.json',
+                        settings.local_metadata_filename or 'gametheca.json',
                     )
                 ) or (
                     settings.use_local_images

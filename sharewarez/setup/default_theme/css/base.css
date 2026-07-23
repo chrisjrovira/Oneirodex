@@ -14,16 +14,16 @@
     --text-muted: #adb5bd;
     --text-muted-light: rgba(255, 255, 255, 0.6);
 
-    /* Extended Background Colors */
-    --bg-dark-40: rgba(40, 40, 40, 0.8);
-    --bg-dark-30: rgba(30, 30, 30, 0.95);
-    --bg-dark-strong: rgba(0, 0, 0, 0.8);
+    /* Extended Background Colors — GameTheca darker default */
+    --bg-dark-40: rgba(18, 22, 28, 0.92);
+    --bg-dark-30: rgba(12, 16, 22, 0.96);
+    --bg-dark-strong: rgba(6, 8, 12, 0.9);
     --bg-transparent-5: rgba(255, 255, 255, 0.05);
 
 
-    /* Button Colors */
-    --btn-primary: #0096ff;
-    --btn-primary-hover: #0077cc;
+    /* Button Colors — teal accent (GameTheca) */
+    --btn-primary: #14b8a6;
+    --btn-primary-hover: #0d9488;
     --btn-info: rgba(23, 162, 184, 0.5);
     --btn-success: #28a745;
     --btn-danger: #dc3545;
@@ -97,11 +97,11 @@
     --font-size-22rem: 2.2rem;
 
     /* Container Backgrounds (High Usage Patterns) */
-    --container-dark-primary: rgba(30, 30, 30, 0.95);
-    --container-dark-secondary: rgba(0, 0, 0, 0.6);
-    --container-dark-tertiary: rgba(0, 0, 0, 0.2);
-    --container-glass-primary: rgba(0, 0, 0, 0.3);
-    --container-glass-secondary: rgba(255, 255, 255, 0.05);
+    --container-dark-primary: rgba(14, 18, 24, 0.96);
+    --container-dark-secondary: rgba(8, 10, 14, 0.75);
+    --container-dark-tertiary: rgba(0, 0, 0, 0.35);
+    --container-glass-primary: rgba(8, 12, 18, 0.55);
+    --container-glass-secondary: rgba(255, 255, 255, 0.04);
 
     /* Button Hover States (Missing Variants) */
     --btn-secondary: #6c757d;
@@ -120,7 +120,7 @@
     --form-bg-dark: rgba(0, 0, 0, 0.2);
     --form-border: rgba(255, 255, 255, 0.2);
     --form-focus-bg: rgba(255, 255, 255, 0.15);
-    --form-focus-border: #0096ff;
+    --form-focus-border: #14b8a6;
     --form-focus-shadow: 0 0 0 0.2rem rgba(0, 150, 255, 0.25);
     --form-placeholder: rgba(255, 255, 255, 0.5);
 
@@ -181,14 +181,14 @@
     --glass-panel-shadow: var(--shadow-glass-strong);
 
     /* Primary Brand Color Variants (for consistent blue theming) */
-    --primary-brand-05: rgba(0, 150, 255, 0.05);
-    --primary-brand-10: rgba(0, 150, 255, 0.1);
-    --primary-brand-15: rgba(0, 150, 255, 0.15);
-    --primary-brand-20: rgba(0, 150, 255, 0.2);
-    --primary-brand-25: rgba(0, 150, 255, 0.25);
-    --primary-brand-30: rgba(0, 150, 255, 0.3);
-    --primary-brand-40: rgba(0, 150, 255, 0.4);
-    --primary-brand-50: rgba(0, 150, 255, 0.5);
+    --primary-brand-05: rgba(20, 184, 166, 0.05);
+    --primary-brand-10: rgba(20, 184, 166, 0.1);
+    --primary-brand-15: rgba(20, 184, 166, 0.15);
+    --primary-brand-20: rgba(20, 184, 166, 0.2);
+    --primary-brand-25: rgba(20, 184, 166, 0.25);
+    --primary-brand-30: rgba(20, 184, 166, 0.3);
+    --primary-brand-40: rgba(20, 184, 166, 0.4);
+    --primary-brand-50: rgba(20, 184, 166, 0.5);
 
     /* Additional Common Backgrounds */
     --bg-dark-gradient: rgba(17, 17, 17, 0.9);
@@ -207,10 +207,10 @@
 
     /* Additional Shadow Variants */
     --shadow-box-light: 0 4px 6px rgba(0, 0, 0, 0.2);
-    --shadow-primary-brand: 0 4px 15px rgba(0, 150, 255, 0.3);
-    --shadow-primary-brand-strong: 0 8px 25px rgba(0, 150, 255, 0.4);
-    --shadow-primary-brand-large: 0 15px 40px rgba(0, 150, 255, 0.2);
-    --shadow-primary-brand-xl: 0 20px 40px rgba(0, 150, 255, 0.25);
+    --shadow-primary-brand: 0 4px 15px rgba(20, 184, 166, 0.3);
+    --shadow-primary-brand-strong: 0 8px 25px rgba(20, 184, 166, 0.4);
+    --shadow-primary-brand-large: 0 15px 40px rgba(20, 184, 166, 0.2);
+    --shadow-primary-brand-xl: 0 20px 40px rgba(20, 184, 166, 0.25);
     --shadow-success: 0 4px 15px rgba(40, 167, 69, 0.3);
 
     /* Red Color Variants (for danger/error states) */
@@ -284,13 +284,17 @@
     --submenu-hover: #505563;
 
     /* Admin Colors */
-    --admin-bg-dark: #1a1a1a;
+    --admin-bg-dark: #0c1016;
 }
 
 body {
-    background-image: url('/static/newstyle/gamecontroller.jpg');
+    background-color: #070a0f;
+    background-image:
+        linear-gradient(180deg, rgba(7, 10, 15, 0.88), rgba(7, 10, 15, 0.92)),
+        url('/static/newstyle/gamecontroller.jpg');
     background-size: cover;
     background-repeat: no-repeat;
+    background-attachment: fixed;
 
     font-family: Arial, sans-serif;
     color: var(--text-white);

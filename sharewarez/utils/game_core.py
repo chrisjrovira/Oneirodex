@@ -560,7 +560,7 @@ def retrieve_and_save_game(game_name, full_disk_path, scan_job_id=None, library_
             'use_local_metadata': settings_obj.use_local_metadata if settings_obj else False,
             'write_local_metadata': settings_obj.write_local_metadata if settings_obj else False,
             'use_local_images': settings_obj.use_local_images if settings_obj else False,
-            'local_metadata_filename': settings_obj.local_metadata_filename if settings_obj else 'sharewarez.json',
+            'local_metadata_filename': settings_obj.local_metadata_filename if settings_obj else 'gametheca.json',
             'propose_only_scan': settings_obj.propose_only_scan if settings_obj else False,
         }
     elif not isinstance(settings, dict):
@@ -569,7 +569,7 @@ def retrieve_and_save_game(game_name, full_disk_path, scan_job_id=None, library_
             'use_local_metadata': settings.use_local_metadata,
             'write_local_metadata': settings.write_local_metadata,
             'use_local_images': settings.use_local_images,
-            'local_metadata_filename': settings.local_metadata_filename or 'sharewarez.json',
+            'local_metadata_filename': settings.local_metadata_filename or 'gametheca.json',
             'propose_only_scan': getattr(settings, 'propose_only_scan', False),
         }
 
@@ -577,7 +577,7 @@ def retrieve_and_save_game(game_name, full_disk_path, scan_job_id=None, library_
     if settings and settings.get('use_local_metadata'):
         print(f"🔍 [LOCAL METADATA] Checking for existing metadata file in: {full_disk_path}")
         local_metadata = read_local_metadata(full_disk_path,
-                                             settings.get('local_metadata_filename', 'sharewarez.json'))
+                                             settings.get('local_metadata_filename', 'gametheca.json'))
         if local_metadata and 'igdb_id' in local_metadata:
             igdb_id = local_metadata['igdb_id']
             print(f"✅ LOCAL METADATA: Found IGDB ID {igdb_id} in {full_disk_path}")
@@ -679,7 +679,7 @@ def retrieve_and_save_game(game_name, full_disk_path, scan_job_id=None, library_
                         igdb_id=igdb_id,
                         game_title=new_game.name,
                         manually_verified=True,
-                        filename=settings.get('local_metadata_filename', 'sharewarez.json')
+                        filename=settings.get('local_metadata_filename', 'gametheca.json')
                     )
                     if not write_success:
                         print("⚠️ [LOCAL METADATA] Failed to write metadata file (already exists or permission issue)")
@@ -769,7 +769,7 @@ def retrieve_and_save_game(game_name, full_disk_path, scan_job_id=None, library_
             if write_match_proposal(full_disk_path, proposal):
                 print(
                     f"📝 [PROPOSE-ONLY] Wrote high-confidence match proposal for '{successful_search_name}' "
-                    f"→ {os.path.join(full_disk_path, 'sharewarez.proposal.json')}"
+                    f"→ {os.path.join(full_disk_path, 'gametheca.proposal.json')}"
                 )
         except Exception as proposal_err:
             print(f"⚠️ Failed to write high-confidence match proposal for {full_disk_path}: {proposal_err}")
@@ -866,7 +866,7 @@ def retrieve_and_save_game(game_name, full_disk_path, scan_job_id=None, library_
                         igdb_id=new_game.igdb_id,
                         game_title=new_game.name,
                         manually_verified=False,  # Auto-identified during scan
-                        filename=settings.get('local_metadata_filename', 'sharewarez.json')
+                        filename=settings.get('local_metadata_filename', 'gametheca.json')
                     )
                     if write_success:
                         print(f"✅ [LOCAL METADATA] Successfully wrote metadata file for '{new_game.name}'")
@@ -926,7 +926,7 @@ def retrieve_and_save_game(game_name, full_disk_path, scan_job_id=None, library_
                 if write_match_proposal(full_disk_path, proposal):
                     print(
                         f"📝 Wrote low-confidence match proposal for '{last_low_confidence_search}' "
-                        f"→ {os.path.join(full_disk_path, 'sharewarez.proposal.json')}"
+                        f"→ {os.path.join(full_disk_path, 'gametheca.proposal.json')}"
                     )
             except Exception as proposal_err:
                 print(f"⚠️ Failed to write match proposal for {full_disk_path}: {proposal_err}")

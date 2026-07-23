@@ -10,7 +10,7 @@
 
 <div class="container-status-page container-settings">
     <div class="card">
-        <h2>Manage SharewareZ Settings</h2>
+        <h2>Manage GameTheca Settings</h2>
 
         <div id="settingsSavedNotification" class="alert alert-success" role="alert" style="display: none;">
             Settings saved successfully, Captain!
@@ -155,14 +155,14 @@
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="useLocalMetadata">
-                                <label class="form-check-label" for="useLocalMetadata" data-toggle="tooltip" title="When enabled, scanner checks for sharewarez.json file in game folders before searching IGDB. This file contains the IGDB ID from previous manual identifications.">
+                                <label class="form-check-label" for="useLocalMetadata" data-toggle="tooltip" title="When enabled, scanner checks for gametheca.json file in game folders before searching IGDB. This file contains the IGDB ID from previous manual identifications.">
                                     <i class="fa-solid fa-magnifying-glass"></i> Use Local Metadata on Scan
                                 </label>
                             </div>
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="writeLocalMetadata">
-                                <label class="form-check-label" for="writeLocalMetadata" data-toggle="tooltip" title="When enabled, creates sharewarez.json file in game folder after manual identification. This survives database resets and makes future scans faster. Requires write permissions to game folders.">
+                                <label class="form-check-label" for="writeLocalMetadata" data-toggle="tooltip" title="When enabled, creates gametheca.json file in game folder after manual identification. This survives database resets and makes future scans faster. Requires write permissions to game folders.">
                                     <i class="fa-solid fa-floppy-disk"></i> Write Metadata File on Manual ID
                                 </label>
                             </div>
@@ -175,11 +175,11 @@
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="localMetadataFilename" class="form-label" data-toggle="tooltip" title="Filename for local metadata files. Default: sharewarez.json">
+                                <label for="localMetadataFilename" class="form-label" data-toggle="tooltip" title="Filename for local metadata files. Default: gametheca.json">
                                     <i class="fa-solid fa-file"></i> Metadata Filename
                                 </label>
                                 <input type="text" class="form-control form-control-sm" id="localMetadataFilename" name="localMetadataFilename"
-                                    value="sharewarez.json" placeholder="sharewarez.json">
+                                    value="gametheca.json" placeholder="gametheca.json">
                                 <small class="form-text text-info">Stored in each game folder</small>
                             </div>
 
@@ -188,7 +188,7 @@
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="proposeOnlyScan">
-                                <label class="form-check-label" for="proposeOnlyScan" data-toggle="tooltip" title="When enabled, the scanner never auto-imports games — not even on a high-confidence IGDB match. Instead it writes a sharewarez.proposal.json sidecar for every unmatched folder so an admin can review and approve matches manually.">
+                                <label class="form-check-label" for="proposeOnlyScan" data-toggle="tooltip" title="When enabled, the scanner never auto-imports games — not even on a high-confidence IGDB match. Instead it writes a gametheca.proposal.json sidecar for every unmatched folder so an admin can review and approve matches manually.">
                                     <i class="fa-solid fa-clipboard-question"></i> Propose-Only Scan Mode
                                 </label>
                             </div>
@@ -204,7 +204,7 @@
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="showSystemLogo">
-                                <label class="form-check-label" for="showSystemLogo" data-toggle="tooltip" title="When enabled, displays the SharewareZ logo on the main interface.">
+                                <label class="form-check-label" for="showSystemLogo" data-toggle="tooltip" title="When enabled, displays the GameTheca logo on the main interface.">
                                     Show System Logo
                                 </label>
                             </div>

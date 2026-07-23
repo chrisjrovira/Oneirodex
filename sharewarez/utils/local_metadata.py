@@ -12,14 +12,30 @@ from sharewarez.utils.functions import sanitize_string_input
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_METADATA_FILENAME = 'gametheca.json'
+LEGACY_METADATA_FILENAME = 'sharewarez.json'
 
-def read_local_metadata(full_disk_path, filename='sharewarez.json'):
+
+def _resolve_metadata_path(full_disk_path, filename):
+    """Return path to existing metadata file, falling back to legacy name if needed."""
+    primary = os.path.join(full_disk_path, filename)
+    if os.path.exists(primary):
+        return primary
+    if filename != LEGACY_METADATA_FILENAME:
+        legacy = os.path.join(full_disk_path, LEGACY_METADATA_FILENAME)
+        if os.path.exists(legacy):
+            return legacy
+    return None
+
+
+def read_local_metadata(full_disk_path, filename=DEFAULT_METADATA_FILENAME):
     """
     Read local metadata file from game folder.
 
     Args:
         full_disk_path: Full path to game folder
-        filename: Metadata filename (default: sharewarez.json)
+        filename: Metadata filename (default: gametheca.json). Falls back to
+            sharewarez.json when the primary file is missing.
 
     Returns:
         dict or None: Metadata dict with keys like 'igdb_id', or None if not found/error
@@ -33,6 +49,7 @@ def read_local_metadata(full_disk_path, filename='sharewarez.json'):
         "version": "1.0"
     }
     """
+    metadata_path = None
     try:
         # Security check
         if current_app:
@@ -53,10 +70,8 @@ def read_local_metadata(full_disk_path, filename='sharewarez.json'):
             logger.debug(f"Path is not a directory: {full_disk_path}")
             return None
 
-        # Build metadata file path
-        metadata_path = os.path.join(full_disk_path, filename)
-
-        if not os.path.exists(metadata_path):
+        metadata_path = _resolve_metadata_path(full_disk_path, filename)
+        if not metadata_path:
             return None
 
         # Read and parse JSON
@@ -84,7 +99,7 @@ def read_local_metadata(full_disk_path, filename='sharewarez.json'):
 
 
 def write_local_metadata(full_disk_path, igdb_id, game_title=None, manually_verified=False,
-                         filename='sharewarez.json'):
+                         filename=DEFAULT_METADATA_FILENAME):
     """
     Write local metadata file to game folder.
 
@@ -93,7 +108,7 @@ def write_local_metadata(full_disk_path, igdb_id, game_title=None, manually_veri
         igdb_id: IGDB ID number
         game_title: Game title (optional, for human readability)
         manually_verified: Whether this was manually identified by admin
-        filename: Metadata filename (default: sharewarez.json)
+        filename: Metadata filename (default: gametheca.json)
 
     Returns:
         bool: True if successful, False otherwise
@@ -165,13 +180,14 @@ def write_local_metadata(full_disk_path, igdb_id, game_title=None, manually_veri
         return False
 
 
-def has_local_metadata(full_disk_path, filename='sharewarez.json'):
+def has_local_metadata(full_disk_path, filename=DEFAULT_METADATA_FILENAME):
     """
     Quick check if local metadata file exists.
 
     Args:
         full_disk_path: Full path to game folder
-        filename: Metadata filename
+        filename: Metadata filename. Also checks legacy sharewarez.json when
+            the primary filename is missing.
 
     Returns:
         bool: True if metadata file exists
@@ -179,13 +195,12 @@ def has_local_metadata(full_disk_path, filename='sharewarez.json'):
     try:
         if not os.path.isdir(full_disk_path):
             return False
-        metadata_path = os.path.join(full_disk_path, filename)
-        return os.path.exists(metadata_path)
-    except:
+        return _resolve_metadata_path(full_disk_path, filename) is not None
+    except Exception:
         return False
 
 
-def delete_local_metadata(full_disk_path, filename='sharewarez.json'):
+def delete_local_metadata(full_disk_path, filename=DEFAULT_METADATA_FILENAME):
     """
     Delete local metadata file from game folder.
 
@@ -201,6 +216,12 @@ def delete_local_metadata(full_disk_path, filename='sharewarez.json'):
         if os.path.exists(metadata_path):
             os.remove(metadata_path)
             logger.info(f"Deleted local metadata: {metadata_path}")
+        # Also remove legacy sidecar if present
+        if filename != LEGACY_METADATA_FILENAME:
+            legacy_path = os.path.join(full_disk_path, LEGACY_METADATA_FILENAME)
+            if os.path.exists(legacy_path):
+                os.remove(legacy_path)
+                logger.info(f"Deleted legacy local metadata: {legacy_path}")
         return True
     except Exception as e:
         logger.error(f"Error deleting local metadata from {full_disk_path}: {e}")

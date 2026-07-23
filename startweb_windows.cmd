@@ -36,10 +36,10 @@ if "%FORCE_SETUP%"=="true" (
     exit /b 0
 )
 
-echo Starting SharewareZ with uvicorn...
+echo Starting GameTheca with uvicorn...
 
 REM Run complete startup initialization once before starting workers
-python -c "from sharewarez.init_manager import run_complete_startup_initialization; import sys; print('[*] Starting SharewareZ initialization...'); result = run_complete_startup_initialization(); print('[+] Initialization completed - starting workers...' if result else '[-] Startup initialization failed!'); sys.exit(0 if result else 1)"
+python -c "from sharewarez.init_manager import run_complete_startup_initialization; import sys; print('[*] Starting GameTheca initialization...'); result = run_complete_startup_initialization(); print('[+] Initialization completed - starting workers...' if result else '[-] Startup initialization failed!'); sys.exit(0 if result else 1)"
 
 if %errorlevel% neq 0 (
     echo [-] Startup initialization failed!

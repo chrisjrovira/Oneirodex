@@ -35,11 +35,18 @@ logs/
 .github/
 .claude/
 .codebuddy/
+.superpowers/
+.worktrees/
 CLAUDE.md
 letsrebuild.md
 *.md
 !README.md
 .vscode
+
+# Node (frontend stage runs npm ci inside the image)
+node_modules/
+**/node_modules/
+frontend/**/node_modules/
 
 # IDE
 .vscode/
@@ -52,6 +59,9 @@ letsrebuild.md
 .coverage
 .pytest_cache/
 htmlcov/
+.ruff_cache/
+.mypy_cache/
+**/__pycache__/
 
 # Static uploads (these should be mounted as volumes)
 sharewarez/static/library/images/

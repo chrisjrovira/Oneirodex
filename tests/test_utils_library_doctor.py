@@ -55,7 +55,7 @@ def test_doctor_write_proposals(tmp_path):
     rows = [{'path': str(folder), 'raw_name': 'Game X'}]
     results = doctor_write_proposals(rows, candidates_by_path={str(folder): [{'id': 1, 'name': 'Game X'}]})
     assert results[0]['ok'] is True
-    assert (folder / 'sharewarez.proposal.json').exists()
+    assert (folder / 'gametheca.proposal.json').exists()
 
 
 def test_doctor_apply_renames(tmp_path):

@@ -1,5 +1,5 @@
 """
-Centralized Initialization Manager for SharewareZ.
+Centralized Initialization Manager for GameTheca.
 This module consolidates all initialization logic into a single, coordinated system
 that ensures proper startup order and eliminates duplication.
 """
@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 
 class InitializationManager:
-    """Central coordinator for all SharewareZ initialization tasks."""
+    """Central coordinator for all GameTheca initialization tasks."""
 
     def __init__(self):
         self._environment_loaded = False
@@ -24,7 +24,7 @@ class InitializationManager:
         Returns True on success, False on failure.
         """
         try:
-            print("🚀 Starting SharewareZ initialization...")
+            print("🚀 Starting GameTheca initialization...")
 
             # Phase 1: Environment setup (load once)
             if not self._phase1_environment():
@@ -47,7 +47,7 @@ class InitializationManager:
                 return False
 
             self._initialization_complete = True
-            print("✅ SharewareZ initialization completed successfully")
+            print("✅ GameTheca initialization completed successfully")
             return True
 
         except Exception as e:
@@ -420,7 +420,7 @@ class InitializationManager:
             from sharewarez import app_version
 
             event = SystemEvents(
-                event_text=f"SharewareZ v{app_version} initialization completed",
+                event_text=f"GameTheca v{app_version} initialization completed",
                 event_type='system',
                 event_level='startup',
                 audit_user=None

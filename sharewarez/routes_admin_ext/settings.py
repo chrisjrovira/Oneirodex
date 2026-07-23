@@ -53,7 +53,7 @@ DEFAULT_SETTINGS = {
     'useLocalMetadata': False,
     'writeLocalMetadata': False,
     'useLocalImages': False,
-    'localMetadataFilename': 'sharewarez.json',
+    'localMetadataFilename': 'gametheca.json',
     'proposeOnlyScan': False
 }
 

@@ -544,7 +544,7 @@ class GlobalSettings(db.Model):
     use_local_metadata = db.Column(db.Boolean, default=False)
     write_local_metadata = db.Column(db.Boolean, default=False)
     use_local_images = db.Column(db.Boolean, default=False)
-    local_metadata_filename = db.Column(db.String(50), default='sharewarez.json')
+    local_metadata_filename = db.Column(db.String(50), default='gametheca.json')
     # Scan Behavior Settings
     propose_only_scan = db.Column(db.Boolean, default=False)
 

@@ -112,7 +112,7 @@ class TestDiscordSettings:
         # Check default values are used
         response_data = response.get_data(as_text=True)
         assert 'insert_webhook_url_here' in response_data
-        assert 'SharewareZ Bot' in response_data
+        assert 'GameTheca Bot' in response_data
         assert 'insert_bot_avatar_url_here' in response_data
     
     def test_discord_settings_get_with_existing_settings(self, client, admin_user, db_session):

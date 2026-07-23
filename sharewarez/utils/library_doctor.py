@@ -72,7 +72,7 @@ def doctor_dry_run(roots: list[str], *, template: str = '{title}', limit: int | 
 
 def doctor_write_proposals(rows: list[dict], *, candidates_by_path: dict[str, list] | None = None) -> list[dict]:
     """
-    Write sharewarez.proposal.json for selected rows.
+    Write gametheca.proposal.json for selected rows.
     candidates_by_path maps folder path → IGDB candidate list (optional).
     """
     results = []

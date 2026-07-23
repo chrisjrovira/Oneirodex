@@ -14,7 +14,10 @@ from sharewarez.models import Game, Library
 from sharewarez.utils.auth import admin_required
 from sharewarez.utils.security import is_safe_path, get_allowed_base_directories
 from sharewarez.utils.disk_rename import build_rename_plan, apply_rename_plan
-from sharewarez.utils.match_proposal import PROPOSAL_FILENAME
+from sharewarez.utils.match_proposal import (
+    resolve_proposal_path,
+    remove_proposal_files,
+)
 from sharewarez.utils.library_doctor import doctor_dry_run, doctor_write_proposals, iter_game_folders
 
 from . import apis_bp
@@ -94,14 +97,14 @@ def rename_apply():
 @login_required
 @admin_required
 def list_proposals():
-    """Scan library games for sharewarez.proposal.json files."""
+    """Scan library games for gametheca.proposal.json files."""
     libraries = db.session.execute(select(Library)).scalars().all()
     found = []
     for library in libraries:
         games = db.session.execute(select(Game).filter_by(library_uuid=library.uuid)).scalars().all()
         for game in games:
-            proposal_path = os.path.join(game.full_disk_path or '', PROPOSAL_FILENAME)
-            if os.path.isfile(proposal_path):
+            proposal_path = resolve_proposal_path(game.full_disk_path or '')
+            if proposal_path:
                 try:
                     with open(proposal_path, encoding='utf-8') as handle:
                         payload = json.load(handle)
@@ -134,10 +137,8 @@ def approve_proposal():
     safe, err = is_safe_path(path, _allowed_bases())
     if not safe:
         return jsonify({'status': 'error', 'message': err or 'Unsafe path'}), 403
-    proposal_path = os.path.join(path, PROPOSAL_FILENAME)
     try:
-        if os.path.isfile(proposal_path):
-            os.remove(proposal_path)
+        remove_proposal_files(path)
     except OSError as exc:
         return jsonify({'status': 'error', 'message': str(exc)}), 500
     return jsonify({
@@ -164,8 +165,8 @@ def scan_roots_for_proposals():
         if not safe:
             continue
         for folder in iter_game_folders(root):
-            proposal_path = os.path.join(folder, PROPOSAL_FILENAME)
-            if not os.path.isfile(proposal_path):
+            proposal_path = resolve_proposal_path(folder)
+            if not proposal_path:
                 continue
             try:
                 with open(proposal_path, encoding='utf-8') as handle:
