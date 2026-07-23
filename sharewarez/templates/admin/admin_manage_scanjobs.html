@@ -674,7 +674,7 @@
                         <li><strong>Fix Permissions (Recommended):</strong> Grant write permissions to the GameTheca user for the game folders:
                             <pre class="mt-2"><code>sudo chmod -R u+w {{ session.get('permission_check_path', '/path/to/games') }}</code></pre>
                             Or for the GameTheca user specifically:
-                            <pre><code>sudo chown -R sharewarez:sharewarez {{ session.get('permission_check_path', '/path/to/games') }}</code></pre>
+                            <pre><code>sudo chown -R gametheca:gametheca {{ session.get('permission_check_path', '/path/to/games') }}</code></pre>
                         </li>
                         <li><strong>Disable Feature:</strong> Go to <strong>Admin Dashboard → Manage Server Settings</strong> and turn off <strong>"Write Metadata File on Manual ID"</strong> under the "Local Metadata & Images" section.</li>
                     </ol>

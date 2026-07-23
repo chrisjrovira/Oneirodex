@@ -1013,3 +1013,39 @@ pre {
         pointer-events: auto;
     }
 }
+
+.game-freshness-panel {
+    margin: 0 0 var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-md);
+    background: var(--container-glass-primary);
+}
+
+.game-freshness-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+.game-freshness-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.game-freshness-hint {
+    margin: 0 0 var(--spacing-sm);
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.game-freshness-details {
+    max-height: 240px;
+    overflow: auto;
+    font-size: 0.8rem;
+    background: rgba(0, 0, 0, 0.35);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+}

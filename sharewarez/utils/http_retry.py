@@ -8,6 +8,8 @@ _lock = threading.Lock()
 _MIN_INTERVAL_SEC = {
     'steam': 1.0,
     'rawg': 1.0,
+    'gog': 1.0,
+    'epic': 1.0,
 }
 
 

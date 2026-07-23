@@ -166,6 +166,9 @@ def browse_games():
             'is_favorite': current_user_id in [user.id for user in game.favorited_by],
             'has_local_override': has_local_override,
             'user_status': user_status,
+            'freshness_status': game.freshness_status,
+            'freshness_confidence': game.freshness_confidence,
+            'local_version': game.local_version,
             **game_card_flags(game),
         })
 

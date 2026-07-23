@@ -1,4 +1,5 @@
 # /sharewarez/routes_apis/game.py
+from datetime import datetime, timezone
 from flask import jsonify, request, url_for
 from flask_login import login_required, current_user
 from sharewarez import db
@@ -106,3 +107,88 @@ def get_next_custom_igdb_id():
     except Exception as e:
         print(f"Error getting next custom IGDB ID: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+@apis_bp.route('/games/<game_uuid>/freshness', methods=['GET'])
+@login_required
+def game_freshness_get(game_uuid):
+    """Return cached freshness snapshot for a game."""
+    from sharewarez.utils.freshness import freshness_public_view
+
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game:
+        return jsonify({'error': 'Game not found'}), 404
+    return jsonify(freshness_public_view(game))
+
+
+@apis_bp.route('/games/<game_uuid>/freshness/check', methods=['POST'])
+@login_required
+def game_freshness_check(game_uuid):
+    """On-demand local vs store freshness check."""
+    from sharewarez.utils.freshness import check_and_store_freshness
+
+    game = db.session.execute(
+        select(Game).filter_by(uuid=game_uuid)
+    ).scalars().first()
+    if not game:
+        return jsonify({'error': 'Game not found'}), 404
+
+    try:
+        # Eager-load relationships used by local/update hints
+        _ = list(game.updates or [])
+        _ = list(game.extras or [])
+        _ = list(game.urls or [])
+        result = check_and_store_freshness(game, commit=True, db_session=db.session)
+        log_system_event(
+            f"Freshness check for {game.name}: {result.get('status')}",
+            event_type='game',
+            event_level='information',
+        )
+        return jsonify(result)
+    except Exception as exc:
+        db.session.rollback()
+        return jsonify({'error': str(exc)}), 500
+
+
+@apis_bp.route('/admin/freshness/refresh', methods=['POST'])
+@login_required
+def admin_freshness_refresh():
+    """Bulk refresh freshness for library badges (admin)."""
+    from sharewarez.utils.freshness import check_and_store_freshness
+
+    if not current_user.is_authenticated or current_user.role != 'admin':
+        return jsonify({'error': 'Admin required'}), 403
+
+    data = request.get_json(silent=True) or {}
+    limit = min(int(data.get('limit') or 25), 100)
+    only_stale = bool(data.get('only_stale', True))
+
+    query = select(Game).order_by(Game.name.asc()).limit(limit * 3 if only_stale else limit)
+    games = db.session.execute(query).scalars().all()
+    updated = []
+    errors = []
+    now = datetime.now(timezone.utc)
+    for game in games:
+        if len(updated) >= limit:
+            break
+        if only_stale and game.freshness_checked_at and game.freshness_status:
+            checked = game.freshness_checked_at
+            if checked.tzinfo is None:
+                checked = checked.replace(tzinfo=timezone.utc)
+            if (now - checked).total_seconds() < 86400:
+                continue
+        try:
+            _ = list(game.updates or [])
+            _ = list(game.extras or [])
+            _ = list(game.urls or [])
+            public = check_and_store_freshness(game, commit=False)
+            updated.append({'uuid': game.uuid, 'name': game.name, 'status': public.get('status')})
+        except Exception as exc:
+            errors.append({'uuid': game.uuid, 'error': str(exc)})
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        return jsonify({'error': str(exc)}), 500
+
+    return jsonify({'updated': updated, 'errors': errors, 'count': len(updated)})

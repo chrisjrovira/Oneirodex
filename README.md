@@ -3,15 +3,30 @@
 GameTheca transforms any game folder into a searchable library with IGDB integration, adding cover images, screenshots, and metadata for enhanced filtering.
 Invite your friends securely and share your favorite games!
 
+**Clone:** `https://github.com/chrisjrovira/gametheca.git`  
+**Docker image:** `chrisjrovira/gametheca:latest` (containers: `gametheca-app`, `gametheca-db`)  
+**Note:** The Python package path remains `sharewarez/` for now (imports, templates, static assets).
+
 ## 📢 Important Notes
 
 - 🔄 Updating from older versions: Automatic update supported - simply overwrite files and run 'pip install -r requirements.txt' again.
 - ⚠️ For versions below 2.0: Database reset required
-- Run `./startweb.sh --force-setup` to recreate database and run setup wizard
+    - Run `./startweb.sh --force-setup` to recreate database and run setup wizard
 - ⚖️ GameTheca promotes and encourages the legal use of software. We do not condone or support any unauthorized distribution or use of copyrighted material.
 - 📝 You must install version >2.5.2 before August 2025 or lose the ability to connect to IGDB for any lookups.
 
-## ✨ Core Features
+## ✨ Features
+
+### 🆕 Current UI & Ops
+- 📚 **Library React grid** — modern library browser with badges and tools
+- 👀 **Ops glance** — quick operational overview for admins
+- 🔍 **Propose-only scan** — review scan proposals before committing changes
+- 🔗 **Find / add & link existing** — locate and link games already in the library
+- ⚙️ **Settings shell** — refreshed admin settings experience
+- 🔄 **Game freshness** — compare local copies vs Steam / GOG / Epic (best-effort)
+  - Game Details → **Check stores** for an on-demand freshness check
+  - Library **Tools → Freshness** for bulk refresh of badges
+  - Badges: **OUT** (behind store, high confidence) and **~** (heuristic / possibly behind)
 
 ### 📚 Game Library Management
 - 🔍 Smart folder scanning & cataloging with multi-threaded processing (4 threads by default)
@@ -262,6 +277,11 @@ notepad .env
 
 ## 🐳 Docker Install
 
+**Image / containers:**
+- Image: `chrisjrovira/gametheca:latest`
+- App container: `gametheca-app`
+- Database container: `gametheca-db`
+
 **Quick Docker Setup:**
 ```bash
 # Clone the repository
@@ -278,8 +298,8 @@ docker-compose up -d
 ```
 
 **What it includes:**
-- ✅ Complete PostgreSQL database setup
-- ✅ Automatic application configuration
+- ✅ Complete PostgreSQL database setup (`gametheca-db`)
+- ✅ Automatic application configuration (`gametheca-app`)
 - ✅ Persistent data storage
 - ✅ Ready-to-use on port 5006
 

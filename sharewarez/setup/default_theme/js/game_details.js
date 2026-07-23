@@ -326,3 +326,63 @@ function nfoEscapeKeyHandler(event) {
         closeNfoModal();
     }
 }
+
+/* --- Game freshness (local vs Steam/GOG/Epic) --- */
+(function initFreshnessPanel() {
+    const panel = document.getElementById('game-freshness-panel');
+    const btn = document.getElementById('freshness-check-btn');
+    const statusLine = document.getElementById('freshness-status-line');
+    const details = document.getElementById('freshness-details');
+    if (!panel || !btn) {
+        return;
+    }
+    const gameUuid = panel.dataset.gameUuid;
+
+    function renderFreshness(data) {
+        if (!data || data.error) {
+            statusLine.innerHTML = `<span class="text-danger">${(data && data.error) || 'Check failed'}</span>`;
+            return;
+        }
+        const bits = [
+            `<strong>${data.status || 'unknown'}</strong>`,
+            data.confidence ? `(${data.confidence})` : '',
+            data.local_version ? `— local ${data.local_version}` : '',
+            data.remote_version_summary ? `— ${data.remote_version_summary}` : '',
+            data.checked_at ? `<span class="text-muted"> · checked ${data.checked_at}</span>` : '',
+        ].filter(Boolean);
+        statusLine.innerHTML = bits.join(' ');
+        details.hidden = false;
+        details.textContent = JSON.stringify(
+            {
+                reasons: data.reasons,
+                dlc: data.dlc,
+                local: data.local,
+                remotes: data.remotes,
+            },
+            null,
+            2,
+        );
+    }
+
+    btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const prev = btn.textContent;
+        btn.textContent = 'Checking…';
+        try {
+            const headers = (typeof CSRFUtils !== 'undefined' && CSRFUtils.getHeaders)
+                ? CSRFUtils.getHeaders()
+                : { 'Content-Type': 'application/json' };
+            const resp = await fetch(`/api/games/${gameUuid}/freshness/check`, {
+                method: 'POST',
+                headers,
+            });
+            const data = await resp.json();
+            renderFreshness(data);
+        } catch (err) {
+            statusLine.innerHTML = `<span class="text-danger">${err.message || err}</span>`;
+        } finally {
+            btn.disabled = false;
+            btn.textContent = prev;
+        }
+    });
+})();

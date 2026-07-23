@@ -190,6 +190,15 @@ class Game(db.Model):
     size = db.Column(db.BigInteger, nullable=False, default=0)
     last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
+    # Store / freshness (local vs Steam/GOG/Epic)
+    steam_app_id = db.Column(db.Integer, nullable=True)
+    local_version = db.Column(db.String(100), nullable=True)
+    remote_version_summary = db.Column(db.String(255), nullable=True)
+    freshness_status = db.Column(db.String(32), nullable=True)
+    freshness_confidence = db.Column(db.String(16), nullable=True)
+    freshness_checked_at = db.Column(db.DateTime, nullable=True)
+    freshness_payload = db.Column(db.JSON, nullable=True)
+
     def __repr__(self):
         return f"<Game id={self.id}, name={self.name}>"
 

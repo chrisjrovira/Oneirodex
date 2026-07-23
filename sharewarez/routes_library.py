@@ -235,6 +235,9 @@ def get_games(page=1, per_page=20, sort_by='name', sort_order='asc', **filters):
             'first_release_date': first_release_date_formatted,
             'has_local_override': has_local_override,
             'user_status': user_status,
+            'freshness_status': game.freshness_status,
+            'freshness_confidence': game.freshness_confidence,
+            'local_version': game.local_version,
             **game_card_flags(game),
         })
 

@@ -302,6 +302,28 @@ class DatabaseManager:
         ALTER TABLE global_settings
         ADD COLUMN IF NOT EXISTS propose_only_scan BOOLEAN DEFAULT FALSE;
 
+        -- Game freshness (local vs store version / DLC)
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS steam_app_id INTEGER;
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS local_version VARCHAR(100);
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS remote_version_summary VARCHAR(255);
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS freshness_status VARCHAR(32);
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS freshness_confidence VARCHAR(16);
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS freshness_checked_at TIMESTAMP;
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS freshness_payload JSONB;
+
         -- Remove unused library_name column from games table (replaced by library relationship via library_uuid)
         DO $$
         BEGIN

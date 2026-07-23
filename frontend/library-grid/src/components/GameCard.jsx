@@ -338,6 +338,20 @@ export function GameCard({
             VR
           </div>
         )}
+
+        {game.freshness_status === 'behind' && (
+          <div className="freshness-badge freshness-badge--behind" title="Behind store version (high confidence)">
+            OUT
+          </div>
+        )}
+        {game.freshness_status === 'heuristic_behind' && (
+          <div
+            className="freshness-badge freshness-badge--heuristic"
+            title="Possibly behind store (heuristic)"
+          >
+            ~
+          </div>
+        )}
       </div>
     </div>
   )

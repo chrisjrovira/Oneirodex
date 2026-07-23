@@ -187,6 +187,33 @@
                 <h1>{{ game.name or 'Game Name Not Available' }}</h1>
             </div>
 
+            <div class="game-freshness-panel glass-panel-inner" id="game-freshness-panel"
+                 data-game-uuid="{{ game.uuid }}">
+                <div class="game-freshness-header">
+                    <h3>Updates &amp; DLC</h3>
+                    <button type="button" class="btn btn-sm btn-primary" id="freshness-check-btn">
+                        Check stores
+                    </button>
+                </div>
+                <p class="game-freshness-hint">
+                    Compare local version hints (folder name, NFO, version files) with Steam / GOG / Epic (best-effort).
+                </p>
+                <div id="freshness-status-line" class="game-freshness-status">
+                    {% if game.freshness_status %}
+                        <strong>{{ game.freshness_status }}</strong>
+                        {% if game.freshness_confidence %} ({{ game.freshness_confidence }}){% endif %}
+                        {% if game.local_version %} — local {{ game.local_version }}{% endif %}
+                        {% if game.remote_version_summary %} — {{ game.remote_version_summary }}{% endif %}
+                        {% if game.freshness_checked_at %}
+                            <span class="text-muted"> · checked {{ game.freshness_checked_at }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted">Not checked yet.</span>
+                    {% endif %}
+                </div>
+                <pre id="freshness-details" class="game-freshness-details" hidden></pre>
+            </div>
+
             <div class="game-card-topq">
                 <div class="game-card-q1">
                     {# Cover Image #}

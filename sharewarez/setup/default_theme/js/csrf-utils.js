@@ -2,7 +2,7 @@
  * CSRF Token Management Utility
  * 
  * Provides centralized CSRF token retrieval with fallback support
- * for all existing patterns in the SharewareZ application.
+ * for all existing patterns in the GameTheca application.
  * 
  * Usage:
  *   const token = CSRFUtils.getToken();

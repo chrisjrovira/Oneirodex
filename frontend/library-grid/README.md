@@ -1,6 +1,6 @@
 # library-grid
 
-React library browser bundle for GameTheca.
+React library browser bundle for **GameTheca**.
 
 ## Build
 
@@ -9,7 +9,7 @@ npm ci
 npm run build
 ```
 
-Output is written to `sharewarez/static/dist/library-grid/` (see `vite.config.js`).
+Output is written to `sharewarez/static/dist/library-grid/` (Python package path remains `sharewarez/` for now; see `vite.config.js`).
 
 ## Test
 
