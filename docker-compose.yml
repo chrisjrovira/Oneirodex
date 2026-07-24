@@ -13,9 +13,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: chrisjrovira/gametheca:0.1.0
-    container_name: gametheca-app
-    restart: unless-stopped
+    image: gametheca:0.1.0
+    container_name: gametheca-app    restart: unless-stopped
     ports:
       - "5006:5006"
     environment:
