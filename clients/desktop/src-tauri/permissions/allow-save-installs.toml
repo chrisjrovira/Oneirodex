@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-save-installs"
+description = "Allows saving install records to app data."
+commands.allow = ["save_installs"]

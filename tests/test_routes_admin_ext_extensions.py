@@ -1,7 +1,7 @@
 import pytest
 from flask import url_for
-from sharewarez.models import AllowedFileType, User
-from sharewarez import db
+from gametheca.models import AllowedFileType, User
+from gametheca import db
 from uuid import uuid4
 import time
 

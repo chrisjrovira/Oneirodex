@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SharewareZ Game Path Update Script
+GameTheca Game Path Update Script
 
 This script helps update game paths in the database after extracting archives or reorganizing files.
 It preserves all metadata (favorites, ratings, downloads, etc.) while fixing broken paths.
@@ -19,7 +19,7 @@ from difflib import SequenceMatcher
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from config import Config
-from sharewarez.models import Game, Library
+from gametheca.models import Game, Library
 
 # Color codes for terminal output
 class Colors:
@@ -306,7 +306,7 @@ def print_summary(valid_count, invalid_count, updated_count, skipped_count, fail
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Update game paths in SharewareZ database after extracting or reorganizing files.",
+        description="Update game paths in GameTheca database after extracting or reorganizing files.",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
@@ -350,7 +350,7 @@ def main():
     try:
         # Print header
         print(f"\n{Colors.HEADER}{'='*80}{Colors.ENDC}")
-        print(f"{Colors.HEADER}SharewareZ Game Path Update Script{Colors.ENDC}")
+        print(f"{Colors.HEADER}GameTheca Game Path Update Script{Colors.ENDC}")
         print(f"{Colors.HEADER}{'='*80}{Colors.ENDC}\n")
 
         if args.dry_run:

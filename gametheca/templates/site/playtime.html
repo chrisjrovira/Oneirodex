@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ 'css/site/member_hub.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/site/playtime_profile.css'|theme_asset }}">
+<script src="{{ 'js/playtime_profile.js'|theme_asset }}"></script>
+
+<div class="gt-hub gt-playtime">
+    <header class="gt-hub__header">
+        <h1>Playtime</h1>
+        <p class="gt-hub__lede">Your play history and time across the library.</p>
+    </header>
+
+    <section class="gt-playtime__summary" aria-label="Playtime summary">
+        <div class="gt-playtime__stat">
+            <span class="gt-playtime__stat-label">Total playtime</span>
+            <strong id="gt-playtime-total" class="gt-playtime__stat-value">—</strong>
+        </div>
+        <div class="gt-playtime__stat">
+            <span class="gt-playtime__stat-label">Games played</span>
+            <strong id="gt-playtime-game-count" class="gt-playtime__stat-value">—</strong>
+        </div>
+    </section>
+
+    <div id="gt-playtime-games" class="gt-hub__list gt-playtime__list" aria-live="polite">
+        <p class="gt-hub__empty">Loading playtime…</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.GameThecaPlaytimeProfile) {
+    GameThecaPlaytimeProfile.init()
+  }
+})
+</script>
+{% endblock %}

@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-extract-zip"
+description = "Allows extracting downloaded archives."
+commands.allow = ["extract_zip_archive"]

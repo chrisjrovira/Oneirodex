@@ -1,0 +1,491 @@
+/* === LOGIN COMPONENTS === */
+
+.container-buttons-login {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    font-size: var(--font-size-20px);
+    gap: var(--spacing-lg);
+}
+
+/* Game Card Component */
+.game-card-container {
+    position: relative;
+    transition: transform var(--transition-normal);
+}
+
+.game-card {
+    cursor: pointer;
+    transition: transform var(--transition-normal);
+    position: relative;
+    margin: var(--spacing-xs);
+    max-width: 250px;
+    max-height: 332px;
+}
+
+.game-card:hover {
+    transform: scale(1.2);
+    z-index: 6;
+    box-shadow: 10px 10px 15px var(--shadow-dark-strong);
+}
+
+.game-cover {
+    display: block;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    object-fit: cover;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    box-shadow: 5px 5px 9px var(--shadow-dark-strong);
+    border: 1px solid var(--game-border-gray);
+    border-radius: var(--border-radius-xs);
+    max-width: 250px;
+    /* Always show a placeholder so missing/broken covers never leave empty tiles */
+    background-color: var(--bg-dark-secondary, #1a1a22);
+    background-image: url('/static/newstyle/default_cover.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Shimmer Effect */
+.game-cover::before {
+    z-index: 12;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%;
+    visibility: hidden;
+    opacity: 1;
+    pointer-events: none;
+}
+
+.game-card:hover .game-cover::before {
+    animation: shimmerAnimation 1s linear forwards;
+    visibility: visible;
+}
+
+@keyframes shimmerAnimation {
+    0% {
+        background-position: -1000px 0;
+        opacity: 1;
+    }
+    100% {
+        background-position: 1000px 0;
+        opacity: 0;
+    }
+}
+
+/* Popup Menu Button */
+.button-glass-hamburger {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 13;
+    background-color: var(--btn-hamburger-bg);
+    border-radius: 50%;
+    padding: 1px 6px;
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.button-glass-hamburger:hover {
+    background-color: var(--btn-hamburger-hover);
+}
+
+.button-glass-hamburger i {
+    color: var(--text-white);
+}
+
+.game-card:hover .button-glass-hamburger {
+    opacity: 1; 
+}
+
+/* Favorite Button */
+.favorite-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    background-color: var(--btn-hamburger-bg);
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 13;
+}
+
+.favorite-btn i {
+    color: var(--text-white);
+    transition: color 0.3s ease;
+}
+
+.favorite-btn:hover {
+    background-color: var(--btn-hamburger-hover);
+}
+
+.game-card:hover .favorite-btn {
+    opacity: 1;
+}
+
+.favorite-btn.favorited i {
+    color: var(--color-pink-favorite);
+}
+
+.favorite-btn.processing {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* Legacy single badges (kept for non-React pages) */
+.local-metadata-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0, 123, 255, 0.9);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-family: monospace;
+}
+
+.freshness-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 7px;
+    border-radius: 4px;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-family: monospace;
+    letter-spacing: 0.02em;
+}
+
+.freshness-badge--behind {
+    background: rgba(220, 53, 69, 0.92);
+}
+
+.freshness-badge--heuristic {
+    background: rgba(255, 193, 7, 0.92);
+    color: #1a1a1a;
+}
+
+/* GameTheca BadgeStack — Netflix/Roku-style title-card overlays */
+.gt-badge-stack {
+    position: absolute;
+    z-index: 12;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: calc(100% - 16px);
+    pointer-events: none;
+    padding: 2px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.28);
+}
+
+.gt-badge-stack--bottom-left {
+    bottom: 8px;
+    left: 8px;
+    right: auto;
+    top: auto;
+}
+
+.gt-badge-stack--bottom-right {
+    bottom: 8px;
+    right: 8px;
+    left: auto;
+    top: auto;
+}
+
+.gt-badge-stack--top-left {
+    top: 8px;
+    left: 8px;
+    right: auto;
+    bottom: auto;
+}
+
+.gt-badge-stack--top-right {
+    top: 8px;
+    right: 8px;
+    left: auto;
+    bottom: auto;
+}
+
+.gt-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 20px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    color: #fff;
+    text-transform: uppercase;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.gt-badge--danger { background: rgba(196, 48, 43, 0.95); }
+.gt-badge--warn { background: rgba(196, 120, 20, 0.95); }
+.gt-badge--accent { background: rgba(24, 120, 180, 0.95); }
+.gt-badge--info { background: rgba(70, 90, 160, 0.95); }
+.gt-badge--owned { background: rgba(40, 130, 90, 0.95); }
+.gt-badge--muted { background: rgba(70, 70, 80, 0.95); }
+.gt-badge--meta { background: rgba(0, 110, 200, 0.95); }
+.gt-badge--overflow { background: rgba(30, 30, 30, 0.9); }
+
+/* GameTheca GameActionBar */
+.gt-action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.gt-action-bar--compact {
+    gap: 4px;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.gt-action-bar__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.gt-action-bar__btn--primary {
+    background: rgba(40, 120, 200, 0.85);
+    border-color: transparent;
+    color: #fff;
+}
+
+.gt-action-bar__btn--danger {
+    border-color: rgba(200, 60, 60, 0.4);
+}
+
+.gt-action-bar__btn:disabled,
+.gt-action-bar__btn.is-disabled,
+.gt-action-bar__btn[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.menu-item--action-bar {
+    padding: 6px 8px;
+}
+
+.menu-item--action-bar .gt-action-bar__btn {
+    width: 100%;
+}
+
+/* Playtime panel (game details) */
+.gt-playtime {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gt-playtime__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.gt-playtime__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.gt-playtime__live {
+    background: rgba(40, 130, 90, 0.35);
+}
+
+/* Game Info Popup */
+.popup-game-details {
+    position: absolute;
+    top: 0%;
+    z-index: 5;
+    background: var(--pagination-bg);
+    padding: var(--spacing-md);
+    animation: fadein 0.5s;
+    display: none;
+    border-radius: 5px;
+    box-sizing: content-box;
+}
+
+.popup-game-details img {
+    border: 1px solid var(--color-black-pure);
+    width: 300px;
+}
+
+.popup-game-details:not(.hidden) {
+    display: block;
+}
+
+.game-info-box {
+    background: var(--pagination-bg);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    animation: fadein 0.5s;
+    height: 95%;
+}
+
+.game-name {
+    font-size: 1.2rem;
+    color: var(--text-white);
+}
+
+.game-name, .game-size, .game-genres {
+    margin-bottom: 5px;
+    margin-left: 0px;
+}
+
+.chip {
+    display: inline-block;
+    padding: 0 15px;
+    height: 25px;
+    font-size: 0.8rem;
+    line-height: 25px;
+    border-radius: 25px;
+    background-color: var(--chip-bg-dark);
+    color: var(--text-white);
+    margin: 2px;
+    white-space: nowrap;
+}
+
+.file-size-chip {
+    background-color: var(--chip-bg-blue);
+    max-width: 50%;
+    margin-bottom: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+
+.submenu-libraries {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background-color: var(--submenu-bg);
+    box-shadow: 0px 8px 16px 0px var(--bg-dark-tertiary);
+    padding: 8px;
+    z-index: 13;
+    min-width: 150px;
+}
+
+.loading-libraries {
+    padding: 8px;
+    color: var(--color-gray-ddd);
+}
+
+.library-item {
+    padding: 8px;
+    cursor: pointer;
+    color: var(--color-gray-ddd);
+}
+
+.library-item:hover {
+    background-color: var(--submenu-hover);
+}
+
+.move-library-container {
+    position: relative;
+}
+
+/* === IMAGE REFRESH PROGRESS SPINNER === */
+.image-refresh-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-left: 8px;
+    vertical-align: middle;
+    position: relative;
+}
+
+.image-refresh-spinner svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.spinner-circle-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.2);
+    stroke-width: 3;
+}
+
+.spinner-circle-progress {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 62.83;
+    stroke-dashoffset: 62.83;
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.alert-image-refresh {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+.gt-details-react {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.gt-details-react__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.gt-details-react__badges .gt-badge-stack {
+  position: static;
+}

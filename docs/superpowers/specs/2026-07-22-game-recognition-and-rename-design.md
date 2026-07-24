@@ -52,7 +52,7 @@ Reduce bad IGDB matches against real Unraid library naming (FitGirl/HV tags, Ste
 
 ### Cleaning upgrades
 
-Files: primarily `sharewarez/utils/gamenames.py`, seeded/`ReleaseGroup` defaults.
+Files: primarily `gametheca/utils/gamenames.py`, seeded/`ReleaseGroup` defaults.
 
 - Strip bracket tags case-insensitively: `[FitGirl Repack]`, `[FitGirl HV Repack]`, `[Fitgirl Repack]`, similar
 - Extract trailing `(digits)` as `steam_app_id` hint while removing them from the search title
@@ -113,10 +113,10 @@ Batch rename of entire libraries (Phase 3).
 
 ### Format
 
-Extend existing local metadata (`sharewarez.json` via `local_metadata.py`):
+Extend existing local metadata (`gametheca.json` via `local_metadata.py`):
 
 - Confirmed imports keep today’s confirmed fields (`igdb_id`, `manually_verified`, …)
-- Low-confidence / propose-only writes a **proposal** section, or sibling `sharewarez.proposal.json` if required to avoid confusing confirmed metadata:
+- Low-confidence / propose-only writes a **proposal** section, or sibling `gametheca.proposal.json` if required to avoid confusing confirmed metadata:
 
 ```json
 {

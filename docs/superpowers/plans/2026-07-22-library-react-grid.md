@@ -4,7 +4,7 @@
 
 **Goal:** Replace Library SSR/AJAX dual card markup with a React+Vite island so pagination and filters never drift, then remount the same components on Favorites and Discover.
 
-**Architecture:** Flask keeps sidebar/chrome shells. A Vite React app (`frontend/library-grid/`) builds hashed assets into `sharewarez/static/dist/library-grid/`. Track 1a mounts on Library (`#library-grid-root`). Track 1b remounts `GameCard`/`GameGrid` on Favorites and Discover. Browse JSON is the single data source; cover URLs become app-rooted static paths.
+**Architecture:** Flask keeps sidebar/chrome shells. A Vite React app (`frontend/library-grid/`) builds hashed assets into `gametheca/static/dist/library-grid/`. Track 1a mounts on Library (`#library-grid-root`). Track 1b remounts `GameCard`/`GameGrid` on Favorites and Discover. Browse JSON is the single data source; cover URLs become app-rooted static paths.
 
 **Tech Stack:** React 18, Vite, Vitest + Testing Library, Flask, existing `/browse_games` + filter/favorite/status APIs, existing theme CSS variables
 
@@ -27,7 +27,7 @@
 | File | Responsibility |
 |------|----------------|
 | `frontend/library-grid/package.json` | Vite/React/Vitest deps and scripts |
-| `frontend/library-grid/vite.config.js` | Build → `sharewarez/static/dist/library-grid`, base `/static/dist/library-grid/` |
+| `frontend/library-grid/vite.config.js` | Build → `gametheca/static/dist/library-grid`, base `/static/dist/library-grid/` |
 | `frontend/library-grid/index.html` | Vite HTML shell (dev only) |
 | `frontend/library-grid/src/main.jsx` | Boot: read mount node `data-*`, render `LibraryApp` |
 | `frontend/library-grid/src/LibraryApp.jsx` | Filters + grid + pagination state, fetch orchestration |
@@ -39,11 +39,11 @@
 | `frontend/library-grid/src/api/filters.js` | Filter list GETs |
 | `frontend/library-grid/src/utils/cookies.js` | Read/write `libraryFilters` |
 | `frontend/library-grid/src/utils/coverUrl.js` | Normalize cover paths to usable `src` |
-| `sharewarez/static/dist/library-grid/*` | Build output (committed or built in Docker — prefer build in image/CI; commit `.gitkeep` + document) |
-| `sharewarez/routes.py` | `/browse_games`: `url_for` cover URLs + `has_local_override` |
-| `sharewarez/templates/games/library_browser.html` | Mount node; load dist bundle; stop SSR card loop / stop `library_pagination.js` |
-| `sharewarez/templates/games/favorites.html` | 1b mount |
-| `sharewarez/templates/games/discover.html` | 1b mounts per section |
+| `gametheca/static/dist/library-grid/*` | Build output (committed or built in Docker — prefer build in image/CI; commit `.gitkeep` + document) |
+| `gametheca/routes.py` | `/browse_games`: `url_for` cover URLs + `has_local_override` |
+| `gametheca/templates/games/library_browser.html` | Mount node; load dist bundle; stop SSR card loop / stop `library_pagination.js` |
+| `gametheca/templates/games/favorites.html` | 1b mount |
+| `gametheca/templates/games/discover.html` | 1b mounts per section |
 | `frontend/library-grid/src/**/*.test.jsx` | Vitest unit/integration |
 | `tests/test_routes.py` | Browse payload contract (`cover_url`, `has_local_override`, `is_vr`) |
 | `Dockerfile` / `entrypoint` / docs | Ensure `npm ci && npm run build` before app start (or multi-stage copy) |
@@ -59,11 +59,11 @@
 - Create: `frontend/library-grid/src/main.jsx`
 - Create: `frontend/library-grid/src/AppSmoke.jsx`
 - Create: `frontend/library-grid/src/AppSmoke.test.jsx`
-- Create: `sharewarez/static/dist/library-grid/.gitkeep`
+- Create: `gametheca/static/dist/library-grid/.gitkeep`
 
 **Interfaces:**
 - Consumes: none
-- Produces: `npm run build` writes `sharewarez/static/dist/library-grid/library-grid.js` (+ css); `npm test` runs Vitest
+- Produces: `npm run build` writes `gametheca/static/dist/library-grid/library-grid.js` (+ css); `npm test` runs Vitest
 
 - [ ] **Step 1: Write the failing smoke test**
 
@@ -100,7 +100,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/static/dist/library-grid/',
   build: {
-    outDir: path.resolve(__dirname, '../../sharewarez/static/dist/library-grid'),
+    outDir: path.resolve(__dirname, '../../gametheca/static/dist/library-grid'),
     emptyOutDir: true,
     rollupOptions: {
       input: path.resolve(__dirname, 'index.html'),
@@ -124,12 +124,12 @@ export default defineConfig({
 - [ ] **Step 4: Run tests and build**
 
 Run: `cd frontend/library-grid && npm test -- --run && npm run build`
-Expected: PASS; `sharewarez/static/dist/library-grid/library-grid.js` exists
+Expected: PASS; `gametheca/static/dist/library-grid/library-grid.js` exists
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add frontend/library-grid sharewarez/static/dist/library-grid/.gitkeep
+git add frontend/library-grid gametheca/static/dist/library-grid/.gitkeep
 git commit -m "Scaffold library-grid Vite React app with Vitest smoke test."
 ```
 
@@ -138,8 +138,8 @@ git commit -m "Scaffold library-grid Vite React app with Vitest smoke test."
 ### Task 2: Browse JSON contract — cover URL + local override flag
 
 **Files:**
-- Modify: `sharewarez/routes.py` (`browse_games`)
-- Modify: `sharewarez/routes_library.py` (`get_games`) — keep SSR/initial payload aligned if still used
+- Modify: `gametheca/routes.py` (`browse_games`)
+- Modify: `gametheca/routes_library.py` (`get_games`) — keep SSR/initial payload aligned if still used
 - Test: `tests/test_routes.py`
 
 **Interfaces:**
@@ -227,7 +227,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add sharewarez/routes.py sharewarez/routes_library.py tests/test_routes.py
+git add gametheca/routes.py gametheca/routes_library.py tests/test_routes.py
 git commit -m "Stabilize browse_games cover URLs and card flags for React grid."
 ```
 
@@ -409,8 +409,8 @@ git commit -m "Add LibraryApp grid pagination with stale-fetch abort."
 - Create: `frontend/library-grid/src/api/filters.js`
 - Create: `frontend/library-grid/src/utils/cookies.js`
 - Modify: `frontend/library-grid/src/main.jsx`
-- Modify: `sharewarez/templates/games/library_browser.html`
-- Modify: `sharewarez/templates/games/library_filters.html` (optional: empty mount host if filters move fully into React)
+- Modify: `gametheca/templates/games/library_browser.html`
+- Modify: `gametheca/templates/games/library_filters.html` (optional: empty mount host if filters move fully into React)
 
 **Interfaces:**
 - Consumes: `/api/get_libraries`, `/api/library_platforms`, `/api/igdb_platforms`, `/api/genres`, `/api/themes`, `/api/game_modes`, `/api/player_perspectives`
@@ -466,7 +466,7 @@ Manual:
 - [ ] **Step 5: Commit**
 
 ```bash
-git add frontend/library-grid sharewarez/templates/games/library_browser.html sharewarez/templates/games/library_filters.html sharewarez/static/dist/library-grid
+git add frontend/library-grid gametheca/templates/games/library_browser.html gametheca/templates/games/library_filters.html gametheca/static/dist/library-grid
 git commit -m "Mount library-grid React island on Library browser."
 ```
 
@@ -515,7 +515,7 @@ RUN npm ci
 COPY frontend/library-grid/ ./
 RUN npm run build
 # later stage:
-COPY --from=library-grid-build /src/../../sharewarez/static/dist/library-grid /app/sharewarez/static/dist/library-grid
+COPY --from=library-grid-build /src/../../gametheca/static/dist/library-grid /app/gametheca/static/dist/library-grid
 ```
 
 Fix paths to match actual build `outDir`.
@@ -534,7 +534,7 @@ git commit -m "Build library-grid assets in Docker image."
 
 **Files:**
 - Modify: `frontend/library-grid/src/FavoritesApp.jsx` (or `mode` prop on shared app)
-- Modify: `sharewarez/templates/games/favorites.html`
+- Modify: `gametheca/templates/games/favorites.html`
 - Add JSON endpoint if favorites are SSR-only today — prefer `GET /api/favorites` returning same card shape; implement + pytest if missing
 
 - [ ] **Step 1: Discover current favorites data path; write failing API or adapter test**
@@ -554,7 +554,7 @@ git commit -m "Mount shared GameGrid on Favorites page."
 ### Task 9: Track 1b — Discover section mounts
 
 **Files:**
-- Modify: `sharewarez/templates/games/discover.html`
+- Modify: `gametheca/templates/games/discover.html`
 - Modify: `frontend/library-grid/src/DiscoverApp.jsx`
 - Align discover section APIs / embedded JSON to card shape (`cover_url`, flags)
 
@@ -619,4 +619,4 @@ git commit -m "Remove legacy Library pagination card builders after React island
 
 ## Placeholder scan
 
-No TBD/TODO left in task steps; Dockerfile path note says “fix to match outDir” — implementer must align COPY path with `vite.config.js` `outDir` from Task 1 (absolute under `sharewarez/static/dist/library-grid`).
+No TBD/TODO left in task steps; Dockerfile path note says “fix to match outDir” — implementer must align COPY path with `vite.config.js` `outDir` from Task 1 (absolute under `gametheca/static/dist/library-grid`).

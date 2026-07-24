@@ -32,14 +32,14 @@ if "%FORCE_SETUP%"=="true" (
     echo [~] Force setup mode - resetting database...
 
     REM Environment variables are already loaded from .env file above
-    python -c "from sharewarez import create_app, db; from sharewarez.utils.setup import reset_setup_state; app = create_app(); app.app_context().push(); print('Dropping all tables...'); db.drop_all(); print('Recreating all tables...'); db.create_all(); print('Database reset complete.'); reset_setup_state(); print('Setup state reset - setup wizard will run on next startup'); print('Database reset complete. Run startweb_windows.cmd to start the server.')"
+    python -c "from gametheca import create_app, db; from gametheca.utils.setup import reset_setup_state; app = create_app(); app.app_context().push(); print('Dropping all tables...'); db.drop_all(); print('Recreating all tables...'); db.create_all(); print('Database reset complete.'); reset_setup_state(); print('Setup state reset - setup wizard will run on next startup'); print('Database reset complete. Run startweb_windows.cmd to start the server.')"
     exit /b 0
 )
 
 echo Starting GameTheca with uvicorn...
 
 REM Run complete startup initialization once before starting workers
-python -c "from sharewarez.init_manager import run_complete_startup_initialization; import sys; print('[*] Starting GameTheca initialization...'); result = run_complete_startup_initialization(); print('[+] Initialization completed - starting workers...' if result else '[-] Startup initialization failed!'); sys.exit(0 if result else 1)"
+python -c "from gametheca.init_manager import run_complete_startup_initialization; import sys; print('[*] Starting GameTheca initialization...'); result = run_complete_startup_initialization(); print('[+] Initialization completed - starting workers...' if result else '[-] Startup initialization failed!'); sys.exit(0 if result else 1)"
 
 if %errorlevel% neq 0 (
     echo [-] Startup initialization failed!
@@ -47,8 +47,8 @@ if %errorlevel% neq 0 (
 )
 
 REM Ensure environment variables are set for worker processes
-set SHAREWAREZ_MIGRATIONS_COMPLETE=true
-set SHAREWAREZ_INITIALIZATION_COMPLETE=true
+set GAMETHECA_MIGRATIONS_COMPLETE=true
+set GAMETHECA_INITIALIZATION_COMPLETE=true
 
 REM Set port for uvicorn (default 5006, can be overridden by PORT env var)
 if not defined PORT set PORT=5006

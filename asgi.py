@@ -1,5 +1,5 @@
 """
-ASGI config for SharewareZ production deployment.
+ASGI config for GameTheca production deployment.
 This file wraps the Flask app to be compatible with ASGI servers like uvicorn
 and provides async file streaming for downloads.
 """
@@ -10,11 +10,11 @@ import json
 import uuid
 from asgiref.wsgi import WsgiToAsgi
 
-from sharewarez import create_app, db
-from sharewarez.models import DownloadRequest, Game
-from sharewarez.async_streaming import create_async_streaming_response, async_generate_zipstream_response
-from sharewarez.utils.security import is_safe_path, get_allowed_base_directories
-from sharewarez.utils.event_logging import log_system_event
+from gametheca import create_app, db
+from gametheca.models import DownloadRequest, Game
+from gametheca.async_streaming import create_async_streaming_response, async_generate_zipstream_response
+from gametheca.utils.security import is_safe_path, get_allowed_base_directories
+from gametheca.utils.event_logging import log_system_event
 from sqlalchemy import select
 
 
@@ -101,8 +101,8 @@ class LazyASGIApp:
         
         download_id = int(download_id_match.group(1))
         
-        # Get user from session
-        user_id = await self._get_user_from_session(scope)
+        # Get user from session or Bearer token
+        user_id = await self._get_user_id(scope)
         if not user_id:
             await self._send_error(send, 401, "Unauthorized")
             return
@@ -169,8 +169,8 @@ class LazyASGIApp:
             await self._send_error(send, 400, "Invalid game identifier")
             return
         
-        # Get user from session
-        user_id = await self._get_user_from_session(scope)
+        # Get user from session or Bearer token
+        user_id = await self._get_user_id(scope)
         if not user_id:
             await self._send_error(send, 401, "Unauthorized")
             return
@@ -202,17 +202,52 @@ class LazyASGIApp:
                 await self._send_error(send, 403, "Access denied")
                 return
             
-            # Check if it's a folder (not supported by WebRetro)
-            if os.path.isdir(game.full_disk_path):
-                await self._send_error(send, 400, "This game is a folder and cannot be played directly")
+            # Resolve plain ROM or zip archive (WebRetro cannot ingest folders directly)
+            from gametheca.utils.rom_archive import ArchiveRomError, resolve_playable_rom_path
+
+            cache_dir = os.path.join(
+                self._flask_app.root_path,
+                'static',
+                'library',
+                'rom_cache',
+                game_uuid,
+            )
+            try:
+                rom_path, filename = resolve_playable_rom_path(
+                    game.full_disk_path,
+                    cache_dir=cache_dir,
+                )
+            except ArchiveRomError as exc:
+                log_system_event(
+                    f"ROM resolve failed for {game.name}: {exc.message}",
+                    event_type='download',
+                    event_level='warning',
+                )
+                await self._send_error(send, exc.status_code, exc.message)
                 return
-            
-            # Stream the file
-            filename = os.path.basename(game.full_disk_path)
+
             log_system_event(f"ROM file downloaded for WebRetro: {game.name}", 
                            event_type='download', event_level='information')
-            await self._stream_file(send, game.full_disk_path, filename)
+            await self._stream_file(send, rom_path, filename)
     
+    async def _get_user_id(self, scope):
+        """Resolve user id from Bearer token (API clients) or Flask session cookie (web)."""
+        headers = dict(scope.get("headers", []))
+        auth_header = headers.get(b"authorization", b"").decode("utf-8")
+        if auth_header.lower().startswith("bearer "):
+            if self._flask_app is None:
+                self._flask_app = create_app()
+            with self._flask_app.app_context():
+                from gametheca.utils.api_tokens import verify_bearer_token
+
+                raw = auth_header.split(" ", 1)[1].strip()
+                user, token = verify_bearer_token(raw)
+                if user and token and token.has_scope('write:download'):
+                    return user.id
+            return None
+
+        return await self._get_user_from_session(scope)
+
     async def _get_user_from_session(self, scope):
         """Extract user ID from Flask session cookie"""
         headers = dict(scope.get("headers", []))
@@ -419,7 +454,7 @@ class LazyASGIApp:
             # Application is starting up
             try:
                 # Register graceful shutdown handlers
-                from sharewarez.utils.shutdown import register_shutdown_handlers
+                from gametheca.utils.shutdown import register_shutdown_handlers
                 register_shutdown_handlers()
                 await send({"type": "lifespan.startup.complete"})
             except Exception as e:
@@ -430,7 +465,7 @@ class LazyASGIApp:
             # Application is shutting down
             try:
                 # Request graceful shutdown
-                from sharewarez.utils.shutdown import request_shutdown
+                from gametheca.utils.shutdown import request_shutdown
                 request_shutdown()
                 print("🛑 ASGI lifespan shutdown initiated")
                 await send({"type": "lifespan.shutdown.complete"})

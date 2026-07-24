@@ -1,4 +1,4 @@
-__pycache__
+﻿__pycache__
 config.portainer
 config.backup
 config.py.backup
@@ -10,8 +10,8 @@ app.db
 instance/app.db
 /logs/*
 /logs
-sharewarez/static/library/images
-/sharewarez/static/images/*.jpg
+gametheca/static/library/images
+/gametheca/static/images/*.jpg
 /venv
 /.venv
 /.codebuddy
@@ -19,7 +19,7 @@ sharewarez/static/library/images
 .codebuddy
 /.git
 /.github
-/sharewarez/static/library/zips/
+/gametheca/static/library/zips/
 CLAUDE.md
 /.claude/*
 .claude/settings.local.json
@@ -62,17 +62,15 @@ logs/
 # Node
 node_modules/
 
-# Development
-.git/
-.gitignore
-.github/
+# Development / scratch (do not ignore real project docs or CI)
 .claude/
 .codebuddy/
 CLAUDE.md
 letsrebuild.md
-*.md
-!README.md
-.vscode
+# Root-only scratch markdown; keep README, CHANGELOG, and all docs/
+/*.md
+!/README.md
+!/CHANGELOG.md
 
 # IDE
 .vscode/
@@ -87,9 +85,9 @@ letsrebuild.md
 htmlcov/
 
 # Static uploads and generated files (these should be mounted as volumes or generated)
-sharewarez/static/library/images/
-sharewarez/static/library/zips/
-sharewarez/static/library/themes/
+gametheca/static/library/images/
+gametheca/static/library/zips/
+gametheca/static/library/themes/
 
 # Docker library host path (default mount point for persistent library data)
 data/

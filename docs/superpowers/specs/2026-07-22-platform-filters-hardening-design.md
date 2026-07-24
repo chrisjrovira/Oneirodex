@@ -117,7 +117,7 @@ Reject `../`, absolute paths outside bases, null-byte/odd input; accept a path u
 
 ### Scope
 
-`sharewarez/utils/secondary_scrapers.py` (Steam + RAWG). IGDB client unchanged unless it already shares the same HTTP helper.
+`gametheca/utils/secondary_scrapers.py` (Steam + RAWG). IGDB client unchanged unless it already shares the same HTTP helper.
 
 ### Approach
 
@@ -225,6 +225,6 @@ Browse JSON `cover_url` uses Flask static URL shape; default cover correct when 
 ## Architecture Notes
 
 - Follow existing filter patterns (`routes_apis/filters.py`, `populateDropdown`)
-- Reuse `sharewarez/utils/security.py` for path checks
+- Reuse `gametheca/utils/security.py` for path checks
 - Keep scraper and savepoint helpers small and single-purpose
 - Targeted cleanup only where it blocks the phase (e.g. broken `platform_id` join)

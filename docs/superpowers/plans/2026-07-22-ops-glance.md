@@ -4,7 +4,7 @@
 
 **Goal:** Ship an admin Ops glance at `/admin/ops` with a hybrid Jinja shell + React tile board that auto-polls a single aggregate JSON summary (host, network, issues, scans, library pulse, recent errors).
 
-**Architecture:** Flask `info_bp` serves the page and `GET /admin/api/ops/summary`. `sharewarez/utils/ops_summary.py` composes existing system/status/uptime helpers plus new network counters and issue rules. Vite React app `frontend/ops-glance/` builds to `sharewarez/static/dist/ops-glance/`. Docker Node stage builds both `library-grid` and `ops-glance`.
+**Architecture:** Flask `info_bp` serves the page and `GET /admin/api/ops/summary`. `gametheca/utils/ops_summary.py` composes existing system/status/uptime helpers plus new network counters and issue rules. Vite React app `frontend/ops-glance/` builds to `gametheca/static/dist/ops-glance/`. Docker Node stage builds both `library-grid` and `ops-glance`.
 
 **Tech Stack:** React 19, Vite 6, Vitest + Testing Library, Flask, psutil, existing admin glass CSS
 
@@ -27,15 +27,15 @@
 
 | File | Responsibility |
 |------|----------------|
-| `sharewarez/utils/ops_network.py` | `get_network_stats()` via psutil |
-| `sharewarez/utils/ops_issues.py` | Pure `derive_issues(host, config, scans, recent_error_count)` |
-| `sharewarez/utils/ops_summary.py` | `build_ops_summary()` aggregate snapshot |
-| `sharewarez/routes_info.py` | `GET /admin/ops`, `GET /admin/api/ops/summary` |
-| `sharewarez/templates/admin/admin_ops.html` | Jinja shell + `#ops-glance-root` |
-| `sharewarez/templates/admin/admin_dashboard.html` | Ops button under Server Management |
-| `sharewarez/setup/default_theme/css/admin/admin_ops.css` | Layout for panels |
+| `gametheca/utils/ops_network.py` | `get_network_stats()` via psutil |
+| `gametheca/utils/ops_issues.py` | Pure `derive_issues(host, config, scans, recent_error_count)` |
+| `gametheca/utils/ops_summary.py` | `build_ops_summary()` aggregate snapshot |
+| `gametheca/routes_info.py` | `GET /admin/ops`, `GET /admin/api/ops/summary` |
+| `gametheca/templates/admin/admin_ops.html` | Jinja shell + `#ops-glance-root` |
+| `gametheca/templates/admin/admin_dashboard.html` | Ops button under Server Management |
+| `gametheca/setup/default_theme/css/admin/admin_ops.css` | Layout for panels |
 | `frontend/ops-glance/*` | Vite React island |
-| `sharewarez/static/dist/ops-glance/*` | Build output |
+| `gametheca/static/dist/ops-glance/*` | Build output |
 | `Dockerfile` | Build both library-grid and ops-glance |
 | `tests/test_utils_ops_issues.py` | Issue rule unit tests |
 | `tests/test_utils_ops_network.py` | Network helper unit tests |
@@ -47,7 +47,7 @@
 ### Task 1: Issue derivation rules (pure)
 
 **Files:**
-- Create: `sharewarez/utils/ops_issues.py`
+- Create: `gametheca/utils/ops_issues.py`
 - Create: `tests/test_utils_ops_issues.py`
 
 **Interfaces:**
@@ -60,7 +60,7 @@
 
 ```python
 # tests/test_utils_ops_issues.py
-from sharewarez.utils.ops_issues import derive_issues
+from gametheca.utils.ops_issues import derive_issues
 
 def test_good_when_healthy():
     result = derive_issues(
@@ -124,7 +124,7 @@ Expected: FAIL — module not found
 - [ ] **Step 3: Implement**
 
 ```python
-# sharewarez/utils/ops_issues.py
+# gametheca/utils/ops_issues.py
 SEVERITY_RANK = {'good': 0, 'warn': 1, 'bad': 2}
 
 
@@ -194,7 +194,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add sharewarez/utils/ops_issues.py tests/test_utils_ops_issues.py
+git add gametheca/utils/ops_issues.py tests/test_utils_ops_issues.py
 git commit -m "feat: add ops glance issue derivation rules"
 ```
 
@@ -203,7 +203,7 @@ git commit -m "feat: add ops glance issue derivation rules"
 ### Task 2: Network stats helper
 
 **Files:**
-- Create: `sharewarez/utils/ops_network.py`
+- Create: `gametheca/utils/ops_network.py`
 - Create: `tests/test_utils_ops_network.py`
 
 **Interfaces:**
@@ -215,7 +215,7 @@ git commit -m "feat: add ops glance issue derivation rules"
 ```python
 # tests/test_utils_ops_network.py
 from unittest.mock import MagicMock, patch
-from sharewarez.utils.ops_network import get_network_stats
+from gametheca.utils.ops_network import get_network_stats
 
 
 def test_get_network_stats_shape():
@@ -223,7 +223,7 @@ def test_get_network_stats_shape():
         bytes_sent=1, bytes_recv=2, packets_sent=3, packets_recv=4,
         errin=0, errout=0, dropin=0, dropout=0,
     )
-    with patch('sharewarez.utils.ops_network.psutil') as mock_psutil:
+    with patch('gametheca.utils.ops_network.psutil') as mock_psutil:
         mock_psutil.net_io_counters.return_value = counters
         mock_psutil.net_connections.return_value = [1, 2, 3]
         result = get_network_stats()
@@ -232,7 +232,7 @@ def test_get_network_stats_shape():
 
 
 def test_get_network_stats_returns_none_on_failure():
-    with patch('sharewarez.utils.ops_network.psutil') as mock_psutil:
+    with patch('gametheca.utils.ops_network.psutil') as mock_psutil:
         mock_psutil.net_io_counters.side_effect = OSError('denied')
         assert get_network_stats() is None
 ```
@@ -244,7 +244,7 @@ Run: `python -m pytest tests/test_utils_ops_network.py -v --timeout=30`
 - [ ] **Step 3: Implement**
 
 ```python
-# sharewarez/utils/ops_network.py
+# gametheca/utils/ops_network.py
 import psutil
 
 
@@ -275,7 +275,7 @@ def get_network_stats():
 - [ ] **Step 5: Commit**
 
 ```bash
-git add sharewarez/utils/ops_network.py tests/test_utils_ops_network.py
+git add gametheca/utils/ops_network.py tests/test_utils_ops_network.py
 git commit -m "feat: add ops network stats helper"
 ```
 
@@ -284,7 +284,7 @@ git commit -m "feat: add ops network stats helper"
 ### Task 3: `build_ops_summary` aggregator
 
 **Files:**
-- Create: `sharewarez/utils/ops_summary.py`
+- Create: `gametheca/utils/ops_summary.py`
 - Create: `tests/test_utils_ops_summary.py`
 
 **Interfaces:**
@@ -300,19 +300,19 @@ from datetime import datetime, timezone
 
 
 def test_build_ops_summary_includes_required_keys():
-    with patch('sharewarez.utils.ops_summary.get_cpu_usage', return_value={'percent': 1, 'cores_physical': 2, 'cores_logical': 4}), \
-         patch('sharewarez.utils.ops_summary.get_memory_usage', return_value={'total': 8, 'used': 4, 'available': 4, 'percent': 50}), \
-         patch('sharewarez.utils.ops_summary.get_disk_usage', return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40}), \
-         patch('sharewarez.utils.ops_summary.get_warez_folder_usage', return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40}), \
-         patch('sharewarez.utils.ops_summary.get_system_info', return_value={'Operating System': 'Linux', 'Hostname': 'h', 'IP Address': '1.2.3.4', 'Python Version': '3.12'}), \
-         patch('sharewarez.utils.ops_summary.get_config_values', return_value={}), \
-         patch('sharewarez.utils.ops_summary.get_formatted_system_uptime', return_value='1h'), \
-         patch('sharewarez.utils.ops_summary.get_formatted_app_uptime', return_value='1h'), \
-         patch('sharewarez.utils.ops_summary.get_network_stats', return_value={'bytes_sent': 0, 'bytes_recv': 0, 'packets_sent': 0, 'packets_recv': 0, 'errin': 0, 'errout': 0, 'dropin': 0, 'dropout': 0, 'connections': 0}), \
-         patch('sharewarez.utils.ops_summary._library_pulse', return_value={'libraries': 1, 'games': 2, 'unmatched_folders': 0, 'download_requests_open': 0}), \
-         patch('sharewarez.utils.ops_summary._scan_snapshot', return_value={'active_count': 0, 'jobs': [], 'failure_count': 0}), \
-         patch('sharewarez.utils.ops_summary._recent_errors', return_value=([], 0)):
-        from sharewarez.utils.ops_summary import build_ops_summary
+    with patch('gametheca.utils.ops_summary.get_cpu_usage', return_value={'percent': 1, 'cores_physical': 2, 'cores_logical': 4}), \
+         patch('gametheca.utils.ops_summary.get_memory_usage', return_value={'total': 8, 'used': 4, 'available': 4, 'percent': 50}), \
+         patch('gametheca.utils.ops_summary.get_disk_usage', return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40}), \
+         patch('gametheca.utils.ops_summary.get_warez_folder_usage', return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40}), \
+         patch('gametheca.utils.ops_summary.get_system_info', return_value={'Operating System': 'Linux', 'Hostname': 'h', 'IP Address': '1.2.3.4', 'Python Version': '3.12'}), \
+         patch('gametheca.utils.ops_summary.get_config_values', return_value={}), \
+         patch('gametheca.utils.ops_summary.get_formatted_system_uptime', return_value='1h'), \
+         patch('gametheca.utils.ops_summary.get_formatted_app_uptime', return_value='1h'), \
+         patch('gametheca.utils.ops_summary.get_network_stats', return_value={'bytes_sent': 0, 'bytes_recv': 0, 'packets_sent': 0, 'packets_recv': 0, 'errin': 0, 'errout': 0, 'dropin': 0, 'dropout': 0, 'connections': 0}), \
+         patch('gametheca.utils.ops_summary._library_pulse', return_value={'libraries': 1, 'games': 2, 'unmatched_folders': 0, 'download_requests_open': 0}), \
+         patch('gametheca.utils.ops_summary._scan_snapshot', return_value={'active_count': 0, 'jobs': [], 'failure_count': 0}), \
+         patch('gametheca.utils.ops_summary._recent_errors', return_value=([], 0)):
+        from gametheca.utils.ops_summary import build_ops_summary
         result = build_ops_summary(datetime.now(timezone.utc))
     assert set(result.keys()) >= {'as_of', 'host', 'network', 'issues', 'scans', 'library', 'recent_errors'}
     assert result['issues']['overall'] == 'good'
@@ -337,7 +337,7 @@ Do **not** import Flask request/app globally beyond what sibling utils already d
 - [ ] **Step 5: Commit**
 
 ```bash
-git add sharewarez/utils/ops_summary.py tests/test_utils_ops_summary.py
+git add gametheca/utils/ops_summary.py tests/test_utils_ops_summary.py
 git commit -m "feat: add ops summary aggregator"
 ```
 
@@ -346,9 +346,9 @@ git commit -m "feat: add ops summary aggregator"
 ### Task 4: Flask routes + dashboard link + page shell
 
 **Files:**
-- Modify: `sharewarez/routes_info.py`
-- Create: `sharewarez/templates/admin/admin_ops.html`
-- Modify: `sharewarez/templates/admin/admin_dashboard.html` (insert Ops button before Statistics)
+- Modify: `gametheca/routes_info.py`
+- Create: `gametheca/templates/admin/admin_ops.html`
+- Modify: `gametheca/templates/admin/admin_dashboard.html` (insert Ops button before Statistics)
 - Create: `tests/test_routes_ops.py` (pure function / app fixture; if DB hangs, keep a non-DB unit that imports views)
 
 **Interfaces:**
@@ -359,9 +359,9 @@ git commit -m "feat: add ops summary aggregator"
 - [ ] **Step 1: Add routes**
 
 ```python
-# append to sharewarez/routes_info.py
+# append to gametheca/routes_info.py
 from flask import jsonify
-from sharewarez.utils.ops_summary import build_ops_summary
+from gametheca.utils.ops_summary import build_ops_summary
 
 @info_bp.route('/admin/ops')
 @login_required
@@ -432,7 +432,7 @@ If pytest collection hangs on DB fixtures, document and keep auth redirect asser
 - [ ] **Step 5: Commit**
 
 ```bash
-git add sharewarez/routes_info.py sharewarez/templates/admin/admin_ops.html sharewarez/templates/admin/admin_dashboard.html tests/test_routes_ops.py
+git add gametheca/routes_info.py gametheca/templates/admin/admin_ops.html gametheca/templates/admin/admin_dashboard.html tests/test_routes_ops.py
 git commit -m "feat: add /admin/ops page and summary API"
 ```
 
@@ -442,16 +442,16 @@ git commit -m "feat: add /admin/ops page and summary API"
 
 **Files:**
 - Create: `frontend/ops-glance/package.json` (mirror `library-grid` deps)
-- Create: `frontend/ops-glance/vite.config.js` (base `/static/dist/ops-glance/`, outDir `../../sharewarez/static/dist/ops-glance`, entry `ops-glance.js`)
+- Create: `frontend/ops-glance/vite.config.js` (base `/static/dist/ops-glance/`, outDir `../../gametheca/static/dist/ops-glance`, entry `ops-glance.js`)
 - Create: `frontend/ops-glance/index.html`
 - Create: `frontend/ops-glance/src/main.jsx`
 - Create: `frontend/ops-glance/src/AppSmoke.jsx`
 - Create: `frontend/ops-glance/src/AppSmoke.test.jsx`
 - Create: `frontend/ops-glance/src/testSetup.js` (`import '@testing-library/jest-dom'`)
-- Create: `sharewarez/static/dist/ops-glance/.gitkeep`
+- Create: `gametheca/static/dist/ops-glance/.gitkeep`
 
 **Interfaces:**
-- Produces: `npm run build` → `sharewarez/static/dist/ops-glance/ops-glance.js`
+- Produces: `npm run build` → `gametheca/static/dist/ops-glance/ops-glance.js`
 
 - [ ] **Step 1: Smoke test**
 
@@ -472,7 +472,7 @@ test('renders ops glance smoke marker', () => {
 - [ ] **Step 4: Commit**
 
 ```bash
-git add frontend/ops-glance sharewarez/static/dist/ops-glance .gitignore
+git add frontend/ops-glance gametheca/static/dist/ops-glance .gitignore
 git commit -m "chore: scaffold ops-glance Vite React app"
 ```
 
@@ -534,7 +534,7 @@ export async function fetchOpsSummary({ signal } = {}) {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add frontend/ops-glance sharewarez/static/dist/ops-glance
+git add frontend/ops-glance gametheca/static/dist/ops-glance
 git commit -m "feat: add OpsApp live tile board"
 ```
 
@@ -543,8 +543,8 @@ git commit -m "feat: add OpsApp live tile board"
 ### Task 7: Ops CSS + wire template polish
 
 **Files:**
-- Create: `sharewarez/setup/default_theme/css/admin/admin_ops.css`
-- Modify: `sharewarez/templates/admin/admin_ops.html` if needed (deep-link note that React owns links)
+- Create: `gametheca/setup/default_theme/css/admin/admin_ops.css`
+- Modify: `gametheca/templates/admin/admin_ops.html` if needed (deep-link note that React owns links)
 
 **CSS requirements:**
 - `.ops-grid` CSS grid 2 columns desktop / 1 column mobile
@@ -556,7 +556,7 @@ git commit -m "feat: add OpsApp live tile board"
 - [ ] **Step 2: Manual visual check optional; commit**
 
 ```bash
-git add sharewarez/setup/default_theme/css/admin/admin_ops.css sharewarez/templates/admin/admin_ops.html
+git add gametheca/setup/default_theme/css/admin/admin_ops.css gametheca/templates/admin/admin_ops.html
 git commit -m "style: add ops glance layout CSS"
 ```
 
@@ -580,21 +580,21 @@ COPY frontend/library-grid/package*.json frontend/library-grid/
 WORKDIR /build/frontend/library-grid
 RUN npm ci
 COPY frontend/library-grid/ .
-RUN mkdir -p ../../sharewarez/static/dist/library-grid && npm run build
+RUN mkdir -p ../../gametheca/static/dist/library-grid && npm run build
 
 WORKDIR /build
 COPY frontend/ops-glance/package*.json frontend/ops-glance/
 WORKDIR /build/frontend/ops-glance
 RUN npm ci
 COPY frontend/ops-glance/ .
-RUN mkdir -p ../../sharewarez/static/dist/ops-glance && npm run build
+RUN mkdir -p ../../gametheca/static/dist/ops-glance && npm run build
 
 FROM python:3.12-slim
 WORKDIR /app
 # ... existing apt/pip ...
 COPY . .
-COPY --from=frontend-build /build/sharewarez/static/dist/library-grid /app/sharewarez/static/dist/library-grid
-COPY --from=frontend-build /build/sharewarez/static/dist/ops-glance /app/sharewarez/static/dist/ops-glance
+COPY --from=frontend-build /build/gametheca/static/dist/library-grid /app/gametheca/static/dist/library-grid
+COPY --from=frontend-build /build/gametheca/static/dist/ops-glance /app/gametheca/static/dist/ops-glance
 # ... rest unchanged ...
 ```
 

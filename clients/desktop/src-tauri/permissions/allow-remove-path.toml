@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-remove-path"
+description = "Allows deleting local install files."
+commands.allow = ["remove_path"]

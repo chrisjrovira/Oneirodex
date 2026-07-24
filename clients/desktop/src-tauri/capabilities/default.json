@@ -1,0 +1,22 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default capability for the main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:path:default",
+    "allow-load-config",
+    "allow-save-config",
+    "allow-load-lifecycle-registry",
+    "allow-save-lifecycle-registry",
+    "allow-load-installs",
+    "allow-save-installs",
+    "allow-get-app-subdir",
+    "allow-write-file-bytes",
+    "allow-extract-zip",
+    "allow-remove-path",
+    "allow-launch-game",
+    "allow-is-process-running"
+  ]
+}

@@ -9,7 +9,7 @@ npm ci
 npm run build
 ```
 
-Output is written to `sharewarez/static/dist/library-grid/` (Python package path remains `sharewarez/` for now; see `vite.config.js`).
+Output is written to `gametheca/static/dist/library-grid/` (see `vite.config.js`).
 
 ## Test
 
@@ -19,4 +19,4 @@ npm test
 
 ## Docker
 
-The root `Dockerfile` builds this bundle in a `library-grid-build` stage and copies the result into the Python image at `/app/sharewarez/static/dist/library-grid`.
+The root `Dockerfile` builds this bundle in a `library-grid-build` stage and copies the result into the Python image at `/app/gametheca/static/dist/library-grid`.

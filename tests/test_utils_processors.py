@@ -2,10 +2,10 @@ import pytest
 import json
 from unittest.mock import patch, mock_open, MagicMock
 from sqlalchemy import delete
-from sharewarez import create_app, db
-from sharewarez.models import GlobalSettings
-from sharewarez.utils.processors import get_loc, get_global_settings
-from sharewarez import app_version
+from gametheca import create_app, db
+from gametheca.models import GlobalSettings
+from gametheca.utils.processors import get_loc, get_global_settings
+from gametheca import app_version
 
 
 class TestGetLoc:
@@ -70,7 +70,7 @@ class TestGetLoc:
         with patch('builtins.open', mock_open(read_data=json.dumps(mock_data))) as mock_file:
             get_loc('test_page')
             mock_file.assert_called_once_with(
-                'sharewarez/static/localization/en/test_page.json', 
+                'gametheca/static/localization/en/test_page.json', 
                 'r', 
                 encoding='utf8'
             )

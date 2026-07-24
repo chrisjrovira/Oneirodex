@@ -1,6 +1,6 @@
 """Tests for library doctor dry-run helpers (no DB / no network)."""
 
-from sharewarez.utils.library_doctor import iter_game_folders, dry_run_folder, doctor_dry_run, doctor_write_proposals
+from gametheca.utils.library_doctor import iter_game_folders, dry_run_folder, doctor_dry_run, doctor_write_proposals
 
 
 def test_iter_game_folders_flat(tmp_path):
@@ -59,7 +59,7 @@ def test_doctor_write_proposals(tmp_path):
 
 
 def test_doctor_apply_renames(tmp_path):
-    from sharewarez.utils.library_doctor import doctor_apply_renames
+    from gametheca.utils.library_doctor import doctor_apply_renames
     folder = tmp_path / 'Game [FitGirl Repack]'
     folder.mkdir()
     rows = [{'path': str(folder), 'cleaned_name': 'Game'}]

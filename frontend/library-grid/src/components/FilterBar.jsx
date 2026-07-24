@@ -35,7 +35,7 @@ export function cleanFilters(filters) {
   )
 }
 
-export function FilterBar({ filters, onApply, onClear }) {
+export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
   const [draft, setDraft] = useState(filters)
   const [options, setOptions] = useState(EMPTY_OPTIONS)
   const [loadError, setLoadError] = useState(false)
@@ -74,10 +74,19 @@ export function FilterBar({ filters, onApply, onClear }) {
     onClear()
   }
 
+  const selects = SELECTS.map(([name, label, emptyLabel, source, valueField, textField]) => [
+    name,
+    t(label),
+    t(emptyLabel),
+    source,
+    valueField,
+    textField,
+  ])
+
   return (
     <form className="container-filtersandsort library-filters" onSubmit={submit}>
-      {loadError && <p role="alert">Unable to load filter options.</p>}
-      {SELECTS.map(([name, label, emptyLabel, source, valueField, textField]) => (
+      {loadError && <p role="alert">{t('Unable to load filter options.')}</p>}
+      {selects.map(([name, label, emptyLabel, source, valueField, textField]) => (
         <label key={name}>
           {label}
           <select
@@ -99,7 +108,7 @@ export function FilterBar({ filters, onApply, onClear }) {
         </label>
       ))}
       <label>
-        Rating
+        {t('Rating')}
         <input
           type="range"
           className="form-control-range rating-slider"
@@ -112,36 +121,36 @@ export function FilterBar({ filters, onApply, onClear }) {
         <span>{draft.rating ?? '0'}</span>
       </label>
       <label>
-        Sort by
+        {t('Sort by')}
         <select
           className="form-control"
           name="sort_by"
           value={draft.sort_by ?? 'name'}
           onChange={update}
         >
-          <option value="name">Name</option>
-          <option value="rating">Rating</option>
-          <option value="first_release_date">Date Released</option>
-          <option value="date_identified">Date Added</option>
-          <option value="size">Filesize</option>
+          <option value="name">{t('Name')}</option>
+          <option value="rating">{t('Rating')}</option>
+          <option value="first_release_date">{t('Date Released')}</option>
+          <option value="date_identified">{t('Date Added')}</option>
+          <option value="size">{t('Filesize')}</option>
         </select>
       </label>
       <label>
-        Sort order
+        {t('Sort order')}
         <select
           className="form-control"
           name="sort_order"
           value={draft.sort_order ?? 'asc'}
           onChange={update}
         >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
+          <option value="asc">{t('Ascending')}</option>
+          <option value="desc">{t('Descending')}</option>
         </select>
       </label>
       <div className="button-group">
-        <button className="btn btn-primary" type="submit">Apply filters</button>
+        <button className="btn btn-primary" type="submit">{t('Apply')}</button>
         <button className="btn btn-secondary" type="button" onClick={clear}>
-          Clear filters
+          {t('Clear')}
         </button>
       </div>
     </form>

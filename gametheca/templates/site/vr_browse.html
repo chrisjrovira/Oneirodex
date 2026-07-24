@@ -1,0 +1,74 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<link rel="manifest" href="{{ url_for('static', filename='vr-manifest.webmanifest') }}">
+<meta name="theme-color" content="#0b0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="{{ 'css/site/vr_browse.css'|theme_asset }}">
+<div class="gt-vr">
+    <header class="gt-vr__header">
+        <h1>VR Library</h1>
+        <p>Large-tap browse for headset browsers. Install as a PWA from the browser menu. Browse only — no downloads.</p>
+    </header>
+    <div id="gt-vr-status" class="gt-vr__status">Loading…</div>
+    <div id="gt-vr-grid" class="gt-vr__grid"></div>
+    <div id="gt-vr-detail" class="gt-vr__detail" hidden></div>
+</div>
+<script>
+(async function () {
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('/vr/sw.js', { scope: '/vr' });
+    } catch (e) { /* optional */ }
+  }
+
+  const status = document.getElementById('gt-vr-status');
+  const grid = document.getElementById('gt-vr-grid');
+  const detail = document.getElementById('gt-vr-detail');
+
+  function esc(v) {
+    return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function showDetail(uuid) {
+    const res = await fetch(`/api/vr/games/${encodeURIComponent(uuid)}`, { credentials: 'same-origin' });
+    const data = await res.json();
+    if (!res.ok) {
+      detail.hidden = false;
+      detail.innerHTML = `<p>${esc(data.error || 'Failed')}</p>`;
+      return;
+    }
+    detail.hidden = false;
+    detail.innerHTML = `
+      <button type="button" class="gt-vr__back" id="gt-vr-back">Back</button>
+      ${data.cover_url ? `<img class="gt-vr__detail-cover" src="${esc(data.cover_url)}" alt="">` : ''}
+      <h2>${esc(data.name)}</h2>
+      <p class="gt-vr__meta">${esc(data.size || '')}</p>
+      <p>${esc(data.summary || 'No summary')}</p>
+    `;
+    document.getElementById('gt-vr-back').onclick = () => { detail.hidden = true; };
+  }
+
+  try {
+    const res = await fetch('/api/vr/catalog?per_page=48', { credentials: 'same-origin' });
+    const data = await res.json();
+    if (!res.ok) {
+      status.textContent = data.error || 'VR browse unavailable';
+      return;
+    }
+    status.textContent = `${data.total || 0} games`;
+    grid.innerHTML = (data.games || []).map(g => `
+      <button type="button" class="gt-vr__card" data-uuid="${esc(g.uuid)}">
+        <img src="${esc(g.cover_url || '')}" alt="">
+        <span>${esc(g.name)}</span>
+      </button>
+    `).join('') || '<p>No games</p>';
+    grid.querySelectorAll('[data-uuid]').forEach(btn => {
+      btn.addEventListener('click', () => showDetail(btn.getAttribute('data-uuid')));
+    });
+  } catch (e) {
+    status.textContent = e.message;
+  }
+})();
+</script>
+{% endblock %}
+

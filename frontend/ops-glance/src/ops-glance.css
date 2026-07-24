@@ -1,6 +1,6 @@
 /* Ops glance styles — kept inside frontend/ops-glance so Docker Node builds
    do not need the Flask theme tree. Mirror of
-   sharewarez/setup/default_theme/css/admin/admin_ops.css */
+   gametheca/setup/default_theme/css/admin/admin_ops.css */
 
 /* Literal fallbacks so the board stays readable if theme vars are missing. */
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Memory monitoring script for SharewareZ application.
+Memory monitoring script for GameTheca application.
 Logs memory usage statistics every 5 seconds with detailed timestamps.
 """
 
@@ -12,21 +12,21 @@ import sys
 from datetime import datetime
 import argparse
 
-def get_sharewarez_processes():
-    """Find all processes related to SharewareZ (uvicorn, python, etc.)"""
+def get_gametheca_processes():
+    """Find all processes related to GameTheca (uvicorn, python, etc.)"""
     processes = []
     
     for proc in psutil.process_iter(['pid', 'name', 'cmdline', 'memory_info']):
         try:
             cmdline = ' '.join(proc.info['cmdline']) if proc.info['cmdline'] else ''
             
-            # Look for SharewareZ related processes
+            # Look for GameTheca related processes
             if any([
                 'uvicorn' in proc.info['name'],
                 'asgi:asgi_app' in cmdline,
-                'sharewarez' in cmdline.lower(),
-                '/var/www/sharewarez' in cmdline,
-                'sharewarez' in cmdline and 'create_app' in cmdline
+                'gametheca' in cmdline.lower(),
+                '/var/www/gametheca' in cmdline,
+                'gametheca' in cmdline and 'create_app' in cmdline
             ]):
                 processes.append({
                     'pid': proc.info['pid'],
@@ -56,10 +56,10 @@ def log_memory_usage(log_file, csv_file):
     memory = psutil.virtual_memory()
     swap = psutil.swap_memory()
     
-    # Get SharewareZ processes
-    processes = get_sharewarez_processes()
+    # Get GameTheca processes
+    processes = get_gametheca_processes()
     
-    # Calculate total memory usage by SharewareZ processes
+    # Calculate total memory usage by GameTheca processes
     total_rss = sum(p['memory_rss'] for p in processes)
     total_vms = sum(p['memory_vms'] for p in processes)
     
@@ -72,7 +72,7 @@ def log_memory_usage(log_file, csv_file):
                 f"Available: {format_bytes(memory.available)}\n")
         f.write(f"Swap Memory - Total: {format_bytes(swap.total)}, "
                 f"Used: {format_bytes(swap.used)} ({swap.percent}%)\n")
-        f.write(f"\nSharewareZ Processes ({len(processes)} found):\n")
+        f.write(f"\nGameTheca Processes ({len(processes)} found):\n")
         
         if processes:
             f.write(f"Total RSS Memory: {format_bytes(total_rss)}\n")
@@ -84,7 +84,7 @@ def log_memory_usage(log_file, csv_file):
                         f"VMS {format_bytes(proc['memory_vms'])}\n")
                 f.write(f"    CMD: {proc['cmdline']}\n")
         else:
-            f.write("No SharewareZ processes found!\n")
+            f.write("No GameTheca processes found!\n")
     
     # Log to CSV file
     csv_exists = os.path.exists(csv_file)
@@ -97,8 +97,8 @@ def log_memory_usage(log_file, csv_file):
                 'timestamp', 'system_memory_total_mb', 'system_memory_used_mb', 
                 'system_memory_percent', 'system_memory_available_mb',
                 'swap_total_mb', 'swap_used_mb', 'swap_percent',
-                'sharewarez_processes_count', 'sharewarez_total_rss_mb', 
-                'sharewarez_total_vms_mb', 'process_details'
+                'gametheca_processes_count', 'gametheca_total_rss_mb', 
+                'gametheca_total_vms_mb', 'process_details'
             ])
         
         # Prepare process details for CSV
@@ -123,7 +123,7 @@ def log_memory_usage(log_file, csv_file):
         ])
 
 def main():
-    parser = argparse.ArgumentParser(description='Monitor SharewareZ memory usage')
+    parser = argparse.ArgumentParser(description='Monitor GameTheca memory usage')
     parser.add_argument('--interval', type=int, default=5, 
                        help='Monitoring interval in seconds (default: 5)')
     parser.add_argument('--log-file', default='memory_monitor.log',
@@ -138,7 +138,7 @@ def main():
     log_file = os.path.abspath(args.log_file)
     csv_file = os.path.abspath(args.csv_file)
     
-    print(f"SharewareZ Memory Monitor")
+    print(f"GameTheca Memory Monitor")
     print(f"Monitoring interval: {args.interval} seconds")
     print(f"Log file: {log_file}")
     print(f"CSV file: {csv_file}")
@@ -149,7 +149,7 @@ def main():
     
     # Initialize log files
     with open(log_file, 'w') as f:
-        f.write(f"SharewareZ Memory Monitor Started: {datetime.now()}\n")
+        f.write(f"GameTheca Memory Monitor Started: {datetime.now()}\n")
         f.write(f"Monitoring interval: {args.interval} seconds\n")
     
     start_time = time.time()

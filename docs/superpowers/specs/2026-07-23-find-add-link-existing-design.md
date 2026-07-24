@@ -34,7 +34,7 @@ not a replacement.
 ### Backend
 
 1. **Search API** — `GET /api/admin/games_search?q=<term>`
-   - New module `sharewarez/routes_apis/admin_search.py`, registered on the
+   - New module `gametheca/routes_apis/admin_search.py`, registered on the
      existing `apis_bp` (prefix `/api`), so the route is `/api/admin/games_search`.
    - `@login_required` + `@admin_required` (this is an admin-only tool,
      unlike the existing public `/api/search` used for user-facing search;

@@ -64,8 +64,8 @@ htmlcov/
 **/__pycache__/
 
 # Static uploads (these should be mounted as volumes)
-sharewarez/static/library/images/
-sharewarez/static/library/zips/
+gametheca/static/library/images/
+gametheca/static/library/zips/
 
 # OS
 .DS_Store

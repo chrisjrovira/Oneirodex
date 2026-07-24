@@ -1,5 +1,5 @@
 import pytest
-from sharewarez.utils.filename import sanitize_filename
+from gametheca.utils.filename import sanitize_filename
 
 
 class TestSanitizeFilename:

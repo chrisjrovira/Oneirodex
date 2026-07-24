@@ -52,7 +52,7 @@ Admin Dashboard ──link──► GET /admin/ops (Jinja)
 - New route module or extend `routes_info.py` / admin blueprint with:
   - `GET /admin/ops` → `admin/admin_ops.html`
   - `GET /admin/api/ops/summary` → JSON snapshot
-- New aggregator helper (e.g. `sharewarez/utils/ops_summary.py`) composing:
+- New aggregator helper (e.g. `gametheca/utils/ops_summary.py`) composing:
   - Existing: `system_stats`, `status`, `uptime`, scan job queries, library/game counts, unmatched folders, download request counts, `SystemEvents`
   - New: network counters via `psutil.net_io_counters()` + connection count (best-effort; `null` on failure)
 - CPU: **one** `psutil.cpu_percent` call per summary request (do not stack multiple `interval=1` waits).
@@ -60,7 +60,7 @@ Admin Dashboard ──link──► GET /admin/ops (Jinja)
 
 ### Frontend
 
-- New Vite app `frontend/ops-glance/` → `sharewarez/static/dist/ops-glance/ops-glance.js`
+- New Vite app `frontend/ops-glance/` → `gametheca/static/dist/ops-glance/ops-glance.js`
 - Docker multi-stage Node build extended to build **both** `library-grid` and `ops-glance`
 - Poll with `AbortController`; ignore aborted/stale responses; expose manual Refresh
 
@@ -133,7 +133,7 @@ Partial failures: nested sections may be `null` with optional `*_error` string; 
 
 ## UI
 
-- Template: `sharewarez/templates/admin/admin_ops.html`
+- Template: `gametheca/templates/admin/admin_ops.html`
 - Mount: `#ops-glance-root` with `data-poll-ms="15000"`
 - Sections: StatusBanner · HostPanel · NetworkPanel · IssuesList · ScansPanel · LibraryPulse · RecentErrors · DeepLinks
 - Desktop: banner; 2×2 Host|Network / Issues|Scans; Library + Errors; footer links

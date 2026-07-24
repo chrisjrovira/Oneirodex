@@ -6,6 +6,12 @@ export function PaginationBar({
   perPage,
   onPageChange,
   onPerPageChange,
+  t = (key, vars) => {
+    if (key === 'Page {page} of {pages}') {
+      return `Page ${vars.page} of ${vars.pages}`
+    }
+    return key
+  },
 }) {
   const hasPrevious = page > 1
   const hasNext = page < pages
@@ -13,9 +19,9 @@ export function PaginationBar({
   return (
     <nav className="pagination-controls" aria-label="Library pagination">
       <label>
-        Per page{' '}
+        {t('Per page')}{' '}
         <select
-          aria-label="Games per page"
+          aria-label={t('Per page')}
           value={perPage}
           onChange={(event) => onPerPageChange(Number(event.target.value))}
         >
@@ -31,38 +37,38 @@ export function PaginationBar({
       </label>
       <button
         type="button"
-        aria-label="First page"
+        aria-label={t('First')}
         disabled={!hasPrevious}
         onClick={() => onPageChange(1)}
       >
-        First
+        {t('First')}
       </button>
       <button
         type="button"
-        aria-label="Previous page"
+        aria-label={t('Previous')}
         disabled={!hasPrevious}
         onClick={() => onPageChange(page - 1)}
       >
-        Previous
+        {t('Previous')}
       </button>
       <span aria-live="polite">
-        Page {page} of {pages}
+        {t('Page {page} of {pages}', { page, pages })}
       </span>
       <button
         type="button"
-        aria-label="Next page"
+        aria-label={t('Next')}
         disabled={!hasNext}
         onClick={() => onPageChange(page + 1)}
       >
-        Next
+        {t('Next')}
       </button>
       <button
         type="button"
-        aria-label="Last page"
+        aria-label={t('Last')}
         disabled={!hasNext}
         onClick={() => onPageChange(pages)}
       >
-        Last
+        {t('Last')}
       </button>
     </nav>
   )

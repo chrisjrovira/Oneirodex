@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-load-lifecycle-registry"
+description = "Allows loading the lifecycle registry from app data."
+commands.allow = ["load_lifecycle_registry"]

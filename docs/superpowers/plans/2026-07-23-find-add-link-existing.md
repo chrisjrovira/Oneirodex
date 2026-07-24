@@ -9,10 +9,10 @@ Design: `docs/superpowers/specs/2026-07-23-find-add-link-existing-design.md`
 1. Docs (this file + design doc) — commit first, `git add -f` (repo
    `.gitignore`s `*.md` except `README.md`).
 2. Backend: admin games search API
-   - `sharewarez/routes_apis/admin_search.py`: `GET /api/admin/games_search?q=`
-   - Register module import in `sharewarez/routes_apis/__init__.py`.
+   - `gametheca/routes_apis/admin_search.py`: `GET /api/admin/games_search?q=`
+   - Register module import in `gametheca/routes_apis/__init__.py`.
 3. Backend: link-existing-game route
-   - `sharewarez/routes_games_ext/add.py`: `POST /link_existing_game`
+   - `gametheca/routes_games_ext/add.py`: `POST /link_existing_game`
      (blueprint `games`), validates path, updates `Game.full_disk_path`,
      deletes matching `UnmatchedFolder`, flashes, redirects.
 4. Backend: prefill enhancement
@@ -20,13 +20,13 @@ Design: `docs/superpowers/specs/2026-07-23-find-add-link-existing-design.md`
      `request.args.get('igdb_id')` when present.
    - `library_tools.approve_proposal`: include `igdb_id` in `identify_hint`.
 5. Frontend: template
-   - `sharewarez/templates/admin/admin_game_identify.html`: add missing CSS
+   - `gametheca/templates/admin/admin_game_identify.html`: add missing CSS
      `<link>`, add "Link to Existing Library Game" panel + hidden form.
 6. Frontend: JS
-   - `sharewarez/setup/default_theme/js/admin_game_identify.js`: search
+   - `gametheca/setup/default_theme/js/admin_game_identify.js`: search
      input handling, results rendering, selection state, submit wiring.
 7. Frontend: CSS
-   - `sharewarez/setup/default_theme/css/admin/admin_game_identify.css`:
+   - `gametheca/setup/default_theme/css/admin/admin_game_identify.css`:
      small additions for new panel/button states.
 8. Tests
    - `tests/test_routes_apis_admin_search.py` — search endpoint auth +

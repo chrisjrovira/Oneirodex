@@ -5,25 +5,25 @@
 
 ## Goals
 
-Rebrand the product from SharewareZ to **GameTheca** for humans and new installs, without renaming the Python package or breaking existing on-disk metadata.
+Rebrand the product from GameTheca to **GameTheca** for humans and new installs, without renaming the Python package or breaking existing on-disk metadata.
 
 ## In scope (Phase A)
 
 - Display names in HTML templates, help copy, Discord defaults, theme author/description
 - Docker image/container names (`chrisjrovira/gametheca:latest`, `gametheca-app`, `gametheca-db`)
-- Compose header comments; `.env.example` / `.env.docker.example` DB defaults (`gametheca` / `gamethecatest`) with a note that existing installs may still use `sharewarez`
+- Compose header comments; `.env.example` / `.env.docker.example` DB defaults (`gametheca` / `gamethecatest`) with a note that existing installs may still use `gametheca`
 - README clone URL → `https://github.com/chrisjrovira/gametheca.git`; remove axewater links
 - Installer / start scripts user-facing messages; greenfield DB user/db → `gamethecauser` / `gametheca`
-- Local metadata default filename → `gametheca.json`, with read fallback to `sharewarez.json`
-- Proposal sidecar default → `gametheca.proposal.json`, with read/remove support for `sharewarez.proposal.json`
+- Local metadata default filename → `gametheca.json`, with read fallback to `gametheca.json`
+- Proposal sidecar default → `gametheca.proposal.json`, with read/remove support for `gametheca.proposal.json`
 - Logo assets: `static/newstyle/gametheca_*.png` (+ compat copies of old filenames)
 - Darker default theme: teal accent, deeper surfaces, dimmed body backdrop (`default_theme` 2.1.0)
 - Micro edit gap: expose `aggregated_rating` and `first_release_date` on game identify/edit Details
 
 ## Out of scope (later phases)
 
-- Renaming the `sharewarez/` Python package or import paths
-- Changing `UPLOAD_FOLDER` filesystem paths (`./sharewarez/static/library`, `/app/sharewarez/static/library`)
+- Renaming the `gametheca/` Python package or import paths
+- Changing `UPLOAD_FOLDER` filesystem paths (`./gametheca/static/library`, `/app/gametheca/static/library`)
 - Migrating existing PostgreSQL database names automatically
 - Full Expert metadata edit (store URLs, HLTB, NFO, GameURL rows)
 - Store library import (Steam/Epic/GOG/Amazon owned libraries)

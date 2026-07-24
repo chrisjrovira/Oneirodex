@@ -17,7 +17,7 @@ def _load_secret_key():
 
 class Config(object):
     # Set Database connection string here or in your .env file, when using docker set the hostname to 'db'
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/sharewarez')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/gametheca')
 
     # Set the path to the folder where the game files are stored (ie: use c:\gamez for windows or /gamez for linux)
     DATA_FOLDER_WAREZ = os.getenv('DATA_FOLDER_WAREZ', r'Z:\gamez')
@@ -29,9 +29,9 @@ class Config(object):
         BASE_FOLDER_POSIX = os.getenv('BASE_FOLDER_POSIX', '/storage')
 
     # YOU CAN LEAVE ALL THESE SETTINGS AT DEFAULT:
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'sharewarez/static/library')
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'gametheca/static/library')
     SECRET_KEY = _load_secret_key()
-    IMAGE_SAVE_PATH = os.path.join(os.path.dirname(__file__), 'sharewarez/static/library/images')
+    IMAGE_SAVE_PATH = os.path.join(os.path.dirname(__file__), 'gametheca/static/library/images')
     IGDB_API_ENDPOINT = os.getenv('IGDB_API_ENDPOINT', 'https://api.igdb.com/v4/games')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -51,3 +51,42 @@ class Config(object):
 
     # Development mode - forces theme files to be recopied on startup (helpful for theme development)
     DEV_MODE = os.getenv('DEV_MODE', 'false').lower() == 'true'
+
+    # Reverse proxy / HTTPS termination — number of trusted proxy hops (0 = disabled).
+    # Set to 1 when GameTheca sits behind a single reverse proxy (nginx, Caddy, Traefik)
+    # so X-Forwarded-Proto/Host are honored for OIDC redirects and external URLs.
+    TRUSTED_PROXIES = int(os.getenv('TRUSTED_PROXIES', '0') or '0')
+
+    # Optional *arr indexer/download-client module
+    ENABLE_ARR_MODULE = os.getenv('ENABLE_ARR_MODULE', 'false').lower() == 'true'
+
+    # Opt-in emulator save-state sync (WebRetro / companion)
+    ENABLE_EMULATOR_SAVE_SYNC = os.getenv('ENABLE_EMULATOR_SAVE_SYNC', 'true').lower() == 'true'
+    ENCRYPT_EMULATOR_SAVES = os.getenv('ENCRYPT_EMULATOR_SAVES', 'false').lower() == 'true'
+
+    # Optional Ollama AI assist (suggestions; apply needs ENABLE_AI_AUTO_APPLY)
+    ENABLE_AI_ASSIST = os.getenv('ENABLE_AI_ASSIST', 'false').lower() == 'true'
+    ENABLE_AI_AUTO_APPLY = os.getenv('ENABLE_AI_AUTO_APPLY', 'false').lower() == 'true'
+    OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://127.0.0.1:11434')
+    OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3.2')
+
+    # Hardlink helpers (preview; apply needs second flag)
+    ENABLE_HARDLINK_HELPERS = os.getenv('ENABLE_HARDLINK_HELPERS', 'false').lower() == 'true'
+    ALLOW_HARDLINK_APPLY = os.getenv('ALLOW_HARDLINK_APPLY', 'false').lower() == 'true'
+    ENABLE_ARR_HARDLINK_PIPELINE = os.getenv('ENABLE_ARR_HARDLINK_PIPELINE', 'false').lower() == 'true'
+
+    # Mobile / Quest-browser VR catalog
+    ENABLE_VR_BROWSE = os.getenv('ENABLE_VR_BROWSE', 'false').lower() == 'true'
+
+    # Optional *arr connector defaults (overridden by Admin → Arr config)
+    PROWLARR_URL = os.getenv('PROWLARR_URL', '')
+    PROWLARR_API_KEY = os.getenv('PROWLARR_API_KEY', '')
+    JACKETT_URL = os.getenv('JACKETT_URL', '')
+    JACKETT_API_KEY = os.getenv('JACKETT_API_KEY', '')
+    QBITTORRENT_URL = os.getenv('QBITTORRENT_URL', '')
+    QBITTORRENT_USERNAME = os.getenv('QBITTORRENT_USERNAME', 'admin')
+    QBITTORRENT_PASSWORD = os.getenv('QBITTORRENT_PASSWORD', '')
+
+    # Flask-Babel / i18n
+    BABEL_DEFAULT_LOCALE = os.getenv('BABEL_DEFAULT_LOCALE', 'en')
+    BABEL_SUPPORTED_LOCALES = ['en', 'es']

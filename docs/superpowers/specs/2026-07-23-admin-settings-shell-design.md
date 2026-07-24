@@ -75,7 +75,7 @@ Admin Dashboard ──link──► GET /admin/settings?section=X (Jinja shell)
 
 ### Backend
 
-- `sharewarez/routes_admin_ext/settings.py`
+- `gametheca/routes_admin_ext/settings.py`
   - New module-level `SETTINGS_SHELL_SECTIONS` dict (ordered: server, attract,
     integrations, themes) and `DEFAULT_SETTINGS_SHELL_SECTION = 'server'`.
   - `settings()` view: GET now validates `?section=` against the dict (falls
@@ -87,14 +87,14 @@ Admin Dashboard ──link──► GET /admin/settings?section=X (Jinja shell)
 
 ### Frontend
 
-- New template: `sharewarez/templates/admin/admin_settings_shell.html`
+- New template: `gametheca/templates/admin/admin_settings_shell.html`
   - Left nav (`<nav>` + `<ul>`) built from `sections.items()`; each link is
     `url_for('admin2.settings', section=key)`.
   - Active-section detail card with a primary "Open <label>" button that
     deep-links via `url_for(section.endpoint)`.
   - Card grid (all 4 sections) below/beside, each card also deep-links via
     `url_for(section.endpoint)`.
-- New stylesheet: `sharewarez/setup/default_theme/css/admin/admin_settings_shell.css`
+- New stylesheet: `gametheca/setup/default_theme/css/admin/admin_settings_shell.css`
   reusing existing admin glass-panel CSS variables (`--container-glass-*`,
   `--border-light`, `--primary-brand-*`, `--spacing-*`, `--border-radius-*`).
 - `admin_dashboard.html`: Server Settings / Attract Mode / Integrations /

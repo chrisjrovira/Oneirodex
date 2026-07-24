@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ 'css/site/member_hub.css'|theme_asset }}">
+<script src="{{ 'js/member_hub.js'|theme_asset }}"></script>
+
+<div class="gt-hub">
+    <header class="gt-hub__header">
+        <h1>Updates</h1>
+        <p class="gt-hub__lede">Games that look behind current store versions (OUT / ~).</p>
+    </header>
+
+    <div id="gt-updates-list" class="gt-hub__list" aria-live="polite">
+        <p class="gt-hub__empty">Loading updates…</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.GameThecaMemberHub) {
+    GameThecaMemberHub.initUpdatesInbox()
+  }
+})
+</script>
+{% endblock %}

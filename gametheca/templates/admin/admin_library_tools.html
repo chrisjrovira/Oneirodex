@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="glass-panel mb-3">
+    <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+
+  <h2><i class="fas fa-magic"></i> Library Recognition Tools</h2>
+  <p class="text-muted">Doctor dry-run, match proposals, and disk rename helpers for FitGirl / Steam-AppID libraries.</p>
+
+  <ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-doctor" type="button">Library Doctor</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-proposals" type="button">Proposals</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rename" type="button">Rename Game</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-freshness" type="button">Freshness</button></li>
+  </ul>
+
+  <div class="tab-content border border-top-0 p-3">
+    <div class="tab-pane fade show active" id="tab-doctor">
+      <div class="mb-3">
+        <label class="form-label">Roots (one path per line)</label>
+        <textarea id="doctorRoots" class="form-control" rows="4" placeholder="E:\_software-games&#10;E:\games&#10;Z:\_software\_games\_pc"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Rename template</label>
+        <input id="doctorTemplate" class="form-control" value="{title}" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Limit (optional)</label>
+        <input id="doctorLimit" class="form-control" type="number" min="1" placeholder="e.g. 50" />
+      </div>
+      <button id="doctorDryRunBtn" class="btn btn-primary">Dry-run</button>
+      <button id="doctorWriteProposalsBtn" class="btn btn-secondary" disabled>Write proposals for listed rows</button>
+      <button id="doctorApplyRenamesBtn" class="btn btn-danger" disabled>Apply root renames for listed rows</button>
+      <pre id="doctorOutput" class="mt-3 small" style="max-height: 420px; overflow:auto;"></pre>
+    </div>
+
+    <div class="tab-pane fade" id="tab-proposals">
+      <button id="loadProposalsBtn" class="btn btn-primary mb-3">Load proposals from library games</button>
+      <div id="proposalsList"></div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-rename">
+      <div class="mb-3">
+        <label class="form-label">Game UUID</label>
+        <input id="renameGameUuid" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Title override</label>
+        <input id="renameTitle" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Year (optional)</label>
+        <input id="renameYear" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Template</label>
+        <select id="renameTemplate" class="form-select">
+          <option value="{title}">{title}</option>
+          <option value="{title} ({year})">{title} ({year})</option>
+          <option value="{title} [{year}]">{title} [{year}]</option>
+          <option value="{title} ({year}) [PC]">{title} ({year}) [PC]</option>
+          <option value="{title} - {year}">{title} - {year}</option>
+          <option value="{year} - {title}">{year} - {title}</option>
+          <option value="{title} ({year}) (GOG)">{title} ({year}) (GOG)</option>
+          <option value="{title} ({year}) (Steam)">{title} ({year}) (Steam)</option>
+          <option value="{title} v{year}">{title} v{year}</option>
+          <option value="{title} [{year}] [FitGirl Repack]">{title} [{year}] [FitGirl Repack]</option>
+        </select>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="renameRoot" checked>
+        <label class="form-check-label" for="renameRoot">Rename root folder</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="renameMedia">
+        <label class="form-check-label" for="renameMedia">Rename top-level media</label>
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="renameBucket">
+        <label class="form-check-label" for="renameBucket">Move to letter bucket</label>
+      </div>
+      <button id="renamePreviewBtn" class="btn btn-primary">Preview</button>
+      <button id="renameApplyBtn" class="btn btn-danger" disabled>Apply selected</button>
+      <div id="renamePlan" class="mt-3"></div>
+      <pre id="renameOutput" class="mt-3 small"></pre>
+    </div>
+
+    <div class="tab-pane fade" id="tab-freshness">
+      <p class="text-muted">
+        Bulk-check local version hints against Steam / GOG / Epic (best-effort) and refresh library badges.
+        Prefer small batches first; store APIs are rate-limited. You can also check a single game from its details page while a scan runs.
+      </p>
+      <div class="mb-3">
+        <label class="form-label">Library (optional)</label>
+        <select id="freshnessLibrary" class="form-select">
+          <option value="">All libraries</option>
+          {% for lib in libraries %}
+          <option value="{{ lib.uuid }}">{{ lib.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Batch size</label>
+        <input id="freshnessLimit" class="form-control" type="number" min="1" max="500" value="25" />
+        <div class="form-text">Max 500 per request. Use “Entire library” to run the largest batch against the selected scope.</div>
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="freshnessOnlyStale" checked>
+        <label class="form-check-label" for="freshnessOnlyStale">Skip games checked in the last 24 hours</label>
+      </div>
+      <button id="freshnessRefreshBtn" class="btn btn-primary">Refresh batch</button>
+      <button id="freshnessAllBtn" class="btn btn-secondary">Entire library (up to 500)</button>
+      <pre id="freshnessOutput" class="mt-3 small" style="max-height: 420px; overflow:auto;"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const csrf = (window.CSRFUtils && CSRFUtils.getToken) ? CSRFUtils.getToken() : '';
+  function headers() {
+    return {'Content-Type': 'application/json', 'X-CSRFToken': csrf};
+  }
+
+  let lastDoctorRows = [];
+  let lastRenamePlan = [];
+
+  document.getElementById('doctorDryRunBtn').addEventListener('click', async () => {
+    const roots = document.getElementById('doctorRoots').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const template = document.getElementById('doctorTemplate').value || '{title}';
+    const limitRaw = document.getElementById('doctorLimit').value;
+    const body = {roots, template};
+    if (limitRaw) body.limit = parseInt(limitRaw, 10);
+    const resp = await fetch('/api/library_tools/doctor/dry_run', {method:'POST', headers: headers(), body: JSON.stringify(body)});
+    const data = await resp.json();
+    lastDoctorRows = data.rows || [];
+    document.getElementById('doctorWriteProposalsBtn').disabled = lastDoctorRows.length === 0;
+    document.getElementById('doctorApplyRenamesBtn').disabled = lastDoctorRows.length === 0;
+    document.getElementById('doctorOutput').textContent = JSON.stringify(data, null, 2);
+  });
+
+  document.getElementById('doctorWriteProposalsBtn').addEventListener('click', async () => {
+    const resp = await fetch('/api/library_tools/doctor/write_proposals', {
+      method:'POST', headers: headers(), body: JSON.stringify({rows: lastDoctorRows})
+    });
+    document.getElementById('doctorOutput').textContent = JSON.stringify(await resp.json(), null, 2);
+  });
+
+  document.getElementById('doctorApplyRenamesBtn').addEventListener('click', async () => {
+    if (!confirm('Apply root-folder renames for all dry-run rows? This changes disk paths.')) return;
+    const template = document.getElementById('doctorTemplate').value || '{title}';
+    const resp = await fetch('/api/library_tools/doctor/apply_renames', {
+      method:'POST', headers: headers(), body: JSON.stringify({rows: lastDoctorRows, template})
+    });
+    document.getElementById('doctorOutput').textContent = JSON.stringify(await resp.json(), null, 2);
+  });
+
+  document.getElementById('loadProposalsBtn').addEventListener('click', async () => {
+    const resp = await fetch('/api/library_tools/proposals');
+    const data = await resp.json();
+    const box = document.getElementById('proposalsList');
+    if (!data.proposals || !data.proposals.length) {
+      box.innerHTML = '<p>No proposal sidecars found on library games.</p>';
+      return;
+    }
+    box.innerHTML = data.proposals.map(p => {
+      const cands = ((p.proposal||{}).candidates||[]).map(c => `${c.name} (${c.score})`).join(', ');
+      return `<div class="border rounded p-2 mb-2"><strong>${p.game_name}</strong><br><code>${p.path}</code><br>${cands}</div>`;
+    }).join('');
+  });
+
+  document.getElementById('renamePreviewBtn').addEventListener('click', async () => {
+    const body = {
+      game_uuid: document.getElementById('renameGameUuid').value.trim(),
+      title: document.getElementById('renameTitle').value.trim() || undefined,
+      year: document.getElementById('renameYear').value.trim() || undefined,
+      template: document.getElementById('renameTemplate').value,
+      rename_root: document.getElementById('renameRoot').checked,
+      rename_top_level_media: document.getElementById('renameMedia').checked,
+      move_letter_bucket: document.getElementById('renameBucket').checked
+    };
+    const resp = await fetch('/api/library_tools/rename/preview', {method:'POST', headers: headers(), body: JSON.stringify(body)});
+    const data = await resp.json();
+    lastRenamePlan = data.plan || [];
+    const planBox = document.getElementById('renamePlan');
+    planBox.innerHTML = lastRenamePlan.map((item, idx) => `
+      <div class="form-check">
+        <input class="form-check-input rename-item" type="checkbox" data-idx="${idx}" id="rn${idx}" checked>
+        <label class="form-check-label" for="rn${idx}"><code>${item.kind}</code>: ${item.from_path} → ${item.to_path}</label>
+      </div>`).join('') || '<p>No changes.</p>';
+    document.getElementById('renameApplyBtn').disabled = lastRenamePlan.length === 0;
+    document.getElementById('renameOutput').textContent = JSON.stringify(data, null, 2);
+  });
+
+  document.getElementById('renameApplyBtn').addEventListener('click', async () => {
+    const selected = [];
+    document.querySelectorAll('.rename-item:checked').forEach(el => {
+      selected.push(lastRenamePlan[parseInt(el.dataset.idx, 10)]);
+    });
+    const body = {
+      game_uuid: document.getElementById('renameGameUuid').value.trim(),
+      plan: selected
+    };
+    const resp = await fetch('/api/library_tools/rename/apply', {method:'POST', headers: headers(), body: JSON.stringify(body)});
+    document.getElementById('renameOutput').textContent = JSON.stringify(await resp.json(), null, 2);
+  });
+
+  async function runFreshness(body) {
+    const out = document.getElementById('freshnessOutput');
+    out.textContent = 'Refreshing… (this can take a while; store APIs are rate-limited)';
+    try {
+      const resp = await fetch('/api/admin/freshness/refresh', {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(body),
+      });
+      let data;
+      try {
+        data = await resp.json();
+      } catch (e) {
+        out.textContent = `Bad response (${resp.status})`;
+        return;
+      }
+      if (!resp.ok) {
+        out.textContent = JSON.stringify(data, null, 2);
+        return;
+      }
+      out.textContent = `Done: ${data.count || 0} updated, ${data.skipped_fresh || 0} skipped (fresh), ${(data.errors || []).length} errors.\n\n`
+        + JSON.stringify(data, null, 2);
+    } catch (err) {
+      out.textContent = String(err);
+    }
+  }
+
+  function freshnessBody(extra) {
+    const libraryUuid = document.getElementById('freshnessLibrary').value;
+    const body = {
+      limit: parseInt(document.getElementById('freshnessLimit').value, 10) || 25,
+      only_stale: document.getElementById('freshnessOnlyStale').checked,
+      ...(extra || {}),
+    };
+    if (libraryUuid) body.library_uuid = libraryUuid;
+    return body;
+  }
+
+  document.getElementById('freshnessRefreshBtn').addEventListener('click', async () => {
+    await runFreshness(freshnessBody());
+  });
+  document.getElementById('freshnessAllBtn').addEventListener('click', async () => {
+    await runFreshness(freshnessBody({ entire_library: true, limit: 500 }));
+  });
+})();
+</script>
+{% endblock %}

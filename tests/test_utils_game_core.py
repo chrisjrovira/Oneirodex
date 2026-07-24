@@ -9,14 +9,14 @@ from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor
 from werkzeug.utils import secure_filename
 
-from sharewarez import create_app, db
-from sharewarez.models import (
+from gametheca import create_app, db
+from gametheca.models import (
     Game, Image, Library, GlobalSettings, Developer, Publisher, 
     Genre, Theme, GameMode, Platform, PlayerPerspective, GameURL, 
     ScanJob, Category, Status
 )
-from sharewarez.platform import LibraryPlatform
-from sharewarez.utils.game_core import (
+from gametheca.platform import LibraryPlatform
+from gametheca.utils.game_core import (
     category_mapping, status_mapping, create_game_instance, 
     check_existing_game_by_path, check_existing_game_by_igdb_id,
     store_image_url_for_download, smart_process_images_for_game,
@@ -202,7 +202,7 @@ class TestDataMappings:
 class TestCoreGameCreationFunctions:
     """Test core game creation and lookup functions."""
     
-    @patch('sharewarez.utils.game_core.fetch_and_store_game_urls')
+    @patch('gametheca.utils.game_core.fetch_and_store_game_urls')
     def test_create_game_instance_success(self, mock_fetch_urls, db_session, sample_library, mock_igdb_response, sample_global_settings):
         """Test successful game instance creation."""
         game_data = mock_igdb_response[0]
@@ -257,7 +257,7 @@ class TestCoreGameCreationFunctions:
 class TestImageProcessingFunctions:
     """Test image processing and download functions."""
     
-    @patch('sharewarez.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
     def test_store_image_url_for_download_cover(self, mock_api, db_session, sample_game, sample_global_settings):
         """Test storing cover image URL for download."""
         mock_api.return_value = [{'url': '//images.igdb.com/igdb/image/upload/t_thumb/test.jpg'}]
@@ -272,7 +272,7 @@ class TestImageProcessingFunctions:
         assert images[0].download_url == 'https://images.igdb.com/igdb/image/upload/t_original/test.jpg'
         assert images[0].is_downloaded is False
     
-    @patch('sharewarez.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
     def test_store_image_url_for_download_screenshot(self, mock_api, db_session, sample_game, sample_global_settings):
         """Test storing screenshot image URL for download."""
         mock_api.return_value = [{'url': '//images.igdb.com/igdb/image/upload/t_thumb/screenshot.jpg'}]
@@ -285,7 +285,7 @@ class TestImageProcessingFunctions:
         assert images[0].igdb_image_id == '11111'
         assert images[0].download_url == 'https://images.igdb.com/igdb/image/upload/t_original/screenshot.jpg'
     
-    @patch('sharewarez.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
     def test_store_image_url_for_download_api_failure(self, mock_api, db_session, sample_game, sample_global_settings):
         """Test handling API failure when storing image URL."""
         mock_api.return_value = {'error': 'API Error'}
@@ -295,9 +295,9 @@ class TestImageProcessingFunctions:
         images = db_session.query(Image).filter_by(game_uuid=sample_game.uuid).all()
         assert len(images) == 0
     
-    @patch('sharewarez.utils.game_core.download_images_for_game_turbo')
-    @patch('sharewarez.utils.game_core.download_images_for_game')
-    @patch('sharewarez.utils.game_core.store_image_url_for_download')
+    @patch('gametheca.utils.game_core.download_images_for_game_turbo')
+    @patch('gametheca.utils.game_core.download_images_for_game')
+    @patch('gametheca.utils.game_core.store_image_url_for_download')
     def test_smart_process_images_for_game_with_cover_and_screenshots(self, mock_store_image, mock_download, mock_download_turbo, app, db_session, sample_game, sample_global_settings):
         """Test smart_process_images_for_game with cover and screenshots."""
         # Force non-turbo mode for this test
@@ -319,9 +319,9 @@ class TestImageProcessingFunctions:
             mock_download_turbo.assert_called_once()
         assert result == 3
     
-    @patch('sharewarez.utils.game_core.download_images_for_game_turbo')
-    @patch('sharewarez.utils.game_core.download_images_for_game')
-    @patch('sharewarez.utils.game_core.store_image_url_for_download')
+    @patch('gametheca.utils.game_core.download_images_for_game_turbo')
+    @patch('gametheca.utils.game_core.download_images_for_game')
+    @patch('gametheca.utils.game_core.store_image_url_for_download')
     def test_smart_process_images_for_game_no_images(self, mock_store_image, mock_download, mock_download_turbo, app, db_session, sample_game, sample_global_settings):
         """Test smart_process_images_for_game with no images."""
         # Force non-turbo mode for this test
@@ -343,8 +343,8 @@ class TestImageProcessingFunctions:
             mock_download_turbo.assert_called_once()
         assert result == 0
     
-    @patch('sharewarez.utils.game_core.download_images_for_game_turbo')
-    @patch('sharewarez.utils.game_core.store_image_url_for_download')
+    @patch('gametheca.utils.game_core.download_images_for_game_turbo')
+    @patch('gametheca.utils.game_core.store_image_url_for_download')
     def test_smart_process_images_for_game_turbo_mode(self, mock_store_image, mock_download_turbo, app, db_session, sample_game, sample_global_settings):
         """Test smart_process_images_for_game with turbo mode enabled."""
         # Enable turbo mode
@@ -379,8 +379,8 @@ class TestDownloadFunctions:
             # Function should return count of processed images
             assert isinstance(result, int)
     
-    @patch('sharewarez.utils.game_core.make_igdb_api_request')
-    @patch('sharewarez.utils.game_core.download_image')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.download_image')
     def test_process_and_save_image_success(self, mock_download, mock_api, app, sample_game, sample_global_settings):
         """Test successful image processing and saving."""
         mock_api.return_value = [{'url': '//images.igdb.com/igdb/image/upload/t_thumb/test.jpg'}]
@@ -393,7 +393,7 @@ class TestDownloadFunctions:
         mock_api.assert_called_once()
         assert mock_download.call_count >= 1
     
-    @patch('sharewarez.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
     def test_process_and_save_image_api_failure(self, mock_api, app, sample_game, sample_global_settings):
         """Test process_and_save_image handles API failure."""
         mock_api.return_value = {'error': 'API Error'}
@@ -405,7 +405,7 @@ class TestDownloadFunctions:
         # Should handle error gracefully
         mock_api.assert_called_once()
     
-    @patch('sharewarez.utils.game_core.process_and_save_image')
+    @patch('gametheca.utils.game_core.process_and_save_image')
     def test_download_single_image_worker(self, mock_process_save, app, sample_image, sample_global_settings):
         """Test download_single_image_worker function."""
         download_single_image_worker(sample_image, app)
@@ -417,12 +417,12 @@ class TestDownloadFunctions:
 class TestGameDataFunctions:
     """Test game data retrieval and URL processing functions."""
     
-    @patch('sharewarez.utils.game_core.discord_webhook')
-    @patch('sharewarez.utils.game_core.smart_process_images_for_game')
-    @patch('sharewarez.utils.game_core.get_folder_size_in_bytes_updates')
-    @patch('sharewarez.utils.game_core.read_first_nfo_content')
-    @patch('sharewarez.utils.game_core.make_igdb_api_request')
-    @patch('sharewarez.utils.game_core.create_game_instance')
+    @patch('gametheca.utils.game_core.discord_webhook')
+    @patch('gametheca.utils.game_core.smart_process_images_for_game')
+    @patch('gametheca.utils.game_core.get_folder_size_in_bytes_updates')
+    @patch('gametheca.utils.game_core.read_first_nfo_content')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.create_game_instance')
     def test_retrieve_and_save_game_success(self, mock_create_game, mock_api, mock_nfo, mock_folder_size, mock_smart_images, mock_discord, app, db_session, sample_library, sample_global_settings):
         """Test successful game retrieval and saving."""
         mock_api.return_value = [{'id': 12345, 'name': 'Test Game'}]
@@ -456,7 +456,7 @@ class TestGameDataFunctions:
         mock_api.assert_called_once()
         mock_create_game.assert_called_once()
     
-    @patch('sharewarez.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
     def test_retrieve_and_save_game_api_failure(self, mock_api, app, db_session, sample_library, sample_global_settings):
         """Test retrieve_and_save_game handles API failure."""
         mock_api.return_value = {'error': 'API Error'}
@@ -471,7 +471,7 @@ class TestGameDataFunctions:
         
         assert result is None
     
-    @patch('sharewarez.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
     def test_fetch_and_store_game_urls_success(self, mock_api, db_session, sample_game, sample_global_settings):
         """Test successful URL fetching and storing."""
         mock_api.return_value = [
@@ -487,7 +487,7 @@ class TestGameDataFunctions:
         assert urls[0].url == 'https://example.com/game1'
         assert urls[1].url == 'https://example.com/game2'
     
-    @patch('sharewarez.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
     def test_fetch_and_store_game_urls_api_failure(self, mock_api, db_session, sample_game, sample_global_settings):
         """Test fetch_and_store_game_urls handles API failure."""
         mock_api.return_value = {'error': 'API Error'}
@@ -498,7 +498,7 @@ class TestGameDataFunctions:
         urls = db_session.query(GameURL).filter_by(game_uuid=sample_game.uuid).all()
         assert len(urls) == 0
     
-    @patch('sharewarez.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
     def test_enumerate_companies_success(self, mock_api, db_session, sample_game, mock_company_response, sample_global_settings):
         """Test successful company enumeration."""
         from sqlalchemy import delete, update
@@ -522,7 +522,7 @@ class TestGameDataFunctions:
         assert developers[0].name == 'Test Developer'
         assert publishers[0].name == 'Test Publisher'
     
-    @patch('sharewarez.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
     def test_enumerate_companies_api_failure(self, mock_api, db_session, sample_global_settings):
         """Test enumerate_companies handles API failure."""
         mock_api.return_value = {'error': 'API Error'}
@@ -587,7 +587,7 @@ class TestGameManagementFunctions:
     
     def test_delete_game_with_exception(self, db_session, sample_game, sample_global_settings):
         """Test delete_game re-raises database errors so callers can report them."""
-        with patch('sharewarez.utils.game_core.db.session.delete', side_effect=Exception("DB Error")):
+        with patch('gametheca.utils.game_core.db.session.delete', side_effect=Exception("DB Error")):
             with patch('builtins.print'):
                 with pytest.raises(Exception, match="DB Error"):
                     delete_game(sample_game.uuid)
@@ -611,8 +611,8 @@ class TestBackgroundImageProcessing:
             # Should return count of processed images
             assert isinstance(result, int)
     
-    @patch('sharewarez.utils.game_core.download_pending_images')
-    @patch('sharewarez.utils.game_core.threading.Thread')
+    @patch('gametheca.utils.game_core.download_pending_images')
+    @patch('gametheca.utils.game_core.threading.Thread')
     def test_start_background_image_downloader(self, mock_thread, mock_download, app, sample_global_settings):
         """Test start_background_image_downloader."""
         start_background_image_downloader()
@@ -631,8 +631,8 @@ class TestBackgroundImageProcessing:
             else:
                 assert result >= 0
     
-    @patch('sharewarez.utils.game_core.turbo_download_images')
-    @patch('sharewarez.utils.game_core.threading.Thread')
+    @patch('gametheca.utils.game_core.turbo_download_images')
+    @patch('gametheca.utils.game_core.threading.Thread')
     def test_start_turbo_background_downloader(self, mock_thread, mock_turbo, app, sample_global_settings):
         """Test start_turbo_background_downloader."""
         start_turbo_background_downloader(max_workers=4)
@@ -660,7 +660,7 @@ class TestMissingImageProcessing:
             assert isinstance(result, dict)
             assert 'missing_images' in result or isinstance(result, list)
     
-    @patch('sharewarez.utils.game_core.store_image_url_for_download')
+    @patch('gametheca.utils.game_core.store_image_url_for_download')
     def test_queue_missing_images_for_download(self, mock_store_image, app, sample_game, sample_global_settings):
         """Test queue_missing_images_for_download function."""
         # Mock image objects with required attributes
@@ -689,8 +689,8 @@ class TestMissingImageProcessing:
             # Function may handle images differently, just ensure no exceptions
             assert True
     
-    @patch('sharewarez.utils.game_core.queue_missing_images_for_download')
-    @patch('sharewarez.utils.game_core.find_missing_images_for_library')
+    @patch('gametheca.utils.game_core.queue_missing_images_for_download')
+    @patch('gametheca.utils.game_core.find_missing_images_for_library')
     def test_process_missing_images_for_scan(self, mock_find_missing, mock_queue_missing, app, sample_library, sample_global_settings):
         """Test process_missing_images_for_scan function."""
         # Mock missing images found - may return dict or list depending on function implementation

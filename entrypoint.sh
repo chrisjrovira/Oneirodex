@@ -2,7 +2,7 @@
 
 echo "🚀 GameTheca container starting up..."
 
-if [[ ! -f /app/sharewarez/static/dist/library-grid/library-grid.js ]]; then
+if [[ ! -f /app/gametheca/static/dist/library-grid/library-grid.js ]]; then
     echo "⚠️  Warning: library-grid.js not found — React library grid may not load. Rebuild the Docker image to include the library-grid build stage."
 fi
 

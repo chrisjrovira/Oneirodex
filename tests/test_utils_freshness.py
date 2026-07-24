@@ -2,9 +2,9 @@
 
 from types import SimpleNamespace
 
-from sharewarez.utils.freshness.compare import compare_freshness, parse_version_tuple
-from sharewarez.utils.freshness.ids import resolve_steam_app_id
-from sharewarez.utils.freshness.local import detect_local_facts
+from gametheca.utils.freshness.compare import compare_freshness, parse_version_tuple
+from gametheca.utils.freshness.ids import resolve_steam_app_id
+from gametheca.utils.freshness.local import detect_local_facts
 
 
 def test_parse_version_tuple():

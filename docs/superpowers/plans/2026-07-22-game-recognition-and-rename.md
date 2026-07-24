@@ -24,14 +24,14 @@
 
 | File | Responsibility |
 |------|----------------|
-| `sharewarez/utils/game_name_parse.py` | Parse folder label → cleaned name + steam_app_id; FitGirl/tag stripping |
-| `sharewarez/utils/gamenames.py` | Delegate cleaning to parse helpers; keep public `clean_game_name` API |
-| `sharewarez/utils/match_scoring.py` | Score IGDB candidates; high/low confidence decision |
-| `sharewarez/utils/game_core.py` | Search limit N; use scorer; stop blind `limit 1` |
-| `sharewarez/utils/scanning.py` | Pending proposals vs auto-import |
-| `sharewarez/utils/disk_rename.py` | Safe rename preview/apply (1B) |
-| `sharewarez/utils/local_metadata.py` | Proposal sidecar R/W (Phase 2) |
-| `sharewarez/utils/library_doctor.py` | Batch dry-run / propose / apply (Phase 3) |
+| `gametheca/utils/game_name_parse.py` | Parse folder label → cleaned name + steam_app_id; FitGirl/tag stripping |
+| `gametheca/utils/gamenames.py` | Delegate cleaning to parse helpers; keep public `clean_game_name` API |
+| `gametheca/utils/match_scoring.py` | Score IGDB candidates; high/low confidence decision |
+| `gametheca/utils/game_core.py` | Search limit N; use scorer; stop blind `limit 1` |
+| `gametheca/utils/scanning.py` | Pending proposals vs auto-import |
+| `gametheca/utils/disk_rename.py` | Safe rename preview/apply (1B) |
+| `gametheca/utils/local_metadata.py` | Proposal sidecar R/W (Phase 2) |
+| `gametheca/utils/library_doctor.py` | Batch dry-run / propose / apply (Phase 3) |
 | Admin templates/routes | Review queue, rename UI, doctor UI |
 | `tests/test_utils_game_name_parse.py` | Real-library cleaning fixtures (no DB) |
 | `tests/test_utils_match_scoring.py` | Scoring thresholds (no DB) |
@@ -41,8 +41,8 @@
 ### Task 1: Parse folder labels (FitGirl + Steam App ID)
 
 **Files:**
-- Create: `sharewarez/utils/game_name_parse.py`
-- Modify: `sharewarez/utils/gamenames.py` (call into parse helpers)
+- Create: `gametheca/utils/game_name_parse.py`
+- Modify: `gametheca/utils/gamenames.py` (call into parse helpers)
 - Test: `tests/test_utils_game_name_parse.py`
 
 **Interfaces:**
@@ -53,7 +53,7 @@
 - [ ] **Step 1: Write failing tests** (no DB)
 
 ```python
-from sharewarez.utils.game_name_parse import parse_game_label
+from gametheca.utils.game_name_parse import parse_game_label
 
 def test_fitgirl_repack_stripped():
     r = parse_game_label("Assassin's Creed Shadows [FitGirl Repack]")
@@ -135,7 +135,7 @@ Run: `pytest tests/test_utils_game_name_parse.py tests/test_utils_gamenames.py::
 - [ ] **Step 5: Commit**
 
 ```bash
-git add sharewarez/utils/game_name_parse.py sharewarez/utils/gamenames.py tests/test_utils_game_name_parse.py tests/test_utils_gamenames.py
+git add gametheca/utils/game_name_parse.py gametheca/utils/gamenames.py tests/test_utils_game_name_parse.py tests/test_utils_gamenames.py
 git commit -m "Parse library folder labels for FitGirl tags and Steam App IDs."
 ```
 
@@ -144,7 +144,7 @@ git commit -m "Parse library folder labels for FitGirl tags and Steam App IDs."
 ### Task 2: Match scoring helper
 
 **Files:**
-- Create: `sharewarez/utils/match_scoring.py`
+- Create: `gametheca/utils/match_scoring.py`
 - Test: `tests/test_utils_match_scoring.py`
 
 **Interfaces:**
@@ -161,8 +161,8 @@ git commit -m "Parse library folder labels for FitGirl tags and Steam App IDs."
 ### Task 3: Wire scan/search to multi-candidate + confidence
 
 **Files:**
-- Modify: `sharewarez/utils/game_core.py` (`search_igdb_for_game` → `limit N`, return list)
-- Modify: `sharewarez/utils/scanning.py` / callers in `retrieve_and_save_game`
+- Modify: `gametheca/utils/game_core.py` (`search_igdb_for_game` → `limit N`, return list)
+- Modify: `gametheca/utils/scanning.py` / callers in `retrieve_and_save_game`
 - Test: unit tests with mocked IGDB HTTP (no live DB if possible); extend existing scan tests when PG available
 
 **Interfaces:**
@@ -191,7 +191,7 @@ git commit -m "Parse library folder labels for FitGirl tags and Steam App IDs."
 ### Task 5 (Phase 1B): Disk rename service
 
 **Files:**
-- Create: `sharewarez/utils/disk_rename.py`
+- Create: `gametheca/utils/disk_rename.py`
 - Test: `tests/test_utils_disk_rename.py` (temp dirs, no PG)
 
 **Interfaces:**
@@ -217,7 +217,7 @@ git commit -m "Parse library folder labels for FitGirl tags and Steam App IDs."
 
 ### Task 7 (Phase 2): Proposal sidecars
 
-- Extend `local_metadata.py` read/write proposal section or `sharewarez.proposal.json`
+- Extend `local_metadata.py` read/write proposal section or `gametheca.proposal.json`
 - Propose-only scan setting
 - Batch approve/reject admin list
 - Commit `Persist match proposals to local sidecars.`

@@ -4,11 +4,11 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from flask import Flask
-from sharewarez import create_app, db
-from sharewarez.models import (
+from gametheca import create_app, db
+from gametheca.models import (
     Game, Library, DiscoverySection, Image, User
 )
-from sharewarez.platform import LibraryPlatform
+from gametheca.platform import LibraryPlatform
 from sqlalchemy import select
 
 
@@ -139,8 +139,8 @@ def test_images(db_session, test_games):
 class TestDiscoverRoute:
     """Test the discover route functionality."""
 
-    @patch('sharewarez.routes_discover.get_loc')
-    @patch('sharewarez.routes_discover.get_global_settings')
+    @patch('gametheca.routes_discover.get_loc')
+    @patch('gametheca.routes_discover.get_global_settings')
     def test_discover_route_requires_login(self, mock_get_global_settings, mock_get_loc, client):
         """Test that discover route requires authentication."""
         mock_get_global_settings.return_value = {}
@@ -151,8 +151,8 @@ class TestDiscoverRoute:
         assert response.status_code == 302
         assert '/login' in response.location
 
-    @patch('sharewarez.routes_discover.get_loc')
-    @patch('sharewarez.routes_discover.get_global_settings')
+    @patch('gametheca.routes_discover.get_loc')
+    @patch('gametheca.routes_discover.get_global_settings')
     def test_discover_route_with_authenticated_user_mock(self, mock_get_global_settings, 
                                                         mock_get_loc, app, test_discovery_sections,
                                                         test_games, test_libraries, test_images):
@@ -163,7 +163,7 @@ class TestDiscoverRoute:
         with app.test_client() as client:
             with app.app_context():
                 # Test that the route can be imported and the core logic works
-                from sharewarez.routes_discover import discover
+                from gametheca.routes_discover import discover
                 assert callable(discover)
                 
                 # Test database queries work correctly
@@ -234,11 +234,11 @@ class TestDiscoverSectionQueries:
 class TestGameDetails:
     """Test game details functionality."""
 
-    @patch('sharewarez.routes_discover.game_card_flags')
+    @patch('gametheca.routes_discover.game_card_flags')
     def test_discover_game_data_matches_shared_card_shape(
         self, mock_game_card_flags
     ):
-        from sharewarez.routes_discover import serialize_discover_game
+        from gametheca.routes_discover import serialize_discover_game
 
         app = Flask(__name__)
         mock_game_card_flags.return_value = {'is_vr': True}
@@ -266,9 +266,11 @@ class TestGameDetails:
         assert result['is_favorite'] is True
         assert result['has_local_override'] is True
         assert result['is_vr'] is True
+        assert result['lifecycle_state'] == 'not_downloaded'
+        assert result['client_connected'] is False
 
     def test_discover_game_data_preserves_static_cover_url(self):
-        from sharewarez.routes_discover import serialize_discover_game
+        from gametheca.routes_discover import serialize_discover_game
 
         app = Flask(__name__)
         game = Mock(
@@ -330,14 +332,14 @@ class TestGameDetails:
 class TestContextProcessor:
     """Test the context processor functionality."""
 
-    @patch('sharewarez.routes_discover.get_global_settings')
+    @patch('gametheca.routes_discover.get_global_settings')
     def test_inject_settings_context_processor(self, mock_get_global_settings, app):
         """Test that the context processor injects global settings."""
-        mock_settings = {'theme': 'default', 'site_name': 'SharewareZ'}
+        mock_settings = {'theme': 'default', 'site_name': 'GameTheca'}
         mock_get_global_settings.return_value = mock_settings
         
         with app.app_context():
-            from sharewarez.routes_discover import inject_settings
+            from gametheca.routes_discover import inject_settings
             result = inject_settings()
             
         assert result == mock_settings
