@@ -1,4 +1,4 @@
-__pycache__
+﻿__pycache__
 config.portainer
 config.backup
 config.py.backup
@@ -62,17 +62,15 @@ logs/
 # Node
 node_modules/
 
-# Development
-.git/
-.gitignore
-.github/
+# Development / scratch (do not ignore real project docs or CI)
 .claude/
 .codebuddy/
 CLAUDE.md
 letsrebuild.md
-*.md
-!README.md
-.vscode
+# Root-only scratch markdown; keep README, CHANGELOG, and all docs/
+/*.md
+!/README.md
+!/CHANGELOG.md
 
 # IDE
 .vscode/
