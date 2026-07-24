@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import { DiscoverApp } from './DiscoverApp'
 import { FavoritesApp } from './FavoritesApp'
+import { GameDetailsApp, parseGameDetailsRootConfig } from './GameDetailsApp'
 import { LibraryApp } from './LibraryApp'
 
 export function parseRootConfig(rootElement) {
@@ -22,6 +23,7 @@ export function parseRootConfig(rootElement) {
     enableDeleteOnDisk: rootElement.dataset.enableDeleteOnDisk === 'true',
     discordConfigured: rootElement.dataset.discordConfigured === 'true',
     discordManualTrigger: rootElement.dataset.discordManualTrigger === 'true',
+    locale: rootElement.dataset.locale || 'en',
     currentFilters,
   }
 }
@@ -67,5 +69,12 @@ const discoverRootElement = document.getElementById('discover-grid-root')
 if (discoverRootElement) {
   createRoot(discoverRootElement).render(
     <DiscoverApp {...parseDiscoverRootConfig(discoverRootElement)} />,
+  )
+}
+
+const detailsRootElement = document.getElementById('game-details-react-root')
+if (detailsRootElement) {
+  createRoot(detailsRootElement).render(
+    <GameDetailsApp {...parseGameDetailsRootConfig(detailsRootElement)} />,
   )
 }

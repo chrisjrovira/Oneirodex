@@ -1,0 +1,148 @@
+"""Tests for ops follow-ons: AI apply, arr→hardlink, OIDC local-optional."""
+
+from __future__ import annotations
+
+import os
+from uuid import uuid4
+
+import pytest
+from flask_login import login_user
+
+from gametheca.models import Game, Library, User
+from gametheca.platform import LibraryPlatform
+from gametheca.utils.arr_hardlink_pipeline import apply_proposals, propose_hardlinks
+
+
+@pytest.fixture
+def admin(db_session):
+    uid = str(uuid4())
+    row = User(
+        name=f'ops_{uid[:8]}',
+        email=f'ops_{uid[:8]}@example.com',
+        role='admin',
+        user_id=uid,
+        state=True,
+    )
+    row.set_password('password123')
+    db_session.add(row)
+    db_session.commit()
+    return row
+
+
+def _login(client, app, user):
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(user.get_id())
+        sess['_fresh'] = True
+    with app.test_request_context():
+        login_user(user)
+
+
+def test_ai_apply_requires_flag(client, app, admin, db_session, tmp_path):
+    _login(client, app, admin)
+    app.config['ENABLE_AI_ASSIST'] = True
+    app.config['ENABLE_AI_AUTO_APPLY'] = False
+    lib = Library(name=f'L_{uuid4().hex[:6]}', platform=LibraryPlatform.PCWIN)
+    db_session.add(lib)
+    db_session.flush()
+    game = Game(
+        uuid=str(uuid4()),
+        name='Old Name',
+        library_uuid=lib.uuid,
+        full_disk_path=str(tmp_path / 'g'),
+    )
+    db_session.add(game)
+    db_session.commit()
+    resp = client.post('/api/ai/apply-triage', json={
+        'game_uuid': game.uuid,
+        'title': 'New Name',
+    })
+    assert resp.status_code == 403
+
+
+def test_ai_apply_renames_when_enabled(client, app, admin, db_session, tmp_path):
+    _login(client, app, admin)
+    app.config['ENABLE_AI_ASSIST'] = True
+    app.config['ENABLE_AI_AUTO_APPLY'] = True
+    lib = Library(name=f'L_{uuid4().hex[:6]}', platform=LibraryPlatform.PCWIN)
+    db_session.add(lib)
+    db_session.flush()
+    game = Game(
+        uuid=str(uuid4()),
+        name='Old Name',
+        library_uuid=lib.uuid,
+        full_disk_path=str(tmp_path / 'g'),
+    )
+    db_session.add(game)
+    db_session.commit()
+    resp = client.post('/api/ai/apply-triage', json={
+        'game_uuid': game.uuid,
+        'title': 'Celeste',
+    })
+    assert resp.status_code == 201
+    assert resp.get_json()['name'] == 'Celeste'
+    db_session.refresh(game)
+    assert game.name == 'Celeste'
+
+
+def test_arr_hardlink_pipeline_flag_off(client, app, admin):
+    _login(client, app, admin)
+    app.config['ENABLE_ARR_MODULE'] = True
+    app.config['ENABLE_ARR_HARDLINK_PIPELINE'] = False
+    resp = client.post('/api/arr/hardlink/preview', json={'library_dest_dir': 'C:\\tmp'})
+    assert resp.status_code == 403
+
+
+def test_propose_hardlinks_from_file(app, tmp_path, monkeypatch):
+    app.config['ENABLE_ARR_HARDLINK_PIPELINE'] = True
+    app.config['ENABLE_HARDLINK_HELPERS'] = True
+    src_dir = tmp_path / 'dl'
+    dest_dir = tmp_path / 'lib'
+    src_dir.mkdir()
+    dest_dir.mkdir()
+    src = src_dir / 'game.bin'
+    src.write_bytes(b'abc')
+
+    monkeypatch.setattr(
+        'gametheca.utils.arr_hardlink_pipeline.get_allowed_base_directories',
+        lambda _app: [str(tmp_path)],
+    )
+    monkeypatch.setattr(
+        'gametheca.utils.arr_hardlink_pipeline.list_completed_torrents',
+        lambda limit=50: [{
+            'hash': 'abc',
+            'name': 'game',
+            'content_path': str(src),
+        }],
+    )
+    with app.app_context():
+        result = propose_hardlinks(str(dest_dir), torrents=[{
+            'hash': 'abc',
+            'name': 'game',
+            'content_path': str(src),
+        }])
+    assert result['count'] == 1
+    assert result['proposals'][0]['preview']['would_succeed'] is True
+
+    app.config['ALLOW_HARDLINK_APPLY'] = True
+    with app.app_context():
+        applied = apply_proposals(result['proposals'])
+    assert applied['applied_count'] == 1
+    assert os.path.isfile(result['proposals'][0]['dest'])
+
+
+def test_oidc_status_local_optional(client, app, admin):
+    _login(client, app, admin)
+    app.config['OIDC_ENABLED'] = False
+    # readiness uses env; ensure endpoint works for operators
+    resp = client.get('/api/oidc/status')
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert 'ready' in body
+    assert body['ready'] is False
+
+
+def test_vr_sw_route(client, app):
+    app.config['ENABLE_VR_BROWSE'] = True
+    resp = client.get('/vr/sw.js')
+    assert resp.status_code == 200
+    assert 'serviceWorker' in resp.get_data(as_text=True) or 'CACHE' in resp.get_data(as_text=True)

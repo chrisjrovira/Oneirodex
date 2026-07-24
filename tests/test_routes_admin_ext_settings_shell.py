@@ -8,8 +8,8 @@ and that every shell section deep-links to an existing, registered route.
 import pytest
 from uuid import uuid4
 
-from sharewarez.models import User
-from sharewarez.routes_admin_ext.settings import (
+from gametheca.models import User
+from gametheca.routes_admin_ext.settings import (
     SETTINGS_SHELL_SECTIONS, DEFAULT_SETTINGS_SHELL_SECTION
 )
 

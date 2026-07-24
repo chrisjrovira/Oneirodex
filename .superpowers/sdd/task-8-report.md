@@ -14,7 +14,7 @@
 
 - `npm test -- --run`: 7 files, 16 tests passed.
 - `npm run build`: passed; 39 modules transformed.
-- `python -m py_compile sharewarez/routes_apis/user.py sharewarez/routes_site.py tests/test_routes_api_favorites.py`: passed.
+- `python -m py_compile gametheca/routes_apis/user.py gametheca/routes_site.py tests/test_routes_api_favorites.py`: passed.
 - `pytest tests/test_routes_api_favorites.py -q`: could not execute the test because PostgreSQL was unavailable at `localhost:5432`; fixture setup ended with `OperationalError` after connection retries.
 
 ## Concerns

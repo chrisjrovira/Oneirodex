@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/static/dist/library-grid/',
   build: {
-    outDir: path.resolve(__dirname, '../../sharewarez/static/dist/library-grid'),
+    outDir: path.resolve(__dirname, '../../gametheca/static/dist/library-grid'),
     emptyOutDir: true,
     rollupOptions: {
       input: path.resolve(__dirname, 'index.html'),

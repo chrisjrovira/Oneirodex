@@ -1,0 +1,204 @@
+"""Ollama-backed AI assist (suggestions by default; apply is double-gated)."""
+
+from __future__ import annotations
+
+import re
+from typing import Any
+
+import requests
+from flask import current_app
+from sqlalchemy import select
+
+from gametheca import db
+from gametheca.models import Game, GlobalSettings
+from gametheca.utils.event_logging import log_system_event
+
+DEFAULT_TIMEOUT = 30
+
+
+def ai_enabled() -> bool:
+    if str(current_app.config.get('ENABLE_AI_ASSIST', '')).lower() in (
+        '1', 'true', 'yes', 'on',
+    ):
+        return True
+    settings = db.session.execute(
+        select(GlobalSettings).order_by(GlobalSettings.id).limit(1),
+    ).scalars().first()
+    return bool(getattr(settings, 'enable_ai_assist', False)) if settings else False
+
+
+def ai_auto_apply_enabled() -> bool:
+    """Requires AI assist + explicit ENABLE_AI_AUTO_APPLY (never silent)."""
+    if not ai_enabled():
+        return False
+    return str(current_app.config.get('ENABLE_AI_AUTO_APPLY', '')).lower() in (
+        '1', 'true', 'yes', 'on',
+    )
+
+
+def _ollama_config() -> tuple[str, str]:
+    settings = db.session.execute(
+        select(GlobalSettings).order_by(GlobalSettings.id).limit(1),
+    ).scalars().first()
+    base = (
+        (getattr(settings, 'ollama_base_url', None) if settings else None)
+        or current_app.config.get('OLLAMA_BASE_URL')
+        or 'http://127.0.0.1:11434'
+    ).rstrip('/')
+    model = (
+        (getattr(settings, 'ollama_model', None) if settings else None)
+        or current_app.config.get('OLLAMA_MODEL')
+        or 'llama3.2'
+    )
+    return base, model
+
+
+def ollama_status() -> dict[str, Any]:
+    enabled = ai_enabled()
+    base, model = _ollama_config()
+    reachable = False
+    error = None
+    if enabled:
+        try:
+            resp = requests.get(f'{base}/api/tags', timeout=5)
+            reachable = resp.status_code < 500
+            if resp.status_code >= 400:
+                error = f'Ollama returned {resp.status_code}'
+        except requests.RequestException as exc:
+            error = str(exc)
+    return {
+        'enabled': enabled,
+        'auto_apply_enabled': ai_auto_apply_enabled(),
+        'reachable': reachable,
+        'base_url': base,
+        'model': model,
+        'error': error,
+    }
+
+
+def _chat(system: str, user: str) -> str:
+    if not ai_enabled():
+        raise PermissionError('AI assist is disabled')
+    base, model = _ollama_config()
+    try:
+        resp = requests.post(
+            f'{base}/api/chat',
+            json={
+                'model': model,
+                'stream': False,
+                'messages': [
+                    {'role': 'system', 'content': system},
+                    {'role': 'user', 'content': user},
+                ],
+            },
+            timeout=DEFAULT_TIMEOUT,
+        )
+    except requests.RequestException as exc:
+        raise ConnectionError(f'Ollama unreachable: {exc}') from exc
+    if resp.status_code >= 400:
+        raise ConnectionError(f'Ollama error ({resp.status_code})')
+    payload = resp.json() if resp.content else {}
+    message = payload.get('message') or {}
+    content = message.get('content') or payload.get('response') or ''
+    return str(content).strip()
+
+
+def _parse_ranked_titles(text: str) -> list[dict[str, Any]]:
+    suggestions: list[dict[str, Any]] = []
+    for line in (text or '').splitlines():
+        match = re.match(r'^\s*(?:\d+[\).:-]|[-*])\s*(.+)$', line.strip())
+        if not match:
+            continue
+        title = match.group(1).strip().strip('"\'')
+        if title:
+            suggestions.append({'rank': len(suggestions) + 1, 'title': title[:200]})
+        if len(suggestions) >= 5:
+            break
+    if not suggestions and text.strip():
+        suggestions.append({'rank': 1, 'title': text.strip().splitlines()[0][:200]})
+    return suggestions
+
+
+def triage_folder(name: str, platform: str | None = None) -> dict[str, Any]:
+    folder = (name or '').strip()
+    if not folder:
+        raise ValueError('folder name is required')
+    system = (
+        'You suggest likely game titles for a DRM-free self-hosted library. '
+        'Reply with a numbered list of up to 5 clean game titles only. No downloads.'
+    )
+    user = f'Folder name: {folder}\nPlatform: {platform or "unknown"}'
+    content = _chat(system, user)
+    return {
+        'query': folder,
+        'platform': platform,
+        'raw': content,
+        'suggestions': _parse_ranked_titles(content),
+        'auto_apply_enabled': ai_auto_apply_enabled(),
+    }
+
+
+def doctor_notes(context: dict[str, Any]) -> dict[str, Any]:
+    game_name = (context.get('game_name') or context.get('name') or 'Unknown').strip()
+    issues = context.get('issues') or context.get('issue_codes') or []
+    if isinstance(issues, str):
+        issues = [issues]
+    issue_text = ', '.join(str(i) for i in issues) if issues else 'general health review'
+    system = (
+        'You are a library doctor assistant for a self-hosted game library. '
+        'Explain issues in plain language and suggest next steps. Do not invent '
+        'file paths. Do not claim you modified anything.'
+    )
+    user = (
+        f'Game: {game_name}\n'
+        f'Issues: {issue_text}\n'
+        f'Extra: {context.get("summary") or context.get("extra") or "n/a"}'
+    )
+    content = _chat(system, user)
+    return {
+        'game_name': game_name,
+        'issues': list(issues),
+        'notes': content,
+    }
+
+
+def apply_triage_title(game_uuid: str, title: str) -> dict[str, Any]:
+    """Apply a triage suggestion by renaming an existing library game (admin action)."""
+    if not ai_auto_apply_enabled():
+        raise PermissionError(
+            'AI auto-apply is disabled. Set ENABLE_AI_AUTO_APPLY=true (and ENABLE_AI_ASSIST).',
+        )
+    uuid = (game_uuid or '').strip()
+    new_name = (title or '').strip()[:200]
+    if not uuid:
+        raise ValueError('game_uuid is required')
+    if not new_name:
+        raise ValueError('title is required')
+    game = db.session.execute(select(Game).filter_by(uuid=uuid)).scalars().first()
+    if not game:
+        raise LookupError('Game not found')
+    old_name = game.name
+    if old_name == new_name:
+        return {
+            'applied': False,
+            'unchanged': True,
+            'game_uuid': uuid,
+            'name': new_name,
+        }
+    game.name = new_name
+    db.session.commit()
+    try:
+        log_system_event(
+            f'AI triage apply: renamed "{old_name}" → "{new_name}" ({uuid})',
+            event_type='audit',
+            event_level='information',
+        )
+    except Exception:
+        pass
+    return {
+        'applied': True,
+        'unchanged': False,
+        'game_uuid': uuid,
+        'old_name': old_name,
+        'name': new_name,
+    }

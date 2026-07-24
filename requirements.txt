@@ -3,6 +3,7 @@ flask_wtf
 flask_sqlalchemy
 flask_login
 flask_caching
+flask-babel
 argon2_cffi
 pillow
 WTForms_SQLAlchemy
@@ -18,4 +19,8 @@ asgiref
 aiofiles
 zipstream_new
 howlongtobeatpy
+authlib
+cryptography
+py7zr
+rarfile
 

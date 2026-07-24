@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch
 
-from sharewarez.utils.statistics import get_download_statistics
+from gametheca.utils.statistics import get_download_statistics
 
 
 
@@ -20,7 +20,7 @@ class TestGetDownloadStatistics:
             mock_execute = MagicMock()
             mock_execute.return_value.all.return_value = []
             
-            with patch('sharewarez.utils.statistics.db.session.execute', mock_execute):
+            with patch('gametheca.utils.statistics.db.session.execute', mock_execute):
                 result = get_download_statistics()
             
             # Should return dict with all expected keys
@@ -79,7 +79,7 @@ class TestGetDownloadStatistics:
                 users_with_invites_data        # Sixth call: users_with_invites
             ]
             
-            with patch('sharewarez.utils.statistics.db.session.execute', mock_execute):
+            with patch('gametheca.utils.statistics.db.session.execute', mock_execute):
                 result = get_download_statistics()
             
             # Verify structure
@@ -142,7 +142,7 @@ class TestGetDownloadStatistics:
                 []   # users_with_invites - empty
             ]
             
-            with patch('sharewarez.utils.statistics.db.session.execute', mock_execute):
+            with patch('gametheca.utils.statistics.db.session.execute', mock_execute):
                 result = get_download_statistics()
             
             # Only top_collectors should have data
@@ -172,7 +172,7 @@ class TestGetDownloadStatistics:
                 [('alice', 3), ('bob', 1)]  # users_with_invites - has data
             ]
             
-            with patch('sharewarez.utils.statistics.db.session.execute', mock_execute):
+            with patch('gametheca.utils.statistics.db.session.execute', mock_execute):
                 result = get_download_statistics()
             
             # Only users_with_invites should have data
@@ -205,7 +205,7 @@ class TestGetDownloadStatistics:
                 []   # users_with_invites - empty
             ]
             
-            with patch('sharewarez.utils.statistics.db.session.execute', mock_execute):
+            with patch('gametheca.utils.statistics.db.session.execute', mock_execute):
                 result = get_download_statistics()
             
             # download_trends should only include recent downloads (3 total)
@@ -238,7 +238,7 @@ class TestGetDownloadStatistics:
                 users_with_invites_data   # users_with_invites - ordered by count desc, limited to 10
             ]
             
-            with patch('sharewarez.utils.statistics.db.session.execute', mock_execute):
+            with patch('gametheca.utils.statistics.db.session.execute', mock_execute):
                 result = get_download_statistics()
             
             # Test top_downloaders ordering and limit

@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-load-config"
+description = "Allows loading desktop config from app data."
+commands.allow = ["load_config"]

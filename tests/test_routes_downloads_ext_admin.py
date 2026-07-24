@@ -2,9 +2,9 @@ import pytest
 import json
 from flask import url_for
 from unittest.mock import patch, MagicMock
-from sharewarez.models import User, DownloadRequest, Game, Library
-from sharewarez.platform import LibraryPlatform
-from sharewarez import db
+from gametheca.models import User, DownloadRequest, Game, Library
+from gametheca.platform import LibraryPlatform
+from gametheca import db
 from uuid import uuid4
 from datetime import datetime, timezone
 
@@ -143,7 +143,7 @@ class TestDeleteDownloadRequestRoute:
         response = client.post(f'/delete_download_request/{sample_download_request.id}')
         assert response.status_code == 302  # Should redirect due to lack of admin access
 
-    @patch('sharewarez.routes_downloads_ext.admin.log_system_event')
+    @patch('gametheca.routes_downloads_ext.admin.log_system_event')
     def test_delete_download_request_success(self, mock_log, client, admin_user, sample_download_request, app):
         """Test successful deletion of download request."""
         with client.session_transaction() as session:
@@ -228,7 +228,7 @@ class TestIntegration:
         assert response.status_code == 200
 
         # 2. Delete completed request
-        with patch('sharewarez.routes_downloads_ext.admin.log_system_event'):
+        with patch('gametheca.routes_downloads_ext.admin.log_system_event'):
             response = client.post(f'/delete_download_request/{completed_request.id}')
             assert response.status_code == 302
 

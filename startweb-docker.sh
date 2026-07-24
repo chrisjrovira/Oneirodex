@@ -20,8 +20,8 @@ if [[ "$FORCE_SETUP" == "true" ]]; then
 from dotenv import load_dotenv
 load_dotenv()
 
-from sharewarez import create_app, db
-from sharewarez.utils.setup import reset_setup_state
+from gametheca import create_app, db
+from gametheca.utils.setup import reset_setup_state
 
 # Create app and reset database
 app = create_app()
@@ -44,7 +44,7 @@ echo "Starting GameTheca with uvicorn in Docker container..."
 
 # Run complete startup initialization once before starting workers
 python3 -c "
-from sharewarez.init_manager import run_complete_startup_initialization
+from gametheca.init_manager import run_complete_startup_initialization
 import sys
 
 print('🚀 Starting GameTheca initialization...')
@@ -55,8 +55,8 @@ print('✅ Initialization completed - starting workers...')
 "
 
 # Ensure environment variables are set for worker processes
-export SHAREWAREZ_MIGRATIONS_COMPLETE=true
-export SHAREWAREZ_INITIALIZATION_COMPLETE=true
+export GAMETHECA_MIGRATIONS_COMPLETE=true
+export GAMETHECA_INITIALIZATION_COMPLETE=true
 
 # Start uvicorn for Docker (bind to all interfaces, multiple workers for better performance)
 # Note: Using 4 workers to match non-Docker performance

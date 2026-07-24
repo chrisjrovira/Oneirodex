@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="max-width: 640px; margin: 2rem auto;">
+    <h1>AI assist</h1>
+    <p class="text-muted">
+        Ollama suggestions by default. Renaming a game from a suggestion requires
+        <code>ENABLE_AI_AUTO_APPLY=true</code> (never silent / background).
+    </p>
+    <div id="ai-status" class="mb-3 text-muted">Loading…</div>
+    <div class="mb-3">
+        <label class="form-label">Folder / title to triage</label>
+        <input id="ai-name" class="form-control" placeholder="Celeste-FitGirl">
+    </div>
+    <button id="ai-triage" class="btn btn-primary mb-3">Suggest matches</button>
+    <div class="mb-3">
+        <label class="form-label">Apply suggestion → game UUID</label>
+        <input id="ai-apply-uuid" class="form-control" placeholder="existing game uuid">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Title to apply</label>
+        <input id="ai-apply-title" class="form-control" placeholder="Clean game title">
+    </div>
+    <button id="ai-apply" class="btn btn-warning mb-3">Apply rename (gated)</button>
+    <div class="mb-3">
+        <label class="form-label">Doctor notes — game UUID (optional)</label>
+        <input id="ai-game" class="form-control" placeholder="game uuid">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Issue codes (comma-separated)</label>
+        <input id="ai-issues" class="form-control" placeholder="missing_cover, path_mismatch">
+    </div>
+    <button id="ai-doctor" class="btn btn-secondary">Explain issues</button>
+    <pre id="ai-out" class="mt-3 p-3 bg-dark text-light rounded" style="min-height:140px"></pre>
+    <p class="mt-4"><a href="{{ url_for('admin2.admin_dashboard') }}">Back to admin</a></p>
+</div>
+<script>
+(async function () {
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+  const headers = { 'Content-Type': 'application/json', 'X-CSRFToken': csrf };
+  const out = document.getElementById('ai-out');
+  const status = document.getElementById('ai-status');
+  try {
+    const res = await fetch('/api/ai/status', { credentials: 'same-origin' });
+    const data = await res.json();
+    status.textContent = `enabled=${data.enabled} auto_apply=${data.auto_apply_enabled} reachable=${data.reachable} model=${data.model || '—'} ${data.error || ''}`;
+  } catch (e) {
+    status.textContent = e.message;
+  }
+  document.getElementById('ai-triage').onclick = async () => {
+    const res = await fetch('/api/ai/triage', {
+      method: 'POST', credentials: 'same-origin', headers,
+      body: JSON.stringify({ name: document.getElementById('ai-name').value.trim() }),
+    });
+    const data = await res.json();
+    out.textContent = JSON.stringify(data, null, 2);
+    const first = (data.suggestions || [])[0];
+    if (first && first.title) {
+      document.getElementById('ai-apply-title').value = first.title;
+    }
+  };
+  document.getElementById('ai-apply').onclick = async () => {
+    const res = await fetch('/api/ai/apply-triage', {
+      method: 'POST', credentials: 'same-origin', headers,
+      body: JSON.stringify({
+        game_uuid: document.getElementById('ai-apply-uuid').value.trim(),
+        title: document.getElementById('ai-apply-title').value.trim(),
+      }),
+    });
+    out.textContent = JSON.stringify(await res.json(), null, 2);
+  };
+  document.getElementById('ai-doctor').onclick = async () => {
+    const issues = document.getElementById('ai-issues').value.split(',').map(s => s.trim()).filter(Boolean);
+    const res = await fetch('/api/ai/doctor-notes', {
+      method: 'POST', credentials: 'same-origin', headers,
+      body: JSON.stringify({
+        game_uuid: document.getElementById('ai-game').value.trim() || undefined,
+        issues,
+      }),
+    });
+    out.textContent = JSON.stringify(await res.json(), null, 2);
+  };
+})();
+</script>
+{% endblock %}

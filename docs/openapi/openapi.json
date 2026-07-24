@@ -1,0 +1,251 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "GameTheca API",
+    "version": "2.9.8",
+    "description": "Self-hosted multi-user game library API. Authenticate with session cookies or Authorization: Bearer gt_<prefix>_<secret>."
+  },
+  "servers": [
+    { "url": "/", "description": "Current host" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "gt_token"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "session"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        }
+      },
+      "ApiTokenPublic": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "token_prefix": { "type": "string" },
+          "scopes": { "type": "array", "items": { "type": "string" } },
+          "created_at": { "type": "string", "format": "date-time" },
+          "last_used_at": { "type": "string", "format": "date-time", "nullable": true },
+          "revoked": { "type": "boolean" }
+        }
+      },
+      "LibraryHealth": {
+        "type": "object",
+        "properties": {
+          "count": { "type": "integer" },
+          "average_score": { "type": "number" },
+          "grade_counts": { "type": "object" },
+          "top_issues": { "type": "array", "items": { "type": "object" } },
+          "worst": { "type": "array", "items": { "type": "object" } }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/openapi.json": {
+      "get": {
+        "summary": "OpenAPI document",
+        "responses": {
+          "200": { "description": "OpenAPI JSON" }
+        }
+      }
+    },
+    "/api/tokens": {
+      "get": {
+        "summary": "List personal API tokens",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "Token list" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Create personal API token",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "scopes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["read:library", "write:download", "write:library", "admin"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created; includes one-time secret" },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/api/tokens/{token_id}": {
+      "delete": {
+        "summary": "Revoke a personal API token",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "token_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Revoked" },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/api/health/library": {
+      "get": {
+        "summary": "Library health summary (admin)",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 200 }
+          },
+          {
+            "name": "library_uuid",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Health summary",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LibraryHealth" }
+              }
+            }
+          },
+          "403": { "description": "Admin required" }
+        }
+      }
+    },
+    "/api/health/games/{game_uuid}": {
+      "get": {
+        "summary": "Per-game health score",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "game_uuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Game health" },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/api/events/stream": {
+      "get": {
+        "summary": "SSE stream for scan/download events",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "text/event-stream" }
+        }
+      }
+    },
+    "/api/search": {
+      "get": {
+        "summary": "Search games by name",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Search results" }
+        }
+      }
+    },
+    "/api/collections": {
+      "get": {
+        "summary": "List visible collections",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "Collection list" } }
+      },
+      "post": {
+        "summary": "Create a collection",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "201": { "description": "Created" }, "400": { "description": "Validation error" } }
+      }
+    },
+    "/api/announcements": {
+      "get": {
+        "summary": "List published announcements",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "Announcement list" } }
+      },
+      "post": {
+        "summary": "Publish announcement (admin)",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "201": { "description": "Created" }, "403": { "description": "Admin required" } }
+      }
+    },
+    "/api/requests": {
+      "get": {
+        "summary": "List wishlist requests",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "Request list" } }
+      },
+      "post": {
+        "summary": "Create wishlist request",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "201": { "description": "Created" }, "403": { "description": "Blocked for role" } }
+      }
+    },
+    "/api/updates/inbox": {
+      "get": {
+        "summary": "Freshness updates inbox",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "Behind / heuristic-behind games" } }
+      }
+    },
+    "/api/playtime/sessions": {
+      "post": {
+        "summary": "Start a play session",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "201": { "description": "Session started" } }
+      }
+    },
+    "/api/playtime/me": {
+      "get": {
+        "summary": "Current user playtime aggregates",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "Totals and per-game progress" } }
+      }
+    }
+  }
+}

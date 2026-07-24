@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-launch-game"
+description = "Allows launching installed game executables."
+commands.allow = ["launch_game"]

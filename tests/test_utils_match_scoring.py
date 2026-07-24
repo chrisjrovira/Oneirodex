@@ -1,6 +1,6 @@
 """Unit tests for IGDB candidate confidence scoring (no DB)."""
 
-from sharewarez.utils.match_scoring import score_candidate, classify_confidence, normalize_for_score
+from gametheca.utils.match_scoring import score_candidate, classify_confidence, normalize_for_score
 
 
 def test_normalize_strips_noise():

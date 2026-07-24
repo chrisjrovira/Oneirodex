@@ -7,9 +7,9 @@ from unittest.mock import patch, MagicMock, call
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from sharewarez import create_app, db
-from sharewarez.models import DownloadRequest, Game, User, GlobalSettings, Library, LibraryPlatform
-from sharewarez.utils.download import (
+from gametheca import create_app, db
+from gametheca.models import DownloadRequest, Game, User, GlobalSettings, Library, LibraryPlatform
+from gametheca.utils.download import (
     zip_game,
     update_download_request,
     zip_folder

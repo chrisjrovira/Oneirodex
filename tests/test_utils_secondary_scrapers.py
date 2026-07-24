@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from sharewarez.utils.secondary_scrapers import (
+from gametheca.utils.secondary_scrapers import (
     VR_PERSPECTIVE_NAME,
     apply_steam_enrichment_to_game,
     categories_indicate_vr,
@@ -60,7 +60,7 @@ def test_game_indicates_vr():
 
 
 def test_game_card_flags_include_is_vr():
-    from sharewarez.utils.secondary_scrapers import game_card_flags
+    from gametheca.utils.secondary_scrapers import game_card_flags
 
     vr_game = SimpleNamespace(
         player_perspectives=[SimpleNamespace(name=VR_PERSPECTIVE_NAME)]
@@ -95,7 +95,7 @@ def test_apply_steam_enrichment_adds_vr_perspective():
     }
 
     with patch(
-        'sharewarez.utils.secondary_scrapers.fetch_steam_data',
+        'gametheca.utils.secondary_scrapers.fetch_steam_data',
         return_value=steam_payload,
     ):
         result = apply_steam_enrichment_to_game(
@@ -117,7 +117,7 @@ def test_apply_steam_enrichment_no_steam_data():
         raise AssertionError('should not create entities without steam data')
 
     with patch(
-        'sharewarez.utils.secondary_scrapers.fetch_steam_data',
+        'gametheca.utils.secondary_scrapers.fetch_steam_data',
         return_value=None,
     ):
         result = apply_steam_enrichment_to_game(
@@ -129,10 +129,10 @@ def test_apply_steam_enrichment_no_steam_data():
     assert result['is_vr'] is False
 
 
-@patch('sharewarez.utils.game_core.apply_enriched_metadata')
-@patch('sharewarez.utils.game_core.fetch_steam_data')
+@patch('gametheca.utils.game_core.apply_enriched_metadata')
+@patch('gametheca.utils.game_core.fetch_steam_data')
 def test_enrich_game_with_steam_delegates(mock_fetch, mock_apply):
-    from sharewarez.utils.game_core import enrich_game_with_steam
+    from gametheca.utils.game_core import enrich_game_with_steam
 
     game = SimpleNamespace(name='Archery Kings VR', player_perspectives=[])
     mock_fetch.return_value = {
@@ -154,10 +154,10 @@ def test_enrich_game_with_steam_delegates(mock_fetch, mock_apply):
     assert callable(mock_apply.call_args.kwargs['perspective_factory'])
 
 
-@patch('sharewarez.utils.game_core.apply_enriched_metadata')
-@patch('sharewarez.utils.game_core.fetch_steam_data')
+@patch('gametheca.utils.game_core.apply_enriched_metadata')
+@patch('gametheca.utils.game_core.fetch_steam_data')
 def test_enrich_game_with_steam_logs_vr_yes(mock_fetch, mock_apply, capsys):
-    from sharewarez.utils.game_core import enrich_game_with_steam
+    from gametheca.utils.game_core import enrich_game_with_steam
 
     game = SimpleNamespace(name='Archery Kings VR', player_perspectives=[])
     mock_fetch.return_value = {
@@ -174,10 +174,10 @@ def test_enrich_game_with_steam_logs_vr_yes(mock_fetch, mock_apply, capsys):
     assert "Archery Kings VR" in out
 
 
-@patch('sharewarez.utils.game_core.apply_enriched_metadata')
-@patch('sharewarez.utils.game_core.fetch_steam_data')
+@patch('gametheca.utils.game_core.apply_enriched_metadata')
+@patch('gametheca.utils.game_core.fetch_steam_data')
 def test_enrich_game_with_steam_logs_vr_no_when_skipped(mock_fetch, mock_apply, capsys):
-    from sharewarez.utils.game_core import enrich_game_with_steam
+    from gametheca.utils.game_core import enrich_game_with_steam
 
     game = SimpleNamespace(name='Plain Game', player_perspectives=[])
     mock_fetch.return_value = None
@@ -189,10 +189,10 @@ def test_enrich_game_with_steam_logs_vr_no_when_skipped(mock_fetch, mock_apply, 
     mock_apply.assert_not_called()
 
 
-@patch('sharewarez.utils.game_core.apply_enriched_metadata')
-@patch('sharewarez.utils.game_core.fetch_steam_data')
+@patch('gametheca.utils.game_core.apply_enriched_metadata')
+@patch('gametheca.utils.game_core.fetch_steam_data')
 def test_enrich_game_with_steam_skips_when_already_vr(mock_fetch, mock_apply, capsys):
-    from sharewarez.utils.game_core import enrich_game_with_steam
+    from gametheca.utils.game_core import enrich_game_with_steam
 
     game = SimpleNamespace(
         name='Archery Kings VR',
@@ -206,11 +206,11 @@ def test_enrich_game_with_steam_skips_when_already_vr(mock_fetch, mock_apply, ca
     assert 'Steam VR: yes' in capsys.readouterr().out
 
 
-@patch('sharewarez.utils.game_core.apply_enriched_metadata')
-@patch('sharewarez.utils.game_core.fetch_steam_data')
+@patch('gametheca.utils.game_core.apply_enriched_metadata')
+@patch('gametheca.utils.game_core.fetch_steam_data')
 def test_enrich_game_with_steam_reports_rollback(mock_fetch, mock_apply, capsys):
     """When the savepoint rolls back, the caller must see applied=False and no perspectives."""
-    from sharewarez.utils.game_core import enrich_game_with_steam
+    from gametheca.utils.game_core import enrich_game_with_steam
 
     game = SimpleNamespace(name='Archery Kings VR', player_perspectives=[])
     mock_fetch.return_value = {
@@ -255,10 +255,10 @@ def test_fetch_steam_data_prefers_exact_name_match():
     }
 
     with patch(
-        'sharewarez.utils.secondary_scrapers.request_with_backoff',
+        'gametheca.utils.secondary_scrapers.request_with_backoff',
         side_effect=[search, details],
     ) as mock_request:
-        from sharewarez.utils.secondary_scrapers import fetch_steam_data
+        from gametheca.utils.secondary_scrapers import fetch_steam_data
 
         data = fetch_steam_data('Archery Kings VR')
 
@@ -293,10 +293,10 @@ def test_fetch_steam_data_sets_is_vr_for_archery_kings_style_payload():
     }
 
     with patch(
-        'sharewarez.utils.secondary_scrapers.request_with_backoff',
+        'gametheca.utils.secondary_scrapers.request_with_backoff',
         side_effect=[search, details],
     ):
-        from sharewarez.utils.secondary_scrapers import fetch_steam_data
+        from gametheca.utils.secondary_scrapers import fetch_steam_data
 
         data = fetch_steam_data('Archery Kings VR')
 
@@ -307,18 +307,18 @@ def test_fetch_steam_data_sets_is_vr_for_archery_kings_style_payload():
     ]
 
 
-@patch('sharewarez.utils.secondary_scrapers.request_with_backoff')
+@patch('gametheca.utils.secondary_scrapers.request_with_backoff')
 def test_fetch_steam_data_returns_none_on_http_failure(mock_req):
     mock_req.return_value = None
-    from sharewarez.utils.secondary_scrapers import fetch_steam_data
+    from gametheca.utils.secondary_scrapers import fetch_steam_data
 
     assert fetch_steam_data('Some Game') is None
 
 
-@patch('sharewarez.utils.secondary_scrapers.request_with_backoff')
+@patch('gametheca.utils.secondary_scrapers.request_with_backoff')
 def test_fetch_rawg_data_returns_none_on_http_failure(mock_req):
     mock_req.return_value = None
-    from sharewarez.utils.secondary_scrapers import fetch_rawg_data
+    from gametheca.utils.secondary_scrapers import fetch_rawg_data
 
     assert fetch_rawg_data('Some Game') is None
 
@@ -330,10 +330,10 @@ def test_fetch_rawg_data_uses_backoff_with_rawg_host_key():
     }
 
     with patch(
-        'sharewarez.utils.secondary_scrapers.request_with_backoff',
+        'gametheca.utils.secondary_scrapers.request_with_backoff',
         return_value=resp,
     ) as mock_request:
-        from sharewarez.utils.secondary_scrapers import fetch_rawg_data
+        from gametheca.utils.secondary_scrapers import fetch_rawg_data
 
         data = fetch_rawg_data('Some Game')
 

@@ -1,0 +1,56 @@
+# Spanish translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-07-24 14:12-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "Library"
+msgstr "Biblioteca"
+
+msgid "Discover"
+msgstr "Descubrir"
+
+msgid "Big Picture"
+msgstr "Big Picture"
+
+msgid "Download"
+msgstr "Descargar"
+
+msgid "Settings"
+msgstr "Ajustes"
+
+msgid "Favorites"
+msgstr "Favoritos"
+
+msgid "Wishlist"
+msgstr "Lista de deseos"
+
+msgid "Playtime"
+msgstr "Tiempo de juego"
+
+msgid "Ownership"
+msgstr "Propiedad"
+
+msgid "Release calendar"
+msgstr "Calendario de lanzamientos"
+
+msgid "Upcoming and recent releases from IGDB (metadata only)."
+msgstr "Lanzamientos próximos y recientes de IGDB (solo metadatos)."
+
+msgid "Loading…"
+msgstr "Cargando…"
+

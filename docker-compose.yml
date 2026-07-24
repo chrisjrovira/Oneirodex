@@ -21,7 +21,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - DATA_FOLDER_WAREZ=/storage
-      - UPLOAD_FOLDER=/app/sharewarez/static/library
+      - UPLOAD_FOLDER=/app/gametheca/static/library
       - SECRET_KEY=${SECRET_KEY}
       - DEV_MODE=${DEV_MODE:-false}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -29,7 +29,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - "${DATA_FOLDER_WAREZ}:/storage:ro"
-      - "${LIBRARY_HOST_PATH:-./data/library}:/app/sharewarez/static/library"
+      - "${LIBRARY_HOST_PATH:-./data/library}:/app/gametheca/static/library"
     depends_on:
       db:
         condition: service_healthy

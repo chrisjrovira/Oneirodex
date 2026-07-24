@@ -10,7 +10,7 @@ load_dotenv()
 test_db_url = os.getenv('TEST_DATABASE_URL')
 if test_db_url:
     # Additional safety: ensure we're not accidentally overriding with production DB
-    if 'sharewarez' in test_db_url.lower() and 'test' not in test_db_url.lower():
+    if 'gametheca' in test_db_url.lower() and 'test' not in test_db_url.lower():
         raise RuntimeError(
             f"CRITICAL: TEST_DATABASE_URL appears to point to production database: {test_db_url}. "
             "TEST_DATABASE_URL must contain 'test' in the database name for safety."
@@ -24,7 +24,7 @@ else:
         "Tests cannot run without explicit test database configuration."
     )
 
-from sharewarez import create_app, db
+from gametheca import create_app, db
 
 @pytest.fixture(scope='function')
 def app():
@@ -38,8 +38,8 @@ def app():
         )
     
     # Enhanced safety checks: ensure we're not using production database
-    production_indicators = ['sharewarez', 'prod', 'production']
-    test_indicators = ['test', 'testing', 'sharewareztest']
+    production_indicators = ['gametheca', 'prod', 'production']
+    test_indicators = ['test', 'testing', 'gamethecatest']
     
     # Check if URL contains production indicators without test indicators
     contains_production = any(indicator in test_db_url.lower() for indicator in production_indicators)
@@ -48,7 +48,7 @@ def app():
     if contains_production and not contains_test:
         pytest.fail(
             f"CRITICAL: TEST_DATABASE_URL appears to point to production database: {test_db_url}. "
-            "Test database MUST contain 'test' in the name (e.g., 'sharewareztest'). "
+            "Test database MUST contain 'test' in the name (e.g., 'gamethecatest'). "
             "Tests will NOT run against production database for safety."
         )
     
@@ -86,6 +86,9 @@ def db_session(app):
     with app.app_context():
         # Create all tables for tests
         db.create_all()
+        # Apply incremental schema updates (new columns/tables on existing test DB)
+        from gametheca.updateschema import DatabaseManager
+        DatabaseManager().add_column_if_not_exists()
         yield db.session
         # Optionally drop all tables after test (commented out for performance)
         # db.drop_all()

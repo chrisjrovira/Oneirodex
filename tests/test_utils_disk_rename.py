@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from sharewarez.utils.disk_rename import (
+from gametheca.utils.disk_rename import (
     apply_rename_template,
     build_rename_plan,
     apply_rename_plan,

@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-get-app-subdir"
+description = "Allows resolving app-data subdirectories."
+commands.allow = ["get_app_subdir"]

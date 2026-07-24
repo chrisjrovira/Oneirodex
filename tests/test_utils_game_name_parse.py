@@ -1,6 +1,6 @@
 """Unit tests for folder label parsing (FitGirl tags, Steam App IDs). No DB required."""
 
-from sharewarez.utils.game_name_parse import parse_game_label, strip_repack_tags
+from gametheca.utils.game_name_parse import parse_game_label, strip_repack_tags
 
 
 def test_fitgirl_repack_stripped():

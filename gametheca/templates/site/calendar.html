@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="max-width: 900px; margin: 2rem auto;">
+    <h1>{{ _('Release calendar') }}</h1>
+    <p class="text-muted">{{ _('Upcoming and recent releases from IGDB (metadata only).') }}</p>
+    <div id="calendar-status" class="text-muted mb-3">{{ _('Loading…') }}</div>
+    <div id="calendar-list" class="row g-3"></div>
+</div>
+<script>
+(async function () {
+  const status = document.getElementById('calendar-status');
+  const list = document.getElementById('calendar-list');
+  try {
+    const res = await fetch('/api/calendar?days_ahead=60&days_behind=14&limit=40');
+    const data = await res.json();
+    if (!res.ok) {
+      status.textContent = data.error || 'Failed to load calendar';
+      return;
+    }
+    status.textContent = `${data.count || 0} releases`;
+    list.innerHTML = (data.releases || []).map(item => `
+      <div class="col-md-6">
+        <div class="d-flex gap-3 align-items-start border rounded p-2 h-100">
+          ${item.cover_url ? `<img src="${item.cover_url}" alt="" width="60" height="80" style="object-fit:cover;border-radius:4px;">` : ''}
+          <div>
+            <div><strong>${item.name || 'Untitled'}</strong></div>
+            <div class="small text-muted">${item.first_release_date || ''} · ${item.window || ''}</div>
+          </div>
+        </div>
+      </div>
+    `).join('') || '<p class="text-muted">No releases in this window.</p>';
+  } catch (err) {
+    status.textContent = 'Failed to load calendar';
+  }
+})();
+</script>
+{% endblock %}

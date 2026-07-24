@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { setGameStatus, toggleFavorite } from '../api/userActions'
 import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
 import { safeHttpUrl } from '../utils/safeUrl'
+import { BadgeStack } from './BadgeStack'
+import { GameActionBar } from './GameActionBar'
 
 const DEFAULT_COVER = DEFAULT_COVER_URL
 
@@ -151,10 +153,14 @@ export function GameCard({
 
         {menuOpen && (
           <div id={`popupMenu-${game.uuid}`} className="popup-menu">
-            <div className="menu-item">
-              <a className="menu-button" href={`/download_game/${game.uuid}`}>
-                Download
-              </a>
+            <div className="menu-item menu-item--action-bar">
+              <GameActionBar
+                gameUuid={game.uuid}
+                gameName={game.name}
+                variant="compact"
+                lifecycleState={game.lifecycle_state || 'not_downloaded'}
+                clientConnected={Boolean(game.client_connected)}
+              />
             </div>
             {isAdmin && (
               <>
@@ -327,31 +333,11 @@ export function GameCard({
           />
         </a>
 
-        {game.has_local_override && (
-          <div className="local-metadata-badge" title="Uses local metadata or images">
-            L
-          </div>
-        )}
-
-        {game.is_vr && (
-          <div className="vr-badge" title="Virtual Reality">
-            VR
-          </div>
-        )}
-
-        {game.freshness_status === 'behind' && (
-          <div className="freshness-badge freshness-badge--behind" title="Behind store version (high confidence)">
-            OUT
-          </div>
-        )}
-        {game.freshness_status === 'heuristic_behind' && (
-          <div
-            className="freshness-badge freshness-badge--heuristic"
-            title="Possibly behind store (heuristic)"
-          >
-            ~
-          </div>
-        )}
+        <BadgeStack
+          game={game}
+          preferredCorner="bottom-left"
+          collidesWithTitle={Boolean(game.badge_title_collision)}
+        />
       </div>
     </div>
   )

@@ -5,19 +5,19 @@ from unittest.mock import MagicMock, patch
 
 def test_build_ops_summary_includes_required_keys():
     with patch(
-        'sharewarez.utils.ops_summary.get_cpu_usage',
+        'gametheca.utils.ops_summary.get_cpu_usage',
         return_value={'percent': 1, 'cores_physical': 2, 'cores_logical': 4},
     ) as get_cpu_usage, patch(
-        'sharewarez.utils.ops_summary.get_memory_usage',
+        'gametheca.utils.ops_summary.get_memory_usage',
         return_value={'total': 8, 'used': 4, 'available': 4, 'percent': 50},
     ), patch(
-        'sharewarez.utils.ops_summary.get_disk_usage',
+        'gametheca.utils.ops_summary.get_disk_usage',
         return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40},
     ), patch(
-        'sharewarez.utils.ops_summary.get_warez_folder_usage',
+        'gametheca.utils.ops_summary.get_warez_folder_usage',
         return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40},
     ), patch(
-        'sharewarez.utils.ops_summary.get_system_info',
+        'gametheca.utils.ops_summary.get_system_info',
         return_value={
             'Operating System': 'Linux',
             'Hostname': 'h',
@@ -25,16 +25,16 @@ def test_build_ops_summary_includes_required_keys():
             'Python Version': '3.12',
         },
     ), patch(
-        'sharewarez.utils.ops_summary.get_config_values',
+        'gametheca.utils.ops_summary.get_config_values',
         return_value={},
     ), patch(
-        'sharewarez.utils.ops_summary.get_formatted_system_uptime',
+        'gametheca.utils.ops_summary.get_formatted_system_uptime',
         return_value='1h',
     ), patch(
-        'sharewarez.utils.ops_summary.get_formatted_app_uptime',
+        'gametheca.utils.ops_summary.get_formatted_app_uptime',
         return_value='1h',
     ), patch(
-        'sharewarez.utils.ops_summary.get_network_stats',
+        'gametheca.utils.ops_summary.get_network_stats',
         return_value={
             'bytes_sent': 0,
             'bytes_recv': 0,
@@ -47,7 +47,7 @@ def test_build_ops_summary_includes_required_keys():
             'connections': 0,
         },
     ), patch(
-        'sharewarez.utils.ops_summary._library_pulse',
+        'gametheca.utils.ops_summary._library_pulse',
         return_value={
             'libraries': 1,
             'games': 2,
@@ -55,13 +55,13 @@ def test_build_ops_summary_includes_required_keys():
             'download_requests_open': 0,
         },
     ), patch(
-        'sharewarez.utils.ops_summary._scan_snapshot',
+        'gametheca.utils.ops_summary._scan_snapshot',
         return_value={'active_count': 0, 'jobs': [], 'failure_count': 0},
     ), patch(
-        'sharewarez.utils.ops_summary._recent_errors',
+        'gametheca.utils.ops_summary._recent_errors',
         return_value=([], 0),
     ):
-        from sharewarez.utils.ops_summary import build_ops_summary
+        from gametheca.utils.ops_summary import build_ops_summary
 
         result = build_ops_summary(datetime.now(timezone.utc))
 
@@ -94,10 +94,10 @@ def test_scan_snapshot_counts_active_folder_failures():
     failure_result.scalar.return_value = 3
 
     with patch(
-        'sharewarez.utils.ops_summary.db.session.execute',
+        'gametheca.utils.ops_summary.db.session.execute',
         side_effect=(active_result, failure_result),
     ) as execute:
-        from sharewarez.utils.ops_summary import _scan_snapshot
+        from gametheca.utils.ops_summary import _scan_snapshot
 
         result = _scan_snapshot()
 
@@ -109,19 +109,19 @@ def test_scan_snapshot_counts_active_folder_failures():
 
 def test_build_ops_summary_keeps_other_sections_on_network_failure():
     with patch(
-        'sharewarez.utils.ops_summary.get_cpu_usage',
+        'gametheca.utils.ops_summary.get_cpu_usage',
         return_value={'percent': 1, 'cores_physical': 2, 'cores_logical': 4},
     ), patch(
-        'sharewarez.utils.ops_summary.get_memory_usage',
+        'gametheca.utils.ops_summary.get_memory_usage',
         return_value={'total': 8, 'used': 4, 'available': 4, 'percent': 50},
     ), patch(
-        'sharewarez.utils.ops_summary.get_disk_usage',
+        'gametheca.utils.ops_summary.get_disk_usage',
         return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40},
     ), patch(
-        'sharewarez.utils.ops_summary.get_warez_folder_usage',
+        'gametheca.utils.ops_summary.get_warez_folder_usage',
         return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40},
     ), patch(
-        'sharewarez.utils.ops_summary.get_system_info',
+        'gametheca.utils.ops_summary.get_system_info',
         return_value={
             'Operating System': 'Linux',
             'Hostname': 'h',
@@ -129,19 +129,19 @@ def test_build_ops_summary_keeps_other_sections_on_network_failure():
             'Python Version': '3.12',
         },
     ), patch(
-        'sharewarez.utils.ops_summary.get_config_values',
+        'gametheca.utils.ops_summary.get_config_values',
         return_value={},
     ), patch(
-        'sharewarez.utils.ops_summary.get_formatted_system_uptime',
+        'gametheca.utils.ops_summary.get_formatted_system_uptime',
         return_value='1h',
     ), patch(
-        'sharewarez.utils.ops_summary.get_formatted_app_uptime',
+        'gametheca.utils.ops_summary.get_formatted_app_uptime',
         return_value='1h',
     ), patch(
-        'sharewarez.utils.ops_summary.get_network_stats',
+        'gametheca.utils.ops_summary.get_network_stats',
         side_effect=RuntimeError('secret connection string'),
     ), patch(
-        'sharewarez.utils.ops_summary._library_pulse',
+        'gametheca.utils.ops_summary._library_pulse',
         return_value={
             'libraries': 1,
             'games': 2,
@@ -149,13 +149,13 @@ def test_build_ops_summary_keeps_other_sections_on_network_failure():
             'download_requests_open': 0,
         },
     ), patch(
-        'sharewarez.utils.ops_summary._scan_snapshot',
+        'gametheca.utils.ops_summary._scan_snapshot',
         return_value={'active_count': 0, 'jobs': [], 'failure_count': 0},
     ), patch(
-        'sharewarez.utils.ops_summary._recent_errors',
+        'gametheca.utils.ops_summary._recent_errors',
         return_value=([], 0),
     ):
-        from sharewarez.utils.ops_summary import build_ops_summary
+        from gametheca.utils.ops_summary import build_ops_summary
 
         result = build_ops_summary(datetime.now(timezone.utc))
 

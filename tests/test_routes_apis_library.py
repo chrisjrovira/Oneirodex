@@ -4,9 +4,9 @@ from unittest.mock import patch, Mock
 from uuid import uuid4
 from flask import url_for
 
-from sharewarez import db
-from sharewarez.models import User, Library
-from sharewarez.platform import LibraryPlatform
+from gametheca import db
+from gametheca.models import User, Library
+from gametheca.platform import LibraryPlatform
 
 
 def safe_cleanup_database(db_session):
@@ -348,7 +348,7 @@ class TestReorderLibraries:
                              content_type='application/json')
         assert response.status_code == 500  # Flask returns 500 for invalid JSON
     
-    @patch('sharewarez.routes_apis.library.db.session.commit')
+    @patch('gametheca.routes_apis.library.db.session.commit')
     def test_reorder_libraries_database_error(self, mock_commit, client, admin_user, multiple_libraries):
         """Test reordering with database error."""
         mock_commit.side_effect = Exception("Database error")

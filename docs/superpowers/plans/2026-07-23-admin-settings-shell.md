@@ -7,7 +7,7 @@ Settings, Attract Mode, Integrations, and Themes behind a left nav + card hub,
 with `?section=` deep-linking, without rewriting any of the underlying forms.
 
 **Architecture:** Reuse the existing `admin2.settings` view
-(`sharewarez/routes_admin_ext/settings.py`). GET renders a new Jinja shell
+(`gametheca/routes_admin_ext/settings.py`). GET renders a new Jinja shell
 template instead of redirecting to Server Settings; POST is untouched. A
 single `SETTINGS_SHELL_SECTIONS` dict is the source of truth for nav labels,
 icons, descriptions, and target endpoints. Dashboard buttons and three legacy
@@ -42,13 +42,13 @@ frontend build, no DB migration.
 
 | File | Responsibility |
 |------|-----------------|
-| `sharewarez/routes_admin_ext/settings.py` | `SETTINGS_SHELL_SECTIONS`, `DEFAULT_SETTINGS_SHELL_SECTION`, updated `settings()` GET branch |
-| `sharewarez/templates/admin/admin_settings_shell.html` | Left nav + active card + card grid |
-| `sharewarez/setup/default_theme/css/admin/admin_settings_shell.css` | Shell layout styling |
-| `sharewarez/templates/admin/admin_dashboard.html` | 4 buttons repointed to `/admin/settings?section=...` |
-| `sharewarez/templates/admin/admin_manage_smtp_settings.html` | Soft-deprecation banner |
-| `sharewarez/templates/admin/admin_manage_igdb_settings.html` | Soft-deprecation banner |
-| `sharewarez/templates/admin/admin_manage_discord_settings.html` | Soft-deprecation banner |
+| `gametheca/routes_admin_ext/settings.py` | `SETTINGS_SHELL_SECTIONS`, `DEFAULT_SETTINGS_SHELL_SECTION`, updated `settings()` GET branch |
+| `gametheca/templates/admin/admin_settings_shell.html` | Left nav + active card + card grid |
+| `gametheca/setup/default_theme/css/admin/admin_settings_shell.css` | Shell layout styling |
+| `gametheca/templates/admin/admin_dashboard.html` | 4 buttons repointed to `/admin/settings?section=...` |
+| `gametheca/templates/admin/admin_manage_smtp_settings.html` | Soft-deprecation banner |
+| `gametheca/templates/admin/admin_manage_igdb_settings.html` | Soft-deprecation banner |
+| `gametheca/templates/admin/admin_manage_discord_settings.html` | Soft-deprecation banner |
 | `tests/test_routes_admin_ext_settings_shell.py` | Route/auth/section behavior tests |
 
 ---
@@ -56,7 +56,7 @@ frontend build, no DB migration.
 ### Task 1: Section registry + shell route
 
 **Files:**
-- Modify: `sharewarez/routes_admin_ext/settings.py`
+- Modify: `gametheca/routes_admin_ext/settings.py`
 
 **Interfaces:**
 - Produces: `SETTINGS_SHELL_SECTIONS: dict[str, dict]`,
@@ -76,7 +76,7 @@ frontend build, no DB migration.
 - [x] **Step 3: Commit**
 
 ```bash
-git add sharewarez/routes_admin_ext/settings.py
+git add gametheca/routes_admin_ext/settings.py
 git commit -m "feat: add settings shell hub route with section deep-links"
 ```
 
@@ -85,8 +85,8 @@ git commit -m "feat: add settings shell hub route with section deep-links"
 ### Task 2: Shell template + CSS
 
 **Files:**
-- Create: `sharewarez/templates/admin/admin_settings_shell.html`
-- Create: `sharewarez/setup/default_theme/css/admin/admin_settings_shell.css`
+- Create: `gametheca/templates/admin/admin_settings_shell.html`
+- Create: `gametheca/setup/default_theme/css/admin/admin_settings_shell.css`
 
 **Interfaces:**
 - Consumes: `sections`, `active_section` from the view
@@ -105,7 +105,7 @@ git commit -m "feat: add settings shell hub route with section deep-links"
 - [x] **Step 3: Commit**
 
 ```bash
-git add sharewarez/templates/admin/admin_settings_shell.html sharewarez/setup/default_theme/css/admin/admin_settings_shell.css
+git add gametheca/templates/admin/admin_settings_shell.html gametheca/setup/default_theme/css/admin/admin_settings_shell.css
 git commit -m "feat: add admin settings shell template and styling"
 ```
 
@@ -114,7 +114,7 @@ git commit -m "feat: add admin settings shell template and styling"
 ### Task 3: Dashboard buttons repointed
 
 **Files:**
-- Modify: `sharewarez/templates/admin/admin_dashboard.html`
+- Modify: `gametheca/templates/admin/admin_dashboard.html`
 
 - [x] **Step 1:** Change the Server Settings, Attract Mode, and Integrations
   buttons (Server Management section) and the Themes button (Admin Tools
@@ -122,7 +122,7 @@ git commit -m "feat: add admin settings shell template and styling"
 - [x] **Step 2: Commit**
 
 ```bash
-git add sharewarez/templates/admin/admin_dashboard.html
+git add gametheca/templates/admin/admin_dashboard.html
 git commit -m "feat: route dashboard settings buttons through settings shell"
 ```
 
@@ -131,9 +131,9 @@ git commit -m "feat: route dashboard settings buttons through settings shell"
 ### Task 4: Soft-deprecate standalone integration pages
 
 **Files:**
-- Modify: `sharewarez/templates/admin/admin_manage_smtp_settings.html`
-- Modify: `sharewarez/templates/admin/admin_manage_igdb_settings.html`
-- Modify: `sharewarez/templates/admin/admin_manage_discord_settings.html`
+- Modify: `gametheca/templates/admin/admin_manage_smtp_settings.html`
+- Modify: `gametheca/templates/admin/admin_manage_igdb_settings.html`
+- Modify: `gametheca/templates/admin/admin_manage_discord_settings.html`
 
 **Constraint:** GET must keep returning 200 with existing content (covered
 by `tests/test_routes_smtp.py`, `tests/test_routes_admin_ext_igdb.py`,
@@ -147,7 +147,7 @@ changes.
 - [x] **Step 2: Commit**
 
 ```bash
-git add sharewarez/templates/admin/admin_manage_smtp_settings.html sharewarez/templates/admin/admin_manage_igdb_settings.html sharewarez/templates/admin/admin_manage_discord_settings.html
+git add gametheca/templates/admin/admin_manage_smtp_settings.html gametheca/templates/admin/admin_manage_igdb_settings.html gametheca/templates/admin/admin_manage_discord_settings.html
 git commit -m "chore: point standalone integration pages at the Integrations hub"
 ```
 

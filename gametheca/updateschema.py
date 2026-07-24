@@ -1,0 +1,694 @@
+from sqlalchemy import create_engine, text
+from config import Config
+
+class DatabaseManager:
+    def __init__(self):
+        # Load the database configuration from Config
+        self.database_uri = Config.SQLALCHEMY_DATABASE_URI
+        # Create a SQLAlchemy engine
+        self.engine = create_engine(self.database_uri)
+
+    def add_column_if_not_exists(self):
+
+        # SQL commands to add new columns and tables
+        add_columns_sql = """
+        -- Ensure global_settings table exists before altering it
+        CREATE TABLE IF NOT EXISTS global_settings (
+            id SERIAL PRIMARY KEY,
+            settings TEXT,
+            last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            discord_webhook_url VARCHAR(512),
+            smtp_server VARCHAR(255),
+            smtp_port INTEGER,
+            smtp_username VARCHAR(255),
+            smtp_password VARCHAR(255),
+            smtp_use_tls BOOLEAN DEFAULT TRUE,
+            smtp_default_sender VARCHAR(255),
+            smtp_last_tested TIMESTAMP,
+            smtp_enabled BOOLEAN DEFAULT FALSE,
+            discord_bot_name VARCHAR(100),
+            discord_bot_avatar_url VARCHAR(512),
+            enable_delete_game_on_disk BOOLEAN DEFAULT TRUE,
+            igdb_client_id VARCHAR(255),
+            igdb_client_secret VARCHAR(255),
+            igdb_last_tested TIMESTAMP
+        );
+        
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS site_url VARCHAR(255) DEFAULT 'http://127.0.0.1:5006';
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS discord_bot_name VARCHAR(255);
+        
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS discord_bot_avatar_url VARCHAR(255);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS igdb_client_id VARCHAR(255);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS igdb_client_secret VARCHAR(255);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS igdb_last_tested TIMESTAMP;
+
+        -- Create allowed_file_types table if it doesn't exist
+        CREATE TABLE IF NOT EXISTS allowed_file_types (
+            id SERIAL PRIMARY KEY,
+            value VARCHAR(10) UNIQUE NOT NULL
+        );
+
+        -- Create user_favorites table if it doesn't exist
+        CREATE TABLE IF NOT EXISTS user_favorites (
+            user_id INTEGER REFERENCES users(id),
+            game_uuid VARCHAR(36) REFERENCES games(uuid),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, game_uuid)
+        );
+
+        -- Create user_game_status table if it doesn't exist
+        CREATE TABLE IF NOT EXISTS user_game_status (
+            user_id INTEGER REFERENCES users(id),
+            game_uuid VARCHAR(36) REFERENCES games(uuid),
+            status VARCHAR(20) NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, game_uuid)
+        );
+
+        -- Create index on user_game_status for performance
+        CREATE INDEX IF NOT EXISTS idx_user_game_status_lookup ON user_game_status(user_id, game_uuid);
+
+        CREATE TABLE IF NOT EXISTS game_updates (
+            id SERIAL PRIMARY KEY,
+            uuid VARCHAR(36) UNIQUE NOT NULL,
+            game_uuid VARCHAR(36) NOT NULL,
+            times_downloaded INTEGER DEFAULT 0,
+            nfo_content TEXT,
+            file_path VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (game_uuid) REFERENCES games(uuid) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS game_extras (
+            id SERIAL PRIMARY KEY,
+            uuid VARCHAR(36) UNIQUE NOT NULL,
+            game_uuid VARCHAR(36) NOT NULL,
+            times_downloaded INTEGER DEFAULT 0,
+            nfo_content TEXT,
+            file_path VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (game_uuid) REFERENCES games(uuid) ON DELETE CASCADE
+        );
+
+        -- Create system_events table if it doesn't exist
+        CREATE TABLE IF NOT EXISTS system_events (
+            id SERIAL PRIMARY KEY,
+            event_type VARCHAR(32) DEFAULT 'log',
+            event_text VARCHAR(256) NOT NULL,
+            event_level VARCHAR(32) DEFAULT 'information',
+            audit_user INTEGER REFERENCES users(id),
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- Ensure scan_jobs table exists before altering it
+        CREATE TABLE IF NOT EXISTS scan_jobs (
+            id SERIAL PRIMARY KEY,
+            status VARCHAR(20),
+            error_message TEXT,
+            is_enabled BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        ALTER TABLE scan_jobs
+        ADD COLUMN IF NOT EXISTS removed_count INTEGER DEFAULT 0;
+
+        -- Ensure images table exists before altering it
+        CREATE TABLE IF NOT EXISTS images (
+            id SERIAL PRIMARY KEY,
+            game_uuid VARCHAR(36),
+            image_type VARCHAR(50),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        -- Add new columns to images table for optimized image downloading
+        ALTER TABLE images
+        ADD COLUMN IF NOT EXISTS igdb_image_id VARCHAR(255);
+
+        ALTER TABLE images
+        ADD COLUMN IF NOT EXISTS download_url VARCHAR(500);
+
+        ALTER TABLE images
+        ADD COLUMN IF NOT EXISTS is_downloaded BOOLEAN DEFAULT FALSE;
+
+        -- Add image download settings to global_settings table
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS use_turbo_image_downloads BOOLEAN DEFAULT TRUE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS turbo_download_threads INTEGER DEFAULT 8;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS turbo_download_batch_size INTEGER DEFAULT 200;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS scan_thread_count INTEGER DEFAULT 1;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS discord_notify_manual_trigger BOOLEAN DEFAULT FALSE;
+
+        -- Add setup state tracking columns to global_settings table
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS setup_in_progress BOOLEAN DEFAULT FALSE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS setup_current_step INTEGER DEFAULT 1;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS setup_completed BOOLEAN DEFAULT FALSE;
+
+        -- Add setting_download_missing_images column to scan_jobs table
+        ALTER TABLE scan_jobs
+        ADD COLUMN IF NOT EXISTS setting_download_missing_images BOOLEAN DEFAULT FALSE;
+
+        -- Change error_message column from varchar(512) to text for longer error messages
+        ALTER TABLE scan_jobs
+        ALTER COLUMN error_message TYPE TEXT;
+
+        -- Add progress tracking columns to scan_jobs table for scan optimization
+        ALTER TABLE scan_jobs
+        ADD COLUMN IF NOT EXISTS current_processing VARCHAR(255);
+
+        ALTER TABLE scan_jobs
+        ADD COLUMN IF NOT EXISTS last_progress_update TIMESTAMP;
+
+        -- Add force_updates_extras setting to scan_jobs table for enhanced scan functionality
+        ALTER TABLE scan_jobs
+        ADD COLUMN IF NOT EXISTS setting_force_updates_extras BOOLEAN DEFAULT FALSE;
+
+        -- Add 'Cancelled' value to the status_enum for scan_jobs
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'Cancelled' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'status_enum')) THEN
+                ALTER TYPE status_enum ADD VALUE 'Cancelled';
+            END IF;
+        END $$;
+
+        -- Add 'Stopping' value to the status_enum for scan_jobs
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'Stopping' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'status_enum')) THEN
+                ALTER TYPE status_enum ADD VALUE 'Stopping';
+            END IF;
+        END $$;
+
+        -- Add unique index to prevent duplicate cover images (but allow multiple screenshots)
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE c.relname = 'unique_game_cover_image' AND n.nspname = 'public'
+            ) THEN
+                CREATE UNIQUE INDEX unique_game_cover_image 
+                ON images (game_uuid) 
+                WHERE image_type = 'cover';
+            END IF;
+        END $$;
+
+        -- Rename columns in filters table from old release group terminology to scanning filter terminology
+        DO $$
+        BEGIN
+            -- Rename rlsgroup to filter_pattern if the old column exists
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name='filters' AND column_name='rlsgroup'
+            ) THEN
+                ALTER TABLE filters RENAME COLUMN rlsgroup TO filter_pattern;
+                RAISE NOTICE 'Renamed column rlsgroup to filter_pattern in filters table';
+            END IF;
+
+            -- Rename rlsgroupcs to case_sensitive if the old column exists
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name='filters' AND column_name='rlsgroupcs'
+            ) THEN
+                ALTER TABLE filters RENAME COLUMN rlsgroupcs TO case_sensitive;
+                RAISE NOTICE 'Renamed column rlsgroupcs to case_sensitive in filters table';
+            END IF;
+        END $$;
+
+        -- Add attract mode settings to global_settings table
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS attract_mode_enabled BOOLEAN DEFAULT FALSE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS attract_mode_idle_timeout INTEGER DEFAULT 60;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS attract_mode_settings TEXT;
+
+        -- Create user_attract_mode_settings table if it doesn't exist
+        CREATE TABLE IF NOT EXISTS user_attract_mode_settings (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(36) UNIQUE NOT NULL,
+            has_customized BOOLEAN DEFAULT FALSE,
+            filter_settings TEXT,
+            autoplay_settings TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        );
+
+        -- Add HowLongToBeat integration fields to games table
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS hltb_id INTEGER;
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS hltb_main_story FLOAT;
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS hltb_main_extra FLOAT;
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS hltb_completionist FLOAT;
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS hltb_all_styles FLOAT;
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS hltb_last_updated TIMESTAMP;
+
+        -- Add HowLongToBeat settings to global_settings table
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS enable_hltb_integration BOOLEAN DEFAULT TRUE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS hltb_rate_limit_delay FLOAT DEFAULT 2.0;
+
+        -- Add Local Metadata & Image Override settings to global_settings table
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS use_local_metadata BOOLEAN DEFAULT FALSE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS write_local_metadata BOOLEAN DEFAULT FALSE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS use_local_images BOOLEAN DEFAULT FALSE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS local_metadata_filename VARCHAR(50) DEFAULT 'gametheca.json';
+
+        -- Add Propose-Only Scan setting to global_settings table
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS propose_only_scan BOOLEAN DEFAULT FALSE;
+
+        -- Game freshness (local vs store version / DLC)
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS steam_app_id INTEGER;
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS local_version VARCHAR(100);
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS remote_version_summary VARCHAR(255);
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS freshness_status VARCHAR(32);
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS freshness_confidence VARCHAR(16);
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS freshness_checked_at TIMESTAMP;
+
+        ALTER TABLE games
+        ADD COLUMN IF NOT EXISTS freshness_payload JSONB;
+
+        -- Library scan depth + last scan folder
+        ALTER TABLE libraries
+        ADD COLUMN IF NOT EXISTS scan_depth INTEGER DEFAULT 1;
+
+        ALTER TABLE libraries
+        ADD COLUMN IF NOT EXISTS last_scan_folder VARCHAR(512);
+
+        -- Parental / child library allow-list
+        CREATE TABLE IF NOT EXISTS user_library_access (
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            library_uuid VARCHAR(36) NOT NULL REFERENCES libraries(uuid) ON DELETE CASCADE,
+            PRIMARY KEY (user_id, library_uuid)
+        );
+        CREATE INDEX IF NOT EXISTS ix_user_library_access_user_id ON user_library_access(user_id);
+        CREATE INDEX IF NOT EXISTS ix_user_library_access_library_uuid ON user_library_access(library_uuid);
+
+        -- Parental / child genre & theme deny-list
+        CREATE TABLE IF NOT EXISTS user_content_filters (
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            filter_type VARCHAR(16) NOT NULL,
+            name VARCHAR(50) NOT NULL,
+            PRIMARY KEY (user_id, filter_type, name)
+        );
+        CREATE INDEX IF NOT EXISTS ix_user_content_filters_user_id ON user_content_filters(user_id);
+
+        -- Personal API tokens for OpenAPI / companion clients
+        CREATE TABLE IF NOT EXISTS api_tokens (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            name VARCHAR(100) NOT NULL,
+            token_prefix VARCHAR(16) NOT NULL,
+            token_hash VARCHAR(255) NOT NULL,
+            scopes JSONB NOT NULL DEFAULT '[]',
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            last_used_at TIMESTAMP,
+            revoked_at TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS ix_api_tokens_user_id ON api_tokens(user_id);
+        CREATE INDEX IF NOT EXISTS ix_api_tokens_token_prefix ON api_tokens(token_prefix);
+
+        -- Companion client heartbeat presence
+        CREATE TABLE IF NOT EXISTS client_devices (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            device_id VARCHAR(64) NOT NULL,
+            device_name VARCHAR(128),
+            client_version VARCHAR(64),
+            user_agent VARCHAR(512),
+            last_seen_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT uq_client_devices_user_device UNIQUE (user_id, device_id)
+        );
+        CREATE INDEX IF NOT EXISTS ix_client_devices_user_id ON client_devices(user_id);
+        CREATE INDEX IF NOT EXISTS ix_client_devices_last_seen_at ON client_devices(last_seen_at);
+
+        -- Playtime sessions + aggregates
+        CREATE TABLE IF NOT EXISTS play_sessions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            game_uuid VARCHAR(36) NOT NULL REFERENCES games(uuid) ON DELETE CASCADE,
+            started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            last_heartbeat_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            ended_at TIMESTAMP,
+            duration_seconds INTEGER NOT NULL DEFAULT 0,
+            client VARCHAR(64),
+            status VARCHAR(16) NOT NULL DEFAULT 'active'
+        );
+        CREATE INDEX IF NOT EXISTS ix_play_sessions_user_id ON play_sessions(user_id);
+        CREATE INDEX IF NOT EXISTS ix_play_sessions_game_uuid ON play_sessions(game_uuid);
+
+        CREATE TABLE IF NOT EXISTS user_game_progress (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            game_uuid VARCHAR(36) NOT NULL REFERENCES games(uuid) ON DELETE CASCADE,
+            total_seconds INTEGER NOT NULL DEFAULT 0,
+            session_count INTEGER NOT NULL DEFAULT 0,
+            last_played_at TIMESTAMP,
+            CONSTRAINT uq_user_game_progress UNIQUE (user_id, game_uuid)
+        );
+        CREATE INDEX IF NOT EXISTS ix_user_game_progress_user_id ON user_game_progress(user_id);
+        CREATE INDEX IF NOT EXISTS ix_user_game_progress_game_uuid ON user_game_progress(game_uuid);
+
+        -- Collections + announcements
+        CREATE TABLE IF NOT EXISTS game_collections (
+            id SERIAL PRIMARY KEY,
+            uuid VARCHAR(36) UNIQUE NOT NULL,
+            name VARCHAR(120) NOT NULL,
+            description TEXT,
+            owner_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            is_public BOOLEAN NOT NULL DEFAULT TRUE,
+            is_system BOOLEAN NOT NULL DEFAULT FALSE,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS game_collection_items (
+            id SERIAL PRIMARY KEY,
+            collection_id INTEGER NOT NULL REFERENCES game_collections(id) ON DELETE CASCADE,
+            game_uuid VARCHAR(36) NOT NULL REFERENCES games(uuid) ON DELETE CASCADE,
+            position INTEGER NOT NULL DEFAULT 0,
+            CONSTRAINT uq_collection_game UNIQUE (collection_id, game_uuid)
+        );
+
+        CREATE TABLE IF NOT EXISTS announcements (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(200) NOT NULL,
+            body TEXT NOT NULL,
+            published BOOLEAN NOT NULL DEFAULT TRUE,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            author_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS game_requests (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            title VARCHAR(255) NOT NULL,
+            notes TEXT,
+            status VARCHAR(32) NOT NULL DEFAULT 'pending',
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            resolved_at TIMESTAMP,
+            resolved_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            linked_game_uuid VARCHAR(36) REFERENCES games(uuid) ON DELETE SET NULL
+        );
+        CREATE INDEX IF NOT EXISTS ix_game_requests_user_id ON game_requests(user_id);
+
+        -- Remove unused library_name column from games table (replaced by library relationship via library_uuid)
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name='games' AND column_name='library_name'
+            ) THEN
+                ALTER TABLE games DROP COLUMN library_name;
+                RAISE NOTICE 'Dropped unused library_name column from games table';
+            END IF;
+        END $$;
+
+        -- OIDC / SSO settings (global_settings)
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS oidc_enabled BOOLEAN DEFAULT FALSE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS oidc_issuer_url VARCHAR(512);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS oidc_client_id VARCHAR(255);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS oidc_client_secret VARCHAR(512);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS oidc_redirect_uri VARCHAR(512);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS oidc_scopes VARCHAR(255) DEFAULT 'openid email profile';
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS oidc_role_claim VARCHAR(64) DEFAULT 'groups';
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS oidc_role_map TEXT;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS oidc_display_name VARCHAR(120) DEFAULT 'Sign in with SSO';
+
+        -- Store ownership sync (register-only; no store downloads)
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS enable_store_ownership_sync BOOLEAN DEFAULT TRUE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS steam_web_api_key VARCHAR(255);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS steamgriddb_api_key VARCHAR(255);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS emulator_profiles TEXT;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS enable_arr_module BOOLEAN DEFAULT FALSE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS enable_emulator_save_sync BOOLEAN DEFAULT TRUE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS arr_settings TEXT;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS encrypt_emulator_saves BOOLEAN DEFAULT FALSE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS giantbomb_api_key VARCHAR(255);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS quality_profiles TEXT;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS detail_layout TEXT;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS enable_ai_assist BOOLEAN DEFAULT FALSE;
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS ollama_base_url VARCHAR(512);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS ollama_model VARCHAR(120);
+
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS locale VARCHAR(10) DEFAULT 'en';
+
+        CREATE TABLE IF NOT EXISTS emulator_saves (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            game_uuid VARCHAR(36) NOT NULL REFERENCES games(uuid) ON DELETE CASCADE,
+            slot_name VARCHAR(64) NOT NULL DEFAULT 'slot1',
+            filename VARCHAR(255) NOT NULL,
+            size_bytes INTEGER NOT NULL DEFAULT 0,
+            storage_path VARCHAR(1024) NOT NULL,
+            encrypted BOOLEAN NOT NULL DEFAULT FALSE,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT uq_emulator_save_slot UNIQUE (user_id, game_uuid, slot_name)
+        );
+
+        ALTER TABLE emulator_saves
+        ADD COLUMN IF NOT EXISTS encrypted BOOLEAN DEFAULT FALSE;
+        CREATE INDEX IF NOT EXISTS ix_emulator_saves_user_id ON emulator_saves(user_id);
+        CREATE INDEX IF NOT EXISTS ix_emulator_saves_game_uuid ON emulator_saves(game_uuid);
+
+        CREATE TABLE IF NOT EXISTS store_accounts (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            store VARCHAR(16) NOT NULL,
+            external_account_id VARCHAR(64),
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT uq_store_account_user_store UNIQUE (user_id, store)
+        );
+        CREATE INDEX IF NOT EXISTS ix_store_accounts_user_id ON store_accounts(user_id);
+
+        CREATE TABLE IF NOT EXISTS user_owned_titles (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            store VARCHAR(16) NOT NULL,
+            external_app_id VARCHAR(32) NOT NULL,
+            name VARCHAR(255),
+            matched_game_uuid VARCHAR(36) REFERENCES games(uuid) ON DELETE SET NULL,
+            last_synced_at TIMESTAMP,
+            CONSTRAINT uq_user_owned_title UNIQUE (user_id, store, external_app_id)
+        );
+        CREATE INDEX IF NOT EXISTS ix_user_owned_titles_user_id ON user_owned_titles(user_id);
+        CREATE INDEX IF NOT EXISTS ix_user_owned_titles_matched_game_uuid ON user_owned_titles(matched_game_uuid);
+
+        """
+        print("Upgrading database to the latest schema")
+        try:
+            # Execute the SQL commands in a transaction
+            with self.engine.begin() as connection:
+                # Parse SQL into proper statements, respecting DO $$ ... END $$ blocks
+                statements = self._parse_sql_statements(add_columns_sql)
+                for statement in statements:
+                    if statement.strip():
+                        try:
+                            connection.execute(text(statement))
+                        except Exception as stmt_error:
+                            print(f"Warning: Failed to execute statement: {statement[:100]}...")
+                            print(f"Error: {stmt_error}")
+                            # Continue with other statements instead of failing completely
+                            continue
+
+            # Clean up duplicate discovery sections
+            self.cleanup_duplicate_discovery_sections()
+
+            print("Database schema update completed successfully.")
+        except Exception as e:
+            print(f"An error occurred during schema update: {e}")
+            # Don't raise the exception - let the application continue
+            print("Application will continue with existing schema...")
+        finally:
+            # Close the database connection
+            self.engine.dispose()
+
+    def cleanup_duplicate_discovery_sections(self):
+        """
+        Clean up duplicate discovery sections created by conflicting initialization code.
+        Removes outdated sections with wrong identifiers (latest, random, popular).
+        """
+        cleanup_sql = """
+        -- Delete outdated discovery sections with wrong identifiers
+        DELETE FROM discovery_sections
+        WHERE identifier IN ('latest', 'random', 'popular');
+
+        -- Log what was done
+        DO $$
+        DECLARE
+            deleted_count INTEGER;
+        BEGIN
+            GET DIAGNOSTICS deleted_count = ROW_COUNT;
+            IF deleted_count > 0 THEN
+                RAISE NOTICE 'Removed % outdated discovery sections', deleted_count;
+            END IF;
+        END $$;
+        """
+
+        print("Cleaning up duplicate discovery sections...")
+        try:
+            with self.engine.begin() as connection:
+                connection.execute(text(cleanup_sql))
+                print("Discovery sections cleanup completed successfully.")
+        except Exception as e:
+            print(f"Warning: Discovery sections cleanup failed: {e}")
+            print("Application will continue...")
+
+    def _parse_sql_statements(self, sql_text):
+        """
+        Parse SQL text into individual statements, properly handling PostgreSQL 
+        dollar-quoted blocks like DO $$ ... END $$;
+        """
+        statements = []
+        current_statement = ""
+        in_dollar_quote = False
+        dollar_tag = ""
+        
+        lines = sql_text.split('\n')
+        
+        for line in lines:
+            stripped_line = line.strip()
+            
+            # Skip empty lines and comments
+            if not stripped_line or stripped_line.startswith('--'):
+                current_statement += line + '\n'
+                continue
+                
+            # Check for start of dollar-quoted block
+            if not in_dollar_quote:
+                # Look for DO $$ or DO $tag$
+                if 'DO $' in stripped_line.upper():
+                    # Extract the dollar tag (e.g., $$ or $tag$)
+                    import re
+                    match = re.search(r'DO\s+(\$[^$]*\$)', stripped_line.upper())
+                    if match:
+                        dollar_tag = match.group(1)
+                        in_dollar_quote = True
+                        
+            current_statement += line + '\n'
+            
+            # Check for end of dollar-quoted block
+            if in_dollar_quote:
+                if dollar_tag in stripped_line and stripped_line.endswith(';'):
+                    in_dollar_quote = False
+                    dollar_tag = ""
+                    # End of DO block, add as complete statement
+                    statements.append(current_statement.strip())
+                    current_statement = ""
+            else:
+                # Regular statement ending with semicolon
+                if stripped_line.endswith(';'):
+                    statements.append(current_statement.strip())
+                    current_statement = ""
+        
+        # Add any remaining statement
+        if current_statement.strip():
+            statements.append(current_statement.strip())
+            
+        return [stmt for stmt in statements if stmt.strip()]
+
+# Example of how to use the class
+# db_manager = DatabaseManager()
+# db_manager.add_column_if_not_exists()

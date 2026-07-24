@@ -24,15 +24,15 @@
 
 | File | Responsibility |
 |------|----------------|
-| `sharewarez/routes_apis/filters.py` | `/api/library_platforms`, `/api/igdb_platforms` |
-| `sharewarez/routes.py` | `/browse_games` dual filters + static cover URLs; sanitize `delete_folder` / `delete_full_game` |
-| `sharewarez/templates/games/library_filters.html` | Two new `<select>` controls |
-| `sharewarez/setup/default_theme/js/library_pagination.js` | Populate, query, cookie, clear; use server cover URLs |
-| `sharewarez/utils/http_retry.py` | Per-host throttle + exponential backoff GET |
-| `sharewarez/utils/secondary_scrapers.py` | Use http_retry for Steam/RAWG |
-| `sharewarez/utils/metadata_enrichment.py` | `apply_enriched_metadata` with savepoint |
-| `sharewarez/utilities.py` | Call enrich HTTP then `apply_enriched_metadata` (both sites) |
-| `sharewarez/routes_discover.py` | Align cover_url to `url_for('static', …)` when bare filename |
+| `gametheca/routes_apis/filters.py` | `/api/library_platforms`, `/api/igdb_platforms` |
+| `gametheca/routes.py` | `/browse_games` dual filters + static cover URLs; sanitize `delete_folder` / `delete_full_game` |
+| `gametheca/templates/games/library_filters.html` | Two new `<select>` controls |
+| `gametheca/setup/default_theme/js/library_pagination.js` | Populate, query, cookie, clear; use server cover URLs |
+| `gametheca/utils/http_retry.py` | Per-host throttle + exponential backoff GET |
+| `gametheca/utils/secondary_scrapers.py` | Use http_retry for Steam/RAWG |
+| `gametheca/utils/metadata_enrichment.py` | `apply_enriched_metadata` with savepoint |
+| `gametheca/utilities.py` | Call enrich HTTP then `apply_enriched_metadata` (both sites) |
+| `gametheca/routes_discover.py` | Align cover_url to `url_for('static', …)` when bare filename |
 | `tests/test_routes_apis_filters.py` | New platform list endpoint tests |
 | `tests/test_routes.py` | Browse filter + delete_folder safety + cover URL tests |
 | `tests/test_utils_http_retry.py` | Retry/backoff unit tests |
@@ -44,7 +44,7 @@
 ### Task 1: Library / IGDB platform filter list APIs
 
 **Files:**
-- Modify: `sharewarez/routes_apis/filters.py`
+- Modify: `gametheca/routes_apis/filters.py`
 - Test: `tests/test_routes_apis_filters.py`
 
 **Interfaces:**
@@ -69,8 +69,8 @@ def test_igdb_platforms_requires_login(self, client):
 
 
 def test_get_library_platforms_used_only(self, client, regular_user, db_session):
-    from sharewarez.models import Library
-    from sharewarez.platform import LibraryPlatform
+    from gametheca.models import Library
+    from gametheca.platform import LibraryPlatform
     from uuid import uuid4
 
     lib = Library(
@@ -97,8 +97,8 @@ def test_get_library_platforms_used_only(self, client, regular_user, db_session)
 
 
 def test_get_igdb_platforms_used_only(self, client, regular_user, db_session):
-    from sharewarez.models import Library, Game, Platform
-    from sharewarez.platform import LibraryPlatform
+    from gametheca.models import Library, Game, Platform
+    from gametheca.platform import LibraryPlatform
     from uuid import uuid4
 
     lib = Library(
@@ -145,11 +145,11 @@ Expected: FAIL (404 or route missing)
 
 - [ ] **Step 3: Implement endpoints**
 
-In `sharewarez/routes_apis/filters.py`, add imports and routes:
+In `gametheca/routes_apis/filters.py`, add imports and routes:
 
 ```python
-from sharewarez.models import Genre, Theme, GameMode, PlayerPerspective, Library, Platform, Game
-from sharewarez.platform import LibraryPlatform
+from gametheca.models import Genre, Theme, GameMode, PlayerPerspective, Library, Platform, Game
+from gametheca.platform import LibraryPlatform
 from sqlalchemy import select, distinct
 
 @apis_bp.route('/library_platforms')
@@ -203,7 +203,7 @@ Expected: PASS for new tests; existing genre test still green
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -f tests/test_routes_apis_filters.py sharewarez/routes_apis/filters.py
+git add -f tests/test_routes_apis_filters.py gametheca/routes_apis/filters.py
 git commit -m "Add used-only library and IGDB platform filter APIs."
 ```
 
@@ -212,7 +212,7 @@ git commit -m "Add used-only library and IGDB platform filter APIs."
 ### Task 2: `/browse_games` dual platform filters
 
 **Files:**
-- Modify: `sharewarez/routes.py` (`browse_games`, ~lines 61–165)
+- Modify: `gametheca/routes.py` (`browse_games`, ~lines 61–165)
 - Test: `tests/test_routes.py`
 
 **Interfaces:**
@@ -314,7 +314,7 @@ if igdb_platform:
     query = query.filter(Game.platforms.any(Platform.name == igdb_platform))
 ```
 
-Add `from sharewarez.platform import LibraryPlatform` at top of `routes.py` if missing.
+Add `from gametheca.platform import LibraryPlatform` at top of `routes.py` if missing.
 
 If both `library_uuid` and `library_platform` are set, keep AND semantics (may need `joinedload` / single join — if Library is joined twice, use `query.join(Library, …)` only once or use `has()` / subquery). Preferred safe form:
 
@@ -339,7 +339,7 @@ Expected: PASS including new filters and existing filter tests
 - [ ] **Step 5: Commit**
 
 ```bash
-git add sharewarez/routes.py tests/test_routes.py
+git add gametheca/routes.py tests/test_routes.py
 git commit -m "Filter browse_games by library and IGDB platforms."
 ```
 
@@ -348,8 +348,8 @@ git commit -m "Filter browse_games by library and IGDB platforms."
 ### Task 3: Library filter UI wiring
 
 **Files:**
-- Modify: `sharewarez/templates/games/library_filters.html`
-- Modify: `sharewarez/setup/default_theme/js/library_pagination.js`
+- Modify: `gametheca/templates/games/library_filters.html`
+- Modify: `gametheca/setup/default_theme/js/library_pagination.js`
 
 **Interfaces:**
 - Consumes: `/api/library_platforms`, `/api/igdb_platforms`, Task 2 query params
@@ -446,7 +446,7 @@ With app running:
 - [ ] **Step 4: Commit**
 
 ```bash
-git add sharewarez/templates/games/library_filters.html sharewarez/setup/default_theme/js/library_pagination.js
+git add gametheca/templates/games/library_filters.html gametheca/setup/default_theme/js/library_pagination.js
 git commit -m "Wire dual platform filter dropdowns in library UI."
 ```
 
@@ -455,7 +455,7 @@ git commit -m "Wire dual platform filter dropdowns in library UI."
 ### Task 4: Sanitize folder deletes before `rmtree` / `remove`
 
 **Files:**
-- Modify: `sharewarez/routes.py` (`delete_folder`, `delete_full_game`)
+- Modify: `gametheca/routes.py` (`delete_folder`, `delete_full_game`)
 - Test: `tests/test_routes.py`
 
 **Interfaces:**
@@ -466,9 +466,9 @@ git commit -m "Wire dual platform filter dropdowns in library UI."
 
 ```python
 @patch('flask_login.current_user')
-@patch('sharewarez.routes.shutil.rmtree')
-@patch('sharewarez.routes.os.path.exists', return_value=True)
-@patch('sharewarez.routes.is_safe_path', return_value=(False, 'Access denied'))
+@patch('gametheca.routes.shutil.rmtree')
+@patch('gametheca.routes.os.path.exists', return_value=True)
+@patch('gametheca.routes.is_safe_path', return_value=(False, 'Access denied'))
 def test_delete_folder_rejects_unsafe_path(self, mock_safe, mock_exists, mock_rmtree,
                                            mock_current_user, client, app, db_session, admin_user):
     mock_current_user.is_authenticated = True
@@ -482,9 +482,9 @@ def test_delete_folder_rejects_unsafe_path(self, mock_safe, mock_exists, mock_rm
 
 
 @patch('flask_login.current_user')
-@patch('sharewarez.routes.shutil.rmtree')
-@patch('sharewarez.routes.os.path.exists', return_value=True)
-@patch('sharewarez.routes.is_safe_path', return_value=(True, None))
+@patch('gametheca.routes.shutil.rmtree')
+@patch('gametheca.routes.os.path.exists', return_value=True)
+@patch('gametheca.routes.is_safe_path', return_value=(True, None))
 def test_delete_folder_allows_safe_path(self, mock_safe, mock_exists, mock_rmtree,
                                         mock_current_user, client, app, db_session, admin_user):
     mock_current_user.is_authenticated = True
@@ -493,7 +493,7 @@ def test_delete_folder_allows_safe_path(self, mock_safe, mock_exists, mock_rmtre
     with client.session_transaction() as sess:
         sess['_user_id'] = str(admin_user.id)
 
-    with patch('sharewarez.routes.os.path.isfile', return_value=False):
+    with patch('gametheca.routes.os.path.isfile', return_value=False):
         response = client.post('/delete_folder', json={'folder_path': '/allowed/game'})
     assert response.status_code == 200
     mock_rmtree.assert_called_once()
@@ -547,7 +547,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add sharewarez/routes.py tests/test_routes.py
+git add gametheca/routes.py tests/test_routes.py
 git commit -m "Require safe paths before folder and game disk deletes."
 ```
 
@@ -556,8 +556,8 @@ git commit -m "Require safe paths before folder and game disk deletes."
 ### Task 5: HTTP retry helper + scraper backoff
 
 **Files:**
-- Create: `sharewarez/utils/http_retry.py`
-- Modify: `sharewarez/utils/secondary_scrapers.py`
+- Create: `gametheca/utils/http_retry.py`
+- Modify: `gametheca/utils/secondary_scrapers.py`
 - Create: `tests/test_utils_http_retry.py`
 - Create: `tests/test_utils_secondary_scrapers.py`
 
@@ -571,11 +571,11 @@ git commit -m "Require safe paths before folder and game disk deletes."
 
 ```python
 from unittest.mock import patch, MagicMock
-from sharewarez.utils.http_retry import request_with_backoff
+from gametheca.utils.http_retry import request_with_backoff
 
 
-@patch('sharewarez.utils.http_retry.time.sleep', return_value=None)
-@patch('sharewarez.utils.http_retry.requests.get')
+@patch('gametheca.utils.http_retry.time.sleep', return_value=None)
+@patch('gametheca.utils.http_retry.requests.get')
 def test_retries_on_429_then_succeeds(mock_get, mock_sleep):
     bad = MagicMock(status_code=429)
     good = MagicMock(status_code=200)
@@ -587,8 +587,8 @@ def test_retries_on_429_then_succeeds(mock_get, mock_sleep):
     assert mock_sleep.called
 
 
-@patch('sharewarez.utils.http_retry.time.sleep', return_value=None)
-@patch('sharewarez.utils.http_retry.requests.get')
+@patch('gametheca.utils.http_retry.time.sleep', return_value=None)
+@patch('gametheca.utils.http_retry.requests.get')
 def test_gives_up_after_max_retries(mock_get, mock_sleep):
     mock_get.return_value = MagicMock(status_code=503)
     resp = request_with_backoff('https://example.com/x', host_key='example', max_retries=3)
@@ -656,7 +656,7 @@ def request_with_backoff(url, *, host_key, params=None, timeout=5, max_retries=3
 In `secondary_scrapers.py`, replace direct `requests.get` with:
 
 ```python
-from sharewarez.utils.http_retry import request_with_backoff
+from gametheca.utils.http_retry import request_with_backoff
 
 # Steam search:
 resp = request_with_backoff(search_url, host_key='steam', timeout=5)
@@ -674,10 +674,10 @@ Keep existing parse/merge logic; still return `None` on failure.
 
 ```python
 from unittest.mock import patch, MagicMock
-from sharewarez.utils.secondary_scrapers import fetch_steam_data
+from gametheca.utils.secondary_scrapers import fetch_steam_data
 
 
-@patch('sharewarez.utils.secondary_scrapers.request_with_backoff')
+@patch('gametheca.utils.secondary_scrapers.request_with_backoff')
 def test_fetch_steam_data_returns_none_on_http_failure(mock_req):
     mock_req.return_value = None
     assert fetch_steam_data('Some Game') is None
@@ -696,7 +696,7 @@ Expected: PASS
 - [ ] **Step 8: Commit**
 
 ```bash
-git add sharewarez/utils/http_retry.py sharewarez/utils/secondary_scrapers.py tests/test_utils_http_retry.py tests/test_utils_secondary_scrapers.py
+git add gametheca/utils/http_retry.py gametheca/utils/secondary_scrapers.py tests/test_utils_http_retry.py tests/test_utils_secondary_scrapers.py
 git commit -m "Add Steam/RAWG HTTP backoff and rate limiting."
 ```
 
@@ -705,8 +705,8 @@ git commit -m "Add Steam/RAWG HTTP backoff and rate limiting."
 ### Task 6: Metadata apply helper with savepoints
 
 **Files:**
-- Create: `sharewarez/utils/metadata_enrichment.py`
-- Modify: `sharewarez/utilities.py` (both enrichment blocks ~196–245 and ~404–450)
+- Create: `gametheca/utils/metadata_enrichment.py`
+- Modify: `gametheca/utilities.py` (both enrichment blocks ~196–245 and ~404–450)
 - Create: `tests/test_utils_metadata_enrichment.py`
 
 **Interfaces:**
@@ -717,13 +717,13 @@ git commit -m "Add Steam/RAWG HTTP backoff and rate limiting."
 
 ```python
 from unittest.mock import patch
-from sharewarez.utils.metadata_enrichment import apply_enriched_metadata
+from gametheca.utils.metadata_enrichment import apply_enriched_metadata
 
 
 def test_apply_enriched_metadata_rolls_back_on_error(app, db_session, /* create game fixture inline */):
     # Create Library + Game with summary=None
     # Patch PlayerPerspective creation or genre append to raise mid-apply
-    with patch('sharewarez.utils.metadata_enrichment.db.session.flush', side_effect=RuntimeError('boom')):
+    with patch('gametheca.utils.metadata_enrichment.db.session.flush', side_effect=RuntimeError('boom')):
         # OR raise inside after summary set by patching a helper
         ok = apply_enriched_metadata(game, {'summary': 'New', 'genres': ['Action'], 'player_perspectives': []})
     assert ok is False
@@ -743,7 +743,7 @@ def test_savepoint_rollback(app, db_session):
     def boom(*args, **kwargs):
         raise RuntimeError('fail')
 
-    with patch('sharewarez.utils.metadata_enrichment._attach_named_relations', side_effect=boom):
+    with patch('gametheca.utils.metadata_enrichment._attach_named_relations', side_effect=boom):
         result = apply_enriched_metadata(game, enriched)
 
     assert result is False
@@ -759,12 +759,12 @@ Expected: FAIL (module missing)
 
 - [ ] **Step 3: Implement helper**
 
-`sharewarez/utils/metadata_enrichment.py`:
+`gametheca/utils/metadata_enrichment.py`:
 
 ```python
 from sqlalchemy import select
-from sharewarez import db
-from sharewarez.models import Genre, PlayerPerspective
+from gametheca import db
+from gametheca.models import Genre, PlayerPerspective
 
 
 def _attach_named_relations(game_obj, enriched):
@@ -851,7 +851,7 @@ Expected: PASS
 - [ ] **Step 7: Commit**
 
 ```bash
-git add sharewarez/utils/metadata_enrichment.py sharewarez/utilities.py tests/test_utils_metadata_enrichment.py
+git add gametheca/utils/metadata_enrichment.py gametheca/utilities.py tests/test_utils_metadata_enrichment.py
 git commit -m "Apply secondary metadata inside DB savepoints."
 ```
 
@@ -860,9 +860,9 @@ git commit -m "Apply secondary metadata inside DB savepoints."
 ### Task 7: Static cover URL hardening
 
 **Files:**
-- Modify: `sharewarez/routes.py` (`browse_games` cover_url building)
-- Modify: `sharewarez/routes_discover.py` (bare filename branch)
-- Modify: `sharewarez/setup/default_theme/js/library_pagination.js` (`createGameCardHtml`)
+- Modify: `gametheca/routes.py` (`browse_games` cover_url building)
+- Modify: `gametheca/routes_discover.py` (bare filename branch)
+- Modify: `gametheca/setup/default_theme/js/library_pagination.js` (`createGameCardHtml`)
 - Test: `tests/test_routes.py`
 
 **Interfaces:**
@@ -928,7 +928,7 @@ Manual:
 - [ ] **Step 6: Commit**
 
 ```bash
-git add sharewarez/routes.py sharewarez/routes_discover.py sharewarez/setup/default_theme/js/library_pagination.js tests/test_routes.py
+git add gametheca/routes.py gametheca/routes_discover.py gametheca/setup/default_theme/js/library_pagination.js tests/test_routes.py
 git commit -m "Return static url_for cover URLs for AJAX browse cards."
 ```
 

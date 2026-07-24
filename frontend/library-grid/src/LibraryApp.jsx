@@ -1,31 +1,36 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { fetchBrowseGames } from './api/browse'
 import { cleanFilters, FilterBar } from './components/FilterBar'
 import { GameGrid } from './components/GameGrid'
 import { GameGridSkeleton } from './components/GameGridSkeleton'
 import { PaginationBar } from './components/PaginationBar'
+import { createTranslator } from './i18n'
 import { readLibraryFilters, writeLibraryFilters } from './utils/cookies'
 
-function EmptyState({ initialConfig }) {
+function EmptyState({ initialConfig, t }) {
   if (initialConfig.libraryCount === 0) {
     return (
       <p>
         {initialConfig.isAdmin
-          ? 'No libraries found. Add a library to get started.'
-          : 'No libraries are available.'}
+          ? t('No libraries found. Add a library to get started.')
+          : t('No libraries are available.')}
       </p>
     )
   }
 
   if (initialConfig.gamesCount === 0) {
-    return <p>No games found in your libraries.</p>
+    return <p>{t('No games found in your libraries.')}</p>
   }
 
-  return <p>No games match the current filters.</p>
+  return <p>{t('No games match the current filters.')}</p>
 }
 
 export function LibraryApp({ initialConfig }) {
+  const t = useMemo(
+    () => createTranslator(initialConfig.locale),
+    [initialConfig.locale],
+  )
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(initialConfig.perPage)
   const defaultFilters = {
@@ -102,9 +107,9 @@ export function LibraryApp({ initialConfig }) {
   if (error && !result) {
     content = (
       <div role="alert">
-        <p>Unable to load games.</p>
+        <p>{t('Unable to load games.')}</p>
         <button type="button" onClick={retry}>
-          Retry
+          {t('Retry')}
         </button>
       </div>
     )
@@ -121,6 +126,7 @@ export function LibraryApp({ initialConfig }) {
             setPage(1)
             setPerPage(nextPerPage)
           }}
+          t={t}
         />
       </>
     )
@@ -129,9 +135,9 @@ export function LibraryApp({ initialConfig }) {
       <>
         {error && (
           <div role="alert">
-            <p>Unable to refresh games.</p>
+            <p>{t('Unable to refresh games.')}</p>
             <button type="button" onClick={retry}>
-              Retry
+              {t('Retry')}
             </button>
           </div>
         )}
@@ -146,7 +152,7 @@ export function LibraryApp({ initialConfig }) {
                 discordConfigured={initialConfig.discordConfigured}
                 discordManualTrigger={initialConfig.discordManualTrigger}
               />
-              <EmptyState initialConfig={initialConfig} />
+              <EmptyState initialConfig={initialConfig} t={t} />
             </>
           ) : (
             <GameGrid
@@ -168,6 +174,7 @@ export function LibraryApp({ initialConfig }) {
             setPage(1)
             setPerPage(nextPerPage)
           }}
+          t={t}
         />
       </>
     )
@@ -178,6 +185,7 @@ export function LibraryApp({ initialConfig }) {
       filters={filters}
       onApply={applyFilters}
       onClear={clearFilters}
+      t={t}
     />
   )
   const filtersRoot = document.getElementById('library-filters-root')

@@ -12,13 +12,13 @@ const baseGame = {
   genres: ['Sports'],
 }
 
-test('renders L and VR badges when flags set', () => {
+test('renders L and VR badges via BadgeStack when flags set', () => {
   render(<GameCard game={baseGame} showPlayStatus={false} isAdmin={false} />)
   expect(screen.getByTitle(/local metadata/i)).toHaveTextContent('L')
   expect(screen.getByTitle(/virtual reality/i)).toHaveTextContent('VR')
 })
 
-test('omits badges when flags false', () => {
+test('omits BadgeStack when no signals', () => {
   render(
     <GameCard
       game={{ ...baseGame, has_local_override: false, is_vr: false }}
@@ -26,6 +26,5 @@ test('omits badges when flags false', () => {
       isAdmin={false}
     />,
   )
-  expect(screen.queryByTitle(/local metadata/i)).toBeNull()
-  expect(screen.queryByTitle(/virtual reality/i)).toBeNull()
+  expect(screen.queryByLabelText(/game badges/i)).toBeNull()
 })

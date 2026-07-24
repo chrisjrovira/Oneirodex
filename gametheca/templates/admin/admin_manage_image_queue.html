@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='library/themes/default/css/admin/admin_dashboard.css') }}">
+
+<div class="container mt-4">
+    <div class="glass-panel">
+        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="hackplanet_titles">
+        <h1><i class="fas fa-images"></i> Image Queue</h1>
+        <p>Manage game cover and screenshot downloads.</p>
+    </div>
+
+    <!-- Controls -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="downloadBatch(10)">
+                    <i class="fas fa-download"></i> Download 10
+                </button>
+                <button class="btn btn-success" onclick="downloadBatch(50)">
+                    <i class="fas fa-download"></i> Download 50
+                </button>
+                <button class="btn btn-primary" onclick="downloadBatch(100)">
+                    <i class="fas fa-download"></i> Download 100
+                </button>
+                <button class="btn btn-secondary" onclick="refreshQueue()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <select id="status-filter" class="form-select" onchange="applyFilters()">
+                    <option value="all">All Images</option>
+                    <option value="pending">Pending Only</option>
+                    <option value="downloaded">Downloaded Only</option>
+                </select>
+                <select id="type-filter" class="form-select" onchange="applyFilters()">
+                    <option value="all">All Types</option>
+                    <option value="cover">Covers</option>
+                    <option value="screenshot">Screenshots</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div id="messages"></div>
+
+    <!-- Image Queue Table -->
+    <div class="table-responsive">
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th>Game</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Download URL</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="image-table-body">
+                <tr>
+                    <td colspan="6" class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <nav id="pagination-nav" style="display: none;">
+        <ul class="pagination justify-content-center" id="pagination">
+        </ul>
+    </nav>
+</div>
+
+<script>
+let currentPage = 1;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    loadImageQueue();
+});
+
+// Load image queue with filters
+async function loadImageQueue() {
+    const statusFilter = document.getElementById('status-filter').value;
+    const typeFilter = document.getElementById('type-filter').value;
+
+    const params = new URLSearchParams({
+        page: currentPage,
+        per_page: 50,
+        status: statusFilter,
+        type: typeFilter
+    });
+
+    try {
+        document.getElementById('image-table-body').innerHTML =
+            '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+
+        const response = await fetch(`/admin/api/image_queue_list?${params}`);
+        const data = await response.json();
+
+        if (data.error) {
+            showMessage('Error loading images: ' + data.error, 'danger');
+            return;
+        }
+
+        renderImageTable(data.images);
+        renderPagination(data.pagination);
+
+    } catch (error) {
+        console.error('Error loading image queue:', error);
+        showMessage('Error loading image queue', 'danger');
+        document.getElementById('image-table-body').innerHTML =
+            '<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>';
+    }
+}
+
+// Render image table
+function renderImageTable(images) {
+    const tbody = document.getElementById('image-table-body');
+
+    if (images.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No images found</td></tr>';
+        return;
+    }
+
+    const html = images.map(image => {
+        const statusBadge = image.is_downloaded ?
+            '<span class="badge bg-success">Downloaded</span>' :
+            '<span class="badge bg-warning">Pending</span>';
+
+        const typeBadge = image.image_type === 'cover' ?
+            '<span class="badge bg-primary">Cover</span>' :
+            '<span class="badge bg-info">Screenshot</span>';
+
+        const downloadUrl = image.download_url ?
+            image.download_url.substring(0, 50) + '...' : 'No URL';
+
+        return `
+            <tr>
+                <td>
+                    <strong>${image.game_name}</strong>
+                    <br><small class="text-muted">${image.game_uuid}</small>
+                </td>
+                <td>${typeBadge}</td>
+                <td>${statusBadge}</td>
+                <td><small>${downloadUrl}</small></td>
+                <td><small>${image.created_at}</small></td>
+                <td>
+                    ${!image.is_downloaded ? `
+                        <button class="btn btn-sm btn-success me-1" onclick="downloadSingle(${image.id})" title="Download">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-sm btn-danger" onclick="deleteSingle(${image.id})" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    tbody.innerHTML = html;
+}
+
+// Render pagination
+function renderPagination(pagination) {
+    const paginationNav = document.getElementById('pagination-nav');
+    const paginationUl = document.getElementById('pagination');
+
+    if (pagination.pages <= 1) {
+        paginationNav.style.display = 'none';
+        return;
+    }
+
+    paginationNav.style.display = 'block';
+
+    let html = `
+        <li class="page-item ${!pagination.has_prev ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${pagination.page - 1})">Previous</a>
+        </li>
+    `;
+
+    // Show page numbers (simplified)
+    const startPage = Math.max(1, pagination.page - 2);
+    const endPage = Math.min(pagination.pages, pagination.page + 2);
+
+    for (let i = startPage; i <= endPage; i++) {
+        html += `
+            <li class="page-item ${i === pagination.page ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+            </li>
+        `;
+    }
+
+    html += `
+        <li class="page-item ${!pagination.has_next ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${pagination.page + 1})">Next</a>
+        </li>
+    `;
+
+    paginationUl.innerHTML = html;
+}
+
+// Change page
+function changePage(page) {
+    if (page < 1) return;
+    currentPage = page;
+    loadImageQueue();
+}
+
+// Apply filters
+function applyFilters() {
+    currentPage = 1;
+    loadImageQueue();
+}
+
+// Refresh queue
+function refreshQueue() {
+    loadImageQueue();
+}
+
+// Download batch
+async function downloadBatch(size) {
+    try {
+        const response = await fetch('/admin/api/download_images', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRFUtils.getToken()
+            },
+            body: JSON.stringify({ batch_size: size })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showMessage(result.message, 'success');
+            loadImageQueue();
+        } else {
+            showMessage('Download failed: ' + result.message, 'danger');
+        }
+
+    } catch (error) {
+        console.error('Error downloading batch:', error);
+        showMessage('Error downloading batch: ' + error.message, 'danger');
+    }
+}
+
+// Download single image
+async function downloadSingle(imageId) {
+    try {
+        const response = await fetch('/admin/api/download_images', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRFUtils.getToken()
+            },
+            body: JSON.stringify({ image_ids: [imageId] })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showMessage(result.message, 'success');
+            loadImageQueue();
+        } else {
+            showMessage('Download failed: ' + result.message, 'danger');
+        }
+
+    } catch (error) {
+        console.error('Error downloading image:', error);
+        showMessage('Error downloading image', 'danger');
+    }
+}
+
+// Delete single image
+async function deleteSingle(imageId) {
+    if (!confirm('Are you sure you want to delete this image?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/admin/api/delete_image/${imageId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': CSRFUtils.getToken()
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showMessage(result.message, 'success');
+            loadImageQueue();
+        } else {
+            showMessage('Delete failed: ' + result.message, 'danger');
+        }
+
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        showMessage('Error deleting image', 'danger');
+    }
+}
+
+// Show message
+function showMessage(message, type = 'info') {
+    const messagesDiv = document.getElementById('messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    messageDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    messagesDiv.appendChild(messageDiv);
+
+    setTimeout(() => {
+        if (messageDiv.parentNode) {
+            messageDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+
+{% endblock %}

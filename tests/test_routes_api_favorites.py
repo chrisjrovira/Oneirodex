@@ -2,7 +2,7 @@ from uuid import uuid4
 
 import pytest
 
-from sharewarez.models import (
+from gametheca.models import (
     Game,
     Image,
     Library,

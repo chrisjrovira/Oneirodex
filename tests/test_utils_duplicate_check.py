@@ -2,7 +2,7 @@
 
 from types import SimpleNamespace
 
-from sharewarez.utils.duplicate_check import (
+from gametheca.utils.duplicate_check import (
     normalize_disk_path,
     should_mark_as_duplicate,
 )

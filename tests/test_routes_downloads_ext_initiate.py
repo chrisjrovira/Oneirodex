@@ -7,12 +7,12 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from sqlalchemy import select
-from sharewarez import db
-from sharewarez.models import (
+from gametheca import db
+from gametheca.models import (
     DownloadRequest, Game, User, GlobalSettings, Library, 
     GameUpdate, GameExtra
 )
-from sharewarez.platform import LibraryPlatform
+from gametheca.platform import LibraryPlatform
 
 
 @pytest.fixture
@@ -331,7 +331,7 @@ class TestSecurityValidation:
             # Should not return 200 - either 400 (validation error) or 302/404 (handled)
             assert response.status_code != 200
     
-    @patch('sharewarez.routes_downloads_ext.initiate.log_system_event')
+    @patch('gametheca.routes_downloads_ext.initiate.log_system_event')
     def test_security_logging(self, mock_log, client, authenticated_user):
         """Test that security violations are properly logged."""
         authenticate_user(client, authenticated_user)

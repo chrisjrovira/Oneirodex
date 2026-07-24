@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-write-file-bytes"
+description = "Allows writing downloaded archives to disk."
+commands.allow = ["write_file_bytes"]

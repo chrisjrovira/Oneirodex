@@ -4,7 +4,7 @@ import json
 import os
 import tempfile
 
-from sharewarez.utils.match_proposal import build_match_proposal, write_match_proposal
+from gametheca.utils.match_proposal import build_match_proposal, write_match_proposal
 
 
 def test_build_match_proposal_from_fitgirl_label():
