@@ -1,11 +1,12 @@
 # GameTheca
 
-Self-hosted multi-user game library and download server. Scan folders, enrich with IGDB metadata, invite friends, and share DRM-free games.
+**Version:** [0.1.0](CHANGELOG.md) · Self-hosted multi-user game library and download server. Scan folders, enrich with IGDB metadata, invite friends, and share DRM-free games.
 
 | | |
 |---|---|
 | **Repo** | https://github.com/chrisjrovira/gametheca |
-| **Docker image** | `chrisjrovira/gametheca:latest` |
+| **Release** | `v0.1.0` (see [CHANGELOG.md](CHANGELOG.md)) |
+| **Docker image** | `chrisjrovira/gametheca:0.1.0` / `:latest` |
 | **Containers** | `gametheca-app`, `gametheca-db` |
 | **Python package** | `gametheca/` |
 | **Default port** | `5006` |
@@ -17,8 +18,10 @@ Self-hosted multi-user game library and download server. Scan folders, enrich wi
 - Streaming ZIP downloads, invite-based access, Discord hooks
 - Library React grid with title-card badges and freshness (OUT / ~)
 - Ops glance, propose-only scans, theme presets
+- Optional modules (feature-flagged): *arr + hardlink pipeline, Ollama AI, VR/Quest PWA, OIDC/Authentik SSO
+- Desktop companion (Tauri) — unsigned by default; signing hooks documented
 
-GameTheca encourages legal use of software only.
+GameTheca encourages legal use of software only. **Authentik/SSO is optional** — local username/password works for home installs.
 
 ## Quick start
 
@@ -38,6 +41,7 @@ Useful flags: `--games-dir /path/to/games`, `--dev`, `--no-db`, `--force`.
 ```bash
 cp .env.docker.example .env
 # Set SECRET_KEY and DATA_FOLDER_WAREZ / LIBRARY_HOST_PATH
+# Optional: ENABLE_ARR_MODULE, ENABLE_AI_ASSIST, ENABLE_VR_BROWSE, OIDC_*
 docker compose up -d --build
 ```
 
@@ -63,6 +67,10 @@ Force setup wizard: `./startweb.sh --force-setup` (required when upgrading from 
 | `LIBRARY_HOST_PATH` | Host path mounted to `UPLOAD_FOLDER` in Docker |
 | `DEV_MODE` | Recopy theme files on startup |
 | `PORT` | Web port (default 5006) |
+| `ENABLE_ARR_MODULE` | *arr search / qBittorrent |
+| `ENABLE_AI_ASSIST` / `ENABLE_AI_AUTO_APPLY` | Ollama triage (+ gated rename) |
+| `ENABLE_VR_BROWSE` | `/vr` PWA catalog |
+| `OIDC_ENABLED` | Env half of SSO (also enable in Admin → Integrations) |
 
 See `.env.example` and `.env.docker.example`.
 
@@ -70,10 +78,13 @@ See `.env.example` and `.env.docker.example`.
 
 | Doc | Contents |
 |---|---|
+| [CHANGELOG.md](CHANGELOG.md) | Release history |
 | [docs/README.md](docs/README.md) | Full documentation index |
 | [docs/strategy/](docs/strategy/) | Roadmap, competitive gaps, UI plan, execution log |
-| [docs/runbooks/](docs/runbooks/) | Unraid deploy, container troubleshooting |
+| [docs/runbooks/](docs/runbooks/) | Unraid, OIDC/Authentik, Docker, signing |
 | [docs/openapi/openapi.json](docs/openapi/openapi.json) | HTTP API |
+| [clients/desktop/README.md](clients/desktop/README.md) | Desktop companion |
+| [clients/quest/README.md](clients/quest/README.md) | Quest / VR PWA |
 
 ## Development
 
@@ -81,10 +92,14 @@ See `.env.example` and `.env.docker.example`.
 pip install -r requirements.txt
 # optional frontend
 cd frontend/library-grid && npm ci && npm test && npm run build
-pytest tests/test_q1_foundation_unit.py
+pytest tests/test_q1_foundation_unit.py tests/test_ops_followons.py
 ```
 
 Set `TEST_DATABASE_URL` (default DB name `gamethecatest`) for DB-backed tests.
+
+## Versioning
+
+Product version is tracked in [`VERSION`](VERSION) (currently **0.1.0**). Desktop, library-grid, ops-glance, and api-client package versions follow the same milestone number. Docker tags: `chrisjrovira/gametheca:0.1.0` and `:latest`.
 
 ## Upgrades
 

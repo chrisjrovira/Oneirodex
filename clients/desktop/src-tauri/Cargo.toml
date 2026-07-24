@@ -1,6 +1,6 @@
 [package]
 name = "gametheca-desktop"
-version = "0.0.1"
+version = "0.1.0"
 description = "GameTheca desktop companion"
 authors = ["GameTheca"]
 edition = "2021"
