@@ -2,7 +2,7 @@
 #
 # Setup Instructions:
 # 1. Copy .env.docker.example to .env and customize your settings
-# 2. Run: docker-compose up -d
+# 2. Run: docker compose up -d --build
 #
 # Volume Mounts:
 # - DATA_FOLDER_WAREZ: Your games directory, mounted read-only to /storage
@@ -27,7 +27,6 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-      # Optional modules (defaults off â€” set in .env)
       - ENABLE_ARR_MODULE=${ENABLE_ARR_MODULE:-false}
       - ENABLE_ARR_HARDLINK_PIPELINE=${ENABLE_ARR_HARDLINK_PIPELINE:-false}
       - ENABLE_AI_ASSIST=${ENABLE_AI_ASSIST:-false}
@@ -53,8 +52,8 @@ services:
       - REMEMBER_COOKIE_SECURE=${REMEMBER_COOKIE_SECURE:-false}
       - TRUSTED_PROXIES=${TRUSTED_PROXIES:-0}
     extra_hosts:
-      # Reach Ollama / qBit / Authentik on the Docker host (Windows/Mac)
-      - "host.docker.internal:host-gateway"    volumes:
+      - "host.docker.internal:host-gateway"
+    volumes:
       - "${DATA_FOLDER_WAREZ}:/storage:ro"
       - "${LIBRARY_HOST_PATH:-./data/library}:/app/gametheca/static/library"
     depends_on:
