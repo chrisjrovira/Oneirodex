@@ -37,9 +37,11 @@
                         {% for error in form.theme.errors %}
                             <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
-                        <div class="theme-swatch-grid" id="themeSwatchGrid" aria-label="Theme previews">
+                        <div class="theme-swatch-grid" id="themeSwatchGrid" role="group" aria-label="Theme previews">
                             {% for value, label in form.theme.choices %}
-                            <button type="button" class="theme-swatch" data-theme="{{ value }}" title="{{ label }}">
+                            <button type="button" class="theme-swatch{% if form.theme.data == value %} is-selected{% endif %}"
+                                    data-theme="{{ value }}" title="{{ label }}"
+                                    aria-pressed="{{ 'true' if form.theme.data == value else 'false' }}">
                                 <span class="theme-swatch-chip theme-swatch-{{ value }}"></span>
                                 <span class="theme-swatch-label">{{ label }}</span>
                             </button>

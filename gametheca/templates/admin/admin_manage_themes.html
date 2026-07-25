@@ -43,6 +43,35 @@
             </form>
         </div>
 
+        {% set active_theme = (current_user.preferences.theme if current_user.preferences and current_user.preferences.theme else 'default') %}
+        <div class="theme-apply-section">
+            <h2>Active Theme</h2>
+            <p class="theme-apply-hint">
+                Pick a theme to apply it to your own account right away. Other members keep
+                their own choice, which they can change under Preferences.
+            </p>
+            <div class="theme-swatch-grid" id="adminThemeGrid" role="group"
+                 aria-label="Apply a theme" data-apply-url="{{ url_for('admin2.apply_theme') }}">
+                <button type="button" class="theme-swatch{% if active_theme == 'default' %} is-selected{% endif %}"
+                        data-theme="default" title="{{ default_theme.name }} (Default)"
+                        aria-pressed="{{ 'true' if active_theme == 'default' else 'false' }}">
+                    <span class="theme-swatch-chip theme-swatch-default"></span>
+                    <span class="theme-swatch-label">Default</span>
+                </button>
+                {% for theme in themes %}
+                {% if theme.folder != 'default' %}
+                <button type="button" class="theme-swatch{% if active_theme == theme.folder %} is-selected{% endif %}"
+                        data-theme="{{ theme.folder }}" title="{{ theme.name }}"
+                        aria-pressed="{{ 'true' if active_theme == theme.folder else 'false' }}">
+                    <span class="theme-swatch-chip theme-swatch-{{ theme.folder }}"></span>
+                    <span class="theme-swatch-label">{{ theme.name }}</span>
+                </button>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <p class="theme-apply-status" id="adminThemeStatus" role="status" aria-live="polite"></p>
+        </div>
+
         <div class="installed-themes-section">
             <h2>Installed Themes</h2>
             <div class="themes-grid">
@@ -71,4 +100,65 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    const grid = document.getElementById('adminThemeGrid');
+    const status = document.getElementById('adminThemeStatus');
+    if (!grid) {
+        return;
+    }
+
+    function setStatus(message, isError) {
+        if (status) {
+            status.textContent = message;
+            status.classList.toggle('is-error', !!isError);
+        }
+    }
+
+    grid.addEventListener('click', function (event) {
+        const swatch = event.target.closest('.theme-swatch');
+        if (!swatch || swatch.disabled) {
+            return;
+        }
+
+        const theme = swatch.dataset.theme;
+        grid.querySelectorAll('.theme-swatch').forEach(function (button) {
+            button.disabled = true;
+        });
+        setStatus('Applying ' + swatch.title + '\u2026', false);
+
+        fetch(grid.dataset.applyUrl, {
+            method: 'POST',
+            headers: CSRFUtils.getHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ theme: theme })
+        })
+        .then(function (response) {
+            return response.json().then(function (data) {
+                return { ok: response.ok, data: data };
+            });
+        })
+        .then(function (result) {
+            if (!result.ok || !result.data.success) {
+                throw new Error(result.data.error || 'Failed to apply theme');
+            }
+            grid.querySelectorAll('.theme-swatch').forEach(function (button) {
+                const isSelected = button.dataset.theme === theme;
+                button.classList.toggle('is-selected', isSelected);
+                button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+            });
+            setStatus('Theme applied. Reloading\u2026', false);
+            // Reload so the page is served this theme's stylesheets.
+            window.location.reload();
+        })
+        .catch(function (error) {
+            console.error('Error:', error);
+            setStatus(error.message, true);
+            grid.querySelectorAll('.theme-swatch').forEach(function (button) {
+                button.disabled = false;
+            });
+        });
+    });
+})();
+</script>
 {% endblock %}
