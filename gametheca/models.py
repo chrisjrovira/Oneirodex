@@ -618,6 +618,7 @@ class UserPreference(db.Model):
     default_sort_order = db.Column(db.String(4), default='asc')
     theme = db.Column(db.String(50), default='default')
     locale = db.Column(db.String(10), default='en')
+    tile_size = db.Column(db.String(4), default='M', nullable=False)
     
     user = db.relationship('User', back_populates='preferences')
 

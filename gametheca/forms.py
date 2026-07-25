@@ -263,6 +263,11 @@ class UserPreferencesForm(FlaskForm):
     default_sort = SelectField('Default Sort', choices=default_sort_choices)
     default_sort_order = SelectField('Default Sort Order', choices=default_sort_order_choices)
     theme = SelectField('Theme', choices=[('default', 'Default')])  # Default theme is always an option
+    tile_size = SelectField(
+        'Tile size',
+        choices=[('S', 'S'), ('M', 'M'), ('L', 'L'), ('XL', 'XL')],
+        default='M',
+    )
     submit = SubmitField('Save Preferences')
 
     def __init__(self, *args, **kwargs):

@@ -46,6 +46,13 @@
                             {% endfor %}
                         </div>
                     </div>
+                    <div class="mb-3">
+                        {{ form.tile_size.label(class="form-label") }}
+                        {{ form.tile_size(class="form-select", id="tileSizeSelect") }}
+                        {% for error in form.tile_size.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">

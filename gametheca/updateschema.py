@@ -534,6 +534,9 @@ class DatabaseManager:
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS locale VARCHAR(10) DEFAULT 'en';
 
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS tile_size VARCHAR(4) DEFAULT 'M';
+
         CREATE TABLE IF NOT EXISTS emulator_saves (
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

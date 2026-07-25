@@ -192,6 +192,7 @@ def settings_panel():
         current_user.preferences.default_sort = form.default_sort.data
         current_user.preferences.default_sort_order = form.default_sort_order.data
         current_user.preferences.theme = form.theme.data if form.theme.data != 'default' else None
+        current_user.preferences.tile_size = form.tile_size.data or 'M'
         
         try:
             db.session.add(current_user.preferences)
