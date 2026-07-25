@@ -40,3 +40,11 @@ docker compose exec app printenv DATABASE_URL DATABASE_HOST
 Expected: `...@db:5432/...` and `DATABASE_HOST=db`.
 
 Postgres service logs should show ready; app should stop looping on localhost.
+
+## Frontend (member SPA)
+
+Docker image build runs `frontend/member-app` (Vite) and copies `member-app.js` to `/app/gametheca/static/dist/member-app/`. After `docker compose up -d --build`, confirm the file exists if the member UI fails to load:
+
+```bash
+docker compose exec app test -f /app/gametheca/static/dist/member-app/member-app.js && echo ok
+```

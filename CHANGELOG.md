@@ -35,6 +35,10 @@ First milestone release on the `feature/roadmap-q1-foundation` track (GameTheca 
 
 ## [Unreleased]
 
+### Changed
+
+- **Member SPA rebrand (wave 1):** browse routes (Discover, Library, Favorites, Downloads) serve a React Router shell from `frontend/member-app` (`member-app.js`), with GameTheca top nav, design tokens, and Docker multi-stage build of `/static/dist/member-app/`
+
 ### Fixed
 
 - Docker Compose forces `DATABASE_URL` host `db` (stops Unraid `.env` `@localhost` loops)
