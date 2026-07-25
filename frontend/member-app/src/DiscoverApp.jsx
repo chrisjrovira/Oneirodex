@@ -1,6 +1,6 @@
 import { GameGrid } from './components/GameGrid'
 
-export function DiscoverApp({ sections, isAdmin = false }) {
+export function DiscoverApp({ sections, isAdmin = false, shellConfig: _shellConfig } = {}) {
   return sections
     .filter((section) => section.games.length > 0)
     .map((section) => (

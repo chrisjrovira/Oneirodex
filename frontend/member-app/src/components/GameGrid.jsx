@@ -1,3 +1,4 @@
+import './GameGrid.css'
 import { GameCard } from './GameCard'
 
 export function GameGrid({

@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { Outlet, Route, Routes } from 'react-router-dom'
+import { applyTileSizeCssVars, TileSizeControl } from './chrome/TileSizeControl'
 import { TopNav } from './chrome/TopNav'
 import { DiscoverApp } from './DiscoverApp'
 import { FavoritesApp } from './FavoritesApp'
@@ -22,10 +24,27 @@ function libraryInitialConfig(shellConfig) {
   }
 }
 
-function Layout({ shellConfig }) {
+function PageHeader({ title, tileSize, onTileSizeChange, shellConfig }) {
+  return (
+    <div className="gt-page-header">
+      <h1>{title}</h1>
+      <TileSizeControl
+        value={tileSize}
+        onChange={onTileSizeChange}
+        shellConfig={shellConfig}
+      />
+    </div>
+  )
+}
+
+function Layout({ shellConfig, tileSize, onTileSizeChange }) {
   return (
     <>
-      <TopNav shellConfig={shellConfig} />
+      <TopNav
+        shellConfig={shellConfig}
+        tileSize={tileSize}
+        onTileSizeChange={onTileSizeChange}
+      />
       <Outlet />
     </>
   )
@@ -33,32 +52,82 @@ function Layout({ shellConfig }) {
 
 export function App({ shellConfig = {} }) {
   const sections = Array.isArray(shellConfig.sections) ? shellConfig.sections : []
+  const [tileSize, setTileSize] = useState(shellConfig.tileSize || 'M')
+
+  useEffect(() => {
+    applyTileSizeCssVars(tileSize)
+  }, [tileSize])
 
   return (
     <Routes>
-      <Route element={<Layout shellConfig={shellConfig} />}>
+      <Route
+        element={
+          <Layout
+            shellConfig={shellConfig}
+            tileSize={tileSize}
+            onTileSizeChange={setTileSize}
+          />
+        }
+      >
         <Route
           path="/discover"
           element={
-            <DiscoverApp sections={sections} isAdmin={Boolean(shellConfig.isAdmin)} />
+            <>
+              <PageHeader
+                title="Discover"
+                tileSize={tileSize}
+                onTileSizeChange={setTileSize}
+                shellConfig={shellConfig}
+              />
+              <DiscoverApp
+                sections={sections}
+                isAdmin={Boolean(shellConfig.isAdmin)}
+                shellConfig={shellConfig}
+              />
+            </>
           }
         />
         <Route
           path="/library"
-          element={<LibraryApp initialConfig={libraryInitialConfig(shellConfig)} />}
+          element={
+            <>
+              <PageHeader
+                title="Library"
+                tileSize={tileSize}
+                onTileSizeChange={setTileSize}
+                shellConfig={shellConfig}
+              />
+              <LibraryApp
+                initialConfig={libraryInitialConfig(shellConfig)}
+                shellConfig={shellConfig}
+              />
+            </>
+          }
         />
         <Route
           path="/favorites"
           element={
-            <FavoritesApp
-              initialConfig={{
-                isAdmin: Boolean(shellConfig.isAdmin),
-                showPlayStatus: Boolean(shellConfig.showPlayStatus),
-              }}
-            />
+            <>
+              <PageHeader
+                title="Favorites"
+                tileSize={tileSize}
+                onTileSizeChange={setTileSize}
+                shellConfig={shellConfig}
+              />
+              <FavoritesApp
+                initialConfig={{
+                  isAdmin: Boolean(shellConfig.isAdmin),
+                  showPlayStatus: Boolean(shellConfig.showPlayStatus),
+                }}
+                shellConfig={shellConfig}
+              />
+            </>
           }
         />
-        <Route path="/downloads" element={<DownloadsPage />} />
+        <Route
+          path="/downloads"
+          element={<DownloadsPage shellConfig={shellConfig} />}
+        />
       </Route>
     </Routes>
   )

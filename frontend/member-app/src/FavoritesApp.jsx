@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchFavoriteGames } from './api/favorites'
 import { GameGrid } from './components/GameGrid'
 
-export function FavoritesApp({ initialConfig }) {
+export function FavoritesApp({ initialConfig, shellConfig: _shellConfig } = {}) {
   const [games, setGames] = useState(null)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
@@ -42,7 +42,7 @@ export function FavoritesApp({ initialConfig }) {
   }
 
   if (!games) {
-    return <p>Loading favorites…</p>
+    return <p>Loading favoritesâ€¦</p>
   }
 
   if (games.length === 0) {

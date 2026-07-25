@@ -164,3 +164,20 @@
     display: none;
   }
 }
+.gt-topnav__tile-size {
+  display: flex;
+  align-items: center;
+  margin-right: 0.35rem;
+}
+
+@media (max-width: 767px) {
+  .gt-topnav__tile-size {
+    margin: 0.35rem 0;
+    width: 100%;
+  }
+
+  .gt-topnav__tile-size .gt-tile-size {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

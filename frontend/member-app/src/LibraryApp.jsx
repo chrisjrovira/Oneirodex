@@ -26,7 +26,7 @@ function EmptyState({ initialConfig, t }) {
   return <p>{t('No games match the current filters.')}</p>
 }
 
-export function LibraryApp({ initialConfig }) {
+export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
   const t = useMemo(
     () => createTranslator(initialConfig.locale),
     [initialConfig.locale],

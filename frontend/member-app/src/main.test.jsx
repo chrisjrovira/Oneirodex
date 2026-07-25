@@ -2,6 +2,7 @@ import {
   parseDiscoverRootConfig,
   parseFavoritesRootConfig,
   parseRootConfig,
+  parseShellConfig,
 } from './main'
 
 test('parses Library template data attributes', () => {
@@ -71,4 +72,23 @@ test('falls back to no sections when Discover data is invalid', () => {
     sections: [],
     isAdmin: false,
   })
+})
+
+
+test('parses SPA shell config including tileSize', () => {
+  const root = document.createElement('div')
+  root.dataset.tileSize = 'XL'
+  root.dataset.isAdmin = 'true'
+  root.dataset.perPage = '50'
+  root.dataset.defaultSort = 'name'
+  root.dataset.defaultSortOrder = 'asc'
+  root.dataset.username = 'ada'
+  root.dataset.sections = '[]'
+  root.dataset.currentFilters = '{}'
+
+  const config = parseShellConfig(root)
+  expect(config.tileSize).toBe('XL')
+  expect(config.isAdmin).toBe(true)
+  expect(config.perPage).toBe(50)
+  expect(config.username).toBe('ada')
 })

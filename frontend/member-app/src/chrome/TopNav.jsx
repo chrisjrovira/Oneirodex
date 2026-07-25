@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { IconMenu, IconMore, IconUser, primaryIconById } from './icons'
 import { getMoreLinks, getPrimaryLinks } from './navConfig'
+import { TileSizeControl } from './TileSizeControl'
 import './TopNav.css'
 
 const ACCOUNT_LINKS = [
@@ -29,7 +30,7 @@ function PrimaryLink({ link }) {
   )
 }
 
-export function TopNav({ shellConfig = {} }) {
+export function TopNav({ shellConfig = {}, tileSize, onTileSizeChange }) {
   const {
     isAdmin = false,
     showTrailers = false,
@@ -89,8 +90,15 @@ export function TopNav({ shellConfig = {} }) {
         {primaryLinks.map((link) => (
           <PrimaryLink key={link.id} link={link} />
         ))}
-
         <div className="gt-topnav__spacer" />
+
+        <div className="gt-topnav__tile-size">
+          <TileSizeControl
+            value={tileSize || shellConfig.tileSize || 'M'}
+            onChange={onTileSizeChange}
+            shellConfig={shellConfig}
+          />
+        </div>
 
         <div className="gt-topnav__menus">
           <div className="gt-topnav__dropdown">

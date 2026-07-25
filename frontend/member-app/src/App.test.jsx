@@ -15,4 +15,35 @@ test('renders library route', () => {
     </MemoryRouter>,
   )
   expect(screen.getByText('LibraryPage')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Library' })).toBeInTheDocument()
+})
+
+test('applies tile size CSS vars from shellConfig', () => {
+  render(
+    <MemoryRouter initialEntries={['/discover']}>
+      <App shellConfig={{ tileSize: 'L', isAdmin: false, sections: [] }} />
+    </MemoryRouter>,
+  )
+  expect(document.documentElement.style.getPropertyValue('--gt-tile-min')).toBe('220px')
+  expect(screen.getByText('DiscoverPage')).toBeInTheDocument()
+})
+
+test('renders favorites route with tile size', () => {
+  render(
+    <MemoryRouter initialEntries={['/favorites']}>
+      <App shellConfig={{ tileSize: 'S', isAdmin: false }} />
+    </MemoryRouter>,
+  )
+  expect(screen.getByText('FavoritesPage')).toBeInTheDocument()
+  expect(document.documentElement.style.getPropertyValue('--gt-tile-min')).toBe('140px')
+})
+
+test('renders downloads route', () => {
+  render(
+    <MemoryRouter initialEntries={['/downloads']}>
+      <App shellConfig={{ tileSize: 'XL', isAdmin: false }} />
+    </MemoryRouter>,
+  )
+  expect(screen.getByText('DownloadsPage')).toBeInTheDocument()
+  expect(document.documentElement.style.getPropertyValue('--gt-tile-min')).toBe('280px')
 })
