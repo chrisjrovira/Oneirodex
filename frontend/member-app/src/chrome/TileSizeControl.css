@@ -42,5 +42,5 @@
   margin: 0;
   font-family: var(--font-display, "Arial Black", sans-serif);
   font-size: 1.35rem;
-  color: var(--gt-text, #e8eef5);
+  color: var(--gt-text, #f2f4f8);
 }

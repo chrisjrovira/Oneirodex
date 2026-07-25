@@ -1,6 +1,6 @@
-# library-grid
+# member-app
 
-React library browser bundle for **GameTheca**.
+React member SPA for **GameTheca** (Discover, Library, Favorites, Downloads).
 
 ## Build
 
@@ -9,7 +9,7 @@ npm ci
 npm run build
 ```
 
-Output is written to `gametheca/static/dist/library-grid/` (see `vite.config.js`).
+Output is written to `gametheca/static/dist/member-app/` (see `vite.config.js`).
 
 ## Test
 
@@ -19,4 +19,4 @@ npm test
 
 ## Docker
 
-The root `Dockerfile` builds this bundle in a `library-grid-build` stage and copies the result into the Python image at `/app/gametheca/static/dist/library-grid`.
+The root `Dockerfile` builds this bundle in the `frontend-build` stage and copies the result into the Python image at `/app/gametheca/static/dist/member-app`.

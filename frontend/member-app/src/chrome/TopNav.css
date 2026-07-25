@@ -6,10 +6,10 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.65rem 1rem;
-  background: color-mix(in srgb, #0b0f14 88%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-accent, #3dd6c6) 35%, transparent);
-  backdrop-filter: blur(8px);
-  color: var(--gt-text, #e8eef5);
+  background: color-mix(in srgb, var(--gt-surface, #141820) 96%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-accent, #ff5a36) 35%, transparent);
+  backdrop-filter: blur(4px);
+  color: var(--gt-text, #f2f4f8);
   font-family: var(--font-ui, "Segoe UI", sans-serif);
 }
 
@@ -23,11 +23,11 @@
 }
 
 .gt-topnav__brand:hover {
-  color: var(--gt-accent, #3dd6c6);
+  color: var(--gt-accent, #ff5a36);
 }
 
 .gt-topnav .gt-icon {
-  color: var(--gt-accent, #3dd6c6);
+  color: var(--gt-accent, #ff5a36);
   flex-shrink: 0;
 }
 
@@ -35,7 +35,7 @@
   display: none;
   margin-left: auto;
   background: transparent;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #3dd6c6) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-accent, #ff5a36) 40%, transparent);
   color: inherit;
   padding: 0.35rem 0.5rem;
   cursor: pointer;
@@ -68,8 +68,8 @@
 .gt-topnav__link:hover,
 .gt-topnav__menu-trigger:hover,
 .gt-topnav__link.active {
-  background: color-mix(in srgb, var(--gt-accent, #3dd6c6) 18%, transparent);
-  color: var(--gt-accent, #3dd6c6);
+  background: color-mix(in srgb, var(--gt-accent, #ff5a36) 18%, transparent);
+  color: var(--gt-accent, #ff5a36);
 }
 
 .gt-topnav__spacer {
@@ -93,14 +93,15 @@
   right: 0;
   min-width: 11rem;
   padding: 0.35rem;
-  background: #121820;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #3dd6c6) 30%, transparent);
+  background: var(--gt-surface-2, #1c2230);
+  border: 1px solid color-mix(in srgb, var(--gt-accent, #ff5a36) 30%, transparent);
   border-radius: 6px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   z-index: 1001;
+  color: var(--gt-text, #f2f4f8);
 }
 
 .gt-topnav__dropdown-panel a {
@@ -112,15 +113,16 @@
 }
 
 .gt-topnav__dropdown-panel a:hover {
-  background: color-mix(in srgb, var(--gt-accent, #3dd6c6) 18%, transparent);
-  color: var(--gt-accent, #3dd6c6);
+  background: color-mix(in srgb, var(--gt-accent, #ff5a36) 18%, transparent);
+  color: var(--gt-accent, #ff5a36);
 }
 
 .gt-topnav__username {
   padding: 0.35rem 0.65rem 0.5rem;
-  opacity: 0.75;
+  color: var(--gt-text-muted, #b6becc);
+  opacity: 1;
   font-size: 0.85rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-text, #e8eef5) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-text, #f2f4f8) 12%, transparent);
   margin-bottom: 0.2rem;
 }
 
@@ -139,8 +141,8 @@
     flex-direction: column;
     align-items: stretch;
     padding: 0.5rem;
-    background: #0b0f14;
-    border-bottom: 1px solid color-mix(in srgb, var(--gt-accent, #3dd6c6) 35%, transparent);
+    background: var(--gt-surface, #141820);
+    border-bottom: 1px solid color-mix(in srgb, var(--gt-accent, #ff5a36) 35%, transparent);
   }
 
   .gt-topnav__nav.is-open {

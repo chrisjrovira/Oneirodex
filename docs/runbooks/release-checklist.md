@@ -7,7 +7,7 @@ Use before tagging a release (example: **v0.1.0**).
 - [ ] Root [`VERSION`](../../VERSION) matches intended semver
 - [ ] [`CHANGELOG.md`](../../CHANGELOG.md) has a dated section for this release
 - [ ] `clients/desktop/package.json`, `src-tauri/tauri.conf.json`, `Cargo.toml`
-- [ ] `frontend/library-grid`, `frontend/ops-glance`, `frontend/api-client` package versions
+- [ ] `frontend/member-app`, `frontend/ops-glance`, `frontend/api-client` package versions
 - [ ] `docker-compose.yml` image tag (`chrisjrovira/gametheca:X.Y.Z`)
 - [ ] Root `README.md` and `docs/README.md` version references
 
