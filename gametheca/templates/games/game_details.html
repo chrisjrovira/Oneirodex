@@ -84,7 +84,7 @@
 <script src="{{ 'js/favorites_manager.js'|theme_asset }}"></script>
 <script src="{{ 'js/game_status_manager.js'|theme_asset }}"></script>
 <script src="{{ 'js/playtime.js'|theme_asset }}"></script>
-<script type="module" src="{{ url_for('static', filename='dist/library-grid/library-grid.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='dist/member-app/member-app.js') }}"></script>
 
 
 {# Modals #}
@@ -222,10 +222,10 @@
                     {% if game.freshness_status %}
                         <strong>{{ game.freshness_status }}</strong>
                         {% if game.freshness_confidence %} ({{ game.freshness_confidence }}){% endif %}
-                        {% if game.local_version %} — local {{ game.local_version }}{% endif %}
-                        {% if game.remote_version_summary %} — {{ game.remote_version_summary }}{% endif %}
+                        {% if game.local_version %} â€” local {{ game.local_version }}{% endif %}
+                        {% if game.remote_version_summary %} â€” {{ game.remote_version_summary }}{% endif %}
                         {% if game.freshness_checked_at %}
-                            <span class="text-muted"> · checked {{ game.freshness_checked_at }}</span>
+                            <span class="text-muted"> Â· checked {{ game.freshness_checked_at }}</span>
                         {% endif %}
                     {% else %}
                         <span class="text-muted">Not checked yet.</span>

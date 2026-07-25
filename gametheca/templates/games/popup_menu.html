@@ -1,5 +1,5 @@
 <!-- in templates/games/popup_menu.html -->
-<!-- When updating this popup menu, also sync frontend/library-grid/src/components/GameCard.jsx -->
+<!-- When updating this popup menu, also sync frontend/member-app/src/components/GameCard.jsx -->
 
 <div id="popupMenu-{{ game_uuid }}" class="popup-menu" style="display: none;">
     <form action="{{ url_for('download.download_game', game_uuid=game_uuid) }}" method="get" class="menu-item">

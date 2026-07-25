@@ -1,5 +1,5 @@
 {
-  "name": "library-grid",
+  "name": "member-app",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.18.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",

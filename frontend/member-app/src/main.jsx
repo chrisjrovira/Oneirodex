@@ -1,8 +1,7 @@
 import { createRoot } from 'react-dom/client'
-import { DiscoverApp } from './DiscoverApp'
-import { FavoritesApp } from './FavoritesApp'
+import { BrowserRouter } from 'react-router-dom'
+import { App } from './App'
 import { GameDetailsApp, parseGameDetailsRootConfig } from './GameDetailsApp'
-import { LibraryApp } from './LibraryApp'
 
 export function parseRootConfig(rootElement) {
   let currentFilters = {}
@@ -49,26 +48,49 @@ export function parseDiscoverRootConfig(rootElement) {
   }
 }
 
-const rootElement = document.getElementById('library-grid-root')
-if (rootElement) {
-  createRoot(rootElement).render(
-    <LibraryApp initialConfig={parseRootConfig(rootElement)} />,
-  )
+export function parseShellConfig(rootElement) {
+  let sections = []
+  try {
+    sections = JSON.parse(rootElement.dataset.sections || '[]')
+  } catch {
+    sections = []
+  }
+
+  let currentFilters = {}
+  try {
+    currentFilters = JSON.parse(rootElement.dataset.currentFilters || '{}')
+  } catch {
+    currentFilters = {}
+  }
+
+  return {
+    tileSize: rootElement.dataset.tileSize || 'M',
+    isAdmin: rootElement.dataset.isAdmin === 'true',
+    showTrailers: rootElement.dataset.showTrailers === 'true',
+    showHelp: rootElement.dataset.showHelp === 'true',
+    enableVr: rootElement.dataset.enableVr === 'true',
+    showPlayStatus: rootElement.dataset.showPlayStatus === 'true',
+    username: rootElement.dataset.username || '',
+    locale: rootElement.dataset.locale || 'en',
+    perPage: Number(rootElement.dataset.perPage) || 20,
+    defaultSort: rootElement.dataset.defaultSort || 'name',
+    defaultSortOrder: rootElement.dataset.defaultSortOrder || 'asc',
+    libraryCount: Number(rootElement.dataset.libraryCount) || 0,
+    gamesCount: Number(rootElement.dataset.gamesCount) || 0,
+    enableDeleteOnDisk: rootElement.dataset.enableDeleteOnDisk === 'true',
+    discordConfigured: rootElement.dataset.discordConfigured === 'true',
+    discordManualTrigger: rootElement.dataset.discordManualTrigger === 'true',
+    sections,
+    currentFilters,
+  }
 }
 
-const favoritesRootElement = document.getElementById('favorites-grid-root')
-if (favoritesRootElement) {
-  createRoot(favoritesRootElement).render(
-    <FavoritesApp
-      initialConfig={parseFavoritesRootConfig(favoritesRootElement)}
-    />,
-  )
-}
-
-const discoverRootElement = document.getElementById('discover-grid-root')
-if (discoverRootElement) {
-  createRoot(discoverRootElement).render(
-    <DiscoverApp {...parseDiscoverRootConfig(discoverRootElement)} />,
+const memberAppRoot = document.getElementById('member-app-root')
+if (memberAppRoot) {
+  createRoot(memberAppRoot).render(
+    <BrowserRouter>
+      <App shellConfig={parseShellConfig(memberAppRoot)} />
+    </BrowserRouter>,
   )
 }
 

@@ -2,11 +2,11 @@ FROM node:22-alpine AS frontend-build
 
 WORKDIR /build
 
-COPY frontend/library-grid/package*.json frontend/library-grid/
-WORKDIR /build/frontend/library-grid
+COPY frontend/member-app/package*.json frontend/member-app/
+WORKDIR /build/frontend/member-app
 RUN npm ci
-COPY frontend/library-grid/ .
-RUN mkdir -p ../../gametheca/static/dist/library-grid && npm run build
+COPY frontend/member-app/ .
+RUN mkdir -p ../../gametheca/static/dist/member-app && npm run build
 
 WORKDIR /build
 COPY frontend/ops-glance/package*.json frontend/ops-glance/
@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . .
-COPY --from=frontend-build /build/gametheca/static/dist/library-grid /app/gametheca/static/dist/library-grid
+COPY --from=frontend-build /build/gametheca/static/dist/member-app /app/gametheca/static/dist/member-app
 COPY --from=frontend-build /build/gametheca/static/dist/ops-glance /app/gametheca/static/dist/ops-glance
 
 RUN pip install -r requirements.txt

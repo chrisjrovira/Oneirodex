@@ -2,8 +2,8 @@
 
 echo "🚀 GameTheca container starting up..."
 
-if [[ ! -f /app/gametheca/static/dist/library-grid/library-grid.js ]]; then
-    echo "⚠️  Warning: library-grid.js not found — React library grid may not load. Rebuild the Docker image to include the library-grid build stage."
+if [[ ! -f /app/gametheca/static/dist/member-app/member-app.js ]]; then
+    echo "⚠️  Warning: member-app.js not found — React member app may not load. Rebuild the Docker image to include the member-app build stage."
 fi
 
 # Inside Docker Compose, Postgres is the sibling service named "db".

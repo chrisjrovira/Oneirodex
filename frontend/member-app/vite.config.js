@@ -4,15 +4,15 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/static/dist/library-grid/',
+  base: '/static/dist/member-app/',
   build: {
-    outDir: path.resolve(__dirname, '../../gametheca/static/dist/library-grid'),
+    outDir: path.resolve(__dirname, '../../gametheca/static/dist/member-app'),
     emptyOutDir: true,
     rollupOptions: {
       input: path.resolve(__dirname, 'index.html'),
       output: {
-        entryFileNames: 'library-grid.js',
-        assetFileNames: 'library-grid.[ext]',
+        entryFileNames: 'member-app.js',
+        assetFileNames: 'member-app.[ext]',
       },
     },
   },
