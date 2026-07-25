@@ -1,0 +1,15 @@
+:root {
+  --gt-bg: #0b0d10;
+  --gt-surface: #141820;
+  --gt-surface-2: #1c2230;
+  --gt-text: #f2f4f8;
+  --gt-text-muted: #b6becc;
+  --gt-accent: #ff5a36;
+  --gt-accent-contrast: #0b0d10;
+  --gt-border: rgba(255, 255, 255, 0.12);
+  --gt-focus-ring: color-mix(in srgb, var(--gt-accent) 70%, white);
+  --gt-tile-min: 180px;
+  --gt-crt-opacity: 0.03;
+  --font-ui: "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-display: "Arial Black", "Segoe UI", sans-serif;
+}

@@ -152,6 +152,25 @@ def install_preset_themes(themes_path: str, default_source: str, *, force: bool 
             css = _replace_css_var(css, 'btn-primary-hover', preset['btn_primary_hover'])
             css = _replace_css_var(css, 'bg-dark-40', preset['bg_dark_40'])
             css = _replace_css_var(css, 'bg-dark-30', preset['bg_dark_30'])
+            if '--gt-accent: var(--btn-primary)' not in css:
+                if '--btn-primary-hover:' in css:
+                    css = css.replace(
+                        '--btn-primary-hover:',
+                        '--gt-accent: var(--btn-primary);\n    --btn-primary-hover:',
+                        1,
+                    )
+                elif ':root {' in css:
+                    css = css.replace(
+                        ':root {',
+                        ':root {\n    --gt-accent: var(--btn-primary);',
+                        1,
+                    )
+                elif ':root{' in css:
+                    css = css.replace(
+                        ':root{',
+                        ':root{\n    --gt-accent: var(--btn-primary);',
+                        1,
+                    )
             with open(base_css_path, 'w', encoding='utf-8') as fh:
                 fh.write(css)
 

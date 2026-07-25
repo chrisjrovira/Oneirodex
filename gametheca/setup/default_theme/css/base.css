@@ -1,3 +1,5 @@
+@import "gt-tokens.css";
+
 :root {
     /* Color Variables */
     --bg-dark-primary: rgba(0, 0, 0, 0.6);
@@ -22,8 +24,9 @@
 
 
     /* Button Colors — teal accent (GameTheca) */
-    --btn-primary: #14b8a6;
-    --btn-primary-hover: #0d9488;
+    --btn-primary: #ff5a36;
+    --btn-primary-hover: #e04520;
+    --gt-accent: var(--btn-primary);
     --btn-info: rgba(23, 162, 184, 0.5);
     --btn-success: #28a745;
     --btn-danger: #dc3545;
@@ -288,16 +291,33 @@
 }
 
 body {
-    background-color: #070a0f;
+    background-color: var(--gt-bg, #0b0d10);
     background-image:
         linear-gradient(180deg, rgba(7, 10, 15, 0.88), rgba(7, 10, 15, 0.92)),
-        url('/static/newstyle/gamecontroller.jpg');
+        url('/static/newstyle/gt_bg.jpg');
     background-size: cover;
     background-repeat: no-repeat;
     background-attachment: fixed;
 
-    font-family: Arial, sans-serif;
-    color: var(--text-white);
+    font-family: var(--font-ui, Arial, sans-serif);
+    color: var(--gt-text);
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: var(--gt-crt-opacity, 0.03);
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.04) 0px,
+            rgba(255, 255, 255, 0.04) 1px,
+            transparent 1px,
+            transparent 3px
+        );
 }
 
 .h2 {

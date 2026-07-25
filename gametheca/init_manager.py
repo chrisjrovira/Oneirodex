@@ -404,6 +404,8 @@ class InitializationManager:
             'js/preferences_modal.js',
             'css/games/game_details.css',
             'css/form-components.css',
+            'css/base.css',
+            'css/gt-tokens.css',
             'theme.json',
         )
         synced = 0
