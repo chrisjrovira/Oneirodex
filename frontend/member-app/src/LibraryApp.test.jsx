@@ -49,7 +49,7 @@ test('page flip replaces cards and does not duplicate grid roots', async () => {
   )
 
   await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
-  await user.click(screen.getByLabelText(/next page/i))
+  await user.click(screen.getByLabelText(/^Next$/i))
   await waitFor(() => expect(screen.getByText('Game B')).toBeInTheDocument())
   expect(screen.queryByText('Game A')).toBeNull()
   expect(document.querySelectorAll('[data-library-grid]').length).toBe(1)
@@ -132,6 +132,6 @@ test('page change closes an open card menu before the next page loads', async ()
   await user.click(screen.getByRole('button', { name: /open actions for game a/i }))
   expect(screen.getByRole('link', { name: 'Download' })).toBeInTheDocument()
 
-  await user.click(screen.getByLabelText(/next page/i))
+  await user.click(screen.getByLabelText(/^Next$/i))
   expect(screen.queryByRole('link', { name: 'Download' })).toBeNull()
 })

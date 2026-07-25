@@ -66,7 +66,7 @@ test('apply omits rating when zero', async () => {
   vi.stubGlobal('fetch', fetchMock)
 
   render(<LibraryApp initialConfig={initialConfig} />)
-  await user.click(await screen.findByRole('button', { name: 'Apply filters' }))
+  await user.click(await screen.findByRole('button', { name: 'Apply' }))
 
   await waitFor(() => {
     const browseUrls = fetchMock.mock.calls
@@ -100,7 +100,7 @@ test('apply persists selected filters and refreshes browse results', async () =>
     await screen.findByLabelText('Genre'),
     'Action',
   )
-  await user.click(screen.getByRole('button', { name: 'Apply filters' }))
+  await user.click(screen.getByRole('button', { name: 'Apply' }))
 
   await waitFor(() => {
     expect(decodeURIComponent(document.cookie)).toContain(

@@ -30,6 +30,7 @@ test('parses Library template data attributes', () => {
     enableDeleteOnDisk: true,
     discordConfigured: false,
     discordManualTrigger: false,
+    locale: 'en',
     currentFilters: { genre: 'Action' },
   })
 })

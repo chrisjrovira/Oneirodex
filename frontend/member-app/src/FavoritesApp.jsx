@@ -42,7 +42,7 @@ export function FavoritesApp({ initialConfig, shellConfig: _shellConfig } = {}) 
   }
 
   if (!games) {
-    return <p>Loading favoritesâ€¦</p>
+    return <p>Loading favorites…</p>
   }
 
   if (games.length === 0) {
