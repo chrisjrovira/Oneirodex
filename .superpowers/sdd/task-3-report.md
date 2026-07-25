@@ -10,11 +10,13 @@
 - Dockerfile / entrypoint.sh / template script tags / README updated for member-app paths
 
 **Tests:**
-`
+```
 cd frontend/member-app && npm test -- --run src/App.test.jsx
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-`
+```
+
+**SHA:** cfd308bbaafcff13a7ea096736a178adbefa6de0
 
 **Commit:** refactor: rename library-grid to member-app and add router shell

@@ -9,4 +9,6 @@ Task 1: complete (commits bdd1456..cc12f42, review clean — controller review; 
 
 Task 2: complete (commits cc12f426f15e05e5a2070b20e0977fa774477f6c..a3680497030670f0b4af5f58a6c7961dd08a6e68, controller review)
 
-Task 3: complete
+Task 3: complete (commit cfd308bbaafcff13a7ea096736a178adbefa6de0)
+
+Task 4: complete (commit 25387245116fd0cb536a7297c6a566b1b8cfe092)
