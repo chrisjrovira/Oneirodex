@@ -162,16 +162,26 @@ def discover():
                 )
             ).scalars().all())
         elif section.identifier == 'most_favorited':
+            # Aggregate favorites in a subquery — GROUP BY Game expands JSON
+            # columns (freshness_payload / video_urls) which Postgres cannot
+            # equality-compare as type "json".
+            fav_counts = (
+                select(
+                    user_favorites.c.game_uuid.label('game_uuid'),
+                    func.count(user_favorites.c.user_id).label('favorite_count'),
+                )
+                .group_by(user_favorites.c.game_uuid)
+                .subquery()
+            )
             most_favorited = db.session.execute(
                 apply_game_access_filters(
-                    select(Game, func.count(user_favorites.c.user_id).label('favorite_count'))
-                    .join(user_favorites)
-                    .group_by(Game)
-                    .order_by(func.count(user_favorites.c.user_id).desc()),
+                    select(Game)
+                    .join(fav_counts, Game.uuid == fav_counts.c.game_uuid)
+                    .order_by(fav_counts.c.favorite_count.desc()),
                     current_user,
                 )
-            ).all()
-            section_data['most_favorited'] = fetch_game_details([game[0] for game in most_favorited])
+            ).scalars().all()
+            section_data['most_favorited'] = fetch_game_details(most_favorited)
 
         if section.identifier != 'libraries':
             discover_sections.append({

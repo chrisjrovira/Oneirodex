@@ -58,6 +58,8 @@ print('✅ Initialization completed - starting workers...')
 export GAMETHECA_MIGRATIONS_COMPLETE=true
 export GAMETHECA_INITIALIZATION_COMPLETE=true
 
-# Start uvicorn for Docker (bind to all interfaces, multiple workers for better performance)
-# Note: Using 4 workers to match non-Docker performance
-uvicorn asgi:asgi_app --host 0.0.0.0 --port 5006 --workers 4
+# Start uvicorn for Docker (bind to all interfaces).
+# Default 2 workers — 4 workers + asgiref WSGI bridge has caused
+# "CurrentThreadExecutor already quit" under Unraid/Compose load.
+WORKERS="${UVICORN_WORKERS:-2}"
+uvicorn asgi:asgi_app --host 0.0.0.0 --port 5006 --workers "$WORKERS"
