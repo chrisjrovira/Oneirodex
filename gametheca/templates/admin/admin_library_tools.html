@@ -1,13 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
+<div class="container gt-adminpage gt-adminpage--xl mt-4">
   <div class="glass-panel mb-3">
     <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
   </div>
 
-  <h2><i class="fas fa-magic"></i> Library Recognition Tools</h2>
-  <p class="text-muted">Doctor dry-run, match proposals, and disk rename helpers for FitGirl / Steam-AppID libraries.</p>
+  <div class="gt-adminpage-header">
+    <div>
+      <h2 class="gt-adminpage-title"><i class="fas fa-magic"></i> Library Recognition Tools</h2>
+      <p class="gt-adminpage-lede">Doctor dry-run, match proposals, and disk rename helpers for FitGirl / Steam-AppID libraries.</p>
+    </div>
+  </div>
 
   <ul class="nav nav-tabs" role="tablist">
     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-doctor" type="button">Library Doctor</button></li>
@@ -16,7 +21,7 @@
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-freshness" type="button">Freshness</button></li>
   </ul>
 
-  <div class="tab-content border border-top-0 p-3">
+  <div class="tab-content">
     <div class="tab-pane fade show active" id="tab-doctor">
       <div class="mb-3">
         <label class="form-label">Roots (one path per line)</label>

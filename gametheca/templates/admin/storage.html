@@ -1,11 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container" style="max-width: 720px; margin: 2rem auto;">
-    <h1>Storage / hardlinks</h1>
-    <p class="text-muted">
-        Preview same-volume hardlinks. Apply requires <code>ALLOW_HARDLINK_APPLY=true</code>.
-        Docker read-only mounts will fail writability checks.
-    </p>
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
+<div class="container gt-adminpage gt-adminpage--md gt-adminpage--spaced">
+    <div class="gt-adminpage-header">
+        <div>
+            <h1 class="gt-adminpage-title"><i class="fas fa-hard-drive"></i> Storage / hardlinks</h1>
+            <p class="gt-adminpage-lede">
+                Preview same-volume hardlinks. Apply requires <code>ALLOW_HARDLINK_APPLY=true</code>.
+                Docker read-only mounts will fail writability checks.
+            </p>
+        </div>
+    </div>
+    <div class="gt-adminpage-panel">
     <div class="mb-3">
         <label class="form-label">Source file</label>
         <input id="hl-source" class="form-control" placeholder="C:\\games\\Title\\setup.exe">
@@ -14,10 +20,13 @@
         <label class="form-label">Destination path</label>
         <input id="hl-dest" class="form-control" placeholder="C:\\library\\Title\\setup.exe">
     </div>
-    <button id="hl-preview" class="btn btn-secondary">Preview</button>
-    <button id="hl-apply" class="btn btn-primary" {% if not allow_apply %}disabled title="ALLOW_HARDLINK_APPLY is off"{% endif %}>Apply</button>
-    <pre id="hl-out" class="mt-3 p-3 bg-dark text-light rounded" style="min-height:120px"></pre>
-    <p class="mt-4"><a href="{{ url_for('site.admin_dashboard') }}">Back to admin</a></p>
+    <div class="gt-adminpage-actions mb-3">
+        <button id="hl-preview" class="btn btn-secondary">Preview</button>
+        <button id="hl-apply" class="btn btn-primary" {% if not allow_apply %}disabled title="ALLOW_HARDLINK_APPLY is off"{% endif %}>Apply</button>
+    </div>
+    <pre id="hl-out" class="gt-adminpage-output"></pre>
+    </div>
+    <p><a class="gt-adminpage-backlink" href="{{ url_for('site.admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Back to admin</a></p>
 </div>
 <script>
 (async function () {

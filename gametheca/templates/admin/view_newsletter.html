@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <div class="container">
     <div class="glass-panel">
         <a href="{{ url_for('admin2.newsletter') }}" class="btn btn-secondary">Back to Newsletters</a>
     </div>
 </div>
-<div class="container-settings">
+<div class="container-settings gt-adminpage gt-adminpage--lg">
     <div class="card">
-        <h1>{{ newsletter.subject }}</h1>
+        <h1 class="gt-adminpage-title">{{ newsletter.subject }}</h1>
         <div class="newsletter-meta">
             <p>Sent by: {{ newsletter.sender.name }}</p>
             <p>Date: {{ newsletter.sent_date.strftime('%Y-%m-%d %H:%M:%S') }}</p>

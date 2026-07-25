@@ -2,7 +2,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<link rel="stylesheet" href="{{ 'css/admin/admin_manage_invites.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <div class="container">
   <div class="glass-panel">
       <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
@@ -17,8 +17,10 @@
     </div>
 {% endif %}
 {% endwith %}
-<div class="admin_manage_invites-panel container-settings mt-5">
-  <h2 class="admin_manage_invites-heading mb-4">Manage User Invites</h2>
+<div class="admin_manage_invites-panel container-settings gt-adminpage gt-adminpage--lg mt-5">
+  <div class="gt-adminpage-header">
+    <div><h2 class="admin_manage_invites-heading gt-adminpage-title">Manage User Invites</h2></div>
+  </div>
   <div class="admin_manage_invites-table-div table-responsive">
     <table class="admin_manage_invites-table table table-dark table-striped">
       <thead class="admin_manage_invites-table-head table-dark">

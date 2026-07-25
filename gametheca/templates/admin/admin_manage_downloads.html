@@ -1,19 +1,21 @@
 <!-- templates/admin/admin_manage_downloads.html -->
 {% extends "base.html" %}  
 {% block content %}
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <div class="container">
     <div class="glass-panel">
         <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
     </div>
 </div>
 
-            
-<div class="card">
-
-    <div class="admin_manage_downloads-requests-header">
-        <h2>Download Requests</h2>
+<div class="container gt-adminpage gt-adminpage--xl gt-adminpage--spaced">
+    <div class="admin_manage_downloads-requests-header gt-adminpage-header">
+        <div>
+            <h2 class="gt-adminpage-title"><i class="fas fa-download"></i> Download Requests</h2>
+            <p class="gt-adminpage-lede">Zip jobs queued by users, newest first.</p>
+        </div>
     </div>
-    <div class="admin_manage_downloads-requests">
+    <div class="admin_manage_downloads-requests gt-adminpage-panel">
         {% if download_requests %}
             <table id="downloadsTable" class="admin_manage_downloads-table table table-dark table-striped">
                 <thead class="admin_manage_downloads-table-header">
@@ -46,9 +48,13 @@
                 </tbody>
             </table>
         {% else %}
-            <p>No download requests found.</p>
+            <div class="gt-adminpage-empty">
+                <i class="fas fa-inbox"></i>
+                <p class="mb-0">No download requests found.</p>
+            </div>
         {% endif %}
     </div>
+</div>
 
 <script>
 // Initialize DataTables

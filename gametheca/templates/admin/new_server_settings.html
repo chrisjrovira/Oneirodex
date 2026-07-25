@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 
 <div class="container">
     <div class="glass-panel">
@@ -8,9 +9,9 @@
 </div>
 
 
-<div class="container-status-page container-settings">
+<div class="container-status-page container-settings gt-adminpage gt-adminpage--xl">
     <div class="card">
-        <h2>Manage GameTheca Settings</h2>
+        <h2 class="gt-adminpage-title">Manage GameTheca Settings</h2>
 
         <div id="settingsSavedNotification" class="alert alert-success" role="alert" style="display: none;">
             Settings saved successfully, Captain!

@@ -2,21 +2,25 @@
 {% extends "base.html" %}
 
 {% block content %}
-
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 
 <div class="container">
     <div class="glass-panel">
         <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
     </div>
 </div>
-    <div class="container mt-4">
-<div class="admin_manage_filters-panel">
-    <div class="admin_manage_filters-header">
-        <h2><i class="fas fa-filter"></i> Game Scanning Filters</h2>
-        <p>Manage game pattern filters to improve scanning speed.</p>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFilterModal">
-            <i class="fas fa-plus"></i> Add New Filter
-        </button>
+<div class="container gt-adminpage gt-adminpage--lg mt-4">
+<div class="admin_manage_filters-panel gt-adminpage-panel">
+    <div class="admin_manage_filters-header gt-adminpage-header">
+        <div>
+            <h2 class="gt-adminpage-title"><i class="fas fa-filter"></i> Game Scanning Filters</h2>
+            <p class="gt-adminpage-lede">Manage game pattern filters to improve scanning speed.</p>
+        </div>
+        <div class="gt-adminpage-header-actions">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFilterModal">
+                <i class="fas fa-plus"></i> Add New Filter
+            </button>
+        </div>
     </div>
 
     <!-- Add Filter Modal -->
@@ -50,6 +54,7 @@
 
     <hr>
     <h3>Existing Filters</h3>
+    <div class="table-responsive">
     <table class="admin_manage_filters-table table table-dark table-striped table-hover">
         <thead>
             <tr>
@@ -74,6 +79,8 @@
         {% endfor %}
         </tbody>
     </table>
+    </div>
+</div>
 </div>
 
 <script src="{{ 'js/admin_manage_filters.js'|theme_asset }}"></script>

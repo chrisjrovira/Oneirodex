@@ -1,13 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container" style="max-width: 720px; margin: 2rem auto;">
-    <h1>Detail layout</h1>
-    <p class="text-muted">Reorder and show/hide sections on the game details page.</p>
-    <div id="dl-status" class="text-muted mb-3">Loading…</div>
-    <ul id="dl-list" class="list-group mb-3"></ul>
-    <button id="dl-save" class="btn btn-primary">Save</button>
-    <button id="dl-reset" class="btn btn-outline-secondary ms-2">Reset defaults</button>
-    <p class="mt-4"><a href="{{ url_for('site.admin_dashboard') }}">Back to admin</a></p>
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
+<div class="container gt-adminpage gt-adminpage--md gt-adminpage--spaced">
+    <div class="gt-adminpage-header">
+        <div>
+            <h1 class="gt-adminpage-title"><i class="fas fa-list-ul"></i> Detail layout</h1>
+            <p class="gt-adminpage-lede">Reorder and show/hide sections on the game details page.</p>
+        </div>
+    </div>
+    <div class="gt-adminpage-panel">
+        <div id="dl-status" class="gt-adminpage-status text-muted mb-3">Loading…</div>
+        <ul id="dl-list" class="list-group mb-3"></ul>
+        <div class="gt-adminpage-actions">
+            <button id="dl-save" class="btn btn-primary">Save</button>
+            <button id="dl-reset" class="btn btn-outline-secondary">Reset defaults</button>
+        </div>
+    </div>
+    <p><a class="gt-adminpage-backlink" href="{{ url_for('site.admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Back to admin</a></p>
 </div>
 <script>
 (async function () {

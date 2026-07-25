@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<link rel="stylesheet" href="{{ 'css/admin/admin_manage_libraries.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
 
@@ -47,13 +47,19 @@
 
 
 <div class="admin_manage_libraries-library-container">
-    <div class="container-settings">
+    <div class="container-settings gt-adminpage gt-adminpage--xl">
         <div class="card">
-        <h1>Library Management</h1>
-        <h2>Game Libraries</h2>
-        <a href="{{ url_for('admin2.add_library') }}" class="btn btn-primary mb-3">
-            <i class="fas fa-plus"></i> Add Library
-        </a>
+        <div class="gt-adminpage-header">
+            <div>
+                <h1 class="gt-adminpage-title">Library Management</h1>
+                <p class="gt-adminpage-lede">Game libraries, their scan jobs, and display order.</p>
+            </div>
+            <div class="gt-adminpage-header-actions">
+                <a href="{{ url_for('admin2.add_library') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Library
+                </a>
+            </div>
+        </div>
         <table class="table table-dark table-hover" id="librariesTable">
             <thead>
                 <tr>
@@ -92,7 +98,9 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
+</div>
 
 <script src="{{ 'js/admin_manage_libs.js'|theme_asset }}"></script>
 

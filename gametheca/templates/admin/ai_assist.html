@@ -1,12 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container" style="max-width: 640px; margin: 2rem auto;">
-    <h1>AI assist</h1>
-    <p class="text-muted">
-        Ollama suggestions by default. Renaming a game from a suggestion requires
-        <code>ENABLE_AI_AUTO_APPLY=true</code> (never silent / background).
-    </p>
-    <div id="ai-status" class="mb-3 text-muted">Loading…</div>
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
+<div class="container gt-adminpage gt-adminpage--sm gt-adminpage--spaced">
+    <div class="gt-adminpage-header">
+        <div>
+            <h1 class="gt-adminpage-title"><i class="fas fa-wand-magic-sparkles"></i> AI assist</h1>
+            <p class="gt-adminpage-lede">
+                Ollama suggestions by default. Renaming a game from a suggestion requires
+                <code>ENABLE_AI_AUTO_APPLY=true</code> (never silent / background).
+            </p>
+        </div>
+    </div>
+    <div class="gt-adminpage-panel">
+    <div id="ai-status" class="gt-adminpage-status mb-3 text-muted">Loading…</div>
     <div class="mb-3">
         <label class="form-label">Folder / title to triage</label>
         <input id="ai-name" class="form-control" placeholder="Celeste-FitGirl">
@@ -30,8 +36,9 @@
         <input id="ai-issues" class="form-control" placeholder="missing_cover, path_mismatch">
     </div>
     <button id="ai-doctor" class="btn btn-secondary">Explain issues</button>
-    <pre id="ai-out" class="mt-3 p-3 bg-dark text-light rounded" style="min-height:140px"></pre>
-    <p class="mt-4"><a href="{{ url_for('site.admin_dashboard') }}">Back to admin</a></p>
+    <pre id="ai-out" class="gt-adminpage-output mt-3"></pre>
+    </div>
+    <p><a class="gt-adminpage-backlink" href="{{ url_for('site.admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Back to admin</a></p>
 </div>
 <script>
 (async function () {

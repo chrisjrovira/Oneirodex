@@ -6,17 +6,20 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
 {% endblock %}
 
-<link rel="stylesheet" href="{{ 'css/admin/admin_manage_users.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <div class="container">
     <div class="glass-panel">
         <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
     </div>
 </div>
 
+<div class="container gt-adminpage gt-adminpage--xl gt-adminpage--spaced">
 <div class="card">
-<div class="d-flex justify-content-between align-items-center">
-    <h2>User Management</h2>
-    <button class="btn btn-primary" id="addNewUserBtn">Add New User</button>
+<div class="gt-adminpage-header">
+    <div><h2 class="gt-adminpage-title">User Management</h2></div>
+    <div class="gt-adminpage-header-actions">
+        <button class="btn btn-primary" id="addNewUserBtn">Add New User</button>
+    </div>
 </div>
     <div class="table-responsive">
         <table id="usersTable" class="table table-dark table-hover display responsive nowrap">
@@ -73,8 +76,7 @@
         </table>
     </div>
 </div>
-
-
+</div>
 
 <!-- Edit User Modal -->
 <div class="modal fade" id="editUserModal" tabindex="-1">

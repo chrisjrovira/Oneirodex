@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 
-<div class="container-settings">
+<div class="container-settings gt-adminpage gt-adminpage--xl">
     <div class="glass-panel">
         <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
     </div>
@@ -10,31 +11,43 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h3>GameTheca Statistics</h3>
+                    <h3 class="gt-adminpage-title">GameTheca Statistics</h3>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <canvas id="downloadsPerUserChart"></canvas>
+                            <div class="gt-adminpage-chart">
+                                <canvas id="downloadsPerUserChart"></canvas>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <canvas id="topGamesChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <canvas id="downloadTrendsChart"></canvas>
-                        </div>
-                        <div class="col-md-6">
-                            <canvas id="inviteTokensChart"></canvas>
+                            <div class="gt-adminpage-chart">
+                                <canvas id="topGamesChart"></canvas>
+                            </div>
                         </div>
                     </div>
-                    <div class="row mt-4">
+                    <div class="row">
                         <div class="col-md-6">
-                            <canvas id="topDownloadersChart"></canvas>
+                            <div class="gt-adminpage-chart">
+                                <canvas id="downloadTrendsChart"></canvas>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <canvas id="topCollectorsChart"></canvas>
+                            <div class="gt-adminpage-chart">
+                                <canvas id="inviteTokensChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="gt-adminpage-chart">
+                                <canvas id="topDownloadersChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="gt-adminpage-chart">
+                                <canvas id="topCollectorsChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -2,7 +2,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<link rel="stylesheet" href="{{ 'css/admin/admin_newsletter.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 
 
 <!-- Back to Dashboard Button -->
@@ -13,13 +13,17 @@
         <!-- Add CKEditor CDN -->
         <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
         <style>
-            .ck-editor__editable { min-height: 300px; background: rgba(255, 255, 255, 0.1) !important; }
+            .ck-editor__editable {
+                min-height: 300px;
+                background: var(--gt-surface-2) !important;
+                color: var(--gt-text) !important;
+            }
         </style>
     </div>
 </div>
-<div class="container-settings">        
-    <div class="card">        
-        <h1>Newsletter</h1>
+<div class="container-settings gt-adminpage gt-adminpage--lg">
+    <div class="card">
+        <h1 class="gt-adminpage-title">Newsletter</h1>
         <form action="" method="post" novalidate>
             {{ form.hidden_tag() }}
             <div class="mb-3">
@@ -83,6 +87,7 @@
            </table>
        </div>
     </div>
+</div>
 
 <script>
     document.getElementById("selectAll").addEventListener("click", function(e) {
