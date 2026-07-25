@@ -101,4 +101,10 @@ Thumbs.db
 # Git worktrees
 .worktrees/
 
+# Frontend bundles (built by the Dockerfile / npm run build)
+gametheca/static/dist/
+
+# Agent scratch: task briefs and reports
+.superpowers/
+
 
