@@ -633,6 +633,104 @@ class TestResetDefaultThemesRoute:
         assert response_get.status_code == 405
 
 
+class TestApplyThemeRoute:
+    """Tests for the apply_theme route."""
+
+    def test_apply_theme_requires_login(self, client):
+        """Test that applying a theme requires login."""
+        response = client.post('/admin/themes/apply', json={'theme': 'default'})
+        assert response.status_code == 302
+        assert 'login' in response.location
+
+    def test_apply_theme_requires_admin(self, client, regular_user):
+        """Test that applying a theme requires admin role."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(regular_user.id)
+            sess['_fresh'] = True
+
+        response = client.post('/admin/themes/apply', json={'theme': 'default'})
+        assert response.status_code == 302
+        assert 'login' in response.location
+
+    def test_apply_theme_post_method_only(self, client, admin_user):
+        """Test that applying a theme only accepts POST requests."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/admin/themes/apply')
+        assert response.status_code == 405
+
+    def test_apply_theme_requires_a_theme_name(self, client, admin_user):
+        """Test that an empty payload is rejected."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.post('/admin/themes/apply', json={})
+        assert response.status_code == 400
+        assert response.get_json()['success'] is False
+
+    def test_apply_theme_rejects_path_traversal(self, client, admin_user):
+        """Test that a traversal attempt never reaches the filesystem check."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.post('/admin/themes/apply', json={'theme': '../../etc'})
+        assert response.status_code == 400
+
+    def test_apply_theme_rejects_unknown_theme(self, client, admin_user):
+        """Test that a theme that is not installed is rejected."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.post('/admin/themes/apply', json={'theme': 'not_installed_theme'})
+        assert response.status_code == 404
+
+    def test_apply_theme_creates_preferences_when_missing(self, client, admin_user, db_session):
+        """Test that applying a theme works for a user with no preferences row."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.post('/admin/themes/apply', json={'theme': 'default'})
+
+        assert response.status_code == 200
+        assert response.get_json() == {'success': True, 'theme': 'default'}
+        db_session.refresh(admin_user)
+        assert admin_user.preferences is not None
+        assert admin_user.preferences.theme == 'default'
+
+    @patch('gametheca.routes_admin_ext.themes.Path')
+    def test_apply_theme_updates_existing_preference(self, mock_path, client, admin_user, db_session):
+        """Test that an installed preset replaces the previous preference."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        client.post('/admin/themes/apply', json={'theme': 'default'})
+        response = client.post('/admin/themes/apply', json={'theme': 'aurora'})
+
+        assert response.status_code == 200
+        db_session.refresh(admin_user)
+        assert admin_user.preferences.theme == 'aurora'
+
+    @patch('gametheca.routes_admin_ext.themes.Path')
+    def test_apply_theme_accepts_form_data(self, mock_path, client, admin_user, db_session):
+        """Test that the endpoint also accepts a plain form post."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.post('/admin/themes/apply', data={'theme': 'ember'})
+
+        assert response.status_code == 200
+        db_session.refresh(admin_user)
+        assert admin_user.preferences.theme == 'ember'
+
+
 class TestThemeRoutesIntegration:
     """Integration tests for theme routes."""
 
@@ -643,6 +741,7 @@ class TestThemeRoutesIntegration:
             assert url_for('admin2.theme_readme') == '/admin/themes/readme'
             assert url_for('admin2.delete_theme', theme_name='test') == '/admin/themes/delete/test'
             assert url_for('admin2.reset_default_themes') == '/admin/themes/reset'
+            assert url_for('admin2.apply_theme') == '/admin/themes/apply'
 
     def test_theme_routes_require_authentication(self, client):
         """Test that all theme routes require authentication."""

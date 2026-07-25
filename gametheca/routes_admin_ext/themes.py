@@ -1,9 +1,12 @@
-from flask import render_template, request, redirect, url_for, flash, current_app
-from flask_login import login_required
+from flask import render_template, request, redirect, url_for, flash, current_app, jsonify
+from flask_login import login_required, current_user
+from gametheca import db
+from gametheca.models import UserPreference
 from gametheca.utils.auth import admin_required
 from gametheca.forms import ThemeUploadForm
 from gametheca.utils.themes import ThemeManager
 from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.preset_themes import install_preset_themes
 import os
 import shutil
 from pathlib import Path
@@ -248,7 +251,9 @@ def reset_default_themes():
         Response: Redirect to themes management page
     """
     try:
-        default_theme_source = Path('gametheca') / 'setup' / 'default_theme'
+        # Resolve against the app package root — not process CWD (Docker/uvicorn).
+        app_root = Path(current_app.root_path)
+        default_theme_source = app_root / 'setup' / 'default_theme'
         if not default_theme_source.exists():
             error_msg = "Failed to reset default themes: source directory not found"
             flash('Error: default theme source not found in gametheca/setup/default_theme', 'error')
@@ -259,7 +264,7 @@ def reset_default_themes():
             )
             return redirect(url_for('admin2.manage_themes'))
 
-        default_theme_target = Path('gametheca') / 'static' / 'library' / 'themes' / 'default'
+        default_theme_target = app_root / 'static' / 'library' / 'themes' / 'default'
 
         log_system_event(
             "Starting default themes reset...",
@@ -288,7 +293,6 @@ def reset_default_themes():
         # Copy default theme from source and (re)install color presets
         try:
             shutil.copytree(default_theme_source, default_theme_target)
-            from gametheca.utils.preset_themes import install_preset_themes
             themes_root = default_theme_target.parent
             presets = install_preset_themes(
                 str(themes_root),
@@ -316,3 +320,57 @@ def reset_default_themes():
         log_system_event(error_message, event_type='themes', event_level='error')
 
     return redirect(url_for('admin2.manage_themes'))
+
+
+@admin2_bp.route('/admin/themes/apply', methods=['POST'])
+@login_required
+@admin_required
+def apply_theme():
+    """Set the calling user's theme preference to an installed theme.
+
+    Accepts JSON ``{"theme": "<slug>"}`` or the same field as form data. CSRF is
+    enforced app-wide by CSRFProtect, so callers must send the token exactly as
+    the other admin POST endpoints require.
+
+    Returns:
+        Response: JSON describing the applied theme, or an error.
+    """
+    payload = request.get_json(silent=True) or {}
+    theme = payload.get('theme') or request.form.get('theme') or ''
+    theme = theme.strip() if isinstance(theme, str) else ''
+
+    if not theme:
+        return jsonify({'success': False, 'error': 'No theme specified'}), 400
+
+    is_valid_name, name_error = is_valid_theme_name(theme)
+    if not is_valid_name:
+        return jsonify({'success': False, 'error': name_error}), 400
+
+    themes_root = Path(current_app.root_path) / 'static' / 'library' / 'themes'
+    if theme != 'default' and not (themes_root / theme / 'theme.json').is_file():
+        return jsonify({'success': False, 'error': f"Theme '{theme}' is not installed"}), 404
+
+    try:
+        preferences = current_user.preferences
+        if preferences is None:
+            preferences = UserPreference(user_id=current_user.id, theme=theme)
+            db.session.add(preferences)
+        else:
+            preferences.theme = theme
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        log_system_event(
+            f"Failed to apply theme '{theme}': {e}",
+            event_type='themes',
+            event_level='error'
+        )
+        return jsonify({'success': False, 'error': 'Failed to apply theme'}), 500
+
+    log_system_event(
+        f"Theme '{theme}' applied by admin",
+        event_type='themes',
+        event_level='information',
+        audit_user=current_user.id
+    )
+    return jsonify({'success': True, 'theme': theme}), 200

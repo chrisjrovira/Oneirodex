@@ -10,6 +10,17 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 
+from gametheca.utils.preset_themes import (
+    install_preset_themes,
+    sync_preset_themes,
+    sync_theme_tree,
+)
+
+# Everything the app ships or generates lives inside the package, so paths must
+# be resolved from here rather than from the process working directory (under
+# Docker/uvicorn the CWD is not the repo root).
+PACKAGE_ROOT = os.path.dirname(os.path.abspath(__file__))
+
 
 class InitializationManager:
     """Central coordinator for all GameTheca initialization tasks."""
@@ -167,7 +178,7 @@ class InitializationManager:
             from config import Config
 
             # Create required directories
-            library_path = os.path.join('gametheca', 'static', 'library')
+            library_path = os.path.join(PACKAGE_ROOT, 'static', 'library')
             themes_path = os.path.join(library_path, 'themes')
             images_path = os.path.join(library_path, 'images')
             zips_path = os.path.join(library_path, 'zips')
@@ -338,16 +349,17 @@ class InitializationManager:
             print("ℹ️  Discovery sections already exist")
 
     def _setup_default_theme(self, themes_path, dev_mode):
-        """Setup default theme files with DEV_MODE support.
+        """Install/refresh the default theme and the colour presets.
 
-        When the default theme already exists (typical Docker volume), still
-        copy any *missing* source files so new assets (e.g. admin_ops.css)
-        appear without wiping customizations.
+        The runtime themes folder is usually a Docker volume that outlives the
+        image, so every boot reconciles it against the tracked source: any file
+        whose content differs is rewritten, and presets generated from an older
+        source snapshot are regenerated.
         """
         default_theme_target = os.path.join(themes_path, 'default')
         theme_json_path = os.path.join(default_theme_target, 'theme.json')
         theme_exists = os.path.exists(theme_json_path)
-        default_theme_source = os.path.join('gametheca', 'setup', 'default_theme')
+        default_theme_source = self.default_theme_source()
 
         if not os.path.exists(default_theme_source):
             print("⚠️  Theme source not found")
@@ -367,57 +379,34 @@ class InitializationManager:
                 else:
                     print("✅ Default theme installed")
             else:
-                filled = self._fill_missing_theme_files(default_theme_source, default_theme_target)
-                synced = self._sync_critical_theme_files(default_theme_source, default_theme_target)
-                if filled or synced:
-                    print(f"✅ Default theme updated ({filled} new, {synced} refreshed)")
+                synced = self._sync_theme_files(default_theme_source, default_theme_target)
+                if synced:
+                    print(f"✅ Default theme updated ({synced} file(s) refreshed)")
                 else:
-                    print("ℹ️  Theme already exists")
+                    print("ℹ️  Default theme already up to date")
 
-            from gametheca.utils.preset_themes import install_preset_themes
             presets = install_preset_themes(themes_path, default_theme_source, force=bool(dev_mode))
             if presets:
-                print(f"✅ Installed {presets} preset theme(s)")
+                print(f"✅ Rebuilt {presets} preset theme(s)")
+
+            preset_files = sync_preset_themes(themes_path, default_theme_source)
+            if preset_files:
+                print(f"✅ Refreshed {preset_files} preset theme file(s)")
         except Exception as e:
             print(f"❌ Theme setup failed: {e}")
 
-    def _fill_missing_theme_files(self, source_root, target_root):
-        """Copy files that exist in source but not yet under the runtime theme."""
-        copied = 0
-        for root, _dirs, files in os.walk(source_root):
-            rel_dir = os.path.relpath(root, source_root)
-            dest_dir = target_root if rel_dir == '.' else os.path.join(target_root, rel_dir)
-            os.makedirs(dest_dir, exist_ok=True)
-            for name in files:
-                src = os.path.join(root, name)
-                dest = os.path.join(dest_dir, name)
-                if not os.path.exists(dest):
-                    shutil.copy2(src, dest)
-                    copied += 1
-        return copied
+    @staticmethod
+    def default_theme_source():
+        """Absolute path to the tracked theme source inside the package."""
+        return os.path.join(PACKAGE_ROOT, 'setup', 'default_theme')
 
-    def _sync_critical_theme_files(self, source_root, target_root):
-        """Overwrite a small set of theme assets that must stay in sync with the app."""
-        critical = (
-            'js/game_details.js',
-            'js/admin_game_identify.js',
-            'js/preferences_modal.js',
-            'css/games/game_details.css',
-            'css/form-components.css',
-            'css/base.css',
-            'css/gt-tokens.css',
-            'theme.json',
-        )
-        synced = 0
-        for rel in critical:
-            src = os.path.join(source_root, rel)
-            dest = os.path.join(target_root, rel)
-            if not os.path.isfile(src):
-                continue
-            os.makedirs(os.path.dirname(dest), exist_ok=True)
-            shutil.copy2(src, dest)
-            synced += 1
-        return synced
+    def _sync_theme_files(self, source_root, target_root):
+        """Rewrite every target file whose content differs from the source.
+
+        Supersedes the old fixed 'critical files' list: a changed stylesheet now
+        propagates on the next boot no matter which file it is.
+        """
+        return sync_theme_tree(source_root, target_root)
 
     def _cleanup_orphaned_scan_jobs(self, session):
         """Clean up scan jobs left in 'Running' or 'Stopping' state after server restart."""
