@@ -19,6 +19,6 @@ cd frontend/member-app && npm test -- --run src/chrome/
       Tests  9 passed (9)
 ```
 
-**SHA:** 25387245116fd0cb536a7297c6a566b1b8cfe092
+**SHA:** e9ddcce195f082198f63cb8b48b69ad781a561a8
 
 **Commit:** feat: add GameTheca top nav with primary and More links
