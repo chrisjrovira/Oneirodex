@@ -1,13 +1,5 @@
-# GameTheca Docker Compose Configuration
-#
-# Setup Instructions:
-# 1. Copy .env.docker.example to .env and customize your settings
-# 2. Run: docker compose up -d --build
-#
-# DATABASE_URL must use host "db" (the Compose service name), not localhost.
-# Volume Mounts:
-# - DATA_FOLDER_WAREZ: Your games directory, mounted read-only to /storage
-# - LIBRARY_HOST_PATH: Persistent storage for cover images, themes, and zips
+# GameTheca Docker Compose — Unraid / NAS
+# App always connects to the Compose service named "db".
 
 services:
   app:
@@ -20,7 +12,7 @@ services:
     ports:
       - "5006:5006"
     environment:
-      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@db:5432/gametheca}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-gametheca}
       - DATABASE_HOST=db
       - DATABASE_PORT=5432
       - DATA_FOLDER_WAREZ=/storage
@@ -67,7 +59,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   db:
     image: postgres:17.6
@@ -82,10 +74,10 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data/pgdata
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
       start_period: 10s
 
 volumes:

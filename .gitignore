@@ -43,6 +43,7 @@ pip-delete-this-directory.txt
 .env.*
 !.env.example
 !.env.docker.example
+!.env.nas.example
 
 config.backup
 config.py.backup
@@ -71,6 +72,8 @@ letsrebuild.md
 /*.md
 !/README.md
 !/CHANGELOG.md
+!/NAS-DEPLOY.md
+!/VERSION
 
 # IDE
 .vscode/

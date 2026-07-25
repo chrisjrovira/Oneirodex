@@ -37,7 +37,7 @@ docs/
 | Product | GameTheca |
 | Version | 0.1.0 |
 | GitHub | chrisjrovira/gametheca |
-| Image | `chrisjrovira/gametheca:0.1.0` / `:latest` |
+| Image | Local `gametheca:0.1.0` via Compose build (Hub publish optional) |
 | App container | gametheca-app |
 | DB container | gametheca-db |
 | Python package | gametheca |

@@ -35,8 +35,18 @@ First milestone release on the `feature/roadmap-q1-foundation` track (GameTheca 
 
 ## [Unreleased]
 
+### Fixed
+
+- Docker Compose forces `DATABASE_URL` host `db` (stops Unraid `.env` `@localhost` loops)
+- Entrypoint rewrites loopback DB URLs inside containers
+- Local image tag `gametheca:0.1.0` (no Docker Hub pull required)
+- Env examples / NAS deploy docs clarified for Compose vs native installs
+
+### Still operator-owned
+
 - Live Authentik smoke (operator secrets)
 - Windows code-signing certificate for distributed desktop builds
 - Native Quest APK (PWA MVP ships in 0.1.0)
+- Publish optional Hub image `chrisjrovira/gametheca` when ready
 
 [0.1.0]: https://github.com/chrisjrovira/gametheca/releases/tag/v0.1.0

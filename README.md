@@ -6,7 +6,7 @@
 |---|---|
 | **Repo** | https://github.com/chrisjrovira/gametheca |
 | **Release** | `v0.1.0` (see [CHANGELOG.md](CHANGELOG.md)) |
-| **Docker image** | `chrisjrovira/gametheca:0.1.0` / `:latest` |
+| **Docker image** | Local build `gametheca:0.1.0` (Compose); Hub publish optional |
 | **Containers** | `gametheca-app`, `gametheca-db` |
 | **Python package** | `gametheca/` |
 | **Default port** | `5006` |
@@ -40,12 +40,14 @@ Useful flags: `--games-dir /path/to/games`, `--dev`, `--no-db`, `--force`.
 
 ```bash
 cp .env.docker.example .env
-# Set SECRET_KEY and DATA_FOLDER_WAREZ / LIBRARY_HOST_PATH
-# Optional: ENABLE_ARR_MODULE, ENABLE_AI_ASSIST, ENABLE_VR_BROWSE, OIDC_*
+# Set SECRET_KEY and DATA_FOLDER_WAREZ (HOST path to games) / LIBRARY_HOST_PATH
+# Do NOT use DATABASE_URL=@localhost — Compose connects to service "db"
 docker compose up -d --build
 ```
 
-App: http://localhost:5006 — volumes mount games read-only at `/storage` and library assets at `/app/gametheca/static/library`.
+App: http://localhost:5006 — Postgres is the `db` service; games mount at `/storage`.
+
+Unraid: see [NAS-DEPLOY.md](NAS-DEPLOY.md).
 
 ### Manual (Windows / Linux)
 
