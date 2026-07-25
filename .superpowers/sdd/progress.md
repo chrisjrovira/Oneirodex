@@ -15,8 +15,8 @@ Task 4: complete (commit e9ddcce195f082198f63cb8b48b69ad781a561a8)
 
 Task 6: complete (commit d06760fb8d8c8c52163137d04231783d01c0ae4e)
 
-Task 9: skipped - Discover sections already embedded via `data-sections` on the member SPA shell (Task 6 / routes_discover); no separate `/api/discover` needed.
+Task 9: skipped - Discover sections already embedded via data-sections on the member SPA shell (Task 6 / routes_discover); no separate /api/discover needed.
 
 Task 10: complete (commit 4e0f19ef20a91b86fd9ca5f9b416296d476a1179)
 
-Task 11: complete (commit 2d34e68a7c2f39e1d5ef3d904c0537f981f21d91)
+Task 11: complete (commit 66ffa73b92bbbc90edc90b6c6993f1c393160003)
