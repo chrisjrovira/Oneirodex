@@ -6,6 +6,7 @@ from typing import Tuple
 from flask import current_app, jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from gametheca import db
 from gametheca.models import DownloadRequest, Game, GlobalSettings
@@ -202,6 +203,41 @@ def api_initiate_game_download(game_uuid: str) -> Tuple[dict, int]:
             event_level='error',
         )
         return jsonify({'error': 'Failed to create download request'}), 500
+
+
+def _download_file_name(download_request: DownloadRequest):
+    if not download_request.zip_file_path:
+        return None
+    normalized = download_request.zip_file_path.replace("\\", "/")
+    return os.path.basename(normalized) or None
+
+
+def _serialize_download_request(download_request: DownloadRequest) -> dict:
+    status = download_request.status or "pending"
+    return {
+        "id": download_request.id,
+        "game_name": download_request.game.name if download_request.game else None,
+        "status": status,
+        "file_name": _download_file_name(download_request),
+        "download_url": (
+            f"/download_zip/{download_request.id}" if status == "available" else None
+        ),
+        "download_size": download_request.download_size,
+    }
+
+
+@apis_bp.route("/my_downloads", methods=["GET"])
+@login_required
+def api_my_downloads():
+    """List the current user's download requests for the member SPA."""
+    download_requests = db.session.execute(
+        select(DownloadRequest)
+        .options(joinedload(DownloadRequest.game))
+        .filter_by(user_id=current_user.id)
+        .order_by(DownloadRequest.request_time.desc())
+    ).scalars().unique().all()
+
+    return jsonify([_serialize_download_request(item) for item in download_requests]), 200
 
 
 @apis_bp.route('/delete_download/<int:request_id>', methods=['DELETE'])
