@@ -4,39 +4,39 @@
 }
 
 .card {
-    background: rgba(30, 30, 30, 0.95);
+    background: var(--gt-surface, var(--bg-dark-40));
     border-radius: 15px;
     margin-top: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--gt-border, var(--border-light));
 }
 
 .card-header {
-    background: rgba(20, 20, 20, 0.95);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--gt-bg, var(--bg-dark-30));
+    border-bottom: 1px solid var(--gt-border, var(--border-light));
     padding: 15px 20px;
     border-radius: 15px 15px 0 0;
 }
 
 .card-header h2 {
-    color: #fff;
+    color: var(--gt-text, var(--text-white));
     margin: 0;
     font-size: 1.5em;
 }
 
 .card-header h2 i {
     margin-right: 10px;
-    color: #0096ff;
+    color: var(--gt-accent, var(--btn-primary));
 }
 
 .card-body {
     padding: 20px;
-    color: #fff;
+    color: var(--gt-text, var(--text-white));
 }
 
 .alert-info {
-    background: rgba(0, 150, 255, 0.1);
-    border: 1px solid rgba(0, 150, 255, 0.3);
-    color: #fff;
+    background: color-mix(in srgb, var(--gt-info, var(--btn-info)) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gt-info, var(--btn-info)) 35%, transparent);
+    color: var(--gt-text, var(--text-white));
 }
 
 .placeholder-content {
@@ -44,7 +44,7 @@
 }
 
 .placeholder-content h3 {
-    color: #0096ff;
+    color: var(--gt-accent, var(--btn-primary));
     margin-bottom: 15px;
 }
 
@@ -55,8 +55,8 @@
 
 .placeholder-content ul li {
     padding: 10px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    color: #ccc;
+    border-bottom: 1px solid var(--gt-border, var(--border-light));
+    color: var(--gt-text-muted, var(--text-light));
 }
 
 .placeholder-content ul li:last-child {
@@ -64,8 +64,8 @@
 }
 
 .section-item {
-    background: rgba(40, 40, 40, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--gt-surface-2, var(--bg-dark-40));
+    border: 1px solid var(--gt-border, var(--border-light));
     border-radius: 8px;
     margin: 10px 0;
     padding: 15px;
@@ -74,7 +74,7 @@
 }
 
 .section-item:hover {
-    background: rgba(60, 60, 60, 0.8);
+    background: color-mix(in srgb, var(--gt-surface-2, var(--bg-dark-40)) 80%, var(--gt-text, #fff));
 }
 
 .section-content {
@@ -84,23 +84,23 @@
 }
 
 .drag-handle {
-    color: #666;
+    color: var(--gt-text-muted, var(--text-muted));
     cursor: move;
     padding: 5px;
 }
 
 .drag-handle:hover {
-    color: #0096ff;
+    color: var(--gt-accent, var(--btn-primary));
 }
 
 .section-name {
     flex-grow: 1;
-    color: #fff;
+    color: var(--gt-text, var(--text-white));
     font-weight: 500;
 }
 
 .section-count {
-    color: #999;
+    color: var(--gt-text-muted, var(--text-muted));
     font-size: 0.9em;
     margin-left: 10px;
     font-style: italic;

@@ -97,7 +97,7 @@
     border-radius: var(--border-radius-round);
     object-fit: cover;
     border: 2px solid var(--border-light-strong);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--gt-bg, #000) 10%, transparent);
 }
 
 /* Table Badges */
@@ -334,7 +334,12 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--gt-text, #fff) 10%, transparent),
+        transparent
+    );
     animation: tableShimmer 1.5s infinite;
 }
 
@@ -382,18 +387,18 @@
 }
 
 .table .status-running {
-    background: var(--status-running);
+    background: var(--gt-success, var(--status-running));
     animation: pulse 1.5s infinite;
 }
 
 .table .status-stopped {
-    background: var(--status-stopped);
+    background: var(--gt-danger, var(--status-stopped));
 }
 
 .table .status-pending {
-    background: var(--status-pending);
+    background: var(--gt-warning, var(--status-pending));
 }
 
 .table .status-completed {
-    background: var(--status-completed);
+    background: var(--gt-text-muted, var(--status-completed));
 }

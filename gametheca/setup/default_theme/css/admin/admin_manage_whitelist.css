@@ -4,7 +4,7 @@
     max-width: 300px;
     border-radius: 15px;
     transition: transform 0.3s ease;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
     transform: rotate(-3deg);
 }
 
@@ -25,26 +25,26 @@
 }
 
 .table {
-    background: rgba(40, 40, 40, 0.3);
-    color: #fff;
+    background: var(--gt-surface, var(--table-bg));
+    color: var(--gt-text, var(--text-white));
     border-radius: 8px;
     overflow: hidden;
 }
 
 .table thead th {
-    background: rgba(0, 0, 0, 0.2);
-    color: #fff;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--gt-bg, #000) 20%, transparent);
+    color: var(--gt-text, var(--text-white));
+    border-bottom: 2px solid var(--gt-border, var(--border-light));
     font-weight: 500;
     padding: 12px;
 }
 
 .table tbody tr {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--gt-border, var(--border-light));
 }
 
 .table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: color-mix(in srgb, var(--gt-text, #fff) 5%, transparent);
 }
 
 /* Form styling */
@@ -58,7 +58,7 @@
 }
 
 .input-group {
-    background: rgba(40, 40, 40, 0.5);
+    background: var(--gt-surface, var(--table-bg-40-alt));
     border-radius: 8px;
     overflow: hidden;
 }
@@ -79,7 +79,7 @@
 }
 
 .form-group label {
-    color: #fff;
+    color: var(--gt-text, var(--text-white));
     font-weight: 500;
 }
 
@@ -92,7 +92,7 @@
 
 
 .last-tested {
-    color: #888;
+    color: var(--gt-text-muted, var(--text-muted));
     font-size: 0.9rem;
     margin-top: 1rem;
 }

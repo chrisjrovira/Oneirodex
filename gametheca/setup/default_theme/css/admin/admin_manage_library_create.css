@@ -1,35 +1,35 @@
 /* Glassmorphic Image Editor Modal Styles */
 .glass-panel-modal {
-    background: rgba(40, 40, 40, 0.95);
+    background: var(--gt-surface, var(--bg-dark-40));
     backdrop-filter: blur(15px);
     border: 1px solid var(--border-light);
     border-radius: var(--border-radius-lg);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
 }
 
 .glass-panel-modal-header {
     background: var(--bg-light-overlay);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--gt-border, var(--border-light));
     border-radius: 15px 15px 0 0;
     padding: 1rem 1.5rem;
 }
 
 .glass-panel-modal-header .modal-title {
-    color: white;
+    color: var(--gt-text, var(--text-white));
     font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 2px 4px color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
 }
 
 .glass-panel-modal-body {
     padding: 2rem;
-    color: white;
+    color: var(--gt-text, var(--text-white));
 }
 
 .glass-panel-modal-footer {
-    background: rgba(255, 255, 255, 0.05);
+    background: color-mix(in srgb, var(--gt-text, #fff) 5%, transparent);
     backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--gt-border, var(--border-light));
     border-radius: 0 0 15px 15px;
     padding: 1rem 1.5rem;
 }
@@ -49,39 +49,39 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(0, 0, 0, 0.3);
+    background: color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
     border-radius: 10px;
-    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border: 2px dashed var(--border-light-strong);
     overflow: hidden;
 }
 
 /* Cropper.js styling adjustments for glassmorphism */
 .cropper-container {
     border-radius: 10px;
-    background: rgba(0, 0, 0, 0.5);
+    background: color-mix(in srgb, var(--gt-bg, #000) 50%, transparent);
 }
 
 .cropper-view-box {
     border-radius: 8px;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--gt-text, #fff) 50%, transparent);
 }
 
 .cropper-face {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: color-mix(in srgb, var(--gt-text, #fff) 10%, transparent);
 }
 
 .cropper-line {
-    background-color: rgba(255, 255, 255, 0.6);
+    background-color: color-mix(in srgb, var(--gt-text, #fff) 60%, transparent);
 }
 
 .cropper-point {
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: color-mix(in srgb, var(--gt-text, #fff) 80%, transparent);
     border-radius: 50%;
     opacity: 0.8;
 }
 
 .cropper-point:hover {
-    background-color: white;
+    background-color: var(--gt-text, #fff);
     opacity: 1;
 }
 
@@ -89,20 +89,20 @@
 .image-editor-controls .btn {
     background: var(--bg-light-overlay);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-light-strong);
     border-radius: 8px;
-    color: white;
+    color: var(--gt-text, var(--text-white));
     padding: 0.5rem 1rem;
     transition: all 0.3s ease;
     font-weight: 500;
 }
 
 .image-editor-controls .btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
-    color: white;
+    background: color-mix(in srgb, var(--gt-text, #fff) 20%, transparent);
+    border-color: var(--border-light-30);
+    color: var(--gt-text, var(--text-white));
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--gt-bg, #000) 20%, transparent);
 }
 
 .image-editor-controls .btn:active {
@@ -115,26 +115,27 @@
 
 /* Modal button overrides */
 .glass-panel-modal-footer .btn-secondary {
-    background: rgba(108, 117, 125, 0.8);
-    border-color: rgba(108, 117, 125, 0.8);
+    background: color-mix(in srgb, var(--btn-secondary) 80%, transparent);
+    border-color: color-mix(in srgb, var(--btn-secondary) 80%, transparent);
     backdrop-filter: blur(10px);
 }
 
 .glass-panel-modal-footer .btn-secondary:hover {
-    background: rgba(108, 117, 125, 1);
-    border-color: rgba(108, 117, 125, 1);
+    background: var(--btn-secondary);
+    border-color: var(--btn-secondary);
     transform: translateY(-1px);
 }
 
 .glass-panel-modal-footer .btn-primary {
-    background: var(--btn-primary);
-    border-color: var(--btn-primary);
+    background: var(--gt-accent, var(--btn-primary));
+    border-color: var(--gt-accent, var(--btn-primary));
+    color: var(--gt-accent-contrast, var(--text-white));
     backdrop-filter: blur(10px);
 }
 
 .glass-panel-modal-footer .btn-primary:hover {
-    background: var(--btn-primary-hover);
-    border-color: var(--btn-primary-hover);
+    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 88%, var(--gt-bg, #000));
+    border-color: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 88%, var(--gt-bg, #000));
     transform: translateY(-1px);
 }
 

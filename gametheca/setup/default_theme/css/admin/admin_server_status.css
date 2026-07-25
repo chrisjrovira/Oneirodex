@@ -1,5 +1,5 @@
 .container-settings {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: color-mix(in srgb, var(--gt-bg, #000) 70%, transparent);
     border-radius: 15px;
     padding: 20px;
     margin-top: 20px;
@@ -11,44 +11,44 @@
     align-items: center;
     padding: 15px;
     margin-bottom: 20px;
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--gt-text, #fff) 10%, transparent);
     border-radius: 10px;
 }
 
 .info-block {
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--gt-text, #fff) 10%, transparent);
     border-radius: 10px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px color-mix(in srgb, var(--gt-bg, #000) 10%, transparent);
 }
 
 .info-block h3 {
-    color: #fff;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    color: var(--gt-text, var(--text-white));
+    border-bottom: 2px solid var(--border-light-strong);
     padding-bottom: 10px;
     margin-bottom: 20px;
 }
 
 .info-block h4 {
-    color: #fff;
+    color: var(--gt-text, var(--text-white));
     font-size: 1.1rem;
     margin-bottom: 15px;
 }
 
 .progress {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: var(--gt-bg, var(--bg-dark-primary));
     border-radius: 15px;
     overflow: hidden;
 }
 
 .progress-bar {
-    background-color: #4CAF50;
+    background-color: color-mix(in srgb, var(--gt-success, var(--btn-success)) 55%, var(--gt-bg, #000));
     transition: width 0.3s ease;
 }
 
 .cpu-details {
-    background: rgba(255, 255, 255, 0.05);
+    background: color-mix(in srgb, var(--gt-text, #fff) 5%, transparent);
     padding: 10px;
     border-radius: 8px;
     margin-top: 10px;
@@ -56,18 +56,18 @@
 
 .cpu-details p {
     margin: 5px 0;
-    color: #fff;
+    color: var(--gt-text, var(--text-white));
 }
 
 /* Table styling inherited from table-components.css */
 
 .table th {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb, var(--gt-text, #fff) 10%, transparent);
+    border-color: var(--border-light-strong);
 }
 
 .table td {
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--gt-border, var(--border-light));
 }
 
 .status-indicator {
@@ -79,15 +79,15 @@
 }
 
 .status-good {
-    background-color: #4CAF50;
+    background-color: var(--gt-success, var(--btn-success));
 }
 
 .status-warning {
-    background-color: #FFC107;
+    background-color: var(--gt-warning, var(--btn-warning));
 }
 
 .status-error {
-    background-color: #F44336;
+    background-color: var(--gt-danger, var(--btn-danger));
 }
 
 .chart-container {
@@ -105,7 +105,7 @@ canvas#warezDiskChart {
 }
 
 .resource-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: color-mix(in srgb, var(--gt-text, #fff) 5%, transparent);
     border-radius: 10px;
     padding: 15px;
     margin-bottom: 15px;
@@ -121,14 +121,14 @@ canvas#warezDiskChart {
 }
 
 .btn-secondary {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: color-mix(in srgb, var(--gt-text, #fff) 20%, transparent);
     border: none;
     margin: 10px;
     transition: background-color 0.3s;
 }
 
 .btn-secondary:hover {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: color-mix(in srgb, var(--gt-text, #fff) 30%, transparent);
 }
 
 .resource-cards {
@@ -151,6 +151,6 @@ canvas#warezDiskChart {
     text-align: center;
 }
 
-.text-success { color: #28a745 !important; }
-.text-danger { color: #dc3545 !important; }
+.text-success { color: var(--gt-success, var(--btn-success)) !important; }
+.text-danger { color: var(--gt-danger, var(--btn-danger)) !important; }
 .text-end { text-align: right !important; }

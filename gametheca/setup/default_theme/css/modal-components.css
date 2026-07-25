@@ -95,7 +95,7 @@
 
 .modal-close:hover,
 .close-button:hover {
-    color: var(--btn-danger);
+    color: var(--gt-danger, var(--btn-danger));
     background: var(--bg-light-overlay);
     transform: scale(1.1);
 }
@@ -151,7 +151,7 @@
 }
 
 .delete-game-modal .modal-content h2 {
-    color: var(--btn-danger);
+    color: var(--gt-danger, var(--btn-danger));
     text-shadow: var(--shadow-text);
     margin: 0 0 var(--spacing-md) 0;
     font-size: var(--font-size-xl);
@@ -198,7 +198,11 @@
 }
 
 .modal .btn-danger:hover {
-    background: linear-gradient(45deg, var(--btn-danger-hover), #bd2130);
+    background: linear-gradient(
+        45deg,
+        var(--btn-danger-hover),
+        color-mix(in srgb, var(--btn-danger-hover) 85%, var(--gt-bg, #000))
+    );
     transform: translateY(-1px);
     box-shadow: var(--shadow-button-hover);
 }

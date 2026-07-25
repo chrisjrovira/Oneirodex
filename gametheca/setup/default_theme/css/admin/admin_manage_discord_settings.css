@@ -43,29 +43,29 @@
     border-radius: var(--border-radius-md);
     box-shadow: var(--shadow-glass);
     backdrop-filter: blur(10px);
-    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid var(--gt-border, var(--border-light));
     padding: 12px;
-    color: white; /* Keep text white */
+    color: var(--gt-text, var(--text-white));
 }
 
 .card {
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: color-mix(in srgb, var(--gt-bg, #000) 60%, transparent);
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--gt-bg, #000) 50%, transparent);
     backdrop-filter: blur(10px);
-    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid var(--gt-border, var(--border-light));
     padding: 12px;
-    color: white; /* Keep text white */
+    color: var(--gt-text, var(--text-white));
 }
 
 .info-panel {
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: color-mix(in srgb, var(--gt-bg, #000) 60%, transparent);
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--gt-bg, #000) 50%, transparent);
     backdrop-filter: blur(10px);
-    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid var(--gt-border, var(--border-light));
     padding: 12px;
-    color: white; /* Keep text white */
+    color: var(--gt-text, var(--text-white));
 }
 
 /* Discord Settings Container */
@@ -83,8 +83,8 @@
 }
 
 .connection-card {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
+    border: 1px solid var(--gt-border, var(--border-light));
     border-radius: 10px;
     padding: 1rem;
 }
@@ -96,22 +96,22 @@
 }
 
 .notification-settings-section h5 {
-    color: #ffffff;
+    color: var(--gt-text, var(--text-white));
     font-weight: 600;
     margin-bottom: 0.5rem;
     font-size: 1.1rem;
 }
 
 .notification-settings-section .text-muted {
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: var(--gt-text-muted, var(--text-light)) !important;
     margin-bottom: 0.75rem;
     font-size: 0.9rem;
 }
 
 /* Notification Cards */
 .notification-card {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--gt-bg, #000) 20%, transparent);
+    border: 1px solid var(--gt-border, var(--border-light));
     border-radius: 6px;
     padding: 0.75rem;
     transition: all 0.3s ease;
@@ -119,8 +119,8 @@
 }
 
 .notification-card:hover {
-    background: rgba(0, 0, 0, 0.3);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
+    border-color: color-mix(in srgb, var(--gt-text, #fff) 20%, transparent);
     transform: translateY(-2px);
 }
 
@@ -129,23 +129,23 @@
 }
 
 .notification-card .form-check-input {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
+    border: 1px solid var(--border-light-30);
     margin-top: 0.1rem;
 }
 
 .notification-card .form-check-input:checked {
-    background-color: #0096ff;
-    border-color: #0096ff;
+    background-color: var(--gt-accent, var(--btn-primary));
+    border-color: var(--gt-accent, var(--btn-primary));
 }
 
 .notification-card .form-check-input:focus {
-    border-color: #0096ff;
-    box-shadow: 0 0 5px rgba(0, 150, 255, 0.3);
+    border-color: var(--gt-accent, var(--btn-primary));
+    box-shadow: 0 0 5px color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 30%, transparent);
 }
 
 .notification-card .form-check-label {
-    color: #ffffff;
+    color: var(--gt-text, var(--text-white));
     cursor: pointer;
     font-weight: 500;
     font-size: 0.9rem;
@@ -161,25 +161,28 @@
     /* Using .form-text-light variant from base.css */
 }
 
-/* Icons in notification cards */
-.notification-card .text-primary { color: #0096ff !important; }
-.notification-card .text-info { color: #17a2b8 !important; }
-.notification-card .text-warning { color: #ffc107 !important; }
-.notification-card .text-success { color: #28a745 !important; }
-.notification-card .text-secondary { color: #6c757d !important; }
+/* Icons in notification cards.
+   These used to re-colour Bootstrap's .text-primary/.text-info/.text-success/
+   .text-secondary utilities with !important, which hijacked those utilities on
+   every page that loads this sheet (integrations.html among them) and made them
+   untouchable by the theme. The icons are decorative — each card already has a
+   text label — so they take a single accent instead. */
+.notification-card .form-check-label > i {
+    color: var(--gt-accent, var(--btn-primary));
+}
 
 /* Connection form specific styles */
 .connection-card .form-label {
-    color: #fff;
+    color: var(--gt-text, var(--text-white));
     font-weight: 500;
     margin-bottom: 0.4rem;
     font-size: 0.9rem;
 }
 
 .connection-card .form-control {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
+    background: color-mix(in srgb, var(--gt-bg, #000) 20%, transparent);
+    border: 1px solid var(--border-light-strong);
+    color: var(--gt-text, var(--text-white));
     padding: 0.4rem;
     border-radius: 4px;
     font-size: 0.9rem;
@@ -187,10 +190,10 @@
 }
 
 .connection-card .form-control:focus {
-    background: rgba(0, 0, 0, 0.3);
-    border-color: #0096ff;
-    box-shadow: 0 0 5px rgba(0, 150, 255, 0.3);
-    color: #fff;
+    background: color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
+    border-color: var(--gt-accent, var(--btn-primary));
+    box-shadow: 0 0 5px color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 30%, transparent);
+    color: var(--gt-text, var(--text-white));
 }
 
 .connection-card .d-flex {

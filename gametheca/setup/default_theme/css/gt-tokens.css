@@ -6,6 +6,14 @@
   --gt-text-muted: #b6becc;
   --gt-accent: #ff5a36;
   --gt-accent-contrast: #0b0d10;
+  /* Semantic status colours. Deliberately not part of preset_tokens(): a
+     failure must read as red in every theme. Each clears 4.5:1 against the
+     lightest surface any preset produces (#362824), so they are safe as body
+     text, not just as indicator dots. */
+  --gt-success: #4ade80;
+  --gt-danger: #ff6b6b;
+  --gt-warning: #ffc94a;
+  --gt-info: #5ac8fa;
   --gt-border: rgba(255, 255, 255, 0.12);
   --gt-focus-ring: color-mix(in srgb, var(--gt-accent) 70%, white);
   --gt-tile-min: 180px;

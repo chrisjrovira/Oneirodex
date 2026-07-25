@@ -1,9 +1,9 @@
 .table {
-    background-color: #333;
-    color: var(--text-white);
+    background-color: var(--gt-surface, var(--bg-dark-40));
+    color: var(--gt-text, var(--text-white));
 }
 .table th {
-    background-color: #444;
+    background-color: var(--gt-surface-2, var(--bg-dark-tertiary));
 }
 
 .instructions-toggle {
@@ -15,8 +15,8 @@
     text-align: left;
     position: relative;
     background-color: var(--btn-info);
-    border: 1px solid rgba(23, 162, 184, 0.3);
-    color: var(--text-white);
+    border: 1px solid color-mix(in srgb, var(--gt-info, var(--btn-info)) 35%, transparent);
+    color: var(--gt-text, var(--text-white));
 }
 
 .instructions-toggle button i {
@@ -64,8 +64,8 @@
 
 .input-glass:focus {
     outline: none;
-    border-color: #0096ff;
-    box-shadow: 0 0 5px rgba(0, 150, 255, 0.3);
+    border-color: var(--gt-accent, var(--btn-primary));
+    box-shadow: 0 0 5px color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 30%, transparent);
 }
 
 .button-group {
@@ -88,7 +88,7 @@
 }
 
 .last-tested {
-    color: #888;
+    color: var(--gt-text-muted, var(--text-muted));
     font-size: 0.9rem;
     margin-top: 1rem;
 }
@@ -104,33 +104,33 @@
 }
 
 .alert-success {
-    background-color: rgba(40, 167, 69, 0.2);
-    border: 1px solid rgba(40, 167, 69, 0.3);
-    color: var(--text-white);
+    background-color: color-mix(in srgb, var(--gt-success, var(--btn-success)) 20%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gt-success, var(--btn-success)) 35%, transparent);
+    color: var(--gt-text, var(--text-white));
 }
 
 .alert-danger {
-    background-color: rgba(220, 53, 69, 0.2);
-    border: 1px solid rgba(220, 53, 69, 0.3);
-    color: var(--text-white);
+    background-color: color-mix(in srgb, var(--gt-danger, var(--btn-danger)) 20%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gt-danger, var(--btn-danger)) 35%, transparent);
+    color: var(--gt-text, var(--text-white));
 }
 
 .alert-info {
     background-color: var(--btn-info);
-    border: 1px solid rgba(23, 162, 184, 0.3);
-    color: var(--text-white);
+    border: 1px solid color-mix(in srgb, var(--gt-info, var(--btn-info)) 35%, transparent);
+    color: var(--gt-text, var(--text-white));
 }
 
 .note {
-    background-color: #333;
+    background-color: var(--gt-surface, var(--bg-dark-40));
     padding: 1rem;
-    border-left: 4px solid #17a2b8;
+    border-left: 4px solid var(--gt-info, var(--btn-info));
     margin-top: 1rem;
     border-radius: 0 4px 4px 0;
 }
 
 .note strong {
-    color: #17a2b8;
+    color: var(--gt-info, var(--btn-info));
 }
 
 /* Loading Spinner Overlay */
@@ -165,7 +165,7 @@
     right: var(--spacing-sm);
     background: none;
     border: none;
-    color: rgba(67, 64, 74, 0.733);
+    color: var(--gt-text-muted, var(--text-muted));
     cursor: pointer;
     padding: 0;
     display: flex;
@@ -176,7 +176,7 @@
 }
 
 .toggle-password:hover {
-    color: rgba(0, 0, 0, 0.8);
+    color: var(--gt-text, var(--text-white));
 }
 
 .toggle-password:focus {
