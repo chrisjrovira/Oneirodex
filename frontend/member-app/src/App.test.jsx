@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+﻿import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from './App'
 
@@ -7,6 +7,7 @@ vi.mock('./DiscoverApp', () => ({ DiscoverApp: () => <div>DiscoverPage</div> }))
 vi.mock('./FavoritesApp', () => ({ FavoritesApp: () => <div>FavoritesPage</div> }))
 vi.mock('./pages/DownloadsPage', () => ({ DownloadsPage: () => <div>DownloadsPage</div> }))
 vi.mock('./chrome/TopNav', () => ({ TopNav: () => <nav>TopNav</nav> }))
+vi.mock('./pages/NewsPage', () => ({ NewsPage: () => <div><h1>News</h1></div> }))
 
 test('renders library route', () => {
   render(
@@ -46,4 +47,23 @@ test('renders downloads route', () => {
   )
   expect(screen.getByText('DownloadsPage')).toBeInTheDocument()
   expect(document.documentElement.style.getPropertyValue('--gt-tile-min')).toBe('280px')
+})
+
+test('renders news more route', () => {
+  render(
+    <MemoryRouter initialEntries={['/news']}>
+      <App shellConfig={{ tileSize: 'M', isAdmin: false }} />
+    </MemoryRouter>,
+  )
+  expect(screen.getByRole('heading', { name: 'News' })).toBeInTheDocument()
+})
+
+test('renders collections stub route', () => {
+  render(
+    <MemoryRouter initialEntries={['/collections']}>
+      <App shellConfig={{ tileSize: 'M', isAdmin: false }} />
+    </MemoryRouter>,
+  )
+  expect(screen.getByRole('heading', { name: 'Collections' })).toBeInTheDocument()
+  expect(screen.getByText('Loading…')).toBeInTheDocument()
 })

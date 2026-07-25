@@ -1,4 +1,4 @@
-import { getPrimaryLinks, getMoreLinks } from './navConfig'
+﻿import { getPrimaryLinks, getMoreLinks } from './navConfig'
 
 test('primary links are locked set', () => {
   expect(getPrimaryLinks().map((l) => l.id)).toEqual([
@@ -20,9 +20,9 @@ test('more links exclude primary ids', () => {
   expect(ids).toContain('vr')
 })
 
-test('more links use Flask paths from base.html', () => {
+test('more links use SPA paths via to', () => {
   const more = getMoreLinks({ showTrailers: true, showHelp: true, enableVr: true })
-  const byId = Object.fromEntries(more.map((l) => [l.id, l.href]))
+  const byId = Object.fromEntries(more.map((l) => [l.id, l.to]))
   expect(byId.collections).toBe('/collections')
   expect(byId.news).toBe('/news')
   expect(byId.wishlist).toBe('/wishlist')
@@ -34,6 +34,10 @@ test('more links use Flask paths from base.html', () => {
   expect(byId.vr).toBe('/vr')
   expect(byId.trailers).toBe('/trailers')
   expect(byId.help).toBe('/help')
+  for (const link of more) {
+    expect(link.to).toBeTruthy()
+    expect(link.href).toBeUndefined()
+  }
 })
 
 test('optional more links omitted when flags false', () => {

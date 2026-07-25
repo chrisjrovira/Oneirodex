@@ -1,11 +1,25 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { Outlet, Route, Routes } from 'react-router-dom'
 import { applyTileSizeCssVars, TileSizeControl } from './chrome/TileSizeControl'
 import { TopNav } from './chrome/TopNav'
 import { DiscoverApp } from './DiscoverApp'
 import { FavoritesApp } from './FavoritesApp'
 import { LibraryApp } from './LibraryApp'
+import { CalendarPage } from './pages/CalendarPage'
 import { DownloadsPage } from './pages/DownloadsPage'
+import { HelpPage } from './pages/HelpPage'
+import {
+  BigPicturePage,
+  CollectionDetailPage,
+  CollectionsPage,
+  OwnershipPage,
+  TrailersPage,
+  VrPage,
+  WishlistPage,
+} from './pages/MoreStubs'
+import { NewsPage } from './pages/NewsPage'
+import { PlaytimePage } from './pages/PlaytimePage'
+import { UpdatesPage } from './pages/UpdatesPage'
 
 function libraryInitialConfig(shellConfig) {
   return {
@@ -128,6 +142,18 @@ export function App({ shellConfig = {} }) {
           path="/downloads"
           element={<DownloadsPage shellConfig={shellConfig} />}
         />
+        <Route path="/collections" element={<CollectionsPage />} />
+        <Route path="/collections/:collectionUuid" element={<CollectionDetailPage />} />
+        <Route path="/news" element={<NewsPage />} />
+        <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/updates" element={<UpdatesPage />} />
+        <Route path="/playtime" element={<PlaytimePage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/ownership" element={<OwnershipPage />} />
+        <Route path="/big-picture" element={<BigPicturePage />} />
+        <Route path="/vr" element={<VrPage />} />
+        <Route path="/trailers" element={<TrailersPage />} />
+        <Route path="/help" element={<HelpPage />} />
       </Route>
     </Routes>
   )

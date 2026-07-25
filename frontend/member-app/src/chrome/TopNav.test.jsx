@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+﻿import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { TopNav } from './TopNav'
@@ -26,7 +26,7 @@ test('hides admin when not admin', () => {
   expect(screen.queryByRole('link', { name: /^admin$/i })).toBeNull()
 })
 
-test('more menu uses Flask paths', async () => {
+test('more menu uses SPA paths via NavLink', async () => {
   const user = userEvent.setup()
   renderNav({ showTrailers: true, showHelp: true, enableVr: true })
   await user.click(screen.getByRole('button', { name: /more/i }))

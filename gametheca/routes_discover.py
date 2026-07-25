@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template
 from flask_login import current_user, login_required
+from gametheca.utils.member_spa import render_member_spa
 from sqlalchemy import func, select
 
 from gametheca import cache, db
@@ -189,7 +190,6 @@ def discover():
                 'games': section_data.get(section.identifier, []),
             })
 
-    return render_template(
-        'site/member_spa.html',
+    return render_member_spa(
         discover_sections=discover_sections,
     )

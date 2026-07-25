@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+﻿import { useEffect, useId, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { IconMenu, IconMore, IconUser, primaryIconById } from './icons'
 import { getMoreLinks, getPrimaryLinks } from './navConfig'
@@ -27,6 +27,21 @@ function PrimaryLink({ link }) {
       {Icon ? <Icon /> : null}
       <span>{link.label}</span>
     </NavLink>
+  )
+}
+
+function MoreMenuLink({ link, onNavigate }) {
+  if (link.to) {
+    return (
+      <NavLink to={link.to} role="menuitem" onClick={onNavigate}>
+        {link.label}
+      </NavLink>
+    )
+  }
+  return (
+    <a href={link.href} role="menuitem">
+      {link.label}
+    </a>
   )
 }
 
@@ -118,9 +133,11 @@ export function TopNav({ shellConfig = {}, tileSize, onTileSizeChange }) {
             {moreOpen ? (
               <div className="gt-topnav__dropdown-panel" id={moreId} role="menu">
                 {moreLinks.map((link) => (
-                  <a key={link.id} href={link.href} role="menuitem">
-                    {link.label}
-                  </a>
+                  <MoreMenuLink
+                    key={link.id}
+                    link={link}
+                    onNavigate={() => setMoreOpen(false)}
+                  />
                 ))}
               </div>
             ) : null}

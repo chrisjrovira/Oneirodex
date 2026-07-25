@@ -1,3 +1,4 @@
+from gametheca.utils.member_spa import render_member_spa
 from flask import render_template, redirect, url_for, flash, jsonify, current_app, abort
 from flask_login import login_required, current_user
 from gametheca.forms import CsrfProtectForm
@@ -11,7 +12,7 @@ from gametheca import db
 @download_bp.route('/downloads')
 @login_required
 def downloads():
-    return render_template('site/member_spa.html')
+    return render_member_spa()
 
 
 @download_bp.route('/delete_download/<int:download_id>', methods=['POST'])

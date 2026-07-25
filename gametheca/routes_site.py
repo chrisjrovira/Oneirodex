@@ -2,6 +2,8 @@
 from flask import Blueprint, render_template, redirect, url_for, current_app, send_from_directory, jsonify, request
 from flask_login import login_required, logout_user, current_user
 
+from gametheca.utils.member_spa import render_member_spa
+
 from sqlalchemy import func, select
 from gametheca import db
 import os
@@ -31,7 +33,7 @@ def restricted():
 @site_bp.route('/help')
 def helpfaq():
     print("Route: /help")
-    return render_template('site/site_help.html')
+    return render_member_spa(title='Help')
 
 @site_bp.route('/logout')
 def logout():
@@ -67,7 +69,7 @@ def admin_dashboard():
 @site_bp.route('/favorites')
 @login_required
 def favorites():
-    return render_template('site/member_spa.html')
+    return render_member_spa()
 
 @site_bp.route('/favicon.ico')
 def favicon():
@@ -81,7 +83,7 @@ def favicon():
 @login_required
 def random_trailers():
     """Main page for watching random game trailers"""
-    return render_template('site/random_trailers.html')
+    return render_member_spa(title='Trailers')
 
 
 @site_bp.route('/api/trailers/filters')

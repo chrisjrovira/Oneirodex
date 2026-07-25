@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
+from gametheca.utils.member_spa import render_member_spa
 from gametheca.models import (
     Library, Game, Genre, GameMode, PlayerPerspective, Theme, Image,
     UserPreference, GlobalSettings, user_game_status
@@ -114,8 +115,7 @@ def library():
     library_data = get_library_count()
     games_count_data = get_games_count()
 
-    return render_template(
-        'site/member_spa.html',
+    return render_member_spa(
         library_count=library_data,
         games_count=games_count_data,
         user_per_page=per_page,
