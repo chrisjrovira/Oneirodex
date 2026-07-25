@@ -71,9 +71,8 @@ def library():
 
     # Get saved filters from cookie (fallback if no URL params)
     saved_filters = get_saved_filters_from_cookie()
-    
+
     # Extract filters from request arguments (URL params take priority over cookie)
-    page = request.args.get('page', 1, type=int)
     library_uuid = request.args.get('library_uuid') or saved_filters.get('library_uuid')
     library_name = request.args.get('library_name')
     # Only override per_page, sort_by, and sort_order if the URL parameters are provided
@@ -111,32 +110,20 @@ def library():
             flash('Library not found.', 'error')
             return redirect(url_for('library.library'))
 
-    game_data, total, pages, current_page = get_games(page, per_page, sort_by=sort_by, sort_order=sort_order, **filters)
-    # dont think the 2 below are used at all. check sometime
+    # Games are loaded client-side via /api/browse; shell only needs counts + filter seed
     library_data = get_library_count()
     games_count_data = get_games_count()
-    
+
     return render_template(
-        'games/library_browser.html',
-        games=game_data,
+        'site/member_spa.html',
         library_count=library_data,
         games_count=games_count_data,
-        total=total,
-        pages=pages,
-        current_page=current_page,
         user_per_page=per_page,
         user_default_sort=sort_by,
         user_default_sort_order=sort_order,
         filters=filters,
-        form=CsrfForm(),
-        library_uuid = library_uuid,
-        is_admin=current_user.role == 'admin',
-        user_locale=(
-            current_user.preferences.locale
-            if current_user.preferences and current_user.preferences.locale
-            else 'en'
-        ),
     )
+
 
 
 def get_games(page=1, per_page=20, sort_by='name', sort_order='asc', **filters):

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, url_for
+from flask import Blueprint, render_template
 from flask_login import current_user, login_required
 from sqlalchemy import func, select
 
@@ -13,7 +13,7 @@ from gametheca.models import (
 )
 from gametheca.utils.functions import format_size
 from gametheca.utils.local_metadata import has_local_images, has_local_metadata
-from gametheca.utils.processors import get_global_settings, get_loc
+from gametheca.utils.processors import get_global_settings
 from gametheca.utils.secondary_scrapers import game_card_flags
 from gametheca.utils.store_ownership import get_matched_owned_game_uuids, ownership_flags
 from gametheca.utils.cover_url import resolve_cover_url
@@ -70,7 +70,6 @@ def inject_settings():
 @discover_bp.route('/discover')
 @login_required
 def discover():
-    page_loc = get_loc("discover")
 
     # Get visible sections in correct order
     visible_sections = db.session.execute(select(DiscoverySection).filter_by(is_visible=True).order_by(DiscoverySection.display_order)).scalars().all()
@@ -162,7 +161,7 @@ def discover():
                 )
             ).scalars().all())
         elif section.identifier == 'most_favorited':
-            # Aggregate favorites in a subquery — GROUP BY Game expands JSON
+            # Aggregate favorites in a subquery -- GROUP BY Game expands JSON
             # columns (freshness_payload / video_urls) which Postgres cannot
             # equality-compare as type "json".
             fav_counts = (
@@ -190,8 +189,7 @@ def discover():
                 'games': section_data.get(section.identifier, []),
             })
 
-    return render_template('games/discover.html',
-                           visible_sections=visible_sections,
-                           section_data=section_data,
-                           discover_sections=discover_sections,
-                           loc=page_loc)
+    return render_template(
+        'site/member_spa.html',
+        discover_sections=discover_sections,
+    )

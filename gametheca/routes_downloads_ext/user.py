@@ -11,12 +11,8 @@ from gametheca import db
 @download_bp.route('/downloads')
 @login_required
 def downloads():
-    user_id = current_user.id
-    download_requests = db.session.execute(select(DownloadRequest).filter_by(user_id=user_id)).scalars().all()
-    for download_request in download_requests:
-        download_request.formatted_size = format_size(download_request.download_size)
-    form = CsrfProtectForm()
-    return render_template('games/manage_downloads.html', download_requests=download_requests, form=form)
+    return render_template('site/member_spa.html')
+
 
 @download_bp.route('/delete_download/<int:download_id>', methods=['POST'])
 @login_required

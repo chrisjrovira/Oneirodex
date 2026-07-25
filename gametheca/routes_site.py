@@ -67,7 +67,7 @@ def admin_dashboard():
 @site_bp.route('/favorites')
 @login_required
 def favorites():
-    return render_template('games/favorites.html')
+    return render_template('site/member_spa.html')
 
 @site_bp.route('/favicon.ico')
 def favicon():
