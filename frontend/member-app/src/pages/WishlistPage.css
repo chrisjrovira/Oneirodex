@@ -1,0 +1,101 @@
+.gt-wishlist {
+  color: var(--gt-text, #f2f4f8);
+}
+
+.gt-wishlist__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.gt-wishlist__form input[type='text'] {
+  flex: 1 1 12rem;
+  min-width: 0;
+  padding: 0.4rem 0.6rem;
+  background: var(--gt-surface, #141820);
+  border: 1px solid var(--gt-border, #2a3140);
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+}
+
+.gt-wishlist__form button,
+.gt-wishlist__actions button {
+  padding: 0.4rem 0.75rem;
+  background: transparent;
+  border: 1px solid var(--gt-border, #2a3140);
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gt-wishlist__form button:hover:not(:disabled),
+.gt-wishlist__actions button:hover:not(:disabled) {
+  border-color: var(--gt-accent, #ff5a36);
+  color: var(--gt-accent, #ff5a36);
+}
+
+.gt-wishlist__form button:disabled,
+.gt-wishlist__actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.gt-wishlist__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  color: var(--gt-text-muted, #b6becc);
+}
+
+.gt-wishlist__action-error {
+  color: var(--gt-accent, #ff5a36);
+}
+
+.gt-wishlist__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.gt-wishlist__card {
+  padding: 0.75rem 0.9rem;
+  background: var(--gt-surface, #141820);
+  border: 1px solid var(--gt-border, #2a3140);
+  border-radius: 6px;
+}
+
+.gt-wishlist__notes,
+.gt-wishlist__card time {
+  color: var(--gt-text-muted, #b6becc);
+}
+
+.gt-wishlist__status {
+  display: inline-block;
+  margin-right: 0.6rem;
+  color: var(--gt-text-muted, #b6becc);
+  text-transform: capitalize;
+}
+
+.gt-wishlist__status[data-status='fulfilled'],
+.gt-wishlist__status[data-status='approved'] {
+  color: var(--gt-accent, #ff5a36);
+}
+
+.gt-wishlist__card a {
+  color: var(--gt-accent, #ff5a36);
+}
+
+.gt-wishlist__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}

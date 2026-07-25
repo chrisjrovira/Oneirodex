@@ -8,6 +8,9 @@ vi.mock('./FavoritesApp', () => ({ FavoritesApp: () => <div>FavoritesPage</div> 
 vi.mock('./pages/DownloadsPage', () => ({ DownloadsPage: () => <div>DownloadsPage</div> }))
 vi.mock('./chrome/TopNav', () => ({ TopNav: () => <nav>TopNav</nav> }))
 vi.mock('./pages/NewsPage', () => ({ NewsPage: () => <div><h1>News</h1></div> }))
+vi.mock('./pages/CollectionsPage', () => ({
+  CollectionsPage: ({ shellConfig }) => <div>CollectionsPage:{shellConfig.tileSize}</div>,
+}))
 
 test('renders library route', () => {
   render(
@@ -58,12 +61,11 @@ test('renders news more route', () => {
   expect(screen.getByRole('heading', { name: 'News' })).toBeInTheDocument()
 })
 
-test('renders collections stub route', () => {
+test('renders collections route with the real page and forwards shellConfig', () => {
   render(
     <MemoryRouter initialEntries={['/collections']}>
       <App shellConfig={{ tileSize: 'M', isAdmin: false }} />
     </MemoryRouter>,
   )
-  expect(screen.getByRole('heading', { name: 'Collections' })).toBeInTheDocument()
-  expect(screen.getByText('Loading…')).toBeInTheDocument()
+  expect(screen.getByText('CollectionsPage:M')).toBeInTheDocument()
 })

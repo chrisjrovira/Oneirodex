@@ -5,21 +5,19 @@ import { TopNav } from './chrome/TopNav'
 import { DiscoverApp } from './DiscoverApp'
 import { FavoritesApp } from './FavoritesApp'
 import { LibraryApp } from './LibraryApp'
+import { BigPicturePage } from './pages/BigPicturePage'
 import { CalendarPage } from './pages/CalendarPage'
+import { CollectionDetailPage } from './pages/CollectionDetailPage'
+import { CollectionsPage } from './pages/CollectionsPage'
 import { DownloadsPage } from './pages/DownloadsPage'
 import { HelpPage } from './pages/HelpPage'
-import {
-  BigPicturePage,
-  CollectionDetailPage,
-  CollectionsPage,
-  OwnershipPage,
-  TrailersPage,
-  VrPage,
-  WishlistPage,
-} from './pages/MoreStubs'
 import { NewsPage } from './pages/NewsPage'
+import { OwnershipPage } from './pages/OwnershipPage'
 import { PlaytimePage } from './pages/PlaytimePage'
+import { TrailersPage } from './pages/TrailersPage'
 import { UpdatesPage } from './pages/UpdatesPage'
+import { VrPage } from './pages/VrPage'
+import { WishlistPage } from './pages/WishlistPage'
 
 function libraryInitialConfig(shellConfig) {
   return {
@@ -142,18 +140,21 @@ export function App({ shellConfig = {} }) {
           path="/downloads"
           element={<DownloadsPage shellConfig={shellConfig} />}
         />
-        <Route path="/collections" element={<CollectionsPage />} />
-        <Route path="/collections/:collectionUuid" element={<CollectionDetailPage />} />
-        <Route path="/news" element={<NewsPage />} />
-        <Route path="/wishlist" element={<WishlistPage />} />
-        <Route path="/updates" element={<UpdatesPage />} />
-        <Route path="/playtime" element={<PlaytimePage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/ownership" element={<OwnershipPage />} />
-        <Route path="/big-picture" element={<BigPicturePage />} />
-        <Route path="/vr" element={<VrPage />} />
-        <Route path="/trailers" element={<TrailersPage />} />
-        <Route path="/help" element={<HelpPage />} />
+        <Route path="/collections" element={<CollectionsPage shellConfig={shellConfig} />} />
+        <Route
+          path="/collections/:collectionUuid"
+          element={<CollectionDetailPage shellConfig={shellConfig} />}
+        />
+        <Route path="/news" element={<NewsPage shellConfig={shellConfig} />} />
+        <Route path="/wishlist" element={<WishlistPage shellConfig={shellConfig} />} />
+        <Route path="/updates" element={<UpdatesPage shellConfig={shellConfig} />} />
+        <Route path="/playtime" element={<PlaytimePage shellConfig={shellConfig} />} />
+        <Route path="/calendar" element={<CalendarPage shellConfig={shellConfig} />} />
+        <Route path="/ownership" element={<OwnershipPage shellConfig={shellConfig} />} />
+        <Route path="/big-picture" element={<BigPicturePage shellConfig={shellConfig} />} />
+        <Route path="/vr" element={<VrPage shellConfig={shellConfig} />} />
+        <Route path="/trailers" element={<TrailersPage shellConfig={shellConfig} />} />
+        <Route path="/help" element={<HelpPage shellConfig={shellConfig} />} />
       </Route>
     </Routes>
   )
