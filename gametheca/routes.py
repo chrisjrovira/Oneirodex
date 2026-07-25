@@ -1,5 +1,6 @@
 # gametheca/routes.py
 import uuid, json, os, shutil
+from pathlib import Path
 from threading import Thread
 from flask import (
     render_template, flash, redirect, url_for, request, Blueprint,
@@ -1123,9 +1124,9 @@ def theme_asset_filter(path):
     else:
         current_theme = 'default'
 
-    # Check if themed asset exists
-    full_path = f'./gametheca/static/library/themes/{current_theme}/{path}'
-    if os.path.exists(full_path):
+    # Resolve against the app package root — not process CWD (Docker/uvicorn).
+    themed = Path(current_app.root_path) / 'static' / 'library' / 'themes' / current_theme / path
+    if themed.is_file():
         return url_for('static', filename=f'library/themes/{current_theme}/{path}')
 
     # Fallback to default theme
