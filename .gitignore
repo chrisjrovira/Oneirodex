@@ -1,4 +1,4 @@
-﻿__pycache__
+__pycache__
 config.portainer
 config.backup
 config.py.backup
@@ -101,3 +101,6 @@ Thumbs.db
 # Git worktrees
 .worktrees/
 
+
+# Git worktrees
+.worktrees/
