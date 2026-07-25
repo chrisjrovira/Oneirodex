@@ -206,6 +206,13 @@ def settings_panel():
             return jsonify({'success': False, 'message': str(e)}), 500
     
     if request.method == 'GET':
+        prefs = current_user.preferences
+        if prefs:
+            form.items_per_page.data = prefs.items_per_page or 20
+            form.default_sort.data = prefs.default_sort or 'name'
+            form.default_sort_order.data = prefs.default_sort_order or 'asc'
+            form.theme.data = prefs.theme or 'default'
+            form.tile_size.data = getattr(prefs, 'tile_size', None) or 'M'
         return render_template('settings/modal_preferences.html', form=form)
     
     return jsonify({

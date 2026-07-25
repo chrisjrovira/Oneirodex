@@ -49,7 +49,7 @@
     gap: var(--spacing-sm);
     padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--border-radius-md);
-    color: var(--text-white);
+    color: var(--gt-text, var(--text-white));
     text-decoration: none;
     transition: background 0.2s ease, box-shadow 0.2s ease;
 }
@@ -59,9 +59,10 @@
 }
 
 .settings-shell-nav-link.active {
-    background: var(--primary-brand-40);
+    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 25%, transparent);
     box-shadow: 0 0 12px var(--primary-brand-30);
     font-weight: 600;
+    color: var(--gt-text, var(--text-white));
 }
 
 .settings-shell-main {
@@ -88,8 +89,8 @@
 
 .settings-shell-active-card p {
     margin: 0 0 var(--spacing-md);
-    color: var(--text-white);
-    opacity: 0.85;
+    color: var(--gt-text-muted, var(--text-light));
+    opacity: 1;
 }
 
 .settings-shell-cards {
@@ -137,7 +138,8 @@
 .settings-shell-card p {
     margin: 0;
     font-size: 0.9em;
-    opacity: 0.85;
+    color: var(--gt-text-muted, var(--text-light));
+    opacity: 1;
 }
 
 @media (max-width: 768px) {

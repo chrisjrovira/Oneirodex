@@ -128,10 +128,11 @@ def edit_library(library_uuid):
     form.platform.choices = [(platform.name, platform.value) for platform in LibraryPlatform]
     # print(f"Platform choices: {form.platform.choices}")
 
-    # Set the initial value for existing library
-    form.platform.data = library.platform.name
-    form.scan_depth.data = getattr(library, 'scan_depth', 1) or 1
-    print(f"Setting initial platform value: {form.platform.data}")
+    # Only seed from DB on GET — assigning on POST overwrites submitted scan_depth/platform.
+    if request.method == 'GET':
+        form.platform.data = library.platform.name
+        form.scan_depth.data = getattr(library, 'scan_depth', 1) or 1
+        print(f"Setting initial platform value: {form.platform.data}")
 
     if form.validate_on_submit():
         library.name = form.name.data
