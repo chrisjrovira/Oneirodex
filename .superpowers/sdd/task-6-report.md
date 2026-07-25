@@ -26,6 +26,6 @@
 - `python -m py_compile` on the four route modules: passed
 - Manual browser smoke not run in this environment
 
-**SHA:** (filled after commit)
+**SHA:** d06760fb8d8c8c52163137d04231783d01c0ae4e
 
 **Commit:** feat: serve member SPA shell for browse routes

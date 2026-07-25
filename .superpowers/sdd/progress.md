@@ -13,4 +13,4 @@ Task 3: complete (commit cfd308bbaafcff13a7ea096736a178adbefa6de0)
 
 Task 4: complete (commit e9ddcce195f082198f63cb8b48b69ad781a561a8)
 
-Task 6: complete (commit PENDING)
+Task 6: complete (commit d06760fb8d8c8c52163137d04231783d01c0ae4e)
