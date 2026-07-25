@@ -18,6 +18,9 @@ body {
 }
 
 .admin-section h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
     color: var(--text-white);
     font-size: 1.3em;
     margin-bottom: var(--spacing-lg);
@@ -25,9 +28,10 @@ body {
     padding-bottom: var(--spacing-sm);
 }
 
-.admin-section h3 i {
-    margin-right: var(--spacing-sm);
-    color: var(--btn-primary);
+/* Section headings and circle buttons now hold inline SVG (.gt-icon) rather
+   than a Font Awesome <i>; the accent token keeps them theme-driven. */
+.admin-section h3 .gt-icon {
+    color: var(--gt-accent, var(--btn-primary));
 }
 
 .admin-buttons {
@@ -44,13 +48,16 @@ body {
 }
 
 .btn-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 60px;
     height: 60px;
     padding: 0;
     border-radius: 50%;
     text-align: center;
     font-size: 24px;
-    line-height: 60px;
+    line-height: 1;
     background: var(--primary-brand-20);
     color: var(--text-white);
     border: 1px solid var(--primary-brand-30);
@@ -89,7 +96,7 @@ body {
         width: 50px;
         height: 50px;
         font-size: 20px;
-        line-height: 50px;
+        line-height: 1;
     }
 
     .button-label {

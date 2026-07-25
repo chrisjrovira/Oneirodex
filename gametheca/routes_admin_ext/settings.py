@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import datetime, timezone
 
-from flask import render_template, request, jsonify, abort, current_app
+from flask import render_template, request, jsonify, abort, current_app, redirect, url_for
 from flask_login import login_required, current_user
 from sqlalchemy import select
 
@@ -62,65 +62,67 @@ DEFAULT_SETTINGS = {
     'proposeOnlyScan': False
 }
 
-# Settings shell hub sections (left nav + cards on /admin/settings)
+# Settings hub sections rendered as one-click cards on /admin/settings.
+# 'icon' is a semantic key for the Jinja SVG macro in templates/partials/icons.html,
+# not a Font Awesome class.
 SETTINGS_SHELL_SECTIONS = {
     'server': {
         'label': 'Server Settings',
-        'icon': 'fa-cogs',
+        'icon': 'cogs',
         'description': 'Scan threads, download batching, folder names, and site metadata.',
         'endpoint': 'admin2.new_server_settings',
     },
     'attract': {
         'label': 'Attract Mode',
-        'icon': 'fa-tv',
+        'icon': 'tv',
         'description': 'Configure the idle-screen trailer slideshow and its filters.',
         'endpoint': 'admin2.attract_mode_settings_page',
     },
     'integrations': {
         'label': 'Integrations',
-        'icon': 'fa-plug',
+        'icon': 'plug',
         'description': 'Email (SMTP), IGDB API credentials, Discord notifications, and artwork providers.',
         'endpoint': 'admin2.integrations',
     },
     'emulators': {
         'label': 'Emulator profiles',
-        'icon': 'fa-gamepad',
+        'icon': 'gamepad',
         'description': 'Preferred WebRetro cores per console platform for Play Now.',
         'endpoint': 'admin2.emulator_profiles_page',
     },
     'arr': {
         'label': 'Arr module',
-        'icon': 'fa-magnet',
+        'icon': 'magnet',
         'description': 'Optional Prowlarr/Jackett search and qBittorrent add-url (feature-flagged).',
         'endpoint': 'arr.arr_admin_page',
     },
     'quality': {
         'label': 'Quality profiles',
-        'icon': 'fa-sliders',
+        'icon': 'sliders',
         'description': 'Preferred/blocked release groups and size bands for Arr scoring.',
         'endpoint': 'admin2.quality_profiles_page',
     },
     'layouts': {
         'label': 'Detail layout',
-        'icon': 'fa-table-columns',
+        'icon': 'layout',
         'description': 'Reorder and show/hide game details sections.',
         'endpoint': 'admin2.detail_layout_page',
     },
     'ai': {
         'label': 'AI assist',
-        'icon': 'fa-robot',
+        'icon': 'robot',
         'description': 'Ollama triage and library-doctor notes (suggestions only).',
         'endpoint': 'admin2.ai_assist_page',
     },
     'storage': {
         'label': 'Storage / hardlinks',
-        'icon': 'fa-link',
+        'icon': 'link',
         'description': 'Preview and optionally apply same-volume hardlinks.',
         'endpoint': 'admin2.storage_page',
     },
     'themes': {
         'label': 'Themes',
-        'icon': 'fa-palette',
+        'icon': 'palette',
         'description': 'Upload, activate, and manage installed UI themes.',
         'endpoint': 'admin2.manage_themes',
     },
@@ -320,20 +322,19 @@ def update_settings():
 def settings():
     """
     Main settings endpoint.
-    GET: Render the Settings shell (hub) with a left nav and cards that deep-link
-         to Server Settings, Attract Mode, Integrations, and Themes. An optional
-         ?section=server|attract|integrations|themes query param highlights the
-         matching nav item and detail card.
+    GET: Render the Settings hub, a grid of cards that link straight to each
+         settings page. A known ?section= value redirects to that page directly
+         so older links (and bookmarks) also cost a single click; unknown values
+         fall through to the hub.
     POST: Handle settings update (used by admin_manage_server_settings.js).
     """
     if request.method == 'GET':
-        section = request.args.get('section', DEFAULT_SETTINGS_SHELL_SECTION)
-        if section not in SETTINGS_SHELL_SECTIONS:
-            section = DEFAULT_SETTINGS_SHELL_SECTION
+        section = request.args.get('section')
+        if section in SETTINGS_SHELL_SECTIONS:
+            return redirect(url_for(SETTINGS_SHELL_SECTIONS[section]['endpoint']))
         return render_template(
             'admin/admin_settings_shell.html',
             sections=SETTINGS_SHELL_SECTIONS,
-            active_section=section
         )
     else:
         return update_settings()

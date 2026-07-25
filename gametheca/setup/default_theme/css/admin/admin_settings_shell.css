@@ -1,158 +1,120 @@
-/* Admin Settings shell — left nav + card hub, admin glass panel tokens */
+/* Admin Settings hub — a single horizontal card grid, one click per section.
+   Replaced the 220px sticky left column, which sat next to the member sidebar
+   and read as a second left nav. Icons are inline SVG (partials/icons.html)
+   and inherit currentColor, so they re-theme with no per-icon rules. */
 
 .settings-shell-header {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
 }
 
 .settings-shell-header h1 {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
     margin: 0;
-    color: var(--text-white);
+    color: var(--gt-text, var(--text-white));
     font-size: 2em;
     font-weight: bold;
     text-shadow: 0 0 10px var(--primary-brand-50);
 }
 
-.settings-shell-layout {
-    display: grid;
-    grid-template-columns: 220px 1fr;
-    gap: var(--spacing-lg);
-    align-items: start;
-}
-
-.settings-shell-nav {
-    background: var(--container-glass-primary);
-    backdrop-filter: var(--backdrop-blur);
-    border: 1px solid var(--border-light);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-glass);
-    padding: var(--spacing-md);
-    position: sticky;
-    top: var(--spacing-lg);
-}
-
-.settings-shell-nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-}
-
-.settings-shell-nav-link {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: var(--border-radius-md);
-    color: var(--gt-text, var(--text-white));
-    text-decoration: none;
-    transition: background 0.2s ease, box-shadow 0.2s ease;
-}
-
-.settings-shell-nav-link:hover {
-    background: var(--primary-brand-20);
-}
-
-.settings-shell-nav-link.active {
-    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 25%, transparent);
-    box-shadow: 0 0 12px var(--primary-brand-30);
-    font-weight: 600;
-    color: var(--gt-text, var(--text-white));
-}
-
-.settings-shell-main {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg);
-}
-
-.settings-shell-active-card {
-    background: var(--container-glass-primary);
-    backdrop-filter: var(--backdrop-blur);
-    border: 1px solid var(--border-light);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-glass);
-    padding: var(--spacing-lg);
-}
-
-.settings-shell-active-card h2 {
-    margin: 0 0 var(--spacing-sm);
-    color: var(--text-white);
-    font-size: 1.3em;
-    font-weight: 500;
-}
-
-.settings-shell-active-card p {
-    margin: 0 0 var(--spacing-md);
+.settings-shell-intro {
+    margin: 0 0 var(--spacing-lg);
     color: var(--gt-text-muted, var(--text-light));
-    opacity: 1;
 }
 
 .settings-shell-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: var(--spacing-lg);
 }
 
 .settings-shell-card {
-    display: block;
-    background: var(--container-glass-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    background: var(--container-glass-primary);
     backdrop-filter: var(--backdrop-blur);
     border: 1px solid var(--border-light);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-glass);
     padding: var(--spacing-lg);
-    color: var(--text-white);
+    color: var(--gt-text, var(--text-white));
     text-decoration: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition: transform var(--transition-fast),
+                background var(--transition-fast),
+                border-color var(--transition-fast),
+                box-shadow var(--transition-fast);
 }
 
-.settings-shell-card:hover {
+.settings-shell-card:hover,
+.settings-shell-card:focus-visible {
     transform: translateY(-3px);
     background: var(--primary-brand-20);
+    border-color: var(--primary-brand-30);
     box-shadow: 0 0 20px var(--primary-brand-30);
-    color: var(--text-white);
+    color: var(--gt-text, var(--text-white));
+    text-decoration: none;
 }
 
-.settings-shell-card.is-active {
-    border-color: var(--primary-brand-30);
+.settings-shell-card:focus-visible {
+    outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+    outline-offset: 2px;
 }
 
 .settings-shell-card-icon {
-    font-size: 1.8em;
-    margin-bottom: var(--spacing-sm);
-    color: var(--btn-primary);
+    display: inline-flex;
+    margin-bottom: var(--spacing-xs);
+    color: var(--gt-accent, var(--btn-primary));
 }
 
-.settings-shell-card h3 {
-    margin: 0 0 var(--spacing-xs);
-    font-size: 1.1em;
-    font-weight: 500;
+.settings-shell-card h2 {
+    margin: 0;
+    font-size: var(--font-size-md);
+    font-weight: 600;
 }
 
 .settings-shell-card p {
     margin: 0;
-    font-size: 0.9em;
+    font-size: var(--font-size-sm);
     color: var(--gt-text-muted, var(--text-light));
-    opacity: 1;
 }
 
-@media (max-width: 768px) {
-    .settings-shell-layout {
-        grid-template-columns: 1fr;
+.settings-shell-card-go {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: auto;
+    padding-top: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--gt-accent, var(--btn-primary));
+}
+
+.settings-shell-card-go .gt-icon {
+    transition: transform var(--transition-fast);
+}
+
+.settings-shell-card:hover .settings-shell-card-go .gt-icon {
+    transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .settings-shell-card,
+    .settings-shell-card-go .gt-icon {
+        transition: none;
     }
 
-    .settings-shell-nav {
-        position: static;
+    .settings-shell-card:hover,
+    .settings-shell-card:focus-visible {
+        transform: none;
     }
 
-    .settings-shell-nav ul {
-        flex-direction: row;
-        flex-wrap: wrap;
+    .settings-shell-card:hover .settings-shell-card-go .gt-icon {
+        transform: none;
     }
 }

@@ -1,3 +1,13 @@
+/* Shared geometry for the inline SVG icons in templates/partials/icons.html.
+   base.html links this stylesheet on every Jinja page, so it is the one place
+   the .gt-icon defaults live. Colour is deliberately absent: the glyphs use
+   stroke="currentColor" and inherit whatever the active theme sets. */
+.gt-icon {
+    display: inline-block;
+    vertical-align: -0.15em;
+    flex-shrink: 0;
+}
+
 .sidebar {
     height: 100%;
     width: 210px; 
@@ -47,8 +57,17 @@
 }
 
 
-.sidebar-link i {
+.sidebar-link i,
+.sidebar-link .gt-icon {
     min-width: 25px; 
+}
+
+.account-menu-option .gt-icon {
+    margin-right: var(--spacing-xs);
+}
+
+.toggle-sidebar .gt-icon {
+    vertical-align: middle;
 }
 
 .sidebar-link .link-text {

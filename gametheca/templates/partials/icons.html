@@ -1,0 +1,201 @@
+{#
+    GameTheca inline SVG icon set for Jinja templates.
+
+    Mirrors frontend/member-app/src/chrome/icons.jsx so the Jinja pages and the
+    member SPA speak one visual language: 24x24 viewBox, fill none, 2px stroke,
+    round caps and joins, stroke="currentColor". Because every glyph inherits
+    the surrounding text colour there are no per-icon colour rules to maintain
+    and the icons re-theme automatically.
+
+    Usage:
+        {% import 'partials/icons.html' as icons %}
+        {{ icons.icon('library') }}
+        {{ icons.icon('cogs', size=28, extra_class='settings-shell-card-icon') }}
+        {{ icons.icon('logout', title='Log out') }}
+
+    `name` is a semantic key, not a Font Awesome class. Adding a glyph means
+    adding one branch below; unknown names render a neutral dot so a typo can
+    never blank out a layout.
+
+    Pass `title` only when the icon is the sole label for a control; otherwise
+    it stays aria-hidden so screen readers read the adjacent text once.
+#}
+
+{% macro icon(name, size=18, extra_class='', title='') -%}
+<svg class="gt-icon{% if extra_class %} {{ extra_class }}{% endif %}"
+     width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24"
+     fill="none" stroke="currentColor" stroke-width="2"
+     stroke-linecap="round" stroke-linejoin="round"
+     {% if title %}role="img" aria-label="{{ title }}"{% else %}aria-hidden="true"{% endif %}
+     focusable="false">
+{%- if title %}<title>{{ title }}</title>{% endif -%}
+
+{#- Member navigation — kept geometrically identical to icons.jsx -#}
+{%- if name in ('discover', 'compass') -%}
+    <circle cx="12" cy="12" r="10"/>
+    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" stroke="none"/>
+{%- elif name in ('library', 'gamepad', 'emulators') -%}
+    <rect x="2" y="6" width="20" height="12" rx="3"/>
+    <path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/>
+{%- elif name in ('download', 'downloads') -%}
+    <path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>
+{%- elif name in ('favorites', 'heart') -%}
+    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>
+{%- elif name in ('settings', 'cogs', 'gear') -%}
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>
+{%- elif name == 'user' -%}
+    <circle cx="12" cy="8" r="4"/>
+    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+{%- elif name == 'menu' -%}
+    <path d="M4 6h16M4 12h16M4 18h16"/>
+{%- elif name == 'more' -%}
+    <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+
+{#- Member navigation — new glyphs drawn to the same weight -#}
+{%- elif name in ('collections', 'layers') -%}
+    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+    <polyline points="2 17 12 22 22 17"/>
+    <polyline points="2 12 12 17 22 12"/>
+{%- elif name in ('news', 'megaphone') -%}
+    <path d="M3 11 21 6v12L3 14v-3z"/>
+    <path d="M11.5 16.7a3 3 0 0 1-5.8-1.5"/>
+{%- elif name in ('wishlist', 'clipboard-list', 'logs') -%}
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+    <rect x="8" y="2" width="8" height="4" rx="1"/>
+    <path d="M8 12h8M8 16h5"/>
+{%- elif name in ('updates', 'arrow-up') -%}
+    <path d="M12 19V5M5 12l7-7 7 7"/>
+{%- elif name in ('playtime', 'clock') -%}
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M12 7v5l3 2"/>
+{%- elif name == 'calendar' -%}
+    <rect x="3" y="5" width="18" height="16" rx="2"/>
+    <path d="M16 3v4M8 3v4M3 11h18"/>
+{%- elif name in ('ownership', 'store') -%}
+    <path d="M6 2 3 6v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4H6z"/>
+    <path d="M3 6h18"/>
+    <path d="M16 10a4 4 0 0 1-8 0"/>
+{%- elif name in ('big-picture', 'tv', 'attract') -%}
+    <rect x="2" y="7" width="20" height="14" rx="2"/>
+    <path d="m17 2-5 5-5-5"/>
+{%- elif name == 'vr' -%}
+    <rect x="2" y="7" width="20" height="10" rx="3"/>
+    <circle cx="7.5" cy="12" r="2"/>
+    <circle cx="16.5" cy="12" r="2"/>
+{%- elif name in ('trailers', 'film') -%}
+    <rect x="2" y="3" width="20" height="18" rx="2"/>
+    <path d="M7 3v18M17 3v18M2 9h5M2 15h5M17 9h5M17 15h5"/>
+{%- elif name == 'help' -%}
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M9.5 9.2a2.6 2.6 0 1 1 3.4 2.5c-.6.2-.9.8-.9 1.4v.4"/>
+    <path d="M12 17h.01"/>
+
+{#- Account menu -#}
+{%- elif name in ('envelope', 'invites') -%}
+    <rect x="2" y="5" width="20" height="14" rx="2"/>
+    <path d="m3 7 9 6 9-6"/>
+{%- elif name == 'envelope-open' -%}
+    <path d="M3 10 12 3l9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9z"/>
+    <path d="m3 10 9 7 9-7"/>
+{%- elif name == 'key' -%}
+    <circle cx="7.5" cy="15.5" r="4.5"/>
+    <path d="m10.7 12.3 9.3-9.3M17 5l3 3M14 8l3 3"/>
+{%- elif name == 'logout' -%}
+    <path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4"/>
+    <path d="m16 17 5-5-5-5"/>
+    <path d="M21 12H9"/>
+{%- elif name == 'login' -%}
+    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+    <path d="m10 17 5-5-5-5"/>
+    <path d="M15 12H3"/>
+{%- elif name == 'user-plus' -%}
+    <circle cx="9" cy="8" r="4"/>
+    <path d="M2 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>
+    <path d="M19 8v6M22 11h-6"/>
+
+{#- Directional -#}
+{%- elif name == 'chevron-up' -%}
+    <path d="m6 15 6-6 6 6"/>
+{%- elif name == 'chevron-right' -%}
+    <path d="m9 6 6 6-6 6"/>
+{%- elif name == 'arrow-left' -%}
+    <path d="M19 12H5M12 19l-7-7 7-7"/>
+{%- elif name == 'arrow-right' -%}
+    <path d="M5 12h14M12 5l7 7-7 7"/>
+
+{#- Admin -#}
+{%- elif name in ('sliders', 'quality') -%}
+    <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/>
+    <path d="M1 14h6M9 8h6M17 16h6"/>
+{%- elif name in ('health', 'activity') -%}
+    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+{%- elif name == 'book' -%}
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+{%- elif name in ('search', 'scan') -%}
+    <circle cx="11" cy="11" r="7"/>
+    <path d="m20 20-3.6-3.6"/>
+{%- elif name in ('wand', 'tools-magic') -%}
+    <path d="m3 21 9.5-9.5"/>
+    <path d="m14.5 2.5 1.3 3 3 1.3-3 1.3-1.3 3-1.3-3-3-1.3 3-1.3 1.3-3z"/>
+    <path d="M20 14v3M18.5 15.5h3"/>
+{%- elif name == 'server' -%}
+    <rect x="2" y="3" width="20" height="7" rx="2"/>
+    <rect x="2" y="14" width="20" height="7" rx="2"/>
+    <path d="M6 6.5h.01M6 17.5h.01"/>
+{%- elif name in ('plug', 'integrations') -%}
+    <path d="M6 8h12v3a6 6 0 0 1-12 0V8z"/>
+    <path d="M9 8V2M15 8V2M12 17v5"/>
+{%- elif name in ('magnet', 'arr') -%}
+    <path d="M6 3H3v9a9 9 0 0 0 18 0V3h-3v9a6 6 0 0 1-12 0V3z"/>
+    <path d="M3 8h3M18 8h3"/>
+{%- elif name in ('layout', 'layouts') -%}
+    <rect x="3" y="4" width="18" height="16" rx="2"/>
+    <path d="M10 4v16"/>
+{%- elif name in ('robot', 'ai') -%}
+    <rect x="4" y="8" width="16" height="12" rx="3"/>
+    <path d="M12 4.5V8M9 14h.01M15 14h.01M9.5 17.5h5"/>
+    <path d="M2 13v3M22 13v3"/>
+    <circle cx="12" cy="3.5" r="1.2" fill="currentColor" stroke="none"/>
+{%- elif name in ('link', 'storage') -%}
+    <path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1 1"/>
+    <path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1-1"/>
+{%- elif name in ('chart', 'statistics') -%}
+    <path d="M3 21h18"/>
+    <path d="M6 21v-8M12 21V6M18 21v-5"/>
+{%- elif name == 'info' -%}
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M12 16v-5M12 8h.01"/>
+{%- elif name == 'users' -%}
+    <circle cx="9" cy="8" r="4"/>
+    <path d="M2 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>
+    <path d="M17 4.6a4 4 0 0 1 0 6.8M18.6 20c0-2.1-.7-4-1.9-5.5"/>
+{%- elif name == 'users-cog' -%}
+    <circle cx="9" cy="8" r="4"/>
+    <path d="M2 20c0-3.9 3.1-7 7-7 1 0 2 .2 2.9.5"/>
+    <circle cx="18" cy="17.5" r="2.5"/>
+    <path d="M18 13.5v1M18 20.5v1M14 17.5h1M21 17.5h1"/>
+{%- elif name in ('user-shield', 'whitelist') -%}
+    <circle cx="9" cy="8" r="4"/>
+    <path d="M2 20c0-3.9 3.1-7 7-7h1"/>
+    <path d="m18 12 4 1.8v2.6c0 2.2-1.7 4.2-4 4.6-2.3-.4-4-2.4-4-4.6v-2.6L18 12z"/>
+{%- elif name in ('tools', 'wrench') -%}
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-8 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-8l-3.7 3.9z"/>
+{%- elif name in ('palette', 'themes') -%}
+    <path d="M12 3a9 9 0 0 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.6-1.3-.3-.4-.5-.8-.5-1.2 0-1 .8-1.8 1.8-1.8H16a5 5 0 0 0 5-5c0-3.9-4-7-9-7z"/>
+    <circle cx="7.6" cy="11.6" r="1" fill="currentColor" stroke="none"/>
+    <circle cx="10.5" cy="7.6" r="1" fill="currentColor" stroke="none"/>
+    <circle cx="15" cy="8.6" r="1" fill="currentColor" stroke="none"/>
+{%- elif name in ('newspaper', 'newsletter') -%}
+    <rect x="3" y="4" width="18" height="16" rx="2"/>
+    <path d="M7 8h6M7 12h10M7 16h10"/>
+
+{#- Fallback keeps layout stable when a name is misspelled -#}
+{%- else -%}
+    <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}

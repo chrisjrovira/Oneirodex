@@ -1,3 +1,4 @@
+{% import 'partials/icons.html' as icons -%}
 <!-- in templates/base.html -->
 <!DOCTYPE html>
 
@@ -55,18 +56,18 @@
         <!-- User Account Icon at the Bottom Left -->
         <div id="userAccountIcon" class="user-account-icon">
             <img src="{{ url_for('static', filename=current_user.avatarpath) }}" alt="User Avatar" class="user-avatar"> <!-- Use the user's avatar if available -->
-            <span class="user-name" style="color: white;">{{ current_user.name | capitalize }}</span>
+            <span class="user-name">{{ current_user.name | capitalize }}</span>
 
-            <i class="fas fa-chevron-up user-expand-icon" style="color: white;"></i>
+            {{ icons.icon('chevron-up', extra_class='user-expand-icon') }}
         </div>
 
         <!-- Expandable User Account Menu -->
         <div id="userAccountMenu" class="user-account-menu hide">
-            <a href="{{ url_for('settings.settings_profile_view') }}" class="account-menu-option"><i class="fas fa-user"></i> Profile</a>
-            <a href="{{ url_for('login.invites') }}" class="account-menu-option"><i class="fas fa-envelope"></i> Invites</a>
-            <a href="#" class="account-menu-option" data-bs-toggle="modal" data-bs-target="#preferencesModal"><i class="fas fa-gear"></i> Preferences</a>
-            <a href="{{ url_for('settings.account_pw') }}" class="account-menu-option"><i class="fas fa-key"></i> Change Password</a>
-            <a href="{{ url_for('site.logout') }}" class="account-menu-option"><i class="fas fa-right-from-bracket"></i> Logout</a>
+            <a href="{{ url_for('settings.settings_profile_view') }}" class="account-menu-option">{{ icons.icon('user') }} Profile</a>
+            <a href="{{ url_for('login.invites') }}" class="account-menu-option">{{ icons.icon('envelope') }} Invites</a>
+            <a href="#" class="account-menu-option" data-bs-toggle="modal" data-bs-target="#preferencesModal">{{ icons.icon('gear') }} Preferences</a>
+            <a href="{{ url_for('settings.account_pw') }}" class="account-menu-option">{{ icons.icon('key') }} Change Password</a>
+            <a href="{{ url_for('site.logout') }}" class="account-menu-option">{{ icons.icon('logout') }} Logout</a>
         </div>
     </div>
     {% endif %}
@@ -85,46 +86,46 @@
     {% endif %}
     
     <div class="sidebar-header">
-        <button id="toggleSidebar" class="toggle-sidebar">
-            <i class="icon-chevron"><span>&gt;</span></i>
+        <button id="toggleSidebar" class="toggle-sidebar" aria-label="{{ _('Toggle navigation') }}">
+            {{ icons.icon('chevron-right', size=22, extra_class='icon-chevron') }}
         </button>
     </div>
     <div class="sidebar-menu">
         {% if current_user.is_authenticated %}
             {% if show_discovery %}
-                <a href="{{ url_for('discover.discover') }}" class="sidebar-link"><i class="fas fa-compass"></i><span class="link-text">{{ _('Discover') }}</span></a>
+                <a href="{{ url_for('discover.discover') }}" class="sidebar-link">{{ icons.icon('discover') }}<span class="link-text">{{ _('Discover') }}</span></a>
             {% endif %}
-            <a href="{{ url_for('library.library') }}" class="sidebar-link"><i class="fas fa-gamepad"></i><span class="link-text">{{ _('Library') }}</span></a>
-            <a href="{{ url_for('download.downloads') }}" class="sidebar-link"><i class="fas fa-download"></i><span class="link-text">{{ _('Download') }}</span></a>
+            <a href="{{ url_for('library.library') }}" class="sidebar-link">{{ icons.icon('library') }}<span class="link-text">{{ _('Library') }}</span></a>
+            <a href="{{ url_for('download.downloads') }}" class="sidebar-link">{{ icons.icon('download') }}<span class="link-text">{{ _('Download') }}</span></a>
             {% if show_favorites %}
-                <a href="{{ url_for('site.favorites') }}" class="sidebar-link"><i class="fas fa-heart"></i><span class="link-text">{{ _('Favorites') }}</span></a>
+                <a href="{{ url_for('site.favorites') }}" class="sidebar-link">{{ icons.icon('favorites') }}<span class="link-text">{{ _('Favorites') }}</span></a>
             {% endif %}
-            <a href="{{ url_for('member.collections_page') }}" class="sidebar-link"><i class="fas fa-layer-group"></i><span class="link-text">Collections</span></a>
-            <a href="{{ url_for('member.announcements_page') }}" class="sidebar-link"><i class="fas fa-bullhorn"></i><span class="link-text">News</span></a>
-            <a href="{{ url_for('member.wishlist_page') }}" class="sidebar-link"><i class="fas fa-clipboard-list"></i><span class="link-text">{{ _('Wishlist') }}</span></a>
-            <a href="{{ url_for('member.updates_page') }}" class="sidebar-link"><i class="fas fa-arrow-up"></i><span class="link-text">Updates</span></a>
-            <a href="{{ url_for('member.playtime_page') }}" class="sidebar-link"><i class="fas fa-clock"></i><span class="link-text">{{ _('Playtime') }}</span></a>
-            <a href="{{ url_for('member.calendar_page') }}" class="sidebar-link"><i class="fas fa-calendar-alt"></i><span class="link-text">{{ _('Release calendar') }}</span></a>
-            <a href="{{ url_for('member.ownership_page') }}" class="sidebar-link"><i class="fas fa-store"></i><span class="link-text">{{ _('Ownership') }}</span></a>
-            <a href="{{ url_for('member.big_picture_page') }}" class="sidebar-link"><i class="fas fa-tv"></i><span class="link-text">{{ _('Big Picture') }}</span></a>
+            <a href="{{ url_for('member.collections_page') }}" class="sidebar-link">{{ icons.icon('collections') }}<span class="link-text">Collections</span></a>
+            <a href="{{ url_for('member.announcements_page') }}" class="sidebar-link">{{ icons.icon('news') }}<span class="link-text">News</span></a>
+            <a href="{{ url_for('member.wishlist_page') }}" class="sidebar-link">{{ icons.icon('wishlist') }}<span class="link-text">{{ _('Wishlist') }}</span></a>
+            <a href="{{ url_for('member.updates_page') }}" class="sidebar-link">{{ icons.icon('updates') }}<span class="link-text">Updates</span></a>
+            <a href="{{ url_for('member.playtime_page') }}" class="sidebar-link">{{ icons.icon('playtime') }}<span class="link-text">{{ _('Playtime') }}</span></a>
+            <a href="{{ url_for('member.calendar_page') }}" class="sidebar-link">{{ icons.icon('calendar') }}<span class="link-text">{{ _('Release calendar') }}</span></a>
+            <a href="{{ url_for('member.ownership_page') }}" class="sidebar-link">{{ icons.icon('ownership') }}<span class="link-text">{{ _('Ownership') }}</span></a>
+            <a href="{{ url_for('member.big_picture_page') }}" class="sidebar-link">{{ icons.icon('big-picture') }}<span class="link-text">{{ _('Big Picture') }}</span></a>
             {% if enable_vr_browse %}
-            <a href="{{ url_for('member.vr_browse_page') }}" class="sidebar-link"><i class="fas fa-vr-cardboard"></i><span class="link-text">VR</span></a>
+            <a href="{{ url_for('member.vr_browse_page') }}" class="sidebar-link">{{ icons.icon('vr') }}<span class="link-text">VR</span></a>
             {% endif %}
             {% if show_trailers %}
-                <a href="{{ url_for('site.random_trailers') }}" class="sidebar-link"><i class="fas fa-film"></i><span class="link-text">Trailers</span></a>
+                <a href="{{ url_for('site.random_trailers') }}" class="sidebar-link">{{ icons.icon('trailers') }}<span class="link-text">Trailers</span></a>
             {% endif %}
 
             {% if current_user.role == 'admin' %}
-                <a href="/admin/dashboard" class="sidebar-link"><i class="fas fa-cogs"></i><span class="link-text">{{ _('Settings') }}</span></a>
+                <a href="/admin/dashboard" class="sidebar-link">{{ icons.icon('settings') }}<span class="link-text">{{ _('Settings') }}</span></a>
             {% endif %}
 
             {% if show_help_button %}
-                <a href="{{ url_for('site.helpfaq') }}" class="sidebar-link"><i class="fas fa-question-circle"></i><span class="link-text">Help</span></a>
+                <a href="{{ url_for('site.helpfaq') }}" class="sidebar-link">{{ icons.icon('help') }}<span class="link-text">Help</span></a>
             {% endif %}
             
         {% else %}
-            <a href="{{ url_for('login.login') }}" class="sidebar-link"><i class="fas fa-sign-in-alt"></i><span class="link-text">Login</span></a>
-            <a href="{{ url_for('login.register') }}" class="sidebar-link"><i class="fas fa-user-plus"></i><span class="link-text">Register</span></a>
+            <a href="{{ url_for('login.login') }}" class="sidebar-link">{{ icons.icon('login') }}<span class="link-text">Login</span></a>
+            <a href="{{ url_for('login.register') }}" class="sidebar-link">{{ icons.icon('user-plus') }}<span class="link-text">Register</span></a>
         {% endif %}
         {% include 'games/library_filters.html' %}
     </div>
