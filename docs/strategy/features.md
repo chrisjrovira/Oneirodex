@@ -262,6 +262,7 @@ Does not replace P0 items below; it is the UI execution track for admin parity.
 | 22 | GiantBomb / PCGW | Secondary enrichment providers |
 | 23 | Collections | See P0-5 |
 | 24 | Activity feed | Merge SystemEvents + announcements |
+| 24b | Lite social | Friends/presence/profiles on Activity + playtime; BYO Stoat/Matrix for chat — see [social.md](social.md) |
 | 25 | Stats cards | Canvas export PNG from playtime |
 | 26 | Import bridges | Playnite/GameVault importers |
 | 26b | Store ownership sync | Per-user Epic/GOG/Amazon/Steam ownership lists → personal library marks/matches; **register only — never download/install from stores**; tokens encrypted at rest; admin can disable connectors |

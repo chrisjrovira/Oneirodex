@@ -110,6 +110,7 @@
 | New: RetroArr-class NZBGet + live scan UX | Missing |
 | New: EmulatorJS alternate / real save sync | Missing |
 | New: RomM Playnite/handheld plugins | Missing |
+| Social | Discord webhooks only; see [social.md](social.md) — lite presence next, BYO Stoat/Matrix for chat |
 
 ## Wave 7 bets (from this map)
 
@@ -122,4 +123,4 @@
 
 ## Explicit non-goals (unchanged)
 
-Heroic DRM download queues · Hydra-as-product (bundled torrents/debrid marketplace) · LaunchBox closed frontend · Shipping Cheat Engine · Redistributing copyrighted ROM/cheat databases.
+Heroic DRM download queues · Hydra-as-product (bundled torrents/debrid marketplace) · LaunchBox closed frontend · Shipping Cheat Engine · Redistributing copyrighted ROM/cheat databases · Full Discord clone inside the GameTheca container.
