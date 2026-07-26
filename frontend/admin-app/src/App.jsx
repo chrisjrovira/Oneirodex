@@ -66,13 +66,17 @@ function RoutedAdminPage() {
       return <ScansPage />
     case 'users':
       return (
-        <HubPage title="Users & access" lede="Accounts, invites, and whitelist." links={HUB_LINKS.users} />
+        <HubPage
+          title="Users & access"
+          lede="Accounts (classic editor below when present), invites, and whitelist. List API: GET /admin/api/users."
+          links={HUB_LINKS.users}
+        />
       )
     case 'integrations':
       return (
         <HubPage
           title="Integrations"
-          lede="SMTP, IGDB, Discord, and related connectors."
+          lede="SMTP, IGDB, Discord, community chat, and related connectors."
           links={HUB_LINKS.integrations}
         />
       )

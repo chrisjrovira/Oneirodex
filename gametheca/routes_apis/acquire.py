@@ -34,7 +34,7 @@ def acquire_status():
         'debrid_enabled': debrid_enabled(),
         'debrid': debrid_status(),
         'can_send': is_librarian(current_user),
-        'clients': ['qbittorrent', 'transmission', 'sabnzbd'],
+        'clients': ['qbittorrent', 'transmission', 'sabnzbd', 'nzbget'],
         'message': (
             'BYO acquisition ready (indexers/debrid configured by admin).'
             if _acquire_allowed()
@@ -78,7 +78,7 @@ def acquire_download():
     if not url:
         return jsonify({'error': 'url or magnet required'}), 400
     try:
-        if provider in ('qbittorrent', 'transmission', 'sabnzbd', 'deluge'):
+        if provider in ('qbittorrent', 'transmission', 'sabnzbd', 'nzbget', 'deluge'):
             if not arr_module_on():
                 return jsonify({'error': 'Arr module disabled'}), 403
             result = send_to_download_client(url, provider=provider)

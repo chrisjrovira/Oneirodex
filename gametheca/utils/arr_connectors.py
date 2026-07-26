@@ -56,6 +56,9 @@ def get_arr_config() -> dict[str, Any]:
         'deluge_password': cfg.get('deluge_password') or current_app.config.get('DELUGE_PASSWORD') or '',
         'sabnzbd_url': (cfg.get('sabnzbd_url') or current_app.config.get('SABNZBD_URL') or '').rstrip('/'),
         'sabnzbd_api_key': cfg.get('sabnzbd_api_key') or current_app.config.get('SABNZBD_API_KEY') or '',
+        'nzbget_url': (cfg.get('nzbget_url') or current_app.config.get('NZBGET_URL') or '').rstrip('/'),
+        'nzbget_username': cfg.get('nzbget_username') or current_app.config.get('NZBGET_USERNAME') or '',
+        'nzbget_password': cfg.get('nzbget_password') or current_app.config.get('NZBGET_PASSWORD') or '',
     }
 
 
@@ -72,6 +75,7 @@ def save_arr_config(payload: dict[str, Any]) -> dict[str, Any]:
         'transmission_url', 'transmission_username', 'transmission_password',
         'deluge_url', 'deluge_password',
         'sabnzbd_url', 'sabnzbd_api_key',
+        'nzbget_url', 'nzbget_username', 'nzbget_password',
     ):
         if key in payload and payload[key] is not None:
             current[key] = str(payload[key]).strip()
@@ -85,6 +89,7 @@ def save_arr_config(payload: dict[str, Any]) -> dict[str, Any]:
         'transmission_password': '***' if current.get('transmission_password') else '',
         'deluge_password': '***' if current.get('deluge_password') else '',
         'sabnzbd_api_key': '***' if current.get('sabnzbd_api_key') else '',
+        'nzbget_password': '***' if current.get('nzbget_password') else '',
     }
 
 
@@ -120,6 +125,11 @@ def connector_status() -> list[dict[str, Any]]:
             'id': 'sabnzbd',
             'configured': bool(cfg['sabnzbd_url'] and cfg['sabnzbd_api_key']),
             'url': cfg['sabnzbd_url'] or None,
+        },
+        {
+            'id': 'nzbget',
+            'configured': bool(cfg['nzbget_url']),
+            'url': cfg['nzbget_url'] or None,
         },
     ]
 
@@ -274,6 +284,47 @@ def sabnzbd_add_url(nzb_url: str) -> dict[str, Any]:
     return {'status': 'queued', 'provider': 'sabnzbd', 'download_url': nzb_url}
 
 
+def nzbget_add_url(nzb_url: str) -> dict[str, Any]:
+    """Queue an NZB/URL via NZBGet JSON-RPC ``append``."""
+    cfg = get_arr_config()
+    if not cfg['nzbget_url']:
+        raise RuntimeError('NZBGet URL is not configured')
+    if not nzb_url:
+        raise ValueError('nzb_url is required')
+    auth = None
+    if cfg.get('nzbget_username'):
+        auth = (cfg['nzbget_username'], cfg.get('nzbget_password') or '')
+    # NZBGet JSON-RPC: append(NZBFilename, NZBContent, Category, Priority, AddToTop, AddPaused, DupeKey, DupeScore, DupeMode)
+    # When NZBContent is a URL, NZBGet fetches it.
+    payload = {
+        'method': 'append',
+        'params': [
+            '',  # NZBFilename (auto from URL)
+            nzb_url,
+            '',  # Category
+            0,  # Priority
+            False,  # AddToTop
+            False,  # AddPaused
+            '',  # DupeKey
+            0,  # DupeScore
+            'SCORE',  # DupeMode
+        ],
+        'id': 1,
+    }
+    resp = requests.post(
+        urljoin(cfg['nzbget_url'] + '/', 'jsonrpc'),
+        json=payload,
+        auth=auth,
+        timeout=DEFAULT_TIMEOUT,
+    )
+    if resp.status_code >= 400:
+        raise RuntimeError(f'NZBGet add failed ({resp.status_code})')
+    body = resp.json() if resp.content else {}
+    if isinstance(body, dict) and body.get('error'):
+        raise RuntimeError(f"NZBGet error: {body.get('error')}")
+    return {'status': 'queued', 'provider': 'nzbget', 'download_url': nzb_url, 'result': body.get('result')}
+
+
 def send_to_download_client(download_url: str, *, provider: str = 'qbittorrent') -> dict[str, Any]:
     provider = (provider or 'qbittorrent').lower()
     if provider == 'qbittorrent':
@@ -282,6 +333,8 @@ def send_to_download_client(download_url: str, *, provider: str = 'qbittorrent')
         return transmission_add_url(download_url)
     if provider == 'sabnzbd':
         return sabnzbd_add_url(download_url)
+    if provider == 'nzbget':
+        return nzbget_add_url(download_url)
     if provider == 'deluge':
         # Deluge JSON-RPC varies by plugin; queue via Transmission-compatible path when unset.
         raise RuntimeError('Deluge send requires WebUI JSON plugin — configure Transmission or qBittorrent for now')

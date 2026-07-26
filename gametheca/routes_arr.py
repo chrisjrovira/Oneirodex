@@ -101,6 +101,14 @@ def arr_config():
             'qbittorrent_url': cfg.get('qbittorrent_url') or '',
             'qbittorrent_username': cfg.get('qbittorrent_username') or 'admin',
             'qbittorrent_password_set': bool(cfg.get('qbittorrent_password')),
+            'transmission_url': cfg.get('transmission_url') or '',
+            'transmission_username': cfg.get('transmission_username') or '',
+            'transmission_password_set': bool(cfg.get('transmission_password')),
+            'sabnzbd_url': cfg.get('sabnzbd_url') or '',
+            'sabnzbd_api_key_set': bool(cfg.get('sabnzbd_api_key')),
+            'nzbget_url': cfg.get('nzbget_url') or '',
+            'nzbget_username': cfg.get('nzbget_username') or '',
+            'nzbget_password_set': bool(cfg.get('nzbget_password')),
         })
     data = request.get_json(silent=True) or {}
     saved = save_arr_config(data)

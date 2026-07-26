@@ -132,6 +132,29 @@ def manage_users():
         themes=themes,
     )
 
+
+@admin2_bp.route('/admin/api/users', methods=['GET'])
+@login_required
+@admin_required
+def list_users_api():
+    users = db.session.execute(select(User).order_by(User.name.asc())).scalars().all()
+    return jsonify({
+        'users': [
+            {
+                'id': u.id,
+                'name': u.name,
+                'email': u.email,
+                'role': u.role,
+                'state': bool(u.state),
+                'is_email_verified': bool(u.is_email_verified),
+                'about': u.about or '',
+                'avatarpath': u.avatarpath or '',
+            }
+            for u in users
+        ]
+    })
+
+
 @admin2_bp.route('/admin/api/user/<int:user_id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
 @admin_required

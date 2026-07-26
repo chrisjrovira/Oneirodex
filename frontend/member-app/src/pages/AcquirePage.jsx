@@ -9,6 +9,28 @@ function csrfToken() {
   )
 }
 
+const CLIENT_BUTTONS = [
+  { id: 'qbittorrent', label: 'qBit' },
+  { id: 'transmission', label: 'Transmission' },
+  { id: 'sabnzbd', label: 'SABnzbd' },
+  { id: 'nzbget', label: 'NZBGet' },
+]
+
+const DEBRID_BUTTONS = [
+  { id: 'real_debrid', label: 'Real-Debrid' },
+  { id: 'alldebrid', label: 'AllDebrid' },
+  { id: 'premiumize', label: 'Premiumize' },
+  { id: 'torbox', label: 'TorBox' },
+]
+
+function formatSize(bytes) {
+  if (typeof bytes !== 'number' || bytes <= 0) return null
+  const gib = bytes / 1024 ** 3
+  if (gib >= 1) return `${gib.toFixed(1)} GiB`
+  const mib = bytes / 1024 ** 2
+  return `${mib.toFixed(0)} MiB`
+}
+
 export function AcquirePage() {
   const [status, setStatus] = useState(null)
   const [query, setQuery] = useState('')
@@ -21,6 +43,8 @@ export function AcquirePage() {
       .then(setStatus)
       .catch((err) => setError(err))
   }, [])
+
+  const clients = new Set(status?.clients || [])
 
   async function onSearch(event) {
     event.preventDefault()
@@ -78,11 +102,13 @@ export function AcquirePage() {
       </div>
       <p className="gt-more-page__lede">
         BYO acquisition via admin-configured indexers / debrid. GameTheca does not host torrents.
+        Results are ranked by score (seeders, repack/quality cues).
       </p>
       {status ? (
         <p>
           Arr: {status.arr_enabled ? 'on' : 'off'} · Debrid: {status.debrid_enabled ? 'on' : 'off'} ·
-          Send: {status.can_send ? 'allowed' : 'librarian only'}
+          Send: {status.can_send ? 'allowed' : 'librarian only'} · Clients:{' '}
+          {(status.clients || []).join(', ') || '—'}
         </p>
       ) : null}
       {error ? <p role="alert">{String(error.message || error)}</p> : null}
@@ -106,28 +132,47 @@ export function AcquirePage() {
             <li key={`${hit.title}-${index}`}>
               <strong>{hit.title}</strong>
               <span>
-                {[hit.indexer, hit.seeders != null ? `${hit.seeders} seeders` : null]
+                {[
+                  hit.score != null ? `score ${hit.score}` : null,
+                  hit.is_repack ? 'repack' : null,
+                  hit.newer_repack ? 'newer repack?' : null,
+                  hit.indexer,
+                  hit.seeders != null ? `${hit.seeders} seeders` : null,
+                  formatSize(hit.size),
+                  hit.protocol,
+                ]
                   .filter(Boolean)
                   .join(' · ')}
               </span>
+              {hit.score_reasons?.length ? (
+                <span className="gt-more-page__lede">{hit.score_reasons.join(', ')}</span>
+              ) : null}
               {status?.can_send ? (
                 <div className="gt-updates__inbox-actions">
-                  <button
-                    type="button"
-                    className="gt-btn"
-                    disabled={busy}
-                    onClick={() => void sendHit(hit, 'qbittorrent')}
-                  >
-                    Send qBit
-                  </button>
-                  <button
-                    type="button"
-                    className="gt-btn"
-                    disabled={busy || !status.debrid_enabled}
-                    onClick={() => void sendHit(hit, 'real_debrid')}
-                  >
-                    Real-Debrid
-                  </button>
+                  {CLIENT_BUTTONS.filter((c) => clients.has(c.id)).map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      className="gt-btn"
+                      disabled={busy}
+                      onClick={() => void sendHit(hit, c.id)}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                  {status.debrid_enabled
+                    ? DEBRID_BUTTONS.map((d) => (
+                        <button
+                          key={d.id}
+                          type="button"
+                          className="gt-btn"
+                          disabled={busy}
+                          onClick={() => void sendHit(hit, d.id)}
+                        >
+                          {d.label}
+                        </button>
+                      ))
+                    : null}
                 </div>
               ) : null}
             </li>

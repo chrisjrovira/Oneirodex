@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "GameTheca API",
-    "version": "2.9.8",
+    "version": "0.2.0",
     "description": "Self-hosted multi-user game library API. Authenticate with session cookies or Authorization: Bearer gt_<prefix>_<secret>."
   },
   "servers": [
@@ -245,6 +245,119 @@
         "summary": "Current user playtime aggregates",
         "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
         "responses": { "200": { "description": "Totals and per-game progress" } }
+      }
+    },
+    "/api/acquire/status": {
+      "get": {
+        "summary": "Acquire module status (arr/debrid/clients)",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "Feature flags and client list" } }
+      }
+    },
+    "/api/acquire/search": {
+      "get": {
+        "summary": "Search BYO indexers (ranked)",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "current", "in": "query", "schema": { "type": "string" }, "description": "Current library title for newer-repack heuristic" }
+        ],
+        "responses": { "200": { "description": "Ranked hits with score / is_repack" } }
+      }
+    },
+    "/api/acquire/download": {
+      "post": {
+        "summary": "Send URL/magnet to download client or debrid (librarian+)",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "Queued" }, "403": { "description": "Forbidden" } }
+      }
+    },
+    "/api/games/{game_uuid}/saves": {
+      "get": {
+        "summary": "List emulator cloud save slots",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Save slots" } }
+      },
+      "post": {
+        "summary": "Upload emulator save slot (multipart file + slot)",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Saved" } }
+      }
+    },
+    "/api/games/{game_uuid}/saves/{slot_name}": {
+      "get": {
+        "summary": "Download emulator save slot",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [
+          { "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "slot_name", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Binary blob" }, "404": { "description": "Missing" } }
+      },
+      "delete": {
+        "summary": "Delete emulator save slot",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [
+          { "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "slot_name", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Deleted" } }
+      }
+    },
+    "/api/games/{game_uuid}/cheats": {
+      "get": {
+        "summary": "List RetroArch .cht files for a game",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Cheat files" } }
+      },
+      "post": {
+        "summary": "Upload .cht cheat file",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [{ "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Stored" } }
+      }
+    },
+    "/api/activity": {
+      "get": {
+        "summary": "Library activity / now playing",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "Activity feed" } }
+      }
+    },
+    "/api/social/status": {
+      "get": {
+        "summary": "Lite social status + BYO community chat link",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "Friends counts and community_chat_url" } }
+      }
+    },
+    "/api/social/friends": {
+      "get": {
+        "summary": "List friendships",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "Friend list" } }
+      },
+      "post": {
+        "summary": "Request friendship by username",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/api/plugins": {
+      "get": {
+        "summary": "Plugin / connector registry",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "Plugins with runtime status" } }
+      }
+    },
+    "/api/export/esde": {
+      "get": {
+        "summary": "ES-DE gamelist.xml export",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": { "200": { "description": "XML" } }
       }
     }
   }

@@ -15,32 +15,32 @@
 | Docker Compose optional-module env | Done |
 | Local-without-Authentik install path | Done |
 
-## Jul 26 status (Waves 4–11)
+## Jul 26 status (Waves 4–13)
 
 | Area | Status |
 |---|---|
 | Member SPA top nav + glass Style B+C | Shipped |
 | App version `0.2.0`; accent `#2fd67b`; `GENERATOR_VERSION` **6** | Shipped |
 | Systems hub `/systems` + platform skins | Shipped |
-| React admin SPA hybrid (top nav + Jinja forms) | Foundations |
+| React admin SPA hybrid (top nav + Jinja forms) | Foundations · users list API added |
 | Game details SPA + companion Install | Shipped |
-| Updates apply + Wave 7–11 foundations | Foundations (see review) |
-| Competitive catalog | **77** products (incl. RetroArr / RomM clients / Hydra Classics) |
+| Waves 7–11 foundations | Foundations |
+| **Wave 12** WebRetro save/cheat bridge · NZBGet · Acquire UX · OpenAPI slice | Shipped |
+| **Wave 13** friends API + BYO community chat link · Activity poll | Shipped |
+| Competitive catalog | **77** products |
 | Unraid smoke | Operator — [unraid-deploy.md](../runbooks/unraid-deploy.md) |
 
-Program canvas: Cursor `canvases/gametheca-program.canvas.tsx` (full-app review board).
+Program canvas: Cursor `canvases/gametheca-program.canvas.tsx`.
 
-## Full-app review (Jul 26)
+## Full-app review (Jul 26) — follow-ups closed in Waves 12–13
 
-**Fixed:** ASGI ROM ACL · playtime start ACL · trailers ACL · activity viewer filter · health/share ACL · `/play_game` → WebRetro · Ruffle null without assets · honest cloud-save labeling.
+**Closed:** WebRetro IndexedDB ↔ `cloud-state`/`cloud-sram` · cheat FS write via postMessage · NZBGet + Transmission/SABnzbd in Acquire UI · OpenAPI Wave 12/13 paths · plugin runtime status · EmulatorJS eval doc · friends + community_chat_url.
 
-**Still open / thin:** real WebRetro IndexedDB save sync · in-browser cheat apply · OpenAPI regen · admin SPA bodies · Acquire UX depth · NZBGet · EmulatorJS eval · RomM-style companion plugins · Badge filter chips · SSE in member UI.
-
-**Suggested Wave 12:** saves/cheats bridge · Acquire depth · admin bodies + OpenAPI · RetroArr-class live scan / NZBGet.
+**Still thin:** full admin SPA body migration · SSE in member UI · Badge filter chips · companion cheat FS write (fetch helper only) · EmulatorJS not adopted.
 
 ## Flags (see `.env.example`)
 
-`ENABLE_ARR_MODULE`, `ENABLE_DEBRID`, `ENABLE_GAME_ASSISTS`, `ENABLE_MOD_TRACKING`, `ENABLE_ACTIVITY_FEED`, `ENABLE_PCDOS_BROWSER`, `ENABLE_RUFFLE`, `ENABLE_VR_BROWSE`, `OIDC_ENABLED`, …
+`ENABLE_ARR_MODULE`, `ENABLE_DEBRID`, `ENABLE_GAME_ASSISTS`, `ENABLE_MOD_TRACKING`, `ENABLE_ACTIVITY_FEED`, `ENABLE_PCDOS_BROWSER`, `ENABLE_RUFFLE`, `ENABLE_VR_BROWSE`, `OIDC_ENABLED`, `NZBGET_*`, …
 
 ## Still operator-owned
 

@@ -51,6 +51,11 @@
                 </button>
             </li>
             <li class="integrations-nav-item nav-item" role="presentation">
+                <button class="integrations-nav-link nav-link" id="community-tab" data-bs-toggle="tab" data-bs-target="#community" type="button" role="tab" aria-controls="community" aria-selected="false">
+                    {{ icons.icon('users') }} Community chat
+                </button>
+            </li>
+            <li class="integrations-nav-item nav-item" role="presentation">
                 <button class="integrations-nav-link nav-link" id="artwork-tab" data-bs-toggle="tab" data-bs-target="#artwork" type="button" role="tab" aria-controls="artwork" aria-selected="false">
                     {{ icons.icon('image') }} Artwork
                 </button>
@@ -104,6 +109,14 @@
                         <!-- Notification Settings Section -->
                         {% include 'partials/integrations/discord_notifications.html' %}
                     </div>
+                </div>
+            </div>
+
+            <!-- Community chat (BYO Stoat/Matrix) -->
+            <div class="integrations-tab-pane tab-pane fade" id="community" role="tabpanel" aria-labelledby="community-tab">
+                <div class="tab-content-wrapper">
+                    <h4>{{ icons.icon('users', size=20) }} Community chat link</h4>
+                    {% include 'partials/integrations/community_form.html' %}
                 </div>
             </div>
 

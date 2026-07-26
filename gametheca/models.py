@@ -762,6 +762,9 @@ class GlobalSettings(db.Model):
     enable_ai_assist = db.Column(db.Boolean, default=False)
     ollama_base_url = db.Column(db.String(512), nullable=True)
     ollama_model = db.Column(db.String(120), nullable=True)
+    # BYO community chat (Stoat / Matrix / Discord invite) — deep-link only
+    community_chat_url = db.Column(db.String(512), nullable=True)
+    community_chat_label = db.Column(db.String(120), nullable=True)
 
     def __repr__(self):
         return f'<GlobalSettings id={self.id}, last_updated={self.last_updated}>'
@@ -845,6 +848,43 @@ class PlaySession(db.Model):
             'duration_seconds': self.duration_seconds,
             'client': self.client,
             'status': self.status,
+        }
+
+
+class UserFriendship(db.Model):
+    """Lite social graph — pending / accepted friendships (Wave 13)."""
+
+    __tablename__ = 'user_friendships'
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'friend_user_id', name='uq_user_friendship'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    friend_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    status = db.Column(db.String(16), default='pending', nullable=False)  # pending | accepted
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('friendships_sent', lazy='dynamic'))
+    friend = db.relationship(
+        'User',
+        foreign_keys=[friend_user_id],
+        backref=db.backref('friendships_received', lazy='dynamic'),
+    )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'friend_user_id': self.friend_user_id,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
         }
 
 

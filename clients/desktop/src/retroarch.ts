@@ -1,5 +1,5 @@
 /**
- * Native RetroArch companion launch profiles (Wave 8).
+ * Native RetroArch companion launch profiles (Wave 8–12).
  * Heavy systems (GC/Wii/PS2) stay native-only via RetroArch CLI.
  */
 
@@ -13,6 +13,11 @@ export interface RetroArchProfile {
   romPath: string
   retroarchPath?: string
   extraArgs?: string[]
+  /** Optional GameTheca game UUID — used when staging cheats before launch */
+  gameUuid?: string
+  cheatsDir?: string
+  cheatFilename?: string
+  apiBase?: string
 }
 
 export function buildRetroArchArgs(profile: RetroArchProfile): string[] {
@@ -23,9 +28,40 @@ export function buildRetroArchArgs(profile: RetroArchProfile): string[] {
   return args
 }
 
+/**
+ * Fetch a library .cht for companion staging (Wave 12).
+ * Returns cheat text; callers write into RetroArch's cheats dir via host FS.
+ */
+export async function fetchCheatText(opts: {
+  gameUuid: string
+  filename: string
+  apiBase?: string
+}): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
+  const base = (opts.apiBase || '').replace(/\/$/, '')
+  const url = `${base}/api/games/${encodeURIComponent(opts.gameUuid)}/cheats/${encodeURIComponent(opts.filename)}`
+  try {
+    const response = await fetch(url, { credentials: 'include' })
+    if (!response.ok) {
+      return { ok: false, error: `cheat download ${response.status}` }
+    }
+    const text = await response.text()
+    return { ok: true, text }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+  }
+}
+
 export async function launchRetroArchProfile(profile: RetroArchProfile): Promise<{ ok: true }> {
   if (!isTauriRuntime()) {
     throw new Error('RetroArch launch requires the desktop companion')
+  }
+  if (profile.gameUuid && profile.cheatFilename) {
+    // Best-effort: fetch so callers / future FS hooks can stage the file.
+    await fetchCheatText({
+      gameUuid: profile.gameUuid,
+      filename: profile.cheatFilename,
+      apiBase: profile.apiBase,
+    })
   }
   const exe = profile.retroarchPath || 'retroarch'
   await invoke('launch_game', {

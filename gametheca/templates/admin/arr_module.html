@@ -7,7 +7,8 @@
         <div>
             <h1 class="gt-adminpage-title">{{ icons.icon('magnet', size=26) }} Arr module</h1>
             <p class="gt-adminpage-lede">
-                Optional indexer search (Prowlarr/Jackett) and qBittorrent add-url.
+                Optional indexer search (Prowlarr/Jackett) and download clients
+                (qBittorrent, Transmission, SABnzbd, NZBGet).
                 Feature-flagged — never downloads DRM store titles.
             </p>
         </div>
@@ -63,6 +64,38 @@
             <div class="col-md-3">
                 <label class="form-label">qBit password</label>
                 <input id="qbittorrent_password" class="form-control" type="password" placeholder="leave blank to keep">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Transmission URL</label>
+                <input id="transmission_url" class="form-control" placeholder="http://localhost:9091">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Transmission user</label>
+                <input id="transmission_username" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Transmission password</label>
+                <input id="transmission_password" class="form-control" type="password" placeholder="leave blank to keep">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">SABnzbd URL</label>
+                <input id="sabnzbd_url" class="form-control" placeholder="http://localhost:8080">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">SABnzbd API key</label>
+                <input id="sabnzbd_api_key" class="form-control" type="password" placeholder="leave blank to keep">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">NZBGet URL</label>
+                <input id="nzbget_url" class="form-control" placeholder="http://localhost:6789">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">NZBGet user</label>
+                <input id="nzbget_username" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">NZBGet password</label>
+                <input id="nzbget_password" class="form-control" type="password" placeholder="leave blank to keep">
             </div>
         </div>
         <button id="arr-save" class="btn btn-primary">Save config</button>
@@ -145,6 +178,11 @@
     document.getElementById('jackett_url').value = data.jackett_url || '';
     document.getElementById('qbittorrent_url').value = data.qbittorrent_url || '';
     document.getElementById('qbittorrent_username').value = data.qbittorrent_username || 'admin';
+    document.getElementById('transmission_url').value = data.transmission_url || '';
+    document.getElementById('transmission_username').value = data.transmission_username || '';
+    document.getElementById('sabnzbd_url').value = data.sabnzbd_url || '';
+    document.getElementById('nzbget_url').value = data.nzbget_url || '';
+    document.getElementById('nzbget_username').value = data.nzbget_username || '';
   }
 
   document.getElementById('arr-save')?.addEventListener('click', async () => {
@@ -153,13 +191,24 @@
       jackett_url: document.getElementById('jackett_url').value,
       qbittorrent_url: document.getElementById('qbittorrent_url').value,
       qbittorrent_username: document.getElementById('qbittorrent_username').value,
+      transmission_url: document.getElementById('transmission_url').value,
+      transmission_username: document.getElementById('transmission_username').value,
+      sabnzbd_url: document.getElementById('sabnzbd_url').value,
+      nzbget_url: document.getElementById('nzbget_url').value,
+      nzbget_username: document.getElementById('nzbget_username').value,
     };
     const prowKey = document.getElementById('prowlarr_api_key').value;
     const jackKey = document.getElementById('jackett_api_key').value;
     const qbitPass = document.getElementById('qbittorrent_password').value;
+    const txPass = document.getElementById('transmission_password').value;
+    const sabKey = document.getElementById('sabnzbd_api_key').value;
+    const nzbPass = document.getElementById('nzbget_password').value;
     if (prowKey) body.prowlarr_api_key = prowKey;
     if (jackKey) body.jackett_api_key = jackKey;
     if (qbitPass) body.qbittorrent_password = qbitPass;
+    if (txPass) body.transmission_password = txPass;
+    if (sabKey) body.sabnzbd_api_key = sabKey;
+    if (nzbPass) body.nzbget_password = nzbPass;
     const res = await fetch('/api/arr/config', { method: 'PUT', headers, body: JSON.stringify(body) });
     alert(res.ok ? 'Saved' : 'Save failed');
     refreshStatus();

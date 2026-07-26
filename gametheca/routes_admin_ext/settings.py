@@ -385,6 +385,11 @@ def integrations():
             settings=settings_record,
             current_settings=current_settings,
             steamgriddb_status=steamgriddb_status,
+            community_chat_url=(settings_record.community_chat_url if settings_record else '') or '',
+            community_chat_label=(settings_record.community_chat_label if settings_record else '') or 'Open community',
+            webhook_url=(settings_record.discord_webhook_url if settings_record and settings_record.discord_webhook_url else ''),
+            bot_name=(settings_record.discord_bot_name if settings_record and settings_record.discord_bot_name else 'GameTheca Bot'),
+            bot_avatar_url=(settings_record.discord_bot_avatar_url if settings_record and settings_record.discord_bot_avatar_url else ''),
         )
     except Exception as e:
         logging.error(f"Error retrieving integrations: {str(e)}")

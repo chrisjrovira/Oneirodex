@@ -73,6 +73,38 @@ def discord_settings():
                          bot_avatar_url=bot_avatar_url,
                          settings=settings)
 
+
+@admin2_bp.route('/admin/community_chat_settings', methods=['POST'])
+@login_required
+@admin_required
+def community_chat_settings():
+    """Persist BYO Stoat/Matrix/Discord invite deep-link (no chat protocol)."""
+    settings = db.session.execute(select(GlobalSettings)).scalars().first()
+    if not settings:
+        settings = GlobalSettings()
+        db.session.add(settings)
+    url = (request.form.get('community_chat_url') or '').strip()
+    label = (request.form.get('community_chat_label') or '').strip() or 'Open community'
+    if url and not (url.startswith('http://') or url.startswith('https://')):
+        flash('Community chat URL must start with http:// or https://', 'error')
+        return redirect(url_for('admin2.integrations') + '#community')
+    if len(url) > 512:
+        flash('Community chat URL is too long', 'error')
+        return redirect(url_for('admin2.integrations') + '#community')
+    if len(label) > 120:
+        flash('Label is too long', 'error')
+        return redirect(url_for('admin2.integrations') + '#community')
+    settings.community_chat_url = url or None
+    settings.community_chat_label = label if url else None
+    try:
+        db.session.commit()
+        flash('Community chat link updated.', 'success')
+    except Exception as exc:
+        db.session.rollback()
+        flash(f'Error saving community chat: {exc}', 'error')
+    return redirect(url_for('admin2.integrations') + '#community')
+
+
 @admin2_bp.route('/admin/test_discord_webhook', methods=['POST'])
 @login_required
 @admin_required

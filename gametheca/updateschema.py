@@ -531,6 +531,12 @@ class DatabaseManager:
         ALTER TABLE global_settings
         ADD COLUMN IF NOT EXISTS ollama_model VARCHAR(120);
 
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS community_chat_url VARCHAR(512);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS community_chat_label VARCHAR(120);
+
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS locale VARCHAR(10) DEFAULT 'en';
 
@@ -555,6 +561,18 @@ class DatabaseManager:
         ADD COLUMN IF NOT EXISTS encrypted BOOLEAN DEFAULT FALSE;
         CREATE INDEX IF NOT EXISTS ix_emulator_saves_user_id ON emulator_saves(user_id);
         CREATE INDEX IF NOT EXISTS ix_emulator_saves_game_uuid ON emulator_saves(game_uuid);
+
+        CREATE TABLE IF NOT EXISTS user_friendships (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            friend_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            status VARCHAR(16) NOT NULL DEFAULT 'pending',
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT uq_user_friendship UNIQUE (user_id, friend_user_id)
+        );
+        CREATE INDEX IF NOT EXISTS ix_user_friendships_user_id ON user_friendships(user_id);
+        CREATE INDEX IF NOT EXISTS ix_user_friendships_friend_user_id ON user_friendships(friend_user_id);
 
         CREATE TABLE IF NOT EXISTS store_accounts (
             id SERIAL PRIMARY KEY,
