@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
 {% import 'partials/icons.html' as icons %}
 
@@ -16,8 +16,17 @@
 
     <nav class="settings-shell-cards" aria-label="Settings sections">
         {% for key, section in sections.items() %}
+        {% set status = module_status.get(key) if module_status is defined and module_status else none %}
         <a href="{{ url_for(section.endpoint) }}" class="settings-shell-card" data-section="{{ key }}">
-            <span class="settings-shell-card-icon">{{ icons.icon(section.icon, size=28) }}</span>
+            <span class="settings-shell-card-top">
+                <span class="settings-shell-card-icon">{{ icons.icon(section.icon, size=28) }}</span>
+                {% if status %}
+                <span class="settings-shell-badge {% if status.on %}settings-shell-badge--on{% else %}settings-shell-badge--off{% endif %}"
+                      title="{% if status.detail %}{{ status.detail }}{% endif %}">
+                    {{ status.label }}{% if status.detail %} · {{ status.detail }}{% endif %}
+                </span>
+                {% endif %}
+            </span>
             <h2>{{ section.label }}</h2>
             <p>{{ section.description }}</p>
             <span class="settings-shell-card-go">Open{{ icons.icon('arrow-right', size=16) }}</span>

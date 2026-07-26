@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 
 <div class="container">
     <div class="glass-panel">
@@ -25,14 +26,14 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="mb-0">Attract Mode Configuration</h3>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Save Settings
+                        {{ icons.icon('save') }} Save Settings
                     </button>
                 </div>
 
                 <!-- Enable/Disable Section -->
                 <div class="settings-section mb-4">
                     <h5 class="section-header">
-                        <i class="fas fa-toggle-on"></i> General Settings
+                        {{ icons.icon('cogs', size=18) }} General Settings
                     </h5>
 
                     <div class="form-check mb-3">
@@ -46,7 +47,7 @@
                     <div class="form-group">
                         <label for="idleTimeout" class="form-label d-flex align-items-center justify-content-between">
                             <span data-toggle="tooltip" title="Time in seconds before attract mode activates ({{ min_timeout }}-{{ max_timeout }} seconds)">
-                                <i class="fas fa-clock"></i> Idle Timeout
+                                {{ icons.icon('clock') }} Idle Timeout
                             </span>
                             <span class="badge bg-primary" id="timeoutDisplay">{{ settings.idle_timeout or 60 }} seconds</span>
                         </label>
@@ -63,7 +64,7 @@
                 <!-- Filter Settings Section -->
                 <div class="settings-section mb-4">
                     <h5 class="section-header">
-                        <i class="fas fa-filter"></i> Trailer Filters
+                        {{ icons.icon('filter', size=18) }} Trailer Filters
                         <small class="text-muted">(Users can override these)</small>
                     </h5>
 
@@ -71,7 +72,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="filterLibrary" class="form-label" data-toggle="tooltip"
                                 title="Filter trailers by library">
-                                <i class="fas fa-book"></i> Library
+                                {{ icons.icon('book') }} Library
                             </label>
                             <select class="form-select" id="filterLibrary">
                                 <option value="">All Libraries</option>
@@ -84,7 +85,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="filterGenres" class="form-label" data-toggle="tooltip"
                                 title="Filter trailers by genres (select multiple)">
-                                <i class="fas fa-th-large"></i> Genres
+                                {{ icons.icon('layout') }} Genres
                             </label>
                             <select class="form-select" id="filterGenres" multiple size="5">
                                 {% for genre in filter_options.genres %}
@@ -97,7 +98,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="filterThemes" class="form-label" data-toggle="tooltip"
                                 title="Filter trailers by themes (select multiple)">
-                                <i class="fas fa-palette"></i> Themes
+                                {{ icons.icon('palette') }} Themes
                             </label>
                             <select class="form-select" id="filterThemes" multiple size="5">
                                 {% for theme in filter_options.themes %}
@@ -110,7 +111,7 @@
                         <div class="col-md-3 mb-3">
                             <label for="filterDateFrom" class="form-label" data-toggle="tooltip"
                                 title="Only show trailers from this year onwards">
-                                <i class="fas fa-calendar-alt"></i> From Year
+                                {{ icons.icon('calendar') }} From Year
                             </label>
                             <input type="number" class="form-control" id="filterDateFrom"
                                    placeholder="e.g., 2000"
@@ -121,7 +122,7 @@
                         <div class="col-md-3 mb-3">
                             <label for="filterDateTo" class="form-label" data-toggle="tooltip"
                                 title="Only show trailers up to this year">
-                                <i class="fas fa-calendar-check"></i> To Year
+                                {{ icons.icon('calendar') }} To Year
                             </label>
                             <input type="number" class="form-control" id="filterDateTo"
                                    placeholder="e.g., 2024"
@@ -134,7 +135,7 @@
                 <!-- Auto-Play Settings Section -->
                 <div class="settings-section mb-4">
                     <h5 class="section-header">
-                        <i class="fas fa-play-circle"></i> Auto-Play Settings
+                        {{ icons.icon('play') }} Auto-Play Settings
                         <small class="text-muted">(Users can override these)</small>
                     </h5>
 
@@ -150,7 +151,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="skipFirst" class="form-label" data-toggle="tooltip"
                                 title="Skip the first N seconds of each trailer (0-300 seconds)">
-                                <i class="fas fa-forward"></i> Skip First (seconds)
+                                {{ icons.icon('arrow-right') }} Skip First (seconds)
                             </label>
                             <input type="number" class="form-control" id="skipFirst"
                                    value="0" min="0" max="300" step="5">
@@ -160,7 +161,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="skipAfter" class="form-label" data-toggle="tooltip"
                                 title="Skip to next trailer after N seconds (0 = disabled, max 600)">
-                                <i class="fas fa-step-forward"></i> Skip After (seconds)
+                                {{ icons.icon('arrow-right') }} Skip After (seconds)
                             </label>
                             <input type="number" class="form-control" id="skipAfter"
                                    value="0" min="0" max="600" step="10">
@@ -172,7 +173,7 @@
                 <!-- Preview Section -->
                 <div class="settings-section mb-4">
                     <h5 class="section-header">
-                        <i class="fas fa-eye"></i> Configuration Preview
+                        {{ icons.icon('eye') }} Configuration Preview
                     </h5>
                     <div class="alert alert-info">
                         <div id="previewText">
@@ -188,7 +189,7 @@
 
                 <div class="d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-save"></i> Save Attract Mode Settings
+                        {{ icons.icon('save') }} Save Attract Mode Settings
                     </button>
                 </div>
             </form>
@@ -197,8 +198,8 @@
 </div>
 
 <!-- Include the attract mode admin JavaScript -->
-<link rel="stylesheet" href="{{ url_for('static', filename='library/themes/' + current_theme + '/css/admin_attract_mode.css') }}">
-<script src="{{ url_for('static', filename='library/themes/' + current_theme + '/js/admin_attract_mode.js') }}"></script>
+<link rel="stylesheet" href="{{ 'css/admin_attract_mode.css'|theme_asset }}">
+<script src="{{ 'js/admin_attract_mode.js'|theme_asset }}"></script>
 
 <!-- Pass settings data to JavaScript -->
 <script>

@@ -24,7 +24,7 @@ import shutil
 from datetime import date
 
 # Bump when the generator's output format changes so existing presets rebuild.
-GENERATOR_VERSION = 2
+GENERATOR_VERSION = 3
 
 # Key written into each generated theme.json; also our ownership proof.
 PRESET_MARKER_KEY = 'gametheca_preset'

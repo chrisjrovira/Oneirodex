@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 {% block head %}
     <!-- Add DataTables CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
@@ -59,14 +60,14 @@
                     <td>
                         {% if user.id != 1 %}
                             <button class="btn btn-sm btn-primary edit-user" data-user-id="{{ user.id }}">
-                                <i class="fas fa-edit"></i> Edit
+                                {{ icons.icon('edit') }} Edit
                             </button>
                             <button class="btn btn-sm btn-danger delete-user" data-user-id="{{ user.id }}">
-                                <i class="fas fa-trash"></i> Delete
+                                {{ icons.icon('trash') }} Delete
                             </button>
                         {% else %}
                             <button class="btn btn-sm btn-primary edit-user" data-user-id="{{ user.id }}">
-                                <i class="fas fa-edit"></i> Edit
+                                {{ icons.icon('edit') }} Edit
                             </button>
                         {% endif %}
                     </td>
@@ -218,6 +219,6 @@
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
 
 <script src="{{ 'js/admin_manage_users.js'|theme_asset }}"></script>
-<script src="{{ url_for('static', filename='library/themes/default/js/admin/users_table.js') }}"></script>
+<script src="{{ 'js/admin/users_table.js'|theme_asset }}"></script>
 
 {% endblock %}

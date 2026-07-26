@@ -1,17 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Mirrors icons.html's 'eye' and 'eye-slash' glyphs — this is a static asset
+    // so it can't call the Jinja macro, hence the SVG markup is duplicated here.
+    const EYE_SVG = '<svg class="gt-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+    const EYE_SLASH_SVG = '<svg class="gt-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 12s3.5-7 10-7c1.9 0 3.5.5 4.8 1.2M22 12s-1.3 2.6-3.8 4.4M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg>';
+
     // Function to toggle password visibility
-    function togglePasswordVisibility(inputId, iconId) {
+    function togglePasswordVisibility(inputId, iconEl) {
         const passwordInput = document.getElementById(inputId);
-        const eyeIcon = document.getElementById(iconId);
-        
+
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
-            eyeIcon.classList.remove('fa-eye');
-            eyeIcon.classList.add('fa-eye-slash');
+            iconEl.innerHTML = EYE_SLASH_SVG;
         } else {
             passwordInput.type = 'password';
-            eyeIcon.classList.remove('fa-eye-slash');
-            eyeIcon.classList.add('fa-eye');
+            iconEl.innerHTML = EYE_SVG;
         }
     }
 
@@ -20,8 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function(event) {
             event.preventDefault();
             const inputId = this.getAttribute('data-input');
-            const iconId = this.querySelector('i').id;
-            togglePasswordVisibility(inputId, iconId);
+            const iconEl = this.querySelector('.toggle-password-icon');
+            togglePasswordVisibility(inputId, iconEl);
         });
     });
 

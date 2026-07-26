@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 
 <!-- Include the custom CSS file -->
 <link rel="stylesheet" href="{{ 'css/admin/admin_system_logs.css'|theme_asset }}">
@@ -19,7 +20,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2>System Logs</h2>
             <button type="button" class="btn btn-danger" id="clearLogsBtn">
-                <i class="fas fa-trash"></i> Clear All Logs
+                {{ icons.icon('trash') }} Clear All Logs
             </button>
         </div>
         <div class="table-responsive">
@@ -80,7 +81,7 @@
 {% block scripts %}
     <!-- Add DataTables JavaScript -->
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
-    <script src="{{ url_for('static', filename='library/themes/default/js/admin_system_logs.js') }}"></script>
+    <script src="{{ 'js/admin_system_logs.js'|theme_asset }}"></script>
 {% endblock %}
 
 <!-- Clear Logs Warning Modal -->

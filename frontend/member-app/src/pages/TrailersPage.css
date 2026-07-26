@@ -8,7 +8,7 @@
 }
 
 .gt-trailers__title-link:hover {
-  color: var(--gt-accent, #ff5a36);
+  color: var(--gt-accent);
 }
 
 .gt-trailers__actions {
@@ -34,8 +34,8 @@
 .gt-trailers__filter-toggle:hover,
 .gt-trailers__filter-actions button:hover,
 .gt-trailers__modal-actions button:hover {
-  border-color: var(--gt-accent, #ff5a36);
-  color: var(--gt-accent, #ff5a36);
+  border-color: var(--gt-accent);
+  color: var(--gt-accent);
 }
 
 .gt-trailers__filters {
@@ -96,7 +96,7 @@
 
 .gt-trailers__filter-error {
   grid-column: 1 / -1;
-  color: var(--gt-accent, #ff5a36);
+  color: var(--gt-accent);
 }
 
 .gt-trailers__filter-actions,
@@ -124,7 +124,7 @@
 }
 
 .gt-trailers__empty a {
-  color: var(--gt-accent, #ff5a36);
+  color: var(--gt-accent);
 }
 
 .gt-trailers__modal-overlay {

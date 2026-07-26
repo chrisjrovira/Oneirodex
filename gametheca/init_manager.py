@@ -22,6 +22,28 @@ from gametheca.utils.preset_themes import (
 PACKAGE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
+def _safe_print(*args, **kwargs):
+    """Print without raising on Windows cp1252 consoles."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        import sys
+        encoding = getattr(sys.stdout, 'encoding', None) or 'ascii'
+        cleaned = []
+        for arg in args:
+            if isinstance(arg, str):
+                cleaned.append(
+                    arg.encode(encoding, errors='replace').decode(
+                        encoding, errors='replace'
+                    )
+                )
+            else:
+                cleaned.append(arg)
+        print(*cleaned, **kwargs)
+
+
+
+
 class InitializationManager:
     """Central coordinator for all GameTheca initialization tasks."""
 
@@ -35,7 +57,7 @@ class InitializationManager:
         Returns True on success, False on failure.
         """
         try:
-            print("🚀 Starting GameTheca initialization...")
+            _safe_print("[..] Starting GameTheca initialization...")
 
             # Phase 1: Environment setup (load once)
             if not self._phase1_environment():
@@ -58,11 +80,11 @@ class InitializationManager:
                 return False
 
             self._initialization_complete = True
-            print("✅ GameTheca initialization completed successfully")
+            _safe_print("[OK] GameTheca initialization completed successfully")
             return True
 
         except Exception as e:
-            print(f"❌ Initialization failed: {e}")
+            _safe_print(f"[ERR] Initialization failed: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -70,7 +92,7 @@ class InitializationManager:
     def _phase1_environment(self):
         """Load environment variables exactly once."""
         if self._environment_loaded:
-            print("🔧 Environment variables already loaded")
+            _safe_print("Environment variables already loaded")
             return True
 
         try:
@@ -88,19 +110,19 @@ class InitializationManager:
                 # Mask password for security
                 masked_url = database_url.split('@')[0].split(':')[0:2]
                 masked_url = ':'.join(masked_url) + ':***@' + database_url.split('@')[1] if '@' in database_url else database_url
-                print("🔧 Environment variables loaded successfully")
-                print(f"📊 DATABASE_URL found: {masked_url}")
+                _safe_print("Environment variables loaded successfully")
+                _safe_print(f"DATABASE_URL found: {masked_url}")
             else:
-                print("⚠️  DATABASE_URL not found in environment - using config fallback")
+                _safe_print("[WARN] DATABASE_URL not found in environment - using config fallback")
 
             return True
         except Exception as e:
-            print(f"❌ Failed to load environment: {e}")
+            _safe_print(f"[ERR] Failed to load environment: {e}")
             return False
 
     def _phase2_database_structure(self):
         """Create database tables and run migrations."""
-        print("🗄️  Phase 2: Database structure setup")
+        _safe_print("Phase 2: Database structure setup")
 
         try:
             # Import config after environment is loaded
@@ -115,13 +137,13 @@ class InitializationManager:
 
                 # Create all tables (idempotent operation)
                 models.db.metadata.create_all(engine)
-                print("✅ Database tables created")
+                _safe_print("[OK] Database tables created")
 
                 # Run schema migrations
                 from gametheca.updateschema import DatabaseManager
                 db_manager = DatabaseManager()
                 db_manager.add_column_if_not_exists()
-                print("✅ Database migrations completed")
+                _safe_print("[OK] Database migrations completed")
 
             finally:
                 engine.dispose()
@@ -129,12 +151,12 @@ class InitializationManager:
             return True
 
         except Exception as e:
-            print(f"❌ Database structure setup failed: {e}")
+            _safe_print(f"[ERR] Database structure setup failed: {e}")
             return False
 
     def _phase3_default_data(self):
         """Initialize all default data in the database."""
-        print("📊 Phase 3: Default data initialization")
+        _safe_print("Phase 3: Default data initialization")
 
         try:
             # Import config to get database URI
@@ -154,24 +176,24 @@ class InitializationManager:
 
                 # Commit all changes
                 session.commit()
-                print("✅ Default data initialization completed")
+                _safe_print("[OK] Default data initialization completed")
                 return True
 
             except Exception as e:
                 session.rollback()
-                print(f"❌ Default data initialization failed: {e}")
+                _safe_print(f"[ERR] Default data initialization failed: {e}")
                 return False
             finally:
                 session.close()
                 engine.dispose()
 
         except Exception as e:
-            print(f"❌ Phase 3 setup failed: {e}")
+            _safe_print(f"[ERR] Phase 3 setup failed: {e}")
             return False
 
     def _phase4_filesystem(self):
         """Setup filesystem folders and theme files."""
-        print("📁 Phase 4: Filesystem setup")
+        _safe_print("Phase 4: Filesystem setup")
 
         try:
             # Import config after environment is loaded
@@ -187,7 +209,7 @@ class InitializationManager:
             try:
                 dev_mode = Config.DEV_MODE
             except AttributeError:
-                print("⚠️  Config.DEV_MODE not found, using environment fallback")
+                _safe_print("[WARN] Config.DEV_MODE not found, using environment fallback")
                 dev_mode = os.getenv('DEV_MODE', 'false').lower() == 'true'
 
             # Handle theme installation
@@ -197,18 +219,18 @@ class InitializationManager:
             for path, name in [(images_path, 'images'), (zips_path, 'zips')]:
                 if not os.path.exists(path):
                     os.makedirs(path, exist_ok=True)
-                    print(f"✅ Created {name} directory")
+                    _safe_print(f"[OK] Created {name} directory")
 
-            print("✅ Filesystem setup completed")
+            _safe_print("[OK] Filesystem setup completed")
             return True
 
         except Exception as e:
-            print(f"❌ Filesystem setup failed: {e}")
+            _safe_print(f"[ERR] Filesystem setup failed: {e}")
             return False
 
     def _phase5_cleanup(self):
         """Cleanup operations and system event logging."""
-        print("🧹 Phase 5: Cleanup and finalization")
+        _safe_print("Phase 5: Cleanup and finalization")
 
         try:
             # Import config to get database URI
@@ -227,19 +249,19 @@ class InitializationManager:
                 self._log_system_event(session)
 
                 session.commit()
-                print("✅ Cleanup and finalization completed")
+                _safe_print("[OK] Cleanup and finalization completed")
                 return True
 
             except Exception as e:
                 session.rollback()
-                print(f"❌ Cleanup failed: {e}")
+                _safe_print(f"[ERR] Cleanup failed: {e}")
                 return False
             finally:
                 session.close()
                 engine.dispose()
 
         except Exception as e:
-            print(f"❌ Phase 5 failed: {e}")
+            _safe_print(f"[ERR] Phase 5 failed: {e}")
             return False
 
     def _init_default_settings(self, session):
@@ -259,9 +281,9 @@ class InitializationManager:
             }
             settings_record = GlobalSettings(settings=default_settings)
             session.add(settings_record)
-            print("✅ Created default global settings")
+            _safe_print("[OK] Created default global settings")
         else:
-            print("ℹ️  Global settings already exist")
+            _safe_print("Global settings already exist")
 
     def _init_scanning_filters(self, session):
         """Initialize default scanning filters."""
@@ -287,9 +309,9 @@ class InitializationManager:
                 added_count += 1
 
         if added_count > 0:
-            print(f"✅ Added {added_count} default scanning filters")
+            _safe_print(f"[OK] Added {added_count} default scanning filters")
         else:
-            print("ℹ️  Scanning filters already exist")
+            _safe_print("Scanning filters already exist")
 
     def _init_allowed_file_types(self, session):
         """Initialize default allowed file types."""
@@ -312,9 +334,9 @@ class InitializationManager:
                 added_count += 1
 
         if added_count > 0:
-            print(f"✅ Added {added_count} default file types")
+            _safe_print(f"[OK] Added {added_count} default file types")
         else:
-            print("ℹ️  File types already exist")
+            _safe_print("File types already exist")
 
     def _init_discovery_sections(self, session):
         """Initialize default discovery sections."""
@@ -344,9 +366,9 @@ class InitializationManager:
                 added_count += 1
 
         if added_count > 0:
-            print(f"✅ Added {added_count} discovery sections")
+            _safe_print(f"[OK] Added {added_count} discovery sections")
         else:
-            print("ℹ️  Discovery sections already exist")
+            _safe_print("Discovery sections already exist")
 
     def _setup_default_theme(self, themes_path, dev_mode):
         """Install/refresh the default theme and the colour presets.
@@ -362,7 +384,7 @@ class InitializationManager:
         default_theme_source = self.default_theme_source()
 
         if not os.path.exists(default_theme_source):
-            print("⚠️  Theme source not found")
+            _safe_print("[WARN] Theme source not found")
             return
 
         try:
@@ -375,25 +397,34 @@ class InitializationManager:
                 shutil.copytree(default_theme_source, default_theme_target, dirs_exist_ok=True)
 
                 if dev_mode:
-                    print("🔄 DEV_MODE: Theme files refreshed")
+                    _safe_print("DEV_MODE: Theme files refreshed")
                 else:
-                    print("✅ Default theme installed")
+                    _safe_print("[OK] Default theme installed")
             else:
                 synced = self._sync_theme_files(default_theme_source, default_theme_target)
                 if synced:
-                    print(f"✅ Default theme updated ({synced} file(s) refreshed)")
+                    _safe_print(f"[OK] Default theme updated ({synced} file(s) refreshed)")
                 else:
-                    print("ℹ️  Default theme already up to date")
+                    _safe_print("Default theme already up to date")
 
             presets = install_preset_themes(themes_path, default_theme_source, force=bool(dev_mode))
             if presets:
-                print(f"✅ Rebuilt {presets} preset theme(s)")
+                _safe_print(f"[OK] Rebuilt {presets} preset theme(s)")
 
             preset_files = sync_preset_themes(themes_path, default_theme_source)
             if preset_files:
-                print(f"✅ Refreshed {preset_files} preset theme file(s)")
+                _safe_print(f"[OK] Refreshed {preset_files} preset theme file(s)")
+
+            tokens_path = os.path.join(default_theme_target, 'css', 'gt-tokens.css')
+            if os.path.isfile(tokens_path):
+                _safe_print(f"[OK] Theme tokens present: {tokens_path}")
+            else:
+                _safe_print(
+                    "[ERR] Missing themes/default/css/gt-tokens.css after sync — "
+                    "UI theming will fall back incorrectly. Use Admin → Reset Default Themes."
+                )
         except Exception as e:
-            print(f"❌ Theme setup failed: {e}")
+            _safe_print(f"[ERR] Theme setup failed: {e}")
 
     @staticmethod
     def default_theme_source():
@@ -427,9 +458,9 @@ class InitializationManager:
                 job.is_enabled = False
                 job.current_processing = None
 
-            print(f"🧹 Cleaned up {len(orphaned_jobs)} orphaned scan jobs")
+            _safe_print(f"Cleaned up {len(orphaned_jobs)} orphaned scan jobs")
         else:
-            print("ℹ️  No orphaned scan jobs found")
+            _safe_print("No orphaned scan jobs found")
 
     def _log_system_event(self, session):
         """Log system startup event."""
@@ -444,9 +475,9 @@ class InitializationManager:
                 audit_user=None
             )
             session.add(event)
-            print("✅ System startup event logged")
+            _safe_print("[OK] System startup event logged")
         except Exception as e:
-            print(f"⚠️  Could not log system event: {e}")
+            _safe_print(f"[WARN] Could not log system event: {e}")
 
 
 # Global instance for easy access

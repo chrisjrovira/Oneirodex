@@ -1,16 +1,41 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <div class="container gt-adminpage gt-adminpage--md gt-adminpage--spaced">
     <div class="gt-adminpage-header">
         <div>
-            <h1 class="gt-adminpage-title"><i class="fas fa-hard-drive"></i> Storage / hardlinks</h1>
+            <h1 class="gt-adminpage-title">{{ icons.icon('storage', size=26) }} Storage / hardlinks</h1>
             <p class="gt-adminpage-lede">
                 Preview same-volume hardlinks. Apply requires <code>ALLOW_HARDLINK_APPLY=true</code>.
                 Docker read-only mounts will fail writability checks.
             </p>
         </div>
     </div>
+
+    {% if not helpers_enabled %}
+    <div class="gt-adminpage-panel">
+        <div class="alert alert-warning mb-0">
+            Hardlink helpers are <strong>off</strong>. Set
+            <code>ENABLE_HARDLINK_HELPERS=true</code> (and restart) before preview or apply will work.
+            Apply also needs <code>ALLOW_HARDLINK_APPLY=true</code> — both stay env-only safety gates.
+        </div>
+    </div>
+    {% elif not allow_apply %}
+    <div class="gt-adminpage-panel">
+        <div class="alert alert-secondary mb-0">
+            Helpers are <strong>on</strong>, but Apply is disabled until
+            <code>ALLOW_HARDLINK_APPLY=true</code> is set. Preview still works.
+        </div>
+    </div>
+    {% else %}
+    <div class="gt-adminpage-panel">
+        <div class="alert alert-success mb-0">
+            Helpers and Apply are both <strong>enabled</strong> via environment flags.
+        </div>
+    </div>
+    {% endif %}
+
     <div class="gt-adminpage-panel">
     <div class="mb-3">
         <label class="form-label">Source file</label>
@@ -21,12 +46,12 @@
         <input id="hl-dest" class="form-control" placeholder="C:\\library\\Title\\setup.exe">
     </div>
     <div class="gt-adminpage-actions mb-3">
-        <button id="hl-preview" class="btn btn-secondary">Preview</button>
+        <button id="hl-preview" class="btn btn-secondary" {% if not helpers_enabled %}disabled title="ENABLE_HARDLINK_HELPERS is off"{% endif %}>Preview</button>
         <button id="hl-apply" class="btn btn-primary" {% if not allow_apply %}disabled title="ALLOW_HARDLINK_APPLY is off"{% endif %}>Apply</button>
     </div>
     <pre id="hl-out" class="gt-adminpage-output"></pre>
     </div>
-    <p><a class="gt-adminpage-backlink" href="{{ url_for('site.admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Back to admin</a></p>
+    <p><a class="gt-adminpage-backlink" href="{{ url_for('admin2.settings') }}">{{ icons.icon('arrow-left') }} Back to Settings</a></p>
 </div>
 <script>
 (async function () {
@@ -42,7 +67,7 @@
     const data = await res.json().catch(() => ({}));
     out.textContent = JSON.stringify({ status: res.status, ...data }, null, 2);
   }
-  document.getElementById('hl-preview').onclick = () => call('/api/storage/hardlink/preview');
+  document.getElementById('hl-preview')?.addEventListener('click', () => call('/api/storage/hardlink/preview'));
   document.getElementById('hl-apply')?.addEventListener('click', () => call('/api/storage/hardlink/apply'));
 })();
 </script>

@@ -45,13 +45,13 @@
 }
 
 .gt-bp__link {
-  border-color: color-mix(in srgb, var(--gt-accent, #ff5a36) 40%, transparent);
-  background: color-mix(in srgb, var(--gt-accent, #ff5a36) 14%, transparent);
+  border-color: color-mix(in srgb, var(--gt-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
 }
 
 .gt-bp__link:hover,
 .gt-bp__exit:hover {
-  border-color: var(--gt-accent, #ff5a36);
+  border-color: var(--gt-accent);
 }
 
 .gt-bp__alert {
@@ -138,8 +138,8 @@
 }
 
 .gt-bp__btn--primary {
-  border-color: var(--gt-accent, #ff5a36);
-  background: color-mix(in srgb, var(--gt-accent, #ff5a36) 22%, transparent);
+  border-color: var(--gt-accent);
+  background: color-mix(in srgb, var(--gt-accent) 22%, transparent);
 }
 
 .gt-bp__rail-wrap {
@@ -205,7 +205,7 @@
 
 .gt-bp__tile--focused .gt-bp__tile-art,
 .gt-bp__tile:focus-visible .gt-bp__tile-art {
-  border-color: var(--gt-accent, #ff5a36);
+  border-color: var(--gt-accent);
   transform: scale(1.03);
 }
 

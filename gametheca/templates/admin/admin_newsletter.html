@@ -1,5 +1,5 @@
 <!-- in templates/admin/admin_newsletter.html -->
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
 
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
@@ -113,7 +113,7 @@ function updateRecipients() {
 
 // Initialize CKEditor
 ClassicEditor
-    .create(document.querySelector('#editor'), {
+    .create(document.querySelector('#content'), {
         toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|', 'undo', 'redo'],
         placeholder: 'Write your newsletter content here...',
     })

@@ -3,15 +3,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const instructionsPanel = document.getElementById('instructionsPanel');
     const toggleIcon = document.getElementById('toggleIcon');
     
-    if (instructionsPanel) {
+    if (instructionsPanel && toggleIcon) {
         instructionsPanel.addEventListener('show.bs.collapse', function () {
-            toggleIcon.classList.remove('fa-chevron-down');
-            toggleIcon.classList.add('fa-chevron-up');
+            toggleIcon.style.transform = 'rotate(180deg)';
         });
-        
+
         instructionsPanel.addEventListener('hide.bs.collapse', function () {
-            toggleIcon.classList.remove('fa-chevron-up');
-            toggleIcon.classList.add('fa-chevron-down');
+            toggleIcon.style.transform = 'rotate(0deg)';
         });
     }
 

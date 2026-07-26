@@ -18,6 +18,7 @@ import { TrailersPage } from './pages/TrailersPage'
 import { UpdatesPage } from './pages/UpdatesPage'
 import { VrPage } from './pages/VrPage'
 import { WishlistPage } from './pages/WishlistPage'
+import './pages/MorePage.css'
 
 function libraryInitialConfig(shellConfig) {
   return {

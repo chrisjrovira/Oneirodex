@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -56,7 +57,7 @@
             </div>
             <div class="gt-adminpage-header-actions">
                 <a href="{{ url_for('admin2.add_library') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add Library
+                    {{ icons.icon('plus') }} Add Library
                 </a>
             </div>
         </div>
@@ -73,7 +74,7 @@
                 {% for library in libraries %}
                     <tr data-library-uuid="{{ library.uuid }}">
                         <td>
-                            <i class="fas fa-grip-vertical drag-handle" style="cursor: move;"></i>
+                            {{ icons.icon('grip', extra_class='drag-handle', title='Drag to reorder') }}
                         </td>
                         <td>
                             <img src="{{ library.image_url or url_for('static', filename='default-image.jpg') }}" alt="{{ library.name }}" style="width: 30px; height: 30px; object-fit: cover;" class="me-2 rounded">
@@ -82,15 +83,15 @@
                         <td>{{ library.games|length }}</td>
                         <td>
                             <a href="{{ url_for('main.scan_management', library_uuid=library.uuid) }}" class="btn btn-sm btn-secondary">
-                                <i class="fas fa-search"></i> Scan
+                                {{ icons.icon('search') }} Scan
                             </a>
                             <a href="{{ url_for('admin2.edit_library', library_uuid=library.uuid) }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-edit"></i> Edit
+                                {{ icons.icon('edit') }} Edit
                             </a>
                             <form action="{{ url_for('main.delete_full_library', library_uuid=library.uuid) }}" method="post" style="display: inline-block;">
                                 {{ csrf_form.csrf_token }}
                                 <button type="button" class="btn btn-sm btn-danger delete-btn" data-bs-toggle="modal" data-bs-target="#deleteWarningModal" data-library-uuid="{{ library.uuid }}">
-                                    <i class="fas fa-trash"></i> Delete
+                                    {{ icons.icon('trash') }} Delete
                                 </button>
                             </form>
                         </td>

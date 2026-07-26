@@ -1,6 +1,6 @@
 .game-library-container[data-library-grid] {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min, 180px), 1fr));
-  gap: var(--spacing-md, 1rem);
+  gap: var(--gt-tile-gap, 10px);
   align-items: start;
 }

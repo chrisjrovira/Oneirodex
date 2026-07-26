@@ -15,7 +15,9 @@ from gametheca.utils.ai_assist import (
     ai_enabled,
     apply_triage_title,
     doctor_notes,
+    get_ai_config,
     ollama_status,
+    save_ai_config,
     triage_folder,
 )
 from gametheca.utils.auth import admin_required
@@ -32,6 +34,20 @@ def _basename(path: str | None) -> str:
 @admin_required
 def ai_status():
     return jsonify(ollama_status())
+
+
+@apis_bp.route('/ai/config', methods=['GET', 'PUT'])
+@login_required
+@admin_required
+def ai_config():
+    """Read/write AI enable + Ollama URL/model. Works even when currently off."""
+    if request.method == 'GET':
+        return jsonify(get_ai_config())
+    data = request.get_json(silent=True) or {}
+    if not any(key in data for key in ('enabled', 'enable_ai_assist', 'ollama_base_url', 'ollama_model')):
+        return jsonify({'error': 'No recognized fields to update'}), 400
+    saved = save_ai_config(data)
+    return jsonify({'status': 'saved', **saved})
 
 
 @apis_bp.route('/ai/triage', methods=['POST'])

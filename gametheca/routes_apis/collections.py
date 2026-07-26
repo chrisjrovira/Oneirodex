@@ -2,12 +2,44 @@
 
 from flask import jsonify, request
 from flask_login import current_user, login_required
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from gametheca import db
 from gametheca.models import Announcement, Game, GameCollection, GameCollectionItem
+from gametheca.utils.library_acl import user_can_access_game
 
 from . import apis_bp
+
+
+def _can_edit_collection(collection: GameCollection) -> bool:
+    return (
+        collection.owner_user_id == current_user.id
+        or current_user.role == 'admin'
+    )
+
+
+def _collection_payload(collection: GameCollection, *, include_items=False, item_count=None):
+    data = collection.to_dict(include_items=include_items)
+    data['can_edit'] = _can_edit_collection(collection)
+    if item_count is not None:
+        data['item_count'] = int(item_count)
+    elif include_items:
+        data['item_count'] = len(data.get('items') or [])
+    return data
+
+
+def _item_counts_by_collection_id(collection_ids: list[int]) -> dict[int, int]:
+    if not collection_ids:
+        return {}
+    rows = db.session.execute(
+        select(
+            GameCollectionItem.collection_id,
+            func.count(GameCollectionItem.id),
+        )
+        .where(GameCollectionItem.collection_id.in_(collection_ids))
+        .group_by(GameCollectionItem.collection_id)
+    ).all()
+    return {collection_id: int(count) for collection_id, count in rows}
 
 
 @apis_bp.route('/collections', methods=['GET'])
@@ -19,7 +51,13 @@ def list_collections():
         c for c in rows
         if c.is_public or c.owner_user_id == current_user.id or current_user.role == 'admin'
     ]
-    return jsonify({'collections': [c.to_dict() for c in visible]})
+    counts = _item_counts_by_collection_id([c.id for c in visible])
+    return jsonify({
+        'collections': [
+            _collection_payload(c, item_count=counts.get(c.id, 0))
+            for c in visible
+        ],
+    })
 
 
 @apis_bp.route('/collections', methods=['POST'])
@@ -38,7 +76,26 @@ def create_collection():
     )
     db.session.add(collection)
     db.session.commit()
-    return jsonify(collection.to_dict()), 201
+    return jsonify(_collection_payload(collection, item_count=0)), 201
+
+
+def _is_collection_owner_or_admin(collection: GameCollection) -> bool:
+    return collection.owner_user_id == current_user.id or current_user.role == 'admin'
+
+
+def _filtered_collection_payload(collection: GameCollection):
+    """Build detail payload; non-owner viewers only see accessible games."""
+    payload = _collection_payload(collection, include_items=True)
+    if _is_collection_owner_or_admin(collection):
+        return payload
+    filtered = [
+        item.to_dict()
+        for item in collection.items
+        if user_can_access_game(current_user, item.game)
+    ]
+    payload['items'] = filtered
+    payload['item_count'] = len(filtered)
+    return payload
 
 
 @apis_bp.route('/collections/<collection_uuid>', methods=['GET'])
@@ -49,9 +106,59 @@ def get_collection(collection_uuid: str):
     ).scalars().first()
     if not collection:
         return jsonify({'error': 'Not found'}), 404
-    if not collection.is_public and collection.owner_user_id != current_user.id and current_user.role != 'admin':
+    if not collection.is_public and not _is_collection_owner_or_admin(collection):
         return jsonify({'error': 'Forbidden'}), 403
-    return jsonify(collection.to_dict(include_items=True))
+    return jsonify(_filtered_collection_payload(collection))
+
+
+@apis_bp.route('/collections/<collection_uuid>', methods=['PATCH'])
+@login_required
+def update_collection(collection_uuid: str):
+    collection = db.session.execute(
+        select(GameCollection).filter_by(uuid=collection_uuid)
+    ).scalars().first()
+    if not collection:
+        return jsonify({'error': 'Not found'}), 404
+    if not _can_edit_collection(collection):
+        return jsonify({'error': 'Forbidden'}), 403
+    if collection.is_system:
+        return jsonify({'error': 'System collections cannot be edited'}), 400
+
+    data = request.get_json(silent=True) or {}
+    if 'name' in data:
+        name = (data.get('name') or '').strip()
+        if not name:
+            return jsonify({'error': 'name required'}), 400
+        collection.name = name[:120]
+    if 'description' in data:
+        raw = data.get('description')
+        if raw is None:
+            collection.description = None
+        else:
+            collection.description = (str(raw).strip()[:4000] or None)
+    if 'is_public' in data:
+        collection.is_public = bool(data.get('is_public'))
+
+    db.session.commit()
+    return jsonify(_collection_payload(collection, include_items=True))
+
+
+@apis_bp.route('/collections/<collection_uuid>', methods=['DELETE'])
+@login_required
+def delete_collection(collection_uuid: str):
+    collection = db.session.execute(
+        select(GameCollection).filter_by(uuid=collection_uuid)
+    ).scalars().first()
+    if not collection:
+        return jsonify({'error': 'Not found'}), 404
+    if not _can_edit_collection(collection):
+        return jsonify({'error': 'Forbidden'}), 403
+    if collection.is_system:
+        return jsonify({'error': 'System collections cannot be deleted'}), 400
+    uuid = collection.uuid
+    db.session.delete(collection)
+    db.session.commit()
+    return jsonify({'ok': True, 'uuid': uuid})
 
 
 @apis_bp.route('/collections/<collection_uuid>/items', methods=['POST'])
@@ -62,13 +169,15 @@ def add_collection_item(collection_uuid: str):
     ).scalars().first()
     if not collection:
         return jsonify({'error': 'Not found'}), 404
-    if collection.owner_user_id != current_user.id and current_user.role != 'admin':
+    if not _can_edit_collection(collection):
         return jsonify({'error': 'Forbidden'}), 403
     data = request.get_json(silent=True) or {}
     game_uuid = (data.get('game_uuid') or '').strip()
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
         return jsonify({'error': 'Game not found'}), 404
+    if not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Game not accessible'}), 403
     existing = db.session.execute(
         select(GameCollectionItem).filter_by(collection_id=collection.id, game_uuid=game_uuid)
     ).scalars().first()
@@ -79,6 +188,59 @@ def add_collection_item(collection_uuid: str):
     db.session.add(item)
     db.session.commit()
     return jsonify(item.to_dict()), 201
+
+
+@apis_bp.route('/collections/<collection_uuid>/items/<game_uuid>', methods=['DELETE'])
+@login_required
+def remove_collection_item(collection_uuid: str, game_uuid: str):
+    collection = db.session.execute(
+        select(GameCollection).filter_by(uuid=collection_uuid)
+    ).scalars().first()
+    if not collection:
+        return jsonify({'error': 'Not found'}), 404
+    if not _can_edit_collection(collection):
+        return jsonify({'error': 'Forbidden'}), 403
+    item = db.session.execute(
+        select(GameCollectionItem).filter_by(
+            collection_id=collection.id,
+            game_uuid=game_uuid,
+        )
+    ).scalars().first()
+    if not item:
+        return jsonify({'error': 'Not found'}), 404
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({'ok': True, 'game_uuid': game_uuid})
+
+
+@apis_bp.route('/collections/<collection_uuid>/items/order', methods=['PUT'])
+@login_required
+def reorder_collection_items(collection_uuid: str):
+    collection = db.session.execute(
+        select(GameCollection).filter_by(uuid=collection_uuid)
+    ).scalars().first()
+    if not collection:
+        return jsonify({'error': 'Not found'}), 404
+    if not _can_edit_collection(collection):
+        return jsonify({'error': 'Forbidden'}), 403
+
+    data = request.get_json(silent=True) or {}
+    game_uuids = data.get('game_uuids')
+    if not isinstance(game_uuids, list):
+        return jsonify({'error': 'game_uuids required'}), 400
+    normalized = [str(uuid).strip() for uuid in game_uuids if uuid is not None]
+    if len(normalized) != len(set(normalized)):
+        return jsonify({'error': 'game_uuids must list each collection item exactly once'}), 400
+    current_uuids = {item.game_uuid for item in collection.items}
+    if set(normalized) != current_uuids:
+        return jsonify({'error': 'game_uuids must list each collection item exactly once'}), 400
+
+    by_uuid = {item.game_uuid: item for item in collection.items}
+    for position, game_uuid in enumerate(normalized):
+        by_uuid[game_uuid].position = position
+    db.session.commit()
+    db.session.refresh(collection)
+    return jsonify(_collection_payload(collection, include_items=True))
 
 
 @apis_bp.route('/announcements', methods=['GET'])

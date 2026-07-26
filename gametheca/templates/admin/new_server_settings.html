@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 
 <div class="container">
@@ -28,7 +29,7 @@
                     <div class="col-lg-4">
                         <div class="settings-section">
                             <h5 class="section-header">
-                                <i class="fa-solid fa-puzzle-piece"></i> Core Features
+                                {{ icons.icon('plug', size=18) }} Core Features
                             </h5>
 
                             <div class="form-check mb-2">
@@ -80,7 +81,7 @@
                     <div class="col-lg-4">
                         <div class="settings-section">
                             <h5 class="section-header">
-                                <i class="fas fa-search"></i> Scanning & Performance
+                                {{ icons.icon('search', size=18) }} Scanning & Performance
                             </h5>
 
                             <div class="form-check mb-2">
@@ -117,7 +118,7 @@
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="useTurboImageDownloads" checked>
                                 <label class="form-check-label" for="useTurboImageDownloads" data-toggle="tooltip" title="🚀 TURBO MODE: Use parallel multi-threaded downloading for game images (8 threads, 200 batch size). When disabled, uses single-thread sequential downloads. TURBO mode is 8-15x faster but uses more bandwidth.">
-                                    <i class="fas fa-rocket"></i> Multithreaded Image Downloads
+                                    {{ icons.icon('rocket') }} Multithreaded Image Downloads
                                 </label>
                             </div>
 
@@ -133,7 +134,7 @@
                             </div>
 
                             <hr class="my-3">
-                            <h6 class="text-white mb-2"><i class="fas fa-clock"></i> HowLongToBeat Integration</h6>
+                            <h6 class="text-white mb-2">{{ icons.icon('clock') }} HowLongToBeat Integration</h6>
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="enableHltbIntegration">
@@ -151,33 +152,33 @@
                             </div>
 
                             <hr class="my-3">
-                            <h6 class="text-white mb-2"><i class="fa-solid fa-file-code"></i> Local Metadata & Images</h6>
+                            <h6 class="text-white mb-2">{{ icons.icon('file') }} Local Metadata & Images</h6>
                             <small class="text-info d-block mb-2">Jellyfin-style filesystem persistence</small>
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="useLocalMetadata">
                                 <label class="form-check-label" for="useLocalMetadata" data-toggle="tooltip" title="When enabled, scanner checks for gametheca.json file in game folders before searching IGDB. This file contains the IGDB ID from previous manual identifications.">
-                                    <i class="fa-solid fa-magnifying-glass"></i> Use Local Metadata on Scan
+                                    {{ icons.icon('search') }} Use Local Metadata on Scan
                                 </label>
                             </div>
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="writeLocalMetadata">
                                 <label class="form-check-label" for="writeLocalMetadata" data-toggle="tooltip" title="When enabled, creates gametheca.json file in game folder after manual identification. This survives database resets and makes future scans faster. Requires write permissions to game folders.">
-                                    <i class="fa-solid fa-floppy-disk"></i> Write Metadata File on Manual ID
+                                    {{ icons.icon('save') }} Write Metadata File on Manual ID
                                 </label>
                             </div>
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="useLocalImages">
                                 <label class="form-check-label" for="useLocalImages" data-toggle="tooltip" title="When enabled, local images (cover.jpg, screenshot-1.jpg, etc.) in game folders take priority over IGDB-downloaded images. Allows custom artwork per game.">
-                                    <i class="fa-solid fa-image"></i> Use Local Images (cover.jpg)
+                                    {{ icons.icon('image') }} Use Local Images (cover.jpg)
                                 </label>
                             </div>
 
                             <div class="form-group mb-3">
                                 <label for="localMetadataFilename" class="form-label" data-toggle="tooltip" title="Filename for local metadata files. Default: gametheca.json">
-                                    <i class="fa-solid fa-file"></i> Metadata Filename
+                                    {{ icons.icon('file') }} Metadata Filename
                                 </label>
                                 <input type="text" class="form-control form-control-sm" id="localMetadataFilename" name="localMetadataFilename"
                                     value="gametheca.json" placeholder="gametheca.json">
@@ -185,12 +186,12 @@
                             </div>
 
                             <hr class="my-3">
-                            <h6 class="text-white mb-2"><i class="fa-solid fa-clipboard-check"></i> Scan Behavior</h6>
+                            <h6 class="text-white mb-2">{{ icons.icon('clipboard-list') }} Scan Behavior</h6>
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="proposeOnlyScan">
                                 <label class="form-check-label" for="proposeOnlyScan" data-toggle="tooltip" title="When enabled, the scanner never auto-imports games — not even on a high-confidence IGDB match. Instead it writes a gametheca.proposal.json sidecar for every unmatched folder so an admin can review and approve matches manually.">
-                                    <i class="fa-solid fa-clipboard-question"></i> Propose-Only Scan Mode
+                                    {{ icons.icon('help') }} Propose-Only Scan Mode
                                 </label>
                             </div>
                         </div>
@@ -200,7 +201,7 @@
                     <div class="col-lg-4">
                         <div class="settings-section">
                             <h5 class="section-header">
-                                <i class="fa-solid fa-display"></i> Interface
+                                {{ icons.icon('layout', size=18) }} Interface
                             </h5>
 
                             <div class="form-check mb-2">

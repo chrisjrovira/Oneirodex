@@ -39,4 +39,29 @@
 
 ## Theme / JS not updating?
 
-Library volume persists old theme files. Use **Reset Default Themes** or delete `themes/default` under the library volume and restart so `_setup_default_theme` reinstalls.
+Library volume persists old theme files. After every code deploy:
+
+1. `docker compose build --no-cache && docker compose up -d`
+2. Watch logs for theme sync / `[OK] Default theme`
+3. Admin → Themes → **Reset Default Themes** (or delete `themes/default` under the library volume and restart)
+
+Also confirm `member-app.css` loads in the browser (View Source on Discover/Library). Missing CSS means a rebuild is required — the SPA chrome will look unstyled without it.
+
+## Compose Manager paths
+
+- External ENV File Path: `/mnt/user/isos/gametheca/.env`
+- Indirect Compose File: `/mnt/user/isos/gametheca/docker-compose.yml`
+- Indirect Path: leave empty
+
+## Smoke checklist (chrome rewrite)
+
+1. First-boot logs show `[OK] Theme tokens present` (or Reset Default Themes)
+2. Discover/Library: View Source includes `member-app.css` and `member-app.js`
+3. Apply Ocean/Forest — accent + surfaces recolour; hard refresh
+4. Preferences swatch grid responds; page reloads after save
+5. Tile grid is dense (small gaps); XL tiles fill the grid cells
+6. Covers show for games with downloaded images (fallback only when truly missing)
+7. Admin pages: top bar only — **no** member left sidebar
+8. `/admin/settings` card grid one-click; Arr/AI toggles + hub badges
+9. Collections: create, search-add, reorder, edit, delete
+

@@ -16,13 +16,67 @@ from gametheca.routes_admin_ext.settings import SETTINGS_SHELL_SECTIONS
 
 TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / 'gametheca' / 'templates'
 
-# Templates converted to the SVG macro set by WP3. Other admin templates still
-# use the Font Awesome webfont on purpose and are deliberately not asserted on.
+# Templates converted to the SVG macro set. Every template here must contain
+# zero literal Font Awesome class strings (see test_no_font_awesome_left_in_converted_templates).
 CONVERTED_TEMPLATES = [
     'base.html',
     'admin/admin_settings_shell.html',
     'admin/admin_dashboard.html',
+    'admin/admin_manage_library_create.html',
+    'admin/admin_server_status.html',
+    'admin/admin_library_tools.html',
+    'admin/arr_module.html',
+    'admin/admin_manage_smtp_settings.html',
+    'admin/detail_layout.html',
+    'admin/integrations.html',
+    'admin/attract_mode_settings.html',
+    'admin/admin_manage_users.html',
+    'admin/emulator_profiles.html',
+    'admin/admin_manage_downloads.html',
+    'admin/admin_manage_discord_settings.html',
+    'admin/admin_manage_whitelist.html',
+    'admin/admin_manage_filters.html',
+    'admin/admin_manage_discord_readme.html',
+    'admin/quality_profiles.html',
+    'admin/admin_help.html',
+    'admin/new_server_settings.html',
+    'admin/ai_assist.html',
+    'admin/admin_game_identify.html',
+    'admin/admin_server_logs.html',
+    'admin/storage.html',
+    'admin/admin_manage_libraries.html',
+    'admin/admin_manage_extensions.html',
+    'admin/new_server_info.html',
+    'admin/admin_discovery_sections.html',
+    'games/game_details.html',
+    'login/user_invites.html',
+    'settings/modal_preferences.html',
+    'settings/settings_password.html',
+    'settings/settings_profile_edit.html',
+    'settings/settings_profile_view.html',
+    'partials/integrations/discord_form.html',
+    'partials/integrations/igdb_form.html',
+    'partials/integrations/discord_notifications.html',
+    'partials/integrations/steamgriddb_status.html',
 ]
+
+# Templates that intentionally still contain a handful of literal Font Awesome
+# classes after the SVG conversion, and exactly why. Kept out of
+# CONVERTED_TEMPLATES (which asserts zero FA remains) but still checked below
+# so nobody can quietly add more FA usage to these files without noticing.
+DOCUMENTED_FA_LEFTOVERS = {
+    # `fa-spin` is a CSS keyframe animation baked into the Font Awesome
+    # webfont; the shared SVG macro has no spin variant, so these two loading
+    # spinners are left as FA on purpose.
+    'admin/admin_manage_scanjobs.html': 2,
+    'admin/admin_manage_image_queue.html': 2,
+}
+
+# Matches any literal Font Awesome class pairing, e.g. "fas fa-trash",
+# "fa fa-file-alt", "fa-solid fa-cog", "fa-brands fa-discord".
+FONT_AWESOME_CLASS_RE = re.compile(
+    r'fa[srb]?\s+fa-[\w-]+|fa-(?:solid|brands|regular)\s+fa-[\w-]+'
+)
 
 # Rendered only when icon() is handed a name it does not know. Matched in full
 # because several real glyphs also use r="2" circles.
@@ -115,6 +169,24 @@ class TestConvertedTemplates:
     def test_no_font_awesome_left_in_converted_templates(self):
         offenders = [p for p in CONVERTED_TEMPLATES if 'fas fa-' in read_template(p)]
         assert not offenders, f"Font Awesome markup still present in: {offenders}"
+
+    def test_no_undocumented_font_awesome_remains_anywhere(self):
+        """Every remaining literal FA class in the whole template tree must be
+        one of the animated spinners tracked in DOCUMENTED_FA_LEFTOVERS, with
+        the exact count we expect. Anything else means a template regressed or
+        a new template was added with FA instead of the SVG macro.
+        """
+        found_counts = {}
+        for path in sorted(TEMPLATE_ROOT.rglob('*.html')):
+            relative = path.relative_to(TEMPLATE_ROOT).as_posix()
+            matches = FONT_AWESOME_CLASS_RE.findall(path.read_text(encoding='utf-8'))
+            if matches:
+                found_counts[relative] = len(matches)
+
+        assert found_counts == DOCUMENTED_FA_LEFTOVERS, (
+            f"Font Awesome usage drifted from the documented leftovers.\n"
+            f"Found: {found_counts}\nExpected: {DOCUMENTED_FA_LEFTOVERS}"
+        )
 
     def test_base_html_does_not_hardcode_icon_colour(self):
         assert 'color: white' not in read_template('base.html')

@@ -17,17 +17,18 @@
 
 .game-card {
     cursor: pointer;
-    transition: transform var(--transition-normal);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
     position: relative;
-    margin: var(--spacing-xs);
-    max-width: 250px;
-    max-height: 332px;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    max-height: none;
 }
 
 .game-card:hover {
-    transform: scale(1.2);
+    transform: translateY(-2px) scale(1.03);
     z-index: 6;
-    box-shadow: 10px 10px 15px var(--shadow-dark-strong);
+    box-shadow: 0 8px 20px var(--shadow-dark-strong);
 }
 
 .game-cover {
@@ -38,10 +39,10 @@
     height: auto;
     object-fit: cover;
     transition: transform var(--transition-normal), box-shadow var(--transition-normal);
-    box-shadow: 5px 5px 9px var(--shadow-dark-strong);
+    box-shadow: 0 4px 12px var(--shadow-dark-strong);
     border: 1px solid var(--game-border-gray);
     border-radius: var(--border-radius-xs);
-    max-width: 250px;
+    max-width: none;
     /* Always show a placeholder so missing/broken covers never leave empty tiles */
     background-color: var(--bg-dark-secondary, #1a1a22);
     background-image: url('/static/newstyle/default_cover.jpg');

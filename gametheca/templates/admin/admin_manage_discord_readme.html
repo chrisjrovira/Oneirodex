@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 
 <div class="container">
@@ -10,7 +11,7 @@
 <div class="container gt-adminpage gt-adminpage--md mt-4">
     <div class="gt-adminpage-panel">
         <div class="gt-adminpage-panel-header">
-            <h2 class="gt-adminpage-title"><i class="fab fa-discord"></i> Discord Notifications Help</h2>
+            <h2 class="gt-adminpage-title">{{ icons.icon('discord', size=22) }} Discord Notifications Help</h2>
         </div>
         <div>
             <h3>Setting Up Discord Notifications</h3>

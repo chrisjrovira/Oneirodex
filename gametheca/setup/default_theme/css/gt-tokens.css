@@ -3,7 +3,7 @@
   --gt-surface: #141820;
   --gt-surface-2: #1c2230;
   --gt-text: #f2f4f8;
-  --gt-text-muted: #b6becc;
+  --gt-text-muted: #c4ccd8;
   --gt-accent: #ff5a36;
   --gt-accent-contrast: #0b0d10;
   /* Semantic status colours. Deliberately not part of preset_tokens(): a
@@ -17,6 +17,7 @@
   --gt-border: rgba(255, 255, 255, 0.12);
   --gt-focus-ring: color-mix(in srgb, var(--gt-accent) 70%, white);
   --gt-tile-min: 180px;
+  --gt-tile-gap: 10px;
   --gt-crt-opacity: 0.03;
   --font-ui: "Segoe UI", "Helvetica Neue", sans-serif;
   --font-display: "Arial Black", "Segoe UI", sans-serif;

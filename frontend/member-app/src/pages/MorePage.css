@@ -1,0 +1,159 @@
+/* Shared hub / “More” page rhythm for member SPA routes. */
+
+.gt-more-page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0.75rem 1rem 2rem;
+  color: var(--gt-text);
+}
+
+.gt-more-page .gt-page-header {
+  margin-bottom: 0.35rem;
+}
+
+.gt-more-page .gt-page-header h1 {
+  font-size: 1.3rem;
+}
+
+.gt-more-page__lede {
+  margin: 0 0 1rem;
+  max-width: 42rem;
+  color: var(--gt-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.gt-more-page [role='alert'] {
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--gt-danger) 45%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--gt-danger) 10%, transparent);
+  color: var(--gt-text);
+}
+
+.gt-more-page [role='alert'] button,
+.gt-more-page button {
+  font: inherit;
+}
+
+.gt-more-page ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gt-more-page__list,
+.gt-news__list,
+.gt-calendar__list,
+.gt-playtime__list,
+.gt-updates__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.gt-more-page__list > li,
+.gt-news__card,
+.gt-calendar__list > li,
+.gt-playtime__list > li,
+.gt-updates__list > li {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.65rem 0.8rem;
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
+  border-radius: 6px;
+  color: var(--gt-text);
+}
+
+.gt-news__card article,
+.gt-calendar__list > li > div,
+.gt-playtime__list > li,
+.gt-updates__list > li a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.gt-updates__list > li a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.gt-updates__list > li a:hover,
+.gt-playtime__list > li a:hover {
+  color: var(--gt-accent);
+}
+
+.gt-news__card p,
+.gt-news__card time,
+.gt-calendar__list span,
+.gt-playtime__list span,
+.gt-updates__list span {
+  color: var(--gt-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.gt-calendar__list img {
+  width: 48px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: var(--gt-surface-2);
+}
+
+.gt-help__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gt-help__section {
+  padding: 0.55rem 0.75rem;
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
+  border-radius: 6px;
+}
+
+.gt-help__section h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.gt-help__section h2 button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  background: transparent;
+  border: none;
+  color: var(--gt-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.gt-help__section h2 button:hover,
+.gt-help__section h2 button:focus-visible {
+  color: var(--gt-accent);
+}
+
+.gt-help__section ul {
+  margin: 0.35rem 0 0.15rem;
+  padding: 0 0 0 1.1rem;
+  list-style: disc;
+  color: var(--gt-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.gt-help__section li {
+  margin-bottom: 0.25rem;
+}

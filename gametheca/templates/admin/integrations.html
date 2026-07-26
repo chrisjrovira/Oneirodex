@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -17,7 +18,7 @@
 
 <div class="container-settings mt-4">
     <div class="card">
-        <h2><i class="fas fa-plug"></i> Integrations Management</h2>
+        <h2>{{ icons.icon('plug', size=22) }} Integrations Management</h2>
         <p>Manage all your external service integrations in one place.</p>
 
         <!-- Flash Messages -->
@@ -36,27 +37,27 @@
         <ul class="integrations-nav-tabs nav nav-tabs" id="integrationTabs" role="tablist">
             <li class="integrations-nav-item nav-item" role="presentation">
                 <button class="integrations-nav-link nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab" aria-controls="email" aria-selected="false">
-                    <i class="fas fa-envelope"></i> Email Settings
+                    {{ icons.icon('envelope') }} Email Settings
                 </button>
             </li>
             <li class="integrations-nav-item nav-item" role="presentation">
                 <button class="integrations-nav-link nav-link" id="igdb-tab" data-bs-toggle="tab" data-bs-target="#igdb" type="button" role="tab" aria-controls="igdb" aria-selected="false">
-                    <i class="fas fa-gamepad"></i> IGDB Settings
+                    {{ icons.icon('gamepad') }} IGDB Settings
                 </button>
             </li>
             <li class="integrations-nav-item nav-item" role="presentation">
                 <button class="integrations-nav-link nav-link" id="discord-tab" data-bs-toggle="tab" data-bs-target="#discord" type="button" role="tab" aria-controls="discord" aria-selected="false">
-                    <i class="fab fa-discord"></i> Discord Settings
+                    {{ icons.icon('discord') }} Discord Settings
                 </button>
             </li>
             <li class="integrations-nav-item nav-item" role="presentation">
                 <button class="integrations-nav-link nav-link" id="artwork-tab" data-bs-toggle="tab" data-bs-target="#artwork" type="button" role="tab" aria-controls="artwork" aria-selected="false">
-                    <i class="fas fa-images"></i> Artwork
+                    {{ icons.icon('image') }} Artwork
                 </button>
             </li>
             <li class="integrations-nav-item nav-item" role="presentation">
                 <button class="integrations-nav-link nav-link" id="oidc-tab" data-bs-toggle="tab" data-bs-target="#oidc" type="button" role="tab" aria-controls="oidc" aria-selected="false">
-                    <i class="fas fa-shield-alt"></i> OIDC / SSO
+                    {{ icons.icon('user-shield') }} OIDC / SSO
                 </button>
             </li>
         </ul>
@@ -67,8 +68,8 @@
             <!-- Email Settings Tab -->
             <div class="integrations-tab-pane tab-pane fade" id="email" role="tabpanel" aria-labelledby="email-tab">
                 <div class="tab-content-wrapper">
-                    <h4><i class="fas fa-envelope"></i> SMTP Email Settings <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#smtpHelpModal">
-                        <i class="fas fa-question-circle"></i>
+                    <h4>{{ icons.icon('envelope', size=20) }} SMTP Email Settings <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#smtpHelpModal" title="SMTP help">
+                        {{ icons.icon('help') }}
                     </button></h4>
 
                     {% include 'partials/integrations/smtp_form.html' %}
@@ -78,7 +79,7 @@
             <!-- IGDB Settings Tab -->
             <div class="integrations-tab-pane tab-pane fade" id="igdb" role="tabpanel" aria-labelledby="igdb-tab">
                 <div class="tab-content-wrapper">
-                    <h4><i class="fas fa-gamepad"></i> IGDB API Settings</h4>
+                    <h4>{{ icons.icon('gamepad', size=20) }} IGDB API Settings</h4>
 
                     {% include 'partials/integrations/igdb_form.html' %}
                 </div>
@@ -90,8 +91,8 @@
                     <div class="discord-settings-container">
                         <!-- Connection Settings Section -->
                         <div class="connection-settings-section">
-                            <h4><i class="fab fa-discord"></i> Discord Connection Settings <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#discordHelpModal">
-                                <i class="fas fa-question-circle"></i>
+                            <h4>{{ icons.icon('discord', size=20) }} Discord Connection Settings <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#discordHelpModal" title="Discord help">
+                                {{ icons.icon('help') }}
                             </button></h4>
                             <p class="text-muted">Configure your Discord webhook and bot settings</p>
 
@@ -109,7 +110,7 @@
             <!-- Artwork Providers Tab -->
             <div class="integrations-tab-pane tab-pane fade" id="artwork" role="tabpanel" aria-labelledby="artwork-tab">
                 <div class="tab-content-wrapper">
-                    <h4><i class="fas fa-images"></i> SteamGridDB Artwork</h4>
+                    <h4>{{ icons.icon('image', size=20) }} SteamGridDB Artwork</h4>
                     {% include 'partials/integrations/steamgriddb_status.html' %}
                 </div>
             </div>
@@ -117,7 +118,7 @@
             <!-- OIDC / SSO Tab -->
             <div class="integrations-tab-pane tab-pane fade" id="oidc" role="tabpanel" aria-labelledby="oidc-tab">
                 <div class="tab-content-wrapper">
-                    <h4><i class="fas fa-shield-alt"></i> OIDC / SSO Settings</h4>
+                    <h4>{{ icons.icon('user-shield', size=20) }} OIDC / SSO Settings</h4>
                     <p class="text-muted">
                         Optional. Local username/password always works — leave this off for home-only installs.
                         Requires <code>OIDC_ENABLED=true</code> in the environment plus the toggle below.
@@ -152,7 +153,7 @@
                                 <input type="password" id="oidc_client_secret" class="form-control input-glass"
                                     value="{{ settings.oidc_client_secret if settings else '' }}" autocomplete="off">
                                 <button type="button" class="toggle-password" data-input="oidc_client_secret" aria-label="Toggle password visibility">
-                                    <i class="fas fa-eye"></i>
+                                    <span class="toggle-password-icon">{{ icons.icon('eye') }}</span>
                                 </button>
                             </div>
                         </div>

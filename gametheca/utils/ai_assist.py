@@ -76,6 +76,44 @@ def ollama_status() -> dict[str, Any]:
     }
 
 
+def get_ai_config() -> dict[str, Any]:
+    settings = db.session.execute(
+        select(GlobalSettings).order_by(GlobalSettings.id).limit(1),
+    ).scalars().first()
+    base, model = _ollama_config()
+    return {
+        'enabled': ai_enabled(),
+        'db_enabled': bool(getattr(settings, 'enable_ai_assist', False)) if settings else False,
+        'env_enabled': str(current_app.config.get('ENABLE_AI_ASSIST', '')).lower() in (
+            '1', 'true', 'yes', 'on',
+        ),
+        'ollama_base_url': base,
+        'ollama_model': model,
+        'auto_apply_enabled': ai_auto_apply_enabled(),
+    }
+
+
+def save_ai_config(payload: dict[str, Any]) -> dict[str, Any]:
+    settings = db.session.execute(
+        select(GlobalSettings).order_by(GlobalSettings.id).limit(1),
+    ).scalars().first()
+    if settings is None:
+        settings = GlobalSettings()
+        db.session.add(settings)
+    if 'enabled' in payload or 'enable_ai_assist' in payload:
+        settings.enable_ai_assist = bool(
+            payload.get('enabled', payload.get('enable_ai_assist')),
+        )
+    if 'ollama_base_url' in payload and payload['ollama_base_url'] is not None:
+        url = str(payload['ollama_base_url']).strip().rstrip('/')
+        settings.ollama_base_url = url or None
+    if 'ollama_model' in payload and payload['ollama_model'] is not None:
+        model = str(payload['ollama_model']).strip()
+        settings.ollama_model = model or None
+    db.session.commit()
+    return get_ai_config()
+
+
 def _chat(system: str, user: str) -> str:
     if not ai_enabled():
         raise PermissionError('AI assist is disabled')

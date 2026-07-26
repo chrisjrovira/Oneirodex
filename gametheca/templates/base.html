@@ -49,9 +49,10 @@
 
 
 
+{% set admin_chrome = request.path.startswith('/admin') %}
 {% if not is_setup_mode %}
-<div id="sidebar" class="sidebar">
-    {% if current_user.is_authenticated %}
+<div id="sidebar" class="sidebar{% if admin_chrome %} collapsed{% endif %}">
+{% if current_user.is_authenticated %}
     <div class="useraccount-minimenu-container">
         <!-- User Account Icon at the Bottom Left -->
         <div id="userAccountIcon" class="user-account-icon">
@@ -132,7 +133,7 @@
     
 </div>
 {% endif %}
-<div id="content" class="{% if is_setup_mode %}setup-mode-content{% endif %}">
+<div id="content" class="{% if is_setup_mode %}setup-mode-content{% endif %}{% if admin_chrome %} collapsed{% endif %}">
     {% include 'partials/flash_messages.html' %}
     {% block content %}{% endblock %}
 </div>

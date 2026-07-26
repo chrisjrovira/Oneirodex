@@ -1,3 +1,4 @@
+{% import 'partials/icons.html' as icons %}
 <form method="POST" action="{{ url_for('admin2.discord_settings') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -29,7 +30,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="discordHelpModalLabel"><i class="fab fa-discord"></i> How to Get a Discord Webhook URL</h5>
+                <h5 class="modal-title" id="discordHelpModalLabel">{{ icons.icon('discord', size=20) }} How to Get a Discord Webhook URL</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -64,19 +65,19 @@
                 </ul>
 
                 <div class="alert alert-info mt-3">
-                    <strong><i class="fas fa-info-circle"></i> Webhook URL Format:</strong><br>
+                    <strong>{{ icons.icon('info') }} Webhook URL Format:</strong><br>
                     Your webhook URL should look like this:<br>
                     <code>https://discord.com/api/webhooks/[WEBHOOK_ID]/[WEBHOOK_TOKEN]</code>
                 </div>
 
                 <div class="alert alert-warning mt-2">
-                    <strong><i class="fas fa-exclamation-triangle"></i> Security Note:</strong><br>
+                    <strong>{{ icons.icon('warning') }} Security Note:</strong><br>
                     Keep your webhook URL private! Anyone with this URL can send messages to your Discord channel.
                 </div>
 
                 <h6 class="mt-3">Additional Resources</h6>
                 <p>For more detailed instructions, visit Discord's official documentation:</p>
-                <p><a href="https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks" target="_blank" rel="noopener noreferrer">Discord Webhooks Guide <i class="fas fa-external-link-alt"></i></a></p>
+                <p><a href="https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks" target="_blank" rel="noopener noreferrer">Discord Webhooks Guide {{ icons.icon('external-link') }}</a></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

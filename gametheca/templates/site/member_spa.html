@@ -26,5 +26,6 @@
   data-sections="{{ discover_sections|tojson|forceescape }}"
   {% endif %}
 ></div>
+<link rel="stylesheet" href="{{ url_for('static', filename='dist/member-app/member-app.css') }}">
 <script type="module" src="{{ url_for('static', filename='dist/member-app/member-app.js') }}"></script>
 {% endblock %}

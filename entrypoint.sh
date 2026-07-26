@@ -5,6 +5,12 @@ echo "🚀 GameTheca container starting up..."
 if [[ ! -f /app/gametheca/static/dist/member-app/member-app.js ]]; then
     echo "⚠️  Warning: member-app.js not found — React member app may not load. Rebuild the Docker image to include the member-app build stage."
 fi
+if [[ ! -f /app/gametheca/static/dist/member-app/member-app.css ]]; then
+    echo "⚠️  Warning: member-app.css not found — member SPA chrome will render unstyled. Rebuild the Docker image."
+fi
+if [[ ! -f /app/gametheca/static/library/themes/default/css/gt-tokens.css ]]; then
+    echo "⚠️  Warning: themes/default/css/gt-tokens.css missing — run init or Admin → Reset Default Themes after boot."
+fi
 
 # Inside Docker Compose, Postgres is the sibling service named "db".
 # Never wait on localhost/127.0.0.1 (common leftover from non-Docker .env files).

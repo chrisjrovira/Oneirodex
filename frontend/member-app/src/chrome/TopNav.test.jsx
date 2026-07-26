@@ -1,7 +1,16 @@
 ﻿import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { openPreferencesModal } from '../api/preferences'
 import { TopNav } from './TopNav'
+
+vi.mock('../api/preferences', async () => {
+  const actual = await vi.importActual('../api/preferences')
+  return {
+    ...actual,
+    openPreferencesModal: vi.fn(() => Promise.resolve()),
+  }
+})
 
 function renderNav(shellConfig = {}) {
   return render(
@@ -44,4 +53,12 @@ test('account menu matches base.html account URLs', async () => {
   expect(screen.getByRole('menuitem', { name: 'Preferences' })).toHaveAttribute('href', '/settings_panel')
   expect(screen.getByRole('menuitem', { name: 'Change Password' })).toHaveAttribute('href', '/settings_password')
   expect(screen.getByRole('menuitem', { name: 'Logout' })).toHaveAttribute('href', '/logout')
+})
+
+test('preferences opens modal path so theme reload can apply', async () => {
+  const user = userEvent.setup()
+  renderNav({ username: 'ada' })
+  await user.click(screen.getByRole('button', { name: /account menu/i }))
+  await user.click(screen.getByRole('menuitem', { name: 'Preferences' }))
+  expect(openPreferencesModal).toHaveBeenCalled()
 })

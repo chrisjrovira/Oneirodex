@@ -332,9 +332,12 @@ def settings():
         section = request.args.get('section')
         if section in SETTINGS_SHELL_SECTIONS:
             return redirect(url_for(SETTINGS_SHELL_SECTIONS[section]['endpoint']))
+        from gametheca.utils.module_status import settings_hub_module_status
+
         return render_template(
             'admin/admin_settings_shell.html',
             sections=SETTINGS_SHELL_SECTIONS,
+            module_status=settings_hub_module_status(),
         )
     else:
         return update_settings()
@@ -536,14 +539,21 @@ def detail_layout_page():
 @login_required
 @admin_required
 def ai_assist_page():
-    return render_template('admin/ai_assist.html')
+    from gametheca.utils.ai_assist import get_ai_config
+
+    return render_template('admin/ai_assist.html', ai_config=get_ai_config())
 
 
 @admin2_bp.route('/admin/storage', methods=['GET'])
 @login_required
 @admin_required
 def storage_page():
-    allow_apply = str(current_app.config.get('ALLOW_HARDLINK_APPLY', '')).lower() in (
-        '1', 'true', 'yes', 'on',
+    from gametheca.utils.module_status import hardlink_apply_on, hardlink_helpers_on
+
+    helpers_on = hardlink_helpers_on()
+    allow_apply = hardlink_apply_on()
+    return render_template(
+        'admin/storage.html',
+        helpers_enabled=helpers_on,
+        allow_apply=allow_apply,
     )
-    return render_template('admin/storage.html', allow_apply=allow_apply)

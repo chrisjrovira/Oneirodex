@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { createCollection, fetchCollections } from '../api/collections'
+import { createCollection, deleteCollection, fetchCollections } from '../api/collections'
 import './Collections.css'
+
+function itemCountLabel(collection) {
+  const count = Number(collection.item_count)
+  if (!Number.isFinite(count)) {
+    return null
+  }
+  return count === 1 ? '1 game' : `${count} games`
+}
 
 export function CollectionsPage({ shellConfig: _shellConfig } = {}) {
   const [collections, setCollections] = useState(null)
@@ -12,6 +20,7 @@ export function CollectionsPage({ shellConfig: _shellConfig } = {}) {
   const [isPublic, setIsPublic] = useState(true)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState(null)
+  const [deletingUuid, setDeletingUuid] = useState(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -60,6 +69,29 @@ export function CollectionsPage({ shellConfig: _shellConfig } = {}) {
       setCreateError(submitError)
     } finally {
       setCreating(false)
+    }
+  }
+
+  async function handleDelete(collection) {
+    if (!collection?.can_edit || collection.is_system || deletingUuid) {
+      return
+    }
+    const confirmed = window.confirm(
+      `Delete collection “${collection.name}”? This cannot be undone.`,
+    )
+    if (!confirmed) {
+      return
+    }
+    setDeletingUuid(collection.uuid)
+    try {
+      await deleteCollection(collection.uuid)
+      setCollections((current) =>
+        (current || []).filter((row) => row.uuid !== collection.uuid),
+      )
+    } catch (deleteError) {
+      window.alert(deleteError.message || 'Unable to delete that collection.')
+    } finally {
+      setDeletingUuid(null)
     }
   }
 
@@ -129,23 +161,37 @@ export function CollectionsPage({ shellConfig: _shellConfig } = {}) {
 
       {!error && collections && collections.length > 0 ? (
         <ul className="gt-collections__list">
-          {collections.map((collection) => (
-            <li key={collection.uuid}>
-              <Link
-                className="gt-collections__card"
-                to={`/collections/${collection.uuid}`}
-              >
-                <strong>{collection.name}</strong>
-                <span className="gt-collections__card-desc">
-                  {collection.description || 'No description'}
-                </span>
-                <span className="gt-collections__meta">
-                  {collection.is_public ? 'Public' : 'Private'}
-                  {collection.is_system ? ' · System' : ''}
-                </span>
-              </Link>
-            </li>
-          ))}
+          {collections.map((collection) => {
+            const countLabel = itemCountLabel(collection)
+            return (
+              <li key={collection.uuid} className="gt-collections__row">
+                <Link
+                  className="gt-collections__card"
+                  to={`/collections/${collection.uuid}`}
+                >
+                  <strong>{collection.name}</strong>
+                  <span className="gt-collections__card-desc">
+                    {collection.description || 'No description'}
+                  </span>
+                  <span className="gt-collections__meta">
+                    {collection.is_public ? 'Public' : 'Private'}
+                    {collection.is_system ? ' · System' : ''}
+                    {countLabel ? ` · ${countLabel}` : ''}
+                  </span>
+                </Link>
+                {collection.can_edit && !collection.is_system ? (
+                  <button
+                    type="button"
+                    className="gt-collections__delete"
+                    disabled={deletingUuid === collection.uuid}
+                    onClick={() => handleDelete(collection)}
+                  >
+                    {deletingUuid === collection.uuid ? 'Deleting…' : 'Delete'}
+                  </button>
+                ) : null}
+              </li>
+            )
+          })}
         </ul>
       ) : null}
     </div>

@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, current_app, jsonify, render_template, request
+from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required
-from sqlalchemy import select
 
 from gametheca import db
-from gametheca.models import GlobalSettings
 from gametheca.utils.arr_connectors import (
     connector_status,
     get_arr_config,
@@ -21,22 +19,18 @@ from gametheca.utils.arr_hardlink_pipeline import (
     propose_hardlinks,
 )
 from gametheca.utils.auth import admin_required
+from gametheca.utils.module_status import (
+    arr_db_enabled,
+    arr_module_on,
+    ensure_global_settings,
+    env_flag,
+)
 from gametheca.utils.quality_profiles import score_release_title
 arr_bp = Blueprint('arr', __name__)
 
 
 def arr_module_enabled() -> bool:
-    env_on = str(current_app.config.get('ENABLE_ARR_MODULE', '')).lower() in (
-        '1',
-        'true',
-        'yes',
-        'on',
-    )
-    settings = db.session.execute(
-        select(GlobalSettings).order_by(GlobalSettings.id).limit(1),
-    ).scalars().first()
-    db_on = bool(getattr(settings, 'enable_arr_module', False)) if settings else False
-    return env_on or db_on
+    return arr_module_on()
 
 
 @arr_bp.route('/api/arr/status', methods=['GET'])
@@ -56,11 +50,38 @@ def arr_status():
             else 'disabled'
         ),
         'message': (
-            'Arr module ready â€” configure indexers/clients in Admin â†’ Arr.'
+            'Arr module ready — configure indexers/clients in Admin → Arr.'
             if enabled
             else 'Arr module is disabled. Set ENABLE_ARR_MODULE=true or enable in Admin.'
         ),
         'connectors': connectors,
+    })
+
+
+@arr_bp.route('/api/arr/module', methods=['GET', 'PUT'])
+@login_required
+@admin_required
+def arr_module_flag():
+    """Read/write the DB toggle. Available even when the module is currently off."""
+    env_on = env_flag('ENABLE_ARR_MODULE')
+    if request.method == 'GET':
+        return jsonify({
+            'enabled': arr_module_enabled(),
+            'db_enabled': arr_db_enabled(),
+            'env_enabled': env_on,
+        })
+    data = request.get_json(silent=True) or {}
+    if 'enabled' not in data and 'enable_arr_module' not in data:
+        return jsonify({'error': 'enabled is required'}), 400
+    enabled = bool(data.get('enabled', data.get('enable_arr_module')))
+    settings = ensure_global_settings()
+    settings.enable_arr_module = enabled
+    db.session.commit()
+    return jsonify({
+        'status': 'saved',
+        'enabled': arr_module_enabled(),
+        'db_enabled': bool(settings.enable_arr_module),
+        'env_enabled': env_on,
     })
 
 
@@ -201,6 +222,8 @@ def arr_admin_page():
     return render_template(
         'admin/arr_module.html',
         enabled=enabled,
+        db_enabled=arr_db_enabled(),
+        env_enabled=env_flag('ENABLE_ARR_MODULE'),
         connectors=connector_status() if enabled else [],
         hardlink_pipeline=pipeline_enabled(),
     )

@@ -34,8 +34,8 @@
 
 .gt-wishlist__form button:hover:not(:disabled),
 .gt-wishlist__actions button:hover:not(:disabled) {
-  border-color: var(--gt-accent, #ff5a36);
-  color: var(--gt-accent, #ff5a36);
+  border-color: var(--gt-accent);
+  color: var(--gt-accent);
 }
 
 .gt-wishlist__form button:disabled,
@@ -53,7 +53,7 @@
 }
 
 .gt-wishlist__action-error {
-  color: var(--gt-accent, #ff5a36);
+  color: var(--gt-accent);
 }
 
 .gt-wishlist__list {
@@ -86,11 +86,11 @@
 
 .gt-wishlist__status[data-status='fulfilled'],
 .gt-wishlist__status[data-status='approved'] {
-  color: var(--gt-accent, #ff5a36);
+  color: var(--gt-accent);
 }
 
 .gt-wishlist__card a {
-  color: var(--gt-accent, #ff5a36);
+  color: var(--gt-accent);
 }
 
 .gt-wishlist__actions {

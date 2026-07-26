@@ -1,10 +1,11 @@
+{% import 'partials/icons.html' as icons %}
 <div class="notification-settings-section mt-4">
-    <h5><i class="fas fa-bell"></i> Notification Preferences</h5>
+    <h5>{{ icons.icon('bell') }} Notification Preferences</h5>
     <p class="text-muted">Configure which events trigger Discord notifications</p>
 
     {% if not settings or not settings.discord_webhook_url %}
     <div class="alert alert-warning">
-        <i class="fas fa-exclamation-triangle"></i>
+        {{ icons.icon('warning') }}
         Discord notifications require a webhook URL to be configured first.
     </div>
     {% endif %}
@@ -18,7 +19,7 @@
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="discordNotifyNewGames">
                         <label class="form-check-label" for="discordNotifyNewGames" data-bs-toggle="tooltip" title="Send Discord notifications when new games are added to the library">
-                            <i class="fas fa-gamepad text-primary me-2"></i>
+                            {{ icons.icon('gamepad', extra_class='text-primary me-2') }}
                             <strong>New Games</strong>
                             <div class="form-text">Notify when games are added</div>
                         </label>
@@ -31,7 +32,7 @@
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="discordNotifyGameUpdates">
                         <label class="form-check-label" for="discordNotifyGameUpdates" data-bs-toggle="tooltip" title="Send Discord notifications when game updates are available">
-                            <i class="fas fa-sync-alt text-info me-2"></i>
+                            {{ icons.icon('refresh', extra_class='text-info me-2') }}
                             <strong>Game Updates</strong>
                             <div class="form-text">Notify when updates are found</div>
                         </label>
@@ -44,7 +45,7 @@
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="discordNotifyGameExtras">
                         <label class="form-check-label" for="discordNotifyGameExtras" data-bs-toggle="tooltip" title="Send Discord notifications when game extra files are available">
-                            <i class="fas fa-file-archive text-warning me-2"></i>
+                            {{ icons.icon('file', extra_class='text-warning me-2') }}
                             <strong>Game Extras</strong>
                             <div class="form-text">Notify when extras are found</div>
                         </label>
@@ -57,7 +58,7 @@
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="discordNotifyDownloads">
                         <label class="form-check-label" for="discordNotifyDownloads" data-bs-toggle="tooltip" title="Send Discord notifications when downloads are processed and ready">
-                            <i class="fas fa-download text-success me-2"></i>
+                            {{ icons.icon('download', extra_class='text-success me-2') }}
                             <strong>Downloads</strong>
                             <div class="form-text">Notify when downloads complete</div>
                         </label>
@@ -70,7 +71,7 @@
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="discordNotifyManualTrigger">
                         <label class="form-check-label" for="discordNotifyManualTrigger" data-bs-toggle="tooltip" title="Allow users to manually send Discord notifications for individual games">
-                            <i class="fas fa-hand-pointer text-secondary me-2"></i>
+                            {{ icons.icon('cursor', extra_class='text-secondary me-2') }}
                             <strong>Allow Manual Notifications</strong>
                             <div class="form-text">Enable manual trigger buttons for users</div>
                         </label>
@@ -81,7 +82,7 @@
 
         <div class="mt-3">
             <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Save Notification Settings
+                {{ icons.icon('save') }} Save Notification Settings
             </button>
         </div>
     </form>

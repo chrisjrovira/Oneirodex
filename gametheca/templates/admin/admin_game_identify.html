@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 
 <head>
     <meta charset="UTF-8">
@@ -108,7 +109,7 @@
             <!-- Collapsible Details Section -->
             <div class="details-section">
                 <button class="btn btn-secondary w-100 mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#gameDetails" aria-expanded="false" aria-controls="gameDetails">
-                    Details <i class="fas fa-chevron-down"></i>
+                    Details {{ icons.icon('chevron-down') }}
                 </button>
                 <div class="collapse" id="gameDetails">
                     <div class="game_edit-form-group-summary">

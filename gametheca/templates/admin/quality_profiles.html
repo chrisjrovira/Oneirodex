@@ -1,10 +1,11 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <div class="container gt-adminpage gt-adminpage--md gt-adminpage--spaced">
     <div class="gt-adminpage-header">
         <div>
-            <h1 class="gt-adminpage-title"><i class="fas fa-sliders-h"></i> Quality profiles</h1>
+            <h1 class="gt-adminpage-title">{{ icons.icon('sliders', size=26) }} Quality profiles</h1>
             <p class="gt-adminpage-lede">
                 Preferred and blocked release groups plus size bands. Used to score Arr search hits.
             </p>
@@ -38,7 +39,7 @@
         <button id="qp-save" class="btn btn-primary">Save</button>
     </div>
     </div>
-    <p><a class="gt-adminpage-backlink" href="{{ url_for('site.admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Back to admin</a></p>
+    <p><a class="gt-adminpage-backlink" href="{{ url_for('site.admin_dashboard') }}">{{ icons.icon('arrow-left') }} Back to admin</a></p>
 </div>
 <script>
 (async function () {

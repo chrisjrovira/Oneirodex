@@ -7,7 +7,7 @@
 }
 
 .gt-vr__error-detail {
-  color: var(--gt-accent, #ff5a36);
+  color: var(--gt-accent);
 }
 
 .gt-vr__grid {
@@ -32,8 +32,8 @@
 
 .gt-vr__card:hover,
 .gt-vr__card:focus-visible {
-  border-color: var(--gt-accent, #ff5a36);
-  color: var(--gt-accent, #ff5a36);
+  border-color: var(--gt-accent);
+  color: var(--gt-accent);
 }
 
 .gt-vr__card img {
@@ -69,8 +69,8 @@
 
 .gt-vr__pager button:hover:not(:disabled),
 .gt-vr__back:hover {
-  border-color: var(--gt-accent, #ff5a36);
-  color: var(--gt-accent, #ff5a36);
+  border-color: var(--gt-accent);
+  color: var(--gt-accent);
 }
 
 .gt-vr__pager button:disabled {

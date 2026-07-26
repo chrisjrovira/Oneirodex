@@ -1,18 +1,50 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <div class="container gt-adminpage gt-adminpage--sm gt-adminpage--spaced">
     <div class="gt-adminpage-header">
         <div>
-            <h1 class="gt-adminpage-title"><i class="fas fa-wand-magic-sparkles"></i> AI assist</h1>
+            <h1 class="gt-adminpage-title">{{ icons.icon('wand', size=26) }} AI assist</h1>
             <p class="gt-adminpage-lede">
                 Ollama suggestions by default. Renaming a game from a suggestion requires
                 <code>ENABLE_AI_AUTO_APPLY=true</code> (never silent / background).
             </p>
         </div>
     </div>
+
     <div class="gt-adminpage-panel">
-    <div id="ai-status" class="gt-adminpage-status mb-3 text-muted">Loading…</div>
+        <div class="gt-adminpage-panel-header"><h2>Module enable &amp; Ollama</h2></div>
+        <p class="text-muted small mb-3">
+            Enable here or via <code>ENABLE_AI_ASSIST=true</code>. Env currently:
+            <strong>{% if ai_config.env_enabled %}on{% else %}off{% endif %}</strong>.
+            Auto-apply stays env-only.
+        </p>
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="ai-enable"
+                   {% if ai_config.db_enabled %}checked{% endif %}>
+            <label class="form-check-label" for="ai-enable">Enable AI assist (Admin toggle)</label>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="ai-ollama-url">Ollama base URL</label>
+            <input id="ai-ollama-url" class="form-control"
+                   value="{{ ai_config.ollama_base_url or '' }}"
+                   placeholder="http://127.0.0.1:11434">
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="ai-ollama-model">Ollama model</label>
+            <input id="ai-ollama-model" class="form-control"
+                   value="{{ ai_config.ollama_model or '' }}"
+                   placeholder="llama3.2">
+        </div>
+        <div class="gt-adminpage-actions mb-2">
+            <button id="ai-config-save" class="btn btn-primary">Save</button>
+            <button id="ai-config-test" class="btn btn-secondary">Test connection</button>
+        </div>
+        <div id="ai-status" class="gt-adminpage-status text-muted" aria-live="polite">Loading…</div>
+    </div>
+
+    <div class="gt-adminpage-panel">
     <div class="mb-3">
         <label class="form-label">Folder / title to triage</label>
         <input id="ai-name" class="form-control" placeholder="Celeste-FitGirl">
@@ -38,7 +70,7 @@
     <button id="ai-doctor" class="btn btn-secondary">Explain issues</button>
     <pre id="ai-out" class="gt-adminpage-output mt-3"></pre>
     </div>
-    <p><a class="gt-adminpage-backlink" href="{{ url_for('site.admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Back to admin</a></p>
+    <p><a class="gt-adminpage-backlink" href="{{ url_for('admin2.settings') }}">{{ icons.icon('arrow-left') }} Back to Settings</a></p>
 </div>
 <script>
 (async function () {
@@ -46,13 +78,38 @@
   const headers = { 'Content-Type': 'application/json', 'X-CSRFToken': csrf };
   const out = document.getElementById('ai-out');
   const status = document.getElementById('ai-status');
-  try {
-    const res = await fetch('/api/ai/status', { credentials: 'same-origin' });
-    const data = await res.json();
-    status.textContent = `enabled=${data.enabled} auto_apply=${data.auto_apply_enabled} reachable=${data.reachable} model=${data.model || '—'} ${data.error || ''}`;
-  } catch (e) {
-    status.textContent = e.message;
+
+  async function refreshStatus() {
+    try {
+      const res = await fetch('/api/ai/status', { credentials: 'same-origin' });
+      const data = await res.json();
+      status.textContent = `enabled=${data.enabled} auto_apply=${data.auto_apply_enabled} reachable=${data.reachable} model=${data.model || '—'} ${data.error || ''}`;
+    } catch (e) {
+      status.textContent = e.message;
+    }
   }
+
+  document.getElementById('ai-config-save').onclick = async () => {
+    status.textContent = 'Saving…';
+    const res = await fetch('/api/ai/config', {
+      method: 'PUT', credentials: 'same-origin', headers,
+      body: JSON.stringify({
+        enabled: document.getElementById('ai-enable').checked,
+        ollama_base_url: document.getElementById('ai-ollama-url').value.trim(),
+        ollama_model: document.getElementById('ai-ollama-model').value.trim(),
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      status.textContent = data.error || 'Save failed';
+      return;
+    }
+    status.textContent = `Saved. enabled=${data.enabled}. Testing…`;
+    await refreshStatus();
+  };
+
+  document.getElementById('ai-config-test').onclick = refreshStatus;
+
   document.getElementById('ai-triage').onclick = async () => {
     const res = await fetch('/api/ai/triage', {
       method: 'POST', credentials: 'same-origin', headers,
@@ -86,6 +143,8 @@
     });
     out.textContent = JSON.stringify(await res.json(), null, 2);
   };
+
+  refreshStatus();
 })();
 </script>
 {% endblock %}

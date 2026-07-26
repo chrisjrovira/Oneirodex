@@ -1,10 +1,10 @@
 <!-- templates/admin/manage_scans.html -->
 
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 {% block head %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 {% endblock %}
 
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_scanjobs.css'|theme_asset }}">
@@ -52,7 +52,7 @@
                 {% if libraries|length > 0 %}
                 <div class="mb-3 d-flex gap-2 flex-wrap">
                     <button type="button" id="refreshAllLibrariesBtn" class="btn btn-secondary">
-                        <i class="fas fa-sync"></i> Refresh all libraries
+                        {{ icons.icon('refresh') }} Refresh all libraries
                     </button>
                     <small class="text-muted align-self-center">Re-scans each library’s last scan folder for new games (one at a time).</small>
                 </div>
@@ -64,7 +64,7 @@
                         <!-- Configuration Card -->
                         <div class="config-card">
                         <div class="card-header">
-                            <h4 class="card-title"><i class="fas fa-cogs"></i> Scan Configuration</h4>
+                            <h4 class="card-title">{{ icons.icon('cogs', size=20) }} Scan Configuration</h4>
                         </div>
                         <div class="card-content">
                             <div class="config-grid">
@@ -150,14 +150,14 @@
                     <!-- Path Selection Card -->
                     <div class="path-card">
                         <div class="card-header">
-                            <h4 class="card-title"><i class="fas fa-folder"></i> Scan Location</h4>
+                            <h4 class="card-title">{{ icons.icon('folder', size=20) }} Scan Location</h4>
                         </div>
                         <div class="card-content">
                             <div class="path-input-group">
                                 {{ auto_form.folder_path.label(class="config-label", **{"data-toggle": "tooltip", "title": "Browse or enter the path to scan for games. Leave empty to scan the configured base directory. Click a folder to select it, then Start Scan."}) }}
                                 <div class="scan-controls-group" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
                                     <button type="submit" name="submit" value="AutoScan" class="btn btn-primary browse-btn" style="margin-right: 10px;">
-                                        <i class="fas fa-play"></i> Start Scan
+                                        {{ icons.icon('play') }} Start Scan
                                     </button>
                                     <div id="loadingSpinner" class="loading-spinner" style="display: none;">
                                         <img src="/static/newstyle/searching_small.gif" alt="Loading...">
@@ -166,7 +166,7 @@
                                 <div class="input-with-button">
                                     {{ auto_form.folder_path(class="form-control path-input", placeholder="Select a folder below, or leave empty for base directory") }}
                                     <button id="browseFoldersBtn" type="button" class="btn btn-info browse-btn" data-browse-url="{{ url_for('apis.browse_folders_ss') }}">
-                                        <i class="fas fa-search"></i> Browse
+                                        {{ icons.icon('search') }} Browse
                                     </button>
                                 </div>
                                 {% if auto_form.folder_path.errors %}
@@ -178,7 +178,7 @@
                             
                             <div class="folder-browser">
                                 <button id="upFolderBtn" type="button" class="btn btn-secondary up-btn" style="display: none;">
-                                    <i class="fas fa-arrow-up"></i> Up
+                                    {{ icons.icon('updates') }} Up
                                 </button>
                                 <div id="folderContents" class="folder-contents"></div>
                             </div>
@@ -189,12 +189,12 @@
                 {% else %}
                 <div class="no-libraries-card">
                     <div class="no-libraries-content">
-                        <i class="fas fa-book-open"></i>
+                        {{ icons.icon('book', size=32) }}
                         <h4>Welcome to Scan Management</h4>
                         <p>Get started by creating your first library to organize your game collection.</p>
                         <p class="help-text">Libraries help organize your games by platform, genre, or any way you prefer.</p>
                         <a href="{{ url_for('library.libraries') }}" class="btn btn-elegant create-library-btn">
-                            <i class="fas fa-plus-circle"></i> Create Your First Library
+                            {{ icons.icon('plus') }} Create Your First Library
                         </a>
                     </div>
                 </div>
@@ -205,7 +205,7 @@
                         <div class="jobs-header-content">
                             <div class="jobs-title-section">
                                 <h4 class="card-title">
-                                    <i class="fas fa-tasks"></i> Active Scan Jobs
+                                    {{ icons.icon('tasks', size=20) }} Active Scan Jobs
                                 </h4>
                                 <p class="jobs-subtitle">Monitor and manage running scan operations</p>
                             </div>
@@ -213,7 +213,7 @@
                                 <form action="{{ url_for('main.clear_all_scan_jobs') }}" method="post" class="inline-form">
                                     {{ csrf_form.csrf_token }}
                                     <button type="submit" class="btn btn-outline-danger btn-sm control-btn" onclick="return confirm('Delete ALL jobs?');">
-                                        <i class="fas fa-trash"></i> <span class="btn-text">Clear All</span>
+                                        {{ icons.icon('trash') }} <span class="btn-text">Clear All</span>
                                     </button>
                                 </form>
                             </div>
@@ -419,10 +419,10 @@
             <div id="scanFilters" class="admin_manage_scanjobs-filters-container container tab-pane {% if active_tab == 'scan_filters' %}active{% else %}fade{% endif %}">
                 <div class="admin_manage_scanjobs-filters-panel glass-panel">
                     <div class="admin_manage_scanjobs-tab-header">
-                        <h3><i class="fas fa-filter"></i> Scanning Filters</h3>
+                        <h3>{{ icons.icon('filter', size=22) }} Scanning Filters</h3>
                         <p>Manage scanning filter patterns to improve scanning speed.</p>
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFilterModal">
-                            <i class="fas fa-plus"></i> Add New Filter
+                            {{ icons.icon('plus') }} Add New Filter
                         </button>
                     </div>
 
@@ -480,7 +480,7 @@
                                         <input type="hidden" name="submit" value="DeleteReleaseGroup">
                                         <input type="hidden" name="filter_id" value="{{ group.id }}">
                                         <button type="submit" class="admin_manage_filters-remove-btn btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this filter?')">
-                                            <i class="fas fa-trash"></i> Remove
+                                            {{ icons.icon('trash') }} Remove
                                         </button>
                                     </form>
                                 </td>
@@ -495,7 +495,7 @@
             <div id="fileExtensions" class="admin_manage_scanjobs-extensions-container container tab-pane {% if active_tab == 'file_extensions' %}active{% else %}fade{% endif %}">
                 <div class="admin_manage_scanjobs-extensions-panel glass-panel">
                     <div class="admin_manage_scanjobs-tab-header">
-                        <h3><i class="fas fa-puzzle-piece"></i> File Extensions</h3>
+                        <h3>{{ icons.icon('plug', size=22) }} File Extensions</h3>
                         <p>Manage allowed file extensions for game file recognition.</p>
                     </div>
 
@@ -504,7 +504,7 @@
                             <div class="card-header">
                                 <h4>Allowed File Types</h4>
                                 <button class="btn btn-primary btn-sm" onclick="addFileType('allowed')">
-                                    <i class="fas fa-plus"></i> Add New
+                                    {{ icons.icon('plus') }} Add New
                                 </button>
                             </div>
                             <div class="card-body">
@@ -520,11 +520,11 @@
                                         <tr data-id="{{ type.id }}" data-category="allowed">
                                             <td class="type-value">{{ type.value }}</td>
                                             <td>
-                                                <button class="btn btn-sm btn-warning" onclick="editFileType(this)">
-                                                    <i class="fas fa-edit"></i>
+                                                <button class="btn btn-sm btn-warning" onclick="editFileType(this)" title="Edit">
+                                                    {{ icons.icon('edit', title='Edit') }}
                                                 </button>
-                                                <button class="btn btn-sm btn-danger" onclick="deleteFileType('allowed', {{ type.id }})">
-                                                    <i class="fas fa-trash"></i>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteFileType('allowed', {{ type.id }})" title="Delete">
+                                                    {{ icons.icon('trash', title='Delete') }}
                                                 </button>
                                             </td>
                                         </tr>
@@ -551,7 +551,7 @@
             <div id="imageQueue" class="admin_manage_scanjobs-imagequeue-container container tab-pane {% if active_tab == 'image_queue' %}active{% else %}fade{% endif %}">
                 <div class="admin_manage_scanjobs-imagequeue-panel glass-panel">
                     <div class="admin_manage_scanjobs-tab-header">
-                        <h3><i class="fas fa-images"></i> Image Queue</h3>
+                        <h3>{{ icons.icon('image', size=22) }} Image Queue</h3>
                         <p>Manage game cover and screenshot downloads.</p>
                     </div>
 
@@ -560,16 +560,16 @@
                         <div class="col-md-6">
                             <div class="btn-group">
                                 <button class="btn btn-success" onclick="downloadBatch(10)">
-                                    <i class="fas fa-download"></i> Download 10
+                                    {{ icons.icon('download') }} Download 10
                                 </button>
                                 <button class="btn btn-success" onclick="downloadBatch(50)">
-                                    <i class="fas fa-download"></i> Download 50
+                                    {{ icons.icon('download') }} Download 50
                                 </button>
                                 <button class="btn btn-primary" onclick="downloadBatch(100)">
-                                    <i class="fas fa-download"></i> Download 100
+                                    {{ icons.icon('download') }} Download 100
                                 </button>
                                 <button class="btn btn-secondary" onclick="refreshQueue()">
-                                    <i class="fas fa-sync"></i> Refresh
+                                    {{ icons.icon('refresh') }} Refresh
                                 </button>
                             </div>
                         </div>
@@ -656,7 +656,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fa-solid fa-exclamation-triangle"></i> Write Permission Error</h5>
+                <h5 class="modal-title">{{ icons.icon('warning', size=20) }} Write Permission Error</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -693,12 +693,12 @@
                 </div>
 
                 <div class="alert alert-warning">
-                    <p><i class="fa-solid fa-info-circle"></i> <strong>Note:</strong> Without write permissions, the local metadata feature cannot save game identification data to disk, and you won't get the benefits of surviving database resets.</p>
+                    <p>{{ icons.icon('info') }} <strong>Note:</strong> Without write permissions, the local metadata feature cannot save game identification data to disk, and you won't get the benefits of surviving database resets.</p>
                 </div>
             </div>
             <div class="modal-footer">
                 <a href="{{ url_for('admin2.new_server_settings') }}" class="btn btn-secondary">
-                    <i class="fa-solid fa-cog"></i> Go to Settings
+                    {{ icons.icon('cogs') }} Go to Settings
                 </a>
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
             </div>
@@ -709,6 +709,11 @@
 <script type="module" src="{{ 'js/admin_manage_scanjobs.js'|theme_asset }}"></script>
 
 <script>
+    // Mirrors icons.html's 'download' and 'trash' glyphs — the icon macro can't run
+    // inside these JS-built table rows, so the SVG markup is duplicated here.
+    const ICON_DOWNLOAD_SVG = '{{ icons.icon("download")|replace("\n", "") }}';
+    const ICON_TRASH_SVG = '{{ icons.icon("trash")|replace("\n", "") }}';
+
     function onLibraryChange(libraryUuid, scanType) {
         // Update the URL with the new library_uuid parameter and active_tab
         const url = new URL(window.location.href);
@@ -898,11 +903,11 @@
                     <td>
                         ${!image.is_downloaded ? `
                             <button class="btn btn-sm btn-success me-1" onclick="downloadSingle(${image.id})" title="Download">
-                                <i class="fas fa-download"></i>
+                                ${ICON_DOWNLOAD_SVG}
                             </button>
                         ` : ''}
                         <button class="btn btn-sm btn-danger" onclick="deleteSingle(${image.id})" title="Delete">
-                            <i class="fas fa-trash"></i>
+                            ${ICON_TRASH_SVG}
                         </button>
                     </td>
                 </tr>

@@ -45,6 +45,12 @@
   list-style: none;
 }
 
+.gt-collections__row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .gt-collections__card {
   display: flex;
   flex-direction: column;
@@ -60,8 +66,8 @@
 
 .gt-collections__card:hover,
 .gt-collections__card:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent, #ff5a36) 55%, transparent);
-  color: var(--gt-accent, #ff5a36);
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  color: var(--gt-accent);
 }
 
 .gt-collections__card-desc {
@@ -77,7 +83,7 @@
 }
 
 .gt-collections__error {
-  color: var(--gt-accent, #ff5a36);
+  color: var(--gt-accent);
   font-size: 0.85rem;
 }
 
@@ -88,7 +94,7 @@
 
 .gt-collection__crumb a:hover,
 .gt-collection__crumb a:focus-visible {
-  color: var(--gt-accent, #ff5a36);
+  color: var(--gt-accent);
 }
 
 .gt-collection__items {
@@ -99,8 +105,51 @@
   list-style: none;
 }
 
+.gt-collection__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gt-collection__item {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.gt-collection__item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.gt-collections__reorder {
+  padding: 6px 10px;
+  border: 1px solid var(--gt-border, #2a3140);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gt-text-muted, #b6becc);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.gt-collections__reorder:hover:not(:disabled),
+.gt-collections__reorder:focus-visible:not(:disabled) {
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  color: var(--gt-accent);
+}
+
+.gt-collections__reorder:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .gt-collection__item a {
   display: flex;
+  flex: 1 1 auto;
   justify-content: space-between;
   gap: 12px;
   padding: 10px 14px;
@@ -113,8 +162,25 @@
 
 .gt-collection__item a:hover,
 .gt-collection__item a:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent, #ff5a36) 55%, transparent);
-  color: var(--gt-accent, #ff5a36);
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  color: var(--gt-accent);
+}
+
+.gt-collections__delete,
+.gt-collections__remove {
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--gt-danger, #ff5c7a) 45%, transparent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gt-danger, #ff5c7a);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.gt-collections__delete:disabled,
+.gt-collections__remove:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .gt-collection__add {
@@ -126,4 +192,37 @@
 .gt-collection__add summary {
   cursor: pointer;
   color: var(--gt-text, #f2f4f8);
+}
+
+.gt-collection__picker {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gt-collection__picker button {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--gt-border, #2a3140);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gt-surface, #141820) 96%, transparent);
+  color: var(--gt-text, #f2f4f8);
+  text-align: left;
+  cursor: pointer;
+}
+
+.gt-collection__picker button:hover:not(:disabled),
+.gt-collection__picker button:focus-visible:not(:disabled) {
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  color: var(--gt-accent);
+}
+
+.gt-collection__picker button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_smtp_settings.css'|theme_asset }}">
@@ -16,8 +17,8 @@
         <a href="{{ url_for('admin2.integrations') }}">Integrations</a> hub.
     </div>
     <div class="card">
-        <h2>SMTP Settings <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#smtpHelpModal">
-            <i class="fas fa-question-circle"></i>
+        <h2>SMTP Settings <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#smtpHelpModal" title="SMTP help">
+            {{ icons.icon('help') }}
         </button></h2>
 
         {% include 'partials/integrations/smtp_form.html' %}

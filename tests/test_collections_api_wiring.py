@@ -1,0 +1,91 @@
+"""DB-free wiring guards for collections delete/remove/counts/picker."""
+
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+API = ROOT / 'gametheca' / 'routes_apis' / 'collections.py'
+SPA_API = ROOT / 'frontend' / 'member-app' / 'src' / 'api' / 'collections.js'
+DETAIL = ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'CollectionDetailPage.jsx'
+LIST = ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'CollectionsPage.jsx'
+
+
+def test_collections_api_exposes_delete_and_counts():
+    src = API.read_text(encoding='utf-8')
+    assert "methods=['DELETE']" in src
+    assert "methods=['PATCH']" in src
+    assert 'def delete_collection' in src
+    assert 'def update_collection' in src
+    assert 'def remove_collection_item' in src
+    assert 'def reorder_collection_items' in src
+    assert "methods=['PUT']" in src
+    assert '/items/order' in src
+    assert 'item_count' in src
+    assert 'can_edit' in src
+    assert 'user_can_access_game' in src
+    assert 'System collections cannot be deleted' in src
+    assert 'System collections cannot be edited' in src
+    assert '_filtered_collection_payload' in src
+
+
+def test_spa_collections_client_covers_new_actions():
+    src = SPA_API.read_text(encoding='utf-8')
+    assert 'export async function deleteCollection' in src
+    assert 'export async function updateCollection' in src
+    assert 'export async function reorderCollectionItems' in src
+    assert 'export async function removeCollectionItem' in src
+    assert 'export async function searchGames' in src
+    assert '/api/search' in src
+    assert '/items/order' in src
+
+
+def test_spa_detail_uses_search_picker_not_raw_uuid_paste():
+    detail = DETAIL.read_text(encoding='utf-8')
+    assert 'searchGames' in detail
+    assert 'Search games' in detail
+    assert 'Paste a game ID' not in detail
+    assert 'removeCollectionItem' in detail
+    assert 'deleteCollection' in detail
+    assert 'updateCollection' in detail
+    assert 'reorderCollectionItems' in detail
+    assert 'Save changes' in detail
+
+
+def test_spa_list_shows_item_counts_and_delete():
+    listing = LIST.read_text(encoding='utf-8')
+    assert 'item_count' in listing
+    assert 'deleteCollection' in listing
+    assert 'can_edit' in listing
+
+
+def test_newsletter_ckeditor_targets_content_field():
+    html = (ROOT / 'gametheca' / 'templates' / 'admin' / 'admin_newsletter.html').read_text(
+        encoding='utf-8',
+    )
+    assert "document.querySelector('#content')" in html
+    assert "document.querySelector('#editor')" not in html
+
+
+def test_statistics_scripts_use_theme_asset():
+    html = (ROOT / 'gametheca' / 'templates' / 'admin' / 'admin_statistics.html').read_text(
+        encoding='utf-8',
+    )
+    assert "js/chart-utils.js'|theme_asset" in html
+    assert "js/admin-statistics.js'|theme_asset" in html
+    assert "library/themes/default/js/" not in html
+
+
+def test_orphaned_manage_downloads_css_is_gone():
+    path = (
+        ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / 'admin'
+        / 'admin_manage_downloads.css'
+    )
+    assert not path.exists()
+
+
+def test_init_manager_has_no_emoji_and_uses_safe_print():
+    src = (ROOT / 'gametheca' / 'init_manager.py').read_text(encoding='utf-8')
+    assert 'def _safe_print' in src
+    assert '_safe_print(' in src
+    for glyph in ('🚀', '✅', '❌', '⚠️'):
+        assert glyph not in src

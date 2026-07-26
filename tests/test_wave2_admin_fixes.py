@@ -28,3 +28,13 @@ def test_edit_library_seeds_scan_depth_only_on_get():
     # Unconditional assignment lines should not appear outside the GET block as siblings
     # (simple guard: count of scan_depth.data assignments in edit_library == 1 inside GET)
     assert chunk.count('form.scan_depth.data') == 1
+
+
+def test_base_html_collapses_member_sidebar_on_admin_paths():
+    """Admin Jinja pages keep the member LHN for recovery nav, but start collapsed
+    so it no longer competes with page chrome (handoff Wave 2 deferred #1)."""
+    base = (ROOT / 'gametheca' / 'templates' / 'base.html').read_text(encoding='utf-8')
+    assert "request.path.startswith('/admin')" in base
+    assert 'admin_chrome' in base
+    assert 'class="sidebar{% if admin_chrome %} collapsed{% endif %}"' in base
+    assert '{% if admin_chrome %} collapsed{% endif %}' in base

@@ -25,4 +25,5 @@ test('onChange updates CSS vars and notifies parent', async () => {
 
   expect(onChange).toHaveBeenCalledWith('L')
   expect(document.documentElement.style.getPropertyValue('--gt-tile-min')).toBe('220px')
+  expect(document.documentElement.style.getPropertyValue('--gt-tile-gap')).toBe('12px')
 })

@@ -1,6 +1,7 @@
+{% import 'partials/icons.html' as icons %}
 <div class="instructions-toggle">
     <button class="btn btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#instructionsPanel" aria-expanded="false" aria-controls="instructionsPanel">
-        <i class="fas fa-chevron-down" id="toggleIcon"></i> Show Instructions
+        <span id="toggleIcon" style="display:inline-flex; transition: transform 0.3s ease;">{{ icons.icon('chevron-down') }}</span> Show Instructions
     </button>
 </div>
 
@@ -39,7 +40,7 @@
             <input type="password" id="igdb_client_secret" value="{{ settings.igdb_client_secret if settings else '' }}" class="form-control"
             minlength="20" maxlength="50" autocomplete="off">
             <button type="button" class="toggle-password" data-input="igdb_client_secret" aria-label="Toggle password visibility">
-                <i id="eye-igdb-secret" class="fas fa-eye"></i>
+                <span class="toggle-password-icon">{{ icons.icon('eye') }}</span>
             </button>
         </div>
     </div>

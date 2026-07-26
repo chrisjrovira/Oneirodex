@@ -69,7 +69,8 @@ class TestThemeManagerInit:
         manager = ThemeManager(sample_app)
         
         assert manager.app == sample_app
-        assert 'gametheca/static/library/themes' in manager.theme_folder
+        normalized = manager.theme_folder.replace('\\', '/')
+        assert 'gametheca/static/library/themes' in normalized
         assert os.path.isabs(manager.theme_folder)
 
 
@@ -354,7 +355,7 @@ class TestValidateThemeStructure:
         result = theme_manager.validate_theme_structure('/fake/theme/path')
         
         assert result is True
-        mock_exists.assert_called_once_with('/fake/theme/path/css')
+        mock_exists.assert_called_once_with(os.path.join('/fake/theme/path', 'css'))
 
     @patch('os.path.exists')
     def test_validate_theme_structure_invalid(self, mock_exists, theme_manager):
@@ -364,7 +365,7 @@ class TestValidateThemeStructure:
         result = theme_manager.validate_theme_structure('/fake/theme/path')
         
         assert result is False
-        mock_exists.assert_called_once_with('/fake/theme/path/css')
+        mock_exists.assert_called_once_with(os.path.join('/fake/theme/path', 'css'))
 
 
 class TestDeleteThemeFile:

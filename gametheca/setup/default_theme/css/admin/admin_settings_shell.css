@@ -66,10 +66,40 @@
     outline-offset: 2px;
 }
 
+.settings-shell-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
 .settings-shell-card-icon {
     display: inline-flex;
-    margin-bottom: var(--spacing-xs);
     color: var(--gt-accent, var(--btn-primary));
+}
+
+.settings-shell-badge {
+    flex: 0 0 auto;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--border-radius-sm, 6px);
+    font-size: var(--font-size-xs, 0.75rem);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+    border: 1px solid transparent;
+}
+
+.settings-shell-badge--on {
+    color: var(--gt-success, #3dd68c);
+    background: color-mix(in srgb, var(--gt-success, #3dd68c) 16%, transparent);
+    border-color: color-mix(in srgb, var(--gt-success, #3dd68c) 40%, transparent);
+}
+
+.settings-shell-badge--off {
+    color: var(--gt-text-muted, var(--text-light));
+    background: color-mix(in srgb, var(--gt-text-muted, var(--text-light)) 12%, transparent);
+    border-color: color-mix(in srgb, var(--gt-text-muted, var(--text-light)) 28%, transparent);
 }
 
 .settings-shell-card h2 {

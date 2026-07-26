@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 
 <link rel="stylesheet" href="{{ 'css/admin/admin_help.css'|theme_asset }}">
 
@@ -63,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="help-content">
     <h1>GameTheca Administrator Guide</h1>
     <div class="admin-section" id="index">
-        <h2><i class="fas fa-chevron-down collapse-icon"></i>Quick Navigation</h2>
+        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}Quick Navigation</h2>
         <div class="collapsible-content">
             <ul>
                 <li><a href="#system-overview">System Overview</a></li>
@@ -77,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
     <div class="admin-section" id="quick-start">
-        <h2><i class="fas fa-chevron-down collapse-icon"></i>Quick Start Guide</h2>
+        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}Quick Start Guide</h2>
         <div class="collapsible-content">
             <ol class="step-by-step">
                 <li>Create a new library by going to Library Management in the admin dashboard</li>
@@ -103,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- System Overview -->
     <div class="admin-section" id="system-overview">
-        <h2><i class="fas fa-chevron-down collapse-icon"></i>System Overview</h2>
+        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}System Overview</h2>
         <div class="collapsible-content">
             <p>GameTheca is a comprehensive game library management system that allows you to organize, catalog, and share your game collection.</p>
             
@@ -122,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Library Management -->
     <div class="admin-section" id="library-management">
-        <h2><i class="fas fa-chevron-down collapse-icon"></i>Library Management</h2>
+        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}Library Management</h2>
         <div class="collapsible-content">
             <div class="help-subsection">
                 <h3>Creating Libraries</h3>
@@ -148,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- User Management -->
     <div class="admin-section" id="user-management">
-        <h2><i class="fas fa-chevron-down collapse-icon"></i>User Management & Access Control</h2>
+        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}User Management & Access Control</h2>
         <div class="collapsible-content">
             <div class="help-subsection">
                 <h3>Invite System</h3>
@@ -175,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Scanning Section -->
     <div class="admin-section" id="scanning">
-        <h2><i class="fas fa-chevron-down collapse-icon"></i>Scanning & Content Management</h2>
+        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}Scanning & Content Management</h2>
         <div class="collapsible-content">
             <div class="help-subsection">
                 <h3>Scan Management</h3>
@@ -244,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Email Settings -->
     <div class="admin-section" id="email-settings">
-        <h2><i class="fas fa-chevron-down collapse-icon"></i>Email & SMTP Configuration</h2>
+        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}Email & SMTP Configuration</h2>
         <div class="collapsible-content">
             <p>Email functionality is used for:</p>
             <ul>
@@ -269,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Discord Integration -->
     <div class="admin-section" id="discord">
-        <h2><i class="fas fa-chevron-down collapse-icon"></i>Discord Integration</h2>
+        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}Discord Integration</h2>
         <div class="collapsible-content">
             <p>Discord integration allows automatic notifications for:</p>
             <ul>
@@ -284,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- System Maintenance -->
     <div class="admin-section" id="maintenance">
-        <h2><i class="fas fa-chevron-down collapse-icon"></i>System Maintenance</h2>
+        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}System Maintenance</h2>
         <div class="collapsible-content">
             <div class="help-subsection">
                 <h3>Regular Maintenance Tasks</h3>

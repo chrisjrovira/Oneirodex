@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
+{% import 'partials/icons.html' as icons %}
 
 <link rel="stylesheet" href="{{ 'css/login/user_invites.css'|theme_asset }}">
 
 {% if not smtp_enabled %}
 <div class="alert alert-warning" role="alert">
-    <i class="fas fa-exclamation-triangle"></i> 
+    {{ icons.icon('warning') }}
     <strong>Warning:</strong> SMTP settings are not configured. Users will not be able to confirm their email addresses 
     and activate their accounts. It is recommended to use the 
     <a href="{{ url_for('admin2.manage_users') }}">user manager</a> to create accounts manually.
@@ -17,7 +18,7 @@
     <p>Invites expire automatically after 48 hours. If not used by then, the invite is returned to you.</p>
     {% if site_url == 'http://127.0.0.1' and current_user.role == 'admin' %}
     <div class="alert alert-warning" role="alert">
-        <i class="fas fa-exclamation-triangle"></i> Warning: Site URL is still set to default value (127.0.0.1). 
+        {{ icons.icon('warning') }} Warning: Site URL is still set to default value (127.0.0.1). 
         Please <a href="{{ url_for('admin2.new_server_settings') }}">configure the site URL</a> in admin settings for proper invite functionality.
     </div>
     {% endif %}

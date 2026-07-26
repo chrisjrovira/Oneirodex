@@ -207,7 +207,8 @@ def test_playtime_profile_page_and_api(client, app, db_session, member_user, lib
         page = client.get('/playtime')
         assert page.status_code == 200
         assert b'Playtime' in page.data
-        assert b'playtime_profile.js' in page.data
+        assert b'member-app.js' in page.data
+        assert b'member-app.css' in page.data
 
 
 def test_big_picture_page(client, app, member_user):
@@ -216,4 +217,5 @@ def test_big_picture_page(client, app, member_user):
         page = client.get('/big-picture')
         assert page.status_code == 200
         assert b'Big Picture' in page.data
-        assert b'big_picture.js' in page.data
+        assert b'member-app.js' in page.data
+        assert b'member-app.css' in page.data

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from flask import current_app, jsonify, request, url_for
+from flask import current_app, jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import func, select
 
 from gametheca import db
 from gametheca.models import Game, Image
+from gametheca.utils.cover_url import resolve_cover_url
 from gametheca.utils.functions import format_size
 from gametheca.utils.library_acl import apply_game_access_filters, user_can_access_game
 
@@ -28,11 +29,7 @@ def _cover_url_for_uuid(game_uuid: str) -> str | None:
         cover = db.session.execute(
             select(Image).filter(Image.game_uuid == game_uuid, Image.url.ilike('%cover%')).limit(1),
         ).scalars().first()
-    if not cover or not cover.url:
-        return url_for('static', filename='newstyle/default_cover.jpg')
-    if cover.url.startswith(('http://', 'https://', '/static/')):
-        return cover.url
-    return url_for('static', filename=f"library/images/{cover.url.lstrip('/')}")
+    return resolve_cover_url(cover)
 
 
 @apis_bp.route('/vr/catalog', methods=['GET'])
