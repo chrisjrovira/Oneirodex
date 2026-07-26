@@ -34,6 +34,9 @@ export function GameDetailsPage() {
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
   const [freshnessBusy, setFreshnessBusy] = useState(false)
+  const [freshnessError, setFreshnessError] = useState(null)
+  const [busyVersionKey, setBusyVersionKey] = useState(null)
+  const [versionActionStatus, setVersionActionStatus] = useState(null)
 
   useEffect(() => {
     if (!gameUuid) {
@@ -79,6 +82,7 @@ export function GameDetailsPage() {
       return
     }
     setFreshnessBusy(true)
+    setFreshnessError(null)
     try {
       const result = await checkGameFreshness(gameUuid)
       setGame((prev) =>
@@ -91,7 +95,10 @@ export function GameDetailsPage() {
           : prev,
       )
     } catch (err) {
-      setError(err)
+      setFreshnessError(err)
+      if (window.$?.notify) {
+        window.$.notify(err?.message || 'Freshness check failed', 'error')
+      }
     } finally {
       setFreshnessBusy(false)
     }
@@ -195,6 +202,11 @@ export function GameDetailsPage() {
               {freshnessBusy ? 'Checking…' : 'Check stores'}
             </button>
           </div>
+          {freshnessError ? (
+            <p className="gt-details-page__muted" role="alert">
+              Store check failed: {String(freshnessError.message || freshnessError)}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -275,17 +287,24 @@ export function GameDetailsPage() {
       </section>
 
       {versions.length > 0 ? (
-        <section className="gt-details-page__section">
+        <section className="gt-details-page__section" id="updates">
           <h2>Versions & extras</h2>
+          {versionActionStatus ? (
+            <p className="gt-details-page__muted" role="status">
+              {versionActionStatus}
+            </p>
+          ) : null}
           <ul className="gt-details-page__versions">
             {versions.map((row) => {
               const downloadHref =
                 row.kind === 'base'
                   ? `/download_game/${game.uuid}`
                   : `/download_other/${row.kind}/${game.uuid}/${row.uuid}`
+              const versionKey = `${row.kind}:${row.uuid}`
               const canApply =
                 Boolean(game.client_connected) &&
                 (row.kind === 'update' || row.kind === 'extra')
+              const applyBusy = busyVersionKey === versionKey
               return (
                 <li key={`${row.kind}-${row.id || row.uuid}`}>
                   <div className="gt-details-page__version-row">
@@ -306,22 +325,32 @@ export function GameDetailsPage() {
                         <button
                           type="button"
                           className="gt-btn"
+                          disabled={Boolean(busyVersionKey)}
                           onClick={() => {
+                            setBusyVersionKey(versionKey)
+                            setVersionActionStatus(null)
                             void queueClientCommand(game.uuid, 'update', {
                               kind: row.kind,
                               versionUuid: row.uuid,
-                            }).then(() => {
-                              if (window.$?.notify) {
-                                window.$.notify(`${row.label} queued for companion`, 'success')
-                              }
-                            }).catch((err) => {
-                              if (window.$?.notify) {
-                                window.$.notify(err?.message || 'Queue failed', 'error')
-                              }
                             })
+                              .then(() => {
+                                setVersionActionStatus(`${row.label} queued for companion`)
+                                if (window.$?.notify) {
+                                  window.$.notify(`${row.label} queued for companion`, 'success')
+                                }
+                              })
+                              .catch((err) => {
+                                setVersionActionStatus(err?.message || 'Failed to queue apply')
+                                if (window.$?.notify) {
+                                  window.$.notify(err?.message || 'Queue failed', 'error')
+                                }
+                              })
+                              .finally(() => {
+                                setBusyVersionKey(null)
+                              })
                           }}
                         >
-                          Apply with companion
+                          {applyBusy ? 'Queuing…' : 'Apply with companion'}
                         </button>
                       ) : null}
                     </div>

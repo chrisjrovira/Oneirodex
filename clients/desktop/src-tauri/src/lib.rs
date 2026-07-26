@@ -100,9 +100,18 @@ fn ensure_path_under_root(path: &Path, root: &Path) -> Result<(), String> {
     let canonical_root = root.canonicalize().map_err(|error| error.to_string())?;
     let canonical_path = canonicalize_path(path)?;
     if !canonical_path.starts_with(&canonical_root) {
-        return Err("Path is outside installs directory".into());
+        return Err("Path is outside allowed app directory".into());
     }
     Ok(())
+}
+
+fn ensure_path_under_any_root(path: &Path, roots: &[&Path]) -> Result<(), String> {
+    for root in roots {
+        if ensure_path_under_root(path, root).is_ok() {
+            return Ok(());
+        }
+    }
+    Err("Path is outside allowed app directories".into())
 }
 
 fn find_likely_exe(dir: &Path, max_depth: u32) -> Option<String> {
@@ -242,8 +251,10 @@ fn get_app_subdir(app: tauri::AppHandle, subdir: String) -> Result<String, Strin
 }
 
 #[tauri::command]
-fn write_file_bytes(path: String, bytes: Vec<u8>) -> Result<(), String> {
+fn write_file_bytes(app: tauri::AppHandle, path: String, bytes: Vec<u8>) -> Result<(), String> {
+    let downloads = resolve_subdir(&app, "downloads")?;
     let file_path = PathBuf::from(&path);
+    ensure_path_under_root(&file_path, &downloads)?;
     if let Some(parent) = file_path.parent() {
         fs::create_dir_all(parent).map_err(|error| error.to_string())?;
     }
@@ -253,12 +264,36 @@ fn write_file_bytes(path: String, bytes: Vec<u8>) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn append_file_bytes(app: tauri::AppHandle, path: String, bytes: Vec<u8>) -> Result<(), String> {
+    use std::fs::OpenOptions;
+
+    let downloads = resolve_subdir(&app, "downloads")?;
+    let file_path = PathBuf::from(&path);
+    ensure_path_under_root(&file_path, &downloads)?;
+    if let Some(parent) = file_path.parent() {
+        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    }
+
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&file_path)
+        .map_err(|error| error.to_string())?;
+    file.write_all(&bytes).map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 fn extract_zip_archive(
+    app: tauri::AppHandle,
     archive_path: String,
     dest_dir: String,
 ) -> Result<ExtractZipResult, String> {
+    let downloads = resolve_subdir(&app, "downloads")?;
+    let installs = resolve_subdir(&app, "installs")?;
     let archive = PathBuf::from(&archive_path);
     let destination = PathBuf::from(&dest_dir);
+    ensure_path_under_root(&archive, &downloads)?;
+    ensure_path_under_root(&destination, &installs)?;
 
     if !archive.is_file() {
         return Err(format!("Archive not found: {archive_path}"));
@@ -364,12 +399,28 @@ fn remove_path_inner(path: &Path) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn remove_path(path: String) -> Result<(), String> {
-    let target = PathBuf::from(path);
+fn remove_path(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    let downloads = resolve_subdir(&app, "downloads")?;
+    let installs = resolve_subdir(&app, "installs")?;
+    let target = PathBuf::from(&path);
+    ensure_path_under_any_root(&target, &[&downloads, &installs])?;
     if !target.exists() {
         return Ok(());
     }
     remove_path_inner(&target)
+}
+
+#[tauri::command]
+fn rename_path(app: tauri::AppHandle, from: String, to: String) -> Result<(), String> {
+    let installs = resolve_subdir(&app, "installs")?;
+    let source = PathBuf::from(&from);
+    let destination = PathBuf::from(&to);
+    ensure_path_under_root(&source, &installs)?;
+    ensure_path_under_root(&destination, &installs)?;
+    if let Some(parent) = destination.parent() {
+        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    }
+    fs::rename(&source, &destination).map_err(|error| error.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -384,10 +435,12 @@ pub fn run() {
             save_installs,
             get_app_subdir,
             write_file_bytes,
+            append_file_bytes,
             extract_zip_archive,
             launch_game,
             is_process_running,
             remove_path,
+            rename_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

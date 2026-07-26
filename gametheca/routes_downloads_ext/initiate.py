@@ -129,17 +129,39 @@ def download_other(file_type, game_uuid, file_id):
     if not re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', game_uuid, re.IGNORECASE):
         log_system_event(f"Invalid game UUID format attempted: {game_uuid[:50]}", event_type='security', event_level='warning')
         abort(400)
-    
-    # Validate file_id is numeric
-    try:
-        file_id = int(file_id)
-    except ValueError:
-        log_system_event(f"Invalid file ID attempted: {file_id}", event_type='security', event_level='warning')
-        abort(400)
+
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game:
+        abort(404)
+    if not user_can_access_game(current_user, game):
+        abort(403)
 
     FileModel = GameUpdate if file_type == 'update' else GameExtra
-    file_record = db.session.execute(select(FileModel).filter_by(id=file_id, game_uuid=game_uuid)).scalars().first()
-    
+    file_token = str(file_id or '').strip()
+    file_record = None
+    # Prefer uuid (SPA / companion pack links); accept legacy numeric PK.
+    if re.match(
+        r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+        file_token,
+        re.IGNORECASE,
+    ):
+        file_record = db.session.execute(
+            select(FileModel).filter_by(uuid=file_token, game_uuid=game_uuid)
+        ).scalars().first()
+    else:
+        try:
+            numeric_id = int(file_token)
+        except ValueError:
+            log_system_event(
+                f"Invalid file ID attempted: {file_token[:50]}",
+                event_type='security',
+                event_level='warning',
+            )
+            abort(400)
+        file_record = db.session.execute(
+            select(FileModel).filter_by(id=numeric_id, game_uuid=game_uuid)
+        ).scalars().first()
+
     if not file_record:
         log_system_event(f"Failed to download {file_type} - file not found: {game_uuid}/{file_id}", event_type='game', event_level='error')
         flash(f"{file_type.capitalize()} file not found", "error")

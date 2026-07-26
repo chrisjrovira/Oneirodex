@@ -110,6 +110,36 @@ function setGameActivity(gameUuid: string, message: string): void {
 
   }
 
+  const card = els.library.querySelector(`[data-game-uuid="${CSS.escape(gameUuid)}"]`)
+
+  if (!(card instanceof HTMLElement)) {
+
+    return
+
+  }
+
+  let activityEl = card.querySelector('.activity')
+
+  if (!message) {
+
+    activityEl?.remove()
+
+    return
+
+  }
+
+  if (!(activityEl instanceof HTMLElement)) {
+
+    activityEl = document.createElement('p')
+
+    activityEl.className = 'activity'
+
+    card.appendChild(activityEl)
+
+  }
+
+  activityEl.textContent = message
+
 }
 
 
@@ -268,7 +298,7 @@ function renderLibrary(): void {
 
       return `
 
-        <article class="game-card">
+        <article class="game-card" data-game-uuid="${escapeHtml(uuid)}">
 
           <h3>${escapeHtml(name)}</h3>
 
@@ -423,7 +453,7 @@ async function handleConnect(): Promise<void> {
   heartbeatScheduler = startClientHeartbeat(auth, {
     clientVersion: '0.0.1',
     onCommands: async (command) => {
-      await runGameAction(command.action, command.game_uuid, {
+      return runGameAction(command.action, command.game_uuid, {
         kind: command.kind,
         versionUuid: command.version_uuid,
       })
@@ -502,31 +532,29 @@ async function runGameAction(
   action: LifecycleAction,
   uuid: string,
   options: { kind?: 'base' | 'update' | 'extra'; versionUuid?: string } = {},
-): Promise<void> {
+): Promise<'ok' | 'busy' | 'error'> {
 
   const registry = lifecycle
 
-  if (!registry || busyGames.has(uuid)) {
-
-    return
-
+  if (!registry) {
+    return 'error'
   }
 
-
+  if (busyGames.has(uuid)) {
+    return 'busy'
+  }
 
   busyGames.add(uuid)
 
   const api = createDesktopApi(auth)
 
-
+  let outcome: 'ok' | 'busy' | 'error' = 'ok'
 
   try {
 
     if (action === 'download') {
 
       setGameActivity(uuid, 'Downloading…')
-
-      renderLibrary()
 
       const versionChoice = options.kind
         ? { kind: options.kind, versionUuid: options.versionUuid }
@@ -552,8 +580,6 @@ async function runGameAction(
 
           }
 
-          renderLibrary()
-
         },
 
       })
@@ -564,8 +590,6 @@ async function runGameAction(
 
       setGameActivity(uuid, 'Extracting…')
 
-      renderLibrary()
-
       await kickoffInstall(registry, uuid)
 
       setStatus(`Installed ${uuid}.`, 'success')
@@ -573,8 +597,6 @@ async function runGameAction(
     } else if (action === 'update') {
 
       setGameActivity(uuid, 'Updating…')
-
-      renderLibrary()
 
       await kickoffUpdate(api, auth, registry, uuid, {
 
@@ -596,8 +618,6 @@ async function runGameAction(
 
           }
 
-          renderLibrary()
-
         },
 
       })
@@ -608,23 +628,31 @@ async function runGameAction(
 
       setGameActivity(uuid, 'Removing local files…')
 
-      renderLibrary()
-
       await kickoffUninstall(registry, uuid)
 
       setStatus(`Uninstalled ${uuid}.`, 'success')
 
     }
 
+  } catch (error) {
+    outcome = 'error'
+    const message = error instanceof Error ? error.message : String(error)
+    setGameActivity(uuid, `Error: ${message}`)
+    setStatus(message, 'error')
+
   } finally {
 
     busyGames.delete(uuid)
 
-    setGameActivity(uuid, '')
+    if (outcome === 'ok') {
+      setGameActivity(uuid, '')
+    }
 
     renderLibrary()
 
   }
+
+  return outcome
 
 }
 

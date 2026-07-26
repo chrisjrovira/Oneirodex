@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { queueClientCommand } from '../api/clientCommands'
 import { fetchStoreSearch, fetchUpdatesInbox } from '../api/updates'
@@ -14,6 +14,7 @@ export function UpdatesPage() {
   const [searchError, setSearchError] = useState(null)
   const [busyKey, setBusyKey] = useState(null)
   const [statusByUuid, setStatusByUuid] = useState({})
+  const searchRequestId = useRef(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -45,16 +46,25 @@ export function UpdatesPage() {
     if (!q) {
       return
     }
+    const requestId = ++searchRequestId.current
     setSearching(true)
     setSearchError(null)
     setHits(null)
     try {
       const data = await fetchStoreSearch({ q, source })
+      if (requestId !== searchRequestId.current) {
+        return
+      }
       setHits(Array.isArray(data.results) ? data.results : [])
     } catch (err) {
+      if (requestId !== searchRequestId.current) {
+        return
+      }
       setSearchError(err)
     } finally {
-      setSearching(false)
+      if (requestId === searchRequestId.current) {
+        setSearching(false)
+      }
     }
   }
 

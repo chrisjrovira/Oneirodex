@@ -1,12 +1,13 @@
 """Updates inbox — freshness-behind games in one place."""
 
+import os
+
 from flask import jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import or_, select
 
 from gametheca import db
-from gametheca.models import Game
-from gametheca.utils.game_versions import list_game_versions
+from gametheca.models import Game, GameExtra, GameUpdate
 from gametheca.utils.library_acl import apply_game_access_filters
 from gametheca.utils.lifecycle import web_client_connected
 from gametheca.utils.secondary_scrapers import (
@@ -17,22 +18,56 @@ from gametheca.utils.secondary_scrapers import (
 from . import apis_bp
 
 
-def _public_local_packs(game: Game) -> list[dict]:
-    packs = []
-    for version in list_game_versions(game):
-        kind = version.get('kind')
-        if kind not in ('update', 'extra'):
-            continue
-        version_uuid = version.get('uuid')
-        if not version_uuid:
-            continue
-        packs.append({
-            'kind': kind,
-            'uuid': version_uuid,
-            'label': version.get('label') or kind,
-            'download_url': f'/download_other/{kind}/{game.uuid}/{version_uuid}',
-        })
-    return packs
+def _basename_label(path: str, fallback: str) -> str:
+    name = os.path.basename(path.rstrip('\\/')) if path else ''
+    return name or fallback
+
+
+def _pack_row(kind: str, game_uuid: str, version_uuid: str, label: str) -> dict:
+    return {
+        'kind': kind,
+        'uuid': version_uuid,
+        'label': label,
+        'download_url': f'/download_other/{kind}/{game_uuid}/{version_uuid}',
+    }
+
+
+def _batch_local_packs(game_uuids: list[str]) -> dict[str, list[dict]]:
+    """Load update/extra packs for many games in two queries."""
+    packs_by_game: dict[str, list[dict]] = {uuid: [] for uuid in game_uuids}
+    if not game_uuids:
+        return packs_by_game
+
+    updates = db.session.execute(
+        select(GameUpdate)
+        .filter(GameUpdate.game_uuid.in_(game_uuids))
+        .order_by(GameUpdate.created_at.desc())
+    ).scalars().all()
+    for update in updates:
+        packs_by_game.setdefault(update.game_uuid, []).append(
+            _pack_row(
+                'update',
+                update.game_uuid,
+                update.uuid,
+                f'Update: {_basename_label(update.file_path, update.uuid[:8])}',
+            )
+        )
+
+    extras = db.session.execute(
+        select(GameExtra)
+        .filter(GameExtra.game_uuid.in_(game_uuids))
+        .order_by(GameExtra.created_at.desc())
+    ).scalars().all()
+    for extra in extras:
+        packs_by_game.setdefault(extra.game_uuid, []).append(
+            _pack_row(
+                'extra',
+                extra.game_uuid,
+                extra.uuid,
+                f'Extra: {_basename_label(extra.file_path, extra.uuid[:8])}',
+            )
+        )
+    return packs_by_game
 
 
 def _dlc_summary(game: Game) -> dict | None:
@@ -86,9 +121,12 @@ def updates_inbox():
         query = query.filter(Game.library_uuid == library_uuid)
 
     games = db.session.execute(query).scalars().all()
+    packs_by_game = _batch_local_packs([game.uuid for game in games])
+    connected = web_client_connected(user_id=current_user.id)
+
     items = []
     for game in games:
-        packs = _public_local_packs(game)
+        packs = packs_by_game.get(game.uuid) or []
         latest_update = next((pack for pack in packs if pack['kind'] == 'update'), None)
         latest_extra = next((pack for pack in packs if pack['kind'] == 'extra'), None)
         items.append({
@@ -109,13 +147,8 @@ def updates_inbox():
             'latest_update': latest_update,
             'latest_extra': latest_extra,
             'dlc': _dlc_summary(game),
-            'client_connected': False,
+            'client_connected': connected,
         })
-
-    # Presence for Apply buttons — cheap TTL check once per request.
-    connected = web_client_connected(user_id=current_user.id)
-    for item in items:
-        item['client_connected'] = connected
 
     return jsonify({'count': len(items), 'items': items})
 

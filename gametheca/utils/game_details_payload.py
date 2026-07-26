@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from flask import url_for
-from sqlalchemy import and_, select
+from sqlalchemy import and_, exists, select
 
 from gametheca import db
 from gametheca.models import (
@@ -11,6 +11,7 @@ from gametheca.models import (
     GameUpdate,
     UserGameProgress,
     get_status_info,
+    user_favorites,
     user_game_status,
 )
 from gametheca.utils.client_lifecycle import load_lifecycle_map
@@ -33,10 +34,17 @@ def build_game_details_payload(game, user) -> dict:
     lifecycle_map = load_lifecycle_map(user_id)
 
     cover_image = None
+    screenshots = []
     for img in game.images.all():
-        if getattr(img, 'image_type', None) == 'cover':
+        image_type = getattr(img, 'image_type', None)
+        if image_type == 'cover' and cover_image is None:
             cover_image = img
-            break
+        elif image_type == 'screenshot':
+            raw = getattr(img, 'url', None) or ''
+            if raw.startswith('http') or raw.startswith('/'):
+                screenshots.append(raw)
+            else:
+                screenshots.append(url_for('static', filename=f'library/images/{raw}'))
     if cover_image is None and getattr(game, 'cover', None) is not None:
         cover_image = game.cover
 
@@ -52,22 +60,23 @@ def build_game_details_payload(game, user) -> dict:
     if steam_app_id and not steam_url:
         steam_url = f'https://store.steampowered.com/app/{int(steam_app_id)}'
 
-    screenshots = []
-    for img in game.images.all():
-        if getattr(img, 'image_type', None) != 'screenshot':
-            continue
-        raw = getattr(img, 'url', None) or ''
-        if raw.startswith('http') or raw.startswith('/'):
-            screenshots.append(raw)
-        else:
-            screenshots.append(url_for('static', filename=f'library/images/{raw}'))
-
     is_favorite = False
     user_status = None
     status_icon = 'fa-circle'
     status_label = 'No Status'
     if user_id:
-        is_favorite = user_id in [u.id for u in game.favorited_by]
+        is_favorite = bool(
+            db.session.execute(
+                select(
+                    exists().where(
+                        and_(
+                            user_favorites.c.user_id == user_id,
+                            user_favorites.c.game_uuid == game.uuid,
+                        )
+                    )
+                )
+            ).scalar()
+        )
         status_row = db.session.execute(
             select(user_game_status.c.status).where(
                 and_(

@@ -7,6 +7,7 @@ from gametheca.models import Image, Game, Library, Genre, GameMode, PlayerPerspe
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.game_core import get_game_by_uuid
 from gametheca.utils.game_details_payload import build_game_details_payload
+from gametheca.utils.rbac import librarian_required
 from gametheca.utils.library_acl import apply_game_access_filters, user_can_access_game, user_can_access_library
 from sqlalchemy import func, select
 from . import apis_bp
@@ -73,12 +74,18 @@ def game_details_api(game_uuid):
 @apis_bp.route('/game_screenshots/<game_uuid>')
 @login_required
 def game_screenshots(game_uuid):
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game:
+        return jsonify({'error': 'Game not found'}), 404
+    if not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Forbidden'}), 403
     screenshots = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, image_type='screenshot')).scalars().all()
     screenshot_urls = [url_for('static', filename=f'library/images/{screenshot.url}') for screenshot in screenshots]
     return jsonify(screenshot_urls)
 
 @apis_bp.route('/move_game_to_library', methods=['POST'])
 @login_required
+@librarian_required
 def move_game_to_library():
     try:
         data = request.get_json()
@@ -99,6 +106,11 @@ def move_game_to_library():
                 'success': False,
                 'message': 'Game or target library not found'
             }), 404
+
+        if not user_can_access_game(current_user, game):
+            return jsonify({'success': False, 'message': 'Forbidden'}), 403
+        if not user_can_access_library(current_user, target_library):
+            return jsonify({'success': False, 'message': 'Forbidden'}), 403
             
         # Update the game's library
         game.library_uuid = target_library_uuid
@@ -139,6 +151,8 @@ def game_freshness_get(game_uuid):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
         return jsonify({'error': 'Game not found'}), 404
+    if not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Forbidden'}), 403
     return jsonify(freshness_public_view(game))
 
 
@@ -153,6 +167,8 @@ def game_freshness_check(game_uuid):
     ).scalars().first()
     if not game:
         return jsonify({'error': 'Game not found'}), 404
+    if not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Forbidden'}), 403
 
     try:
         # Eager-load relationships used by local/update hints

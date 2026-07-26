@@ -75,6 +75,9 @@ export function GameCard({
   }, [game.uuid, game.cover_url, game.is_favorite, game.user_status])
 
   useEffect(() => {
+    if (!menuOpen && !statusOpen) {
+      return undefined
+    }
     const closeMenus = (event) => {
       if (!cardRef.current?.contains(event.target)) {
         setMenuOpen(false)
@@ -84,7 +87,7 @@ export function GameCard({
 
     document.addEventListener('click', closeMenus)
     return () => document.removeEventListener('click', closeMenus)
-  }, [])
+  }, [menuOpen, statusOpen])
 
   const handleFavoriteClick = async (event) => {
     event.preventDefault()

@@ -29,11 +29,20 @@ function EmptyState({ initialConfig, t }) {
 }
 
 function filtersFromSearchParams(searchParams) {
+  const next = {}
   const libraryPlatform = searchParams.get('library_platform')
-  if (!libraryPlatform) {
-    return {}
+  if (libraryPlatform) {
+    next.library_platform = libraryPlatform
   }
-  return { library_platform: libraryPlatform }
+  const genre = searchParams.get('genre')
+  if (genre) {
+    next.genre = genre
+  }
+  const theme = searchParams.get('theme')
+  if (theme) {
+    next.theme = theme
+  }
+  return next
 }
 
 export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
@@ -63,11 +72,15 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
 
   useEffect(() => {
     const fromUrl = filtersFromSearchParams(searchParams)
-    if (!fromUrl.library_platform) {
+    if (!fromUrl.library_platform && !fromUrl.genre && !fromUrl.theme) {
       return
     }
     setFilters((current) => {
-      if (current.library_platform === fromUrl.library_platform) {
+      if (
+        current.library_platform === fromUrl.library_platform &&
+        current.genre === fromUrl.genre &&
+        current.theme === fromUrl.theme
+      ) {
         return current
       }
       const next = cleanFilters({ ...current, ...fromUrl })
@@ -135,7 +148,11 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
     writeLibraryFilters(defaultFilters)
     setPage(1)
     setFilters(defaultFilters)
-    if (searchParams.has('library_platform')) {
+    if (
+      searchParams.has('library_platform') ||
+      searchParams.has('genre') ||
+      searchParams.has('theme')
+    ) {
       setSearchParams({}, { replace: true })
     }
   }

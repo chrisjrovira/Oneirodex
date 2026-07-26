@@ -69,6 +69,10 @@ describe('download kickoff helper', () => {
       path: resolveArchivePath('/appdata/downloads', 'game-42'),
       bytes: expect.any(Uint8Array),
     })
+    expect(invoke).toHaveBeenCalledWith('append_file_bytes', {
+      path: resolveArchivePath('/appdata/downloads', 'game-42'),
+      bytes: expect.any(Uint8Array),
+    })
     expect(next).toBe('downloaded')
     expect(registry.get('game-42')).toBe('downloaded')
   })

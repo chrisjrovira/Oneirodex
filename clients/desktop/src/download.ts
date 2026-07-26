@@ -118,6 +118,69 @@ export async function fetchDownloadStream(
   return merged.buffer
 }
 
+/** Stream a download directly to disk (avoids buffering the full zip in RAM). */
+export async function streamDownloadToFile(
+  auth: AuthStore,
+  streamPath: string,
+  archivePath: string,
+  options: {
+    fetchImpl?: typeof fetch
+    onProgress?: DownloadProgressCallback
+  } = {},
+): Promise<void> {
+  const authHeader = auth.authorizationHeader()
+  if (!authHeader) {
+    throw new Error('Not authenticated')
+  }
+
+  const fetchImpl = options.fetchImpl ?? fetch
+  const response = await fetchImpl(joinUrl(auth.getBaseUrl(), streamPath), {
+    method: 'GET',
+    headers: {
+      Authorization: authHeader,
+    },
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(text || `Download failed with HTTP ${response.status}`)
+  }
+
+  const totalHeader = response.headers.get('content-length')
+  const totalBytes = totalHeader ? Number.parseInt(totalHeader, 10) : null
+  const body = response.body
+
+  if (!isTauriRuntime()) {
+    return
+  }
+
+  // Truncate / create destination.
+  await invoke('write_file_bytes', { path: archivePath, bytes: new Uint8Array(0) })
+
+  if (!body) {
+    const bytes = new Uint8Array(await response.arrayBuffer())
+    if (bytes.byteLength > 0) {
+      await invoke('append_file_bytes', { path: archivePath, bytes })
+    }
+    options.onProgress?.({ bytesReceived: bytes.byteLength, totalBytes })
+    return
+  }
+
+  const reader = body.getReader()
+  let bytesReceived = 0
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) {
+      break
+    }
+    if (value) {
+      await invoke('append_file_bytes', { path: archivePath, bytes: value })
+      bytesReceived += value.byteLength
+      options.onProgress?.({ bytesReceived, totalBytes })
+    }
+  }
+}
+
 export async function writeDownloadArchive(archivePath: string, bytes: ArrayBuffer): Promise<void> {
   if (!isTauriRuntime()) {
     return
@@ -153,11 +216,16 @@ export async function downloadGameArchive(
     versionUuid: options.versionUuid,
   })
   const streamPath = initiated.stream_url || buildDownloadStreamPath(initiated.download_id)
-  const bytes = await fetchDownloadStream(auth, streamPath, options)
 
   const downloadsDir = await getDownloadsDir()
   const archivePath = resolveArchivePath(downloadsDir, gameUuid)
-  await writeDownloadArchive(archivePath, bytes)
+
+  if (isTauriRuntime()) {
+    await streamDownloadToFile(auth, streamPath, archivePath, options)
+  } else {
+    const bytes = await fetchDownloadStream(auth, streamPath, options)
+    await writeDownloadArchive(archivePath, bytes)
+  }
 
   const installsDir = await getInstallsDir()
   const record: GameInstallRecord = {

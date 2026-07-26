@@ -2,15 +2,28 @@
 
 import uuid
 
-from flask import jsonify, request
+from flask import g, jsonify, request
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
+from gametheca import db
+from gametheca.models import Game, GameExtra, GameUpdate
 from gametheca.utils.api_tokens import require_api_scope, user_has_scope
-from gametheca.utils.client_commands import claim_pending_commands, enqueue_client_command
+from gametheca.utils.client_commands import (
+    ack_client_commands,
+    claim_pending_commands,
+    enqueue_client_command,
+    nack_client_commands,
+)
 from gametheca.utils.client_lifecycle import load_lifecycle_map, save_lifecycle_records
 from gametheca.utils.client_presence import record_client_heartbeat
+from gametheca.utils.library_acl import user_can_access_game
 
 from . import apis_bp
+
+
+def _has_companion_token() -> bool:
+    return getattr(g, 'api_token', None) is not None
 
 
 @apis_bp.route('/client/heartbeat', methods=['POST'])
@@ -29,8 +42,11 @@ def client_heartbeat():
         user_agent=request.headers.get('User-Agent'),
     )
     payload = device.to_dict()
-    # Deliver queued Install/Update/Uninstall requests from the web UI.
-    payload['commands'] = claim_pending_commands(current_user.id)
+    # Only deliver the queue to Bearer companion tokens (not browser session CSRF).
+    if _has_companion_token():
+        payload['commands'] = claim_pending_commands(current_user.id)
+    else:
+        payload['commands'] = []
     return jsonify(payload)
 
 
@@ -70,13 +86,30 @@ def client_lifecycle_post():
 def client_commands_post():
     """Queue a companion action from the member SPA / game details island."""
     data = request.get_json(silent=True) or {}
+    game_uuid = (data.get('game_uuid') or '').strip()
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game:
+        return jsonify({'error': 'Game not found'}), 404
+    if not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Forbidden'}), 403
+
+    kind = data.get('kind')
+    version_uuid = (data.get('version_uuid') or '').strip() or None
+    if kind in ('update', 'extra') and version_uuid:
+        Model = GameUpdate if kind == 'update' else GameExtra
+        pack = db.session.execute(
+            select(Model).filter_by(game_uuid=game.uuid, uuid=version_uuid)
+        ).scalars().first()
+        if not pack:
+            return jsonify({'error': 'Version not found for game'}), 404
+
     try:
         command = enqueue_client_command(
             current_user.id,
-            data.get('game_uuid'),
+            game_uuid,
             data.get('action'),
-            kind=data.get('kind'),
-            version_uuid=data.get('version_uuid'),
+            kind=kind,
+            version_uuid=version_uuid,
         )
     except ValueError as exc:
         return jsonify({'error': str(exc)}), 400
@@ -88,6 +121,30 @@ def client_commands_post():
 @require_api_scope('read:library')
 def client_commands_get():
     """Explicit poll for pending commands (companion may also use heartbeat)."""
+    if not _has_companion_token():
+        return jsonify({'error': 'Companion API token required'}), 403
     limit = request.args.get('limit', 10, type=int) or 10
     limit = max(1, min(limit, 25))
     return jsonify({'commands': claim_pending_commands(current_user.id, limit=limit)})
+
+
+@apis_bp.route('/client/commands/ack', methods=['POST'])
+@login_required
+def client_commands_ack():
+    if not _has_companion_token():
+        return jsonify({'error': 'Companion API token required'}), 403
+    data = request.get_json(silent=True) or {}
+    ids = data.get('ids') if isinstance(data.get('ids'), list) else []
+    removed = ack_client_commands(current_user.id, [str(i) for i in ids])
+    return jsonify({'ok': True, 'removed': removed})
+
+
+@apis_bp.route('/client/commands/nack', methods=['POST'])
+@login_required
+def client_commands_nack():
+    if not _has_companion_token():
+        return jsonify({'error': 'Companion API token required'}), 403
+    data = request.get_json(silent=True) or {}
+    ids = data.get('ids') if isinstance(data.get('ids'), list) else []
+    released = nack_client_commands(current_user.id, [str(i) for i in ids])
+    return jsonify({'ok': True, 'released': released})

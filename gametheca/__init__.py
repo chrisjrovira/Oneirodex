@@ -161,6 +161,8 @@ def create_app():
     csrf.exempt(client_api.client_lifecycle_get)
     csrf.exempt(client_api.client_lifecycle_post)
     csrf.exempt(client_api.client_commands_get)
+    csrf.exempt(client_api.client_commands_ack)
+    csrf.exempt(client_api.client_commands_nack)
 
     with app.app_context():
         # Database initialization is handled by the InitializationManager before workers start

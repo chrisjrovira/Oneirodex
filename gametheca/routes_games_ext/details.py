@@ -80,6 +80,9 @@ def serve_local_image(game_uuid, image_type):
         )
         abort(404, "Game not found")
 
+    if not user_can_access_game(current_user, game):
+        abort(403)
+
     allowed_bases = get_allowed_base_directories(current_app)
     if not allowed_bases:
         log_system_event(

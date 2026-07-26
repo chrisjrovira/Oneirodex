@@ -36,10 +36,38 @@ export interface CompanionCommand {
   version_uuid?: string
 }
 
-export type CompanionCommandHandler = (command: CompanionCommand) => void | Promise<void>
+export type CompanionCommandResult = 'ok' | 'busy' | 'error'
+
+export type CompanionCommandHandler = (
+  command: CompanionCommand,
+) => CompanionCommandResult | Promise<CompanionCommandResult | void>
 
 function isLifecycleAction(value: string): value is LifecycleAction {
   return value === 'download' || value === 'install' || value === 'update' || value === 'uninstall'
+}
+
+async function postCommandResult(
+  auth: AuthStore,
+  endpoint: 'ack' | 'nack',
+  ids: string[],
+  fetchImpl: typeof fetch,
+): Promise<void> {
+  if (ids.length === 0) {
+    return
+  }
+  const baseUrl = auth.getBaseUrl()
+  const token = auth.getToken()
+  if (!baseUrl || !token) {
+    return
+  }
+  await fetchImpl(`${baseUrl.replace(/\/$/, '')}/api/client/commands/${endpoint}`, {
+    method: 'POST',
+    headers: {
+      Authorization: formatBearerAuthorization(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ids }),
+  })
 }
 
 export async function postClientHeartbeat(
@@ -111,19 +139,45 @@ export function startClientHeartbeat(
 ): HeartbeatScheduler {
   const intervalMs = options.intervalMs ?? 60_000
   let timer: ReturnType<typeof setInterval> | undefined
+  let inFlight = false
 
   const tick = (): void => {
+    if (inFlight) {
+      return
+    }
+    inFlight = true
+    const fetchImpl = options.fetchImpl ?? fetch
     void postClientHeartbeat(auth, options)
       .then(async (commands) => {
         if (!options.onCommands || commands.length === 0) {
           return
         }
         for (const command of commands) {
-          await options.onCommands(command)
+          let result: CompanionCommandResult = 'ok'
+          try {
+            const handlerResult = await options.onCommands(command)
+            if (handlerResult === 'busy' || handlerResult === 'error' || handlerResult === 'ok') {
+              result = handlerResult
+            }
+          } catch {
+            result = 'error'
+          }
+          try {
+            if (result === 'ok') {
+              await postCommandResult(auth, 'ack', [command.id], fetchImpl)
+            } else {
+              await postCommandResult(auth, 'nack', [command.id], fetchImpl)
+            }
+          } catch {
+            // Ack/nack is best-effort; stale reclaim recovers in_flight rows.
+          }
         }
       })
       .catch(() => {
         // Presence is best-effort; connection UI handles hard failures.
+      })
+      .finally(() => {
+        inFlight = false
       })
   }
 
