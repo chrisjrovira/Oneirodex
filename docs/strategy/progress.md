@@ -15,7 +15,7 @@
 | Docker Compose optional-module env | Done |
 | Local-without-Authentik install path | Done |
 
-## Jul 26 status (Wave 4 — UX polish)
+## Jul 26 status (Waves 4–6)
 
 | Area | Status |
 |---|---|
@@ -23,12 +23,11 @@
 | App version `0.2.0`; accent `#2fd67b`; `GENERATOR_VERSION` **6** | Shipped |
 | Systems hub `/systems` + Flask route + platform skins | Shipped |
 | React admin SPA hybrid (top nav + Jinja forms) | Shipped |
-| Announcements composer, news RSS, updates store search | Shipped |
-| Companion lifecycle sync + installed-only filter | Shipped |
-| Tile slider, badge dismiss, Steam deep links, Play on tiles | Shipped |
-| Unraid smoke (`build --no-cache` + Reset Themes v6) | Operator-owned |
+| Game details full SPA + companion Install bridge | Shipped |
+| Updates apply loop (local packs + companion kind/version) | Shipped |
+| Unraid smoke checklist (incl. details/updates) | Operator — see [unraid-deploy.md](../runbooks/unraid-deploy.md) |
 
-Program canvas: Cursor `canvases/gametheca-program.canvas.tsx` (Wave 4 board).
+Program canvas: Cursor `canvases/gametheca-program.canvas.tsx` (Wave 6 board).
 
 ## Flags (see `.env.example` / `.env.docker.example`)
 

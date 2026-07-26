@@ -98,6 +98,32 @@
   line-height: 1.4;
 }
 
+.gt-updates__inbox-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.gt-updates__inbox-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 240px;
+}
+
+.gt-updates__inbox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gt-updates__status {
+  color: var(--gt-accent);
+}
+
 .gt-calendar__list img {
   width: 48px;
   height: 64px;

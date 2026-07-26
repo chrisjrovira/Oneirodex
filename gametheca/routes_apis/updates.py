@@ -6,13 +6,62 @@ from sqlalchemy import or_, select
 
 from gametheca import db
 from gametheca.models import Game
+from gametheca.utils.game_versions import list_game_versions
 from gametheca.utils.library_acl import apply_game_access_filters
+from gametheca.utils.lifecycle import web_client_connected
 from gametheca.utils.secondary_scrapers import (
     search_gog_games,
     search_steam_games,
 )
 
 from . import apis_bp
+
+
+def _public_local_packs(game: Game) -> list[dict]:
+    packs = []
+    for version in list_game_versions(game):
+        kind = version.get('kind')
+        if kind not in ('update', 'extra'):
+            continue
+        version_uuid = version.get('uuid')
+        if not version_uuid:
+            continue
+        packs.append({
+            'kind': kind,
+            'uuid': version_uuid,
+            'label': version.get('label') or kind,
+            'download_url': f'/download_other/{kind}/{game.uuid}/{version_uuid}',
+        })
+    return packs
+
+
+def _dlc_summary(game: Game) -> dict | None:
+    payload = getattr(game, 'freshness_payload', None) or {}
+    dlc = payload.get('dlc')
+    if isinstance(dlc, dict) and dlc:
+        missing = dlc.get('missing_dlc_count_estimate')
+        if missing is None:
+            missing = dlc.get('missing_count')
+        store_count = dlc.get('store_dlc_count')
+        if store_count is None:
+            store_count = dlc.get('store_count')
+        return {
+            'store_count': store_count,
+            'local_hint': dlc.get('local_dlc_count_hint') or dlc.get('local_hint'),
+            'missing_count': missing,
+            'store': dlc.get('store'),
+        }
+    remotes = payload.get('remotes') if isinstance(payload, dict) else None
+    if isinstance(remotes, list):
+        for remote in remotes:
+            if isinstance(remote, dict) and remote.get('dlc_count') is not None:
+                return {
+                    'store_count': remote.get('dlc_count'),
+                    'local_hint': (payload.get('local') or {}).get('dlc_count_hint'),
+                    'missing_count': None,
+                    'store': remote.get('store'),
+                }
+    return None
 
 
 @apis_bp.route('/updates/inbox', methods=['GET'])
@@ -37,20 +86,37 @@ def updates_inbox():
         query = query.filter(Game.library_uuid == library_uuid)
 
     games = db.session.execute(query).scalars().all()
-    items = [
-        {
-            'uuid': g.uuid,
-            'name': g.name,
-            'freshness_status': g.freshness_status,
-            'freshness_confidence': g.freshness_confidence,
-            'local_version': g.local_version,
-            'remote_version_summary': g.remote_version_summary,
-            'freshness_checked_at': g.freshness_checked_at.isoformat() if g.freshness_checked_at else None,
-            'library_uuid': g.library_uuid,
-            'steam_app_id': getattr(g, 'steam_app_id', None),
-        }
-        for g in games
-    ]
+    items = []
+    for game in games:
+        packs = _public_local_packs(game)
+        latest_update = next((pack for pack in packs if pack['kind'] == 'update'), None)
+        latest_extra = next((pack for pack in packs if pack['kind'] == 'extra'), None)
+        items.append({
+            'uuid': game.uuid,
+            'name': game.name,
+            'freshness_status': game.freshness_status,
+            'freshness_confidence': game.freshness_confidence,
+            'local_version': game.local_version,
+            'remote_version_summary': game.remote_version_summary,
+            'freshness_checked_at': (
+                game.freshness_checked_at.isoformat() if game.freshness_checked_at else None
+            ),
+            'library_uuid': game.library_uuid,
+            'steam_app_id': getattr(game, 'steam_app_id', None),
+            'updates_count': sum(1 for pack in packs if pack['kind'] == 'update'),
+            'extras_count': sum(1 for pack in packs if pack['kind'] == 'extra'),
+            'local_packs': packs,
+            'latest_update': latest_update,
+            'latest_extra': latest_extra,
+            'dlc': _dlc_summary(game),
+            'client_connected': False,
+        })
+
+    # Presence for Apply buttons — cheap TTL check once per request.
+    connected = web_client_connected(user_id=current_user.id)
+    for item in items:
+        item['client_connected'] = connected
+
     return jsonify({'count': len(items), 'items': items})
 
 

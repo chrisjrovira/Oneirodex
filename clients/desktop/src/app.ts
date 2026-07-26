@@ -423,7 +423,10 @@ async function handleConnect(): Promise<void> {
   heartbeatScheduler = startClientHeartbeat(auth, {
     clientVersion: '0.0.1',
     onCommands: async (command) => {
-      await runGameAction(command.action, command.game_uuid)
+      await runGameAction(command.action, command.game_uuid, {
+        kind: command.kind,
+        versionUuid: command.version_uuid,
+      })
     },
   })
 
@@ -495,7 +498,11 @@ async function runPlayAction(uuid: string): Promise<void> {
 
 
 
-async function runGameAction(action: LifecycleAction, uuid: string): Promise<void> {
+async function runGameAction(
+  action: LifecycleAction,
+  uuid: string,
+  options: { kind?: 'base' | 'update' | 'extra'; versionUuid?: string } = {},
+): Promise<void> {
 
   const registry = lifecycle
 
@@ -521,7 +528,9 @@ async function runGameAction(action: LifecycleAction, uuid: string): Promise<voi
 
       renderLibrary()
 
-      const versionChoice = await pickDownloadVersion(api, uuid)
+      const versionChoice = options.kind
+        ? { kind: options.kind, versionUuid: options.versionUuid }
+        : await pickDownloadVersion(api, uuid)
 
       await kickoffDownload(api, auth, registry, uuid, {
 
@@ -568,6 +577,10 @@ async function runGameAction(action: LifecycleAction, uuid: string): Promise<voi
       renderLibrary()
 
       await kickoffUpdate(api, auth, registry, uuid, {
+
+        kind: options.kind,
+
+        versionUuid: options.versionUuid,
 
         onProgress: ({ bytesReceived, totalBytes }) => {
 

@@ -75,6 +75,8 @@ def client_commands_post():
             current_user.id,
             data.get('game_uuid'),
             data.get('action'),
+            kind=data.get('kind'),
+            version_uuid=data.get('version_uuid'),
         )
     except ValueError as exc:
         return jsonify({'error': str(exc)}), 400

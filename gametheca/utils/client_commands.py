@@ -11,6 +11,7 @@ from typing import Any
 
 _LOCK = threading.Lock()
 _VALID_ACTIONS = frozenset({'install', 'update', 'uninstall'})
+_VALID_KINDS = frozenset({'base', 'update', 'extra'})
 
 
 def _library_root() -> str:
@@ -50,14 +51,27 @@ def _write_queue(path: str, commands: list[dict[str, Any]]) -> None:
         json.dump({'commands': commands}, fh, indent=2)
 
 
-def enqueue_client_command(user_id: int, game_uuid: str, action: str) -> dict[str, Any]:
+def enqueue_client_command(
+    user_id: int,
+    game_uuid: str,
+    action: str,
+    *,
+    kind: str | None = None,
+    version_uuid: str | None = None,
+) -> dict[str, Any]:
     """Append a pending command for the companion to claim."""
     cleaned_uuid = str(game_uuid or '').strip()
     cleaned_action = str(action or '').strip().lower()
+    cleaned_kind = str(kind or '').strip().lower() or None
+    cleaned_version = str(version_uuid or '').strip() or None
     if not cleaned_uuid:
         raise ValueError('game_uuid is required')
     if cleaned_action not in _VALID_ACTIONS:
         raise ValueError(f'action must be one of: {", ".join(sorted(_VALID_ACTIONS))}')
+    if cleaned_kind is not None and cleaned_kind not in _VALID_KINDS:
+        raise ValueError(f'kind must be one of: {", ".join(sorted(_VALID_KINDS))}')
+    if cleaned_kind in {'update', 'extra'} and not cleaned_version:
+        raise ValueError('version_uuid required for update/extra kind')
 
     command = {
         'id': str(uuid.uuid4()),
@@ -66,10 +80,15 @@ def enqueue_client_command(user_id: int, game_uuid: str, action: str) -> dict[st
         'status': 'pending',
         'created_at': datetime.now(timezone.utc).isoformat(),
     }
+    if cleaned_kind:
+        command['kind'] = cleaned_kind
+    if cleaned_version:
+        command['version_uuid'] = cleaned_version
+
     path = _store_path(user_id)
     with _LOCK:
         queue = _read_queue(path)
-        # Drop duplicate pending for same game+action.
+        # Drop duplicate pending for same game+action+version.
         queue = [
             row
             for row in queue
@@ -77,10 +96,10 @@ def enqueue_client_command(user_id: int, game_uuid: str, action: str) -> dict[st
                 row.get('status') == 'pending'
                 and row.get('game_uuid') == cleaned_uuid
                 and row.get('action') == cleaned_action
+                and (row.get('version_uuid') or None) == cleaned_version
             )
         ]
         queue.append(command)
-        # Cap queue length to avoid unbounded growth.
         if len(queue) > 50:
             queue = queue[-50:]
         _write_queue(path, queue)
@@ -107,6 +126,10 @@ def claim_pending_commands(user_id: int, *, limit: int = 10) -> list[dict[str, A
                     'action': str(row['action']),
                     'created_at': row.get('created_at'),
                 }
+                if row.get('kind'):
+                    delivered['kind'] = str(row['kind'])
+                if row.get('version_uuid'):
+                    delivered['version_uuid'] = str(row['version_uuid'])
                 claimed.append(delivered)
             else:
                 remaining.append(row)

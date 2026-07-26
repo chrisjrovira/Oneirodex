@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { checkGameFreshness, fetchGameDetails, fetchGameVersions } from '../api/gameDetails'
+import { queueClientCommand } from '../api/clientCommands'
 import { BadgeStack } from '../components/BadgeStack'
 import { GameActionBar } from '../components/GameActionBar'
 import './GameDetailsPage.css'
@@ -277,21 +278,58 @@ export function GameDetailsPage() {
         <section className="gt-details-page__section">
           <h2>Versions & extras</h2>
           <ul className="gt-details-page__versions">
-            {versions.map((row) => (
-              <li key={`${row.kind}-${row.id}`}>
-                <strong>{row.label}</strong>
-                <span className="gt-details-page__muted">
-                  {' '}
-                  · {row.kind}
-                  {row.is_default ? ' · default' : ''}
-                  {row.size ? ` · ${row.size}` : ''}
-                </span>
-              </li>
-            ))}
+            {versions.map((row) => {
+              const downloadHref =
+                row.kind === 'base'
+                  ? `/download_game/${game.uuid}`
+                  : `/download_other/${row.kind}/${game.uuid}/${row.uuid}`
+              const canApply =
+                Boolean(game.client_connected) &&
+                (row.kind === 'update' || row.kind === 'extra')
+              return (
+                <li key={`${row.kind}-${row.id || row.uuid}`}>
+                  <div className="gt-details-page__version-row">
+                    <div>
+                      <strong>{row.label}</strong>
+                      <span className="gt-details-page__muted">
+                        {' '}
+                        · {row.kind}
+                        {row.is_default ? ' · default' : ''}
+                        {row.size ? ` · ${row.size}` : ''}
+                      </span>
+                    </div>
+                    <div className="gt-details-page__version-actions">
+                      <a className="gt-btn" href={downloadHref}>
+                        Download
+                      </a>
+                      {canApply ? (
+                        <button
+                          type="button"
+                          className="gt-btn"
+                          onClick={() => {
+                            void queueClientCommand(game.uuid, 'update', {
+                              kind: row.kind,
+                              versionUuid: row.uuid,
+                            }).then(() => {
+                              if (window.$?.notify) {
+                                window.$.notify(`${row.label} queued for companion`, 'success')
+                              }
+                            }).catch((err) => {
+                              if (window.$?.notify) {
+                                window.$.notify(err?.message || 'Queue failed', 'error')
+                              }
+                            })
+                          }}
+                        >
+                          Apply with companion
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
-          <a className="gt-btn" href={`/download_game/${game.uuid}`}>
-            Download default
-          </a>
         </section>
       ) : null}
 

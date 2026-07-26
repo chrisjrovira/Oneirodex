@@ -32,6 +32,8 @@ export interface CompanionCommand {
   game_uuid: string
   action: LifecycleAction
   created_at?: string
+  kind?: 'base' | 'update' | 'extra'
+  version_uuid?: string
 }
 
 export type CompanionCommandHandler = (command: CompanionCommand) => void | Promise<void>
@@ -86,6 +88,11 @@ export async function postClientHeartbeat(
         game_uuid: gameUuid,
         action,
         created_at: record.created_at ? String(record.created_at) : undefined,
+        kind:
+          record.kind === 'base' || record.kind === 'update' || record.kind === 'extra'
+            ? record.kind
+            : undefined,
+        version_uuid: record.version_uuid ? String(record.version_uuid) : undefined,
       },
     ]
   })

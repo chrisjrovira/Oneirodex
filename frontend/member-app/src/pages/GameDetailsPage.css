@@ -96,9 +96,19 @@
   gap: 10px;
 }
 
-.gt-details-page__versions {
-  margin: 0 0 12px;
-  padding-left: 1.1rem;
+.gt-details-page__version-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.gt-details-page__version-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .gt-details-page__muted {

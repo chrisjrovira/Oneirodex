@@ -53,7 +53,7 @@ Also confirm `member-app.css` loads in the browser (View Source on Discover/Libr
 - Indirect Compose File: `/mnt/user/isos/gametheca/docker-compose.yml`
 - Indirect Path: leave empty
 
-## Smoke checklist (Style B+C + Systems)
+## Smoke checklist (Style B+C + Systems + Wave 5/6)
 
 1. First-boot logs show theme tokens OK (or Reset Default Themes after `GENERATOR_VERSION` 6)
 2. Discover/Library: View Source includes **`member-app.css`** and `member-app.js`
@@ -66,5 +66,10 @@ Also confirm `member-app.css` loads in the browser (View Source on Discover/Libr
 9. Admin: React top bar — no member left sidebar; Dashboard / Libraries / Settings work
 10. `/admin/settings` card grid; Themes → Reset Default Themes after rebuild
 11. Collections: create, search-add, reorder, edit, delete
+12. **Game details SPA** (`/game_details/<uuid>`): TopNav present; summary/versions/screenshots load; Check stores works
+13. **Updates** (`/updates`): freshness inbox loads; store search returns Steam/GOG links; local Update/DLC shows Download / Apply when packs exist
+14. Companion (optional): Install from details; Apply update/DLC from Updates or details versions; heartbeat claims command within ~60s
 
-See also [docker-compose-deploy.md](docker-compose-deploy.md).
+Operator sign-off: tick the list above after `build --no-cache` + Reset Default Themes, then mark Unraid smoke done in `docs/strategy/progress.md`.
+
+See also [docker-compose-deploy.md](docker-compose-deploy.md) · [themes-reset.md](../admin/themes-reset.md).

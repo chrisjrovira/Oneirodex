@@ -1,4 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { queueClientCommand } from '../api/clientCommands'
 import { fetchStoreSearch, fetchUpdatesInbox } from '../api/updates'
 
 export function UpdatesPage() {
@@ -10,6 +12,8 @@ export function UpdatesPage() {
   const [searching, setSearching] = useState(false)
   const [hits, setHits] = useState(null)
   const [searchError, setSearchError] = useState(null)
+  const [busyKey, setBusyKey] = useState(null)
+  const [statusByUuid, setStatusByUuid] = useState({})
 
   useEffect(() => {
     const controller = new AbortController()
@@ -54,14 +58,43 @@ export function UpdatesPage() {
     }
   }
 
+  async function applyPack(game, pack) {
+    if (!pack?.uuid) {
+      return
+    }
+    const key = `${game.uuid}:${pack.uuid}`
+    setBusyKey(key)
+    try {
+      await queueClientCommand(game.uuid, 'update', {
+        kind: pack.kind,
+        versionUuid: pack.uuid,
+      })
+      setStatusByUuid((prev) => ({
+        ...prev,
+        [game.uuid]: `${pack.kind} queued for companion`,
+      }))
+      if (window.$?.notify) {
+        window.$.notify(`${pack.label} queued for companion`, 'success')
+      }
+    } catch (err) {
+      setStatusByUuid((prev) => ({
+        ...prev,
+        [game.uuid]: err?.message || 'Failed to queue apply',
+      }))
+    } finally {
+      setBusyKey(null)
+    }
+  }
+
   return (
     <div className="gt-more-page gt-updates">
       <div className="gt-page-header">
         <h1>Updates</h1>
       </div>
       <p className="gt-more-page__lede">
-        Library titles that look behind store versions, plus a store search to check Steam / GOG
-        for updates and DLC.
+        Library titles that look behind store versions. Download local Update/DLC packs from your
+        library, or queue the companion to apply them. Store search is discovery-only (Steam / GOG
+        links).
       </p>
 
       <section className="gt-updates__search gt-glass-panel">
@@ -131,22 +164,63 @@ export function UpdatesPage() {
         ) : null}
 
         {!error && items && items.length > 0 ? (
-          <ul className="gt-updates__list">
-            {items.map((game) => (
-              <li key={game.uuid}>
-                <a href={`/game_details/${game.uuid}`}>
-                  <strong>{game.name}</strong>
-                  <span>
-                    {[
-                      game.freshness_status,
-                      `${game.local_version || 'local?'} → ${game.remote_version_summary || 'store?'}`,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </span>
-                </a>
-              </li>
-            ))}
+          <ul className="gt-updates__list gt-updates__inbox-list">
+            {items.map((game) => {
+              const pack = game.latest_update || game.latest_extra
+              const applyKey = pack ? `${game.uuid}:${pack.uuid}` : null
+              return (
+                <li key={game.uuid} className="gt-updates__inbox-item">
+                  <div className="gt-updates__inbox-main">
+                    <Link to={`/game_details/${game.uuid}`}>
+                      <strong>{game.name}</strong>
+                    </Link>
+                    <span>
+                      {[
+                        game.freshness_status,
+                        `${game.local_version || 'local?'} → ${game.remote_version_summary || 'store?'}`,
+                        game.updates_count
+                          ? `${game.updates_count} local update${game.updates_count === 1 ? '' : 's'}`
+                          : null,
+                        game.dlc?.missing_count != null
+                          ? `DLC gap ${game.dlc.missing_count}`
+                          : game.dlc?.store_count != null
+                            ? `Store DLC ${game.dlc.store_count}`
+                            : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
+                    {statusByUuid[game.uuid] ? (
+                      <span className="gt-updates__status" role="status">
+                        {statusByUuid[game.uuid]}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="gt-updates__inbox-actions">
+                    {pack?.download_url ? (
+                      <a className="gt-btn" href={pack.download_url}>
+                        Download {pack.kind}
+                      </a>
+                    ) : null}
+                    {pack && game.client_connected ? (
+                      <button
+                        type="button"
+                        className="gt-btn"
+                        disabled={busyKey === applyKey}
+                        onClick={() => {
+                          void applyPack(game, pack)
+                        }}
+                      >
+                        {busyKey === applyKey ? 'Queuing…' : 'Apply with companion'}
+                      </button>
+                    ) : null}
+                    <Link className="gt-btn" to={`/game_details/${game.uuid}`}>
+                      Details
+                    </Link>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         ) : null}
       </section>

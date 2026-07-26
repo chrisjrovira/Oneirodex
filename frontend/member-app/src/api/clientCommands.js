@@ -27,13 +27,21 @@ function csrfHeaders(additionalHeaders = {}) {
  * Queue Install / Update / Uninstall for the desktop companion to claim.
  * @param {string} gameUuid
  * @param {'install' | 'update' | 'uninstall'} action
+ * @param {{ kind?: 'base' | 'update' | 'extra', versionUuid?: string }} [options]
  */
-export async function queueClientCommand(gameUuid, action) {
+export async function queueClientCommand(gameUuid, action, options = {}) {
+  const body = { game_uuid: gameUuid, action }
+  if (options.kind) {
+    body.kind = options.kind
+  }
+  if (options.versionUuid) {
+    body.version_uuid = options.versionUuid
+  }
   const response = await fetch('/api/client/commands', {
     method: 'POST',
     credentials: 'same-origin',
     headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ game_uuid: gameUuid, action }),
+    body: JSON.stringify(body),
   })
 
   const data = await response.json().catch(() => ({}))
