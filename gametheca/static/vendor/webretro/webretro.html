@@ -11,7 +11,7 @@
     <div id="gt-emu-bar">
         <strong class="gt-play-brand">GameTheca</strong>
         <span class="gt-play-system" id="gt-play-system" hidden></span>
-        <button type="button" id="gt-sync-save">Sync cloud save</button>
+        <button type="button" id="gt-sync-save" title="Uploads/downloads the cloud1 slot. Browser WASM state sync is not fully wired yet.">Sync cloud slot</button>
         <label>Cheats <select id="gt-cheat-select"><option value="">None</option></select></label>
         <button type="button" id="gt-load-cheat">Load .cht</button>
         <span id="gt-emu-status"></span>
@@ -130,8 +130,12 @@
                         return null;
                     })
                     .then(function (existingBlob) {
+                        var hadExisting = Boolean(existingBlob);
                         var payloadBlob = existingBlob || new Blob(
-                            ['GameTheca cloud save slot for ' + guid + ' @ ' + new Date().toISOString()],
+                            [
+                                'GameTheca cloud1 slot placeholder — real libretro .state/.srm sync is not wired from WebRetro IndexedDB yet. ',
+                                'guid=' + guid + ' @ ' + new Date().toISOString(),
+                            ].join(''),
                             { type: 'application/octet-stream' },
                         );
                         var body = new FormData();
@@ -142,11 +146,16 @@
                             credentials: 'same-origin',
                             headers: { 'X-CSRFToken': csrfToken() },
                             body: body,
+                        }).then(function (r) {
+                            return r.json().then(function (j) {
+                                return { ok: r.ok, j: j, hadExisting: hadExisting };
+                            });
                         });
                     })
-                    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
                     .then(function (res) {
-                        setStatus(res.ok ? 'Cloud save synced (slot cloud1)' : (res.j.error || 'Sync failed'));
+                        setStatus(res.ok
+                            ? (res.hadExisting ? 'Cloud slot cloud1 refreshed' : 'Cloud slot cloud1 updated (placeholder until WASM state export)')
+                            : (res.j.error || 'Sync failed'));
                     })
                     .catch(function () { setStatus('Sync failed'); });
             });

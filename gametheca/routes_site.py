@@ -13,6 +13,7 @@ from datetime import datetime
 from gametheca.models import Game, Library, Genre, Theme
 from gametheca.utils.processors import get_global_settings
 from gametheca.utils.auth import admin_required
+from gametheca.utils.library_acl import apply_game_access_filters
 from gametheca import cache
 
 site_bp = Blueprint('site', __name__)
@@ -146,6 +147,7 @@ def get_random_trailer():
             Game.video_urls.isnot(None),
             Game.video_urls != ''
         )
+        query = apply_game_access_filters(query, current_user)
 
         # Apply library filter
         library_uuid_param = request.args.get('library_uuid')

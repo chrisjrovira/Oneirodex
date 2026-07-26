@@ -20,6 +20,8 @@ def playtime_start():
         return jsonify({'error': 'game_uuid required'}), 400
     try:
         session = start_session(current_user.id, game_uuid, client=data.get('client'))
+    except PermissionError:
+        return jsonify({'error': 'Forbidden'}), 403
     except ValueError as exc:
         return jsonify({'error': str(exc)}), 404
     return jsonify(session.to_dict()), 201

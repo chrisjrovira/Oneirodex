@@ -7,7 +7,8 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 
 from gametheca import db
-from gametheca.models import Game, PlaySession, UserGameProgress
+from gametheca.models import Game, PlaySession, User, UserGameProgress
+from gametheca.utils.library_acl import user_can_access_game
 
 HEARTBEAT_TTL_SECONDS = 120
 
@@ -20,6 +21,9 @@ def start_session(user_id: int, game_uuid: str, client: str | None = None) -> Pl
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
         raise ValueError('Game not found')
+    user = db.session.get(User, user_id)
+    if not user or not user_can_access_game(user, game):
+        raise PermissionError('Forbidden')
 
     # End any stale active sessions for this user+game
     active = db.session.execute(

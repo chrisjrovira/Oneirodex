@@ -11,10 +11,11 @@ import uuid
 from asgiref.wsgi import WsgiToAsgi
 
 from gametheca import create_app, db
-from gametheca.models import DownloadRequest, Game
+from gametheca.models import DownloadRequest, Game, User
 from gametheca.async_streaming import create_async_streaming_response, async_generate_zipstream_response
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories
 from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.library_acl import user_can_access_game
 from sqlalchemy import select
 
 
@@ -183,6 +184,16 @@ class LazyASGIApp:
                 log_system_event(f"ROM download attempt for non-existent game UUID: {game_uuid}", 
                                event_type='security', event_level='warning')
                 await self._send_error(send, 404, "Game not found")
+                return
+
+            user = db.session.get(User, user_id)
+            if not user or not user_can_access_game(user, game):
+                log_system_event(
+                    f"ROM download blocked by library ACL for user_id={user_id} game={game_uuid[:8]}...",
+                    event_type='security',
+                    event_level='warning',
+                )
+                await self._send_error(send, 403, "Access denied")
                 return
             
             # Check if file exists

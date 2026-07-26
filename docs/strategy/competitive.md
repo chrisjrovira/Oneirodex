@@ -81,6 +81,36 @@
 
 **Count:** 70 entries (≥50 requirement met).
 
+## New competitors spotted (post–Wave 11 review)
+
+| # | Product | Category | Steal next | Ignore |
+|---|---|---|---|---|
+| 71 | [RetroArr](https://retroarr.app/) | Game *arr + emu | NZBGet + EmulatorJS save UI + SignalR live scan badge + process-isolated plugins | Claiming full PVR rewrite overnight |
+| 72 | [Gaseous](https://github.com/gaseous-project/gaseous-server) | ROM manager | Alternate WASM player path | Dual-maintain EmulatorJS |
+| 73 | [Sail Launcher](https://github.com/) | Desktop launcher | aria2 + debrid UX cues | Bundled pirate marketplace |
+| 74 | [Gamepile](https://github.com/) | Steam library vault | Activation key vault ideas | Steam DRM queues |
+| 75 | Argosy / Freegosy (RomM clients) | Mobile / desktop clients | Official companion plugin model | Replacing Tauri companion |
+| 76 | Hydra Classics (PS1–3) | ROM + native emu | DuckStation/PCSX2/RPCS3 launch profiles | Hydra download marketplace |
+| 77 | MyGamesAnywhere deepen | Local-first merge | Provenance / source-backed pages | Desktop-only product |
+
+## Gap status snapshot (Jul 26 post-review)
+
+| Area | Status |
+|---|---|
+| *arr + quality + hardlink | Shipped (flagged) — thin Acquire UI |
+| Debrid connectors | Shipped (RD/AD/Premiumize/TorBox) |
+| Store search → library bind | Shipped MVP |
+| WebRetro cores | Shipped; **cloud save = placeholder**; cheats = sessionStorage |
+| Admin React bodies | **Hybrid** — HubPages + Jinja forms |
+| Big Picture | MVP + kid CSS |
+| Parental ACL | Models yes; **ASGI ROM/trailers/playtime holes fixed in review pass** |
+| Plugins | Static registry only |
+| OpenAPI | **Stale** vs Waves 7–11 |
+| Unraid smoke | Operator |
+| New: RetroArr-class NZBGet + live scan UX | Missing |
+| New: EmulatorJS alternate / real save sync | Missing |
+| New: RomM Playnite/handheld plugins | Missing |
+
 ## Wave 7 bets (from this map)
 
 1. **BYO acquisition** — Playerr/Gamarr/Hydra UX cues on top of Prowlarr + qBit + Real-Debrid/AllDebrid (no embedded indexers).  
@@ -93,16 +123,3 @@
 ## Explicit non-goals (unchanged)
 
 Heroic DRM download queues · Hydra-as-product (bundled torrents/debrid marketplace) · LaunchBox closed frontend · Shipping Cheat Engine · Redistributing copyrighted ROM/cheat databases.
-
-## Gap status snapshot
-
-| Area | Status |
-|---|---|
-| *arr + quality + hardlink | Shipped (flagged) |
-| Debrid connectors | **Wave 7** |
-| Store search → library bind | **Wave 7** |
-| WebRetro cores + saves | Partial → **Wave 7 deepen** |
-| `.cht` + PC assists | **Wave 7** |
-| Admin React bodies | Hybrid shell → **Wave 7 migrate** |
-| Big Picture fullscreen | MVP → **Wave 7 polish** |
-| Unraid smoke | Operator checklist **Wave 7 expand** |

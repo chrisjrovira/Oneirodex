@@ -11,6 +11,7 @@ from gametheca.models import Game, UserGameProgress
 from gametheca.utils.auth import admin_required
 from gametheca.utils.quality_profiles import get_quality_profile, save_quality_profile, score_release_title
 from gametheca.utils.stats_share import build_playtime_share_svg
+from gametheca.utils.library_acl import user_can_access_game
 
 from . import apis_bp
 
@@ -56,6 +57,8 @@ def playtime_share_card(game_uuid: str):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
         return jsonify({'error': 'Game not found'}), 404
+    if not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Forbidden'}), 403
     row = db.session.execute(
         select(UserGameProgress).filter_by(user_id=current_user.id, game_uuid=game_uuid),
     ).scalars().first()

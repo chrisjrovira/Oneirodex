@@ -105,8 +105,8 @@ def activity_feed():
         return jsonify({'activity': [], 'now_playing': [], 'restricted': True})
     limit = min(100, max(1, int(request.args.get('limit') or 25)))
     return jsonify({
-        'activity': list_recent_activity(limit=limit),
-        'now_playing': list_now_playing(),
+        'activity': list_recent_activity(limit=limit, viewer=current_user),
+        'now_playing': list_now_playing(viewer=current_user),
     })
 
 

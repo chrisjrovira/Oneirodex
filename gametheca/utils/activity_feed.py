@@ -9,17 +9,26 @@ from sqlalchemy import select
 
 from gametheca import db
 from gametheca.models import Game, PlaySession, User
+from gametheca.utils.library_acl import user_can_access_game
 
 
-def list_recent_activity(*, limit: int = 25, active_within_minutes: int = 15) -> list[dict[str, Any]]:
-    """Return recent play sessions for an activity feed (no private paths)."""
+def list_recent_activity(
+    *,
+    limit: int = 25,
+    active_within_minutes: int = 15,
+    viewer: User | None = None,
+) -> list[dict[str, Any]]:
+    """Return recent play sessions for an activity feed (no private paths).
+
+    When ``viewer`` is set, sessions for games the viewer cannot access are omitted.
+    """
     cutoff = datetime.now(timezone.utc) - timedelta(days=14)
     rows = list(
         db.session.execute(
             select(PlaySession)
             .where(PlaySession.started_at >= cutoff)
             .order_by(PlaySession.started_at.desc())
-            .limit(max(1, min(limit, 100))),
+            .limit(max(1, min(limit * 3, 300))),
         ).scalars().all(),
     )
     active_cutoff = datetime.now(timezone.utc) - timedelta(minutes=active_within_minutes)
@@ -28,6 +37,8 @@ def list_recent_activity(*, limit: int = 25, active_within_minutes: int = 15) ->
         game = db.session.execute(
             select(Game).filter_by(uuid=session.game_uuid),
         ).scalars().first() if getattr(session, 'game_uuid', None) else None
+        if viewer is not None and (not game or not user_can_access_game(viewer, game)):
+            continue
         user = db.session.get(User, session.user_id) if getattr(session, 'user_id', None) else None
         ended = getattr(session, 'ended_at', None)
         last = getattr(session, 'last_heartbeat_at', None) or ended or session.started_at
@@ -44,8 +55,22 @@ def list_recent_activity(*, limit: int = 25, active_within_minutes: int = 15) ->
             'client': getattr(session, 'client', None) or 'unknown',
             'is_playing': is_active,
         })
+        if len(out) >= max(1, min(limit, 100)):
+            break
     return out
 
 
-def list_now_playing(*, active_within_minutes: int = 15) -> list[dict[str, Any]]:
-    return [row for row in list_recent_activity(limit=50, active_within_minutes=active_within_minutes) if row['is_playing']]
+def list_now_playing(
+    *,
+    active_within_minutes: int = 15,
+    viewer: User | None = None,
+) -> list[dict[str, Any]]:
+    return [
+        row
+        for row in list_recent_activity(
+            limit=50,
+            active_within_minutes=active_within_minutes,
+            viewer=viewer,
+        )
+        if row['is_playing']
+    ]

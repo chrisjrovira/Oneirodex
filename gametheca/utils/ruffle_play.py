@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from flask import current_app
 
 
@@ -11,8 +13,13 @@ def ruffle_enabled() -> bool:
     )
 
 
+def ruffle_player_path() -> str:
+    return os.path.join(current_app.root_path, 'static', 'vendor', 'ruffle', 'player.html')
+
+
 def ruffle_play_url(game_uuid: str) -> str | None:
     if not ruffle_enabled() or not game_uuid:
         return None
-    # Operators host Ruffle player under static; GameTheca only exposes the hook.
+    if not os.path.isfile(ruffle_player_path()):
+        return None
     return f'/static/vendor/ruffle/player.html?guid={game_uuid}'
