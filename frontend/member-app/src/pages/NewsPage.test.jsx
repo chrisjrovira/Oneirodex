@@ -44,3 +44,23 @@ test('shows empty state when no announcements', async () => {
 
   expect(await screen.findByText('No announcements yet.')).toBeInTheDocument()
 })
+
+test('keeps announcements when gaming news fails', async () => {
+  announcementsApi.fetchAnnouncements.mockResolvedValue({
+    announcements: [
+      {
+        id: 2,
+        title: 'Maintenance',
+        body: 'Tonight',
+        created_at: '2026-07-02T12:00:00+00:00',
+      },
+    ],
+  })
+  gamingNewsApi.fetchGamingNews.mockRejectedValue(new Error('rss down'))
+
+  render(<NewsPage />)
+
+  expect(await screen.findByText('Maintenance')).toBeInTheDocument()
+  expect(screen.queryByText('Unable to load news.')).not.toBeInTheDocument()
+  expect(screen.getByText('No external headlines available right now.')).toBeInTheDocument()
+})

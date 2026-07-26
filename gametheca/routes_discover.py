@@ -20,6 +20,7 @@ from gametheca.utils.store_ownership import get_matched_owned_game_uuids, owners
 from gametheca.utils.cover_url import resolve_cover_url
 from gametheca.utils.library_acl import apply_game_access_filters, filter_libraries
 from gametheca.utils.lifecycle import web_lifecycle_fields
+from gametheca.utils.play_url import browse_play_fields, library_platform_key
 
 discover_bp = Blueprint('discover', __name__)
 
@@ -35,6 +36,12 @@ def serialize_discover_game(
 ):
     cover_url = resolve_cover_url(cover_image)
     owned_uuids = owned_game_uuids or set()
+    platform_key = library_platform_key(game)
+    platform_label = None
+    library = getattr(game, 'library', None)
+    platform = getattr(library, 'platform', None) if library is not None else None
+    if platform is not None:
+        platform_label = getattr(platform, 'value', None) or platform_key
 
     return {
         'id': game.id,
@@ -55,6 +62,10 @@ def serialize_discover_game(
             else None
         ),
         'freshness_status': getattr(game, 'freshness_status', None),
+        'library_platform': platform_key,
+        'library_platform_label': platform_label,
+        'badge_title_collision': bool(platform_key),
+        **browse_play_fields(game),
         **game_card_flags(game),
         **web_lifecycle_fields(game, user_id=user_id),
         **ownership_flags(game.uuid, owned_uuids),
@@ -81,9 +92,9 @@ def discover():
     def fetch_game_details(games_query, limit=8):
         # Handle both query objects and lists
         if hasattr(games_query, 'limit'):
-            games = games_query.limit(limit).all()
+            games = game_query.limit(limit).all()
         else:
-            games = games_query[:limit] if limit else games_query
+            games = game_query[:limit] if limit else game_query
 
         game_details = []
         for game in games:

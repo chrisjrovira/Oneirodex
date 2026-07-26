@@ -30,7 +30,7 @@ const SCRIPT = process.env.PREFERENCES_MODAL_JS || path.resolve(
 
 // Stand-in for the .theme-swatch-<slug> rules in css/form-components.css.
 const CHIP_COLOURS = {
-    'theme-swatch-default': 'rgb(255, 90, 54)',
+    'theme-swatch-default': 'rgb(47, 214, 123)',
     'theme-swatch-ember': 'rgb(244, 114, 182)',
 };
 

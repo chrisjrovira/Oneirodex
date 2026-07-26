@@ -91,6 +91,36 @@ export async function syncLifecycleRegistryToServer(
   }
 }
 
+/** Pull server lifecycle and merge into local registry (local wins on conflict). */
+export async function pullLifecycleRegistryFromServer(
+  auth: AuthStore,
+  registry: LifecycleRegistry,
+  fetchImpl: typeof fetch = fetch,
+): Promise<void> {
+  const baseUrl = auth.getBaseUrl()
+  const token = auth.getToken()
+  if (!baseUrl || !token) {
+    return
+  }
+
+  try {
+    const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/api/client/lifecycle`, {
+      method: 'GET',
+      headers: {
+        Authorization: formatBearerAuthorization(token),
+      },
+    })
+    if (!response.ok) {
+      console.warn(`[lifecycle] pull failed: ${response.status}`)
+      return
+    }
+    const data = (await response.json()) as RawLifecycleRegistryFile
+    registry.merge(fromRawRecords(data.records))
+  } catch (err) {
+    console.warn('[lifecycle] pull error', err)
+  }
+}
+
 export interface PersistedLifecycleRegistryOptions {
   initial?: GameLifecycleRecord[]
   persist?: (records: GameLifecycleRecord[]) => void | Promise<void>

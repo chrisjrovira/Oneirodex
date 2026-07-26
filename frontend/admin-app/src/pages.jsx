@@ -243,6 +243,9 @@ export function resolveAdminPage(pathname) {
   ) {
     return 'integrations'
   }
+  if (pathname.includes('new_server_settings')) {
+    return 'settings-section'
+  }
   if (
     pathname.includes('/admin/ops') ||
     pathname.includes('server_') ||

@@ -10,7 +10,10 @@ from gametheca.models import (
     user_game_status,
     get_status_info,
 )
+from gametheca.utils.client_lifecycle import load_lifecycle_map
 from gametheca.utils.local_metadata import has_local_images, has_local_metadata
+from gametheca.utils.lifecycle import web_lifecycle_fields
+from gametheca.utils.play_url import browse_play_fields, library_platform_key
 from gametheca.utils.secondary_scrapers import game_card_flags
 from gametheca.utils.cover_url import resolve_cover_url
 from gametheca.utils.library_acl import user_can_access_game
@@ -85,6 +88,7 @@ def favorites():
         user_statuses = {row[0]: row[1] for row in status_results}
 
     settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    lifecycle_map = load_lifecycle_map(current_user.id)
     game_data = []
     for game in games:
         if not user_can_access_game(current_user, game):
@@ -107,13 +111,30 @@ def favorites():
                 and has_local_images(game.full_disk_path)
             )
 
+        platform_key = library_platform_key(game)
+        platform_label = None
+        library = getattr(game, 'library', None)
+        platform = getattr(library, 'platform', None) if library is not None else None
+        if platform is not None:
+            platform_label = getattr(platform, 'value', None) or platform_key
+
         game_data.append({
             'uuid': game.uuid,
             'name': game.name,
             'cover_url': cover_url,
             'is_favorite': True,
             'has_local_override': has_local_override,
+            'library_platform': platform_key,
+            'library_platform_label': platform_label,
+            'badge_title_collision': bool(platform_key),
+            'freshness_status': getattr(game, 'freshness_status', None),
+            **browse_play_fields(game),
             **game_card_flags(game),
+            **web_lifecycle_fields(
+                game,
+                user_id=current_user.id,
+                client_state=lifecycle_map.get(game.uuid),
+            ),
             'genres': [genre.name for genre in game.genres],
             'user_status': user_statuses.get(game.uuid),
         })

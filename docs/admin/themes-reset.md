@@ -23,6 +23,6 @@ Or delete `themes/default` (and stale presets) under the library volume and rest
 - Members: preferences swatch grid.
 - Admins: Manage Themes / Active Theme picker; `POST /admin/themes/apply` supports apply flows.
 
-Never edit `gametheca/static/library/themes/` in git — it is runtime output. Change `setup/default_theme/` and bump generator version when output format changes.
+Never edit `gametheca/static/library/themes/` in git — it is runtime output. Change `gametheca/setup/default_theme/` and bump generator version when output format changes.
 
 Related: [preferences-themes.md](../user/preferences-themes.md) · [ui-wave0-tokens.md](../dev/ui-wave0-tokens.md)

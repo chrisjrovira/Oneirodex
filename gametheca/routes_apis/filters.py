@@ -1,10 +1,11 @@
 # /gametheca/routes_apis/filters.py
 from typing import Tuple, List, Dict, Any, Type
 from flask import jsonify, Response
-from flask_login import login_required
+from flask_login import current_user, login_required
 from gametheca.models import Genre, Theme, GameMode, PlayerPerspective, Library, Platform, Game
 from gametheca import db
 from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.library_acl import allowed_library_uuids, apply_game_access_filters
 from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 from . import apis_bp
@@ -101,11 +102,21 @@ def get_player_perspectives() -> Tuple[Response, int]:
 @login_required
 def get_library_platforms():
     try:
-        count_rows = db.session.execute(
-            select(Library.platform, func.count(Game.id))
-            .outerjoin(Game, Game.library_uuid == Library.uuid)
+        allowed = allowed_library_uuids(current_user)
+        if allowed is not None and not allowed:
+            return jsonify([]), 200
+
+        accessible_games = apply_game_access_filters(select(Game.id, Game.library_uuid), current_user).subquery()
+        query = (
+            select(Library.platform, func.count(accessible_games.c.id))
+            .select_from(Library)
+            .outerjoin(accessible_games, accessible_games.c.library_uuid == Library.uuid)
             .group_by(Library.platform)
-        ).all()
+        )
+        if allowed is not None:
+            query = query.filter(Library.uuid.in_(list(allowed)))
+
+        count_rows = db.session.execute(query).all()
         counts = {}
         for platform, game_count in count_rows:
             if platform is None:

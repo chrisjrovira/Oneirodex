@@ -29,11 +29,7 @@ def _store_path(user_id: int) -> str:
     return os.path.join(folder, f'user_{int(user_id)}.json')
 
 
-def load_lifecycle_map(user_id: int | None) -> dict[str, str]:
-    """Return {game_uuid: state} for the user, or empty."""
-    if user_id is None:
-        return {}
-    path = _store_path(user_id)
+def _read_lifecycle_map(path: str) -> dict[str, str]:
     if not os.path.isfile(path):
         return {}
     try:
@@ -55,10 +51,25 @@ def load_lifecycle_map(user_id: int | None) -> dict[str, str]:
     return out
 
 
-def save_lifecycle_records(user_id: int, records: list[dict[str, Any]]) -> dict[str, str]:
-    """Replace the user's lifecycle map from companion payload."""
-    cleaned: list[dict[str, str]] = []
-    mapping: dict[str, str] = {}
+def load_lifecycle_map(user_id: int | None) -> dict[str, str]:
+    """Return {game_uuid: state} for the user, or empty."""
+    if user_id is None:
+        return {}
+    return _read_lifecycle_map(_store_path(user_id))
+
+
+def save_lifecycle_records(
+    user_id: int,
+    records: list[dict[str, Any]],
+    *,
+    replace: bool = False,
+) -> dict[str, str]:
+    """Upsert companion lifecycle rows (default) or replace the whole map.
+
+    Partial companion snapshots must not wipe other games' states; pass
+    ``replace=True`` only for an intentional full reset.
+    """
+    incoming: dict[str, str] = {}
     for row in records or []:
         if not isinstance(row, dict):
             continue
@@ -66,11 +77,13 @@ def save_lifecycle_records(user_id: int, records: list[dict[str, Any]]) -> dict[
         state = str(row.get('state') or '').strip()
         if not uuid or state not in _VALID_STATES:
             continue
-        cleaned.append({'game_uuid': uuid, 'state': state})
-        mapping[uuid] = state
+        incoming[uuid] = state
 
     path = _store_path(user_id)
     with _LOCK:
+        mapping = {} if replace else _read_lifecycle_map(path)
+        mapping.update(incoming)
+        cleaned = [{'game_uuid': uuid, 'state': state} for uuid, state in sorted(mapping.items())]
         with open(path, 'w', encoding='utf-8') as fh:
             json.dump({'records': cleaned}, fh, indent=2)
     return mapping

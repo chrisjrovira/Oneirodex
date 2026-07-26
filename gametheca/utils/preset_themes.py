@@ -105,7 +105,7 @@ PRESET_THEMES = [
         'name': 'Coin Gold',
         'description': 'Arcade coin-slot gold (not orange).',
         'btn_primary': '#fbbf24',
-        'btn_primary_hover': '#f59e0b',
+        'btn_primary_hover': '#eab308',
         'bg_dark_40': 'rgba(24, 18, 8, 0.94)',
         'bg_dark_30': 'rgba(14, 10, 4, 0.97)',
     },

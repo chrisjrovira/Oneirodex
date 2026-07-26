@@ -15,24 +15,29 @@ export function NewsPage() {
     setAnnouncements(null)
     setHeadlines(null)
 
-    Promise.all([
+    Promise.allSettled([
       fetchAnnouncements({ signal: controller.signal }),
-      fetchGamingNews({ signal: controller.signal }).catch(() => ({ items: [] })),
-    ])
-      .then(([announceData, newsData]) => {
-        if (!active) {
-          return
-        }
+      fetchGamingNews({ signal: controller.signal }),
+    ]).then(([announceResult, newsResult]) => {
+      if (!active) {
+        return
+      }
+      if (announceResult.status === 'fulfilled') {
+        const announceData = announceResult.value
         setAnnouncements(
           Array.isArray(announceData.announcements) ? announceData.announcements : [],
         )
+      } else if (announceResult.reason?.name !== 'AbortError') {
+        setError(announceResult.reason)
+        setAnnouncements([])
+      }
+      if (newsResult.status === 'fulfilled') {
+        const newsData = newsResult.value
         setHeadlines(Array.isArray(newsData.items) ? newsData.items : [])
-      })
-      .catch((err) => {
-        if (active && err.name !== 'AbortError') {
-          setError(err)
-        }
-      })
+      } else {
+        setHeadlines([])
+      }
+    })
 
     return () => {
       active = false

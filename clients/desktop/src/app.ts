@@ -20,7 +20,7 @@ import { loadStoredConfig, saveStoredConfig } from './config-store.js'
 
 import { keychainAdapter } from './keychain.js'
 
-import { hydrateLifecycleRegistry, syncLifecycleRegistryToServer, type LifecycleRegistry } from './lifecycle-store.js'
+import { hydrateLifecycleRegistry, pullLifecycleRegistryFromServer, syncLifecycleRegistryToServer, type LifecycleRegistry } from './lifecycle-store.js'
 
 import {
 
@@ -424,6 +424,7 @@ async function handleConnect(): Promise<void> {
 
   try {
     const registry = await ensureLifecycleRegistry()
+    await pullLifecycleRegistryFromServer(auth, registry)
     await syncLifecycleRegistryToServer(auth, registry.snapshot())
   } catch {
     // Lifecycle sync is best-effort after connect.

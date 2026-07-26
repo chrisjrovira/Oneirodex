@@ -5,6 +5,7 @@ import uuid
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
+from gametheca.utils.api_tokens import require_api_scope, user_has_scope
 from gametheca.utils.client_lifecycle import load_lifecycle_map, save_lifecycle_records
 from gametheca.utils.client_presence import record_client_heartbeat
 
@@ -31,6 +32,7 @@ def client_heartbeat():
 
 @apis_bp.route('/client/lifecycle', methods=['GET'])
 @login_required
+@require_api_scope('read:library')
 def client_lifecycle_get():
     mapping = load_lifecycle_map(current_user.id)
     records = [{'game_uuid': uuid, 'state': state} for uuid, state in mapping.items()]
@@ -40,11 +42,18 @@ def client_lifecycle_get():
 @apis_bp.route('/client/lifecycle', methods=['POST'])
 @login_required
 def client_lifecycle_post():
+    # Companion tokens typically carry write:download; library write also accepted.
+    if not (
+        user_has_scope('write:download')
+        or user_has_scope('write:library')
+    ):
+        return jsonify({'error': 'Missing scope: write:download or write:library'}), 403
     data = request.get_json(silent=True) or {}
     records = data.get('records')
     if not isinstance(records, list):
         return jsonify({'error': 'records must be a list'}), 400
-    mapping = save_lifecycle_records(current_user.id, records)
+    replace = bool(data.get('replace'))
+    mapping = save_lifecycle_records(current_user.id, records, replace=replace)
     return jsonify({
         'ok': True,
         'count': len(mapping),

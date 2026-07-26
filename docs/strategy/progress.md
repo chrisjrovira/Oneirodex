@@ -28,8 +28,7 @@
 | Tile slider, badge dismiss, Steam deep links, Play on tiles | Shipped |
 | Unraid smoke (`build --no-cache` + Reset Themes v6) | Operator-owned |
 
-Program canvas:  
-`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
+Program canvas: Cursor `canvases/gametheca-program.canvas.tsx` (Wave 4 board).
 
 ## Flags (see `.env.example` / `.env.docker.example`)
 

@@ -61,7 +61,7 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
       .catch((err) => {
         if (active && err.name !== 'AbortError') {
           setError(err)
-          setPlatforms([])
+          // Keep platforms null so the error/retry UI wins over empty-state.
         }
       })
 

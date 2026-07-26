@@ -21,11 +21,15 @@ describe('lifecycle state machine', () => {
     expect(registry.get('game-1')).toBe('installed')
   })
 
-  it('hydrates initial records', () => {
+  it('merges server records without wiping local state', () => {
     const registry = createLifecycleRegistry({
-      initial: [{ gameUuid: 'saved-game', state: 'downloaded' }],
+      initial: [{ gameUuid: 'local', state: 'installed' }],
     })
-    expect(registry.get('saved-game')).toBe('downloaded')
-    expect(registry.get('missing-game')).toBe('not_downloaded')
+    registry.merge([
+      { gameUuid: 'local', state: 'downloaded' },
+      { gameUuid: 'remote', state: 'downloaded' },
+    ])
+    expect(registry.get('local')).toBe('installed')
+    expect(registry.get('remote')).toBe('downloaded')
   })
 })

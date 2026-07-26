@@ -43,3 +43,17 @@ test('renders system tiles linking into library platform filter', async () => {
     '/library?library_platform=PCWIN',
   )
 })
+
+test('shows error retry instead of empty state when fetch fails', async () => {
+  mockFetch([], false)
+
+  render(
+    <MemoryRouter>
+      <SystemsPage />
+    </MemoryRouter>,
+  )
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load systems.')
+  expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+  expect(screen.queryByText(/No library platforms yet/i)).not.toBeInTheDocument()
+})

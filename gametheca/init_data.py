@@ -1,7 +1,9 @@
 import os
 import shutil
 from gametheca import db
+from gametheca.init_manager import InitManager
 from gametheca.models import DiscoverySection
+from gametheca.utils.preset_themes import install_preset_themes
 from sqlalchemy import select
 
 # Default allowed file types
@@ -57,18 +59,17 @@ def initialize_default_settings():
 def initialize_library_folders():
     """Initialize the required folders and theme files for the application."""
     print("Initializing library folders...")
-    library_path = os.path.join('gametheca', 'static', 'library')
+    library_path = os.path.join(os.path.dirname(__file__), 'static', 'library')
     themes_path = os.path.join(library_path, 'themes')
     images_path = os.path.join(library_path, 'images')
     zips_path = os.path.join(library_path, 'zips')
     
     # Check if default theme exists
     default_theme_target = os.path.join(themes_path, 'default')
+    default_theme_source = InitManager.default_theme_source()
     if not os.path.exists(os.path.join(default_theme_target, 'theme.json')):
         print(f"Default theme not found at {os.path.join(default_theme_target, 'theme.json')}")
         log_system_event(f"Default theme not found at {os.path.join(default_theme_target, 'theme.json')}", event_type='startup', event_level='warning', audit_user='system')
-        # Copy default theme from source directory
-        default_theme_source = os.path.join('gametheca', 'setup', 'default_theme')
         if os.path.exists(default_theme_source):
             try:
                 # Create themes directory if it doesn't exist
@@ -77,6 +78,7 @@ def initialize_library_folders():
                 shutil.copytree(default_theme_source, default_theme_target)
                 print("Default theme copied successfully")
                 log_system_event("Default theme copied successfully from source directory", event_type='startup', event_level='info', audit_user='system')
+                install_preset_themes(themes_path, default_theme_source)
             except Exception as e:
                 print(f"Error copying default theme: {str(e)}")
                 log_system_event(f"Error copying default theme: {str(e)}", event_type='startup', event_level='error', audit_user='system')
@@ -85,6 +87,12 @@ def initialize_library_folders():
             log_system_event("Warning: default theme source not found in gametheca/setup/default_theme", event_type='startup', event_level='warning', audit_user='system')
     else:
         print("Default theme found, skipping copy")
+        # Ensure colour presets exist even when default was copied earlier.
+        if os.path.exists(default_theme_source):
+            try:
+                install_preset_themes(themes_path, default_theme_source)
+            except Exception as e:
+                print(f"Error installing preset themes: {str(e)}")
     # Create images folder if it doesn't exist
     if not os.path.exists(images_path):
         os.makedirs(images_path)

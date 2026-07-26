@@ -146,6 +146,16 @@ export function createLifecycleRegistry(options: LifecycleRegistryOptions = {}) 
       notify()
     },
 
+    /** Add server records without wiping local entries (local wins on conflict). */
+    merge(records: GameLifecycleRecord[]): void {
+      for (const record of records) {
+        if (!byUuid.has(record.gameUuid)) {
+          byUuid.set(record.gameUuid, record.state)
+        }
+      }
+      notify()
+    },
+
     snapshot(): GameLifecycleRecord[] {
       return [...byUuid.entries()].map(([gameUuid, state]) => ({ gameUuid, state }))
     },

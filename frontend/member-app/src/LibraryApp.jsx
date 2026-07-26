@@ -41,7 +41,7 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
     () => createTranslator(initialConfig.locale),
     [initialConfig.locale],
   )
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(initialConfig.perPage)
   const defaultFilters = {
@@ -135,6 +135,9 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
     writeLibraryFilters(defaultFilters)
     setPage(1)
     setFilters(defaultFilters)
+    if (searchParams.has('library_platform')) {
+      setSearchParams({}, { replace: true })
+    }
   }
 
   const pages = Math.max(result?.pages ?? 1, 1)
