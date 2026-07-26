@@ -224,13 +224,36 @@
       box.textContent = data.error || 'Search failed';
       return;
     }
-    box.innerHTML = (data.results || []).map(r => `
-      <div class="border rounded p-2 mb-2">
-        <div><strong>${r.title}</strong> <span class="text-muted">score ${r.quality?.score ?? 0}</span></div>
-        <div class="small text-muted">${r.indexer || ''} · seeders ${r.seeders ?? '—'}</div>
-        <button class="btn btn-sm btn-outline-primary mt-1" data-url="${r.download_url || ''}">Send to qBittorrent</button>
-      </div>
-    `).join('') || '<p>No results</p>';
+    box.textContent = '';
+    const results = data.results || [];
+    if (!results.length) {
+      box.textContent = 'No results';
+      return;
+    }
+    results.forEach((r) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'border rounded p-2 mb-2';
+      const title = document.createElement('div');
+      const strong = document.createElement('strong');
+      strong.textContent = r.title || 'Untitled';
+      title.appendChild(strong);
+      const score = document.createElement('span');
+      score.className = 'text-muted';
+      score.textContent = ` score ${r.quality?.score ?? 0}`;
+      title.appendChild(score);
+      const meta = document.createElement('div');
+      meta.className = 'small text-muted';
+      meta.textContent = `${r.indexer || ''} · seeders ${r.seeders ?? '—'}`;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn-sm btn-outline-primary mt-1';
+      btn.textContent = 'Send to qBittorrent';
+      btn.dataset.url = r.download_url || '';
+      wrap.appendChild(title);
+      wrap.appendChild(meta);
+      wrap.appendChild(btn);
+      box.appendChild(wrap);
+    });
     box.querySelectorAll('button[data-url]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const url = btn.getAttribute('data-url');

@@ -21,7 +21,9 @@ Tracks Art / Docs / Admin SPA. Jul 25 handoff is superseded for planning.
 |---|---|---|
 | Competitive gap analysis | `docs/strategy/competitive.md` | Have |
 | Feature build plans | `docs/strategy/features.md` | Have |
-| Social / Discord alternatives | `docs/strategy/social.md` | Have |
+| Social / Discord alternatives | `docs/strategy/social.md` | Have (pointer) |
+| Social + A/V wave plan | `docs/strategy/social-av.md` | Have |
+| Security suite | `docs/strategy/security.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
 | UI rebuild plan | `docs/strategy/ui.md` | Have |
 | Product roadmap | `docs/strategy/roadmap.md` | Have |

@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from gametheca import db
 from gametheca.models import Game, PlaySession, UserGameProgress
+from gametheca.utils.library_acl import user_can_access_game
 from gametheca.utils.playtime import end_session, heartbeat_session, start_session
 
 from . import apis_bp
@@ -79,6 +80,9 @@ def playtime_me():
 @apis_bp.route('/playtime/games/<game_uuid>', methods=['GET'])
 @login_required
 def playtime_for_game(game_uuid: str):
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game or not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Forbidden'}), 403
     row = db.session.execute(
         select(UserGameProgress).filter_by(user_id=current_user.id, game_uuid=game_uuid)
     ).scalars().first()

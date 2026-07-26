@@ -126,7 +126,13 @@ export function ActivityPage() {
       </p>
       {social?.community_chat_url ? (
         <p>
-          <a className="gt-btn" href={social.community_chat_url} target="_blank" rel="noreferrer">
+          <a
+            className="gt-btn"
+            href={social.community_chat_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={social.community_chat_url}
+          >
             {social.community_chat_label || 'Open community'}
           </a>
         </p>

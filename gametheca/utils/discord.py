@@ -4,6 +4,7 @@ from sqlalchemy import select
 import os
 from gametheca.utils.igdb_api import get_cover_url
 from gametheca.utils.functions import format_size
+from gametheca.utils.security import is_discord_webhook_url
 
 def get_folder_size_in_bytes(folder_path):
     if os.path.isfile(folder_path):
@@ -62,6 +63,10 @@ def discord_webhook(game_uuid, manual_trigger=False):
     discord_bot_name = settings.discord_bot_name
     discord_bot_avatar_url = settings.discord_bot_avatar_url
     site_url = settings.site_url
+
+    if not is_discord_webhook_url(discord_webhook_url or ''):
+        print("Discord notifications: Webhook URL failed hostname validation. Exiting.")
+        return
 
     # Initialize Discord webhook and embed
     webhook = DiscordWebhook(url=discord_webhook_url, rate_limit_retry=True)

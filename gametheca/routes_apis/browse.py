@@ -3,6 +3,7 @@ from flask import jsonify, request, current_app
 import os, sys
 from flask_login import login_required
 from gametheca.utils.auth import admin_required
+from gametheca.utils.security import is_safe_path
 from . import apis_bp
 
 @apis_bp.route('/browse_folders_ss')
@@ -24,8 +25,8 @@ def browse_folders_ss():
         # Safely construct the folder path to prevent directory traversal vulnerabilities
         folder_path = os.path.abspath(os.path.join(base_directory, request_path))
         print(f'SS folder browser: Folder path: {folder_path}', file=sys.stderr)
-        # Prevent directory traversal outside the base directory
-        if not folder_path.startswith(base_directory):
+        ok, _err = is_safe_path(folder_path, [base_directory])
+        if not ok:
             print(f'SS folder browser: Access denied: {folder_path} outside of base directory: {base_directory}', file=sys.stderr)
             return jsonify({'error': 'Access denied'}), 403
 

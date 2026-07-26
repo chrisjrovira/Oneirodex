@@ -77,6 +77,12 @@ def acquire_download():
     provider = (data.get('provider') or 'qbittorrent').strip().lower()
     if not url:
         return jsonify({'error': 'url or magnet required'}), 400
+    if url.lower().startswith('http://') or url.lower().startswith('https://'):
+        from gametheca.utils.security import validate_outbound_http_url
+        ok, result = validate_outbound_http_url(url, allow_http=True)
+        if not ok:
+            return jsonify({'error': result}), 400
+        url = result
     try:
         if provider in ('qbittorrent', 'transmission', 'sabnzbd', 'nzbget', 'deluge'):
             if not arr_module_on():

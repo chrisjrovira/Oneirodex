@@ -85,12 +85,12 @@ def community_chat_settings():
         db.session.add(settings)
     url = (request.form.get('community_chat_url') or '').strip()
     label = (request.form.get('community_chat_label') or '').strip() or 'Open community'
-    if url and not (url.startswith('http://') or url.startswith('https://')):
-        flash('Community chat URL must start with http:// or https://', 'error')
+    from gametheca.utils.security import validate_community_chat_url
+    ok, result = validate_community_chat_url(url)
+    if not ok:
+        flash(result, 'error')
         return redirect(url_for('admin2.integrations') + '#community')
-    if len(url) > 512:
-        flash('Community chat URL is too long', 'error')
-        return redirect(url_for('admin2.integrations') + '#community')
+    url = result
     if len(label) > 120:
         flash('Label is too long', 'error')
         return redirect(url_for('admin2.integrations') + '#community')

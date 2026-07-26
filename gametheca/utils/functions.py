@@ -252,8 +252,15 @@ def download_image(url, save_path):
 
     url = url.replace('/t_thumb/', '/t_original/')
 
+    from gametheca.utils.security import validate_outbound_http_url
+    ok, result = validate_outbound_http_url(url, allow_http=True)
+    if not ok:
+        print(f"download_image blocked: {result}")
+        return
+    url = result
+
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=30)
         if response.status_code == 200:
             directory = os.path.dirname(save_path)
 
@@ -491,9 +498,9 @@ def validate_discord_webhook_url(url, max_length=512):
     if not sanitized_url.startswith('https://'):
         return False, "Webhook URL must use HTTPS"
     
-    # Check Discord webhook URL format
-    if not ('discord.com/api/webhooks/' in sanitized_url or 'discordapp.com/api/webhooks/' in sanitized_url):
-        return False, "URL must be a valid Discord webhook URL"
+    from gametheca.utils.security import is_discord_webhook_url
+    if not is_discord_webhook_url(sanitized_url):
+        return False, "URL must be a valid Discord webhook on discord.com or discordapp.com"
     
     return True, sanitized_url
 
