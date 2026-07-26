@@ -11,7 +11,7 @@ from gametheca.utils.filename import sanitize_filename
 from gametheca import db
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.library_acl import user_can_access_game
-from gametheca.routes_games_ext.details import get_path_size
+from gametheca.utils.functions import get_path_size
 from . import download_bp
 
 @download_bp.route('/download_game/<game_uuid>', methods=['GET'])

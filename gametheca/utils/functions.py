@@ -40,6 +40,26 @@ def square_image(image, size):
         image = new_image
     return image
 
+def get_path_size(file_path):
+    """Calculate size of a file or directory in bytes (download initiate helper)."""
+    try:
+        if os.path.isfile(file_path):
+            return os.path.getsize(file_path)
+        if os.path.isdir(file_path):
+            total_size = 0
+            for dirpath, _dirnames, filenames in os.walk(file_path):
+                for filename in filenames:
+                    filepath = os.path.join(dirpath, filename)
+                    try:
+                        total_size += os.path.getsize(filepath)
+                    except OSError:
+                        pass
+            return total_size
+    except OSError:
+        pass
+    return 0
+
+
 def get_folder_size_in_bytes(folder_path, timeout=300):
     """Calculate the total size of a folder in bytes.
     

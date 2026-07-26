@@ -15,6 +15,9 @@ from gametheca.utils.local_metadata import get_local_cover_path, get_local_scree
 from gametheca.utils.member_spa import render_member_spa
 from gametheca.utils.security import get_allowed_base_directories, is_safe_path, sanitize_path_for_logging
 
+# Re-export for older callers that imported get_path_size from this module.
+from gametheca.utils.functions import get_path_size  # noqa: F401
+
 from . import games_bp
 
 
