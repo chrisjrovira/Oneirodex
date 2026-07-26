@@ -14,6 +14,7 @@ from urllib.parse import urlparse, urlunparse
 from flask_caching import Cache
 from gametheca.utils.db import check_postgres_port_open
 from gametheca.utils.proxy import apply_proxy_fix
+from gametheca.utils.icon_themes import icon_pack_css_url
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -81,12 +82,22 @@ def create_app():
 
     @app.context_processor
     def inject_current_theme():
-        """Injects the current user's theme into all templates."""
+        """Injects the current user's theme and icon pack into all templates."""
+        current_theme = 'default'
+        current_icon_pack = 'outline'
+        icon_pack_css = None
         if current_user.is_authenticated and hasattr(current_user, 'preferences') and current_user.preferences:
             current_theme = current_user.preferences.theme or 'default'
-        else:
-            current_theme = 'default'
-        return dict(current_theme=current_theme)
+            current_icon_pack = getattr(current_user.preferences, 'icon_pack', None) or 'outline'
+        try:
+            icon_pack_css = icon_pack_css_url(current_icon_pack)
+        except Exception:
+            icon_pack_css = None
+        return dict(
+            current_theme=current_theme,
+            current_icon_pack=current_icon_pack,
+            icon_pack_css=icon_pack_css,
+        )
 
     @app.context_processor
     def inject_feature_flags():

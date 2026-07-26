@@ -98,19 +98,19 @@ Nitro-style boosts · public discovery · unlimited guilds · stickers marketpla
 
 ### Wave 14 — Social depth (no media yet)
 
-| Slice | Scope |
-|---|---|
-| **14a** | Presence model (online / away / in-game + game UUID) · Activity SSE · friends filter on Activity · block/unfriend polish |
-| **14b** | Public member profiles (avatar, about, recent games ACL-filtered, playtime totals) · compare-with-friend |
-| **14c** | Notification center (friend request, “started playing”) · preference toggles |
+| Slice | Scope | Status |
+|---|---|---|
+| **14a** | Presence model · Activity SSE · friends filter · block/reject | **Shipped** |
+| **14b** | Public member profiles · compare-with-friend | **Shipped** |
+| **14c** | Notification center | **Shipped** — `/api/notifications` + SPA prefs |
 
 ### Wave 15 — Text chat (native mid)
 
-| Slice | Scope |
-|---|---|
-| **15a** | 1:1 DMs (threads, read receipts lite, typing optional) |
-| **15b** | Household channels (`#general`, `#looking-for-players`) · RBAC-gated create · child-safe default channel |
-| **15c** | Mentions · mute · email digest optional |
+| Slice | Scope | Status |
+|---|---|---|
+| **15a** | 1:1 DMs (threads, read receipts lite, typing optional) | **Shipped** (typing deferred) |
+| **15b** | Household channels (`#general`, `#looking-for-players`) · RBAC-gated create · child-safe default channel | **Shipped** |
+| **15c** | Mentions · mute · email digest optional | **Partial** — @mentions + mute column; email digest deferred |
 
 ### Wave 16 — Voice / video path start
 

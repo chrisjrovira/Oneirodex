@@ -32,8 +32,8 @@ def play_game(game_uuid):
 @download_bp.route('/playromtest', methods=['GET'])
 @login_required
 def playromtest():
-    """Placeholder route for the play game functionality"""
-    flash("Play game functionality coming soon!", "info")
+    """Legacy test route — prefer /play_game/<uuid> → WebRetro."""
+    flash("Use Play from a game details page for browser emulation.", "info")
     return render_template('games/playrom.html')
 
 # NOTE: This API route is now handled by ASGI for async streaming  

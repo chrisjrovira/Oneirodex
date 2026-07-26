@@ -1,0 +1,27 @@
+{
+  "id": "outline",
+  "name": "Outline",
+  "description": "Default 2px stroke icons (matches GameTheca chrome).",
+  "version": "1.0.0",
+  "style": "stroke",
+  "icons": {
+    "discover": "icons/discover.svg",
+    "library": "icons/library.svg",
+    "download": "icons/download.svg",
+    "favorites": "icons/favorites.svg",
+    "settings": "icons/settings.svg",
+    "systems": "icons/systems.svg",
+    "user": "icons/user.svg",
+    "menu": "icons/menu.svg",
+    "more": "icons/more.svg",
+    "play": "icons/play.svg",
+    "collections": "icons/collections.svg",
+    "news": "icons/news.svg",
+    "wishlist": "icons/wishlist.svg",
+    "updates": "icons/updates.svg",
+    "playtime": "icons/playtime.svg",
+    "calendar": "icons/calendar.svg",
+    "ownership": "icons/ownership.svg"
+  },
+  "images": {}
+}

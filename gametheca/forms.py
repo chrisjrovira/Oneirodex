@@ -12,6 +12,7 @@ from gametheca.models import Status, Category, genre_choices, game_mode_choices,
 from urllib.parse import urlparse
 from gametheca.utils.functions import comma_separated_urls
 from gametheca.utils.themes import ThemeManager
+from gametheca.utils.icon_themes import list_icon_packs
 from flask import current_app
 
 
@@ -263,6 +264,7 @@ class UserPreferencesForm(FlaskForm):
     default_sort = SelectField('Default Sort', choices=default_sort_choices)
     default_sort_order = SelectField('Default Sort Order', choices=default_sort_order_choices)
     theme = SelectField('Theme', choices=[('default', 'Default')])  # Default theme is always an option
+    icon_pack = SelectField('Icon pack', choices=[('outline', 'Outline')])
     tile_size = SelectField(
         'Tile size',
         choices=[('S', 'S'), ('M', 'M'), ('L', 'L'), ('XL', 'XL')],
@@ -280,6 +282,13 @@ class UserPreferencesForm(FlaskForm):
             for theme in installed_themes
             if (theme.get('folder') or theme['name']) != 'default'
         ]
+        try:
+            packs = list_icon_packs()
+            self.icon_pack.choices = [
+                (p['id'], p.get('name') or p['id']) for p in packs
+            ] or [('outline', 'Outline')]
+        except Exception:
+            self.icon_pack.choices = [('outline', 'Outline')]
 
 
 class LibraryForm(FlaskForm):

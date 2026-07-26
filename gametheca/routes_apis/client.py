@@ -62,6 +62,9 @@ def client_lifecycle_get():
 @apis_bp.route('/client/lifecycle', methods=['POST'])
 @login_required
 def client_lifecycle_post():
+    # Sec-B: Bearer-only — CSRF-exempt endpoint must not accept session cookie alone.
+    if not _has_companion_token():
+        return jsonify({'error': 'Companion API token required'}), 403
     # Companion tokens typically carry write:download; library write also accepted.
     if not (
         user_has_scope('write:download')

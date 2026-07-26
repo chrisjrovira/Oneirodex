@@ -25,4 +25,12 @@ Or delete `themes/default` (and stale presets) under the library volume and rest
 
 Never edit `gametheca/static/library/themes/` in git — it is runtime output. Change `gametheca/setup/default_theme/` and bump generator version when output format changes.
 
+## Icon packs (separate from color themes)
+
+Icon / image packs live under `static/library/icon-themes/{id}/` and are installed from `gametheca/setup/icon_themes/` on boot. They restyle `.gt-icon` via `html[data-icon-pack]` and work with **any** color theme.
+
+- **Reset Default Themes does not wipe icon packs.**
+- Members pick a pack in Preferences → Icon pack (same modal as color swatches).
+- Details: [icon-themes.md](../strategy/icon-themes.md) · [preferences-themes.md](../user/preferences-themes.md)
+
 Related: [preferences-themes.md](../user/preferences-themes.md) · [ui-wave0-tokens.md](../dev/ui-wave0-tokens.md)

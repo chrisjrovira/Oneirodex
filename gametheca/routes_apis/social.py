@@ -11,6 +11,8 @@ from sqlalchemy import or_, select
 from gametheca import db
 from gametheca.models import GlobalSettings, User, UserFriendship
 from gametheca.utils.activity_feed import list_now_playing
+from gametheca.utils.notifications import notify_friend_accepted, notify_friend_request
+from gametheca.utils.presence import list_friend_presence, presence_for_user
 from gametheca.utils.rbac import normalize_role
 
 from . import apis_bp
@@ -26,11 +28,17 @@ def _community_settings() -> dict:
     }
 
 
-def _user_public(user: User) -> dict:
+def _user_public(user: User, *, viewer: User | None = None) -> dict:
+    presence = presence_for_user(user.id, viewer=viewer)
     return {
         'id': user.id,
         'name': user.name,
         'role': normalize_role(getattr(user, 'role', None) or 'user'),
+        'presence': {
+            'status': presence['status'],
+            'game_uuid': presence.get('game_uuid'),
+            'game_name': presence.get('game_name'),
+        },
     }
 
 
@@ -66,6 +74,7 @@ def social_status():
         'friend_count': len(friends),
         'pending_incoming': len(pending_in),
         'now_playing': list_now_playing(viewer=current_user),
+        'presence': list_friend_presence(current_user),
     })
 
 
@@ -94,9 +103,36 @@ def social_friends_list():
         out.append({
             **row.to_dict(),
             'direction': direction,
-            'user': _user_public(other),
+            'user': _user_public(other, viewer=current_user),
         })
     return jsonify({'friends': out})
+
+
+@apis_bp.route('/social/friends/<int:friendship_id>/reject', methods=['POST'])
+@login_required
+def social_friends_reject(friendship_id: int):
+    """Decline an incoming pending request (same effect as delete for recipient)."""
+    row = db.session.get(UserFriendship, friendship_id)
+    if not row or row.friend_user_id != current_user.id or row.status != 'pending':
+        return jsonify({'error': 'Not found'}), 404
+    db.session.delete(row)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+
+@apis_bp.route('/social/friends/<int:friendship_id>/block', methods=['POST'])
+@login_required
+def social_friends_block(friendship_id: int):
+    row = db.session.get(UserFriendship, friendship_id)
+    if not row or (row.user_id != current_user.id and row.friend_user_id != current_user.id):
+        return jsonify({'error': 'Not found'}), 404
+    row.status = 'blocked'
+    row.updated_at = datetime.now(timezone.utc)
+    # Ensure blocker is always user_id for consistent filtering later.
+    if row.friend_user_id == current_user.id:
+        row.user_id, row.friend_user_id = row.friend_user_id, row.user_id
+    db.session.commit()
+    return jsonify({'ok': True, 'friendship': row.to_dict()})
 
 
 @apis_bp.route('/social/friends', methods=['POST'])
@@ -128,6 +164,8 @@ def social_friends_request():
         )
     ).scalars().first()
     if existing:
+        if existing.status == 'blocked':
+            return jsonify({'error': 'Unable to send friend request'}), 403
         return jsonify({'ok': True, 'friendship': existing.to_dict(), 'existing': True})
     row = UserFriendship(
         user_id=current_user.id,
@@ -136,6 +174,10 @@ def social_friends_request():
     )
     db.session.add(row)
     db.session.commit()
+    try:
+        notify_friend_request(target, current_user)
+    except Exception:
+        pass
     return jsonify({'ok': True, 'friendship': row.to_dict()}), 201
 
 
@@ -145,9 +187,17 @@ def social_friends_accept(friendship_id: int):
     row = db.session.get(UserFriendship, friendship_id)
     if not row or row.friend_user_id != current_user.id:
         return jsonify({'error': 'Not found'}), 404
+    if row.status == 'blocked':
+        return jsonify({'error': 'Not found'}), 404
     row.status = 'accepted'
     row.updated_at = datetime.now(timezone.utc)
     db.session.commit()
+    requester = db.session.get(User, row.user_id)
+    if requester:
+        try:
+            notify_friend_accepted(requester, current_user)
+        except Exception:
+            pass
     return jsonify({'ok': True, 'friendship': row.to_dict()})
 
 

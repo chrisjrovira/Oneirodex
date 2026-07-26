@@ -35,12 +35,22 @@ First milestone release on the `feature/roadmap-q1-foundation` track (GameTheca 
 
 ## [Unreleased]
 
+### Added
+
+- **Icon packs** (Outline, Filled, Duotone, Pixel, Soft, Mono) — orthogonal to color themes; Preferences chips + `data-icon-pack` CSS; see `docs/strategy/icon-themes.md`
+- Lite social (friends, Activity poll) + community chat URL; WebRetro save/cheat bridge; NZBGet in Acquire
+- Security suite P0/P1 hardening + `tests/test_security_suite.py`
+- **Wave 14–15 social:** presence, Activity SSE, profiles, notifications, DMs, household channels, @mentions
+- **Sec-B:** `ALLOW_PRIVATE_LAN_URLS`, `OIDC_LOCK_ROLES`, Bearer-only client lifecycle POST
+
 ### Changed
 
 - **Member SPA rebrand (wave 1):** browse routes (Discover, Library, Favorites, Downloads) serve a React Router shell from `frontend/member-app` (`member-app.js`), with GameTheca top nav, design tokens, and Docker multi-stage build of `/static/dist/member-app/`
+- Docs: progress, competitive, bug triage, preferences/themes, security, social-av plans
 
 ### Fixed
 
+- `admin_required` role normalization; honest `/playromtest` messaging
 - Docker Compose forces `DATABASE_URL` host `db` (stops Unraid `.env` `@localhost` loops)
 - Entrypoint rewrites loopback DB URLs inside containers
 - Local image tag `gametheca:0.1.0` (no Docker Hub pull required)

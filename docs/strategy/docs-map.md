@@ -1,6 +1,6 @@
 # Documentation map (runbooks, SOPs, assets)
 
-**Date:** 2026-07-26 · **Product version:** 0.1.0  
+**Date:** 2026-07-26 · **Product version:** 0.2.0 (in progress)  
 **Purpose:** List everything the project needs across docs, ops, and communications as GameTheca grows toward peer parity.
 
 **Program board (Jul 26):** Cursor canvas  
@@ -24,6 +24,8 @@ Tracks Art / Docs / Admin SPA. Jul 25 handoff is superseded for planning.
 | Social / Discord alternatives | `docs/strategy/social.md` | Have (pointer) |
 | Social + A/V wave plan | `docs/strategy/social-av.md` | Have |
 | Security suite | `docs/strategy/security.md` | Have |
+| Icon / image packs | `docs/strategy/icon-themes.md` | Have |
+| Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
 | UI rebuild plan | `docs/strategy/ui.md` | Have |
 | Product roadmap | `docs/strategy/roadmap.md` | Have |
@@ -94,6 +96,7 @@ Tracks Art / Docs / Admin SPA. Jul 25 handoff is superseded for planning.
 | `docs/runbooks/rotate-secret-key.md` | Create | Credential rotation |
 | [oidc-sso.md](../runbooks/oidc-sso.md) | Have | SSO |
 | [oidc-authentik-unraid.md](../runbooks/oidc-authentik-unraid.md) | Have | Authentik on Unraid |
+| [local-postgres-pytest.md](../runbooks/local-postgres-pytest.md) | Have | Docker Desktop Postgres for pytest |
 | `docs/runbooks/enable-arr-module.md` | Create | Optional automation |
 
 ---
@@ -148,7 +151,7 @@ Capture at **1920×1080** and **1280×800**; dark default theme + one alternate 
 | S10 | Unmatched / proposals |
 | S11 | Identify multi-scanner |
 | S12 | Library tools freshness |
-| S13 | Theme picker (swatches) |
+| S13 | Theme picker (swatches) + icon pack chips |
 | S14 | Integrations / settings modules |
 | S15 | Desktop client (when ready) |
 | S16 | Big Picture mode (when ready) |

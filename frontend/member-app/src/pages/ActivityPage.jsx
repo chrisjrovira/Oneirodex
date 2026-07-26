@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-async function fetchActivity({ signal } = {}) {
-  const response = await fetch('/api/activity', {
+async function fetchActivity({ signal, friendsOnly } = {}) {
+  const qs = friendsOnly ? '?friends_only=1' : ''
+  const response = await fetch(`/api/activity${qs}`, {
     credentials: 'same-origin',
     signal,
   })
@@ -38,6 +39,13 @@ function csrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.content || ''
 }
 
+function presenceLabel(status) {
+  if (status === 'in-game') return 'In game'
+  if (status === 'online') return 'Online'
+  if (status === 'away') return 'Away'
+  return 'Offline'
+}
+
 export function ActivityPage() {
   const [data, setData] = useState(null)
   const [social, setSocial] = useState(null)
@@ -45,11 +53,12 @@ export function ActivityPage() {
   const [friendName, setFriendName] = useState('')
   const [error, setError] = useState(null)
   const [friendMsg, setFriendMsg] = useState(null)
+  const [friendsOnly, setFriendsOnly] = useState(false)
 
   function reload() {
     const controller = new AbortController()
     Promise.all([
-      fetchActivity({ signal: controller.signal }),
+      fetchActivity({ signal: controller.signal, friendsOnly }),
       fetchSocial({ signal: controller.signal }),
       fetchFriends({ signal: controller.signal }),
     ])
@@ -66,8 +75,21 @@ export function ActivityPage() {
 
   useEffect(() => {
     const cleanup = reload()
+    let source
+    try {
+      source = new EventSource('/api/activity/stream')
+      source.addEventListener('activity', () => {
+        fetchActivity({ friendsOnly }).then(setData).catch(() => {})
+        fetchSocial().then(setSocial).catch(() => {})
+      })
+      source.onerror = () => {
+        /* Fall back to poll below if SSE drops */
+      }
+    } catch {
+      source = null
+    }
     const timer = window.setInterval(() => {
-      fetchActivity()
+      fetchActivity({ friendsOnly })
         .then(setData)
         .catch(() => {})
       fetchSocial()
@@ -77,8 +99,9 @@ export function ActivityPage() {
     return () => {
       cleanup?.()
       window.clearInterval(timer)
+      source?.close()
     }
-  }, [])
+  }, [friendsOnly])
 
   async function requestFriend(event) {
     event.preventDefault()
@@ -116,14 +139,42 @@ export function ActivityPage() {
     setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
   }
 
+  async function rejectFriend(id) {
+    await fetch(`/api/social/friends/${id}/reject`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'X-CSRFToken': csrfToken() },
+    })
+    const friendData = await fetchFriends()
+    setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
+  }
+
+  async function removeFriend(id) {
+    await fetch(`/api/social/friends/${id}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+      headers: { 'X-CSRFToken': csrfToken() },
+    })
+    const friendData = await fetchFriends()
+    setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
+  }
+
   return (
     <div className="gt-more-page">
       <div className="gt-page-header">
         <h1>Activity</h1>
       </div>
       <p className="gt-more-page__lede">
-        Now playing and recent sessions across the library. Polls every 30s.
+        Now playing and recent sessions. Live via SSE with a 30s poll fallback.
       </p>
+      <label className="gt-more-page__lede">
+        <input
+          type="checkbox"
+          checked={friendsOnly}
+          onChange={(event) => setFriendsOnly(event.target.checked)}
+        />{' '}
+        Friends only
+      </label>
       {social?.community_chat_url ? (
         <p>
           <a
@@ -153,8 +204,14 @@ export function ActivityPage() {
               <ul>
                 {data.now_playing.map((row) => (
                   <li key={`np-${row.session_id}`}>
-                    <strong>{row.user}</strong> —{' '}
-                    <Link to={`/game_details/${row.game_uuid}`}>{row.game_name}</Link>
+                    {row.user_id ? (
+                      <Link to={`/members/${row.user_id}`}>
+                        <strong>{row.user}</strong>
+                      </Link>
+                    ) : (
+                      <strong>{row.user}</strong>
+                    )}{' '}
+                    — <Link to={`/game_details/${row.game_uuid}`}>{row.game_name}</Link>
                   </li>
                 ))}
               </ul>
@@ -165,8 +222,14 @@ export function ActivityPage() {
             <ul>
               {(data.activity || []).map((row) => (
                 <li key={row.session_id}>
-                  <strong>{row.user}</strong> played{' '}
-                  <Link to={`/game_details/${row.game_uuid}`}>{row.game_name}</Link>
+                  {row.user_id ? (
+                    <Link to={`/members/${row.user_id}`}>
+                      <strong>{row.user}</strong>
+                    </Link>
+                  ) : (
+                    <strong>{row.user}</strong>
+                  )}{' '}
+                  played <Link to={`/game_details/${row.game_uuid}`}>{row.game_name}</Link>
                   {row.is_playing ? ' (live)' : ''}
                 </li>
               ))}
@@ -187,12 +250,29 @@ export function ActivityPage() {
             <ul>
               {friends.map((row) => (
                 <li key={row.id}>
-                  <strong>{row.user?.name}</strong> — {row.status}
+                  <Link to={`/members/${row.user?.id}`}>
+                    <strong>{row.user?.name}</strong>
+                  </Link>{' '}
+                  — {row.status}
+                  {row.user?.presence?.status
+                    ? ` · ${presenceLabel(row.user.presence.status)}`
+                    : ''}
                   {row.direction === 'incoming' && row.status === 'pending' ? (
                     <>
                       {' '}
                       <button type="button" className="gt-btn" onClick={() => void acceptFriend(row.id)}>
                         Accept
+                      </button>{' '}
+                      <button type="button" className="gt-btn" onClick={() => void rejectFriend(row.id)}>
+                        Decline
+                      </button>
+                    </>
+                  ) : null}
+                  {row.status === 'accepted' ? (
+                    <>
+                      {' '}
+                      <button type="button" className="gt-btn" onClick={() => void removeFriend(row.id)}>
+                        Unfriend
                       </button>
                     </>
                   ) : null}

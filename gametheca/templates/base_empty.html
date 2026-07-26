@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ current_theme|default('default') }}" data-icon-pack="{{ current_icon_pack|default('outline') }}">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="{{ 'css/components.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/games/library_browser.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/games/game_status.css'|theme_asset }}">
+    {% if icon_pack_css %}<link rel="stylesheet" id="gt-icon-pack-css" href="{{ icon_pack_css }}">{% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='dist/member-app/member-app.css') }}">
 
     <script src="{{ 'js/preferences_modal.js'|theme_asset }}"></script>

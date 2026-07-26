@@ -7,6 +7,7 @@ from gametheca.models import (
     GlobalSettings,
     Image,
     User,
+    UserGameProgress,
     user_game_status,
     get_status_info,
 )
@@ -17,14 +18,130 @@ from gametheca.utils.play_url import browse_play_fields, library_platform_key
 from gametheca.utils.secondary_scrapers import game_card_flags
 from gametheca.utils.cover_url import resolve_cover_url
 from gametheca.utils.library_acl import user_can_access_game
+from gametheca.utils.icon_themes import icon_pack_css_url, list_icon_packs
+from gametheca.utils.presence import accepted_friend_ids, presence_for_user
 from sqlalchemy import func, select, and_, delete
 from datetime import datetime, timezone
 from . import apis_bp
+
+
+@apis_bp.route('/users/<int:user_id>/profile', methods=['GET'])
+@login_required
+def member_profile(user_id: int):
+    """Public member profile — ACL-filtered recent games (Wave 14b)."""
+    target = db.session.get(User, user_id)
+    if not target or not target.state:
+        return jsonify({'error': 'Not found'}), 404
+    friends = accepted_friend_ids(current_user.id)
+    is_self = target.id == current_user.id
+    is_friend = target.id in friends
+    presence = presence_for_user(target.id, viewer=current_user)
+    progress_rows = (
+        db.session.execute(
+            select(UserGameProgress)
+            .where(UserGameProgress.user_id == target.id)
+            .order_by(UserGameProgress.last_played_at.desc().nullslast())
+            .limit(40)
+        )
+        .scalars()
+        .all()
+    )
+    recent = []
+    total_seconds = 0
+    for row in progress_rows:
+        total_seconds += int(row.total_seconds or 0)
+        game = db.session.execute(select(Game).filter_by(uuid=row.game_uuid)).scalars().first()
+        if not game or not user_can_access_game(current_user, game):
+            continue
+        recent.append({
+            'game_uuid': row.game_uuid,
+            'game_name': game.name,
+            'total_seconds': int(row.total_seconds or 0),
+            'last_played_at': row.last_played_at.isoformat() if row.last_played_at else None,
+        })
+        if len(recent) >= 12:
+            break
+    avatar = getattr(target, 'avatarpath', None) or 'newstyle/avatar_default.jpg'
+    return jsonify({
+        'user': {
+            'id': target.id,
+            'name': target.name,
+            'about': getattr(target, 'about', None),
+            'avatar_url': url_for('static', filename=avatar) if avatar else None,
+        },
+        'presence': presence,
+        'is_self': is_self,
+        'is_friend': is_friend,
+        'total_seconds': total_seconds,
+        'recent_games': recent,
+    })
+
+
+@apis_bp.route('/users/<int:user_id>/compare/<int:other_id>', methods=['GET'])
+@login_required
+def member_profile_compare(user_id: int, other_id: int):
+    """Compare playtime with a friend (Wave 14b)."""
+    if current_user.id not in {user_id, other_id}:
+        return jsonify({'error': 'Forbidden'}), 403
+    friends = accepted_friend_ids(current_user.id)
+    peers = {user_id, other_id}
+    if current_user.id not in peers:
+        return jsonify({'error': 'Forbidden'}), 403
+    other = other_id if current_user.id == user_id else user_id
+    if other != current_user.id and other not in friends:
+        return jsonify({'error': 'Friends only'}), 403
+    left = db.session.get(User, user_id)
+    right = db.session.get(User, other_id)
+    if not left or not right:
+        return jsonify({'error': 'Not found'}), 404
+    left_rows = {
+        r.game_uuid: r
+        for r in db.session.execute(
+            select(UserGameProgress).where(UserGameProgress.user_id == user_id)
+        ).scalars().all()
+    }
+    right_rows = {
+        r.game_uuid: r
+        for r in db.session.execute(
+            select(UserGameProgress).where(UserGameProgress.user_id == other_id)
+        ).scalars().all()
+    }
+    shared = []
+    for guuid in set(left_rows) & set(right_rows):
+        game = db.session.execute(select(Game).filter_by(uuid=guuid)).scalars().first()
+        if not game or not user_can_access_game(current_user, game):
+            continue
+        shared.append({
+            'game_uuid': guuid,
+            'game_name': game.name,
+            'left_seconds': int(left_rows[guuid].total_seconds or 0),
+            'right_seconds': int(right_rows[guuid].total_seconds or 0),
+        })
+    shared.sort(key=lambda r: r['left_seconds'] + r['right_seconds'], reverse=True)
+    return jsonify({
+        'left': {'id': left.id, 'name': left.name},
+        'right': {'id': right.id, 'name': right.name},
+        'shared_games': shared[:40],
+    })
+
 
 @apis_bp.route('/current_user_role', methods=['GET'])
 @login_required
 def get_current_user_role():
     return jsonify({'role': current_user.role}), 200
+
+
+@apis_bp.route('/icon-packs', methods=['GET'])
+@login_required
+def list_icon_packs_api():
+    current = 'outline'
+    if getattr(current_user, 'preferences', None):
+        current = getattr(current_user.preferences, 'icon_pack', None) or 'outline'
+    packs = list_icon_packs()
+    for pack in packs:
+        pack['css_url'] = icon_pack_css_url(pack['id'])
+    return jsonify({'packs': packs, 'current': current})
+
 
 @apis_bp.route('/check_username', methods=['POST'])
 @login_required

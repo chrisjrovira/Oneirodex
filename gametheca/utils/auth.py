@@ -6,7 +6,7 @@ from flask_login import current_user, login_user
 from sqlalchemy import func, select
 from gametheca.models import User, db
 from gametheca import login_manager
-from gametheca.utils.rbac import librarian_required  # noqa: F401 — re-export
+from gametheca.utils.rbac import librarian_required, normalize_role  # noqa: F401 — re-export
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -31,7 +31,8 @@ def _authenticate_and_redirect(username, password):
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role != 'admin':
+        role = normalize_role(getattr(current_user, 'role', None) or '') if current_user.is_authenticated else ''
+        if not current_user.is_authenticated or role != 'admin':
             flash("You must be an admin to access this page.", "danger")
             return redirect(url_for('login.login'))
         return f(*args, **kwargs)

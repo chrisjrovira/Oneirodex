@@ -34,7 +34,7 @@ Become the best **self-hosted, multi-user, DRM-free game library & distribution 
 - WebSocket events for scan/download  
 - UI Wave 0–1 (design system, library/details)  
 - **Title-card badge system v1** (Netflix/Roku-style overlay; default bottom-left; collision-aware)  
-- Theme picker with 10 swatches (already seeded)  
+- Theme picker with swatches + **icon packs** (orthogonal CSS packs)  
 - Library health score v1  
 - Docs/runbooks pack (see `docs-map.md`)  
 - Docker/Unraid hardening follow-through

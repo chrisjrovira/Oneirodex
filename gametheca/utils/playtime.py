@@ -8,6 +8,7 @@ from sqlalchemy import select
 
 from gametheca import db
 from gametheca.models import Game, PlaySession, User, UserGameProgress
+from gametheca.utils.event_bus import event_bus
 from gametheca.utils.library_acl import user_can_access_game
 
 HEARTBEAT_TTL_SECONDS = 120
@@ -44,6 +45,17 @@ def start_session(user_id: int, game_uuid: str, client: str | None = None) -> Pl
     )
     db.session.add(session)
     db.session.commit()
+    try:
+        event_bus.publish(
+            'activity',
+            action='started',
+            session_id=session.id,
+            user_id=user_id,
+            game_uuid=game_uuid,
+            game_name=getattr(game, 'name', None),
+        )
+    except Exception:
+        pass
     return session
 
 
@@ -77,6 +89,17 @@ def end_session(session: PlaySession, *, orphan: bool = False) -> PlaySession:
     session.status = 'orphaned' if orphan else 'ended'
     _accumulate_progress(session)
     db.session.commit()
+    try:
+        event_bus.publish(
+            'activity',
+            action='ended',
+            session_id=session.id,
+            user_id=session.user_id,
+            game_uuid=session.game_uuid,
+            orphan=orphan,
+        )
+    except Exception:
+        pass
     return session
 
 

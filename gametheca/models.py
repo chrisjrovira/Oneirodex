@@ -617,9 +617,14 @@ class UserPreference(db.Model):
     default_sort = db.Column(db.String(50), default='name')
     default_sort_order = db.Column(db.String(4), default='asc')
     theme = db.Column(db.String(50), default='default')
+    icon_pack = db.Column(db.String(50), default='outline')
     locale = db.Column(db.String(10), default='en')
     tile_size = db.Column(db.String(4), default='M', nullable=False)
-    
+    notify_friend_requests = db.Column(db.Boolean, default=True, nullable=False)
+    notify_activity = db.Column(db.Boolean, default=True, nullable=False)
+    notify_mentions = db.Column(db.Boolean, default=True, nullable=False)
+    notify_chat = db.Column(db.Boolean, default=True, nullable=False)
+
     user = db.relationship('User', back_populates='preferences')
 
 
@@ -862,7 +867,7 @@ class UserFriendship(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     friend_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
-    status = db.Column(db.String(16), default='pending', nullable=False)  # pending | accepted
+    status = db.Column(db.String(16), default='pending', nullable=False)  # pending | accepted | blocked
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = db.Column(
         db.DateTime,
@@ -884,6 +889,95 @@ class UserFriendship(db.Model):
             'user_id': self.user_id,
             'friend_user_id': self.friend_user_id,
             'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class UserNotification(db.Model):
+    """In-app notification center (Wave 14c)."""
+
+    __tablename__ = 'user_notifications'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    kind = db.Column(db.String(32), nullable=False, default='info')
+    title = db.Column(db.String(200), nullable=False)
+    body = db.Column(db.String(500), nullable=True)
+    link = db.Column(db.String(512), nullable=True)
+    actor_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    payload = db.Column(JSONEncodedDict, nullable=True)
+    read_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'kind': self.kind,
+            'title': self.title,
+            'body': self.body,
+            'link': self.link,
+            'actor_user_id': self.actor_user_id,
+            'payload': self.payload or {},
+            'read_at': self.read_at.isoformat() if self.read_at else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'unread': self.read_at is None,
+        }
+
+
+class ChatChannel(db.Model):
+    """Household channel or 1:1 DM thread (Wave 15)."""
+
+    __tablename__ = 'chat_channels'
+
+    id = db.Column(db.Integer, primary_key=True)
+    kind = db.Column(db.String(16), nullable=False, default='channel')  # channel | dm
+    name = db.Column(db.String(120), nullable=False)
+    slug = db.Column(db.String(64), nullable=True, unique=True)
+    is_child_safe = db.Column(db.Boolean, default=True, nullable=False)
+    created_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'kind': self.kind,
+            'name': self.name,
+            'slug': self.slug,
+            'is_child_safe': bool(self.is_child_safe),
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class ChatChannelMember(db.Model):
+    __tablename__ = 'chat_channel_members'
+    __table_args__ = (
+        db.UniqueConstraint('channel_id', 'user_id', name='uq_chat_channel_member'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    channel_id = db.Column(db.Integer, db.ForeignKey('chat_channels.id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    last_read_message_id = db.Column(db.Integer, nullable=True)
+    muted = db.Column(db.Boolean, default=False, nullable=False)
+    joined_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class ChatMessage(db.Model):
+    __tablename__ = 'chat_messages'
+
+    id = db.Column(db.Integer, primary_key=True)
+    channel_id = db.Column(db.Integer, db.ForeignKey('chat_channels.id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    def to_dict(self, *, author_name: str | None = None):
+        return {
+            'id': self.id,
+            'channel_id': self.channel_id,
+            'user_id': self.user_id,
+            'user': author_name or 'member',
+            'body': self.body,
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }
 

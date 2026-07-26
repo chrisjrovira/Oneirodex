@@ -93,24 +93,37 @@
 | 76 | Hydra Classics (PS1–3) | ROM + native emu | DuckStation/PCSX2/RPCS3 launch profiles | Hydra download marketplace |
 | 77 | MyGamesAnywhere deepen | Local-first merge | Provenance / source-backed pages | Desktop-only product |
 
-## Gap status snapshot (Jul 26 post-review)
+## Gap status snapshot (Jul 26 post W14–15)
 
 | Area | Status |
 |---|---|
 | *arr + quality + hardlink | Shipped (flagged) — thin Acquire UI |
 | Debrid connectors | Shipped (RD/AD/Premiumize/TorBox) |
 | Store search → library bind | Shipped MVP |
-| WebRetro cores | Shipped; **cloud save = placeholder**; cheats = sessionStorage |
+| WebRetro cores | Shipped; cloud save bridge · cheats FS write |
 | Admin React bodies | **Hybrid** — HubPages + Jinja forms |
 | Big Picture | MVP + kid CSS |
-| Parental ACL | Models yes; **ASGI ROM/trailers/playtime holes fixed in review pass** |
+| Parental ACL | Models + API holes closed; keep auditing new surfaces |
 | Plugins | Static registry only |
-| OpenAPI | **Stale** vs Waves 7–11 |
-| Unraid smoke | Operator |
-| New: RetroArr-class NZBGet + live scan UX | Missing |
-| New: EmulatorJS alternate / real save sync | Missing |
-| New: RomM Playnite/handheld plugins | Missing |
-| Social | Discord webhooks only; see [social.md](social.md) — lite presence next, BYO Stoat/Matrix for chat |
+| OpenAPI | **Stale** vs Waves 7–15 |
+| Social | Friends · presence · profiles · notifications · DMs · household channels — LiveKit still Wave 16 |
+| Icon packs | Six CSS packs orthogonal to color themes |
+
+## Still missing vs peers that touch our offerings
+
+| Offering we sell | Peer that does it better today | Gap to close |
+|---|---|---|
+| Self-hosted library UX | GameVault / Drop | denser mobile clients; deeper progress social |
+| Scan / recognition | RomM / RetroArr | live scan UX polish; handheld plugin story |
+| Browser play | Gaseous / WebRetro forks | BIOS UX; N64 edge cores; EmulatorJS eval only |
+| Native companion | Argosy / Freegosy / Heroic | install/update/uninstall polish; signing |
+| BYO acquire | Playarr / Sonarr-class | NZBGet live scan density; LAN flag docs (done Sec-B) |
+| Household social | Discord / Stoat / Matrix | **voice** (Wave 16 LiveKit); email digests; reactions/search (W17) |
+| Ops / Unraid | *arr stack | Admin SPA completion; OpenAPI freshness |
+| Themes | RomM skins | more glyph SVG packs (image overrides reserved) |
+
+**Not chasing:** Discord clone, Hydra marketplace, Cheat Engine, DRM store queues.
+
 
 ## Wave 7 bets (from this map)
 

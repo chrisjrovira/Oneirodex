@@ -92,6 +92,13 @@ class Config(object):
     ENABLE_RUFFLE = os.getenv('ENABLE_RUFFLE', 'false').lower() == 'true'
     ENABLE_ACTIVITY_FEED = os.getenv('ENABLE_ACTIVITY_FEED', 'true').lower() == 'true'
 
+    # Homelab SSRF policy — when true, *arr / Ollama / connector URLs may target RFC1918 hosts.
+    # Cloud metadata (169.254.169.254) stays blocked. Default off for safer public-facing installs.
+    ALLOW_PRIVATE_LAN_URLS = os.getenv('ALLOW_PRIVATE_LAN_URLS', 'false').lower() == 'true'
+
+    # When true (default), OIDC JIT updates never overwrite an existing user's role.
+    OIDC_LOCK_ROLES = os.getenv('OIDC_LOCK_ROLES', 'true').lower() == 'true'
+
     # Optional *arr connector defaults (overridden by Admin → Arr config)
     PROWLARR_URL = os.getenv('PROWLARR_URL', '')
     PROWLARR_API_KEY = os.getenv('PROWLARR_API_KEY', '')

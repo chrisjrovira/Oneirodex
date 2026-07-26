@@ -108,3 +108,6 @@ gametheca/static/dist/
 .superpowers/
 
 
+
+# Icon packs installed from setup/icon_themes at boot (like themes/)
+gametheca/static/library/icon-themes/

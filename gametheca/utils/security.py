@@ -120,10 +120,25 @@ def is_blocked_outbound_host(hostname: str | None) -> bool:
     return False
 
 
+def allow_private_lan_urls_enabled() -> bool:
+    """Homelab opt-in: allow private/RFC1918 hosts for *arr / Ollama connectors."""
+    try:
+        from flask import current_app, has_app_context
+
+        if has_app_context():
+            return bool(current_app.config.get('ALLOW_PRIVATE_LAN_URLS'))
+    except Exception:
+        pass
+    import os
+
+    return os.getenv('ALLOW_PRIVATE_LAN_URLS', 'false').lower() in ('1', 'true', 'yes')
+
+
 def validate_outbound_http_url(
     url: str,
     *,
     allow_http: bool = False,
+    allow_private_lan: bool | None = None,
     allowed_hostnames: set[str] | None = None,
 ) -> tuple[bool, str]:
     """Validate an outbound http(s) URL for SSRF-sensitive server fetches."""
@@ -140,8 +155,14 @@ def validate_outbound_http_url(
         return False, 'URL scheme not allowed'
     if not parsed.hostname:
         return False, 'URL host required'
-    if is_blocked_outbound_host(parsed.hostname):
+    lan_ok = allow_private_lan_urls_enabled() if allow_private_lan is None else bool(allow_private_lan)
+    if is_blocked_outbound_host(parsed.hostname) and not lan_ok:
         return False, 'URL host is not allowed'
+    if lan_ok and is_blocked_outbound_host(parsed.hostname):
+        # Still block cloud metadata endpoints even when LAN is allowed.
+        host = parsed.hostname.strip().lower().rstrip('.')
+        if host in {'169.254.169.254', 'metadata.google.internal'} or host.startswith('169.254.'):
+            return False, 'URL host is not allowed'
     if allowed_hostnames is not None and parsed.hostname.lower() not in {
         h.lower() for h in allowed_hostnames
     }:

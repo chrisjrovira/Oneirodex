@@ -17,7 +17,7 @@
 - Cover art, screenshots, filters, discovery rails
 - Streaming ZIP downloads, invite-based access, Discord hooks
 - Library React grid with title-card badges and freshness (OUT / ~)
-- Ops glance, propose-only scans, theme presets
+- Ops glance, propose-only scans, color theme presets + independent icon packs
 - Optional modules (feature-flagged): *arr + hardlink pipeline, Ollama AI, VR/Quest PWA, OIDC/Authentik SSO
 - Desktop companion (Tauri) â€” unsigned by default; signing hooks documented
 

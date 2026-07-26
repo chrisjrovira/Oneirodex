@@ -48,6 +48,29 @@
                             </button>
                             {% endfor %}
                         </div>
+                        <p class="form-text text-muted small mb-0">Color theme (surfaces &amp; accent). Independent of icon pack.</p>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.icon_pack.label(class="form-label") }}
+                        {{ form.icon_pack(class="form-select", id="iconPackSelect") }}
+                        {% for error in form.icon_pack.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <div class="icon-pack-preview" id="iconPackPreview" role="group" aria-label="Icon pack preview">
+                            {% for value, label in form.icon_pack.choices %}
+                            <button type="button" class="icon-pack-chip{% if form.icon_pack.data == value %} is-selected{% endif %}"
+                                    data-icon-pack="{{ value }}" title="{{ label }}"
+                                    aria-pressed="{{ 'true' if form.icon_pack.data == value else 'false' }}">
+                                <span class="icon-pack-chip-icons" data-preview-pack="{{ value }}">
+                                    {{ icons.icon('library', size=16) }}
+                                    {{ icons.icon('download', size=16) }}
+                                    {{ icons.icon('favorites', size=16) }}
+                                </span>
+                                <span class="icon-pack-chip-label">{{ label }}</span>
+                            </button>
+                            {% endfor %}
+                        </div>
+                        <p class="form-text text-muted small mb-0">Icon style works with any color theme (uses currentColor).</p>
                     </div>
                     <div class="mb-3">
                         {{ form.tile_size.label(class="form-label") }}

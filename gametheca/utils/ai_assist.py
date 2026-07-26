@@ -106,6 +106,13 @@ def save_ai_config(payload: dict[str, Any]) -> dict[str, Any]:
         )
     if 'ollama_base_url' in payload and payload['ollama_base_url'] is not None:
         url = str(payload['ollama_base_url']).strip().rstrip('/')
+        if url:
+            from gametheca.utils.security import validate_outbound_http_url
+
+            ok, result = validate_outbound_http_url(url, allow_http=True)
+            if not ok:
+                raise ValueError(result)
+            url = result.rstrip('/')
         settings.ollama_base_url = url or None
     if 'ollama_model' in payload and payload['ollama_model'] is not None:
         model = str(payload['ollama_model']).strip()

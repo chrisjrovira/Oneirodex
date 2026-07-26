@@ -4,6 +4,7 @@ from gametheca import db
 from gametheca.init_manager import InitManager
 from gametheca.models import DiscoverySection
 from gametheca.utils.preset_themes import install_preset_themes
+from gametheca.utils.icon_themes import install_icon_themes
 from sqlalchemy import select
 
 # Default allowed file types
@@ -63,6 +64,7 @@ def initialize_library_folders():
     themes_path = os.path.join(library_path, 'themes')
     images_path = os.path.join(library_path, 'images')
     zips_path = os.path.join(library_path, 'zips')
+    icon_themes_path = os.path.join(library_path, 'icon-themes')
     
     # Check if default theme exists
     default_theme_target = os.path.join(themes_path, 'default')
@@ -102,6 +104,16 @@ def initialize_library_folders():
     if not os.path.exists(zips_path):
         os.makedirs(zips_path)
         print("Created zips folder")
+
+    # Icon packs (orthogonal to color themes)
+    os.makedirs(icon_themes_path, exist_ok=True)
+    try:
+        installed = install_icon_themes(force=False)
+        print(f"Icon packs ready: {', '.join(installed)}")
+    except Exception as e:
+        print(f"Error installing icon packs: {e}")
+        log_system_event(f"Error installing icon packs: {e}", event_type='startup', event_level='warning', audit_user='system')
+
 
 def insert_default_scanning_filters():
     """Initialize default scanning filters in the database."""

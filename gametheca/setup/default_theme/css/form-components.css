@@ -433,3 +433,37 @@ input[type="checkbox"] {
 .theme-swatch-mono { background: #94a3b8; }
 .theme-swatch-sunset { background: #fbbf24; }
 .theme-swatch-ice { background: #7dd3fc; }
+
+/* Icon pack picker — orthogonal to color themes; previews use .gt-icon + data-icon-pack */
+.icon-pack-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+.icon-pack-chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 4.5rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--gt-border);
+    border-radius: 0.5rem;
+    background: var(--gt-surface);
+    color: var(--gt-text);
+    cursor: pointer;
+}
+.icon-pack-chip.is-selected {
+    border-color: var(--gt-accent);
+    box-shadow: 0 0 0 1px var(--gt-accent);
+}
+.icon-pack-chip-icons {
+    display: inline-flex;
+    gap: 0.35rem;
+    color: var(--gt-accent);
+}
+.icon-pack-chip-label {
+    font-size: 0.7rem;
+    line-height: 1.1;
+}

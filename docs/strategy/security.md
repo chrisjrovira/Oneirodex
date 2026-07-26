@@ -25,12 +25,12 @@
 
 ## Still open (track in Waves Sec-A / Sec-B)
 
-| Sev | Item |
-|---|---|
-| P1 | Arr/Ollama connector URL private-IP policy (LAN homelab flag) |
-| P1 | OIDC role overwrite policy (lock after provision) |
-| P1 | CSRF on client lifecycle POST (Bearer-only or CSRF) |
-| P2 | Login rate limit · export path leakage · acquire search for children · username enum |
+| Sev | Item | Status |
+|---|---|---|
+| P1 | Arr/Ollama connector URL private-IP policy (LAN homelab flag) | **Done** — `ALLOW_PRIVATE_LAN_URLS` |
+| P1 | OIDC role overwrite policy (lock after provision) | **Done** — `OIDC_LOCK_ROLES` (default true) |
+| P1 | CSRF on client lifecycle POST (Bearer-only or CSRF) | **Done** — Bearer required on lifecycle POST |
+| P2 | Login rate limit · export path leakage · acquire search for children · username enum | Open |
 
 ## Ongoing suite
 

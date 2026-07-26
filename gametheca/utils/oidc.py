@@ -409,7 +409,17 @@ def provision_or_update_user(db_session, claims: dict[str, Any], config: OidcCon
     else:
         if email and user.email != email:
             user.email = email
-        user.role = normalize_role(role)
+        # Sec-B: lock roles after first provision so IdP group churn cannot escalate/demote.
+        roles_locked = True
+        try:
+            from flask import current_app, has_app_context
+
+            if has_app_context():
+                roles_locked = bool(current_app.config.get('OIDC_LOCK_ROLES', True))
+        except Exception:
+            roles_locked = True
+        if not roles_locked:
+            user.role = normalize_role(role)
         if not user.is_email_verified:
             user.is_email_verified = True
 

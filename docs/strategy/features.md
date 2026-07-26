@@ -268,6 +268,7 @@ Does not replace P0 items below; it is the UI execution track for admin parity.
 | 26b | Store ownership sync | Per-user Epic/GOG/Amazon/Steam ownership lists → personal library marks/matches; **register only — never download/install from stores**; tokens encrypted at rest; admin can disable connectors |
 | 27 | AI assist | Ollama-only default; never required |
 | 28 | Custom layouts | Admin JSON layout for details |
+| 28b | Icon packs | CSS packs orthogonal to color themes — [icon-themes.md](icon-themes.md) |
 | 29 | i18n | Flask-Babel / react-i18next |
 | 30 | WebSockets | Scan/download events; replace polling |
 

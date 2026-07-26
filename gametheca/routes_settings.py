@@ -192,6 +192,7 @@ def settings_panel():
         current_user.preferences.default_sort = form.default_sort.data
         current_user.preferences.default_sort_order = form.default_sort_order.data
         current_user.preferences.theme = form.theme.data if form.theme.data != 'default' else None
+        current_user.preferences.icon_pack = form.icon_pack.data or 'outline'
         current_user.preferences.tile_size = form.tile_size.data or 'M'
         
         try:
@@ -199,7 +200,9 @@ def settings_panel():
             db.session.commit()
             return jsonify({
                 'success': True,
-                'message': 'Preferences updated successfully!'
+                'message': 'Preferences updated successfully!',
+                'icon_pack': current_user.preferences.icon_pack or 'outline',
+                'theme': current_user.preferences.theme or 'default',
             })
         except Exception as e:
             db.session.rollback()
@@ -212,6 +215,7 @@ def settings_panel():
             form.default_sort.data = prefs.default_sort or 'name'
             form.default_sort_order.data = prefs.default_sort_order or 'asc'
             form.theme.data = prefs.theme or 'default'
+            form.icon_pack.data = getattr(prefs, 'icon_pack', None) or 'outline'
             form.tile_size.data = getattr(prefs, 'tile_size', None) or 'M'
         return render_template('settings/modal_preferences.html', form=form)
     

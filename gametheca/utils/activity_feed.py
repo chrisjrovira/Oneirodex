@@ -10,6 +10,7 @@ from sqlalchemy import select
 from gametheca import db
 from gametheca.models import Game, PlaySession, User
 from gametheca.utils.library_acl import user_can_access_game
+from gametheca.utils.presence import accepted_friend_ids
 
 
 def list_recent_activity(
@@ -17,12 +18,18 @@ def list_recent_activity(
     limit: int = 25,
     active_within_minutes: int = 15,
     viewer: User | None = None,
+    friends_only: bool = False,
 ) -> list[dict[str, Any]]:
     """Return recent play sessions for an activity feed (no private paths).
 
     When ``viewer`` is set, sessions for games the viewer cannot access are omitted.
+    When ``friends_only`` is set, only the viewer and accepted friends appear.
     """
     cutoff = datetime.now(timezone.utc) - timedelta(days=14)
+    friend_ids: set[int] | None = None
+    if friends_only and viewer is not None:
+        friend_ids = accepted_friend_ids(viewer.id)
+        friend_ids.add(viewer.id)
     rows = list(
         db.session.execute(
             select(PlaySession)
@@ -34,6 +41,8 @@ def list_recent_activity(
     active_cutoff = datetime.now(timezone.utc) - timedelta(minutes=active_within_minutes)
     out: list[dict[str, Any]] = []
     for session in rows:
+        if friend_ids is not None and session.user_id not in friend_ids:
+            continue
         game = db.session.execute(
             select(Game).filter_by(uuid=session.game_uuid),
         ).scalars().first() if getattr(session, 'game_uuid', None) else None
@@ -50,6 +59,7 @@ def list_recent_activity(
             'game_uuid': session.game_uuid,
             'game_name': getattr(game, 'name', None) or 'Unknown game',
             'user': getattr(user, 'name', None) or 'player',
+            'user_id': getattr(user, 'id', None) or session.user_id,
             'started_at': session.started_at.isoformat() if session.started_at else None,
             'ended_at': ended.isoformat() if ended else None,
             'client': getattr(session, 'client', None) or 'unknown',
@@ -64,6 +74,7 @@ def list_now_playing(
     *,
     active_within_minutes: int = 15,
     viewer: User | None = None,
+    friends_only: bool = False,
 ) -> list[dict[str, Any]]:
     return [
         row
@@ -71,6 +82,7 @@ def list_now_playing(
             limit=50,
             active_within_minutes=active_within_minutes,
             viewer=viewer,
+            friends_only=friends_only,
         )
         if row['is_playing']
     ]

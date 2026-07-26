@@ -4,11 +4,17 @@
 
 From the member SPA account / preferences control (preferences modal). Changes save to your user profile and usually reload the page.
 
-## Theme presets
+## Color theme presets
 
 - Pick a preset from the **swatch grid** (not name-only).
 - Default brand accent is green **`#2fd67b`** (Style B+C glass); other presets (Ocean, Forest, …) recolour accent and surfaces.
 - If swatches do nothing or accents look wrong (old teal/orange), the library volume may have stale theme files — ask an admin to **Reset Default Themes** after a rebuild (`GENERATOR_VERSION` 6).
+
+## Icon packs (independent of color)
+
+- Preferences → **Icon pack**: Outline, Filled, Duotone, Pixel, Soft, Mono block.
+- Packs only change glyph weight/style; they use `currentColor`, so they work with **any** color theme (e.g. Aurora + Pixel).
+- Details: [icon-themes.md](../strategy/icon-themes.md).
 
 ## Tile size
 
@@ -17,5 +23,6 @@ From the member SPA account / preferences control (preferences modal). Changes s
 
 ## Tips
 
-- Hard-refresh (Ctrl+F5) after a theme apply if CSS was just redeployed.
+- Hard-refresh (Ctrl+F5) after a theme or icon-pack apply if CSS was just redeployed.
 - Admin theme install is separate from your personal preset — see [themes-reset.md](../admin/themes-reset.md).
+- Icon packs install on app boot; they are not wiped by Reset Default Themes.

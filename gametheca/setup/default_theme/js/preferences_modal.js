@@ -129,6 +129,52 @@
         if (event.target && event.target.id === 'themeSelect') {
             applySelection(event.target.value);
         }
+        if (event.target && event.target.id === 'iconPackSelect') {
+            previewIconPack(event.target.value);
+        }
+    });
+
+    function previewIconPack(packId) {
+        if (!packId) return;
+        document.documentElement.setAttribute('data-icon-pack', packId);
+        syncIconPackChips(packId);
+        // Swap pack stylesheet so preview matches saved look (not only data-icon-pack).
+        var link = document.getElementById('gt-icon-pack-css');
+        if (link && link.href) {
+            link.href = link.href.replace(
+                /library\/icon-themes\/[^/]+\/pack\.css/,
+                'library/icon-themes/' + encodeURIComponent(packId) + '/pack.css'
+            );
+        }
+        document.querySelectorAll('#iconPackPreview .icon-pack-chip').forEach(function (chip) {
+            chip.setAttribute('data-preview-active', chip.dataset.iconPack === packId ? '1' : '0');
+        });
+    }
+
+    function syncIconPackChips(selected) {
+        document.querySelectorAll('#iconPackPreview .icon-pack-chip').forEach(function (chip) {
+            var on = chip.dataset.iconPack === selected;
+            chip.classList.toggle('is-selected', on);
+            chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        var select = document.getElementById('iconPackSelect');
+        if (select && select.value !== selected) {
+            select.value = selected;
+        }
+    }
+
+    document.addEventListener('click', function (event) {
+        var target = event.target;
+        var chip = target && target.closest ? target.closest('.icon-pack-chip') : null;
+        if (!chip || !chip.closest('#iconPackPreview')) {
+            return;
+        }
+        previewIconPack(chip.dataset.iconPack);
+        var select = document.getElementById('iconPackSelect');
+        if (select) {
+            select.value = chip.dataset.iconPack;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     });
 
     // An unsaved preview must not outlive the modal.

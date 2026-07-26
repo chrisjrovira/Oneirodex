@@ -543,6 +543,9 @@ class DatabaseManager:
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS tile_size VARCHAR(4) DEFAULT 'M';
 
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS icon_pack VARCHAR(50) DEFAULT 'outline';
+
         CREATE TABLE IF NOT EXISTS emulator_saves (
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -596,6 +599,61 @@ class DatabaseManager:
         );
         CREATE INDEX IF NOT EXISTS ix_user_owned_titles_user_id ON user_owned_titles(user_id);
         CREATE INDEX IF NOT EXISTS ix_user_owned_titles_matched_game_uuid ON user_owned_titles(matched_game_uuid);
+
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS notify_friend_requests BOOLEAN DEFAULT TRUE;
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS notify_activity BOOLEAN DEFAULT TRUE;
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS notify_mentions BOOLEAN DEFAULT TRUE;
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS notify_chat BOOLEAN DEFAULT TRUE;
+
+        CREATE TABLE IF NOT EXISTS user_notifications (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            kind VARCHAR(32) NOT NULL DEFAULT 'info',
+            title VARCHAR(200) NOT NULL,
+            body VARCHAR(500),
+            link VARCHAR(512),
+            actor_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            payload TEXT,
+            read_at TIMESTAMP,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS ix_user_notifications_user_id ON user_notifications(user_id);
+
+        CREATE TABLE IF NOT EXISTS chat_channels (
+            id SERIAL PRIMARY KEY,
+            kind VARCHAR(16) NOT NULL DEFAULT 'channel',
+            name VARCHAR(120) NOT NULL,
+            slug VARCHAR(64) UNIQUE,
+            is_child_safe BOOLEAN NOT NULL DEFAULT TRUE,
+            created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS chat_channel_members (
+            id SERIAL PRIMARY KEY,
+            channel_id INTEGER NOT NULL REFERENCES chat_channels(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            last_read_message_id INTEGER,
+            muted BOOLEAN NOT NULL DEFAULT FALSE,
+            joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT uq_chat_channel_member UNIQUE (channel_id, user_id)
+        );
+        CREATE INDEX IF NOT EXISTS ix_chat_channel_members_channel_id ON chat_channel_members(channel_id);
+        CREATE INDEX IF NOT EXISTS ix_chat_channel_members_user_id ON chat_channel_members(user_id);
+
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id SERIAL PRIMARY KEY,
+            channel_id INTEGER NOT NULL REFERENCES chat_channels(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            body TEXT NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS ix_chat_messages_channel_id ON chat_messages(channel_id);
+        CREATE INDEX IF NOT EXISTS ix_chat_messages_user_id ON chat_messages(user_id);
 
         """
         print("Upgrading database to the latest schema")
