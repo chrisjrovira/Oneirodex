@@ -338,6 +338,12 @@
     cursor: not-allowed;
 }
 
+.gt-action-bar__status {
+    flex: 1 1 100%;
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
 .menu-item--action-bar {
     padding: 6px 8px;
 }

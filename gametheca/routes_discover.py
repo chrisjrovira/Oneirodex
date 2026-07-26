@@ -19,6 +19,7 @@ from gametheca.utils.secondary_scrapers import game_card_flags
 from gametheca.utils.store_ownership import get_matched_owned_game_uuids, ownership_flags
 from gametheca.utils.cover_url import resolve_cover_url
 from gametheca.utils.library_acl import apply_game_access_filters, filter_libraries
+from gametheca.utils.client_lifecycle import load_lifecycle_map
 from gametheca.utils.lifecycle import web_lifecycle_fields
 from gametheca.utils.play_url import browse_play_fields, library_platform_key
 
@@ -33,6 +34,7 @@ def serialize_discover_game(
     has_local_override,
     owned_game_uuids=None,
     user_id=None,
+    client_state=None,
 ):
     cover_url = resolve_cover_url(cover_image)
     owned_uuids = owned_game_uuids or set()
@@ -67,7 +69,7 @@ def serialize_discover_game(
         'badge_title_collision': bool(platform_key),
         **browse_play_fields(game),
         **game_card_flags(game),
-        **web_lifecycle_fields(game, user_id=user_id),
+        **web_lifecycle_fields(game, user_id=user_id, client_state=client_state),
         **ownership_flags(game.uuid, owned_uuids),
     }
 
@@ -88,6 +90,7 @@ def discover():
     settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
     favorite_game_uuids = {game.uuid for game in current_user.favorites}
     owned_game_uuids = get_matched_owned_game_uuids(current_user.id)
+    lifecycle_map = load_lifecycle_map(current_user.id)
 
     def fetch_game_details(games_query, limit=8):
         # Handle both query objects and lists
@@ -128,6 +131,7 @@ def discover():
                     has_local_override=has_local_override,
                     owned_game_uuids=owned_game_uuids,
                     user_id=current_user.id,
+                    client_state=lifecycle_map.get(game.uuid),
                 )
             )
         return game_details

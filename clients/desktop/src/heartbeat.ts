@@ -1,6 +1,7 @@
 import { formatBearerAuthorization } from '@gametheca/api-client'
 
 import type { AuthStore } from './auth.js'
+import type { LifecycleAction } from './lifecycle.js'
 
 const DEVICE_ID_STORAGE_KEY = 'gametheca-device-id'
 
@@ -26,14 +27,27 @@ export interface HeartbeatOptions {
   fetchImpl?: typeof fetch
 }
 
+export interface CompanionCommand {
+  id: string
+  game_uuid: string
+  action: LifecycleAction
+  created_at?: string
+}
+
+export type CompanionCommandHandler = (command: CompanionCommand) => void | Promise<void>
+
+function isLifecycleAction(value: string): value is LifecycleAction {
+  return value === 'download' || value === 'install' || value === 'update' || value === 'uninstall'
+}
+
 export async function postClientHeartbeat(
   auth: AuthStore,
   options: HeartbeatOptions = {},
-): Promise<void> {
+): Promise<CompanionCommand[]> {
   const baseUrl = auth.getBaseUrl()
   const token = auth.getToken()
   if (!baseUrl || !token) {
-    return
+    return []
   }
 
   const fetchImpl = options.fetchImpl ?? fetch
@@ -53,6 +67,28 @@ export async function postClientHeartbeat(
   if (!response.ok) {
     throw new Error(`Heartbeat failed (${response.status})`)
   }
+
+  const data = (await response.json().catch(() => ({}))) as { commands?: unknown }
+  const raw = Array.isArray(data.commands) ? data.commands : []
+  return raw.flatMap((row) => {
+    if (!row || typeof row !== 'object') {
+      return []
+    }
+    const record = row as Record<string, unknown>
+    const action = String(record.action || '')
+    const gameUuid = String(record.game_uuid || '').trim()
+    if (!gameUuid || !isLifecycleAction(action) || action === 'download') {
+      return []
+    }
+    return [
+      {
+        id: String(record.id || crypto.randomUUID()),
+        game_uuid: gameUuid,
+        action,
+        created_at: record.created_at ? String(record.created_at) : undefined,
+      },
+    ]
+  })
 }
 
 export interface HeartbeatScheduler {
@@ -61,15 +97,27 @@ export interface HeartbeatScheduler {
 
 export function startClientHeartbeat(
   auth: AuthStore,
-  options: HeartbeatOptions & { intervalMs?: number } = {},
+  options: HeartbeatOptions & {
+    intervalMs?: number
+    onCommands?: CompanionCommandHandler
+  } = {},
 ): HeartbeatScheduler {
   const intervalMs = options.intervalMs ?? 60_000
   let timer: ReturnType<typeof setInterval> | undefined
 
   const tick = (): void => {
-    void postClientHeartbeat(auth, options).catch(() => {
-      // Presence is best-effort; connection UI handles hard failures.
-    })
+    void postClientHeartbeat(auth, options)
+      .then(async (commands) => {
+        if (!options.onCommands || commands.length === 0) {
+          return
+        }
+        for (const command of commands) {
+          await options.onCommands(command)
+        }
+      })
+      .catch(() => {
+        // Presence is best-effort; connection UI handles hard failures.
+      })
   }
 
   tick()

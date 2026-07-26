@@ -33,3 +33,12 @@ def test_default_accent_is_green():
     assert '--gt-glass-bg:' in tokens
     assert '--gt-platform-accent:' in tokens
     assert '--gt-tile-gap:' in tokens
+
+
+def test_member_spa_shell_loads_admin_delete_scripts():
+    empty = (ROOT / 'gametheca' / 'templates' / 'base_empty.html').read_text(
+        encoding='utf-8',
+    )
+    assert 'js/popup_menu.js' in empty
+    assert 'js/delete_game_modal.js' in empty
+    assert "partials/delete_game_modal.html" in empty

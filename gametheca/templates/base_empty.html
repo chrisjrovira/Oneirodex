@@ -25,6 +25,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='dist/member-app/member-app.css') }}">
 
     <script src="{{ 'js/preferences_modal.js'|theme_asset }}"></script>
+    <script src="{{ 'js/popup_menu.js'|theme_asset }}"></script>
+    <script src="{{ 'js/delete_game_modal.js'|theme_asset }}"></script>
     <style>
       /* No left sidebar on member SPA shell */
       #content.member-spa-content {
@@ -41,6 +43,7 @@
     {% include 'partials/flash_messages.html' %}
     {% block content %}{% endblock %}
 </div>
+{% include 'partials/delete_game_modal.html' %}
 <div id="preferencesModalContainer"></div>
 </body>
 </html>

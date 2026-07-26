@@ -131,7 +131,10 @@ describe('client heartbeat helper', () => {
     auth.setBaseUrl('https://example.com')
     auth.setToken('gt_prefix_secret')
 
-    const fetchImpl = vi.fn().mockResolvedValue({ ok: true })
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ commands: [] }),
+    })
     await postClientHeartbeat(auth, {
       deviceId: 'device-1',
       deviceName: 'Test Desktop',

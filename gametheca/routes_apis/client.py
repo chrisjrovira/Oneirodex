@@ -6,6 +6,7 @@ from flask import jsonify, request
 from flask_login import current_user, login_required
 
 from gametheca.utils.api_tokens import require_api_scope, user_has_scope
+from gametheca.utils.client_commands import claim_pending_commands, enqueue_client_command
 from gametheca.utils.client_lifecycle import load_lifecycle_map, save_lifecycle_records
 from gametheca.utils.client_presence import record_client_heartbeat
 
@@ -27,7 +28,10 @@ def client_heartbeat():
         client_version=data.get('client_version'),
         user_agent=request.headers.get('User-Agent'),
     )
-    return jsonify(device.to_dict())
+    payload = device.to_dict()
+    # Deliver queued Install/Update/Uninstall requests from the web UI.
+    payload['commands'] = claim_pending_commands(current_user.id)
+    return jsonify(payload)
 
 
 @apis_bp.route('/client/lifecycle', methods=['GET'])
@@ -59,3 +63,29 @@ def client_lifecycle_post():
         'count': len(mapping),
         'records': [{'game_uuid': uuid, 'state': state} for uuid, state in mapping.items()],
     })
+
+
+@apis_bp.route('/client/commands', methods=['POST'])
+@login_required
+def client_commands_post():
+    """Queue a companion action from the member SPA / game details island."""
+    data = request.get_json(silent=True) or {}
+    try:
+        command = enqueue_client_command(
+            current_user.id,
+            data.get('game_uuid'),
+            data.get('action'),
+        )
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({'ok': True, 'command': command}), 201
+
+
+@apis_bp.route('/client/commands', methods=['GET'])
+@login_required
+@require_api_scope('read:library')
+def client_commands_get():
+    """Explicit poll for pending commands (companion may also use heartbeat)."""
+    limit = request.args.get('limit', 10, type=int) or 10
+    limit = max(1, min(limit, 25))
+    return jsonify({'commands': claim_pending_commands(current_user.id, limit=limit)})

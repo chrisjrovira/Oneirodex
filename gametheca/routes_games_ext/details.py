@@ -17,6 +17,7 @@ from gametheca.utils.game_core import get_game_by_uuid
 from gametheca.utils.security import sanitize_path_for_logging
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.library_acl import user_can_access_game
+from gametheca.utils.client_lifecycle import load_lifecycle_map
 from gametheca.utils.lifecycle import web_lifecycle_fields
 from gametheca.utils.detail_layouts import layout_helpers
 
@@ -77,6 +78,7 @@ def game_details(game_uuid):
         # Explicitly load updates and extras
         updates = db.session.execute(select(GameUpdate).filter_by(game_uuid=game.uuid)).scalars().all()
         extras = db.session.execute(select(GameExtra).filter_by(game_uuid=game.uuid)).scalars().all()
+        lifecycle_map = load_lifecycle_map(current_user.id)
         
         # Log successful access for audit trail
         log_system_event(
@@ -149,7 +151,12 @@ def game_details(game_uuid):
             "freshness_confidence": getattr(game, 'freshness_confidence', None),
             "owned": False,
             "store_owned": False,
-            **web_lifecycle_fields(game, updates_count=len(updates), user_id=current_user.id),
+            **web_lifecycle_fields(
+                game,
+                updates_count=len(updates),
+                user_id=current_user.id,
+                client_state=lifecycle_map.get(game.uuid),
+            ),
         }
         
         # Augment game_data with URLs using smart icon detection

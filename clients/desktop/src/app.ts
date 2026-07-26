@@ -420,7 +420,12 @@ async function handleConnect(): Promise<void> {
 
   heartbeatScheduler?.stop()
 
-  heartbeatScheduler = startClientHeartbeat(auth, { clientVersion: '0.0.1' })
+  heartbeatScheduler = startClientHeartbeat(auth, {
+    clientVersion: '0.0.1',
+    onCommands: async (command) => {
+      await runGameAction(command.action, command.game_uuid)
+    },
+  })
 
   try {
     const registry = await ensureLifecycleRegistry()
