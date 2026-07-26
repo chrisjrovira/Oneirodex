@@ -457,10 +457,11 @@
                                 <script>
                                 // List of supported platforms for WebRetro emulation
                                 const supportedPlatforms = [
-                                    'PCDOS', 'NES', 'SNES', 'N64', 'GB', 'GBA', 'GBC', 'NDS', 
-                                    'PSX', 'SEGA_MD', 'SEGA_MS', 'SEGA_32X', 'SEGA_GG', 
-                                    'SEGA_SATURN', 'ATARI_7800', 'ATARI_5200', 'ATARI_2600', 
-                                    'LYNX', 'JAGUAR', 'WS', 'COLECO', 'VECTREX'
+                                    'NES', 'SNES', 'N64', 'GB', 'GBA', 'GBC', 'NDS', 'VB',
+                                    'PSX', 'SEGA_MD', 'SEGA_MS', 'SEGA_CD', 'SEGA_32X', 'SEGA_GG',
+                                    'SEGA_SATURN', 'ATARI_7800', 'ATARI_5200', 'ATARI_2600',
+                                    'LYNX', 'JAGUAR', 'WS', 'NGP', 'COLECO', 'VECTREX',
+                                    'THREEDO', 'NEOGEO_CD', 'INTV', 'CHAF', 'O2EM',
                                 ];
                                 
                                 // Function to get emulator core for the current platform
@@ -470,11 +471,12 @@
                                         const libraryUuid = "{{ library_uuid }}";
                                         const response = await fetch(`/api/library/${libraryUuid}`);
                                         const libraryData = await response.json();
+                                        const platformKey = libraryData.platform || '';
                                         
                                         // Check if platform is supported
-                                        if (!supportedPlatforms.includes(libraryData.platform)) {
+                                        if (!supportedPlatforms.includes(platformKey)) {
                                             // Hide the play button if platform is not supported
-                                            console.log(`Platform '${libraryData.platform}' is not supported by WebRetro`);
+                                            console.log(`Platform '${platformKey}' is not supported by WebRetro`);
                                             const playButton = document.getElementById('play-now-button');
                                             if (playButton) {
                                                 playButton.style.display = 'none';
@@ -483,22 +485,22 @@
                                         }
                                         
                                         // Get emulators for this platform (preferred core first when profiles set)
-                                        const emulatorsResponse = await fetch(`/api/emulators/${libraryData.platform}`);
+                                        const emulatorsResponse = await fetch(`/api/emulators/${platformKey}`);
                                         const emulatorsData = await emulatorsResponse.json();
                                         const preferred = emulatorsData.preferred;
                                         const emulators = emulatorsData.emulators || [];
                                         if (preferred) {
-                                            console.log(`Using preferred emulator core '${preferred}' for platform '${libraryData.platform}'`);
-                                            return preferred;
+                                            console.log(`Using preferred emulator core '${preferred}' for platform '${platformKey}'`);
+                                            return { core: preferred, platform: platformKey };
                                         }
                                         
                                         // Only return a valid emulator core if we have one
                                         if (emulators.length > 0) {
-                                            console.log(`Using emulator core '${emulators[0]}' for platform '${libraryData.platform}'`);
-                                            return emulators[0];
+                                            console.log(`Using emulator core '${emulators[0]}' for platform '${platformKey}'`);
+                                            return { core: emulators[0], platform: platformKey };
                                         } else {
                                             // No emulators available for this platform - hide play button
-                                            console.log(`No emulators configured for platform '${libraryData.platform}'`);
+                                            console.log(`No emulators configured for platform '${platformKey}'`);
                                             const playButton = document.getElementById('play-now-button');
                                             if (playButton) {
                                                 playButton.style.display = 'none';
@@ -521,10 +523,13 @@
                                     const playButton = document.getElementById('play-now-button');
                                     if (!playButton) return;
                                     
-                                    const emulatorCore = await getEmulatorCore();
+                                    const playInfo = await getEmulatorCore();
                                     // Only set up the button if we have a valid emulator core
-                                    if (emulatorCore && emulatorCore !== 'auto') {
-                                        playButton.href = `/static/vendor/webretro/webretro.html?guid={{ game.uuid }}&core=${emulatorCore}`;
+                                    if (playInfo && playInfo.core && playInfo.core !== 'auto') {
+                                        const platformQ = playInfo.platform
+                                            ? `&platform=${encodeURIComponent(playInfo.platform)}`
+                                            : '';
+                                        playButton.href = `/static/vendor/webretro/webretro.html?guid={{ game.uuid }}&core=${playInfo.core}${platformQ}`;
                                         console.log(`Play button configured with WebRetro URL: ${playButton.href}`);
                                     } else {
                                         // Hide the button if no valid emulator core is available

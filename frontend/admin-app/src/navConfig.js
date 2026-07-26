@@ -20,6 +20,7 @@ export const SETTINGS_CARDS = [
   { to: '/admin/ai', title: 'AI Assist', blurb: 'AI identification and helpers.' },
   { to: '/admin/storage', title: 'Storage', blurb: 'Disk paths, BIOS under userdata/system, assists packs.' },
   { to: '/admin/themes', title: 'Themes', blurb: 'Apply presets; Reset Default Themes.' },
+  { to: '/admin/plugins', title: 'Plugins', blurb: 'Connector / export / emu registry.' },
 ]
 
 export const HUB_LINKS = {

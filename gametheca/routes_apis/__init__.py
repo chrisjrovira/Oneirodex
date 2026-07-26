@@ -11,4 +11,4 @@ def inject_settings():
     return get_global_settings()
 
 # Import routes to register them with the blueprint
-from . import admin_search, ai_assist, browse, calendar, client, collections, download, emulator_cheats, emulator_saves, events, filters, game, health, igdb, imports_playnite, layouts, library, library_tools, locale, metadata_search, oidc_status, ownership, playtime, providers, quality_stats, scan, storage, system, tokens, updates, user, vr, wishlist, wanted, acquire, assists
+from . import admin_search, ai_assist, browse, calendar, client, collections, download, emulator_cheats, emulator_saves, events, filters, game, health, igdb, imports_playnite, layouts, library, library_tools, locale, metadata_search, oidc_status, ownership, playtime, providers, quality_stats, scan, storage, system, tokens, updates, user, vr, wishlist, wanted, acquire, assists, wave8_11

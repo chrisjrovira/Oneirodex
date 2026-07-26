@@ -249,12 +249,14 @@ export function BigPicturePage({ shellConfig = {} }) {
     : ''
 
   return (
-    <div className="gt-bp">
+    <div className={`gt-bp${shellConfig.role === 'child' ? ' gt-bp--kid' : ''}`}>
       <header className="gt-bp__header">
         <div>
           <h1 className="gt-bp__title">Big Picture</h1>
           <p className="gt-bp__hint">
-            ← → browse · Enter / A open · D download · B attract · Esc blur · Home first
+            {shellConfig.role === 'child'
+              ? 'Kid mode — library already filtered by parental ACL · ← → browse · Esc exit'
+              : '← → browse · Enter / A open · D download · B attract · Esc blur · Home first'}
           </p>
         </div>
         <div className="gt-bp__header-actions">

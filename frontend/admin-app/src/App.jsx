@@ -7,6 +7,7 @@ import {
   HelpPage,
   HubPage,
   LibrariesPage,
+  PluginsPage,
   ScansPage,
   SettingsPage,
   ThemesPage,
@@ -59,6 +60,8 @@ function RoutedAdminPage() {
       return <ThemesPage />
     case 'help':
       return <HelpPage />
+    case 'plugins':
+      return <PluginsPage />
     case 'scans':
       return <ScansPage />
     case 'users':

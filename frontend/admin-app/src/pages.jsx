@@ -213,17 +213,66 @@ export function HelpPage() {
         <li>Libraries list comes from <code>/api/get_libraries</code>.</li>
         <li>Settings cards open module pages (Arr, AI, Themes, Storage, …).</li>
         <li>
-          Wave 7 flags: <code>ENABLE_ARR_MODULE</code>, <code>ENABLE_DEBRID</code>,{' '}
-          <code>ENABLE_GAME_ASSISTS</code> — member Acquire at <code>/acquire</code>; assists are
-          single-player / offline only.
+          Wave 7–11 flags: <code>ENABLE_ARR_MODULE</code>, <code>ENABLE_DEBRID</code>,{' '}
+          <code>ENABLE_GAME_ASSISTS</code>, <code>ENABLE_MOD_TRACKING</code>,{' '}
+          <code>ENABLE_ACTIVITY_FEED</code>, <code>ENABLE_PCDOS_BROWSER</code> (off by default).
+        </li>
+        <li>
+          Plugins registry: <code>GET /api/plugins</code>. Exports: <code>/api/export/esde</code>,{' '}
+          <code>/api/export/pegasus</code>. Emulator health: <code>/api/emulator/health</code>.
         </li>
         <li>
           Emulator: BIOS + <code>.cht</code> via <code>/api/emulator/*</code>; WebRetro play bar
-          for cloud save and cheats.
+          for cloud save and cheats; companion RetroArch profiles for heavy systems.
         </li>
         <li>Themes: Reset Default Themes after image rebuilds that change design tokens.</li>
         <li>Member Systems hub lives at <code>/systems</code> with platform skins.</li>
       </ul>
+    </Page>
+  )
+}
+
+export function PluginsPage() {
+  const [plugins, setPlugins] = useState(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    getJson('/api/plugins')
+      .then((data) => setPlugins(data.plugins || []))
+      .catch(setError)
+  }, [])
+
+  return (
+    <Page title="Plugins & connectors" lede="Built-in registry of metadata, acquire, emu, and export hooks.">
+      {error ? <div role="alert">Unable to load plugins.</div> : null}
+      <div className="gt-admin-panel">
+        {!plugins ? (
+          <p>Loading…</p>
+        ) : (
+          <table className="gt-admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {plugins.map((plugin) => (
+                <tr key={plugin.id}>
+                  <td>
+                    <code>{plugin.id}</code>
+                  </td>
+                  <td>{plugin.name}</td>
+                  <td>{plugin.category}</td>
+                  <td>{plugin.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </Page>
   )
 }
@@ -265,6 +314,7 @@ export function resolveAdminPage(pathname) {
   if (pathname === '/admin/dashboard' || pathname === '/admin' || pathname === '/admin/') {
     return 'dashboard'
   }
+  if (pathname === '/admin/plugins') return 'plugins'
   if (pathname.startsWith('/libraries') || pathname.startsWith('/admin/library') || pathname.includes('library_tools') || pathname.includes('/admin/filters') || pathname.includes('/admin/extensions')) {
     return 'libraries'
   }

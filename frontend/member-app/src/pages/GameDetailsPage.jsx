@@ -37,6 +37,7 @@ export function GameDetailsPage() {
   const [freshnessError, setFreshnessError] = useState(null)
   const [busyVersionKey, setBusyVersionKey] = useState(null)
   const [versionActionStatus, setVersionActionStatus] = useState(null)
+  const [selectedCore, setSelectedCore] = useState('')
 
   useEffect(() => {
     if (!gameUuid) {
@@ -70,12 +71,33 @@ export function GameDetailsPage() {
     }
   }, [gameUuid, retryCount])
 
+  useEffect(() => {
+    if (game?.emulator_core) {
+      setSelectedCore(game.emulator_core)
+    }
+  }, [game?.emulator_core, game?.uuid])
+
   const videoEmbeds = useMemo(() => {
     if (!game?.video_urls) {
       return []
     }
     return game.video_urls.map(youtubeEmbed).filter(Boolean)
   }, [game])
+
+  const playHref = useMemo(() => {
+    if (!game?.can_play_in_browser) {
+      return null
+    }
+    const cores = Array.isArray(game.emulator_cores) ? game.emulator_cores : []
+    const core = selectedCore || game.emulator_core || cores[0]
+    if (!core || !game.uuid) {
+      return game.play_url || null
+    }
+    const platform = game.library_platform
+      ? `&platform=${encodeURIComponent(game.library_platform)}`
+      : ''
+    return `/static/vendor/webretro/webretro.html?guid=${encodeURIComponent(game.uuid)}&core=${encodeURIComponent(core)}${platform}`
+  }, [game, selectedCore])
 
   async function handleFreshnessCheck() {
     if (!gameUuid || freshnessBusy) {
@@ -176,10 +198,27 @@ export function GameDetailsPage() {
             variant="full"
           />
           <div className="gt-details-page__quick">
-            {game.can_play_in_browser && game.play_url ? (
-              <a className="gt-btn gt-btn--primary" href={game.play_url}>
-                Play in browser
-              </a>
+            {playHref ? (
+              <>
+                {Array.isArray(game.emulator_cores) && game.emulator_cores.length > 1 ? (
+                  <label className="gt-details-page__core-picker">
+                    Core{' '}
+                    <select
+                      value={selectedCore || game.emulator_core || game.emulator_cores[0]}
+                      onChange={(event) => setSelectedCore(event.target.value)}
+                    >
+                      {game.emulator_cores.map((core) => (
+                        <option key={core} value={core}>
+                          {core}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
+                <a className="gt-btn gt-btn--primary" href={playHref}>
+                  Play in browser
+                </a>
+              </>
             ) : null}
             {game.steam_url ? (
               <a className="gt-btn" href={game.steam_url} target="_blank" rel="noreferrer">

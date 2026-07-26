@@ -30,8 +30,20 @@ def library_platform_key(game) -> str | None:
 def browse_play_fields(game) -> dict[str, Any]:
     """Fields for GameCard play / demo links."""
     key = library_platform_key(game)
-    if not key or key not in WEBRETRO_PLATFORMS:
+    if not key:
         return {'play_url': None, 'can_play_in_browser': False, 'emulator_cores': []}
+    if key not in WEBRETRO_PLATFORMS:
+        # PCDOS stays native-only unless ENABLE_PCDOS_BROWSER (no bundled WASM by default).
+        pcdos_ok = False
+        if key == 'PCDOS':
+            try:
+                from flask import current_app
+
+                pcdos_ok = bool(current_app.config.get('ENABLE_PCDOS_BROWSER'))
+            except RuntimeError:
+                pcdos_ok = False
+        if not pcdos_ok:
+            return {'play_url': None, 'can_play_in_browser': False, 'emulator_cores': []}
     try:
         from gametheca.utils.emulator_profiles import resolve_emulators_for_platform
 
@@ -52,12 +64,14 @@ def browse_play_fields(game) -> dict[str, Any]:
         return {'play_url': None, 'can_play_in_browser': False, 'emulator_cores': []}
 
     core = cores[0]
+    platform_q = f'&platform={key}' if key else ''
     return {
         'play_url': (
-            f'/static/vendor/webretro/webretro.html?guid={game.uuid}&core={core}'
+            f'/static/vendor/webretro/webretro.html?guid={game.uuid}&core={core}{platform_q}'
         ),
         'can_play_in_browser': True,
         'emulator_cores': cores,
         'emulator_core': core,
+        'library_platform': key,
         'webretro_installed_cores': sorted(WEBRETR_INSTALLED_CORES),
     }

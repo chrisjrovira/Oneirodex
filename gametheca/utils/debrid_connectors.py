@@ -35,6 +35,8 @@ def get_debrid_config() -> dict[str, Any]:
     return {
         'real_debrid_token': cfg.get('real_debrid_token') or current_app.config.get('REAL_DEBRID_TOKEN') or '',
         'alldebrid_api_key': cfg.get('alldebrid_api_key') or current_app.config.get('ALLDEBRID_API_KEY') or '',
+        'premiumize_api_key': cfg.get('premiumize_api_key') or current_app.config.get('PREMIUMIZE_API_KEY') or '',
+        'torbox_api_key': cfg.get('torbox_api_key') or current_app.config.get('TORBOX_API_KEY') or '',
     }
 
 
@@ -44,7 +46,7 @@ def save_debrid_config(payload: dict[str, Any]) -> dict[str, Any]:
         row = GlobalSettings()
         db.session.add(row)
     current = dict(getattr(row, 'arr_settings', None) or {})
-    for key in ('real_debrid_token', 'alldebrid_api_key'):
+    for key in ('real_debrid_token', 'alldebrid_api_key', 'premiumize_api_key', 'torbox_api_key'):
         if key in payload and payload[key] is not None:
             current[key] = str(payload[key]).strip()
     row.arr_settings = current
@@ -52,6 +54,8 @@ def save_debrid_config(payload: dict[str, Any]) -> dict[str, Any]:
     return {
         'real_debrid_token': '***' if current.get('real_debrid_token') else '',
         'alldebrid_api_key': '***' if current.get('alldebrid_api_key') else '',
+        'premiumize_api_key': '***' if current.get('premiumize_api_key') else '',
+        'torbox_api_key': '***' if current.get('torbox_api_key') else '',
     }
 
 
@@ -66,6 +70,16 @@ def debrid_status() -> list[dict[str, Any]]:
         {
             'id': 'alldebrid',
             'configured': bool(cfg.get('alldebrid_api_key')),
+            'enabled': debrid_enabled(),
+        },
+        {
+            'id': 'premiumize',
+            'configured': bool(cfg.get('premiumize_api_key')),
+            'enabled': debrid_enabled(),
+        },
+        {
+            'id': 'torbox',
+            'configured': bool(cfg.get('torbox_api_key')),
             'enabled': debrid_enabled(),
         },
     ]
@@ -93,6 +107,33 @@ def alldebrid_upload_magnet(magnet: str) -> dict[str, Any]:
         urljoin('https://api.alldebrid.com/', 'v4/magnet/upload'),
         params={'agent': 'GameTheca', 'apikey': key},
         data={'magnets[]': magnet},
+        timeout=DEFAULT_TIMEOUT,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def premiumize_add_magnet(magnet: str) -> dict[str, Any]:
+    key = get_debrid_config().get('premiumize_api_key')
+    if not key:
+        raise RuntimeError('Premiumize API key not configured')
+    response = requests.post(
+        'https://www.premiumize.me/api/transfer/create',
+        data={'apikey': key, 'src': magnet},
+        timeout=DEFAULT_TIMEOUT,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def torbox_add_magnet(magnet: str) -> dict[str, Any]:
+    key = get_debrid_config().get('torbox_api_key')
+    if not key:
+        raise RuntimeError('TorBox API key not configured')
+    response = requests.post(
+        'https://api.torbox.app/v1/api/torrents/createtorrent',
+        headers={'Authorization': f'Bearer {key}'},
+        data={'magnet': magnet},
         timeout=DEFAULT_TIMEOUT,
     )
     response.raise_for_status()

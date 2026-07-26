@@ -29,6 +29,20 @@ def test_browse_play_fields_requires_bundled_core(monkeypatch):
     assert browse_play_fields(game)['can_play_in_browser'] is False
 
 
+def test_browse_play_url_includes_platform(monkeypatch):
+    library = SimpleNamespace(platform=SimpleNamespace(name='NES'))
+    game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
+
+    monkeypatch.setattr(
+        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        lambda _p: {'emulators': ['nestopia'], 'preferred': 'nestopia'},
+    )
+    fields = browse_play_fields(game)
+    assert fields['can_play_in_browser'] is True
+    assert 'platform=NES' in fields['play_url']
+    assert fields['library_platform'] == 'NES'
+
+
 def test_wanted_queue_add_and_fulfill(tmp_path, monkeypatch):
     monkeypatch.setattr(wu, '_library_root', lambda: str(tmp_path))
     item = wu.add_wanted(1, game_uuid='game-1', kind='update', label='Patch')

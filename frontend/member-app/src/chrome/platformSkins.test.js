@@ -17,6 +17,8 @@ describe('platformSkins', () => {
     expect(familyForPlatform('XONE')).toBe('xbox')
     expect(familyForPlatform('SEGA_MD')).toBe('sega')
     expect(familyForPlatform('PCWIN')).toBe('pc')
+    expect(familyForPlatform('NEOGEO_CD')).toBe('atari')
+    expect(familyForPlatform('INTV')).toBe('atari')
   })
 
   test('skinForPlatform returns accent and motion', () => {

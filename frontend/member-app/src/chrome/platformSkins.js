@@ -12,6 +12,7 @@ const ATARI = new Set([
   'ATARI_7800', 'ATARI_5200', 'ATARI_2600', 'LYNX', 'JAGUAR',
   'PCE', 'PCFX', 'NGP', 'WS', 'COLECO', 'THREEDO', 'VECTREX',
   'VICE_X64SC', 'VICE_X128', 'VICE_XVIC', 'VICE_XPLUS4', 'VICE_XPET',
+  'NEOGEO_CD', 'INTV', 'CHAF', 'O2EM',
 ])
 const PC = new Set(['PCWIN', 'PCDOS', 'MAC', 'OTHER'])
 

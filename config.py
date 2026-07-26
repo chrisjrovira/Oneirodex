@@ -83,6 +83,14 @@ class Config(object):
     ENABLE_GAME_ASSISTS = os.getenv('ENABLE_GAME_ASSISTS', 'false').lower() == 'true'
     REAL_DEBRID_TOKEN = os.getenv('REAL_DEBRID_TOKEN', '')
     ALLDEBRID_API_KEY = os.getenv('ALLDEBRID_API_KEY', '')
+    PREMIUMIZE_API_KEY = os.getenv('PREMIUMIZE_API_KEY', '')
+    TORBOX_API_KEY = os.getenv('TORBOX_API_KEY', '')
+
+    # Wave 8+ — PCDOS stays native-only unless WASM core is intentionally enabled
+    ENABLE_PCDOS_BROWSER = os.getenv('ENABLE_PCDOS_BROWSER', 'false').lower() == 'true'
+    ENABLE_MOD_TRACKING = os.getenv('ENABLE_MOD_TRACKING', 'true').lower() == 'true'
+    ENABLE_RUFFLE = os.getenv('ENABLE_RUFFLE', 'false').lower() == 'true'
+    ENABLE_ACTIVITY_FEED = os.getenv('ENABLE_ACTIVITY_FEED', 'true').lower() == 'true'
 
     # Optional *arr connector defaults (overridden by Admin → Arr config)
     PROWLARR_URL = os.getenv('PROWLARR_URL', '')
@@ -92,6 +100,13 @@ class Config(object):
     QBITTORRENT_URL = os.getenv('QBITTORRENT_URL', '')
     QBITTORRENT_USERNAME = os.getenv('QBITTORRENT_USERNAME', 'admin')
     QBITTORRENT_PASSWORD = os.getenv('QBITTORRENT_PASSWORD', '')
+    TRANSMISSION_URL = os.getenv('TRANSMISSION_URL', '')
+    TRANSMISSION_USERNAME = os.getenv('TRANSMISSION_USERNAME', '')
+    TRANSMISSION_PASSWORD = os.getenv('TRANSMISSION_PASSWORD', '')
+    DELUGE_URL = os.getenv('DELUGE_URL', '')
+    DELUGE_PASSWORD = os.getenv('DELUGE_PASSWORD', '')
+    SABNZBD_URL = os.getenv('SABNZBD_URL', '')
+    SABNZBD_API_KEY = os.getenv('SABNZBD_API_KEY', '')
 
     # Flask-Babel / i18n
     BABEL_DEFAULT_LOCALE = os.getenv('BABEL_DEFAULT_LOCALE', 'en')

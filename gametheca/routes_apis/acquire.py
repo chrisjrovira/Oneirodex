@@ -5,12 +5,15 @@ from __future__ import annotations
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
-from gametheca.utils.arr_connectors import qbittorrent_add_url, search_indexers
+from gametheca.utils.acquire_scoring import rank_acquire_hits, title_looks_like_newer_repack
+from gametheca.utils.arr_connectors import search_indexers, send_to_download_client
 from gametheca.utils.debrid_connectors import (
     alldebrid_upload_magnet,
     debrid_enabled,
     debrid_status,
+    premiumize_add_magnet,
     real_debrid_add_magnet,
+    torbox_add_magnet,
 )
 from gametheca.utils.module_status import arr_module_on
 from gametheca.utils.rbac import is_librarian
@@ -31,6 +34,7 @@ def acquire_status():
         'debrid_enabled': debrid_enabled(),
         'debrid': debrid_status(),
         'can_send': is_librarian(current_user),
+        'clients': ['qbittorrent', 'transmission', 'sabnzbd'],
         'message': (
             'BYO acquisition ready (indexers/debrid configured by admin).'
             if _acquire_allowed()
@@ -47,17 +51,25 @@ def acquire_search():
     query = (request.args.get('q') or '').strip()
     if not query:
         return jsonify({'error': 'q required'}), 400
+    current_label = (request.args.get('current') or '').strip()
     try:
         hits = search_indexers(query)
     except Exception as exc:
         return jsonify({'error': str(exc)}), 502
-    return jsonify({'q': query, 'results': [hit.to_dict() for hit in hits]})
+    ranked = rank_acquire_hits([hit.to_dict() for hit in hits], query=query)
+    if current_label:
+        for row in ranked:
+            row['newer_repack'] = title_looks_like_newer_repack(
+                str(row.get('title') or ''),
+                current_label,
+            )
+    return jsonify({'q': query, 'results': ranked})
 
 
 @apis_bp.route('/acquire/download', methods=['POST'])
 @login_required
 def acquire_download():
-    """Send magnet/URL to qBittorrent or debrid — librarian/admin only."""
+    """Send magnet/URL to download client or debrid — librarian/admin only."""
     if not is_librarian(current_user):
         return jsonify({'error': 'Librarian or admin required'}), 403
     data = request.get_json(silent=True) or {}
@@ -66,11 +78,11 @@ def acquire_download():
     if not url:
         return jsonify({'error': 'url or magnet required'}), 400
     try:
-        if provider == 'qbittorrent':
+        if provider in ('qbittorrent', 'transmission', 'sabnzbd', 'deluge'):
             if not arr_module_on():
                 return jsonify({'error': 'Arr module disabled'}), 403
-            qbittorrent_add_url(url)
-            return jsonify({'ok': True, 'provider': 'qbittorrent'})
+            result = send_to_download_client(url, provider=provider)
+            return jsonify({'ok': True, 'provider': provider, 'result': result})
         if provider == 'real_debrid':
             if not debrid_enabled():
                 return jsonify({'error': 'Debrid disabled'}), 403
@@ -81,6 +93,16 @@ def acquire_download():
                 return jsonify({'error': 'Debrid disabled'}), 403
             payload = alldebrid_upload_magnet(url)
             return jsonify({'ok': True, 'provider': 'alldebrid', 'result': payload})
+        if provider == 'premiumize':
+            if not debrid_enabled():
+                return jsonify({'error': 'Debrid disabled'}), 403
+            payload = premiumize_add_magnet(url)
+            return jsonify({'ok': True, 'provider': 'premiumize', 'result': payload})
+        if provider == 'torbox':
+            if not debrid_enabled():
+                return jsonify({'error': 'Debrid disabled'}), 403
+            payload = torbox_add_magnet(url)
+            return jsonify({'ok': True, 'provider': 'torbox', 'result': payload})
         return jsonify({'error': 'Unknown provider'}), 400
     except Exception as exc:
         return jsonify({'error': str(exc)}), 502

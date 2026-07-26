@@ -60,6 +60,12 @@ def playtime_page():
     return render_member_spa(title='Playtime')
 
 
+@member_bp.route('/activity')
+@login_required
+def activity_page():
+    return render_member_spa(title='Activity')
+
+
 @member_bp.route('/big-picture')
 @login_required
 def big_picture_page():

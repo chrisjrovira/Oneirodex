@@ -126,6 +126,13 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
       </div>
       <p className="gt-more-page__lede">
         Browse your library by console or PC. Open a system to filter the grid and apply that era&apos;s chrome.
+        Export packs for external frontends:{' '}
+        <a className="gt-btn" href="/api/export/esde">
+          ES-DE gamelist.xml
+        </a>{' '}
+        <a className="gt-btn" href="/api/export/pegasus?platform=Library">
+          Pegasus metadata
+        </a>
       </p>
       {groups.map((group) => (
         <section key={group.id} className="gt-systems-group" data-family={group.id}>

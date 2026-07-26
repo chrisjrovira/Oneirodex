@@ -67,6 +67,7 @@ export function parseShellConfig(rootElement) {
     tileSize: rootElement.dataset.tileSize || 'M',
     isAdmin: rootElement.dataset.isAdmin === 'true',
     isLibrarian: rootElement.dataset.isLibrarian === 'true',
+    role: rootElement.dataset.role || 'user',
     showTrailers: rootElement.dataset.showTrailers === 'true',
     showHelp: rootElement.dataset.showHelp === 'true',
     enableVr: rootElement.dataset.enableVr === 'true',

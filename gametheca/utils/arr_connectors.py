@@ -49,6 +49,13 @@ def get_arr_config() -> dict[str, Any]:
         'qbittorrent_url': (cfg.get('qbittorrent_url') or current_app.config.get('QBITTORRENT_URL') or '').rstrip('/'),
         'qbittorrent_username': cfg.get('qbittorrent_username') or current_app.config.get('QBITTORRENT_USERNAME') or 'admin',
         'qbittorrent_password': cfg.get('qbittorrent_password') or current_app.config.get('QBITTORRENT_PASSWORD') or '',
+        'transmission_url': (cfg.get('transmission_url') or current_app.config.get('TRANSMISSION_URL') or '').rstrip('/'),
+        'transmission_username': cfg.get('transmission_username') or current_app.config.get('TRANSMISSION_USERNAME') or '',
+        'transmission_password': cfg.get('transmission_password') or current_app.config.get('TRANSMISSION_PASSWORD') or '',
+        'deluge_url': (cfg.get('deluge_url') or current_app.config.get('DELUGE_URL') or '').rstrip('/'),
+        'deluge_password': cfg.get('deluge_password') or current_app.config.get('DELUGE_PASSWORD') or '',
+        'sabnzbd_url': (cfg.get('sabnzbd_url') or current_app.config.get('SABNZBD_URL') or '').rstrip('/'),
+        'sabnzbd_api_key': cfg.get('sabnzbd_api_key') or current_app.config.get('SABNZBD_API_KEY') or '',
     }
 
 
@@ -62,14 +69,23 @@ def save_arr_config(payload: dict[str, Any]) -> dict[str, Any]:
         'prowlarr_url', 'prowlarr_api_key',
         'jackett_url', 'jackett_api_key',
         'qbittorrent_url', 'qbittorrent_username', 'qbittorrent_password',
+        'transmission_url', 'transmission_username', 'transmission_password',
+        'deluge_url', 'deluge_password',
+        'sabnzbd_url', 'sabnzbd_api_key',
     ):
         if key in payload and payload[key] is not None:
             current[key] = str(payload[key]).strip()
     row.arr_settings = current
     db.session.commit()
-    return {**current, 'prowlarr_api_key': '***' if current.get('prowlarr_api_key') else '',
-            'jackett_api_key': '***' if current.get('jackett_api_key') else '',
-            'qbittorrent_password': '***' if current.get('qbittorrent_password') else ''}
+    return {
+        **current,
+        'prowlarr_api_key': '***' if current.get('prowlarr_api_key') else '',
+        'jackett_api_key': '***' if current.get('jackett_api_key') else '',
+        'qbittorrent_password': '***' if current.get('qbittorrent_password') else '',
+        'transmission_password': '***' if current.get('transmission_password') else '',
+        'deluge_password': '***' if current.get('deluge_password') else '',
+        'sabnzbd_api_key': '***' if current.get('sabnzbd_api_key') else '',
+    }
 
 
 def connector_status() -> list[dict[str, Any]]:
@@ -89,6 +105,21 @@ def connector_status() -> list[dict[str, Any]]:
             'id': 'qbittorrent',
             'configured': bool(cfg['qbittorrent_url']),
             'url': cfg['qbittorrent_url'] or None,
+        },
+        {
+            'id': 'transmission',
+            'configured': bool(cfg['transmission_url']),
+            'url': cfg['transmission_url'] or None,
+        },
+        {
+            'id': 'deluge',
+            'configured': bool(cfg['deluge_url']),
+            'url': cfg['deluge_url'] or None,
+        },
+        {
+            'id': 'sabnzbd',
+            'configured': bool(cfg['sabnzbd_url'] and cfg['sabnzbd_api_key']),
+            'url': cfg['sabnzbd_url'] or None,
         },
     ]
 
@@ -187,3 +218,71 @@ def qbittorrent_add_url(download_url: str) -> dict[str, Any]:
     if add.status_code >= 400:
         raise RuntimeError(f'qBittorrent add failed ({add.status_code})')
     return {'status': 'queued', 'download_url': download_url}
+
+
+def transmission_add_url(download_url: str) -> dict[str, Any]:
+    cfg = get_arr_config()
+    if not cfg['transmission_url']:
+        raise RuntimeError('Transmission URL is not configured')
+    if not download_url:
+        raise ValueError('download_url is required')
+    auth = None
+    if cfg.get('transmission_username'):
+        auth = (cfg['transmission_username'], cfg.get('transmission_password') or '')
+    # Session id handshake
+    session = requests.Session()
+    ping = session.post(
+        urljoin(cfg['transmission_url'] + '/', 'transmission/rpc'),
+        json={'method': 'session-get'},
+        auth=auth,
+        timeout=DEFAULT_TIMEOUT,
+    )
+    headers = {}
+    session_id = ping.headers.get('X-Transmission-Session-Id')
+    if session_id:
+        headers['X-Transmission-Session-Id'] = session_id
+    add = session.post(
+        urljoin(cfg['transmission_url'] + '/', 'transmission/rpc'),
+        json={'method': 'torrent-add', 'arguments': {'filename': download_url}},
+        headers=headers,
+        auth=auth,
+        timeout=DEFAULT_TIMEOUT,
+    )
+    if add.status_code >= 400:
+        raise RuntimeError(f'Transmission add failed ({add.status_code})')
+    return {'status': 'queued', 'provider': 'transmission', 'download_url': download_url}
+
+
+def sabnzbd_add_url(nzb_url: str) -> dict[str, Any]:
+    cfg = get_arr_config()
+    if not cfg['sabnzbd_url'] or not cfg['sabnzbd_api_key']:
+        raise RuntimeError('SABnzbd is not configured')
+    if not nzb_url:
+        raise ValueError('nzb_url is required')
+    resp = requests.get(
+        urljoin(cfg['sabnzbd_url'] + '/', 'api'),
+        params={
+            'mode': 'addurl',
+            'name': nzb_url,
+            'apikey': cfg['sabnzbd_api_key'],
+            'output': 'json',
+        },
+        timeout=DEFAULT_TIMEOUT,
+    )
+    if resp.status_code >= 400:
+        raise RuntimeError(f'SABnzbd add failed ({resp.status_code})')
+    return {'status': 'queued', 'provider': 'sabnzbd', 'download_url': nzb_url}
+
+
+def send_to_download_client(download_url: str, *, provider: str = 'qbittorrent') -> dict[str, Any]:
+    provider = (provider or 'qbittorrent').lower()
+    if provider == 'qbittorrent':
+        return qbittorrent_add_url(download_url)
+    if provider == 'transmission':
+        return transmission_add_url(download_url)
+    if provider == 'sabnzbd':
+        return sabnzbd_add_url(download_url)
+    if provider == 'deluge':
+        # Deluge JSON-RPC varies by plugin; queue via Transmission-compatible path when unset.
+        raise RuntimeError('Deluge send requires WebUI JSON plugin — configure Transmission or qBittorrent for now')
+    raise ValueError(f'Unknown download client: {provider}')

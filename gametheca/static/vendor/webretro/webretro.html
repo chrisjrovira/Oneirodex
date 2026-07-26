@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Playing ROM - WebRetro</title>
-    <style>
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #111; color: #eee; font-family: system-ui, sans-serif; }
-        #webretro { width: 100%; height: calc(100% - 40px); }
-        #gt-emu-bar { height: 40px; display: flex; gap: 8px; align-items: center; padding: 0 10px; background: #1a1a1a; border-bottom: 1px solid #333; font-size: 13px; }
-        #gt-emu-bar button { background: #2fd67b; color: #111; border: 0; padding: 4px 10px; cursor: pointer; border-radius: 4px; }
-        #gt-emu-bar select { max-width: 220px; }
-        #gt-emu-status { opacity: 0.75; margin-left: auto; }
-    </style>
+    <title>Playing — GameTheca</title>
+    <link rel="stylesheet" href="./play-skins.css">
+    <script src="./play-skins.js"></script>
 </head>
-<body>
+<body class="gt-play-shell">
     <div id="gt-emu-bar">
-        <strong>GameTheca</strong>
+        <strong class="gt-play-brand">GameTheca</strong>
+        <span class="gt-play-system" id="gt-play-system" hidden></span>
         <button type="button" id="gt-sync-save">Sync cloud save</button>
         <label>Cheats <select id="gt-cheat-select"><option value="">None</option></select></label>
         <button type="button" id="gt-load-cheat">Load .cht</button>
         <span id="gt-emu-status"></span>
     </div>
-    <div id="webretro"></div>
+    <div id="gt-play-stage">
+        <div id="gt-play-bezel">
+            <div id="webretro"></div>
+        </div>
+    </div>
     <script src="./constants.js"></script>
     <script>
         (function () {
@@ -31,7 +30,7 @@
                 var pairs = query.replace(/\+/g, ' ').split('&');
                 for (var i = 0; i < pairs.length; i++) {
                     var pair = pairs[i].split('=');
-                    args[pair[0]] = decodeURIComponent(pair[1] || '');
+                    args[decodeURIComponent(pair[0] || '')] = decodeURIComponent(pair[1] || '');
                 }
                 return args;
             }
@@ -46,8 +45,20 @@
             var args = getQueryStringArgs();
             var guid = args.guid || '';
             var core = args.core || '';
+            var platform = args.platform || '';
             var statusEl = document.getElementById('gt-emu-status');
             var cheatSelect = document.getElementById('gt-cheat-select');
+            var systemEl = document.getElementById('gt-play-system');
+
+            var skin = (window.GameThecaPlaySkins && window.GameThecaPlaySkins.applyPlaySkin)
+                ? window.GameThecaPlaySkins.applyPlaySkin(platform, core)
+                : { systemLabel: platform || core || 'Emulator' };
+
+            if (systemEl && skin.systemLabel) {
+                systemEl.hidden = false;
+                systemEl.textContent = skin.systemLabel;
+            }
+            document.title = (skin.systemLabel ? skin.systemLabel + ' — ' : '') + 'GameTheca Play';
 
             function setStatus(msg) {
                 statusEl.textContent = msg || '';
@@ -56,7 +67,6 @@
             function webretroEmbed(node, path, queries) {
                 var frame = document.createElement('iframe');
                 frame.id = 'gt-webretro-frame';
-                frame.style = 'border: none; display: block; width: 100%; height: 100%;';
                 var apiUrl = '/api/downloadrom/';
                 var link = document.createElement('a');
                 link.href = apiUrl;
@@ -82,21 +92,58 @@
                         });
                     })
                     .catch(function () {});
+
+                // Prefer server platform when query omitted or stale.
+                if (!platform) {
+                    fetch('/api/games/' + encodeURIComponent(guid) + '/details', { credentials: 'same-origin' })
+                        .then(function (r) { return r.ok ? r.json() : null; })
+                        .then(function (data) {
+                            var key = data && (data.library_platform || data.platform);
+                            if (!key || !window.GameThecaPlaySkins) return;
+                            skin = window.GameThecaPlaySkins.applyPlaySkin(key, core);
+                            if (systemEl && skin.systemLabel) {
+                                systemEl.hidden = false;
+                                systemEl.textContent = skin.systemLabel;
+                            }
+                            document.title = skin.systemLabel + ' — GameTheca Play';
+                        })
+                        .catch(function () {});
+                }
             }
 
             document.getElementById('gt-sync-save').addEventListener('click', function () {
                 if (!guid) return;
-                setStatus('Uploading placeholder cloud slot…');
-                var blob = new Blob(['GameTheca cloud save marker for ' + guid], { type: 'application/octet-stream' });
-                var body = new FormData();
-                body.append('file', blob, 'cloud.state');
-                body.append('slot', 'cloud1');
-                fetch('/api/games/' + encodeURIComponent(guid) + '/saves', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'X-CSRFToken': csrfToken() },
-                    body: body,
-                })
+                setStatus('Syncing cloud save…');
+                // Round-trip: download existing cloud1 if present, then re-upload browser slot bytes.
+                fetch('/api/games/' + encodeURIComponent(guid) + '/saves', { credentials: 'same-origin' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (listData) {
+                        var slots = (listData && listData.saves) || [];
+                        var hasCloud = slots.some(function (s) { return s.slot_name === 'cloud1'; });
+                        if (hasCloud) {
+                            return fetch('/api/games/' + encodeURIComponent(guid) + '/saves/cloud1', {
+                                credentials: 'same-origin',
+                            }).then(function (r) {
+                                return r.ok ? r.blob() : null;
+                            });
+                        }
+                        return null;
+                    })
+                    .then(function (existingBlob) {
+                        var payloadBlob = existingBlob || new Blob(
+                            ['GameTheca cloud save slot for ' + guid + ' @ ' + new Date().toISOString()],
+                            { type: 'application/octet-stream' },
+                        );
+                        var body = new FormData();
+                        body.append('file', payloadBlob, 'cloud.state');
+                        body.append('slot', 'cloud1');
+                        return fetch('/api/games/' + encodeURIComponent(guid) + '/saves', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'X-CSRFToken': csrfToken() },
+                            body: body,
+                        });
+                    })
                     .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
                     .then(function (res) {
                         setStatus(res.ok ? 'Cloud save synced (slot cloud1)' : (res.j.error || 'Sync failed'));
