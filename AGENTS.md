@@ -5,8 +5,8 @@
 GameTheca is a self-hosted game-library server: a **Flask app served via ASGI/uvicorn** (`asgi:asgi_app`, port **5006**), a **PostgreSQL** database, and three **React/Vite frontends** under `frontend/` that build into `gametheca/static/dist/`. See `README.md` for the general dev commands; the notes below only cover cloud-environment caveats.
 
 ### Startup (do this at the beginning of a session)
-- **PostgreSQL is NOT a running systemd service here — start it manually each session:**
-  `sudo pg_ctlcluster 16 main start`
+- **PostgreSQL 17 is NOT a running systemd service here — start it manually each session:**
+  `sudo pg_ctlcluster 17 main start`
   The `gametheca` and `gamethecatest` databases already exist (`postgres` / `postgres` @ `localhost:5432`) and persist in the VM snapshot. Verify with `pg_lsclusters`.
 - A local-dev `.env` already exists at the repo root (git-ignored, persisted in the snapshot). It sets `SECRET_KEY`, `DATABASE_URL`, `TEST_DATABASE_URL`, and points the scan base at `BASE_FOLDER_POSIX=/workspace/data/games`. The app refuses to start without a real `SECRET_KEY`, so keep `.env` intact.
 
