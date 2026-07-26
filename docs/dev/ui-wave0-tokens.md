@@ -1,25 +1,40 @@
 # UI Wave 0 — design tokens (GameTheca)
 
 These CSS variables are the shared foundation for web + future desktop client.
-Import after theme base.css or use as a reference when migrating React islands.
+Tracked source: `gametheca/setup/default_theme/css/gt-tokens.css` (presets regenerated at **`GENERATOR_VERSION` 6**).
+
+Import after theme base.css or use as a reference when migrating React islands / admin SPA.
 
 ```css
 :root {
-  --gt-font-display: "Segoe UI Soft", "Trebuchet MS", sans-serif;
-  --gt-font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
-  --gt-space-1: 4px;
-  --gt-space-2: 8px;
-  --gt-space-3: 12px;
-  --gt-space-4: 16px;
-  --gt-space-6: 24px;
-  --gt-radius-sm: 6px;
-  --gt-radius-md: 10px;
-  --gt-accent: var(--btn-primary, #14b8a6);
-  --gt-surface: var(--bg-dark-40, rgba(18, 22, 28, 0.92));
-  --gt-text: var(--text-light, #e0e0e0);
-  --gt-muted: var(--text-muted, #adb5bd);
+  --gt-bg: #0b0d10;
+  --gt-surface: #141820;
+  --gt-surface-2: #1c2230;
+  --gt-text: #f2f4f8;
+  --gt-text-muted: #c4ccd8;
+  --gt-accent: #2fd67b;
+  --gt-accent-contrast: #0b0d10;
+  --gt-success: #4ade80;
+  --gt-danger: #ff6b6b;
+  --gt-warning: #ffc94a;
+  --gt-info: #5ac8fa;
+  --gt-border: rgba(255, 255, 255, 0.12);
+  --gt-focus-ring: color-mix(in srgb, var(--gt-accent) 70%, white);
+  --gt-tile-min: 180px;
+  --gt-tile-gap: 10px;
+  --gt-crt-opacity: 0.03;
+  /* Style B glass launcher chrome */
+  --gt-glass-bg: rgba(20, 24, 32, 0.72);
+  --gt-glass-border: rgba(255, 255, 255, 0.14);
+  --gt-glass-blur: 12px;
+  --gt-platform-accent: var(--gt-accent);
+  --gt-platform-motion: none;
+  --font-ui: "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-display: "Arial Black", "Segoe UI", sans-serif;
 }
 ```
+
+Member SPA also ships `frontend/member-app` chrome (`glass.css`, TopNav). Built **`member-app.css`** must be linked in the SPA shell.
 
 ## Command palette (planned)
 
@@ -29,7 +44,8 @@ Import after theme base.css or use as a reference when migrating React islands.
 
 ## Checklist
 
-- [x] Document tokens
+- [x] Document tokens (default accent `#2fd67b` + glass)
 - [ ] Shared package `frontend/design-system`
 - [ ] Command palette island
-- [ ] Wire into `base.html`
+- [x] Wire tokens into theme pipeline / member SPA
+- [ ] Wire into React admin SPA (`frontend/admin-app`)

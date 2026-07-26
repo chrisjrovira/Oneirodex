@@ -24,6 +24,8 @@ Read in this order:
 ## Related code
 
 - Package: `gametheca/`
-- Library UI: `frontend/library-grid/` (`BadgeStack`, `GameActionBar`)
-- Runbooks: `docs/runbooks/`
+- Member SPA: `frontend/member-app/` (top nav, Systems, glass B+C)
+- Library islands: `frontend/library-grid/` (`BadgeStack`, `GameActionBar`)
+- Admin: Jinja `base_admin` → planned `frontend/admin-app`
+- Runbooks: `docs/runbooks/` · User/admin guides: `docs/user/`, `docs/admin/`
 - Desktop: `clients/desktop/` · Quest PWA: `clients/quest/`

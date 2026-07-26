@@ -31,6 +31,7 @@ def restricted():
 
 
 @site_bp.route('/help')
+@login_required
 def helpfaq():
     print("Route: /help")
     return render_member_spa(title='Help')

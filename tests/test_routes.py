@@ -201,6 +201,7 @@ class TestMainBlueprint:
         assert 'has_local_override' in game
         assert isinstance(game['has_local_override'], bool)
         assert 'is_vr' in game
+        assert 'library_platform' in game
         assert game['lifecycle_state'] == 'not_downloaded'
         assert game['client_connected'] is False
 

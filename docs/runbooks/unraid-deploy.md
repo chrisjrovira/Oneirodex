@@ -33,7 +33,7 @@
 2. Start container; watch logs until Postgres is ready
 3. Open `http://<unraid-ip>:5006`
 4. Complete setup wizard (admin → SMTP optional → IGDB)
-5. Admin → Themes → **Reset Default Themes** (installs 10 presets on the volume)
+5. Admin → Themes → **Reset Default Themes** (installs presets; regenerates at `GENERATOR_VERSION` 6)
 6. Add a library pointing at `/storage/...`
 7. Run a small scan before a full library scan
 
@@ -42,7 +42,7 @@
 Library volume persists old theme files. After every code deploy:
 
 1. `docker compose build --no-cache && docker compose up -d`
-2. Watch logs for theme sync / `[OK] Default theme`
+2. Watch logs for theme sync / `[OK] Default theme` / token presence
 3. Admin → Themes → **Reset Default Themes** (or delete `themes/default` under the library volume and restart)
 
 Also confirm `member-app.css` loads in the browser (View Source on Discover/Library). Missing CSS means a rebuild is required — the SPA chrome will look unstyled without it.
@@ -53,15 +53,18 @@ Also confirm `member-app.css` loads in the browser (View Source on Discover/Libr
 - Indirect Compose File: `/mnt/user/isos/gametheca/docker-compose.yml`
 - Indirect Path: leave empty
 
-## Smoke checklist (chrome rewrite)
+## Smoke checklist (Style B+C + Systems)
 
-1. First-boot logs show `[OK] Theme tokens present` (or Reset Default Themes)
-2. Discover/Library: View Source includes `member-app.css` and `member-app.js`
-3. Apply Ocean/Forest — accent + surfaces recolour; hard refresh
-4. Preferences swatch grid responds; page reloads after save
-5. Tile grid is dense (small gaps); XL tiles fill the grid cells
-6. Covers show for games with downloaded images (fallback only when truly missing)
-7. Admin pages: top bar only — **no** member left sidebar
-8. `/admin/settings` card grid one-click; Arr/AI toggles + hub badges
-9. Collections: create, search-add, reorder, edit, delete
+1. First-boot logs show theme tokens OK (or Reset Default Themes after `GENERATOR_VERSION` 6)
+2. Discover/Library: View Source includes **`member-app.css`** and `member-app.js`
+3. Admin pages: View Source includes **`admin-app.css`** and `admin-app.js` (React admin SPA)
+4. Default accent reads **green `#2fd67b`** (not teal/orange); Ocean/Forest still recolour — hard refresh
+5. Top nav only on member pages (Discover, Library, **Systems**, Downloads, Favorites, More)
+6. **Systems** (`/systems`): family groups load; click a console → library filtered with platform skin
+7. Preferences swatch grid responds; page reloads after save; tile size changes grid density
+8. Covers show for games with downloaded images (fallback only when truly missing)
+9. Admin: React top bar — no member left sidebar; Dashboard / Libraries / Settings work
+10. `/admin/settings` card grid; Themes → Reset Default Themes after rebuild
+11. Collections: create, search-add, reorder, edit, delete
 
+See also [docker-compose-deploy.md](docker-compose-deploy.md).

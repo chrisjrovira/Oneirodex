@@ -1,5 +1,8 @@
 import { invoke } from '@tauri-apps/api/core'
 
+import { formatBearerAuthorization } from '@gametheca/api-client'
+
+import type { AuthStore } from './auth.js'
 import {
   createLifecycleRegistry,
   isGameLifecycleState,
@@ -59,6 +62,35 @@ export async function saveLifecycleRegistryToDisk(records: GameLifecycleRecord[]
   })
 }
 
+/** Push local install states so the web library can show Install/Installed/filter. */
+export async function syncLifecycleRegistryToServer(
+  auth: AuthStore,
+  records: GameLifecycleRecord[],
+  fetchImpl: typeof fetch = fetch,
+): Promise<void> {
+  const baseUrl = auth.getBaseUrl()
+  const token = auth.getToken()
+  if (!baseUrl || !token) {
+    return
+  }
+
+  try {
+    const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/api/client/lifecycle`, {
+      method: 'POST',
+      headers: {
+        Authorization: formatBearerAuthorization(token),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ records: toRawRecords(records) }),
+    })
+    if (!response.ok) {
+      console.warn(`[lifecycle] sync failed: ${response.status}`)
+    }
+  } catch (err) {
+    console.warn('[lifecycle] sync error', err)
+  }
+}
+
 export interface PersistedLifecycleRegistryOptions {
   initial?: GameLifecycleRecord[]
   persist?: (records: GameLifecycleRecord[]) => void | Promise<void>
@@ -77,11 +109,18 @@ export function createPersistedLifecycleRegistry(
   return registry
 }
 
-export async function hydrateLifecycleRegistry(): Promise<LifecycleRegistry> {
+export async function hydrateLifecycleRegistry(
+  auth?: AuthStore,
+): Promise<LifecycleRegistry> {
   const initial = await loadLifecycleRegistryFromDisk()
   return createPersistedLifecycleRegistry({
     initial,
-    persist: saveLifecycleRegistryToDisk,
+    persist: async (records) => {
+      await saveLifecycleRegistryToDisk(records)
+      if (auth) {
+        await syncLifecycleRegistryToServer(auth, records)
+      }
+    },
   })
 }
 

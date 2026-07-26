@@ -46,6 +46,7 @@ def web_lifecycle_fields(
     updates_count: int | None = None,
     user_id: int | None = None,
     client_connected: bool | None = None,
+    client_state: str | None = None,
 ) -> dict[str, Any]:
     """Shared lifecycle/client fields for GameCard and GameActionBar."""
     connected = (
@@ -53,7 +54,17 @@ def web_lifecycle_fields(
         if client_connected is not None
         else web_client_connected(user_id=user_id)
     )
+    has_updates = game_has_updates_available(game, updates_count=updates_count)
+    state = web_lifecycle_state(game, updates_count=updates_count)
+    # Companion install state wins when present (except store-behind → update_available).
+    if client_state in {'downloaded', 'installed', 'update_available', 'not_downloaded'}:
+        if has_updates and client_state in {'downloaded', 'installed'}:
+            state = 'update_available'
+        else:
+            state = client_state
     return {
-        'lifecycle_state': web_lifecycle_state(game, updates_count=updates_count),
+        'lifecycle_state': state,
         'client_connected': connected,
+        'has_updates': has_updates,
+        'updates_count': int(updates_count or 0),
     }

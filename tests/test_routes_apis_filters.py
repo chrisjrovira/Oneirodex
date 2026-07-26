@@ -282,6 +282,8 @@ class TestFiltersAPISuccessful:
         nes = next(item for item in data if item['value'] == 'NES')
         assert nes['name'] == LibraryPlatform.NES.value
         assert nes['id'] == 'NES'
+        assert 'game_count' in nes
+        assert isinstance(nes['game_count'], int)
 
     def test_get_igdb_platforms_used_only(self, client, regular_user, db_session):
         from gametheca.models import Library, Game, Platform

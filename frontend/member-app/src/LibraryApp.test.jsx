@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { LibraryApp } from './LibraryApp'
 
 function jsonResponse(body) {
@@ -7,6 +8,10 @@ function jsonResponse(body) {
     ok: true,
     json: () => Promise.resolve(body),
   })
+}
+
+function renderLibrary(ui, { route = '/library' } = {}) {
+  return render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>)
 }
 
 test('page flip replaces cards and does not duplicate grid roots', async () => {
@@ -36,7 +41,7 @@ test('page flip replaces cards and does not duplicate grid roots', async () => {
   })
   vi.stubGlobal('fetch', fetchMock)
 
-  render(
+  renderLibrary(
     <LibraryApp
       initialConfig={{
         perPage: 20,
@@ -73,7 +78,7 @@ test('renders filter bar into the sidebar mount when present', async () => {
   })
   vi.stubGlobal('fetch', fetchMock)
 
-  const { container } = render(
+  const { container } = renderLibrary(
     <LibraryApp
       initialConfig={{
         perPage: 20,
@@ -116,7 +121,7 @@ test('page change closes an open card menu before the next page loads', async ()
   })
   vi.stubGlobal('fetch', fetchMock)
 
-  render(
+  renderLibrary(
     <LibraryApp
       initialConfig={{
         perPage: 20,

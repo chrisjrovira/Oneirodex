@@ -47,6 +47,7 @@ export function GameCard({
   discordConfigured = false,
   discordManualTrigger = false,
   onToggleFavorite,
+  hidePlatformChip = false,
 }) {
   const cardRef = useRef(null)
   const [isFavorite, setIsFavorite] = useState(Boolean(game.is_favorite))
@@ -58,6 +59,10 @@ export function GameCard({
   const [imgSrc, setImgSrc] = useState(() => coverUrl(game.cover_url))
   const currentStatus = statusConfig(status)
   const igdbUrl = safeHttpUrl(game.url)
+  const steamAppId = game.steam_app_id ? Number(game.steam_app_id) : null
+  const steamStoreUrl = safeHttpUrl(game.steam_url) || (steamAppId ? `https://store.steampowered.com/app/${steamAppId}` : null)
+  const steamRunUrl = steamAppId ? `steam://run/${steamAppId}` : null
+  const playDemoHref = game.play_url || game.demo_url || null
   const showDiscord =
     isAdmin && discordConfigured && discordManualTrigger
 
@@ -240,7 +245,33 @@ export function GameCard({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Open IGDB Page
+                  Open catalog page
+                </a>
+              </div>
+            )}
+            {steamStoreUrl && (
+              <div className="menu-item">
+                <a
+                  className="menu-button"
+                  href={steamStoreUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open in Steam store
+                </a>
+              </div>
+            )}
+            {steamRunUrl && (
+              <div className="menu-item">
+                <a className="menu-button" href={steamRunUrl}>
+                  Launch via Steam
+                </a>
+              </div>
+            )}
+            {playDemoHref && (
+              <div className="menu-item">
+                <a className="menu-button" href={playDemoHref}>
+                  Play demo
                 </a>
               </div>
             )}
@@ -333,10 +364,28 @@ export function GameCard({
           />
         </a>
 
+        {!hidePlatformChip && game.library_platform ? (
+          <span className="gt-platform-chip" title={game.library_platform_label || game.library_platform}>
+            {game.library_platform_label || game.library_platform}
+          </span>
+        ) : null}
+
+        {playDemoHref ? (
+          <a
+            className="gt-tile-play"
+            href={playDemoHref}
+            title="Play in browser"
+            aria-label={`Play ${game.name} in browser`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            Play
+          </a>
+        ) : null}
+
         <BadgeStack
           game={game}
-          preferredCorner="bottom-left"
-          collidesWithTitle={Boolean(game.badge_title_collision)}
+          preferredCorner="bottom-right"
+          collidesWithTitle={Boolean(game.badge_title_collision) || Boolean(game.library_platform)}
         />
       </div>
     </div>

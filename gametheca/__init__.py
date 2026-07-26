@@ -19,8 +19,9 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
 cache = Cache(config={'CACHE_TYPE': 'SimpleCache'})
+csrf = CSRFProtect()
 app_start_time = datetime.now()
-app_version = '2.9.8'
+app_version = '0.2.0'
 
 
 def create_app():
@@ -43,7 +44,7 @@ def create_app():
         
         print(f"🧪 PYTEST MODE: Using database: {app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')}")
     
-    CSRFProtect(app)
+    csrf.init_app(app)
     apply_proxy_fix(app)
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/library')
 
@@ -152,6 +153,13 @@ def create_app():
     app.register_blueprint(info_bp)
     app.register_blueprint(apis_bp)
     app.register_blueprint(arr_bp)
+
+    # Companion desktop uses Bearer tokens without a browser CSRF cookie.
+    from gametheca.routes_apis import client as client_api
+
+    csrf.exempt(client_api.client_heartbeat)
+    csrf.exempt(client_api.client_lifecycle_get)
+    csrf.exempt(client_api.client_lifecycle_post)
 
     with app.app_context():
         # Database initialization is handled by the InitializationManager before workers start

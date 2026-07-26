@@ -133,9 +133,9 @@ class TestPresetGeneration:
         install_preset_themes(str(themes_root), str(source_tree))
 
         base = read(str(themes_root / 'ember' / 'css' / 'base.css'))
-        assert '--btn-primary: #f59e0b;' in base
-        assert '--btn-primary-hover: #d97706;' in base
-        assert '--bg-dark-40: rgba(28, 18, 12, 0.94);' in base
+        assert '--btn-primary: #f472b6;' in base
+        assert '--btn-primary-hover: #ec4899;' in base
+        assert '--bg-dark-40: rgba(28, 10, 22, 0.94);' in base
 
     def test_shared_files_are_copied_verbatim(self, source_tree, themes_root):
         install_preset_themes(str(themes_root), str(source_tree))

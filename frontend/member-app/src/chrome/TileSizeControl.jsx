@@ -16,6 +16,8 @@ export function TileSizeControl({
   onChange,
   shellConfig = {},
 }) {
+  const index = Math.max(0, SIZES.indexOf(value))
+
   async function handleSelect(size) {
     if (size === value) {
       return
@@ -34,18 +36,21 @@ export function TileSizeControl({
   }
 
   return (
-    <div className="gt-tile-size" role="group" aria-label="Tile size">
-      {SIZES.map((size) => (
-        <button
-          key={size}
-          type="button"
-          className={`gt-tile-size__btn${value === size ? ' is-active' : ''}`}
-          aria-pressed={value === size}
-          onClick={() => handleSelect(size)}
-        >
-          {size}
-        </button>
-      ))}
+    <div className="gt-tile-size" role="group" aria-label="Library tile size">
+      <span className="gt-tile-size__label" aria-hidden="true">
+        {SIZES[index]}
+      </span>
+      <input
+        type="range"
+        className="gt-tile-size__slider"
+        min={0}
+        max={SIZES.length - 1}
+        step={1}
+        value={index}
+        aria-valuetext={SIZES[index]}
+        aria-label="Library tile size"
+        onChange={(event) => handleSelect(SIZES[Number(event.target.value)])}
+      />
     </div>
   )
 }

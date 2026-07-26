@@ -5,37 +5,47 @@ const FAQ_SECTIONS = [
     id: 'getting-started',
     title: 'Getting Started',
     items: [
-      'Navigate through the library using the sidebar menu',
-      'Press any key to start searching, to quickly find specific games',
-      'Apply filters to narrow down your search by genre, platform, or release date',
-      'Click on any game to view detailed information, screenshots, and download options',
+      'Use the top navigation for Discover, Library, Systems, Downloads, and Favorites.',
+      'Open More for Collections, Wishlist, Ownership, Big Picture, and other hubs.',
+      'Press any key on Library to focus search, then filter by genre, platform, or release date.',
+      'Click a cover to open game details, screenshots, and download options.',
+    ],
+  },
+  {
+    id: 'systems',
+    title: 'Systems & themes',
+    items: [
+      'Open Systems to browse by console or PC; each tile filters the library to that platform.',
+      'Inside a system, chrome accents and button motion follow that console family (Nintendo, Sony, Xbox, Sega, Retro, PC).',
+      'All-library / global search keeps the default green glass look.',
+      'Change themes in Preferences; after apply, hard-refresh so volume CSS loads.',
     ],
   },
   {
     id: 'downloads',
     title: 'Downloads',
     items: [
-      'Click the download button on any game page to start the download process',
-      'Some downloads will require processing time as they are being zipped on the server',
-      'Track your download progress in the Downloads section',
-      'Downloaded files are available until you (or the admin) remove them from the list',
+      'Use Download on a game page to start a zip on the server.',
+      'Some downloads need processing time before the file is ready.',
+      'Track progress under Downloads in the top nav.',
+      'Files stay available until you or an admin remove them.',
     ],
   },
   {
     id: 'library',
     title: 'Your Library',
     items: [
-      'Add games to your favorites by clicking the heart icon',
-      'Access your favorite games quickly from the sidebar',
-      'View your download history in the Downloads section',
-      'Customize your experience through the user preferences panel',
+      'Favorite games with the heart on a cover tile.',
+      'Open Favorites from the top nav for a quick shelf.',
+      'Adjust tile size from the control in the page header or top nav.',
+      'Customize accent themes and display options in Preferences (account menu).',
     ],
   },
   {
     id: 'support',
     title: 'Need Help?',
     items: [
-      'If you need additional assistance or encounter any issues, report technical problems on the GitHub repo: https://github.com/chrisjrovira/gametheca',
+      'Report technical problems on the GitHub repo: https://github.com/chrisjrovira/gametheca',
     ],
   },
 ]
@@ -60,7 +70,7 @@ export function HelpPage() {
       <div className="gt-page-header">
         <h1>Help & FAQ</h1>
       </div>
-      <p className="gt-more-page__lede">Your complete guide to using GameTheca</p>
+      <p className="gt-more-page__lede">Your guide to the GameTheca member library</p>
 
       <div className="gt-help__sections">
         {FAQ_SECTIONS.map((section) => {
@@ -78,8 +88,8 @@ export function HelpPage() {
               </h2>
               {open ? (
                 <ul>
-                  {section.items.map((text) => (
-                    <li key={text}>{text}</li>
+                  {section.items.map((item) => (
+                    <li key={item}>{item}</li>
                   ))}
                 </ul>
               ) : null}

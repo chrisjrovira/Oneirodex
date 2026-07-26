@@ -1,8 +1,8 @@
-﻿import { getPrimaryLinks, getMoreLinks } from './navConfig'
+﻿import { getContextLinks, getPrimaryLinks, getMoreLinks } from './navConfig'
 
 test('primary links are locked set', () => {
   expect(getPrimaryLinks().map((l) => l.id)).toEqual([
-    'discover', 'library', 'downloads', 'favorites', 'admin',
+    'discover', 'library', 'systems', 'downloads', 'favorites', 'admin',
   ])
 })
 
@@ -45,4 +45,17 @@ test('optional more links omitted when flags false', () => {
   expect(ids).not.toContain('vr')
   expect(ids).not.toContain('trailers')
   expect(ids).not.toContain('help')
+})
+
+test('context links always include Home and Admin when admin', () => {
+  const links = getContextLinks('/updates', { isAdmin: true })
+  expect(links.map((l) => l.id)).toEqual(['home', 'section', 'admin-home'])
+  expect(links[0].to).toBe('/discover')
+  expect(links[1].to).toBe('/updates')
+  expect(links[2].href).toBe('/admin/dashboard')
+})
+
+test('context links omit Admin for members', () => {
+  const links = getContextLinks('/library', { isAdmin: false })
+  expect(links.map((l) => l.id)).toEqual(['home', 'section'])
 })

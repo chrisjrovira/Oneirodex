@@ -23,3 +23,13 @@ def test_entrypoint_warns_on_missing_member_app_css():
     sh = (ROOT / 'entrypoint.sh').read_text(encoding='utf-8')
     assert 'member-app.css' in sh
     assert 'gt-tokens.css' in sh
+
+
+def test_default_accent_is_green():
+    tokens = (
+        ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / 'gt-tokens.css'
+    ).read_text(encoding='utf-8')
+    assert '--gt-accent: #2fd67b;' in tokens
+    assert '--gt-glass-bg:' in tokens
+    assert '--gt-platform-accent:' in tokens
+    assert '--gt-tile-gap:' in tokens

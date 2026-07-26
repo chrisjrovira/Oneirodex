@@ -1,4 +1,4 @@
-"""DB-free guards for Phase 3 admin chrome shell."""
+"""DB-free guards for React admin SPA shell (base_admin)."""
 
 from pathlib import Path
 
@@ -13,33 +13,17 @@ def test_base_admin_exists_without_member_sidebar():
     assert BASE_ADMIN.is_file()
     text = BASE_ADMIN.read_text(encoding='utf-8')
     assert 'id="sidebar"' not in text
-    assert 'admin-shell' in text
-    assert 'admin-topbar' in text
-    assert 'id="content"' in text
+    assert 'admin-app-root' in text
+    assert 'admin-legacy-content' in text
+    assert 'dist/admin-app/admin-app.js' in text
+    assert 'dist/admin-app/admin-app.css' in text
 
 
-def test_base_admin_has_top_nav_links():
+def test_base_admin_loads_spa_assets():
     text = BASE_ADMIN.read_text(encoding='utf-8')
-    expected = (
-        "url_for('site.admin_dashboard')",
-        "url_for('library.libraries')",
-        "url_for('main.scan_management')",
-        "url_for('admin2.settings')",
-        "url_for('admin2.manage_users')",
-        "url_for('admin2.integrations')",
-        "url_for('info.admin_ops')",
-        "url_for('library.library')",
-    )
-    for needle in expected:
-        assert needle in text, f'missing nav endpoint: {needle}'
-    assert 'Dashboard' in text
-    assert 'Libraries' in text
-    assert 'Scans' in text
-    assert 'Settings' in text
-    assert 'Users' in text
-    assert 'Integrations' in text
-    assert 'System' in text
-    assert 'Back to library' in text
+    assert 'admin-spa' in text
+    assert 'gametheca_mark.svg' in text
+    assert 'csrf-token' in text
 
 
 def test_admin_dashboard_extends_base_admin():
@@ -59,11 +43,7 @@ def test_no_hardcoded_default_theme_js_in_admin_templates():
     assert remaining == [], f'hardcoded theme paths remain in: {remaining}'
 
 
-def test_admin_shell_css_exists_and_is_linked():
-    css = ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / 'admin' / 'admin-shell.css'
-    assert css.is_file()
-    shell = css.read_text(encoding='utf-8')
-    assert '.admin-topbar' in shell
-    assert '--gt-text-muted' in shell
-    base = BASE_ADMIN.read_text(encoding='utf-8')
-    assert "css/admin/admin-shell.css'|theme_asset" in base
+def test_admin_app_package_exists():
+    pkg = ROOT / 'frontend' / 'admin-app' / 'package.json'
+    assert pkg.is_file()
+    assert 'admin-app' in pkg.read_text(encoding='utf-8')

@@ -1,8 +1,10 @@
 ﻿import { useEffect, useState } from 'react'
 import { fetchAnnouncements } from '../api/announcements'
+import { fetchGamingNews } from '../api/gamingNews'
 
 export function NewsPage() {
   const [announcements, setAnnouncements] = useState(null)
+  const [headlines, setHeadlines] = useState(null)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
 
@@ -11,12 +13,20 @@ export function NewsPage() {
     let active = true
     setError(null)
     setAnnouncements(null)
+    setHeadlines(null)
 
-    fetchAnnouncements({ signal: controller.signal })
-      .then((data) => {
-        if (active) {
-          setAnnouncements(Array.isArray(data.announcements) ? data.announcements : [])
+    Promise.all([
+      fetchAnnouncements({ signal: controller.signal }),
+      fetchGamingNews({ signal: controller.signal }).catch(() => ({ items: [] })),
+    ])
+      .then(([announceData, newsData]) => {
+        if (!active) {
+          return
         }
+        setAnnouncements(
+          Array.isArray(announceData.announcements) ? announceData.announcements : [],
+        )
+        setHeadlines(Array.isArray(newsData.items) ? newsData.items : [])
       })
       .catch((err) => {
         if (active && err.name !== 'AbortError') {
@@ -35,7 +45,9 @@ export function NewsPage() {
       <div className="gt-page-header">
         <h1>News</h1>
       </div>
-      <p className="gt-more-page__lede">Announcements from your GameTheca admins.</p>
+      <p className="gt-more-page__lede">
+        Admin announcements plus top gaming headlines from the web.
+      </p>
 
       {error ? (
         <div role="alert">
@@ -48,26 +60,54 @@ export function NewsPage() {
 
       {!error && !announcements ? <p>Loading…</p> : null}
 
-      {!error && announcements && announcements.length === 0 ? (
-        <p>No announcements yet.</p>
+      {!error && announcements ? (
+        <section className="gt-news__section">
+          <h2>From your admins</h2>
+          {announcements.length === 0 ? <p>No announcements yet.</p> : null}
+          {announcements.length > 0 ? (
+            <ul className="gt-news__list">
+              {announcements.map((item) => (
+                <li key={item.id} className="gt-news__card">
+                  <article>
+                    <strong>{item.title}</strong>
+                    <p>{item.body}</p>
+                    {item.created_at ? (
+                      <time dateTime={item.created_at}>
+                        {String(item.created_at).slice(0, 10)}
+                      </time>
+                    ) : null}
+                  </article>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
       ) : null}
 
-      {!error && announcements && announcements.length > 0 ? (
-        <ul className="gt-news__list">
-          {announcements.map((item) => (
-            <li key={item.id} className="gt-news__card">
-              <article>
-                <strong>{item.title}</strong>
-                <p>{item.body}</p>
-                {item.created_at ? (
-                  <time dateTime={item.created_at}>
-                    {String(item.created_at).slice(0, 10)}
-                  </time>
-                ) : null}
-              </article>
-            </li>
-          ))}
-        </ul>
+      {!error && headlines ? (
+        <section className="gt-news__section">
+          <h2>Gaming headlines</h2>
+          {headlines.length === 0 ? (
+            <p>No external headlines available right now.</p>
+          ) : (
+            <ul className="gt-news__list">
+              {headlines.map((item) => (
+                <li key={item.url} className="gt-news__card">
+                  <article>
+                    <a href={item.url} target="_blank" rel="noreferrer">
+                      <strong>{item.title}</strong>
+                    </a>
+                    {item.summary ? <p>{item.summary}</p> : null}
+                    <p className="gt-news__meta">
+                      <span>{item.source}</span>
+                      {item.published_at ? <time>{String(item.published_at).slice(0, 16)}</time> : null}
+                    </p>
+                  </article>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       ) : null}
     </div>
   )

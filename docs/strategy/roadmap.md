@@ -1,8 +1,15 @@
 # GameTheca Product Roadmap
 
-**Date:** 2026-07-23  
+**Date:** 2026-07-23 · **Updated:** 2026-07-26  
 **Horizon:** ~12 months from baseline  
 **Sources:** `competitive.md`, `features.md`, `ui.md`
+
+## Near-term program (Jul 26) — Systems + Admin SPA
+
+Member chrome is largely locked: top nav, Systems hub, green glass B+C (`#2fd67b`). Next execution track is **React admin SPA** (shell → migrate all Jinja admin surfaces → verify), after brand/docs waves on the program board canvas:
+`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
+
+See [progress.md](progress.md) for Jul 26 status.
 
 ## Product north star
 

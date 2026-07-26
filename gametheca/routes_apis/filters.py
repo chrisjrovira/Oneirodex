@@ -3,10 +3,9 @@ from typing import Tuple, List, Dict, Any, Type
 from flask import jsonify, Response
 from flask_login import login_required
 from gametheca.models import Genre, Theme, GameMode, PlayerPerspective, Library, Platform, Game
-from gametheca.platform import LibraryPlatform
 from gametheca import db
 from gametheca.utils.event_logging import log_system_event
-from sqlalchemy import select, distinct
+from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 from . import apis_bp
 
@@ -102,19 +101,25 @@ def get_player_perspectives() -> Tuple[Response, int]:
 @login_required
 def get_library_platforms():
     try:
-        platforms = db.session.execute(
-            select(distinct(Library.platform)).order_by(Library.platform.asc())
-        ).scalars().all()
-        data = []
-        for p in platforms:
-            if p is None:
+        count_rows = db.session.execute(
+            select(Library.platform, func.count(Game.id))
+            .outerjoin(Game, Game.library_uuid == Library.uuid)
+            .group_by(Library.platform)
+        ).all()
+        counts = {}
+        for platform, game_count in count_rows:
+            if platform is None:
                 continue
+            counts[platform] = counts.get(platform, 0) + int(game_count or 0)
+
+        data = []
+        for p, game_count in sorted(counts.items(), key=lambda item: item[0].value.lower()):
             data.append({
                 'id': p.name,
                 'name': p.value,
                 'value': p.name,
+                'game_count': game_count,
             })
-        data.sort(key=lambda x: x['name'].lower())
         return jsonify(data), 200
     except SQLAlchemyError as e:
         log_system_event('filters_api', f'Database error fetching library_platforms: {str(e)}', 'error')

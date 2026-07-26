@@ -1,7 +1,7 @@
 ﻿import { useEffect, useId, useRef, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { IconMenu, IconMore, IconUser, primaryIconById } from './icons'
-import { getMoreLinks, getPrimaryLinks } from './navConfig'
+import { getContextLinks, getMoreLinks, getPrimaryLinks } from './navConfig'
 import { openPreferencesModal } from '../api/preferences'
 import { TileSizeControl } from './TileSizeControl'
 import './TopNav.css'
@@ -55,6 +55,7 @@ export function TopNav({ shellConfig = {}, tileSize, onTileSizeChange }) {
     username = '',
   } = shellConfig
 
+  const { pathname } = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
@@ -64,6 +65,7 @@ export function TopNav({ shellConfig = {}, tileSize, onTileSizeChange }) {
 
   const primaryLinks = getPrimaryLinks().filter((link) => link.id !== 'admin' || isAdmin)
   const moreLinks = getMoreLinks({ showTrailers, showHelp, enableVr })
+  const contextLinks = getContextLinks(pathname, { isAdmin })
 
   function closeMenus() {
     setMoreOpen(false)
@@ -121,7 +123,14 @@ export function TopNav({ shellConfig = {}, tileSize, onTileSizeChange }) {
   return (
     <header className="gt-topnav" ref={rootRef}>
       <Link className="gt-topnav__brand" to="/discover" onClick={closeMobile}>
-        GameTheca
+        <img
+          className="gt-topnav__brand-mark"
+          src="/static/newstyle/gametheca_mark.svg"
+          alt=""
+          width={28}
+          height={28}
+        />
+        <span>GameTheca</span>
       </Link>
 
       <button
@@ -147,6 +156,29 @@ export function TopNav({ shellConfig = {}, tileSize, onTileSizeChange }) {
         {primaryLinks.map((link) => (
           <PrimaryLink key={link.id} link={link} onNavigate={closeMobile} />
         ))}
+        <div className="gt-topnav__context" aria-label="Section">
+          {contextLinks.map((link) =>
+            link.external || link.href ? (
+              <a
+                key={link.id}
+                className="gt-topnav__context-link"
+                href={link.href || link.to}
+                onClick={closeMobile}
+              >
+                {link.label}
+              </a>
+            ) : (
+              <NavLink
+                key={link.id}
+                className="gt-topnav__context-link"
+                to={link.to}
+                onClick={closeMobile}
+              >
+                {link.label}
+              </NavLink>
+            ),
+          )}
+        </div>
         <div className="gt-topnav__spacer" />
 
         <div className="gt-topnav__tile-size">

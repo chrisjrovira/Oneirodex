@@ -1,7 +1,20 @@
 # UI Rebuild Plan — Sleeker GameTheca
 
-**Date:** 2026-07-23  
+**Date:** 2026-07-23 · **Updated:** 2026-07-26  
 **Drivers:** Mixed Jinja + React islands, admin page sprawl, peer UX bar set by GameVault/Drop/Playnite/LaunchBox Big Box.
+
+## Current product chrome (Jul 26)
+
+| Surface | State |
+|---|---|
+| Member SPA | Vite React app (`frontend/member-app`), **top nav** (no left sidebar), glass Style **B+C** |
+| Accent | Default **`#2fd67b`** green (not teal); `GENERATOR_VERSION` **6** regenerates preset tokens |
+| Systems hub | `/systems` — browse-by-console families + platform skins |
+| Admin | **`base_admin.html`** Jinja top bar (~38 pages); **React admin SPA in progress** (`frontend/admin-app` target) |
+| Required asset | Built `member-app.css` (+ `member-app.js`) must ship in image/dist — SPA chrome is unstyled without it |
+
+Program board: Cursor canvas  
+`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
 
 ## Principles
 
@@ -10,20 +23,21 @@
 3. **Progressive migration** — no big-bang rewrite; replace surfaces by traffic  
 4. **Controller-first optional shell** — Big Picture mode without forcing desktop users into it  
 5. **Admin ≠ user chrome** — ops density for admins; cinematic browse for members  
-6. Stay on-brand (GameTheca teal) but avoid AI-slop purple/glow/card spam
+6. Stay on-brand (GameTheca **green** glass) but avoid AI-slop purple/glow/card spam
 
 ## Target information architecture
 
 ```
-/app                  Member shell (React SPA or hybrid)
+/app                  Member shell (React SPA — shipping)
+  /discover           Shelves / discovery
   /library            Grid + filters + virtualized scroll
-  /discover           Shelves / collections / trailers
+  /systems            Console/family hub (Style B+C)
   /game/:uuid         Details (path, freshness, versions, Download/Install/Update/Uninstall)
   /updates            Freshness inbox + requests
   /downloads          Queue + history (+ install status when client connected)
   /profile            Playtime, status, prefs, devices
 
-/admin                Admin shell (React)
+/admin                Admin shell (Jinja today → React SPA)
   /overview           Ops glance (exists — expand)
   /libraries          Scan, depth, refresh, doctor
   /recognition        Unmatched, proposals, identify
@@ -33,22 +47,25 @@
   /system             Logs, settings, health, backups
 ```
 
-Legacy Jinja routes remain as redirects during migration.
+Legacy Jinja member hubs retired; admin Jinja routes remain until SPA parity, then redirect.
 
 ## Visual system
 
 | Token | Direction |
 |---|---|
 | Type | Distinct display + readable body (not Inter/Roboto defaults) |
-| Color | Existing GameTheca teal accent; deep slate surfaces; theme presets remain |
+| Color | Default accent **`#2fd67b`**; deep slate surfaces; glass (`--gt-glass-*`); theme presets remain |
 | Layout | Full-bleed hero only on Discover/Attract; library is dense grid, not card farm |
 | Motion | 2–3 purposeful transitions (shelf scroll, details cover, download progress) |
 | Density | Member: airy; Admin: compact tables |
 
+See [dev/ui-wave0-tokens.md](../dev/ui-wave0-tokens.md).
+
 ## Component inventory (build first)
 
-- `AppShell` (LHN + topbar + command palette)  
+- `AppShell` (top nav + More menu + command palette) — member top nav shipped  
 - `LibraryGrid` (evolve existing React app)  
+- `SystemsHub` — shipped (`/systems`)  
 - `FilterRail` / chip bar  
 - `GameHero` + `PathBanner` (disk path always visible for admins)  
 - **`BadgeStack`** — overlay badges on title/cover cards (see Badge system)  
@@ -58,7 +75,8 @@ Legacy Jinja routes remain as redirects during migration.
 - `ScanJobTimeline`  
 - `IdentifyWorkbench` (multi-scanner)  
 - `OpsStatStrip`  
-- `BigPictureShell` (fullscreen)
+- `BigPictureShell` (fullscreen)  
+- **Admin `AppShell`** — React SPA (program Wave 3)
 
 ## Badge system (Netflix / Roku-inspired)
 
@@ -111,20 +129,22 @@ State machine per game/user: `not_downloaded` → `downloaded` → `installed` �
 - Command palette (Ctrl+K) for games + admin jumps  
 - **`BadgeStack` prototype** on library-grid covers (static NEW/UPDATE fixtures)
 
-### Wave 1 — Library & details (3–4 weeks)
-- Finish React library as default; retire `library_browser.html`  
-- Rebuild `game_details` as React island or full page  
+### Wave 1 — Library & details (3–4 weeks) — largely shipped
+- React library as default member browse; retire Jinja library hubs  
+- Rebuild `game_details` as React island or full page (still hybrid)  
 - Surface folder path, versions, freshness, HLTB  
 - **`GameActionBar`** with Download live; Install/Update/Uninstall gated until client  
 - Wire real badge signals (new import, freshness, updates)
 
-### Wave 2 — Member chrome (2–3 weeks)
-- Discover + collections + trailers under one shell  
+### Wave 2 — Member chrome (2–3 weeks) — largely shipped
+- Discover + collections + trailers under one SPA shell  
+- Top nav + Systems hub + green glass Style B+C  
 - Downloads queue UX (pause/resume when client exists)  
-- Preferences / theme picker redesigned (show all 10 presets with swatches)  
+- Preferences / theme picker (presets with swatches; `GENERATOR_VERSION` 6)  
 - Badge filter chips (“New”, “Updates”, “Releases”)
 
-### Wave 3 — Admin consolidation (4–5 weeks)
+### Wave 3 — Admin consolidation / React SPA (active program)
+- New `frontend/admin-app` on `/admin/*`; progressive Jinja redirects  
 - Collapse duplicate settings pages into Integrations + System  
 - Library Tools + Scan + Unmatched → Recognition hub  
 - Ops glance becomes home dashboard with health + scan + freshness widgets  
@@ -159,4 +179,4 @@ State machine per game/user: `not_downloaded` → `downloaded` → `installed` �
 - Badges readable on light and dark covers; &lt;5% title occlusion in spot checks  
 - Admin scan start &lt; 2 clicks from Ops home  
 - Lighthouse / a11y baseline on library + details  
-- Zero dual-maintained CSS for the same component after Wave 3
+- Zero dual-maintained CSS for the same component after Wave 3 SPA complete

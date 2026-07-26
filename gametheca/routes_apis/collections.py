@@ -274,3 +274,14 @@ def create_announcement():
     db.session.add(row)
     db.session.commit()
     return jsonify(row.to_dict()), 201
+
+
+@apis_bp.route('/news/gaming', methods=['GET'])
+@login_required
+def gaming_news_feed():
+    """Best-effort top gaming headlines from public RSS feeds."""
+    from gametheca.utils.gaming_news import fetch_gaming_headlines
+
+    limit = request.args.get('limit', 12, type=int)
+    items = fetch_gaming_headlines(limit=max(1, min(limit or 12, 30)))
+    return jsonify({'items': items})

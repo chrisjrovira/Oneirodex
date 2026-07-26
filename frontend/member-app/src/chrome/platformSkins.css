@@ -1,0 +1,72 @@
+/* Platform-reactive chrome — accents + motion keyed by data-platform-family. */
+
+:root {
+  --gt-platform-accent: var(--gt-accent);
+}
+
+[data-platform-family] .gt-btn,
+[data-platform-family] .gt-topnav__link.is-active,
+[data-platform-family] .gt-systems-tile {
+  --gt-btn-accent: var(--gt-platform-accent, var(--gt-accent));
+}
+
+[data-platform-family] .gt-topnav {
+  border-bottom-color: color-mix(in srgb, var(--gt-platform-accent) 40%, transparent);
+}
+
+[data-platform-family] .gt-topnav .gt-icon {
+  color: var(--gt-platform-accent);
+}
+
+/* Motion variants (disabled when reduced-motion). */
+@media (prefers-reduced-motion: no-preference) {
+  [data-platform-motion='pixel'] .gt-btn:hover,
+  [data-platform-motion='pixel'] .gt-systems-tile:hover {
+    box-shadow:
+      0 0 0 1px var(--gt-platform-accent),
+      2px 2px 0 color-mix(in srgb, var(--gt-platform-accent) 55%, transparent);
+    transform: translate(-1px, -1px);
+  }
+
+  [data-platform-motion='sheen'] .gt-btn,
+  [data-platform-motion='sheen'] .gt-systems-tile {
+    background-image: linear-gradient(
+      120deg,
+      transparent 30%,
+      color-mix(in srgb, white 22%, transparent) 50%,
+      transparent 70%
+    );
+    background-size: 200% 100%;
+    background-position: 100% 0;
+  }
+
+  [data-platform-motion='sheen'] .gt-btn:hover,
+  [data-platform-motion='sheen'] .gt-systems-tile:hover {
+    background-position: 0 0;
+    transition: background-position 0.45s ease;
+  }
+
+  [data-platform-motion='pulse'] .gt-btn:hover,
+  [data-platform-motion='pulse'] .gt-systems-tile:hover {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gt-platform-accent) 35%, transparent);
+  }
+
+  [data-platform-motion='bounce'] .gt-btn:hover,
+  [data-platform-motion='bounce'] .gt-systems-tile:hover {
+    transform: translateY(-2px);
+  }
+
+  [data-platform-motion='crt'] .gt-btn:hover,
+  [data-platform-motion='crt'] .gt-systems-tile:hover {
+    filter: contrast(1.05) brightness(1.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-platform-motion] .gt-btn,
+  [data-platform-motion] .gt-systems-tile {
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}

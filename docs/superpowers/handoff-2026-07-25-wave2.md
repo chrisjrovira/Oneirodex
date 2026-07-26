@@ -3,6 +3,11 @@
 Read this first if you are picking up cold. It is written for a new agent
 with no prior context.
 
+> **Superseded for planning (2026-07-26).** Use the Jul 26 program board canvas
+> instead of this handoff for priorities, gaps, and Admin SPA tracks:
+> `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
+> Historical Wave 2A/2B detail below remains useful for theme/pipeline context.
+
 ## State
 
 - Repo: `C:\Users\cephyrix_zyth\Desktop\gametheca`

@@ -133,11 +133,35 @@
 }
 
 .btn-pagination:hover:not(:disabled) {
-    background: var(--bg-light-overlay-hover);
-    border-color: var(--border-light-30);
+    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 22%, transparent);
+    border-color: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 55%, transparent);
+    color: var(--gt-text, var(--text-white));
     transform: translateY(-1px);
     box-shadow: var(--shadow-card);
 }
+
+.btn-pagination:focus-visible {
+    outline: 2px solid var(--gt-accent, var(--btn-primary));
+    outline-offset: 2px;
+}
+
+.dropdown-perpage:focus {
+    outline: none;
+    border-color: var(--gt-accent, var(--btn-primary));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 35%, transparent);
+}
+
+.gt-pagination__perpage {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.gt-pagination__label {
+    font-size: 0.85rem;
+    color: var(--gt-text-muted, var(--text-muted));
+}
+
 
 .btn-pagination:disabled {
     opacity: 0.4;
@@ -152,7 +176,7 @@
     color: var(--text-white);
     font-size: 14px;
     font-weight: 500;
-    var(--text-white)-space: nowrap;
+    white-space: nowrap;
     min-width: 80px;
     text-align: center;
 }
@@ -175,18 +199,12 @@
     border-color: var(--border-light-30);
 }
 
-.dropdown-perpage:focus {
-    outline: none;
-    border-color: var(--btn-info-hover);
-    box-shadow: 0 0 0 2px var(--primary-brand-25);
-}
-
 /* Legacy pagination compatibility */
 .pagination .page-link {
     padding-left: 3.8rem;
     padding-right: 3.8rem;
     background-color: var(--pagination-bg);
-    color: var(--text-white)fff;
+    color: var(--text-white);
     border: 1px solid var(--btn-dark);
 }
 

@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import { Outlet, Route, Routes } from 'react-router-dom'
-import { applyTileSizeCssVars, TileSizeControl } from './chrome/TileSizeControl'
+import { applyTileSizeCssVars } from './chrome/TileSizeControl'
 import { TopNav } from './chrome/TopNav'
 import { DiscoverApp } from './DiscoverApp'
 import { FavoritesApp } from './FavoritesApp'
@@ -18,7 +18,10 @@ import { TrailersPage } from './pages/TrailersPage'
 import { UpdatesPage } from './pages/UpdatesPage'
 import { VrPage } from './pages/VrPage'
 import { WishlistPage } from './pages/WishlistPage'
+import { SystemsPage } from './pages/SystemsPage'
 import './pages/MorePage.css'
+import './chrome/platformSkins.css'
+import './chrome/glass.css'
 
 function libraryInitialConfig(shellConfig) {
   return {
@@ -37,15 +40,10 @@ function libraryInitialConfig(shellConfig) {
   }
 }
 
-function PageHeader({ title, tileSize, onTileSizeChange, shellConfig }) {
+function PageHeader({ title }) {
   return (
     <div className="gt-page-header">
       <h1>{title}</h1>
-      <TileSizeControl
-        value={tileSize}
-        onChange={onTileSizeChange}
-        shellConfig={shellConfig}
-      />
     </div>
   )
 }
@@ -86,12 +84,7 @@ export function App({ shellConfig = {} }) {
           path="/discover"
           element={
             <>
-              <PageHeader
-                title="Discover"
-                tileSize={tileSize}
-                onTileSizeChange={setTileSize}
-                shellConfig={shellConfig}
-              />
+              <PageHeader title="Discover" />
               <DiscoverApp
                 sections={sections}
                 isAdmin={Boolean(shellConfig.isAdmin)}
@@ -104,12 +97,7 @@ export function App({ shellConfig = {} }) {
           path="/library"
           element={
             <>
-              <PageHeader
-                title="Library"
-                tileSize={tileSize}
-                onTileSizeChange={setTileSize}
-                shellConfig={shellConfig}
-              />
+              <PageHeader title="Library" />
               <LibraryApp
                 initialConfig={libraryInitialConfig(shellConfig)}
                 shellConfig={shellConfig}
@@ -117,16 +105,12 @@ export function App({ shellConfig = {} }) {
             </>
           }
         />
+        <Route path="/systems" element={<SystemsPage shellConfig={shellConfig} />} />
         <Route
           path="/favorites"
           element={
             <>
-              <PageHeader
-                title="Favorites"
-                tileSize={tileSize}
-                onTileSizeChange={setTileSize}
-                shellConfig={shellConfig}
-              />
+              <PageHeader title="Favorites" />
               <FavoritesApp
                 initialConfig={{
                   isAdmin: Boolean(shellConfig.isAdmin),

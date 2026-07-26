@@ -23,9 +23,9 @@
     --bg-transparent-5: rgba(255, 255, 255, 0.05);
 
 
-    /* Button Colors — teal accent (GameTheca) */
-    --btn-primary: #ff5a36;
-    --btn-primary-hover: #e04520;
+    /* Button Colors — Style B+C green accent */
+    --btn-primary: #2fd67b;
+    --btn-primary-hover: #22c55e;
     --gt-accent: var(--btn-primary);
     --btn-info: rgba(23, 162, 184, 0.5);
     --btn-success: #28a745;

@@ -9,6 +9,7 @@ export function GameGrid({
   discordConfigured = false,
   discordManualTrigger = false,
   onToggleFavorite,
+  hidePlatformChip = false,
 }) {
   return (
     <div className="game-library-container" data-library-grid>
@@ -22,6 +23,7 @@ export function GameGrid({
           discordConfigured={discordConfigured}
           discordManualTrigger={discordManualTrigger}
           onToggleFavorite={onToggleFavorite}
+          hidePlatformChip={hidePlatformChip}
         />
       ))}
     </div>

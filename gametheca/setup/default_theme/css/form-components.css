@@ -423,13 +423,13 @@ input[type="checkbox"] {
    'gt-accent' is PRESET_THEMES[*]['btn_primary']; the default theme's accent
    is --gt-accent in css/gt-tokens.css. tests/test_theme_swatch_colours.py
    reads both and fails if the values below drift out of sync. */
-.theme-swatch-default { background: #ff5a36; }
+.theme-swatch-default { background: #2fd67b; }
 .theme-swatch-aurora { background: #22d3ee; }
-.theme-swatch-ember { background: #f59e0b; }
+.theme-swatch-ember { background: #f472b6; }
 .theme-swatch-violet { background: #a78bfa; }
 .theme-swatch-forest { background: #4ade80; }
 .theme-swatch-ocean { background: #3b82f6; }
 .theme-swatch-rose { background: #fb7185; }
 .theme-swatch-mono { background: #94a3b8; }
-.theme-swatch-sunset { background: #fb923c; }
+.theme-swatch-sunset { background: #fbbf24; }
 .theme-swatch-ice { background: #7dd3fc; }

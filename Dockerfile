@@ -9,6 +9,13 @@ COPY frontend/member-app/ .
 RUN mkdir -p ../../gametheca/static/dist/member-app && npm run build
 
 WORKDIR /build
+COPY frontend/admin-app/package*.json frontend/admin-app/
+WORKDIR /build/frontend/admin-app
+RUN npm ci
+COPY frontend/admin-app/ .
+RUN mkdir -p ../../gametheca/static/dist/admin-app && npm run build
+
+WORKDIR /build
 COPY frontend/ops-glance/package*.json frontend/ops-glance/
 WORKDIR /build/frontend/ops-glance
 RUN npm ci
@@ -27,6 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY . .
 COPY --from=frontend-build /build/gametheca/static/dist/member-app /app/gametheca/static/dist/member-app
+COPY --from=frontend-build /build/gametheca/static/dist/admin-app /app/gametheca/static/dist/admin-app
 COPY --from=frontend-build /build/gametheca/static/dist/ops-glance /app/gametheca/static/dist/ops-glance
 
 RUN pip install -r requirements.txt

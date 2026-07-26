@@ -1,27 +1,72 @@
-import { capBadges, collectBadgeSignals, resolveBadgeCorner } from '../utils/badgeSignals'
+import { useMemo, useState } from 'react'
+import {
+  capBadges,
+  collectBadgeSignals,
+  resolveBadgeCorner,
+} from '../utils/badgeSignals'
+import {
+  clearDismissedBadges,
+  dismissBadge,
+  filterDismissedBadges,
+  listDismissedKinds,
+} from '../utils/badgeDismiss'
 
 /**
  * Netflix/Roku-style overlay badge stack for title cards.
- * Default corner: bottom-left; shifts when collidesWithTitle is set.
+ * Default corner: bottom-right (avoids platform chip); shifts when collidesWithTitle.
+ * Dismiss is local-only (per browser) — informational overlays, not server state.
  */
 export function BadgeStack({
   game,
-  preferredCorner = 'bottom-left',
+  preferredCorner = 'bottom-right',
   collidesWithTitle = false,
   maxVisible = 3,
   now,
+  dismissible = true,
 }) {
-  const badges = collectBadgeSignals(game, { now })
+  const [dismissTick, setDismissTick] = useState(0)
+  const badges = useMemo(() => {
+    void dismissTick
+    const all = collectBadgeSignals(game, { now })
+    return filterDismissedBadges(game?.uuid, all)
+  }, [game, now, dismissTick])
+
   const { visible, overflow } = capBadges(badges, maxVisible)
-  if (visible.length === 0) {
+  if (visible.length === 0 && overflow === 0) {
     return null
   }
 
   const corner = resolveBadgeCorner(preferredCorner, collidesWithTitle)
+  const dismissed = listDismissedKinds(game?.uuid)
+
+  function handleDismiss(kind, event) {
+    event.preventDefault()
+    event.stopPropagation()
+    dismissBadge(game?.uuid, kind)
+    setDismissTick((n) => n + 1)
+  }
+
+  function handleClearAll(event) {
+    event.preventDefault()
+    event.stopPropagation()
+    clearDismissedBadges(game?.uuid)
+    // Also dismiss currently visible so they stay gone until reset
+    for (const badge of collectBadgeSignals(game, { now })) {
+      dismissBadge(game?.uuid, badge.kind)
+    }
+    setDismissTick((n) => n + 1)
+  }
+
+  function handleRestore(event) {
+    event.preventDefault()
+    event.stopPropagation()
+    clearDismissedBadges(game?.uuid)
+    setDismissTick((n) => n + 1)
+  }
 
   return (
     <div
-      className={`gt-badge-stack gt-badge-stack--${corner}`}
+      className={`gt-badge-stack gt-badge-stack--${corner}${dismissible ? ' gt-badge-stack--interactive' : ''}`}
       data-corner={corner}
       aria-label="Game badges"
     >
@@ -32,7 +77,18 @@ export function BadgeStack({
           data-badge={badge.kind}
           title={badge.title}
         >
-          {badge.label}
+          <span className="gt-badge__label">{badge.label}</span>
+          {dismissible ? (
+            <button
+              type="button"
+              className="gt-badge__dismiss"
+              aria-label={`Hide ${badge.label} badge`}
+              title="Hide this badge"
+              onClick={(event) => handleDismiss(badge.kind, event)}
+            >
+              ×
+            </button>
+          ) : null}
         </span>
       ))}
       {overflow > 0 && (
@@ -40,6 +96,28 @@ export function BadgeStack({
           +{overflow}
         </span>
       )}
+      {dismissible && visible.length > 0 ? (
+        <button
+          type="button"
+          className="gt-badge gt-badge--clear"
+          title="Hide all badges on this card"
+          aria-label="Hide all badges"
+          onClick={handleClearAll}
+        >
+          Clear
+        </button>
+      ) : null}
+      {dismissible && dismissed.length > 0 && visible.length === 0 ? (
+        <button
+          type="button"
+          className="gt-badge gt-badge--restore"
+          title="Restore hidden badges"
+          aria-label="Restore badges"
+          onClick={handleRestore}
+        >
+          Badges
+        </button>
+      ) : null}
     </div>
   )
 }

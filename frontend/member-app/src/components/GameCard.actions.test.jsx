@@ -121,5 +121,5 @@ test('popup ignores javascript: IGDB urls', async () => {
     />,
   )
   await user.click(screen.getByRole('button', { name: /open actions for archery kings vr/i }))
-  expect(screen.queryByRole('link', { name: 'Open IGDB Page' })).toBeNull()
+  expect(screen.queryByRole('link', { name: 'Open catalog page' })).toBeNull()
 })

@@ -925,11 +925,15 @@ class GameCollectionItem(db.Model):
     game = db.relationship('Game')
 
     def to_dict(self):
+        library_platform = None
+        if self.game is not None and self.game.library is not None and self.game.library.platform is not None:
+            library_platform = self.game.library.platform.name
         return {
             'id': self.id,
             'collection_id': self.collection_id,
             'game_uuid': self.game_uuid,
             'game_name': self.game.name if self.game else None,
+            'library_platform': library_platform,
             'position': self.position,
         }
 

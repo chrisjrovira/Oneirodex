@@ -13,8 +13,8 @@ const EMPTY_OPTIONS = {
 
 const SELECTS = [
   ['library_uuid', 'Library', 'All Libraries', 'libraries', 'uuid', 'name'],
-  ['library_platform', 'Library platform', 'All Library Platforms', 'libraryPlatforms', 'value', 'name'],
-  ['igdb_platform', 'IGDB platform', 'All IGDB Platforms', 'igdbPlatforms', 'name', 'name'],
+  ['library_platform', 'System / console', 'All systems', 'libraryPlatforms', 'value', 'name'],
+  ['igdb_platform', 'Catalog platform', 'All catalog platforms', 'igdbPlatforms', 'name', 'name'],
   ['genre', 'Genre', 'All Genres', 'genres', 'name', 'name'],
   ['theme', 'Theme', 'All Themes', 'themes', 'name', 'name'],
   ['game_mode', 'Game mode', 'All Game Modes', 'gameModes', 'name', 'name'],
@@ -107,6 +107,18 @@ export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
           </select>
         </label>
       ))}
+      <label>
+        {t('Installed')}
+        <select
+          className="form-control"
+          name="installed_only"
+          value={draft.installed_only ?? ''}
+          onChange={update}
+        >
+          <option value="">{t('All games')}</option>
+          <option value="1">{t('Installed only')}</option>
+        </select>
+      </label>
       <label>
         {t('Rating')}
         <input

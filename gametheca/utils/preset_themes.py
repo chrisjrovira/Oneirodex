@@ -24,7 +24,7 @@ import shutil
 from datetime import date
 
 # Bump when the generator's output format changes so existing presets rebuild.
-GENERATOR_VERSION = 3
+GENERATOR_VERSION = 6
 
 # Key written into each generated theme.json; also our ownership proof.
 PRESET_MARKER_KEY = 'gametheca_preset'
@@ -34,11 +34,13 @@ PRESET_MARKER_KEY = 'gametheca_preset'
 PRESET_MANAGED_FILES = ('theme.json', 'css/base.css', 'css/gt-tokens.css')
 
 # Folder slug must match how preferences / theme_asset resolve paths.
+# Mix of arcade/retro cabinet looks and cleaner modern glass looks.
+# Avoid warm orange accents that clash with the default green system chrome.
 PRESET_THEMES = [
     {
         'slug': 'aurora',
-        'name': 'Aurora',
-        'description': 'Cool cyan accent on deep slate.',
+        'name': 'Arcade Neon',
+        'description': 'CRT cyan glow — retro cabinet neon.',
         'btn_primary': '#22d3ee',
         'btn_primary_hover': '#06b6d4',
         'bg_dark_40': 'rgba(10, 24, 32, 0.94)',
@@ -46,17 +48,17 @@ PRESET_THEMES = [
     },
     {
         'slug': 'ember',
-        'name': 'Ember',
-        'description': 'Warm amber accent for late-night browsing.',
-        'btn_primary': '#f59e0b',
-        'btn_primary_hover': '#d97706',
-        'bg_dark_40': 'rgba(28, 18, 12, 0.94)',
-        'bg_dark_30': 'rgba(18, 10, 6, 0.97)',
+        'name': 'Hot Cabinet',
+        'description': 'Arcade magenta on deep cabinet black.',
+        'btn_primary': '#f472b6',
+        'btn_primary_hover': '#ec4899',
+        'bg_dark_40': 'rgba(28, 10, 22, 0.94)',
+        'bg_dark_30': 'rgba(18, 6, 14, 0.97)',
     },
     {
         'slug': 'violet',
-        'name': 'Violet',
-        'description': 'Soft violet accent with indigo glass.',
+        'name': 'Modern Violet',
+        'description': 'Soft violet glass for a modern library.',
         'btn_primary': '#a78bfa',
         'btn_primary_hover': '#8b5cf6',
         'bg_dark_40': 'rgba(22, 16, 36, 0.94)',
@@ -64,8 +66,8 @@ PRESET_THEMES = [
     },
     {
         'slug': 'forest',
-        'name': 'Forest',
-        'description': 'Moss green accent and deep woodland tone.',
+        'name': 'Vector Green',
+        'description': 'Phosphor green — classic vector arcade.',
         'btn_primary': '#4ade80',
         'btn_primary_hover': '#22c55e',
         'bg_dark_40': 'rgba(12, 24, 18, 0.94)',
@@ -73,8 +75,8 @@ PRESET_THEMES = [
     },
     {
         'slug': 'ocean',
-        'name': 'Ocean',
-        'description': 'Deep blue accent for a calm library feel.',
+        'name': 'Modern Ocean',
+        'description': 'Clean deep blue modern chrome.',
         'btn_primary': '#3b82f6',
         'btn_primary_hover': '#2563eb',
         'bg_dark_40': 'rgba(10, 18, 36, 0.94)',
@@ -82,8 +84,8 @@ PRESET_THEMES = [
     },
     {
         'slug': 'rose',
-        'name': 'Rose',
-        'description': 'Muted rose accent on charcoal glass.',
+        'name': 'Modern Rose',
+        'description': 'Muted rose on charcoal glass.',
         'btn_primary': '#fb7185',
         'btn_primary_hover': '#f43f5e',
         'bg_dark_40': 'rgba(28, 14, 20, 0.94)',
@@ -91,8 +93,8 @@ PRESET_THEMES = [
     },
     {
         'slug': 'mono',
-        'name': 'Mono',
-        'description': 'Neutral gray accent — minimal chrome.',
+        'name': 'Modern Mono',
+        'description': 'Neutral slate — minimal modern chrome.',
         'btn_primary': '#94a3b8',
         'btn_primary_hover': '#64748b',
         'bg_dark_40': 'rgba(18, 18, 22, 0.94)',
@@ -100,16 +102,16 @@ PRESET_THEMES = [
     },
     {
         'slug': 'sunset',
-        'name': 'Sunset',
-        'description': 'Coral-orange accent with dusk backgrounds.',
-        'btn_primary': '#fb923c',
-        'btn_primary_hover': '#f97316',
-        'bg_dark_40': 'rgba(32, 16, 12, 0.94)',
-        'bg_dark_30': 'rgba(22, 10, 8, 0.97)',
+        'name': 'Coin Gold',
+        'description': 'Arcade coin-slot gold (not orange).',
+        'btn_primary': '#fbbf24',
+        'btn_primary_hover': '#f59e0b',
+        'bg_dark_40': 'rgba(24, 18, 8, 0.94)',
+        'bg_dark_30': 'rgba(14, 10, 4, 0.97)',
     },
     {
         'slug': 'ice',
-        'name': 'Ice',
+        'name': 'Modern Ice',
         'description': 'Pale sky accent on cold navy glass.',
         'btn_primary': '#7dd3fc',
         'btn_primary_hover': '#38bdf8',

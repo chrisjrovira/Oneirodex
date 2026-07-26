@@ -1,0 +1,237 @@
+:root {
+  --gt-bg: #0b0d10;
+  --gt-surface: #141820;
+  --gt-surface-2: #1c2230;
+  --gt-text: #f2f4f8;
+  --gt-text-muted: #c4ccd8;
+  --gt-accent: #2fd67b;
+  --gt-accent-contrast: #0b0d10;
+  --gt-danger: #ff6b6b;
+  --gt-border: rgba(255, 255, 255, 0.12);
+  --gt-glass-bg: rgba(20, 24, 32, 0.72);
+  --gt-glass-border: rgba(255, 255, 255, 0.14);
+  --gt-glass-blur: 12px;
+  --font-ui: "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-display: "Arial Black", "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-ui);
+  color: var(--gt-text);
+  background: var(--gt-bg);
+}
+
+a {
+  color: var(--gt-accent);
+}
+
+.gt-admin-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.gt-admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 1rem;
+  background: var(--gt-glass-bg);
+  border-bottom: 1px solid var(--gt-glass-border);
+  backdrop-filter: blur(var(--gt-glass-blur));
+}
+
+.gt-admin-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--gt-text);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.gt-admin-brand img {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 6px;
+}
+
+.gt-admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.gt-admin-nav a {
+  color: var(--gt-text);
+  text-decoration: none;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+}
+
+.gt-admin-nav a:hover,
+.gt-admin-nav a.active {
+  border-color: color-mix(in srgb, var(--gt-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 16%, transparent);
+  color: var(--gt-accent);
+}
+
+.gt-admin-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.gt-admin-main {
+  flex: 1;
+  padding: 1rem 1.15rem 2rem;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.gt-admin-page h1 {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+}
+
+.gt-admin-lede {
+  margin: 0 0 1rem;
+  color: var(--gt-text-muted);
+  max-width: 42rem;
+}
+
+.gt-admin-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.gt-admin-card {
+  display: block;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--gt-glass-border);
+  background: var(--gt-glass-bg);
+  backdrop-filter: blur(var(--gt-glass-blur));
+  color: inherit;
+  text-decoration: none;
+}
+
+.gt-admin-card:hover {
+  border-color: color-mix(in srgb, var(--gt-accent) 50%, transparent);
+}
+
+.gt-admin-card h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.gt-admin-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--gt-text-muted);
+}
+
+.gt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 18%, transparent);
+  color: var(--gt-text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.gt-btn:hover {
+  border-color: var(--gt-accent);
+}
+
+.gt-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.gt-admin-table th,
+.gt-admin-table td {
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--gt-border);
+}
+
+.gt-admin-panel {
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--gt-glass-border);
+  background: var(--gt-glass-bg);
+}
+
+.gt-admin-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.gt-admin-legacy {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem 1.15rem 2rem;
+}
+
+.gt-admin-legacy .settings-shell-header .btn,
+.gt-admin-legacy a.btn[href*="dashboard"] {
+  /* Prefer top-nav Dashboard; shrink leftover page widgets */
+  display: none !important;
+}
+
+.gt-admin-legacy .settings-shell-header {
+  margin-bottom: 0.75rem;
+}
+
+.gt-admin-input {
+  display: block;
+  width: 100%;
+  margin: 0.35rem 0 0.85rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
+  color: var(--gt-text);
+  font: inherit;
+}
+
+.gt-admin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.gt-admin-panel label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--gt-text-muted);
+}

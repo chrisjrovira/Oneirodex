@@ -46,6 +46,8 @@ from gametheca.utils.unmatched import handle_delete_unmatched
 from gametheca.utils.processors import get_global_settings
 from gametheca.utils.library_acl import apply_game_access_filters, user_can_access_library
 from gametheca.utils.lifecycle import web_lifecycle_fields
+from gametheca.utils.client_lifecycle import installed_game_uuids, load_lifecycle_map
+from gametheca.utils.play_url import browse_play_fields
 bp = Blueprint('main', __name__)
 
 def get_serializer():
@@ -82,13 +84,20 @@ def browse_games():
     theme = request.args.get('theme')
     sort_by = request.args.get('sort_by', 'name')
     sort_order = request.args.get('sort_order', 'asc')
+    installed_only = request.args.get('installed_only', '').lower() in ('1', 'true', 'yes')
     query = select(Game).options(
         joinedload(Game.genres),
         joinedload(Game.player_perspectives),
+        joinedload(Game.library),
     )
     query = apply_game_access_filters(query, current_user)
     # Get current user ID for favorite status
     current_user_id = current_user.id if current_user.is_authenticated else None
+    if installed_only:
+        installed = installed_game_uuids(current_user_id)
+        if not installed:
+            return jsonify({'games': [], 'total': 0, 'pages': 0, 'current_page': page}), 200
+        query = query.filter(Game.uuid.in_(installed))
     if library_uuid:
         if not user_can_access_library(current_user, library_uuid):
             return jsonify({'games': [], 'total': 0, 'pages': 0, 'current_page': page}), 200
@@ -153,6 +162,7 @@ def browse_games():
 
     settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
     owned_game_uuids = get_matched_owned_game_uuids(current_user_id) if current_user_id else set()
+    lifecycle_map = load_lifecycle_map(current_user_id)
 
     # Get game data
     game_data = []
@@ -171,6 +181,18 @@ def browse_games():
         # Get user status for this game
         user_status = user_statuses.get(game.uuid)
 
+        library_platform_key = None
+        library_platform_label = None
+        if game.library is not None and game.library.platform is not None:
+            platform = game.library.platform
+            library_platform_key = getattr(platform, 'name', None) or str(platform)
+            library_platform_label = getattr(platform, 'value', None) or library_platform_key
+
+        steam_app_id = getattr(game, 'steam_app_id', None)
+        steam_url = getattr(game, 'steam_url', None) or None
+        if steam_app_id and not steam_url:
+            steam_url = f'https://store.steampowered.com/app/{int(steam_app_id)}'
+
         game_data.append({
             'id': game.id,
             'uuid': game.uuid,
@@ -181,6 +203,8 @@ def browse_games():
             'size': game_size_formatted,
             'genres': genres,
             'library_uuid': game.library_uuid,
+            'library_platform': library_platform_key,
+            'library_platform_label': library_platform_label,
             'is_favorite': current_user_id in [user.id for user in game.favorited_by],
             'date_identified': game.date_identified.isoformat() if game.date_identified else None,
             'date_created': game.date_created.isoformat() if game.date_created else None,
@@ -190,11 +214,16 @@ def browse_games():
             'freshness_status': game.freshness_status,
             'freshness_confidence': game.freshness_confidence,
             'local_version': game.local_version,
+            'steam_app_id': steam_app_id,
+            'steam_url': steam_url,
+            'badge_title_collision': bool(library_platform_key),
+            **browse_play_fields(game),
             **game_card_flags(game),
             **web_lifecycle_fields(
                 game,
                 updates_count=update_counts.get(game.uuid, 0),
                 user_id=current_user_id,
+                client_state=lifecycle_map.get(game.uuid),
             ),
             **ownership_flags(game.uuid, owned_game_uuids),
         })

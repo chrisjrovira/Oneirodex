@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useSearchParams } from 'react-router-dom'
 import { fetchBrowseGames } from './api/browse'
+import { applyPlatformSkin, clearPlatformSkin } from './chrome/platformSkins'
 import { cleanFilters, FilterBar } from './components/FilterBar'
 import { GameGrid } from './components/GameGrid'
 import { GameGridSkeleton } from './components/GameGridSkeleton'
@@ -26,11 +28,20 @@ function EmptyState({ initialConfig, t }) {
   return <p>{t('No games match the current filters.')}</p>
 }
 
+function filtersFromSearchParams(searchParams) {
+  const libraryPlatform = searchParams.get('library_platform')
+  if (!libraryPlatform) {
+    return {}
+  }
+  return { library_platform: libraryPlatform }
+}
+
 export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
   const t = useMemo(
     () => createTranslator(initialConfig.locale),
     [initialConfig.locale],
   )
+  const [searchParams] = useSearchParams()
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(initialConfig.perPage)
   const defaultFilters = {
@@ -42,12 +53,40 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
       ...defaultFilters,
       ...initialConfig.currentFilters,
       ...readLibraryFilters(),
+      ...filtersFromSearchParams(searchParams),
     }),
   )
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
+
+  useEffect(() => {
+    const fromUrl = filtersFromSearchParams(searchParams)
+    if (!fromUrl.library_platform) {
+      return
+    }
+    setFilters((current) => {
+      if (current.library_platform === fromUrl.library_platform) {
+        return current
+      }
+      const next = cleanFilters({ ...current, ...fromUrl })
+      writeLibraryFilters(next)
+      return next
+    })
+    setPage(1)
+  }, [searchParams])
+
+  useEffect(() => {
+    if (filters.library_platform) {
+      applyPlatformSkin(filters.library_platform)
+    } else {
+      clearPlatformSkin()
+    }
+    return () => {
+      clearPlatformSkin()
+    }
+  }, [filters.library_platform])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -102,13 +141,14 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
   const games = result?.games ?? []
   const showSkeleton = loading && !result
   const showRefreshing = loading && Boolean(result)
+  const hidePlatformChip = Boolean(filters.library_platform)
 
   let content
   if (error && !result) {
     content = (
       <div role="alert">
         <p>{t('Unable to load games.')}</p>
-        <button type="button" onClick={retry}>
+        <button type="button" className="gt-btn" onClick={retry}>
           {t('Retry')}
         </button>
       </div>
@@ -136,7 +176,7 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
         {error && (
           <div role="alert">
             <p>{t('Unable to refresh games.')}</p>
-            <button type="button" onClick={retry}>
+            <button type="button" className="gt-btn" onClick={retry}>
               {t('Retry')}
             </button>
           </div>
@@ -151,6 +191,7 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
                 enableDeleteOnDisk={initialConfig.enableDeleteOnDisk}
                 discordConfigured={initialConfig.discordConfigured}
                 discordManualTrigger={initialConfig.discordManualTrigger}
+                hidePlatformChip={hidePlatformChip}
               />
               <EmptyState initialConfig={initialConfig} t={t} />
             </>
@@ -162,6 +203,7 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
               enableDeleteOnDisk={initialConfig.enableDeleteOnDisk}
               discordConfigured={initialConfig.discordConfigured}
               discordManualTrigger={initialConfig.discordManualTrigger}
+              hidePlatformChip={hidePlatformChip}
             />
           )}
         </div>

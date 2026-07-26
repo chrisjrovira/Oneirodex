@@ -1,13 +1,20 @@
 ﻿import { render, screen } from '@testing-library/react'
 import { NewsPage } from './NewsPage'
 import * as announcementsApi from '../api/announcements'
+import * as gamingNewsApi from '../api/gamingNews'
 
 vi.mock('../api/announcements', () => ({
   fetchAnnouncements: vi.fn(),
 }))
 
+vi.mock('../api/gamingNews', () => ({
+  fetchGamingNews: vi.fn(),
+}))
+
 beforeEach(() => {
   announcementsApi.fetchAnnouncements.mockReset()
+  gamingNewsApi.fetchGamingNews.mockReset()
+  gamingNewsApi.fetchGamingNews.mockResolvedValue({ items: [] })
 })
 
 test('lists announcement cards from API', async () => {

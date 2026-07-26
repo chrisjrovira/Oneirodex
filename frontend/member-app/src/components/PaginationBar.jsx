@@ -17,10 +17,11 @@ export function PaginationBar({
   const hasNext = page < pages
 
   return (
-    <nav className="pagination-controls" aria-label="Library pagination">
-      <label>
-        {t('Per page')}{' '}
+    <nav className="pagination-controls gt-pagination" aria-label="Library pagination">
+      <label className="gt-pagination__perpage">
+        <span className="gt-pagination__label">{t('Per page')}</span>
         <select
+          className="dropdown-perpage"
           aria-label={t('Per page')}
           value={perPage}
           onChange={(event) => onPerPageChange(Number(event.target.value))}
@@ -37,6 +38,7 @@ export function PaginationBar({
       </label>
       <button
         type="button"
+        className="btn-pagination"
         aria-label={t('First')}
         disabled={!hasPrevious}
         onClick={() => onPageChange(1)}
@@ -45,17 +47,19 @@ export function PaginationBar({
       </button>
       <button
         type="button"
+        className="btn-pagination"
         aria-label={t('Previous')}
         disabled={!hasPrevious}
         onClick={() => onPageChange(page - 1)}
       >
         {t('Previous')}
       </button>
-      <span aria-live="polite">
+      <span className="page-info" aria-live="polite">
         {t('Page {page} of {pages}', { page, pages })}
       </span>
       <button
         type="button"
+        className="btn-pagination"
         aria-label={t('Next')}
         disabled={!hasNext}
         onClick={() => onPageChange(page + 1)}
@@ -64,6 +68,7 @@ export function PaginationBar({
       </button>
       <button
         type="button"
+        className="btn-pagination"
         aria-label={t('Last')}
         disabled={!hasNext}
         onClick={() => onPageChange(pages)}

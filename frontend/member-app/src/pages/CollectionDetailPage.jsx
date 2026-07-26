@@ -9,6 +9,7 @@ import {
   searchGames,
   updateCollection,
 } from '../api/collections'
+import { applyPlatformSkin, clearPlatformSkin, sharedPlatform } from '../chrome/platformSkins'
 import './Collections.css'
 
 function loadErrorMessage(error) {
@@ -68,6 +69,18 @@ export function CollectionDetailPage({ shellConfig: _shellConfig } = {}) {
       controller.abort()
     }
   }, [collectionUuid, retryCount])
+
+  useEffect(() => {
+    const platform = sharedPlatform(collection?.items || [])
+    if (platform) {
+      applyPlatformSkin(platform)
+    } else {
+      clearPlatformSkin()
+    }
+    return () => {
+      clearPlatformSkin()
+    }
+  }, [collection])
 
   useEffect(() => {
     const trimmed = query.trim()

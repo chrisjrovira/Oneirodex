@@ -1,7 +1,4 @@
 /**
- * Shared lifecycle actions: Download · Install · Update · Uninstall.
- * Web: Download is live. Install/Update/Uninstall require companion client.
- *
  * @param {'full' | 'compact'} [variant='full']
  * @param {'not_downloaded' | 'downloaded' | 'installed' | 'update_available'} [lifecycleState]
  */
@@ -19,17 +16,24 @@ export function GameActionBar({
   const updatesUrl = updateHref || `/game_details/${gameUuid}#updates`
   const compact = variant === 'compact'
 
-  const installDisabled = !clientConnected
-  const updateDisabled = !clientConnected || lifecycleState !== 'update_available'
+  // Local companion enables install/update/uninstall. Web alone can still open Update extras.
+  const installDisabled =
+    !clientConnected || lifecycleState === 'installed' || lifecycleState === 'update_available'
+  const updateDisabled = lifecycleState !== 'update_available'
   const uninstallDisabled = !clientConnected || lifecycleState === 'not_downloaded'
 
-  const installTitle = clientConnected
-    ? 'Install with GameTheca client'
-    : 'Install requires the GameTheca companion client'
-  const updateTitle = !clientConnected
-    ? 'Update requires the GameTheca companion client'
-    : lifecycleState === 'update_available'
-      ? 'Apply update with GameTheca client'
+  const installTitle = !clientConnected
+    ? 'Install requires the GameTheca companion client (keep it open while browsing)'
+    : lifecycleState === 'installed' || lifecycleState === 'update_available'
+      ? 'Already installed on this device'
+      : lifecycleState === 'downloaded'
+        ? 'Install with GameTheca client'
+        : 'Download first, then install with the companion client'
+  const updateTitle =
+    lifecycleState === 'update_available'
+      ? clientConnected
+        ? 'Apply update with GameTheca client'
+        : 'View updates / extras (companion needed to apply)'
       : 'No update available'
   const uninstallTitle = !clientConnected
     ? 'Uninstall requires the GameTheca companion client'
@@ -57,17 +61,13 @@ export function GameActionBar({
         Install
       </button>
       <a
-        className={`gt-action-bar__btn${updateDisabled && !clientConnected ? ' is-disabled' : ''}`}
-        href={clientConnected && lifecycleState === 'update_available' ? updatesUrl : updatesUrl}
+        className={`gt-action-bar__btn${updateDisabled ? ' is-disabled' : ''}`}
+        href={updatesUrl}
         title={updateTitle}
         aria-disabled={updateDisabled}
         data-action="update"
         onClick={(event) => {
-          if (!clientConnected) {
-            // Still allow navigating to updates/extras on web
-            return
-          }
-          if (lifecycleState !== 'update_available') {
+          if (updateDisabled) {
             event.preventDefault()
           }
         }}

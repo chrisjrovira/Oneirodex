@@ -10,6 +10,12 @@ from gametheca.utils.member_spa import render_member_spa
 member_bp = Blueprint('member', __name__)
 
 
+@member_bp.route('/systems')
+@login_required
+def systems_page():
+    return render_member_spa(title='Systems')
+
+
 @member_bp.route('/collections')
 @login_required
 def collections_page():

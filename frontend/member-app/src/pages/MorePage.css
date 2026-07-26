@@ -157,3 +157,40 @@
 .gt-help__section li {
   margin-bottom: 0.25rem;
 }
+
+.gt-updates__search {
+  margin: 0 0 1.25rem;
+  padding: 0.85rem 1rem;
+}
+
+.gt-updates__search h2,
+.gt-updates__inbox h2 {
+  margin: 0 0 0.65rem;
+  font-size: 1.05rem;
+}
+
+.gt-updates__search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.gt-updates__search-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  min-width: 10rem;
+}
+
+.gt-updates__search-form input,
+.gt-updates__search-form select {
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--gt-surface, #141820) 90%, transparent);
+  color: inherit;
+  font: inherit;
+}

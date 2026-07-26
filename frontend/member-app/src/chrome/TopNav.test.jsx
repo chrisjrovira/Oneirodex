@@ -23,11 +23,13 @@ function renderNav(shellConfig = {}) {
 test('renders GameTheca wordmark and primary SPA links', () => {
   renderNav({ isAdmin: true, username: 'ada' })
   expect(screen.getByText('GameTheca')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: /discover/i })).toHaveAttribute('href', '/discover')
-  expect(screen.getByRole('link', { name: /library/i })).toHaveAttribute('href', '/library')
-  expect(screen.getByRole('link', { name: /downloads/i })).toHaveAttribute('href', '/downloads')
-  expect(screen.getByRole('link', { name: /favorites/i })).toHaveAttribute('href', '/favorites')
-  expect(screen.getByRole('link', { name: /^admin$/i })).toHaveAttribute('href', '/admin/dashboard')
+  const nav = screen.getByRole('navigation', { name: 'Primary' })
+  expect(nav.querySelector('a[href="/discover"]')).toHaveTextContent(/discover/i)
+  expect(nav.querySelector('a.gt-topnav__link[href="/library"]')).toHaveTextContent(/^Library$/i)
+  expect(nav.querySelector('a[href="/systems"]')).toHaveTextContent(/systems/i)
+  expect(nav.querySelector('a[href="/downloads"]')).toHaveTextContent(/downloads/i)
+  expect(nav.querySelector('a[href="/favorites"]')).toHaveTextContent(/favorites/i)
+  expect(nav.querySelector('a[href="/admin/dashboard"]')).toHaveTextContent(/^Admin$/i)
 })
 
 test('hides admin when not admin', () => {

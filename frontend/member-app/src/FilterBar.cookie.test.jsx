@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { LibraryApp } from './LibraryApp'
 
 function jsonResponse(body) {
@@ -7,6 +8,10 @@ function jsonResponse(body) {
     ok: true,
     json: () => Promise.resolve(body),
   })
+}
+
+function renderLibrary(ui) {
+  return render(<MemoryRouter initialEntries={['/library']}>{ui}</MemoryRouter>)
 }
 
 const initialConfig = {
@@ -40,7 +45,7 @@ test('applies libraryFilters cookie on boot', async () => {
   })
   vi.stubGlobal('fetch', fetchMock)
 
-  render(<LibraryApp initialConfig={initialConfig} />)
+  renderLibrary(<LibraryApp initialConfig={initialConfig} />)
 
   await waitFor(() => {
     const browseCall = fetchMock.mock.calls.find(([url]) =>
@@ -65,7 +70,7 @@ test('apply omits rating when zero', async () => {
   })
   vi.stubGlobal('fetch', fetchMock)
 
-  render(<LibraryApp initialConfig={initialConfig} />)
+  renderLibrary(<LibraryApp initialConfig={initialConfig} />)
   await user.click(await screen.findByRole('button', { name: 'Apply' }))
 
   await waitFor(() => {
@@ -94,7 +99,7 @@ test('apply persists selected filters and refreshes browse results', async () =>
   })
   vi.stubGlobal('fetch', fetchMock)
 
-  render(<LibraryApp initialConfig={initialConfig} />)
+  renderLibrary(<LibraryApp initialConfig={initialConfig} />)
 
   await user.selectOptions(
     await screen.findByLabelText('Genre'),

@@ -8,6 +8,12 @@ fi
 if [[ ! -f /app/gametheca/static/dist/member-app/member-app.css ]]; then
     echo "⚠️  Warning: member-app.css not found — member SPA chrome will render unstyled. Rebuild the Docker image."
 fi
+if [[ ! -f /app/gametheca/static/dist/admin-app/admin-app.js ]]; then
+    echo "⚠️  Warning: admin-app.js not found — React admin SPA may not load. Rebuild the Docker image."
+fi
+if [[ ! -f /app/gametheca/static/dist/admin-app/admin-app.css ]]; then
+    echo "⚠️  Warning: admin-app.css not found — admin SPA chrome will render unstyled. Rebuild the Docker image."
+fi
 if [[ ! -f /app/gametheca/static/library/themes/default/css/gt-tokens.css ]]; then
     echo "⚠️  Warning: themes/default/css/gt-tokens.css missing — run init or Admin → Reset Default Themes after boot."
 fi

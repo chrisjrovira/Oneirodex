@@ -32,7 +32,7 @@ test('capBadges collapses overflow', () => {
   expect(overflow).toBe(1)
 })
 
-test('BadgeStack renders bottom-left NEW fixture by default', () => {
+test('BadgeStack renders bottom-right NEW fixture by default', () => {
   render(
     <BadgeStack
       game={{ date_identified: '2026-07-20T00:00:00Z', name: 'Fixture' }}
@@ -40,7 +40,7 @@ test('BadgeStack renders bottom-left NEW fixture by default', () => {
     />,
   )
   const stack = screen.getByLabelText(/game badges/i)
-  expect(stack).toHaveAttribute('data-corner', 'bottom-left')
+  expect(stack).toHaveAttribute('data-corner', 'bottom-right')
   expect(screen.getByTitle(/newly added/i)).toHaveTextContent('NEW')
 })
 
@@ -52,5 +52,5 @@ test('BadgeStack shifts corner when title collides', () => {
       now={now}
     />,
   )
-  expect(screen.getByLabelText(/game badges/i)).toHaveAttribute('data-corner', 'bottom-right')
+  expect(screen.getByLabelText(/game badges/i)).toHaveAttribute('data-corner', 'top-left')
 })

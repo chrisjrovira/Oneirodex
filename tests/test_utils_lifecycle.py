@@ -31,6 +31,8 @@ def test_not_downloaded_when_no_signals():
     assert web_lifecycle_fields(game) == {
         'lifecycle_state': 'not_downloaded',
         'client_connected': False,
+        'has_updates': False,
+        'updates_count': 0,
     }
 
 
