@@ -5,7 +5,9 @@ from flask_login import login_required, current_user
 from gametheca import db
 from gametheca.models import Image, Game, Library, Genre, GameMode, PlayerPerspective, Theme
 from gametheca.utils.event_logging import log_system_event
-from gametheca.utils.library_acl import apply_game_access_filters, user_can_access_library
+from gametheca.utils.game_core import get_game_by_uuid
+from gametheca.utils.game_details_payload import build_game_details_payload
+from gametheca.utils.library_acl import apply_game_access_filters, user_can_access_game, user_can_access_library
 from sqlalchemy import func, select
 from . import apis_bp
 
@@ -54,6 +56,19 @@ def search():
         games = db.session.execute(search_query).scalars().all()
         results = [{'id': game.id, 'uuid': game.uuid, 'name': game.name} for game in games]
     return jsonify(results)
+
+
+@apis_bp.route('/games/<game_uuid>/details', methods=['GET'])
+@login_required
+def game_details_api(game_uuid):
+    """Full game details JSON for the member SPA details page."""
+    game = get_game_by_uuid(game_uuid)
+    if not game:
+        return jsonify({'error': 'Game not found'}), 404
+    if not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Access denied'}), 403
+    return jsonify(build_game_details_payload(game, current_user))
+
 
 @apis_bp.route('/game_screenshots/<game_uuid>')
 @login_required

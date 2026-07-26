@@ -24,6 +24,6 @@ Browse-by-console hub (Style **B+C**):
 - **Discover** (`/discover`) — shelves / discovery rails.
 - **Favorites**, **Collections**, **Wishlist**, **Updates**, **Ownership**, **Big Picture**, optional **VR** / **Trailers** — under primary nav or **More**.
 
-Game details may still open a hybrid Jinja + React island page; Download and metadata live there.
+Game details (`/game_details/<uuid>`) is a full member SPA page under the same TopNav: cover, summary, metadata, versions, screenshots, Play / Steam / companion Install actions.
 
 Related: [getting-started.md](getting-started.md) · [downloads.md](downloads.md)

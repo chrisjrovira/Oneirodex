@@ -246,12 +246,14 @@ def reorder_collection_items(collection_uuid: str):
 @apis_bp.route('/announcements', methods=['GET'])
 @login_required
 def list_announcements():
-    rows = db.session.execute(
-        select(Announcement)
-        .filter_by(published=True)
-        .order_by(Announcement.created_at.desc())
-        .limit(50)
-    ).scalars().all()
+    include_drafts = (
+        request.args.get('include_drafts') == '1'
+        and current_user.role == 'admin'
+    )
+    query = select(Announcement).order_by(Announcement.created_at.desc()).limit(50)
+    if not include_drafts:
+        query = query.filter_by(published=True)
+    rows = db.session.execute(query).scalars().all()
     return jsonify({'announcements': [a.to_dict() for a in rows]})
 
 

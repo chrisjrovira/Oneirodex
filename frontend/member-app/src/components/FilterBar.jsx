@@ -108,7 +108,7 @@ export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
         </label>
       ))}
       <label>
-        {t('Installed')}
+        {t('Companion')}
         <select
           className="form-control"
           name="installed_only"
@@ -116,7 +116,7 @@ export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
           onChange={update}
         >
           <option value="">{t('All games')}</option>
-          <option value="1">{t('Installed only')}</option>
+          <option value="1">{t('Companion installed')}</option>
         </select>
       </label>
       <label>

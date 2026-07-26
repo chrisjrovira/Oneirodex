@@ -19,6 +19,7 @@ import { UpdatesPage } from './pages/UpdatesPage'
 import { VrPage } from './pages/VrPage'
 import { WishlistPage } from './pages/WishlistPage'
 import { SystemsPage } from './pages/SystemsPage'
+import { GameDetailsPage } from './pages/GameDetailsPage'
 import './pages/MorePage.css'
 import './chrome/platformSkins.css'
 import './chrome/glass.css'
@@ -140,6 +141,7 @@ export function App({ shellConfig = {} }) {
         <Route path="/vr" element={<VrPage shellConfig={shellConfig} />} />
         <Route path="/trailers" element={<TrailersPage shellConfig={shellConfig} />} />
         <Route path="/help" element={<HelpPage shellConfig={shellConfig} />} />
+        <Route path="/game_details/:gameUuid" element={<GameDetailsPage />} />
       </Route>
     </Routes>
   )

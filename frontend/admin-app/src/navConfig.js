@@ -4,7 +4,7 @@ export const ADMIN_NAV = [
   { id: 'libraries', path: '/libraries', label: 'Libraries' },
   { id: 'scans', path: '/scan_management', label: 'Scans' },
   { id: 'settings', path: '/admin/settings', label: 'Settings' },
-  { id: 'content', path: '/admin/announcements', label: 'Content' },
+  { id: 'content', path: '/admin/discovery_sections', label: 'Content' },
   { id: 'users', path: '/admin/users', label: 'Users' },
   { id: 'integrations', path: '/admin/integrations', label: 'Integrations' },
   { id: 'system', path: '/admin/ops', label: 'System' },

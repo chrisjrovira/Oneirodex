@@ -20,6 +20,10 @@ async function postJson(url, body) {
 
 async function getJson(url) {
   const response = await fetch(url, { credentials: 'same-origin' })
+  if (response.status === 401) {
+    window.location.href = '/login'
+    throw new Error('Unauthorized')
+  }
   if (!response.ok) {
     throw new Error(`${url} ${response.status}`)
   }
@@ -30,13 +34,14 @@ export function AnnouncementsPage() {
   const [rows, setRows] = useState(null)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
+  const [publishNow, setPublishNow] = useState(true)
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
     let active = true
-    getJson('/api/announcements')
+    getJson('/api/announcements?include_drafts=1')
       .then((data) => {
         if (active) {
           setRows(Array.isArray(data.announcements) ? data.announcements : [])
@@ -55,9 +60,14 @@ export function AnnouncementsPage() {
     setSaving(true)
     setError(null)
     try {
-      await postJson('/api/announcements', { title, body, published: true })
+      await postJson('/api/announcements', {
+        title,
+        body,
+        published: publishNow,
+      })
       setTitle('')
       setBody('')
+      setPublishNow(true)
       setTick((n) => n + 1)
     } catch (err) {
       setError(err)
@@ -70,7 +80,8 @@ export function AnnouncementsPage() {
     <div className="gt-admin-page">
       <h1>Announcements</h1>
       <p className="gt-admin-lede">
-        Publish blasts that appear on the member News page alongside gaming headlines.
+        Publish blasts that appear on the member News page alongside gaming headlines. Save as draft
+        to keep an unpublished note in this list.
       </p>
 
       {error ? <div role="alert">{String(error.message || error)}</div> : null}
@@ -96,8 +107,16 @@ export function AnnouncementsPage() {
             required
           />
         </label>
+        <label className="gt-admin-check">
+          <input
+            type="checkbox"
+            checked={publishNow}
+            onChange={(e) => setPublishNow(e.target.checked)}
+          />{' '}
+          Publish immediately
+        </label>
         <button className="gt-btn" type="submit" disabled={saving}>
-          {saving ? 'Publishing…' : 'Publish announcement'}
+          {saving ? 'Saving…' : publishNow ? 'Publish announcement' : 'Save draft'}
         </button>
       </form>
 
@@ -109,6 +128,7 @@ export function AnnouncementsPage() {
           {rows.map((row) => (
             <li key={row.id} className="gt-admin-panel">
               <strong>{row.title}</strong>
+              {!row.published ? <span className="chip">Draft</span> : null}
               <p>{row.body}</p>
               {row.created_at ? (
                 <time dateTime={row.created_at}>{String(row.created_at).slice(0, 16)}</time>

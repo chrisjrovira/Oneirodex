@@ -18,7 +18,16 @@ const SECTION_HOME = {
   generic: { href: '/admin/dashboard', label: 'Home' },
 }
 
-function isActivePath(pathname, path) {
+function isActivePath(pathname, link) {
+  const path = link.path
+  if (link.id === 'content') {
+    return (
+      pathname.includes('announcement') ||
+      pathname.includes('discovery') ||
+      pathname.includes('newsletter') ||
+      pathname.includes('attract')
+    )
+  }
   if (path === '/admin/dashboard') {
     return pathname === '/admin/dashboard' || pathname === '/admin' || pathname === '/admin/'
   }
@@ -42,7 +51,7 @@ export function AdminTopNav() {
           <a
             key={link.id}
             href={link.path}
-            className={isActivePath(pathname, link.path) ? 'active' : undefined}
+            className={isActivePath(pathname, link) ? 'active' : undefined}
           >
             {link.label}
           </a>

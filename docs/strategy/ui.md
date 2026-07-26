@@ -131,7 +131,7 @@ State machine per game/user: `not_downloaded` → `downloaded` → `installed` �
 
 ### Wave 1 — Library & details (3–4 weeks) — largely shipped
 - React library as default member browse; retire Jinja library hubs  
-- Rebuild `game_details` as React island or full page (still hybrid)  
+- Rebuild `game_details` as a full member SPA page under TopNav (Wave 5b)
 - Surface folder path, versions, freshness, HLTB  
 - **`GameActionBar`** with Download live; Install/Update/Uninstall gated until client  
 - Wire real badge signals (new import, freshness, updates)
