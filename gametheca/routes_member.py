@@ -47,6 +47,13 @@ def updates_page():
     return render_member_spa(title='Updates')
 
 
+@member_bp.route('/acquire')
+@login_required
+def acquire_page():
+    """BYO indexer/debrid acquire panel (feature-flagged on the API)."""
+    return render_member_spa(title='Acquire')
+
+
 @member_bp.route('/playtime')
 @login_required
 def playtime_page():

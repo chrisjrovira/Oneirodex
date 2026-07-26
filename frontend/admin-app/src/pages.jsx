@@ -212,9 +212,51 @@ export function HelpPage() {
         <li>Dashboard and Ops show live summary from <code>/admin/api/ops/summary</code>.</li>
         <li>Libraries list comes from <code>/api/get_libraries</code>.</li>
         <li>Settings cards open module pages (Arr, AI, Themes, Storage, …).</li>
+        <li>
+          Wave 7 flags: <code>ENABLE_ARR_MODULE</code>, <code>ENABLE_DEBRID</code>,{' '}
+          <code>ENABLE_GAME_ASSISTS</code> — member Acquire at <code>/acquire</code>; assists are
+          single-player / offline only.
+        </li>
+        <li>
+          Emulator: BIOS + <code>.cht</code> via <code>/api/emulator/*</code>; WebRetro play bar
+          for cloud save and cheats.
+        </li>
         <li>Themes: Reset Default Themes after image rebuilds that change design tokens.</li>
         <li>Member Systems hub lives at <code>/systems</code> with platform skins.</li>
       </ul>
+    </Page>
+  )
+}
+
+export function ScansPage() {
+  const [status, setStatus] = useState(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    getJson('/api/scan_jobs_status')
+      .then(setStatus)
+      .catch(setError)
+  }, [])
+
+  return (
+    <Page title="Scans & recognition" lede="Scan jobs, identify workbench, and image queue.">
+      <LinkRow links={HUB_LINKS.scans} />
+      {error ? <div role="alert">Unable to load scan status.</div> : null}
+      <div className="gt-admin-panel">
+        {!status ? (
+          <p>Loading…</p>
+        ) : (
+          <p>
+            Running: {status.running || status.is_running ? 'yes' : 'no'}
+            {status.job_id ? (
+              <>
+                {' '}
+                · job <code>{status.job_id}</code>
+              </>
+            ) : null}
+          </p>
+        )}
+      </div>
     </Page>
   )
 }

@@ -1,7 +1,7 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { queueClientCommand } from '../api/clientCommands'
-import { fetchStoreSearch, fetchUpdatesInbox } from '../api/updates'
+import { addWantedUpdate, fetchStoreSearch, fetchUpdatesInbox } from '../api/updates'
 
 export function UpdatesPage() {
   const [items, setItems] = useState(null)
@@ -139,17 +139,60 @@ export function UpdatesPage() {
           <ul className="gt-updates__list">
             {hits.map((hit, index) => (
               <li key={`${hit.source}-${hit.steam_app_id || hit.gog_id || hit.url || index}`}>
-                {hit.url ? (
-                  <a href={hit.url} target="_blank" rel="noreferrer">
-                    <strong>{hit.name}</strong>
-                    <span>{hit.source}</span>
-                  </a>
-                ) : (
-                  <>
-                    <strong>{hit.name}</strong>
-                    <span>{hit.source}</span>
-                  </>
-                )}
+                <div className="gt-updates__inbox-item">
+                  <div className="gt-updates__inbox-main">
+                    {hit.url ? (
+                      <a href={hit.url} target="_blank" rel="noreferrer">
+                        <strong>{hit.name}</strong>
+                        <span>{hit.source}</span>
+                      </a>
+                    ) : (
+                      <>
+                        <strong>{hit.name}</strong>
+                        <span>{hit.source}</span>
+                      </>
+                    )}
+                    {hit.matched_game_uuid ? (
+                      <span>
+                        Matched library:{' '}
+                        <Link to={`/game_details/${hit.matched_game_uuid}`}>
+                          {hit.matched_game_name || 'Open'}
+                        </Link>
+                      </span>
+                    ) : (
+                      <span>No library match</span>
+                    )}
+                  </div>
+                  <div className="gt-updates__inbox-actions">
+                    {hit.matched_game_uuid ? (
+                      <button
+                        type="button"
+                        className="gt-btn"
+                        onClick={() => {
+                          void addWantedUpdate({
+                            game_uuid: hit.matched_game_uuid,
+                            kind: 'update',
+                            label: hit.name,
+                            store: hit.source,
+                            store_id: String(hit.steam_app_id || hit.gog_id || ''),
+                          })
+                            .then(() => {
+                              if (window.$?.notify) {
+                                window.$.notify('Added to wanted updates', 'success')
+                              }
+                            })
+                            .catch((err) => {
+                              if (window.$?.notify) {
+                                window.$.notify(err?.message || 'Wanted failed', 'error')
+                              }
+                            })
+                        }}
+                      >
+                        Want pack
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
               </li>
             ))}
           </ul>

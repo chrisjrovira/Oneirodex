@@ -18,9 +18,10 @@ import { invoke } from '@tauri-apps/api/core'
 describe('download kickoff helper', () => {
   beforeEach(() => {
     vi.mocked(invoke).mockReset()
-    vi.mocked(invoke).mockImplementation(async (command: string, args?: { subdir?: string }) => {
+    vi.mocked(invoke).mockImplementation(async (command: string, args?: unknown) => {
+      const typed = args as { subdir?: string } | undefined
       if (command === 'get_app_subdir') {
-        return args?.subdir === 'installs' ? '/appdata/installs' : '/appdata/downloads'
+        return typed?.subdir === 'installs' ? '/appdata/installs' : '/appdata/downloads'
       }
       if (command === 'load_installs') {
         return { installs: {} }

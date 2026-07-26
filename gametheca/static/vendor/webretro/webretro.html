@@ -4,69 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Playing ROM - WebRetro</title>
-    
     <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-        #webretro {
-            width: 100%;
-            height: 100%;
-        }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #111; color: #eee; font-family: system-ui, sans-serif; }
+        #webretro { width: 100%; height: calc(100% - 40px); }
+        #gt-emu-bar { height: 40px; display: flex; gap: 8px; align-items: center; padding: 0 10px; background: #1a1a1a; border-bottom: 1px solid #333; font-size: 13px; }
+        #gt-emu-bar button { background: #2fd67b; color: #111; border: 0; padding: 4px 10px; cursor: pointer; border-radius: 4px; }
+        #gt-emu-bar select { max-width: 220px; }
+        #gt-emu-status { opacity: 0.75; margin-left: auto; }
     </style>
 </head>
 <body>
-
-    <div id="webretro">
-    
+    <div id="gt-emu-bar">
+        <strong>GameTheca</strong>
+        <button type="button" id="gt-sync-save">Sync cloud save</button>
+        <label>Cheats <select id="gt-cheat-select"><option value="">None</option></select></label>
+        <button type="button" id="gt-load-cheat">Load .cht</button>
+        <span id="gt-emu-status"></span>
     </div>
-    <script src=./constants.js></script>
+    <div id="webretro"></div>
+    <script src="./constants.js"></script>
     <script>
-
-        (function() {
-
-            function webretroEmbed(node, path, queries) {
-                console.log (systems)
-                var frame = document.createElement("iframe");
-                frame.style = "border: none; display: block; width: 100%; height: 100%;";
-                let apiUrl = "/api/downloadrom/";
-                // make absolute path
-                var link = document.createElement("a");
-                link.href = apiUrl;
-                apiUrl = link.href;
-                frame.src = `${path}?core=${queries.core}&rom=${apiUrl}${queries.guid}`;
-                
-                node.appendChild(frame);
-                
-                return frame;
-            }
-            
+        (function () {
             function getQueryStringArgs() {
                 var args = {};
                 var query = window.location.search.substring(1);
-                var pairs = query.replace(/\+/g, " ").split("&");
+                var pairs = query.replace(/\+/g, ' ').split('&');
                 for (var i = 0; i < pairs.length; i++) {
-                    var pair = pairs[i].split("=");
-                    args[pair[0]] = decodeURIComponent(pair[1] || "");
+                    var pair = pairs[i].split('=');
+                    args[pair[0]] = decodeURIComponent(pair[1] || '');
                 }
                 return args;
             }
 
-            const args = getQueryStringArgs();
-            const path = `${location.protocol}//${location.host}/static/vendor/webretro/standalone.html`;
-    
-            webretroEmbed(document.getElementById("webretro"), path, {
-                core: args.core, // "mupen64plus_next",
-                guid: args.guid, // "3532be6b-e9b5-4c7a-b4f2-3541cabf60ce",
+            function csrfToken() {
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta && meta.content) return meta.content;
+                var match = document.cookie.match(/(?:^|; )csrf_token=([^;]+)/);
+                return match ? decodeURIComponent(match[1]) : '';
+            }
+
+            var args = getQueryStringArgs();
+            var guid = args.guid || '';
+            var core = args.core || '';
+            var statusEl = document.getElementById('gt-emu-status');
+            var cheatSelect = document.getElementById('gt-cheat-select');
+
+            function setStatus(msg) {
+                statusEl.textContent = msg || '';
+            }
+
+            function webretroEmbed(node, path, queries) {
+                var frame = document.createElement('iframe');
+                frame.id = 'gt-webretro-frame';
+                frame.style = 'border: none; display: block; width: 100%; height: 100%;';
+                var apiUrl = '/api/downloadrom/';
+                var link = document.createElement('a');
+                link.href = apiUrl;
+                apiUrl = link.href;
+                frame.src = path + '?core=' + encodeURIComponent(queries.core || '') +
+                    '&rom=' + encodeURIComponent(apiUrl + queries.guid);
+                node.appendChild(frame);
+                return frame;
+            }
+
+            var path = location.protocol + '//' + location.host + '/static/vendor/webretro/standalone.html';
+            webretroEmbed(document.getElementById('webretro'), path, { core: core, guid: guid });
+
+            if (guid) {
+                fetch('/api/games/' + encodeURIComponent(guid) + '/cheats', { credentials: 'same-origin' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        (data.cheats || []).forEach(function (row) {
+                            var opt = document.createElement('option');
+                            opt.value = row.url;
+                            opt.textContent = row.name;
+                            cheatSelect.appendChild(opt);
+                        });
+                    })
+                    .catch(function () {});
+            }
+
+            document.getElementById('gt-sync-save').addEventListener('click', function () {
+                if (!guid) return;
+                setStatus('Uploading placeholder cloud slot…');
+                var blob = new Blob(['GameTheca cloud save marker for ' + guid], { type: 'application/octet-stream' });
+                var body = new FormData();
+                body.append('file', blob, 'cloud.state');
+                body.append('slot', 'cloud1');
+                fetch('/api/games/' + encodeURIComponent(guid) + '/saves', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'X-CSRFToken': csrfToken() },
+                    body: body,
+                })
+                    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+                    .then(function (res) {
+                        setStatus(res.ok ? 'Cloud save synced (slot cloud1)' : (res.j.error || 'Sync failed'));
+                    })
+                    .catch(function () { setStatus('Sync failed'); });
             });
 
+            document.getElementById('gt-load-cheat').addEventListener('click', function () {
+                var url = cheatSelect.value;
+                if (!url) {
+                    setStatus('Select a .cht file');
+                    return;
+                }
+                fetch(url, { credentials: 'same-origin' })
+                    .then(function (r) { return r.text(); })
+                    .then(function (text) {
+                        try {
+                            sessionStorage.setItem('gt_pending_cht', text);
+                            sessionStorage.setItem('gt_pending_cht_name', cheatSelect.options[cheatSelect.selectedIndex].text);
+                        } catch (e) {}
+                        setStatus('Cheat loaded into session — open RetroArch Quick Menu → Cheats to apply');
+                    })
+                    .catch(function () { setStatus('Failed to load cheat'); });
+            });
         })();
-        
-
     </script>
 </body>
 </html>

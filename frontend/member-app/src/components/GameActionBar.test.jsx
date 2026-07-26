@@ -7,13 +7,22 @@ vi.mock('../api/clientCommands', () => ({
   queueClientCommand: vi.fn(),
 }))
 
+vi.mock('../api/assists', () => ({
+  fetchGameAssists: vi.fn().mockResolvedValue({ enabled: false, pack: null }),
+}))
+
 beforeEach(() => {
   clientCommands.queueClientCommand.mockReset()
 })
 
 test('Download is always available; Install gated without client', () => {
   render(
-    <GameActionBar gameUuid="abc" gameName="Demo" lifecycleState="not_downloaded" />,
+    <GameActionBar
+      gameUuid="abc"
+      gameName="Demo"
+      lifecycleState="not_downloaded"
+      assistPack={null}
+    />,
   )
   expect(screen.getByRole('link', { name: /^Download$/i })).toHaveAttribute(
     'href',
@@ -30,6 +39,7 @@ test('Install enabled when companion client connected and downloaded', () => {
       gameName="Demo"
       clientConnected
       lifecycleState="downloaded"
+      assistPack={null}
     />,
   )
   expect(screen.getByRole('button', { name: /^Install$/i })).not.toBeDisabled()
@@ -45,6 +55,7 @@ test('Install click queues companion command', async () => {
       gameName="Demo"
       clientConnected
       lifecycleState="downloaded"
+      assistPack={null}
     />,
   )
 
@@ -56,4 +67,19 @@ test('Install click queues companion command', async () => {
   expect(await screen.findByRole('status')).toHaveTextContent(
     'Install queued for companion',
   )
+})
+
+test('Assists button shows when pack has toggles', () => {
+  render(
+    <GameActionBar
+      gameUuid="abc"
+      gameName="Demo"
+      assistPack={{
+        title: 'Demo Assists',
+        policy: 'single_player_offline_only',
+        toggles: [{ id: 'god', label: 'God mode' }],
+      }}
+    />,
+  )
+  expect(screen.getByRole('button', { name: /^Assists$/i })).toBeInTheDocument()
 })

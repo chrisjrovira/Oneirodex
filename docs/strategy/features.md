@@ -6,6 +6,21 @@ Each plan is implementation-ready at the *decision* level (scope, files, risks, 
 
 ---
 
+## Program note — Wave 7 (Jul 26)
+
+**Competitive:** ≥50-product catalog in `competitive.md` with steal/ignore for Wave 7.
+
+**Shipped bets drawn from that map:**
+- BYO acquire (Prowlarr/Jackett + qBit + optional Real-Debrid/AllDebrid) — not Hydra-style bundled indexers
+- Store-hit → library bind + wanted queue (Sonarr-like “wanted”)
+- WebRetro core registry + BIOS + cloud-save UI; RetroArch `.cht` toggles
+- Wand-inspired single-player assist packs (`ENABLE_GAME_ASSISTS`) on companion + GameActionBar
+- Big Picture fullscreen shell; React admin dashboard / settings / scans hubs
+
+**Still out of scope:** pirate indexer hosting, Heroic DRM download queues, multiplayer cheat injection.
+
+---
+
 ## Program note — Systems hub + Admin SPA (Jul 26)
 
 **Shipped:** Member SPA top nav; Style B+C green `#2fd67b`; **Systems** hub (`/systems`) with family marks + platform skins; `member-app.css` required in dist; `GENERATOR_VERSION` 6.

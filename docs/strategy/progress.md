@@ -15,7 +15,7 @@
 | Docker Compose optional-module env | Done |
 | Local-without-Authentik install path | Done |
 
-## Jul 26 status (Waves 4–6)
+## Jul 26 status (Waves 4–7)
 
 | Area | Status |
 |---|---|
@@ -25,19 +25,25 @@
 | React admin SPA hybrid (top nav + Jinja forms) | Shipped |
 | Game details full SPA + companion Install bridge | Shipped |
 | Updates apply loop (local packs + companion kind/version) | Shipped |
-| Unraid smoke checklist (incl. details/updates) | Operator — see [unraid-deploy.md](../runbooks/unraid-deploy.md) |
+| Competitive catalog ≥50 + Wave 7 bets | Shipped — [competitive.md](competitive.md) |
+| Emulator cores / cloud saves / `.cht` / assists | Shipped (Wave 7) |
+| BYO acquire (arr + debrid) + store-hit bind | Shipped (Wave 7) |
+| Big Picture fullscreen + admin SPA bodies | Shipped (Wave 7; hybrid forms remain) |
+| Unraid smoke checklist (incl. acquire/emu/assists) | Operator — [unraid-deploy.md](../runbooks/unraid-deploy.md) |
 
-Program canvas: Cursor `canvases/gametheca-program.canvas.tsx` (Wave 6 board).
+Program canvas: Cursor `canvases/gametheca-program.canvas.tsx` (Wave 7 board).
 
 ## Flags (see `.env.example` / `.env.docker.example`)
 
-`ENABLE_ARR_MODULE`, `ENABLE_ARR_HARDLINK_PIPELINE`, `ENABLE_AI_ASSIST`, `ENABLE_AI_AUTO_APPLY`, `ENABLE_HARDLINK_HELPERS`, `ALLOW_HARDLINK_APPLY`, `ENABLE_VR_BROWSE`, `OIDC_ENABLED`, `OLLAMA_*`
+`ENABLE_ARR_MODULE`, `ENABLE_ARR_HARDLINK_PIPELINE`, `ENABLE_AI_ASSIST`, `ENABLE_AI_AUTO_APPLY`, `ENABLE_HARDLINK_HELPERS`, `ALLOW_HARDLINK_APPLY`, `ENABLE_VR_BROWSE`, `ENABLE_GAME_ASSISTS`, `ENABLE_DEBRID`, `OIDC_ENABLED`, `OLLAMA_*`
 
 ## Verification
 
 ```bash
-pytest tests/test_ops_followons.py tests/test_hardlinks_ai_vr_layouts.py tests/test_q1_foundation_unit.py -q
+pytest tests/test_wave7_helpers.py tests/test_ops_followons.py -q
 cd frontend/member-app && npm test -- --run && npm run build
+cd frontend/admin-app && npm run build
+cd clients/desktop && npm test && npm run build
 ```
 
 Confirm View Source on Discover/Library includes `member-app.css` and `member-app.js`.

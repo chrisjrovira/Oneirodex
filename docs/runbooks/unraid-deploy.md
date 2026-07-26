@@ -67,8 +67,11 @@ Also confirm `member-app.css` loads in the browser (View Source on Discover/Libr
 10. `/admin/settings` card grid; Themes → Reset Default Themes after rebuild
 11. Collections: create, search-add, reorder, edit, delete
 12. **Game details SPA** (`/game_details/<uuid>`): TopNav present; summary/versions/screenshots load; Check stores works
-13. **Updates** (`/updates`): freshness inbox loads; store search returns Steam/GOG links; local Update/DLC shows Download / Apply when packs exist
-14. Companion (optional): Install from details; Apply update/DLC from Updates or details versions; heartbeat claims command within ~60s
+13. **Updates** (`/updates`): freshness inbox; store search binds to library games; Want pack; Download / Apply
+14. **Acquire** (`/acquire`, optional): ENABLE_ARR_MODULE / ENABLE_DEBRID — indexer search + librarian send
+15. **Big Picture** (`/big-picture`): fullscreen shell (no TopNav); Open / Download / Install; Exit → Library
+16. **Emulator play**: WebRetro cores for mapped platforms; cloud save button; .cht select when uploaded
+17. Companion (optional): Install/Apply; assist packs when ENABLE_GAME_ASSISTS
 
 Operator sign-off: tick the list above after `build --no-cache` + Reset Default Themes, then mark Unraid smoke done in `docs/strategy/progress.md`.
 

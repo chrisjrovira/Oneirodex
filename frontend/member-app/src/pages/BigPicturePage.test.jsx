@@ -1,11 +1,20 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { BigPicturePage } from './BigPicturePage'
 import * as browseApi from '../api/browse'
 
 vi.mock('../api/browse', () => ({
   fetchBrowseGames: vi.fn(),
 }))
+
+vi.mock('../api/clientCommands', () => ({
+  queueClientCommand: vi.fn(),
+}))
+
+function renderPage(ui) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>)
+}
 
 beforeEach(() => {
   browseApi.fetchBrowseGames.mockReset()
@@ -31,7 +40,7 @@ const GAMES = [
 test('shows loading then renders tiles and hero for the first game', async () => {
   browseApi.fetchBrowseGames.mockResolvedValue({ games: GAMES })
 
-  render(<BigPicturePage shellConfig={{}} />)
+  renderPage(<BigPicturePage shellConfig={{}} />)
 
   expect(screen.getByText('Loading games…')).toBeInTheDocument()
 
@@ -44,7 +53,7 @@ test('shows loading then renders tiles and hero for the first game', async () =>
   )
 
   expect(browseApi.fetchBrowseGames).toHaveBeenCalledWith(
-    { per_page: 24, sort_by: 'date_identified', sort_order: 'desc' },
+    { per_page: 48, sort_by: 'date_identified', sort_order: 'desc' },
     expect.objectContaining({ signal: expect.anything() }),
   )
 
@@ -65,7 +74,7 @@ test('arrow keys move the selection and update the hero', async () => {
   const user = userEvent.setup()
   browseApi.fetchBrowseGames.mockResolvedValue({ games: GAMES })
 
-  render(<BigPicturePage shellConfig={{}} />)
+  renderPage(<BigPicturePage shellConfig={{}} />)
 
   const alphaTile = await screen.findByRole('option', { name: 'Alpha Game' })
   expect(alphaTile).toHaveFocus()
@@ -91,7 +100,7 @@ test('arrow keys move the selection and update the hero', async () => {
 test('shows empty state when the library has no games', async () => {
   browseApi.fetchBrowseGames.mockResolvedValue({ games: [] })
 
-  render(<BigPicturePage shellConfig={{}} />)
+  renderPage(<BigPicturePage shellConfig={{}} />)
 
   expect(await screen.findByText('No games in your library yet.')).toBeInTheDocument()
   expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('No games')
@@ -105,7 +114,7 @@ test('shows an error with retry that recovers', async () => {
     .mockRejectedValueOnce(new Error('boom'))
     .mockResolvedValueOnce({ games: GAMES })
 
-  render(<BigPicturePage shellConfig={{}} />)
+  renderPage(<BigPicturePage shellConfig={{}} />)
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load Big Picture.')
 

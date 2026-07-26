@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { fetchBrowseGames } from '../api/browse'
+import { queueClientCommand } from '../api/clientCommands'
 import { coverUrl } from '../utils/coverUrl'
 import './BigPicturePage.css'
 
-const DEFAULT_PER_PAGE = 24
+const DEFAULT_PER_PAGE = 48
 const GAMEPAD_DEADZONE = 0.5
 const GAMEPAD_REPEAT_MS = 220
 
@@ -295,15 +297,30 @@ export function BigPicturePage({ shellConfig = {} }) {
             ) : null}
             {selected ? (
               <div className="gt-bp__hero-actions">
-                <a
-                  className="gt-bp__btn gt-bp__btn--primary"
-                  href={gameDetailsUrl(selected.uuid)}
-                >
+                <Link className="gt-bp__btn gt-bp__btn--primary" to={gameDetailsUrl(selected.uuid)}>
                   Open
-                </a>
+                </Link>
                 <a className="gt-bp__btn" href={downloadUrl(selected.uuid)}>
                   Download
                 </a>
+                {selected.client_connected && selected.lifecycle_state === 'downloaded' ? (
+                  <button
+                    type="button"
+                    className="gt-bp__btn"
+                    onClick={() => {
+                      void queueClientCommand(selected.uuid, 'install').then(() => {
+                        if (window.$?.notify) {
+                          window.$.notify('Install queued for companion', 'success')
+                        }
+                      })
+                    }}
+                  >
+                    Install
+                  </button>
+                ) : null}
+                <Link className="gt-bp__btn" to="/library">
+                  Exit
+                </Link>
               </div>
             ) : null}
           </div>

@@ -78,6 +78,12 @@ class Config(object):
     # Mobile / Quest-browser VR catalog
     ENABLE_VR_BROWSE = os.getenv('ENABLE_VR_BROWSE', 'false').lower() == 'true'
 
+    # Wave 7 — BYO debrid + single-player assists
+    ENABLE_DEBRID = os.getenv('ENABLE_DEBRID', 'false').lower() == 'true'
+    ENABLE_GAME_ASSISTS = os.getenv('ENABLE_GAME_ASSISTS', 'false').lower() == 'true'
+    REAL_DEBRID_TOKEN = os.getenv('REAL_DEBRID_TOKEN', '')
+    ALLDEBRID_API_KEY = os.getenv('ALLDEBRID_API_KEY', '')
+
     # Optional *arr connector defaults (overridden by Admin → Arr config)
     PROWLARR_URL = os.getenv('PROWLARR_URL', '')
     PROWLARR_API_KEY = os.getenv('PROWLARR_API_KEY', '')

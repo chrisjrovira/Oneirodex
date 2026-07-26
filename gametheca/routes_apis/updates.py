@@ -192,4 +192,48 @@ def updates_store_search():
                 'score': hit.get('score'),
             })
 
+    # Bind store hits to library games (steam_app_id, then normalized name).
+    steam_ids = {
+        int(row['steam_app_id'])
+        for row in results
+        if row.get('source') == 'steam' and str(row.get('steam_app_id') or '').isdigit()
+    }
+    games_by_steam: dict[int, Game] = {}
+    if steam_ids:
+        for game in db.session.execute(
+            apply_game_access_filters(
+                select(Game).filter(Game.steam_app_id.in_(list(steam_ids))),
+                current_user,
+            )
+        ).scalars().all():
+            if game.steam_app_id is not None:
+                games_by_steam[int(game.steam_app_id)] = game
+
+    name_keys = {(row.get('name') or '').strip().lower() for row in results if row.get('name')}
+    games_by_name: dict[str, Game] = {}
+    if name_keys:
+        # Bound scan: only games the user can access whose name matches any hit.
+        for game in db.session.execute(
+            apply_game_access_filters(select(Game), current_user).limit(2000)
+        ).scalars().all():
+            key = (game.name or '').strip().lower()
+            if key in name_keys and key not in games_by_name:
+                games_by_name[key] = game
+
+    for row in results:
+        matched = None
+        sid = row.get('steam_app_id')
+        if sid is not None and str(sid).isdigit():
+            matched = games_by_steam.get(int(sid))
+        if matched is None:
+            matched = games_by_name.get((row.get('name') or '').strip().lower())
+        if matched is not None:
+            row['matched_game_uuid'] = matched.uuid
+            row['matched_game_name'] = matched.name
+            row['library_url'] = f'/game_details/{matched.uuid}'
+        else:
+            row['matched_game_uuid'] = None
+            row['matched_game_name'] = None
+            row['library_url'] = None
+
     return jsonify({'q': name, 'source': source, 'results': results[: limit * 2]})

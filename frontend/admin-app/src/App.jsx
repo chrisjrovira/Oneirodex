@@ -7,6 +7,7 @@ import {
   HelpPage,
   HubPage,
   LibrariesPage,
+  ScansPage,
   SettingsPage,
   ThemesPage,
   resolveAdminPage,
@@ -59,13 +60,7 @@ function RoutedAdminPage() {
     case 'help':
       return <HelpPage />
     case 'scans':
-      return (
-        <HubPage
-          title="Scans & recognition"
-          lede="Scan jobs, identify workbench, and image queue."
-          links={HUB_LINKS.scans}
-        />
-      )
+      return <ScansPage />
     case 'users':
       return (
         <HubPage title="Users & access" lede="Accounts, invites, and whitelist." links={HUB_LINKS.users} />

@@ -5,6 +5,7 @@ import { TopNav } from './chrome/TopNav'
 import { DiscoverApp } from './DiscoverApp'
 import { FavoritesApp } from './FavoritesApp'
 import { LibraryApp } from './LibraryApp'
+import { AcquirePage } from './pages/AcquirePage'
 import { BigPicturePage } from './pages/BigPicturePage'
 import { CalendarPage } from './pages/CalendarPage'
 import { CollectionDetailPage } from './pages/CollectionDetailPage'
@@ -72,6 +73,7 @@ export function App({ shellConfig = {} }) {
 
   return (
     <Routes>
+      <Route path="/big-picture" element={<BigPicturePage shellConfig={shellConfig} />} />
       <Route
         element={
           <Layout
@@ -134,10 +136,10 @@ export function App({ shellConfig = {} }) {
         <Route path="/news" element={<NewsPage shellConfig={shellConfig} />} />
         <Route path="/wishlist" element={<WishlistPage shellConfig={shellConfig} />} />
         <Route path="/updates" element={<UpdatesPage shellConfig={shellConfig} />} />
+        <Route path="/acquire" element={<AcquirePage />} />
         <Route path="/playtime" element={<PlaytimePage shellConfig={shellConfig} />} />
         <Route path="/calendar" element={<CalendarPage shellConfig={shellConfig} />} />
         <Route path="/ownership" element={<OwnershipPage shellConfig={shellConfig} />} />
-        <Route path="/big-picture" element={<BigPicturePage shellConfig={shellConfig} />} />
         <Route path="/vr" element={<VrPage shellConfig={shellConfig} />} />
         <Route path="/trailers" element={<TrailersPage shellConfig={shellConfig} />} />
         <Route path="/help" element={<HelpPage shellConfig={shellConfig} />} />

@@ -13,12 +13,12 @@ export const ADMIN_NAV = [
 export const SETTINGS_CARDS = [
   { to: '/admin/new_server_settings', title: 'Server Settings', blurb: 'Scan threads, download batching, site URL.' },
   { to: '/admin/attract_mode_settings', title: 'Attract Mode', blurb: 'Idle trailer slideshow and filters.' },
-  { to: '/admin/emulator_profiles', title: 'Emulators', blurb: 'WebRetro / emulator profiles.' },
-  { to: '/admin/arr', title: 'Arr Module', blurb: 'Radarr/Sonarr-style automation hooks.' },
+  { to: '/admin/emulator_profiles', title: 'Emulators', blurb: 'WebRetro cores, BIOS, cloud saves.' },
+  { to: '/admin/arr', title: 'Arr Module', blurb: 'BYO Prowlarr/Jackett + qBittorrent (no bundled indexers).' },
   { to: '/admin/quality_profiles', title: 'Quality Profiles', blurb: 'Release quality rules.' },
   { to: '/admin/detail_layout', title: 'Detail Layout', blurb: 'Game details field layout.' },
   { to: '/admin/ai', title: 'AI Assist', blurb: 'AI identification and helpers.' },
-  { to: '/admin/storage', title: 'Storage', blurb: 'Disk paths and volume hints.' },
+  { to: '/admin/storage', title: 'Storage', blurb: 'Disk paths, BIOS under userdata/system, assists packs.' },
   { to: '/admin/themes', title: 'Themes', blurb: 'Apply presets; Reset Default Themes.' },
 ]
 
