@@ -1,0 +1,25 @@
+.gt-page-status {
+  margin: 0.35rem 0;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--gt-glass-border, color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent));
+  background: var(--gt-glass-bg, color-mix(in srgb, var(--gt-surface, #141820) 88%, transparent));
+  backdrop-filter: blur(var(--gt-glass-blur, 12px));
+  color: var(--gt-text-muted, color-mix(in srgb, var(--gt-text, #e8f5ee) 72%, transparent));
+}
+
+.gt-page-status__message {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: inherit;
+}
+
+.gt-page-status--loading {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 36%, transparent);
+  color: var(--gt-accent, #2fd67b);
+}
+
+.gt-page-status--empty {
+  border-style: dashed;
+}

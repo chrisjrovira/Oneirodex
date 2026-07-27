@@ -1,0 +1,292 @@
+import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { CollectionDetailPage } from './CollectionDetailPage'
+import { CollectionsPage } from './CollectionsPage'
+import * as collectionsApi from '../api/collections'
+
+vi.mock('../api/collections', () => ({
+  fetchCollections: vi.fn(),
+  fetchCollection: vi.fn(),
+  createCollection: vi.fn(),
+  updateCollection: vi.fn(),
+  deleteCollection: vi.fn(),
+  reorderCollectionItems: vi.fn(),
+  addCollectionItem: vi.fn(),
+  removeCollectionItem: vi.fn(),
+  searchGames: vi.fn(),
+}))
+
+function renderPage() {
+  return render(
+    <MemoryRouter>
+      <CollectionsPage />
+    </MemoryRouter>,
+  )
+}
+
+function renderDetailPage(uuid = 'abc-123') {
+  return render(
+    <MemoryRouter initialEntries={[`/collections/${uuid}`]}>
+      <Routes>
+        <Route path="/collections/:collectionUuid" element={<CollectionDetailPage />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
+
+beforeEach(() => {
+  collectionsApi.fetchCollections.mockReset()
+  collectionsApi.fetchCollection.mockReset()
+  collectionsApi.createCollection.mockReset()
+  collectionsApi.updateCollection.mockReset()
+  collectionsApi.deleteCollection.mockReset()
+  collectionsApi.reorderCollectionItems.mockReset()
+  collectionsApi.addCollectionItem.mockReset()
+  collectionsApi.removeCollectionItem.mockReset()
+  collectionsApi.searchGames.mockReset()
+  collectionsApi.searchGames.mockResolvedValue([])
+})
+
+test('lists collections from API and links to detail routes', async () => {
+  collectionsApi.fetchCollections.mockResolvedValue({
+    collections: [
+      {
+        id: 1,
+        uuid: 'abc-123',
+        name: 'Cozy co-op nights',
+        description: 'Couch games',
+        is_public: true,
+        is_system: false,
+        item_count: 3,
+        can_edit: true,
+      },
+    ],
+  })
+
+  renderPage()
+
+  expect(screen.getByText('Loading…')).toBeInTheDocument()
+
+  const link = await screen.findByRole('link', { name: /Cozy co-op nights/ })
+  expect(link).toHaveAttribute('href', '/collections/abc-123')
+  expect(within(link).getByText('Couch games')).toBeInTheDocument()
+  expect(within(link).getByText(/Public/)).toBeInTheDocument()
+  expect(within(link).getByText(/3 games/)).toBeInTheDocument()
+})
+
+test('shows empty state when no collections', async () => {
+  collectionsApi.fetchCollections.mockResolvedValue({ collections: [] })
+
+  renderPage()
+
+  expect(
+    await screen.findByText('No collections yet. Create your first shelf with the form above.'),
+  ).toBeInTheDocument()
+})
+
+test('shows retry control when the request fails', async () => {
+  collectionsApi.fetchCollections.mockRejectedValueOnce(new Error('collections 500'))
+  collectionsApi.fetchCollections.mockResolvedValueOnce({ collections: [] })
+
+  renderPage()
+
+  expect(await screen.findByText('Unable to load collections.')).toBeInTheDocument()
+
+  await userEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+  expect(
+    await screen.findByText('No collections yet. Create your first shelf with the form above.'),
+  ).toBeInTheDocument()
+})
+
+test('creates a collection and shows it in the list', async () => {
+  collectionsApi.fetchCollections.mockResolvedValue({ collections: [] })
+  collectionsApi.createCollection.mockResolvedValue({
+    id: 7,
+    uuid: 'new-uuid',
+    name: 'Roguelites',
+    description: '',
+    is_public: true,
+    is_system: false,
+    item_count: 0,
+    can_edit: true,
+  })
+
+  renderPage()
+
+  await screen.findByText('No collections yet. Create your first shelf with the form above.')
+
+  await userEvent.type(screen.getByLabelText('Name'), 'Roguelites')
+  await userEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+  expect(collectionsApi.createCollection).toHaveBeenCalledWith({
+    name: 'Roguelites',
+    description: '',
+    isPublic: true,
+  })
+  expect(await screen.findByRole('link', { name: /Roguelites/ })).toHaveAttribute(
+    'href',
+    '/collections/new-uuid',
+  )
+})
+
+test('detail page renders items for the routed collection uuid', async () => {
+  collectionsApi.fetchCollection.mockResolvedValue({
+    id: 1,
+    uuid: 'abc-123',
+    name: 'Cozy co-op nights',
+    description: 'Couch games',
+    is_public: true,
+    is_system: false,
+    can_edit: true,
+    items: [{ id: 5, game_uuid: 'game-1', game_name: 'Overcooked', position: 0 }],
+  })
+
+  renderDetailPage()
+
+  expect(screen.getByText('Loading…')).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Cozy co-op nights' })).toBeInTheDocument()
+  expect(collectionsApi.fetchCollection).toHaveBeenCalledWith(
+    'abc-123',
+    expect.objectContaining({ signal: expect.anything() }),
+  )
+  expect(screen.getByRole('link', { name: /Overcooked/ })).toHaveAttribute(
+    'href',
+    '/game_details/game-1',
+  )
+  expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument()
+  expect(screen.getByLabelText('Name')).toHaveValue('Cozy co-op nights')
+})
+
+test('detail page saves collection edits', async () => {
+  collectionsApi.fetchCollection.mockResolvedValue({
+    id: 1,
+    uuid: 'abc-123',
+    name: 'Cozy',
+    description: 'Old blurb',
+    is_public: true,
+    is_system: false,
+    can_edit: true,
+    items: [],
+  })
+  collectionsApi.updateCollection.mockResolvedValue({
+    id: 1,
+    uuid: 'abc-123',
+    name: 'Cozy remixed',
+    description: 'New blurb',
+    is_public: false,
+    is_system: false,
+    can_edit: true,
+    item_count: 0,
+    items: [],
+  })
+
+  renderDetailPage()
+  await screen.findByRole('heading', { name: 'Cozy' })
+
+  const nameInput = screen.getByLabelText('Name')
+  await userEvent.clear(nameInput)
+  await userEvent.type(nameInput, 'Cozy remixed')
+  const descriptionInput = screen.getByLabelText('Description')
+  await userEvent.clear(descriptionInput)
+  await userEvent.type(descriptionInput, 'New blurb')
+  await userEvent.click(screen.getByLabelText('Public'))
+  await userEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+
+  expect(collectionsApi.updateCollection).toHaveBeenCalledWith('abc-123', {
+    name: 'Cozy remixed',
+    description: 'New blurb',
+    isPublic: false,
+  })
+  expect(await screen.findByRole('heading', { name: 'Cozy remixed' })).toBeInTheDocument()
+})
+
+test('detail page reorders items with up/down controls', async () => {
+  collectionsApi.fetchCollection.mockResolvedValue({
+    id: 1,
+    uuid: 'abc-123',
+    name: 'Shelf',
+    is_public: true,
+    is_system: false,
+    can_edit: true,
+    items: [
+      { id: 1, game_uuid: 'game-a', game_name: 'Alpha', position: 0 },
+      { id: 2, game_uuid: 'game-b', game_name: 'Beta', position: 1 },
+    ],
+  })
+  collectionsApi.reorderCollectionItems.mockResolvedValue({
+    id: 1,
+    uuid: 'abc-123',
+    name: 'Shelf',
+    is_public: true,
+    is_system: false,
+    can_edit: true,
+    item_count: 2,
+    items: [
+      { id: 2, game_uuid: 'game-b', game_name: 'Beta', position: 0 },
+      { id: 1, game_uuid: 'game-a', game_name: 'Alpha', position: 1 },
+    ],
+  })
+
+  renderDetailPage()
+  await screen.findByRole('heading', { name: 'Shelf' })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Move Alpha down' }))
+
+  expect(collectionsApi.reorderCollectionItems).toHaveBeenCalledWith('abc-123', [
+    'game-b',
+    'game-a',
+  ])
+})
+
+test('detail page shows an empty state when the collection has no games', async () => {
+  collectionsApi.fetchCollection.mockResolvedValue({
+    id: 2,
+    uuid: 'empty-uuid',
+    name: 'Empty shelf',
+    description: null,
+    is_public: true,
+    is_system: false,
+    can_edit: true,
+    items: [],
+  })
+
+  renderDetailPage('empty-uuid')
+
+  expect(
+    await screen.findByText('No games in this collection yet. Search below to add one.'),
+  ).toBeInTheDocument()
+  expect(screen.getByLabelText('Search games')).toBeInTheDocument()
+})
+
+test('detail page searches and adds a picked game', async () => {
+  collectionsApi.fetchCollection.mockResolvedValue({
+    id: 1,
+    uuid: 'abc-123',
+    name: 'Cozy',
+    is_public: true,
+    is_system: false,
+    can_edit: true,
+    items: [],
+  })
+  collectionsApi.searchGames.mockResolvedValue([
+    { id: 9, uuid: 'game-9', name: 'Celeste' },
+  ])
+  collectionsApi.addCollectionItem.mockResolvedValue({
+    id: 11,
+    game_uuid: 'game-9',
+    game_name: 'Celeste',
+    position: 0,
+  })
+
+  renderDetailPage()
+  await screen.findByRole('heading', { name: 'Cozy' })
+
+  await userEvent.type(screen.getByLabelText('Search games'), 'Cel')
+  const addButton = await screen.findByRole('button', { name: /Celeste/ })
+  await userEvent.click(addButton)
+
+  expect(collectionsApi.addCollectionItem).toHaveBeenCalledWith('abc-123', 'game-9')
+  expect(await screen.findByRole('link', { name: /Celeste/ })).toBeInTheDocument()
+})

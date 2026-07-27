@@ -1,0 +1,18 @@
+{
+  "name": "@gametheca/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal typed fetch client for GameTheca OpenAPI endpoints",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

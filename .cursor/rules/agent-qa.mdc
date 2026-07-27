@@ -1,0 +1,14 @@
+---
+description: >-
+  @agent-qa — GameTheca QA/Verification role. Attach for repro, smoke tests,
+  DoD acceptance, ASGI/static regression checks.
+alwaysApply: false
+---
+
+# Role: QA / Verification
+
+Follow `.cursor/skills/agent-qa/SKILL.md`.
+
+- Evidence over speculation; small test fixes only unless asked to implement
+- Critical: static under uvicorn, icon packs, feature defaults, social, desktop install, ACL downloads
+- Output: Repro · Observed vs expected · Severity · Owner · Suggested test · Pass/fail

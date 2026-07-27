@@ -1,0 +1,329 @@
+"""Shared game-details payload for SPA API and (legacy) Jinja."""
+
+from __future__ import annotations
+
+import os
+
+from flask import current_app, url_for
+from sqlalchemy import and_, exists, select
+
+from gametheca import db
+from gametheca.models import (
+    GameExtra,
+    GameUpdate,
+    UserGameProgress,
+    get_status_info,
+    user_favorites,
+    user_game_status,
+)
+from gametheca.utils.client_lifecycle import load_lifecycle_map
+from gametheca.utils.cover_url import resolve_game_cover_url
+from gametheca.utils.functions import format_size, get_url_icon, sanitize_string_input
+from gametheca.utils.lifecycle import web_lifecycle_fields
+from gametheca.utils.play_url import browse_play_fields, library_platform_key
+from gametheca.utils.rom_language import preferred_locale_matches
+from gametheca.utils.secondary_scrapers import game_card_flags
+
+
+def _rom_patch_apply_enabled() -> bool:
+    try:
+        return str(current_app.config.get('ENABLE_ROM_PATCH_APPLY', '')).lower() in (
+            '1',
+            'true',
+            'yes',
+            'on',
+        )
+    except RuntimeError:
+        return os.getenv('ENABLE_ROM_PATCH_APPLY', 'true').lower() in (
+            '1',
+            'true',
+            'yes',
+            'on',
+        )
+
+
+def _rom_ai_translate_enabled() -> bool:
+    try:
+        return str(current_app.config.get('ENABLE_ROM_AI_TRANSLATE', '')).lower() in (
+            '1',
+            'true',
+            'yes',
+            'on',
+        )
+    except RuntimeError:
+        return os.getenv('ENABLE_ROM_AI_TRANSLATE', 'true').lower() in (
+            '1',
+            'true',
+            'yes',
+            'on',
+        )
+
+
+def _patch_catalog_enabled() -> bool:
+    try:
+        return str(current_app.config.get('ENABLE_PATCH_CATALOG', '')).lower() in (
+            '1',
+            'true',
+            'yes',
+            'on',
+        )
+    except RuntimeError:
+        return os.getenv('ENABLE_PATCH_CATALOG', 'true').lower() in (
+            '1',
+            'true',
+            'yes',
+            'on',
+        )
+
+
+def _ai_target_lang_hint(preferred_locale: str | None) -> str:
+    pref = (preferred_locale or 'en-US').strip().lower() or 'en-us'
+    if pref.startswith('en'):
+        return 'en'
+    if pref.startswith('ja'):
+        return 'ja'
+    if pref.startswith('es'):
+        return 'es'
+    if pref.startswith('fr'):
+        return 'fr'
+    if pref.startswith('de'):
+        return 'de'
+    return pref.split('-')[0] or 'en'
+
+
+def build_game_details_payload(game, user) -> dict:
+    """JSON-safe details payload (no disk paths)."""
+    user_id = getattr(user, 'id', None) if user is not None else None
+    updates = db.session.execute(
+        select(GameUpdate).filter_by(game_uuid=game.uuid)
+    ).scalars().all()
+    extras = db.session.execute(
+        select(GameExtra).filter_by(game_uuid=game.uuid)
+    ).scalars().all()
+    lifecycle_map = load_lifecycle_map(user_id)
+
+    preferred_locale = 'en-US'
+    prefs = getattr(user, 'preferences', None) if user is not None else None
+    if prefs is not None:
+        preferred_locale = getattr(prefs, 'preferred_game_locale', None) or 'en-US'
+
+    rom_languages_raw = getattr(game, 'rom_languages', None) or ''
+    rom_lang_list = [part.strip() for part in rom_languages_raw.split(',') if part.strip()]
+    rom_region = getattr(game, 'rom_region', None)
+    locale_matches = preferred_locale_matches(
+        preferred_locale, rom_lang_list, region=rom_region
+    )
+
+    translation_patches = []
+    for extra in extras:
+        if getattr(extra, 'extra_kind', None) != 'translation_patch':
+            continue
+        translation_patches.append(
+            {
+                'uuid': extra.uuid,
+                'label': os.path.basename(extra.file_path or '') or extra.uuid[:8],
+                'patch_format': getattr(extra, 'patch_format', None),
+                'target_language': getattr(extra, 'target_language', None),
+                'source_url': getattr(extra, 'source_url', None),
+                'download_url': f'/download_other/extra/{game.uuid}/{extra.uuid}',
+            }
+        )
+
+    needs_translation = locale_matches is False
+    patch_apply_enabled = _rom_patch_apply_enabled()
+    has_translation_patch = bool(translation_patches)
+    ai_translate_enabled = _rom_ai_translate_enabled()
+    show_ai_translate = ai_translate_enabled and needs_translation and not has_translation_patch
+    show_translations_block = (
+        needs_translation or bool(translation_patches) or show_ai_translate
+    )
+    try:
+        ai_service_url = (current_app.config.get('RETROARCH_AI_SERVICE_URL') or '').strip() or None
+    except RuntimeError:
+        ai_service_url = (os.getenv('RETROARCH_AI_SERVICE_URL') or '').strip() or None
+
+    cover_image = None
+    screenshots = []
+    for img in game.images.all():
+        image_type = getattr(img, 'image_type', None)
+        if image_type == 'cover' and cover_image is None:
+            cover_image = img
+        elif image_type == 'screenshot':
+            raw = getattr(img, 'url', None) or ''
+            if raw.startswith('http') or raw.startswith('/'):
+                screenshots.append(raw)
+            else:
+                screenshots.append(url_for('static', filename=f'library/images/{raw}'))
+    platform_key = library_platform_key(game)
+    platform_label = None
+    library = getattr(game, 'library', None)
+    platform = getattr(library, 'platform', None) if library is not None else None
+    if platform is not None:
+        platform_label = getattr(platform, 'value', None) or platform_key
+
+    steam_app_id = getattr(game, 'steam_app_id', None)
+    steam_url = getattr(game, 'steam_url', None) or None
+    if steam_app_id and not steam_url:
+        steam_url = f'https://store.steampowered.com/app/{int(steam_app_id)}'
+
+    is_favorite = False
+    user_status = None
+    status_icon = 'fa-circle'
+    status_label = 'No Status'
+    if user_id:
+        is_favorite = bool(
+            db.session.execute(
+                select(
+                    exists().where(
+                        and_(
+                            user_favorites.c.user_id == user_id,
+                            user_favorites.c.game_uuid == game.uuid,
+                        )
+                    )
+                )
+            ).scalar()
+        )
+        status_row = db.session.execute(
+            select(user_game_status.c.status).where(
+                and_(
+                    user_game_status.c.user_id == user_id,
+                    user_game_status.c.game_uuid == game.uuid,
+                )
+            )
+        ).first()
+        if status_row:
+            user_status = status_row[0]
+        status_info = get_status_info(user_status)
+        status_icon = status_info['icon']
+        status_label = status_info['label']
+
+    playtime = {
+        'total_seconds': 0,
+        'session_count': 0,
+        'last_played_at': None,
+    }
+    if user_id:
+        progress = db.session.execute(
+            select(UserGameProgress).filter_by(user_id=user_id, game_uuid=game.uuid)
+        ).scalars().first()
+        if progress:
+            playtime = {
+                'total_seconds': int(progress.total_seconds or 0),
+                'session_count': int(progress.session_count or 0),
+                'last_played_at': (
+                    progress.last_played_at.isoformat()
+                    if progress.last_played_at
+                    else None
+                ),
+            }
+
+    video_urls = getattr(game, 'video_urls', None) or []
+    if not isinstance(video_urls, list):
+        video_urls = []
+
+    return {
+        'id': game.id,
+        'uuid': game.uuid,
+        'igdb_id': game.igdb_id,
+        'name': game.name,
+        'summary': game.summary,
+        'storyline': game.storyline,
+        'cover_url': resolve_game_cover_url(game, cover_image),
+        'local_version': getattr(game, 'local_version', None),
+        'remote_version_summary': getattr(game, 'remote_version_summary', None),
+        'aggregated_rating': game.aggregated_rating,
+        'aggregated_rating_count': game.aggregated_rating_count,
+        'rating': game.rating,
+        'rating_count': game.rating_count,
+        'total_rating': game.total_rating,
+        'total_rating_count': game.total_rating_count,
+        'first_release_date': (
+            game.first_release_date.isoformat() if game.first_release_date else None
+        ),
+        'date_identified': (
+            game.date_identified.isoformat() if game.date_identified else None
+        ),
+        'last_updated': (
+            game.last_updated.isoformat() if game.last_updated else None
+        ),
+        'slug': game.slug,
+        'status': game.status.value if game.status else None,
+        'category': game.category.value if game.category else None,
+        'url_igdb': game.url_igdb,
+        'url': game.url,
+        'video_urls': video_urls,
+        'genres': [genre.name for genre in game.genres],
+        'game_modes': [mode.name for mode in game.game_modes],
+        'themes': [theme.name for theme in game.themes],
+        'platforms': [platform.name for platform in game.platforms],
+        'player_perspectives': [p.name for p in game.player_perspectives],
+        'developer': game.developer.name if game.developer else None,
+        'publisher': game.publisher.name if game.publisher else None,
+        'size': format_size(game.size),
+        'size_bytes': int(game.size or 0),
+        'times_downloaded': game.times_downloaded,
+        'steam_app_id': steam_app_id,
+        'steam_url': steam_url if steam_url and steam_url != 'Not available' else None,
+        'hltb_id': game.hltb_id,
+        'hltb_main_story': game.hltb_main_story,
+        'hltb_main_extra': game.hltb_main_extra,
+        'hltb_completionist': game.hltb_completionist,
+        'hltb_all_styles': game.hltb_all_styles,
+        'freshness_status': getattr(game, 'freshness_status', None),
+        'freshness_confidence': getattr(game, 'freshness_confidence', None),
+        'rom_region': rom_region,
+        'rom_languages': getattr(game, 'rom_languages', None),
+        'has_english': getattr(game, 'has_english', None),
+        'preferred_game_locale': preferred_locale,
+        'preferred_locale_matches': locale_matches,
+        'needs_translation': needs_translation,
+        'show_translations_block': show_translations_block,
+        'translation_patches': translation_patches,
+        'has_translation_patch': has_translation_patch,
+        'translation_howto_url': '/help#translations',
+        'rom_patch_apply_enabled': patch_apply_enabled,
+        'patch_catalog_enabled': _patch_catalog_enabled(),
+        'rom_ai_translate': {
+            'enabled': ai_translate_enabled,
+            'show_panel': show_ai_translate,
+            'service_url_hint': ai_service_url,
+            'target_lang': _ai_target_lang_hint(preferred_locale),
+            'runbook_url': '/help#translations',
+            'note': (
+                'Live OCR/MT overlay via RetroArch AI Service — gist quality, not a permanent patch. '
+                'Browser WebRetro cannot use this; companion/native RetroArch only.'
+            ),
+        },
+        'offline_translate_status': 'unsupported',
+        'library_uuid': game.library_uuid,
+        'library_platform': platform_key,
+        'library_platform_label': platform_label,
+        'updates_count': len(updates),
+        'extras_count': len(extras),
+        'nfo_content': (
+            sanitize_string_input(game.nfo_content, 10000) if game.nfo_content else None
+        ),
+        'urls': [
+            {
+                'type': url.url_type,
+                'url': url.url,
+                'icon': get_url_icon(url.url_type, url.url),
+            }
+            for url in game.urls
+        ],
+        'screenshots': screenshots,
+        'is_favorite': is_favorite,
+        'user_status': user_status,
+        'status_icon': status_icon,
+        'status_label': status_label,
+        'playtime': playtime,
+        'is_admin': bool(getattr(user, 'role', None) == 'admin'),
+        **browse_play_fields(game),
+        **game_card_flags(game),
+        **web_lifecycle_fields(
+            game,
+            updates_count=len(updates),
+            user_id=user_id,
+            client_state=lifecycle_map.get(game.uuid),
+        ),
+    }

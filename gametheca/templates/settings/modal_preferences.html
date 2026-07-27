@@ -1,0 +1,114 @@
+{% import 'partials/icons.html' as icons %}
+<div class="modal fade" id="preferencesModal" tabindex="-1" aria-labelledby="preferencesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="preferencesModalLabel">
+                    {{ icons.icon('cogs') }} User Preferences
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="preferencesForm" method="POST" action="{{ url_for('settings.settings_panel') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.items_per_page.label(class="form-label") }}
+                        {{ form.items_per_page(class="form-control") }}
+                        {% for error in form.items_per_page.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.default_sort.label(class="form-label") }}
+                        {{ form.default_sort(class="form-select") }}
+                        {% for error in form.default_sort.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.default_sort_order.label(class="form-label") }}
+                        {{ form.default_sort_order(class="form-select") }}
+                        {% for error in form.default_sort_order.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.theme.label(class="form-label") }}
+                        {{ form.theme(class="form-select", id="themeSelect") }}
+                        {% for error in form.theme.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <div class="theme-swatch-grid" id="themeSwatchGrid" role="group" aria-label="Theme previews">
+                            {% for value, label in form.theme.choices %}
+                            <button type="button" class="theme-swatch{% if form.theme.data == value %} is-selected{% endif %}"
+                                    data-theme="{{ value }}" title="{{ label }}"
+                                    aria-pressed="{{ 'true' if form.theme.data == value else 'false' }}">
+                                <span class="theme-swatch-chip theme-swatch-{{ value }}"></span>
+                                <span class="theme-swatch-label">{{ label }}</span>
+                            </button>
+                            {% endfor %}
+                        </div>
+                        <p class="form-text text-muted small mb-0">Color theme (surfaces &amp; accent). Independent of icon pack.</p>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.icon_pack.label(class="form-label") }}
+                        {{ form.icon_pack(class="form-select", id="iconPackSelect") }}
+                        {% for error in form.icon_pack.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <div class="icon-pack-preview" id="iconPackPreview" role="group" aria-label="Icon pack preview">
+                            {% for value, label in form.icon_pack.choices %}
+                            <button type="button" class="icon-pack-chip{% if form.icon_pack.data == value %} is-selected{% endif %}"
+                                    data-icon-pack="{{ value }}" title="{{ label }}"
+                                    aria-pressed="{{ 'true' if form.icon_pack.data == value else 'false' }}">
+                                <span class="icon-pack-chip-icons" data-preview-pack="{{ value }}">
+                                    {{ icons.icon('library', size=16) }}
+                                    {{ icons.icon('download', size=16) }}
+                                    {{ icons.icon('favorites', size=16) }}
+                                </span>
+                                <span class="icon-pack-chip-label">{{ label }}</span>
+                            </button>
+                            {% endfor %}
+                        </div>
+                        <p class="form-text text-muted small mb-0">Icon style works with any color theme (uses currentColor).</p>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.tile_size.label(class="form-label") }}
+                        <div class="d-flex align-items-center gap-2">
+                            {{ form.tile_size(class="form-range flex-grow-1", id="tileSizeSelect", type="range", min="0", max="100", step="1") }}
+                            <span id="tileSizeValue" class="text-muted small" style="min-width:2.5rem;">{{ form.tile_size.data }}%</span>
+                        </div>
+                        {% for error in form.tile_size.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                        <p class="form-text text-muted small mb-0">Library tile size as a continuous percent (0–100).</p>
+                        <script>
+                          (function () {
+                            var input = document.getElementById('tileSizeSelect');
+                            var label = document.getElementById('tileSizeValue');
+                            if (!input || !label) return;
+                            var sync = function () { label.textContent = input.value + '%'; };
+                            input.addEventListener('input', sync);
+                            sync();
+                          })();
+                        </script>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.preferred_game_locale.label(class="form-label") }}
+                        {{ form.preferred_game_locale(class="form-select", id="preferredGameLocaleSelect") }}
+                        {% for error in form.preferred_game_locale.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <p class="form-text text-muted small mb-0">
+                            Preferred ROM / game content language (separate from UI language). Used for translation chips on game details.
+                        </p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="preferencesForm" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>

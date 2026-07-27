@@ -1,0 +1,72 @@
+{
+
+  "$schema": "../gen/schemas/desktop-schema.json",
+
+  "identifier": "default",
+
+  "description": "Main companion window — lifecycle, downloads, launch, and Friends window control",
+
+  "windows": ["main"],
+
+  "permissions": [
+
+    "core:default",
+
+    "core:path:default",
+
+    "core:webview:allow-create-webview-window",
+
+    "core:window:allow-show",
+
+    "core:window:allow-set-focus",
+
+    "core:window:allow-set-always-on-top",
+
+    "core:window:allow-get-all-windows",
+
+    "core:webview:allow-get-all-webviews",
+
+    "allow-load-config",
+
+    "allow-save-config",
+
+    "allow-secure-store-get",
+
+    "allow-secure-store-set",
+
+    "allow-secure-store-delete",
+
+    "allow-load-lifecycle-registry",
+
+    "allow-save-lifecycle-registry",
+
+    "allow-load-installs",
+
+    "allow-save-installs",
+
+    "allow-get-app-subdir",
+
+    "allow-write-file-bytes",
+
+    "allow-append-file-bytes",
+
+    "allow-extract-zip",
+
+    "allow-remove-path",
+
+    "allow-rename-path",
+
+    "allow-launch-game",
+
+    "allow-is-process-running",
+
+    "allow-get-flips-path",
+
+    "allow-run-flips-apply",
+
+    "allow-apply-staged-mod"
+
+  ]
+
+}
+

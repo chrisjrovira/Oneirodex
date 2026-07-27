@@ -1,0 +1,283 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+  }
+  
+.container-filtersandsort {
+    
+}
+
+.game-library-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min, 180px), 1fr));
+
+    position: relative;
+    
+}
+
+.library-filters-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.gt-badge-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 25px;
+}
+
+#sidebar .gt-badge-filter-chips {
+    margin-top: 8px;
+}
+
+.gt-badge-filter-chip {
+    appearance: none;
+    border: 1px solid color-mix(in srgb, var(--gt-border, var(--text-color, #ddd)) 28%, transparent);
+    background: color-mix(in srgb, var(--gt-surface-2, var(--panel-bg, #1a1a1e)) 88%, transparent);
+    color: var(--gt-text-muted, var(--text-color, #e8e8ec));
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    padding: 0.38rem 0.62rem;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.gt-badge-filter-chip:hover {
+    border-color: color-mix(in srgb, var(--gt-accent, var(--accent-color, #2fd67b)) 55%, transparent);
+}
+
+.gt-badge-filter-chip.is-active,
+.gt-badge-filter-chip[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--gt-accent, var(--accent-color, #2fd67b)) 22%, transparent);
+    border-color: color-mix(in srgb, var(--gt-accent, var(--accent-color, #2fd67b)) 55%, transparent);
+    color: var(--gt-accent, var(--accent-color, #2fd67b));
+}
+
+.library-filters {
+    margin-top: 0;
+}
+
+.library-filters-stack > .library-filters {
+    margin-top: 0;
+}
+
+/* Reduce spacing for sidebar filters */
+#sidebar .library-filters {
+    margin-top: 5px;
+}
+
+#sidebar .library-filters .form-group {
+    margin-bottom: 5px;
+    gap: 2px;
+}
+
+
+
+.modal-backdrop {
+    position: inherit;
+}
+
+.modal-backdrop.show {
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--shadow-dark);
+}
+
+.rating-slider {
+    
+    max-width: 100%;
+}
+
+
+.container-pagination {
+    display: flex;
+    margin: 5px;
+    align-items: center;
+    justify-content: center;
+
+}
+
+
+.pagination-style{
+    border: 1px solid var(--bg-dark-tertiary);
+    border-radius: 8px;
+    box-shadow: var(--shadow-box-standard);
+    align-items: center;
+}
+
+
+.hidden {
+    display: none;
+}
+
+
+#sortSelect {
+    height: 30px;
+    border-radius: 5px;
+}
+
+
+
+
+.container-filtersandsort {
+    background-color: transparent;
+    border-radius: 8px;
+    color: var(--color-gray-ccc);
+    padding: 15px;
+    box-shadow: var(--shadow-box-light);
+}
+
+/* Sidebar-specific overrides for compact layout */
+#sidebar .container-filtersandsort {
+    padding: 0;
+    box-shadow: none;
+}
+
+.library-filters select.form-control,
+.library-filters button.btn {
+    background-color: var(--bg-dark-tertiary);
+    border: 1px solid var(--border-light);
+    color: var(--color-gray-ddd);
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+/* Compact styling for sidebar filters */
+#sidebar .library-filters select.form-control,
+#sidebar .library-filters button.btn {
+    margin-bottom: 3px;
+    padding: 2px 5px;
+    font-size: 14px;
+    height: 28px;
+}
+
+.library-filters select.form-control:hover,
+.library-filters button.btn:hover {
+    background-color: var(--bg-light-overlay);
+}
+
+.rating-slider {
+    -webkit-appearance: none; 
+    width: 100%;
+    background: transparent; 
+}
+
+.rating-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-gray-888); 
+    cursor: pointer; 
+}
+
+.rating-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 5px;
+    background: #ccc; 
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+
+.library-filters label {
+    display: block;
+    margin-bottom: .5rem;
+    color: var(--color-gray-ccc);
+}
+
+/* Compact labels for sidebar */
+#sidebar .library-filters label {
+    margin-bottom: 2px;
+    font-size: 13px;
+}
+
+
+.sorting-dropdown {
+    display: flex;
+    align-items: center;
+}
+
+.sorting-dropdown option {
+    color: var(--text-dark-80);
+    background-color: var(--color-gray-ddd);
+}
+
+.library-filters select.form-control {
+    background-color: var(--bg-dark-tertiary);
+    color: var(--color-gray-ddd);
+}
+
+
+.library-filters select.form-control:-moz-focusring {
+    color: transparent;
+    text-shadow: 0 0 0 #ddd;
+}
+
+
+.library-filters option {
+    background: var(--bg-dark-50);
+    color: var(--color-gray-ccc);
+}
+
+
+.library-filters select.form-control::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+
+
+.sorting-dropdown select,
+.sorting-dropdown .btn-secondary {
+    background-color: var(--bg-dark-tertiary);
+    color: var(--color-gray-ccc);
+    border-radius: 4px;
+    border: 1px solid var(--border-light);
+    padding: 0px 5px;
+}
+
+.sorting-dropdown .btn-secondary {
+    margin-left: 5px;
+    padding: 2px 7px;
+}
+
+/* Compact styling for sidebar sorting dropdown */
+#sidebar .sorting-dropdown select,
+#sidebar .sorting-dropdown .btn-secondary {
+    padding: 2px 5px;
+    font-size: 14px;
+    height: 28px;
+    margin: 0;
+}
+
+#sidebar .sorting-dropdown .btn-secondary {
+    margin-left: 3px;
+}
+
+.button-group {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    margin-top: var(--spacing-xs);
+}
+
+.button-group .btn {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .container-filtersandsort {
+        padding: 10px;
+    }
+
+    .library-filters .form-group {
+        margin-bottom: 10px;
+    }
+}

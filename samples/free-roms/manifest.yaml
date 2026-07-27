@@ -1,0 +1,56 @@
+# Legal free / public-domain / author-redistributable sample ROMs for GameTheca.
+# Binaries are NOT in git — operators run: python scripts/fetch-free-roms.py
+# Never add commercial dumps or warez-adjacent titles here.
+# Keep notes on one line (quoted) so the stdlib YAML subset parser stays reliable.
+
+version: 1
+
+roms:
+  - id: nestest
+    platform: nes
+    filename: nestest.nes
+    url: https://raw.githubusercontent.com/christopherpow/nes-test-roms/master/other/nestest.nes
+    license: "Author-redistributable NES CPU test ROM (Kevin Horton / kevtris); mirrored for emulator testing"
+    source: https://github.com/christopherpow/nes-test-roms
+    notes: "Standard nestest; not a commercial game dump."
+
+  - id: dmg-acid2
+    platform: gb
+    filename: dmg-acid2.gb
+    url: https://github.com/mattcurrie/dmg-acid2/releases/download/v1.0/dmg-acid2.gb
+    license: MIT
+    source: https://github.com/mattcurrie/dmg-acid2
+    notes: "Tobu Tobu Girl is MIT/CC-BY but itch.io-only (no GitHub release ROM); dmg-acid2 is the GitHub-fetchable GB substitute."
+
+  - id: cascade7
+    platform: gba
+    filename: CASCADE7.gba
+    url: https://github.com/mick-schroeder/gba-cascade7/releases/download/v1.0.0/CASCADE7.gba
+    license: MIT
+    source: https://github.com/mick-schroeder/gba-cascade7
+    notes: "Open-source GBA puzzle homebrew with a clear GitHub Releases ROM."
+
+  - id: genmddj
+    platform: genesis
+    filename: genmddj-v0.17.bin
+    url: https://github.com/little-scale/genmddj/releases/download/v0.17/genmddj-v0.17.bin
+    license: MIT
+    source: https://github.com/little-scale/genmddj
+    notes: "Original Mega Drive / Genesis music-tracker homebrew (not a commercial dump)."
+
+  - id: atari2600-4paddle-tester
+    platform: atari2600
+    filename: atari2600-4paddle-tester.a26
+    url: https://github.com/alijani1/atari2600-4paddle-tester/releases/download/v1.0.0/atari2600-4paddle-tester.a26
+    license: MIT
+    source: https://github.com/alijani1/atari2600-4paddle-tester
+    notes: "Atari 2600 paddle diagnostic homebrew; Stella-compatible."
+
+# Platforms GameTheca can browser/companion-play, but no clear legal GitHub URL yet.
+skipped:
+  - platform: gbc
+    note: "Companion/browser ready -- place ROM after fetch when available. Tobu Tobu Girl Deluxe (MIT/CC-BY) is itch.io-only."
+  - platform: sms
+    note: "Companion/browser ready -- place ROM after fetch when available. No clearly licensed SMS homebrew ROM URL verified."
+  - platform: snes
+    note: "Companion/browser ready -- place ROM after fetch when available. No clearly licensed SNES homebrew ROM URL verified."

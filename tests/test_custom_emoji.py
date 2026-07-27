@@ -1,0 +1,99 @@
+"""Custom chat emoji (Wave 17b) unit tests."""
+
+from __future__ import annotations
+
+from io import BytesIO
+from uuid import uuid4
+
+import pytest
+from PIL import Image
+from werkzeug.datastructures import FileStorage
+
+from gametheca.models import User
+from gametheca.utils.chat import ALLOWED_REACTIONS, is_allowed_reaction
+from gametheca.utils.custom_emoji import (
+    MAX_CUSTOM_EMOJI,
+    delete_custom_emoji,
+    list_custom_emoji,
+    normalize_slug,
+    upload_custom_emoji,
+)
+
+
+@pytest.fixture
+def admin(db_session):
+    uid = str(uuid4())
+    user = User(
+        name=f'emoji_admin_{uid[:8]}',
+        email=f'emoji_admin_{uid[:8]}@example.com',
+        password_hash='hashed_password',
+        role='admin',
+        user_id=uid,
+        avatarpath='newstyle/avatar_default.jpg',
+        invite_quota=5,
+        is_email_verified=True,
+    )
+    user.set_password('testpassword123')
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+def _png_file(name='party.png', size=(64, 64)):
+    buf = BytesIO()
+    Image.new('RGBA', size, (255, 0, 0, 255)).save(buf, format='PNG')
+    buf.seek(0)
+    return FileStorage(stream=buf, filename=name, content_type='image/png')
+
+
+def test_normalize_slug():
+    assert normalize_slug(':Party_1:') == 'party_1'
+    with pytest.raises(ValueError):
+        normalize_slug('x')
+    with pytest.raises(ValueError):
+        normalize_slug('Bad Slug!')
+
+
+def test_is_allowed_reaction_fixed():
+    assert is_allowed_reaction('👍') is True
+    assert is_allowed_reaction('nope') is False
+
+
+def test_upload_list_delete(app, db_session, admin, tmp_path, monkeypatch):
+    with app.app_context():
+        monkeypatch.setitem(app.config, 'UPLOAD_FOLDER', str(tmp_path))
+        row = upload_custom_emoji(
+            slug='party',
+            label='Party',
+            file=_png_file(),
+            uploader=admin,
+        )
+        assert row.reaction_key() == ':party:'
+        assert is_allowed_reaction(':party:') is True
+        listed = list_custom_emoji()
+        assert any(item['slug'] == 'party' for item in listed)
+        assert delete_custom_emoji('party') is True
+        assert is_allowed_reaction(':party:') is False
+
+
+def test_upload_rejects_duplicate_and_cap(app, db_session, admin, tmp_path, monkeypatch):
+    with app.app_context():
+        monkeypatch.setitem(app.config, 'UPLOAD_FOLDER', str(tmp_path))
+        upload_custom_emoji(slug='one', label='One', file=_png_file(), uploader=admin)
+        with pytest.raises(ValueError, match='already exists'):
+            upload_custom_emoji(slug='one', label='One', file=_png_file(), uploader=admin)
+
+        # Fill to cap
+        for i in range(2, MAX_CUSTOM_EMOJI + 1):
+            upload_custom_emoji(
+                slug=f'e{i:02d}',
+                label=f'E{i}',
+                file=_png_file(name=f'e{i}.png'),
+                uploader=admin,
+            )
+        with pytest.raises(ValueError, match='limit'):
+            upload_custom_emoji(slug='overflow', label='X', file=_png_file(), uploader=admin)
+
+
+def test_fixed_set_unchanged():
+    assert len(ALLOWED_REACTIONS) == 5

@@ -1,0 +1,167 @@
+:root {
+  color-scheme: dark;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.5;
+  background: #0f1419;
+  color: #e7ecf1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+header h1 {
+  margin: 0 0 0.25rem;
+}
+
+.muted {
+  color: #9aa7b5;
+}
+
+.panel {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #243041;
+  border-radius: 12px;
+  background: #151b24;
+}
+
+.connect-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+input {
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #314055;
+  background: #0f1419;
+  color: inherit;
+}
+
+button,
+.action-btn {
+  cursor: pointer;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.55rem 0.9rem;
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.action-btn.play-btn {
+  background: #1f7a45;
+}
+
+.action-btn.play-btn:hover:not(:disabled) {
+  background: #269653;
+}
+
+.status {
+  margin-top: 0.75rem;
+  min-height: 1.25rem;
+}
+
+.status[data-tone='error'] {
+  color: #f87171;
+}
+
+.status[data-tone='success'] {
+  color: #4ade80;
+}
+
+.offline-banner {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #7f1d1d;
+  background: #1f1215;
+  color: #fca5a5;
+  font-size: 0.9rem;
+}
+
+.game-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.game-card {
+  padding: 0.85rem;
+  border-radius: 10px;
+  border: 1px solid #243041;
+  background: #10161f;
+}
+
+.game-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.uuid {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #9aa7b5;
+  word-break: break-all;
+}
+
+.state {
+  margin: 0.5rem 0;
+}
+
+.activity {
+  margin: 0.35rem 0;
+  font-size: 0.8rem;
+  color: #93c5fd;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.action-btn {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.55rem;
+  background: #1f2937;
+}
+
+.lifecycle-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.action-btn--update {
+  border-color: #f59e0b;
+  font-weight: 600;
+}
+.state-update .state-pill {
+  color: #f59e0b;
+}
+.lifecycle-list .install-path code {
+  font-size: 0.8em;
+}

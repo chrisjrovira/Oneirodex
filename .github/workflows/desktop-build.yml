@@ -1,0 +1,52 @@
+name: Desktop build
+
+# Product stance: Windows code signing is unsupported permanently.
+# Do not reintroduce WINDOWS_CERTIFICATE / WINDOWS_CERTIFICATE_PASSWORD secrets
+# or a signtool step — unsigned .exe is the supported distribution path.
+# See docs/runbooks/desktop-code-signing.md.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'clients/desktop/**'
+      - '.github/workflows/desktop-build.yml'
+  pull_request:
+    paths:
+      - 'clients/desktop/**'
+      - '.github/workflows/desktop-build.yml'
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: clients/desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: clients/desktop/package-lock.json
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend deps
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build (unsigned)
+        run: npm run tauri:build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gametheca-desktop-windows
+          path: |
+            clients/desktop/src-tauri/target/release/gametheca-desktop.exe
+          if-no-files-found: error

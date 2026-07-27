@@ -1,0 +1,10 @@
+html[data-icon-pack="mono"] .gt-icon {
+  stroke-width: 0.5;
+  fill: currentColor;
+  fill-opacity: 1;
+  stroke: currentColor;
+  stroke-opacity: 0.15;
+}
+html[data-icon-pack="mono"] .gt-icon [fill="none"] {
+  fill: currentColor;
+}

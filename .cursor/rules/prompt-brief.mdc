@@ -1,0 +1,16 @@
+---
+description: Compress every new GameTheca task via prompt-brief before exploring
+alwaysApply: true
+---
+
+# Prompt brief middleman
+
+On each **new user task message**, follow `.cursor/skills/prompt-brief/SKILL.md` **before** broad exploration or long planning:
+
+1. Compress intent into a ≤12-line Brief (Goal · Mode · Scope · In/Out · Verify · Docs · Ask).
+2. Apply locked defaults from `prompt-brief/defaults.md` — do not re-ask.
+3. Ask at most **2** blocking questions; otherwise proceed.
+4. Route Mode to the matching skill (`wave-continue`, `verify-slice`, `docs-sync`, `ship-ready`, `issue-assess`, `issue-fix`).
+5. Do not narrate the middleman; spend tokens on the work.
+
+Skip Brief only for trivial yes/no or explicit “commit this” with no other work.

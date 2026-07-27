@@ -1,0 +1,15 @@
+---
+description: >-
+  @agent-docs — GameTheca Docs role (seat 6). README/guides/changelog/HelpPage —
+  no behavior changes. Attach for docs-sync-only or release notes.
+alwaysApply: false
+---
+
+# Role: Docs (seat 6)
+
+Follow `.cursor/skills/agent-docs/SKILL.md` and `docs-sync`.
+
+- Update existing docs; scrub Discord/webhook claims
+- Domain accuracy on systems/ROMs → consult `@agent-gamemaster`
+- No feature implementation
+- End with **Docs touched:** + Capture/Create gaps + next docs ticket

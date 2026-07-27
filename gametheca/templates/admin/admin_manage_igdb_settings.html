@@ -1,0 +1,26 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ 'css/admin/admin_manage_igdb_settings.css'|theme_asset }}">
+<div class="container">
+    <div class="glass-panel">
+        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="igdb-settings-container container-settings">
+    <div class="alert alert-info" role="alert">
+        This page has moved. Manage IGDB alongside SMTP from the
+        <a href="{{ url_for('admin2.integrations') }}">Integrations</a> hub.
+    </div>
+    <div class="card">
+        <h2>IGDB API Settings</h2>
+
+        {% include 'partials/integrations/igdb_form.html' %}
+    </div>
+
+<script src="{{ 'js/password_visibility.js'|theme_asset }}"></script>
+
+<script src="{{ 'js/admin_manage_igdb_settings.js'|theme_asset }}"></script>
+
+{% endblock %}

@@ -1,0 +1,217 @@
+/* Main container styling */
+.glass-panel-addgame {
+    background: var(--bg-dark-primary);
+    backdrop-filter: var(--backdrop-blur);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    margin: var(--spacing-lg) auto;
+    max-width: 1000px;
+    box-shadow: 0 4px 6px var(--bg-dark-tertiary);
+    color: var(--text-white);
+}
+
+/* Header section */
+.game-edit-library-labels {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+    font-size: 1.4em;
+    color: var(--text-white);
+}
+
+#library_display, #platform_display {
+    font-size: 1.2em;
+    font-weight: 500;
+    color: var(--text-white);
+    text-shadow: 2px 2px 4px var(--shadow-dark);
+}
+
+/* Form sections */
+.game_edit-form-group-id,
+.game_edit-form-group-name,
+.game_edit-form-group-path {
+    background: var(--bg-dark-secondary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Form controls */
+
+.form-control:focus {
+    background: color-mix(in srgb, var(--gt-text, #fff) 15%, transparent);
+    border-color: var(--border-light-30);
+    color: var(--gt-text, var(--text-white));
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 25%, transparent);
+}
+
+/* Labels */
+label {
+    color: var(--text-white);
+    margin-bottom: var(--spacing-8);
+    display: block;
+    font-size: 1.1em;
+}
+
+/* Search results */
+#search-results {
+    background: var(--bg-dark-secondary);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.search-result-item {
+    padding: var(--spacing-12);
+    border-radius: 6px;
+    margin-bottom: var(--spacing-8);
+    background: var(--bg-light-overlay);
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.search-result-item:hover {
+    background: var(--bg-light-overlay-hover);
+    transform: translateY(-2px);
+}
+
+/* Details section */
+.details-section {
+    background: var(--bg-dark-secondary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    margin-top: var(--spacing-25);
+}
+
+.details-section .btn {
+    background: var(--bg-light-overlay);
+    border: none;
+    width: 100%;
+    text-align: left;
+    padding: var(--spacing-12);
+    color: var(--text-white);
+    position: relative;
+}
+
+/* Checkbox groups */
+.group-game-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+    background: var(--bg-dark-tertiary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+}
+
+.checkbox {
+    margin: var(--spacing-8) 0;
+}
+
+.form-check-input {
+    background-color: var(--bg-light-overlay);
+    border-color: var(--border-light-strong);
+}
+
+.form-check-label {
+    color: var(--text-white);
+    margin-left: var(--spacing-8);
+}
+
+/* Save button styling */
+.game-edit-savebutton .btn-primary {
+    background-color: var(--gt-accent, var(--btn-primary));
+    color: var(--gt-accent-contrast, var(--text-white));
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-25);
+    font-size: 1.1em;
+    transition: background-color var(--transition-normal);
+}
+
+.game-edit-savebutton .btn-primary:hover {
+    background-color: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 88%, var(--gt-bg, #000));
+}
+
+/* Alert messages */
+.alert {
+    background: var(--bg-dark-secondary);
+    border: 1px solid var(--border-light-strong);
+    color: var(--text-white);
+    margin: var(--spacing-sm) 0;
+}
+
+/* Essential information section */
+.essential-info {
+    background: var(--bg-dark-tertiary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Glass panel top section */
+.glass-panel-addgame-top {
+    background: var(--bg-dark-tertiary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+/* Feedback text styling - using unified .form-text-muted from base.css */
+
+/* Invalid input highlighting */
+.invalid-input {
+    border: 2px solid var(--gt-danger, var(--btn-danger));
+    background: color-mix(in srgb, var(--gt-danger, var(--btn-danger)) 10%, transparent);
+}
+
+/* Link to Existing Library Game panel */
+.link-existing-game-panel {
+    background: var(--bg-dark-secondary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    margin-top: var(--spacing-lg);
+}
+
+.link-existing-game-panel h3 {
+    color: var(--text-white);
+    margin-bottom: var(--spacing-8);
+}
+
+.link-existing-search-row {
+    margin-bottom: var(--spacing-md);
+}
+
+.existing-game-results {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.existing-game-results .search-result-item.selected {
+    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 35%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 60%, transparent);
+}
+
+.existing-game-result-name {
+    font-weight: 600;
+    display: block;
+}
+
+.existing-game-result-path {
+    font-size: 0.85em;
+    opacity: 0.75;
+    display: block;
+    word-break: break-all;
+}
+
+.link-existing-selection {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}

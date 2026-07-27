@@ -1,0 +1,15 @@
+---
+description: Require documentation sync on every GameTheca code change
+alwaysApply: true
+---
+
+# Docs sync on every code change
+
+Before finishing any implementation, fix, or wave work, follow the project skill **docs-sync** (`.cursor/skills/docs-sync/SKILL.md`).
+
+Required:
+1. Update the relevant docs from the skill matrix (canvas, progress, docs-map, README, user/admin guides, FAQ, troubleshooting, runbooks).
+2. Scrub stale product claims (no Discord webhooks; match shipped flags).
+3. End with **Docs touched:** … or **Docs: N/A — …**.
+
+Do not claim the task complete with code-only changes when env, UI, API, or ops behavior changed.

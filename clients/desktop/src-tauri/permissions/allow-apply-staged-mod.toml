@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-apply-staged-mod"
+description = "Allow applying staged mod zips/files into local install directories"
+commands.allow = ["apply_staged_mod"]

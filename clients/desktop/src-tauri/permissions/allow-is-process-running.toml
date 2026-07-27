@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-is-process-running"
+description = "Allows polling whether a launched game process is still running."
+commands.allow = ["is_process_running"]

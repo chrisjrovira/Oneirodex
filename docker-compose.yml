@@ -1,0 +1,220 @@
+# GameTheca Docker Compose — Unraid / NAS
+# App always connects to the Compose service named "db".
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gametheca:0.2.0
+    container_name: gametheca-app
+    restart: unless-stopped
+    ports:
+      - "5006:5006"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-gametheca}
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATA_FOLDER_GAMES=/storage
+      - UPLOAD_FOLDER=/app/gametheca/static/library
+      - SECRET_KEY=${SECRET_KEY}
+      - DEV_MODE=${DEV_MODE:-false}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-gametheca}
+      - ENABLE_ARR_MODULE=${ENABLE_ARR_MODULE:-true}
+      - ENABLE_ARR_HARDLINK_PIPELINE=${ENABLE_ARR_HARDLINK_PIPELINE:-true}
+      - ALLOW_PRIVATE_LAN_URLS=${ALLOW_PRIVATE_LAN_URLS:-true}
+      - ENABLE_AI_ASSIST=${ENABLE_AI_ASSIST:-true}
+      - ENABLE_AI_AUTO_APPLY=${ENABLE_AI_AUTO_APPLY:-false}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - ENABLE_HARDLINK_HELPERS=${ENABLE_HARDLINK_HELPERS:-true}
+      - ALLOW_HARDLINK_APPLY=${ALLOW_HARDLINK_APPLY:-false}
+      - ENABLE_VR_BROWSE=${ENABLE_VR_BROWSE:-true}
+      - OIDC_ENABLED=${OIDC_ENABLED:-false}
+      - OIDC_ISSUER_URL=${OIDC_ISSUER_URL:-}
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-}
+      - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI:-}
+      - PROWLARR_URL=${PROWLARR_URL:-}
+      - PROWLARR_API_KEY=${PROWLARR_API_KEY:-}
+      - JACKETT_URL=${JACKETT_URL:-}
+      - JACKETT_API_KEY=${JACKETT_API_KEY:-}
+      - QBITTORRENT_URL=${QBITTORRENT_URL:-}
+      - QBITTORRENT_USERNAME=${QBITTORRENT_USERNAME:-admin}
+      - QBITTORRENT_PASSWORD=${QBITTORRENT_PASSWORD:-}
+      - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-false}
+      - REMEMBER_COOKIE_SECURE=${REMEMBER_COOKIE_SECURE:-false}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-0}
+      - ENABLE_LIVEKIT=${ENABLE_LIVEKIT:-true}
+      - LIVEKIT_URL=${LIVEKIT_URL:-}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-}
+      - ENABLE_MALWARE_SCAN=${ENABLE_MALWARE_SCAN:-true}
+      - MALWARE_SCAN_BLOCK_ON_HIT=${MALWARE_SCAN_BLOCK_ON_HIT:-true}
+      - CLAMAV_HOST=${CLAMAV_HOST:-clamav}
+      - CLAMAV_PORT=${CLAMAV_PORT:-3310}
+      - CLAMAV_SOCKET=${CLAMAV_SOCKET:-}
+      - ENABLE_GAME_ASSISTS=${ENABLE_GAME_ASSISTS:-true}
+      - ENABLE_DEBRID=${ENABLE_DEBRID:-true}
+      - ENABLE_PCDOS_BROWSER=${ENABLE_PCDOS_BROWSER:-true}
+      - ENABLE_RUFFLE=${ENABLE_RUFFLE:-true}
+      - ENABLE_ROM_PATCH_APPLY=${ENABLE_ROM_PATCH_APPLY:-true}
+      - ENABLE_PATCH_CATALOG=${ENABLE_PATCH_CATALOG:-true}
+      - ENABLE_ROM_AI_TRANSLATE=${ENABLE_ROM_AI_TRANSLATE:-true}
+      - SUPPORT_GITHUB_TOKEN=${SUPPORT_GITHUB_TOKEN:-}
+      - SUPPORT_GITHUB_REPO=${SUPPORT_GITHUB_REPO:-chrisjrovira/gametheca}
+      # Challenge / captcha solver (opt-in — set ENABLE_CHALLENGE_SOLVER=true + URL)
+      - ENABLE_CHALLENGE_SOLVER=${ENABLE_CHALLENGE_SOLVER:-false}
+      - CHALLENGE_SOLVER_URL=${CHALLENGE_SOLVER_URL:-}
+      - CHALLENGE_SOLVER_PROVIDER=${CHALLENGE_SOLVER_PROVIDER:-flaresolverr_compat}
+      - CHALLENGE_SOLVER_TIMEOUT_MS=${CHALLENGE_SOLVER_TIMEOUT_MS:-60000}
+      - CHALLENGE_SOLVER_MAX_TIER=${CHALLENGE_SOLVER_MAX_TIER:-5}
+      # Default 1 — SSE/schedulers single-process; override UVICORN_WORKERS=2 OK
+      - UVICORN_WORKERS=${UVICORN_WORKERS:-1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - "${DATA_FOLDER_GAMES:-${DATA_FOLDER_WAREZ}}:/storage:ro"
+      - "${LIBRARY_HOST_PATH:-./data/library}:/app/gametheca/static/library"
+      # Optional WebRetro cores bind-mount (PCE/VICE/DOS). Host dir must include
+      # the shipped 24 cores OR run scripts/fetch-webretro-cores.sh --defaults first —
+      # an empty mount hides image cores. See docs/runbooks/webretro-cores.md
+      # - "${WEBRETRO_CORES_HOST_PATH}:/app/gametheca/static/vendor/webretro/cores"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      # /readyz requires DB + startup init — do not probe login/setup "/"
+      test: ["CMD-SHELL", "curl -f http://localhost:5006/readyz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  db:
+    image: postgres:17.6
+    container_name: gametheca-db
+    restart: unless-stopped
+    shm_size: 128mb
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-gametheca}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - db_data:/var/lib/postgresql/data/pgdata
+    ports:
+      # Host access for local pytest / native app against Compose Postgres
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # Optional LiveKit SFU — start with: docker compose --profile livekit up -d
+  livekit:
+    profiles: ['livekit']
+    image: livekit/livekit-server:v1.8.4
+    container_name: gametheca-livekit
+    restart: unless-stopped
+    command: --dev --bind 0.0.0.0 --port 7880
+    ports:
+      - "${LIVEKIT_HOST_PORT:-7880}:7880"
+      - "${LIVEKIT_RTC_PORT:-7881}:7881"
+      - "${LIVEKIT_UDP_PORT:-7882}:7882/udp"
+
+  # Optional ClamAV (clamd) — start with: docker compose --profile clamav up -d
+  # App uses CLAMAV_HOST=clamav:3310 by default. On Unraid you can instead bind-mount
+  # a host clamd socket and set CLAMAV_SOCKET=/run/clamav/clamd.sock (see runbook).
+  clamav:
+    profiles: ['clamav']
+    image: clamav/clamav:1.4
+    container_name: gametheca-clamav
+    restart: unless-stopped
+    volumes:
+      - clamav_db:/var/lib/clamav
+    healthcheck:
+      test: ['CMD', '/usr/local/bin/clamdcheck.sh']
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+
+  # Optional TRAWL challenge solver — start with: docker compose --profile challenge up -d
+  # Redis + TRAWL sidecar for FlareSolverr-compatible /v1. No host ports — Docker/LAN only.
+  # Set ENABLE_CHALLENGE_SOLVER=true and CHALLENGE_SOLVER_URL=http://trawl:8191 on app.
+  # Old NAS / kernel <5.1: TRAWL_IMAGE=ghcr.io/germondai/trawl:baseline — see runbook.
+  challenge-redis:
+    profiles: ['challenge']
+    image: redis:8.8-alpine
+    container_name: gametheca-challenge-redis
+    restart: unless-stopped
+    volumes:
+      - challenge_redis_data:/data
+
+  trawl:
+    profiles: ['challenge']
+    image: ${TRAWL_IMAGE:-ghcr.io/germondai/trawl:latest}
+    container_name: gametheca-trawl
+    restart: unless-stopped
+    shm_size: 1gb
+    environment:
+      - REDIS_URL=redis://challenge-redis:6379
+      - BROWSER_POOL_SIZE=${TRAWL_BROWSER_POOL_SIZE:-3}
+      - MITM_PROXY_ENABLED=${TRAWL_MITM_PROXY_ENABLED:-false}
+      - MITM_PROXY_HOST=0.0.0.0
+      - MITM_PROXY_PORT=8192
+      - MITM_PROXY_CA_DIR=/data/proxy-ca
+      - MITM_PROXY_MAX_TIER=${TRAWL_MITM_PROXY_MAX_TIER:-4}
+    volumes:
+      - trawl_proxy_ca:/data/proxy-ca
+    depends_on:
+      - challenge-redis
+    healthcheck:
+      test: ['CMD', 'curl', '-sf', 'http://localhost:8191/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # profile: observability — OPTIONAL stub (not enabled; no images required)
+  # Prometheus/Grafana are NOT bundled for 1.0. Prefer Admin → Ops + /healthz
+  # + /readyz. When you add scrape later, uncomment and wire your own config —
+  # see docs/runbooks/observability-profile.md. Do not enable until /metrics
+  # (or an equivalent scrape target) exists and is auth-gated.
+  # ---------------------------------------------------------------------------
+  # prometheus:
+  #   profiles: ['observability']
+  #   image: prom/prometheus:v2.54.1
+  #   container_name: gametheca-prometheus
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./ops/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - prometheus_data:/prometheus
+  #   ports:
+  #     - "${PROMETHEUS_HOST_PORT:-9090}:9090"
+  # grafana:
+  #   profiles: ['observability']
+  #   image: grafana/grafana:11.2.0
+  #   container_name: gametheca-grafana
+  #   restart: unless-stopped
+  #   depends_on: [prometheus]
+  #   ports:
+  #     - "${GRAFANA_HOST_PORT:-3000}:3000"
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+
+volumes:
+  db_data:
+    driver: local
+  clamav_db:
+    driver: local
+  challenge_redis_data:
+    driver: local
+  trawl_proxy_ca:
+    driver: local

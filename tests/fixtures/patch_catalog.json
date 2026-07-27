@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "title": "Final Fantasy",
+      "platform": "SNES",
+      "region": "JPN",
+      "target_language": "en",
+      "patch_format": "bps",
+      "source_url": "https://example.test/ff-guide",
+      "notes": "Fixture guide",
+      "title_aliases": ["Final Fantasy III", "FF6"]
+    },
+    {
+      "title": "Chrono Trigger",
+      "platform": "SNES",
+      "region": "JPN",
+      "target_language": "en",
+      "patch_format": "bps",
+      "source_url": "https://example.test/ct-guide",
+      "notes": "Other fixture"
+    }
+  ]
+}

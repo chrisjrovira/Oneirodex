@@ -1,0 +1,51 @@
+# Free games (News)
+
+GameTheca polls major stores and a public giveaway aggregator so household members can **see what’s free right now**, get an in-app notification when something new appears, and **claim via store deeplinks**.
+
+This is **not** a DRM download client. Claiming always happens on Steam / Epic / GOG / Amazon / itch / Humble (browser or launcher).
+
+## Where to look
+
+| Surface | What you get |
+|---|---|
+| **News → Free now** | Active offers with Claim, Open in app, Sync ownership |
+| **Notifications** | `Free on …` alerts for newly seen offers (opt out under Notification preferences) |
+| Deep link | `/news#free-games` |
+
+## Claim (both avenues)
+
+| Avenue | When | Action |
+|---|---|---|
+| **A — Deeplink** | Always | **Claim** (HTTPS) or **Open in app** (`steam://` / Epic launcher URI when that store is linked) |
+| **B — Connected assist** | Store linked under Ownership | **Sync ownership** registers the title and, for Steam, re-runs live library sync |
+
+GameTheca never silently redeems DRM. Claim on the store first (A), then Sync ownership (B) so badges update.
+
+## Stores
+
+| Store | Typical source | Claim |
+|---|---|---|
+| Epic | Official freeGamesPromotions | Store page / Epic launcher URI if Epic linked |
+| Steam | Featured 100% off | Store page / `steam://openurl/…` if Steam linked |
+| GOG · Amazon (Prime) · itch · Humble | GamerPower giveaways API | HTTPS claim URL |
+
+Xbox / PlayStation freebies may appear when the aggregator lists them; no special launcher deeplink yet.
+
+## Operator flags
+
+| Env | Default | Meaning |
+|---|---|---|
+| `ENABLE_FREE_GAMES` | `true` | Poller + API |
+| `FREE_GAMES_POLL_HOURS` | `3` | Refresh interval (1–24) |
+
+Outbound HTTP must reach Epic / Steam / GamerPower from the container host.
+
+## Member prefs
+
+`notify_free_games` (default on) — Notifications → Preferences → **Free games**.
+
+## Non-goals
+
+- Silent DRM redeem / OAuth claim without opening the store
+- DRM install queues inside GameTheca
+- Email digests of free games alone (included in the optional daily notification digest instead)

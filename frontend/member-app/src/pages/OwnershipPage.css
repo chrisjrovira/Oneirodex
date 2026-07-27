@@ -1,0 +1,83 @@
+.gt-ownership {
+  color: var(--gt-text);
+}
+
+.gt-ownership__status {
+  margin-bottom: 1.5rem;
+}
+
+.gt-ownership__empty {
+  color: var(--gt-text-muted);
+}
+
+.gt-ownership__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  border: 1px solid var(--gt-border);
+  border-radius: 8px;
+  background: var(--gt-surface);
+}
+
+.gt-ownership__meta {
+  color: var(--gt-text-muted);
+  font-size: 0.9rem;
+}
+
+.gt-ownership__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--gt-border);
+  border-radius: 8px;
+  background: var(--gt-surface);
+}
+
+.gt-ownership__section h2 {
+  margin: 0;
+  color: var(--gt-text);
+}
+
+.gt-ownership__section form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.gt-ownership__section label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  max-width: 32rem;
+  color: var(--gt-text-muted);
+  font-size: 0.9rem;
+}
+
+.gt-ownership__section input[type='text'],
+.gt-ownership__section textarea {
+  padding: 0.5rem;
+  border: 1px solid var(--gt-border);
+  border-radius: 6px;
+  background: var(--gt-surface);
+  color: var(--gt-text);
+  font: inherit;
+}
+
+.gt-ownership__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gt-ownership__message[data-tone='error'] {
+  color: var(--gt-accent);
+}
+
+.gt-ownership__message[data-tone='ok'] {
+  color: var(--gt-text);
+}

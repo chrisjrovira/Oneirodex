@@ -1,0 +1,137 @@
+__pycache__
+config.portainer
+config.backup
+config.py.backup
+.env
+.env.bak
+/db_data/
+/db_data/*
+app.db
+instance/app.db
+/logs/*
+/logs
+gametheca/static/library/images
+/gametheca/static/images/*.jpg
+/venv
+/.venv
+/.codebuddy
+/.codebuddy/*
+.codebuddy
+/.git
+# Track CI workflows + PR/issue templates; ignore other local .github scratch if any
+/.github/*
+!/.github/workflows/
+!/.github/workflows/**
+!/.github/PULL_REQUEST_TEMPLATE.md
+!/.github/ISSUE_TEMPLATE/
+!/.github/ISSUE_TEMPLATE/**
+/gametheca/static/library/zips/
+CLAUDE.md
+/.claude/*
+.claude/settings.local.json
+letsrebuild.md
+.claude/settings.local.json
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+ENV/
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment & Config
+.env
+.env.*
+!.env.example
+!.env.docker.example
+!.env.nas.example
+!.env.thin
+
+config.backup
+config.py.backup
+config.portainer
+*.env
+!*.env.example
+
+# Database
+db_data/
+*.db
+instance/
+
+# Logs
+logs/
+*.log
+
+# Node
+node_modules/
+
+# Desktop companion (Tauri Rust build — regenerable; also in clients/desktop/.gitignore)
+clients/desktop/src-tauri/target/
+**/src-tauri/target/
+
+# Lint / type caches
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+.eggs/
+
+# Development / scratch (do not ignore real project docs or CI)
+.claude/
+.codebuddy/
+CLAUDE.md
+letsrebuild.md
+# Root-only scratch markdown; keep README, CHANGELOG, and all docs/
+/*.md
+!/README.md
+!/CHANGELOG.md
+!/NAS-DEPLOY.md
+!/VERSION
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing (keep tests/ for unit testing, but exclude test artifacts)
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Static uploads and generated files (these should be mounted as volumes or generated)
+gametheca/static/library/images/
+gametheca/static/library/zips/
+gametheca/static/library/themes/
+
+# Docker library host path (default mount point for persistent library data)
+data/
+
+# OS
+.DS_Store
+Thumbs.db
+# Git worktrees
+.worktrees/
+
+# Frontend bundles (built by the Dockerfile / npm run build)
+gametheca/static/dist/
+
+# Agent scratch: task briefs and reports
+.superpowers/
+
+# Team-only competitive intel / banned-token lists — never push
+docs/_private/
+
+# Legal sample ROM binaries (operator-fetched; never commit dumps)
+samples/free-roms/library/
+
+
+
+# Icon packs installed from setup/icon_themes at boot (like themes/)
+gametheca/static/library/icon-themes/
+gametheca/static/library/chat-emoji/

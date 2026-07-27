@@ -1,0 +1,237 @@
+.game-library-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min, 180px), 1fr));
+    gap: var(--gt-tile-gap, 10px);
+    align-items: start;
+}
+
+.game-card-skeleton {
+    margin: 0;
+    max-width: none;
+    width: 100%;
+}
+
+.game-card-skeleton__cover {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    border-radius: var(--border-radius-xs, 4px);
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.06) 0%,
+        rgba(255, 255, 255, 0.12) 50%,
+        rgba(255, 255, 255, 0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: library-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes library-skeleton-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+.library-grid-loading {
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+}
+
+.game-discovery-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.modal-content-search button.close {
+    background-color: var(--btn-secondary);
+    color: var(--text-white);
+    border: 1px solid var(--btn-secondary);
+    border-radius: 4px;
+}
+
+.modal-content-search button.close:hover {
+    background-color: var(--btn-dark);
+}
+
+.search-result {
+    padding: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.search-result:hover, .search-result.selected {
+    background-color: var(--btn-secondary);
+    color: var(--text-white);
+}
+
+/* Modern Pagination Styles */
+.pagination-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.pagination-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
+    padding: 15px 0;
+    border-top: 1px solid var(--border-light);
+}
+
+.pagination-controls-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination-controls-right,
+.pagination-footer {
+    display: flex;
+    align-items: center;
+}
+
+.pagination-label {
+    color: var(--color-gray-ddd);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.pagination-nav {
+    display: flex;
+    align-items: center;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--container-glass-primary);
+    backdrop-filter: blur(10px);
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+}
+
+.btn-pagination {
+    background: var(--bg-light-overlay);
+    border: 1px solid var(--border-light-strong);
+    color: var(--color-gray-ddd);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+}
+
+.btn-pagination:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 22%, transparent);
+    border-color: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 55%, transparent);
+    color: var(--gt-text, var(--text-white));
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-card);
+}
+
+.btn-pagination:focus-visible {
+    outline: 2px solid var(--gt-accent, var(--btn-primary));
+    outline-offset: 2px;
+}
+
+.dropdown-perpage:focus {
+    outline: none;
+    border-color: var(--gt-accent, var(--btn-primary));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 35%, transparent);
+}
+
+.gt-pagination__perpage {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.gt-pagination__label {
+    font-size: 0.85rem;
+    color: var(--gt-text-muted, var(--text-muted));
+}
+
+
+.btn-pagination:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.page-info {
+    padding: 8px 16px;
+    background: var(--bg-white-05);
+    border-radius: 8px;
+    color: var(--text-white);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: center;
+}
+
+.dropdown-perpage {
+    background: var(--container-glass-primary);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-light-strong);
+    color: var(--color-gray-ddd);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 70px;
+}
+
+.dropdown-perpage:hover {
+    background: var(--bg-dark-secondary);
+    border-color: var(--border-light-30);
+}
+
+/* Legacy pagination compatibility */
+.pagination .page-link {
+    padding-left: 3.8rem;
+    padding-right: 3.8rem;
+    background-color: var(--pagination-bg);
+    color: var(--text-white);
+    border: 1px solid var(--btn-dark);
+}
+
+.pagination .page-link.active,
+.pagination .page-item.active .page-link {
+    background-color: var(--pagination-active);
+    border-color: var(--btn-secondary);
+}
+
+.pagination .page-link:hover {
+    background-color: var(--btn-secondary);
+    border-color: var(--btn-secondary);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: var(--btn-secondary);
+    background-color: var(--pagination-bg);
+    border-color: var(--btn-dark);
+}
+
+.breadcrumbs {
+    font-size: 2.2rem;
+    font-weight: bold;
+    margin: 10px;
+    text-align: center;
+}
+
+.hidden {
+    display: none;
+}

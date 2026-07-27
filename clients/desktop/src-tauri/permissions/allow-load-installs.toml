@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-load-installs"
+description = "Allows loading install records from app data."
+commands.allow = ["load_installs"]

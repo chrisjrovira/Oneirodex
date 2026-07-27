@@ -1,0 +1,54 @@
+.gt-set-completion-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.gt-set-completion-region {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--gt-text-muted);
+}
+
+.gt-set-completion-region select {
+  background: var(--gt-glass-bg, rgba(20, 24, 32, 0.72));
+  color: var(--gt-text);
+  border: 1px solid var(--gt-glass-border, rgba(255, 255, 255, 0.14));
+  border-radius: 6px;
+  padding: 0.25rem 0.4rem;
+}
+
+.gt-set-completion-msg {
+  font-size: 0.9rem;
+  color: var(--gt-accent, #2fd67b);
+}
+
+.gt-set-completion-missing {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.gt-set-completion-missing li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--gt-glass-bg, rgba(20, 24, 32, 0.72));
+  border: 1px solid var(--gt-glass-border, rgba(255, 255, 255, 0.14));
+  border-radius: 8px;
+}
+
+.gt-set-completion-missing li span {
+  flex: 1 1 12rem;
+  font-size: 0.9rem;
+}

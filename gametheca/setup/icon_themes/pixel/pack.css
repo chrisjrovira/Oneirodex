@@ -1,0 +1,7 @@
+html[data-icon-pack="pixel"] .gt-icon {
+  stroke-width: 2.75;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  shape-rendering: crispEdges;
+  fill: none;
+}

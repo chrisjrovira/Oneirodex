@@ -1,0 +1,36 @@
+.gt-store-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  list-style: none;
+  padding: 0;
+}
+
+.gt-store-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.65rem 0.25rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gt-store-color, #2fd67b) 45%, transparent);
+  background: color-mix(in srgb, var(--gt-store-color, #2fd67b) 16%, transparent);
+  color: var(--gt-text, #f2f4f8);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.gt-store-link:hover {
+  border-color: var(--gt-store-color, #2fd67b);
+}
+
+.gt-store-link__icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+}
+
+.gt-store-link__label {
+  line-height: 1;
+}

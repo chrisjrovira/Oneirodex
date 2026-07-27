@@ -1,0 +1,15 @@
+---
+description: >-
+  @agent-uiux — GameTheca UI/UX role (member SPA + theme only). Attach when
+  doing frontend polish, details/library UX, or social companion chrome.
+alwaysApply: false
+---
+
+# Role: UI/UX
+
+Follow `.cursor/skills/agent-uiux/SKILL.md`.
+
+- Frontend only: `frontend/member-app/**`, aurora theme CSS/JS
+- No Flask/API/Docker/Tauri implementations — hand off instead
+- Preserve `--gt-*` language; OIDC stays opt-in; no Discord / romhacking.net scrape
+- End with changes, UX rationale, handoffs, next UI ticket, **Docs touched:**

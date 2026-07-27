@@ -1,0 +1,20 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "thin-main",
+  "description": "Thin client main shell — save URL/token and open webviews only",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:webview:allow-create-webview-window",
+    "core:window:allow-show",
+    "core:window:allow-set-focus",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-get-all-windows",
+    "core:webview:allow-get-all-webviews",
+    "allow-load-config",
+    "allow-save-config",
+    "allow-secure-store-get",
+    "allow-secure-store-set",
+    "allow-secure-store-delete"
+  ]
+}

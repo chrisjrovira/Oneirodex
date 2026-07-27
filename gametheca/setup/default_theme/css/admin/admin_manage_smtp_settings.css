@@ -1,0 +1,75 @@
+/* Using unified admin-section container from admin-components.css */
+.smtp-settings-container {
+    max-width: 800px;
+    margin: var(--spacing-rem-xl) auto;
+    padding: var(--spacing-rem-xl);
+    background: var(--container-dark-primary);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-glass);
+}
+
+.smtp-settings-container h2 {
+    color: var(--text-white);
+    margin-bottom: var(--spacing-rem-xl);
+    padding-bottom: var(--spacing-rem-md);
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.smtp-settings-container h2 .btn-info {
+    font-size: var(--font-size-sm);
+    padding: 0.3em 0.6em;
+    margin-left: var(--spacing-rem-md);
+    background-color: var(--btn-info);
+    border: 1px solid var(--btn-info-border);
+}
+
+.smtp-settings-container h2 .btn-info:hover {
+    background-color: var(--btn-info-hover);
+}
+
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-rem-lg);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: var(--text-white);
+    font-weight: 500;
+}
+
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+
+.last-tested {
+    color: var(--color-gray-888);
+    font-size: var(--font-size-095rem);
+    margin-top: var(--spacing-rem-md);
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.card {
+    width: 70%;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}

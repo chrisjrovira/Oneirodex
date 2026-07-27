@@ -1,0 +1,210 @@
+.gt-chat-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: calc(100vh - 7rem);
+}
+
+.gt-chat-page__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.gt-chat-page__toolbar form {
+  display: flex;
+  gap: 0.4rem;
+  align-items: end;
+  margin: 0;
+}
+
+.gt-chat-page__toolbar label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-chat-page__toolbar input {
+  min-width: 10rem;
+  min-height: 2.2rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.14));
+  background: var(--gt-surface-2, #1c2230);
+  color: inherit;
+}
+
+.gt-chat-layout {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) 1fr;
+  gap: 0.85rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.gt-chat-channels,
+.gt-chat-thread {
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--gt-surface, #141820) 92%, transparent);
+  padding: 0.65rem;
+  min-height: 0;
+}
+
+.gt-chat-channels h2,
+.gt-chat-thread__head {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+}
+
+.gt-chat-channels ul,
+.gt-chat-messages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gt-chat-channels li + li {
+  margin-top: 0.3rem;
+}
+
+.gt-chat-channel {
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+}
+
+.gt-chat-channel[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 40%, transparent);
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 12%, transparent);
+}
+
+.gt-chat-channel.is-muted {
+  opacity: 0.65;
+}
+
+.gt-chat-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.gt-chat-thread__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.gt-chat-messages {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.25rem 0.15rem;
+  min-height: 16rem;
+  max-height: min(55vh, 520px);
+}
+
+.gt-chat-msg {
+  padding: 0.45rem 0.55rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.gt-chat-msg__meta {
+  display: flex;
+  gap: 0.45rem;
+  align-items: baseline;
+  margin-bottom: 0.2rem;
+}
+
+.gt-chat-msg__user {
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.gt-chat-msg__body {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.gt-chat-msg__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+}
+
+.gt-chat-msg__actions button {
+  min-height: 1.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.gt-chat-msg__actions button[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 50%, transparent);
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 14%, transparent);
+}
+
+.gt-chat-reply-ref {
+  opacity: 0.7;
+  font-size: 0.8em;
+  margin-bottom: 0.25rem;
+}
+
+.gt-chat-composer {
+  display: flex;
+  gap: 0.45rem;
+  align-items: end;
+  margin: 0;
+}
+
+.gt-chat-composer textarea {
+  flex: 1;
+  min-height: 2.6rem;
+  max-height: 7rem;
+  resize: vertical;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.14));
+  background: var(--gt-surface-2, #1c2230);
+  color: inherit;
+  font: inherit;
+}
+
+.gt-chat-empty {
+  opacity: 0.7;
+  font-size: 0.9rem;
+  padding: 1rem 0.25rem;
+}
+
+.gt-chat-search-hits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.gt-chat-search-hits button {
+  width: 100%;
+  text-align: left;
+}

@@ -1,0 +1,15 @@
+---
+description: >-
+  @agent-ops — Unraid/Docker reliability, health probes, Admin Ops glance,
+  optional metrics. Attach for deploy/observability work.
+alwaysApply: false
+---
+
+# Agent Ops
+
+Follow `.cursor/skills/agent-ops/SKILL.md`.
+
+Owns Compose/Unraid health, ops summary enrichment, `/healthz`/`/readyz`,
+optional observability profile. Does not redesign member SPA.
+
+Locks: no Discord/webhooks; OIDC stays opt-in; commit only when asked.

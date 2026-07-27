@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-secure-store-delete"
+description = "Allows deleting a secret from the OS credential store."
+commands.allow = ["secure_store_delete"]

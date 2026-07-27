@@ -1,0 +1,257 @@
+{% extends "base_admin.html" %}
+{% block content %}
+{% import 'partials/icons.html' as icons %}
+
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+<!-- Load individual CSS files for each integration -->
+<link rel="stylesheet" href="{{ 'css/admin/admin_manage_smtp_settings.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/admin/admin_manage_igdb_settings.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/admin/integrations_tabs.css'|theme_asset }}">
+
+<div class="container-settings mt-4 gt-adminpage gt-adminpage--xl">
+    <div class="card">
+        <h2>{{ icons.icon('plug', size=22) }} Integrations</h2>
+        <p>Manage SMTP, IGDB, community chat, artwork providers, and OIDC / SSO.</p>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Nav tabs -->
+        <ul class="integrations-nav-tabs nav nav-tabs" id="integrationTabs" role="tablist">
+            <li class="integrations-nav-item nav-item" role="presentation">
+                <button class="integrations-nav-link nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab" aria-controls="email" aria-selected="false">
+                    {{ icons.icon('envelope') }} Email Settings
+                </button>
+            </li>
+            <li class="integrations-nav-item nav-item" role="presentation">
+                <button class="integrations-nav-link nav-link" id="igdb-tab" data-bs-toggle="tab" data-bs-target="#igdb" type="button" role="tab" aria-controls="igdb" aria-selected="false">
+                    {{ icons.icon('gamepad') }} IGDB Settings
+                </button>
+            </li>
+            <li class="integrations-nav-item nav-item" role="presentation">
+                <button class="integrations-nav-link nav-link" id="community-tab" data-bs-toggle="tab" data-bs-target="#community" type="button" role="tab" aria-controls="community" aria-selected="false">
+                    {{ icons.icon('users') }} Community chat
+                </button>
+            </li>
+            <li class="integrations-nav-item nav-item" role="presentation">
+                <button class="integrations-nav-link nav-link" id="artwork-tab" data-bs-toggle="tab" data-bs-target="#artwork" type="button" role="tab" aria-controls="artwork" aria-selected="false">
+                    {{ icons.icon('image') }} Artwork
+                </button>
+            </li>
+            <li class="integrations-nav-item nav-item" role="presentation">
+                <button class="integrations-nav-link nav-link" id="oidc-tab" data-bs-toggle="tab" data-bs-target="#oidc" type="button" role="tab" aria-controls="oidc" aria-selected="false">
+                    {{ icons.icon('user-shield') }} OIDC / SSO
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab content -->
+        <div class="integrations-tab-content tab-content" id="integrationTabContent">
+
+            <!-- Email Settings Tab -->
+            <div class="integrations-tab-pane tab-pane fade" id="email" role="tabpanel" aria-labelledby="email-tab">
+                <div class="tab-content-wrapper">
+                    <h4>{{ icons.icon('envelope', size=20) }} SMTP Email Settings <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#smtpHelpModal" title="SMTP help">
+                        {{ icons.icon('help') }}
+                    </button></h4>
+
+                    {% include 'partials/integrations/smtp_form.html' %}
+                </div>
+            </div>
+
+            <!-- IGDB Settings Tab -->
+            <div class="integrations-tab-pane tab-pane fade" id="igdb" role="tabpanel" aria-labelledby="igdb-tab">
+                <div class="tab-content-wrapper">
+                    <h4>{{ icons.icon('gamepad', size=20) }} IGDB API Settings</h4>
+
+                    {% include 'partials/integrations/igdb_form.html' %}
+                </div>
+            </div>
+
+            <!-- Community chat (BYO Stoat/Matrix) -->
+            <div class="integrations-tab-pane tab-pane fade" id="community" role="tabpanel" aria-labelledby="community-tab">
+                <div class="tab-content-wrapper">
+                    <h4>{{ icons.icon('users', size=20) }} Community chat link</h4>
+                    <p>
+                      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin2.chat_emoji_admin') }}">
+                        Manage custom chat emoji
+                      </a>
+                      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin2.reference_sets_admin') }}">
+                        ROM reference sets (DAT)
+                      </a>
+                    </p>
+                    {% include 'partials/integrations/community_form.html' %}
+                </div>
+            </div>
+
+            <!-- Artwork Providers Tab -->
+            <div class="integrations-tab-pane tab-pane fade" id="artwork" role="tabpanel" aria-labelledby="artwork-tab">
+                <div class="tab-content-wrapper">
+                    <h4>{{ icons.icon('image', size=20) }} SteamGridDB Artwork</h4>
+                    {% include 'partials/integrations/steamgriddb_status.html' %}
+                </div>
+            </div>
+
+            <!-- OIDC / SSO Tab -->
+            <div class="integrations-tab-pane tab-pane fade" id="oidc" role="tabpanel" aria-labelledby="oidc-tab">
+                <div class="tab-content-wrapper">
+                    <h4>{{ icons.icon('user-shield', size=20) }} OIDC / SSO Settings</h4>
+                    <p class="text-muted">
+                        Optional. Local username/password always works — leave this off for home-only installs.
+                        Requires <code>OIDC_ENABLED=true</code> in the environment plus the toggle below.
+                        Live Authentik checklist: <code>docs/runbooks/oidc-authentik-unraid.md</code>.
+                    </p>
+                    <div id="oidc-readiness" class="alert alert-secondary mb-3" style="font-size:0.9rem;">Checking OIDC readiness…</div>
+
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label for="oidc_enabled">Enable OIDC SSO</label>
+                            <input type="checkbox" id="oidc_enabled" {% if settings and settings.oidc_enabled %}checked{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label for="oidc_display_name">Login button label</label>
+                            <input type="text" id="oidc_display_name" class="form-control input-glass"
+                                value="{{ settings.oidc_display_name if settings and settings.oidc_display_name else 'Sign in with SSO' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="oidc_issuer_url">Issuer URL</label>
+                            <input type="url" id="oidc_issuer_url" class="form-control input-glass"
+                                value="{{ settings.oidc_issuer_url if settings else '' }}"
+                                placeholder="https://auth.example.com/application/o/gametheca/">
+                        </div>
+                        <div class="form-group">
+                            <label for="oidc_client_id">Client ID</label>
+                            <input type="text" id="oidc_client_id" class="form-control input-glass"
+                                value="{{ settings.oidc_client_id if settings else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="oidc_client_secret">Client Secret</label>
+                            <div class="password-input-container">
+                                <input type="password" id="oidc_client_secret" class="form-control input-glass"
+                                    value="{{ settings.oidc_client_secret if settings else '' }}" autocomplete="off">
+                                <button type="button" class="toggle-password" data-input="oidc_client_secret" aria-label="Toggle password visibility">
+                                    <span class="toggle-password-icon">{{ icons.icon('eye') }}</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="oidc_redirect_uri">Redirect URI</label>
+                            <input type="url" id="oidc_redirect_uri" class="form-control input-glass"
+                                value="{{ settings.oidc_redirect_uri if settings else '' }}"
+                                placeholder="https://gametheca.example.com/login/oidc/callback">
+                        </div>
+                        <div class="form-group">
+                            <label for="oidc_scopes">Scopes</label>
+                            <input type="text" id="oidc_scopes" class="form-control input-glass"
+                                value="{{ settings.oidc_scopes if settings and settings.oidc_scopes else 'openid email profile' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="oidc_role_claim">Role claim name</label>
+                            <input type="text" id="oidc_role_claim" class="form-control input-glass"
+                                value="{{ settings.oidc_role_claim if settings and settings.oidc_role_claim else 'groups' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="oidc_role_map">Role map (JSON)</label>
+                            <textarea id="oidc_role_map" class="form-control input-glass" rows="4">{% if settings and settings.oidc_role_map %}{{ settings.oidc_role_map | tojson }}{% else %}{"admin":"admin","gametheca-admin":"admin","librarian":"librarian","gametheca-librarian":"librarian","child":"child","gametheca-child":"child"}{% endif %}</textarea>
+                        </div>
+                        <div class="button-group">
+                            <button type="button" id="oidcSaveBtn" class="btn btn-primary">Save OIDC Settings</button>
+                            <div id="oidcSaveStatus" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Embed current settings as JSON for JavaScript -->
+<script id="currentSettings" type="application/json">{{ current_settings|tojson }}</script>
+
+<!-- Load individual JavaScript files for each integration -->
+<script src="{{ 'js/admin_manage_smtp_settings.js'|theme_asset }}"></script>
+<script src="{{ 'js/password_visibility.js'|theme_asset }}"></script>
+<script src="{{ 'js/admin_manage_igdb_settings.js'|theme_asset }}"></script>
+<script src="{{ 'js/integrations_tabs.js'|theme_asset }}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const readinessEl = document.getElementById('oidc-readiness');
+    if (readinessEl) {
+        fetch('/api/oidc/status', { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                const cls = data.ready ? 'alert-success' : 'alert-secondary';
+                readinessEl.className = 'alert ' + cls + ' mb-3';
+                readinessEl.style.fontSize = '0.9rem';
+                readinessEl.textContent = data.message || (data.ready ? 'OIDC ready' : 'OIDC not configured');
+            })
+            .catch(() => {
+                readinessEl.textContent = 'Could not load OIDC readiness.';
+            });
+    }
+
+    const saveBtn = document.getElementById('oidcSaveBtn');
+    if (!saveBtn) return;
+
+    saveBtn.addEventListener('click', async function() {
+        const statusEl = document.getElementById('oidcSaveStatus');
+        let roleMap;
+        try {
+            roleMap = JSON.parse(document.getElementById('oidc_role_map').value || '{}');
+        } catch (e) {
+            statusEl.innerHTML = '<div class="alert alert-danger">Role map must be valid JSON.</div>';
+            return;
+        }
+
+        const payload = {
+            oidc_enabled: document.getElementById('oidc_enabled').checked,
+            oidc_display_name: document.getElementById('oidc_display_name').value.trim(),
+            oidc_issuer_url: document.getElementById('oidc_issuer_url').value.trim(),
+            oidc_client_id: document.getElementById('oidc_client_id').value.trim(),
+            oidc_client_secret: document.getElementById('oidc_client_secret').value,
+            oidc_redirect_uri: document.getElementById('oidc_redirect_uri').value.trim(),
+            oidc_scopes: document.getElementById('oidc_scopes').value.trim(),
+            oidc_role_claim: document.getElementById('oidc_role_claim').value.trim(),
+            oidc_role_map: roleMap,
+        };
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const headers = {'Content-Type': 'application/json'};
+        if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+
+        saveBtn.disabled = true;
+        statusEl.textContent = 'Saving...';
+        try {
+            const response = await fetch('{{ url_for("admin2.integrations_oidc_save") }}', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+            if (response.ok) {
+                statusEl.innerHTML = '<div class="alert alert-success">' + (data.message || 'Saved.') + '</div>';
+            } else {
+                statusEl.innerHTML = '<div class="alert alert-danger">' + (data.message || 'Save failed.') + '</div>';
+            }
+        } catch (err) {
+            statusEl.innerHTML = '<div class="alert alert-danger">Network error while saving OIDC settings.</div>';
+        } finally {
+            saveBtn.disabled = false;
+        }
+    });
+});
+</script>
+
+{% endblock %}

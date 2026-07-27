@@ -1,0 +1,158 @@
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.glass-panel {
+    background: var(--container-glass-primary);
+    backdrop-filter: var(--backdrop-blur);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-card);
+}
+
+.page-title {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--gt-text);
+}
+
+.theme-upload-section {
+    margin-bottom: 40px;
+}
+
+.theme-upload-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.form-label {
+    color: var(--gt-text);
+    margin-bottom: 10px;
+    display: block;
+}
+
+.form-control-file {
+    background-color: var(--gt-surface-2);
+    border: 1px solid var(--gt-border);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm);
+    color: var(--gt-text);
+    width: 100%;
+}
+
+/* Apply-a-theme picker; the swatch grid itself lives in form-components.css. */
+.theme-apply-section {
+    margin-bottom: 40px;
+}
+
+.theme-apply-section h2 {
+    color: var(--gt-text);
+    margin-bottom: 10px;
+}
+
+.theme-apply-hint {
+    color: var(--gt-text-muted);
+    margin-bottom: var(--spacing-md);
+    max-width: 70ch;
+}
+
+.theme-apply-status {
+    min-height: 1.25rem;
+    margin-top: var(--spacing-sm);
+    color: var(--gt-text-muted);
+}
+
+.theme-apply-status.is-error {
+    color: var(--gt-text);
+    font-weight: 600;
+}
+
+.installed-themes-section h2 {
+    color: var(--gt-text);
+    margin-bottom: 20px;
+}
+
+.themes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.theme-card {
+    background: var(--gt-surface-2);
+    border: 1px solid var(--gt-border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: transform 0.3s ease;
+}
+
+.theme-card:hover {
+    transform: translateY(-5px);
+}
+
+.theme-card h3 {
+    color: var(--gt-text);
+    margin-bottom: 10px;
+}
+
+.theme-card p {
+    color: var(--gt-text-muted);
+    margin-bottom: 5px;
+}
+
+.default-theme {
+    border: 2px solid var(--gt-accent);
+}
+
+
+.flash-messages {
+    margin-bottom: 20px;
+}
+
+/* Dark-surface alerts: the text is --gt-text on a tinted panel (>=4.5:1),
+   with the status hue carried by the border instead of a light fill. */
+.alert {
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 10px;
+    color: var(--gt-text);
+    border: 1px solid var(--gt-border);
+    background-color: var(--gt-surface-2);
+}
+
+.alert-success {
+    background-color: var(--alert-success-bg);
+    border-color: var(--btn-success);
+}
+
+.alert-danger,
+.alert-error {
+    background-color: var(--alert-danger-bg);
+    border-color: var(--btn-danger);
+}
+
+.alert-warning {
+    background-color: var(--alert-warning-bg);
+    border-color: var(--btn-warning);
+}
+
+.alert-info {
+    background-color: var(--alert-info-bg);
+    border-color: var(--btn-info);
+}
+
+.theme-actions {
+    text-align: center;
+    margin: 20px 0;
+    padding: 10px;
+    border-top: 1px solid var(--gt-border);
+    border-bottom: 1px solid var(--gt-border);
+}

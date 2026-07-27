@@ -1,0 +1,430 @@
+/* GameTheca emulator play shell — stylized per gaming system. */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0a0a0c;
+  color: #eee;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body.gt-play-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background:
+    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--gt-play-accent, #2fd67b) 28%, transparent), transparent 55%),
+    var(--gt-play-bg, #0a0a0c);
+  color: var(--gt-play-fg, #eee);
+}
+
+#gt-emu-bar {
+  height: 48px;
+  flex: 0 0 auto;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 0 14px;
+  background: var(--gt-play-bar-bg, #141418);
+  border-bottom: 2px solid var(--gt-play-accent, #2fd67b);
+  font-size: 13px;
+  z-index: 2;
+}
+
+#gt-emu-bar .gt-play-brand {
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--gt-play-accent, #2fd67b);
+}
+
+#gt-emu-bar .gt-play-system {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gt-play-accent, #2fd67b) 55%, transparent);
+  background: color-mix(in srgb, var(--gt-play-accent, #2fd67b) 14%, transparent);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+#gt-emu-bar button {
+  background: var(--gt-play-accent, #2fd67b);
+  color: var(--gt-play-btn-fg, #111);
+  border: 0;
+  padding: 5px 12px;
+  cursor: pointer;
+  border-radius: var(--gt-play-radius, 4px);
+  font-weight: 600;
+}
+
+#gt-emu-bar button:hover {
+  filter: brightness(1.08);
+}
+
+#gt-emu-bar select {
+  max-width: 220px;
+  background: #0f0f12;
+  color: inherit;
+  border: 1px solid color-mix(in srgb, var(--gt-play-accent, #2fd67b) 35%, #333);
+  border-radius: 4px;
+  padding: 4px 6px;
+}
+
+#gt-emu-status {
+  opacity: 0.8;
+  margin-left: auto;
+  font-size: 12px;
+}
+
+#gt-play-stage {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gt-play-stage-pad, 18px 22px 28px);
+  min-height: 0;
+  position: relative;
+}
+
+#gt-play-bezel {
+  width: min(100%, var(--gt-play-bezel-max, 1100px));
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--gt-play-bezel-bg, #1c1c22);
+  border: var(--gt-play-bezel-border, 3px solid #2a2a32);
+  border-radius: var(--gt-play-bezel-radius, 14px);
+  box-shadow: var(--gt-play-bezel-shadow, 0 18px 40px rgba(0, 0, 0, 0.45));
+  padding: var(--gt-play-bezel-pad, 14px 16px 18px);
+  position: relative;
+  overflow: hidden;
+}
+
+#gt-play-bezel::before {
+  content: var(--gt-play-bezel-label, "");
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--gt-play-accent, #2fd67b) 70%, #fff);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+#webretro {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  margin-top: 10px;
+  border-radius: var(--gt-play-screen-radius, 6px);
+  overflow: hidden;
+  background: #000;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.55);
+  position: relative;
+}
+
+#webretro::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: var(--gt-play-scanline-opacity, 0);
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.18) 0,
+    rgba(0, 0, 0, 0.18) 1px,
+    transparent 2px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+}
+
+#gt-webretro-frame {
+  border: none;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+/* ---- Family defaults ---- */
+[data-platform-family="nintendo"] {
+  --gt-play-accent: #e60012;
+  --gt-play-bg: #12080a;
+  --gt-play-bar-bg: #1a0c10;
+  --gt-play-bezel-bg: linear-gradient(180deg, #3a3a3e, #2a2a2e);
+  --gt-play-bezel-border: 4px solid #5a5a60;
+  --gt-play-radius: 2px;
+  --gt-play-scanline-opacity: 0.12;
+}
+
+[data-platform-family="sony"] {
+  --gt-play-accent: #0070d1;
+  --gt-play-bg: #070b12;
+  --gt-play-bar-bg: #0c121c;
+  --gt-play-bezel-bg: linear-gradient(160deg, #2b2f38, #171a20);
+  --gt-play-bezel-border: 2px solid #4a5568;
+  --gt-play-bezel-radius: 10px;
+  --gt-play-scanline-opacity: 0.08;
+}
+
+[data-platform-family="sega"] {
+  --gt-play-accent: #1a66ff;
+  --gt-play-bg: #05070f;
+  --gt-play-bar-bg: #0a1020;
+  --gt-play-bezel-bg: #111318;
+  --gt-play-bezel-border: 3px solid #1a66ff;
+  --gt-play-bezel-radius: 8px;
+  --gt-play-scanline-opacity: 0.1;
+}
+
+[data-platform-family="atari"] {
+  --gt-play-accent: #f5a623;
+  --gt-play-bg: #120e08;
+  --gt-play-bar-bg: #1a140c;
+  --gt-play-bezel-bg: linear-gradient(180deg, #6b4423, #3d2412 40%, #2a1a0e);
+  --gt-play-bezel-border: 5px solid #8b5a2b;
+  --gt-play-bezel-radius: 4px;
+  --gt-play-scanline-opacity: 0.22;
+}
+
+[data-platform-family="xbox"] {
+  --gt-play-accent: #2fd67b;
+  --gt-play-bg: #06110a;
+  --gt-play-bar-bg: #0a1810;
+  --gt-play-bezel-bg: #121816;
+  --gt-play-bezel-border: 2px solid #2fd67b;
+}
+
+[data-platform-family="pc"] {
+  --gt-play-accent: #2fd67b;
+  --gt-play-bg: #0a0a0c;
+  --gt-play-bezel-bg: #16161a;
+  --gt-play-bezel-border: 2px solid #333;
+  --gt-play-scanline-opacity: 0;
+}
+
+/* ---- Per-system overrides (distinct console look) ---- */
+[data-platform="NES"] {
+  --gt-play-accent: #e60012;
+  --gt-play-bezel-bg: linear-gradient(180deg, #d8d8d8, #9a9a9a);
+  --gt-play-bezel-border: 6px solid #6e6e6e;
+  --gt-play-bezel-radius: 6px;
+  --gt-play-btn-fg: #fff;
+  --gt-play-fg: #1a1a1a;
+  --gt-play-bar-bg: #2c2c2c;
+  --gt-play-bezel-label: "NES";
+}
+
+[data-platform="SNES"] {
+  --gt-play-accent: #7b68a6;
+  --gt-play-bezel-bg: linear-gradient(180deg, #cfc8d8, #8e849e);
+  --gt-play-bezel-border: 5px solid #5c4d78;
+  --gt-play-bezel-radius: 18px;
+  --gt-play-bezel-label: "Super NES";
+}
+
+[data-platform="N64"] {
+  --gt-play-accent: #00a651;
+  --gt-play-bezel-bg: #1a1a1a;
+  --gt-play-bezel-border: 4px solid #c8102e;
+  --gt-play-bezel-radius: 20px;
+  --gt-play-bezel-label: "NINTENDO 64";
+}
+
+[data-platform="GB"],
+[data-platform="GBC"] {
+  --gt-play-accent: #9bbc0f;
+  --gt-play-bezel-bg: linear-gradient(180deg, #c4c4a8, #8b8b70);
+  --gt-play-bezel-border: 8px solid #6b6b55;
+  --gt-play-bezel-radius: 22px;
+  --gt-play-bezel-max: 520px;
+  --gt-play-stage-pad: 24px 18vw 36px;
+  --gt-play-scanline-opacity: 0.18;
+  --gt-play-bezel-label: "GAME BOY";
+}
+
+[data-platform="GBC"] {
+  --gt-play-accent: #7b68ee;
+  --gt-play-bezel-bg: linear-gradient(180deg, #d8c8f0, #7b68a6);
+  --gt-play-bezel-label: "GAME BOY COLOR";
+}
+
+[data-platform="GBA"] {
+  --gt-play-accent: #5b6ee1;
+  --gt-play-bezel-bg: linear-gradient(180deg, #6e7fd0, #3a4580);
+  --gt-play-bezel-border: 6px solid #2a3160;
+  --gt-play-bezel-radius: 28px;
+  --gt-play-bezel-max: 720px;
+  --gt-play-bezel-label: "GAME BOY ADVANCE";
+}
+
+[data-platform="NDS"] {
+  --gt-play-accent: #c0c0c8;
+  --gt-play-bezel-bg: #e8e8ec;
+  --gt-play-bezel-border: 4px solid #a0a0a8;
+  --gt-play-bezel-radius: 12px;
+  --gt-play-fg: #222;
+  --gt-play-bezel-label: "Nintendo DS";
+}
+
+[data-platform="VB"] {
+  --gt-play-accent: #ff0033;
+  --gt-play-bezel-bg: #111;
+  --gt-play-bezel-border: 4px solid #ff0033;
+  --gt-play-scanline-opacity: 0.35;
+  --gt-play-bezel-label: "Virtual Boy";
+}
+
+[data-platform="PSX"] {
+  --gt-play-accent: #ff6600;
+  --gt-play-bezel-bg: linear-gradient(145deg, #b8bcc4, #6e7480);
+  --gt-play-bezel-border: 3px solid #4a4e56;
+  --gt-play-bezel-radius: 8px;
+  --gt-play-bezel-label: "PlayStation";
+}
+
+[data-platform="SEGA_MD"] {
+  --gt-play-accent: #1a66ff;
+  --gt-play-bezel-bg: #0d0d0f;
+  --gt-play-bezel-border: 4px solid #1a66ff;
+  --gt-play-bezel-radius: 4px;
+  --gt-play-bezel-label: "Genesis / Mega Drive";
+}
+
+[data-platform="SEGA_MS"] {
+  --gt-play-accent: #0000aa;
+  --gt-play-bezel-bg: #101018;
+  --gt-play-bezel-border: 4px solid #c0c0c0;
+  --gt-play-bezel-label: "Master System";
+}
+
+[data-platform="SEGA_CD"] {
+  --gt-play-accent: #1a66ff;
+  --gt-play-bezel-bg: #15151a;
+  --gt-play-bezel-border: 3px solid #888;
+  --gt-play-bezel-label: "Sega CD";
+}
+
+[data-platform="SEGA_32X"] {
+  --gt-play-accent: #ff3300;
+  --gt-play-bezel-bg: #111;
+  --gt-play-bezel-border: 3px solid #ff3300;
+  --gt-play-bezel-label: "32X";
+}
+
+[data-platform="SEGA_GG"] {
+  --gt-play-accent: #00a0e9;
+  --gt-play-bezel-bg: linear-gradient(180deg, #2a2a30, #111);
+  --gt-play-bezel-border: 8px solid #222;
+  --gt-play-bezel-radius: 24px;
+  --gt-play-bezel-max: 560px;
+  --gt-play-bezel-label: "Game Gear";
+}
+
+[data-platform="SEGA_SATURN"] {
+  --gt-play-accent: #ff6600;
+  --gt-play-bezel-bg: #1a1a1a;
+  --gt-play-bezel-border: 3px solid #ff6600;
+  --gt-play-bezel-label: "Sega Saturn";
+}
+
+[data-platform="ATARI_2600"],
+[data-platform="ATARI_5200"],
+[data-platform="ATARI_7800"] {
+  --gt-play-accent: #f5a623;
+  --gt-play-bezel-bg: linear-gradient(180deg, #8b4513, #3e2723);
+  --gt-play-bezel-border: 6px solid #5d4037;
+  --gt-play-scanline-opacity: 0.28;
+  --gt-play-bezel-label: "Atari";
+}
+
+[data-platform="LYNX"] {
+  --gt-play-accent: #ff6600;
+  --gt-play-bezel-bg: #2a2a2a;
+  --gt-play-bezel-border: 10px solid #111;
+  --gt-play-bezel-radius: 30px;
+  --gt-play-bezel-max: 640px;
+  --gt-play-bezel-label: "Atari Lynx";
+}
+
+[data-platform="JAGUAR"] {
+  --gt-play-accent: #ff0000;
+  --gt-play-bezel-bg: #111;
+  --gt-play-bezel-border: 4px solid #ff0000;
+  --gt-play-bezel-label: "Jaguar";
+}
+
+[data-platform="THREEDO"] {
+  --gt-play-accent: #ffcc00;
+  --gt-play-bezel-bg: #f0f0f0;
+  --gt-play-bezel-border: 3px solid #333;
+  --gt-play-fg: #111;
+  --gt-play-bezel-label: "3DO";
+}
+
+[data-platform="NEOGEO_CD"],
+[data-platform="NGP"] {
+  --gt-play-accent: #ffcc00;
+  --gt-play-bezel-bg: #1a1a1a;
+  --gt-play-bezel-border: 3px solid #ffcc00;
+  --gt-play-bezel-label: "Neo Geo";
+}
+
+[data-platform="WS"] {
+  --gt-play-accent: #e60012;
+  --gt-play-bezel-bg: #eee;
+  --gt-play-bezel-border: 6px solid #ccc;
+  --gt-play-bezel-radius: 16px;
+  --gt-play-bezel-max: 640px;
+  --gt-play-fg: #222;
+  --gt-play-bezel-label: "WonderSwan";
+}
+
+[data-platform="COLECO"] {
+  --gt-play-accent: #c00;
+  --gt-play-bezel-bg: #222;
+  --gt-play-bezel-border: 4px solid #c00;
+  --gt-play-bezel-label: "ColecoVision";
+}
+
+[data-platform="VECTREX"] {
+  --gt-play-accent: #33ff66;
+  --gt-play-bezel-bg: #111;
+  --gt-play-bezel-border: 8px solid #333;
+  --gt-play-scanline-opacity: 0.4;
+  --gt-play-bezel-label: "Vectrex";
+}
+
+[data-platform="INTV"] {
+  --gt-play-accent: #c00;
+  --gt-play-bezel-bg: #2a1810;
+  --gt-play-bezel-border: 5px solid #8b4513;
+  --gt-play-bezel-label: "Intellivision";
+}
+
+[data-platform="O2EM"],
+[data-platform="CHAF"] {
+  --gt-play-accent: #f5a623;
+  --gt-play-bezel-bg: #2a2010;
+  --gt-play-bezel-border: 4px solid #8b6914;
+  --gt-play-scanline-opacity: 0.25;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #webretro::after {
+    opacity: 0 !important;
+  }
+}

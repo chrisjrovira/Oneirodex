@@ -1,0 +1,62 @@
+{% extends "base_admin.html" %}
+{% block content %}
+{% import 'partials/icons.html' as icons %}
+
+<div class="container">
+    <div class="glass-panel">
+        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+
+<link rel="stylesheet" href="{{ 'css/admin/admin_discovery_sections.css'|theme_asset }}">
+
+<script src="{{ 'js/admin/discovery_sections.js'|theme_asset }}"></script>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2>{{ icons.icon('compass', size=22) }} Discovery Sections Management</h2>
+                </div>
+                <div class="card-body">
+                    <div id="discovery-sections-list" class="sections-list">
+                        {% for section in sections %}
+                        <div class="section-item" data-section-id="{{ section.id }}">
+                            <div class="section-content">
+                                <div class="drag-handle-container">
+                                {{ icons.icon('grip', extra_class='drag-handle') }}
+                                </div>
+                                <span class="section-name">{{ section.name }}</span>
+                                <span class="section-count">
+                                    {% if section_counts[section.identifier] > 0 %}
+                                        ({{ section_counts[section.identifier] }} items)
+                                    {% else %}
+                                        (empty)
+                                    {% endif %}
+                                </span>
+                                <div class="section-controls">
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" 
+                                               class="form-check-input section-visibility-toggle" 
+                                               id="visibility-{{ section.id }}"
+                                               data-section-id="{{ section.id }}"
+                                               {% if section.is_visible %}checked{% endif %}>
+                                        <label class="form-check-label" for="visibility-{{ section.id }}">
+                                            Visible
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

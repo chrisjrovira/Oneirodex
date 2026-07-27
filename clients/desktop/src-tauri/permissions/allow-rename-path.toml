@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-rename-path"
+description = "Allows renaming staging install folders into place during updates."
+commands.allow = ["rename_path"]

@@ -1,0 +1,31 @@
+:root {
+  --gt-bg: #0b0d10;
+  --gt-surface: #141820;
+  --gt-surface-2: #1c2230;
+  --gt-text: #f2f4f8;
+  --gt-text-muted: #c4ccd8;
+  --gt-accent: #2fd67b;
+  --gt-accent-contrast: #0b0d10;
+  /* Semantic status colours. Deliberately not part of preset_tokens(): a
+     failure must read as red in every theme. Each clears 4.5:1 against the
+     lightest surface any preset produces (#362824), so they are safe as body
+     text, not just as indicator dots. */
+  --gt-success: #4ade80;
+  --gt-danger: #ff6b6b;
+  --gt-warning: #ffc94a;
+  --gt-info: #5ac8fa;
+  --gt-border: rgba(255, 255, 255, 0.12);
+  --gt-focus-ring: color-mix(in srgb, var(--gt-accent) 70%, white);
+  --gt-tile-min: 180px;
+  --gt-tile-gap: 10px;
+  --gt-crt-opacity: 0.03;
+  /* Style B glass launcher chrome */
+  --gt-glass-bg: rgba(20, 24, 32, 0.72);
+  --gt-glass-border: rgba(255, 255, 255, 0.14);
+  --gt-glass-blur: 12px;
+  /* Platform skin overrides these when browsing a single system */
+  --gt-platform-accent: var(--gt-accent);
+  --gt-platform-motion: none;
+  --font-ui: "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-display: "Arial Black", "Segoe UI", sans-serif;
+}

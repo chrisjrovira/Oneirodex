@@ -1,0 +1,18 @@
+.game-library-container[data-library-grid]:not([data-library-virtual]) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min, 180px), 1fr));
+  gap: var(--gt-tile-gap, 10px);
+  align-items: start;
+}
+
+.game-library-container[data-library-virtual] {
+  display: block;
+}
+
+.game-library-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min, 180px), 1fr));
+  gap: var(--gt-tile-gap, 10px);
+  align-items: start;
+  box-sizing: border-box;
+}

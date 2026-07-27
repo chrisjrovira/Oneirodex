@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-save-config"
+description = "Allows saving desktop config to app data."
+commands.allow = ["save_config"]

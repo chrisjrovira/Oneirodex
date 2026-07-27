@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% import 'partials/icons.html' as icons %}
+
+<link rel="stylesheet" href="{{ 'css/settings/settings_profile_view.css'|theme_asset }}">
+
+<div class="container my-4">
+
+    <div class="content-restricted-textblock">
+        <h2>{{ icons.icon('user', size=22, extra_class='me-2') }}User Profile</h2>
+        <div class="avatar-container">
+            <div class="settings_profile_view-edit-button">
+                <a href="{{ url_for('settings.settings_profile_edit') }}" class="btn btn-primary">
+                    {{ icons.icon('camera', extra_class='me-2') }}Change Avatar
+                </a>
+            </div>
+            <img src="{{ url_for('static', filename=current_user.avatarpath) }}" 
+                 alt="User Avatar" 
+                 class="settings_profile_view-user-avatar"
+                 title="Profile Picture">
+        </div>
+        <div class="settings_profile_view-userinfo">
+            <p>
+                <strong>{{ icons.icon('user', extra_class='me-2') }}Name:</strong>
+                <span>{{ current_user.name }}</span>
+            </p>
+            <p>
+                <strong>{{ icons.icon('envelope', extra_class='me-2') }}Email:</strong>
+                <span>{{ current_user.email }}</span>
+            </p>
+            <p>
+                <strong>{{ icons.icon('user', extra_class='me-2') }}Role:</strong>
+                <span>{{ current_user.role|title }}</span>
+            </p>
+            <p>
+                <strong>{{ icons.icon('calendar', extra_class='me-2') }}Member Since:</strong>
+                <span>{{ current_user.created.strftime('%B %d, %Y') }}</span>
+            </p>
+            <p>
+                <strong>{{ icons.icon('info', extra_class='me-2') }}About:</strong>
+                <span>{{ current_user.about or 'No information provided' }}</span>
+            </p>
+            <p>
+                <strong>{{ icons.icon('ticket', extra_class='me-2') }}Invites:</strong>
+                <span>{{ remaining_invites }} out of {{ total_invites }}</span>
+            </p>
+        </div>
+
+    </div>
+</div>
+
+
+</div>
+
+{% endblock %}

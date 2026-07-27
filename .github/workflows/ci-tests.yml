@@ -1,0 +1,136 @@
+# GameTheca CI — PR gate with a *core* pytest subset (+ member-app / desktop vitest).
+#
+# Full pytest suite remains local / release-time (needs Unraid-like fixtures,
+# library paths, and heavier integrations). Do not treat this workflow as
+# coverage of the entire tests/ tree.
+#
+# See: docs/runbooks/release-checklist.md · docs/runbooks/local-postgres-pytest.md
+# Scrub shipped SPA bundles before image publish: docs/runbooks/scrub-shipped-bundles.md
+
+name: CI tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - 'feature/**'
+      - 'feat/**'
+      - 'fix/**'
+
+concurrency:
+  group: ci-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest-core:
+    name: Pytest (core)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          # DB name must contain "test" (enforced by conftest.py).
+          POSTGRES_DB: gamethecatest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d gamethecatest"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Must contain "test" in the database name — never point at production.
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gamethecatest
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      FLASK_ENV: testing
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # pytest is not pinned in requirements.txt (dev/CI only).
+          pip install pytest
+
+      - name: Run core pytest subset
+        # Core gate only — full suite is still local/release.
+        run: >
+          python -m pytest -q
+          tests/test_health_probes.py
+          tests/test_asgi_static.py
+          tests/test_utils_ops_summary.py
+          tests/test_routes_ops.py
+          tests/test_security_suite.py
+          tests/test_rbac_unit.py
+
+  member-app-vitest:
+    name: Member-app vitest
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend/member-app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/member-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run vitest
+        # package.json "test" is "vitest"; --run exits non-interactively in CI.
+        run: npm test -- --run
+
+  desktop-vitest:
+    name: Desktop vitest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: clients/desktop
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: clients/desktop/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run fast desktop vitest slice
+        # Keychain / config / connection UX only — full desktop suite stays local.
+        run: >
+          npx vitest run
+          src/keychain.test.ts
+          src/config-store.test.ts
+          src/connection-ux.test.ts

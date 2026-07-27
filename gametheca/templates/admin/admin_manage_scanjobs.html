@@ -1,0 +1,1099 @@
+{% extends "base_admin.html" %}
+{% block styles %}
+<link rel="stylesheet" href="{{ 'css/admin/admin_manage_scanjobs.css'|theme_asset }}">
+{% endblock %}
+{% block content %}
+{% import 'partials/icons.html' as icons %}
+
+<meta name="active-tab" content="{{ active_tab }}">
+<meta name="selected-library-uuid" content="{{ selected_library_uuid }}">
+
+<div class="admin_manage_scanjobs-nav-panel mt-3">
+    <div class="container-settings gt-adminpage gt-adminpage--xl">
+        <div class="gt-adminpage-header">
+            <div>
+                <h1 class="gt-adminpage-title">Scan management</h1>
+                <p class="gt-adminpage-lede">Auto / manual scans, unmatched folders, filters, and extensions.</p>
+            </div>
+        </div>
+        <ul class="admin_manage_scanjobs-nav-tabs nav nav-tabs">
+            <li class="admin_manage_scanjobs-nav-item nav-item">
+                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'auto' or not active_tab %}active{% endif %}" id="autoScan-tab" data-bs-toggle="tab" href="#autoScan">Auto Scan</a>
+            </li>
+            <li class="admin_manage_scanjobs-nav-item nav-item">
+                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'manual' %}active{% endif %}" id="manualScan-tab" data-bs-toggle="tab" href="#manualScan">Manual Scan</a>
+            </li>
+            <li class="admin_manage_scanjobs-nav-item nav-item">
+                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'unmatched' %}active{% endif %}" id="unmatchedFolders-tab" data-bs-toggle="tab" href="#unmatchedFolders">Unmatched Folders</a>
+            </li>
+            <li class="admin_manage_scanjobs-nav-item nav-item">
+                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'scan_filters' %}active{% endif %}" id="scanFilters-tab" data-bs-toggle="tab" href="#scanFilters">Scan Filters</a>
+            </li>
+            <li class="admin_manage_scanjobs-nav-item nav-item">
+                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'file_extensions' %}active{% endif %}" id="fileExtensions-tab" data-bs-toggle="tab" href="#fileExtensions">File Extensions</a>
+            </li>
+            <li class="admin_manage_scanjobs-nav-item nav-item">
+                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'image_queue' %}active{% endif %}" id="imageQueue-tab" data-bs-toggle="tab" href="#imageQueue">Image Queue</a>
+            </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="admin_manage_scanjobs-tab-content tab-content">
+            <!-- Auto Scan Tab -->
+            <div id="autoScan" class="admin_manage_scanjobs-tab-panel tab-pane {% if active_tab == 'auto' or not active_tab %}active{% else %}fade{% endif %}">
+
+                
+                {% if libraries|length > 0 %}
+                <div class="mb-3 d-flex gap-2 flex-wrap">
+                    <button type="button" id="refreshAllLibrariesBtn" class="btn btn-secondary">
+                        {{ icons.icon('refresh') }} Refresh all libraries
+                    </button>
+                    <small class="text-muted align-self-center">Re-scans each library’s last scan folder for new games (one at a time).</small>
+                </div>
+                <form id="autoScanForm" action="" method="post">
+                    {{ auto_form.hidden_tag() }}
+
+                    <!-- Config and Path Row (Side by Side) -->
+                    <div class="config-path-row">
+                        <!-- Configuration Card -->
+                        <div class="config-card">
+                        <div class="card-header">
+                            <h4 class="card-title">{{ icons.icon('cogs', size=20) }} Scan Configuration</h4>
+                        </div>
+                        <div class="card-content">
+                            <div class="config-grid">
+                                <!-- Library Selection -->
+                                <div class="config-item">
+                                    {{ auto_form.library_uuid.label(class="config-label", **{"data-toggle": "tooltip", "title": "Choose which library to scan games into"}) }}
+                                    {{ auto_form.library_uuid(class="form-control config-input", id="libraryUuid", onchange='onLibraryChange(this.value, "auto")') }}
+                                    {% if auto_form.library_uuid.errors %}
+                                        {% for error in auto_form.library_uuid.errors %}
+                                            <div class="alert alert-danger">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+
+                                <!-- Scan Mode -->
+                                <div class="config-item">
+                                    <label class="config-label" data-toggle="tooltip" title="Choose how your games are organized on disk">{{ auto_form.scan_mode.label.text }}</label>
+                                    <div class="radio-group">
+                                        {% for subfield in auto_form.scan_mode %}
+                                            <div class="radio-option">
+                                                {{ subfield(class="form-check-input") }}
+                                                {% if subfield.data == 'folders' %}
+                                                {{ subfield.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Each game is in its own folder (e.g., /Games/Doom/, /Games/Quake/)"}) }}
+                                                {% else %}
+                                                {{ subfield.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Games are individual files in one folder (e.g., /Games/doom.zip, /Games/quake.exe)"}) }}
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% if auto_form.scan_mode.errors %}
+                                        {% for error in auto_form.scan_mode.errors %}
+                                            <div class="alert alert-danger">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Options Row -->
+                            <div class="options-row">
+                                <div class="option-item">
+                                    <div class="form-check modern-checkbox">
+                                        {{ auto_form.remove_missing(class="form-check-input") }}
+                                        {{ auto_form.remove_missing.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Remove games from library if their folders no longer exist on disk"}) }}
+                                    </div>
+                                </div>
+                                
+                                <div class="option-item">
+                                    <div class="form-check modern-checkbox">
+                                        {{ auto_form.download_missing_images(class="form-check-input") }}
+                                        {{ auto_form.download_missing_images.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Automatically download cover art and screenshots for games missing images"}) }}
+                                    </div>
+                                </div>
+                                
+                                <div class="option-item">
+                                    <div class="form-check modern-checkbox">
+                                        {{ auto_form.force_updates_extras_scan(class="form-check-input", id="force-updates-extras-auto") }}
+                                        {{ auto_form.force_updates_extras_scan.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Force re-scanning of update and extras folders even if previously scanned"}) }}
+                                    </div>
+                                </div>
+
+                                <div class="option-item">
+                                    <div class="form-check modern-checkbox">
+                                        {{ auto_form.fetch_hltb(class="form-check-input", id="fetch-hltb-auto", checked="checked") }}
+                                        {{ auto_form.fetch_hltb.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Fetch game completion times from HowLongToBeat during scan"}) }}
+                                    </div>
+                                </div>
+
+                                <div class="option-item">
+                                    <div class="form-check modern-checkbox">
+                                        {{ auto_form.force_hltb_refetch(class="form-check-input", id="force-hltb-refetch-auto") }}
+                                        {{ auto_form.force_hltb_refetch.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Force refetch HLTB data for games that already exist in the database"}) }}
+                                    </div>
+                                </div>
+
+                                <div class="option-item">
+                                    {{ auto_form.schedule.label(class="config-label", **{"data-toggle": "tooltip", "title": "Optionally repeat this scan on a timer after it completes"}) }}
+                                    {{ auto_form.schedule(class="form-control config-input") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                        
+                    <!-- Path Selection Card -->
+                    <div class="path-card">
+                        <div class="card-header">
+                            <h4 class="card-title">{{ icons.icon('folder', size=20) }} Scan Location</h4>
+                        </div>
+                        <div class="card-content">
+                            <div class="path-input-group">
+                                {{ auto_form.folder_path.label(class="config-label", **{"data-toggle": "tooltip", "title": "Browse or enter the path to scan for games. Leave empty to scan the configured base directory. Click a folder to select it, then Start Scan."}) }}
+                                <div class="scan-controls-group" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                                    <button type="submit" name="submit" value="AutoScan" class="btn btn-primary browse-btn" style="margin-right: 10px;">
+                                        {{ icons.icon('play') }} Start Scan
+                                    </button>
+                                    <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                                        <img src="/static/newstyle/searching_small.gif" alt="Loading...">
+                                    </div>
+                                </div>
+                                <div class="input-with-button">
+                                    {{ auto_form.folder_path(class="form-control path-input", placeholder="Select a folder below, or leave empty for base directory") }}
+                                    <button id="browseFoldersBtn" type="button" class="btn btn-info browse-btn" data-browse-url="{{ url_for('apis.browse_folders_ss') }}">
+                                        {{ icons.icon('search') }} Browse
+                                    </button>
+                                </div>
+                                {% if auto_form.folder_path.errors %}
+                                    {% for error in auto_form.folder_path.errors %}
+                                        <div class="alert alert-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            
+                            <div class="folder-browser">
+                                <button id="upFolderBtn" type="button" class="btn btn-secondary up-btn" style="display: none;">
+                                    {{ icons.icon('updates') }} Up
+                                </button>
+                                <div id="folderContents" class="folder-contents"></div>
+                            </div>
+                        </div>
+                    </div>
+                    </div><!-- Close config-path-row -->
+                </form>
+                {% else %}
+                <div class="no-libraries-card">
+                    <div class="no-libraries-content">
+                        {{ icons.icon('book', size=32) }}
+                        <h4>Welcome to Scan Management</h4>
+                        <p>Get started by creating your first library to organize your game collection.</p>
+                        <p class="help-text">Libraries help organize your games by platform, genre, or any way you prefer.</p>
+                        <a href="{{ url_for('library.libraries') }}" class="btn btn-elegant create-library-btn">
+                            {{ icons.icon('plus') }} Create Your First Library
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                <!-- Scan Jobs Management Card -->
+                <div class="scan-jobs-card">
+                    <div class="card-header">
+                        <div class="jobs-header-content">
+                            <div class="jobs-title-section">
+                                <h4 class="card-title">
+                                    {{ icons.icon('tasks', size=20) }} Active Scan Jobs
+                                </h4>
+                                <p class="jobs-subtitle">Monitor and manage running scan operations</p>
+                            </div>
+                            <div class="jobs-controls">
+                                <form action="{{ url_for('main.clear_all_scan_jobs') }}" method="post" class="inline-form">
+                                    {{ csrf_form.csrf_token }}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm control-btn" onclick="return confirm('Delete ALL jobs?');">
+                                        {{ icons.icon('trash') }} <span class="btn-text">Clear All</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="jobs-table-wrapper">
+                            <table id="scanJobsTable" class="simple-jobs-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Library</th>
+                                        <th>Path</th>
+                                        <th>Status</th>
+                                        <th>Progress</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jobsTableBody">
+                                    {% if jobs %}
+                                        {% for job in jobs[:25] %}
+                                        <tr data-job-id="{{ job.id }}">
+                                            <td>{{ job.id }}</td>
+                                            <td>{{ job.library.name if job.library else 'N/A' }}</td>
+                                            <td>{{ job.scan_folder or 'N/A' }}</td>
+                                            <td>{{ job.status }}</td>
+                                            <td>
+                                                {% if job.total_folders %}
+                                                    {{ job.folders_success or 0 }}/{{ job.total_folders }}
+                                                {% else %}
+                                                    —
+                                                {% endif %}
+                                            </td>
+                                            <td>—</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr class="jobs-empty-row"><td colspan="6">No scan jobs yet. Click Start Scan after selecting a folder.</td></tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Scan Tab -->
+            <div id="manualScan" class="admin_manage_scanjobs-manual-panel glass-panel tab-pane {% if active_tab == 'manual' %}active{% else %}fade{% endif %}"><br>
+                <div class="admin_manage_scanjobs-tab-header">
+                    <h3>Manual Folder Scan</h3>
+                </div>
+                <form action="" method="post">
+                    {{ manual_form.hidden_tag() }}
+                    <!-- Library Selection -->
+                    <div class="admin_manage_scanjobs-library form-group">
+                        {{ manual_form.library_uuid.label(**{"data-toggle": "tooltip", "title": "Choose which library to scan games into"}) }}
+                        {{ manual_form.library_uuid(class="form-control", id="manualLibraryUuid", onchange='onLibraryChange(this.value, "manual")') }}
+                        {% if manual_form.library_uuid.errors %}
+                            {% for error in manual_form.library_uuid.errors %}
+                                <div class="alert alert-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <!-- Scan Mode -->
+                    <div class="admin_manage_scanjobs-scanmode form-group">
+                        {{ manual_form.scan_mode.label(**{"data-toggle": "tooltip", "title": "Choose how your games are organized on disk"}) }}
+                        {% for subfield in manual_form.scan_mode %}
+                            <div class="form-check">
+                                {{ subfield(class="form-check-input") }}
+                                {% if subfield.data == 'folders' %}
+                                {{ subfield.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Each game is in its own folder (e.g., /Games/Doom/, /Games/Quake/)"}) }}
+                                {% else %}
+                                {{ subfield.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Games are individual files in one folder (e.g., /Games/doom.zip, /Games/quake.exe)"}) }}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ manual_form.folder_path.label(**{"data-toggle": "tooltip", "title": "Browse or enter the path to scan for games"}) }}
+                        {{ manual_form.folder_path(class="form-control", id="manualFolderPath") }}
+                        {% if manual_form.folder_path.errors %}
+                            {% for error in manual_form.folder_path.errors %}
+                                <div class="alert alert-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Options -->
+                    <div class="form-check modern-checkbox">
+                        {{ manual_form.force_updates_extras_scan(class="form-check-input", id="force-updates-extras-manual") }}
+                        {{ manual_form.force_updates_extras_scan.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Force re-scanning of update and extras folders even if previously scanned"}) }}
+                    </div>
+
+                    <div class="form-check modern-checkbox">
+                        {{ manual_form.fetch_hltb(class="form-check-input", id="fetch-hltb-manual", checked="checked") }}
+                        {{ manual_form.fetch_hltb.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Fetch game completion times from HowLongToBeat during scan"}) }}
+                    </div>
+
+                    <div class="form-check modern-checkbox">
+                        {{ manual_form.force_hltb_refetch(class="form-check-input", id="force-hltb-refetch-manual") }}
+                        {{ manual_form.force_hltb_refetch.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Force refetch HLTB data for games that already exist in the database"}) }}
+                    </div>
+
+                    <div class="form-group">
+                        <button id="browseFoldersBtnManual" type="button" class="admin_manage_scanjobs-browsefolders-btn btn btn-info">Browse Folders</button>
+                        <button type="submit" name="submit" value="ManualScan" class="admin_manage_scanjobs-browsefolders-listgames-btn btn btn-primary">List Games</button>
+                        <button id="upFolderBtnManual" type="button" class="admin_manage_scanjobs-browsefolders-up-btn btn btn-secondary" style="display: none;">Up</button>
+                    </div>
+                </form>
+                <div id="loadingSpinnerManual" class="loading-spinner">
+                    <img src="/static/newstyle/searching_small.gif" alt="Loading...">
+                </div>
+                <div id="folderContentsManual"></div>
+            
+                {% if game_names_with_ids %}
+                <br>
+                <div class="admin_manage_scanjobs-foundgames-header">
+                    <h4>Found Games:</h4>
+                </div>
+                <div class="admin_manage_scanjobs-foudngames-list list-group">
+                    {% for game in game_names_with_ids %}
+                        <div class="admin_manage_scanjobs-list-item list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            {{ game['name'] }}
+                            <!-- Identify Form for each game -->
+                            <form action="{{ url_for('games.add_game_manual') }}" method="GET">
+                                <input type="hidden" name="full_disk_path" value="{{ game['full_path'] }}">
+                                <input type="submit" class="admin_manage_scanjobs-identify-btn btn btn-primary btn-sm" value="Identify">
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+                </div>
+
+            <!-- Unmatched Folders Tab -->
+            <div id="unmatchedFolders" class="admin_manage_scanjobs-unmatched-container container tab-pane {% if active_tab == 'unmatched' %}active{% else %}fade{% endif %}"><br>
+                <div class="admin_manage_scanjobs-unmatched-panel glass-panel">
+                    <div class="admin_manage_scanjobs-tab-header">
+                        <h3>Resolve Unmatched Folders</h3>
+                    </div>
+                    <!-- spinner -->
+                    <div id="globalSpinner" style="display: none;">
+                        <img src="{{ url_for('static', filename='/newstyle/searching.gif') }}" alt="Loading...">
+                    </div>
+
+                    <div class="container-unmatched-buttons mb-3">
+                        <form action="" method="post">
+                            {{ csrf_form.csrf_token }}
+                            <input type="hidden" name="submit" value="DeleteAllUnmatched">
+                            <button type="submit" class="admin_manage_scanjobs-clearall-btn btn btn-danger" data-toggle="tooltip" title="Remove all entries from the unmatched folders list" onclick="return confirm('Are you sure you want to delete all entries in the list? This cannot be undone.');">Clear All</button>
+                        </form>
+                        <form action="" method="post">
+                            {{ csrf_form.csrf_token }}
+                            <input type="hidden" name="submit" value="DeleteOnlyUnmatched">
+                            <button type="submit" class="admin_manage_scanjobs-clearunmatched-btn btn btn-warning" data-toggle="tooltip" title="Remove only folders with 'Unmatched' status, keeping identified items" onclick="return confirm('Are you sure you want to clear all unmatched folders? This cannot be undone.');">Clear Unmatched</button>
+                            <button type="button" id="reclassifyDuplicatesBtn" class="btn btn-secondary" data-toggle="tooltip" title="Change false Duplicate rows (different folder titles, same IGDB) back to Unmatched">Fix false duplicates</button>
+                        </form>
+                    </div>
+
+                    <!-- Filter Controls -->
+                    <div class="unmatched-filters">
+                        <div class="filter-row">
+                            <div class="filter-buttons">
+                                <button class="filter-btn active" data-filter="all">All</button>
+                                <button class="filter-btn" data-filter="Unmatched">Unmatched</button>
+                                <button class="filter-btn" data-filter="Duplicate" title="Same title already in library (IGDB copy)">Duplicates</button>
+                                <button class="filter-btn" data-filter="Ignore">Ignored</button>
+                                <button class="filter-btn" data-filter="Pending">Pending</button>
+                            </div>
+                            <div class="search-container">
+                                <input type="text"
+                                       id="unmatchedSearch"
+                                       class="search-input"
+                                       placeholder="Search folder path, library, or platform...">
+                            </div>
+                        </div>
+                        <div class="results-info" id="resultsInfo">
+                            Showing all entries
+                        </div>
+                    </div>
+                    <table id="unmatchedTable" class="simple-unmatched-table" style="border-radius: 15px;">
+                        <thead>
+                            <tr>
+                                <th>Folder Path</th>
+                                <th>Status</th>
+                                <th>Library</th>
+                                <th>Platform</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="unmatchedFoldersTableBody">
+                            <!-- This will be populated dynamically by JavaScript -->
+                        </tbody>
+                    </table>
+                    
+                </div>
+
+            </div>
+
+            <!-- Scan Filters Tab -->
+            <div id="scanFilters" class="admin_manage_scanjobs-filters-container container tab-pane {% if active_tab == 'scan_filters' %}active{% else %}fade{% endif %}">
+                <div class="admin_manage_scanjobs-filters-panel glass-panel">
+                    <div class="admin_manage_scanjobs-tab-header">
+                        <h3>{{ icons.icon('filter', size=22) }} Scanning Filters</h3>
+                        <p>Manage scanning filter patterns to improve scanning speed.</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFilterModal">
+                            {{ icons.icon('plus') }} Add New Filter
+                        </button>
+                    </div>
+
+                    <!-- Add Filter Modal -->
+                    <div class="modal fade" id="addFilterModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Add New Scanning Filter</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="" method="post">
+                                    <div class="modal-body">
+                                        {{ release_group_form.hidden_tag() }}
+                                        <div class="mb-3">
+                                            <label for="filter_pattern" class="form-label">Scanning Filter Pattern</label>
+                                            {{ release_group_form.filter_pattern(class="form-control", id="filter_pattern") }}
+                                        </div>
+                                        <div class="mb-3 form-check">
+                                            {{ release_group_form.case_sensitive(class="form-check-input", id="case_sensitive") }}
+                                            <label class="form-check-label" for="case_sensitive">Case Sensitive</label>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" name="submit" value="AddReleaseGroup" class="btn btn-primary">Save Filter</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h4>Existing Filters</h4>
+                    <table class="admin_manage_filters-table table table-dark table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th width="60%">Scanning Filter Pattern</th>
+                                <th width="20%">Case Sensitive</th>
+                                <th width="20%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for group in scanning_filters %}
+                            <tr>
+                                <td>{{ group.filter_pattern }}</td>
+                                <td>
+                                    <span class="badge {% if group.case_sensitive %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ 'Yes' if group.case_sensitive else 'No' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <form action="" method="post" style="display: inline;">
+                                        {{ csrf_form.csrf_token }}
+                                        <input type="hidden" name="submit" value="DeleteReleaseGroup">
+                                        <input type="hidden" name="filter_id" value="{{ group.id }}">
+                                        <button type="submit" class="admin_manage_filters-remove-btn btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this filter?')">
+                                            {{ icons.icon('trash') }} Remove
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- File Extensions Tab -->
+            <div id="fileExtensions" class="admin_manage_scanjobs-extensions-container container tab-pane {% if active_tab == 'file_extensions' %}active{% else %}fade{% endif %}">
+                <div class="admin_manage_scanjobs-extensions-panel glass-panel">
+                    <div class="admin_manage_scanjobs-tab-header">
+                        <h3>{{ icons.icon('plug', size=22) }} File Extensions</h3>
+                        <p>Manage allowed file extensions for game file recognition.</p>
+                    </div>
+
+                    <div class="extensions-table">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Allowed File Types</h4>
+                                <button class="btn btn-primary btn-sm" onclick="addFileType('allowed')">
+                                    {{ icons.icon('plus') }} Add New
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-dark table-hover" id="allowedTypesTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Extension</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for type in allowed_file_types %}
+                                        <tr data-id="{{ type.id }}" data-category="allowed">
+                                            <td class="type-value">{{ type.value }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning" onclick="editFileType(this)" title="Edit">
+                                                    {{ icons.icon('edit', title='Edit') }}
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteFileType('allowed', {{ type.id }})" title="Delete">
+                                                    {{ icons.icon('trash', title='Delete') }}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="extensions-info mt-3">
+                        <div class="info-panel">
+                            <h5>File Extensions</h5>
+                            <p>The extensions listed here are used to identify game files during the scanning process. Only files with these extensions will be recognized as games when scanning folders.</p>
+                            <hr>
+                            <p>This helps ensure that only valid game files are added to your library.</p>
+                            <p class="mb-0">Add or remove extensions as needed to match the types of game files in your collection.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Queue Tab -->
+            <div id="imageQueue" class="admin_manage_scanjobs-imagequeue-container container tab-pane {% if active_tab == 'image_queue' %}active{% else %}fade{% endif %}">
+                <div class="admin_manage_scanjobs-imagequeue-panel glass-panel">
+                    <div class="admin_manage_scanjobs-tab-header">
+                        <h3>{{ icons.icon('image', size=22) }} Image Queue</h3>
+                        <p>Manage game cover and screenshot downloads.</p>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="btn-group">
+                                <button class="btn btn-success" onclick="downloadBatch(10)">
+                                    {{ icons.icon('download') }} Download 10
+                                </button>
+                                <button class="btn btn-success" onclick="downloadBatch(50)">
+                                    {{ icons.icon('download') }} Download 50
+                                </button>
+                                <button class="btn btn-primary" onclick="downloadBatch(100)">
+                                    {{ icons.icon('download') }} Download 100
+                                </button>
+                                <button class="btn btn-secondary" onclick="refreshQueue()">
+                                    {{ icons.icon('refresh') }} Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2">
+                                <select id="status-filter" class="form-select" onchange="applyFilters()">
+                                    <option value="all">All Images</option>
+                                    <option value="pending">Pending Only</option>
+                                    <option value="downloaded">Downloaded Only</option>
+                                </select>
+                                <select id="type-filter" class="form-select" onchange="applyFilters()">
+                                    <option value="all">All Types</option>
+                                    <option value="cover">Covers</option>
+                                    <option value="screenshot">Screenshots</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages -->
+                    <div id="messages"></div>
+
+                    <!-- Image Queue Table -->
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Game</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Download URL</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="image-table-body">
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <span class="gt-spinner" aria-hidden="true"></span> Loading...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav id="pagination-nav" style="display: none;">
+                        <ul class="pagination justify-content-center" id="pagination">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal for Extensions -->
+<div class="modal fade" id="fileTypeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add/Edit File Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalTypeCategory">
+                <input type="hidden" id="modalTypeId">
+                <div class="form-group">
+                    <label for="fileTypeValue">File Extension:</label>
+                    <input type="text" class="form-control" id="fileTypeValue" maxlength="10">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveFileType()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Write Permissions Error Modal -->
+<div class="modal fade" id="permissionsErrorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">{{ icons.icon('warning', size=20) }} Write Permission Error</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <h6><strong>Cannot Start Scan: Write Permissions Required</strong></h6>
+                    <p>The setting <strong>"Write Metadata File on Manual ID"</strong> is enabled in Server Settings, but GameTheca cannot write to the following path(s):</p>
+                </div>
+
+                {% if session.get('permission_errors') %}
+                <div class="mb-3">
+                    <h6>Failed Paths:</h6>
+                    <ul class="list-group">
+                        {% for error in session['permission_errors'] %}
+                        <li class="list-group-item list-group-item-danger">
+                            <strong>Path:</strong> <code>{{ error.path }}</code><br>
+                            <strong>Error:</strong> {{ error.error }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="alert alert-info">
+                    <h6><strong>How to Fix:</strong></h6>
+                    <p>You have two options:</p>
+                    <ol>
+                        <li><strong>Fix Permissions (Recommended):</strong> Grant write permissions to the GameTheca user for the game folders:
+                            <pre class="mt-2"><code>sudo chmod -R u+w {{ session.get('permission_check_path', '/path/to/games') }}</code></pre>
+                            Or for the GameTheca user specifically:
+                            <pre><code>sudo chown -R gametheca:gametheca {{ session.get('permission_check_path', '/path/to/games') }}</code></pre>
+                        </li>
+                        <li><strong>Disable Feature:</strong> Go to <strong>Admin Dashboard → Manage Server Settings</strong> and turn off <strong>"Write Metadata File on Manual ID"</strong> under the "Local Metadata & Images" section.</li>
+                    </ol>
+                </div>
+
+                <div class="alert alert-warning">
+                    <p>{{ icons.icon('info') }} <strong>Note:</strong> Without write permissions, the local metadata feature cannot save game identification data to disk, and you won't get the benefits of surviving database resets.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="{{ url_for('admin2.new_server_settings') }}" class="btn btn-secondary">
+                    {{ icons.icon('cogs') }} Go to Settings
+                </a>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="{{ 'js/admin_manage_scanjobs.js'|theme_asset }}"></script>
+
+<script>
+    // Mirrors icons.html's 'download' and 'trash' glyphs — the icon macro can't run
+    // inside these JS-built table rows, so the SVG markup is duplicated here.
+    const ICON_DOWNLOAD_SVG = '{{ icons.icon("download")|replace("\n", "") }}';
+    const ICON_TRASH_SVG = '{{ icons.icon("trash")|replace("\n", "") }}';
+
+    function onLibraryChange(libraryUuid, scanType) {
+        // Update the URL with the new library_uuid parameter and active_tab
+        const url = new URL(window.location.href);
+        url.searchParams.set('library_uuid', libraryUuid);
+        url.searchParams.set('active_tab', scanType === 'manual' ? 'manual' : 'auto');
+        window.location.href = url.toString();
+    }
+
+    // File Extensions functionality
+    function addFileType(category) {
+        document.getElementById('modalTypeCategory').value = category;
+        document.getElementById('modalTypeId').value = '';
+        document.getElementById('fileTypeValue').value = '';
+        document.querySelector('#fileTypeModal .modal-title').textContent = 'Add File Type';
+        new bootstrap.Modal(document.getElementById('fileTypeModal')).show();
+    }
+
+    function editFileType(button) {
+        const row = button.closest('tr');
+        const typeId = row.dataset.id;
+        const category = row.dataset.category;
+        const currentValue = row.querySelector('.type-value').textContent;
+
+        document.getElementById('modalTypeCategory').value = category;
+        document.getElementById('modalTypeId').value = typeId;
+        document.getElementById('fileTypeValue').value = currentValue;
+        document.querySelector('#fileTypeModal .modal-title').textContent = 'Edit File Type';
+        new bootstrap.Modal(document.getElementById('fileTypeModal')).show();
+    }
+
+    function saveFileType() {
+        const category = document.getElementById('modalTypeCategory').value;
+        const typeId = document.getElementById('modalTypeId').value;
+        const value = document.getElementById('fileTypeValue').value;
+
+        if (!value.trim()) {
+            alert('Please enter a file extension');
+            return;
+        }
+
+        const url = `/api/file_types/${category}`;
+        const method = typeId ? 'PUT' : 'POST';
+
+        const body = typeId ?
+            JSON.stringify({ id: parseInt(typeId), value: value }) :
+            JSON.stringify({ value: value });
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRFUtils.getToken()
+            },
+            body: body
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success || data.id || data.value) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+    }
+
+    function deleteFileType(category, typeId) {
+        if (!confirm('Are you sure you want to delete this file type?')) {
+            return;
+        }
+
+        fetch(`/api/file_types/${category}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRFUtils.getToken()
+            },
+            body: JSON.stringify({ id: parseInt(typeId) })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+    }
+
+    // Image Queue functionality
+    let currentPage = 1;
+
+    // Initialize image queue when tab is shown
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load image queue only when the tab is active
+        const imageQueueTab = document.getElementById('imageQueue-tab');
+        if (imageQueueTab) {
+            imageQueueTab.addEventListener('shown.bs.tab', function() {
+                loadImageQueue();
+            });
+        }
+
+        // Load initially if image queue tab is active
+        if (document.getElementById('imageQueue').classList.contains('active')) {
+            loadImageQueue();
+        }
+    });
+
+    // Load image queue with filters
+    async function loadImageQueue() {
+        const statusFilter = document.getElementById('status-filter')?.value || 'all';
+        const typeFilter = document.getElementById('type-filter')?.value || 'all';
+
+        const params = new URLSearchParams({
+            page: currentPage,
+            per_page: 50,
+            status: statusFilter,
+            type: typeFilter
+        });
+
+        try {
+            const tableBody = document.getElementById('image-table-body');
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center"><span class="gt-spinner" aria-hidden="true"></span> Loading...</td></tr>';
+            }
+
+            const response = await fetch(`/admin/api/image_queue_list?${params}`);
+            const data = await response.json();
+
+            if (data.error) {
+                showMessage('Error loading images: ' + data.error, 'danger');
+                return;
+            }
+
+            renderImageTable(data.images);
+            renderPagination(data.pagination);
+
+        } catch (error) {
+            console.error('Error loading image queue:', error);
+            showMessage('Error loading image queue', 'danger');
+            const tableBody = document.getElementById('image-table-body');
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>';
+            }
+        }
+    }
+
+    // Render image table
+    function renderImageTable(images) {
+        const tbody = document.getElementById('image-table-body');
+        if (!tbody) return;
+
+        if (images.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No images found</td></tr>';
+            return;
+        }
+
+        const html = images.map(image => {
+            const statusBadge = image.is_downloaded ?
+                '<span class="badge bg-success">Downloaded</span>' :
+                '<span class="badge bg-warning">Pending</span>';
+
+            const typeBadge = image.image_type === 'cover' ?
+                '<span class="badge bg-primary">Cover</span>' :
+                '<span class="badge bg-info">Screenshot</span>';
+
+            const downloadUrl = image.download_url ?
+                image.download_url.substring(0, 50) + '...' : 'No URL';
+
+            return `
+                <tr>
+                    <td>
+                        <strong>${image.game_name}</strong>
+                        <br><small class="text-muted">${image.game_uuid}</small>
+                    </td>
+                    <td>${typeBadge}</td>
+                    <td>${statusBadge}</td>
+                    <td><small>${downloadUrl}</small></td>
+                    <td><small>${image.created_at}</small></td>
+                    <td>
+                        ${!image.is_downloaded ? `
+                            <button class="btn btn-sm btn-success me-1" onclick="downloadSingle(${image.id})" title="Download">
+                                ${ICON_DOWNLOAD_SVG}
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-sm btn-danger" onclick="deleteSingle(${image.id})" title="Delete">
+                            ${ICON_TRASH_SVG}
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        tbody.innerHTML = html;
+    }
+
+    // Render pagination
+    function renderPagination(pagination) {
+        const paginationNav = document.getElementById('pagination-nav');
+        const paginationUl = document.getElementById('pagination');
+        if (!paginationNav || !paginationUl) return;
+
+        if (pagination.pages <= 1) {
+            paginationNav.style.display = 'none';
+            return;
+        }
+
+        paginationNav.style.display = 'block';
+
+        let html = `
+            <li class="page-item ${!pagination.has_prev ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${pagination.page - 1})">Previous</a>
+            </li>
+        `;
+
+        // Show page numbers (simplified)
+        const startPage = Math.max(1, pagination.page - 2);
+        const endPage = Math.min(pagination.pages, pagination.page + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            html += `
+                <li class="page-item ${i === pagination.page ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                </li>
+            `;
+        }
+
+        html += `
+            <li class="page-item ${!pagination.has_next ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${pagination.page + 1})">Next</a>
+            </li>
+        `;
+
+        paginationUl.innerHTML = html;
+    }
+
+    // Change page
+    function changePage(page) {
+        if (page < 1) return;
+        currentPage = page;
+        loadImageQueue();
+    }
+
+    // Apply filters
+    function applyFilters() {
+        currentPage = 1;
+        loadImageQueue();
+    }
+
+    // Refresh queue
+    function refreshQueue() {
+        loadImageQueue();
+    }
+
+    // Download batch
+    async function downloadBatch(size) {
+        try {
+            const response = await fetch('/admin/api/download_images', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRFUtils.getToken()
+                },
+                body: JSON.stringify({ batch_size: size })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage(result.message, 'success');
+                loadImageQueue();
+            } else {
+                showMessage('Download failed: ' + result.message, 'danger');
+            }
+
+        } catch (error) {
+            console.error('Error downloading batch:', error);
+            showMessage('Error downloading batch: ' + error.message, 'danger');
+        }
+    }
+
+    // Download single image
+    async function downloadSingle(imageId) {
+        try {
+            const response = await fetch('/admin/api/download_images', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRFUtils.getToken()
+                },
+                body: JSON.stringify({ image_ids: [imageId] })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage(result.message, 'success');
+                loadImageQueue();
+            } else {
+                showMessage('Download failed: ' + result.message, 'danger');
+            }
+
+        } catch (error) {
+            console.error('Error downloading image:', error);
+            showMessage('Error downloading image', 'danger');
+        }
+    }
+
+    // Delete single image
+    async function deleteSingle(imageId) {
+        if (!confirm('Are you sure you want to delete this image?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/admin/api/delete_image/${imageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': CSRFUtils.getToken()
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage(result.message, 'success');
+                loadImageQueue();
+            } else {
+                showMessage('Delete failed: ' + result.message, 'danger');
+            }
+
+        } catch (error) {
+            console.error('Error deleting image:', error);
+            showMessage('Error deleting image', 'danger');
+        }
+    }
+
+    // Show message
+    function showMessage(message, type = 'info') {
+        const messagesDiv = document.getElementById('messages');
+        if (!messagesDiv) return;
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        messageDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        messagesDiv.appendChild(messageDiv);
+
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Show permissions modal if redirected with show_permissions_modal parameter
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('show_permissions_modal') === 'true') {
+            const modal = new bootstrap.Modal(document.getElementById('permissionsErrorModal'));
+            modal.show();
+
+            // Clear the session flag after showing modal
+            fetch('/admin/clear_permission_errors', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            // Remove the parameter from URL without reloading
+            urlParams.delete('show_permissions_modal');
+            const newUrl = window.location.pathname + '?' + urlParams.toString();
+            window.history.replaceState({}, '', newUrl);
+        }
+    });
+</script>
+
+{% endblock %}

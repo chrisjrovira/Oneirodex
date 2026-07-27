@@ -1,0 +1,212 @@
+.gt-systems-page .gt-systems-group {
+  margin-bottom: 1.5rem;
+}
+
+.gt-systems-group__title {
+  margin: 0 0 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
+}
+
+.gt-systems-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.gt-systems-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 4.25rem;
+  padding: 0.75rem 0.85rem;
+  text-decoration: none;
+  color: var(--gt-text);
+  background: var(--gt-glass-bg, rgba(20, 24, 32, 0.72));
+  border: 1px solid var(--gt-glass-border, rgba(255, 255, 255, 0.14));
+  border-radius: 10px;
+  backdrop-filter: blur(var(--gt-glass-blur, 12px));
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gt-systems-tile__main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.gt-systems-tile__set-link {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--gt-accent, #2fd67b);
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 0.2rem 0.4rem;
+}
+
+.gt-systems-tile:hover,
+.gt-systems-tile:focus-visible {
+  border-color: color-mix(in srgb, var(--gt-platform-accent, var(--gt-accent)) 55%, transparent);
+  outline: none;
+}
+
+.gt-systems-tile__mark {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 8px;
+  color: var(--gt-accent-contrast);
+  background: var(--gt-platform-accent, var(--gt-accent));
+}
+
+.gt-systems-tile__mark svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.gt-systems-group[data-family='nintendo'] .gt-systems-tile__mark {
+  background: #e60012;
+}
+
+.gt-systems-group[data-family='sony'] .gt-systems-tile__mark {
+  background: #0070d1;
+}
+
+.gt-systems-group[data-family='xbox'] .gt-systems-tile__mark {
+  background: #2fd67b;
+  color: #0b0d10;
+}
+
+.gt-systems-group[data-family='sega'] .gt-systems-tile__mark {
+  background: #1a66ff;
+}
+
+.gt-systems-group[data-family='atari'] .gt-systems-tile__mark {
+  background: #f5a623;
+  color: #0b0d10;
+}
+
+.gt-systems-group[data-family='pc'] .gt-systems-tile__mark {
+  background: var(--gt-accent);
+  color: var(--gt-accent-contrast);
+}
+
+.gt-systems-tile__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.gt-systems-tile__name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.gt-systems-tile__count {
+  font-size: 0.8rem;
+  color: var(--gt-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.gt-systems-tile__mode {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid currentColor;
+  opacity: 0.85;
+}
+
+.gt-systems-tile__mode--browser {
+  color: var(--gt-accent, #2fd67b);
+}
+
+.gt-systems-tile__mode--companion {
+  color: var(--gt-text-muted);
+}
+
+.gt-systems-tile__mode--catalog {
+  color: var(--gt-text-muted);
+  opacity: 0.7;
+}
+
+.gt-systems-tile__completion {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--gt-accent, #2fd67b);
+}
+
+.gt-systems-tile__completion a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.gt-systems-tile__regions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+}
+
+.gt-systems-tile__region {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.65rem;
+  line-height: 1.2;
+  text-decoration: none;
+  color: var(--gt-text, #e8e8e8);
+  background: color-mix(in srgb, var(--gt-surface, #1a1a1a) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border, #444) 70%, transparent);
+}
+
+.gt-systems-tile__region-pct {
+  opacity: 0.85;
+}
+
+.gt-systems-tile__region--high {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 70%, transparent);
+  color: var(--gt-accent, #2fd67b);
+}
+
+.gt-systems-tile__region--mid {
+  border-color: color-mix(in srgb, #c9a227 65%, transparent);
+  color: #d4b84a;
+}
+
+.gt-systems-tile__region--low {
+  border-color: color-mix(in srgb, #c45c26 65%, transparent);
+  color: #d9783a;
+}
+
+.gt-systems-tile__region--empty {
+  opacity: 0.55;
+}

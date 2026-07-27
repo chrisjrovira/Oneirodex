@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-secure-store-get"
+description = "Allows reading a secret from the OS credential store."
+commands.allow = ["secure_store_get"]

@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-save-lifecycle-registry"
+description = "Allows saving the lifecycle registry to app data."
+commands.allow = ["save_lifecycle_registry"]

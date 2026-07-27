@@ -1,0 +1,189 @@
+.table {
+    background-color: var(--gt-surface, var(--bg-dark-40));
+    color: var(--gt-text, var(--text-white));
+}
+.table th {
+    background-color: var(--gt-surface-2, var(--bg-dark-tertiary));
+}
+
+.instructions-toggle {
+    margin-bottom: 1rem;
+}
+
+.instructions-toggle button {
+    width: 100%;
+    text-align: left;
+    position: relative;
+    background-color: var(--btn-info);
+    border: 1px solid color-mix(in srgb, var(--gt-info, var(--btn-info)) 35%, transparent);
+    color: var(--gt-text, var(--text-white));
+}
+
+.instructions-toggle button i {
+    position: absolute;
+    right: 1rem;
+    transition: transform var(--transition-normal);
+}
+
+.instructions-toggle button[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+.instructions-panel {
+    background-color: var(--bg-dark-tertiary);
+    padding: 1.5rem;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-light);
+}
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: var(--text-white);
+    font-weight: 500;
+}
+
+.input-glass {
+    background: var(--bg-dark-tertiary);
+    border: 1px solid var(--border-light-strong);
+    color: var(--text-white);
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.input-glass:focus {
+    outline: none;
+    border-color: var(--gt-accent, var(--btn-primary));
+    box-shadow: 0 0 5px color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 30%, transparent);
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px var(--bg-dark-tertiary);
+}
+
+.last-tested {
+    color: var(--gt-text-muted, var(--text-muted));
+    font-size: 0.9rem;
+    margin-top: 1rem;
+}
+
+#testResults {
+    margin-top: 1rem;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background-color: color-mix(in srgb, var(--gt-success, var(--btn-success)) 20%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gt-success, var(--btn-success)) 35%, transparent);
+    color: var(--gt-text, var(--text-white));
+}
+
+.alert-danger {
+    background-color: color-mix(in srgb, var(--gt-danger, var(--btn-danger)) 20%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gt-danger, var(--btn-danger)) 35%, transparent);
+    color: var(--gt-text, var(--text-white));
+}
+
+.alert-info {
+    background-color: var(--btn-info);
+    border: 1px solid color-mix(in srgb, var(--gt-info, var(--btn-info)) 35%, transparent);
+    color: var(--gt-text, var(--text-white));
+}
+
+.note {
+    background-color: var(--gt-surface, var(--bg-dark-40));
+    padding: 1rem;
+    border-left: 4px solid var(--gt-info, var(--btn-info));
+    margin-top: 1rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.note strong {
+    color: var(--gt-info, var(--btn-info));
+}
+
+/* Loading Spinner Overlay */
+#loadingSpinner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--shadow-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#loadingSpinner img {
+    border-radius: var(--border-radius-lg);
+    max-width: 100px;
+    max-height: 100px;
+}
+
+/* Password visibility toggle styling */
+.password-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-password {
+    position: absolute;
+    right: var(--spacing-sm);
+    background: none;
+    border: none;
+    color: var(--gt-text-muted, var(--text-muted));
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    transition: color var(--transition-normal);
+}
+
+.toggle-password:hover {
+    color: var(--gt-text, var(--text-white));
+}
+
+.toggle-password:focus {
+    outline: none;
+}
+.card {
+    width: 70%;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}

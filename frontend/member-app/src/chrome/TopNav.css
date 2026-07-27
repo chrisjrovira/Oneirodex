@@ -1,0 +1,364 @@
+.gt-topnav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.85rem;
+  background: var(--gt-glass-bg, color-mix(in srgb, var(--gt-surface) 96%, transparent));
+  border-bottom: 1px solid var(--gt-glass-border, color-mix(in srgb, var(--gt-accent) 28%, transparent));
+  backdrop-filter: blur(var(--gt-glass-blur, 12px));
+  color: var(--gt-text);
+  font-family: var(--font-ui);
+}
+
+/* Skip link lives in App Layout; styles live with TopNav chrome tokens. */
+.gt-skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 2000;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
+  background: var(--gt-surface, #141820);
+  color: var(--gt-accent, #2fd67b);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-120%);
+  transition: transform 0.12s ease;
+}
+
+.gt-skip-link:focus,
+.gt-skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--gt-accent, #2fd67b);
+  outline-offset: 2px;
+}
+
+.gt-main-content:focus {
+  outline: none;
+}
+
+.gt-main-content:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.gt-topnav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  color: var(--gt-text);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 0.2rem 0.15rem;
+}
+
+.gt-topnav__brand-mark {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.gt-topnav__brand:hover,
+.gt-topnav__brand:focus-visible {
+  color: var(--gt-accent);
+}
+
+.gt-topnav .gt-icon {
+  color: var(--gt-accent);
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+}
+
+.gt-topnav__hamburger {
+  display: none;
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 36%, transparent);
+  border-radius: 4px;
+  color: inherit;
+  padding: 0.3rem 0.45rem;
+  cursor: pointer;
+}
+
+.gt-topnav__hamburger:hover,
+.gt-topnav__hamburger:focus-visible {
+  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
+  color: var(--gt-accent);
+}
+
+.gt-topnav__backdrop {
+  display: none;
+}
+
+.gt-topnav__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.gt-topnav__link,
+.gt-topnav__menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  color: var(--gt-text);
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.gt-topnav__link:hover,
+.gt-topnav__menu-trigger:hover {
+  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
+  color: var(--gt-accent);
+  border-color: color-mix(in srgb, var(--gt-accent) 30%, transparent);
+}
+
+.gt-topnav__link:focus-visible,
+.gt-topnav__menu-trigger:focus-visible,
+.gt-topnav__context-link:focus-visible,
+.gt-topnav__brand:focus-visible,
+.gt-topnav__hamburger:focus-visible,
+.gt-topnav__search-hint:focus-visible {
+  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
+  color: var(--gt-accent);
+  border-color: color-mix(in srgb, var(--gt-accent) 40%, transparent);
+  outline: 2px solid var(--gt-accent);
+  outline-offset: 2px;
+}
+
+.gt-topnav__link.active {
+  background: color-mix(in srgb, var(--gt-accent) 20%, transparent);
+  color: var(--gt-accent);
+  font-weight: 600;
+  border-color: color-mix(in srgb, var(--gt-accent) 40%, transparent);
+}
+
+.gt-topnav__spacer {
+  flex: 1;
+}
+
+.gt-topnav__context {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.35rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid color-mix(in srgb, var(--gt-accent) 28%, transparent);
+}
+
+.gt-topnav__context-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.8rem;
+  color: var(--gt-text-muted, color-mix(in srgb, var(--gt-text) 70%, transparent));
+  text-decoration: none;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+.gt-topnav__context-link:hover,
+.gt-topnav__context-link.active {
+  color: var(--gt-accent);
+  border-color: color-mix(in srgb, var(--gt-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 10%, transparent);
+}
+
+.gt-topnav__menus {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: auto;
+}
+
+.gt-topnav__dropdown {
+  position: relative;
+}
+
+.gt-topnav__dropdown-panel {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  right: 0;
+  min-width: 12rem;
+  padding: 0.3rem;
+  background: var(--gt-surface-2);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 26%, transparent);
+  border-radius: 6px;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--gt-bg) 75%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  z-index: 1001;
+  color: var(--gt-text);
+}
+
+.gt-topnav__dropdown-panel a {
+  display: block;
+  padding: 0.4rem 0.6rem;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.gt-topnav__dropdown-panel a:hover,
+.gt-topnav__dropdown-panel a:focus-visible,
+.gt-topnav__dropdown-panel a.active {
+  background: color-mix(in srgb, var(--gt-accent) 16%, transparent);
+  color: var(--gt-accent);
+}
+
+.gt-topnav__username {
+  padding: 0.3rem 0.6rem 0.45rem;
+  color: var(--gt-text-muted);
+  opacity: 1;
+  font-size: 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-text) 12%, transparent);
+  margin-bottom: 0.15rem;
+}
+
+.gt-topnav__search-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-right: 0.2rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 28%, transparent);
+  border-radius: 8px;
+  color: var(--gt-text-muted, color-mix(in srgb, var(--gt-text) 70%, transparent));
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.gt-topnav__search-hint:hover {
+  color: var(--gt-accent);
+  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--gt-accent) 42%, transparent);
+}
+
+.gt-topnav__search-hint-kbd {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 30%, transparent);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  color: var(--gt-accent);
+}
+
+.gt-topnav__tile-size {
+  display: flex;
+  align-items: center;
+  margin-right: 0.25rem;
+}
+
+@media (max-width: 900px) {
+  .gt-topnav__hamburger {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .gt-topnav__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: color-mix(in srgb, var(--gt-bg) 55%, transparent);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .gt-topnav__nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.2rem;
+    padding: 0.55rem 0.65rem 0.75rem;
+    background: var(--gt-surface);
+    border-bottom: 1px solid color-mix(in srgb, var(--gt-accent) 28%, transparent);
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--gt-bg) 70%, transparent);
+    max-height: min(70vh, 28rem);
+    overflow-y: auto;
+  }
+
+  .gt-topnav__nav.is-open {
+    display: flex;
+  }
+
+  .gt-topnav__link,
+  .gt-topnav__menu-trigger {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.55rem 0.65rem;
+  }
+
+  .gt-topnav__menus {
+    margin-left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 0.25rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+  }
+
+  .gt-topnav__dropdown-panel {
+    position: static;
+    box-shadow: none;
+    margin-top: 0.2rem;
+    border-color: color-mix(in srgb, var(--gt-border) 90%, transparent);
+  }
+
+  .gt-topnav__spacer {
+    display: none;
+  }
+
+  .gt-topnav__search-hint {
+    width: 100%;
+    justify-content: space-between;
+    margin: 0.15rem 0;
+    padding: 0.5rem 0.65rem;
+  }
+
+  .gt-topnav__tile-size {
+    margin: 0.25rem 0;
+    width: 100%;
+  }
+
+  .gt-topnav__tile-size .gt-tile-size {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

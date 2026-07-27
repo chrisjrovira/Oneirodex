@@ -1,0 +1,86 @@
+"""Wave 2C — feature-flag / module UX regression guards (DB-free)."""
+
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+TEMPLATES = ROOT / 'gametheca' / 'templates' / 'admin'
+THEME_CSS = ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / 'admin'
+
+
+def _read(path: Path) -> str:
+    return path.read_text(encoding='utf-8')
+
+
+def test_settings_shell_renders_module_status_badges():
+    shell = _read(TEMPLATES / 'admin_settings_shell.html')
+    assert 'module_status' in shell
+    assert 'settings-shell-badge' in shell
+    assert 'settings-shell-badge--on' in shell
+    assert 'settings-shell-badge--off' in shell
+
+
+def test_settings_shell_css_defines_badge_tokens():
+    css = _read(THEME_CSS / 'admin_settings_shell.css')
+    assert '.settings-shell-badge--on' in css
+    assert '.settings-shell-badge--off' in css
+    assert 'var(--gt-success' in css
+
+
+def test_settings_route_passes_module_status():
+    src = _read(ROOT / 'gametheca' / 'routes_admin_ext' / 'settings.py')
+    assert 'settings_hub_module_status' in src
+    assert 'module_status=settings_hub_module_status()' in src
+
+
+def test_arr_module_toggle_endpoint_exists():
+    src = _read(ROOT / 'gametheca' / 'routes_arr.py')
+    assert "/api/arr/module" in src
+    assert 'def arr_module_flag' in src
+    assert 'ensure_global_settings' in src
+
+
+def test_arr_admin_page_shows_enable_toggle_even_when_off():
+    html = _read(TEMPLATES / 'arr_module.html')
+    assert 'id="arr-enable"' in html
+    assert '/api/arr/module' in html
+    assert 'id="arr-enable-save"' in html
+    # Enable panel is outside the {% if enabled %} gate
+    enable_idx = html.index('id="arr-enable"')
+    gated_idx = html.index('{% if enabled %}')
+    assert enable_idx < gated_idx
+
+
+def test_ai_config_endpoint_and_save_ui():
+    api = _read(ROOT / 'gametheca' / 'routes_apis' / 'ai_assist.py')
+    assert "/ai/config" in api
+    assert 'save_ai_config' in api
+    util = _read(ROOT / 'gametheca' / 'utils' / 'ai_assist.py')
+    assert 'def get_ai_config' in util
+    assert 'def save_ai_config' in util
+    html = _read(TEMPLATES / 'ai_assist.html')
+    assert 'id="ai-enable"' in html
+    assert 'id="ai-ollama-url"' in html
+    assert 'id="ai-ollama-model"' in html
+    assert '/api/ai/config' in html
+    assert 'id="ai-config-test"' in html
+
+
+def test_storage_page_surfaces_env_gates():
+    html = _read(TEMPLATES / 'storage.html')
+    assert 'helpers_enabled' in html
+    assert 'ENABLE_HARDLINK_HELPERS' in html
+    assert 'ALLOW_HARDLINK_APPLY' in html
+    src = _read(ROOT / 'gametheca' / 'routes_admin_ext' / 'settings.py')
+    assert 'hardlink_helpers_on' in src
+    assert 'helpers_enabled=helpers_on' in src
+
+
+def test_module_status_helper_covers_hub_keys():
+    src = _read(ROOT / 'gametheca' / 'utils' / 'module_status.py')
+    assert "def settings_hub_module_status" in src
+    for key in ("'arr'", "'ai'", "'storage'"):
+        assert key in src
+    # Safety flags remain env-only — no DB toggle helpers for apply/pipeline/VR
+    assert 'enable_hardlink' not in src.lower() or 'ENABLE_HARDLINK_HELPERS' in src
+    assert 'ALLOW_HARDLINK_APPLY' in src

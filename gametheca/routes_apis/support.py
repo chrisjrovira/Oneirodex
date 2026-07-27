@@ -1,0 +1,126 @@
+"""In-app support tickets → GitHub Issues + admin alerts."""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+from flask import current_app, jsonify, request
+from flask_login import current_user, login_required
+from sqlalchemy import select
+
+from gametheca import db
+from gametheca.models import SupportTicket
+from gametheca.utils.auth import admin_required
+from gametheca.utils.github_issues import build_issue_body, create_github_issue
+from gametheca.utils.notifications import notify_admins
+from gametheca.utils.rbac import normalize_role
+
+from . import apis_bp
+
+VALID_AREAS = frozenset({
+    'auth', 'library', 'download', 'webretro', 'companion', 'acquire',
+    'social', 'themes', 'admin', 'oidc', 'security', 'other',
+})
+VALID_SEV = frozenset({'P0', 'P1', 'P2', 'P3'})
+
+
+@apis_bp.route('/support/tickets', methods=['POST'])
+@login_required
+def support_ticket_create():
+    data = request.get_json(silent=True) or {}
+    title = (data.get('title') or '').strip()[:200]
+    body = (data.get('body') or data.get('symptom') or '').strip()
+    if not title or not body:
+        return jsonify({'error': 'title and body required'}), 400
+    area = (data.get('area') or 'other').strip().lower()
+    if area not in VALID_AREAS:
+        area = 'other'
+    severity = (data.get('severity') or 'P2').strip().upper()
+    if severity not in VALID_SEV:
+        severity = 'P2'
+    ticket = SupportTicket(
+        user_id=current_user.id,
+        title=title,
+        body=body[:8000],
+        area=area,
+        severity=severity,
+        role_at_submit=normalize_role(getattr(current_user, 'role', None)),
+        deploy_hint=(data.get('deploy_hint') or data.get('deploy') or '')[:64] or None,
+        client_hint=(data.get('client_hint') or data.get('client') or '')[:120] or None,
+        url_hint=(data.get('url_hint') or data.get('url') or '')[:512] or None,
+        logs=(data.get('logs') or '')[:8000] or None,
+        status='open',
+        github_sync='pending',
+    )
+    db.session.add(ticket)
+    db.session.commit()
+
+    gh = create_github_issue(
+        title=f'[support] {ticket.severity} {ticket.area}: {ticket.title}',
+        body=build_issue_body(ticket.to_dict()),
+        labels=['support', ticket.severity.lower(), ticket.area],
+    )
+    if gh.get('ok'):
+        ticket.github_sync = 'synced'
+        ticket.github_issue_number = gh.get('number')
+        ticket.github_issue_url = gh.get('url')
+    elif gh.get('skipped'):
+        ticket.github_sync = 'skipped'
+    else:
+        ticket.github_sync = 'error'
+        current_app.logger.warning('GitHub issue sync failed: %s', gh.get('error'))
+    db.session.commit()
+
+    try:
+        notify_admins(
+            kind='support_ticket',
+            title=f'Support: {ticket.title}',
+            body=f'{ticket.severity} · {ticket.area} · by {current_user.name}',
+            link='/admin/support',
+            actor_user_id=current_user.id,
+            payload={'ticket_id': ticket.id, 'github_url': ticket.github_issue_url},
+            pref_flag='notify_support',
+        )
+    except Exception:
+        pass
+
+    return jsonify({'ok': True, 'ticket': ticket.to_dict()}), 201
+
+
+@apis_bp.route('/support/tickets', methods=['GET'])
+@login_required
+def support_tickets_list():
+    role = normalize_role(getattr(current_user, 'role', None))
+    q = select(SupportTicket).order_by(SupportTicket.created_at.desc()).limit(100)
+    if role != 'admin':
+        q = select(SupportTicket).where(
+            SupportTicket.user_id == current_user.id,
+        ).order_by(SupportTicket.created_at.desc()).limit(50)
+    rows = db.session.execute(q).scalars().all()
+    return jsonify({'tickets': [r.to_dict() for r in rows]})
+
+
+@apis_bp.route('/support/tickets/<int:ticket_id>', methods=['GET'])
+@login_required
+def support_ticket_detail(ticket_id: int):
+    ticket = db.session.get(SupportTicket, ticket_id)
+    if not ticket:
+        return jsonify({'error': 'Not found'}), 404
+    role = normalize_role(getattr(current_user, 'role', None))
+    if role != 'admin' and ticket.user_id != current_user.id:
+        return jsonify({'error': 'Forbidden'}), 403
+    return jsonify({'ticket': ticket.to_dict()})
+
+
+@apis_bp.route('/support/tickets/<int:ticket_id>/resolve', methods=['POST'])
+@login_required
+@admin_required
+def support_ticket_resolve(ticket_id: int):
+    ticket = db.session.get(SupportTicket, ticket_id)
+    if not ticket:
+        return jsonify({'error': 'Not found'}), 404
+    ticket.status = 'resolved'
+    ticket.resolved_at = datetime.now(timezone.utc)
+    ticket.resolved_by_user_id = current_user.id
+    db.session.commit()
+    return jsonify({'ok': True, 'ticket': ticket.to_dict()})

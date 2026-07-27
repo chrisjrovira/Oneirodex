@@ -1,0 +1,289 @@
+# /gametheca/routes_apis/download.py
+import os
+import re
+from typing import Tuple
+
+from flask import current_app, jsonify, request
+from flask_login import current_user, login_required
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
+
+from gametheca import db
+from gametheca.models import DownloadRequest, Game, GlobalSettings
+from gametheca.utils.api_tokens import require_api_scope
+from gametheca.utils.auth import admin_required
+from gametheca.utils.event_bus import publish_download_event
+from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.game_versions import list_game_versions, resolve_version_file
+from gametheca.utils.library_acl import user_can_access_game
+from gametheca.utils.security import get_allowed_base_directories, is_safe_path
+
+from . import apis_bp
+
+_UUID_RE = re.compile(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+    re.IGNORECASE,
+)
+
+
+def _resolve_zip_file_path(game: Game, file_location: str) -> str:
+    """Pick a zip/file path for streaming from a game folder or file."""
+    if not os.path.isdir(file_location):
+        return file_location
+
+    # Folder download of an update/extra path: stream the folder/file as-is.
+    if os.path.normpath(file_location) != os.path.normpath(game.full_disk_path):
+        return file_location
+
+    settings = db.session.execute(select(GlobalSettings)).scalars().first()
+    files_in_directory = []
+    for entry in os.listdir(file_location):
+        full_path = os.path.join(file_location, entry)
+        if os.path.isdir(full_path) and settings and (
+            entry.lower() == settings.update_folder_name.lower()
+            or entry.lower() == settings.extras_folder_name.lower()
+        ):
+            continue
+        if os.path.isfile(full_path):
+            files_in_directory.append(entry)
+
+    significant_files = [
+        entry
+        for entry in files_in_directory
+        if not entry.lower().endswith(('.nfo', '.sfv'))
+        and entry.lower() not in ('file_id.diz', 'gametheca.json')
+    ]
+
+    if len(significant_files) == 1:
+        return os.path.join(file_location, significant_files[0])
+    return file_location
+
+
+def _create_or_get_download_request(
+    game: Game,
+    *,
+    file_location: str,
+    zip_file_path: str,
+) -> DownloadRequest:
+    existing_request = db.session.execute(
+        select(DownloadRequest).filter_by(
+            user_id=current_user.id,
+            file_location=file_location,
+        )
+    ).scalars().first()
+    if existing_request:
+        return existing_request
+
+    new_request = DownloadRequest(
+        user_id=current_user.id,
+        game_uuid=game.uuid,
+        status='available',
+        download_size=game.size if file_location == game.full_disk_path else 0,
+        file_location=file_location,
+        zip_file_path=zip_file_path,
+    )
+    db.session.add(new_request)
+    if file_location == game.full_disk_path:
+        game.times_downloaded += 1
+    db.session.commit()
+
+    try:
+        publish_download_event(
+            new_request.id,
+            'available',
+            game_uuid=game.uuid,
+            game_name=game.name,
+        )
+    except Exception:
+        pass
+
+    log_system_event(
+        f"API download request created for game: {game.name}",
+        event_type='game',
+        event_level='information',
+    )
+    return new_request
+
+
+@apis_bp.route('/games/<game_uuid>/versions', methods=['GET'])
+@login_required
+@require_api_scope('read:library')
+def api_list_game_versions(game_uuid: str) -> Tuple[dict, int]:
+    if not _UUID_RE.match(game_uuid):
+        return jsonify({'error': 'Invalid game UUID'}), 400
+
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game:
+        return jsonify({'error': 'Game not found'}), 404
+
+    if not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Access denied'}), 403
+
+    versions = list_game_versions(game)
+    # Do not expose raw disk paths to clients
+    public = [
+        {
+            'kind': v['kind'],
+            'id': v['id'],
+            'uuid': v['uuid'],
+            'label': v['label'],
+            'is_default': v['is_default'],
+            'size': v.get('size'),
+        }
+        for v in versions
+    ]
+    return jsonify({'game_uuid': game_uuid, 'versions': public}), 200
+
+
+@apis_bp.route('/downloads/games/<game_uuid>', methods=['POST'])
+@login_required
+@require_api_scope('write:download')
+def api_initiate_game_download(game_uuid: str) -> Tuple[dict, int]:
+    """Create or reuse a download request for companion clients."""
+    if not _UUID_RE.match(game_uuid):
+        return jsonify({'error': 'Invalid game UUID'}), 400
+
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game:
+        return jsonify({'error': 'Game not found'}), 404
+
+    if not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Access denied'}), 403
+
+    payload = request.get_json(silent=True) or {}
+    kind = (payload.get('kind') or request.args.get('kind') or 'base').strip().lower()
+    version_uuid = (
+        payload.get('version_uuid')
+        or payload.get('version_id')
+        or request.args.get('version_uuid')
+        or request.args.get('version_id')
+    )
+
+    try:
+        file_location, zip_hint, resolved_version = resolve_version_file(
+            game,
+            kind=kind,
+            version_uuid=version_uuid,
+        )
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    except LookupError as exc:
+        return jsonify({'error': str(exc)}), 404
+
+    allowed_bases = get_allowed_base_directories(current_app)
+    if not allowed_bases:
+        return jsonify({'error': 'Server configuration error'}), 500
+
+    is_safe, _error_message = is_safe_path(file_location, allowed_bases)
+    if not is_safe:
+        return jsonify({'error': 'Access denied'}), 403
+
+    zip_file_path = _resolve_zip_file_path(game, file_location if kind == 'base' else zip_hint)
+
+    try:
+        download_request = _create_or_get_download_request(
+            game,
+            file_location=file_location,
+            zip_file_path=zip_file_path,
+        )
+        return jsonify(
+            {
+                'download_id': download_request.id,
+                'status': download_request.status,
+                'stream_url': f'/download_zip/{download_request.id}',
+                'kind': kind if kind in ('base', 'update', 'extra') else 'base',
+                'version_uuid': resolved_version,
+            }
+        ), 200
+    except Exception as exc:
+        db.session.rollback()
+        log_system_event(
+            f'Error creating API download request for {game_uuid}: {exc}',
+            event_type='game',
+            event_level='error',
+        )
+        return jsonify({'error': 'Failed to create download request'}), 500
+
+
+def _download_file_name(download_request: DownloadRequest):
+    if not download_request.zip_file_path:
+        return None
+    normalized = download_request.zip_file_path.replace("\\", "/")
+    return os.path.basename(normalized) or None
+
+
+def _serialize_download_request(download_request: DownloadRequest) -> dict:
+    status = download_request.status or "pending"
+    return {
+        "id": download_request.id,
+        "game_name": download_request.game.name if download_request.game else None,
+        "status": status,
+        "file_name": _download_file_name(download_request),
+        "download_url": (
+            f"/download_zip/{download_request.id}" if status == "available" else None
+        ),
+        "download_size": download_request.download_size,
+    }
+
+
+@apis_bp.route("/my_downloads", methods=["GET"])
+@login_required
+def api_my_downloads():
+    """List the current user's download requests for the member SPA."""
+    download_requests = db.session.execute(
+        select(DownloadRequest)
+        .options(joinedload(DownloadRequest.game))
+        .filter_by(user_id=current_user.id)
+        .order_by(DownloadRequest.request_time.desc())
+    ).scalars().unique().all()
+
+    return jsonify([_serialize_download_request(item) for item in download_requests]), 200
+
+
+@apis_bp.route('/delete_download/<int:request_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def api_delete_download_request(request_id: int) -> Tuple[dict, int]:
+    """Delete a download request."""
+    if request_id <= 0:
+        log_system_event('download_api', f'Invalid request ID: {request_id}', 'warning')
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid request ID'
+        }), 400
+
+    try:
+        download_request = db.session.get(DownloadRequest, request_id)
+        if not download_request:
+            return jsonify({
+                'status': 'error',
+                'message': 'Download request not found'
+            }), 404
+
+        log_system_event(
+            'download_api',
+            f'Deleting download request {request_id} for user {download_request.user_id}',
+            'info'
+        )
+
+        db.session.delete(download_request)
+        db.session.commit()
+
+        log_system_event('download_api', f'Successfully deleted download request {request_id}', 'info')
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Download request deleted successfully'
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        log_system_event(
+            'download_api',
+            f'Error deleting download request {request_id}: {str(e)}',
+            'error'
+        )
+        return jsonify({
+            'status': 'error',
+            'message': f'Error deleting download request: {str(e)}'
+        }), 500

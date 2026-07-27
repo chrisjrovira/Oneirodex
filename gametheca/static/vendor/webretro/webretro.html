@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <title>Playing — GameTheca</title>
+    <link rel="stylesheet" href="./play-skins.css">
+    <script src="./play-skins.js"></script>
+</head>
+<body class="gt-play-shell">
+    <div id="gt-emu-bar">
+        <strong class="gt-play-brand">GameTheca</strong>
+        <span class="gt-play-system" id="gt-play-system" hidden></span>
+        <button type="button" id="gt-sync-save" title="Push/pull libretro .state/.srm via WebRetro IndexedDB bridge">Sync cloud saves</button>
+        <label>Cheats <select id="gt-cheat-select"><option value="">None</option></select></label>
+        <button type="button" id="gt-load-cheat">Apply .cht</button>
+        <span id="gt-emu-status"></span>
+    </div>
+    <div id="gt-play-stage">
+        <div id="gt-play-bezel">
+            <div id="webretro"></div>
+        </div>
+    </div>
+    <script src="./constants.js"></script>
+    <script>
+        (function () {
+            function getQueryStringArgs() {
+                var args = {};
+                var query = window.location.search.substring(1);
+                var pairs = query.replace(/\+/g, ' ').split('&');
+                for (var i = 0; i < pairs.length; i++) {
+                    var pair = pairs[i].split('=');
+                    args[decodeURIComponent(pair[0] || '')] = decodeURIComponent(pair[1] || '');
+                }
+                return args;
+            }
+
+            function csrfToken() {
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta && meta.content) return meta.content;
+                var match = document.cookie.match(/(?:^|; )csrf_token=([^;]+)/);
+                var fromCookie = match ? decodeURIComponent(match[1]) : '';
+                if (fromCookie && meta && !meta.content) {
+                    meta.setAttribute('content', fromCookie);
+                }
+                return fromCookie;
+            }
+
+            function b64ToBlob(b64, filename) {
+                var bin = atob(b64);
+                var bytes = new Uint8Array(bin.length);
+                for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                return new Blob([bytes], { type: 'application/octet-stream' });
+            }
+
+            function blobToB64(blob) {
+                return blob.arrayBuffer().then(function (buf) {
+                    var bytes = new Uint8Array(buf);
+                    var s = '';
+                    var chunk = 0x8000;
+                    for (var i = 0; i < bytes.length; i += chunk) {
+                        s += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+                    }
+                    return btoa(s);
+                });
+            }
+
+            var args = getQueryStringArgs();
+            var guid = args.guid || '';
+            var core = args.core || '';
+            var platform = args.platform || '';
+            var statusEl = document.getElementById('gt-emu-status');
+            var cheatSelect = document.getElementById('gt-cheat-select');
+            var systemEl = document.getElementById('gt-play-system');
+            var emuFrame = null;
+            var reqSeq = 0;
+            var pending = {};
+
+            var skin = (window.GameThecaPlaySkins && window.GameThecaPlaySkins.applyPlaySkin)
+                ? window.GameThecaPlaySkins.applyPlaySkin(platform, core)
+                : { systemLabel: platform || core || 'Emulator' };
+
+            if (systemEl && skin.systemLabel) {
+                systemEl.hidden = false;
+                systemEl.textContent = skin.systemLabel;
+            }
+            document.title = (skin.systemLabel ? skin.systemLabel + ' — ' : '') + 'GameTheca Play';
+
+            function setStatus(msg) {
+                statusEl.textContent = msg || '';
+            }
+
+            window.addEventListener('message', function (ev) {
+                var data = ev.data;
+                if (!data || data.source !== 'gametheca-emu') return;
+                var waiter = pending[data.reqId];
+                if (!waiter) return;
+                delete pending[data.reqId];
+                if (data.ok) waiter.resolve(data);
+                else waiter.reject(new Error(data.error || 'Bridge error'));
+            });
+
+            function callEmu(type, payload, timeoutMs) {
+                return new Promise(function (resolve, reject) {
+                    if (!emuFrame || !emuFrame.contentWindow) {
+                        reject(new Error('Emulator frame not ready'));
+                        return;
+                    }
+                    var reqId = 'gt-' + (++reqSeq);
+                    pending[reqId] = { resolve: resolve, reject: reject };
+                    emuFrame.contentWindow.postMessage(
+                        Object.assign({ source: 'gametheca', type: type, reqId: reqId }, payload || {}),
+                        '*',
+                    );
+                    window.setTimeout(function () {
+                        if (!pending[reqId]) return;
+                        delete pending[reqId];
+                        reject(new Error('Emulator bridge timeout'));
+                    }, timeoutMs || 8000);
+                });
+            }
+
+            function waitUntilReady(attemptsLeft, requireMain) {
+                return callEmu('gt-ping', {}, 2000).then(function (res) {
+                    var ok = res.ready && (!requireMain || res.mainCompleted);
+                    if (ok) return res;
+                    if (attemptsLeft <= 0) throw new Error(requireMain ? 'Emulator not started' : 'ROM not ready');
+                    return new Promise(function (resolve) {
+                        window.setTimeout(resolve, 1000);
+                    }).then(function () {
+                        return waitUntilReady(attemptsLeft - 1, requireMain);
+                    });
+                }).catch(function (err) {
+                    if (attemptsLeft <= 0) throw err;
+                    return new Promise(function (resolve) {
+                        window.setTimeout(resolve, 1000);
+                    }).then(function () {
+                        return waitUntilReady(attemptsLeft - 1, requireMain);
+                    });
+                });
+            }
+
+            function whenIdle(fn, timeoutMs) {
+                if (typeof window.requestIdleCallback === 'function') {
+                    window.requestIdleCallback(fn, { timeout: timeoutMs || 8000 });
+                } else {
+                    window.setTimeout(fn, Math.min(timeoutMs || 8000, 4000));
+                }
+            }
+
+            function uploadSlot(slot, blob, filename) {
+                var body = new FormData();
+                body.append('file', blob, filename);
+                body.append('slot', slot);
+                return fetch('/api/games/' + encodeURIComponent(guid) + '/saves', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'X-CSRFToken': csrfToken() },
+                    body: body,
+                }).then(function (r) {
+                    return r.json().then(function (j) {
+                        if (!r.ok) throw new Error(j.error || 'Upload failed');
+                        return j;
+                    });
+                });
+            }
+
+            function downloadSlotB64(slot) {
+                return fetch('/api/games/' + encodeURIComponent(guid) + '/saves/' + encodeURIComponent(slot), {
+                    credentials: 'same-origin',
+                }).then(function (r) {
+                    if (r.status === 404) return null;
+                    if (!r.ok) throw new Error('Download failed');
+                    return r.blob().then(blobToB64);
+                });
+            }
+
+            function pullCloudIntoEmu() {
+                if (!guid) return Promise.resolve();
+                setStatus('Loading cloud saves…');
+                // Prefer mainCompleted so we don't contend with WASM/ROM I/O; fall back if Start is gated.
+                return waitUntilReady(45, true).catch(function () {
+                    return waitUntilReady(15, false);
+                }).then(function () {
+                    return new Promise(function (resolve) {
+                        whenIdle(resolve, 8000);
+                    });
+                }).then(function () {
+                    return Promise.all([
+                        downloadSlotB64('cloud-state'),
+                        downloadSlotB64('cloud-sram'),
+                        // Legacy Wave 7 placeholder slot
+                        downloadSlotB64('cloud1'),
+                    ]);
+                }).then(function (pair) {
+                    var stateB64 = pair[0] || pair[2];
+                    var sramB64 = pair[1];
+                    if (!stateB64 && !sramB64) {
+                        setStatus('No cloud saves yet');
+                        return null;
+                    }
+                    return callEmu('gt-import-saves', { stateB64: stateB64, sramB64: sramB64 }, 5000);
+                }).then(function (res) {
+                    if (!res) return;
+                    if (res.autoLoaded) {
+                        setStatus('Cloud saves restored (state loaded)');
+                        return;
+                    }
+                    setStatus(res.hint || ('Imported: ' + (res.imported || []).join(', ')));
+                }).catch(function (err) {
+                    var msg = err && err.message ? err.message : 'Cloud import skipped';
+                    if (/Emulator not started|ROM not ready|bridge timeout/i.test(msg)) {
+                        setStatus('Waiting for core… sync again after Start if needed');
+                        return;
+                    }
+                    setStatus(msg);
+                });
+            }
+
+            function preloadPlayAssets() {
+                if (core) {
+                    var coreBase = '/static/vendor/webretro/cores/' + encodeURIComponent(core) + '_libretro';
+                    var jsLink = document.createElement('link');
+                    jsLink.rel = 'preload';
+                    jsLink.as = 'script';
+                    jsLink.href = coreBase + '.js';
+                    document.head.appendChild(jsLink);
+                    var wasmLink = document.createElement('link');
+                    wasmLink.rel = 'preload';
+                    wasmLink.as = 'fetch';
+                    wasmLink.href = coreBase + '.wasm';
+                    wasmLink.crossOrigin = 'anonymous';
+                    document.head.appendChild(wasmLink);
+                }
+                if (guid) {
+                    // Warm HTTP cache with credentials (link prefetch cannot send cookies reliably).
+                    fetch('/api/downloadrom/' + encodeURIComponent(guid), {
+                        credentials: 'same-origin',
+                        priority: 'low',
+                    }).catch(function () {});
+                }
+            }
+
+            function webretroEmbed(node, path, queries) {
+                var frame = document.createElement('iframe');
+                frame.id = 'gt-webretro-frame';
+                var apiUrl = '/api/downloadrom/';
+                var link = document.createElement('a');
+                link.href = apiUrl;
+                apiUrl = link.href;
+                // nobundle=1 skips dozens of CDN RetroArch asset fetches on cold start.
+                frame.src = path + '?core=' + encodeURIComponent(queries.core || '') +
+                    '&rom=' + encodeURIComponent(apiUrl + queries.guid) +
+                    '&nobundle=1';
+                node.appendChild(frame);
+                return frame;
+            }
+
+            preloadPlayAssets();
+            var path = location.protocol + '//' + location.host + '/static/vendor/webretro/standalone.html';
+            emuFrame = webretroEmbed(document.getElementById('webretro'), path, { core: core, guid: guid });
+            // Defer cloud pull until after ROM/main — do not compete with core WASM download.
+            emuFrame.addEventListener('load', function () {
+                window.setTimeout(function () { pullCloudIntoEmu(); }, 500);
+            });
+
+            if (guid) {
+                fetch('/api/games/' + encodeURIComponent(guid) + '/cheats', { credentials: 'same-origin' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        (data.cheats || []).forEach(function (row) {
+                            var opt = document.createElement('option');
+                            opt.value = row.url;
+                            opt.textContent = row.name;
+                            cheatSelect.appendChild(opt);
+                        });
+                    })
+                    .catch(function () {});
+
+                if (!platform) {
+                    fetch('/api/games/' + encodeURIComponent(guid) + '/details', { credentials: 'same-origin' })
+                        .then(function (r) { return r.ok ? r.json() : null; })
+                        .then(function (data) {
+                            var key = data && (data.library_platform || data.platform);
+                            if (!key || !window.GameThecaPlaySkins) return;
+                            skin = window.GameThecaPlaySkins.applyPlaySkin(key, core);
+                            if (systemEl && skin.systemLabel) {
+                                systemEl.hidden = false;
+                                systemEl.textContent = skin.systemLabel;
+                            }
+                            document.title = skin.systemLabel + ' — GameTheca Play';
+                        })
+                        .catch(function () {});
+                }
+            }
+
+            document.getElementById('gt-sync-save').addEventListener('click', function () {
+                if (!guid) return;
+                setStatus('Syncing cloud saves…');
+                waitUntilReady(20)
+                    .then(function () { return callEmu('gt-export-saves', {}, 10000); })
+                    .then(function (exported) {
+                        var jobs = [];
+                        if (exported.stateB64) {
+                            jobs.push(uploadSlot(
+                                'cloud-state',
+                                b64ToBlob(exported.stateB64, 'cloud.state'),
+                                'cloud.state',
+                            ));
+                        }
+                        if (exported.sramB64) {
+                            jobs.push(uploadSlot(
+                                'cloud-sram',
+                                b64ToBlob(exported.sramB64, 'cloud.srm'),
+                                'cloud.srm',
+                            ));
+                        }
+                        if (!jobs.length) {
+                            throw new Error('No save data yet — save in-game or Save State, then sync again');
+                        }
+                        return Promise.all(jobs).then(function () {
+                            return exported;
+                        });
+                    })
+                    .then(function (exported) {
+                        var parts = [];
+                        if (exported.stateB64) parts.push('state');
+                        if (exported.sramB64) parts.push('sram');
+                        setStatus('Cloud synced (' + parts.join(' + ') + ')');
+                    })
+                    .catch(function (err) {
+                        setStatus(err.message || 'Sync failed');
+                    });
+            });
+
+            document.getElementById('gt-load-cheat').addEventListener('click', function () {
+                var url = cheatSelect.value;
+                if (!url) {
+                    setStatus('Select a .cht file');
+                    return;
+                }
+                var name = cheatSelect.options[cheatSelect.selectedIndex].text;
+                setStatus('Applying cheat…');
+                fetch(url, { credentials: 'same-origin' })
+                    .then(function (r) { return r.text(); })
+                    .then(function (text) {
+                        try {
+                            sessionStorage.setItem('gt_pending_cht', text);
+                            sessionStorage.setItem('gt_pending_cht_name', name);
+                        } catch (e) {}
+                        return waitUntilReady(20).then(function () {
+                            return callEmu('gt-apply-cht', { text: text, name: name }, 5000);
+                        });
+                    })
+                    .then(function (res) {
+                        try {
+                            sessionStorage.removeItem('gt_pending_cht');
+                            sessionStorage.removeItem('gt_pending_cht_name');
+                        } catch (e) {}
+                        setStatus(res.hint || ('Cheat written to ' + (res.path || 'FS')));
+                    })
+                    .catch(function (err) {
+                        var msg = err.message || 'Failed to apply cheat';
+                        setStatus(
+                            msg +
+                            ' — for heavy systems, use the desktop companion (stages .cht under app cheats/).'
+                        );
+                    });
+            });
+        })();
+    </script>
+</body>
+</html>

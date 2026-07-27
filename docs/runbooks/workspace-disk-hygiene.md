@@ -1,0 +1,78 @@
+# Workspace disk hygiene
+
+**Audience:** maintainers / agents cleaning a large local clone before Unraid or Docker work.  
+**Not for:** operators on Unraid — image size ≠ workspace size; caches below never ship in the Hub image when `.dockerignore` is current.
+
+## Why this exists
+
+A full clone can balloon past **1 GB** from regenerable caches while the **shipped** surface stays small: Python app + vendored WebRetro cores (~72 MB) + SPA built inside Docker. Local `node_modules` and Tauri `target/` are **dev-only**.
+
+## KEEP (never delete)
+
+| Path | Why |
+|---|---|
+| `.git/` | History; optional `git gc` only (see below) |
+| `gametheca/static/vendor/webretro/` | Honesty matrix + browser play; image expects these cores |
+| Source trees (`gametheca/`, `frontend/`, `clients/desktop/src*`, `tests/`, `docs/`) | Product |
+| `requirements.txt` / lockfiles / `.env*.example` | Reproducible installs |
+| Tracked DAT/docs policy files | Operator guides — not regenerable caches |
+
+## SAFE DELETE anytime (regenerable)
+
+| Path | Approx | Rebuild |
+|---|---|---|
+| `clients/desktop/src-tauri/target/` | ~0.5–1 GB | `cd clients/desktop && npm ci && npm run tauri:dev` (or `tauri:build`) |
+| `**/node_modules/` | hundreds of MB | `npm ci` in `frontend/member-app`, `admin-app`, `ops-glance`, `clients/desktop` |
+| `**/__pycache__/`, `*.py[cod]`, `.pytest_cache/`, `.ruff_cache/`, `.mypy_cache/` | small | next pytest / import |
+| Host `gametheca/static/dist/` | if present | Docker build or local `npm run build` in each frontend app |
+| Vitest/Vite caches under `node_modules/.vite/` | tiny | next `npm test` / `vite` |
+
+PowerShell one-shot (caches only — does **not** touch webretro or `.git`):
+
+```powershell
+Remove-Item -Recurse -Force -ErrorAction SilentlyContinue `
+  clients\desktop\src-tauri\target,
+  frontend\member-app\node_modules,
+  frontend\admin-app\node_modules,
+  frontend\ops-glance\node_modules,
+  clients\desktop\node_modules,
+  .pytest_cache, .ruff_cache, .mypy_cache
+Get-ChildItem -Recurse -Directory -Filter __pycache__ -ErrorAction SilentlyContinue |
+  Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+```
+
+## Docker image vs workspace
+
+| Concern | Fact |
+|---|---|
+| Build context | `.dockerignore` must exclude `node_modules/`, `clients/`, `**/src-tauri/target/`, host `static/dist/`, `.git/` |
+| Image contents | Multi-stage `npm ci` + `pip install`; WebRetro cores **copied in** from `gametheca/static/vendor/webretro/` |
+| Unraid after local wipe | **No effect** on running container. Rebuild image from clean context: `docker compose build --no-cache` (or Hub pull). Do **not** bind-mount an empty cores dir over image cores — see [webretro-cores.md](webretro-cores.md) |
+
+## OPTIONAL shrink (caveats)
+
+| Action | Effect | Risk |
+|---|---|---|
+| `git gc --aggressive` | May reclaim tens–hundreds of MB inside `.git` | Slow; local only |
+| Shallow clone (`--depth 1`) | Tiny `.git` | Loses history for blame/bisect/release archaeology — avoid for maintainers |
+
+## After wipe — verify local-dev
+
+```bash
+# Python
+pip install -r requirements.txt   # or use existing venv
+pytest -q                         # or project’s usual subset
+
+# SPAs
+cd frontend/member-app && npm ci && npm test && npm run build
+cd ../admin-app && npm ci && npm test && npm run build
+
+# Desktop companion
+cd clients/desktop && npm ci && npm test && npm run tauri:dev
+```
+
+## Related
+
+- [webretro-cores.md](webretro-cores.md) — cores must stay; optional host mount
+- [scrub-shipped-bundles.md](scrub-shipped-bundles.md) — rebuild `static/dist` before publish
+- [unraid-deploy.md](unraid-deploy.md) · [docker-compose-deploy.md](docker-compose-deploy.md)

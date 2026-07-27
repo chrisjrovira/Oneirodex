@@ -1,0 +1,38 @@
+---
+name: Bug report
+description: Report a GameTheca bug (product language only)
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **External-facing scrub:** Do **not** paste competitor catalogs, peer teardown matrices, or warez / scene brand lists.
+        Describe the problem in GameTheca capability language. Class D integrations (Playnite, Pegasus/ES-DE, Prowlarr) are fine when relevant.
+        See `docs/strategy/external-facing-scrub.md`.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Steps, expected vs actual, and relevant logs (redact secrets).
+      placeholder: |
+        1. …
+        Expected: …
+        Actual: …
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: e.g. Unraid + Compose, desktop client, browser
+      placeholder: Unraid / Docker Compose / desktop
+    validations:
+      required: false
+  - type: checkboxes
+    id: scrub
+    attributes:
+      label: Scrub checklist
+      options:
+        - label: I did not include competitor catalogs or warez / scene brand lists
+          required: true

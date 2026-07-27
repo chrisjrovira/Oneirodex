@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-run-flips-apply"
+description = "Allow invoking Flips to apply IPS/BPS patches under app_data/patches"
+commands.allow = ["run_flips_apply"]

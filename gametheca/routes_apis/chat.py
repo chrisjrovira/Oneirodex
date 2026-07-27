@@ -1,0 +1,215 @@
+"""Chat channels + DMs API (Wave 15)."""
+
+from __future__ import annotations
+
+from flask import jsonify, request
+from flask_login import current_user, login_required
+from sqlalchemy import select
+
+from gametheca import db
+from gametheca.models import ChatChannel, ChatMessage, User
+from gametheca.utils.auth import admin_required
+from gametheca.utils.chat import (
+    ALLOWED_REACTIONS,
+    create_household_channel,
+    list_channels_for_user,
+    list_messages,
+    mark_channel_read,
+    open_or_create_dm,
+    post_message,
+    search_messages,
+    set_channel_muted,
+    toggle_reaction,
+    user_can_access_channel,
+)
+from gametheca.utils.custom_emoji import (
+    MAX_CUSTOM_EMOJI,
+    delete_custom_emoji,
+    list_custom_emoji,
+    upload_custom_emoji,
+)
+
+from . import apis_bp
+
+
+@apis_bp.route('/chat/channels', methods=['GET'])
+@login_required
+def chat_channels_list():
+    return jsonify({'channels': list_channels_for_user(current_user)})
+
+
+@apis_bp.route('/chat/channels', methods=['POST'])
+@login_required
+def chat_channels_create():
+    data = request.get_json(silent=True) or {}
+    try:
+        ch = create_household_channel(
+            current_user,
+            name=(data.get('name') or '').strip(),
+            slug=(data.get('slug') or '').strip(),
+            is_child_safe=bool(data.get('is_child_safe', True)),
+        )
+    except PermissionError as exc:
+        return jsonify({'error': str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({'ok': True, 'channel': ch.to_dict()}), 201
+
+
+@apis_bp.route('/chat/dm', methods=['POST'])
+@login_required
+def chat_open_dm():
+    data = request.get_json(silent=True) or {}
+    other = None
+    if data.get('user_id') is not None:
+        try:
+            other = db.session.get(User, int(data['user_id']))
+        except (TypeError, ValueError):
+            other = None
+    elif data.get('username'):
+        other = db.session.execute(
+            select(User).where(User.name == str(data['username']).strip()),
+        ).scalars().first()
+    if not other or not other.state:
+        return jsonify({'error': 'User not found'}), 404
+    try:
+        ch = open_or_create_dm(current_user, other)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({'ok': True, 'channel': ch.to_dict()})
+
+
+@apis_bp.route('/chat/channels/<int:channel_id>/mute', methods=['POST'])
+@login_required
+def chat_channel_mute(channel_id: int):
+    ch = db.session.get(ChatChannel, channel_id)
+    if not ch or not user_can_access_channel(current_user, ch):
+        return jsonify({'error': 'Not found'}), 404
+    data = request.get_json(silent=True) or {}
+    if 'muted' not in data:
+        return jsonify({'error': 'muted is required'}), 400
+    try:
+        muted = set_channel_muted(current_user, ch, bool(data.get('muted')))
+    except PermissionError:
+        return jsonify({'error': 'Not found'}), 404
+    return jsonify({'ok': True, 'channel_id': ch.id, 'muted': muted})
+
+
+@apis_bp.route('/chat/channels/<int:channel_id>/messages', methods=['GET'])
+@login_required
+def chat_messages_list(channel_id: int):
+    ch = db.session.get(ChatChannel, channel_id)
+    if not ch or not user_can_access_channel(current_user, ch):
+        return jsonify({'error': 'Not found'}), 404
+    limit = min(100, max(1, int(request.args.get('limit') or 50)))
+    before = request.args.get('before')
+    since = request.args.get('since')
+    before_id = int(before) if before and str(before).isdigit() else None
+    since_id = int(since) if since and str(since).isdigit() else None
+    messages = list_messages(
+        channel_id,
+        limit=limit,
+        before_id=before_id,
+        since_id=since_id,
+        viewer_user_id=current_user.id,
+    )
+    if messages:
+        mark_channel_read(channel_id, current_user.id, messages[-1]['id'])
+    return jsonify({'messages': messages, 'channel': ch.to_dict()})
+
+
+@apis_bp.route('/chat/channels/<int:channel_id>/messages', methods=['POST'])
+@login_required
+def chat_messages_post(channel_id: int):
+    ch = db.session.get(ChatChannel, channel_id)
+    if not ch or not user_can_access_channel(current_user, ch):
+        return jsonify({'error': 'Not found'}), 404
+    data = request.get_json(silent=True) or {}
+    parent_raw = data.get('parent_message_id')
+    parent_id = None
+    if parent_raw is not None and str(parent_raw).strip() != '':
+        try:
+            parent_id = int(parent_raw)
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Invalid parent_message_id'}), 400
+    try:
+        msg = post_message(
+            ch,
+            current_user,
+            data.get('body') or '',
+            parent_message_id=parent_id,
+        )
+    except (ValueError, PermissionError) as exc:
+        code = 403 if isinstance(exc, PermissionError) else 400
+        return jsonify({'error': str(exc)}), code
+    return jsonify({
+        'ok': True,
+        'message': msg.to_dict(author_name=current_user.name, reactions={}, mine=[]),
+    }), 201
+
+
+@apis_bp.route('/chat/messages/<int:message_id>/reactions', methods=['POST'])
+@login_required
+def chat_message_reaction_toggle(message_id: int):
+    msg = db.session.get(ChatMessage, message_id)
+    if not msg:
+        return jsonify({'error': 'Not found'}), 404
+    data = request.get_json(silent=True) or {}
+    try:
+        result = toggle_reaction(msg, current_user, data.get('emoji') or '')
+    except PermissionError as exc:
+        return jsonify({'error': str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({'ok': True, **result})
+
+
+@apis_bp.route('/chat/emoji', methods=['GET'])
+@login_required
+def chat_emoji_list():
+    custom = list_custom_emoji()
+    return jsonify({
+        'fixed': sorted(ALLOWED_REACTIONS),
+        'custom': custom,
+        'max_custom': MAX_CUSTOM_EMOJI,
+    })
+
+
+@apis_bp.route('/chat/emoji', methods=['POST'])
+@login_required
+@admin_required
+def chat_emoji_upload():
+    slug = request.form.get('slug') or ''
+    label = request.form.get('label') or ''
+    file = request.files.get('file') or request.files.get('image')
+    try:
+        row = upload_custom_emoji(
+            slug=slug,
+            label=label,
+            file=file,
+            uploader=current_user,
+        )
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({'ok': True, 'emoji': row.to_dict()}), 201
+
+
+@apis_bp.route('/chat/emoji/<slug>', methods=['DELETE'])
+@login_required
+@admin_required
+def chat_emoji_delete(slug: str):
+    if not delete_custom_emoji(slug):
+        return jsonify({'error': 'Not found'}), 404
+    return jsonify({'ok': True})
+
+
+@apis_bp.route('/chat/search', methods=['GET'])
+@login_required
+def chat_search():
+    q = (request.args.get('q') or '').strip()
+    limit = min(50, max(1, int(request.args.get('limit') or 20)))
+    try:
+        results = search_messages(current_user, q, limit=limit)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({'results': results, 'q': q})

@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-get-flips-path"
+description = "Allow reading FLIPS_PATH from the environment"
+commands.allow = ["get_flips_path"]
