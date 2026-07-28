@@ -10,6 +10,7 @@ alwaysApply: false
 Follow `.cursor/skills/agent-docs/SKILL.md` and `docs-sync`.
 
 - Update existing docs; scrub Discord/webhook claims
+- On every commit/ship pass: refresh live README screenshots (`scripts/capture_docs_media.py` → `docs/assets/readme/` slots). Never restore mock JPGs.
 - Domain accuracy on systems/ROMs → consult `@agent-gamemaster`
 - No feature implementation
-- End with **Docs touched:** + Capture/Create gaps + next docs ticket
+- End with **Docs touched:** + **Capture:** refreshed|skipped|needed + next docs ticket

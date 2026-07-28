@@ -34,20 +34,26 @@ Read [checklist.md](checklist.md) for the inventory map. Prefer **update existin
 | Troubleshooting symptoms | `docs/user/troubleshooting.md` and/or `docs/admin/troubleshooting.md` |
 
 3. **Canvas** — if the program board exists, sync TodoList statuses + gap table + TLDR in the same turn.
-4. **Scrub stale claims** — search for removed product names (e.g. Discord webhooks) in `docs/`, `README.md`, HelpPage, admin guides.
-5. **Index** — if you add a doc, link it from `docs/README.md` and `docs/strategy/docs-map.md`.
-6. **Stop condition** — reply includes a one-line **Docs touched:** list (or `Docs: N/A — <reason>`).
+4. **README live media (Docs owns on every commit/ship pass)** — if member/admin UI changed **or** Docs is seated on the wave:
+   - Re-run `python scripts/capture_docs_media.py` against a running instance (or copy freshest `docs/media/screenshots/` into `docs/assets/readme/` slots).
+   - Canonical README slots: `hero-banner.png`, `screenshot-library.png`, `screenshot-systems.png`, `screenshot-chat.png`.
+   - Never restore illustrative mock JPGs; never invent screenshots with image generators.
+   - Checklist: [docs/assets/readme/CAPTURE.md](../../../docs/assets/readme/CAPTURE.md).
+5. **Scrub stale claims** — search for removed product names (e.g. Discord webhooks) in `docs/`, `README.md`, HelpPage, admin guides.
+6. **Index** — if you add a doc, link it from `docs/README.md` and `docs/strategy/docs-map.md`.
+7. **Stop condition** — reply includes a one-line **Docs touched:** list (or `Docs: N/A — <reason>`). Mention **Capture:** refreshed | skipped (why) | needed.
 
 ## Style
 
 - Concise; tables over prose.
 - No fake “all features built” — match `progress.md`.
-- Do not invent screenshots; mark Capture needed in docs-map if UI is new.
+- Do not invent screenshots; mark Capture needed in docs-map if UI is new **and** capture cannot run this turn.
 - Prefer GameTheca product name; package path stays `gametheca/`.
 
 ## Anti-patterns
 
 - Shipping code-only PRs that change env/UI/API without docs.
+- Shipping README with stale mock JPG frames after UI changed.
 - Leaving Discord/Slack as supported notification paths.
 - Updating strategy without user/admin/runbook when operators must act.
 - Creating parallel “new guide” when an existing guide section fits.

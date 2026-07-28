@@ -15,8 +15,9 @@ Only when the user explicitly asks to commit / push / PR / ship.
 
 1. `git status` / `git diff` / `git log -5 --oneline`
 2. Confirm **docs-sync** done (or do it now)
-3. No secrets (`.env`, tokens, keys)
-4. Conventional commit: `feat|fix|chore|docs|refactor|test(scope): …`
+3. **README media** — if this ship includes member/admin UI (or Docs was on the wave), confirm live README slots are current (`docs/assets/readme/screenshot-*.png`, `hero-banner.png`). If UI drifted and capture was not run, Task `@agent-docs` to refresh via `scripts/capture_docs_media.py` **before** commit. Do not commit restored mock JPGs.
+4. No secrets (`.env`, tokens, keys)
+5. Conventional commit: `feat|fix|chore|docs|refactor|test(scope): …`
 
 ## Commit (Windows PowerShell-safe)
 

@@ -35,6 +35,7 @@ the team.
    - `docs/strategy/progress.md`
    - Program canvas:  
      `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
+   - **Live README screenshots** (`scripts/capture_docs_media.py` → `docs/assets/readme/`) on every pass that will commit/ship — never leave mock JPG frames
 5. PM reply to user = Status · Backlog · Sequencing · what was dispatched · open decisions ≤3.  
    **Not** a code dump.
 

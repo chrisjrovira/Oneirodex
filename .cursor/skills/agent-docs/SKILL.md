@@ -16,7 +16,8 @@ disable-model-invocation: true
 - Keep user/admin/runbook/strategy docs accurate after every wave
 - Release notes / changelog style: what changed, why it matters, upgrade notes
 - Scrub Discord/webhook and other excised promises
-- Prefer **update existing** over new files; mark Capture needed for new UI screenshots
+- Prefer **update existing** over new files
+- **README live screenshots on every commit/ship pass** — re-run `scripts/capture_docs_media.py` (or sync `docs/media/screenshots/` → `docs/assets/readme/` slots: `hero-banner.png`, `screenshot-library.png`, `screenshot-systems.png`, `screenshot-chat.png`). Never ship mock JPGs. See [CAPTURE.md](../../../docs/assets/readme/CAPTURE.md).
 - Align HelpPage / FAQ with real nav and feature flags (OIDC opt-in)
 
 ## Follow
@@ -55,6 +56,7 @@ Import only `cursor/canvas`. No empty placeholder sections.
 ## End of turn
 
 1. **Docs touched:** list
-2. Stale claims removed (if any)
-3. Gaps still needing Capture / Create
-4. Suggested next docs ticket
+2. **Capture:** refreshed | skipped (reason) | needed (which slots)
+3. Stale claims removed (if any)
+4. Gaps still needing Capture / Create
+5. Suggested next docs ticket

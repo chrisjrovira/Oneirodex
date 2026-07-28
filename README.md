@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/readme/hero-banner.jpg" alt="GameTheca — self-hosted multi-user game library" width="920" />
+  <img src="docs/assets/readme/hero-banner.png" alt="GameTheca — self-hosted multi-user game library" width="920" />
 </p>
 
 <p align="center">
@@ -83,24 +83,23 @@ GameTheca is a **Flask + React** game library server you run at home (or on a NA
 ## 🖼️ Screenshots
 
 <p align="center">
-  <img src="docs/assets/readme/screenshot-library.jpg" alt="Library grid with filters and game tiles" width="900" />
+  <img src="docs/assets/readme/screenshot-library.png" alt="Library grid with filters and game tiles" width="900" />
   <br/><em>Library — filters, tiles, and freshness badges</em>
 </p>
 
 <p align="center">
-  <img src="docs/assets/readme/screenshot-systems.jpg" alt="Systems hub by console family" width="900" />
+  <img src="docs/assets/readme/screenshot-systems.png" alt="Systems hub by console family" width="900" />
   <br/><em>Systems — browse by console family &amp; set completion</em>
 </p>
 
 <p align="center">
-  <img src="docs/assets/readme/screenshot-chat.jpg" alt="Household chat channels" width="900" />
-  <br/><em>Chat — household channels, DMs, reactions</em>
+  <em>Chat — household channels, DMs, reactions — live capture queued (<a href="docs/assets/readme/CAPTURE.md">CAPTURE.md</a>)</em>
 </p>
 
 <details>
 <summary>📷 Asset credits</summary>
 
-Preview art lives in [`docs/assets/readme/`](docs/assets/readme/). The controller mark is the product SVG (`gametheca_mark.svg`). UI frames are illustrative product previews for the README; replace with live captures from your deploy anytime.
+Live UI captures live in [`docs/assets/readme/`](docs/assets/readme/) (synced from [`docs/media/screenshots/`](docs/media/screenshots/) via [`scripts/capture_docs_media.py`](scripts/capture_docs_media.py)). The controller mark is the product SVG (`gametheca_mark.svg`). Docs re-runs capture on every commit/ship pass that touches member or admin UI.
 
 </details>
 

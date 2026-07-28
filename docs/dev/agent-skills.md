@@ -7,7 +7,7 @@ Token-efficient workflows for maintainers and teammates. Skills live in `.cursor
 | Skill / rule | Role |
 |---|---|
 | **prompt-brief** | Middleman — compress user input → Brief → route |
-| **docs-sync** | Update docs/canvas before claiming done |
+| **docs-sync** | Update docs/canvas before claiming done; Docs refreshes live README screenshots on every commit/ship pass ([CAPTURE.md](../assets/readme/CAPTURE.md)) |
 | Rules: `prompt-brief.mdc`, `docs-sync.mdc` | Always on |
 
 ## On demand

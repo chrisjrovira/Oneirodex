@@ -30,18 +30,28 @@ USER = os.environ.get("CAPTURE_USER", "admin")
 PASSWORD = os.environ.get("CAPTURE_PASS", "CaptureAdmin1!")
 
 
-def _shot(page, name: str, also_readme: bool = False) -> None:
+def _sync_readme(src: Path, dest_name: str) -> None:
+    """Copy a media shot into the canonical README slot."""
+    README_ASSETS.mkdir(parents=True, exist_ok=True)
+    dest = README_ASSETS / dest_name
+    dest.write_bytes(src.read_bytes())
+    print("readme:", dest)
+
+
+def _shot(page, name: str, also_readme: bool = False, readme_as: str | None = None) -> None:
     SHOT_DIR.mkdir(parents=True, exist_ok=True)
     path = SHOT_DIR / f"{name}.png"
     page.screenshot(path=str(path), full_page=False, timeout=10_000)
     print("shot:", path)
-    if also_readme:
+    if also_readme or readme_as:
         README_ASSETS.mkdir(parents=True, exist_ok=True)
+        dest_name = readme_as or f"{name}.png"
         page.screenshot(
-            path=str(README_ASSETS / f"{name}.png"),
+            path=str(README_ASSETS / dest_name),
             full_page=False,
             timeout=10_000,
         )
+        print("readme:", README_ASSETS / dest_name)
 
 
 def _goto(page, path: str, timeout: int = 20_000) -> bool:
@@ -67,16 +77,18 @@ def login(page) -> None:
 
 
 def capture_tour(page) -> None:
+    # (path, media name, full_page, optional README slot filenames)
     pages = [
-        ("/library", "library-free-roms", True, False),
-        ("/systems", "systems-platforms", False, False),
-        ("/discover", "discover", False, False),
-        ("/admin/ops", "admin-ops-services", True, False),
-        ("/admin/features", "admin-features", False, True),
-        ("/admin/integrations", "admin-integrations", False, True),
-        ("/libraries", "admin-libraries", False, True),
+        ("/library", "library-free-roms", False, ("screenshot-library.png", "hero-banner.png")),
+        ("/systems", "systems-platforms", False, ("screenshot-systems.png",)),
+        ("/chat", "chat-channels", False, ("screenshot-chat.png",)),
+        ("/discover", "discover", False, ()),
+        ("/admin/ops", "admin-ops-services", False, ()),
+        ("/admin/features", "admin-features", True, ()),
+        ("/admin/integrations", "admin-integrations", True, ()),
+        ("/libraries", "admin-libraries", True, ()),
     ]
-    for path, name, readme, full in pages:
+    for path, name, full, readme_slots in pages:
         if not _goto(page, path):
             continue
         if path == "/admin/ops":
@@ -85,18 +97,20 @@ def capture_tour(page) -> None:
                 page.wait_for_timeout(500)
             except Exception as exc:  # noqa: BLE001
                 print("ops wait:", exc)
+        if path == "/chat":
+            page.wait_for_timeout(1200)
         try:
             SHOT_DIR.mkdir(parents=True, exist_ok=True)
             path_png = SHOT_DIR / f"{name}.png"
             page.screenshot(path=str(path_png), full_page=full, timeout=15_000)
             print("shot:", path_png)
-            if readme:
-                README_ASSETS.mkdir(parents=True, exist_ok=True)
-                page.screenshot(
-                    path=str(README_ASSETS / f"{name}.png"),
-                    full_page=full,
-                    timeout=15_000,
-                )
+            for slot in readme_slots:
+                _sync_readme(path_png, slot)
+            # Keep legacy alias names for docs/media consumers
+            if name == "library-free-roms":
+                _sync_readme(path_png, "library-free-roms.png")
+            if name == "admin-ops-services":
+                _sync_readme(path_png, "admin-ops-services.png")
         except Exception as exc:  # noqa: BLE001
             print("shot fail", name, exc)
 

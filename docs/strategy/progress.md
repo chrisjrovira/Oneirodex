@@ -81,6 +81,7 @@
 | Icon packs (6 styles, any color theme) | Shipped — [icon-themes.md](icon-themes.md) |
 | Support tickets (no Discord) | Shipped — [support-inbox.md](../admin/support-inbox.md) |
 | Docs sync on every change | Skill + always-apply rule — `.cursor/skills/docs-sync/` |
+| README live media | **Shipped (Jul 28)** — hero · Library · Systems live PNGs; mock JPGs deleted — [CAPTURE.md](../assets/readme/CAPTURE.md) · **Chat blocked** (`screenshot-chat.png`) — local `/login` + `/library` 500; Docs re-captures on next healthy UI ship pass |
 | Prompt-brief middleman | Always-on — `.cursor/skills/prompt-brief/` · [agent-skills.md](../dev/agent-skills.md) |
 | Bug scrub triage | [bug-triage.md](bug-triage.md) |
 | Competitive catalog | Private vault only — `docs/_private/` (gitignored); public stub [competitive.md](competitive.md) · **Jul 27 landscape expansion** (≥30 net-new × 8 service lanes) |

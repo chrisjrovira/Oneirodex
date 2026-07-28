@@ -156,9 +156,11 @@
 
 ## 6. Screenshots & media needed
 
-Capture at **1920×1080** and **1280×800**; dark default + one alternate preset. Store under `docs/media/screenshots/`.
+Capture at **1920×1080** and **1280×800**; dark default + one alternate preset. Store under `docs/media/screenshots/`; sync README slots under `docs/assets/readme/` (live PNG only — **retired** illustrative `hero-banner.jpg` / `screenshot-*.jpg`).
 
-Checklist: [../assets/readme/CAPTURE.md](../assets/readme/CAPTURE.md) — **done** for Ops Services, Library free ROMs, Systems, Ctrl/Cmd+K, Features, health JSON, and tour video (`docs/media/`).
+Checklist: [../assets/readme/CAPTURE.md](../assets/readme/CAPTURE.md) — README **live** for hero, Library, Systems; **Chat blocked** (`screenshot-chat.png`) — local `/login` + `/library` 500 this pass; script writes canonical slot when app healthy. Docs media **done** for Ops Services, Library free ROMs, Systems, Ctrl/Cmd+K, Features, health JSON, and tour video (`docs/media/`).
+
+**Refresh rule:** Re-run `scripts/capture_docs_media.py` (or copy freshest shots into readme slots) on every commit/ship pass that touches member/admin UI.
 
 Also: Friends companion dock + `/social-companion` pop-out, Support report form, Support inbox, Activity voice lobby, Chat, Notifications, Icon pack chips, Big Picture party voice, Admin → Features.
 
@@ -168,7 +170,7 @@ Also: Friends companion dock + `/social-companion` pop-out, Support report form,
 
 | Area | Action |
 |---|---|
-| README | Synced for 0.2.0 — feature defaults ON · OIDC opt-in · ClamAV profile · Friends companion · no Discord |
+| README | Synced for 0.2.0 — **live PNG screenshots** (hero · Library · Systems) · Chat capture queued · feature defaults ON · OIDC opt-in · ClamAV profile · Friends companion · no Discord |
 | [progress.md](progress.md) | Jul 27 PM locks · CH/ART/MOD/SRV **shipped** · GOW/LIGHT/TC-1/Desktop **in flight** · no 1.1 track |
 | CHANGELOG | Unreleased catch-up for waves 14–17 + malware / Features; bump when cutting 0.2.0 |
 | `.env.example` | Includes LiveKit + SUPPORT_GITHUB_* + malware scan |
@@ -197,7 +199,7 @@ docs/
 
 ## 9. Immediate next documentation sprint
 
-1. Re-run Capture when UI changes — [CAPTURE.md](../assets/readme/CAPTURE.md) (base set **done** under `docs/media/`)  
+1. Re-run Capture when UI changes — [CAPTURE.md](../assets/readme/CAPTURE.md) (README live PNGs + `docs/media/` base set; **Chat blocked** on login 500 until app healthy)  
 2. Browser play platform matrix guide refresh  
 3. Remaining Create runbooks as incidents hit production  
 4. CHANGELOG bump when cutting 0.2.0  

@@ -24,7 +24,7 @@ Use these unless the user **explicitly** overrides in the same message.
 
 | Default | Value |
 |---|---|
-| Docs | Always docs-sync (+ canvas when program board exists) |
+| Docs | Always docs-sync (+ canvas when program board exists); Docs refreshes live README screenshots on every commit/ship pass |
 | Commit | Only when user says commit / ship / push |
 | Push | Only when user says push / ship to GitHub |
 | Tests | Smallest relevant pytest/vitest slice |
