@@ -64,6 +64,10 @@ COMPANION_HINTS = {
     'XONE': (
         'Xbox One: catalog + optional BYO companion. No browser Play.'
     ),
+    'PSP': (
+        'PSP: use PPSSPP or a RetroArch PPSSPP profile via the desktop companion. '
+        'Not browser-playable.'
+    ),
 }
 
 COMPANION_PREFERRED_BLOCKERS = frozenset({

@@ -46,17 +46,20 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
     return <PageStatus emptyMessage="No Discover shelves to show yet." />
   }
 
-  return visible.map((section) => (
-    <section key={section.identifier} data-discover-section={section.identifier}>
-      <h2 className={`discovery-${section.identifier.replaceAll('_', '-')}-label`}>
-        {section.title}
-      </h2>
-      <GameGrid
-        games={section.games}
-        isAdmin={isAdmin}
-        showPlayStatus={Boolean(shellConfig.showPlayStatus)}
-        enableDeleteOnDisk={Boolean(shellConfig.enableDeleteOnDisk)}
-      />
-    </section>
-  ))
+  return visible.map((section) => {
+    const id = String(section.identifier || section.title || 'section')
+    return (
+      <section key={id} data-discover-section={id}>
+        <h2 className={`discovery-${id.replaceAll('_', '-')}-label`}>
+          {section.title}
+        </h2>
+        <GameGrid
+          games={section.games}
+          isAdmin={isAdmin}
+          showPlayStatus={Boolean(shellConfig.showPlayStatus)}
+          enableDeleteOnDisk={Boolean(shellConfig.enableDeleteOnDisk)}
+        />
+      </section>
+    )
+  })
 }

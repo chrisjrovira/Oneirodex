@@ -1,4 +1,5 @@
 import os
+import fnmatch
 from flask import flash
 import re
 from gametheca import db
@@ -7,6 +8,20 @@ from sqlalchemy import select
 from gametheca.utils.game_name_parse import parse_game_label
 
 LETTER_BUCKET_RE = re.compile(r'^_[a-z0-9#if]$', re.IGNORECASE)
+
+
+def should_skip_scan_dir(name, skip_dir_patterns=None):
+    """True when folder basename matches a skip-dir glob (case-insensitive fnmatch)."""
+    if not name or not skip_dir_patterns:
+        return False
+    folded = name.casefold()
+    for pattern in skip_dir_patterns:
+        if not pattern:
+            continue
+        if fnmatch.fnmatch(folded, str(pattern).casefold()):
+            return True
+    return False
+
 
 # Sequel numeral swaps for IGDB search (trailing token only).
 _ROMAN_TO_ARABIC = {
@@ -36,14 +51,22 @@ _KNOWN_SUBTITLES = (
 _SMART_APOSTROPHE_RE = re.compile(r"[’‘ʼ´]")
 
 
-def _list_game_dirs(folder_path, scan_depth=1):
+def _list_game_dirs(folder_path, scan_depth=1, skip_dir_patterns=None):
     """Return list of (item_name, full_path) game directories honoring scan_depth.
 
     scan_depth=2 unwraps letter buckets (_a…_z, _#) used by layouts like
     .../_pc/_b/Baldur's Gate Dark Alliance 1. Set library scan_depth to 2 for
     those roots; depth 1 would treat `_b` itself as a game folder.
+
+    Does **not** walk Family→Platform→ROMs (no scan_depth=3). Console trees
+    use per-leaf libraries — see docs/strategy/console-gaming-libraries.md.
+
+    skip_dir_patterns — case-insensitive fnmatch globs; matched folders are
+    excluded at every listing level (defaults from load_skip_dir_patterns /
+    ``dir:`` Admin filters). Defense-in-depth if a lib is pointed too high.
     """
     depth = int(scan_depth or 1)
+    patterns = skip_dir_patterns or ()
     results = []
     try:
         entries = sorted(os.listdir(folder_path), key=str.lower)
@@ -55,6 +78,8 @@ def _list_game_dirs(folder_path, scan_depth=1):
         full_path = os.path.join(folder_path, item)
         if not os.path.isdir(full_path):
             continue
+        if should_skip_scan_dir(item, patterns):
+            continue
         if depth >= 2 and LETTER_BUCKET_RE.match(item):
             try:
                 children = sorted(os.listdir(full_path), key=str.lower)
@@ -62,20 +87,31 @@ def _list_game_dirs(folder_path, scan_depth=1):
                 continue
             for child in children:
                 child_path = os.path.join(full_path, child)
-                if os.path.isdir(child_path):
-                    results.append((child, child_path))
+                if not os.path.isdir(child_path):
+                    continue
+                if should_skip_scan_dir(child, patterns):
+                    continue
+                results.append((child, child_path))
         else:
             results.append((item, full_path))
     return results
 
 
-def get_game_names_from_folder(folder_path, insensitive_patterns, sensitive_patterns, scan_depth=1):
+def get_game_names_from_folder(
+    folder_path,
+    insensitive_patterns,
+    sensitive_patterns,
+    scan_depth=1,
+    skip_dir_patterns=None,
+):
     if not os.path.exists(folder_path) or not os.access(folder_path, os.R_OK):
         print(f"Error: The folder '{folder_path}' does not exist or is not readable.")
         flash(f"Error: The folder '{folder_path}' does not exist or is not readable.")
         return []
     game_names_with_paths = []
-    for item, full_path in _list_game_dirs(folder_path, scan_depth=scan_depth):
+    for item, full_path in _list_game_dirs(
+        folder_path, scan_depth=scan_depth, skip_dir_patterns=skip_dir_patterns
+    ):
         game_name = clean_game_name(item, insensitive_patterns, sensitive_patterns)
         game_names_with_paths.append({'name': game_name, 'full_path': full_path})
     return game_names_with_paths

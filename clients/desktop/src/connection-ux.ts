@@ -64,6 +64,18 @@ export function friendsOpenBlockedReason(baseUrl: string): string | null {
   return null
 }
 
+/**
+ * Prefer the Server URL field the user sees over a stale auth store value.
+ * Friends does not require Connect — the form is the source of truth.
+ */
+export function resolveFriendsBaseUrl(formUrl: string, authUrl: string): string {
+  const fromForm = formUrl.trim()
+  if (fromForm) {
+    return fromForm
+  }
+  return authUrl.trim()
+}
+
 /** Status strip copy after Friends window open/focus (honest offline/auth). */
 export function friendsOpenStatus(
   how: FriendsOpenHow,

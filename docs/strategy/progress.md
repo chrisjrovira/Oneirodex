@@ -2,7 +2,7 @@
 
 **Branch:** `feature/wave2-admin-fixes` → ship to `main`  
 **Release:** **0.2.0** (full-ship in progress — Jul 27 board includes WIP polish)  
-**Updated:** 2026-07-27 late evening (IGDB name variants Shipped code · Human ship/rescan next)
+**Updated:** 2026-07-28 (Full-app 3-pass review **Complete / ship-ready** · P3: 62 pytest · auth smoke 200 · **next:** Human ship → Unraid rebuild/schema → leaf libs)
 
 ## Locked for 0.2.0 (product decisions)
 
@@ -61,9 +61,13 @@
 | Activity SSE vs single worker | **Shipped** — native ASGI `/api/activity/stream` + `/api/events/stream` · Flask WSGI returns 503 · companion SSE only when dock open |
 | Compose pg_hba (`no encryption`) | **Shipped** — `docker/postgres/pg_hba.conf` + `hba_file=` · runbook §3b |
 | Team review Jul 27 (boot→Discover→Admin) | **Blocked on Unraid deploy** — code/docs pass; E2E needs commit+push + `force-recreate db` + app rebuild — see canvas |
-| Unraid test-bed wave (Jul 27 evening) | **In flight** — local: ASGI SSE · pg_hba · scan identify/progress · themes · GIF scrub · **Ops volume sectioning + `.env.unraid.example` + monitor checklist** · **Ops scan counters + OpsPage tile** · **IGDB name variants**; Unraid E2E blocked until ship; **next:** Human library `_pc` scan_depth=2 + re-scan `_b`/BGDA1 + Unraid after ship → QA Unraid smoke → 1.0 board — see program canvas |
+| Unraid test-bed wave (Jul 27 evening) | **In flight** — local: ASGI SSE · pg_hba · scan identify/progress · themes · GIF scrub · **Ops volume sectioning + `.env.unraid.example` + monitor checklist** · **Ops RO-games path honesty** · **Ops scan counters + OpsPage tile** · **IGDB name variants** · **console-gaming library model LOCKED (per-platform)** · **skip-dir patterns (code)** · **enums NEOGEO/PSP/SWITCH/ARCADE (code, catalog/companion honesty)** · Unraid runbook leaf-lib + skip-dir apply; **next:** Human ship (skip-dir + enums) → Unraid schema/rebuild → create per-platform leaf libs (NES/Genesis/PS1 first; then Neo Geo/PSP/Switch/Arcade as needed) — **Blocked:** Unraid until ship — see program canvas |
 | IGDB name-resolution strategy | **Shipped (docs)** — letter-bucket / BGDA matcher rules — [name-resolution.md](name-resolution.md) |
 | IGDB name variants (matcher) | **Shipped (code)** — BGDA1 → Baldur's Gate: Dark Alliance; Human ship + `_pc`/`_b` rescan next — [name-resolution.md](name-resolution.md) |
+| Console-gaming skip-dir (scan) | **Shipped (code)** — emu/FE/tool **prefix** globs + `dir:` Admin filters; tightened Jul 28 review (no `GOD*` / `*dolphin*` title false positives); **no** scan_depth=3 family walk — [console-gaming-libraries.md](console-gaming-libraries.md) |
+| Console-gaming library model | **LOCKED** (per-platform leaf libraries; not one mega-lib) — [console-gaming-libraries.md](console-gaming-libraries.md) |
+| Console-gaming enum add list | **Shipped (code)** — `NEOGEO` · `PSP` · `SWITCH` · `ARCADE` (catalog/companion honesty; Wii U deferred) — [console-gaming-libraries.md](console-gaming-libraries.md)#locked-enum-add-list-backend |
+| Full-app 3-pass review Jul 28 | **Complete / ship-ready** — P1: major routes 200 auth · pytest 51 · SSE hang = env. P2: skip-dir GOD/dolphin · Ops RO honesty · Ops counters · Big Picture friends · Desktop Friends URL/keyring · Unraid runbooks. P3: 62 pytest · auth smoke 200 · ship-ready. **Next:** Human ship (skip-dir+enums+Pass2) → Unraid rebuild/schema → leaf libs NES/Genesis/PS1 — **Blocked:** Unraid E2E until ship only — see program canvas |
 | PM Task-disperse process | **Shipped (process)** — always-apply `pm-disperse.mdc` · parent Tasks Ops/Backend/UI/Desktop/QA/Docs/GM · Docs owns program canvas Done/Next/Blocked/Team flow each wave — [agent-skills.md](../dev/agent-skills.md) |
 | Deep scan stall (folder size / IGDB) | **Shipped** — defer size walk on identify · 60s size timeout · IGDB HTTP timeout · rate-limiter unlock · max 3 name fallbacks |
 | Scan progress stall at 1 + empty Stop UX | **Shipped** — atomic `bump_scan_job_progress` · Stop drains in-flight · Cancelled shows `Stopped N/total` · Stopping button labeled |

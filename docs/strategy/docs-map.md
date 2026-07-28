@@ -42,6 +42,8 @@
 | Upgrade notes (0.2 → 1.0) | `docs/strategy/upgrade-notes-1.0.md` | Have |
 | Game Master 1.0 domain sign-off | `docs/strategy/v1-gamemaster-signoff.md` | Have (gate 7) |
 | Folder → IGDB name-resolution rules | `docs/strategy/name-resolution.md` | Have — scan_depth=2 + variant order for Backend |
+| Console / emulator library layout | `docs/strategy/console-gaming-libraries.md` | Have — per-leaf libs · skip-dir DoD · no depth-3 walker |
+| Console / emulator tree → libraries | `docs/strategy/console-gaming-libraries.md` | Have — per-platform leaf libs; exclude emus/tools |
 | Docs map (this file) | `docs/strategy/docs-map.md` | Have |
 | Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) |
 | Competitive re-score template | `docs/strategy/competitor-rescore.md` | Create |

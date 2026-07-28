@@ -2,6 +2,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
 import { normalizeBaseUrl } from './auth.js'
 import { isTauriRuntime, loadStoredConfig, saveStoredConfig } from './config-store.js'
+import { keychainAdapter } from './keychain.js'
 import { joinUrl } from './paths.js'
 import { openSocialCompanionWindow } from './social-window.js'
 
@@ -85,10 +86,22 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
     statusEl.dataset.tone = tone
   }
 
+  async function persistThinConfig(baseUrl: string, token: string): Promise<void> {
+    // Config JSON never stores the token; optional thin token lives in the OS keyring.
+    await saveStoredConfig({ baseUrl, token: null })
+    if (token) {
+      await keychainAdapter.save(token)
+    } else {
+      await keychainAdapter.clear()
+    }
+  }
+
   try {
     const stored = await loadStoredConfig()
     if (stored.baseUrl) baseUrlEl.value = stored.baseUrl
-    if (stored.token) tokenEl.value = stored.token
+    const fromKeychain = await keychainAdapter.load()
+    const token = stored.token || fromKeychain
+    if (token) tokenEl.value = token
   } catch {
     // first run
   }
@@ -98,7 +111,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
       try {
         const baseUrl = normalizeBaseUrl(baseUrlEl.value)
         baseUrlEl.value = baseUrl
-        await saveStoredConfig({ baseUrl, token: tokenEl.value.trim() })
+        await persistThinConfig(baseUrl, tokenEl.value.trim())
         setStatus('Saved. Open library or friends when ready.', 'success')
       } catch (err) {
         setStatus(err instanceof Error ? err.message : String(err), 'error')
@@ -111,7 +124,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
       try {
         const baseUrl = normalizeBaseUrl(baseUrlEl.value)
         baseUrlEl.value = baseUrl
-        await saveStoredConfig({ baseUrl, token: tokenEl.value.trim() })
+        await persistThinConfig(baseUrl, tokenEl.value.trim())
         const result = await openLibraryWindow(baseUrl)
         setStatus(
           result === 'focused' ? 'Library window focused.' : 'Library window opened — sign in if prompted.',
@@ -128,7 +141,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
       try {
         const baseUrl = normalizeBaseUrl(baseUrlEl.value)
         baseUrlEl.value = baseUrl
-        await saveStoredConfig({ baseUrl, token: tokenEl.value.trim() })
+        await persistThinConfig(baseUrl, tokenEl.value.trim())
         const result = await openSocialCompanionWindow(baseUrl)
         setStatus(
           result === 'focused' ? 'Friends window focused.' : 'Friends window opened — sign in if prompted.',

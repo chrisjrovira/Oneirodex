@@ -8,6 +8,7 @@ from sqlalchemy import select
 from flask import current_app, flash, redirect, url_for, session, copy_current_request_context
 from gametheca.utils.functions import (
     load_scanning_filter_patterns,
+    load_skip_dir_patterns,
 )
 from gametheca.models import (
     Game, Library, AllowedFileType, ScanJob, GlobalSettings, UnmatchedFolder
@@ -143,13 +144,18 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
 
     # Load patterns before they are used
     insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
+    skip_dir_patterns = load_skip_dir_patterns()
 
     try:
         # Use database-stored allowed extensions
         if scan_mode == 'folders':
             scan_depth = getattr(library, 'scan_depth', 1) or 1
             game_names_with_paths = get_game_names_from_folder(
-                folder_path, insensitive_patterns, sensitive_patterns, scan_depth=scan_depth
+                folder_path,
+                insensitive_patterns,
+                sensitive_patterns,
+                scan_depth=scan_depth,
+                skip_dir_patterns=skip_dir_patterns,
             )
         elif scan_mode == 'files':
             game_names_with_paths = get_game_names_from_files(folder_path, allowed_extensions, insensitive_patterns, sensitive_patterns)
@@ -736,11 +742,16 @@ def handle_manual_scan(manual_form):
         if os.path.exists(full_path) and os.access(full_path, os.R_OK):
             print("Folder exists and can be accessed.")
             insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
+            skip_dir_patterns = load_skip_dir_patterns()
             if scan_mode == 'folders':
                 lib = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
                 scan_depth = getattr(lib, 'scan_depth', 1) or 1 if lib else 1
                 games_with_paths = get_game_names_from_folder(
-                    full_path, insensitive_patterns, sensitive_patterns, scan_depth=scan_depth
+                    full_path,
+                    insensitive_patterns,
+                    sensitive_patterns,
+                    scan_depth=scan_depth,
+                    skip_dir_patterns=skip_dir_patterns,
                 )
             else:  # files mode
                 # Load allowed file types from database

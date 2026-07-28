@@ -34,14 +34,24 @@ from gametheca.utils.uptime import (
 # Companions are "online" if they heartbeated within this window.
 _COMPANION_ONLINE_MINUTES = 3
 
+# Compose/Unraid mounts games RO at /storage — write is not required for scans.
+_READ_ONLY_OK_PATH_KEYS = frozenset({'DATA_FOLDER_GAMES', 'DATA_FOLDER_WAREZ'})
+
 
 def _path_problems(config_values):
-    """Return configured paths that are missing or not writable."""
+    """Return configured paths that are missing, unreadable, or wrongly unwritable.
+
+    Games scan root may be read-only (Unraid ``/storage:ro``); only missing /
+    unreadable counts as a problem for those keys. Uploads / image paths still
+    require write.
+    """
     problems = []
     for key, details in (config_values or {}).items():
         if not details.get('exists', False):
             problems.append({'key': key, 'reason': 'missing'})
-        elif not details.get('write', False):
+        elif not details.get('read', False):
+            problems.append({'key': key, 'reason': 'not readable'})
+        elif key not in _READ_ONLY_OK_PATH_KEYS and not details.get('write', False):
             problems.append({'key': key, 'reason': 'not writable'})
     return problems
 

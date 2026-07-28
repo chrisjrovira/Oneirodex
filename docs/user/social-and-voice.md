@@ -17,9 +17,9 @@ Household social is first-party (no third-party chat webhooks). Optional voice u
 
 ## Friends companion (stay-open)
 
-- Library UI shows a **Friends** pill (bottom-right). Open it for presence, DMs, party invite, and share-game.
+- Library UI shows a **Friends** pill (bottom-right). Open it for presence, DMs, party invite, and share-game. The dock **starts closed** and only opens `/api/activity/stream` while open (avoids starving Discover/Library on single-worker ASGI).
 - **Pop out** opens `/social-companion` in a separate browser window you can park on a second monitor.
-- **Big Picture:** header **Friends** or press **Y** — dock stays available while you browse the rail.
+- **Big Picture:** header **Friends** or press **Y** — companion starts closed; open when you need it so the rail stays responsive.
 - **Desktop companion:** **Open friends window** creates or focuses an always-on-top Tauri webview to `/social-companion`. Needs a Server URL; uses your **site login** in that window (companion Connect optional). If the companion is Offline, the window still opens but may not load until the server is back — the status strip explains this. Least-privilege ACL — no install/launch from the Friends window. Same surfaces as web: dock · pop-out · Big Picture **Y**. See [desktop-companion.md](desktop-companion.md).
 
 ## Optional email (mentions & DMs)

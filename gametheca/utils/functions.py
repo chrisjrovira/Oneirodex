@@ -412,6 +412,9 @@ PLATFORM_IDS = {
     "NES": 18,
     "SNES": 19,
     "NGC" : 21,
+    "WII": 5,
+    "N3DS": 37,
+    "SWITCH": 130,
     "XBOX": 11,
     "X360": 12,
     "XONE": 49,
@@ -422,6 +425,7 @@ PLATFORM_IDS = {
     "PS4": 48,
     "PS5": 167,
     "PSP": 38,
+    "PSVITA": 46,
     "VB": 87,
     "SEGA_MD": 29,
     "SEGA_MS": 86,
@@ -431,11 +435,15 @@ PLATFORM_IDS = {
     "JAGUAR": 62,
     "SEGA_GG": 35,
     "SEGA_SATURN": 32,
+    "SEGA_DC": 23,
     "ATARI_7800": 60,
     "ATARI_2600": 59,
     "PCE": 128,
     "PCFX": 274,
     "NGP": 119,
+    "NEOGEO_CD": 136,
+    "NEOGEO": 79,
+    "ARCADE": 52,
     "WS": 57,
     "COLECO": 68,
     "VICE_X64SC": 15,
@@ -447,18 +455,81 @@ PLATFORM_IDS = {
 }
 
 
+# Folder-name globs skipped while listing game dirs (emu installs / FE / tools).
+# Case-insensitive fnmatch. Source of truth: docs/strategy/console-gaming-libraries.md.
+# Operators may add more via Admin → Scanning filters with prefix ``dir:``
+# (e.g. ``dir:_MyTools``). Name-clean ReleaseGroup rows (no ``dir:``) are unchanged.
+# Prefer prefix globs (``emu*``) over substring (``*emu*``) so real titles are
+# not skipped — e.g. ``*dolphin*`` killed ``Ecco the Dolphin``; ``GOD *`` /
+# ``GOD*`` killed ``God of War`` / ``God Hand``. Align with
+# docs/strategy/console-gaming-libraries.md exclude list.
+DEFAULT_SKIP_DIR_GLOBS = (
+    '_Emulators',
+    'Emulators',
+    '*duckstation*',  # portable builds often have version prefixes
+    'yuzu*',
+    'ryujinx*',
+    'xenia*',
+    'bsnes*',
+    'mgba*',
+    'snes9x*',
+    'virtualjaguar*',
+    'pcsx2*',
+    'dolphin*',
+    'citra*',
+    'flycast*',
+    'vita3k*',
+    'retroarch*',
+    'cru-*',
+    'pegasus*',
+    'pegasus-fe*',
+    'GOD v*',  # tool folder e.g. "GOD v1.0" — not "God of War"
+)
+
+_DIR_FILTER_PREFIX = 'dir:'
+
+
+def load_skip_dir_patterns():
+    """Built-in skip-dir globs plus Admin scanning filters prefixed with ``dir:``."""
+    patterns = list(DEFAULT_SKIP_DIR_GLOBS)
+    try:
+        rows = db.session.execute(
+            select(ReleaseGroup).filter(ReleaseGroup.filter_pattern.isnot(None))
+        ).scalars().all()
+        for rg in rows:
+            raw = (rg.filter_pattern or '').strip()
+            if not raw.lower().startswith(_DIR_FILTER_PREFIX):
+                continue
+            extra = raw[len(_DIR_FILTER_PREFIX):].strip()
+            if extra:
+                patterns.append(extra)
+        return patterns
+    except SQLAlchemyError as e:
+        print(f"An error occurred while fetching skip-dir patterns: {e}")
+        return list(DEFAULT_SKIP_DIR_GLOBS)
+
+
 def load_scanning_filter_patterns():
     try:
-        # Fetching insensitive patterns (not case-sensitive)
+        # Fetching insensitive patterns (not case-sensitive).
+        # Skip ``dir:`` rows — those are folder-skip globs, not name cleaners.
+        name_filter_rows = [
+            rg for rg in db.session.execute(
+                select(ReleaseGroup).filter(ReleaseGroup.filter_pattern.isnot(None))
+            ).scalars().all()
+            if not (rg.filter_pattern or '').strip().lower().startswith(_DIR_FILTER_PREFIX)
+        ]
         insensitive_patterns = [
-            "-" + rg.filter_pattern for rg in db.session.execute(select(ReleaseGroup).filter(ReleaseGroup.filter_pattern.isnot(None))).scalars().all()
+            "-" + rg.filter_pattern for rg in name_filter_rows
         ] + [
-            "." + rg.filter_pattern for rg in db.session.execute(select(ReleaseGroup).filter(ReleaseGroup.filter_pattern.isnot(None))).scalars().all()
+            "." + rg.filter_pattern for rg in name_filter_rows
         ]
         
         # Initializing list for sensitive patterns (case-sensitive)
         sensitive_patterns = []
         for rg in db.session.execute(select(ReleaseGroup).filter(ReleaseGroup.case_sensitive.isnot(None))).scalars().all():
+            if (rg.filter_pattern or '').strip().lower().startswith(_DIR_FILTER_PREFIX):
+                continue
             pattern = rg.case_sensitive
             is_case_sensitive = False
             if pattern.lower() == 'yes':

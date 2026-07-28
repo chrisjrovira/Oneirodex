@@ -11,7 +11,7 @@ Near-realtime operator visibility ships **in-app**:
 |---|---|
 | `GET /healthz` | Liveness (process up) |
 | `GET /readyz` | Readiness (DB + startup init) — Compose / Unraid healthcheck |
-| Admin → Ops (`/admin/ops`) | Polls `/admin/api/ops/summary` (~15s) including **Services** (LiveKit · malware/ClamAV · companions · queues) — [ops-summary.md](../admin/ops-summary.md) |
+| Admin → Ops (`/admin/ops`) | Polls `/admin/api/ops/summary` (~15s) including **Services** (LiveKit · malware/ClamAV · companions · queues · game_servers) — [ops-summary.md](../admin/ops-summary.md) |
 
 Do **not** block upgrades or smoke sign-off on Prometheus/Grafana.
 

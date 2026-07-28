@@ -5,6 +5,9 @@ import { joinUrl } from './paths.js'
 
 const SOCIAL_LABEL = 'social'
 
+/** Last URL loaded into the Tauri `social` label (for Server URL change detection). */
+let lastSocialUrl = ''
+
 /** Member SPA route for the stay-open Friends companion. */
 export function buildSocialCompanionUrl(baseUrl: string): string {
   const trimmed = baseUrl.trim()
@@ -14,10 +17,16 @@ export function buildSocialCompanionUrl(baseUrl: string): string {
   return joinUrl(trimmed, '/social-companion')
 }
 
+/** Test helper — reset module URL tracking between cases. */
+export function resetSocialWindowUrlTracking(): void {
+  lastSocialUrl = ''
+}
+
 /**
  * Open (or focus) the stay-on-top Friends companion window pointed at the member SPA.
  * Requires the user to be logged into the GameTheca site in that webview once.
  * Does not require companion API Connect — Friends uses the site session.
+ * Heartbeat/offline gating does not block open; only a missing Server URL does.
  */
 export async function openSocialCompanionWindow(
   baseUrl: string,
@@ -33,14 +42,24 @@ export async function openSocialCompanionWindow(
 
   const existing = await WebviewWindow.getByLabel(SOCIAL_LABEL)
   if (existing) {
-    await existing.show()
-    await existing.setFocus()
-    try {
-      await existing.setAlwaysOnTop(true)
-    } catch {
-      // optional capability on some hosts
+    if (lastSocialUrl && lastSocialUrl !== url) {
+      // Server URL changed — recreate so SSE / site session hit the new origin.
+      try {
+        await existing.close()
+      } catch {
+        // fall through to create; stale label may still fail create
+      }
+    } else {
+      await existing.show()
+      await existing.setFocus()
+      try {
+        await existing.setAlwaysOnTop(true)
+      } catch {
+        // optional capability on some hosts
+      }
+      lastSocialUrl = url
+      return 'focused'
     }
-    return 'focused'
   }
 
   const webview = new WebviewWindow(SOCIAL_LABEL, {
@@ -64,5 +83,6 @@ export async function openSocialCompanionWindow(
     })
   })
 
+  lastSocialUrl = url
   return 'opened'
 }

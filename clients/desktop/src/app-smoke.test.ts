@@ -46,4 +46,12 @@ describe('app-smoke (offline gating)', () => {
       expect(wouldBlockLifecycleAction(action, 'online').blocked).toBe(false)
     }
   })
+
+  it('heartbeat offline gating never treats Friends as a server lifecycle action', () => {
+    // Friends uses site session + /social-companion; companion heartbeat Offline
+    // only gates download/update/apply_* — not opening the Friends window.
+    expect(actionNeedsServer('play')).toBe(false)
+    expect(wouldBlockLifecycleAction('play', 'offline').blocked).toBe(false)
+    expect(wouldBlockLifecycleAction('install', 'offline').blocked).toBe(false)
+  })
 })

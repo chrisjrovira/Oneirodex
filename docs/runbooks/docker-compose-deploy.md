@@ -103,8 +103,8 @@ Feedback loop for local/Unraid tests — use Ops glance + scan progress + logs (
 |---|---|---|
 | Readiness | `curl -f http://localhost:5006/readyz` | HTTP 200 (DB + init); Compose `healthcheck` uses this |
 | Liveness | `curl -f http://localhost:5006/healthz` | HTTP 200 |
-| Ops glance | Admin → Ops (`/admin/ops`) → `/admin/api/ops/summary` ~15s | Host/library OK; **Services** (LiveKit · malware/ClamAV · companions · queues) |
-| Scan progress | Admin scan jobs **or** Ops `scans.jobs[]` | `progress` / `status` / `errors` advance |
+| Ops glance | Admin → Ops (`/admin/ops`) → `/admin/api/ops/summary` ~15s | `host` / `library` OK; games RO not a path issue; **Services** (LiveKit · malware · companions · queues · game_servers) |
+| Scan progress | Admin scan jobs **or** Ops `scans.jobs[]` | `folders_success` / `folders_failed` / `total_folders` (+ `current_processing`); aliases `progress` / `errors` OK |
 | Container logs | `docker compose logs -f app` (+ `db` / profile sidecars) | No crash loops |
 
 ## Smoke
@@ -117,7 +117,7 @@ Feedback loop for local/Unraid tests — use Ops glance + scan progress + logs (
 
 ### Observability (optional — not required for 1.0)
 
-Prometheus/Grafana are **not** bundled. Near-realtime ops for operators = Admin → Ops (`/admin/ops`, polls `/admin/api/ops/summary` including **Services**: LiveKit, malware/ClamAV, companions, queues) + the probes above. Compose keeps a commented `# profile: observability` stub — see [observability-profile.md](observability-profile.md). Do not block upgrades on scrape.
+Prometheus/Grafana are **not** bundled. Near-realtime ops for operators = Admin → Ops (`/admin/ops`, polls `/admin/api/ops/summary` including **Services**: LiveKit, malware/ClamAV, companions, queues, game_servers) + the probes above. Compose keeps a commented `# profile: observability` stub — see [observability-profile.md](observability-profile.md). Do not block upgrades on scrape.
 
 ### Workers
 

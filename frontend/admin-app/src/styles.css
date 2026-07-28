@@ -467,3 +467,21 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 900px) {
+  .gt-admin-topbar {
+    flex-wrap: wrap;
+    row-gap: 0.35rem;
+  }
+
+  .gt-admin-nav {
+    order: 3;
+    flex: 1 1 100%;
+    padding-top: 0.15rem;
+    border-top: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+  }
+
+  .gt-admin-actions {
+    margin-left: auto;
+  }
+}

@@ -81,3 +81,30 @@ test('does not render empty discover sections', async () => {
   expect(screen.queryByRole('heading', { name: 'Most Favorited Games' })).not.toBeInTheDocument()
   expect(document.querySelector('[data-library-grid]')).not.toBeInTheDocument()
 })
+
+test('shows Loading Discover while sections fetch', async () => {
+  let resolveFetch
+  global.fetch = vi.fn(
+    () =>
+      new Promise((resolve) => {
+        resolveFetch = resolve
+      }),
+  )
+
+  render(<DiscoverApp isAdmin={false} />)
+  expect(screen.getByText('Loading Discover…')).toBeInTheDocument()
+
+  resolveFetch({
+    ok: true,
+    headers: {
+      get(name) {
+        return String(name).toLowerCase() === 'content-type' ? 'application/json' : null
+      },
+    },
+    json: async () => ({ sections: [] }),
+  })
+
+  await waitFor(() => {
+    expect(screen.getByText(/No Discover shelves/i)).toBeInTheDocument()
+  })
+})

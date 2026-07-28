@@ -65,7 +65,8 @@ export function BigPicturePage({ shellConfig = {} }) {
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
   const [index, setIndex] = useState(0)
-  const [socialOpen, setSocialOpen] = useState(true)
+  // Default closed so /api/activity/stream is not held open on enter (SSE gate).
+  const [socialOpen, setSocialOpen] = useState(false)
   const tileRefs = useRef([])
   const autoFocused = useRef(false)
   const padState = useRef({ games: [], index: 0, select: () => {} })

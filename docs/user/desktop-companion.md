@@ -9,7 +9,7 @@ Optional **Tauri** client under `clients/desktop/` for Install / Update / Uninst
 3. Library preview loads via search; local lifecycle syncs with the server when available.
 4. Status shows **Online** / **Offline (server unreachable)** / **Not connected**. After two failed heartbeats, Download and Update are disabled; Play, Install, and Uninstall still run locally. Web-queued Install/Update commands stay pending until heartbeat recovers (nack → retry).
 
-**Thin client:** For connect-only seats (no Download/Install/Play), build `npm run tauri:build:thin` — see [thin-client.md](../strategy/thin-client.md) and [desktop-code-signing.md](../runbooks/desktop-code-signing.md). Use thin token scopes (`read:social` / presence) when available.
+**Thin client:** For connect-only seats (no Download/Install/Play), build `npm run tauri:build:thin` — see [thin-client.md](../strategy/thin-client.md) and [desktop-code-signing.md](../runbooks/desktop-code-signing.md). Use thin token scopes (`read:social` / presence) when available. Optional thin API token is stored in the same OS credential store as the full companion (not `config.json`).
 
 **Security note:** The API token is stored in the OS credential store (Windows Credential Manager on Windows; Keychain / Secret Service elsewhere), not in plaintext `config.json`. Older installs that still have a token in JSON are migrated into the secure store on next Connect/load and scrubbed from the file. Caveat: anyone with your Windows user session can still read Credential Manager entries for this app.
 
@@ -29,9 +29,10 @@ Signing in on Friends does not replace Connect on the main window, and Connect d
 | Situation | What you see |
 |---|---|
 | **No Server URL** | Status error — set Server URL first (no silent no-op) |
-| **Server URL only (not Connect)** | Window opens; sign in with your **site account** in that webview (companion API token not required) |
-| **Companion Offline** | Window still opens/focuses; status warns the page may not load until the server is reachable again |
+| **Server URL only (not Connect)** | Window opens from the **current Server URL field** (not a stale Connect auth base); sign in with your **site account** in that webview (companion API token not required) |
+| **Companion Offline** | Window still opens/focuses; status warns the page may not load until the server is reachable again. Heartbeat Offline does **not** disable Open friends |
 | **Already open** | Existing always-on-top window is shown and focused |
+| **Server URL changed while open** | Previous Friends webview is closed and recreated at the new `/social-companion` origin |
 
 The Friends webview is least-privilege (browse only); install/launch ACLs stay on the main window.
 

@@ -91,7 +91,7 @@ After **two consecutive heartbeat failures**, the UI switches to **Offline**: Do
 
 ## Friends window
 
-**Open friends window** creates or focuses a separate always-on-top Tauri label `social` pointed at `{baseUrl}/social-companion`. Capability file `capabilities/social.json` grants only `core:default` (no FS / launch ACL). Main window keeps create/focus/always-on-top permissions.
+**Open friends window** creates or focuses a separate always-on-top Tauri label `social` pointed at `{baseUrl}/social-companion`. Capability file `capabilities/social.json` grants only `core:default` (no FS / launch ACL). Main window keeps create/focus/always-on-top/close permissions so a Server URL change can recreate the webview. Friends open uses the **form Server URL** (Connect not required); companion heartbeat Offline does not block Friends.
 
 ## Project layout
 

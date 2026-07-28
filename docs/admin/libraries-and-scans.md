@@ -38,6 +38,16 @@ Folder → IGDB matching expands cleaned labels into search variants (colon subt
 
 Depth does not recursively walk whole trees per title; per-game stalls were from sync folder-size walks on large NAS volumes (now deferred on scan).
 
+## Console / emulator trees (`_console-gaming`)
+
+Do **not** create one library on a mixed console root (families + emulator installs + tools). Prefer **one library per platform ROM/game leaf** with the correct `LibraryPlatform`, `scan_mode` **files** (flat dumps) or **folders** (folder-per-game), and `scan_depth` **1** (or **2** only if that leaf uses letter buckets).
+
+Never library-root: `_Emulators`, named emu installs, Pegasus/CRU/tools, archive-only parents. Document typo paths as-is (e.g. `Ninentdo Entertainment System`).
+
+**Skip-dir (defense-in-depth):** folder listing ignores built-in emu/FE/tool name globs (`_Emulators`, `yuzu*`, `ryujinx*`, `dolphin*`, `bsnes*`, `pegasus*`, `cru-*`, `GOD v*`, …). Patterns are mostly **prefix** globs so titles like *God of War* or *Ecco the Dolphin* are not skipped. Operators can add more via Admin → Scanning filters with prefix `dir:` (e.g. `dir:_MyTools`). This does **not** replace per-leaf libraries — do not point a lib at a family root and rely on skips. There is no `scan_depth=3` family walker.
+
+Full family→platform map, exclude list, and Backend DoD: [console-gaming-libraries.md](../strategy/console-gaming-libraries.md).
+
 ## Deploy note
 
 Games volume is often **read-only** in Compose (`/storage:ro`). Scans identify and enrich metadata; they do not rewrite the games share unless you mount RW and use tools that allow it.

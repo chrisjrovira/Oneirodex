@@ -123,3 +123,17 @@ test('shows an error with retry that recovers', async () => {
   expect(await screen.findByRole('option', { name: 'Alpha Game' })).toBeInTheDocument()
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
 })
+
+test('friends companion starts closed (SSE gated)', async () => {
+  browseApi.fetchBrowseGames.mockResolvedValue({ games: GAMES })
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => ({ ok: true, json: async () => ({ friends: [], friend_count: 0 }) })),
+  )
+
+  renderPage(<BigPicturePage shellConfig={{}} />)
+  await screen.findByRole('option', { name: 'Alpha Game' })
+
+  expect(screen.getByRole('button', { name: /open friends companion/i })).toBeInTheDocument()
+  expect(screen.queryByLabelText(/^Friends companion$/i)).not.toBeInTheDocument()
+})

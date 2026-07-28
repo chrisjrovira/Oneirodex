@@ -14,6 +14,7 @@
 ## Scaffolding shipped
 
 - Enum: `WII`, `N3DS`, `SEGA_DC`, `PSVITA` (+ Postgres `libraryplatform` ALTER)
+- Console leaf enums (LOCKED): `NEOGEO` · `PSP` · `SWITCH` · `ARCADE` — catalog/companion honesty; never `NEOGEO`→`neocd`
 - `play_mode_for_platform()` · `CATALOG_ONLY_PLATFORMS` · `COMPANION_PREFERRED_PLATFORMS`
 - `browse_play_fields` returns `play_mode` / `play_blocker` / `companion_hint`
 - Systems hub shows Browser / Companion / Catalog badges
@@ -39,8 +40,9 @@ NES · SNES · N64 · GB/GBC/GBA · NDS · VB · PS1 · Genesis family · Saturn
 ## Explicit out of Wave 19 play targets
 
 - **PS5** · **Xbox Series X|S** — catalog only  
-- Switch / Wii U — optional later (hard)  
-- Arcade / MAME · Amiga · MSX · Neo Geo AES — backlog  
+- Switch / Wii U — **`SWITCH` enum shipped (catalog)**; Wii U deferred; no play CTA — [console-gaming-libraries.md](console-gaming-libraries.md)  
+- Arcade · Neo Geo AES · Amiga · MSX — **`ARCADE` + `NEOGEO` enums shipped (catalog)**; Amiga/MSX still backlog; no browser Play — same doc  
+- PSP — **`PSP` enum shipped (companion / PPSSPP BYO)**; no WebRetro  
 - Shipping large WASM cores (PCE/VICE/DOSBox/Dolphin) — operator places files; see [webretro-cores.md](../runbooks/webretro-cores.md) (`scripts/fetch-webretro-cores`); Python discovers `*_libretro.wasm` on disk; JS allowlist via `/api/emulator/installed-cores.js`
 
 ## Sample free ROMs

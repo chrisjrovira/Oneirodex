@@ -35,6 +35,7 @@ import {
   friendsOpenStatus,
   isActionBlockedOffline,
   offlineBlockReason,
+  resolveFriendsBaseUrl,
   type ConnectionMode,
 } from './connection-ux.js'
 import type { SearchResultItem } from '@gametheca/api-client'
@@ -639,7 +640,9 @@ export async function mountApp(root: HTMLElement): Promise<void> {
     void handleConnect()
   })
   root.querySelector('#friends-btn')!.addEventListener('click', () => {
-    const base = normalizeBaseUrl(auth.getBaseUrl() || els.baseUrl.value)
+    // Prefer the visible Server URL field — Friends must not require Connect,
+    // and must not keep a stale auth base after the user edits the form.
+    const base = normalizeBaseUrl(resolveFriendsBaseUrl(els.baseUrl.value, auth.getBaseUrl()))
     const blocked = friendsOpenBlockedReason(base)
     if (blocked) {
       console.warn('[friends]', blocked)

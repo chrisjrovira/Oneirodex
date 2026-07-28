@@ -25,6 +25,7 @@ Read in this order:
 | 4h | [ambient-lighting.md](ambient-lighting.md) | Hyperion.ng / Home Assistant — LIGHT-1/2 **shipped** |
 | 4i | [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md) | Jul 27 PM agent briefs + locked priority order |
 | 4j | [name-resolution.md](name-resolution.md) | Folder → IGDB search variants · letter-bucket `scan_depth=2` |
+| 4k | [console-gaming-libraries.md](console-gaming-libraries.md) | `_console-gaming` → one library per platform leaf · exclude emus |
 | 5 | [ui.md](ui.md) | UI rebuild waves, BadgeStack, GameActionBar |
 | 6 | [progress.md](progress.md) | What shipped / what's next |
 | 7 | [social-av.md](social-av.md) | Household social + LiveKit waves |

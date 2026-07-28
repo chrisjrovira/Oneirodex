@@ -22,6 +22,8 @@ Built by `gametheca.utils.ops_summary._scan_snapshot`. Poll-friendly (~15s) glan
 | `jobs[].library` | Library name when joined cheaply |
 | `jobs[].progress` / `errors` | Compat aliases (`%` of done folders · `folders_failed`) |
 
+**Ops UI (`/admin/ops` Scans tile):** renders processed (`success+failed`) / `total`, with a `· N failed` suffix when failures > 0 (same honesty as Scan Jobs).
+
 ## `services` key
 
 Built by `gametheca.utils.ops_summary._services_snapshot`. Brief field map:
@@ -37,9 +39,7 @@ Built by `gametheca.utils.ops_summary._services_snapshot`. Brief field map:
 
 No Discord / webhook sinks — alerts stay in-app SystemEvents / optional SMTP digest.
 
-### Future: game server health (SRV-2)
-
-When Backend ships **SRV-1** (admin registry of household game servers — see [game-servers-mods.md](../strategy/game-servers-mods.md)), extend `services` with a `game_servers` (or similar) array: display name, connect string, reachability from TCP/HTTP ping, last check time. Ops summary UI would show health chips alongside LiveKit/malware — **not implemented in 1.0**; registry + ping API must land first.
+**Path issues:** `DATA_FOLDER_GAMES` / `DATA_FOLDER_WAREZ` need **exist + read** only (Compose Unraid often mounts `/storage:ro`). Uploads / image paths still require write — a RO games mount must not appear as `not writable` in `issues`.
 
 ## Related
 

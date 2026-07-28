@@ -7,6 +7,7 @@ import {
   friendsOpenStatus,
   isActionBlockedOffline,
   offlineBlockReason,
+  resolveFriendsBaseUrl,
 } from './connection-ux.js'
 
 describe('connection-ux', () => {
@@ -45,10 +46,20 @@ describe('connection-ux', () => {
     expect(friendsOpenBlockedReason('https://games.home')).toBeNull()
   })
 
+  it('prefers the form Server URL over a stale auth base', () => {
+    expect(resolveFriendsBaseUrl('https://new.home', 'https://old.home')).toBe(
+      'https://new.home',
+    )
+    expect(resolveFriendsBaseUrl('', 'https://old.home')).toBe('https://old.home')
+    expect(resolveFriendsBaseUrl('   ', '')).toBe('')
+  })
+
   it('explains Friends open outcomes for offline and auth', () => {
     expect(friendsOpenStatus('focused', 'online').message).toMatch(/focused/i)
     expect(friendsOpenStatus('focused', 'offline').tone).toBe('info')
     expect(friendsOpenStatus('opened', 'disconnected').message).toMatch(/sign in/i)
     expect(friendsOpenStatus('opened', 'offline').message).toMatch(/unreachable/i)
+    // Offline/disconnected never blocks Friends open — only missing Server URL does.
+    expect(friendsOpenBlockedReason('https://games.home')).toBeNull()
   })
 })

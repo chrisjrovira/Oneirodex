@@ -8,8 +8,9 @@ See [container-wont-start.md](../runbooks/container-wont-start.md) for SECRET_KE
 |---|---|
 | App unhealthy | `curl -f http://localhost:5006/readyz` · `docker compose logs app` · DB healthy? Compose probes **`/readyz`** (not `/`) |
 | Liveness only | `curl -f http://localhost:5006/healthz` — process up; does not prove DB |
-| Sidecars / queues look wrong | **Admin → Ops** (or Dashboard) **Services** tile — LiveKit · malware · companions · queues; then `/readyz` — field map: [ops-summary.md](ops-summary.md) |
-| Scan progress looks stalled / want live counters | **Admin → Ops** **Scans** tile (polls `/admin/api/ops/summary` ~15s) shows `folders_success` / `failed` / `total`, `current_processing`, status — [ops-summary.md](ops-summary.md#scans-key) · Scan Jobs page for Stop/detail |
+| Sidecars / queues look wrong | **Admin → Ops** (or Dashboard) **Services** tile — LiveKit · malware · companions · queues · game_servers; then `/readyz` — field map: [ops-summary.md](ops-summary.md) |
+| Ops flags `DATA_FOLDER_GAMES not writable` | Expected on Unraid `:ro` games mount only on **older** builds — current Ops treats games as read-OK; rebuild/restart app if still bad. `UPLOAD_FOLDER` / library must stay RW |
+| Scan progress looks stalled / want live counters | **Admin → Ops** **Scans** tile (polls `/admin/api/ops/summary` ~15s) shows processed (`success+failed`) / `total`, plus failed count, `current_processing`, status — [ops-summary.md](ops-summary.md#scans-key) · Scan Jobs page for Stop/detail |
 | Schema errors | Startup `updateschema` · [local-postgres-pytest.md](../runbooks/local-postgres-pytest.md) for local tests |
 | App loops waiting for DB: `no pg_hba … no encryption` | Postgres rejects non-SSL from Docker bridge — [container-wont-start §3b](../runbooks/container-wont-start.md#3b-postgres-up-but-pg_hba-rejects-app-no-encryption); recreate `db` with current Compose `pg_hba` mount |
 

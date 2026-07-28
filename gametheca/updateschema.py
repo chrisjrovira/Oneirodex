@@ -775,6 +775,35 @@ class DatabaseManager:
                 ) THEN
                     ALTER TYPE libraryplatform ADD VALUE 'PSVITA';
                 END IF;
+                -- LOCKED console leaf enums (NEOGEO / PSP / SWITCH / ARCADE)
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'PSP'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'PSP';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'NEOGEO'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'NEOGEO';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'SWITCH'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'SWITCH';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'ARCADE'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'ARCADE';
+                END IF;
             END IF;
         END $$;
 

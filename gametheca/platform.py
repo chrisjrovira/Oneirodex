@@ -49,11 +49,15 @@ class LibraryPlatform(PyEnum):
     PS3 = "Sony PS3"
     PS4 = "Sony PS4"
     PS5 = "Sony PS5"
+    PSP = "Sony PSP"
     PSVITA = "Sony PS Vita"
     INTV = "Intellivision"
     CHAF = "Fairchild Channel F"
     O2EM = "Magnavox Odyssey 2"
     NEOGEO_CD = "Neo Geo CD"
+    NEOGEO = "Neo Geo AES"
+    SWITCH = "Nintendo Switch"
+    ARCADE = "Arcade"
 
 
 class Emulator(PyEnum):
@@ -182,21 +186,29 @@ platform_emulator_mapping = {
     LibraryPlatform.PS3: [],
     LibraryPlatform.PS4: [],
     LibraryPlatform.PS5: [],
+    LibraryPlatform.PSP: [],  # companion BYO (PPSSPP) — no WebRetro core
     LibraryPlatform.XBOX: [],
     LibraryPlatform.X360: [],
     LibraryPlatform.XONE: [],
     LibraryPlatform.XSX: [],
+    # LOCKED console leaf enums — catalog/companion honesty; never NEOCD for cart AES
+    LibraryPlatform.NEOGEO: [],
+    LibraryPlatform.SWITCH: [],
+    LibraryPlatform.ARCADE: [],
 }
 
 
-# Catalog-only: no Play CTA (Wave 19 bar — at/above current gen).
-CATALOG_ONLY_PLATFORMS = frozenset({'PS5', 'XSX'})
+# Catalog-only: no Play CTA (current-gen bar + Switch / Arcade / Neo Geo AES).
+CATALOG_ONLY_PLATFORMS = frozenset({
+    'PS5', 'XSX',
+    'SWITCH', 'ARCADE', 'NEOGEO',
+})
 
 # Prefer companion / native; browser cores not shipped (or not suitable).
 COMPANION_PREFERRED_PLATFORMS = frozenset({
     'NGC', 'WII', 'PS2', 'PSVITA', 'SEGA_DC', 'N3DS', 'PCDOS',
     'PCE', 'PCFX', 'VICE_X64SC', 'VICE_X128', 'VICE_XVIC', 'VICE_XPLUS4', 'VICE_XPET',
-    'PS3', 'PS4', 'XBOX', 'X360', 'XONE',
+    'PS3', 'PS4', 'PSP', 'XBOX', 'X360', 'XONE',
 })
 
 # Keys that currently have WebRetro WASM (mirrors play_url.WEBRETRO_PLATFORMS).

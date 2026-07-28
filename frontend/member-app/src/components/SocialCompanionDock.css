@@ -285,7 +285,8 @@
   color: inherit;
 }
 
-@media (max-width: 700px) {
+/* Align with TopNav / mobile-density ≤900px so tablet widths don't clip the dock. */
+@media (max-width: 900px) {
   .gt-social-dock:not(.gt-social-dock--standalone):not(.gt-social-dock--popout) {
     right: 0.5rem;
     left: 0.5rem;
@@ -297,5 +298,9 @@
   .gt-social-dock__launcher {
     right: 0.75rem;
     bottom: 0.75rem;
+  }
+
+  .gt-social-dock__friend-actions {
+    flex-wrap: wrap;
   }
 }
