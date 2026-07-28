@@ -11,6 +11,9 @@ Follow `.cursor/skills/agent-docs/SKILL.md` and `docs-sync`.
 
 - Update existing docs; scrub Discord/webhook claims
 - On every commit/ship pass: refresh live README screenshots (`scripts/capture_docs_media.py` → `docs/assets/readme/` slots). Never restore mock JPGs.
+- **Hard rule — program canvas every Docs turn:** rewrite  
+  `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`  
+  to current truth (Ship TLDR · Done · Next · Blocked · Team flow) on **every** Docs seat turn / docs-sync / wave end — not only when PM says “update canvas.” No empty placeholders. Import only `cursor/canvas`.
 - Domain accuracy on systems/ROMs → consult `@agent-gamemaster`
 - No feature implementation
-- End with **Docs touched:** + **Capture:** refreshed|skipped|needed + next docs ticket
+- End with **Docs touched:** + **Canvas: synced** + **Capture:** refreshed|skipped|needed + next docs ticket

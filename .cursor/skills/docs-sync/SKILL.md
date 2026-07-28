@@ -33,7 +33,9 @@ Read [checklist.md](checklist.md) for the inventory map. Prefer **update existin
 | Break-glass ops | `docs/runbooks/container-wont-start.md` or new runbook; link from `docs/README.md` |
 | Troubleshooting symptoms | `docs/user/troubleshooting.md` and/or `docs/admin/troubleshooting.md` |
 
-3. **Canvas** — if the program board exists, sync TodoList statuses + gap table + TLDR in the same turn.
+3. **Canvas (required every docs-sync / every Docs seat turn)** — rewrite program board  
+   `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`  
+   to current truth in the same turn: **Ship TLDR · Done · Next · Blocked · Team flow**. Not optional; not only when PM says “update canvas.” No empty placeholders. Import only `cursor/canvas`. End-of-turn must include **Canvas: synced**.
 4. **README live media (Docs owns on every commit/ship pass)** — if member/admin UI changed **or** Docs is seated on the wave:
    - Re-run `python scripts/capture_docs_media.py` against a running instance (or copy freshest `docs/media/screenshots/` into `docs/assets/readme/` slots).
    - Canonical README slots: `hero-banner.png`, `screenshot-library.png`, `screenshot-systems.png`, `screenshot-chat.png`.
@@ -41,7 +43,7 @@ Read [checklist.md](checklist.md) for the inventory map. Prefer **update existin
    - Checklist: [docs/assets/readme/CAPTURE.md](../../../docs/assets/readme/CAPTURE.md).
 5. **Scrub stale claims** — search for removed product names (e.g. Discord webhooks) in `docs/`, `README.md`, HelpPage, admin guides.
 6. **Index** — if you add a doc, link it from `docs/README.md` and `docs/strategy/docs-map.md`.
-7. **Stop condition** — reply includes a one-line **Docs touched:** list (or `Docs: N/A — <reason>`). Mention **Capture:** refreshed | skipped (why) | needed.
+7. **Stop condition** — reply includes a one-line **Docs touched:** list (or `Docs: N/A — <reason>`), **Canvas: synced**, and **Capture:** refreshed | skipped (why) | needed.
 
 ## Style
 

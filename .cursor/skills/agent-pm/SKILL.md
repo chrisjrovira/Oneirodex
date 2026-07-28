@@ -33,22 +33,23 @@ the team.
 3. Each Task prompt must include: role · paths · In/Out · DoD · docs-sync · **no commit unless user said ship**.
 4. After lands: Task `@agent-qa` against DoD, then Task `@agent-docs` to refresh:
    - `docs/strategy/progress.md`
-   - Program canvas:  
+   - Program canvas (**always** — Docs Task prompt must include “rewrite canvas to current truth”):  
      `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
    - **Live README screenshots** (`scripts/capture_docs_media.py` → `docs/assets/readme/`) on every pass that will commit/ship — never leave mock JPG frames
-5. PM reply to user = Status · Backlog · Sequencing · what was dispatched · open decisions ≤3.  
+5. **Refuse to close a wave** if Docs did not refresh the program canvas (TLDR/Done/Next/Blocked/Team flow) and report **Canvas: synced**.
+6. PM reply to user = Status · Backlog · Sequencing · what was dispatched · open decisions ≤3.  
    **Not** a code dump.
 
 ### Anti-patterns (stop)
 
 - Implementing “just this one fix” while seats exist
-- Skipping canvas update after a wave
+- Skipping canvas update after a wave / closing without Docs canvas refresh
 - Asking Ops to redesign member SPA / Backend to rewrite Unraid runbooks alone
 - Re-asking locked defaults
 
 ## Canvas contract (with Docs)
 
-Every wave that changes status must leave the program canvas with:
+Every wave **and every Docs turn** must leave the program canvas with current truth. Docs Task briefs always include: **rewrite canvas to current truth**.
 
 | Section | Required |
 |---|---|
@@ -58,7 +59,7 @@ Every wave that changes status must leave the program canvas with:
 | Blocked | Unraid/deploy/human gates |
 | Team flow | Last seats that ran + next seat |
 
-Docs owns the file; PM owns the **content brief** Docs pastes in.
+Docs owns the file; PM owns the **content brief** Docs pastes in. PM does not close if canvas is stale.
 
 ## Unraid test loop (Ops + Backend + QA)
 

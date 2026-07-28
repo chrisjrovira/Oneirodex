@@ -32,14 +32,14 @@ Attach with `@` in a chat (skills have `disable-model-invocation: true` — expl
 | **agent-backend** | Flask/ASGI/APIs/schema |
 | **agent-desktop** | Tauri companion (`clients/desktop`) |
 | **agent-qa** | Repro, smoke, DoD verification |
-| **agent-docs** | Docs/changelog only (seat 6) |
+| **agent-docs** | Docs/changelog only (seat 6) — **program canvas mandatory every Docs turn** |
 | **agent-gamemaster** | Games/systems/formats/DAT/metadata domain (seat 7) |
 | **agent-ops** | Unraid/Compose health, ops glance, probes (seat 8) |
 
 Typical wave (Task-first): parent acts as **PM** → optional GM/Ops consult → **Task** implementers in parallel → Task **QA** → Task **Docs** (docs-sync + program canvas Done/Next/Blocked/Team flow). Parent does **not** land product code when seats exist (always-apply `pm-disperse.mdc`).
 
-**Program canvas:**  
-`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx` — Docs owns the file; PM owns the content brief.
+**Program canvas (mandatory every Docs turn):**  
+`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx` — Docs rewrites TLDR/Done/Next/Blocked/Team flow every Docs seat turn / docs-sync / wave end (not only when PM says “update canvas”); PM owns the content brief and refuses to close waves without **Canvas: synced**.
 
 **Unraid test bed:** Ops sections games RO vs library RW mounts; Backend keeps Admin → Ops / scan progress honest; QA smokes `/readyz` + Ops glance.
 

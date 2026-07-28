@@ -28,20 +28,22 @@ disable-model-invocation: true
 ## Typical paths
 
 - `docs/**`, `README.md`, `.env.example` (comments only), HelpPage copy
-- **Program canvas (required every wave):**  
+- **Program canvas (required every Docs turn):**  
   `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
 
-## Canvas update contract (with PM)
+## Canvas hard rule (every Docs turn)
 
-When PM/Docs Task says “update canvas”, rewrite the program board so it always has:
+**Do not close a Docs turn** without rewriting the program canvas to **current truth**. This is mandatory on **every** Docs seat turn / docs-sync / wave end — **not** only when PM says “update canvas.”
+
+Always keep these sections (no empty placeholders):
 
 1. **Ship TLDR** — one sentence current truth  
-2. **Done** — TodoList/table of landed items this wave  
+2. **Done** — TodoList/table of landed items  
 3. **Next** — ordered passes with owner seat (`ops` / `backend` / …)  
-4. **Blocked** — Unraid deploy / human gates  
+4. **Blocked** — Unraid deploy / human gates / capture blockers  
 5. **Team flow** — seats that just ran + next seat  
 
-Import only `cursor/canvas`. No empty placeholder sections.
+Import only `cursor/canvas`. Stats/pills must match truth (shipped vs feature-branch vs blocked).
 
 ## Handoffs
 
@@ -56,7 +58,8 @@ Import only `cursor/canvas`. No empty placeholder sections.
 ## End of turn
 
 1. **Docs touched:** list
-2. **Capture:** refreshed | skipped (reason) | needed (which slots)
-3. Stale claims removed (if any)
-4. Gaps still needing Capture / Create
-5. Suggested next docs ticket
+2. **Canvas: synced** — program board rewritten to current truth (mandatory)
+3. **Capture:** refreshed | skipped (reason) | needed (which slots)
+4. Stale claims removed (if any)
+5. Gaps still needing Capture / Create
+6. Suggested next docs ticket

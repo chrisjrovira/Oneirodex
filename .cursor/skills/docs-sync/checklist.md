@@ -6,7 +6,7 @@ Canonical map: [docs/strategy/docs-map.md](../../../docs/strategy/docs-map.md).
 
 | Artifact | Path |
 |---|---|
-| Program canvas | `…/canvases/gametheca-program.canvas.tsx` |
+| Program canvas | `…/canvases/gametheca-program.canvas.tsx` — **required every Docs turn / docs-sync** (TLDR · Done · Next · Blocked · Team flow); end with **Canvas: synced** |
 | Progress | `docs/strategy/progress.md` |
 | Docs map | `docs/strategy/docs-map.md` |
 | Docs hub | `docs/README.md` |
