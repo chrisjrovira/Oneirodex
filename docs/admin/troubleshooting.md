@@ -67,6 +67,12 @@ Expected if `SUPPORT_GITHUB_TOKEN` unset (`github_sync=skipped`). Ticket + admin
 | Browser can’t connect | `LIVEKIT_URL` must be reachable from the **browser** (not only Docker DNS) |
 | Child screenshare 403 | By design |
 
+## Libraries / admin UI
+
+| Symptom | Check |
+|---|---|
+| Delete library Confirm/Cancel unclickable | Theme CSS had put Bootstrap `.modal` under `.modal-backdrop` (z-index 1000 vs 1050). Fixed in `modal-components.css` (`.modal.fade` ≥ 1055). Hard-refresh Admin → Libraries after upgrade. |
+
 ## Scans / identify
 
 | Symptom | Check |

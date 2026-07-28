@@ -43,11 +43,14 @@ document.addEventListener('DOMContentLoaded', function() {
     csrfInput.value = CSRFUtils.getToken(); // Ensure CSRF token is pulled from CSRFUtils
     deleteForm.appendChild(csrfInput);
 
-    var body = document.querySelector('body');
-    var deleteAllUrl = body.getAttribute('data-delete-url');
-    var baseDeleteUrl = document.body.getAttribute('data-base-delete-url');
-    var baseProgressUrl = document.body.getAttribute('data-progress-url');
-    var baseCheckProgressUrl = document.body.getAttribute('data-check-progress-url');
+    // Config lives on the spinner wrapper in admin_manage_libraries.html (not body).
+    var deleteConfig = document.querySelector('[data-base-delete-url]');
+    var deleteAllUrl = deleteConfig ? deleteConfig.getAttribute('data-delete-url') : null;
+    var baseDeleteUrl = deleteConfig ? deleteConfig.getAttribute('data-base-delete-url') : null;
+    var baseProgressUrl = deleteConfig ? deleteConfig.getAttribute('data-progress-url') : null;
+    var baseCheckProgressUrl = deleteConfig ? deleteConfig.getAttribute('data-check-progress-url') : null;
+    var deleteModalEl = document.getElementById('deleteWarningModal');
+    var deleteWarningModal = bootstrap.Modal.getOrCreateInstance(deleteModalEl);
 
     // Handle individual delete buttons
     document.querySelectorAll('.delete-btn').forEach(button => {
@@ -58,8 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
             deleteForm.action = baseDeleteUrl + libraryUuid;
             confirmDeleteButton.textContent = 'Confirm Delete';
 
-            // show modal
-            var deleteWarningModal = new bootstrap.Modal(document.getElementById('deleteWarningModal'));
             deleteWarningModal.show();
 
             confirmDeleteButton.onclick = function() {
@@ -112,7 +113,6 @@ document.addEventListener('DOMContentLoaded', function() {
             deleteForm.action = deleteAllUrl;
             confirmDeleteButton.textContent = 'Confirm Delete All Libraries';
 
-            var deleteWarningModal = new bootstrap.Modal(document.getElementById('deleteWarningModal'));
             deleteWarningModal.show();
             
             confirmDeleteButton.onclick = function() {

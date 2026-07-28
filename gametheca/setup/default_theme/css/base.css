@@ -969,6 +969,12 @@ form textarea {
     background-color: rgb(0,0,0);
     background-color: rgba(0,0,0,0.4); 
   }
+
+/* Prefer modal-components.css; keep Bootstrap fade dialogs above backdrop if this file wins. */
+.modal.fade {
+    z-index: var(--bs-modal-zindex, 1055);
+    background-color: transparent;
+}
   
 
 

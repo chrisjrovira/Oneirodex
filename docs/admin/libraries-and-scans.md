@@ -9,6 +9,10 @@ Admin surfaces today are **Jinja** under `base_admin` (top bar). A React admin S
 3. Set **scan depth** on create/edit (GET seeds the form; save persists it).
 4. Prefer a small test scan before a full library scan.
 
+## Delete a library
+
+Admin → Libraries → **Delete** opens a Bootstrap confirm modal. Confirm/Cancel must be clickable (dialog stacks above the backdrop). If buttons look present but do not respond, hard-refresh after upgrade — see [troubleshooting.md](troubleshooting.md#libraries--admin-ui).
+
 ## Run a scan
 
 - Start from library tools / scan management.

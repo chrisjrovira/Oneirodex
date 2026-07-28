@@ -1,7 +1,7 @@
 /* === UNIFIED MODAL SYSTEM === */
 /* Consolidates modal styling duplicated across 6 files (12 occurrences) */
 
-/* Base Modal Styling */
+/* Base Modal Styling (legacy custom modals without Bootstrap fade) */
 .modal {
     display: none;
     position: fixed;
@@ -12,6 +12,15 @@
     height: 100%;
     overflow: auto;
     background-color: var(--modal-backdrop);
+}
+
+/*
+ * Bootstrap 5 fade modals: keep dialog above .modal-backdrop (1050).
+ * Theme .modal { z-index: 1000 } otherwise leaves Confirm/Cancel under the backdrop.
+ */
+.modal.fade {
+    z-index: var(--bs-modal-zindex, 1055);
+    background-color: transparent;
 }
 
 /* Modal Content Base */

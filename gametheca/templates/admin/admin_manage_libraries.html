@@ -83,7 +83,8 @@
                                 </a>
                                 <form action="{{ url_for('main.delete_full_library', library_uuid=library.uuid) }}" method="post" style="display: inline-block;">
                                     {{ csrf_form.csrf_token }}
-                                    <button type="button" class="btn btn-sm btn-danger delete-btn" data-bs-toggle="modal" data-bs-target="#deleteWarningModal" data-library-uuid="{{ library.uuid }}">
+                                    {# JS opens the modal (getOrCreateInstance) — avoid data-bs-toggle double backdrop #}
+                                    <button type="button" class="btn btn-sm btn-danger delete-btn" data-library-uuid="{{ library.uuid }}">
                                         {{ icons.icon('trash') }} Delete
                                     </button>
                                 </form>
