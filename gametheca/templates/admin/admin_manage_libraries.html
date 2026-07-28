@@ -4,6 +4,32 @@
 
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+{#
+  theme_asset serves library/themes copies (Reset Themes to refresh). Inline so delete
+  confirm stays clickable without that step — theme .modal { z-index:1000 } sits under
+  Bootstrap's .modal-backdrop (1050).
+#}
+<style>
+  #deleteWarningModal.modal {
+    z-index: 1065 !important;
+    background: transparent !important;
+    pointer-events: none !important;
+  }
+  #deleteWarningModal .modal-dialog {
+    pointer-events: auto !important;
+    z-index: 1;
+  }
+  #deleteWarningModal .modal-content,
+  #deleteWarningModal .btn {
+    pointer-events: auto !important;
+  }
+  body.modal-open > .modal-backdrop {
+    z-index: 1060 !important;
+  }
+  #deleteSpinner.spinner-overlay {
+    z-index: 1070;
+  }
+</style>
 
 <div
   data-base-delete-url="{{ url_for('main.delete_full_library', library_uuid='') }}"
@@ -24,9 +50,10 @@
 </div>
 
 <div class="modal fade" id="deleteWarningModal" tabindex="-1" role="dialog" aria-labelledby="deleteWarningModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
+                <h5 class="modal-title" id="deleteWarningModalLabel">Delete library</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -98,4 +125,14 @@
 </div>
 
 <script src="{{ 'js/admin_manage_libs.js'|theme_asset }}"></script>
+{# Theme assets live under library/themes until Reset Themes — hoist modal so stacking works after app rebuild alone. #}
+<script>
+(function () {
+  var modalEl = document.getElementById('deleteWarningModal');
+  if (!modalEl) return;
+  if (modalEl.parentElement !== document.body) {
+    document.body.appendChild(modalEl);
+  }
+})();
+</script>
 {% endblock %}

@@ -42,6 +42,22 @@ a {
   min-height: 100vh;
 }
 
+/*
+ * Bootstrap fade modals on Jinja admin pages: theme library CSS can still pin
+ * `.modal` under `.modal-backdrop`. Keep admin confirms clickable after rebuild
+ * even before Admin → Themes → Reset Themes.
+ */
+body.admin-spa .modal.fade,
+body.admin-shell .modal.fade {
+  z-index: 1065;
+  background-color: transparent;
+}
+
+body.admin-spa.modal-open > .modal-backdrop,
+body.admin-shell.modal-open > .modal-backdrop {
+  z-index: 1060;
+}
+
 .gt-admin-topbar {
   position: sticky;
   top: 0;

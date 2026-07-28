@@ -71,7 +71,7 @@ Expected if `SUPPORT_GITHUB_TOKEN` unset (`github_sync=skipped`). Ticket + admin
 
 | Symptom | Check |
 |---|---|
-| Delete library Confirm/Cancel unclickable | Theme CSS had put Bootstrap `.modal` under `.modal-backdrop` (z-index 1000 vs 1050). Fixed in `modal-components.css` (`.modal.fade` ≥ 1055). Hard-refresh Admin → Libraries after upgrade. |
+| Delete library Confirm/Cancel unclickable | Theme CSS under `static/library/themes/` can pin `.modal` under `.modal-backdrop`. Current Libraries page ships **inline** stacking CSS + moves the modal to `document.body` (works after **app rebuild/restart** without Reset Themes). Also run **Admin → Themes → Reset Themes** so library theme CSS/JS match the image. Hard-refresh Admin → Libraries. |
 
 ## Scans / identify
 

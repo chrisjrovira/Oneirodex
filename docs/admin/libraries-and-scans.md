@@ -11,7 +11,7 @@ Admin surfaces today are **Jinja** under `base_admin` (top bar). A React admin S
 
 ## Delete a library
 
-Admin → Libraries → **Delete** opens a Bootstrap confirm modal. Confirm/Cancel must be clickable (dialog stacks above the backdrop). If buttons look present but do not respond, hard-refresh after upgrade — see [troubleshooting.md](troubleshooting.md#libraries--admin-ui).
+Admin → Libraries → **Delete** opens a Bootstrap confirm modal. Confirm/Cancel must be clickable. If buttons look present but do not respond: rebuild/restart the app (page includes inline stacking CSS), hard-refresh, then optionally **Admin → Themes → Reset Themes** so `library/themes` copies pick up theme CSS/JS fixes — [troubleshooting.md](troubleshooting.md).
 
 ## Run a scan
 

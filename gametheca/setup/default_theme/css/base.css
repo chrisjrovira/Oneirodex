@@ -957,7 +957,8 @@ form textarea {
     100% { transform: rotate(360deg); }
 }
 
-.modal {
+/* Legacy custom modals only — Bootstrap `.modal.fade` must not inherit z-index 1000. */
+.modal:not(.fade) {
     display: none;
     position: fixed;
     z-index: 1000;
@@ -967,10 +968,9 @@ form textarea {
     height: 100%;
     overflow: auto;
     background-color: rgb(0,0,0);
-    background-color: rgba(0,0,0,0.4); 
-  }
+    background-color: rgba(0,0,0,0.4);
+}
 
-/* Prefer modal-components.css; keep Bootstrap fade dialogs above backdrop if this file wins. */
 .modal.fade {
     z-index: var(--bs-modal-zindex, 1055);
     background-color: transparent;

@@ -50,11 +50,21 @@ document.addEventListener('DOMContentLoaded', function() {
     var baseProgressUrl = deleteConfig ? deleteConfig.getAttribute('data-progress-url') : null;
     var baseCheckProgressUrl = deleteConfig ? deleteConfig.getAttribute('data-check-progress-url') : null;
     var deleteModalEl = document.getElementById('deleteWarningModal');
-    var deleteWarningModal = bootstrap.Modal.getOrCreateInstance(deleteModalEl);
+    // Host on body so theme/admin stacking contexts cannot trap the dialog under the backdrop.
+    if (deleteModalEl && deleteModalEl.parentElement !== document.body) {
+        document.body.appendChild(deleteModalEl);
+    }
+    var deleteWarningModal = bootstrap.Modal.getOrCreateInstance(deleteModalEl, {
+        backdrop: true,
+        keyboard: true,
+        focus: true
+    });
 
     // Handle individual delete buttons
     document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
             console.log('clicked delete button');
             var libraryUuid = this.getAttribute('data-library-uuid');
             document.querySelector('#deleteWarningModal .modal-body').textContent = 'Are you sure you want to delete this library? This action cannot be undone.';
@@ -63,7 +73,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             deleteWarningModal.show();
 
-            confirmDeleteButton.onclick = function() {
+            confirmDeleteButton.onclick = function(confirmEvent) {
+                confirmEvent.preventDefault();
+                confirmEvent.stopPropagation();
                 // Hide the modal
                 deleteWarningModal.hide();
                 // Show the spinner with initial progress
