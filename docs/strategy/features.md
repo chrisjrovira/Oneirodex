@@ -43,7 +43,7 @@ Each plan is implementation-ready at the *decision* level (scope, files, risks, 
 
 ## Program note — Systems hub + Admin SPA (Jul 26)
 
-**Shipped:** Member SPA top nav; Style B+C green `#2fd67b`; **Systems** hub (`/systems`) with family marks + platform skins; `member-app.css` required in dist; `GENERATOR_VERSION` 6.
+**Shipped:** Member SPA top nav; Style B+C green `#2fd67b`; **Systems** hub (`/systems`) with family marks + platform skins; `member-app.css` required in dist; `GENERATOR_VERSION` 8.
 
 **In progress:** Migrate `base_admin` Jinja (~38 pages) → React **`frontend/admin-app`** on `/admin/*` with progressive redirects. Program canvas:
 `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`

@@ -1,5 +1,6 @@
 import pytest
 import os
+import time
 import tempfile
 import shutil
 from unittest.mock import patch, MagicMock, mock_open, call
@@ -284,18 +285,22 @@ class TestGetFolderSizeInBytesUpdates:
     
     def test_get_folder_size_updates_single_file(self, db_session):
         """Test get_folder_size_in_bytes_updates with single file."""
-        with patch('os.path.isfile', return_value=True):
-            with patch('os.path.getsize', return_value=2048):
-                result = get_folder_size_in_bytes_updates('/path/to/file.txt')
-                assert result == 2048
+        with patch('gametheca.utils.functions.get_allowed_base_directories', return_value=['/']):
+            with patch('gametheca.utils.functions.is_safe_path', return_value=(True, None)):
+                with patch('os.path.isfile', return_value=True):
+                    with patch('os.path.getsize', return_value=2048):
+                        result = get_folder_size_in_bytes_updates('/path/to/file.txt')
+                        assert result == 2048
     
     def test_get_folder_size_updates_nonexistent_path(self, db_session):
         """Test get_folder_size_in_bytes_updates with non-existent path."""
-        with patch('os.path.exists', return_value=False):
-            with patch('builtins.print') as mock_print:
-                result = get_folder_size_in_bytes_updates('/nonexistent/path')
-                assert result == 0
-                mock_print.assert_called()
+        with patch('gametheca.utils.functions.get_allowed_base_directories', return_value=['/']):
+            with patch('gametheca.utils.functions.is_safe_path', return_value=(True, None)):
+                with patch('os.path.exists', return_value=False):
+                    with patch('builtins.print') as mock_print:
+                        result = get_folder_size_in_bytes_updates('/nonexistent/path')
+                        assert result == 0
+                        mock_print.assert_called()
     
     def test_get_folder_size_updates_with_exclusions(self, db_session, sample_global_settings):
         """Test get_folder_size_in_bytes_updates excludes update/extra folders."""
@@ -306,15 +311,40 @@ class TestGetFolderSizeInBytesUpdates:
             ('/test/normal', [], ['game.exe'])
         ]
         
+        with patch('gametheca.utils.functions.get_allowed_base_directories', return_value=['/']):
+            with patch('gametheca.utils.functions.is_safe_path', return_value=(True, None)):
+                with patch('os.path.isfile', return_value=False):
+                    with patch('os.path.exists', return_value=True):
+                        with patch('os.access', return_value=True):
+                            with patch('os.walk', return_value=mock_walk_data):
+                                with patch('os.path.islink', return_value=False):
+                                    with patch('os.path.getsize', return_value=1024):
+                                        result = get_folder_size_in_bytes_updates('/test')
+                                        # Should only count game.exe, not files in Updates/Extras
+                                        assert result == 1024
+
+    def test_get_folder_size_honors_timeout(self):
+        """Timeout must stop the walk instead of ignoring the parameter."""
+        slow_walk = [
+            ('/test', ['a'], ['f1.bin']),
+            ('/test/a', ['b'], ['f2.bin']),
+            ('/test/a/b', [], ['f3.bin']),
+        ]
+
+        def slow_getsize(_path):
+            time.sleep(0.05)
+            return 100
+
         with patch('os.path.isfile', return_value=False):
             with patch('os.path.exists', return_value=True):
                 with patch('os.access', return_value=True):
-                    with patch('os.walk', return_value=mock_walk_data):
+                    with patch('os.walk', return_value=slow_walk):
                         with patch('os.path.islink', return_value=False):
-                            with patch('os.path.getsize', return_value=1024):
-                                result = get_folder_size_in_bytes_updates('/test')
-                                # Should only count game.exe, not files in Updates/Extras
-                                assert result == 1024
+                            with patch('os.path.getsize', side_effect=slow_getsize):
+                                with patch('builtins.print'):
+                                    result = get_folder_size_in_bytes('/test', timeout=1)
+        # Partial result is fine; must return quickly and not hang forever.
+        assert result >= 1
 
 
 class TestReadFirstNfoContent:

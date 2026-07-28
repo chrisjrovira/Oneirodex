@@ -12,7 +12,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 
 | Audience | Go to |
 |---|---|
-| End users | [user/getting-started.md](user/getting-started.md) · [faq.md](user/faq.md) · [troubleshooting.md](user/troubleshooting.md) · [browser-play.md](user/browser-play.md) · [desktop-companion.md](user/desktop-companion.md) · [translation-patches.md](user/translation-patches.md) · [free-games.md](user/free-games.md) · [social-and-voice.md](user/social-and-voice.md) · [library-and-systems.md](user/library-and-systems.md) · [preferences-themes.md](user/preferences-themes.md) · [downloads.md](user/downloads.md) |
+| End users | [user/getting-started.md](user/getting-started.md) · [faq.md](user/faq.md) · [troubleshooting.md](user/troubleshooting.md) · [browser-play.md](user/browser-play.md) · [desktop-companion.md](user/desktop-companion.md) · [controllers-and-vr.md](user/controllers-and-vr.md) · [translation-patches.md](user/translation-patches.md) · [free-games.md](user/free-games.md) · [social-and-voice.md](user/social-and-voice.md) · [library-and-systems.md](user/library-and-systems.md) · [preferences-themes.md](user/preferences-themes.md) · [downloads.md](user/downloads.md) |
 | Operators / Unraid | [runbooks/unraid-deploy.md](runbooks/unraid-deploy.md) |
 | Operators / Docker Compose | [runbooks/docker-compose-deploy.md](runbooks/docker-compose-deploy.md) — optional `--profile livekit` · `--profile clamav` |
 | Operators / observability (optional) | [runbooks/observability-profile.md](runbooks/observability-profile.md) — Prometheus stub; Admin Ops is default |

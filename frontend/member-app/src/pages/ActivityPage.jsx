@@ -97,36 +97,44 @@ export function ActivityPage() {
       timer = window.setInterval(pollFallback, ms)
     }
 
-    try {
-      source = new EventSource('/api/activity/stream')
-      source.addEventListener('hello', () => {
-        sseLive = true
-        startSlowPoll()
-      })
-      source.addEventListener('activity', () => {
-        sseLive = true
-        fetchActivity({ friendsOnly }).then(setData).catch(() => {})
-        fetchSocial().then(setSocial).catch(() => {})
-      })
-      source.addEventListener('presence', () => {
-        sseLive = true
-        fetchSocial().then(setSocial).catch(() => {})
-        fetchFriends().then((friendData) => {
-          setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
-        }).catch(() => {})
-      })
-      source.onerror = () => {
+    let sseTimer = 0
+
+    function connectSse() {
+      try {
+        source = new EventSource('/api/activity/stream')
+        source.addEventListener('hello', () => {
+          sseLive = true
+          startSlowPoll()
+        })
+        source.addEventListener('activity', () => {
+          sseLive = true
+          fetchActivity({ friendsOnly }).then(setData).catch(() => {})
+          fetchSocial().then(setSocial).catch(() => {})
+        })
+        source.addEventListener('presence', () => {
+          sseLive = true
+          fetchSocial().then(setSocial).catch(() => {})
+          fetchFriends().then((friendData) => {
+            setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
+          }).catch(() => {})
+        })
+        source.onerror = () => {
+          sseLive = false
+          startSlowPoll()
+        }
+      } catch {
+        source = null
         sseLive = false
-        startSlowPoll()
       }
-    } catch {
-      source = null
-      sseLive = false
     }
+
+    // Poll first; defer SSE so initial Activity fetches aren't racing the stream.
     startSlowPoll()
+    sseTimer = window.setTimeout(connectSse, 500)
     return () => {
       cleanup?.()
       window.clearInterval(timer)
+      window.clearTimeout(sseTimer)
       source?.close()
     }
   }, [friendsOnly])

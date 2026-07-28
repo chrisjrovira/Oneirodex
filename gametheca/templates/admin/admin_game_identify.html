@@ -16,10 +16,10 @@
 </head>
 <body>
     <!-- Loading Spinner -->
-    <div id="saveSpinner" class="spinner-overlay" style="display: none;">
+    <div id="saveSpinner" class="spinner-overlay" style="display: none;" role="status" aria-live="assertive" aria-busy="true">
         <div class="spinner-container">
-            <img src="{{ url_for('static', filename='newstyle/searching_small.gif') }}" alt="Loading...">
-            <div class="progress-text">Saving game...</div>
+            <span class="gt-spinner gt-spinner--lg" aria-hidden="true"></span>
+            <div class="progress-text">Saving game…</div>
         </div>
     </div>
 

@@ -36,7 +36,12 @@ Attach with `@` in a chat (skills have `disable-model-invocation: true` — expl
 | **agent-gamemaster** | Games/systems/formats/DAT/metadata domain (seat 7) |
 | **agent-ops** | Unraid/Compose health, ops glance, probes (seat 8) |
 
-Typical wave: `@agent-pm` → (`@agent-gamemaster` if taxonomy) → (`@agent-ops` if deploy/health) → implementers → `@agent-qa` → `@agent-docs` if needed.
+Typical wave (Task-first): parent acts as **PM** → optional GM/Ops consult → **Task** implementers in parallel → Task **QA** → Task **Docs** (docs-sync + program canvas Done/Next/Blocked/Team flow). Parent does **not** land product code when seats exist (always-apply `pm-disperse.mdc`).
+
+**Program canvas:**  
+`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx` — Docs owns the file; PM owns the content brief.
+
+**Unraid test bed:** Ops sections games RO vs library RW mounts; Backend keeps Admin → Ops / scan progress honest; QA smokes `/readyz` + Ops glance.
 
 Official **1.0.0** gate board: [../strategy/v1-readiness.md](../strategy/v1-readiness.md).
 

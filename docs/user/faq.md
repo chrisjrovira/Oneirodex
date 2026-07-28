@@ -67,4 +67,9 @@ No — claim on the store, then sync Ownership for badges. Local DRM-free librar
 
 ## Big Picture
 
-Gamepad-friendly browse at **More → Big Picture**. Esc exits; Attract opens trailers.
+Gamepad-friendly browse at **More → Big Picture**. Esc exits; Attract opens trailers. Full button map (Xbox + DualSense): [controllers-and-vr.md](controllers-and-vr.md).
+
+## VR / headsets
+
+`/vr` is headset-friendly browse (admin flag), **not Quest-only** — PSVR2/SteamVR use a desktop browser on the PC; Quest friends use the headset browser/PWA. See [controllers-and-vr.md](controllers-and-vr.md).
+

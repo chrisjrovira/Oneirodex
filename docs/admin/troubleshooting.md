@@ -9,7 +9,9 @@ See [container-wont-start.md](../runbooks/container-wont-start.md) for SECRET_KE
 | App unhealthy | `curl -f http://localhost:5006/readyz` · `docker compose logs app` · DB healthy? Compose probes **`/readyz`** (not `/`) |
 | Liveness only | `curl -f http://localhost:5006/healthz` — process up; does not prove DB |
 | Sidecars / queues look wrong | **Admin → Ops** (or Dashboard) **Services** tile — LiveKit · malware · companions · queues; then `/readyz` — field map: [ops-summary.md](ops-summary.md) |
+| Scan progress looks stalled / want live counters | **Admin → Ops** **Scans** tile (polls `/admin/api/ops/summary` ~15s) shows `folders_success` / `failed` / `total`, `current_processing`, status — [ops-summary.md](ops-summary.md#scans-key) · Scan Jobs page for Stop/detail |
 | Schema errors | Startup `updateschema` · [local-postgres-pytest.md](../runbooks/local-postgres-pytest.md) for local tests |
+| App loops waiting for DB: `no pg_hba … no encryption` | Postgres rejects non-SSL from Docker bridge — [container-wont-start §3b](../runbooks/container-wont-start.md#3b-postgres-up-but-pg_hba-rejects-app-no-encryption); recreate `db` with current Compose `pg_hba` mount |
 
 ## Frontend dist missing
 
@@ -18,6 +20,18 @@ Rebuild so `gametheca/static/dist/member-app` and `admin-app` exist:
 ```bash
 docker compose build --no-cache && docker compose up -d
 ```
+
+## SPA navigates but pages/admin hang (Discover stuck on Loading)
+
+Default Docker uses **`UVICORN_WORKERS=1`**. A long-lived sync SSE on `/api/activity/stream` used to run through WsgiToAsgi and **starve** Discover, Library APIs, and Jinja admin on that same worker. Symptoms: shell/nav works, CSS/JS 200, `/api/activity/stream` 200, then **no** `/api/discover/sections` (or admin never finishes).
+
+**Fix (current code):** ASGI serves `/api/activity/stream` and `/api/events/stream` natively (non-blocking); Flask WSGI handlers return **503** if reached. The Friends companion only opens activity SSE when the dock is open. Rebuild/restart the app container after pull:
+
+```bash
+docker compose build app && docker compose up -d app
+```
+
+Confirm in logs that after `/discover` you also see `GET /api/discover/sections` (or Admin HTML) completing. Keep `UVICORN_WORKERS=1` unless you accept split in-process SSE/schedulers — see [docker-compose-deploy.md](../runbooks/docker-compose-deploy.md).
 
 ## Features / modules
 
@@ -54,4 +68,12 @@ Expected if `SUPPORT_GITHUB_TOKEN` unset (`github_sync=skipped`). Ticket + admin
 
 ## Scans / identify
 
-Stuck jobs, unmatched, freshness: [libraries-and-scans.md](libraries-and-scans.md). Deep ops still use Jinja admin pages behind the React top bar.
+| Symptom | Check |
+|---|---|
+| Listing finds many games but each identify takes forever | Fixed: scan identify no longer walks the whole game tree for size before commit; size fills in background. Restart app / re-run scan after upgrade. |
+| Size shows `0.00 KB` briefly after scan | Expected until deferred size job finishes (large Unraid trees). |
+| Progress stuck at 1 while library keeps growing | Fixed: multithreaded counter races + Stop early-exit. Redeploy app; counters use atomic bumps and Stop drains in-flight work. |
+| Stop button looks empty / Cancelled shows `-` | Fixed: Stopping shows “Stopping…”; Cancelled shows `Stopped N/total`. Hard-refresh scan management after upgrade. |
+| Stuck jobs / unmatched / freshness | [libraries-and-scans.md](libraries-and-scans.md) |
+
+Deep ops still use Jinja admin pages behind the React top bar.

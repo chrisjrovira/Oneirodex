@@ -153,8 +153,9 @@
                                     <button type="submit" name="submit" value="AutoScan" class="btn btn-primary browse-btn" style="margin-right: 10px;">
                                         {{ icons.icon('play') }} Start Scan
                                     </button>
-                                    <div id="loadingSpinner" class="loading-spinner" style="display: none;">
-                                        <img src="/static/newstyle/searching_small.gif" alt="Loading...">
+                                    <div id="loadingSpinner" class="loading-spinner" style="display: none;" role="status" aria-live="polite">
+                                        <span class="gt-spinner gt-spinner--lg" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Loading folders…</span>
                                     </div>
                                 </div>
                                 <div class="input-with-button">
@@ -318,8 +319,9 @@
                         <button id="upFolderBtnManual" type="button" class="admin_manage_scanjobs-browsefolders-up-btn btn btn-secondary" style="display: none;">Up</button>
                     </div>
                 </form>
-                <div id="loadingSpinnerManual" class="loading-spinner">
-                    <img src="/static/newstyle/searching_small.gif" alt="Loading...">
+                <div id="loadingSpinnerManual" class="loading-spinner" style="display: none;" role="status" aria-live="polite">
+                    <span class="gt-spinner gt-spinner--lg" aria-hidden="true"></span>
+                    <span class="visually-hidden">Loading folders…</span>
                 </div>
                 <div id="folderContentsManual"></div>
             
@@ -351,8 +353,9 @@
                         <h3>Resolve Unmatched Folders</h3>
                     </div>
                     <!-- spinner -->
-                    <div id="globalSpinner" style="display: none;">
-                        <img src="{{ url_for('static', filename='/newstyle/searching.gif') }}" alt="Loading...">
+                    <div id="globalSpinner" class="gt-loading-overlay" style="display: none;" role="status" aria-live="polite" aria-busy="true">
+                        <span class="gt-spinner gt-spinner--lg" aria-hidden="true"></span>
+                        <span class="visually-hidden">Working…</span>
                     </div>
 
                     <div class="container-unmatched-buttons mb-3">

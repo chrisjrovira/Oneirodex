@@ -45,8 +45,11 @@ export function AdminTopNav() {
   return (
     <header className="gt-admin-topbar">
       <a className="gt-admin-brand" href="/admin/dashboard">
-        <img src="/static/newstyle/gametheca_mark.svg" alt="" width={28} height={28} />
-        <span>Admin</span>
+        <img src="/static/newstyle/gametheca_mark.svg" alt="" width={24} height={24} />
+        <span className="gt-admin-brand-text">
+          <span className="gt-admin-brand-name">GameTheca</span>
+          <span className="gt-admin-brand-role">Admin</span>
+        </span>
       </a>
       <nav className="gt-admin-nav" aria-label="Admin">
         {ADMIN_NAV.map((link) => (
@@ -61,20 +64,20 @@ export function AdminTopNav() {
       </nav>
       <div className="gt-admin-actions">
         {!onDashboard ? (
-          <a className="gt-btn" href="/admin/dashboard">
-            Back to dashboard
+          <a className="gt-btn gt-btn--quiet" href="/admin/dashboard">
+            Dashboard
           </a>
         ) : null}
-        {sectionHome.href !== '/admin/dashboard' ? (
-          <a className="gt-btn" href={sectionHome.href}>
+        {sectionHome.href !== '/admin/dashboard' && sectionHome.href !== pathname ? (
+          <a className="gt-btn gt-btn--quiet" href={sectionHome.href}>
             {sectionHome.label}
           </a>
         ) : null}
-        <a className="gt-btn" href="/library">
-          Back to library
+        <a className="gt-btn gt-btn--quiet" href="/library">
+          Library
         </a>
-        <a className="gt-btn" href="/logout">
-          Logout
+        <a className="gt-btn gt-btn--quiet" href="/logout">
+          Log out
         </a>
       </div>
     </header>

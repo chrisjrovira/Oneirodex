@@ -316,10 +316,9 @@ class TestProcessGameWithFallback:
         )
         
         assert result is False
-        # The scan_job object should be updated in memory but not necessarily committed
-        # Let's fetch it fresh from the database to check
+        # Coordinator owns folders_failed — workers must not bump it (race with MT progress).
         fresh_scan_job = db_session.get(ScanJob, sample_scan_job.id)
-        assert fresh_scan_job.folders_failed == original_failed_count + 1
+        assert fresh_scan_job.folders_failed == original_failed_count
     
     @patch('gametheca.utils.scanning.try_add_game')
     @patch('gametheca.utils.scanning.log_unmatched_folder')

@@ -385,11 +385,13 @@ class TestImageProcessingFunctions:
 
     @patch('gametheca.utils.game_core.smart_process_images_for_game')
     @patch('gametheca.utils.game_core.enrich_game_with_steam')
+    @patch('gametheca.utils.game_core.get_folder_size_in_bytes_updates')
     def test_queue_post_identify_enrichment_inline(
-        self, mock_steam, mock_images, app, db_session, sample_game, sample_global_settings
+        self, mock_size, mock_steam, mock_images, app, db_session, sample_game, sample_global_settings
     ):
         sample_global_settings.enable_hltb_integration = False
         db_session.commit()
+        mock_size.return_value = 4096
 
         with app.app_context():
             queue_post_identify_enrichment(
@@ -401,9 +403,12 @@ class TestImageProcessingFunctions:
                 run_inline=True,
             )
 
+        mock_size.assert_called_once()
         mock_steam.assert_called_once()
         mock_images.assert_called_once()
         assert mock_images.call_args.kwargs.get('download_immediately') is True
+        db_session.refresh(sample_game)
+        assert sample_game.size == 4096
 
     @patch('gametheca.utils.game_core.queue_post_identify_enrichment')
     @patch('gametheca.utils.game_core.enrich_game_with_steam')
@@ -467,6 +472,7 @@ class TestImageProcessingFunctions:
         assert result == mock_game
         mock_steam.assert_not_called()
         mock_smart_images.assert_not_called()
+        mock_folder_size.assert_not_called()
         mock_queue.assert_called_once()
         assert mock_queue.call_args.kwargs.get('fetch_hltb') is True
 

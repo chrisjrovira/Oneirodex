@@ -79,7 +79,9 @@ def build_discover_sections(user) -> list[dict]:
     visible_sections = db.session.execute(
         select(DiscoverySection).filter_by(is_visible=True).order_by(DiscoverySection.display_order)
     ).scalars().all()
-    settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    settings = db.session.execute(
+        select(GlobalSettings).order_by(GlobalSettings.id).limit(1)
+    ).scalars().first()
     favorite_game_uuids = {game.uuid for game in user.favorites}
     owned_game_uuids = get_matched_owned_game_uuids(user.id)
     lifecycle_map = load_lifecycle_map(user.id)
@@ -141,30 +143,50 @@ def build_discover_sections(user) -> list[dict]:
                 'image_url': lib.image_url
             } for lib in libraries]
         elif section.identifier == 'latest_games':
-            section_data['latest_games'] = fetch_game_details(db.session.execute(
-                apply_game_access_filters(select(Game).order_by(Game.date_created.desc()), user)
-            ).scalars().all())
+            section_data['latest_games'] = fetch_game_details(
+                db.session.execute(
+                    apply_game_access_filters(
+                        select(Game).order_by(Game.date_created.desc()).limit(8),
+                        user,
+                    )
+                ).scalars().all()
+            )
         elif section.identifier == 'most_downloaded':
-            section_data['most_downloaded'] = fetch_game_details(db.session.execute(
-                apply_game_access_filters(
-                    select(Game).filter(Game.times_downloaded > 0).order_by(Game.times_downloaded.desc()),
-                    user,
-                )
-            ).scalars().all())
+            section_data['most_downloaded'] = fetch_game_details(
+                db.session.execute(
+                    apply_game_access_filters(
+                        select(Game)
+                        .filter(Game.times_downloaded > 0)
+                        .order_by(Game.times_downloaded.desc())
+                        .limit(8),
+                        user,
+                    )
+                ).scalars().all()
+            )
         elif section.identifier == 'highest_rated':
-            section_data['highest_rated'] = fetch_game_details(db.session.execute(
-                apply_game_access_filters(
-                    select(Game).filter(Game.rating.isnot(None)).order_by(Game.rating.desc()),
-                    user,
-                )
-            ).scalars().all())
+            section_data['highest_rated'] = fetch_game_details(
+                db.session.execute(
+                    apply_game_access_filters(
+                        select(Game)
+                        .filter(Game.rating.isnot(None))
+                        .order_by(Game.rating.desc())
+                        .limit(8),
+                        user,
+                    )
+                ).scalars().all()
+            )
         elif section.identifier == 'last_updated':
-            section_data['last_updated'] = fetch_game_details(db.session.execute(
-                apply_game_access_filters(
-                    select(Game).filter(Game.last_updated.isnot(None)).order_by(Game.last_updated.desc()),
-                    user,
-                )
-            ).scalars().all())
+            section_data['last_updated'] = fetch_game_details(
+                db.session.execute(
+                    apply_game_access_filters(
+                        select(Game)
+                        .filter(Game.last_updated.isnot(None))
+                        .order_by(Game.last_updated.desc())
+                        .limit(8),
+                        user,
+                    )
+                ).scalars().all()
+            )
         elif section.identifier == 'most_favorited':
             fav_counts = (
                 select(
@@ -178,7 +200,8 @@ def build_discover_sections(user) -> list[dict]:
                 apply_game_access_filters(
                     select(Game)
                     .join(fav_counts, Game.uuid == fav_counts.c.game_uuid)
-                    .order_by(fav_counts.c.favorite_count.desc()),
+                    .order_by(fav_counts.c.favorite_count.desc())
+                    .limit(8),
                     user,
                 )
             ).scalars().all()

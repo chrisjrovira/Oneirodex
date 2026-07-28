@@ -1,5 +1,24 @@
 # GameTheca Docker Compose — Unraid / NAS
 # App always connects to the Compose service named "db".
+#
+# ---------------------------------------------------------------------------
+# UNRAID VOLUMES (host .env → container mounts)
+# Do NOT conflate these two mounts.
+#
+#   GAMES (scan root only — never uploads)
+#     Host:    DATA_FOLDER_GAMES  (alias: DATA_FOLDER_WAREZ, deprecated)
+#     Mount:   → /storage:ro
+#     App env: DATA_FOLDER_GAMES=/storage  (container path; hard-set below)
+#
+#   LIBRARY / UPLOADS (covers, themes, user uploads)
+#     Host:    LIBRARY_HOST_PATH
+#     Mount:   → /app/gametheca/static/library  (RW)
+#     App env: UPLOAD_FOLDER=/app/gametheca/static/library  (hard-set below)
+#
+# Unraid path examples: .env.unraid.example
+# Profiles (opt-in): livekit | clamav | challenge
+# Observability: commented stub only — see docs/runbooks/observability-profile.md
+# ---------------------------------------------------------------------------
 
 services:
   app:
@@ -15,6 +34,7 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-gametheca}
       - DATABASE_HOST=db
       - DATABASE_PORT=5432
+      # Container paths (always); host paths live on the volume mounts below
       - DATA_FOLDER_GAMES=/storage
       - UPLOAD_FOLDER=/app/gametheca/static/library
       - SECRET_KEY=${SECRET_KEY}
@@ -75,8 +95,11 @@ services:
       - UVICORN_WORKERS=${UVICORN_WORKERS:-1}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # ----- UNRAID VOLUMES (see header) -----
     volumes:
+      # Games: host DATA_FOLDER_GAMES → scan root only (RO). Never put uploads here.
       - "${DATA_FOLDER_GAMES:-${DATA_FOLDER_WAREZ}}:/storage:ro"
+      # Library/uploads: host LIBRARY_HOST_PATH → covers, themes, uploads (RW)
       - "${LIBRARY_HOST_PATH:-./data/library}:/app/gametheca/static/library"
       # Optional WebRetro cores bind-mount (PCE/VICE/DOS). Host dir must include
       # the shipped 24 cores OR run scripts/fetch-webretro-cores.sh --defaults first —
@@ -103,8 +126,17 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_DB=${POSTGRES_DB:-gametheca}
       - PGDATA=/var/lib/postgresql/data/pgdata
+    # Force a Compose-friendly HBA so Docker-bridge IPs can connect without SSL.
+    # (Stale volume pg_hba with only hostssl → "no encryption" / no pg_hba entry.)
+    command:
+      - postgres
+      - -c
+      - listen_addresses=*
+      - -c
+      - hba_file=/etc/gametheca/pg_hba.conf
     volumes:
       - db_data:/var/lib/postgresql/data/pgdata
+      - ./docker/postgres/pg_hba.conf:/etc/gametheca/pg_hba.conf:ro
     ports:
       # Host access for local pytest / native app against Compose Postgres
       - "${POSTGRES_HOST_PORT:-5432}:5432"

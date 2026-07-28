@@ -611,18 +611,22 @@ form textarea {
 }
 
 .spinner-container {
-    background: var(--text-white);
+    background: color-mix(in srgb, var(--gt-surface, #121812) 96%, transparent);
+    color: var(--gt-text, #f3f6f4);
     padding: var(--spacing-lg);
     border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-glass);
+    border: 1px solid color-mix(in srgb, var(--gt-text, #fff) 12%, transparent);
     text-align: center;
-    min-width: 300px;
+    min-width: 240px;
+}
+
+.spinner-container .gt-spinner {
+    margin: 0 auto 0.75rem;
+    color: var(--gt-accent, #2fd67b);
 }
 
 .spinner-container img {
-    width: 50px;
-    height: 50px;
-    margin-bottom: var(--spacing-md);
+    display: none; /* legacy GIF loaders removed */
 }
 
 .admin-section {

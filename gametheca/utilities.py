@@ -15,7 +15,7 @@ from gametheca.models import (
 from gametheca import db
 from gametheca.utils.game_core import remove_from_lib
 from gametheca.utils.gamenames import get_game_names_from_folder, get_game_names_from_files
-from gametheca.utils.scanning import process_game_with_fallback, process_game_updates, process_game_extras, is_scan_job_running
+from gametheca.utils.scanning import process_game_with_fallback, process_game_updates, process_game_extras, is_scan_job_running, bump_scan_job_progress
 from gametheca.utils.igdb_api import IGDBRateLimiter
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories
 
@@ -286,81 +286,119 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
         return result
     
     # Process games either sequentially or in parallel based on thread count
+    scan_was_cancelled = False
+    scan_job_id = scan_job_entry.id
+    total_to_process = len(game_names_with_paths)
     if scan_thread_count > 1:
         # Multithreaded processing
         print(f"Using multithreaded scanning with {scan_thread_count} threads")
+        processed_count = 0
         with ThreadPoolExecutor(max_workers=scan_thread_count) as executor:
             # Submit all game processing tasks
             future_to_game = {
-                executor.submit(process_single_game, game_info, scan_job_entry.id, library_uuid,
+                executor.submit(process_single_game, game_info, scan_job_id, library_uuid,
                               update_folder_name, extras_folder_name, enable_game_updates, enable_game_extras,
                               existing_game_paths, existing_unmatched_paths, igdb_rate_limiter, current_app._get_current_object(),
                               force_updates_extras_scan, fetch_hltb, force_hltb_refetch, settings_dict): game_info
                 for game_info in game_names_with_paths
             }
             
-            # Process completed futures
+            # Process completed futures — always count first, then honor Stop by
+            # cancelling pending work and draining in-flight results (do not return early).
             for future in as_completed(future_to_game):
                 # Discard any worker-touched session state on the coordinator thread.
                 db.session.remove()
 
-                # Check for shutdown request
-                from gametheca.utils.shutdown import should_continue_processing
-                if not should_continue_processing():
-                    print("🛑 Shutdown requested during scan, cancelling remaining tasks...")
-                    # Cancel remaining tasks
-                    for f in future_to_game:
-                        f.cancel()
-                    scan_job_entry = db.session.get(ScanJob, scan_job_entry.id)
-                    if scan_job_entry:
-                        scan_job_entry.status = 'Cancelled'
-                        scan_job_entry.error_message = 'Scan cancelled due to application shutdown'
-                        db.session.commit()
-                    return
-                
-                # Check if the job is still enabled
-                scan_job_entry = db.session.get(ScanJob, scan_job_entry.id)
-                if not scan_job_entry or not scan_job_entry.is_enabled:
-                    # Cancel remaining tasks
-                    for f in future_to_game:
-                        f.cancel()
-                    if scan_job_entry:
-                        scan_job_entry.status = 'Cancelled'
-                        scan_job_entry.error_message = 'Scan cancelled by user'
-                        scan_job_entry.current_processing = None
-                        db.session.commit()
-                    return
-                
+                if future.cancelled():
+                    continue
+
                 game_info = future_to_game[future]
                 try:
                     result = future.result()
-                    if result['success']:
-                        scan_job_entry.folders_success += 1
-                    elif result.get('unmatched'):
-                        # Unmatched games are not errors, just increment failed count for tracking
-                        scan_job_entry.folders_failed += 1
-                        print(f"[SCAN INFO] Game '{result['game_name']}' was unmatched (not an error)")
+                    processed_count += 1
+                    label = (
+                        f"Processing: {result.get('game_name') or game_info['name']} "
+                        f"({processed_count}/{total_to_process})"
+                    )
+                    if result.get('success'):
+                        bump_scan_job_progress(
+                            scan_job_id,
+                            success=True,
+                            current_processing=label,
+                        )
                     else:
-                        scan_job_entry.folders_failed += 1
-                        
-                    # Only add actual errors to error_message, not unmatched games
-                    if result.get('error') and not result.get('unmatched'):
-                        error_line = f"Failed to process '{result['game_name']}': {result['error']}"
-                        scan_job_entry.error_message = (scan_job_entry.error_message or "") + f"{error_line}\n"
-                        print(f"[SCAN ERROR] {error_line}")
-                        print(f"[SCAN ERROR] Game path: {future_to_game[future]['full_path']}")
-                        print(f"[SCAN ERROR] Full result: {result}")
+                        bump_scan_job_progress(
+                            scan_job_id,
+                            failed=True,
+                            current_processing=label,
+                        )
+                        if result.get('unmatched'):
+                            print(f"[SCAN INFO] Game '{result['game_name']}' was unmatched (not an error)")
+                        elif result.get('error'):
+                            error_line = f"Failed to process '{result['game_name']}': {result['error']}"
+                            job_row = db.session.get(ScanJob, scan_job_id)
+                            if job_row:
+                                job_row.error_message = (job_row.error_message or "") + f"{error_line}\n"
+                                db.session.commit()
+                            print(f"[SCAN ERROR] {error_line}")
+                            print(f"[SCAN ERROR] Game path: {game_info.get('full_path')}")
+                            print(f"[SCAN ERROR] Full result: {result}")
                         
                 except Exception as e:
-                    scan_job_entry.folders_failed += 1
+                    processed_count += 1
+                    bump_scan_job_progress(
+                        scan_job_id,
+                        failed=True,
+                        current_processing=f"Error: {game_info['name']} ({processed_count}/{total_to_process})",
+                    )
                     error_line = f"Exception processing '{game_info['name']}': {str(e)}"
-                    scan_job_entry.error_message = (scan_job_entry.error_message or "") + f"{error_line}\n"
+                    job_row = db.session.get(ScanJob, scan_job_id)
+                    if job_row:
+                        job_row.error_message = (job_row.error_message or "") + f"{error_line}\n"
+                        db.session.commit()
                     print(f"[SCAN EXCEPTION] {error_line}")
                     print(f"[SCAN EXCEPTION] Game path: {game_info.get('full_path', 'unknown')}")
                     print(f"[SCAN EXCEPTION] Full exception: {repr(e)}")
                     import traceback
                     print(f"[SCAN EXCEPTION] Traceback: {traceback.format_exc()}")
-                    
+
+                # After counting, check shutdown / user Stop
+                from gametheca.utils.shutdown import should_continue_processing
+                scan_job_entry = db.session.get(ScanJob, scan_job_id)
+                stop_requested = (
+                    not should_continue_processing()
+                    or not scan_job_entry
+                    or not scan_job_entry.is_enabled
+                )
+                if stop_requested:
+                    scan_was_cancelled = True
+                    for f in future_to_game:
+                        if not f.done():
+                            f.cancel()
+                    if scan_job_entry:
+                        scan_job_entry.status = 'Stopping'
+                        if not should_continue_processing():
+                            scan_job_entry.error_message = 'Scan cancelled due to application shutdown'
+                        else:
+                            scan_job_entry.error_message = (
+                                scan_job_entry.error_message
+                                or 'Scan is stopping, waiting for in-flight folders to finish'
+                            )
+                        scan_job_entry.current_processing = (
+                            f"Stopping… ({processed_count}/{total_to_process})"
+                        )
+                        db.session.commit()
+                    # Keep draining as_completed so in-flight results still bump counters
+
+            # Finalize cancel after all futures settled (executor context waits on exit too)
+            db.session.remove()
+            scan_job_entry = db.session.get(ScanJob, scan_job_id)
+            if scan_was_cancelled and scan_job_entry:
+                scan_job_entry.status = 'Cancelled'
+                if not scan_job_entry.error_message or 'stopping' in (scan_job_entry.error_message or '').lower():
+                    scan_job_entry.error_message = 'Scan cancelled by user'
+                scan_job_entry.current_processing = None
+                scan_job_entry.is_enabled = False
                 db.session.commit()
     else:
         # Sequential processing (original behavior)
@@ -374,33 +412,43 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
         scan_start_time = datetime.now()
         
         for game_info in game_names_with_paths:
-            db.session.refresh(scan_job_entry)  # Check if the job is still enabled
-            if not scan_job_entry.is_enabled:
-                scan_job_entry.status = 'Cancelled'
-                scan_job_entry.error_message = 'Scan cancelled by user'
-                scan_job_entry.current_processing = None
-                db.session.commit()
-                return  # Stop processing if cancelled
+            db.session.remove()
+            scan_job_entry = db.session.get(ScanJob, scan_job_id)
+            if not scan_job_entry or not scan_job_entry.is_enabled:
+                if scan_job_entry:
+                    scan_job_entry.status = 'Cancelled'
+                    scan_job_entry.error_message = 'Scan cancelled by user'
+                    scan_job_entry.current_processing = None
+                    db.session.commit()
+                scan_was_cancelled = True
+                break  # Stop processing if cancelled
             
             game_name = game_info['name']
             full_disk_path = game_info['full_path']
             processed_count += 1
+            progress_label = f"Processing: {game_name} ({processed_count}/{total_to_process})"
             
             # Fast path - check cached sets BEFORE database queries
             if existing_game_paths and full_disk_path in existing_game_paths:
                 print(f"Game already exists (cached): {game_name} at {full_disk_path}")
                 already_exist_count += 1
-                scan_job_entry.folders_success += 1
+                bump_scan_job_progress(
+                    scan_job_id, success=True, current_processing=progress_label
+                )
             elif existing_unmatched_paths and full_disk_path in existing_unmatched_paths:
                 print(f"Folder already logged as unmatched (cached): {full_disk_path}")
                 already_unmatched_count += 1
-                scan_job_entry.folders_failed += 1
+                bump_scan_job_progress(
+                    scan_job_id, failed=True, current_processing=progress_label
+                )
             else:
                 try:
-                    success = process_game_with_fallback(game_name, full_disk_path, scan_job_entry.id, library_uuid, existing_game_paths, existing_unmatched_paths, fetch_hltb=fetch_hltb, settings=settings_dict)
+                    success = process_game_with_fallback(game_name, full_disk_path, scan_job_id, library_uuid, existing_game_paths, existing_unmatched_paths, fetch_hltb=fetch_hltb, settings=settings_dict)
                     if success:
                         new_games_count += 1
-                        scan_job_entry.folders_success += 1
+                        bump_scan_job_progress(
+                            scan_job_id, success=True, current_processing=progress_label
+                        )
                         # Use cached settings instead of querying database again
                         # Check for updates folder using the cached setting
                         if enable_game_updates:
@@ -424,7 +472,9 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
                         else:
                             print(f"Extras scanning disabled, skipping for game: {game_name}")
                     else:
-                        scan_job_entry.folders_failed += 1
+                        bump_scan_job_progress(
+                            scan_job_id, failed=True, current_processing=progress_label
+                        )
                         print(f"[SCAN INFO] Game '{game_name}' could not be matched to IGDB database or was already unmatched.")
                         print(f"[SCAN INFO] Game path: {full_disk_path}")
                         print("[SCAN INFO] This is informational, not an error")
@@ -435,32 +485,41 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
                     print(f"[SCAN EXCEPTION] Full exception: {repr(e)}")
                     import traceback
                     print(f"[SCAN EXCEPTION] Traceback: {traceback.format_exc()}")
-                    scan_job_entry.folders_failed += 1
-                    scan_job_entry.status = 'Failed'
-                    error_line = f"Exception processing '{game_name}': {str(e)}"
-                    scan_job_entry.error_message = (scan_job_entry.error_message or "") + f"{error_line}\n"
-            
-            # Commit after each game and update progress
-            scan_job_entry.current_processing = f"Processing: {game_name} ({processed_count}/{len(game_names_with_paths)})"
-            scan_job_entry.last_progress_update = datetime.now()
-            
-            db.session.commit()
+                    bump_scan_job_progress(
+                        scan_job_id, failed=True, current_processing=progress_label
+                    )
+                    scan_job_entry = db.session.get(ScanJob, scan_job_id)
+                    if scan_job_entry:
+                        scan_job_entry.status = 'Failed'
+                        error_line = f"Exception processing '{game_name}': {str(e)}"
+                        scan_job_entry.error_message = (scan_job_entry.error_message or "") + f"{error_line}\n"
+                        db.session.commit()
             
             # Log detailed progress every 10 games
-            if processed_count % 10 == 0 or processed_count == len(game_names_with_paths):
-                print(f"Committed: {processed_count}/{len(game_names_with_paths)} games processed")
+            if processed_count % 10 == 0 or processed_count == total_to_process:
+                print(f"Committed: {processed_count}/{total_to_process} games processed")
                 
                 elapsed_time = (datetime.now() - scan_start_time).total_seconds()
                 games_per_second = processed_count / elapsed_time if elapsed_time > 0 else 0
-                estimated_remaining = (len(game_names_with_paths) - processed_count) / games_per_second if games_per_second > 0 else 0
+                estimated_remaining = (total_to_process - processed_count) / games_per_second if games_per_second > 0 else 0
                 
-                print(f"Progress: {processed_count}/{len(game_names_with_paths)} games processed")
+                print(f"Progress: {processed_count}/{total_to_process} games processed")
                 print(f"Speed: {games_per_second:.1f} games/sec")
                 if estimated_remaining > 0:
                     print(f"Estimated time remaining: {estimated_remaining:.0f} seconds")
                 print(f"Skipped (already exist): {already_exist_count}")
                 print(f"New games found: {new_games_count}")
                 print(f"Already unmatched: {already_unmatched_count}")
+
+    db.session.remove()
+    scan_job_entry = db.session.get(ScanJob, scan_job_id)
+    if not scan_job_entry:
+        return
+
+    if scan_was_cancelled:
+        # Counters already finalized; skip Completed / remove_missing / image pass
+        print(f"Scan cancelled for folder: {folder_path} with ScanJob ID: {scan_job_id}")
+        return
 
     if scan_job_entry.status != 'Failed':
         scan_job_entry.status = 'Completed'

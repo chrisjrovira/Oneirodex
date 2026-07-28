@@ -7,7 +7,8 @@ Quick checks before pinging an admin.
 | Symptom | Likely cause | What to try |
 |---|---|---|
 | Unstyled Discover/Library | Missing frontend build | Admin rebuilds image / `member-app` dist |
-| Spin forever | API 401/500 | Hard refresh; re-login; admin check `/readyz` + logs |
+| Spin forever / Discover stuck on Loading while nav works | Old image without ASGI SSE fix, or companion SSE holding the only worker | Ask admin to rebuild from current tree (not restart alone) — [admin troubleshooting](../admin/troubleshooting.md#spa-navigates-but-pagesadmin-hang-discover-stuck-on-loading). Clear site data if Friends dock was stuck open. |
+| Spin forever (API 401/500) | Auth / server error | Hard refresh; re-login; admin check `/readyz` + logs |
 | Theme didn’t apply | Cache / wrong preference | Preferences → re-pick theme; hard refresh |
 | Can’t find a page | Nav clutter | **Ctrl+K** / ⌘K command palette — [faq.md](faq.md) |
 | Chat cramped on phone | Old frontend build | Admin rebuild `member-app` (Chat stacks ≤900px) |

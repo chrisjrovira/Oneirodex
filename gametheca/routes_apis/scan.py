@@ -13,27 +13,33 @@ from . import apis_bp
 @admin_required
 def scan_jobs_status():
     jobs = db.session.execute(select(ScanJob).order_by(ScanJob.last_run.desc())).scalars().all()
-    jobs_data = [{
-        'id': job.id,
-        'library_name': job.library.name if job.library else 'No Library Assigned',
-        'library_uuid': job.library_uuid,
-        'folders': job.folders,
-        'status': job.status,
-        'total_folders': job.total_folders,
-        'folders_success': job.folders_success,
-        'folders_failed': job.folders_failed,
-        'removed_count': job.removed_count,
-        'scan_folder': job.scan_folder,
-        'setting_remove': bool(job.setting_remove),
-        'setting_filefolder': bool(job.setting_filefolder),
-        'setting_download_missing_images': bool(job.setting_download_missing_images),
-        'current_processing': job.current_processing,
-        'error_message': job.error_message or '',
-        'last_run': job.last_run.strftime('%Y-%m-%d %H:%M:%S') if job.last_run else 'Not Available',
-        'last_update': job.last_progress_update.isoformat() if job.last_progress_update else None,
-        'next_run': job.next_run.strftime('%Y-%m-%d %H:%M:%S') if job.next_run else 'Not Scheduled',
-        'progress_percentage': round((job.folders_success + job.folders_failed) / job.total_folders * 100, 1) if job.total_folders > 0 else 0
-    } for job in jobs]
+    jobs_data = []
+    for job in jobs:
+        folders_success = job.folders_success or 0
+        folders_failed = job.folders_failed or 0
+        total_folders = job.total_folders or 0
+        processed = folders_success + folders_failed
+        jobs_data.append({
+            'id': job.id,
+            'library_name': job.library.name if job.library else 'No Library Assigned',
+            'library_uuid': job.library_uuid,
+            'folders': job.folders,
+            'status': job.status,
+            'total_folders': total_folders,
+            'folders_success': folders_success,
+            'folders_failed': folders_failed,
+            'removed_count': job.removed_count or 0,
+            'scan_folder': job.scan_folder,
+            'setting_remove': bool(job.setting_remove),
+            'setting_filefolder': bool(job.setting_filefolder),
+            'setting_download_missing_images': bool(job.setting_download_missing_images),
+            'current_processing': job.current_processing,
+            'error_message': job.error_message or '',
+            'last_run': job.last_run.strftime('%Y-%m-%d %H:%M:%S') if job.last_run else 'Not Available',
+            'last_update': job.last_progress_update.isoformat() if job.last_progress_update else None,
+            'next_run': job.next_run.strftime('%Y-%m-%d %H:%M:%S') if job.next_run else 'Not Scheduled',
+            'progress_percentage': round(processed / total_folders * 100, 1) if total_folders > 0 else 0,
+        })
     return jsonify(jobs_data)
 
 @apis_bp.route('/unmatched_folders', methods=['GET'])

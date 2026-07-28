@@ -1,131 +1,304 @@
-.container {
-    max-width: 1200px;
+/* Admin → Themes — dense gt-adminpage blocks (no legacy padding stacks). */
+
+.gt-themes-page {
+    --gt-themes-gap: 0.85rem;
+    --gt-themes-pad: 0.9rem 1rem;
+    --gt-themes-radius: 10px;
+    max-width: 1080px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0.25rem 0 1.25rem;
 }
 
-.glass-panel {
-    background: var(--container-glass-primary);
-    backdrop-filter: var(--backdrop-blur);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-xl);
-    box-shadow: var(--shadow-card);
+.gt-themes-flash {
+    max-width: 1080px;
+    margin: 0 auto 0.75rem;
+    display: grid;
+    gap: 0.4rem;
 }
 
-.page-title {
-    text-align: center;
-    margin-bottom: 30px;
-    color: var(--gt-text);
+.gt-themes-header {
+    margin-bottom: var(--gt-themes-gap);
+    padding-bottom: 0.75rem;
+    gap: 0.65rem;
 }
 
-.theme-upload-section {
-    margin-bottom: 40px;
+.gt-themes-kicker {
+    margin: 0 0 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gt-accent);
 }
 
-.theme-upload-form {
-    display: flex;
-    flex-direction: column;
+.gt-themes-header .gt-adminpage-title {
+    margin: 0 0 0.25rem;
+    font-size: clamp(1.35rem, 2.4vw, 1.7rem);
+}
+
+.gt-themes-header .gt-adminpage-lede {
+    margin: 0;
+    font-size: 0.9rem;
+    max-width: 58ch;
+}
+
+.gt-themes-link {
+    display: inline-flex;
     align-items: center;
-}
-
-.form-group {
-    margin-bottom: 20px;
-    width: 100%;
-}
-
-.form-label {
-    color: var(--gt-text);
-    margin-bottom: 10px;
-    display: block;
-}
-
-.form-control-file {
-    background-color: var(--gt-surface-2);
+    padding: 0.35rem 0.7rem;
+    border-radius: 6px;
     border: 1px solid var(--gt-border);
-    border-radius: var(--border-radius-sm);
-    padding: var(--spacing-sm);
+    background: var(--gt-surface-2);
     color: var(--gt-text);
-    width: 100%;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    font-weight: 550;
+    white-space: nowrap;
 }
 
-/* Apply-a-theme picker; the swatch grid itself lives in form-components.css. */
-.theme-apply-section {
-    margin-bottom: 40px;
+.gt-themes-link:hover,
+.gt-themes-link:focus-visible {
+    color: var(--gt-accent);
+    border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+    outline: none;
 }
 
-.theme-apply-section h2 {
+/* ---- section blocks ---- */
+
+.gt-themes-block {
+    background: var(--gt-surface);
+    border: 1px solid var(--gt-border);
+    border-radius: var(--gt-themes-radius);
+    padding: var(--gt-themes-pad);
+    margin-bottom: var(--gt-themes-gap);
+}
+
+.gt-themes-block:last-child {
+    margin-bottom: 0;
+}
+
+.gt-themes-block-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.85rem;
+    margin-bottom: 0.65rem;
+}
+
+.gt-themes-block-head h2 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 650;
+    letter-spacing: 0.01em;
     color: var(--gt-text);
-    margin-bottom: 10px;
 }
 
-.theme-apply-hint {
+.gt-themes-block-hint {
+    margin: 0;
+    flex: 1 1 14rem;
+    font-size: 0.8rem;
     color: var(--gt-text-muted);
-    margin-bottom: var(--spacing-md);
-    max-width: 70ch;
+    max-width: 62ch;
+}
+
+.gt-themes-page .theme-swatch-grid {
+    margin-top: 0;
+    gap: 0.45rem;
+    grid-template-columns: repeat(auto-fill, minmax(4.75rem, 1fr));
+}
+
+.gt-themes-page .theme-swatch {
+    padding: 0.55rem 0.3rem 0.45rem;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--gt-text) 3%, transparent);
+}
+
+.gt-themes-page .theme-swatch-chip {
+    width: 1.75rem;
+    height: 1.75rem;
 }
 
 .theme-apply-status {
-    min-height: 1.25rem;
-    margin-top: var(--spacing-sm);
+    min-height: 1.1rem;
+    margin: 0.45rem 0 0;
+    font-size: 0.8rem;
     color: var(--gt-text-muted);
 }
 
 .theme-apply-status.is-error {
-    color: var(--gt-text);
+    color: var(--gt-danger, #ff6b6b);
     font-weight: 600;
 }
 
-.installed-themes-section h2 {
-    color: var(--gt-text);
-    margin-bottom: 20px;
+/* ---- install / reset toolbar ---- */
+
+.gt-themes-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.75rem 1rem;
+    align-items: end;
 }
+
+.gt-themes-upload {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.45rem 0.65rem;
+    align-items: end;
+}
+
+.gt-themes-upload-label {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 550;
+    color: var(--gt-text-muted);
+}
+
+.gt-themes-file {
+    width: 100%;
+    min-width: 0;
+    padding: 0.4rem 0.55rem;
+    border-radius: 6px;
+    border: 1px solid var(--gt-border);
+    background: var(--gt-surface-2);
+    color: var(--gt-text);
+    font-size: 0.85rem;
+}
+
+.gt-themes-reset {
+    margin: 0;
+    display: flex;
+    align-items: flex-end;
+}
+
+.gt-themes-btn {
+    white-space: nowrap;
+    border-radius: 6px !important;
+    font-size: 0.8125rem !important;
+    padding: 0.4rem 0.75rem !important;
+}
+
+/* ---- installed cards ---- */
 
 .themes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+    gap: 0.65rem;
 }
 
 .theme-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
     background: var(--gt-surface-2);
     border: 1px solid var(--gt-border);
-    border-radius: 10px;
-    padding: 20px;
-    transition: transform 0.3s ease;
+    border-radius: 8px;
+    padding: 0.75rem 0.85rem;
+    transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .theme-card:hover {
-    transform: translateY(-5px);
+    border-color: color-mix(in srgb, var(--gt-accent) 35%, var(--gt-border));
 }
 
-.theme-card h3 {
+.theme-card.is-active,
+.theme-card.default-theme.is-active {
+    border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+    box-shadow: inset 3px 0 0 var(--gt-accent);
+}
+
+.theme-card.default-theme:not(.is-active) {
+    border-color: color-mix(in srgb, var(--gt-accent) 28%, var(--gt-border));
+}
+
+.theme-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.theme-card-head h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 650;
     color: var(--gt-text);
-    margin-bottom: 10px;
+    line-height: 1.25;
 }
 
-.theme-card p {
+.theme-card-badge {
+    flex-shrink: 0;
+    padding: 0.12rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 650;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--gt-accent);
+    background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
+}
+
+.theme-card-badge--live {
+    color: var(--gt-text);
+}
+
+.theme-card-meta {
+    margin: 0;
+    display: grid;
+    gap: 0.2rem;
+}
+
+.theme-card-meta > div {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.theme-card-meta dt {
+    margin: 0;
     color: var(--gt-text-muted);
-    margin-bottom: 5px;
+    font-weight: 500;
 }
 
-.default-theme {
-    border: 2px solid var(--gt-accent);
+.theme-card-meta dd {
+    margin: 0;
+    color: var(--gt-text);
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
-
-.flash-messages {
-    margin-bottom: 20px;
+.theme-card-meta code {
+    font-size: 0.75rem;
+    padding: 0.05rem 0.25rem;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--gt-text) 6%, transparent);
+    color: var(--gt-text);
 }
 
-/* Dark-surface alerts: the text is --gt-text on a tinted panel (>=4.5:1),
-   with the status hue carried by the border instead of a light fill. */
+.theme-card-desc {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--gt-text-muted);
+    line-height: 1.4;
+}
+
+.theme-card-actions {
+    margin: 0.15rem 0 0;
+    padding-top: 0.45rem;
+    border-top: 1px solid var(--gt-border);
+}
+
 .alert {
-    padding: var(--spacing-sm);
-    border-radius: var(--border-radius-sm);
-    margin-bottom: 10px;
+    padding: 0.45rem 0.65rem;
+    border-radius: 6px;
+    margin: 0;
     color: var(--gt-text);
     border: 1px solid var(--gt-border);
     background-color: var(--gt-surface-2);
+    font-size: 0.85rem;
 }
 
 .alert-success {
@@ -149,10 +322,23 @@
     border-color: var(--btn-info);
 }
 
-.theme-actions {
-    text-align: center;
-    margin: 20px 0;
-    padding: 10px;
-    border-top: 1px solid var(--gt-border);
-    border-bottom: 1px solid var(--gt-border);
+@media (max-width: 720px) {
+    .gt-themes-tools,
+    .gt-themes-upload {
+        grid-template-columns: 1fr;
+    }
+
+    .gt-themes-reset {
+        width: 100%;
+    }
+
+    .gt-themes-reset .gt-themes-btn {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .theme-card {
+        transition: none;
+    }
 }

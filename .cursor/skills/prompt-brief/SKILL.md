@@ -37,13 +37,15 @@ Then **execute** the Mode skill (below). Do not wait for confirmation unless Ask
 
 | Mode | Follow |
 |---|---|
-| build | Implement + docs-sync; wave-continue if “keep building / next wave” |
-| fix | issue-fix if GitHub/ticket; else smallest fix + verify-slice |
+| build | If multi-area / Unraid / team / wave → **act as PM** (`agent-pm` + Task seats); else implement + docs-sync; wave-continue if “keep building / next wave” |
+| fix | issue-fix if GitHub/ticket; else smallest fix + verify-slice (or Task `@agent-backend` / `@agent-uiux` when non-trivial) |
 | triage | issue-assess only |
-| docs | docs-sync (+ canvas) |
+| docs | Task `@agent-docs` (docs-sync + **program canvas**) when non-trivial |
 | ship | ship-ready |
-| verify | verify-slice |
+| verify | Task `@agent-qa` or verify-slice |
 | ask | ≤2 questions, then stop |
+
+**PM disperse:** On multi-seat work the parent **must not** land product code — see `agent-team` + always-apply `pm-disperse.mdc`.
 
 ## Locked defaults (never re-ask)
 

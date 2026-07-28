@@ -10,19 +10,24 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
 
   useEffect(() => {
     const controller = new AbortController()
+    let cancelled = false
     setLoading(true)
     setError(null)
     fetchDiscoverSections({ signal: controller.signal })
       .then((next) => {
+        if (cancelled) return
         setSections(next)
         setLoading(false)
       })
       .catch((err) => {
-        if (err?.name === 'AbortError') return
+        if (cancelled || err?.name === 'AbortError') return
         setError(true)
         setLoading(false)
       })
-    return () => controller.abort()
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
   }, [])
 
   if (loading) {

@@ -12,7 +12,7 @@ export function presenceLabel(status) {
   return 'Offline'
 }
 
-export function readCompanionOpen(defaultOpen = true) {
+export function readCompanionOpen(defaultOpen = false) {
   try {
     const raw = localStorage.getItem(STORAGE_OPEN)
     if (raw == null) return defaultOpen

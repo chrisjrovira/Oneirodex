@@ -4,6 +4,11 @@ import { DiscoverApp } from './DiscoverApp'
 function mockDiscoverFetch(sections) {
   global.fetch = vi.fn().mockResolvedValue({
     ok: true,
+    headers: {
+      get(name) {
+        return String(name).toLowerCase() === 'content-type' ? 'application/json' : null
+      },
+    },
     json: async () => ({ sections }),
   })
 }

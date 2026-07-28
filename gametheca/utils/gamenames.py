@@ -8,9 +8,41 @@ from gametheca.utils.game_name_parse import parse_game_label
 
 LETTER_BUCKET_RE = re.compile(r'^_[a-z0-9#if]$', re.IGNORECASE)
 
+# Sequel numeral swaps for IGDB search (trailing token only).
+_ROMAN_TO_ARABIC = {
+    'II': '2', 'III': '3', 'IV': '4', 'V': '5',
+    'VI': '6', 'VII': '7', 'VIII': '8', 'IX': '9', 'X': '10',
+}
+_ARABIC_TO_ROMAN = {v: k for k, v in _ROMAN_TO_ARABIC.items()}
+_EDITION_TAIL_TOKENS = frozenset({
+    'goty', 'edition', 'remastered', 'remake', 'deluxe', 'definitive',
+    'complete', 'collection', 'hd', 'ultimate', 'anniversary', 'enhanced',
+})
+# Contiguous subtitle phrases → insert ": " immediately before the match (longest first).
+_KNOWN_SUBTITLES = (
+    "legacy of the void",
+    "wings of liberty",
+    "heart of the swarm",
+    "director's cut",
+    "enhanced edition",
+    "definitive edition",
+    "complete edition",
+    "game of the year",
+    "royal edition",
+    "dark alliance",
+    "remastered",
+    "remake",
+)
+_SMART_APOSTROPHE_RE = re.compile(r"[’‘ʼ´]")
+
 
 def _list_game_dirs(folder_path, scan_depth=1):
-    """Return list of (item_name, full_path) game directories honoring scan_depth."""
+    """Return list of (item_name, full_path) game directories honoring scan_depth.
+
+    scan_depth=2 unwraps letter buckets (_a…_z, _#) used by layouts like
+    .../_pc/_b/Baldur's Gate Dark Alliance 1. Set library scan_depth to 2 for
+    those roots; depth 1 would treat `_b` itself as a game folder.
+    """
     depth = int(scan_depth or 1)
     results = []
     try:
@@ -115,32 +147,159 @@ def detect_goty_pattern(filename):
     return False, filename
 
 
+def _dedupe_variants(items):
+    """Preserve order; case-insensitive unique non-empty strings."""
+    seen = set()
+    out = []
+    for item in items:
+        if not item or not str(item).strip():
+            continue
+        text = str(item).strip()
+        key = text.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(text)
+    return out
+
+
+def _normalize_apostrophes(name):
+    """Map smart quotes to ASCII apostrophe."""
+    return _SMART_APOSTROPHE_RE.sub("'", name)
+
+
+def _strip_trailing_bare_one(name):
+    """
+    Strip a trailing bare edition number '1' when ≥3 non-empty tokens precede it
+    and the preceding token is non-numeric.
+
+    Folder labels often append '1' for the first game in a series
+    (e.g. Baldur's Gate Dark Alliance 1 → Baldur's Gate Dark Alliance).
+    """
+    words = name.split()
+    if len(words) < 4 or words[-1] != '1':
+        return None
+    if any(ch.isdigit() for ch in words[-2]):
+        return None
+    return ' '.join(words[:-1])
+
+
+def _known_subtitle_colon(name):
+    """Insert ': ' before a known contiguous subtitle phrase when absent."""
+    if ':' in name:
+        return None
+    lower = name.casefold()
+    for phrase in _KNOWN_SUBTITLES:
+        idx = lower.find(phrase)
+        if idx <= 0:
+            continue
+        # Require a word boundary before the phrase
+        if name[idx - 1] not in ' \t-_':
+            continue
+        head = name[:idx].rstrip(' -_')
+        tail = name[idx:].lstrip(' -_')
+        if not head or not tail:
+            continue
+        return f"{head}: {tail}"
+    return None
+
+
+def _colon_subtitle_variants(name):
+    """
+    Heuristic colon before a trailing multi-word (or single-word) subtitle.
+
+    Fallback when no known-subtitle phrase matched (e.g. Mass Effect: Andromeda).
+    """
+    words = name.split()
+    if len(words) < 3:
+        return []
+    if words[-1].isdigit() or words[-1].lower() in _EDITION_TAIL_TOKENS:
+        return []
+    if ':' in name:
+        return []
+
+    variants = []
+    if len(words) >= 4:
+        # Prefer 2-word subtitle: Baldur's Gate: Dark Alliance
+        variants.append(f"{' '.join(words[:-2])}: {' '.join(words[-2:])}")
+    variants.append(f"{' '.join(words[:-1])}: {words[-1]}")
+    return variants
+
+
+def _sequel_numeral_variants(name):
+    """Swap trailing Arabic ↔ Roman sequel tokens (2/II, 3/III, …)."""
+    words = name.split()
+    if len(words) < 2:
+        return []
+    last = words[-1]
+    head = ' '.join(words[:-1])
+    upper = last.upper()
+    variants = []
+    if upper in _ROMAN_TO_ARABIC:
+        variants.append(f"{head} {_ROMAN_TO_ARABIC[upper]}")
+    if last.isdigit() and last in _ARABIC_TO_ROMAN:
+        variants.append(f"{head} {_ARABIC_TO_ROMAN[last]}")
+    return variants
+
+
+def _deapostrophe_variant(name):
+    """One search copy with ASCII apostrophes removed."""
+    if "'" not in name:
+        return None
+    cleaned = re.sub(r"\s+", " ", name.replace("'", "")).strip()
+    return cleaned if cleaned and cleaned != name else None
+
+
 def generate_goty_variants(base_name):
     """
-    Generate GOTY search variants for a game name containing GOTY.
-    Returns list of variants to try.
+    Generate ordered IGDB search variants for a folder/game label.
+
+    Covers GOTY spellings, known/heuristic colon subtitles, trailing bare '1'
+    strip, Arabic↔Roman sequel swaps, and a de-apostrophized copy.
+    See docs/strategy/name-resolution.md.
     """
-    if 'GOTY' not in base_name:
-        return [base_name]
+    if not base_name or not str(base_name).strip():
+        return []
 
-    # Generate variants
-    variants = []
+    base_name = _normalize_apostrophes(str(base_name).strip())
+    variants = [base_name]
 
-    # Try with GOTY
-    variants.append(base_name)
+    if 'GOTY' in base_name:
+        variants.append(base_name.replace('GOTY', 'G.O.T.Y.'))
+        no_goty_variant = re.sub(r'\s+', ' ', base_name.replace('GOTY', '')).strip()
+        if no_goty_variant:
+            variants.append(no_goty_variant)
 
-    # Try with G.O.T.Y.
-    goty_variant = base_name.replace('GOTY', 'G.O.T.Y.')
-    variants.append(goty_variant)
+    # Known subtitle colon on original (may still include trailing bare 1).
+    known_on_base = _known_subtitle_colon(base_name)
+    if known_on_base:
+        variants.append(known_on_base)
 
-    # Try without GOTY as fallback
-    no_goty_variant = base_name.replace('GOTY', '').strip()
-    # Clean up any double spaces
-    no_goty_variant = re.sub(r'\s+', ' ', no_goty_variant).strip()
-    if no_goty_variant:  # Only add if not empty
-        variants.append(no_goty_variant)
+    stripped_one = _strip_trailing_bare_one(base_name)
+    if stripped_one:
+        variants.append(stripped_one)
+        known_stripped = _known_subtitle_colon(stripped_one)
+        if known_stripped:
+            variants.append(known_stripped)
 
-    return variants
+    # Heuristic colon on title core when known list did not already produce it.
+    core = stripped_one or base_name
+    if not _known_subtitle_colon(core):
+        variants.extend(_colon_subtitle_variants(core))
+
+    for seed in (base_name, stripped_one) if stripped_one else (base_name,):
+        variants.extend(_sequel_numeral_variants(seed))
+
+    # Prefer de-apostrophe of the best colon form (without trailing bare 1) when present.
+    colon_hit = next(
+        (v for v in variants if ': ' in v and not v.rstrip().endswith(' 1')),
+        None,
+    )
+    deap = _deapostrophe_variant(colon_hit or core)
+    if deap:
+        variants.append(deap)
+
+    return _dedupe_variants(variants)
 
 
 def clean_game_name(filename, insensitive_patterns, sensitive_patterns):

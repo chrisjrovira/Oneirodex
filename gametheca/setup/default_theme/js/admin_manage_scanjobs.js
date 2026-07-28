@@ -199,9 +199,25 @@ document.addEventListener('DOMContentLoaded', function() {
         return job.status;
     }
 
+    function progressCounts(job) {
+        const success = Number(job.folders_success) || 0;
+        const failed = Number(job.folders_failed) || 0;
+        const total = Number(job.total_folders) || 0;
+        const processed = success + failed;
+        const percentage = total > 0
+            ? (Number(job.progress_percentage) || Math.round((processed / total) * 1000) / 10)
+            : 0;
+        return { success, failed, total, processed, percentage };
+    }
+
     const updateScanJobs = () => {
         fetch('/api/scan_jobs_status', {cache: 'no-store'})
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`scan_jobs_status HTTP ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 // Sort the data array to ensure the latest scan is at the top
                 data.sort((a, b) => new Date(b.last_run) - new Date(a.last_run));
@@ -212,18 +228,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isAnyJobRunning = data.some(j => j.status === 'Running' || j.status === 'Stopping');
                 
                 data.forEach(job => {
+                    const { processed, total, percentage } = progressCounts(job);
                     // Create progress column content
                     let progressColumn = '';
-                    if (job.status === 'Running' && job.total_folders > 0) {
-                        const percentage = job.progress_percentage || 0;
-                        const processed = job.folders_success + job.folders_failed;
+                    if (job.status === 'Running' && total > 0) {
                         progressColumn = `
                             <div class="scan-progress">
                                 <div class="progress mb-1" style="height: 20px;">
                                     <div class="progress-bar" style="width: ${percentage}%"></div>
                                 </div>
                                 <div class="progress-info">
-                                    <span class="progress-numbers">${processed}/${job.total_folders} (${percentage}%)</span>
+                                    <span class="progress-numbers">${processed}/${total} (${percentage}%)</span>
                                 </div>
                                 <div class="progress-status">
                                     <small class="text-bright-green">${job.current_processing || 'Processing...'}</small>
@@ -231,26 +246,30 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         `;
                     } else if (job.status === 'Stopping') {
-                        const processed = job.folders_success + job.folders_failed;
                         progressColumn = `
                             <div class="scan-progress">
                                 <div class="progress-status">
                                     <span class="text-warning">
-                                        <span class="gt-spinner" aria-hidden="true"></span>
-                                        Stopping scan... (${processed}/${job.total_folders})
+                                        <span class="gt-spinner gt-spinner--sm" aria-hidden="true"></span>
+                                        Stopping… (${processed}/${total || '?'})
                                     </span>
                                 </div>
                                 <div class="progress-status">
-                                    <small class="text-muted">Waiting for threads to complete</small>
+                                    <small class="text-muted">Finishing in-flight folders, then cancelling the rest</small>
                                 </div>
                             </div>
                         `;
-                    } else if (job.status === 'Completed') {
-                        progressColumn = `<span class="text-success">✓ ${job.folders_success + job.folders_failed}/${job.total_folders}</span>`;
+                    } else if (job.status === 'Completed' || job.status === 'Scheduled') {
+                        progressColumn = `<span class="text-success">✓ ${processed}/${total || processed}</span>`;
+                    } else if (job.status === 'Cancelled') {
+                        progressColumn = `<span class="text-warning">⏹ Stopped ${processed}/${total || processed}</span>`;
                     } else if (job.status === 'Failed') {
-                        progressColumn = `<span class="text-danger">✗ ${job.folders_success + job.folders_failed}/${job.total_folders}</span>`;
+                        const cancelledMsg = job.error_message === 'Scan cancelled by user';
+                        progressColumn = cancelledMsg
+                            ? `<span class="text-warning">⏹ Stopped ${processed}/${total || processed}</span>`
+                            : `<span class="text-danger">✗ ${processed}/${total || processed}</span>`;
                     } else {
-                        progressColumn = '-';
+                        progressColumn = total ? `${processed}/${total}` : '—';
                     }
 
                     // Create actions column content
@@ -262,7 +281,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             </form>` :
                         job.status === 'Stopping' ?
                             `<button class="btn btn-warning btn-sm" disabled title="Scan is stopping, please wait...">
-                                <span class="gt-spinner" aria-hidden="true"></span>
+                                <span class="gt-spinner gt-spinner--sm" aria-hidden="true"></span>
+                                Stopping…
                             </button>` :
                             `${isAnyJobRunning ?
                                 `<button class="btn btn-info btn-sm" disabled title="Cannot restart while another scan is running">↻</button>` :

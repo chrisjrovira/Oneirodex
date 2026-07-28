@@ -5,7 +5,11 @@
 **Sync rule:** `.cursor/skills/docs-sync/` + `.cursor/rules/docs-sync.mdc` — update on every code change.
 
 **Program board:**  
-`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
+`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`  
+**Owner:** Docs (`@agent-docs`) refreshes this canvas **each wave** (Done · Next · Blocked · Team flow) from the PM content brief. PM owns the brief; Docs owns the file edit.
+
+**Feature roadmap mockups:**  
+`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\feature-roadmap-mockups.canvas.tsx`
 
 ## Status legend
 
@@ -37,6 +41,7 @@
 | Admin hybrid inventory | `docs/strategy/admin-hybrid.md` | Have |
 | Upgrade notes (0.2 → 1.0) | `docs/strategy/upgrade-notes-1.0.md` | Have |
 | Game Master 1.0 domain sign-off | `docs/strategy/v1-gamemaster-signoff.md` | Have (gate 7) |
+| Folder → IGDB name-resolution rules | `docs/strategy/name-resolution.md` | Have — scan_depth=2 + variant order for Backend |
 | Docs map (this file) | `docs/strategy/docs-map.md` | Have |
 | Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) |
 | Competitive re-score template | `docs/strategy/competitor-rescore.md` | Create |
@@ -61,7 +66,8 @@
 | Attract mode | End users | Update | Idle timeout, filters |
 | Wishlist / requests | End users | Create | |
 | Desktop client guide | End users | Have | [desktop-companion.md](../user/desktop-companion.md) |
-| Thin client | Strategy → user | Strategy have · user Create at TC-2 | [thin-client.md](thin-client.md) — **TC-1 in 1.0 scope (in flight)** |
+| Thin client | Strategy → user | Strategy have · user Create at TC-2 | [thin-client.md](thin-client.md) — TC-1/TC-2 shell shipped |
+| Android APK + headset VR ladder | Strategy | **Have** | [android-apk-vr.md](android-apk-vr.md) · [headset-vr.md](headset-vr.md) (SteamVR/PSVR2 + Quest) · [controller-input.md](controller-input.md) · [controllers-and-vr.md](../user/controllers-and-vr.md) |
 | Challenge / captcha bypass | Strategy → runbook | Have | [challenge-bypass.md](challenge-bypass.md) · [challenge-solver-unraid.md](../runbooks/challenge-solver-unraid.md) — profile **`challenge`**; CH-1…5 **shipped** |
 | Cover art studio | Strategy | Have | [cover-art-studio.md](cover-art-studio.md) — **ART-1…3 shipped** |
 | GOW / remote play | Strategy | Have | [gow-remote-play.md](gow-remote-play.md) — **GOW-1/2 in 1.0 (in flight)** |
@@ -80,9 +86,9 @@
 | Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — feature defaults ON · OIDC opt-in · malware block-on-hit · ClamAV profile |
 | Support inbox | Have | [support-inbox.md](../admin/support-inbox.md) |
-| Ops summary (`services` contract) | Have | [ops-summary.md](../admin/ops-summary.md) — LiveKit · malware · companions · queues · SRV-2 note |
+| Ops summary (`services` + `scans` contract) | Have | [ops-summary.md](../admin/ops-summary.md) — LiveKit · malware · companions · queues · scan folder counters · SRV-2 note |
 | Troubleshooting | Have | [troubleshooting.md](../admin/troubleshooting.md) — Features / malware / OIDC notes |
-| First-run setup wizard | Update | SECRET_KEY, IGDB, SMTP |
+| First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 8 |
 | Propose-only scan & proposals | Create | |
 | Library Doctor & rename templates | Create | |
 | Unmatched & false duplicates | Update | |
@@ -104,7 +110,7 @@
 
 | Runbook | Status | Trigger |
 |---|---|---|
-| [unraid-deploy.md](../runbooks/unraid-deploy.md) | Have | New Unraid container |
+| [unraid-deploy.md](../runbooks/unraid-deploy.md) | Have | New Unraid container · volume sectioning (games RO vs library RW) · monitor-while-testing · `.env.unraid.example` |
 | [docker-compose-deploy.md](../runbooks/docker-compose-deploy.md) | Have | Compose install · LiveKit + **ClamAV** + **challenge** profiles |
 | [observability-profile.md](../runbooks/observability-profile.md) | Have | Optional Prometheus stub (`# profile: observability`) |
 | [container-wont-start.md](../runbooks/container-wont-start.md) | Have | Crash loops |

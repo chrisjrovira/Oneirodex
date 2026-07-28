@@ -61,7 +61,10 @@ Today the only native client is the **full companion** (`clients/desktop`). Ever
 
 **Secondary (same wave or TC-2b):** **PWA** install of member SPA for Chromebook / locked-down seats (no native binary).
 
-**Defer:** separate mobile native apps; VR client (already noted as optional elsewhere).
+**Defer:** Google/Meta store listings; Unity/Godot VR client; WebXR library room (see [android-apk-vr.md](android-apk-vr.md)).
+
+**Adjacent:** Android **thin APK** ([android-apk-vr.md](android-apk-vr.md)); headset/VR **SteamVR/PSVR2 + Quest** ([headset-vr.md](headset-vr.md)); controllers ([controller-input.md](controller-input.md)).
+
 
 Rationale: reuses shipped SPA (library, details, social, BP, browser play); avoids dual UI; matches Friends-window least-privilege pattern already proven.
 

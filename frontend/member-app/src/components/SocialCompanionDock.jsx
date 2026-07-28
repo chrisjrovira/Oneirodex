@@ -105,7 +105,7 @@ export function SocialCompanionDock({
   const [uncontrolledOpen, setUncontrolledOpen] = useState(() => {
     if (forceOpen || standalone) return true
     if (typeof defaultOpen === 'boolean') return defaultOpen
-    return readCompanionOpen(true)
+    return readCompanionOpen(false)
   })
   const open = controlled ? openProp : uncontrolledOpen
 
@@ -118,7 +118,9 @@ export function SocialCompanionDock({
   const [busyKey, setBusyKey] = useState(null)
   const [toast, setToast] = useState(null)
   const [addName, setAddName] = useState('')
-  const social = useSocialCompanion({ enabled: true })
+  // SSE only while the companion is open — closed dock must not hold
+  // /api/activity/stream (single-worker uvicorn + sync SSE starved the SPA).
+  const social = useSocialCompanion({ enabled: true, sseEnabled: open || standalone })
 
   useEffect(() => {
     if (standalone || forceOpen || controlled) return undefined

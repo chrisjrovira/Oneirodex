@@ -82,6 +82,17 @@ const FAQ_SECTIONS = [
     ],
   },
   {
+    id: 'controllers-vr',
+    title: 'Controllers & VR',
+    items: [
+      'More → Big Picture for gamepad-first browse: A open, X download, B Attract, Y Friends, Esc exit (DualSense: × □ ○ △).',
+      'Steam Deck / Steam Input can remap the browser if you launch it from Steam — GameTheca uses the standard Gamepad API.',
+      'VR browse (/vr when enabled) is headset-friendly for any seat — not Quest-only. PSVR2/SteamVR: use a desktop browser on the PC + Big Picture with a normal pad.',
+      'Quest / standalone: open /vr in the headset browser (optional Add to Home). Play heavy PC titles via Moonlight to the household host.',
+      'Sense / VR controllers are for SteamVR games; they do not reliably drive the GameTheca website.',
+    ],
+  },
+  {
     id: 'support',
     title: 'Need Help?',
     items: [

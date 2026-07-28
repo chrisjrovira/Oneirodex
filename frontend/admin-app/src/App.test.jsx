@@ -26,6 +26,7 @@ test('renders admin brand and primary nav', () => {
       <App />
     </MemoryRouter>,
   )
+  expect(screen.getByText('GameTheca')).toBeInTheDocument()
   expect(screen.getByText('Admin')).toBeInTheDocument()
   expect(screen.getByRole('navigation', { name: 'Admin' })).toBeInTheDocument()
   const nav = screen.getByRole('navigation', { name: 'Admin' })

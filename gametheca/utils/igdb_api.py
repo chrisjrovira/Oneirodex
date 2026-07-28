@@ -28,7 +28,7 @@ def make_igdb_api_request(endpoint_url, query_params):
 
     try:
         # print(f"make_igdb_api_request Attempting to make a request to {endpoint_url} with headers: {headers} and query: {query_params}")
-        response = requests.post(endpoint_url, headers=headers, data=query_params)
+        response = requests.post(endpoint_url, headers=headers, data=query_params, timeout=20)
         response.raise_for_status()
         # print(f"make_igdb_api_request Response from IGDB API: {data}")
         return response.json()
@@ -68,7 +68,7 @@ def get_access_token(client_id, client_secret):
         'client_secret': client_secret,
         'grant_type': 'client_credentials'
     }
-    response = requests.post(url, params=params)
+    response = requests.post(url, params=params, timeout=15)
     if response.status_code == 200:
         payload = response.json()
         token = payload.get('access_token')
@@ -149,27 +149,45 @@ class IGDBRateLimiter:
         self.lock = threading.Lock()
         
     def acquire(self):
-        """Acquire permission to make an IGDB API request."""
-        with self.lock:
-            current_time = time.time()
-            
-            # Remove request times older than 1 second
-            self.request_times = [req_time for req_time in self.request_times 
-                                if current_time - req_time < 1.0]
-            
-            # Wait if we're at the concurrent request limit
-            while self.concurrent_requests >= self.max_concurrent_requests:
-                time.sleep(0.1)
-            
-            # Wait if we've exceeded the rate limit
-            if len(self.request_times) >= self.max_requests_per_second:
-                sleep_time = 1.0 - (current_time - self.request_times[0])
-                if sleep_time > 0:
-                    time.sleep(sleep_time)
-            
-            # Record this request and increment concurrent counter
-            self.request_times.append(current_time)
-            self.concurrent_requests += 1
+        """Acquire permission to make an IGDB API request.
+
+        Sleeps outside the lock so release() from other threads can proceed
+        (sleeping while holding the lock deadlocks when concurrent slots are full).
+        """
+        while True:
+            rate_sleep = None
+            with self.lock:
+                if self.concurrent_requests >= self.max_concurrent_requests:
+                    rate_sleep = 0.05
+                else:
+                    current_time = time.time()
+                    self.request_times = [
+                        req_time for req_time in self.request_times
+                        if current_time - req_time < 1.0
+                    ]
+                    if len(self.request_times) >= self.max_requests_per_second:
+                        rate_sleep = max(0.0, 1.0 - (current_time - self.request_times[0]))
+                    else:
+                        self.request_times.append(current_time)
+                        self.concurrent_requests += 1
+                        return
+
+            if rate_sleep is not None and rate_sleep > 0:
+                time.sleep(rate_sleep)
+
+            # After waiting out a rate window, grant a slot (same as pre-fix behavior).
+            if rate_sleep is not None and rate_sleep != 0.05:
+                with self.lock:
+                    if self.concurrent_requests >= self.max_concurrent_requests:
+                        continue
+                    current_time = time.time()
+                    self.request_times = [
+                        req_time for req_time in self.request_times
+                        if current_time - req_time < 1.0
+                    ]
+                    self.request_times.append(current_time)
+                    self.concurrent_requests += 1
+                    return
             
     def release(self):
         """Release a concurrent request slot."""

@@ -11,10 +11,10 @@
   data-progress-url="{{ url_for('main.delete_library_progress', job_id='') }}"
   data-check-progress-url="{{ url_for('main.check_deletion_progress', job_id='') }}"
 >
-    <div id="deleteSpinner" class="spinner-overlay" style="display: none;">
+    <div id="deleteSpinner" class="spinner-overlay" style="display: none;" role="status" aria-live="assertive" aria-busy="true">
         <div class="spinner-container">
-            <img src="{{ url_for('static', filename='newstyle/searching_small.gif') }}" alt="Loading...">
-            <div id="progressText" class="progress-text">Preparing deletion...</div>
+            <span class="gt-spinner gt-spinner--lg" aria-hidden="true"></span>
+            <div id="progressText" class="progress-text">Preparing deletion…</div>
             <div id="progressBar" class="progress-bar" style="display: none;">
                 <div id="progressFill" class="progress-fill"></div>
                 <div id="progressCounter" class="progress-counter">0/0</div>

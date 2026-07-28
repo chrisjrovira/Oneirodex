@@ -2,7 +2,7 @@
 
 **Branch:** `feature/wave2-admin-fixes` → ship to `main`  
 **Release:** **0.2.0** (full-ship in progress — Jul 27 board includes WIP polish)  
-**Updated:** 2026-07-27 (v1 readiness board · disk hygiene: safe-deleted `target/` + `node_modules` · [workspace-disk-hygiene.md](../runbooks/workspace-disk-hygiene.md))
+**Updated:** 2026-07-27 late evening (IGDB name variants Shipped code · Human ship/rescan next)
 
 ## Locked for 0.2.0 (product decisions)
 
@@ -50,24 +50,36 @@
 | Tile size control | **Shipped** — continuous 0–100% slider (legacy S/M/L/XL mapped) |
 | Library grid virtualization (V1-UI-1 partial) | **Shipped** — `GameGrid` row virtualizer (`@tanstack/react-virtual`) · pagination unchanged |
 | Command palette (Ctrl/Cmd+K) | **Shipped** — member SPA `cmdk` nav jumps + Preferences · Search hint in TopNav — [ui.md](ui.md) · [getting-started.md](../user/getting-started.md) |
-| Admin SPA bodies | Hybrid — Dashboard/Ops React live counts; Libraries/Scans Jinja fixed (no nested `</body>`); Integrations hub React cards (IGDB/SMTP/OIDC/LiveKit/Support) + Jinja forms |
+| Admin SPA bodies | Hybrid — Dashboard/Ops React live counts; Libraries/Scans Jinja fixed (no nested `</body>`); Integrations hub React cards (IGDB/SMTP/OIDC/LiveKit/Support) + Jinja forms; Support/Announcements/Invites/Users live |
 | Library badge/filter chrome | **Shipped** — GameTheca tokens in member-app CSS (no bare browser buttons) |
 | Custom chat emoji | **Shipped** — admin upload capped at 20 — [social-and-voice.md](../user/social-and-voice.md) |
 | WebRetro WASM scaffold | **Shipped** — disk discovery + local `relativeBase` + `installed-cores.js` + fetch scripts — [webretro-cores.md](../runbooks/webretro-cores.md); deferred PCE/VICE/DOS binaries still operator-owned |
 | WebRetro save polish (O1) | **Shipped** — export retries · `.srm`/`.mcr`/`.sav` · auto load state — [browser-play.md](../user/browser-play.md) |
 | ROM set completeness | **Shipped** — DAT upload · title + hash match · Systems % — [reference-sets.md](../runbooks/reference-sets.md) |
 | Multi-region heatmap | **Shipped** — `set_completion_regions` chips on Systems |
-| Perf review P0–P2 | **Shipped** — browse batch · SPA lazy · Chat/IGDB · WebRetro cold start · scan defer · Discover API · SSE queue · favorites page · filters bundle · scan session.remove |
+| Perf review P0–P2 | **Shipped** — browse batch · SPA lazy · Chat/IGDB · WebRetro cold start · scan defer (images/Steam/HLTB + **folder size**) · Discover API · SSE queue · favorites page · filters bundle · scan session.remove |
+| Activity SSE vs single worker | **Shipped** — native ASGI `/api/activity/stream` + `/api/events/stream` · Flask WSGI returns 503 · companion SSE only when dock open |
+| Compose pg_hba (`no encryption`) | **Shipped** — `docker/postgres/pg_hba.conf` + `hba_file=` · runbook §3b |
+| Team review Jul 27 (boot→Discover→Admin) | **Blocked on Unraid deploy** — code/docs pass; E2E needs commit+push + `force-recreate db` + app rebuild — see canvas |
+| Unraid test-bed wave (Jul 27 evening) | **In flight** — local: ASGI SSE · pg_hba · scan identify/progress · themes · GIF scrub · **Ops volume sectioning + `.env.unraid.example` + monitor checklist** · **Ops scan counters + OpsPage tile** · **IGDB name variants**; Unraid E2E blocked until ship; **next:** Human library `_pc` scan_depth=2 + re-scan `_b`/BGDA1 + Unraid after ship → QA Unraid smoke → 1.0 board — see program canvas |
+| IGDB name-resolution strategy | **Shipped (docs)** — letter-bucket / BGDA matcher rules — [name-resolution.md](name-resolution.md) |
+| IGDB name variants (matcher) | **Shipped (code)** — BGDA1 → Baldur's Gate: Dark Alliance; Human ship + `_pc`/`_b` rescan next — [name-resolution.md](name-resolution.md) |
+| PM Task-disperse process | **Shipped (process)** — always-apply `pm-disperse.mdc` · parent Tasks Ops/Backend/UI/Desktop/QA/Docs/GM · Docs owns program canvas Done/Next/Blocked/Team flow each wave — [agent-skills.md](../dev/agent-skills.md) |
+| Deep scan stall (folder size / IGDB) | **Shipped** — defer size walk on identify · 60s size timeout · IGDB HTTP timeout · rate-limiter unlock · max 3 name fallbacks |
+| Scan progress stall at 1 + empty Stop UX | **Shipped** — atomic `bump_scan_job_progress` · Stop drains in-flight · Cancelled shows `Stopped N/total` · Stopping button labeled |
+| Ops glance scan counters | **Shipped** — `/admin/api/ops/summary` `scans.jobs` exposes `folders_*` / `current_processing` / `last_progress_update` / `id_short` (+ recent terminal jobs 24h) — [ops-summary.md](../admin/ops-summary.md#scans-key) |
+| ShareWarez loader GIF purge | **Shipped** — pirate `searching*.gif` deleted; folder browse / scan / identify / libraries / IGDB use `gt-spinner` + a11y status |
+| Setup admin create redesign | **Shipped** — `gt-setup` wizard (mark · green accent · dense fields) · Admin Users create/edit `gt-user-modal` |
+| Admin Themes page densify | **Shipped** — `gt-themes-*` blocks · tighter admin top nav · Reset Default Themes after deploy (`GENERATOR_VERSION` **8**) |
 | Bug scrub O4–O12 + O1/O8 | **Shipped** — see [bug-triage.md](bug-triage.md) |
 | ROM translation (detect + catalog + Flips apply) | **Shipped** — filename lang chips · preferred `en-US` · extras · companion apply · Library LANG/PATCH · **operator patch catalog hooks** · **RetroArch AI overlay hints** · offline stubs — [translation-patches.md](../user/translation-patches.md) · [rom-auto-translate.md](rom-auto-translate.md) |
 | Security P0/P1 + Sec-B | Done — [security.md](security.md) |
 | Icon packs (6 styles, any color theme) | Shipped — [icon-themes.md](icon-themes.md) |
 | Support tickets (no Discord) | Shipped — [support-inbox.md](../admin/support-inbox.md) |
-| Admin SPA bodies | Hybrid — Support/Announcements/Dashboard/Invites/Users/Scans live; forms often Jinja |
 | Docs sync on every change | Skill + always-apply rule — `.cursor/skills/docs-sync/` |
 | Prompt-brief middleman | Always-on — `.cursor/skills/prompt-brief/` · [agent-skills.md](../dev/agent-skills.md) |
 | Bug scrub triage | [bug-triage.md](bug-triage.md) |
-| Competitive catalog | Private vault only — `docs/_private/` (gitignored); public stub [competitive.md](competitive.md) |
+| Competitive catalog | Private vault only — `docs/_private/` (gitignored); public stub [competitive.md](competitive.md) · **Jul 27 landscape expansion** (≥30 net-new × 8 service lanes) |
 
 ## Still thin / next (board order — Jul 27 PM locks)
 
@@ -79,6 +91,7 @@ Priority for **1.0.0** — **no 1.1 track** (see [pm-dispatch-2026-07-27.md](pm-
 4. ~~**GOW-1 → GOW-2**~~ — remote play host + Moonlight CTA — **shipped** — [gow-remote-play.md](gow-remote-play.md)  
 5. **LIGHT-1 → LIGHT-2** — Hyperion + HA ambient hooks — **shipped** — [ambient-lighting.md](ambient-lighting.md)  
 6. ~~**TC-1**~~ — thin client scopes + `device_kind` + capabilities API — **shipped** — [thin-client.md](thin-client.md) · ~~TC-2 shell build~~ **shipped** (`tauri:build:thin`)  
+6b. **Android APK** — [android-apk-vr.md](android-apk-vr.md) · **Headset/VR** relocked SteamVR/PSVR2-first — [headset-vr.md](headset-vr.md) · **Controllers** — [controller-input.md](controller-input.md) (PAD-DOCS/HELP queued)  
 7. ~~**Desktop MOD-3**~~ — companion mod pack apply **shipped** — [desktop-companion.md](../user/desktop-companion.md) · GOW-2 copy-host stub **deferred** (no GOW API yet)  
 8. **Official 1.0.0** — [v1-readiness.md](v1-readiness.md) · [pm-miss-backlog.md](pm-miss-backlog.md) agent MISS-* **closed** · remaining **human:** Authentik/Hub/Unraid  
 9. **SCRUB** — [external-facing-scrub.md](external-facing-scrub.md) · SCRUB-1…4,6–9 done; **SCRUB-6b GitHub Issues/PR search clean** ([github-scrub-2026-07-27.md](github-scrub-2026-07-27.md)); SCRUB-5 history rewrite deferred  
@@ -93,7 +106,7 @@ Priority for **1.0.0** — **no 1.1 track** (see [pm-dispatch-2026-07-27.md](pm-
 | Ops | `/healthz` `/readyz` · Ops Services pulse · observability stub + Unraid Services checklist |
 | QA | `ci-tests.yml` |
 | Backend | pinned requirements · image `0.2.0` · [ADR 0001](../adr/0001-schema-migrations-defer-alembic.md) |
-| UI/UX | GameGrid virtualization · **Art studio** (ART-1…3) |
+| UI/UX | GameGrid virtualization · **Art studio** (ART-1…3) · **Themes densify** · setup `gt-setup` · loader GIF purge (`GENERATOR_VERSION` 8) |
 | Desktop | OS keyring token store · `app-smoke.test.ts` · Friends session vs keyring docs |
 | Game Master | [v1-gamemaster-signoff.md](v1-gamemaster-signoff.md) · CHANGELOG Emulation honesty |
 | Docs | [admin-hybrid.md](admin-hybrid.md) · [upgrade-notes-1.0.md](upgrade-notes-1.0.md) · [observability-profile.md](../runbooks/observability-profile.md) |
@@ -101,6 +114,8 @@ Priority for **1.0.0** — **no 1.1 track** (see [pm-dispatch-2026-07-27.md](pm-
 ## Agent team (Jul 27)
 
 Seats: PM · UI/UX · Backend · Desktop · QA · Docs · Game Master · **Ops** (`@agent-ops` — Unraid/Compose health + ops glance). Index: [agent-skills.md](../dev/agent-skills.md).
+
+**Disperse:** Parent acts as PM and **Task**s seats (no in-parent product code). Docs owns program canvas Done/Next/Blocked/Team flow each wave.
 
 ## Flags
 

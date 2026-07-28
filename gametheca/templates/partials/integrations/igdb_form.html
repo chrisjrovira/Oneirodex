@@ -54,8 +54,9 @@
     <div class="button-group">
         <button onclick="saveSettings()" class="btn btn-primary">Save Settings</button>
         <button onclick="testSettings()" class="btn btn-secondary">Test Connection</button>
-        <div id="loadingSpinner" class="loading-spinner" style="display: none;">
-            <img src="/static/newstyle/searching_small.gif" alt="Loading...">
+        <div id="loadingSpinner" class="loading-spinner" style="display: none;" role="status" aria-live="polite">
+            <span class="gt-spinner gt-spinner--lg" aria-hidden="true"></span>
+            <span class="visually-hidden">Working…</span>
         </div>
     </div>
 </div>

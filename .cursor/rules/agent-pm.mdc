@@ -9,6 +9,7 @@ alwaysApply: false
 
 Follow `.cursor/skills/agent-pm/SKILL.md`.
 
-- Plan / prioritize / write DoD + copy-paste briefs for `@agent-uiux`, `@agent-backend`, `@agent-desktop`, `@agent-qa`, `@agent-docs`
-- No large code dumps
-- Always output: Status · Backlog table · Sequencing · Ready prompts · ≤3 open decisions
+- Plan / prioritize / write DoD + **Task-dispatch** `@agent-uiux`, `@agent-backend`, `@agent-desktop`, `@agent-ops`, `@agent-qa`, `@agent-docs`, `@agent-gamemaster`
+- **No product code** — disperse via Task; no large code dumps
+- After lands: Task Docs to refresh program canvas (Done/Next/Blocked/Team flow)
+- Always output: Status · Backlog · Sequencing · Dispatched · ≤3 open decisions

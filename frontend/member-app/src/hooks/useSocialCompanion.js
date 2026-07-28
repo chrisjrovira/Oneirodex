@@ -7,7 +7,7 @@ import {
 /**
  * Live friends + presence for the stay-open social companion.
  */
-export function useSocialCompanion({ enabled = true } = {}) {
+export function useSocialCompanion({ enabled = true, sseEnabled = false } = {}) {
   const [friends, setFriends] = useState([])
   const [status, setStatus] = useState(null)
   const [error, setError] = useState(null)
@@ -41,6 +41,7 @@ export function useSocialCompanion({ enabled = true } = {}) {
     let source
     let sseLive = false
     let timer = 0
+    let sseTimer = 0
 
     function poll() {
       void reload()
@@ -51,36 +52,45 @@ export function useSocialCompanion({ enabled = true } = {}) {
       timer = window.setInterval(poll, sseLive ? 120000 : 30000)
     }
 
-    try {
-      source = new EventSource('/api/activity/stream')
-      source.addEventListener('hello', () => {
-        sseLive = true
-        startPoll()
-      })
-      source.addEventListener('presence', () => {
-        sseLive = true
-        void reload()
-      })
-      source.addEventListener('activity', () => {
-        sseLive = true
-        void reload()
-      })
-      source.onerror = () => {
+    function connectSse() {
+      try {
+        source = new EventSource('/api/activity/stream')
+        source.addEventListener('hello', () => {
+          sseLive = true
+          startPoll()
+        })
+        source.addEventListener('presence', () => {
+          sseLive = true
+          void reload()
+        })
+        source.addEventListener('activity', () => {
+          sseLive = true
+          void reload()
+        })
+        source.onerror = () => {
+          sseLive = false
+          startPoll()
+        }
+      } catch {
+        source = null
         sseLive = false
-        startPoll()
       }
-    } catch {
-      source = null
-      sseLive = false
     }
+
+    // Poll immediately so Discover/Library APIs are never starved by SSE.
     startPoll()
+    if (sseEnabled) {
+      // Defer SSE briefly so the first page fetch wave can finish.
+      sseTimer = window.setTimeout(connectSse, 1500)
+    }
 
     return () => {
       controller.abort()
       window.clearInterval(timer)
+      window.clearTimeout(sseTimer)
       source?.close()
     }
-  }, [enabled, reload])
+  }, [enabled, reload, sseEnabled])
 
   const accepted = useMemo(
     () => friends.filter((row) => row.status === 'accepted'),

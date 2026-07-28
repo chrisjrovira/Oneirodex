@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import json
-import queue
 
-from flask import Response, current_app, jsonify, request, stream_with_context
+from flask import Response, current_app, jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -13,7 +12,6 @@ from gametheca import db
 from gametheca.models import Game
 from gametheca.utils.activity_feed import list_now_playing, list_recent_activity
 from gametheca.utils.auth import admin_required
-from gametheca.utils.event_bus import encode_sse, event_bus
 from gametheca.utils.frontend_export import (
     build_es_de_gamelist,
     build_pegasus_metadata,
@@ -137,34 +135,17 @@ def activity_feed():
 @apis_bp.route('/activity/stream', methods=['GET'])
 @login_required
 def activity_stream():
-    """SSE for activity/presence — EventSource('/api/activity/stream')."""
+    """WSGI fallback — real SSE is native ASGI (`asgi.py`) to avoid worker starvation."""
     role = normalize_role(getattr(current_user, 'role', None))
     if role == 'child':
         return jsonify({'error': 'Restricted'}), 403
-
-    def generate():
-        q = event_bus.subscribe()
-        try:
-            yield b'event: hello\ndata: {"ok": true, "channel": "activity"}\n\n'
-            while True:
-                try:
-                    event = q.get(timeout=1.0)
-                    if event.type in ('activity', 'presence', 'hello', 'test'):
-                        yield encode_sse(event)
-                except queue.Empty:
-                    yield b': keepalive\n\n'
-        finally:
-            event_bus.unsubscribe(q)
-
-    return Response(
-        stream_with_context(generate()),
-        mimetype='text/event-stream',
-        headers={
-            'Cache-Control': 'no-cache',
-            'X-Accel-Buffering': 'no',
-            'Connection': 'keep-alive',
-        },
-    )
+    return jsonify({
+        'error': 'SSE requires ASGI',
+        'detail': (
+            'Serve GameTheca with uvicorn asgi:asgi_app. '
+            '/api/activity/stream is handled natively outside WsgiToAsgi.'
+        ),
+    }), 503
 
 
 @apis_bp.route('/emulator/health', methods=['GET'])

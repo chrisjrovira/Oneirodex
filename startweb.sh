@@ -77,5 +77,5 @@ export PORT=${PORT:-5006}
 # Default 2 workers — high worker counts + WsgiToAsgi can trigger
 # "CurrentThreadExecutor already quit" under concurrent asset load.
 # Static files are now served natively in asgi.py; keep workers modest.
-WORKERS="${UVICORN_WORKERS:-2}"
+WORKERS="${UVICORN_WORKERS:-1}"
 uvicorn asgi:asgi_app --host 0.0.0.0 --port $PORT --workers "$WORKERS"

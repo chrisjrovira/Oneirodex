@@ -1,6 +1,6 @@
 """Unit tests for folder label parsing (FitGirl tags, Steam App IDs). No DB required."""
 
-from gametheca.utils.game_name_parse import parse_game_label, strip_repack_tags
+from gametheca.utils.game_name_parse import parse_game_label, strip_repack_tags, strip_version_brackets
 
 
 def test_fitgirl_repack_stripped():
@@ -38,6 +38,13 @@ def test_remastered_kept_for_disambiguation():
     r = parse_game_label("Alan Wake - Remastered [FitGirl Repack]")
     assert "Alan Wake" in r['cleaned_name']
     assert "Remastered" in r['cleaned_name'] or "Remaster" in r['cleaned_name']
+
+
+def test_version_bracket_junk_stripped():
+    r = parse_game_label("Some Game [1 0 4 1]")
+    assert r['cleaned_name'] == "Some Game"
+    assert "[1" not in r['cleaned_name']
+    assert strip_version_brackets("Game [1.0.4.1]") == "Game"
 
 
 def test_strip_repack_tags_alone():

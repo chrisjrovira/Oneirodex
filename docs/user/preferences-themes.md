@@ -9,7 +9,7 @@ From the member SPA account / preferences control (preferences modal). Changes s
 - Pick a preset from the **swatch grid** (not name-only).
 - **Default (system)** is the built-in theme id `default` (saved explicitly — not `None`).
 - Default brand accent is green **`#2fd67b`** (Style B+C glass); other presets (Ocean, Forest, …) recolour accent and surfaces.
-- If swatches do nothing or accents look wrong (old teal/orange), the library volume may have stale theme files — ask an admin to **Reset Default Themes** after a rebuild (`GENERATOR_VERSION` 6).
+- If swatches do nothing or accents look wrong (old teal/orange), the library volume may have stale theme files — ask an admin to **Reset Default Themes** after a rebuild (`GENERATOR_VERSION` 8).
 
 ## Icon packs (independent of color)
 

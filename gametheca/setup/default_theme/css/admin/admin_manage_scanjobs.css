@@ -443,16 +443,25 @@
     display: none !important;
 }
 
-/* Loading spinner */
+/* Loading spinner — CSS ring (no legacy GIF) */
 .loading-spinner {
     text-align: center;
-    padding: 20px;
+    padding: 1rem;
     display: none;
+    color: var(--gt-accent, #2fd67b);
 }
 
-.loading-spinner img {
-    max-width: 50px;
-    height: auto;
+.loading-spinner .gt-spinner {
+    margin: 0 auto;
+}
+
+.loading-spinner.is-visible,
+.loading-spinner[style*="display: block"],
+.loading-spinner[style*="display: flex"] {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 /* Auto scan styling */

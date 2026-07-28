@@ -6,9 +6,10 @@ Desktop repo: `C:\Users\cephyrix_zyth\Desktop\gametheca`
 
 ```powershell
 cd C:\Users\cephyrix_zyth\Desktop\gametheca
-# .env is already updated for Compose (host db). Or:
-copy .env.nas.example .env
-# set SECRET_KEY in .env
+# Prefer Unraid template (volume sectioning + Compose Manager paths):
+copy .env.unraid.example .env
+# or: copy .env.nas.example .env
+# set SECRET_KEY + DATA_FOLDER_GAMES / LIBRARY_HOST_PATH in .env
 ```
 
 `.env` must **not** contain `DATABASE_URL=...@localhost...`.

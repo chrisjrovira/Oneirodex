@@ -1,11 +1,12 @@
 # Themes & reset
 
-Themes live on the **library volume** (`/app/gametheca/static/library/themes/...`), not only in the image. Source of truth for defaults: `gametheca/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 6** in `gametheca/utils/preset_themes.py`.
+Themes live on the **library volume** (`/app/gametheca/static/library/themes/...`), not only in the image. Source of truth for defaults: `gametheca/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 8** in `gametheca/utils/preset_themes.py`.
 
 ## Default look
 
 - Accent **`#2fd67b`** (green glass Style B+C).
 - Glass tokens: `--gt-glass-bg`, `--gt-glass-border`, `--gt-glass-blur`.
+- Admin → Themes is a dense `gt-adminpage` surface (active swatches · install/reset · installed cards) — no separate “Back to Dashboard” stack; use the React top bar.
 - Member SPA also needs built **`member-app.css`** in dist — theme reset does not replace a missing SPA bundle.
 
 ## When to Reset Default Themes

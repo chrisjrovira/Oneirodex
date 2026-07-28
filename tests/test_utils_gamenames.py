@@ -606,10 +606,30 @@ class TestGenerateGotyVariants:
         assert variants == expected_variants, f"Expected {expected_variants}, got {variants}"
 
     def test_non_goty_game_unchanged(self):
-        """Test that non-GOTY games return single variant."""
+        """Short non-GOTY names with no sequel/subtitle heuristics stay a single variant."""
         input_name = 'Regular Game'
         variants = generate_goty_variants(input_name)
         assert variants == [input_name], f"Non-GOTY game should return single variant: {variants}"
+
+    def test_baldurs_gate_dark_alliance_1_colon_form(self):
+        """Folder 'Baldur's Gate Dark Alliance 1' must yield IGDB-searchable colon form."""
+        input_name = "Baldur's Gate Dark Alliance 1"
+        variants = generate_goty_variants(input_name)
+
+        assert input_name in variants
+        assert "Baldur's Gate Dark Alliance" in variants
+        assert "Baldur's Gate: Dark Alliance" in variants
+        assert "Baldur's Gate: Dark Alliance 1" in variants
+        assert "Baldurs Gate: Dark Alliance" in variants
+        # Trailing bare 1 must not be the only colon form
+        assert any(v == "Baldur's Gate: Dark Alliance" for v in variants)
+
+    def test_sequel_arabic_roman_swap(self):
+        """Trailing 2/II and 3/III swap for sequel search."""
+        assert 'Halo II' in generate_goty_variants('Halo 2')
+        assert 'Halo 2' in generate_goty_variants('Halo II')
+        assert 'Mass Effect III' in generate_goty_variants('Mass Effect 3')
+        assert 'Mass Effect 3' in generate_goty_variants('Mass Effect III')
 
     def test_multiple_goty_handling(self):
         """Test handling of games with multiple GOTY occurrences."""

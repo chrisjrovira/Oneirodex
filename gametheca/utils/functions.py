@@ -1,4 +1,5 @@
 import os
+import time
 from PIL import Image as PILImage
 import requests
 import re
@@ -11,6 +12,33 @@ from sqlalchemy import select, func
 from gametheca.models import GlobalSettings
 from flask import url_for, current_app
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories
+
+# Default cap for recursive size walks (NAS/Unraid trees can take minutes otherwise).
+_DEFAULT_FOLDER_SIZE_TIMEOUT_SEC = 60
+
+
+def _excluded_size_folder_names(settings) -> set[str]:
+    """Lowercased update/extras folder basenames to skip during size walks."""
+    names: set[str] = set()
+    if not settings:
+        return names
+    for attr in ('update_folder_name', 'extras_folder_name'):
+        value = getattr(settings, attr, None)
+        if value and str(value).strip():
+            names.add(str(value).strip().lower())
+    return names
+
+
+def _path_has_excluded_component(dirpath: str, root: str, excluded: set[str]) -> bool:
+    if not excluded:
+        return False
+    try:
+        rel = os.path.relpath(dirpath, root)
+    except ValueError:
+        rel = dirpath
+    if rel in ('.', ''):
+        return False
+    return any(part.lower() in excluded for part in rel.replace('\\', '/').split('/'))
 
 def format_size(size_in_bytes):
     """Format file size from bytes to human-readable format."""
@@ -59,7 +87,7 @@ def get_path_size(file_path):
     return 0
 
 
-def get_folder_size_in_bytes(folder_path, timeout=300):
+def get_folder_size_in_bytes(folder_path, timeout=_DEFAULT_FOLDER_SIZE_TIMEOUT_SEC):
     """Calculate the total size of a folder in bytes.
     
     Args:
@@ -99,28 +127,45 @@ def get_folder_size_in_bytes(folder_path, timeout=300):
             print(f"Error: No read permission for path: {folder_path}")
             return 0
 
+        timeout_sec = max(1, int(timeout or _DEFAULT_FOLDER_SIZE_TIMEOUT_SEC))
+        deadline = time.monotonic() + timeout_sec
         total_size = 0
+        timed_out = False
         for dirpath, dirnames, filenames in os.walk(folder_path):
+            if time.monotonic() >= deadline:
+                timed_out = True
+                break
             try:
                 # Skip if we can't access the directory
                 if not os.access(dirpath, os.R_OK):
                     print(f"Warning: Skipping inaccessible directory: {dirpath}")
+                    dirnames[:] = []
                     continue
 
                 for f in filenames:
+                    if time.monotonic() >= deadline:
+                        timed_out = True
+                        break
                     try:
                         fp = os.path.join(dirpath, f)
                         # Skip symlinks unless they point to regular files
                         if os.path.islink(fp):
                             continue
-                        if os.path.exists(fp):
-                            total_size += os.path.getsize(fp)
+                        total_size += os.path.getsize(fp)
                     except (OSError, IOError) as e:
                         print(f"Error processing file {f}: {e}")
                         continue
             except (OSError, IOError) as e:
                 print(f"Error accessing directory {dirpath}: {e}")
                 continue
+            if timed_out:
+                break
+
+        if timed_out:
+            print(
+                f"Folder size timed out after {timeout_sec}s for {folder_path} "
+                f"(partial={total_size} bytes)"
+            )
 
         return max(total_size, 1)
 
@@ -129,7 +174,7 @@ def get_folder_size_in_bytes(folder_path, timeout=300):
         return 0
 
 
-def get_folder_size_in_bytes_updates(folder_path, timeout=300):
+def get_folder_size_in_bytes_updates(folder_path, timeout=_DEFAULT_FOLDER_SIZE_TIMEOUT_SEC):
     """Calculate folder size excluding update and extras folders."""
     try:
         # Validate folder path security (only if we're in an application context)
@@ -161,37 +206,55 @@ def get_folder_size_in_bytes_updates(folder_path, timeout=300):
             return 0
 
         settings = db.session.execute(select(GlobalSettings)).scalars().first()
+        excluded = _excluded_size_folder_names(settings)
+        timeout_sec = max(1, int(timeout or _DEFAULT_FOLDER_SIZE_TIMEOUT_SEC))
+        deadline = time.monotonic() + timeout_sec
         total_size = 0
+        timed_out = False
         
         for dirpath, dirnames, filenames in os.walk(folder_path):
+            if time.monotonic() >= deadline:
+                timed_out = True
+                break
             try:
+                # Prune update/extras children so we do not walk those trees.
+                if excluded:
+                    dirnames[:] = [d for d in dirnames if d.lower() not in excluded]
+
                 # Skip if we can't access the directory
                 if not os.access(dirpath, os.R_OK):
                     print(f"Warning: Skipping inaccessible directory: {dirpath}")
+                    dirnames[:] = []
                     continue
 
-                # Check if current directory should be excluded
-                should_process = True
-                if settings:
-                    if (settings.update_folder_name and settings.update_folder_name.lower() in dirpath.lower()) or \
-                       (settings.extras_folder_name and settings.extras_folder_name.lower() in dirpath.lower()):
-                        should_process = False
+                if _path_has_excluded_component(dirpath, folder_path, excluded):
+                    dirnames[:] = []
+                    continue
 
-                if should_process:
-                    for f in filenames:
-                        try:
-                            fp = os.path.join(dirpath, f)
-                            if os.path.islink(fp):
-                                continue
-                            if os.path.exists(fp):
-                                total_size += os.path.getsize(fp)
-                        except (OSError, IOError) as e:
-                            print(f"Error processing file {f}: {e}")
+                for f in filenames:
+                    if time.monotonic() >= deadline:
+                        timed_out = True
+                        break
+                    try:
+                        fp = os.path.join(dirpath, f)
+                        if os.path.islink(fp):
                             continue
+                        total_size += os.path.getsize(fp)
+                    except (OSError, IOError) as e:
+                        print(f"Error processing file {f}: {e}")
+                        continue
 
             except (OSError, IOError) as e:
                 print(f"Error accessing directory {dirpath}: {e}")
                 continue
+            if timed_out:
+                break
+
+        if timed_out:
+            print(
+                f"Folder size (excl. updates/extras) timed out after {timeout_sec}s "
+                f"for {folder_path} (partial={total_size} bytes)"
+            )
 
         return max(total_size, 1)
 

@@ -28,13 +28,26 @@ optional `livekit` / `clamav` profiles). Admins already have
 
 1. **Liveness / readiness** — unauthenticated `/healthz` + `/readyz` (DB + init)
    suitable for Unraid health plugins and Compose `healthcheck` (not login `/`)
-2. **Near-realtime operator view** — extend ops summary + SSE/event hooks for
-   scans, errors, companion heartbeats, ClamAV/LiveKit reachability
-3. **Optional scrape path** — Prometheus `/metrics` (admin or token) behind a
+2. **Volume sectioning (Unraid test bed)** — clearly separate in Compose + runbooks:
+   - **Games** `DATA_FOLDER_GAMES` → `/storage:ro` (library scan root; never uploads)
+   - **Library / uploads** `LIBRARY_HOST_PATH` → `/app/gametheca/static/library` RW
+     (covers, themes, user uploads). Prefer named comments + `.env.unraid.example`
+     path examples under `/mnt/user/...` — do not conflate the two mounts.
+3. **Near-realtime operator view** — extend ops summary + scan job progress so
+   Unraid testers (and the agent team) can monitor scans/errors/companions while
+   using the stack; hand Backend concrete field contracts
+4. **Optional scrape path** — Prometheus `/metrics` (admin or token) behind a
    Compose `observability` profile; Grafana optional — never required for v1
-4. **Deploy truth** — keep runbooks accurate: volumes, Rebuild + Reset Themes,
+5. **Deploy truth** — keep runbooks accurate: volumes, Rebuild + Reset Themes,
    profile gotchas, version tags aligned with app semver
-5. **Security** — no open metrics that leak library paths; rate-limit probes
+6. **Security** — no open metrics that leak library paths; rate-limit probes
+
+## Full Compose expectation
+
+`docker-compose.yml` is the single source: `app` + `db` always; profiles
+`livekit` / `clamav` / `challenge` (+ documented optional observability).
+Unraid-specific path examples live in runbooks / `.env.unraid.example`, not a
+forked mystery compose unless PM asks for an overlay file.
 
 ## Paths
 

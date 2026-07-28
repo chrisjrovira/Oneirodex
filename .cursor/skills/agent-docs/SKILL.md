@@ -27,12 +27,26 @@ disable-model-invocation: true
 ## Typical paths
 
 - `docs/**`, `README.md`, `.env.example` (comments only), HelpPage copy
-- Canvas program board when it exists
+- **Program canvas (required every wave):**  
+  `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
+
+## Canvas update contract (with PM)
+
+When PM/Docs Task says “update canvas”, rewrite the program board so it always has:
+
+1. **Ship TLDR** — one sentence current truth  
+2. **Done** — TodoList/table of landed items this wave  
+3. **Next** — ordered passes with owner seat (`ops` / `backend` / …)  
+4. **Blocked** — Unraid deploy / human gates  
+5. **Team flow** — seats that just ran + next seat  
+
+Import only `cursor/canvas`. No empty placeholder sections.
 
 ## Handoffs
 
 - Domain accuracy on systems/ROMs/DAT → ask `@agent-gamemaster`
 - API/env truth → verify with `@agent-backend` notes, don’t invent flags
+- Volume/Compose truth → verify with `@agent-ops` notes
 
 ## Locked out
 

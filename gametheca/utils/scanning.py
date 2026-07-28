@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone
 from flask import current_app, flash, has_request_context
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from gametheca import db
 from gametheca.models import (
@@ -18,6 +18,34 @@ from gametheca.models import (
 from gametheca.utils.functions import read_first_nfo_content
 from gametheca.utils.igdb_api import make_igdb_api_request
 from gametheca.utils.event_logging import log_system_event
+
+
+def bump_scan_job_progress(
+    scan_job_id,
+    *,
+    success=False,
+    failed=False,
+    current_processing=None,
+):
+    """Atomically bump scan counters so worker commits cannot clobber progress.
+
+    Multithreaded identify commits other ScanJob fields from worker sessions;
+    ORM ``folders_success += 1`` on a stale coordinator row can stall the UI
+    at 1 while games keep landing in the library.
+    """
+    if not scan_job_id or not (success or failed or current_processing is not None):
+        return
+    values = {'last_progress_update': datetime.now(timezone.utc)}
+    if success:
+        values['folders_success'] = ScanJob.folders_success + 1
+    if failed:
+        values['folders_failed'] = ScanJob.folders_failed + 1
+    if current_processing is not None:
+        values['current_processing'] = current_processing[:255] if current_processing else None
+    db.session.execute(
+        update(ScanJob).where(ScanJob.id == scan_job_id).values(**values)
+    )
+    db.session.commit()
 
 
 def try_add_game(game_name, full_disk_path, scan_job_id, library_uuid, check_exists=True, fetch_hltb=False, settings=None):
@@ -81,18 +109,17 @@ def process_game_with_fallback(game_name, full_disk_path, scan_job_id, library_u
     
     # Fetch library details based on library_uuid
     library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalar_one_or_none()
-    scan_job = db.session.get(ScanJob, scan_job_id)
     if not library:
         print(f"Library with UUID {library_uuid} not found.")
         return False
 
     # Log skipping of processing for already matched or unmatched folders (fallback for when cached sets not provided)
+    # Do NOT bump ScanJob counters here — the scan coordinator owns folders_success/failed
+    # (worker increments race with multithreaded progress and stall the UI).
     if not existing_unmatched_paths:
         existing_unmatched_folder = db.session.execute(select(UnmatchedFolder).filter_by(folder_path=full_disk_path)).scalar_one_or_none()
         if existing_unmatched_folder:
             print(f"Skipping processing for already logged unmatched folder: {full_disk_path}")
-            # Update total count to maintain consistency even when skipping
-            scan_job.folders_failed += 1
             return False
 
     # Check if the game already exists in the database (fallback for when cached sets not provided)
@@ -106,9 +133,13 @@ def process_game_with_fallback(game_name, full_disk_path, scan_job_id, library_u
     print(f'Game does not exist in database: {game_name} at {full_disk_path}')
     # Try to add the game, now using library_uuid
     if not try_add_game(game_name, full_disk_path, scan_job_id, library_uuid=library_uuid, check_exists=False, fetch_hltb=fetch_hltb, settings=settings):
-        # Attempt fallback game name processing
+        # Truncate name from the right — cap attempts so one bad title cannot
+        # burn minutes of IGDB round-trips (ShareWarez-era unbounded loop).
         parts = game_name.split()
-        for i in range(len(parts) - 1, 0, -1):
+        max_fallback = min(3, max(0, len(parts) - 1))
+        for i in range(len(parts) - 1, len(parts) - 1 - max_fallback, -1):
+            if i <= 0:
+                break
             fallback_name = ' '.join(parts[:i])
             if try_add_game(fallback_name, full_disk_path, scan_job_id, library_uuid=library_uuid, check_exists=False, fetch_hltb=fetch_hltb, settings=settings):
                 print(f"[GAME MATCH] Success with fallback name: '{fallback_name}'")

@@ -266,6 +266,43 @@
     border-width: 3px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .gt-spinner {
+        animation: none;
+        border-top-color: color-mix(in srgb, currentColor 55%, transparent);
+        opacity: 0.85;
+    }
+}
+
+/* Full-page / folder-browse loading chrome (replaces legacy pirate GIFs) */
+.gt-loading-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    color: var(--gt-accent, #2fd67b);
+}
+
+.spinner-overlay .spinner-container {
+    background: var(--gt-surface, #141820);
+    color: var(--gt-text, #f2f4f8);
+    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    border-radius: 12px;
+    box-shadow: 0 12px 40px color-mix(in srgb, var(--gt-bg, #0b0d10) 55%, transparent);
+}
+
+.spinner-overlay .gt-spinner,
+.loading-spinner .gt-spinner,
+.gt-loading-overlay .gt-spinner {
+    color: var(--gt-accent, #2fd67b);
+}
+
+.spinner-overlay .progress-text {
+    color: var(--gt-text-muted, #c4ccd8);
+    margin-top: 0.75rem;
+}
+
 .gt-status-dot {
     display: inline-block;
     width: 0.7em;

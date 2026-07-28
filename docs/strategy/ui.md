@@ -8,9 +8,9 @@
 | Surface | State |
 |---|---|
 | Member SPA | Vite React app (`frontend/member-app`), **top nav** (no left sidebar), glass Style **B+C** |
-| Accent | Default **`#2fd67b`** green (not teal); `GENERATOR_VERSION` **6** regenerates preset tokens |
+| Accent | Default **`#2fd67b`** green (not teal); `GENERATOR_VERSION` **8** regenerates preset tokens |
 | Systems hub | `/systems` — browse-by-console families + platform skins |
-| Admin | **`base_admin.html`** Jinja top bar (~38 pages); **React admin SPA in progress** (`frontend/admin-app` target) |
+| Admin | **`base_admin.html`** + React top bar (`frontend/admin-app`); Themes page densified (`gt-themes-*` blocks); Settings hub cards tighter |
 | Required asset | Built `member-app.css` (+ `member-app.js`) must ship in image/dist — SPA chrome is unstyled without it |
 
 Program board: Cursor canvas  
@@ -141,7 +141,7 @@ State machine per game/user: `not_downloaded` → `downloaded` → `installed` �
 - Discover + collections + trailers under one SPA shell  
 - Top nav + Systems hub + green glass Style B+C  
 - Downloads queue UX (pause/resume when client exists)  
-- Preferences / theme picker (presets with swatches; `GENERATOR_VERSION` 6)  
+- Preferences / theme picker (presets with swatches; `GENERATOR_VERSION` 8)  
 - ~~Badge filter chips (“New”, “Updates”, “Releases”)~~ **Done** (O5)
 
 ### Wave 3 — Admin consolidation / React SPA (active program)

@@ -6,6 +6,22 @@
 
 Top-level keys include `as_of`, `host`, `network`, `issues`, `scans`, `library`, **`services`**, `recent_errors` (plus `*_error` when a section fails).
 
+## `scans` key
+
+Built by `gametheca.utils.ops_summary._scan_snapshot`. Poll-friendly (~15s) glance for Unraid library scans — counters come from atomic `bump_scan_job_progress`.
+
+| Field | Meaning |
+|---|---|
+| `active_count` | Jobs in `Running` or `Stopping` |
+| `jobs[]` | Active jobs first, then up to 5 recent `Completed` / `Cancelled` / `Failed` (24h) |
+| `jobs[].id` / `id_short` | Full UUID · first 8 chars |
+| `jobs[].status` | Enum casing: `Running` / `Stopping` / `Cancelled` / `Completed` / `Failed` |
+| `jobs[].folders_success` / `folders_failed` / `total_folders` | Live folder counters |
+| `jobs[].current_processing` | Latest label from the scan coordinator (nullable) |
+| `jobs[].last_progress_update` | ISO timestamp of last counter bump (nullable) |
+| `jobs[].library` | Library name when joined cheaply |
+| `jobs[].progress` / `errors` | Compat aliases (`%` of done folders · `folders_failed`) |
+
 ## `services` key
 
 Built by `gametheca.utils.ops_summary._services_snapshot`. Brief field map:

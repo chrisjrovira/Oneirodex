@@ -96,31 +96,84 @@ def test_build_ops_summary_includes_required_keys():
 
 
 def test_scan_snapshot_counts_active_folder_failures():
+    last_update = datetime(2026, 7, 27, 12, 0, tzinfo=timezone.utc)
     active_job = SimpleNamespace(
-        id=1,
+        id='abcdef12-3456-7890-abcd-ef1234567890',
         library=SimpleNamespace(name='Games'),
         status='Running',
         total_folders=4,
         folders_success=1,
         folders_failed=2,
+        current_processing='Processing: Halo (3/4)',
+        last_progress_update=last_update,
     )
     active_result = MagicMock()
     active_result.scalars.return_value.all.return_value = [active_job]
+    recent_result = MagicMock()
+    recent_result.scalars.return_value.all.return_value = []
     failure_result = MagicMock()
     failure_result.scalar.return_value = 3
 
     with patch(
         'gametheca.utils.ops_summary.db.session.execute',
-        side_effect=(active_result, failure_result),
+        side_effect=(active_result, recent_result, failure_result),
     ) as execute:
         from gametheca.utils.ops_summary import _scan_snapshot
 
         result = _scan_snapshot()
 
-    failure_query = str(execute.call_args_list[1].args[0])
+    failure_query = str(execute.call_args_list[2].args[0])
     assert 'folders_failed >' in failure_query
-    assert result['jobs'][0]['errors'] == 2
+    job = result['jobs'][0]
+    assert job['errors'] == 2
+    assert job['folders_failed'] == 2
+    assert job['folders_success'] == 1
+    assert job['total_folders'] == 4
+    assert job['status'] == 'Running'
+    assert job['id_short'] == 'abcdef12'
+    assert job['current_processing'] == 'Processing: Halo (3/4)'
+    assert job['last_progress_update'] == last_update.isoformat()
+    assert job['library'] == 'Games'
+    assert job['progress'] == 75
+    assert result['active_count'] == 1
     assert result['failure_count'] == 3
+
+
+def test_scan_snapshot_includes_recent_terminal_jobs():
+    completed = SimpleNamespace(
+        id='deadbeef-0000-0000-0000-000000000001',
+        library=SimpleNamespace(name='PC'),
+        status='Completed',
+        total_folders=10,
+        folders_success=9,
+        folders_failed=1,
+        current_processing=None,
+        last_progress_update=datetime(2026, 7, 27, 11, 0, tzinfo=timezone.utc),
+    )
+    active_result = MagicMock()
+    active_result.scalars.return_value.all.return_value = []
+    recent_result = MagicMock()
+    recent_result.scalars.return_value.all.return_value = [completed]
+    failure_result = MagicMock()
+    failure_result.scalar.return_value = 0
+
+    with patch(
+        'gametheca.utils.ops_summary.db.session.execute',
+        side_effect=(active_result, recent_result, failure_result),
+    ):
+        from gametheca.utils.ops_summary import _scan_snapshot
+
+        result = _scan_snapshot()
+
+    assert result['active_count'] == 0
+    assert len(result['jobs']) == 1
+    job = result['jobs'][0]
+    assert job['status'] == 'Completed'
+    assert job['id_short'] == 'deadbeef'
+    assert job['folders_success'] == 9
+    assert job['folders_failed'] == 1
+    assert job['total_folders'] == 10
+    assert job['progress'] == 100
 
 
 def test_build_ops_summary_keeps_other_sections_on_network_failure():

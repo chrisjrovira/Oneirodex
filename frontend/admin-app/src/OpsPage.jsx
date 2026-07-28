@@ -190,15 +190,29 @@ export function OpsPage() {
             <>
               <p>{scans.active_count ?? 0} active</p>
               {(scans.jobs || []).length === 0 ? (
-                <p className="gt-admin-lede">No running scan jobs.</p>
+                <p className="gt-admin-lede">No active or recent scan jobs.</p>
               ) : (
                 <ul className="gt-ops-list">
-                  {scans.jobs.map((job) => (
-                    <li key={job.id}>
-                      #{job.id} {job.library || 'library'} · {job.status} · {job.progress}%
-                      {job.errors ? ` · ${job.errors} errors` : ''}
-                    </li>
-                  ))}
+                  {scans.jobs.map((job) => {
+                    const counters =
+                      job.total_folders != null
+                        ? `${job.folders_success ?? 0}/${job.total_folders}` +
+                          (job.folders_failed ? ` · ${job.folders_failed} failed` : '')
+                        : `${job.progress ?? 0}%`
+                    return (
+                      <li key={job.id}>
+                        #{job.id_short || job.id} {job.library || 'library'} · {job.status}
+                        {' · '}
+                        {counters}
+                        {job.current_processing ? (
+                          <>
+                            <br />
+                            <span className="gt-admin-lede">{job.current_processing}</span>
+                          </>
+                        ) : null}
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </>

@@ -8,6 +8,7 @@
 {% endblock %}
 
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/admin/admin_manage_users.css'|theme_asset }}">
 <div class="container">
     <div class="glass-panel">
         <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
@@ -80,14 +81,14 @@
 </div>
 
 <!-- Edit User Modal -->
-<div class="modal fade" id="editUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal fade gt-user-modal" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalTitle">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content gt-user-modal__panel">
+            <div class="modal-header gt-user-modal__header">
+                <h5 class="modal-title" id="editUserModalTitle">Edit user</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body gt-user-modal__body">
                 <form id="editUserForm">
                     <input type="hidden" id="editUserId">
                     <div class="mb-3">
@@ -153,8 +154,8 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <div class="modal-footer gt-user-modal__footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="saveUserChanges">Save changes</button>
             </div>
         </div>
@@ -162,19 +163,20 @@
     </div>
     
     <!-- Add New User Modal -->
-    <div class="modal fade" id="addUserModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add New User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal fade gt-user-modal" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalTitle">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content gt-user-modal__panel">
+                <div class="modal-header gt-user-modal__header">
+                    <h5 class="modal-title" id="addUserModalTitle">Add household user</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body gt-user-modal__body">
+                    <p class="gt-user-modal__lede">Creates a local account. Role and library limits can be set after creation.</p>
                     <form id="addUserForm">
                         <div class="mb-3">
                             <label for="newUsername" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="newUsername" required>
-                            <small id="usernameAvailabilityFeedback" class="form-text"></small>
+                            <input type="text" class="form-control" id="newUsername" required autocomplete="username" aria-describedby="usernameAvailabilityFeedback">
+                            <small id="usernameAvailabilityFeedback" class="form-text" role="status" aria-live="polite"></small>
                         </div>
                         <div class="mb-3">
                             <label for="newEmail" class="form-label">Email</label>
@@ -185,14 +187,14 @@
                             <input type="password" class="form-control" id="newPassword" required autocomplete="new-password">
                         </div>
                         <div class="mb-3">
-                            <label for="newConfirmPassword" class="form-label">Confirm Password</label>
+                            <label for="newConfirmPassword" class="form-label">Confirm password</label>
                             <input type="password" class="form-control" id="newConfirmPassword" required autocomplete="new-password">
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveNewUser">Create User</button>
+                <div class="modal-footer gt-user-modal__footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveNewUser">Create user</button>
                 </div>
             </div>
         </div>

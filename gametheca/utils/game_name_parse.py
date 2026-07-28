@@ -11,6 +11,11 @@ _BRACKET_TAG_RE = re.compile(
     r'\s*(?:Repack)?\s*\]',
     re.IGNORECASE,
 )
+# Version junk like [1 0 4 1] or [1.0.4.1] in brackets — not useful for IGDB search.
+_VERSION_BRACKET_RE = re.compile(
+    r'\[\s*\d+(?:[\s._]+\d+)+\s*\]',
+    re.IGNORECASE,
+)
 _STEAM_ID_RE = re.compile(r'\(\s*(\d{4,7})\s*\)\s*$')
 
 
@@ -19,6 +24,13 @@ def strip_repack_tags(raw: str) -> str:
     if not raw:
         return ''
     return _BRACKET_TAG_RE.sub('', raw).strip()
+
+
+def strip_version_brackets(raw: str) -> str:
+    """Remove bracketed multi-part version junk (e.g. [1 0 4 1])."""
+    if not raw:
+        return ''
+    return _VERSION_BRACKET_RE.sub('', raw).strip()
 
 
 def parse_game_label(raw: str) -> dict:
@@ -34,6 +46,7 @@ def parse_game_label(raw: str) -> dict:
     steam_app_id = None
     working = raw.strip()
     working = strip_repack_tags(working)
+    working = strip_version_brackets(working)
 
     match = _STEAM_ID_RE.search(working)
     if match:

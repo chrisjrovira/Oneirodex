@@ -50,6 +50,7 @@ pip-delete-this-directory.txt
 !.env.example
 !.env.docker.example
 !.env.nas.example
+!.env.unraid.example
 !.env.thin
 
 config.backup

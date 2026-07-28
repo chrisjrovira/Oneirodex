@@ -123,6 +123,7 @@ Useful flags: `--games-dir /path/to/games` · `--dev` · `--no-db` · `--force`
 
 ```bash
 cp .env.docker.example .env
+# Unraid: prefer .env.unraid.example (Compose Manager paths + volume sectioning)
 # Required: SECRET_KEY, DATA_FOLDER_GAMES (host games path), LIBRARY_HOST_PATH
 # Do NOT use DATABASE_URL=@localhost — Compose talks to service "db"
 docker compose up -d --build
@@ -174,7 +175,7 @@ Force the setup wizard: `./startweb.sh --force-setup` (required when upgrading f
 | `ENABLE_LOGIN_RATE_LIMIT` | In-process login / reset rate limit (default on) |
 | `ENABLE_PATCH_CATALOG` / `ENABLE_ROM_AI_TRANSLATE` | ROM patch / AI translate hooks (on by default) |
 
-Full lists: [`.env.example`](.env.example) · [`.env.docker.example`](.env.docker.example) · [settings-modules.md](docs/admin/settings-modules.md)
+Full lists: [`.env.example`](.env.example) · [`.env.docker.example`](.env.docker.example) · [`.env.unraid.example`](.env.unraid.example) · [settings-modules.md](docs/admin/settings-modules.md)
 
 ---
 
@@ -218,8 +219,10 @@ Quick triage — full guides: [member](docs/user/troubleshooting.md) · [admin](
 |---|---|
 | Exit / restart loop + `SECRET_KEY` error | Set a real `SECRET_KEY` (not the placeholder) |
 | Can’t reach DB | Compose host must be `db`, not `localhost` |
+| `no pg_hba.conf entry … no encryption` | Recreate db with Compose `hba_file` mount — [container-wont-start §3b](docs/runbooks/container-wont-start.md#3b-postgres-up-but-pg_hba-rejects-app-no-encryption) |
 | Port in use | Change published `5006` mapping |
 | Unstyled Library / Discover | Rebuild image so `member-app` dist exists |
+| Discover stuck on Loading; logs show stream but no `/api/discover/sections` | Rebuild app with ASGI SSE fix — [admin troubleshooting](docs/admin/troubleshooting.md#spa-navigates-but-pagesadmin-hang-discover-stuck-on-loading) |
 
 ```bash
 docker compose logs app --tail 200
@@ -230,7 +233,7 @@ docker compose build --no-cache && docker compose up -d
 
 | Symptom | What to try |
 |---|---|
-| Spin forever / blank UI | Hard refresh · re-login · ask admin to check logs |
+| Spin forever / blank UI | Hard refresh · re-login · ask admin to check logs · clear Friends dock localStorage if Discover never leaves Loading |
 | Download 404 / empty zip | Admin: verify games mount + re-scan |
 | “Too many login attempts” | Wait a few minutes (rate limit) |
 | Browser play won’t start | System may be companion-only · missing BIOS |

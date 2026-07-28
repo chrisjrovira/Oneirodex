@@ -62,30 +62,65 @@ def _library_pulse():
     }
 
 
+def _scan_job_payload(job):
+    """Serialize a ScanJob for Ops glance (~15s poll) — honest folder counters."""
+    total = job.total_folders or 0
+    success = job.folders_success or 0
+    failed = job.folders_failed or 0
+    completed = success + failed
+    progress = round(completed * 100 / total) if total > 0 else 0
+    job_id = job.id or ''
+    last_update = job.last_progress_update
+    return {
+        'id': job_id,
+        'id_short': job_id[:8] if job_id else None,
+        'library': job.library.name if job.library else None,
+        # Preserve ScanJob enum casing (Running / Stopping / Cancelled / Completed / …)
+        'status': job.status,
+        'folders_success': success,
+        'folders_failed': failed,
+        'total_folders': total,
+        'current_processing': job.current_processing,
+        'last_progress_update': last_update.isoformat() if last_update else None,
+        # Backward-compatible aliases for existing Ops / Dashboard tiles
+        'progress': progress,
+        'errors': failed,
+    }
+
+
 def _scan_snapshot():
-    """Return active scan jobs and recent scan failure count."""
+    """Return active + recent scan jobs (with live counters) and failure count."""
     active_jobs = db.session.execute(
         select(ScanJob)
         .where(ScanJob.status.in_(('Running', 'Stopping')))
         .order_by(ScanJob.last_progress_update.desc())
     ).scalars().all()
 
-    jobs = []
-    for job in active_jobs:
-        total = job.total_folders or 0
-        completed = (job.folders_success or 0) + (job.folders_failed or 0)
-        progress = round(completed * 100 / total) if total > 0 else 0
-        jobs.append(
-            {
-                'id': job.id,
-                'library': job.library.name if job.library else None,
-                'status': job.status.lower(),
-                'progress': progress,
-                'errors': job.folders_failed or 0,
-            }
-        )
+    jobs = [_scan_job_payload(job) for job in active_jobs]
+    active_ids = {job.id for job in active_jobs}
 
     since = datetime.now(timezone.utc) - timedelta(hours=24)
+    # Recent terminal jobs so Unraid testing can report progress after a scan ends.
+    recent_jobs = db.session.execute(
+        select(ScanJob)
+        .where(
+            ScanJob.status.in_(('Completed', 'Cancelled', 'Failed')),
+            or_(
+                ScanJob.last_progress_update >= since,
+                ScanJob.last_run >= since,
+            ),
+        )
+        .order_by(
+            func.coalesce(ScanJob.last_progress_update, ScanJob.last_run).desc()
+        )
+        .limit(5)
+    ).scalars().all()
+
+    for job in recent_jobs:
+        if job.id in active_ids:
+            continue
+        jobs.append(_scan_job_payload(job))
+
     failure_count = db.session.execute(
         select(func.count(ScanJob.id)).where(
             or_(
@@ -98,7 +133,7 @@ def _scan_snapshot():
     ).scalar()
 
     return {
-        'active_count': len(jobs),
+        'active_count': len(active_jobs),
         'jobs': jobs,
         'failure_count': failure_count,
     }

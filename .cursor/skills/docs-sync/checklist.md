@@ -11,7 +11,7 @@ Canonical map: [docs/strategy/docs-map.md](../../../docs/strategy/docs-map.md).
 | Docs map | `docs/strategy/docs-map.md` |
 | Docs hub | `docs/README.md` |
 | Root README | `README.md` |
-| Env examples | `.env.example`, `.env.docker.example` |
+| Env examples | `.env.example`, `.env.docker.example`, `.env.unraid.example` |
 
 ## User
 

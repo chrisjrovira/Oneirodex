@@ -18,7 +18,7 @@ Use these unless the user **explicitly** overrides in the same message.
 | Support | In-app Report → GitHub Issues + admin inbox |
 | LLM | Cursor skills on demand; no paid keys in Flask |
 | Auto-merge | Never |
-| Agent team | `@agent-team` / `@agent-pm` / `@agent-uiux` / `@agent-backend` / `@agent-desktop` / `@agent-qa` / `@agent-docs` / `@agent-gamemaster` / `@agent-ops` |
+| Agent team | `@agent-team` / `@agent-pm` / seats — parent is PM: **Task-disperse**; no product code when seats exist; Docs owns program canvas every wave |
 
 ## Engineering
 

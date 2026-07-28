@@ -62,6 +62,21 @@ class LazyASGIApp:
                 await self._handle_download(scope, receive, send)
                 return
 
+            # Long-lived SSE must not run through WsgiToAsgi — a single sync
+            # stream stalls the worker and freezes Discover/Admin/API fetches.
+            sse_key = path.rstrip('/') or '/'
+            if sse_key in self._SSE_ROUTES:
+                cfg = self._SSE_ROUTES[sse_key]
+                await self._handle_sse(
+                    scope,
+                    receive,
+                    send,
+                    channel=cfg['channel'],
+                    event_types=cfg['event_types'],
+                    restrict_child=cfg['restrict_child'],
+                )
+                return
+
             # Serve /static/* outside WsgiToAsgi — concurrent CSS/JS through the
             # bridge triggers "CurrentThreadExecutor already quit or is broken".
             if path.startswith('/static/'):
@@ -70,6 +85,136 @@ class LazyASGIApp:
 
             await self._ensure_flask()
             await self._app(scope, receive, send)
+
+    # path (no trailing slash) → native async SSE config
+    _SSE_ROUTES = {
+        '/api/activity/stream': {
+            'channel': 'activity',
+            'event_types': frozenset({'activity', 'presence', 'hello', 'test'}),
+            'restrict_child': True,
+        },
+        '/api/events/stream': {
+            'channel': 'events',
+            # scan/download/ops fan-out — emit all bus types
+            'event_types': None,
+            'restrict_child': False,
+        },
+    }
+
+    async def _authorize_sse_user(self, user_id, *, restrict_child: bool) -> int | None:
+        """Return HTTP error status, or None if the user may open SSE."""
+        if not user_id:
+            return 401
+        with self._flask_app.app_context():
+            from gametheca.utils.rbac import normalize_role
+
+            user = db.session.get(User, user_id)
+            if not user:
+                return 401
+            if restrict_child and normalize_role(getattr(user, 'role', None)) == 'child':
+                return 403
+        return None
+
+    async def _handle_sse(
+        self,
+        scope,
+        receive,
+        send,
+        *,
+        channel: str,
+        event_types: frozenset[str] | None,
+        restrict_child: bool,
+    ):
+        """Async SSE — keeps the uvicorn event loop free (not WsgiToAsgi)."""
+        import queue as queue_mod
+
+        if scope.get("method") != "GET":
+            await self._send_error(send, 405, "Method Not Allowed")
+            return
+
+        await self._ensure_flask()
+        user_id = await self._get_user_from_session(scope)
+        auth_status = await self._authorize_sse_user(user_id, restrict_child=restrict_child)
+        if auth_status is not None:
+            await self._send_error(
+                send,
+                auth_status,
+                "Unauthorized" if auth_status == 401 else "Restricted",
+            )
+            return
+
+        from gametheca.utils.event_bus import encode_sse, event_bus
+
+        subscriber = event_bus.subscribe()
+
+        def _poll(timeout: float = 1.0):
+            try:
+                return subscriber.get(timeout=timeout)
+            except queue_mod.Empty:
+                return None
+
+        await send({
+            "type": "http.response.start",
+            "status": 200,
+            "headers": [
+                (b"content-type", b"text/event-stream"),
+                (b"cache-control", b"no-cache"),
+                (b"x-accel-buffering", b"no"),
+                (b"connection", b"keep-alive"),
+            ],
+        })
+
+        disconnected = asyncio.Event()
+
+        async def _watch_disconnect():
+            while True:
+                message = await receive()
+                if message.get("type") == "http.disconnect":
+                    disconnected.set()
+                    return
+
+        hello = (
+            f'event: hello\ndata: {{"ok": true, "channel": "{channel}"}}\n\n'
+        ).encode('utf-8')
+        watcher = asyncio.create_task(_watch_disconnect())
+        try:
+            await send({
+                "type": "http.response.body",
+                "body": hello,
+                "more_body": True,
+            })
+            while not disconnected.is_set():
+                event = await asyncio.to_thread(_poll, 1.0)
+                if disconnected.is_set():
+                    break
+                if event is None:
+                    await send({
+                        "type": "http.response.body",
+                        "body": b": keepalive\n\n",
+                        "more_body": True,
+                    })
+                    continue
+                if event_types is None or event.type in event_types:
+                    await send({
+                        "type": "http.response.body",
+                        "body": encode_sse(event),
+                        "more_body": True,
+                    })
+        except (asyncio.CancelledError, ConnectionResetError, BrokenPipeError):
+            pass
+        except Exception as exc:
+            print(f"Error in {channel} SSE: {exc}")
+        finally:
+            watcher.cancel()
+            try:
+                await watcher
+            except asyncio.CancelledError:
+                pass
+            event_bus.unsubscribe(subscriber)
+            try:
+                await send({"type": "http.response.body", "body": b"", "more_body": False})
+            except Exception:
+                pass
 
     async def _handle_static(self, scope, receive, send, path: str):
         """Stream static files with path-traversal protection."""

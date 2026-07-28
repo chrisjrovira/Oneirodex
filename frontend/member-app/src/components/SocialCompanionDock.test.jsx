@@ -41,11 +41,16 @@ beforeEach(() => {
       return { ok: false, json: async () => ({}) }
     }),
   )
+  globalThis.__gtEventSourceCalls = []
   vi.stubGlobal(
     'EventSource',
     class {
-      addEventListener() {}
-      close() {}
+      constructor(url) {
+        globalThis.__gtEventSourceCalls.push(url)
+        this.url = url
+        this.addEventListener = () => {}
+        this.close = () => {}
+      }
     },
   )
 })
@@ -80,4 +85,30 @@ test('launcher opens collapsed dock', async () => {
   await waitFor(() => {
     expect(screen.getByLabelText(/friends companion/i)).toBeInTheDocument()
   })
+})
+
+test('closed dock never opens activity EventSource', async () => {
+  render(
+    <MemoryRouter>
+      <SocialCompanionDock mode="dock" defaultOpen={false} />
+    </MemoryRouter>,
+  )
+  await screen.findByRole('button', { name: /open friends companion/i })
+  await new Promise((resolve) => setTimeout(resolve, 1700))
+  expect(globalThis.__gtEventSourceCalls || []).toHaveLength(0)
+})
+
+test('open dock connects activity EventSource after defer', async () => {
+  render(
+    <MemoryRouter>
+      <SocialCompanionDock mode="dock" defaultOpen />
+    </MemoryRouter>,
+  )
+  expect(await screen.findByText('Alex')).toBeInTheDocument()
+  await waitFor(
+    () => {
+      expect(globalThis.__gtEventSourceCalls).toContain('/api/activity/stream')
+    },
+    { timeout: 2500 },
+  )
 })

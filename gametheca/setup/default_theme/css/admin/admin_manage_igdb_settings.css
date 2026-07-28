@@ -133,7 +133,6 @@
     color: var(--gt-info, var(--btn-info));
 }
 
-/* Loading Spinner Overlay */
 #loadingSpinner {
     position: fixed;
     top: 0;
@@ -145,12 +144,17 @@
     justify-content: center;
     align-items: center;
     z-index: 9999;
+    color: var(--gt-accent, #2fd67b);
+}
+
+#loadingSpinner .gt-spinner {
+    width: 2rem;
+    height: 2rem;
+    border-width: 3px;
 }
 
 #loadingSpinner img {
-    border-radius: var(--border-radius-lg);
-    max-width: 100px;
-    max-height: 100px;
+    display: none;
 }
 
 /* Password visibility toggle styling */

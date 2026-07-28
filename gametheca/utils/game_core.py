@@ -438,8 +438,9 @@ def queue_post_identify_enrichment(
     screenshots_data=None,
     app=None,
     run_inline=False,
+    compute_folder_size=True,
 ):
-    """Run Steam / image / HLTB work after the Game row is committed.
+    """Run Steam / image / HLTB / folder-size work after the Game row is committed.
 
     Scan workers call this with run_inline=False so identify returns quickly.
     Tests can pass run_inline=True.
@@ -455,6 +456,26 @@ def queue_post_identify_enrichment(
                 ).scalar_one_or_none()
                 if not game:
                     return
+
+                if compute_folder_size and game.full_disk_path:
+                    try:
+                        size_bytes = get_folder_size_in_bytes_updates(game.full_disk_path)
+                        game.size = size_bytes
+                        db.session.commit()
+                        print(
+                            f"Deferred folder size for {game.name}: {format_size(size_bytes)}"
+                        )
+                    except Exception as size_err:  # noqa: BLE001
+                        print(f"Deferred folder size failed for {game_uuid}: {size_err}")
+                        try:
+                            db.session.rollback()
+                        except Exception:
+                            pass
+                        game = db.session.execute(
+                            select(Game).filter_by(uuid=game_uuid)
+                        ).scalar_one_or_none()
+                        if not game:
+                            return
 
                 try:
                     enrich_game_with_steam(game, lookup_name=game.name)
@@ -772,8 +793,13 @@ def retrieve_and_save_game(
 
                 # Create game from IGDB data (continue with existing logic at line 472)
                 nfo_content = read_first_nfo_content(full_disk_path)
-                folder_size_bytes = get_folder_size_in_bytes_updates(full_disk_path)
-                print(f"Folder size for {full_disk_path}: {format_size(folder_size_bytes)}")
+                # Scan path: defer full tree walk — large NAS/Unraid folders block identify for minutes.
+                if defer_enrichment:
+                    folder_size_bytes = 0
+                    print(f"Deferring folder size walk for scan identify: {full_disk_path}")
+                else:
+                    folder_size_bytes = get_folder_size_in_bytes_updates(full_disk_path)
+                    print(f"Folder size for {full_disk_path}: {format_size(folder_size_bytes)}")
                 new_game = create_game_instance(
                     game_data=response_json[0],
                     full_disk_path=full_disk_path,
@@ -891,11 +917,17 @@ def retrieve_and_save_game(
         if steam_title:
             print(f"Steam App ID {parsed_label['steam_app_id']} resolved to '{steam_title}'")
 
-    # Generate GOTY variants to try different search combinations
-    search_variants = generate_goty_variants(game_name)
+    # Prefer parse_game_label cleaned folder basename for variants (keeps apostrophes,
+    # drops Steam IDs / repack / version-bracket junk). Fall back to scan-cleaned name.
+    variant_base = (parsed_label.get('cleaned_name') or '').strip() or game_name
+    search_variants = generate_goty_variants(variant_base)
+    if game_name and game_name.strip():
+        for extra in generate_goty_variants(game_name):
+            if extra not in search_variants:
+                search_variants.append(extra)
     if steam_title and steam_title not in search_variants:
         search_variants = [steam_title] + [v for v in search_variants if v != steam_title]
-    print(f"Generated search variants for '{game_name}': {search_variants}")
+    print(f"Generated search variants for '{variant_base}': {search_variants}")
 
     response_json = None
     successful_search_name = None
@@ -977,9 +1009,14 @@ def retrieve_and_save_game(
                 steam_title=steam_title,
             )
         else:
-            nfo_content = read_first_nfo_content(full_disk_path)            
-            folder_size_bytes = get_folder_size_in_bytes_updates(full_disk_path)
-            print(f"Folder size for {full_disk_path}: {format_size(folder_size_bytes)}")
+            nfo_content = read_first_nfo_content(full_disk_path)
+            # Scan path: defer full tree walk — large NAS/Unraid folders block identify for minutes.
+            if defer_enrichment:
+                folder_size_bytes = 0
+                print(f"Deferring folder size walk for scan identify: {full_disk_path}")
+            else:
+                folder_size_bytes = get_folder_size_in_bytes_updates(full_disk_path)
+                print(f"Folder size for {full_disk_path}: {format_size(folder_size_bytes)}")
             new_game = create_game_instance(game_data=selected_game, full_disk_path=full_disk_path, folder_size_bytes=folder_size_bytes, library_uuid=library.uuid)
             
             if new_game is None:
@@ -1097,11 +1134,18 @@ def retrieve_and_save_game(
             if response_json.get('error') == 'Failed to retrieve access token':
                 error_msg = 'IGDB API Authentication Failed'
                 if scan_job_id:
-                    scan_job = db.session.get(ScanJob, scan_job_id)
-                    if scan_job:
-                        scan_job.error_message = error_msg
-                        scan_job.status = 'Failed'
-                        db.session.commit()
+                    # Column-only update — avoid loading a ScanJob ORM row that could
+                    # clobber folders_success/failed from the scan coordinator.
+                    db.session.execute(
+                        update(ScanJob)
+                        .where(ScanJob.id == scan_job_id)
+                        .values(
+                            error_message=error_msg,
+                            status='Failed',
+                            is_enabled=False,
+                        )
+                    )
+                    db.session.commit()
                 
                 log_system_event(f"IGDB API Authentication Failed: {response_json.get('error')}", 
                                  event_type='scan', event_level='error')
