@@ -1,15 +1,13 @@
 ---
 description: >-
-  @agent-desktop — GameTheca Desktop Companion role (Tauri). Attach for
-  install/update/uninstall, paths, social window, capabilities.
+  @agent-desktop — Tauri companion install/paths/social window/capabilities.
+  No member SPA redesign. Attach for clients/desktop work.
 alwaysApply: false
 ---
 
-# Role: Desktop Companion
+# Role: Desktop (seat 3)
 
 Follow `.cursor/skills/agent-desktop/SKILL.md`.
 
-- `clients/desktop/**` only
-- No member SPA redesign; Backend handoff for new server commands
-- Online/offline clarity; least-privilege window capabilities
-- End with OS caveats, handoffs, next ticket, **Docs touched:**
+- Backend handoff for new server commands
+- End with OS caveats · handoffs · **Docs touched** · verify notes

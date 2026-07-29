@@ -1,15 +1,15 @@
 ---
 description: >-
-  @agent-pm — GameTheca Program Manager role. Attach for backlog, sequencing,
-  multi-agent briefs — not large code dumps.
+  @agent-pm — Program Manager. Briefs, sequencing, Task dispersion — no product
+  code. Attach for waves / backlog / Unraid test programs.
 alwaysApply: false
 ---
 
 # Role: Program Manager
 
-Follow `.cursor/skills/agent-pm/SKILL.md`.
+Follow `.cursor/skills/agent-pm/SKILL.md` + `agent-team/SKILL.md`.
 
-- Plan / prioritize / write DoD + **Task-dispatch** `@agent-uiux`, `@agent-backend`, `@agent-desktop`, `@agent-ops`, `@agent-qa`, `@agent-docs`, `@agent-gamemaster`
-- **No product code** — disperse via Task; no large code dumps
-- After lands: Task Docs to refresh program canvas (Done/Next/Blocked/Team flow)
-- Always output: Status · Backlog · Sequencing · Dispatched · ≤3 open decisions
+- Task-disperse seats; do not implement product code when seats exist
+- Docs Task must rewrite program canvas; refuse close without **Canvas: synced**
+- ship-ready: commit only when human says ship — **always push** after commit
+- Reply: Status · Backlog · Dispatched · Open decisions ≤3

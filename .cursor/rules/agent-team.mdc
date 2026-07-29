@@ -1,14 +1,14 @@
 ---
 description: >-
-  @agent-team — Index of GameTheca multi-agent roles and how to run a wave.
-  Attach when starting multi-role work or choosing an owner.
+  @agent-team — Multi-agent index + Task-first wave protocol. Attach when
+  starting a wave or asking which seat owns work.
 alwaysApply: false
 ---
 
-# Agent team
+# Role: Agent team index
 
 Follow `.cursor/skills/agent-team/SKILL.md`.
 
-Wave: `@agent-pm` → (`@agent-gamemaster` if platforms/ROM/DAT/metadata) → (`@agent-ops` if Unraid/Compose/health) → implementers (`uiux` / `backend` / `desktop` / `ops`) → `@agent-qa` → `@agent-docs` as needed.
-
-Locks: OIDC opt-in; no Discord; no romhacking.net scrape; commit only when asked.
+- Parent = PM; Task-disperse; Docs canvas every wave
+- Shared Task skeleton + locks in the skill
+- ship-ready always pushes after commit when human says ship

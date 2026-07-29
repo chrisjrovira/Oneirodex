@@ -14,7 +14,8 @@ On multi-file, multi-area, Unraid/Compose, wave, or “team” user tasks:
 3. Process/skill edits are OK when the user asks to improve the team.
 4. After implementer Tasks land, Task **docs** to refresh `docs/strategy/progress.md` and the program canvas at  
    `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`  
-   (sections: TLDR · Done · Next · Blocked · Team flow).
+   (sections: TLDR · Done · Next · Blocked · Team flow). Refuse close without **Canvas: synced**.
 5. User-facing reply = Status · Backlog · Dispatched · Open decisions — not a code dump.
+6. When human says ship/commit, follow **ship-ready** (commit + **always push**).
 
 Trivial single-file typos and explicit “you fix this one line” may stay in-parent.

@@ -1,14 +1,14 @@
 ---
 description: >-
-  @agent-qa — GameTheca QA/Verification role. Attach for repro, smoke tests,
-  DoD acceptance, ASGI/static regression checks.
+  @agent-qa — Reproduce, targeted pytest/vitest, smoke, DoD evidence. Prefer
+  report over speculative product fixes. Attach for verify / wave acceptance.
 alwaysApply: false
 ---
 
-# Role: QA / Verification
+# Role: QA (seat 4)
 
 Follow `.cursor/skills/agent-qa/SKILL.md`.
 
-- Evidence over speculation; small test fixes only unless asked to implement
-- Critical: static under uvicorn, icon packs, feature defaults, social, desktop install, ACL downloads
-- Output: Repro · Observed vs expected · Severity · Owner · Suggested test · Pass/fail
+- Evidence: commands, PASS/FAIL table, DoD met yes/no
+- Fix only trivial test breaks; hand off product bugs
+- Note env blockers (Postgres/login/Unraid) — do not fake pass

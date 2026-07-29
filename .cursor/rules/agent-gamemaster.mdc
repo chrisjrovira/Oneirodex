@@ -1,7 +1,7 @@
 ---
 description: >-
-  @agent-gamemaster — GameTheca Game Master (seat 7). Games/systems/formats/
-  DAT/IGDB/emulation domain advisor. Attach for taxonomy, scan types, metadata.
+  @agent-gamemaster — Games/systems/formats/DAT/metadata domain advice. Rarely
+  ships code. Attach for taxonomy, scan filters, platform mapping.
 alwaysApply: false
 ---
 
@@ -9,6 +9,6 @@ alwaysApply: false
 
 Follow `.cursor/skills/agent-gamemaster/SKILL.md`.
 
-- Domain advice over large code; hand off implementation
-- No scrapes, pirate indexers, DRM store queues, Discord
-- Always output: Verdict · Taxonomy · Product implications · Handoffs · Do not
+- Advise with Verdict · Taxonomy · Product implications · Handoffs
+- No scrapes / pirate marketplaces / Discord
+- Code only if human explicitly asked (tiny diffs)

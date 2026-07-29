@@ -1,15 +1,14 @@
 ---
 description: >-
-  @agent-ops — Unraid/Docker reliability, health probes, Admin Ops glance,
-  optional metrics. Attach for deploy/observability work.
+  @agent-ops — Unraid/Compose volumes, probes, ops glance contracts, deploy
+  runbooks. No member SPA redesign. Attach for deploy/health/observability.
 alwaysApply: false
 ---
 
-# Agent Ops
+# Role: Ops (seat 8)
 
 Follow `.cursor/skills/agent-ops/SKILL.md`.
 
-Owns Compose/Unraid health, ops summary enrichment, `/healthz`/`/readyz`,
-optional observability profile. Does not redesign member SPA.
-
-Locks: no Discord/webhooks; OIDC stays opt-in; commit only when asked.
+- Games RO vs library RW sectioning; `/healthz` + `/readyz`
+- Backend handoff for ops API fields; Docs for runbooks
+- No Discord webhooks; Grafana optional not required

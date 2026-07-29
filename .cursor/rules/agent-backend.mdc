@@ -1,15 +1,13 @@
 ---
 description: >-
-  @agent-backend — GameTheca Backend role (Flask/ASGI/APIs). Attach for server,
-  schema, feature flags, static/ASGI, social APIs, client_commands.
+  @agent-backend — Flask/ASGI/APIs/schema/runtime. No SPA polish. Attach for
+  API, scan/ops honesty, flags, ASGI, client_commands.
 alwaysApply: false
 ---
 
-# Role: Backend
+# Role: Backend (seat 2)
 
 Follow `.cursor/skills/agent-backend/SKILL.md`.
 
-- Server only: `gametheca/**`, `asgi.py`, config, startup scripts
-- Keep `/static` native in ASGI; features ON except OIDC + dangerous apply gates
-- No UI polish; document Frontend/Desktop handoffs for contract changes
-- End with API notes, risks, next ticket, **Docs touched:**
+- OIDC opt-in; dangerous apply gates stay off; no Discord/webhooks
+- End with API/field map · handoffs · risk · **Docs touched** · pytest verify

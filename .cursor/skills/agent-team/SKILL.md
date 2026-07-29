@@ -1,56 +1,72 @@
 ---
 name: agent-team
 description: >-
-  Index of GameTheca multi-agent roles and how to run a wave with Task
-  dispersion + canvas updates. Use when @agent-team, starting a multi-seat wave,
-  or asking which role owns a task.
+  Index of GameTheca multi-agent roles and how to run a Task-first wave with
+  canvas updates. Use when @agent-team, starting a multi-seat wave, asking which
+  seat owns work, or refining team process.
 ---
 
 # Agent team (GameTheca)
 
+Parent chat defaults to **PM**. Seats are invoked via **Task** (preferred) or `@agent-*`. Skills use `disable-model-invocation: true` — attach explicitly.
+
 ## Roles
 
-| @ skill | Owns | Does not |
-|---|---|---|
-| `agent-pm` | Backlog, sequencing, Task briefs, canvas content brief | Product code / Compose / SPA |
-| `agent-uiux` | Member SPA + theme UX | Flask/API/Docker/Tauri |
-| `agent-backend` | Flask/ASGI/APIs/schema | UI polish / Unraid prose |
-| `agent-desktop` | Tauri companion | Member SPA redesign |
-| `agent-qa` | Repro, tests, smoke, reports | Speculative refactors |
-| `agent-docs` | Docs/help/changelog + **program canvas** (seat 6) | Behavior changes |
-| `agent-gamemaster` | Games/systems/formats domain (seat 7) | Scrapes / large feature dumps |
-| `agent-ops` | Unraid/Compose health, volumes, ops glance, probes (seat 8) | Member SPA redesign |
+| Seat | Skill | Owns | Does not |
+|---|---|---|---|
+| PM | `agent-pm` | Briefs, sequencing, Task dispersion, canvas content brief | Product code / Compose / SPA / docs prose |
+| 1 | `agent-uiux` | Member + admin SPA chrome, theme UX | Flask/API/Docker/Tauri product logic |
+| 2 | `agent-backend` | Flask/ASGI/APIs/schema/runtime | UI polish / Unraid runbook prose alone |
+| 3 | `agent-desktop` | Tauri companion | Member SPA redesign |
+| 4 | `agent-qa` | Repro, tests, smoke, DoD evidence | Speculative product refactors |
+| 6 | `agent-docs` | Docs/help/changelog + **program canvas** | Behavior / schema changes |
+| 7 | `agent-gamemaster` | Games/systems/formats/DAT/metadata domain | Scrapes / large feature dumps |
+| 8 | `agent-ops` | Unraid/Compose/volumes/probes/ops glance | Member SPA redesign |
 
 ## How to run a wave (Task-first)
 
-Default parent chat is **PM**. Do not implement as the parent.
+1. Brief → backlog rows with **owner seat**
+2. Consult GM (platforms/ROMs/DAT) and/or Ops (Unraid/Compose) when needed
+3. **Parallel Task** implementers (uiux / backend / desktop / ops)
+4. Task QA against DoD
+5. Task Docs — docs-sync + **Canvas: synced** (mandatory)
+6. PM synthesizes Status · Backlog · Dispatched · Open decisions ≤3
 
-1. `@agent-pm` / parent Brief → backlog + owner seats
-2. Consult `@agent-gamemaster` when platforms/ROMs/DAT/metadata
-3. Consult `@agent-ops` when Unraid/Compose/volumes/health/monitor
-4. **Task tool** → parallel implementers (`uiux` / `backend` / `desktop` / `ops`)
-5. Task `@agent-qa` against DoD
-6. Task `@agent-docs` — docs-sync **and** program canvas Done/Next/Blocked/Team flow
-7. PM synthesizes seat reports for the user
+### Program canvas
 
-### Program canvas path
+`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`  
+Docs rewrites every Docs turn; PM refuses to close waves without **Canvas: synced**.
 
-`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
+## Shared Task prompt skeleton
 
-Docs updates it every wave; PM supplies the Done/Next brief in the Docs Task prompt.
+Every implementer Task from PM must include:
 
-## Unraid as test bed
+```text
+You are GameTheca @agent-<seat>. Follow .cursor/skills/agent-<seat>/SKILL.md.
 
-Ops owns Compose + volume sectioning (`DATA_FOLDER_GAMES` → `/storage:ro`,  
-`LIBRARY_HOST_PATH` → library uploads RW). Backend owns Ops API honesty while
-scans run. QA verifies on Unraid. Docs records Blocked until human deploy.
+## Brief
+**Goal:** …
+**In:** …
+**Out:** (locked defaults + non-goals)
+**Paths:** …
+**DoD:** …
+**Verify:** …
+
+## Rules
+- Honor prompt-brief/defaults.md
+- No Discord/webhooks; OIDC opt-in; no commit unless human said ship/commit
+- End with seat End-of-turn format from your SKILL.md
+```
 
 ## Shared locks
 
-See `prompt-brief/defaults.md`. Always:
+See `prompt-brief/defaults.md`:
 
-- OIDC/auth **opt-in** (off by default)
-- Dangerous apply gates stay off
-- No Discord/webhooks; no romhacking.net scrape
-- Commit/push only when user says so
-- Parent PM does not land code when Task seats can
+- OIDC/auth **opt-in**; dangerous apply gates stay off
+- No Discord/webhooks; no romhacking.net scrape; no pirate marketplace
+- Commit only when user says ship/commit; **ship-ready always pushes**
+- Parent PM does not land product code when Task seats exist (`pm-disperse.mdc`)
+
+## Unraid test bed
+
+Ops: games RO vs library RW. Backend: Ops/scan honesty. QA: `/readyz` + Ops glance. Docs: Blocked until human deploy.
