@@ -26,6 +26,57 @@ GT_TEXT = (242, 244, 248)
 GT_TEXT_MUTED = (196, 204, 216)
 GT_ACCENT = (47, 214, 123)
 
+# Per-system template packs: distinct palette + glyph for readable tiles ≥200×300.
+# Keys are normalized (casefold) LibraryPlatform names/values and common short labels.
+SystemPalette = tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], str]
+
+# (bg_top, bg_bottom, accent, glyph_id)
+SYSTEM_TEMPLATES: dict[str, SystemPalette] = {
+    'nes': ((48, 12, 18), (18, 8, 12), (220, 60, 60), 'cart'),
+    'nintendo entertainment system (nes)': ((48, 12, 18), (18, 8, 12), (220, 60, 60), 'cart'),
+    'snes': ((56, 28, 88), (22, 14, 40), (180, 120, 255), 'cart'),
+    'super nintendo entertainment system (snes)': ((56, 28, 88), (22, 14, 40), (180, 120, 255), 'cart'),
+    'n64': ((12, 48, 28), (8, 20, 14), (80, 200, 100), 'disc'),
+    'nintendo 64': ((12, 48, 28), (8, 20, 14), (80, 200, 100), 'disc'),
+    'gba': ((28, 40, 72), (12, 16, 36), (100, 160, 255), 'cart'),
+    'nintendo gameboy advance': ((28, 40, 72), (12, 16, 36), (100, 160, 255), 'cart'),
+    'gb': ((40, 56, 24), (16, 24, 12), (140, 200, 60), 'cart'),
+    'gbc': ((40, 32, 64), (16, 14, 32), (200, 120, 255), 'cart'),
+    'nds': ((20, 36, 64), (10, 16, 32), (90, 170, 255), 'clamshell'),
+    'nintendo ds': ((20, 36, 64), (10, 16, 32), (90, 170, 255), 'clamshell'),
+    'ngc': ((72, 36, 12), (32, 16, 8), (255, 140, 40), 'disc'),
+    'nintendo gamecube': ((72, 36, 12), (32, 16, 8), (255, 140, 40), 'disc'),
+    'wii': ((40, 48, 56), (16, 20, 28), (120, 180, 220), 'disc'),
+    'nintendo wii': ((40, 48, 56), (16, 20, 28), (120, 180, 220), 'disc'),
+    'switch': ((64, 16, 24), (24, 8, 12), (232, 56, 72), 'joycon'),
+    'nintendo switch': ((64, 16, 24), (24, 8, 12), (232, 56, 72), 'joycon'),
+    'psx': ((24, 24, 56), (10, 10, 28), (120, 120, 255), 'disc'),
+    'sony playstation (psx)': ((24, 24, 56), (10, 10, 28), (120, 120, 255), 'disc'),
+    'ps1': ((24, 24, 56), (10, 10, 28), (120, 120, 255), 'disc'),
+    'ps2': ((12, 24, 56), (6, 12, 28), (60, 120, 220), 'disc'),
+    'sony ps2': ((12, 24, 56), (6, 12, 28), (60, 120, 220), 'disc'),
+    'ps3': ((20, 20, 28), (8, 8, 14), (180, 180, 200), 'disc'),
+    'sony ps3': ((20, 20, 28), (8, 8, 14), (180, 180, 200), 'disc'),
+    'psp': ((32, 32, 40), (12, 12, 18), (160, 160, 180), 'umd'),
+    'sony psp': ((32, 32, 40), (12, 12, 18), (160, 160, 180), 'umd'),
+    'sega_md': ((16, 32, 64), (8, 14, 32), (40, 120, 220), 'cart'),
+    'sega mega drive/genesis (md)': ((16, 32, 64), (8, 14, 32), (40, 120, 220), 'cart'),
+    'genesis': ((16, 32, 64), (8, 14, 32), (40, 120, 220), 'cart'),
+    'sega_saturn': ((48, 24, 56), (20, 10, 28), (200, 80, 200), 'disc'),
+    'sega saturn': ((48, 24, 56), (20, 10, 28), (200, 80, 200), 'disc'),
+    'sega_dc': ((56, 28, 16), (24, 12, 8), (255, 120, 40), 'disc'),
+    'sega dreamcast': ((56, 28, 16), (24, 12, 8), (255, 120, 40), 'disc'),
+    'pcwin': ((16, 28, 40), (8, 12, 20), (47, 214, 123), 'pc'),
+    'pc windows': ((16, 28, 40), (8, 12, 20), (47, 214, 123), 'pc'),
+    'pcdos': ((28, 24, 16), (12, 10, 8), (220, 180, 60), 'pc'),
+    'pc dos': ((28, 24, 16), (12, 10, 8), (220, 180, 60), 'pc'),
+    'arcade': ((48, 8, 16), (20, 4, 8), (255, 60, 80), 'cabinet'),
+    'xbox': ((12, 40, 20), (6, 18, 10), (80, 200, 80), 'xbox'),
+    'x360': ((12, 40, 20), (6, 18, 10), (120, 220, 80), 'xbox'),
+    'xbox 360': ((12, 40, 20), (6, 18, 10), (120, 220, 80), 'xbox'),
+    'default': ((20, 24, 32), (11, 13, 16), (47, 214, 123), 'mark'),
+}
+
 SIZE_MATRIX: list[tuple[str, int, int]] = [
     ('tile', 200, 300),
     ('tile', 400, 600),
@@ -91,17 +142,39 @@ def _lerp_color(a: tuple[int, int, int], b: tuple[int, int, int], t: float) -> t
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
-def _vertical_gradient(width: int, height: int) -> Image.Image:
+def resolve_system_template(system: str | None) -> SystemPalette:
+    """Map a LibraryPlatform label / short name to a template pack."""
+    key = (system or '').strip().casefold()
+    if not key:
+        return SYSTEM_TEMPLATES['default']
+    if key in SYSTEM_TEMPLATES:
+        return SYSTEM_TEMPLATES[key]
+    # Enum member name (e.g. SEGA_MD)
+    compact = key.replace(' ', '_').replace('/', '_').replace('(', '').replace(')', '')
+    if compact in SYSTEM_TEMPLATES:
+        return SYSTEM_TEMPLATES[compact]
+    for alias, pack in SYSTEM_TEMPLATES.items():
+        if alias != 'default' and (alias in key or key in alias):
+            return pack
+    return SYSTEM_TEMPLATES['default']
+
+
+def _vertical_gradient(
+    width: int,
+    height: int,
+    top: tuple[int, int, int] = GT_SURFACE,
+    bottom: tuple[int, int, int] = GT_BG,
+) -> Image.Image:
     img = Image.new('RGB', (width, height))
     draw = ImageDraw.Draw(img)
     for y in range(height):
         t = y / max(height - 1, 1)
-        color = _lerp_color(GT_SURFACE, GT_BG, t * 0.85)
+        color = _lerp_color(top, bottom, t * 0.85)
         draw.line([(0, y), (width, y)], fill=color)
     return img
 
 
-def _draw_mark(draw: ImageDraw.ImageDraw, cx: int, cy: int, scale: float) -> None:
+def _draw_mark(draw: ImageDraw.ImageDraw, cx: int, cy: int, scale: float, accent=GT_ACCENT) -> None:
     """Minimal GameTheca controller mark (matches gametheca_mark.svg)."""
     s = scale
     body = [
@@ -110,14 +183,80 @@ def _draw_mark(draw: ImageDraw.ImageDraw, cx: int, cy: int, scale: float) -> Non
         cx + 22 * s,
         cy + 12 * s,
     ]
-    draw.rounded_rectangle(body, radius=int(8 * s), outline=GT_ACCENT, width=max(2, int(3 * s)))
+    draw.rounded_rectangle(body, radius=int(8 * s), outline=accent, width=max(2, int(3 * s)))
     draw.ellipse(
         [cx - 22 * s + 12 * s - 3.5 * s, cy - 3.5 * s, cx - 22 * s + 12 * s + 3.5 * s, cy + 3.5 * s],
-        fill=GT_ACCENT,
+        fill=accent,
     )
     draw.ellipse([cx + 8 * s - 2 * s, cy - 5 * s, cx + 8 * s + 2 * s, cy - 1 * s], fill=GT_TEXT)
     draw.ellipse([cx + 13 * s - 2 * s, cy, cx + 13 * s + 2 * s, cy + 4 * s], fill=GT_TEXT)
-    draw.rectangle([cx - 2 * s, cy - 14 * s, cx + 2 * s, cy - 8 * s], fill=GT_ACCENT)
+    draw.rectangle([cx - 2 * s, cy - 14 * s, cx + 2 * s, cy - 8 * s], fill=accent)
+
+
+def _draw_system_glyph(
+    draw: ImageDraw.ImageDraw,
+    cx: int,
+    cy: int,
+    scale: float,
+    glyph: str,
+    accent: tuple[int, int, int],
+) -> None:
+    """Draw a simple system mark that stays readable at tile sizes."""
+    s = max(0.55, scale)
+    w = max(2, int(2.5 * s))
+    if glyph == 'cart':
+        draw.rounded_rectangle(
+            [cx - 18 * s, cy - 22 * s, cx + 18 * s, cy + 22 * s],
+            radius=int(4 * s),
+            outline=accent,
+            width=w,
+        )
+        draw.rectangle([cx - 10 * s, cy - 26 * s, cx + 10 * s, cy - 18 * s], fill=accent)
+        draw.line([cx - 10 * s, cy - 6 * s, cx + 10 * s, cy - 6 * s], fill=accent, width=w)
+        draw.line([cx - 10 * s, cy + 4 * s, cx + 10 * s, cy + 4 * s], fill=accent, width=w)
+    elif glyph == 'disc':
+        r = 20 * s
+        draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=accent, width=w)
+        draw.ellipse([cx - 5 * s, cy - 5 * s, cx + 5 * s, cy + 5 * s], fill=accent)
+    elif glyph == 'clamshell':
+        draw.rounded_rectangle(
+            [cx - 20 * s, cy - 24 * s, cx + 20 * s, cy - 2 * s],
+            radius=int(3 * s), outline=accent, width=w,
+        )
+        draw.rounded_rectangle(
+            [cx - 20 * s, cy + 2 * s, cx + 20 * s, cy + 24 * s],
+            radius=int(3 * s), outline=accent, width=w,
+        )
+    elif glyph == 'joycon':
+        draw.rounded_rectangle(
+            [cx - 26 * s, cy - 18 * s, cx - 10 * s, cy + 18 * s],
+            radius=int(6 * s), outline=accent, width=w,
+        )
+        draw.rounded_rectangle(
+            [cx + 10 * s, cy - 18 * s, cx + 26 * s, cy + 18 * s],
+            radius=int(6 * s), outline=(90, 200, 255), width=w,
+        )
+        draw.rectangle([cx - 8 * s, cy - 14 * s, cx + 8 * s, cy + 14 * s], outline=GT_TEXT, width=max(1, w - 1))
+    elif glyph == 'umd':
+        draw.ellipse([cx - 18 * s, cy - 18 * s, cx + 18 * s, cy + 18 * s], outline=accent, width=w)
+        draw.ellipse([cx - 10 * s, cy - 10 * s, cx + 10 * s, cy + 10 * s], outline=accent, width=max(1, w - 1))
+    elif glyph == 'pc':
+        draw.rounded_rectangle(
+            [cx - 22 * s, cy - 16 * s, cx + 22 * s, cy + 10 * s],
+            radius=int(3 * s), outline=accent, width=w,
+        )
+        draw.rectangle([cx - 6 * s, cy + 10 * s, cx + 6 * s, cy + 16 * s], fill=accent)
+        draw.rectangle([cx - 14 * s, cy + 16 * s, cx + 14 * s, cy + 20 * s], fill=accent)
+    elif glyph == 'cabinet':
+        draw.rectangle([cx - 16 * s, cy - 24 * s, cx + 16 * s, cy + 22 * s], outline=accent, width=w)
+        draw.rectangle([cx - 12 * s, cy - 18 * s, cx + 12 * s, cy - 4 * s], fill=accent)
+        draw.ellipse([cx - 4 * s, cy + 6 * s, cx + 4 * s, cy + 14 * s], outline=accent, width=w)
+    elif glyph == 'xbox':
+        draw.ellipse([cx - 18 * s, cy - 18 * s, cx + 18 * s, cy + 18 * s], outline=accent, width=w)
+        draw.line([cx - 8 * s, cy - 8 * s, cx + 8 * s, cy + 8 * s], fill=accent, width=w)
+        draw.line([cx + 8 * s, cy - 8 * s, cx - 8 * s, cy + 8 * s], fill=accent, width=w)
+    else:
+        _draw_mark(draw, cx, cy, scale, accent=accent)
 
 
 def _wrap_title(title: str, font: ImageFont.ImageFont, max_width: int) -> list[str]:
@@ -138,6 +277,19 @@ def _wrap_title(title: str, font: ImageFont.ImageFont, max_width: int) -> list[s
     return lines[:4]
 
 
+def _fit_title_font(headline: str, max_width: int, min_size: int, max_size: int) -> ImageFont.ImageFont:
+    """Pick the largest font that keeps the title readable at tile size."""
+    size = max_size
+    while size >= min_size:
+        font = _load_font(size)
+        lines = _wrap_title(headline, font, max_width)
+        widest = max((font.getbbox(line)[2] - font.getbbox(line)[0]) for line in lines)
+        if widest <= max_width and len(lines) <= 3:
+            return font
+        size -= 1
+    return _load_font(min_size)
+
+
 def render_cover_art(
     width: int,
     height: int,
@@ -146,62 +298,75 @@ def render_cover_art(
     system: str | None = None,
     variant: str = 'tile',
 ) -> Image.Image:
-    """Render a branded placeholder/cover at the given size."""
+    """Render a branded placeholder/cover at the given size with per-system templates."""
     title = (title or '').strip()
     system = (system or '').strip()
     is_wide = width >= height and width / max(height, 1) >= 1.5
     is_square = width == height
 
-    img = _vertical_gradient(width, height)
+    top, bottom, accent, glyph = resolve_system_template(system)
+    img = _vertical_gradient(width, height, top=top, bottom=bottom)
     draw = ImageDraw.Draw(img)
 
-    accent_h = max(4, height // 80)
-    draw.rectangle([0, 0, width, accent_h], fill=GT_ACCENT)
+    accent_h = max(4, height // 64)
+    draw.rectangle([0, 0, width, accent_h], fill=accent)
+    # Bottom accent bar for system identity at small tile sizes
+    draw.rectangle([0, height - accent_h, width, height], fill=accent)
 
     inset = max(8, min(width, height) // 16)
     draw.rectangle(
-        [inset, inset + accent_h, width - inset, height - inset],
-        outline=(255, 255, 255, 30),
-        width=max(1, min(width, height) // 256),
+        [inset, inset + accent_h, width - inset, height - inset - accent_h],
+        outline=_lerp_color(accent, (255, 255, 255), 0.35),
+        width=max(1, min(width, height) // 200),
     )
 
-    mark_scale = min(width, height) / 320
-    _draw_mark(draw, width // 2, int(height * (0.28 if not is_wide else 0.35)), mark_scale)
+    mark_scale = min(width, height) / 280
+    glyph_y = int(height * (0.26 if not is_wide else 0.32))
+    _draw_system_glyph(draw, width // 2, glyph_y, mark_scale, glyph, accent)
 
     if not title:
         headline = 'GameTheca'
-        subtitle = 'Library hero' if variant == 'wide' or is_wide else 'No cover art'
+        subtitle = system or ('Library hero' if variant == 'wide' or is_wide else 'No cover art')
     else:
         headline = title
         subtitle = system or 'GameTheca'
 
-    title_size = max(14, min(width, height) // (10 if is_square else 12))
-    sub_size = max(10, title_size // 2)
-    title_font = _load_font(title_size)
+    # Readable minimums: ≥14px title / ≥11px subtitle on 200×300 tiles
+    min_title = 14 if min(width, height) >= 200 else 11
+    max_title = max(min_title, min(width, height) // (9 if is_square else 10))
+    pad = max(10, min(width, height) // 12)
+    max_text_w = width - pad * 2
+    title_font = _fit_title_font(headline, max_text_w, min_title, max_title)
+    sub_size = max(11, title_font.size // 2 if hasattr(title_font, 'size') else min_title // 2)
+    # FreeTypeFont exposes .size; default bitmap font may not — clamp safely
+    try:
+        sub_size = max(11, int(getattr(title_font, 'size', max_title) * 0.45))
+    except (TypeError, ValueError):
+        sub_size = 11
     sub_font = _load_font(sub_size)
 
-    pad = max(12, min(width, height) // 10)
-    max_text_w = width - pad * 2
     lines = _wrap_title(headline, title_font, max_text_w)
     line_heights = [title_font.getbbox(line)[3] - title_font.getbbox(line)[1] for line in lines]
     block_h = sum(line_heights) + (len(lines) - 1) * 4
     sub_bbox = sub_font.getbbox(subtitle)
     sub_h = sub_bbox[3] - sub_bbox[1]
-    total_h = block_h + sub_h + 8
-    y = int(height * (0.52 if not is_wide else 0.55)) - total_h // 2
+    total_h = block_h + sub_h + 10
+    y = int(height * (0.54 if not is_wide else 0.55)) - total_h // 2
 
     for line, lh in zip(lines, line_heights):
         bbox = title_font.getbbox(line)
         tw = bbox[2] - bbox[0]
+        # Soft shadow for contrast on vivid system gradients
+        draw.text(((width - tw) // 2 + 1, y + 1), line, fill=(0, 0, 0), font=title_font)
         draw.text(((width - tw) // 2, y), line, fill=GT_TEXT, font=title_font)
         y += lh + 4
 
     sw = sub_bbox[2] - sub_bbox[0]
-    draw.text(((width - sw) // 2, y + 4), subtitle, fill=GT_TEXT_MUTED, font=sub_font)
+    draw.text(((width - sw) // 2, y + 6), subtitle, fill=accent, font=sub_font)
 
     if is_wide:
         bar_w = int(width * 0.35)
-        draw.rectangle([0, height - accent_h * 2, bar_w, height], fill=GT_SURFACE_2)
+        draw.rectangle([0, height - accent_h * 2, bar_w, height], fill=_lerp_color(top, accent, 0.35))
 
     return img
 

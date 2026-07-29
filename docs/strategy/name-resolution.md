@@ -61,7 +61,7 @@ Given cleaned tokens from Stage A (example: `Baldur's Gate Dark Alliance 1`):
 | 2 | Known subtitle colon | If a **known subtitle phrase** matches as a contiguous tail/mid token run, insert `: ` immediately before it | `Baldur's Gate: Dark Alliance 1` |
 | 3 | Drop trailing bare `1` | If last token is bare arabic `1` (not `01`, not Roman) and ≥3 tokens precede it → drop `1` | `Baldur's Gate Dark Alliance` / `Baldur's Gate: Dark Alliance` |
 | 4 | Sequel digit ↔ Roman | Map trailing `2`↔`II`, `3`↔`III`, `4`↔`IV` (both directions as separate variants) | `… Dark Alliance 2` ↔ `… Dark Alliance II` |
-| 5 | Heuristic colon (≥4 tokens) | **Fallback only:** `tokens[:-2] + ": " + tokens[-2:]` | `Baldur's Gate: Dark Alliance` (after drop-1) |
+| 5 | Heuristic colon (≥4 tokens) | **Fallback only:** `tokens[:-2] + ": " + tokens[-2:]` (plus optional 1-word tail). **Never** invent colon forms for 3-token titles (`A Fishermans Tale` stays as-is; use known-subtitle / franchise-head instead). | `Baldur's Gate: Dark Alliance` (after drop-1) |
 | 6 | De-apostrophized | Remove `'` for one query | `Baldurs Gate: Dark Alliance` |
 | 7 | Hyphen ↔ space / existing GOTY | Keep `generate_goty_variants`; try ` - ` → space and vice versa lightly | `Bad Dream Afterlife` |
 

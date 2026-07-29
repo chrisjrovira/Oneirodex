@@ -6,7 +6,7 @@ Use these unless the user **explicitly** overrides in the same message.
 
 | Default | Value |
 |---|---|
-| Product | Self-hosted household DRM-free library |
+| Product | Self-hosted household **gaming sphere** (library · systems · ownership/metadata · play · social · admin/ops · BYO acquire) — DRM-free vault, not a DRM store client |
 | Social | Native chat/presence; optional LiveKit; BYO Stoat/Matrix link |
 | Discord | **Never** — excised; no webhooks |
 | Windows code signing | **Never** — unsigned desktop builds only; no cert purchase |
@@ -18,7 +18,7 @@ Use these unless the user **explicitly** overrides in the same message.
 | Support | In-app Report → GitHub Issues + admin inbox |
 | LLM | Cursor skills on demand; no paid keys in Flask |
 | Auto-merge | Never |
-| Agent team | `@agent-team` / `@agent-pm` / seats — parent is PM: **Task-disperse**; no product code when seats exist; Docs owns program canvas **every Docs turn / every wave end / every commit pass** (mandatory, not only when PM says update canvas) |
+| Agent team | `@agent-team` / `@agent-pm` / seats — parent chat **is** the PM monitor; **Task-disperse** (not silent broadcast); **relevant agent only** (wrong-seat refuse); no product code when seats exist; Docs owns program canvas **every Docs turn / every wave end / every commit pass**; lanes Integrations/Acquire/Play/Social/Security route via Backend (+ consults) until promoted |
 
 ## Engineering
 

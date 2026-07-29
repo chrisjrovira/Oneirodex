@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function syncImageTypeForProvider() {
         const provider = (sgdbProvider?.value || 'steamgriddb');
         if (!sgdbImageType) return;
-        if (provider === 'igdb') {
+        if (provider === 'igdb' || provider === 'giantbomb') {
             sgdbImageType.value = 'cover';
             sgdbImageType.disabled = true;
         } else {
@@ -281,6 +281,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (provider === 'igdb' && imageType !== 'cover') {
             sgdbStatus.textContent = 'IGDB only supports covers.';
+            return;
+        }
+        if (provider === 'giantbomb' && imageType !== 'cover') {
+            sgdbStatus.textContent = 'Giant Bomb only supports covers.';
             return;
         }
         sgdbStatus.textContent = 'Searching…';
@@ -329,17 +333,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const type = imageType || selectedImageType();
         sgdbStatus.textContent = `Applying ${type}…`;
         try {
-            const resp = await fetch(`/api/games/${uuid}/artwork/steamgriddb`, {
-                method: 'POST',
-                headers: {
-                    ...CSRFUtils.getHeaders(),
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ url, image_type: type, provider: providerId }),
-            });
-            const data = await resp.json();
+            let resp;
+            let data;
+            if (type === 'cover') {
+                resp = await fetch('/admin/api/covers/apply', {
+                    method: 'POST',
+                    headers: {
+                        ...CSRFUtils.getHeaders(),
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ game_uuid: uuid, url, provider: providerId }),
+                });
+                data = await resp.json().catch(() => ({}));
+            } else {
+                resp = await fetch(`/api/games/${uuid}/artwork/steamgriddb`, {
+                    method: 'POST',
+                    headers: {
+                        ...CSRFUtils.getHeaders(),
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url, image_type: type, provider: providerId }),
+                });
+                data = await resp.json().catch(() => ({}));
+            }
             if (!resp.ok) {
-                throw new Error(data.error || `Apply failed (${resp.status})`);
+                const reason = data.error || data.message || `Apply failed (HTTP ${resp.status})`;
+                throw new Error(reason);
             }
             sgdbStatus.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} applied.`;
             if (type === 'cover') {

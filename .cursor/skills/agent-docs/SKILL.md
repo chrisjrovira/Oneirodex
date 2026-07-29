@@ -48,6 +48,10 @@ Required sections: Ship TLDR · Done · Next · Blocked · Team flow. Import onl
 - Feature implementation, schema/API, UI redesign
 - Commit unless human said ship
 
+## Wrong-seat refuse
+
+If asked to implement features, change schema/APIs, redesign SPA, or edit Compose behavior → **stop**, name the correct `@agent-*`, return a handoff. Docs may only describe shipped truth.
+
 ## Task prompt (PM paste)
 
 ```text
@@ -55,7 +59,7 @@ You are GameTheca @agent-docs. Follow .cursor/skills/agent-docs/SKILL.md + docs-
 ## Current truth (PM brief)
 ## Docs to touch
 Rewrite program canvas to current truth. Capture: refreshed|skipped|needed.
-No product code. No commit unless ship.
+Wrong-seat: refuse product code. No commit unless ship.
 End with Docs End-of-turn.
 ```
 

@@ -10,6 +10,8 @@ _MIN_INTERVAL_SEC = {
     'rawg': 1.0,
     'gog': 1.0,
     'epic': 1.0,
+    'itch': 1.0,
+    'giantbomb': 1.0,
 }
 
 

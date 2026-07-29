@@ -21,7 +21,8 @@ export const SETTINGS_CARDS = [
   { to: '/admin/ai', title: 'AI Assist', blurb: 'AI identification and helpers.' },
   { to: '/admin/storage', title: 'Storage', blurb: 'Disk paths, BIOS under userdata/system, assists packs.' },
   { to: '/admin/themes', title: 'Themes', blurb: 'Apply presets; Reset Default Themes.' },
-  { to: '/admin/art_studio', title: 'Art studio', blurb: 'Branded cover placeholders — generate, zip, apply.' },
+  { to: '/admin/art_studio', title: 'Art studio', blurb: 'Placeholders + artwork picker / image queue.' },
+  { to: '/admin/art_studio#images', title: 'Art & images', blurb: 'Single-title artwork picker + mass image queue.' },
   { to: '/admin/remote_play', title: 'Remote play', blurb: 'BYO Sunshine/Wolf Moonlight host — off by default.' },
   { to: '/admin/plugins', title: 'Plugins', blurb: 'Connector / export / emu registry.' },
 ]
@@ -93,7 +94,8 @@ export const HUB_LINKS = {
   ],
   scans: [
     { href: '/scan_management', label: 'Scan jobs' },
-    { href: '/admin/image_queue', label: 'Image queue' },
+    { href: '/admin/art_studio#images', label: 'Art & images' },
+    { href: '/admin/image_queue', label: 'Image queue (classic)' },
   ],
   users: [
     { href: '/admin/users', label: 'Users' },

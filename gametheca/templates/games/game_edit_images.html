@@ -52,11 +52,12 @@
             </div>
             <div class="glass-panel glass-panel-image-editor-upload mt-3" id="sgdb-cover-picker" data-game-uuid="{{ game.uuid }}">
                 <h4>Artwork search (SteamGridDB / IGDB)</h4>
-                <p class="text-muted small mb-2">Artwork only — search and apply cover, logo, or hero (SGDB). IGDB covers only.</p>
+                <p class="text-muted small mb-2">Artwork only — search and apply cover, logo, or hero (SGDB). IGDB / Giant Bomb covers only. Failed applies show the server error below.</p>
                 <div class="d-flex gap-2 flex-wrap align-items-center">
                     <select id="sgdb-provider" class="form-select" style="max-width: 180px" aria-label="Artwork provider">
                         <option value="steamgriddb">SteamGridDB</option>
                         <option value="igdb">IGDB</option>
+                        <option value="giantbomb">Giant Bomb</option>
                     </select>
                     <select id="sgdb-image-type" class="form-select" style="max-width: 140px" aria-label="Image type">
                         <option value="cover">Cover</option>

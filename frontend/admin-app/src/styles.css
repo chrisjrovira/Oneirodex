@@ -452,11 +452,17 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-art-studio {
   display: grid;
   gap: 1.25rem;
-  grid-template-columns: minmax(240px, 1fr) minmax(200px, 420px);
+  grid-template-columns: minmax(240px, 1fr) minmax(280px, 1fr);
   align-items: start;
 }
 
-.gt-art-studio__form input {
+.gt-art-studio__form input,
+.gt-art-studio__form select,
+.gt-artwork-picker__controls input,
+.gt-artwork-picker__controls select,
+.gt-images-filters select,
+.gt-images-filters input,
+.gt-images-game-search input {
   display: block;
   width: 100%;
   margin: 0.35rem 0 0.85rem;
@@ -486,9 +492,421 @@ body.admin-shell.modal-open > .modal-backdrop {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
+.gt-art-studio__preview-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.gt-art-studio__tile {
+  margin: 0;
+  padding: 0.5rem;
+  border-radius: 12px;
+  border: 2px solid var(--gt-border);
+  background: var(--gt-surface);
+}
+
+.gt-art-studio__tile figcaption {
+  font-size: 0.75rem;
+  color: var(--gt-text-muted);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.gt-art-studio__tile img {
+  display: block;
+  border-radius: 6px;
+  image-rendering: auto;
+}
+
+.gt-art-studio__tile-placeholder {
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  border: 1px dashed var(--gt-border);
+  background: color-mix(in srgb, var(--gt-surface-2) 80%, transparent);
+  color: var(--gt-text-muted);
+  font-size: 0.8rem;
+}
+
+.gt-art-studio__batch-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  max-height: 240px;
+  overflow: auto;
+}
+
+.gt-art-studio__batch-list label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--gt-text);
+}
+
+.gt-art-studio__batch-log {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--gt-surface-2);
+  border: 1px solid var(--gt-border);
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.gt-art-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+  padding: 0.25rem;
+  border-radius: 10px;
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.gt-art-tabs__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--gt-text-muted);
+  font: inherit;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.gt-art-tabs__btn.is-active {
+  background: var(--gt-surface-2);
+  color: var(--gt-text);
+  box-shadow: inset 0 0 0 1px var(--gt-accent);
+}
+
+.gt-art-studio__tile--nintendo {
+  border-color: #e60012;
+}
+
+.gt-art-studio__tile--sony {
+  border-color: #0070d1;
+}
+
+.gt-art-studio__tile--xbox {
+  border-color: #2fd67b;
+}
+
+.gt-art-studio__tile--sega {
+  border-color: #1a66ff;
+}
+
+.gt-art-studio__tile--atari {
+  border-color: #f5a623;
+}
+
+.gt-art-studio__tile--pc {
+  border-color: color-mix(in srgb, var(--gt-accent) 80%, #2fd67b);
+}
+
+.gt-btn--ghost {
+  background: transparent;
+  border-color: var(--gt-border);
+}
+
+.gt-btn--ghost:hover {
+  border-color: var(--gt-accent);
+}
+
+.gt-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8em;
+  color: var(--gt-text-muted);
+}
+
+.gt-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  vertical-align: middle;
+}
+
+.gt-badge--danger {
+  background: color-mix(in srgb, var(--gt-danger) 25%, transparent);
+  color: var(--gt-danger);
+}
+
+.gt-badge--warn {
+  background: color-mix(in srgb, #f5a623 25%, transparent);
+  color: #f5a623;
+}
+
+.gt-admin-panel-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.gt-admin-lede--warn {
+  color: #f5a623;
+}
+
+.gt-artwork-picker__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.gt-artwork-picker__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.gt-artwork-picker__chips-label {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin-right: 0.25rem;
+}
+
+.gt-chip {
+  appearance: none;
+  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 35%, transparent);
+  background: color-mix(in srgb, var(--gt-surface, #1a2332) 88%, transparent);
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.gt-chip.is-active {
+  border-color: var(--gt-accent, #2fd67b);
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 22%, transparent);
+}
+
+.gt-chip:focus-visible {
+  outline: 2px solid var(--gt-accent, #2fd67b);
+  outline-offset: 2px;
+}
+
+.gt-artwork-picker__controls label {
+  min-width: 7rem;
+}
+
+.gt-artwork-picker__query {
+  flex: 1 1 12rem;
+}
+
+.gt-artwork-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.65rem;
+}
+
+.gt-artwork-picker__card {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  border-radius: 10px;
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
+  color: var(--gt-text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.gt-artwork-picker__card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.gt-artwork-picker__card:not(:disabled):hover {
+  border-color: var(--gt-accent);
+}
+
+.gt-artwork-picker__thumb {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--gt-bg);
+}
+
+.gt-artwork-picker__thumb--empty {
+  display: block;
+  min-height: 8rem;
+}
+
+.gt-artwork-picker__thumb--hero {
+  aspect-ratio: 16 / 9;
+}
+
+.gt-artwork-picker__caption {
+  font-size: 0.72rem;
+  color: var(--gt-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gt-images-game-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.gt-images-game-search__field {
+  flex: 1 1 14rem;
+}
+
+.gt-images-game-hits {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.gt-images-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.gt-images-filters label {
+  min-width: 8rem;
+}
+
+.gt-images-filters__check {
+  display: flex !important;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: auto;
+  margin-bottom: 0.85rem;
+  color: var(--gt-text);
+}
+
+.gt-images-filters__check input {
+  width: auto;
+  margin: 0;
+}
+
+.gt-images-groups {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.gt-images-group {
+  border: 1px solid var(--gt-border);
+  border-radius: 10px;
+  background: var(--gt-surface);
+  overflow: hidden;
+}
+
+.gt-images-group__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  background: var(--gt-surface-2);
+  border-bottom: 1px solid var(--gt-border);
+}
+
+.gt-images-group__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gt-images-row {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.45rem 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
+}
+
+.gt-images-row__thumb {
+  width: 48px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--gt-bg);
+}
+
+.gt-images-row__thumb--empty {
+  display: block;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--gt-surface-2),
+    var(--gt-surface-2) 6px,
+    var(--gt-bg) 6px,
+    var(--gt-bg) 12px
+  );
+}
+
+.gt-images-row__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+}
+
+.gt-images-row__error {
+  color: var(--gt-danger);
+}
+
+.gt-images-row__actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.gt-images-missing {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.gt-images-missing li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 @media (max-width: 720px) {
   .gt-art-studio {
     grid-template-columns: 1fr;
+  }
+
+  .gt-images-row {
+    grid-template-columns: 40px 1fr;
+  }
+
+  .gt-images-row__actions {
+    grid-column: 1 / -1;
   }
 }
 

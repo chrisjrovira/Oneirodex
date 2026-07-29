@@ -41,7 +41,8 @@
 | Admin hybrid inventory | `docs/strategy/admin-hybrid.md` | Have |
 | Upgrade notes (0.2 → 1.0) | `docs/strategy/upgrade-notes-1.0.md` | Have |
 | Game Master 1.0 domain sign-off | `docs/strategy/v1-gamemaster-signoff.md` | Have (gate 7) |
-| Folder → IGDB name-resolution rules | `docs/strategy/name-resolution.md` | Have — scan_depth=2 + variant order for Backend |
+| Folder → IGDB name-resolution rules | `docs/strategy/name-resolution.md` | Have — heuristic colon ≥4 tokens (fishermans); known-subtitle first |
+| Store metadata identify · ownership (Meta/Quest+) | `docs/strategy/store-metadata-identify.md` | Have — **META-1 shipping** Meta CSV + identify; DRM register-only; no LibraryPlatform.QUEST |
 | Console / emulator library layout | `docs/strategy/console-gaming-libraries.md` | Have — per-leaf libs · skip-dir DoD · no depth-3 walker |
 | Console / emulator tree → libraries | `docs/strategy/console-gaming-libraries.md` | Have — per-platform leaf libs; exclude emus/tools |
 | Docs map (this file) | `docs/strategy/docs-map.md` | Have |
@@ -71,7 +72,7 @@
 | Thin client | Strategy → user | Strategy have · user Create at TC-2 | [thin-client.md](thin-client.md) — TC-1/TC-2 shell shipped |
 | Android APK + headset VR ladder | Strategy | **Have** | [android-apk-vr.md](android-apk-vr.md) · [headset-vr.md](headset-vr.md) (SteamVR/PSVR2 + Quest) · [controller-input.md](controller-input.md) · [controllers-and-vr.md](../user/controllers-and-vr.md) |
 | Challenge / captcha bypass | Strategy → runbook | Have | [challenge-bypass.md](challenge-bypass.md) · [challenge-solver-unraid.md](../runbooks/challenge-solver-unraid.md) — profile **`challenge`**; CH-1…5 **shipped** |
-| Cover art studio | Strategy | Have | [cover-art-studio.md](cover-art-studio.md) — **ART-1…3 shipped** |
+| Cover art studio | Strategy | Have | [cover-art-studio.md](cover-art-studio.md) — **ART-1…3 + ART-5 shipping** (system templates); ART-4 deferred |
 | GOW / remote play | Strategy | Have | [gow-remote-play.md](gow-remote-play.md) — **GOW-1/2 in 1.0 (in flight)** |
 | Mods + game servers | Strategy | Have | [game-servers-mods.md](game-servers-mods.md) — **MOD-1/2 · SRV-1/2 APIs shipped** |
 | Ambient lighting | Strategy | Have | [ambient-lighting.md](ambient-lighting.md) — **LIGHT-1/2 in 1.0 (in flight)** |
@@ -143,7 +144,7 @@
 | Doc | Status |
 |---|---|
 | Issue assess / fix workflow | Have — [dev/issue-assess-agent.md](../dev/issue-assess-agent.md) |
-| Agent skills index | Have — [dev/agent-skills.md](../dev/agent-skills.md) |
+| Agent skills index | Have — [dev/agent-skills.md](../dev/agent-skills.md) — Jul 29 process refresh: sphere · seat router · wrong-seat refuse · ship helpers · lanes |
 | Docs-sync skill | Have — `.cursor/skills/docs-sync/` |
 | Prompt-brief middleman | Have — `.cursor/skills/prompt-brief/` + rule |
 | UI tokens (Wave 0 / B+C) | Have — [dev/ui-wave0-tokens.md](../dev/ui-wave0-tokens.md) |

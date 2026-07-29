@@ -202,6 +202,154 @@ def search_gog_games(game_name, limit=10):
         return []
 
 
+def search_epic_games(game_name, limit=10):
+    """Return Epic Games Store catalog search hits (metadata only — no DRM download)."""
+    try:
+        clean_name = re.sub(r'[\(\)\[\]]', '', game_name or '').strip()
+        if not clean_name:
+            return []
+        # Public catalog fuzzy search used by open-source launchers (register/identify only).
+        resp = request_with_backoff(
+            f'https://catalog-public-service-prod06.ol.epicgames.com/catalog/api/shared/'
+            f'namespace/epic/fuzzySearch/{requests.utils.quote(clean_name)}',
+            host_key='epic',
+            params={'count': limit},
+            timeout=8,
+            headers={'User-Agent': 'GameTheca/1.0 (self-hosted library)'},
+        )
+        if resp is None:
+            return []
+        payload = resp.json() if resp.content else {}
+        elements = (payload.get('elements') or payload.get('data') or [])[:limit]
+        results = []
+        for item in elements:
+            if not isinstance(item, dict):
+                continue
+            title = item.get('title') or item.get('name')
+            offer_id = item.get('id') or item.get('offerId') or item.get('namespace')
+            slug = item.get('urlSlug') or item.get('productSlug') or item.get('slug')
+            key_images = item.get('keyImages') or []
+            cover = None
+            for img in key_images:
+                if not isinstance(img, dict):
+                    continue
+                if (img.get('type') or '').lower() in (
+                    'thumbnail', 'dieselgamesboxwide', 'offerimagesquare', 'offerimagetall',
+                ):
+                    cover = img.get('url')
+                    if cover:
+                        break
+            if not cover and key_images and isinstance(key_images[0], dict):
+                cover = key_images[0].get('url')
+            results.append({
+                'source': 'epic',
+                'id': offer_id,
+                'name': title,
+                'url': f'https://store.epicgames.com/p/{slug}' if slug else None,
+                'cover_url': cover,
+                'summary': item.get('description'),
+                'epic_id': offer_id,
+                'slug': slug,
+                'ownership_only': True,
+            })
+        return results
+    except Exception as e:
+        print(f"Epic search error for {game_name}: {e}")
+        return []
+
+
+def search_itch_games(game_name, limit=10):
+    """Return itch.io search hits via public JSON when available (metadata only)."""
+    try:
+        clean_name = re.sub(r'[\(\)\[\]]', '', game_name or '').strip()
+        if not clean_name:
+            return []
+        # Public browse JSON used by itch catalog pages (no API key).
+        resp = request_with_backoff(
+            'https://itch.io/games/ajax-search',
+            host_key='itch',
+            params={'q': clean_name},
+            timeout=8,
+            headers={'User-Agent': 'GameTheca/1.0 (self-hosted library)'},
+        )
+        if resp is None:
+            return []
+        payload = resp.json() if resp.content else {}
+        games = (payload.get('games') or [])[:limit]
+        results = []
+        for game in games:
+            if not isinstance(game, dict):
+                continue
+            game_id = game.get('id')
+            title = game.get('title') or game.get('name')
+            url = game.get('url') or game.get('link')
+            cover = game.get('cover') or game.get('cover_url') or game.get('still_cover_url')
+            results.append({
+                'source': 'itch',
+                'id': game_id,
+                'name': title,
+                'url': url,
+                'cover_url': cover,
+                'summary': game.get('short_text') or game.get('description'),
+                'itch_id': game_id,
+            })
+        return results
+    except Exception as e:
+        print(f"itch.io search error for {game_name}: {e}")
+        return []
+
+
+def search_giantbomb_games(game_name, api_key=None, limit=10):
+    """Return GiantBomb search hits for manual identify UI (requires API key)."""
+    try:
+        from gametheca.utils.providers.giantbomb import get_giantbomb_api_key
+
+        key = (api_key or get_giantbomb_api_key() or '').strip()
+        if not key:
+            return []
+        clean_name = re.sub(r'[\(\)\[\]]', '', game_name or '').strip()
+        if not clean_name:
+            return []
+        resp = request_with_backoff(
+            'https://www.giantbomb.com/api/search/',
+            host_key='giantbomb',
+            params={
+                'api_key': key,
+                'format': 'json',
+                'query': clean_name,
+                'resources': 'game',
+                'limit': limit,
+            },
+            timeout=8,
+            headers={'User-Agent': 'GameTheca/1.0 (self-hosted library)'},
+        )
+        if resp is None:
+            return []
+        results = []
+        for item in (resp.json().get('results') or [])[:limit]:
+            image = item.get('image') or {}
+            results.append({
+                'source': 'giantbomb',
+                'id': item.get('id'),
+                'name': item.get('name'),
+                'url': item.get('site_detail_url'),
+                'cover_url': image.get('super_url') or image.get('medium_url'),
+                'summary': item.get('deck'),
+                'giantbomb_id': item.get('id'),
+            })
+        return results
+    except Exception as e:
+        print(f"GiantBomb search error for {game_name}: {e}")
+        return []
+
+
+def search_meta_quest_games(game_name, limit=10):
+    """Proxy to Meta/Quest IGDB platform search (metadata / ownership only)."""
+    from gametheca.utils.providers.meta_quest import search_meta_quest_games as _search
+
+    return _search(game_name, limit=limit)
+
+
 def fetch_steam_data(game_name):
     """Query Steam Store API for complete game details."""
     try:

@@ -417,6 +417,11 @@ export function HelpPage() {
           for cloud save and cheats; companion RetroArch profiles for heavy systems.
         </li>
         <li>Themes: Reset Default Themes after image rebuilds that change design tokens.</li>
+        <li>
+          Art studio (<code>/admin/art_studio</code>): placeholders + <strong>Pick &amp; queue</strong>{' '}
+          (<code>#images</code>) for SteamGridDB/IGDB search, mass downloads, and auto-pick via{' '}
+          <code>/admin/api/covers/batch/apply</code>.
+        </li>
         <li>Member Systems hub lives at <code>/systems</code> with platform skins.</li>
       </ul>
     </Page>
@@ -542,6 +547,7 @@ export function resolveAdminPage(pathname) {
   if (pathname === '/admin/settings') return 'settings'
   if (pathname === '/admin/themes' || pathname.startsWith('/admin/themes/')) return 'themes'
   if (pathname === '/admin/art_studio') return 'art_studio'
+  if (pathname === '/admin/images') return 'images'
   if (pathname === '/admin/remote_play') return 'remote_play'
   if (pathname === '/admin/help') return 'help'
   if (pathname.startsWith('/scan_management') || pathname.includes('image_queue') || pathname.includes('game_identify') || pathname.includes('game_edit')) {

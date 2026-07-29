@@ -17,6 +17,20 @@ _VERSION_BRACKET_RE = re.compile(
     re.IGNORECASE,
 )
 _STEAM_ID_RE = re.compile(r'\(\s*(\d{4,7})\s*\)\s*$')
+# Trailing "(Build 14.09.2017)" / "(build 123)" junk — not a Steam App ID.
+_BUILD_PAREN_RE = re.compile(r'\s*\(\s*build\b[^)]*\)\s*$', re.IGNORECASE)
+# Trailing "VR MOD ..." tails, with or without a leading hyphen (e.g.
+# "Alien Isolation VR MOD - MotherVR 0 8 1" -> "Alien Isolation").
+_VR_MOD_TAIL_RE = re.compile(r'\s*-?\s*\bVR\s+MOD\b.*$', re.IGNORECASE)
+# Trailing "MotherVR ..." / "- MotherVR ..." tails when VR MOD wasn't already
+# matched above (e.g. a bare "- MotherVR 1 2 3" suffix).
+_MOTHERVR_TAIL_RE = re.compile(r'\s*-?\s*\bMotherVR\b.*$', re.IGNORECASE)
+# Trailing standalone "VR" token (e.g. "A Fishermans Tale VR" -> "A Fishermans Tale").
+_TRAILING_VR_RE = re.compile(r'\s+VR\s*$', re.IGNORECASE)
+# Tiny alias map for obvious stylized titles that don't survive plain cleanup.
+_ALIAS_MAP = {
+    'adr1ft': 'Adrift',
+}
 
 
 def strip_repack_tags(raw: str) -> str:
@@ -33,6 +47,26 @@ def strip_version_brackets(raw: str) -> str:
     return _VERSION_BRACKET_RE.sub('', raw).strip()
 
 
+def strip_build_tail(raw: str) -> str:
+    """Remove a trailing '(Build ...)' / '(build ...)' parenthetical."""
+    if not raw:
+        return ''
+    return _BUILD_PAREN_RE.sub('', raw).strip()
+
+
+def strip_vr_noise_tail(raw: str) -> str:
+    """
+    Remove trailing VR-repack noise: 'VR MOD ...', 'MotherVR ...' /
+    '- MotherVR ...' tails, and a bare trailing 'VR' token.
+    """
+    if not raw:
+        return ''
+    working = _VR_MOD_TAIL_RE.sub('', raw)
+    working = _MOTHERVR_TAIL_RE.sub('', working)
+    working = _TRAILING_VR_RE.sub('', working)
+    return working.strip()
+
+
 def parse_game_label(raw: str) -> dict:
     """
     Parse a folder or file stem into a cleaned display/search name and optional Steam App ID.
@@ -47,6 +81,8 @@ def parse_game_label(raw: str) -> dict:
     working = raw.strip()
     working = strip_repack_tags(working)
     working = strip_version_brackets(working)
+    working = strip_build_tail(working)
+    working = strip_vr_noise_tail(working)
 
     match = _STEAM_ID_RE.search(working)
     if match:
@@ -56,18 +92,22 @@ def parse_game_label(raw: str) -> dict:
     working = working.replace('_', ' ')
     working = re.sub(r'\s+', ' ', working).strip(' -_')
 
-    parts = []
-    for word in working.split(' '):
-        if not word:
-            continue
-        if word.isupper() or any(ch.isdigit() for ch in word):
-            parts.append(word)
-        elif word.lower() == word:
-            parts.append(word[:1].upper() + word[1:])
-        else:
-            parts.append(word)
+    aliased = _ALIAS_MAP.get(working.casefold())
+    if aliased:
+        cleaned = aliased
+    else:
+        parts = []
+        for word in working.split(' '):
+            if not word:
+                continue
+            if word.isupper() or any(ch.isdigit() for ch in word):
+                parts.append(word)
+            elif word.lower() == word:
+                parts.append(word[:1].upper() + word[1:])
+            else:
+                parts.append(word)
 
-    cleaned = ' '.join(parts)
+        cleaned = ' '.join(parts)
     return {
         'raw': raw,
         'cleaned_name': cleaned,

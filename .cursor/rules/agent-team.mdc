@@ -1,7 +1,8 @@
 ---
 description: >-
-  @agent-team — Multi-agent index + Task-first wave protocol. Attach when
-  starting a wave or asking which seat owns work.
+  @agent-team — Multi-agent index, seat router, ship helpers, Task-first wave
+  protocol. Attach when starting a wave, asking which seat owns work, or
+  improving how humans drive the team.
 alwaysApply: false
 ---
 
@@ -10,5 +11,8 @@ alwaysApply: false
 Follow `.cursor/skills/agent-team/SKILL.md`.
 
 - Parent = PM; Task-disperse; Docs canvas every wave
-- Shared Task skeleton + locks in the skill
-- ship-ready always pushes after commit when human says ship
+- **Relevant agent only** — wrong-seat refuse + handoff
+- Intent → seat router + Integrations/Acquire/Play/Social/Security lanes
+- This parent chat is the PM monitor; Tasks distribute work
+- Shared Task skeleton + locks + human drive shortcuts in the skill
+- ship-ready always pushes after commit when human says ship (PM ship helper prompt in skill)

@@ -16,6 +16,7 @@ from gametheca.utils.gamenames import (
     detect_goty_pattern,
     generate_goty_variants
 )
+from gametheca.utils.game_name_parse import parse_game_label
 
 
 def safe_cleanup_database(db_session):
@@ -652,6 +653,31 @@ class TestGenerateGotyVariants:
         assert 'GOTY' in variants
         assert 'G.O.T.Y.' in variants
 
+    def test_hyphen_subtitle_variant_agatha_christie(self):
+        """Folder 'Agatha Christie Death On The Nile' should get a hyphen-subtitle variant."""
+        variants = generate_goty_variants('Agatha Christie Death On The Nile')
+        assert 'Agatha Christie - Death On The Nile' in variants
+
+    def test_hyphen_to_space_variant(self):
+        """Existing ' - ' subtitle also produces a despaced copy (Stage C7)."""
+        variants = generate_goty_variants('Bad Dream - Afterlife')
+        assert 'Bad Dream Afterlife' in variants
+
+    def test_drop_trailing_year_variant(self):
+        """Trailing 4-digit year is dropped as an additional search variant."""
+        variants = generate_goty_variants('Alone In The Dark 2024')
+        assert 'Alone In The Dark' in variants
+        assert 'Alone In The Dark 2024' in variants
+
+    def test_franchise_head_colon_assassins_creed(self):
+        """Assassin's Creed gets a colon-subtitle variant when a token follows."""
+        variants = generate_goty_variants("Assassin's Creed Odyssey")
+        assert "Assassin's Creed: Odyssey" in variants
+
+    def test_franchise_head_colon_far_cry_and_call_of_duty(self):
+        assert 'Far Cry: Primal' in generate_goty_variants('Far Cry Primal')
+        assert 'Call Of Duty: Ghosts' in generate_goty_variants('Call Of Duty Ghosts')
+
 
 class TestGotyIntegration:
     """Integration tests for GOTY handling in clean_game_name."""
@@ -772,7 +798,56 @@ class TestNumberHandling:
             ('Doom 1993', 'Doom 1993'),  # Original release year
             ('Game 1 2 3', 'Game 1'),  # Multiple numbers, keep first valid one
         ]
-
+        
         for input_name, expected in test_cases:
             result = clean_game_name(input_name, [], [])
             assert result == expected, f"Input: '{input_name}' -> Expected: '{expected}' -> Got: '{result}'"
+
+
+class TestRealFolderPipeline:
+    """
+    End-to-end parse_game_label -> generate_goty_variants pipeline for real
+    PCWIN folders that previously stayed Unmatched after only stripping
+    repack/VR/build noise. See docs/strategy/name-resolution.md Stage C.
+    """
+
+    def test_abyssus_repack(self):
+        cleaned = parse_game_label("Abyssus [FitGirl Repack]")['cleaned_name']
+        assert cleaned == "Abyssus"
+        assert generate_goty_variants(cleaned) == ["Abyssus"]
+
+    def test_assassins_creed_odyssey_repack(self):
+        cleaned = parse_game_label("Assassin's Creed Odyssey [FitGirl HV Repack]")['cleaned_name']
+        assert cleaned == "Assassin's Creed Odyssey"
+        variants = generate_goty_variants(cleaned)
+        assert "Assassin's Creed Odyssey" in variants
+        assert "Assassin's Creed: Odyssey" in variants
+
+    def test_fishermans_tale_vr(self):
+        cleaned = parse_game_label("A Fishermans Tale VR")['cleaned_name']
+        assert cleaned == "A Fishermans Tale"
+        assert generate_goty_variants(cleaned) == ["A Fishermans Tale"]
+
+    def test_agatha_christie_death_on_the_nile(self):
+        parsed = parse_game_label("agatha christie death on the nile (85933)")
+        assert parsed['steam_app_id'] == 85933
+        assert parsed['cleaned_name'] == "Agatha Christie Death On The Nile"
+        variants = generate_goty_variants(parsed['cleaned_name'])
+        assert "Agatha Christie - Death On The Nile" in variants
+
+    def test_adr1ft_build_tail(self):
+        cleaned = parse_game_label("ADR1FT (Build 14.09.2017)")['cleaned_name']
+        assert cleaned == "Adrift"
+        assert generate_goty_variants(cleaned) == ["Adrift"]
+
+    def test_alone_in_the_dark_2024(self):
+        cleaned = parse_game_label("Alone in the Dark 2024")['cleaned_name']
+        assert cleaned == "Alone In The Dark 2024"
+        variants = generate_goty_variants(cleaned)
+        assert "Alone In The Dark 2024" in variants
+        assert "Alone In The Dark" in variants
+
+    def test_alien_isolation_vr_mod_mothervr(self):
+        cleaned = parse_game_label("Alien Isolation VR MOD - MotherVR 0 8 1")['cleaned_name']
+        assert cleaned == "Alien Isolation"
+        assert generate_goty_variants(cleaned) == ["Alien Isolation"]

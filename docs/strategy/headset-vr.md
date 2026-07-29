@@ -3,7 +3,7 @@
 **Date:** 2026-07-27  
 **Status:** Strategy lock (relock — PC SteamVR / PSVR2 first-class; Quest = friend seat)  
 **Audience:** PM · UI/UX · Ops · Docs · Desktop  
-**Related:** [controller-input.md](controller-input.md) · [gow-remote-play.md](gow-remote-play.md) · [thin-client.md](thin-client.md) · [android-apk-vr.md](android-apk-vr.md) · `ENABLE_VR_BROWSE` · `/vr`
+**Related:** [controller-input.md](controller-input.md) · [gow-remote-play.md](gow-remote-play.md) · [thin-client.md](thin-client.md) · [android-apk-vr.md](android-apk-vr.md) · [store-metadata-identify.md](store-metadata-identify.md) (Quest Store identify / ownership register-only) · `ENABLE_VR_BROWSE` · `/vr`
 
 > Android APK paths stay in [android-apk-vr.md](android-apk-vr.md). This doc owns **headset / VR product**.
 

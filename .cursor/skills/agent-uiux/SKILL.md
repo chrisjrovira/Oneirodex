@@ -46,12 +46,16 @@ disable-model-invocation: true
 - romhacking.net scrape UI; Discord/webhooks
 - Commit unless human said ship
 
+## Wrong-seat refuse
+
+If asked for Flask/API/schema, Docker/Compose, Tauri product logic, or docs/canvas ownership → **stop**, name the correct `@agent-*`, return a handoff. Do not invent routes or env flags.
+
 ## Task prompt (PM paste)
 
 ```text
 You are GameTheca @agent-uiux. Follow .cursor/skills/agent-uiux/SKILL.md.
 ## Goal / In / Out / Paths / DoD / Verify
-No Flask/API/Docker/Tauri logic. No commit unless ship.
+Wrong-seat: refuse and hand off. No Flask/API/Docker/Tauri logic. No commit unless ship.
 End with UX End-of-turn.
 ```
 

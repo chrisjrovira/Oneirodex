@@ -11,6 +11,7 @@ from gametheca.utils.security import is_safe_path, get_allowed_base_directories,
 from gametheca.utils.functions import sanitize_string_input
 from gametheca.utils.game_core import check_existing_game_by_igdb_id
 from gametheca.utils.gamenames import clean_game_name
+from gametheca.utils.game_name_parse import parse_game_label
 from gametheca import db
 from threading import Thread
 from sqlalchemy.exc import SQLAlchemyError
@@ -29,13 +30,18 @@ def add_game_manual():
     from_unmatched = request.args.get('from_unmatched', 'false') == 'true'  # Detect origin
     raw_folder_name = os.path.basename(full_disk_path.rstrip('/\\')) if full_disk_path else ''
     # "Fix search": prefill the identify workbench with a scanner-cleaned title
-    # (release-group tags / dots / underscores stripped) instead of the raw
-    # folder name, so IGDB search actually finds a match on the first try.
+    # (release-group tags / dots / underscores / VR-repack / build tails stripped)
+    # instead of the raw folder name, so IGDB search actually finds a match on
+    # the first try. Prefer parse_game_label's cleaned_name — it keeps original
+    # casing (e.g. "Assassin's Creed") and applies the small alias map, unlike
+    # clean_game_name's heavier pipeline which re-title-cases everything.
     game_name = raw_folder_name
     if raw_folder_name:
         try:
-            insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
-            cleaned_name = clean_game_name(raw_folder_name, insensitive_patterns, sensitive_patterns)
+            cleaned_name = parse_game_label(raw_folder_name).get('cleaned_name') or ''
+            if not cleaned_name:
+                insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
+                cleaned_name = clean_game_name(raw_folder_name, insensitive_patterns, sensitive_patterns)
             if cleaned_name:
                 game_name = cleaned_name
         except Exception as exc:

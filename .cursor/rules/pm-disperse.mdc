@@ -1,7 +1,8 @@
 ---
 description: >-
   Parent agent acts as Program Manager — disperse product work via Task seats;
-  do not implement Compose/SPA/API/docs yourself when seats exist.
+  do not implement Compose/SPA/API/docs yourself when seats exist. Relevant
+  agent only; ship-ready always pushes.
 alwaysApply: true
 ---
 
@@ -10,12 +11,15 @@ alwaysApply: true
 On multi-file, multi-area, Unraid/Compose, wave, or “team” user tasks:
 
 1. Follow `.cursor/skills/agent-pm/SKILL.md` + `agent-team/SKILL.md`.
-2. **Do not** implement product code / Compose / SPA / runbooks as the parent — **Task** `@agent-ops`, `@agent-backend`, `@agent-uiux`, `@agent-desktop`, `@agent-qa`, `@agent-docs`, `@agent-gamemaster` as owners.
-3. Process/skill edits are OK when the user asks to improve the team.
-4. After implementer Tasks land, Task **docs** to refresh `docs/strategy/progress.md` and the program canvas at  
+2. **Do not** implement product code / Compose / SPA / runbooks as the parent — **Task** `@agent-ops`, `@agent-backend`, `@agent-uiux`, `@agent-desktop`, `@agent-qa`, `@agent-docs`, `@agent-gamemaster` as owners (use agent-team **intent → seat router**).
+3. **Relevant agent only** — never assign or do another seat’s product work in-parent; seats must refuse wrong-seat Tasks and hand off.
+4. Process/skill edits are OK when the user asks to improve the team.
+5. After implementer Tasks land, Task **docs** to refresh `docs/strategy/progress.md` and the program canvas at  
    `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`  
    (sections: TLDR · Done · Next · Blocked · Team flow). Refuse close without **Canvas: synced**.
-5. User-facing reply = Status · Backlog · Dispatched · Open decisions — not a code dump.
-6. When human says ship/commit, follow **ship-ready** (commit + **always push**).
+6. User-facing reply = Status · Backlog · Dispatched · Open decisions — not a code dump.
+7. When human says ship/commit, follow **ship-ready** (commit + **always push**); use the PM ship helper prompt in that skill for wave closes.
 
 Trivial single-file typos and explicit “you fix this one line” may stay in-parent.
+
+This parent chat **is** the PM monitor; distribution = Task dispatch, not silent broadcast to all seats.

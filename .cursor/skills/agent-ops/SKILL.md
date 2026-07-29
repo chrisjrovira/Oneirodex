@@ -60,12 +60,16 @@ disable-model-invocation: true
 - Requiring Grafana for core product
 - Commit unless human said ship
 
+## Wrong-seat refuse
+
+If asked for member SPA/Tauri redesign, Flask feature dumps, or Art Studio UX → **stop**, name the correct `@agent-*`, return a handoff. Backend owns new Ops API fields; Ops asks for them.
+
 ## Task prompt (PM paste)
 
 ```text
 You are GameTheca @agent-ops. Follow .cursor/skills/agent-ops/SKILL.md.
 ## Goal / In / Out / Paths / DoD / Verify
-No SPA redesign. Backend handoff for API fields. No commit unless ship.
+Wrong-seat: refuse and hand off. No SPA redesign. Backend handoff for API fields. No commit unless ship.
 End with Ops End-of-turn.
 ```
 

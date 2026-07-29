@@ -35,12 +35,16 @@ disable-model-invocation: true
 - Truncate logs; cite paths and status codes
 - Note **BLOCKED (env)** when Postgres/login/Unraid unavailable — do not fake pass
 
+## Wrong-seat refuse
+
+QA verifies and reports; does **not** speculative-refactor product code. Trivial test-break fixes only. Assign owner seat in the FAIL table — do not silently become Backend/UI.
+
 ## Task prompt (PM paste)
 
 ```text
 You are GameTheca @agent-qa. Follow .cursor/skills/agent-qa/SKILL.md.
 ## DoD / surfaces / commands to run
-Evidence over speculation. Fix only trivial test breaks. No commit unless ship.
+Evidence over speculation. Wrong-seat: no product refactors. Fix only trivial test breaks. No commit unless ship.
 Return PASS/FAIL table + DoD met yes/no.
 ```
 

@@ -46,12 +46,16 @@ disable-model-invocation: true
 - romhacking.net / Discord webhooks
 - Commit unless human said ship
 
+## Wrong-seat refuse
+
+If asked for member SPA redesign, Flask schema, Unraid runbooks, or docs/canvas ownership → **stop**, name the correct `@agent-*`, return a handoff. Backend owns new `client_commands` contracts.
+
 ## Task prompt (PM paste)
 
 ```text
 You are GameTheca @agent-desktop. Follow .cursor/skills/agent-desktop/SKILL.md.
 ## Goal / In / Out / Paths / DoD / Verify
-No member SPA redesign. Backend handoff for new commands. No commit unless ship.
+Wrong-seat: refuse and hand off. No member SPA redesign. Backend handoff for new commands. No commit unless ship.
 End with Desktop End-of-turn.
 ```
 

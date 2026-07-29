@@ -1,7 +1,7 @@
 # Cover art studio — fallback art + admin art creator
 
 **Date:** 2026-07-27  
-**Status:** **ART-1…ART-3 shipped** (Jul 27) — ART-4 ops quota deferred  
+**Status:** **ART-1…ART-3 shipped** (Jul 27) · **ART-5 shipped (shipping Jul 29)** — per-system templates + readable tiles · ArtStudioPage system previews — ART-4 ops quota deferred  
 **Audience:** UI/UX · Backend · Ops · Docs  
 **Related:** `gametheca/utils/cover_url.py` · icon themes · Themes admin · [v1-readiness.md](v1-readiness.md) · [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md)
 
@@ -48,8 +48,10 @@ Operators also cannot generate on-brand placeholders (title text, system accent,
 
 - Admin SPA/Jinja page under Themes or new **Art studio**  
 - Server-side render (Pillow / cairo / SVG templates) — no paid cloud AI required  
+- **Per-system template packs** — distinct palette + glyph + stronger title typography (≥14px on 200×300 tiles) keyed by LibraryPlatform / system string  
 - Optional Ollama later for “describe cover” — **not** required for 1.0  
 - Store under `static/library/generated/` or per-game image dirs  
+- Batch generate for missing-cover slice: `POST /admin/api/art-studio/batch-generate`  
 
 ### Out of scope
 
@@ -66,6 +68,7 @@ Operators also cannot generate on-brand placeholders (title text, system accent,
 | ART-1 | Ship new default_cover / default_library assets + CSS-safe SVG fallback | UI/UX + Docs |
 | ART-2 | Admin art creator API + size matrix export | Backend |
 | ART-3 | Admin UI: preview, download zip, attach to game / set fallback pack | UI/UX |
+| ART-5 | Per-system template packs + readable tile typography · ArtStudioPage system previews | UI/UX + Backend |
 | ART-4 | Ops: disk quota for generated art; purge orphan | Ops |
 
 ---

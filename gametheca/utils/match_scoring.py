@@ -18,7 +18,9 @@ def score_candidate(cleaned_name: str, candidate_name: str, *, steam_title: str 
     """
     Return similarity score in [0, 1] between cleaned folder name and an IGDB candidate title.
 
-    Optional steam_title: if provided and strongly matches the candidate, bump the score slightly.
+    Optional steam_title: when provided, score is the max of (folder vs candidate)
+    and (steam_title vs candidate) — the resolved Steam title is often a cleaner
+    match than the raw folder label.
     """
     left = normalize_for_score(cleaned_name)
     right = normalize_for_score(candidate_name)
@@ -29,8 +31,9 @@ def score_candidate(cleaned_name: str, candidate_name: str, *, steam_title: str 
 
     if steam_title:
         steam_norm = normalize_for_score(steam_title)
-        if steam_norm and SequenceMatcher(None, steam_norm, right).ratio() >= 0.92:
-            score = min(1.0, score + 0.05)
+        if steam_norm:
+            steam_score = SequenceMatcher(None, steam_norm, right).ratio()
+            score = max(score, steam_score)
 
     return float(score)
 

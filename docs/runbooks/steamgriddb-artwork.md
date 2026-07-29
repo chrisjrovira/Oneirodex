@@ -45,7 +45,9 @@ IGDB remains available as a second provider for **covers only**.
 
 ## Admin UI
 
-**Edit Images** for a game includes an artwork search panel: pick SteamGridDB or IGDB, choose cover/logo/hero (SGDB), search, and click a result to apply.
+**Edit Images** for a game includes an artwork search panel: pick SteamGridDB, IGDB, or Giant Bomb, choose cover/logo/hero (SGDB), search, and click a result to apply. Apply failures show the server error text.
+
+**Art studio → Pick & queue** (`/admin/art_studio#images`) is the React admin path for the same search/apply flow plus mass image queue actions.
 
 ## Troubleshooting
 

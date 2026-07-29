@@ -92,13 +92,21 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 
 ## Art studio (cover placeholders)
 
-- **Admin → Settings → Art studio** or `/admin/art_studio` (React; admin/ops only).
+- **Admin → Settings → Art studio** or `/admin/art_studio` (React; admin/ops only). Tabs: **Placeholders** · **Pick & queue** (`#images`).
 - Local Pillow templates — aurora tokens (`--gt-*`), no paid cloud AI.
-- **Preview** tile → **Generate all sizes** (2:3 tiles, 16:9 wides, 1:1 squares, 1280×720 hero) under `static/library/generated/{pack_id}/`.
+- **System / platform** selector drives preview chrome + Backend system template keys (NES/SNES/…). Preview tiles at real **200×300** and **400×600**.
+- **Preview** → **Generate all sizes** (2:3 tiles, 16:9 wides, 1:1 squares, 1280×720 hero) under `static/library/generated/{pack_id}/`.
 - **Download ZIP** · **Set as fallback pack** (writes `default_cover.jpg` + `default_library.jpg`) · **Apply cover to game** (game UUID).
-- API: `POST /admin/api/art-studio/preview|generate|apply`, `GET /admin/api/art-studio/download/<pack_id>`.
+- **Batch placeholders** for no-cover titles via `POST /admin/api/art-studio/batch-generate` (alias: `apply-batch`) first, then `POST /admin/api/covers/batch/apply` (`generate_only`) fallback.
+- **Auto-pick (ImagesPage):** `POST /admin/api/covers/batch/apply` with `policy=sgdb_then_igdb_then_generate` (library / platform / service filters). Mass search: `POST /admin/api/covers/batch/search`.
+- **Single-title picker:** `POST /admin/api/covers/search` + `POST /admin/api/covers/apply`. Identify chips from `GET /api/search_metadata/sources` (Meta Quest / Epic / itch / Giant Bomb) search via `GET /api/search_metadata?source=`.
+- Queue rows show `failure_reason` (and `last_error` fallback); list responses surface `image_save_path.error` when the images volume is not writable.
+- API: `POST /admin/api/art-studio/preview|generate|apply|apply-batch`, `GET /admin/api/art-studio/download/<pack_id>`, `POST /admin/api/art-studio/batch-generate`; covers mass tools under `/admin/api/covers/*`.
+- **System templates:** generated covers use per-system palette + glyph (NES/SNES/PS1/Switch/PC/…) so 200×300 tiles stay readable — not a generic subtitle-only placeholder.
+- **Meta Quest Store:** identify `GET /api/search_metadata?source=meta_quest|meta|quest` · ownership CSV `POST /api/ownership/meta_quest/csv` · `META_QUEST_API_MODE` / `META_QUEST_UNOFFICIAL_GRAPHQL` (off by default) — [store-metadata-identify.md](../strategy/store-metadata-identify.md).
 - Disk failures (read-only `IMAGE_SAVE_PATH` / generated-pack folder, out of space) surface as a JSON `error` and show in the red alert banner instead of a bare 500 — check the message for the exact path/permission problem. If applying a pack to a game fails partway (DB error after the file was written), the orphaned file is cleaned up automatically.
 - Guide: [cover-art-studio.md](../strategy/cover-art-studio.md).
+- Artwork picker: [steamgriddb-artwork.md](../runbooks/steamgriddb-artwork.md) · [libraries-and-scans.md](libraries-and-scans.md#image-queue).
 
 ## Other env toggles
 

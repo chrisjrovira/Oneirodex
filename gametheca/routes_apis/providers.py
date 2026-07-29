@@ -183,3 +183,38 @@ def pcgamingwiki_search():
         return jsonify(pcgamingwiki_enrichment(query))
     except RuntimeError as exc:
         return jsonify({'error': str(exc), 'provider': 'pcgamingwiki'}), 502
+
+
+@apis_bp.route('/providers/meta_quest/search', methods=['GET'])
+@login_required
+@admin_required
+def meta_quest_cover_search():
+    """Search Meta/Quest covers via IGDB platform filter (artwork only)."""
+    query = (request.args.get('q') or request.args.get('query') or '').strip()
+    if not query:
+        return jsonify({'error': 'Query parameter q is required'}), 400
+    try:
+        limit = min(int(request.args.get('limit') or 20), 50)
+    except (TypeError, ValueError):
+        limit = 20
+
+    provider = get_provider('meta_quest')
+    if not provider.is_enabled():
+        return jsonify({
+            'error': 'Meta/Quest search requires IGDB credentials.',
+            'provider': provider.id,
+            'hint': provider.config_hint(),
+        }), 503
+    try:
+        results = provider.search_covers(query, limit=limit)
+    except ProviderDisabledError as exc:
+        return jsonify({'error': exc.message, 'provider': exc.provider_id}), 503
+    except RuntimeError as exc:
+        return jsonify({'error': str(exc), 'provider': provider.id}), 502
+
+    return jsonify({
+        'provider': provider.id,
+        'query': query,
+        'ownership_only': True,
+        'results': [item.to_dict() for item in results],
+    })

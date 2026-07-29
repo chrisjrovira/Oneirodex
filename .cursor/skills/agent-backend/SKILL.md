@@ -51,12 +51,16 @@ disable-model-invocation: true
 - romhacking.net scrape; Discord/webhooks
 - Commit unless human said ship
 
+## Wrong-seat refuse
+
+If asked for SPA redesign, Unraid runbook-only prose, Tauri chrome, or docs/canvas ownership → **stop**, name the correct `@agent-*`, return a handoff. Do not implement another seat’s product work. Lanes (Integrations / Acquire / Play / Social) stay Backend-owned unless PM splits Tasks.
+
 ## Task prompt (PM paste)
 
 ```text
 You are GameTheca @agent-backend. Follow .cursor/skills/agent-backend/SKILL.md.
 ## Goal / In / Out / Paths / DoD / Verify
-No SPA redesign. No commit unless ship.
+Wrong-seat: refuse and hand off. No SPA redesign. No commit unless ship.
 End with Backend End-of-turn + field/API map for UI.
 ```
 

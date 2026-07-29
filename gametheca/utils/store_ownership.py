@@ -22,9 +22,10 @@ import requests
 from sqlalchemy import func, select
 
 from gametheca import db
-from gametheca.models import Game, GlobalSettings, StoreAccount, UserOwnedTitle
+from gametheca.models import Game, GameURL, GlobalSettings, StoreAccount, UserOwnedTitle
 
-VALID_STORES = frozenset({'steam', 'gog', 'epic', 'amazon'})
+# meta_quest = register-only ownership (CSV); never downloads DRM titles.
+VALID_STORES = frozenset({'steam', 'gog', 'epic', 'amazon', 'meta_quest'})
 
 _CSV_ID_HEADERS = frozenset({
     'appid',
@@ -35,8 +36,12 @@ _CSV_ID_HEADERS = frozenset({
     'gog_id',
     'epic_id',
     'catalog_item_id',
+    'meta_id',
+    'quest_id',
     'name',
 })
+
+_NAME_MATCH_STORES = frozenset({'gog', 'epic', 'amazon', 'meta_quest'})
 
 
 def is_ownership_sync_enabled() -> bool:
@@ -91,6 +96,22 @@ def _match_by_unique_normalized_name(name: str | None) -> str | None:
     return None
 
 
+def _match_meta_quest_by_url(external_app_id: str) -> str | None:
+    """Exact match on GameURL(url_type='meta_quest') when a single game links the id."""
+    external_id = (external_app_id or '').strip()
+    if not external_id:
+        return None
+    matches = db.session.execute(
+        select(GameURL.game_uuid).where(
+            GameURL.url_type == 'meta_quest',
+            GameURL.url == external_id,
+        )
+    ).scalars().all()
+    if len(matches) == 1:
+        return matches[0]
+    return None
+
+
 def match_title_to_library_game(
     store: str,
     external_app_id: str,
@@ -99,8 +120,8 @@ def match_title_to_library_game(
     """
     Match an owned store title to a library Game UUID.
     Steam: exact match on Game.steam_app_id when present.
-    GOG/Epic: no dedicated ID columns — unique normalized name match when name
-    is provided; otherwise None (admin can link unmatched rows later).
+    Meta Quest: GameURL url_type=meta_quest exact id, else unique normalized name.
+    GOG/Epic/Amazon: unique normalized name when name is provided; never multi-match.
     """
     if store == 'steam':
         try:
@@ -110,7 +131,12 @@ def match_title_to_library_game(
         return db.session.execute(
             select(Game.uuid).filter(Game.steam_app_id == app_id)
         ).scalars().first()
-    if store in ('gog', 'epic'):
+    if store == 'meta_quest':
+        by_url = _match_meta_quest_by_url(external_app_id)
+        if by_url:
+            return by_url
+        return _match_by_unique_normalized_name(name)
+    if store in _NAME_MATCH_STORES:
         return _match_by_unique_normalized_name(name)
     return None
 
@@ -366,6 +392,15 @@ def import_gog_csv(user_id: int, csv_text: str) -> dict:
 
 def import_epic_csv(user_id: int, csv_text: str) -> dict:
     return import_store_csv(user_id, 'epic', csv_text)
+
+
+def import_amazon_csv(user_id: int, csv_text: str) -> dict:
+    return import_store_csv(user_id, 'amazon', csv_text)
+
+
+def import_meta_quest_csv(user_id: int, csv_text: str) -> dict:
+    """Register-only Meta/Quest ownership import (never downloads DRM titles)."""
+    return import_store_csv(user_id, 'meta_quest', csv_text)
 
 
 def get_ownership_summary(user_id: int) -> dict:

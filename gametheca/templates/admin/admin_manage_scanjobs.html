@@ -576,6 +576,12 @@
                                 <button id="retryFailedBtn" class="btn btn-warning" onclick="retryFailed()" title="Retry every image the queue could not download">
                                     {{ icons.icon('refresh') }} Retry failed
                                 </button>
+                                <button id="autoPickBtn" class="btn btn-outline-info" onclick="autoPickBest()" title="POST /admin/api/covers/batch/apply policy=sgdb_then_igdb_then_generate">
+                                    {{ icons.icon('image') }} Auto-pick best
+                                </button>
+                                <a class="btn btn-outline-light" href="/admin/art_studio#images">
+                                    {{ icons.icon('image') }} Art &amp; images picker
+                                </a>
                                 <button class="btn btn-secondary" onclick="refreshQueue()">
                                     {{ icons.icon('refresh') }} Refresh
                                 </button>
@@ -593,6 +599,12 @@
                                     <option value="all">All Types</option>
                                     <option value="cover">Covers</option>
                                     <option value="screenshot">Screenshots</option>
+                                </select>
+                                <select id="library-filter" class="form-select" disabled title="Needs Backend: image_queue_list must return library_uuid">
+                                    <option value="">Library (needs Backend)</option>
+                                </select>
+                                <select id="platform-filter" class="form-select" disabled title="Needs Backend: image_queue_list must return platform">
+                                    <option value="">Platform (needs Backend)</option>
                                 </select>
                                 <div class="form-check form-switch align-self-center ms-1" style="white-space: nowrap;">
                                     <input class="form-check-input" type="checkbox" id="group-by-game" onchange="applyFilters()">
@@ -1010,6 +1022,8 @@
                         <strong>${escapeHtml(group.name)}</strong>
                         <small class="text-muted">${escapeHtml(group.uuid)}</small>
                         ${summary}
+                        ${group.uuid ? `<a class="btn btn-sm btn-outline-light ms-2" href="/admin/art_studio?game=${encodeURIComponent(group.uuid)}&name=${encodeURIComponent(group.name)}#images">Open picker</a>
+                        <a class="btn btn-sm btn-outline-secondary ms-1" href="/edit_game_images/${encodeURIComponent(group.uuid)}">Classic edit</a>` : ''}
                     </td>
                 </tr>
             `;
@@ -1161,6 +1175,46 @@
         } catch (error) {
             console.error('Error retrying failed images:', error);
             showMessage('Error retrying failed images', 'danger');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    // Auto-pick best available artwork via Backend cover policy.
+    async function autoPickBest() {
+        const btn = document.getElementById('autoPickBtn');
+        if (btn) btn.disabled = true;
+        try {
+            const response = await fetch('/admin/api/covers/batch/apply', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRFUtils.getToken()
+                },
+                body: JSON.stringify({
+                    policy: 'sgdb_then_igdb_then_generate',
+                    missing_cover: true,
+                    limit_games: 25,
+                    image_type: document.getElementById('type-filter')?.value || 'cover'
+                })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (response.ok) {
+                const applied = result.applied ?? 0;
+                const failed = result.failed ?? 0;
+                showMessage(
+                    result.message || `Auto-pick finished — applied ${applied}, failed ${failed}`,
+                    failed ? 'warning' : 'success'
+                );
+                loadImageQueue();
+            } else {
+                showMessage(
+                    result.error || result.message || `Auto-pick failed (HTTP ${response.status})`,
+                    'danger'
+                );
+            }
+        } catch (error) {
+            showMessage('Auto-pick error: ' + (error.message || error), 'danger');
         } finally {
             if (btn) btn.disabled = false;
         }

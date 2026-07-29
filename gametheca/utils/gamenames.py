@@ -49,6 +49,19 @@ _KNOWN_SUBTITLES = (
     "remake",
 )
 _SMART_APOSTROPHE_RE = re.compile(r"[’‘ʼ´]")
+# Franchise heads that use a hyphen (not colon) subtitle separator, e.g.
+# "Agatha Christie - Death on the Nile".
+_HYPHEN_SUBTITLE_HEADS = (
+    "agatha christie",
+)
+# Franchise heads that take a colon subtitle when at least one token follows
+# (e.g. "Assassin's Creed Odyssey" -> "Assassin's Creed: Odyssey").
+_FRANCHISE_COLON_HEADS = (
+    "assassin's creed",
+    "far cry",
+    "call of duty",
+)
+_TRAILING_YEAR_RE = re.compile(r'^(?:19|20)\d{2}$')
 
 
 def _list_game_dirs(folder_path, scan_depth=1, skip_dir_patterns=None):
@@ -242,24 +255,25 @@ def _known_subtitle_colon(name):
 
 def _colon_subtitle_variants(name):
     """
-    Heuristic colon before a trailing multi-word (or single-word) subtitle.
+    Stage C5 heuristic colon (≥4 tokens only).
 
-    Fallback when no known-subtitle phrase matched (e.g. Mass Effect: Andromeda).
+    Prefer a 2-word trailing subtitle (`tokens[:-2]: tokens[-2:]`), e.g.
+    Baldur's Gate: Dark Alliance. Also emit a 1-word trailing subtitle form
+    for the same ≥4-token titles. Three-word titles (e.g. A Fishermans Tale)
+    must not invent a colon — use known-subtitle / franchise-head paths instead.
     """
     words = name.split()
-    if len(words) < 3:
+    if len(words) < 4:
         return []
     if words[-1].isdigit() or words[-1].lower() in _EDITION_TAIL_TOKENS:
         return []
     if ':' in name:
         return []
 
-    variants = []
-    if len(words) >= 4:
-        # Prefer 2-word subtitle: Baldur's Gate: Dark Alliance
-        variants.append(f"{' '.join(words[:-2])}: {' '.join(words[-2:])}")
-    variants.append(f"{' '.join(words[:-1])}: {words[-1]}")
-    return variants
+    return [
+        f"{' '.join(words[:-2])}: {' '.join(words[-2:])}",
+        f"{' '.join(words[:-1])}: {words[-1]}",
+    ]
 
 
 def _sequel_numeral_variants(name):
@@ -276,6 +290,54 @@ def _sequel_numeral_variants(name):
     if last.isdigit() and last in _ARABIC_TO_ROMAN:
         variants.append(f"{head} {_ARABIC_TO_ROMAN[last]}")
     return variants
+
+
+def _hyphen_subtitle_variants(name):
+    """
+    Hyphen ↔ space subtitle variant.
+
+    If a ' - ' subtitle separator is present, add a despaced copy (matches
+    existing Stage C7 heuristic). Otherwise, if the name starts with a known
+    hyphen-subtitle franchise head (e.g. "Agatha Christie"), insert one.
+    """
+    if ' - ' in name:
+        despaced = re.sub(r'\s+', ' ', name.replace(' - ', ' ')).strip()
+        return [despaced] if despaced and despaced != name else []
+
+    lower = name.casefold()
+    for head in _HYPHEN_SUBTITLE_HEADS:
+        prefix = head + ' '
+        if lower.startswith(prefix):
+            tail = name[len(head):].strip(' -')
+            if tail:
+                return [f"{name[:len(head)]} - {tail}"]
+            break
+    return []
+
+
+def _franchise_head_colon_variant(name):
+    """Insert ': ' after a known franchise head when ≥1 token follows and no colon exists."""
+    if ':' in name:
+        return None
+    lower = name.casefold()
+    for head in _FRANCHISE_COLON_HEADS:
+        prefix = head + ' '
+        if lower.startswith(prefix):
+            tail = name[len(head):].strip()
+            if tail:
+                return f"{name[:len(head)]}: {tail}"
+            break
+    return None
+
+
+def _drop_trailing_year_variant(name):
+    """Drop a trailing standalone 4-digit year (1900s/2000s) as a search variant."""
+    words = name.split()
+    if len(words) < 2:
+        return None
+    if not _TRAILING_YEAR_RE.match(words[-1]):
+        return None
+    return ' '.join(words[:-1])
 
 
 def _deapostrophe_variant(name):
@@ -311,20 +373,35 @@ def generate_goty_variants(base_name):
     if known_on_base:
         variants.append(known_on_base)
 
+    franchise_on_base = _franchise_head_colon_variant(base_name)
+    if franchise_on_base:
+        variants.append(franchise_on_base)
+
     stripped_one = _strip_trailing_bare_one(base_name)
     if stripped_one:
         variants.append(stripped_one)
         known_stripped = _known_subtitle_colon(stripped_one)
         if known_stripped:
             variants.append(known_stripped)
+        franchise_stripped = _franchise_head_colon_variant(stripped_one)
+        if franchise_stripped:
+            variants.append(franchise_stripped)
 
     # Heuristic colon on title core when known list did not already produce it.
     core = stripped_one or base_name
-    if not _known_subtitle_colon(core):
+    if not _known_subtitle_colon(core) and not _franchise_head_colon_variant(core):
         variants.extend(_colon_subtitle_variants(core))
+
+    # Hyphen ↔ space subtitle variant (e.g. Agatha Christie style).
+    variants.extend(_hyphen_subtitle_variants(base_name))
 
     for seed in (base_name, stripped_one) if stripped_one else (base_name,):
         variants.extend(_sequel_numeral_variants(seed))
+
+    # Trailing 4-digit year dropped as an additional search variant.
+    year_dropped = _drop_trailing_year_variant(base_name)
+    if year_dropped:
+        variants.append(year_dropped)
 
     # Prefer de-apostrophe of the best colon form (without trailing bare 1) when present.
     colon_hit = next(

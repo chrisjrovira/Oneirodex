@@ -15,6 +15,7 @@ from gametheca.utils.store_ownership import (
     disconnect_gog_account,
     import_epic_csv,
     import_gog_csv,
+    import_meta_quest_csv,
     import_steam_csv,
     match_title_to_library_game,
     ownership_flags,
@@ -129,6 +130,7 @@ def test_upsert_owned_title_matches_library(db_session, lib, user):
 
 
 def test_import_steam_csv(db_session, lib, user):
+    _ensure_global_settings(db_session, enable_store_ownership_sync=True)
     game_uuid = str(uuid4())
     app_id = _unique_steam_app_id()
     orphan_app_id = _unique_steam_app_id()
@@ -152,6 +154,7 @@ def test_import_steam_csv(db_session, lib, user):
 
 
 def test_import_gog_csv_matches_by_name(db_session, lib, user):
+    _ensure_global_settings(db_session, enable_store_ownership_sync=True)
     game_uuid = str(uuid4())
     title = f'Divinity Test {uuid4().hex[:8]}'
     game = Game(
@@ -180,7 +183,50 @@ def test_import_gog_csv_matches_by_name(db_session, lib, user):
     assert matched.matched_game_uuid == game_uuid
 
 
+def test_import_meta_quest_csv_matches_by_name(db_session, lib, user):
+    _ensure_global_settings(db_session, enable_store_ownership_sync=True)
+    game_uuid = str(uuid4())
+    title = f'Quest Exclusive {uuid4().hex[:8]}'
+    game = Game(uuid=game_uuid, name=title, library_uuid=lib.uuid)
+    db_session.add(game)
+    db_session.commit()
+
+    result = import_meta_quest_csv(
+        user.id,
+        f'meta_id,name\nquest-app-1,{title}\nquest-app-2,Unknown Quest Title\n',
+    )
+    assert result['imported'] == 2
+    assert result['matched'] == 1
+    assert result['store'] == 'meta_quest'
+
+    matched = db_session.execute(
+        select(UserOwnedTitle).filter_by(
+            user_id=user.id,
+            store='meta_quest',
+            external_app_id='quest-app-1',
+        )
+    ).scalars().first()
+    assert matched is not None
+    assert matched.matched_game_uuid == game_uuid
+
+
+def test_match_meta_quest_by_game_url(db_session, lib):
+    from gametheca.models import GameURL
+
+    game_uuid = str(uuid4())
+    quest_id = f'oculus-{uuid4().hex[:12]}'
+    game = Game(uuid=game_uuid, name='URL Linked Quest', library_uuid=lib.uuid)
+    db_session.add(game)
+    db_session.flush()
+    db_session.add(GameURL(game_uuid=game_uuid, url_type='meta_quest', url=quest_id))
+    db_session.commit()
+
+    assert match_title_to_library_game('meta_quest', quest_id) == game_uuid
+    assert match_title_to_library_game('meta_quest', 'other-id', 'No Match Name') is None
+
+
 def test_import_epic_csv_matches_by_name(db_session, lib, user):
+    _ensure_global_settings(db_session, enable_store_ownership_sync=True)
     game_uuid = str(uuid4())
     title = f'Hades Test {uuid4().hex[:8]}'
     game = Game(

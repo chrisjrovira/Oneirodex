@@ -35,7 +35,9 @@ Per-row actions:
 
 ## After scan
 
-- Unmatched titles → Identify workbench (IGDB / Steam / GOG / RAWG).
+- Unmatched titles → Identify workbench (IGDB / Steam / GOG / RAWG / Epic / itch / GiantBomb / Meta·Quest via IGDB platforms).
+- **Meta Quest Store & Epic** are **metadata + ownership register only** — GameTheca never downloads DRM titles from those stores. Optional CSV: `POST /api/ownership/meta_quest/csv`. Identify modes via `META_QUEST_API_MODE` (`igdb` default · `csv_only` · `disabled` · `unofficial_graphql` off unless `META_QUEST_UNOFFICIAL_GRAPHQL=1`). Optional `META_GRAPH_ACCESS_TOKEN` is reserved for a future official catalog.
+- Identify metadata search: `GET /api/search_metadata?name=…&source=steam|rawg|gog|epic|itch|giantbomb|meta_quest|meta|quest` · source list: `GET /api/search_metadata/sources`.
 - **Identify is fast-path:** when a scan job creates a game, folder-size walk, Steam enrichment, cover/screenshot download, and HLTB run on a background thread after the row commits (`queue_post_identify_enrichment`). The library can show the title before size/covers finish.
 - Manual identify / add still sizes the folder inline (capped ~60s) and enriches inline (or uses the existing image-refresh thread).
 - Covers may also fill via missing-image tools; freshness tools mark OUT/~ titles.
@@ -67,11 +69,20 @@ Full family→platform map, exclude list, and Backend DoD: [console-gaming-libra
 ## Image queue
 
 Admin → Scan management → **Image Queue** tab manages cover/screenshot downloads.
+Prefer **Admin → Settings → Art studio → Pick & queue** (`/admin/art_studio#images`) for the React artwork picker + mass queue chrome.
 
 - **Preview** column shows a thumbnail once a file is downloaded and still present on disk; a striped placeholder shows for pending/failed rows.
-- **Group by game** toggle clusters rows by title with a per-group Failed/Pending count badge, instead of one flat paginated list.
-- **Status** is `Pending` / `Downloaded` / `Failed` / `File missing` (marked downloaded but the file is gone from `IMAGE_SAVE_PATH` — re-download to fix). Hover a Failed badge for the recorded reason (network error, HTTP status, disk permission, blocked URL).
+- **Group by game** toggle clusters rows by title with a per-group Failed/Pending count badge, instead of one flat paginated list. Group headers include **Open picker** (Art studio Pick & queue) and **Classic edit**.
+- **Status** is `Pending` / `Downloaded` / `Failed` / `File missing` (marked downloaded but the file is gone from `IMAGE_SAVE_PATH` — re-download to fix). Hover a Failed badge for the recorded reason (network error, HTTP status, disk permission, blocked URL). Queue JSON also returns `failure_reason` and `image_save_path` (`exists` / `writable` / `error`) so Unraid operators can see a read-only images volume immediately. React **Pick & queue** shows `failure_reason` on each row and banners `image_save_path.error`.
 - **Retry failed** re-attempts every image with a recorded failure in one click (`POST /admin/api/download_images` with `retry_failed: true`); per-row Retry does the same for one image.
+- **Auto-pick best** → `POST /admin/api/covers/batch/apply` with `policy=sgdb_then_igdb_then_generate` (optional library / platform / service from identify sources).
+- **Mass cover search** → `POST /admin/api/covers/batch/search` with the same filters.
+- **Mass / single cover selection** (admin):
+  - `POST /admin/api/covers/search` — `{ game_uuid?|query, providers?, limit? }` → candidates across SteamGridDB / IGDB / GiantBomb
+  - `POST /admin/api/covers/apply` — `{ game_uuid, url, provider }`
+  - Identify chips (SPA picker): `GET /api/search_metadata/sources` + `GET /api/search_metadata?source=meta_quest|epic|itch|giantbomb`
+  - `POST /admin/api/covers/batch/search` — filter `library_uuid` / `platform` / `service` / `missing_cover`
+  - `POST /admin/api/covers/batch/apply` — same filters or `game_uuids` + `policy` (`sgdb_then_igdb_then_generate` | `provider:igdb` | `generate_only` | …)
 - Failures are recorded on the `Image` row (`last_error`, `last_attempt_at`) by every download path (batch, single, turbo, and the eager cover/screenshot fetch during scan/identify) so a permissions or network problem on `IMAGE_SAVE_PATH` shows up in the UI instead of silently leaving images stuck "pending".
 
 ## Deploy note

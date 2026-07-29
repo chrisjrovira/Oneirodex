@@ -5,6 +5,7 @@ from __future__ import annotations
 from gametheca.utils.providers.base import MetadataImageProvider
 from gametheca.utils.providers.giantbomb import GiantBombProvider, PcGamingWikiProvider
 from gametheca.utils.providers.igdb import IgdbCoverProvider
+from gametheca.utils.providers.meta_quest import MetaQuestProvider
 from gametheca.utils.providers.steamgriddb import SteamGridDBProvider
 
 _PROVIDER_CLASSES: dict[str, type[MetadataImageProvider]] = {
@@ -12,6 +13,7 @@ _PROVIDER_CLASSES: dict[str, type[MetadataImageProvider]] = {
     IgdbCoverProvider.id: IgdbCoverProvider,
     GiantBombProvider.id: GiantBombProvider,
     PcGamingWikiProvider.id: PcGamingWikiProvider,
+    MetaQuestProvider.id: MetaQuestProvider,
 }
 
 _provider_instances: dict[str, MetadataImageProvider] = {}

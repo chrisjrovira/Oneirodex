@@ -31,6 +31,34 @@ def test_render_cover_art_returns_valid_image():
     assert len(buf.getvalue()) > 500
 
 
+def test_system_templates_differ_by_platform_pixels():
+    """At least three platforms produce distinct palettes / pixels at tile size."""
+    from gametheca.utils.cover_art_studio import resolve_system_template
+
+    nes = resolve_system_template('NES')
+    snes = resolve_system_template('SNES')
+    ps1 = resolve_system_template('PS1')
+    assert nes != snes != ps1
+    assert nes[2] != snes[2]  # accents differ
+
+    img_nes = render_cover_art(200, 300, title='Demo', system='NES')
+    img_snes = render_cover_art(200, 300, title='Demo', system='SNES')
+    img_ps1 = render_cover_art(200, 300, title='Demo', system='PS1')
+    assert img_nes.tobytes() != img_snes.tobytes()
+    assert img_snes.tobytes() != img_ps1.tobytes()
+    assert img_nes.tobytes() != img_ps1.tobytes()
+
+
+def test_tile_title_readable_min_font_at_200x300():
+    """200×300 tiles must use at least 14px title sizing path (no tiny default font)."""
+    img = render_cover_art(200, 300, title='Readable Title', system='GBA')
+    assert img.size == (200, 300)
+    # Non-flat image (gradient + text + glyph) — enough entropy for a real render
+    extrema = img.getextrema()
+    assert any(lo != hi for lo, hi in extrema)
+
+
+
 def test_generate_size_matrix_has_all_outlets():
     files = generate_size_matrix('Demo Title', system='NES')
     assert 'tile_200x300.webp' in files

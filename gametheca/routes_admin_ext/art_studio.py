@@ -7,7 +7,11 @@ import io
 
 from flask import jsonify, render_template, request, send_file
 from flask_login import login_required
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
+from gametheca import db
+from gametheca.models import Game
 from gametheca.utils.auth import admin_required
 from gametheca.utils.cover_art_studio import (
     apply_pack_as_fallback,
@@ -19,6 +23,7 @@ from gametheca.utils.cover_art_studio import (
     save_pack,
     safe_pack_dir,
 )
+from gametheca.utils.cover_selection import list_games_for_cover_batch
 from gametheca.utils.event_logging import log_system_event
 from . import admin2_bp
 
@@ -138,3 +143,88 @@ def art_studio_apply():
         return jsonify({'error': f'Failed to write cover art to disk: {exc}'}), 500
     except Exception as exc:  # noqa: BLE001 - surface DB/commit failures as JSON, not an HTML 500 page
         return jsonify({'error': f'Unexpected error applying pack: {exc}'}), 500
+
+
+@admin2_bp.route('/admin/api/art-studio/batch-generate', methods=['POST'])
+@login_required
+@admin_required
+def art_studio_batch_generate():
+    """Generate + apply system-templated covers for games missing covers."""
+    return _art_studio_apply_batch_impl()
+
+
+@admin2_bp.route('/admin/api/art-studio/apply-batch', methods=['POST'])
+@login_required
+@admin_required
+def art_studio_apply_batch():
+    """Alias expected by Admin ArtStudioPage — same as batch-generate."""
+    return _art_studio_apply_batch_impl()
+
+
+def _art_studio_apply_batch_impl():
+    data = _json_body()
+    try:
+        limit = min(int(data.get('limit') or data.get('limit_games') or 25), 100)
+    except (TypeError, ValueError):
+        limit = 25
+
+    game_uuids = data.get('game_uuids')
+    if isinstance(game_uuids, str):
+        game_uuids = [u.strip() for u in game_uuids.split(',') if u.strip()]
+    elif isinstance(game_uuids, list):
+        game_uuids = [str(u).strip() for u in game_uuids if str(u).strip()]
+    else:
+        game_uuids = None
+
+    override_system = (data.get('system') or data.get('platform') or '').strip() or None
+
+    if game_uuids:
+        games = list(
+            db.session.execute(
+                select(Game)
+                .options(joinedload(Game.library))
+                .filter(Game.uuid.in_(game_uuids))
+            ).scalars().unique().all()
+        )
+    else:
+        games = list_games_for_cover_batch(
+            library_uuid=(data.get('library_uuid') or '').strip() or None,
+            platform=override_system,
+            service=(data.get('service') or '').strip() or None,
+            missing_cover=bool(data.get('missing_cover', True)),
+            limit=limit,
+        )
+
+    applied = []
+    failed = []
+    for game in games:
+        system = override_system
+        if not system and game.library and game.library.platform:
+            system = game.library.platform.value
+        try:
+            manifest = save_pack(game.name or 'Untitled', system=system)
+            result = apply_pack_to_game(manifest['pack_id'], game.uuid)
+            applied.append({
+                'game_uuid': game.uuid,
+                'name': game.name,
+                'system': system,
+                'pack_id': manifest['pack_id'],
+                **result,
+            })
+        except Exception as exc:  # noqa: BLE001
+            failed.append({
+                'game_uuid': game.uuid,
+                'name': game.name,
+                'error': str(exc),
+            })
+
+    log_system_event(
+        f"Art studio apply-batch applied={len(applied)} failed={len(failed)}"
+    )
+    return jsonify({
+        'applied': len(applied),
+        'failed': len(failed),
+        'results': applied,
+        'errors': failed,
+    })
+

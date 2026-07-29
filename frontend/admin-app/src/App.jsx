@@ -6,6 +6,7 @@ import { InvitesPage } from './InvitesPage'
 import { UsersPage } from './UsersPage'
 import { OpsPage } from './OpsPage'
 import { ArtStudioPage } from './ArtStudioPage'
+import { ImagesPage } from './ImagesPage'
 import { RemotePlayPage } from './RemotePlayPage'
 import { HUB_LINKS, SETTINGS_CARDS } from './navConfig'
 import './ops.css'
@@ -68,6 +69,8 @@ function RoutedAdminPage() {
       return <ThemesPage />
     case 'art_studio':
       return <ArtStudioPage />
+    case 'images':
+      return <ImagesPage />
     case 'remote_play':
       return <RemotePlayPage />
     case 'help':
