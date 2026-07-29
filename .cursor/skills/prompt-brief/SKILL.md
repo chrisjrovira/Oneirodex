@@ -54,7 +54,7 @@ Read [defaults.md](defaults.md). Highlights:
 - No Discord / webhooks / auto-merge / force-push
 - No bundled torrent/debrid marketplace / DRM store download/install queues / always-on paid LLM in Flask
 - Docs-sync on every code change
-- Commit/push only when user says ship/commit/push
+- Commit only when user says ship/commit/push; **ship-ready always pushes** after commit
 - Prefer Unraid + Compose; GitHub Issues for support
 - Author commits as `cephyrix_zyth` via `-c` flags when shipping (never `git config`)
 
