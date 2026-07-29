@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import gzip
+import os
 import zipfile
 from pathlib import Path
 
@@ -10,6 +11,7 @@ import pytest
 
 from gametheca.utils.rom_archive import (
     ArchiveRomError,
+    bundle_playable_rom_zip,
     choose_rom_member,
     extract_rom_from_zip,
     path_supports_browser_extract,
@@ -153,3 +155,77 @@ def test_archive_error_payload_shape():
         'code': 'missing_dependency',
         'hint': 'install x',
     }
+
+
+def test_bundle_cue_bin_zips_and_rewrites_paths(tmp_path):
+    disc_dir = tmp_path / 'disc'
+    disc_dir.mkdir()
+    cue_path = disc_dir / 'Game (Disc 1).cue'
+    cue_path.write_text(
+        'FILE "subfolder/Game (Disc 1).bin" BINARY\n'
+        '  TRACK 01 MODE2/2352\n'
+        '    INDEX 01 00:00:00\n',
+        encoding='utf-8',
+    )
+    (disc_dir / 'Game (Disc 1).bin').write_bytes(b'BINDATA' * 1000)
+    (disc_dir / 'readme.txt').write_text('ignore me', encoding='utf-8')
+
+    cache = tmp_path / 'cache'
+    zip_path, filename = bundle_playable_rom_zip(str(cue_path), str(cache))
+
+    assert filename == 'play.zip'
+    assert Path(zip_path) == cache / 'play.zip'
+
+    with zipfile.ZipFile(zip_path) as zf:
+        names = set(zf.namelist())
+        assert names == {'Game (Disc 1).cue', 'Game (Disc 1).bin'}
+        info = zf.getinfo('Game (Disc 1).cue')
+        assert info.compress_type == zipfile.ZIP_STORED
+        cue_contents = zf.read('Game (Disc 1).cue').decode('utf-8')
+        assert 'FILE "Game (Disc 1).bin" BINARY' in cue_contents
+        assert 'subfolder' not in cue_contents
+        assert zf.read('Game (Disc 1).bin') == b'BINDATA' * 1000
+
+
+def test_bundle_reuses_fresh_zip(tmp_path):
+    disc_dir = tmp_path / 'disc'
+    disc_dir.mkdir()
+    cue_path = disc_dir / 'disc.cue'
+    cue_path.write_text('FILE "disc.bin" BINARY\n', encoding='utf-8')
+    (disc_dir / 'disc.bin').write_bytes(b'X' * 100)
+
+    cache = tmp_path / 'cache'
+    zip_path_1, _ = bundle_playable_rom_zip(str(cue_path), str(cache))
+    first_mtime = os.path.getmtime(zip_path_1)
+
+    zip_path_2, _ = bundle_playable_rom_zip(str(cue_path), str(cache))
+    assert zip_path_2 == zip_path_1
+    assert os.path.getmtime(zip_path_2) == first_mtime
+
+
+def test_bundle_single_iso_unchanged(tmp_path):
+    disc_dir = tmp_path / 'disc'
+    disc_dir.mkdir()
+    iso_path = disc_dir / 'game.iso'
+    iso_path.write_bytes(b'ISODATA')
+
+    cache = tmp_path / 'cache'
+    result_path, filename = bundle_playable_rom_zip(str(iso_path), str(cache))
+
+    assert result_path == str(iso_path)
+    assert filename == 'game.iso'
+    assert not (cache / 'play.zip').exists()
+
+
+def test_bundle_cue_without_companions_unchanged(tmp_path):
+    disc_dir = tmp_path / 'disc'
+    disc_dir.mkdir()
+    cue_path = disc_dir / 'lone.cue'
+    cue_path.write_text('FILE "lone.bin" BINARY\n', encoding='utf-8')
+
+    cache = tmp_path / 'cache'
+    result_path, filename = bundle_playable_rom_zip(str(cue_path), str(cache))
+
+    assert result_path == str(cue_path)
+    assert filename == 'lone.cue'
+    assert not (cache / 'play.zip').exists()

@@ -69,4 +69,29 @@ $(document).ready(function() {
     });
 
     console.log('Tab controller initialized with fragment support');
+
+    // SMTP help lives inside .integrations-tab-content (backdrop-filter stacking
+    // context). Host on body so the dialog stays above Bootstrap's backdrop.
+    // (admin_manage_smtp_settings.js also wires this; keep both for load-order safety.)
+    const smtpHelpModalEl = document.getElementById('smtpHelpModal');
+    if (smtpHelpModalEl && smtpHelpModalEl.parentElement !== document.body) {
+        document.body.appendChild(smtpHelpModalEl);
+    }
+    if (smtpHelpModalEl && window.bootstrap && bootstrap.Modal) {
+        const smtpHelpModal = bootstrap.Modal.getOrCreateInstance(smtpHelpModalEl, {
+            backdrop: true,
+            keyboard: true,
+            focus: true,
+        });
+        document.querySelectorAll('.smtp-help-open').forEach(function (btn) {
+            // Avoid duplicate listeners if smtp settings JS already bound.
+            if (btn.dataset.smtpHelpBound === '1') return;
+            btn.dataset.smtpHelpBound = '1';
+            btn.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                smtpHelpModal.show();
+            });
+        });
+    }
 });

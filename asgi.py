@@ -29,7 +29,11 @@ from gametheca.models import DownloadRequest, Game, User
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.library_acl import user_can_access_game
 from gametheca.utils.play_url import library_platform_key
-from gametheca.utils.rom_archive import ArchiveRomError, resolve_playable_rom_path
+from gametheca.utils.rom_archive import (
+    ArchiveRomError,
+    bundle_playable_rom_zip,
+    resolve_playable_rom_path,
+)
 from gametheca.utils.security import get_allowed_base_directories, is_safe_path
 from gametheca.utils.static_files import resolve_static_path
 from sqlalchemy import select
@@ -472,6 +476,9 @@ class LazyASGIApp:
                     cache_dir=cache_dir,
                     platform=platform_key,
                 )
+                # Multi-track discs (.cue + .bin/.img/...) need every file in one
+                # response — WebRetro never gets a second chance to fetch companions.
+                rom_path, filename = bundle_playable_rom_zip(rom_path, cache_dir)
             except ArchiveRomError as exc:
                 log_system_event(
                     f"ROM resolve failed for {game.name}: {exc.message}",

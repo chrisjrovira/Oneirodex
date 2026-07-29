@@ -87,6 +87,10 @@ export async function openPreferencesModal() {
     throw new Error('preferences modal markup missing')
   }
 
+  if (typeof window.gtHoistBootstrapModals === 'function') {
+    window.gtHoistBootstrapModals(modalElement)
+  }
+
   const bootstrap = window.bootstrap
   if (bootstrap?.Modal) {
     bootstrap.Modal.getOrCreateInstance(modalElement).show()

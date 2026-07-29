@@ -55,6 +55,7 @@ Product toggles live under **Admin → Features** (and setup → Features). Env 
 | Community chat | BYO Stoat/Matrix URL only |
 | Discord | **Removed** — use Support inbox + in-app admin alerts |
 | LiveKit | [livekit-unraid.md](../runbooks/livekit-unraid.md) · Plugins → `rtc.livekit` |
+| SMTP help (?) unclickable after open | Same stacking trap as library delete — help modal is hoisted to `document.body` + inline z-index on Integrations. Hard-refresh; optional **Reset Themes**. |
 
 ## Support tickets not on GitHub
 
@@ -73,6 +74,7 @@ Expected if `SUPPORT_GITHUB_TOKEN` unset (`github_sync=skipped`). Ticket + admin
 | Symptom | Check |
 |---|---|
 | Delete library Confirm/Cancel unclickable | Theme CSS under `static/library/themes/` can pin `.modal` under `.modal-backdrop`. Current Libraries page ships **inline** stacking CSS + moves the modal to `document.body` (works after **app rebuild/restart** without Reset Themes). Also run **Admin → Themes → Reset Themes** so library theme CSS/JS match the image. Hard-refresh Admin → Libraries. |
+| Any Bootstrap admin modal unclickable (Filters, Extensions, Scans Add Filter, Discovery Zones, Users, Downloads, SMTP help) | Same stacking trap: glass/`backdrop-filter` parents. Admin + member shells load `js/gt_modal_stack.js` which hoists every `.modal.fade` to `document.body` (also on `show.bs.modal`). Rebuild/restart app; hard-refresh; optional Reset Themes. |
 
 ## Scans / identify
 

@@ -12,6 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js"></script>
 
     <script src="{{ 'js/csrf-utils.js'|theme_asset }}"></script>
+    <script src="{{ 'js/gt_modal_stack.js'|theme_asset }}"></script>
 
     <link rel="stylesheet" href="{{ 'css/gt-tokens.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/gt-chrome.css'|theme_asset }}">
@@ -34,6 +35,14 @@
         margin-right: 0;
         width: 100%;
         max-width: 100%;
+      }
+      /* Preferences modal may inject under glass chrome — keep above backdrop */
+      .modal.fade {
+        z-index: 1065 !important;
+        background-color: transparent;
+      }
+      body.modal-open > .modal-backdrop {
+        z-index: 1060 !important;
       }
     </style>
     {% endblock %}

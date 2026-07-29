@@ -6,6 +6,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const testButton = document.querySelector('.btn-secondary');
     const testResultsDiv = document.getElementById('testResults');
 
+    // Host help modal on body (avoid stacking-context trap under backdrop-filter cards).
+    const smtpHelpModalEl = document.getElementById('smtpHelpModal');
+    if (smtpHelpModalEl && smtpHelpModalEl.parentElement !== document.body) {
+        document.body.appendChild(smtpHelpModalEl);
+    }
+    if (smtpHelpModalEl && window.bootstrap && bootstrap.Modal) {
+        const smtpHelpModal = bootstrap.Modal.getOrCreateInstance(smtpHelpModalEl, {
+            backdrop: true,
+            keyboard: true,
+            focus: true,
+        });
+        document.querySelectorAll('.smtp-help-open').forEach(function (btn) {
+            if (btn.dataset.smtpHelpBound === '1') return;
+            btn.dataset.smtpHelpBound = '1';
+            btn.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                smtpHelpModal.show();
+            });
+        });
+    }
+
     // Define test settings function
     window.testSettings = function() {
         testButton.disabled = true;

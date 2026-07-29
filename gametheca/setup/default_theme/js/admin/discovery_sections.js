@@ -81,7 +81,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const zoneModalEl = document.getElementById('zoneModal');
     if (!zoneModalEl) return;
-    const zoneModal = new bootstrap.Modal(zoneModalEl);
+    if (window.gtHoistBootstrapModals) {
+        window.gtHoistBootstrapModals(zoneModalEl);
+    } else if (zoneModalEl.parentElement !== document.body) {
+        document.body.appendChild(zoneModalEl);
+    }
+    const zoneModal = bootstrap.Modal.getOrCreateInstance(zoneModalEl);
 
     const zoneIdInput = document.getElementById('zoneId');
     const zoneNameInput = document.getElementById('zoneName');

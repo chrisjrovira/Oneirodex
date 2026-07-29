@@ -2,8 +2,14 @@
 /* Consolidates modal styling duplicated across 6 files (12 occurrences) */
 
 /*
- * Legacy custom modals only. Do NOT style Bootstrap `.modal.fade` here —
- * `.modal { z-index:1000 }` under `.modal-backdrop` (1050) made Confirm unclickable.
+ * Legacy custom modals only. Do NOT style Bootstrap `.modal.fade` with a low
+ * z-index — `.modal { z-index:1000 }` under `.modal-backdrop` (1050) made
+ * Confirm unclickable.
+ *
+ * Bootstrap fade modals must also be hosted on `document.body` when their
+ * markup is nested under stacking contexts (`backdrop-filter` glass panels,
+ * Integrations tabs, Scan jobs). See `js/gt_modal_stack.js` (auto-hoist) and
+ * inline CSS in `base_admin.html` / Libraries / Integrations.
  */
 .modal:not(.fade) {
     display: none;

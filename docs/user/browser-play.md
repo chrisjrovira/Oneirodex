@@ -51,6 +51,12 @@ Browser Play streams via `GET /api/downloadrom/<uuid>` (ASGI). Server extracts a
 
 Failures return JSON: `{"error": "…", "code": "…", "hint": "…"}` (`error` always present). The play shell (`webretro.html`) surfaces non-2xx `/api/downloadrom/` responses in an accessible `#gt-play-alert` region (`error` plus optional `hint`) instead of a silent `.catch`. Browse may set `play_blocker=unsupported_archive`; GameCard / Game Details show a disabled Play control with tooltip when that blocker is present.
 
+### PS1 (and other disc/`.cue`) downloads are bundled as a zip
+
+`.cue` sheets need their sibling `.bin`/`.img`/`.iso`/`.raw`/`.wav` track files to boot — a plain HTTP GET can only stream one file. `GET /api/downloadrom/<uuid>` detects this and streams a single **stored (uncompressed) `play.zip`** containing the `.cue` (with `FILE` lines rewritten to plain basenames) plus every disc-track companion sitting next to it. WebRetro's own client-side unzip (`unzipFileMulti`) splits the bundle back into files for disc cores (PS1, Saturn, Sega CD, etc.) — no server round-trip changes were needed on the WebRetro side beyond reading the real filename off the response.
+
+Single-file discs (`.iso`, `.chd`, a lone `.bin`) stream unchanged — no zip wrapping. The play shell reads the actual filename from the response's `Content-Disposition` header (not the request URL, which is just `/api/downloadrom/<uuid>`) and uses a long fetch timeout for ROM downloads, since PS1-sized discs can take well past the old 8-second default.
+
 ## Cloud saves (WebRetro bridge)
 
 The play bar **Sync cloud saves** uses `gt-bridge.js` postMessage (`gt-export-saves` / `gt-import-saves`):

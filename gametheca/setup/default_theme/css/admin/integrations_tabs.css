@@ -67,6 +67,15 @@
     color: var(--gt-accent, var(--btn-primary));
 }
 
+/* SMTP help is hoisted to body in JS; keep dialog above backdrop if CSS alone applies. */
+#smtpHelpModal.modal.fade {
+    z-index: 1065;
+}
+
+#smtpHelpModal .modal-dialog {
+    pointer-events: auto;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .integrations-nav-link {

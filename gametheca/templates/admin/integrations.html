@@ -8,6 +8,20 @@
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_smtp_settings.css'|theme_asset }}">
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_igdb_settings.css'|theme_asset }}">
 <link rel="stylesheet" href="{{ 'css/admin/integrations_tabs.css'|theme_asset }}">
+{# Inline: theme volume copies of integrations_tabs.css may lag until Reset Themes.
+   Help modal must sit above Bootstrap backdrop even when nested under backdrop-filter. #}
+<style>
+  #smtpHelpModal.modal.fade {
+    z-index: 1065 !important;
+  }
+  #smtpHelpModal .modal-dialog {
+    z-index: 1;
+    pointer-events: auto;
+  }
+  body.modal-open > .modal-backdrop {
+    z-index: 1060 !important;
+  }
+</style>
 
 <div class="container-settings mt-4 gt-adminpage gt-adminpage--xl">
     <div class="card">
@@ -61,7 +75,7 @@
             <!-- Email Settings Tab -->
             <div class="integrations-tab-pane tab-pane fade" id="email" role="tabpanel" aria-labelledby="email-tab">
                 <div class="tab-content-wrapper">
-                    <h4>{{ icons.icon('envelope', size=20) }} SMTP Email Settings <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#smtpHelpModal" title="SMTP help">
+                    <h4>{{ icons.icon('envelope', size=20) }} SMTP Email Settings <button type="button" class="btn btn-info btn-sm smtp-help-open" title="SMTP help" aria-haspopup="dialog" aria-controls="smtpHelpModal">
                         {{ icons.icon('help') }}
                     </button></h4>
 

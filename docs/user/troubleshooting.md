@@ -30,6 +30,7 @@ Quick checks before pinging an admin.
 | Core won’t start | Unsupported system / missing BIOS | See admin emulator profiles; some systems are companion-only |
 | Save missing | Cloud save flag / encrypt | Re-try; admin check emulator saves settings |
 | Play fails / blank after Start (zip/7z/rar/gz) | Archive has no playable ROM, wrong member, or missing unrar/py7zr | Prefer one ROM per archive; use `.zip` with a known ROM ext; single-file `game.nes.gz` is OK — not `.tar.gz`. Check `/api/downloadrom/<uuid>` JSON (`error`, `code`, optional `hint`) |
+| PS1 (or other `.cue`-based disc) never starts / stuck loading ROM | Large cue+bin download still in flight, or BIOS missing | Disc sets download as a bundled `play.zip` (cue + bin/img together) and can take a while on slower storage/network — let it finish. Confirm the correct SCPH/region BIOS is uploaded under Admin → emulator BIOS — [browser-play.md](browser-play.md#ps1-and-other-disccue-downloads-are-bundled-as-a-zip) |
 | No browser Play button on a scanned `.gz` | Non-ROM gzip (e.g. `.tar.gz`) | Repack as `.zip` / raw ROM; Play is suppressed for unsupported archives |
 | No sound on Start | Browser autoplay policy suspends audio until a page gesture | Click once into the play screen, then press Start |
 | SNES game crackles / audio pitch shifts on busy scenes | WASM CPU pressure causing emulation slowdown | Pre-start gear → **Reduce Slowdown (Overclock)**; still choppy → use desktop companion for that title — [browser-play.md](browser-play.md#audiovideo-tuning--wasm-limits-snes-and-friends) |

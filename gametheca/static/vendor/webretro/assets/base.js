@@ -446,17 +446,17 @@ function log(log, userInput) {
 }
 
 // xhr
-function grab(url, type, success, fail) {
+function grab(url, type, success, fail, timeoutMs) {
 	var req = new XMLHttpRequest();
 	req.open("GET", url, true);
 	req.overrideMimeType("text/plain; charset=x-user-defined");
 	req.responseType = type;
-	req.timeout = 8000;
+	req.timeout = (typeof timeoutMs === "number") ? timeoutMs : 8000;
 	req.onload = function() {
 		if (req.status >= 400) {
 			if (fail) fail(req.status);
 		} else {
-			if (success) success(this.response);
+			if (success) success(this.response, req);
 		}
 	}
 	req.onerror = function() {
@@ -466,6 +466,22 @@ function grab(url, type, success, fail) {
 		if (fail) fail(0);
 	}
 	req.send();
+}
+
+// parse a filename out of a Content-Disposition header (quoted, bare, or filename*)
+function parseContentDispositionFilename(headerValue) {
+	if (!headerValue) return null;
+	var starMatch = /filename\*\s*=\s*(?:UTF-8''|utf-8'')?([^;]+)/i.exec(headerValue);
+	if (starMatch && starMatch[1]) {
+		try {
+			return decodeURIComponent(starMatch[1].trim().replace(/^["']|["']$/g, ""));
+		} catch (e) { /* fall through to other forms */ }
+	}
+	var quotedMatch = /filename\s*=\s*"([^"]+)"/i.exec(headerValue);
+	if (quotedMatch && quotedMatch[1]) return quotedMatch[1];
+	var bareMatch = /filename\s*=\s*([^;]+)/i.exec(headerValue);
+	if (bareMatch && bareMatch[1]) return bareMatch[1].trim();
+	return null;
 }
 
 // file readers
@@ -771,15 +787,21 @@ function readyLaunchQueue() {
 function readyRomFetch() {
 	var romloc = (/^(https?:)?\/\//i).test(queries.rom) ? queries.rom : relativeBase + "roms/" + queries.rom;
 	var romFilename = queries.rom.split("/").slice(-1)[0];
-	grab(romloc, "arraybuffer", function(data) {
-		log("Succesfully fetched ROM from " + romloc);
+	// ROM downloads (esp. PSX cue+bin bundles, hundreds of MB) blow past the default
+	// 8s XHR timeout — give ROM fetches a generous ceiling instead.
+	grab(romloc, "arraybuffer", function(data, req) {
+		var cdFilename = (req && req.getResponseHeader) ? parseContentDispositionFilename(req.getResponseHeader("Content-Disposition")) : null;
+		// Prefer the server-reported filename (real extension, e.g. "play.zip"/"Game.cue") —
+		// the URL itself is just "/api/downloadrom/<uuid>" with no extension.
+		var effectiveName = cdFilename || romFilename;
+		log("Succesfully fetched ROM from " + romloc + (cdFilename ? " (as " + cdFilename + ")" : ""));
 		romMode = "querystring";
-		romUploadCallback([{path: romFilename, data: data}]);
+		romUploadCallback([{path: effectiveName, data: data}]);
 	}, function(error) {
 		alert("Could not get ROM at " + romloc + " (Error " + error + ")");
 		romMode = "upload";
 		ffd.style.display = "block";
-	});
+	}, 300000);
 }
 
 // safe writeFile

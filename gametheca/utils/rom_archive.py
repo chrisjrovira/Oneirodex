@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gzip
 import os
+import re
 import zipfile
 from pathlib import Path
 
@@ -12,6 +13,7 @@ ROM_EXTENSIONS = frozenset({
     '.nds', '.iso', '.cue', '.bin', '.chd', '.pce', '.ngp', '.ngc',
     '.ws', '.wsc', '.col', '.vec', '.a26', '.a52', '.a78', '.lnx', '.jag',
     '.md', '.smd', '.gen', '.sms', '.gg', '.32x', '.rom', '.fds',
+    '.pbp', '.img', '.raw', '.wav',
 })
 
 ARCHIVE_EXTENSIONS = frozenset({'.zip', '.7z', '.rar'})
@@ -657,3 +659,113 @@ def resolve_playable_rom_path(
         status_code=400,
         code='unsupported_format',
     )
+
+
+# Matches a cue sheet FILE line, quoted or bare: FILE "disc.bin" BINARY / FILE disc.bin BINARY
+_CUE_FILE_LINE_RE = re.compile(r'(?im)^(\s*FILE\s+)(?:"([^"]*)"|(\S+))(\s+\S+\s*)$')
+
+
+def _rewrite_cue_file_paths(cue_text: str) -> str:
+    """Rewrite FILE references in a .cue sheet to basenames (for a flattened zip)."""
+
+    def _replace(match: re.Match[str]) -> str:
+        prefix, quoted, bare, suffix = match.groups()
+        original = quoted if quoted is not None else bare
+        basename = Path(original.replace('\\', '/')).name
+        if quoted is not None:
+            return f'{prefix}"{basename}"{suffix}'
+        return f'{prefix}{basename}{suffix}'
+
+    return _CUE_FILE_LINE_RE.sub(_replace, cue_text)
+
+
+def bundle_playable_rom_zip(rom_path: str, cache_dir: str) -> tuple[str, str]:
+    """
+    Bundle a resolved `.cue` sheet with its sibling disc images (.bin/.img/.iso/
+    .raw/.wav) into one stored (uncompressed) zip named `play.zip`, so a single
+    HTTP download hands WebRetro every file a multi-track PSX/CD image needs
+    (WebRetro's own client-side unzip already splits multi-file zips back out
+    for disc cores — see `unzipFileMulti` in base.js).
+
+    Returns (rom_path, filename) unchanged when `rom_path` is not a `.cue` or
+    has no companions next to it, so single-file `.iso`/`.chd`/`.bin` play is
+    untouched.
+    """
+    path = Path(rom_path)
+    if path.suffix.lower() != '.cue':
+        return rom_path, path.name
+
+    source_dir = path.parent
+    try:
+        sibling_names = sorted(os.listdir(source_dir))
+    except OSError as exc:
+        raise ArchiveRomError(
+            'Failed to read disc folder for ROM bundling',
+            code='extract_failed',
+        ) from exc
+
+    resolved_cue = path.resolve()
+    companions = [
+        candidate
+        for name in sibling_names
+        if Path(name).suffix.lower() in CUE_COMPANION_EXTENSIONS
+        for candidate in (source_dir / name,)
+        if candidate.is_file() and candidate.resolve() != resolved_cue
+    ]
+
+    if not companions:
+        return rom_path, path.name
+
+    os.makedirs(cache_dir, exist_ok=True)
+    zip_path = os.path.join(cache_dir, 'play.zip')
+
+    sources = [path, *companions]
+    try:
+        newest_source_mtime = max(p.stat().st_mtime for p in sources)
+    except OSError as exc:
+        raise ArchiveRomError(
+            'Failed to stat disc files for ROM bundling',
+            code='extract_failed',
+        ) from exc
+
+    if os.path.isfile(zip_path):
+        try:
+            fresh = (
+                os.path.getsize(zip_path) > 0
+                and os.path.getmtime(zip_path) >= newest_source_mtime
+            )
+        except OSError:
+            fresh = False
+        if fresh:
+            return zip_path, 'play.zip'
+
+    try:
+        cue_text = path.read_text(encoding='utf-8', errors='replace')
+    except OSError as exc:
+        raise ArchiveRomError(
+            'Failed to read .cue sheet for ROM bundling',
+            code='extract_failed',
+        ) from exc
+
+    rewritten_cue = _rewrite_cue_file_paths(cue_text)
+
+    tmp_path = f'{zip_path}.tmp-{os.getpid()}'
+    try:
+        with zipfile.ZipFile(tmp_path, 'w', compression=zipfile.ZIP_STORED) as zf:
+            zf.writestr(path.name, rewritten_cue)
+            for companion in companions:
+                zf.write(companion, arcname=companion.name)
+        os.replace(tmp_path, zip_path)
+    except OSError as exc:
+        raise ArchiveRomError(
+            'Failed to build ROM bundle zip',
+            code='extract_failed',
+        ) from exc
+    finally:
+        if os.path.isfile(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+
+    return zip_path, 'play.zip'
