@@ -8,6 +8,7 @@ const FAQ_SECTIONS = [
       'Use the top navigation for Discover, Library, Systems, Downloads, and Favorites.',
       'Press Ctrl+K (⌘K on Mac) or Search in the top nav to open the command palette and jump to any page.',
       'Open More for Collections, Wishlist, Ownership, Big Picture, and other hubs.',
+      'Account → API tokens creates companion/thin secrets for the desktop client (shown once).',
       'Press any key on Library to focus search, then filter by genre, platform, or release date.',
       'Click a cover to open game details, screenshots, and download options.',
       'If the site will not load, ask an admin to check /healthz (up) and /readyz (DB ready); Admins also use Ops → Services.',

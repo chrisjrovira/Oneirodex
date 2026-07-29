@@ -71,7 +71,7 @@
   pointer-events: none;
 }
 
-/* PLAY stays top-left; hamburger is top-right so they no longer collide */
+/* PLAY is a small bar control under badges — badges win true top-left */
 .game-card .gt-tile-play {
   position: absolute;
   z-index: 14;
@@ -93,8 +93,8 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
-/* When PLAY is present, nudge UPDATE/OUT/NEW stack below it */
-.game-card:has(.gt-tile-play) .gt-badge-stack--top-left {
+/* Transitional badges (UPDATE/OUT/NEW/VR) keep top-left; nudge PLAY below */
+.game-card:has(.gt-badge-stack--top-left) .gt-tile-play {
   top: 2.35rem;
 }
 
@@ -102,6 +102,20 @@
 .game-card .gt-tile-play:focus-visible {
   filter: brightness(1.08);
   outline: none;
+}
+
+.game-card .gt-tile-play--disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.35);
+  pointer-events: auto;
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 35%, #555);
+  color: color-mix(in srgb, var(--gt-accent-contrast, #0b0d10) 70%, #fff);
+}
+
+.game-card .gt-tile-play--disabled:hover,
+.game-card .gt-tile-play--disabled:focus-visible {
+  filter: grayscale(0.35);
 }
 
 .game-card {

@@ -60,6 +60,10 @@ export function GameCard({
   const steamStoreUrl = safeHttpUrl(game.steam_url) || (steamAppId ? `https://store.steampowered.com/app/${steamAppId}` : null)
   const steamRunUrl = steamAppId ? `steam://run/${steamAppId}` : null
   const playDemoHref = game.play_url || game.demo_url || null
+  const archiveBlocked = game.play_blocker === 'unsupported_archive'
+  const archiveBlockHint =
+    game.companion_hint ||
+    'This archive type cannot be extracted for browser play. Use .zip / .7z / .rar / ROM.gz or a raw ROM.'
   useEffect(() => {
     setImgSrc(coverUrl(game.cover_url))
     setIsFavorite(Boolean(game.is_favorite))
@@ -375,6 +379,15 @@ export function GameCard({
           >
             Play
           </a>
+        ) : archiveBlocked ? (
+          <span
+            className="gt-tile-play gt-tile-play--disabled"
+            title={archiveBlockHint}
+            aria-disabled="true"
+            aria-label={`${game.name}: browser play unavailable — unsupported archive`}
+          >
+            Play
+          </span>
         ) : null}
 
         <BadgeStack

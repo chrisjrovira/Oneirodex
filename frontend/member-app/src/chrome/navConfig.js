@@ -53,6 +53,7 @@ const SECTION_HOME = {
   '/report': { to: '/report', label: 'Report issue' },
   '/calendar': { to: '/calendar', label: 'Calendar' },
   '/ownership': { to: '/ownership', label: 'Ownership' },
+  '/tokens': { to: '/tokens', label: 'API tokens' },
   '/big-picture': { to: '/big-picture', label: 'Big Picture' },
   '/vr': { to: '/vr', label: 'VR' },
   '/trailers': { to: '/trailers', label: 'Trailers' },

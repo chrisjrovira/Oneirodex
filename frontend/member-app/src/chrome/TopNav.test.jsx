@@ -53,6 +53,7 @@ test('account menu matches base.html account URLs', async () => {
   await user.click(screen.getByRole('button', { name: /account menu/i }))
   expect(screen.getByRole('menuitem', { name: 'Profile' })).toHaveAttribute('href', '/settings_profile_view')
   expect(screen.getByRole('menuitem', { name: 'Preferences' })).toHaveAttribute('href', '/settings_panel')
+  expect(screen.getByRole('menuitem', { name: 'API tokens' })).toHaveAttribute('href', '/tokens')
   expect(screen.getByRole('menuitem', { name: 'Change Password' })).toHaveAttribute('href', '/settings_password')
   expect(screen.getByRole('menuitem', { name: 'Logout' })).toHaveAttribute('href', '/logout')
 })

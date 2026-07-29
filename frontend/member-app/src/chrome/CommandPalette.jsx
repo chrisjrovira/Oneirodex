@@ -55,6 +55,12 @@ export function buildPaletteCommands(shellConfig = {}) {
     action: 'preferences',
     group: 'Account',
   })
+  push({
+    id: 'tokens',
+    label: 'API tokens',
+    to: '/tokens',
+    group: 'Account',
+  })
 
   return commands
 }

@@ -10,13 +10,15 @@
 </head>
 <body class="gt-play-shell">
     <div id="gt-emu-bar">
+        <button type="button" id="gt-emu-back" class="gt-emu-back" title="Back to library" aria-label="Back to library">← Library</button>
         <strong class="gt-play-brand">GameTheca</strong>
         <span class="gt-play-system" id="gt-play-system" hidden></span>
         <button type="button" id="gt-sync-save" title="Push/pull libretro .state/.srm via WebRetro IndexedDB bridge">Sync cloud saves</button>
         <label>Cheats <select id="gt-cheat-select"><option value="">None</option></select></label>
         <button type="button" id="gt-load-cheat">Apply .cht</button>
-        <span id="gt-emu-status"></span>
+        <span id="gt-emu-status" role="status" aria-live="polite"></span>
     </div>
+    <div id="gt-play-alert" class="gt-play-alert" role="alert" aria-live="assertive" hidden></div>
     <div id="gt-play-stage">
         <div id="gt-play-bezel">
             <div id="webretro"></div>
@@ -71,8 +73,10 @@
             var core = args.core || '';
             var platform = args.platform || '';
             var statusEl = document.getElementById('gt-emu-status');
+            var alertEl = document.getElementById('gt-play-alert');
             var cheatSelect = document.getElementById('gt-cheat-select');
             var systemEl = document.getElementById('gt-play-system');
+            var backBtn = document.getElementById('gt-emu-back');
             var emuFrame = null;
             var reqSeq = 0;
             var pending = {};
@@ -87,8 +91,77 @@
             }
             document.title = (skin.systemLabel ? skin.systemLabel + ' — ' : '') + 'GameTheca Play';
 
+            function sameOriginReferrer() {
+                var ref = document.referrer;
+                if (!ref) return '';
+                try {
+                    return new URL(ref).origin === window.location.origin ? ref : '';
+                } catch (err) {
+                    return '';
+                }
+            }
+
+            function goBackToLibrary() {
+                var ref = sameOriginReferrer();
+                if (ref && window.history.length > 1) {
+                    window.history.back();
+                    return;
+                }
+                if (ref) {
+                    window.location.href = ref;
+                    return;
+                }
+                window.location.href = '/library';
+            }
+
+            if (backBtn) {
+                backBtn.addEventListener('click', goBackToLibrary);
+            }
+
             function setStatus(msg) {
                 statusEl.textContent = msg || '';
+            }
+
+            function clearPlayAlert() {
+                if (!alertEl) return;
+                alertEl.hidden = true;
+                alertEl.textContent = '';
+            }
+
+            function showPlayAlert(message) {
+                if (!alertEl) {
+                    setStatus(message || '');
+                    return;
+                }
+                var text = (message || '').trim();
+                if (!text) {
+                    clearPlayAlert();
+                    return;
+                }
+                alertEl.hidden = false;
+                alertEl.textContent = text;
+                setStatus(text);
+            }
+
+            function formatDownloadromFailure(payload, fallbackStatus) {
+                var body = payload && typeof payload === 'object' ? payload : null;
+                var error = (body && body.error) ? String(body.error) : '';
+                var hint = (body && body.hint) ? String(body.hint) : '';
+                if (error && hint) return error + ' — ' + hint;
+                if (error) return error;
+                if (hint) return hint;
+                return fallbackStatus
+                    ? ('ROM download failed (' + fallbackStatus + ')')
+                    : 'ROM download failed';
+            }
+
+            function readDownloadromFailure(response) {
+                var fallback = formatDownloadromFailure(null, response && response.status);
+                return response.json().then(function (body) {
+                    return formatDownloadromFailure(body, response.status);
+                }, function () {
+                    return fallback;
+                });
             }
 
             window.addEventListener('message', function (ev) {
@@ -235,10 +308,21 @@
                 }
                 if (guid) {
                     // Warm HTTP cache with credentials (link prefetch cannot send cookies reliably).
+                    // Surface API JSON failures (error + optional hint) instead of a silent catch.
                     fetch('/api/downloadrom/' + encodeURIComponent(guid), {
                         credentials: 'same-origin',
                         priority: 'low',
-                    }).catch(function () {});
+                    }).then(function (response) {
+                        if (response.ok) {
+                            clearPlayAlert();
+                            return null;
+                        }
+                        return readDownloadromFailure(response).then(showPlayAlert);
+                    }).catch(function (err) {
+                        showPlayAlert(
+                            (err && err.message) ? err.message : 'ROM download failed'
+                        );
+                    });
                 }
             }
 

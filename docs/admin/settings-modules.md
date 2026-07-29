@@ -131,4 +131,4 @@ Related: [libraries-and-scans.md](libraries-and-scans.md) · [docker-compose-dep
 - **API:** `GET/POST /api/tokens`, `DELETE /api/tokens/{id}` — any logged-in member.
 - **Presets:** `POST` body `"preset": "companion"` (`read:library` + `write:download`) or `"preset": "thin"` (`read:library` + `read:social` + `write:presence`; **no** download). List response includes `scope_presets`.
 - **Thin protocol:** heartbeat accepts `device_kind` (`companion` | `thin` | `browser`); `GET /api/client/capabilities` advertises allows/denies. Install/update command queue delivers only to `companion` + download/lifecycle scopes.
-- **UI:** no dedicated token form yet — use API, `@gametheca/api-client`, or OpenAPI. See [thin-client.md](../strategy/thin-client.md).
+- **UI:** member SPA **Account → API tokens** (`/tokens`) — create with companion/thin presets, copy one-time secret, revoke. API / `@gametheca/api-client` / OpenAPI still work. See [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](../strategy/thin-client.md).

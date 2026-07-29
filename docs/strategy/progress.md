@@ -1,8 +1,8 @@
 # Roadmap execution progress
 
-**Branch:** working tree (Member UI + Ops observability wave) → ship to `main` when human asks  
-**Release:** **0.2.0** (full-ship in progress — Jul 27 board includes WIP polish)  
-**Updated:** 2026-07-28 evening (Member UI + Ops **Pass A–F implemented, uncommitted** · store logos theme-adaptive **closed** · prior Pass 2 / modal v2 on origin/main · **next:** Human ship/commit → Unraid rebuild · Chat capture blocked on login 500)
+**Branch:** `main` (synced with origin after ship)  
+**Release:** **0.2.0** (full-ship in progress — Jul 28 Tokens UI + play polish shipped)  
+**Updated:** 2026-07-28 evening (**Shipped** member API Tokens `/tokens` + play polish — ROM extract-on-play · badges top-left · ← Library · per-system rooms · **next:** Unraid rebuild · Chat capture blocked on login 500)
 
 ## Locked for 0.2.0 (product decisions)
 
@@ -45,14 +45,16 @@
 | Feature defaults (modules ON) | **Shipped** — setup + Admin → Features · OIDC opt-in only · AI/hardlink apply locked off — [settings-modules.md](../admin/settings-modules.md) |
 | Admin → Features + malware scan | **Shipped** — `ENABLE_MALWARE_SCAN` + block-on-hit default · ClamAV profile — [settings-modules.md](../admin/settings-modules.md) · [docker-compose-deploy.md](../runbooks/docker-compose-deploy.md) |
 | ASGI static path hardening | **Shipped** — native `/static/*` serving · `resolve_static_path` rejects traversal — `asgi.py` · `tests/test_asgi_static.py` |
-| Member UI + Ops observability (Pass A–F) | **Implemented (uncommitted)** — A–C: tile chrome · sticky LHN filters · quiet TopNav · mobile density · tile slider; D–F: details full-width summary + store marks · Admin issues list + Grafana Ops console · backend `ops_summary` enrich (`load_avg` / `process` / `db_ping_ms` / `readyz` / companions) — [library-and-systems.md](../user/library-and-systems.md) · [ops-summary.md](../admin/ops-summary.md) |
+| Member UI + Ops observability (Pass A–F) | **On main @ 6d6eabee** — A–C: tile chrome · sticky LHN filters · quiet TopNav · mobile density · tile slider; D–F: details full-width summary + store marks · Admin issues list + Grafana Ops console · backend `ops_summary` enrich (`load_avg` / `process` / `db_ping_ms` / `readyz` / companions) — [library-and-systems.md](../user/library-and-systems.md) · [ops-summary.md](../admin/ops-summary.md) |
+| Play polish (ROM / WebRetro / badges) | **Shipped** — extract-on-play harden (platform pick · nested zip · gz · clearer errors) · Library badges incl VR **top-left** · PLAY under stack · emulator **← Library** · per-system play rooms (not accent-only) — [browser-play.md](../user/browser-play.md) · [library-and-systems.md](../user/library-and-systems.md) |
+| Member API tokens UI | **Shipped** — Account → **API tokens** (`/tokens`) · companion/thin presets · one-time secret copy · revoke · cmdk + Help — [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](thin-client.md) |
 | Game details polish | **Shipped (code in wave tree)** — screenshot lightbox · brand store/catalog marks (Steam/GOG/Epic/IGDB/YouTube/Wikipedia/official + social + **PSN · Xbox · Amazon · Humble · itch · EA · Ubisoft SVG · Fandom · unknown**) · theme-adaptive masks · full-width summary · cover URL existence check · Social companion dock · ≤900px layout |
 | Mobile density | **Shipped** — Chat · filters · pagination · tiles ≤900px — [getting-started.md](../user/getting-started.md) |
 | Tile size control | **Shipped** — continuous 0–100% slider (legacy S/M/L/XL mapped) · CSS var transitions · virtualizer remeasure debounced |
 | Library grid virtualization (V1-UI-1 partial) | **Shipped** — `GameGrid` row virtualizer (`@tanstack/react-virtual`) · pagination unchanged |
 | Command palette (Ctrl/Cmd+K) | **Shipped** — member SPA `cmdk` nav jumps + Preferences · Search hint in TopNav — [ui.md](ui.md) · [getting-started.md](../user/getting-started.md) |
 | Admin SPA bodies | Hybrid — Dashboard/Ops **Grafana-style observability console** (~15s poll, status + `issues.items` + load/RSS/db_ping/readyz/companions meters + tables); Libraries/Scans Jinja fixed (no nested `</body>`); Integrations hub React cards (IGDB/SMTP/OIDC/LiveKit/Support) + Jinja forms; Support/Announcements/Invites/Users live |
-| Library badge/filter chrome | **Shipped** — tile menu top-right · favorite cover bottom-right · VR badge over platform chip (not a filter chip) · sticky LHN filters + ≤900px drawer · quiet TopNav active · smooth `--gt-tile-*` + debounced grid remeasure — [library-and-systems.md](../user/library-and-systems.md) |
+| Library badge/filter chrome | **Shipped / polish WIP** — tile menu top-right · favorite cover bottom-right · badges incl VR **top-left** · PLAY under stack · sticky LHN filters + ≤900px drawer · quiet TopNav active · smooth `--gt-tile-*` + debounced grid remeasure — [library-and-systems.md](../user/library-and-systems.md) |
 | Store logo asset gap | **Closed** — theme-adaptive PNG masks under `frontend/member-app/src/assets/store-brands/` + Ubisoft inline SVG (supplied PNG blank); unknown mark replaces chain-link fallback — [library-and-systems.md](../user/library-and-systems.md) |
 | Custom chat emoji | **Shipped** — admin upload capped at 20 — [social-and-voice.md](../user/social-and-voice.md) |
 | WebRetro WASM scaffold | **Shipped** — disk discovery + local `relativeBase` + `installed-cores.js` + fetch scripts — [webretro-cores.md](../runbooks/webretro-cores.md); deferred PCE/VICE/DOS binaries still operator-owned |
@@ -69,12 +71,12 @@
 | Console-gaming skip-dir (scan) | **Shipped (code)** — emu/FE/tool **prefix** globs + `dir:` Admin filters; tightened Jul 28 review (no `GOD*` / `*dolphin*` title false positives); **no** scan_depth=3 family walk — [console-gaming-libraries.md](console-gaming-libraries.md) |
 | Console-gaming library model | **LOCKED** (per-platform leaf libraries; not one mega-lib) — [console-gaming-libraries.md](console-gaming-libraries.md) |
 | Console-gaming enum add list | **Shipped (code)** — `NEOGEO` · `PSP` · `SWITCH` · `ARCADE` (catalog/companion honesty; Wii U deferred) — [console-gaming-libraries.md](console-gaming-libraries.md)#locked-enum-add-list-backend |
-| Full-app 3-pass review Jul 28 | **Complete / ship-ready** — P1–P3 landed on main (prior). **Member UI + Ops Pass A–F** sits in working tree (**uncommitted**). **Next:** Human ship/commit → Unraid rebuild → leaf libs — **Blocked:** Chat capture (login 500) — see program canvas |
+| Full-app 3-pass review Jul 28 | **Complete** — P1–P3 + Pass A–F + Tokens UI + play polish on main. **Next:** Unraid rebuild → leaf libs — **Blocked:** Chat capture (login 500) — see program canvas |
 | PM Task-disperse process | **Shipped (process)** — always-apply `pm-disperse.mdc` · parent Tasks Ops/Backend/UI/Desktop/QA/Docs/GM · Docs owns program canvas **every Docs turn** (TLDR/Done/Next/Blocked/Team flow mandatory; PM refuses wave close without Canvas: synced) — [agent-skills.md](../dev/agent-skills.md) |
 | Deep scan stall (folder size / IGDB) | **Shipped** — defer size walk on identify · 60s size timeout · IGDB HTTP timeout · rate-limiter unlock · max 3 name fallbacks |
 | Scan progress stall at 1 + empty Stop UX | **Shipped** — atomic `bump_scan_job_progress` · Stop drains in-flight · Cancelled shows `Stopped N/total` · Stopping button labeled |
 | Ops glance scan counters | **Shipped** — `/admin/api/ops/summary` `scans.jobs` exposes `folders_*` / `current_processing` / `last_progress_update` / `id_short` (+ recent terminal jobs 24h) — [ops-summary.md](../admin/ops-summary.md#scans-key) |
-| Ops summary Grafana enrichments | **Shipped in wave tree (uncommitted)** — `host.load_avg` / `process` / `db_ping_ms` · `services.readyz` · companions `by_kind` + `last_seen` · Dashboard/Ops paint meters + `issues.items` (~15s) — [ops-summary.md](../admin/ops-summary.md) |
+| Ops summary Grafana enrichments | **On main @ 6d6eabee** — `host.load_avg` / `process` / `db_ping_ms` · `services.readyz` · companions `by_kind` + `last_seen` · Dashboard/Ops paint meters + `issues.items` (~15s) — [ops-summary.md](../admin/ops-summary.md) |
 | ShareWarez loader GIF purge | **Shipped** — pirate `searching*.gif` deleted; folder browse / scan / identify / libraries / IGDB use `gt-spinner` + a11y status |
 | Setup admin create redesign | **Shipped** — `gt-setup` wizard (mark · green accent · dense fields) · Admin Users create/edit `gt-user-modal` |
 | Admin Themes page densify | **Shipped** — `gt-themes-*` blocks · tighter admin top nav · Reset Default Themes after deploy (`GENERATOR_VERSION` **8**) |

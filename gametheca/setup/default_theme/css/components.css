@@ -239,7 +239,7 @@
     top: auto;
 }
 
-/* Clear PLAY chip; hamburger is top-right so top-left is primary for UPDATE/OUT/NEW */
+/* Badges win true top-left (UPDATE/OUT/NEW/VR); PLAY is nudged in glass.css when present */
 .gt-badge-stack--top-left {
     top: 8px;
     left: 8px;
@@ -254,19 +254,10 @@
     bottom: auto;
 }
 
-/* VR always stacks over the system/console chip (bottom-left) */
+/* VR rides in the top-left transitional stack (non-dismissable) */
 .gt-badge-stack--vr {
     z-index: 13;
-    bottom: 8px;
-    left: 8px;
-    right: auto;
-    top: auto;
-    max-width: min(40%, 5rem);
-    pointer-events: none;
-}
-
-.game-card:has(.gt-platform-chip) .gt-badge-stack--vr {
-    bottom: 1.85rem;
+    max-width: min(78%, 13rem);
 }
 
 @keyframes gt-spin {

@@ -198,8 +198,8 @@ export function capBadges(badges, maxVisible = 2) {
 
 /**
  * Corner placement with collision fallbacks.
- * Prefer top-left (UPDATE/OUT/NEW) — hamburger is top-right, favorite bottom-right.
- * VR uses a dedicated bottom-left stack over the platform chip (not this helper).
+ * Prefer top-left (UPDATE/OUT/NEW/VR) — hamburger is top-right, favorite bottom-right.
+ * VR lives in the same top-left transitional stack (never dismissable).
  * Order: top-left → bottom-left → top-right → bottom-right
  *
  * @param {'bottom-left' | 'bottom-right' | 'top-left' | 'top-right'} preferred

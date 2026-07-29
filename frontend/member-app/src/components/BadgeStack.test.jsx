@@ -5,7 +5,7 @@ import { dismissBadge, filterDismissedBadges } from '../utils/badgeDismiss'
 
 const now = new Date('2026-07-23T12:00:00Z')
 
-test('resolveBadgeCorner shifts on title collision', () => {
+test('resolveBadgeCorner prefers top-left and shifts on title collision', () => {
   expect(resolveBadgeCorner('top-left', false)).toBe('top-left')
   expect(resolveBadgeCorner('top-left', true)).toBe('bottom-left')
   expect(resolveBadgeCorner('bottom-left', true)).toBe('top-right')
@@ -70,21 +70,30 @@ test('BadgeStack shifts corner when title collides', () => {
   expect(screen.getByLabelText(/game badges/i)).toHaveAttribute('data-corner', 'bottom-left')
 })
 
-test('VR badge is anchored over platform and is not dismissable', () => {
+test('VR badge joins top-left transitional stack and is not dismissable', () => {
   const uuid = '22222222-2222-4222-8222-222222222222'
   render(
     <BadgeStack
-      game={{ uuid, is_vr: true, has_local_override: true, name: 'VR Fixture' }}
+      game={{
+        uuid,
+        is_vr: true,
+        has_local_override: true,
+        date_identified: '2026-07-20T00:00:00Z',
+        name: 'VR Fixture',
+      }}
       now={now}
     />,
   )
 
-  const vrStack = screen.getByLabelText(/vr badge/i)
-  expect(vrStack).toHaveAttribute('data-vr-anchor', 'platform')
-  expect(vrStack).toHaveAttribute('data-corner', 'bottom-left')
+  const stack = screen.getByLabelText(/game badges/i)
+  expect(stack).toHaveAttribute('data-corner', 'top-left')
+  expect(stack).toHaveAttribute('data-vr-in-stack', 'top-left')
+  expect(stack.className).toMatch(/gt-badge-stack--top-left/)
   expect(screen.getByTitle(/virtual reality/i)).toHaveTextContent('VR')
-  expect(vrStack.querySelector('.gt-badge__dismiss')).toBeNull()
+  expect(screen.getByTitle(/newly added/i)).toHaveTextContent('NEW')
+  expect(stack.querySelector('[data-badge="VR"] .gt-badge__dismiss')).toBeNull()
   expect(screen.getByRole('button', { name: /hide l badge/i })).toBeInTheDocument()
+  expect(screen.queryByLabelText(/^vr badge$/i)).toBeNull()
 
   dismissBadge(uuid, 'VR')
   const filtered = filterDismissedBadges(uuid, [
@@ -94,4 +103,14 @@ test('VR badge is anchored over platform and is not dismissable', () => {
   // Even if a stale dismiss store listed VR, filter always keeps it.
   expect(filtered.some((b) => b.kind === 'VR')).toBe(true)
   expect(filtered.map((b) => b.kind)).toContain('VR')
+})
+
+test('VR-only stack still anchors top-left', () => {
+  render(
+    <BadgeStack game={{ is_vr: true, name: 'Headset Only' }} now={now} />,
+  )
+  const stack = screen.getByLabelText(/game badges/i)
+  expect(stack).toHaveAttribute('data-corner', 'top-left')
+  expect(stack).toHaveAttribute('data-vr-in-stack', 'top-left')
+  expect(screen.getByTitle(/virtual reality/i)).toHaveTextContent('VR')
 })

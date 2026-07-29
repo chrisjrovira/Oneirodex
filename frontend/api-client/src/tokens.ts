@@ -1,14 +1,14 @@
 import type { Requester } from './client.js'
 import type {
-  ApiTokenPublic,
   CreateTokenRequest,
   CreateTokenResponse,
+  ListTokensResponse,
 } from './types.js'
 
 export function createTokensApi(request: Requester) {
   return {
-    list(): Promise<ApiTokenPublic[]> {
-      return request<ApiTokenPublic[]>('/api/tokens')
+    list(): Promise<ListTokensResponse> {
+      return request<ListTokensResponse>('/api/tokens')
     },
 
     create(body: CreateTokenRequest): Promise<CreateTokenResponse> {
@@ -19,8 +19,8 @@ export function createTokensApi(request: Requester) {
       })
     },
 
-    revoke(tokenId: number): Promise<void> {
-      return request<void>(`/api/tokens/${tokenId}`, { method: 'DELETE' })
+    revoke(tokenId: number): Promise<{ ok: boolean }> {
+      return request<{ ok: boolean }>(`/api/tokens/${tokenId}`, { method: 'DELETE' })
     },
   }
 }

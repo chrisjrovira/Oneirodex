@@ -99,7 +99,7 @@ Extend `VALID_SCOPES` beyond `read:library` / `write:download`:
 | `write:lifecycle` (new or alias) | **Denied** | Required for install ack |
 
 Account UI: token preset **“Thin client”** = `read:library` + `read:social` + `write:presence` (no download).  
-**Shipped (TC-1):** `GET /api/tokens` returns `scope_presets`; `POST /api/tokens` accepts `"preset": "thin"` or `"preset": "companion"`. No dedicated token UI yet — use API or OpenAPI client.
+**Shipped (TC-1 + member UI):** `GET /api/tokens` returns `scope_presets`; `POST /api/tokens` accepts `"preset": "thin"` or `"preset": "companion"`. Members create/revoke at **Account → API tokens** (`/tokens`).
 
 ### 2. Device kind (Backend)
 

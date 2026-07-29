@@ -16,8 +16,9 @@ test('renders L and VR badges via BadgeStack when flags set', () => {
   render(<GameCard game={baseGame} showPlayStatus={false} isAdmin={false} />)
   expect(screen.getByTitle(/local metadata/i)).toHaveTextContent('L')
   expect(screen.getByTitle(/virtual reality/i)).toHaveTextContent('VR')
-  expect(screen.getByLabelText(/vr badge/i)).toHaveAttribute('data-vr-anchor', 'platform')
-  expect(screen.getByLabelText(/game badges/i)).toHaveAttribute('data-corner', 'top-left')
+  const stack = screen.getByLabelText(/game badges/i)
+  expect(stack).toHaveAttribute('data-corner', 'top-left')
+  expect(stack).toHaveAttribute('data-vr-in-stack', 'top-left')
 })
 
 test('places hamburger top-right and favorite bottom-right of cover', () => {
@@ -41,5 +42,24 @@ test('omits BadgeStack when no signals', () => {
     />,
   )
   expect(screen.queryByLabelText(/game badges/i)).toBeNull()
-  expect(screen.queryByLabelText(/vr badge/i)).toBeNull()
+})
+
+test('shows disabled Play when play_blocker is unsupported_archive', () => {
+  render(
+    <GameCard
+      game={{
+        ...baseGame,
+        play_url: null,
+        play_blocker: 'unsupported_archive',
+        companion_hint: 'Cannot extract .tar.gz for browser play.',
+      }}
+      showPlayStatus={false}
+      isAdmin={false}
+    />,
+  )
+  const play = screen.getByLabelText(/browser play unavailable — unsupported archive/i)
+  expect(play.tagName).toBe('SPAN')
+  expect(play).toHaveAttribute('aria-disabled', 'true')
+  expect(play).toHaveAttribute('title', 'Cannot extract .tar.gz for browser play.')
+  expect(play).toHaveClass('gt-tile-play--disabled')
 })

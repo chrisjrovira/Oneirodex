@@ -9,6 +9,7 @@ import './TopNav.css'
 const ACCOUNT_LINKS = [
   { id: 'profile', href: '/settings_profile_view', label: 'Profile' },
   { id: 'preferences', href: '/settings_panel', label: 'Preferences', preferences: true },
+  { id: 'tokens', to: '/tokens', label: 'API tokens' },
   { id: 'password', href: '/settings_password', label: 'Change Password' },
   { id: 'logout', href: '/logout', label: 'Logout' },
 ]
@@ -265,22 +266,37 @@ export function TopNav({
             {accountOpen ? (
               <div className="gt-topnav__dropdown-panel" id={accountId} role="menu">
                 {username ? <div className="gt-topnav__username">{username}</div> : null}
-                {ACCOUNT_LINKS.map((link) =>
-                  link.preferences ? (
-                    <a
-                      key={link.id}
-                      href={link.href}
-                      role="menuitem"
-                      onClick={handlePreferencesClick}
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
+                {ACCOUNT_LINKS.map((link) => {
+                  if (link.preferences) {
+                    return (
+                      <a
+                        key={link.id}
+                        href={link.href}
+                        role="menuitem"
+                        onClick={handlePreferencesClick}
+                      >
+                        {link.label}
+                      </a>
+                    )
+                  }
+                  if (link.to) {
+                    return (
+                      <NavLink
+                        key={link.id}
+                        to={link.to}
+                        role="menuitem"
+                        onClick={closeMobile}
+                      >
+                        {link.label}
+                      </NavLink>
+                    )
+                  }
+                  return (
                     <a key={link.id} href={link.href} role="menuitem" onClick={closeMobile}>
                       {link.label}
                     </a>
-                  ),
-                )}
+                  )
+                })}
               </div>
             ) : null}
           </div>

@@ -19,6 +19,26 @@ GameTheca play modes for systems **below PS5 / Xbox Series**. Those two stay **c
 
 Admin: upload BIOS via `/api/emulator-bios` (Settings / storage path). Browse API returns `bios` + `n64_note` on playable titles. Systems hub badges show **Browser** / **Companion** / **Catalog** per platform. Operator core drops: [webretro-cores.md](../runbooks/webretro-cores.md) · health: `GET /api/emulator/health` (`deferred_cores`) · JS allowlist: `GET /api/emulator/installed-cores.js`.
 
+## Play shell (WebRetro room)
+
+Browser play opens `webretro.html` with a per-system **room** skin (wallpaper, bezel chrome, bar typography, ambient light) — not just an accent color. Pass `platform=` (or rely on `core=` mapping) so the skin applies immediately; the bar shows the system name.
+
+- **← Library** on the play bar returns via `history.back()` when the referrer is same-origin, else falls back to `/library`.
+- Distinct rooms include NES den, SNES living room, Genesis arcade corner, PS1 CRT night, Dreamcast swirl, Arcade cabinet, GB/GBA handheld slabs, PC desk, and more.
+
+## Compressed ROMs (extract-on-play)
+
+Browser Play streams via `GET /api/downloadrom/<uuid>` (ASGI). Server extracts a playable member into `static/library/rom_cache/<uuid>/` for:
+
+| Format | Notes |
+|---|---|
+| `.zip` | Nested folders + zip-in-zip (depth ≤ 3). Multi-ROM: prefers platform extension, then larger files; `.cue` (+ sibling `.bin`) for disc sets |
+| `.7z` | Requires `py7zr` |
+| `.rar` | Requires `rarfile` + host `unrar`/`bsdtar` |
+| `.gz` | Single ROM wrappers only (`Adventure.nes.gz`). `.tar.gz` is **not** browser-playable (`play_blocker=unsupported_archive`) |
+
+Failures return JSON: `{"error": "…", "code": "…", "hint": "…"}` (`error` always present). The play shell (`webretro.html`) surfaces non-2xx `/api/downloadrom/` responses in an accessible `#gt-play-alert` region (`error` plus optional `hint`) instead of a silent `.catch`. Browse may set `play_blocker=unsupported_archive`; GameCard / Game Details show a disabled Play control with tooltip when that blocker is present.
+
 ## Cloud saves (WebRetro bridge)
 
 The play bar **Sync cloud saves** uses `gt-bridge.js` postMessage (`gt-export-saves` / `gt-import-saves`):

@@ -31,9 +31,17 @@ export interface CreateTokenRequest {
   preset?: ApiTokenPreset
 }
 
-export interface CreateTokenResponse extends ApiTokenPublic {
+export interface CreateTokenResponse {
+  token: ApiTokenPublic
   /** One-time secret; only returned on create */
-  token: string
+  secret: string
+  warning?: string
+}
+
+export interface ListTokensResponse {
+  tokens: ApiTokenPublic[]
+  valid_scopes: ApiTokenScope[]
+  scope_presets: Record<string, { label?: string; scopes?: ApiTokenScope[] }>
 }
 
 export interface SearchResultItem {

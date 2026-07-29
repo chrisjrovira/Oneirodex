@@ -4,10 +4,12 @@ Optional **Tauri** client under `clients/desktop/` for Install / Update / Uninst
 
 ## Connect
 
-1. Create an API token in Account settings with at least `read:library` (add `write:download` for downloads).
-2. Open the companion, enter your GameTheca **base URL** and token, Connect.
-3. Library preview loads via search; local lifecycle syncs with the server when available.
-4. Status shows **Online** / **Offline (server unreachable)** / **Not connected**. After two failed heartbeats, Download and Update are disabled; Play, Install, and Uninstall still run locally. Web-queued Install/Update commands stay pending until heartbeat recovers (nack → retry).
+1. Open **Account → API tokens** (`/tokens`) — or create via `POST /api/tokens` if you prefer the API.
+2. Create a token with the **Desktop companion** preset (`read:library` + `write:download`), or **Thin client** for connect-only seats.
+3. Copy the one-time secret (`gt_…`) — it is shown only once.
+4. Open the companion, enter your GameTheca **base URL** and token, Connect.
+5. Library preview loads via search; local lifecycle syncs with the server when available.
+6. Status shows **Online** / **Offline (server unreachable)** / **Not connected**. After two failed heartbeats, Download and Update are disabled; Play, Install, and Uninstall still run locally. Web-queued Install/Update commands stay pending until heartbeat recovers (nack → retry).
 
 **Thin client:** For connect-only seats (no Download/Install/Play), build `npm run tauri:build:thin` — see [thin-client.md](../strategy/thin-client.md) and [desktop-code-signing.md](../runbooks/desktop-code-signing.md). Use thin token scopes (`read:social` / presence) when available. Optional thin API token is stored in the same OS credential store as the full companion (not `config.json`).
 

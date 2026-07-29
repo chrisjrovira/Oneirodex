@@ -28,6 +28,8 @@ from gametheca.async_streaming import (
 from gametheca.models import DownloadRequest, Game, User
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.library_acl import user_can_access_game
+from gametheca.utils.play_url import library_platform_key
+from gametheca.utils.rom_archive import ArchiveRomError, resolve_playable_rom_path
 from gametheca.utils.security import get_allowed_base_directories, is_safe_path
 from gametheca.utils.static_files import resolve_static_path
 from sqlalchemy import select
@@ -456,8 +458,6 @@ class LazyASGIApp:
                 await self._send_error(send, 403, "Access denied")
                 return
 
-            from gametheca.utils.rom_archive import ArchiveRomError, resolve_playable_rom_path
-
             cache_dir = os.path.join(
                 self._flask_app.root_path,
                 'static',
@@ -465,10 +465,12 @@ class LazyASGIApp:
                 'rom_cache',
                 game_uuid,
             )
+            platform_key = library_platform_key(game)
             try:
                 rom_path, filename = resolve_playable_rom_path(
                     game.full_disk_path,
                     cache_dir=cache_dir,
+                    platform=platform_key,
                 )
             except ArchiveRomError as exc:
                 log_system_event(
@@ -476,7 +478,13 @@ class LazyASGIApp:
                     event_type='download',
                     event_level='warning',
                 )
-                await self._send_error(send, exc.status_code, exc.message)
+                await self._send_error(
+                    send,
+                    exc.status_code,
+                    exc.message,
+                    code=exc.code,
+                    hint=exc.hint,
+                )
                 return
 
             log_system_event(
@@ -655,9 +663,14 @@ class LazyASGIApp:
                 except Exception:
                     pass
 
-    async def _send_error(self, send, status_code, message):
-        """Send an HTTP error response"""
-        response_body = json.dumps({"error": message}).encode()
+    async def _send_error(self, send, status_code, message, *, code=None, hint=None):
+        """Send an HTTP error response (JSON). Optional code/hint for ROM extract failures."""
+        payload = {"error": message}
+        if code:
+            payload["code"] = code
+        if hint:
+            payload["hint"] = hint
+        response_body = json.dumps(payload).encode()
 
         await send({
             "type": "http.response.start",

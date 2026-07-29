@@ -249,6 +249,18 @@ export function GameDetailsPage() {
                   Play in browser
                 </a>
               </>
+            ) : game.play_blocker === 'unsupported_archive' ? (
+              <button
+                type="button"
+                className="gt-btn gt-btn--primary"
+                disabled
+                title={
+                  game.companion_hint ||
+                  'This archive type cannot be extracted for browser play. Use .zip / .7z / .rar / ROM.gz or a raw ROM.'
+                }
+              >
+                Play in browser
+              </button>
             ) : null}
             {game.steam_app_id ? (
               <a className="gt-btn" href={`steam://run/${game.steam_app_id}`}>

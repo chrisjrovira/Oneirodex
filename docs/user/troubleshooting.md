@@ -29,6 +29,8 @@ Quick checks before pinging an admin.
 |---|---|---|
 | Core won’t start | Unsupported system / missing BIOS | See admin emulator profiles; some systems are companion-only |
 | Save missing | Cloud save flag / encrypt | Re-try; admin check emulator saves settings |
+| Play fails / blank after Start (zip/7z/rar/gz) | Archive has no playable ROM, wrong member, or missing unrar/py7zr | Prefer one ROM per archive; use `.zip` with a known ROM ext; single-file `game.nes.gz` is OK — not `.tar.gz`. Check `/api/downloadrom/<uuid>` JSON (`error`, `code`, optional `hint`) |
+| No browser Play button on a scanned `.gz` | Non-ROM gzip (e.g. `.tar.gz`) | Repack as `.zip` / raw ROM; Play is suppressed for unsupported archives |
 
 ## Social / voice
 
@@ -44,7 +46,7 @@ Quick checks before pinging an admin.
 
 | Symptom | Likely cause | What to try |
 |---|---|---|
-| Connect fails 401/403 | Bad token / scopes | Recreate API token with `read:library` (+ `write:download`) |
+| Connect fails 401/403 | Bad token / scopes | Account → API tokens: recreate with Desktop companion preset (or `read:library` + `write:download`) |
 | Download / Update greyed in companion | Offline heartbeat | Re-Connect; Play/Install/Uninstall still work — [desktop-companion.md](desktop-companion.md) |
 | Friends window can’t install games | By design (least-privilege) | Use the main companion window |
 | Update never appears | Local registry not merged | Re-Connect companion; see [desktop-companion.md](desktop-companion.md) |

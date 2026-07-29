@@ -10,6 +10,9 @@
 **I can’t log in.**  
 Ask an admin to check your invite/whitelist and that the server is up (`/healthz` liveness · `/readyz` ready). SSO only works if Admin → Integrations has OIDC enabled *and* `OIDC_ENABLED=true`. After several failed passwords you may see “Too many login attempts” — wait a few minutes.
 
+**I can’t pair the desktop companion.**  
+Account menu → **API tokens** (`/tokens`). Create with the **Desktop companion** preset, copy the one-time `gt_…` secret into Connect. Thin seats use the **Thin client** preset (no download). See [desktop-companion.md](desktop-companion.md).
+
 **Child account can’t see some games.**  
 Parental ACL / library allowlists filter the library. That’s intentional.
 

@@ -31,7 +31,7 @@ export function listDismissedKinds(gameUuid) {
 }
 
 export function dismissBadge(gameUuid, kind) {
-  // VR is badge-only chrome over the platform chip — never dismissable.
+  // VR joins the top-left transitional stack — never dismissable.
   if (!gameUuid || !kind || kind === 'VR') {
     return
   }

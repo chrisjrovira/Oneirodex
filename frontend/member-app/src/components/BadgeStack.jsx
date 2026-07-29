@@ -12,9 +12,23 @@ import {
 } from '../utils/badgeDismiss'
 
 /**
+ * Cap flexible badges but always keep VR in the top-left transitional stack.
+ */
+function capWithPinnedVr(badges, maxVisible = 2) {
+  const vr = badges.find((badge) => badge.kind === 'VR') || null
+  const rest = badges.filter((badge) => badge.kind !== 'VR')
+  const { visible: restVisible, overflow } = capBadges(rest, maxVisible)
+  if (!vr) {
+    return { visible: restVisible, overflow }
+  }
+  return { visible: [...restVisible, vr], overflow }
+}
+
+/**
  * Netflix/Roku-style overlay badge stack for title cards.
  * Default corner: top-left (hamburger is top-right; favorite is bottom-right).
- * VR is always rendered separately over the system/console chip and is never dismissable.
+ * VR joins the top-left transitional stack and is never dismissable.
+ * Badges win top-left over the PLAY chip (PLAY is nudged in CSS when a stack is present).
  */
 export function BadgeStack({
   game,
@@ -25,25 +39,20 @@ export function BadgeStack({
   dismissible = true,
 }) {
   const [dismissTick, setDismissTick] = useState(0)
-  const { vrBadge, badges } = useMemo(() => {
+  const badges = useMemo(() => {
     void dismissTick
-    const all = collectBadgeSignals(game, { now })
-    const vr = all.find((badge) => badge.kind === 'VR') || null
-    const rest = filterDismissedBadges(
-      game?.uuid,
-      all.filter((badge) => badge.kind !== 'VR'),
-    )
-    return { vrBadge: vr, badges: rest }
+    return filterDismissedBadges(game?.uuid, collectBadgeSignals(game, { now }))
   }, [game, now, dismissTick])
 
-  const { visible, overflow } = capBadges(badges, maxVisible)
+  const { visible, overflow } = capWithPinnedVr(badges, maxVisible)
   const hasMain = visible.length > 0 || overflow > 0
-  if (!hasMain && !vrBadge) {
+  const dismissed = listDismissedKinds(game?.uuid).filter((kind) => kind !== 'VR')
+  if (!hasMain && !(dismissible && dismissed.length > 0)) {
     return null
   }
 
   const corner = resolveBadgeCorner(preferredCorner, collidesWithTitle)
-  const dismissed = listDismissedKinds(game?.uuid).filter((kind) => kind !== 'VR')
+  const hasVr = visible.some((badge) => badge.kind === 'VR')
 
   function handleDismiss(kind, event) {
     if (kind === 'VR') {
@@ -63,68 +72,49 @@ export function BadgeStack({
   }
 
   return (
-    <>
-      {vrBadge ? (
-        <div
-          className="gt-badge-stack gt-badge-stack--vr gt-badge-stack--bottom-left"
-          data-corner="bottom-left"
-          data-vr-anchor="platform"
-          aria-label="VR badge"
+    <div
+      className={`gt-badge-stack gt-badge-stack--${corner}${hasVr ? ' gt-badge-stack--vr' : ''}${dismissible ? ' gt-badge-stack--interactive' : ''}`}
+      data-corner={corner}
+      data-vr-in-stack={hasVr ? 'top-left' : undefined}
+      aria-label="Game badges"
+    >
+      {visible.map((badge) => (
+        <span
+          key={badge.kind}
+          className={`gt-badge gt-badge--${badge.tone}`}
+          data-badge={badge.kind}
+          title={badge.title}
         >
-          <span
-            className={`gt-badge gt-badge--${vrBadge.tone}`}
-            data-badge={vrBadge.kind}
-            title={vrBadge.title}
-          >
-            <span className="gt-badge__label">{vrBadge.label}</span>
-          </span>
-        </div>
-      ) : null}
-      {hasMain || (dismissible && dismissed.length > 0) ? (
-        <div
-          className={`gt-badge-stack gt-badge-stack--${corner}${dismissible ? ' gt-badge-stack--interactive' : ''}`}
-          data-corner={corner}
-          aria-label="Game badges"
-        >
-          {visible.map((badge) => (
-            <span
-              key={badge.kind}
-              className={`gt-badge gt-badge--${badge.tone}`}
-              data-badge={badge.kind}
-              title={badge.title}
-            >
-              <span className="gt-badge__label">{badge.label}</span>
-              {dismissible ? (
-                <button
-                  type="button"
-                  className="gt-badge__dismiss"
-                  aria-label={`Hide ${badge.label} badge`}
-                  title="Hide this badge"
-                  onClick={(event) => handleDismiss(badge.kind, event)}
-                >
-                  ×
-                </button>
-              ) : null}
-            </span>
-          ))}
-          {overflow > 0 && (
-            <span className="gt-badge gt-badge--overflow" title={`${overflow} more badges`}>
-              +{overflow}
-            </span>
-          )}
-          {dismissible && dismissed.length > 0 && visible.length === 0 ? (
+          <span className="gt-badge__label">{badge.label}</span>
+          {dismissible && badge.kind !== 'VR' ? (
             <button
               type="button"
-              className="gt-badge gt-badge--restore"
-              title="Restore hidden badges"
-              aria-label="Restore badges"
-              onClick={handleRestore}
+              className="gt-badge__dismiss"
+              aria-label={`Hide ${badge.label} badge`}
+              title="Hide this badge"
+              onClick={(event) => handleDismiss(badge.kind, event)}
             >
-              Badges
+              ×
             </button>
           ) : null}
-        </div>
+        </span>
+      ))}
+      {overflow > 0 && (
+        <span className="gt-badge gt-badge--overflow" title={`${overflow} more badges`}>
+          +{overflow}
+        </span>
+      )}
+      {dismissible && dismissed.length > 0 && visible.length === 0 ? (
+        <button
+          type="button"
+          className="gt-badge gt-badge--restore"
+          title="Restore hidden badges"
+          aria-label="Restore badges"
+          onClick={handleRestore}
+        >
+          Badges
+        </button>
       ) : null}
-    </>
+    </div>
   )
 }

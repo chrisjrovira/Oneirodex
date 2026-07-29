@@ -67,6 +67,9 @@ const VrPage = lazy(() => import('./pages/VrPage').then((m) => ({ default: m.VrP
 const WishlistPage = lazy(() =>
   import('./pages/WishlistPage').then((m) => ({ default: m.WishlistPage })),
 )
+const TokensPage = lazy(() =>
+  import('./pages/TokensPage').then((m) => ({ default: m.TokensPage })),
+)
 const SetCompletionPage = lazy(() =>
   import('./pages/SetCompletionPage').then((m) => ({ default: m.SetCompletionPage })),
 )
@@ -341,6 +344,14 @@ export function App({ shellConfig = {} }) {
           element={
             <LazyPage>
               <OwnershipPage shellConfig={shellConfig} />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/tokens"
+          element={
+            <LazyPage>
+              <TokensPage />
             </LazyPage>
           }
         />

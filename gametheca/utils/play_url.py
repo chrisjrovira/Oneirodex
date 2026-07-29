@@ -10,6 +10,7 @@ from gametheca.platform import (
     pcdos_browser_enabled,
     play_mode_for_platform,
 )
+from gametheca.utils.rom_archive import path_supports_browser_extract
 from gametheca.utils.webretro_cores import get_effective_installed_cores
 
 # Platforms that WebRetro can launch when a bundled core is available.
@@ -115,6 +116,22 @@ def browse_play_fields(game) -> dict[str, Any]:
             'library_platform': key,
             'play_mode': 'catalog',
             'play_blocker': 'catalog_only',
+        }
+
+    # Suppress Play when on-disk path cannot be extracted for WebRetro (e.g. .tar.gz).
+    disk_path = getattr(game, 'full_disk_path', None)
+    if disk_path and not path_supports_browser_extract(disk_path):
+        return {
+            'play_url': None,
+            'can_play_in_browser': False,
+            'emulator_cores': [],
+            'library_platform': key,
+            'play_mode': mode if mode != 'browser' else 'companion',
+            'play_blocker': 'unsupported_archive',
+            'companion_hint': (
+                'This file type cannot be extracted for browser play '
+                '(use .zip / .7z / .rar / ROM.gz or a raw ROM).'
+            ),
         }
 
     # Wave 19b — PC DOS: companion by default; browser only with flag + vendored WASM.
