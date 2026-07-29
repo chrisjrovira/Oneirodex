@@ -108,4 +108,33 @@
 
 .section-controls {
     margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-badge {
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: 4px;
+}
+
+.section-badge--custom {
+    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 22%, transparent);
+    color: var(--gt-accent, var(--btn-primary));
+    border: 1px solid color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 45%, transparent);
+}
+
+.zone-mode-toggle .btn-check:checked + .btn-outline-secondary {
+    background: var(--gt-accent, var(--btn-primary));
+    border-color: var(--gt-accent, var(--btn-primary));
+    color: var(--gt-bg, #0b0b12);
+}
+
+#zoneFilterFields .form-select + .form-select {
+    margin-top: 8px;
 }

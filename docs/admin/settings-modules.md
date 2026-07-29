@@ -97,6 +97,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - **Preview** tile → **Generate all sizes** (2:3 tiles, 16:9 wides, 1:1 squares, 1280×720 hero) under `static/library/generated/{pack_id}/`.
 - **Download ZIP** · **Set as fallback pack** (writes `default_cover.jpg` + `default_library.jpg`) · **Apply cover to game** (game UUID).
 - API: `POST /admin/api/art-studio/preview|generate|apply`, `GET /admin/api/art-studio/download/<pack_id>`.
+- Disk failures (read-only `IMAGE_SAVE_PATH` / generated-pack folder, out of space) surface as a JSON `error` and show in the red alert banner instead of a bare 500 — check the message for the exact path/permission problem. If applying a pack to a game fails partway (DB error after the file was written), the orphaned file is cleaned up automatically.
 - Guide: [cover-art-studio.md](../strategy/cover-art-studio.md).
 
 ## Other env toggles

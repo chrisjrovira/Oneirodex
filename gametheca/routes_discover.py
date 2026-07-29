@@ -20,6 +20,7 @@ from gametheca.utils.store_ownership import get_matched_owned_game_uuids, owners
 from gametheca.utils.cover_url import resolve_game_cover_url
 from gametheca.utils.library_acl import apply_game_access_filters, filter_libraries
 from gametheca.utils.client_lifecycle import load_lifecycle_map
+from gametheca.utils.discovery_zones import resolve_custom_zone_games
 from gametheca.utils.lifecycle import web_lifecycle_fields
 from gametheca.utils.play_url import browse_play_fields, library_platform_key
 
@@ -206,6 +207,10 @@ def build_discover_sections(user) -> list[dict]:
                 )
             ).scalars().all()
             section_data['most_favorited'] = fetch_game_details(most_favorited)
+        elif section.section_type == 'custom':
+            section_data[section.identifier] = fetch_game_details(
+                resolve_custom_zone_games(section.config, user, limit=8)
+            )
 
         if section.identifier != 'libraries':
             discover_sections.append({

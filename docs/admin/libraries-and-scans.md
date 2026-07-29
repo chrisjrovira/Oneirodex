@@ -21,6 +21,18 @@ Admin → Libraries → **Delete** opens a Bootstrap confirm modal. Confirm/Canc
 - Progress (`N/total`) uses atomic counter bumps so multithreaded scans stay honest while titles land in the library.
 - **Stop** sets status to Stopping, finishes in-flight folders (those still count), cancels the rest, then shows **Stopped N/total** — not a blank action cell.
 
+## Unmatched folders
+
+Admin → Scan management → **Unmatched Folders** tab lists rows the scanner could not auto-match, plus true duplicates and ignored entries.
+
+Per-row actions:
+
+- **Fix search** — opens manual add/identify with the folder's basename cleaned (release-group tags, dots/underscores, scanning filter patterns stripped) and prefilled as the search query — same cleanup the auto-matcher uses.
+- **Copy path** — copies the full on-disk folder path to the clipboard.
+- **Open / reveal** — best-effort: tries to deep-link the **Auto Scan** folder browser straight to that path (reuses `GET /api/browse_folders_ss?abs_path=`); if the path is outside the configured base directory (or the lookup fails), falls back to copy-to-clipboard with a toast asking you to open it in the host's file manager. The browser cannot open paths on a remote Unraid host directly.
+- **Ignore / Clear / Delete** — unchanged (ignore hides from future scans, Clear drops the row only, Delete removes the folder from disk).
+- **Export** — `Export CSV` / `Export JSON` buttons download the currently filtered status (`all` / `Unmatched` / `Duplicate` / `Ignore` / `Pending`) via `GET /api/unmatched_folders/export?status=…&format=csv|json` for offline triage.
+
 ## After scan
 
 - Unmatched titles → Identify workbench (IGDB / Steam / GOG / RAWG).
@@ -51,6 +63,16 @@ Never library-root: `_Emulators`, named emu installs, Pegasus/CRU/tools, archive
 **Skip-dir (defense-in-depth):** folder listing ignores built-in emu/FE/tool name globs (`_Emulators`, `yuzu*`, `ryujinx*`, `dolphin*`, `bsnes*`, `pegasus*`, `cru-*`, `GOD v*`, …). Patterns are mostly **prefix** globs so titles like *God of War* or *Ecco the Dolphin* are not skipped. Operators can add more via Admin → Scanning filters with prefix `dir:` (e.g. `dir:_MyTools`). This does **not** replace per-leaf libraries — do not point a lib at a family root and rely on skips. There is no `scan_depth=3` family walker.
 
 Full family→platform map, exclude list, and Backend DoD: [console-gaming-libraries.md](../strategy/console-gaming-libraries.md).
+
+## Image queue
+
+Admin → Scan management → **Image Queue** tab manages cover/screenshot downloads.
+
+- **Preview** column shows a thumbnail once a file is downloaded and still present on disk; a striped placeholder shows for pending/failed rows.
+- **Group by game** toggle clusters rows by title with a per-group Failed/Pending count badge, instead of one flat paginated list.
+- **Status** is `Pending` / `Downloaded` / `Failed` / `File missing` (marked downloaded but the file is gone from `IMAGE_SAVE_PATH` — re-download to fix). Hover a Failed badge for the recorded reason (network error, HTTP status, disk permission, blocked URL).
+- **Retry failed** re-attempts every image with a recorded failure in one click (`POST /admin/api/download_images` with `retry_failed: true`); per-row Retry does the same for one image.
+- Failures are recorded on the `Image` row (`last_error`, `last_attempt_at`) by every download path (batch, single, turbo, and the eager cover/screenshot fetch during scan/identify) so a permissions or network problem on `IMAGE_SAVE_PATH` shows up in the UI instead of silently leaving images stuck "pending".
 
 ## Deploy note
 

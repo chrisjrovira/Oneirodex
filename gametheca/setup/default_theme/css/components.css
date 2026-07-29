@@ -84,7 +84,7 @@
     }
 }
 
-/* Popup Menu Button — top-right (favorite moved to cover bottom-right) */
+/* Popup Menu Button — top-right (favorite stacks directly under it, same corner) */
 .button-glass-hamburger {
     position: absolute;
     top: 10px;
@@ -114,11 +114,11 @@
     opacity: 1;
 }
 
-/* Favorite Button — bottom-right of cover */
+/* Favorite Button — top-right of cover, stacked directly under the hamburger */
 .favorite-btn {
     position: absolute;
-    top: auto;
-    bottom: 10px;
+    top: 44px;
+    bottom: auto;
     right: 10px;
     width: 30px;
     height: 30px;
@@ -155,9 +155,9 @@
     opacity: 0.7;
 }
 
-/* Tile action menu anchors under top-right hamburger */
+/* Tile action menu anchors under the hamburger + favorite stack */
 .game-card > .popup-menu {
-    top: 42px;
+    top: 82px;
     right: 8px;
     left: auto;
 }
@@ -224,7 +224,6 @@
     pointer-events: auto;
 }
 
-/* Clear favorite / status controls at bottom-right */
 .gt-badge-stack--bottom-left {
     bottom: 8px;
     left: 8px;
@@ -232,6 +231,7 @@
     top: auto;
 }
 
+/* Clear the optional play-status button / badge at bottom-right */
 .gt-badge-stack--bottom-right {
     bottom: 44px;
     right: 8px;
@@ -247,8 +247,9 @@
     bottom: auto;
 }
 
+/* Clear the hamburger + favorite stack (top:10px hamburger, top:44px favorite) */
 .gt-badge-stack--top-right {
-    top: 44px;
+    top: 80px;
     right: 8px;
     left: auto;
     bottom: auto;

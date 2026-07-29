@@ -26,7 +26,8 @@ function capWithPinnedVr(badges, maxVisible = 2) {
 
 /**
  * Netflix/Roku-style overlay badge stack for title cards.
- * Default corner: top-left (hamburger is top-right; favorite is bottom-right).
+ * Default corner: top-left (hamburger + favorite now stack together in the
+ * top-right band, one under the other).
  * VR joins the top-left transitional stack and is never dismissable.
  * Badges win top-left over the PLAY chip (PLAY is nudged in CSS when a stack is present).
  */

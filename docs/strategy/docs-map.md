@@ -1,6 +1,6 @@
 # Documentation map (runbooks, SOPs, assets)
 
-**Date:** 2026-07-27 · **Product version:** 0.2.0 (in progress)  
+**Date:** 2026-07-29 · **Product version:** 0.2.0 (in progress)  
 **Purpose:** Inventory of docs, ops, and communications.  
 **Sync rule:** `.cursor/skills/docs-sync/` + `.cursor/rules/docs-sync.mdc` — update on every code change.
 
@@ -87,16 +87,17 @@
 | Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) |
 | Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — feature defaults ON · OIDC opt-in · malware block-on-hit · ClamAV profile |
+| Discover sections (custom zones) | Have | [discover-sections.md](../admin/discover-sections.md) — manual pick / library / platform / genre zones, reorder + hide built-ins |
 | Support inbox | Have | [support-inbox.md](../admin/support-inbox.md) |
 | Ops summary (`services` + `scans` contract) | Have | [ops-summary.md](../admin/ops-summary.md) — Grafana enrich (`load_avg` / process / db_ping / readyz) · issues.items · LiveKit · malware · companions · queues · scan counters |
 | Troubleshooting | Have | [troubleshooting.md](../admin/troubleshooting.md) — Features / malware / OIDC notes |
 | First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 8 |
 | Propose-only scan & proposals | Create | |
 | Library Doctor & rename templates | Create | |
-| Unmatched & false duplicates | Update | |
+| Unmatched & false duplicates | Have | [libraries-and-scans.md#unmatched-folders](../admin/libraries-and-scans.md#unmatched-folders) — fix search, copy/reveal path, CSV/JSON export |
 | Identify workbench | Update | |
 | Freshness bulk & inbox | Update | |
-| Image queue / turbo downloads | Update | |
+| Image queue / turbo downloads | Have | [libraries-and-scans.md#image-queue](../admin/libraries-and-scans.md#image-queue) — thumbnails, group by game, retry failed |
 | Users, invites, whitelist | Update | Classic Jinja + React hubs |
 | RBAC & parental controls | Update | Covered partially in security |
 | Integrations hub | Have | SMTP/IGDB/community/OIDC — **no Discord** |
@@ -171,7 +172,7 @@ Also: Friends companion dock + `/social-companion` pop-out, Support report form,
 | Area | Action |
 |---|---|
 | README | Synced for 0.2.0 — **live PNG screenshots** (hero · Library · Systems) · Chat capture queued · feature defaults ON · OIDC opt-in · ClamAV profile · Friends companion · no Discord |
-| [progress.md](progress.md) | Jul 28 — Member UI + Ops Pass A–F **uncommitted** · store logos theme-adaptive (gap closed) · Chat capture blocked · Unraid waits human ship |
+| [progress.md](progress.md) | Jul 29 — Wave 1+2 feedback fixes **uncommitted** (favorite top-right, admin full-width, Discover custom zones, play aspect-lock, SNES A/V tuning, …) · Chat capture blocked · Unraid rebuild + Reset Themes + free disk waits human ship |
 | CHANGELOG | Unreleased catch-up for waves 14–17 + malware / Features; bump when cutting 0.2.0 |
 | `.env.example` | Includes LiveKit + SUPPORT_GITHUB_* + malware scan |
 | In-app Help (`/help`) | Ctrl/Cmd+K · `/healthz`/`/readyz` · Friends · Report · no Discord |
@@ -203,5 +204,6 @@ docs/
 2. ~~Human store logo assets~~ **Done** — theme-adaptive store marks (Ubisoft SVG; others PNG masks) — [library-and-systems.md](../user/library-and-systems.md)  
 3. Browser play platform matrix guide refresh  
 4. Remaining Create runbooks as incidents hit production  
-5. CHANGELOG bump when cutting 0.2.0 (include Member UI + Ops Pass A–F after human ship)  
-6. Game details / freshness badges user guide (**Create**)
+5. CHANGELOG bump when cutting 0.2.0 (include Member UI + Ops Pass A–F + Wave 1+2 feedback fixes after human ship)  
+6. Game details / freshness badges user guide (**Create**)  
+7. Human: Unraid `git pull` + rebuild, **Reset Default Themes**, and **free disk space** (host reported ~99% full) before the pull/rebuild — see [progress.md](progress.md) Operator-owned

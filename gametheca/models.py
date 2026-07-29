@@ -276,6 +276,8 @@ class Image(db.Model):
     igdb_image_id = db.Column(db.String, nullable=True)  # IGDB image ID for reference
     download_url = db.Column(db.String, nullable=True)  # Full IGDB URL to download from
     is_downloaded = db.Column(db.Boolean, default=False, nullable=False)  # Download status
+    last_error = db.Column(db.String(500), nullable=True)  # Most recent download failure reason, if any
+    last_attempt_at = db.Column(db.DateTime, nullable=True)  # When the download was last attempted
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
@@ -808,7 +810,12 @@ class DiscoverySection(db.Model):
     identifier = db.Column(db.String(50), unique=True, nullable=False)
     is_visible = db.Column(db.Boolean, default=True)
     display_order = db.Column(db.Integer, default=0)
-    
+    # 'seed' = built-in shelf (libraries, latest_games, ...); 'custom' = admin-created zone
+    section_type = db.Column(db.String(20), default='seed', nullable=False)
+    # Custom zone config, e.g. {"mode": "manual", "game_uuids": [...]}
+    # or {"mode": "filter", "filter_type": "library|platform|genre", "filter_value": "..."}
+    config = db.Column(JSONEncodedDict, nullable=True)
+
     def __repr__(self):
         return f"<DiscoverySection {self.name}>"
 

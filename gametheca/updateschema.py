@@ -131,6 +131,13 @@ class DatabaseManager:
         ALTER TABLE images
         ADD COLUMN IF NOT EXISTS is_downloaded BOOLEAN DEFAULT FALSE;
 
+        -- Surface image download failures in the admin Image Queue (Wave 2)
+        ALTER TABLE images
+        ADD COLUMN IF NOT EXISTS last_error VARCHAR(500);
+
+        ALTER TABLE images
+        ADD COLUMN IF NOT EXISTS last_attempt_at TIMESTAMP;
+
         -- Add image download settings to global_settings table
         ALTER TABLE global_settings
         ADD COLUMN IF NOT EXISTS use_turbo_image_downloads BOOLEAN DEFAULT TRUE;
@@ -537,6 +544,15 @@ class DatabaseManager:
 
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS locale VARCHAR(10) DEFAULT 'en';
+
+        -- Custom discovery zones (manual game list or library/platform/genre filter)
+        ALTER TABLE discovery_sections
+        ADD COLUMN IF NOT EXISTS section_type VARCHAR(20) DEFAULT 'seed';
+
+        ALTER TABLE discovery_sections
+        ADD COLUMN IF NOT EXISTS config TEXT;
+
+        UPDATE discovery_sections SET section_type = 'seed' WHERE section_type IS NULL;
 
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS tile_size VARCHAR(8) DEFAULT '50';

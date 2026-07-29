@@ -198,15 +198,17 @@ export function capBadges(badges, maxVisible = 2) {
 
 /**
  * Corner placement with collision fallbacks.
- * Prefer top-left (UPDATE/OUT/NEW/VR) — hamburger is top-right, favorite bottom-right.
+ * Prefer top-left (UPDATE/OUT/NEW/VR) — hamburger + favorite now stack together
+ * in the top-right band (hamburger on top, favorite directly under it), so
+ * badges avoid that whole corner until top-left/bottom-left are unavailable.
  * VR lives in the same top-left transitional stack (never dismissable).
- * Order: top-left → bottom-left → top-right → bottom-right
+ * Order: top-left → bottom-left → bottom-right → top-right
  *
  * @param {'bottom-left' | 'bottom-right' | 'top-left' | 'top-right'} preferred
  * @param {boolean} [collidesWithTitle]
  */
 export function resolveBadgeCorner(preferred = 'top-left', collidesWithTitle = false) {
-  const order = ['top-left', 'bottom-left', 'top-right', 'bottom-right']
+  const order = ['top-left', 'bottom-left', 'bottom-right', 'top-right']
   if (!collidesWithTitle) {
     return preferred
   }

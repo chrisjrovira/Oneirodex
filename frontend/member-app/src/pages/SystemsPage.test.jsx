@@ -34,8 +34,9 @@ test('renders system tiles linking into library platform filter', async () => {
     </MemoryRouter>,
   )
 
-  expect(await screen.findByRole('heading', { name: 'Systems' })).toBeInTheDocument()
+  // TopNav already labels the Systems route — no redundant page H1 here.
   const nes = await screen.findByRole('link', { name: /Nintendo Entertainment System/i })
+  expect(screen.queryByRole('heading', { name: 'Systems' })).not.toBeInTheDocument()
   expect(nes).toHaveAttribute('href', '/library?library_platform=NES')
   expect(screen.getByText('12 games')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: /PC Windows/i })).toHaveAttribute(

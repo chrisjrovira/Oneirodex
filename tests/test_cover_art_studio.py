@@ -116,6 +116,95 @@ def test_art_studio_api_requires_admin(client, db_session, admin_user):
     assert bad.status_code == 400
 
 
+def test_art_studio_generate_surfaces_permission_error(client, db_session, admin_user):
+    """A disk write failure (e.g. read-only IMAGE_SAVE_PATH) must return a JSON
+    error instead of a bare 500 HTML page, so the admin UI can show it."""
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(admin_user.id)
+        sess['_fresh'] = True
+
+    with patch(
+        'gametheca.routes_admin_ext.art_studio.save_pack',
+        side_effect=PermissionError('Permission denied'),
+    ):
+        response = client.post(
+            '/admin/api/art-studio/generate',
+            json={'title': 'Broken Perms'},
+        )
+        assert response.status_code == 500
+        data = response.get_json()
+        assert 'error' in data
+        assert 'Permission denied' in data['error']
+
+
+def test_art_studio_apply_fallback_surfaces_disk_error(client, db_session, admin_user):
+    """apply mode=fallback should surface OSError/PermissionError as JSON, not crash."""
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(admin_user.id)
+        sess['_fresh'] = True
+
+    with patch(
+        'gametheca.routes_admin_ext.art_studio.apply_pack_as_fallback',
+        side_effect=OSError('Disk full'),
+    ):
+        response = client.post(
+            '/admin/api/art-studio/apply',
+            json={'pack_id': 'some-pack', 'mode': 'fallback'},
+        )
+        assert response.status_code == 500
+        data = response.get_json()
+        assert 'error' in data
+        assert 'Disk full' in data['error']
+
+
+def test_art_studio_download_surfaces_disk_error(client, db_session, admin_user):
+    """download should surface OSError as JSON rather than an unhandled 500."""
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(admin_user.id)
+        sess['_fresh'] = True
+
+    with patch('gametheca.routes_admin_ext.art_studio.safe_pack_dir', return_value=Path('/fake')):
+        with patch(
+            'gametheca.routes_admin_ext.art_studio.build_zip_bytes',
+            side_effect=PermissionError('Permission denied'),
+        ):
+            response = client.get('/admin/api/art-studio/download/some-pack')
+            assert response.status_code == 500
+            data = response.get_json()
+            assert 'error' in data
+            assert 'Permission denied' in data['error']
+
+
+def test_apply_pack_to_game_rolls_back_and_removes_file_on_db_failure(tmp_path, db_session):
+    """If the DB commit fails after the cover file is written, the orphaned
+    file must be cleaned up and the original exception re-raised."""
+    from gametheca.utils.cover_art_studio import apply_pack_to_game, save_pack
+
+    game_uuid = str(uuid4())
+    library = Library(name=f'ArtLib_{uuid4().hex[:6]}', platform=LibraryPlatform.PCWIN)
+    db_session.add(library)
+    db_session.flush()
+    game = Game(uuid=game_uuid, name='Rollback Target', library_uuid=library.uuid)
+    db_session.add(game)
+    db_session.commit()
+
+    gen_root = tmp_path / 'generated'
+    img_root = tmp_path / 'images'
+    img_root.mkdir()
+
+    with patch('gametheca.utils.cover_art_studio.generated_root', return_value=gen_root):
+        manifest = save_pack('Rollback Test', pack_id='rollbackpack01')
+
+        with patch('gametheca.utils.cover_art_studio.current_app') as mock_app:
+            mock_app.config = {'IMAGE_SAVE_PATH': str(img_root)}
+            with patch('gametheca.utils.cover_art_studio.db.session.commit', side_effect=RuntimeError('db down')):
+                with pytest.raises(RuntimeError, match='db down'):
+                    apply_pack_to_game(manifest['pack_id'], game_uuid)
+
+    # The written cover file should have been cleaned up after the rollback.
+    assert list(img_root.glob(f'{game_uuid}_cover_studio_*')) == []
+
+
 def test_art_studio_generate_apply_game(client, db_session, admin_user, app, tmp_path):
     game_uuid = str(uuid4())
     library = Library(name=f'ArtLib_{uuid4().hex[:6]}', platform=LibraryPlatform.PCWIN)

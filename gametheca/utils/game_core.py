@@ -542,6 +542,8 @@ def download_images_for_game_turbo(game_uuid, app=None, max_workers=5):
             
             downloaded_count = 0
             successful_images = []
+            failed_images = {}
+            now = datetime.now(UTC)
             
             # Use ThreadPoolExecutor for parallel downloads
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -557,17 +559,27 @@ def download_images_for_game_turbo(game_uuid, app=None, max_workers=5):
                         if result['success']:
                             successful_images.append(image.id)
                             downloaded_count += 1
+                        else:
+                            failed_images[image.id] = result.get('error') or 'Download failed for an unknown reason.'
                     except Exception as e:
                         print(f"❌ Failed downloading image {image.id}: {e}")
+                        failed_images[image.id] = str(e)
             
             # Update database
             if successful_images:
                 db.session.execute(
-                    update(Image).filter(Image.id.in_(successful_images)).values(is_downloaded=True)
+                    update(Image).filter(Image.id.in_(successful_images)).values(
+                        is_downloaded=True, last_error=None, last_attempt_at=now
+                    )
                 )
+            for image_id, error in failed_images.items():
+                db.session.execute(
+                    update(Image).filter(Image.id == image_id).values(last_error=error, last_attempt_at=now)
+                )
+            if successful_images or failed_images:
                 db.session.commit()
             
-            print(f"🚀 Downloaded {downloaded_count} images for game {game_uuid[:8]}...")
+            print(f"🚀 Downloaded {downloaded_count} images for game {game_uuid[:8]}... ({len(failed_images)} failed)")
             return downloaded_count
             
     except Exception as e:
@@ -598,10 +610,6 @@ def process_and_save_image(game_uuid, image_data, image_type='cover'):
             print(f"Failed to retrieve URL for cover ID {image_data}.")
             return
 
-        file_name = secure_filename(f"{game_uuid}_cover_{image_data}.jpg") 
-        save_path = os.path.join(current_app.config['IMAGE_SAVE_PATH'], file_name)
-        download_image(url, save_path)
-
     elif image_type == 'screenshot':
         screenshot_query = f'fields url; where id={image_data};'
         response = make_igdb_api_request('https://api.igdb.com/v4/screenshots', screenshot_query)
@@ -612,22 +620,30 @@ def process_and_save_image(game_uuid, image_data, image_type='cover'):
             else:
                 print(f"Screenshot URL not found for ID {image_data}.")
                 return
-            file_name = secure_filename(f"{game_uuid}_{image_data}.jpg") 
-    
+
     # Check if file_name is set before proceeding
     if not file_name:
         print("File name could not be set. Exiting.")
         return
     save_path = os.path.join(current_app.config['IMAGE_SAVE_PATH'], file_name)
-    download_image(url, save_path)
+    # Single download attempt (previously this ran twice for covers — once in
+    # the branch above, once here — silently doubling IGDB requests). The
+    # result is now recorded on the Image row instead of being discarded, so
+    # the queue/UI can tell a real failure from a still-pending download.
+    success, error = download_image(url, save_path)
 
-    if file_name and save_path:
-        image = Image(
-            game_uuid=game_uuid,
-            image_type=image_type,
-            url=file_name,
-        )
-        db.session.add(image)
+    image = Image(
+        game_uuid=game_uuid,
+        image_type=image_type,
+        url=file_name,
+        download_url=url,
+        is_downloaded=success,
+        last_error=None if success else (error or 'Download failed for an unknown reason.'),
+        last_attempt_at=datetime.now(UTC),
+    )
+    db.session.add(image)
+    if not success:
+        print(f"Failed to download {image_type} for game {game_uuid}: {image.last_error}")
     
     
 def fetch_and_store_game_urls(game_uuid, igdb_id):
@@ -1357,35 +1373,46 @@ def download_pending_images(batch_size=10, delay_between_downloads=1, app=None):
                 return 0
             
             downloaded_count = 0
+            failed_count = 0
             for image in pending_images:
                 try:
+                    image.last_attempt_at = datetime.now(UTC)
+
                     if not image.download_url:
+                        image.last_error = 'No download URL on record for this image.'
+                        failed_count += 1
                         print(f"No download URL for image {image.id}, skipping.")
                         continue
-                    
+
                     # Download the image
                     save_path = os.path.join(app.config['IMAGE_SAVE_PATH'], image.url)
-                    
+
                     from gametheca.utils.functions import download_image
-                    download_image(image.download_url, save_path)
-                    
-                    # Mark as downloaded
-                    image.is_downloaded = True
-                    downloaded_count += 1
-                    
-                    print(f"Downloaded {image.image_type} for game {image.game_uuid}: {image.url}")
-                    
+                    success, error = download_image(image.download_url, save_path)
+
+                    if success:
+                        image.is_downloaded = True
+                        image.last_error = None
+                        downloaded_count += 1
+                        print(f"Downloaded {image.image_type} for game {image.game_uuid}: {image.url}")
+                    else:
+                        image.last_error = error or 'Download failed for an unknown reason.'
+                        failed_count += 1
+                        print(f"Failed to download image {image.id}: {image.last_error}")
+
                     # Small delay to avoid overwhelming the server
                     if delay_between_downloads > 0:
                         time.sleep(delay_between_downloads)
                         
                 except Exception as e:
+                    image.last_error = f"Unexpected error: {e}"
+                    failed_count += 1
                     print(f"Error downloading image {image.id}: {e}")
                     continue
             
             # Commit all changes
             db.session.commit()
-            print(f"Downloaded {downloaded_count} images.")
+            print(f"Downloaded {downloaded_count} images ({failed_count} failed).")
             return downloaded_count
             
     except Exception as e:
@@ -1438,18 +1465,27 @@ def download_images_for_game(game_uuid, app=None):
             downloaded_count = 0
             for image in pending_images:
                 try:
+                    image.last_attempt_at = datetime.now(UTC)
+
                     if not image.download_url:
+                        image.last_error = 'No download URL on record for this image.'
                         continue
-                    
+
                     save_path = os.path.join(app.config['IMAGE_SAVE_PATH'], image.url)
-                    
+
                     from gametheca.utils.functions import download_image
-                    download_image(image.download_url, save_path)
-                    
-                    image.is_downloaded = True
-                    downloaded_count += 1
-                    
+                    success, error = download_image(image.download_url, save_path)
+
+                    if success:
+                        image.is_downloaded = True
+                        image.last_error = None
+                        downloaded_count += 1
+                    else:
+                        image.last_error = error or 'Download failed for an unknown reason.'
+                        print(f"Failed to download image {image.id}: {image.last_error}")
+
                 except Exception as e:
+                    image.last_error = f"Unexpected error: {e}"
                     print(f"Error downloading image {image.id}: {e}")
                     continue
             
@@ -1470,13 +1506,16 @@ def download_single_image_worker(image, app):
     """Worker function to download a single image - designed for parallel execution."""
     try:
         if not image.download_url:
-            return {'success': False, 'image_id': image.id, 'error': 'No download URL'}
-        
+            return {'success': False, 'image_id': image.id, 'error': 'No download URL on record for this image.'}
+
         save_path = os.path.join(app.config['IMAGE_SAVE_PATH'], image.url)
-        
+
         from gametheca.utils.functions import download_image
-        download_image(image.download_url, save_path)
-        
+        success, error = download_image(image.download_url, save_path)
+
+        if not success:
+            return {'success': False, 'image_id': image.id, 'error': error or 'Download failed for an unknown reason.'}
+
         return {
             'success': True, 
             'image_id': image.id, 
@@ -1505,6 +1544,8 @@ def turbo_download_images(batch_size=100, max_workers=5, app=None):
             downloaded_count = 0
             failed_count = 0
             successful_images = []
+            failed_images = {}
+            now = datetime.now(UTC)
             
             # Create thread pool and submit all download tasks
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -1525,17 +1566,26 @@ def turbo_download_images(batch_size=100, max_workers=5, app=None):
                             downloaded_count += 1
                         else:
                             failed_count += 1
+                            failed_images[image.id] = result.get('error') or 'Download failed for an unknown reason.'
                             print(f"❌ Failed to download image {result['image_id']}: {result['error']}")
                             
                     except Exception as e:
                         failed_count += 1
+                        failed_images[image.id] = str(e)
                         print(f"❌ Exception downloading image {image.id}: {e}")
             
             # Update database - mark successful downloads as completed
             if successful_images:
                 db.session.execute(
-                    update(Image).filter(Image.id.in_(successful_images)).values(is_downloaded=True)
+                    update(Image).filter(Image.id.in_(successful_images)).values(
+                        is_downloaded=True, last_error=None, last_attempt_at=now
+                    )
                 )
+            for image_id, error in failed_images.items():
+                db.session.execute(
+                    update(Image).filter(Image.id == image_id).values(last_error=error, last_attempt_at=now)
+                )
+            if successful_images or failed_images:
                 db.session.commit()
             
             result_message = f"🚀 Downloaded {downloaded_count} images ({failed_count} failed)" if failed_count > 0 else f"🚀 Downloaded {downloaded_count} images"

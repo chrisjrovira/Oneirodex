@@ -1,5 +1,8 @@
 # /gametheca/routes_apis/scan.py
-from flask import jsonify, current_app, request
+import csv
+import io
+
+from flask import jsonify, current_app, request, Response
 from flask_login import login_required
 from gametheca import db
 from gametheca.models import ScanJob, UnmatchedFolder, Library
@@ -7,6 +10,8 @@ from sqlalchemy import select
 from gametheca.utils.auth import admin_required
 from gametheca.utils.functions import PLATFORM_IDS
 from . import apis_bp
+
+VALID_UNMATCHED_EXPORT_STATUSES = {'all', 'Unmatched', 'Duplicate', 'Ignore', 'Pending'}
 
 @apis_bp.route('/scan_jobs_status', methods=['GET'])
 @login_required
@@ -62,6 +67,59 @@ def unmatched_folders():
     } for folder, library_name, platform in unmatched]
     
     return jsonify(unmatched_data)
+
+
+@apis_bp.route('/unmatched_folders/export', methods=['GET'])
+@login_required
+@admin_required
+def export_unmatched_folders():
+    """Export unmatched/duplicate/ignored folders as CSV or JSON for offline triage."""
+    status = request.args.get('status', 'all')
+    if status not in VALID_UNMATCHED_EXPORT_STATUSES:
+        return jsonify({'error': f"Invalid status. Choose one of: {sorted(VALID_UNMATCHED_EXPORT_STATUSES)}"}), 400
+
+    fmt = (request.args.get('format', 'csv') or 'csv').lower()
+    if fmt not in ('csv', 'json'):
+        return jsonify({'error': "Invalid format. Choose 'csv' or 'json'."}), 400
+
+    query = (
+        select(UnmatchedFolder, Library.name.label('library_name'), Library.platform)
+        .join(Library)
+        .order_by(UnmatchedFolder.status.desc(), UnmatchedFolder.folder_path.asc())
+    )
+    if status != 'all':
+        query = query.filter(UnmatchedFolder.status == status)
+
+    rows = db.session.execute(query).all()
+    export_rows = [{
+        'id': folder.id,
+        'folder_path': folder.folder_path,
+        'status': folder.status,
+        'library_name': library_name,
+        'platform_name': platform.name if platform else '',
+    } for folder, library_name, platform in rows]
+
+    filename_status = status if status != 'all' else 'all'
+
+    if fmt == 'json':
+        response = jsonify(export_rows)
+        response.headers['Content-Disposition'] = (
+            f'attachment; filename="unmatched_folders_{filename_status}.json"'
+        )
+        return response
+
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=['id', 'folder_path', 'status', 'library_name', 'platform_name'])
+    writer.writeheader()
+    writer.writerows(export_rows)
+
+    return Response(
+        buffer.getvalue(),
+        mimetype='text/csv',
+        headers={
+            'Content-Disposition': f'attachment; filename="unmatched_folders_{filename_status}.csv"'
+        },
+    )
 
 
 @apis_bp.route('/unmatched_folders/reclassify_duplicates', methods=['POST'])

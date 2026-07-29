@@ -120,6 +120,11 @@
     margin-left: var(--spacing-xl);
 }
 
+/* Settings/profile pages suppress the legacy LHN entirely (no sidebar in DOM) */
+#content.no-sidebar {
+    margin-left: 0;
+}
+
 .icon-chevron {
     display: inline-block;
     transition: transform var(--transition-normal);

@@ -150,7 +150,7 @@ export function GameCard({
           className={`favorite-btn${isFavorite ? ' favorited' : ''}${favoritePending ? ' processing' : ''}`}
           data-game-uuid={game.uuid}
           data-is-favorite={String(isFavorite)}
-          data-chrome-anchor="bottom-right"
+          data-chrome-anchor="top-right"
           aria-label={`${isFavorite ? 'Remove' : 'Add'} ${game.name} ${isFavorite ? 'from' : 'to'} favorites`}
           aria-pressed={isFavorite}
           disabled={favoritePending}

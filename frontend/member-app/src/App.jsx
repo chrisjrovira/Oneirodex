@@ -89,14 +89,6 @@ function libraryInitialConfig(shellConfig) {
   }
 }
 
-function PageHeader({ title }) {
-  return (
-    <div className="gt-page-header">
-      <h1>{title}</h1>
-    </div>
-  )
-}
-
 function RouteFallback() {
   return <p className="gt-more-page__lede">Loading…</p>
 }
@@ -182,25 +174,19 @@ export function App({ shellConfig = {} }) {
         <Route
           path="/discover"
           element={
-            <>
-              <PageHeader title="Discover" />
-              <DiscoverApp
-                isAdmin={Boolean(shellConfig.isAdmin)}
-                shellConfig={shellConfig}
-              />
-            </>
+            <DiscoverApp
+              isAdmin={Boolean(shellConfig.isAdmin)}
+              shellConfig={shellConfig}
+            />
           }
         />
         <Route
           path="/library"
           element={
-            <>
-              <PageHeader title="Library" />
-              <LibraryApp
-                initialConfig={libraryInitialConfig(shellConfig)}
-                shellConfig={shellConfig}
-              />
-            </>
+            <LibraryApp
+              initialConfig={libraryInitialConfig(shellConfig)}
+              shellConfig={shellConfig}
+            />
           }
         />
         <Route path="/systems" element={<SystemsPage shellConfig={shellConfig} />} />
@@ -215,16 +201,13 @@ export function App({ shellConfig = {} }) {
         <Route
           path="/favorites"
           element={
-            <>
-              <PageHeader title="Favorites" />
-              <FavoritesApp
-                initialConfig={{
-                  isAdmin: Boolean(shellConfig.isAdmin),
-                  showPlayStatus: Boolean(shellConfig.showPlayStatus),
-                }}
-                shellConfig={shellConfig}
-              />
-            </>
+            <FavoritesApp
+              initialConfig={{
+                isAdmin: Boolean(shellConfig.isAdmin),
+                showPlayStatus: Boolean(shellConfig.showPlayStatus),
+              }}
+              shellConfig={shellConfig}
+            />
           }
         />
         <Route

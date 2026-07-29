@@ -2,7 +2,8 @@ import pytest
 from flask import url_for
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
-from gametheca.models import User, SystemEvents, DiscoverySection
+from gametheca.models import User, SystemEvents, DiscoverySection, Game, Library
+from gametheca.platform import LibraryPlatform
 from gametheca import db
 from gametheca.routes_admin_ext.system import (
     validate_pagination_params, 
@@ -113,6 +114,30 @@ def sample_discovery_sections(db_session):
     
     db_session.commit()
     return sections
+
+
+@pytest.fixture
+def test_libraries_for_zones(db_session):
+    """Libraries for exercising custom discovery zone filters."""
+    libraries = [
+        Library(name=f'Zone Library {i}', platform=LibraryPlatform.SNES)
+        for i in range(2)
+    ]
+    for lib in libraries:
+        db_session.add(lib)
+    db_session.commit()
+    return libraries
+
+
+@pytest.fixture
+def test_games_for_zones(db_session, test_libraries_for_zones):
+    """Games for exercising custom discovery zone manual pick lists."""
+    library = test_libraries_for_zones[0]
+    games = [Game(name=f'Zone Game {i}', library_uuid=library.uuid) for i in range(3)]
+    for game in games:
+        db_session.add(game)
+    db_session.commit()
+    return games
 
 
 class TestHelperFunctions:
@@ -336,6 +361,126 @@ class TestDiscoverySectionsRoute:
         assert response.status_code == 200
         assert b'Popular Games' in response.data
         assert b'New Releases' in response.data
+
+
+class TestCustomDiscoveryZones:
+    """Test custom discovery zone create/edit/delete + member-facing rendering."""
+
+    def _login(self, client, user):
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(user.id)
+            sess['_fresh'] = True
+
+    def test_create_zone_requires_admin(self, client, regular_user):
+        self._login(client, regular_user)
+        response = client.post(
+            '/admin/api/discovery_sections',
+            json={'name': 'Staff Picks', 'mode': 'manual', 'game_uuids': ['x']},
+            content_type='application/json',
+        )
+        assert response.status_code == 302
+
+    def test_create_manual_zone_success(self, client, admin_user, db_session, test_games_for_zones):
+        self._login(client, admin_user)
+        uuids = [g.uuid for g in test_games_for_zones[:2]]
+        response = client.post(
+            '/admin/api/discovery_sections',
+            json={'name': 'Staff Picks', 'mode': 'manual', 'game_uuids': uuids},
+            content_type='application/json',
+        )
+        assert response.status_code == 201
+        data = response.get_json()
+        assert data['success'] is True
+        assert data['section']['section_type'] == 'custom'
+        assert data['section']['count'] == 2
+
+        section = db_session.get(DiscoverySection, data['section']['id'])
+        assert section.config['mode'] == 'manual'
+        assert set(section.config['game_uuids']) == set(uuids)
+
+    def test_create_zone_requires_name(self, client, admin_user):
+        self._login(client, admin_user)
+        response = client.post(
+            '/admin/api/discovery_sections',
+            json={'name': '', 'mode': 'manual', 'game_uuids': ['abc']},
+            content_type='application/json',
+        )
+        assert response.status_code == 400
+
+    def test_create_manual_zone_rejects_unknown_uuids(self, client, admin_user):
+        self._login(client, admin_user)
+        response = client.post(
+            '/admin/api/discovery_sections',
+            json={'name': 'Ghost Zone', 'mode': 'manual', 'game_uuids': ['not-a-real-uuid']},
+            content_type='application/json',
+        )
+        assert response.status_code == 400
+        assert 'not found' in response.get_json()['error']
+
+    def test_create_filter_zone_by_library(self, client, admin_user, db_session, test_libraries_for_zones):
+        self._login(client, admin_user)
+        library = test_libraries_for_zones[0]
+        response = client.post(
+            '/admin/api/discovery_sections',
+            json={'name': 'By Library', 'mode': 'filter', 'filter_type': 'library', 'filter_value': library.uuid},
+            content_type='application/json',
+        )
+        assert response.status_code == 201
+        section_id = response.get_json()['section']['id']
+        section = db_session.get(DiscoverySection, section_id)
+        assert section.config == {'mode': 'filter', 'filter_type': 'library', 'filter_value': library.uuid}
+
+    def test_update_zone_success(self, client, admin_user, db_session, test_games_for_zones):
+        self._login(client, admin_user)
+        section = DiscoverySection(
+            name='Old Name', identifier='custom_test1', is_visible=True,
+            display_order=99, section_type='custom',
+            config={'mode': 'manual', 'game_uuids': [test_games_for_zones[0].uuid]},
+        )
+        db_session.add(section)
+        db_session.commit()
+
+        response = client.put(
+            f'/admin/api/discovery_sections/{section.id}',
+            json={'name': 'New Name', 'mode': 'manual', 'game_uuids': [g.uuid for g in test_games_for_zones]},
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        db_session.refresh(section)
+        assert section.name == 'New Name'
+        assert len(section.config['game_uuids']) == len(test_games_for_zones)
+
+    def test_update_seed_section_rejected(self, client, admin_user, sample_discovery_sections):
+        self._login(client, admin_user)
+        seed_section = sample_discovery_sections[0]
+        response = client.put(
+            f'/admin/api/discovery_sections/{seed_section.id}',
+            json={'name': 'Hacked', 'mode': 'manual', 'game_uuids': ['x']},
+            content_type='application/json',
+        )
+        assert response.status_code == 400
+
+    def test_delete_zone_success(self, client, admin_user, db_session):
+        self._login(client, admin_user)
+        section = DiscoverySection(
+            name='Deletable', identifier='custom_test2', is_visible=True,
+            display_order=99, section_type='custom',
+            config={'mode': 'filter', 'filter_type': 'genre', 'filter_value': 'Action'},
+        )
+        db_session.add(section)
+        db_session.commit()
+        section_id = section.id
+
+        response = client.delete(f'/admin/api/discovery_sections/{section_id}')
+        assert response.status_code == 200
+        assert db_session.get(DiscoverySection, section_id) is None
+
+    def test_delete_seed_section_rejected(self, client, admin_user, sample_discovery_sections, db_session):
+        self._login(client, admin_user)
+        seed_section = sample_discovery_sections[0]
+        response = client.delete(f'/admin/api/discovery_sections/{seed_section.id}')
+        assert response.status_code == 400
+        assert db_session.get(DiscoverySection, seed_section.id) is not None
 
 
 class TestUpdateSectionOrderAPI:

@@ -180,6 +180,7 @@ body.gt-play-shell::after {
   max-height: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   background: var(--gt-play-bezel-bg, #1c1c22);
   border: var(--gt-play-bezel-border, 3px solid #2a2a32);
   border-radius: var(--gt-play-bezel-radius, 14px);
@@ -219,11 +220,23 @@ body.gt-play-shell::after {
   opacity: var(--gt-play-chrome-opacity, 0.7);
 }
 
+/*
+ * Aspect-locked screen: fills bezel width (or handheld's narrower
+ * --gt-play-bezel-max) then derives height from --gt-play-aspect so the
+ * emulator box matches the core/system shape instead of stretching to fill
+ * the bezel and leaving black bars around the RetroArch canvas. When the
+ * derived height would overflow the bezel, max-height + aspect-ratio
+ * resolve together to shrink width instead (standard CSS letterbox pattern).
+ */
 #webretro {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
   min-height: 0;
-  margin-top: var(--gt-play-screen-mt, 10px);
+  aspect-ratio: var(--gt-play-aspect, 4 / 3);
+  margin: var(--gt-play-screen-mt, 10px) auto 0;
   border-radius: var(--gt-play-screen-radius, 6px);
   overflow: hidden;
   background: #000;
@@ -531,7 +544,9 @@ body.gt-play-shell::after {
   --gt-play-wallpaper: linear-gradient(180deg, #e8e8f0, #c8c8d0);
   --gt-play-room-bg: #d0d0d8;
   --gt-play-bar-bg: #c8c8d0;
-  --gt-play-bezel-max: 640px;
+  /* Dual-screen framebuffer is portrait; keep the clamshell frame narrow. */
+  --gt-play-bezel-max: 420px;
+  --gt-play-stage-pad: 24px 18vw 32px;
 }
 
 [data-platform="VB"] {
@@ -606,10 +621,23 @@ body.gt-play-shell::after {
 
 [data-platform="SEGA_32X"] {
   --gt-play-accent: #ff3300;
-  --gt-play-bezel-bg: #111;
+  --gt-play-room-bg: #100604;
+  --gt-play-bezel-bg: linear-gradient(180deg, #1c1c20, #0d0d0f);
   --gt-play-bezel-border: 3px solid #ff3300;
+  --gt-play-bezel-pad: 16px 14px 20px;
   --gt-play-bezel-label: "32X";
+  --gt-play-bezel-label-tracking: 0.25em;
+  --gt-play-wallpaper:
+    repeating-linear-gradient(135deg, rgba(255, 51, 0, 0.06) 0 12px, transparent 12px 24px),
+    linear-gradient(180deg, #140a08, #060404);
   --gt-play-ambient: radial-gradient(circle at 50% 20%, rgba(255, 51, 0, 0.2), transparent 50%);
+  --gt-play-furniture: linear-gradient(180deg, #241412, #100a08);
+  --gt-play-furniture-h: 14%;
+  --gt-play-scanline-opacity: 0.16;
+  --gt-play-chrome-inset: auto 12px 12px auto;
+  --gt-play-chrome-w: 40px;
+  --gt-play-chrome-h: 6px;
+  --gt-play-chrome: repeating-linear-gradient(90deg, #ff3300 0 4px, transparent 4px 8px);
 }
 
 [data-platform="SEGA_GG"] {
@@ -625,11 +653,26 @@ body.gt-play-shell::after {
 
 [data-platform="SEGA_SATURN"] {
   --gt-play-accent: #ff6600;
-  --gt-play-bezel-bg: #1a1a1a;
+  --gt-play-room-bg: #0e0a08;
+  --gt-play-bezel-bg: linear-gradient(160deg, #232323, #141414);
   --gt-play-bezel-border: 3px solid #ff6600;
+  --gt-play-bezel-radius: 6px;
+  --gt-play-bezel-pad: 16px 16px 20px;
   --gt-play-bezel-label: "Sega Saturn";
-  --gt-play-wallpaper: linear-gradient(135deg, #1a1008, #0a0a0c 50%, #180c08);
+  --gt-play-bezel-label-tracking: 0.3em;
+  --gt-play-wallpaper:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255, 102, 0, 0.14), transparent 55%),
+    linear-gradient(135deg, #1a1008, #0a0a0c 50%, #180c08);
+  --gt-play-ambient: radial-gradient(ellipse 45% 30% at 20% 85%, rgba(255, 102, 0, 0.16), transparent 55%);
+  --gt-play-furniture: linear-gradient(180deg, #2a2018, #12100c);
+  --gt-play-furniture-h: 14%;
   --gt-play-bar-border: 2px solid #ff6600;
+  --gt-play-scanline-opacity: 0.08;
+  --gt-play-chrome-inset: 12px 12px auto auto;
+  --gt-play-chrome-w: 6px;
+  --gt-play-chrome-h: 6px;
+  --gt-play-chrome-radius: 50%;
+  --gt-play-chrome: radial-gradient(circle, #ffaa66, #ff6600);
 }
 
 /* Dreamcast swirl living room */
@@ -695,14 +738,29 @@ body.gt-play-shell::after {
 
 [data-platform="PS2"] {
   --gt-play-accent: #0070d1;
+  --gt-play-room-bg: #060a12;
   --gt-play-bezel-bg: linear-gradient(160deg, #1a2030, #0c1018);
   --gt-play-bezel-border: 2px solid #0070d1;
   --gt-play-bezel-radius: 8px;
+  --gt-play-bezel-pad: 16px 18px 20px;
+  --gt-play-bezel-shadow: 0 20px 44px rgba(0, 30, 70, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --gt-play-bezel-label: "PlayStation 2";
+  --gt-play-bezel-label-tracking: 0.3em;
   --gt-play-wallpaper:
     radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0, 112, 209, 0.2), transparent 55%),
     linear-gradient(180deg, #0a1018, #040608);
+  --gt-play-ambient:
+    radial-gradient(ellipse 50% 35% at 80% 85%, rgba(0, 112, 209, 0.16), transparent 55%);
+  --gt-play-furniture: linear-gradient(180deg, #182234, #0a1018);
+  --gt-play-furniture-h: 14%;
   --gt-play-bar-bg: #0a1018;
+  --gt-play-scanline-opacity: 0.05;
+  --gt-play-chrome-inset: auto 14px 14px auto;
+  --gt-play-chrome-w: 10px;
+  --gt-play-chrome-h: 10px;
+  --gt-play-chrome-radius: 50%;
+  --gt-play-chrome: radial-gradient(circle, #66b8ff, #0070d1);
+  --gt-play-font: "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
 /* PSP sleek black handheld */
@@ -806,13 +864,27 @@ body.gt-play-shell::after {
 
 [data-platform="NGC"] {
   --gt-play-accent: #6a5acd;
+  --gt-play-room-bg: #0c0a16;
   --gt-play-bezel-bg: linear-gradient(180deg, #4a3a8a, #2a1a5a);
   --gt-play-bezel-border: 4px solid #8a7acc;
   --gt-play-bezel-radius: 20px;
+  --gt-play-bezel-pad: 18px 18px 22px;
+  --gt-play-bezel-shadow: 0 20px 44px rgba(30, 10, 60, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   --gt-play-bezel-label: "GameCube";
+  --gt-play-bezel-label-tracking: 0.3em;
   --gt-play-wallpaper:
     radial-gradient(circle at 30% 30%, rgba(106, 90, 205, 0.2), transparent 40%),
     linear-gradient(180deg, #141028, #0a0814);
+  --gt-play-ambient: radial-gradient(ellipse 55% 35% at 75% 90%, rgba(106, 90, 205, 0.2), transparent 55%);
+  --gt-play-furniture: linear-gradient(180deg, #241c3c, #100c1c);
+  --gt-play-furniture-h: 14%;
+  --gt-play-scanline-opacity: 0.06;
+  --gt-play-chrome-inset: auto 16px 14px auto;
+  --gt-play-chrome-w: 16px;
+  --gt-play-chrome-h: 16px;
+  --gt-play-chrome-radius: 50%;
+  --gt-play-chrome: radial-gradient(circle at 35% 35%, #cabfff, #6a5acd 60%, #3a2a80);
+  --gt-play-font: Impact, "Arial Black", sans-serif;
 }
 
 [data-platform="ATARI_2600"],
@@ -829,75 +901,111 @@ body.gt-play-shell::after {
 
 [data-platform="LYNX"] {
   --gt-play-accent: #ff6600;
-  --gt-play-bezel-bg: #2a2a2a;
+  --gt-play-room-bg: #140c08;
+  --gt-play-bezel-bg: linear-gradient(180deg, #3a3a3a, #1a1a1a);
   --gt-play-bezel-border: 10px solid #111;
   --gt-play-bezel-radius: 30px;
   --gt-play-bezel-max: 640px;
   --gt-play-bezel-label: "Atari Lynx";
   --gt-play-stage-pad: 28px 16vw 36px;
+  --gt-play-wallpaper: linear-gradient(180deg, #221408, #100a06);
+  --gt-play-ambient: radial-gradient(ellipse 40% 35% at 50% 45%, rgba(255, 102, 0, 0.14), transparent 60%);
+  --gt-play-scanline-opacity: 0.15;
 }
 
 [data-platform="JAGUAR"] {
   --gt-play-accent: #ff0000;
-  --gt-play-bezel-bg: #111;
+  --gt-play-room-bg: #120404;
+  --gt-play-bezel-bg: linear-gradient(160deg, #1c1c1c, #0a0a0a);
   --gt-play-bezel-border: 4px solid #ff0000;
+  --gt-play-bezel-radius: 4px;
   --gt-play-bezel-label: "Jaguar";
+  --gt-play-bezel-label-tracking: 0.3em;
+  --gt-play-wallpaper:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255, 0, 0, 0.16), transparent 55%),
+    linear-gradient(180deg, #180606, #080202);
+  --gt-play-scanline-opacity: 0.1;
 }
 
 [data-platform="THREEDO"] {
   --gt-play-accent: #ffcc00;
-  --gt-play-bezel-bg: #f0f0f0;
+  --gt-play-room-bg: #14140c;
+  --gt-play-bezel-bg: linear-gradient(160deg, #fafafa, #d8d8d8);
   --gt-play-bezel-border: 3px solid #333;
   --gt-play-fg: #111;
   --gt-play-bezel-label: "3DO";
+  --gt-play-wallpaper:
+    radial-gradient(ellipse 55% 35% at 50% 0%, rgba(255, 204, 0, 0.14), transparent 55%),
+    linear-gradient(180deg, #16160e, #0a0a06);
+  --gt-play-scanline-opacity: 0.05;
 }
 
 [data-platform="NEOGEO_CD"],
 [data-platform="NGP"] {
   --gt-play-accent: #ffcc00;
-  --gt-play-bezel-bg: #1a1a1a;
+  --gt-play-room-bg: #14100a;
+  --gt-play-bezel-bg: linear-gradient(160deg, #262626, #141414);
   --gt-play-bezel-border: 3px solid #ffcc00;
   --gt-play-bezel-label: "Neo Geo";
+  --gt-play-bezel-label-tracking: 0.25em;
+  --gt-play-wallpaper:
+    radial-gradient(ellipse 60% 35% at 50% 0%, rgba(255, 204, 0, 0.16), transparent 55%),
+    linear-gradient(180deg, #181008, #0a0704);
+  --gt-play-scanline-opacity: 0.12;
 }
 
 [data-platform="WS"] {
   --gt-play-accent: #e60012;
-  --gt-play-bezel-bg: #eee;
+  --gt-play-room-bg: #d0d0d4;
+  --gt-play-bezel-bg: linear-gradient(180deg, #fafafa, #d8d8dc);
   --gt-play-bezel-border: 6px solid #ccc;
   --gt-play-bezel-radius: 16px;
-  --gt-play-bezel-max: 640px;
+  --gt-play-bezel-max: 480px;
   --gt-play-fg: #222;
   --gt-play-bezel-label: "WonderSwan";
+  --gt-play-wallpaper: linear-gradient(180deg, #e4e4e8, #b8b8c0);
+  --gt-play-scanline-opacity: 0.08;
 }
 
 [data-platform="COLECO"] {
   --gt-play-accent: #c00;
-  --gt-play-bezel-bg: #222;
+  --gt-play-room-bg: #140808;
+  --gt-play-bezel-bg: linear-gradient(180deg, #2e2e2e, #161616);
   --gt-play-bezel-border: 4px solid #c00;
   --gt-play-bezel-label: "ColecoVision";
+  --gt-play-wallpaper: linear-gradient(180deg, #1c0c0c, #0c0606);
+  --gt-play-scanline-opacity: 0.2;
 }
 
 [data-platform="VECTREX"] {
   --gt-play-accent: #33ff66;
-  --gt-play-bezel-bg: #111;
+  --gt-play-room-bg: #0a0a0a;
+  --gt-play-bezel-bg: linear-gradient(160deg, #1c1c1c, #0a0a0a);
   --gt-play-bezel-border: 8px solid #333;
   --gt-play-scanline-opacity: 0.4;
   --gt-play-bezel-label: "Vectrex";
+  --gt-play-wallpaper: radial-gradient(circle at 50% 50%, #101410, #000);
   --gt-play-ambient: radial-gradient(circle at 50% 45%, rgba(51, 255, 102, 0.15), transparent 50%);
+  --gt-play-ambient-blend: screen;
 }
 
 [data-platform="INTV"] {
   --gt-play-accent: #c00;
-  --gt-play-bezel-bg: #2a1810;
+  --gt-play-room-bg: #180e08;
+  --gt-play-bezel-bg: linear-gradient(180deg, #3a2416, #2a1810);
   --gt-play-bezel-border: 5px solid #8b4513;
   --gt-play-bezel-label: "Intellivision";
+  --gt-play-wallpaper: linear-gradient(180deg, #241408, #100a04);
+  --gt-play-scanline-opacity: 0.2;
 }
 
 [data-platform="O2EM"],
 [data-platform="CHAF"] {
   --gt-play-accent: #f5a623;
-  --gt-play-bezel-bg: #2a2010;
+  --gt-play-room-bg: #14100a;
+  --gt-play-bezel-bg: linear-gradient(180deg, #3a3018, #2a2010);
   --gt-play-bezel-border: 4px solid #8b6914;
+  --gt-play-wallpaper: linear-gradient(180deg, #201808, #0e0a04);
   --gt-play-scanline-opacity: 0.25;
 }
 

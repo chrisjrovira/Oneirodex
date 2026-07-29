@@ -1,12 +1,19 @@
 from flask import render_template, request, jsonify
 from flask_login import login_required, current_user
 from gametheca.utils.auth import admin_required
-from gametheca.models import SystemEvents, DiscoverySection, Game, Library, user_favorites
+from gametheca.models import SystemEvents, DiscoverySection, Game, Genre, Library, user_favorites
 from gametheca import db
+from gametheca.platform import LibraryPlatform
 from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.discovery_zones import (
+    count_custom_zone_games,
+    describe_zone_config,
+    validate_zone_config,
+)
 from sqlalchemy import select, and_, func
 from datetime import datetime
 from typing import Optional, Dict, Any
+import uuid
 from . import admin2_bp
 
 # Constants
@@ -113,6 +120,7 @@ def discovery_sections() -> str:
 
     # Calculate item counts for each section
     section_counts = {}
+    zone_descriptions = {}
 
     for section in sections:
         if section.identifier == 'libraries':
@@ -130,12 +138,193 @@ def discovery_sections() -> str:
                 select(func.count(func.distinct(Game.uuid)))
                 .join(user_favorites, Game.uuid == user_favorites.c.game_uuid)
             ).scalar()
+        elif section.section_type == 'custom':
+            count = count_custom_zone_games(section.config)
+            zone_descriptions[section.id] = describe_zone_config(section.config)
         else:
             count = 0
 
         section_counts[section.identifier] = count
 
-    return render_template('admin/admin_discovery_sections.html', sections=sections, section_counts=section_counts)
+    libraries = db.session.execute(select(Library).order_by(Library.name)).scalars().all()
+    genres = db.session.execute(select(Genre).order_by(Genre.name)).scalars().all()
+    platforms = list(LibraryPlatform)
+
+    return render_template(
+        'admin/admin_discovery_sections.html',
+        sections=sections,
+        section_counts=section_counts,
+        zone_descriptions=zone_descriptions,
+        libraries=libraries,
+        genres=genres,
+        platforms=platforms,
+    )
+
+
+@admin2_bp.route('/admin/api/discovery_sections', methods=['POST'])
+@login_required
+@admin_required
+def create_discovery_section() -> tuple[Dict[str, Any], int]:
+    """Create a custom discovery zone (manual game pick list or library/platform/genre filter)."""
+    try:
+        data = request.get_json() or {}
+        name = str(data.get('name') or '').strip()
+        if not name:
+            return jsonify({'success': False, 'error': 'Zone name is required'}), 400
+        if len(name) > 50:
+            return jsonify({'success': False, 'error': 'Zone name must be 50 characters or fewer'}), 400
+
+        config, error = validate_zone_config(
+            data.get('mode'),
+            game_uuids=data.get('game_uuids'),
+            filter_type=data.get('filter_type'),
+            filter_value=data.get('filter_value'),
+        )
+        if error:
+            return jsonify({'success': False, 'error': error}), 400
+
+        max_order = db.session.execute(select(func.max(DiscoverySection.display_order))).scalar() or 0
+        identifier = f"custom_{uuid.uuid4().hex[:12]}"
+
+        section = DiscoverySection(
+            name=name,
+            identifier=identifier,
+            is_visible=True,
+            display_order=max_order + 1,
+            section_type='custom',
+            config=config,
+        )
+        db.session.add(section)
+        db.session.commit()
+
+        log_system_event(
+            f"Created custom discovery zone '{name}'",
+            event_type='admin_action',
+            event_level='information',
+            audit_user=current_user.id,
+        )
+
+        return jsonify({
+            'success': True,
+            'section': {
+                'id': section.id,
+                'name': section.name,
+                'identifier': section.identifier,
+                'is_visible': section.is_visible,
+                'section_type': section.section_type,
+                'description': describe_zone_config(section.config),
+                'count': count_custom_zone_games(section.config),
+            },
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        log_system_event(
+            f"Failed to create discovery zone: {str(e)}",
+            event_type='admin_action',
+            event_level='error',
+            audit_user=current_user.id,
+        )
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+
+@admin2_bp.route('/admin/api/discovery_sections/<int:section_id>', methods=['PUT'])
+@login_required
+@admin_required
+def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
+    """Edit a custom discovery zone's name and/or selection."""
+    try:
+        section = db.session.get(DiscoverySection, section_id)
+        if not section:
+            return jsonify({'success': False, 'error': 'Zone not found'}), 404
+        if section.section_type != 'custom':
+            return jsonify({'success': False, 'error': 'Only custom zones can be edited'}), 400
+
+        data = request.get_json() or {}
+        name = str(data.get('name') or '').strip()
+        if not name:
+            return jsonify({'success': False, 'error': 'Zone name is required'}), 400
+        if len(name) > 50:
+            return jsonify({'success': False, 'error': 'Zone name must be 50 characters or fewer'}), 400
+
+        config, error = validate_zone_config(
+            data.get('mode'),
+            game_uuids=data.get('game_uuids'),
+            filter_type=data.get('filter_type'),
+            filter_value=data.get('filter_value'),
+        )
+        if error:
+            return jsonify({'success': False, 'error': error}), 400
+
+        section.name = name
+        section.config = config
+        db.session.commit()
+
+        log_system_event(
+            f"Updated custom discovery zone '{name}'",
+            event_type='admin_action',
+            event_level='information',
+            audit_user=current_user.id,
+        )
+
+        return jsonify({
+            'success': True,
+            'section': {
+                'id': section.id,
+                'name': section.name,
+                'identifier': section.identifier,
+                'is_visible': section.is_visible,
+                'section_type': section.section_type,
+                'description': describe_zone_config(section.config),
+                'count': count_custom_zone_games(section.config),
+            },
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        log_system_event(
+            f"Failed to update discovery zone {section_id}: {str(e)}",
+            event_type='admin_action',
+            event_level='error',
+            audit_user=current_user.id,
+        )
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+
+@admin2_bp.route('/admin/api/discovery_sections/<int:section_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def delete_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
+    """Delete a custom discovery zone. Seed shelves cannot be deleted."""
+    try:
+        section = db.session.get(DiscoverySection, section_id)
+        if not section:
+            return jsonify({'success': False, 'error': 'Zone not found'}), 404
+        if section.section_type != 'custom':
+            return jsonify({'success': False, 'error': 'Only custom zones can be deleted'}), 400
+
+        name = section.name
+        db.session.delete(section)
+        db.session.commit()
+
+        log_system_event(
+            f"Deleted custom discovery zone '{name}'",
+            event_type='admin_action',
+            event_level='information',
+            audit_user=current_user.id,
+        )
+
+        return jsonify({'success': True, 'message': f"Zone '{name}' deleted"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        log_system_event(
+            f"Failed to delete discovery zone {section_id}: {str(e)}",
+            event_type='admin_action',
+            event_level='error',
+            audit_user=current_user.id,
+        )
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
 @admin2_bp.route('/admin/api/discovery_sections/order', methods=['POST'])
 @login_required

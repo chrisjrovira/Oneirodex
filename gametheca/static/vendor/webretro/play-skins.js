@@ -79,6 +79,33 @@
     MAC: 'Mac',
   };
 
+  /**
+   * Native system aspect ratio [w, h] — locks the play-shell screen box so
+   * the emulator doesn't leave big empty black bars inside the bezel.
+   * Handhelds (GB/GBA/NDS/etc.) already get a narrow --gt-play-bezel-max
+   * from play-skins.css; this locks the screen itself to the real shape.
+   */
+  var ASPECT_RATIOS = {
+    NES: [4, 3], SNES: [4, 3], N64: [4, 3], NGC: [4, 3], WII: [4, 3], N3DS: [5, 3],
+    // NDS cores render both screens stacked into one portrait framebuffer.
+    GB: [10, 9], GBC: [10, 9], GBA: [3, 2], NDS: [2, 3], VB: [4, 3],
+    PSX: [4, 3], PS2: [4, 3], PS3: [16, 9], PSP: [16, 9], PSVITA: [16, 9],
+    SEGA_MD: [4, 3], SEGA_MS: [4, 3], SEGA_CD: [4, 3], SEGA_32X: [4, 3],
+    SEGA_GG: [10, 9], SEGA_SATURN: [4, 3], SEGA_DC: [4, 3],
+    ARCADE: [4, 3], MAME: [4, 3], FBNEO: [4, 3],
+    ATARI_2600: [4, 3], ATARI_5200: [4, 3], ATARI_7800: [4, 3],
+    LYNX: [8, 5], JAGUAR: [4, 3], PCE: [4, 3], PCFX: [4, 3],
+    NGP: [10, 9], WS: [10, 9], COLECO: [4, 3], THREEDO: [4, 3], VECTREX: [4, 3],
+    NEOGEO_CD: [4, 3], INTV: [4, 3], O2EM: [4, 3], CHAF: [4, 3],
+    PCWIN: [4, 3], PCDOS: [4, 3], PC: [4, 3], MAC: [4, 3], OTHER: [4, 3],
+  };
+  var DEFAULT_ASPECT = [4, 3];
+
+  function aspectForPlatform(platformId) {
+    var id = String(platformId || '').toUpperCase();
+    return ASPECT_RATIOS[id] || DEFAULT_ASPECT;
+  }
+
   /** Best-effort core → platform when URL omits platform=. */
   var CORE_TO_PLATFORM = {
     nestopia: 'NES',
@@ -157,12 +184,18 @@
     root.style.setProperty('--gt-play-accent', meta.accent);
     root.style.setProperty('--gt-platform-accent', meta.accent);
 
+    var aspect = aspectForPlatform(platform || 'pc');
+    var aspectCss = aspect[0] + ' / ' + aspect[1];
+    root.style.setProperty('--gt-play-aspect', aspectCss);
+    body.style.setProperty('--gt-play-aspect', aspectCss);
+
     return {
       platform: platform,
       family: family,
       accent: meta.accent,
       familyLabel: meta.label,
       systemLabel: PLATFORM_LABELS[platform] || platform || meta.label,
+      aspectRatio: aspect,
     };
   }
 
@@ -170,7 +203,9 @@
     familyForPlatform: familyForPlatform,
     resolvePlatform: resolvePlatform,
     applyPlaySkin: applyPlaySkin,
+    aspectForPlatform: aspectForPlatform,
     PLATFORM_LABELS: PLATFORM_LABELS,
     CORE_TO_PLATFORM: CORE_TO_PLATFORM,
+    ASPECT_RATIOS: ASPECT_RATIOS,
   };
 })(typeof window !== 'undefined' ? window : this);

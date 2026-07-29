@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from gametheca.utils.cover_url import resolve_cover_url
+from gametheca.utils.cover_url import resolve_cover_url, resolve_game_cover_url
 
 
 class _FakeImage:
@@ -81,3 +81,58 @@ def test_resolve_cover_url_falls_back_when_downloaded_file_missing(mock_url_for,
 def test_resolve_cover_url_normalizes_protocol_relative_primary_url(mock_url_for):
     image = _FakeImage(url='//images.igdb.com/co.jpg', is_downloaded=False)
     assert resolve_cover_url(image) == 'https://images.igdb.com/co.jpg'
+
+
+class _FakeGame:
+    def __init__(self, name, cover=None):
+        self.name = name
+        self.cover = cover
+
+
+@patch('gametheca.utils.cover_url.url_for', side_effect=_static_url)
+def test_missing_cover_generates_titled_placeholder_file(mock_url_for, tmp_path):
+    """No cover + a title should render a branded per-title JPEG, not the boring default."""
+    with patch('gametheca.utils.cover_url.generated_root', return_value=tmp_path):
+        url = resolve_cover_url(None, title='Chrono Trigger')
+
+    assert url.startswith('/static/library/generated/covers/')
+    assert url.endswith('.jpg')
+    generated = list((tmp_path / 'covers').glob('*.jpg'))
+    assert len(generated) == 1
+    assert generated[0].stat().st_size > 0
+
+
+@patch('gametheca.utils.cover_url.url_for', side_effect=_static_url)
+def test_missing_cover_placeholder_is_cached_per_title(mock_url_for, tmp_path):
+    """A second lookup for the same title reuses the cached file (no re-render)."""
+    with patch('gametheca.utils.cover_url.generated_root', return_value=tmp_path):
+        first = resolve_cover_url(None, title='Chrono Trigger')
+        second = resolve_cover_url(None, title='Chrono Trigger')
+
+    assert first == second
+    assert len(list((tmp_path / 'covers').glob('*.jpg'))) == 1
+
+
+@patch('gametheca.utils.cover_url.url_for', side_effect=_static_url)
+def test_missing_cover_without_title_still_uses_static_default(mock_url_for, tmp_path):
+    with patch('gametheca.utils.cover_url.generated_root', return_value=tmp_path):
+        url = resolve_cover_url(None)
+
+    assert url == '/static/newstyle/default_cover.jpg'
+    assert not (tmp_path / 'covers').exists()
+
+
+@patch('gametheca.utils.cover_url.url_for', side_effect=_static_url)
+def test_resolve_game_cover_url_uses_game_name_for_placeholder(mock_url_for, tmp_path):
+    game = _FakeGame(name='Secret of Mana')
+    with patch('gametheca.utils.cover_url.generated_root', return_value=tmp_path):
+        url = resolve_game_cover_url(game, cover_image=None)
+
+    assert '/static/library/generated/covers/' in url
+
+
+@patch('gametheca.utils.cover_url.generated_root', side_effect=RuntimeError('no app context'))
+@patch('gametheca.utils.cover_url.url_for', side_effect=_static_url)
+def test_missing_cover_falls_back_to_static_default_on_render_failure(mock_url_for, mock_root):
+    """Rendering failures (missing app context, disk errors, ...) must not break cover resolution."""
+    assert resolve_cover_url(None, title='Chrono Trigger') == '/static/newstyle/default_cover.jpg'

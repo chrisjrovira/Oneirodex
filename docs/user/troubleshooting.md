@@ -31,6 +31,8 @@ Quick checks before pinging an admin.
 | Save missing | Cloud save flag / encrypt | Re-try; admin check emulator saves settings |
 | Play fails / blank after Start (zip/7z/rar/gz) | Archive has no playable ROM, wrong member, or missing unrar/py7zr | Prefer one ROM per archive; use `.zip` with a known ROM ext; single-file `game.nes.gz` is OK — not `.tar.gz`. Check `/api/downloadrom/<uuid>` JSON (`error`, `code`, optional `hint`) |
 | No browser Play button on a scanned `.gz` | Non-ROM gzip (e.g. `.tar.gz`) | Repack as `.zip` / raw ROM; Play is suppressed for unsupported archives |
+| No sound on Start | Browser autoplay policy suspends audio until a page gesture | Click once into the play screen, then press Start |
+| SNES game crackles / audio pitch shifts on busy scenes | WASM CPU pressure causing emulation slowdown | Pre-start gear → **Reduce Slowdown (Overclock)**; still choppy → use desktop companion for that title — [browser-play.md](browser-play.md#audiovideo-tuning--wasm-limits-snes-and-friends) |
 
 ## Social / voice
 

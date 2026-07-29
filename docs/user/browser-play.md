@@ -25,6 +25,18 @@ Browser play opens `webretro.html` with a per-system **room** skin (wallpaper, b
 
 - **← Library** on the play bar returns via `history.back()` when the referrer is same-origin, else falls back to `/library`.
 - Distinct rooms include NES den, SNES living room, Genesis arcade corner, PS1 CRT night, Dreamcast swirl, Arcade cabinet, GB/GBA handheld slabs, PC desk, and more.
+- The emulator screen is **aspect-locked to the core's native shape** (SNES/NES/Genesis ~4:3, GBA 3:2, GB/GBC ~10:9, NDS portrait dual-screen, PSP/Vita ~16:9, etc.) instead of stretching to fill the bezel, so you no longer get big empty black bars around the picture.
+
+## Audio/video tuning + WASM limits (SNES and friends)
+
+Browser Play runs RetroArch compiled to WebAssembly inside the tab — there's no native audio thread or GPU passthrough, so a few defaults are tuned to reduce common WASM artifacts:
+
+- **Audio buffer + timing skew** are set slightly above RetroArch's bare defaults (`audio_latency`, `audio_max_timing_skew`) so brief main-thread hiccups resample instead of crackling.
+- **`video_vsync`** is explicit so WASM frame delivery paces to the browser's `requestAnimationFrame` instead of free-running.
+- **SNES "Reduce Slowdown (Overclock)"** — a pre-start core option (gear icon before you press Start) enables `snes9x_overclock_cycles = balanced`, which fixes the slowdown-driven audio pitch/crackle some demanding SNES titles (Star Fox, Kirby's Dream Land 3, some Konami games) hit under WASM CPU pressure.
+- **Browser autoplay policy**: audio stays muted/suspended until you interact with the page (the **Start** click/keypress inside the emulator). If you don't hear anything, click into the play screen once before pressing Start.
+
+Residual limits that tuning can't fully fix in-browser: WASM is single-threaded on the main thread, so heavy cores (N64, PS1 HW renderer, Saturn) can still stutter under load on lower-end hardware, and audio scheduling jitter can't reach native-app smoothness. If a title is still choppy after the overclock option, prefer the **desktop companion** (native RetroArch) for that system.
 
 ## Compressed ROMs (extract-on-play)
 
@@ -34,7 +46,7 @@ Browser Play streams via `GET /api/downloadrom/<uuid>` (ASGI). Server extracts a
 |---|---|
 | `.zip` | Nested folders + zip-in-zip (depth ≤ 3). Multi-ROM: prefers platform extension, then larger files; `.cue` (+ sibling `.bin`) for disc sets |
 | `.7z` | Requires `py7zr` |
-| `.rar` | Requires `rarfile` + host `unrar`/`bsdtar` |
+| `.rar` | Requires `rarfile` + a host `unrar`/`bsdtar`/`7z` binary — the Docker image ships `libarchive-tools` (`bsdtar`) + `p7zip-full` (`7z`) so this works out of the box in Compose/Unraid |
 | `.gz` | Single ROM wrappers only (`Adventure.nes.gz`). `.tar.gz` is **not** browser-playable (`play_blocker=unsupported_archive`) |
 
 Failures return JSON: `{"error": "…", "code": "…", "hint": "…"}` (`error` always present). The play shell (`webretro.html`) surfaces non-2xx `/api/downloadrom/` responses in an accessible `#gt-play-alert` region (`error` plus optional `hint`) instead of a silent `.catch`. Browse may set `play_blocker=unsupported_archive`; GameCard / Game Details show a disabled Play control with tooltip when that blocker is present.

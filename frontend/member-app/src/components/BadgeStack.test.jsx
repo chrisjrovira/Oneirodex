@@ -8,7 +8,10 @@ const now = new Date('2026-07-23T12:00:00Z')
 test('resolveBadgeCorner prefers top-left and shifts on title collision', () => {
   expect(resolveBadgeCorner('top-left', false)).toBe('top-left')
   expect(resolveBadgeCorner('top-left', true)).toBe('bottom-left')
-  expect(resolveBadgeCorner('bottom-left', true)).toBe('top-right')
+  // hamburger + favorite stack together in top-right, so bottom-right is
+  // tried before top-right when cascading away from a collision.
+  expect(resolveBadgeCorner('bottom-left', true)).toBe('bottom-right')
+  expect(resolveBadgeCorner('bottom-right', true)).toBe('top-right')
 })
 
 test('collectBadgeSignals orders NEW and freshness', () => {

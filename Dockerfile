@@ -26,10 +26,15 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies (bash required by entrypoint/start scripts)
+# Install system dependencies (bash required by entrypoint/start scripts).
+# libarchive-tools (bsdtar) and p7zip-full (7z) give rarfile a working
+# extraction backend for .rar ROMs without needing Debian's non-free repo
+# (plain `unrar` lives there and isn't enabled on this base image).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     bash \
+    libarchive-tools \
+    p7zip-full \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . .

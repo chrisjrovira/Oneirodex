@@ -32,11 +32,11 @@
                             <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 gt-picker-field">
                         {{ form.theme.label(class="form-label") }}
-                        {{ form.theme(class="form-select", id="themeSelect") }}
+                        {{ form.theme(class="form-select visually-hidden", id="themeSelect", tabindex="-1", **{"aria-hidden": "true"}) }}
                         {% for error in form.theme.errors %}
-                            <div class="invalid-feedback">{{ error }}</div>
+                            <div class="invalid-feedback d-block">{{ error }}</div>
                         {% endfor %}
                         <div class="theme-swatch-grid" id="themeSwatchGrid" role="group" aria-label="Theme previews">
                             {% for value, label in form.theme.choices %}
@@ -50,11 +50,11 @@
                         </div>
                         <p class="form-text text-muted small mb-0">Color theme (surfaces &amp; accent). Independent of icon pack.</p>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 gt-picker-field">
                         {{ form.icon_pack.label(class="form-label") }}
-                        {{ form.icon_pack(class="form-select", id="iconPackSelect") }}
+                        {{ form.icon_pack(class="form-select visually-hidden", id="iconPackSelect", tabindex="-1", **{"aria-hidden": "true"}) }}
                         {% for error in form.icon_pack.errors %}
-                            <div class="invalid-feedback">{{ error }}</div>
+                            <div class="invalid-feedback d-block">{{ error }}</div>
                         {% endfor %}
                         <div class="icon-pack-preview" id="iconPackPreview" role="group" aria-label="Icon pack preview">
                             {% for value, label in form.icon_pack.choices %}

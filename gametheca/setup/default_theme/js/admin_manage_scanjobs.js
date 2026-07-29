@@ -13,6 +13,57 @@ function hideSpinner() {
     document.getElementById('globalSpinner').style.display = 'none';
 }
 
+function escapeHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Lightweight toast, independent from showSuccessNotification so it can be
+// used for both success and informational best-effort messages.
+function showToast(message, variant) {
+    const existing = document.querySelector('.success-notification');
+    if (existing) existing.remove();
+
+    const notification = document.createElement('div');
+    notification.className = 'success-notification';
+    if (variant === 'info') {
+        notification.style.background = 'color-mix(in srgb, var(--gt-info, var(--btn-info)) 95%, transparent)';
+    }
+    notification.innerHTML = `${variant === 'info' ? 'ℹ' : '✓'} <span>${escapeHtml(message)}</span>`;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.classList.add('show'), 10);
+    setTimeout(() => {
+        notification.classList.add('hide');
+        setTimeout(() => notification.remove(), 300);
+    }, 3500);
+}
+
+async function copyPathToClipboard(path) {
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(path);
+        } else {
+            const textarea = document.createElement('textarea');
+            textarea.value = path;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+        return true;
+    } catch (error) {
+        console.error('Copy to clipboard failed:', error);
+        return false;
+    }
+}
+
 function attachDeleteFolderFormListeners() {
     document.querySelectorAll('.delete-folder-form').forEach(form => {
         if (!form.dataset.listenerAdded) {
@@ -318,7 +369,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 unmatchedTableBody.innerHTML = '';
                 
                 data.forEach(folder => {
+                    const escapedPath = escapeHtml(folder.folder_path);
                     const actionsColumn = `
+                        <div class="unmatched-row-actions">
                         <button 
                             onclick="window.toggleIgnoreStatus('${folder.id}', this)" 
                             class="btn ${folder.status === 'Ignore' ? 'btn-warning' : 'btn-secondary'} btn-sm"
@@ -327,17 +380,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button onclick="clearEntry('${folder.id}')" class="btn btn-info btn-sm" title="Remove from unmatched list">Clear</button>
                         <form class="delete-folder-form" style="display: inline;">
                             <input type="hidden" name="csrf_token" value="${csrfToken}">
-                            <input type="hidden" name="folder_path" value="${folder.folder_path}">
+                            <input type="hidden" name="folder_path" value="${escapedPath}">
                             <button type="submit" class="btn btn-danger btn-sm" title="Delete the folder from disk">Delete</button>
                         </form>
                         <form action="/add_game_manual" method="GET" style="display: inline;">
-                            <input type="hidden" name="full_disk_path" value="${folder.folder_path}">
-                            <input type="hidden" name="library_uuid" value="${folder.library_uuid}">
-                            <input type="hidden" name="platform_name" value="${folder.platform_name}">
-                            <input type="hidden" name="platform_id" value="${folder.platform_id}">
+                            <input type="hidden" name="full_disk_path" value="${escapedPath}">
+                            <input type="hidden" name="library_uuid" value="${escapeHtml(folder.library_uuid)}">
+                            <input type="hidden" name="platform_name" value="${escapeHtml(folder.platform_name)}">
+                            <input type="hidden" name="platform_id" value="${escapeHtml(folder.platform_id)}">
                             <input type="hidden" name="from_unmatched" value="true">
-                            <button type="submit" class="btn btn-primary btn-sm" title="Attempt manual IGDB search">Search</button>
+                            <button type="submit" class="btn btn-primary btn-sm" title="Fix search: opens manual add with a cleaned game name prefilled">Fix search</button>
                         </form>
+                        <button type="button" class="btn btn-outline-light btn-sm copy-path-btn" data-path="${escapedPath}" title="Copy folder path to clipboard">Copy path</button>
+                        <button type="button" class="btn btn-outline-light btn-sm reveal-path-btn" data-path="${escapedPath}" title="Best-effort: browse this path in Auto Scan, or copy it for the host file manager">Open / reveal</button>
+                        </div>
                     `;
                     
                     const row = document.createElement('tr');
@@ -346,10 +402,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     row.setAttribute('data-library-name', folder.library_name.toLowerCase());
                     row.setAttribute('data-platform-name', folder.platform_name.toLowerCase());
                     row.innerHTML = `
-                        <td>📁 ${folder.folder_path}</td>
+                        <td>📁 ${escapedPath}</td>
                         <td><span class="status-${folder.status.toLowerCase()}" title="${folder.status === 'Duplicate' ? 'Another library game already uses this IGDB match and the folder title looks like the same game' : (folder.status === 'Unmatched' ? 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder)' : '')}">${folder.status === 'Duplicate' ? 'Duplicate (same title)' : folder.status}</span></td>
-                        <td>${folder.library_name}</td>
-                        <td>${folder.platform_name}</td>
+                        <td>${escapeHtml(folder.library_name)}</td>
+                        <td>${escapeHtml(folder.platform_name)}</td>
                         <td>${actionsColumn}</td>
                     `;
                     unmatchedTableBody.appendChild(row);
@@ -367,6 +423,56 @@ document.addEventListener('DOMContentLoaded', function() {
                 hideSpinner();
             });
     };
+
+    // Copy path / reveal path — event delegation so re-rendered rows stay wired
+    // without re-escaping paths back into inline onclick strings (XSS-safe).
+    if (unmatchedTableBody && !unmatchedTableBody.dataset.actionsWired) {
+        unmatchedTableBody.addEventListener('click', function(event) {
+            const copyBtn = event.target.closest('.copy-path-btn');
+            if (copyBtn) {
+                const path = copyBtn.dataset.path || '';
+                copyPathToClipboard(path).then(ok => {
+                    showToast(ok ? 'Path copied to clipboard' : 'Could not copy path', ok ? 'success' : 'info');
+                });
+                return;
+            }
+
+            const revealBtn = event.target.closest('.reveal-path-btn');
+            if (revealBtn) {
+                revealPath(revealBtn.dataset.path || '');
+            }
+        });
+        unmatchedTableBody.dataset.actionsWired = 'true';
+    }
+
+    // Best-effort "open / reveal": the browser can't open paths on the Unraid
+    // host directly, so first try to deep-link the Auto Scan folder browser to
+    // the folder; fall back to copy-to-clipboard + toast when that's not possible.
+    function revealPath(path) {
+        if (!path) return;
+
+        fetch(`/api/browse_folders_ss?abs_path=${encodeURIComponent(path)}`, { cache: 'no-store' })
+            .then(response => response.ok ? response.json() : Promise.reject(response.status))
+            .then(data => {
+                if (data.outside_base || data.resolved_path === null || data.resolved_path === undefined) {
+                    return copyPathToClipboard(path).then(() => {
+                        showToast('Path copied — open in file manager on the host', 'info');
+                    });
+                }
+
+                new bootstrap.Tab(document.querySelector('#autoScan-tab')).show();
+                const resolvedPath = data.resolved_path;
+                window.currentPathAuto = resolvedPath;
+                $('#folder_path').val(resolvedPath);
+                fetchFolders(resolvedPath, '#folderContents', '#loadingSpinner', '#upFolderBtn', '#folder_path', 'currentPathAuto');
+                showToast('Opened folder in Auto Scan browser', 'success');
+            })
+            .catch(() => {
+                copyPathToClipboard(path).then(() => {
+                    showToast('Path copied — open in file manager on the host', 'info');
+                });
+            });
+    }
 
     // Filtering functionality
     let currentFilter = 'all';
@@ -457,6 +563,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Keep the Export CSV/JSON links in sync with whichever status filter is
+    // active, so a download reflects the tab the admin is currently looking at.
+    function updateExportLinks() {
+        ['exportUnmatchedCsvBtn', 'exportUnmatchedJsonBtn'].forEach(id => {
+            const link = document.getElementById(id);
+            if (!link) return;
+            const url = new URL(link.href, window.location.origin);
+            url.searchParams.set('status', currentFilter === 'all' ? 'all' : currentFilter);
+            link.href = url.toString();
+        });
+    }
+
     function setupUnmatchedFilters() {
         // Filter button event listeners
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -472,6 +590,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Apply filtering
                 filterUnmatchedRows();
+                updateExportLinks();
             });
         });
 
@@ -542,6 +661,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Set up filter controls
     setupUnmatchedFilters();
+    updateExportLinks();
 
     // Run immediately on load
     updateScanJobs();

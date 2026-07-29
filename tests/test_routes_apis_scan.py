@@ -678,6 +678,108 @@ class TestUnmatchedFolders:
         assert folder['platform_id'] == 11  # Known value from PLATFORM_IDS
 
 
+class TestExportUnmatchedFolders:
+    """Tests for the export_unmatched_folders endpoint."""
+
+    def test_export_requires_login(self, client):
+        """Test that the export endpoint requires login."""
+        response = client.get('/api/unmatched_folders/export')
+        assert response.status_code == 302
+        assert 'login' in response.location
+
+    def test_export_requires_admin(self, client, regular_user):
+        """Test that the export endpoint requires admin privileges."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(regular_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/api/unmatched_folders/export')
+        assert response.status_code == 302
+
+    def test_export_csv_default(self, client, admin_user, sample_unmatched_folder):
+        """Test CSV export (default format) includes the unmatched folder."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/api/unmatched_folders/export')
+        assert response.status_code == 200
+        assert 'text/csv' in response.content_type
+        assert 'attachment' in response.headers.get('Content-Disposition', '')
+
+        body = response.get_data(as_text=True)
+        assert 'folder_path' in body  # header row
+        assert '/test/unmatched/folder' in body
+
+    def test_export_json_format(self, client, admin_user, sample_unmatched_folder):
+        """Test JSON export returns the unmatched folder as a list of dicts."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/api/unmatched_folders/export?format=json')
+        assert response.status_code == 200
+        assert 'attachment' in response.headers.get('Content-Disposition', '')
+
+        data = response.get_json()
+        assert isinstance(data, list)
+        assert len(data) == 1
+        assert data[0]['folder_path'] == '/test/unmatched/folder'
+        assert data[0]['status'] == 'Unmatched'
+
+    def test_export_filters_by_status(self, client, admin_user, db_session, sample_library, sample_scan_job):
+        """Test that the status filter only returns matching rows."""
+        for i, status in enumerate(['Unmatched', 'Duplicate', 'Ignore']):
+            db_session.add(UnmatchedFolder(
+                library_uuid=sample_library.uuid,
+                scan_job_id=sample_scan_job.id,
+                folder_path=f'/test/export/{i}',
+                status=status,
+                content_type='Games'
+            ))
+        db_session.commit()
+
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/api/unmatched_folders/export?status=Duplicate&format=json')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert len(data) == 1
+        assert data[0]['status'] == 'Duplicate'
+
+    def test_export_invalid_status_rejected(self, client, admin_user):
+        """Test that an invalid status value returns a 400 error."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/api/unmatched_folders/export?status=NotARealStatus')
+        assert response.status_code == 400
+        assert 'error' in response.get_json()
+
+    def test_export_invalid_format_rejected(self, client, admin_user):
+        """Test that an invalid format value returns a 400 error."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/api/unmatched_folders/export?format=xml')
+        assert response.status_code == 400
+        assert 'error' in response.get_json()
+
+    def test_export_empty_result(self, client, admin_user):
+        """Test exporting with no unmatched folders returns an empty payload."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/api/unmatched_folders/export?format=json')
+        assert response.status_code == 200
+        assert response.get_json() == []
+
+
 class TestScanApiBlueprint:
     """Test blueprint registration and URL patterns."""
     

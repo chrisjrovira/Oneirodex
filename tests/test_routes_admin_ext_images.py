@@ -372,7 +372,7 @@ class TestDownloadImagesAPI:
             
             mock_app.config = {'IMAGE_SAVE_PATH': '/test/path'}
             mock_join.return_value = '/test/path/cover.jpg'
-            mock_download.return_value = True
+            mock_download.return_value = (True, None)
             
             response = client.post('/admin/api/download_images', 
                                  json={'image_ids': [pending_image.id]})

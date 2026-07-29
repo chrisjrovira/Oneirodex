@@ -9,7 +9,7 @@
     backdrop-filter: var(--backdrop-blur);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-xl);
-    max-width: 1200px;
+    max-width: 1600px;
     box-shadow: var(--shadow-glass-strong);
     margin-bottom: var(--spacing-lg);
     border: 1px solid var(--border-light);
@@ -19,7 +19,7 @@
 .smtp-settings-container,
 .admin-container,
 .settings-container {
-    max-width: 800px;
+    max-width: 1100px;
     margin: var(--spacing-rem-xl) auto;
     padding: var(--spacing-rem-xl);
     background: var(--container-dark-primary);

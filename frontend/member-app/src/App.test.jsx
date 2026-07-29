@@ -38,7 +38,8 @@ test('renders library route', () => {
     </MemoryRouter>,
   )
   expect(screen.getByText('LibraryPage')).toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'Library' })).toBeInTheDocument()
+  // TopNav already labels the Library route — no redundant page H1 here.
+  expect(screen.queryByRole('heading', { name: 'Library' })).not.toBeInTheDocument()
 })
 
 test('applies tile size CSS vars from shellConfig', () => {

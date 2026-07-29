@@ -92,9 +92,6 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
   if (error && !platforms) {
     return (
       <div className="gt-more-page gt-systems-page">
-        <div className="gt-page-header">
-          <h1>Systems</h1>
-        </div>
         <div role="alert">
           <p>Unable to load systems.</p>
           <button type="button" className="gt-btn" onClick={() => setRetryCount((n) => n + 1)}>
@@ -108,9 +105,6 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
   if (platforms === null) {
     return (
       <div className="gt-more-page gt-systems-page">
-        <div className="gt-page-header">
-          <h1>Systems</h1>
-        </div>
         <p className="gt-more-page__lede">Loading systems…</p>
       </div>
     )
@@ -119,9 +113,6 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
   if (platforms.length === 0) {
     return (
       <div className="gt-more-page gt-systems-page">
-        <div className="gt-page-header">
-          <h1>Systems</h1>
-        </div>
         <p className="gt-more-page__lede">
           No library platforms yet. Add a library with a console or PC platform to see it here.
         </p>
@@ -134,9 +125,6 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
 
   return (
     <div className="gt-more-page gt-systems-page">
-      <div className="gt-page-header">
-        <h1>Systems</h1>
-      </div>
       <p className="gt-more-page__lede">
         Browse your library by console or PC. Open a system to filter the grid and apply that era&apos;s chrome.
         Export packs for external frontends:{' '}

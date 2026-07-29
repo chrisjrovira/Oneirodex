@@ -4,7 +4,7 @@
    that have not opted in. Colours come from the --gt-* tokens only. */
 
 .gt-adminpage {
-    --gt-adminpage-max: 960px;
+    --gt-adminpage-max: 1400px;
     --gt-adminpage-radius: 14px;
     --gt-adminpage-radius-sm: 8px;
     --gt-adminpage-pad: clamp(1rem, 2.2vw, 1.75rem);
@@ -45,7 +45,7 @@
 }
 
 .gt-adminpage--xl {
-    --gt-adminpage-max: 1240px;
+    --gt-adminpage-max: 1600px;
 }
 
 /* ---------------------------------------------------------------- header */
@@ -70,22 +70,44 @@
     flex: 0 0 auto;
 }
 
+/* Demoted: the admin top nav already names the active section (active link
+   + "<Section> home" button), so this in-page title is redundant next to
+   it. Kept as a real heading for a11y/landmarks, styled as a compact
+   eyebrow label instead of a second hero-sized title. */
 .gt-adminpage-header h1,
 .gt-adminpage-header h2,
 .gt-adminpage-title {
     margin: 0 0 0.35rem;
-    color: var(--gt-text);
-    font-family: var(--font-display);
-    font-size: clamp(1.5rem, 3vw, 2rem);
+    color: var(--gt-text-muted);
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
     font-weight: 700;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .gt-adminpage-header h1 i,
 .gt-adminpage-header h2 i,
 .gt-adminpage-title i {
-    margin-right: 0.5rem;
+    margin-right: 0.4rem;
     color: var(--gt-accent);
+    font-size: 1rem;
+}
+
+/* A few legacy pages (Integrations) put their page title in a plain
+   `.card` at the top of `.gt-adminpage` instead of the `.gt-adminpage-title`
+   shell — demote that first heading too so it doesn't duplicate the active
+   top-nav section label. Scoped tightly (direct child + first-child) so it
+   never touches headings inside nested/secondary cards. */
+.gt-adminpage > .card > h1:first-child,
+.gt-adminpage > .card > h2:first-child {
+    margin: 0 0 0.35rem;
+    color: var(--gt-text-muted);
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .gt-adminpage-lede,

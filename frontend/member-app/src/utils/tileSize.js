@@ -13,20 +13,31 @@ export const TILE_PERCENT_DEFAULT = 50
 const MIN_PX = 120
 const MAX_PX = 300
 
+/** Round to 2 decimal places without leaving trailing-zero float noise. */
+function roundFine(value) {
+  return Math.round(value * 100) / 100
+}
+
+/**
+ * Continuous 0–100 percent, fractions preserved.
+ * Only whole-number rounding happens where it's actually needed (persisted
+ * preference / display label) so a `step="any"` slider can feel smooth
+ * instead of visibly snapping between integer percents while dragging.
+ */
 export function normalizeTilePercent(value) {
   if (value == null || value === '') return TILE_PERCENT_DEFAULT
   if (typeof value === 'string' && LEGACY_MAP[value.toUpperCase()] != null) {
     return LEGACY_MAP[value.toUpperCase()]
   }
-  const n = typeof value === 'number' ? value : Number.parseInt(String(value), 10)
+  const n = typeof value === 'number' ? value : Number.parseFloat(String(value))
   if (!Number.isFinite(n)) return TILE_PERCENT_DEFAULT
-  return Math.min(TILE_PERCENT_MAX, Math.max(TILE_PERCENT_MIN, Math.round(n)))
+  return roundFine(Math.min(TILE_PERCENT_MAX, Math.max(TILE_PERCENT_MIN, n)))
 }
 
 export function tilePercentToCssVars(percent) {
   const p = normalizeTilePercent(percent) / 100
-  const minPx = Math.round(MIN_PX + (MAX_PX - MIN_PX) * p)
-  const gapPx = Math.round(6 + 10 * p)
+  const minPx = roundFine(MIN_PX + (MAX_PX - MIN_PX) * p)
+  const gapPx = roundFine(6 + 10 * p)
   return {
     '--gt-tile-min': `${minPx}px`,
     '--gt-tile-gap': `${gapPx}px`,

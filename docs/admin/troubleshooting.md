@@ -10,7 +10,7 @@ See [container-wont-start.md](../runbooks/container-wont-start.md) for SECRET_KE
 | Liveness only | `curl -f http://localhost:5006/healthz` — process up; does not prove DB |
 | Sidecars / queues look wrong | **Admin → Ops** (or Dashboard) observability console — status + `issues.items` · load/RSS/db_ping/readyz · LiveKit · malware · companions by kind · queues · game servers; then `/readyz` — field map: [ops-summary.md](ops-summary.md) |
 | Ops tiles show **n/a** for load / RSS / db_ping | Expected when OS denies load averages (Windows), psutil unavailable, or DB unreachable — not a broken UI |
-| Ops flags `DATA_FOLDER_GAMES not writable` | Expected on Unraid `:ro` games mount only on **older** builds — current Ops treats games as read-OK; rebuild/restart app if still bad. `UPLOAD_FOLDER` / library must stay RW |
+| Ops flags `DATA_FOLDER_GAMES` / `BASE_FOLDER_POSIX` / `BASE_FOLDER_WINDOWS` `not writable` | Expected on Unraid `:ro` games mount (and its base folder) only on **older** builds — current Ops treats games + base folder as read-OK; rebuild/restart app if still bad. `UPLOAD_FOLDER` / library must stay RW |
 | Scan progress looks stalled / want live counters | **Admin → Ops** **Scans** tile (polls `/admin/api/ops/summary` ~15s) shows processed (`success+failed`) / `total`, plus failed count, `current_processing`, status — [ops-summary.md](ops-summary.md#scans-key) · Scan Jobs page for Stop/detail |
 | Schema errors | Startup `updateschema` · [local-postgres-pytest.md](../runbooks/local-postgres-pytest.md) for local tests |
 | App loops waiting for DB: `no pg_hba … no encryption` | Postgres rejects non-SSL from Docker bridge — [container-wont-start §3b](../runbooks/container-wont-start.md#3b-postgres-up-but-pg_hba-rejects-app-no-encryption); recreate `db` with current Compose `pg_hba` mount |
@@ -83,5 +83,7 @@ Expected if `SUPPORT_GITHUB_TOKEN` unset (`github_sync=skipped`). Ticket + admin
 | Progress stuck at 1 while library keeps growing | Fixed: multithreaded counter races + Stop early-exit. Redeploy app; counters use atomic bumps and Stop drains in-flight work. |
 | Stop button looks empty / Cancelled shows `-` | Fixed: Stopping shows “Stopping…”; Cancelled shows `Stopped N/total`. Hard-refresh scan management after upgrade. |
 | Stuck jobs / unmatched / freshness | [libraries-and-scans.md](libraries-and-scans.md) |
+| Images stuck "Pending" forever, or covers missing after scan/identify despite `IMAGE_SAVE_PATH` being writable | Fixed: the eager cover/screenshot download run during scan/identify was discarding its result (and, for covers, downloading twice) instead of recording success/failure. Every download path now sets `is_downloaded`/`last_error` on the `Image` row — check Admin → Scan management → **Image Queue**, filter **Failed Only**, hover the red badge for the reason, then **Retry failed**. |
+| Art studio generate/apply returns a blank error or "Unexpected error" | Check the JSON `error` message in the red banner — disk permission/space problems on `IMAGE_SAVE_PATH` or the generated-pack folder are now returned as text instead of a bare 500 page. |
 
 Deep ops still use Jinja admin pages behind the React top bar.

@@ -499,14 +499,54 @@ class TestDownloadFunctions:
     def test_process_and_save_image_success(self, mock_download, mock_api, app, sample_game, sample_global_settings):
         """Test successful image processing and saving."""
         mock_api.return_value = [{'url': '//images.igdb.com/igdb/image/upload/t_thumb/test.jpg'}]
-        mock_download.return_value = None
+        mock_download.return_value = (True, None)
         
         with app.app_context():
             process_and_save_image(sample_game.uuid, 12345, 'cover')
         
-        # Should call API and download - process_and_save_image may call download twice due to cover processing
+        # Should call API and download exactly once (previously this double-downloaded for covers)
         mock_api.assert_called_once()
-        assert mock_download.call_count >= 1
+        assert mock_download.call_count == 1
+
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.download_image')
+    def test_process_and_save_image_records_success_state(self, mock_download, mock_api, app, db_session, sample_game, sample_global_settings):
+        """The saved Image row should reflect a successful download: is_downloaded True,
+        no last_error, and a download_url so a future retry has something to work with."""
+        mock_api.return_value = [{'url': '//images.igdb.com/igdb/image/upload/t_thumb/test.jpg'}]
+        mock_download.return_value = (True, None)
+
+        with app.app_context():
+            process_and_save_image(sample_game.uuid, 54321, 'cover')
+            db_session.commit()
+
+            image = db_session.execute(
+                __import__('sqlalchemy').select(Image).filter_by(game_uuid=sample_game.uuid, image_type='cover')
+            ).scalars().first()
+            assert image is not None
+            assert image.is_downloaded is True
+            assert image.last_error is None
+            assert image.download_url
+
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
+    @patch('gametheca.utils.game_core.download_image')
+    def test_process_and_save_image_records_failure_state(self, mock_download, mock_api, app, db_session, sample_game, sample_global_settings):
+        """A failed download must not be silently marked downloaded — the row should
+        carry is_downloaded=False and a human-readable last_error for the admin UI."""
+        mock_api.return_value = [{'url': '//images.igdb.com/igdb/image/upload/t_thumb/test.jpg'}]
+        mock_download.return_value = (False, 'Directory is not writable by the GameTheca process.')
+
+        with app.app_context():
+            process_and_save_image(sample_game.uuid, 99999, 'cover')
+            db_session.commit()
+
+            image = db_session.execute(
+                __import__('sqlalchemy').select(Image).filter_by(game_uuid=sample_game.uuid, image_type='cover')
+            ).scalars().first()
+            assert image is not None
+            assert image.is_downloaded is False
+            assert image.last_error == 'Directory is not writable by the GameTheca process.'
+            assert image.download_url
     
     @patch('gametheca.utils.game_core.make_igdb_api_request')
     def test_process_and_save_image_api_failure(self, mock_api, app, sample_game, sample_global_settings):

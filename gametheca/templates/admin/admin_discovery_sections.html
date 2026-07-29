@@ -19,26 +19,55 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header gt-adminpage-panel-header">
                     <h2>{{ icons.icon('compass', size=22) }} Discovery Sections Management</h2>
+                    <button class="btn btn-primary btn-sm" type="button" id="add-zone-btn">
+                        {{ icons.icon('plus') }} Add Zone
+                    </button>
                 </div>
                 <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Drag to reorder, toggle visibility, or add a custom zone below (a manual game
+                        pick list, or a library / platform / genre filter). Built-in shelves can be
+                        reordered and hidden but not deleted.
+                    </p>
                     <div id="discovery-sections-list" class="sections-list">
                         {% for section in sections %}
-                        <div class="section-item" data-section-id="{{ section.id }}">
+                        <div class="section-item"
+                             data-section-id="{{ section.id }}"
+                             data-section-type="{{ section.section_type }}"
+                             data-section-name="{{ section.name }}"
+                             {% if section.section_type == 'custom' %}
+                             data-section-config='{{ (section.config or {})|tojson }}'
+                             {% endif %}>
                             <div class="section-content">
                                 <div class="drag-handle-container">
                                 {{ icons.icon('grip', extra_class='drag-handle') }}
                                 </div>
                                 <span class="section-name">{{ section.name }}</span>
-                                <span class="section-count">
-                                    {% if section_counts[section.identifier] > 0 %}
-                                        ({{ section_counts[section.identifier] }} items)
-                                    {% else %}
-                                        (empty)
-                                    {% endif %}
-                                </span>
+                                {% if section.section_type == 'custom' %}
+                                    <span class="section-badge section-badge--custom">Custom</span>
+                                    <span class="section-count">{{ zone_descriptions.get(section.id, 'Custom zone') }}</span>
+                                {% else %}
+                                    <span class="section-count">
+                                        {% if section_counts[section.identifier] > 0 %}
+                                            ({{ section_counts[section.identifier] }} items)
+                                        {% else %}
+                                            (empty)
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
                                 <div class="section-controls">
+                                    {% if section.section_type == 'custom' %}
+                                    <button type="button" class="btn btn-sm btn-outline-secondary zone-edit-btn"
+                                            data-section-id="{{ section.id }}" title="Edit zone">
+                                        {{ icons.icon('edit', title='Edit') }}
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger zone-delete-btn"
+                                            data-section-id="{{ section.id }}" title="Delete zone">
+                                        {{ icons.icon('trash', title='Delete') }}
+                                    </button>
+                                    {% endif %}
                                     <div class="form-check form-switch">
                                         <input type="checkbox" 
                                                class="form-check-input section-visibility-toggle" 
@@ -55,6 +84,71 @@
                         {% endfor %}
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit custom zone modal -->
+<div class="modal fade" id="zoneModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="zoneModalTitle">Add Discovery Zone</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="zoneId">
+                <div class="mb-3">
+                    <label class="form-label" for="zoneName">Zone name</label>
+                    <input type="text" class="form-control" id="zoneName" maxlength="50" placeholder="e.g. Staff Picks">
+                </div>
+
+                <div class="mb-3 zone-mode-toggle" role="group" aria-label="Zone selection mode">
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="zoneMode" id="zoneModeManual" value="manual" checked>
+                        <label class="btn btn-outline-secondary" for="zoneModeManual">Manual game list</label>
+                        <input type="radio" class="btn-check" name="zoneMode" id="zoneModeFilter" value="filter">
+                        <label class="btn btn-outline-secondary" for="zoneModeFilter">Filter</label>
+                    </div>
+                </div>
+
+                <div class="mb-3" id="zoneManualFields">
+                    <label class="form-label" for="zoneGameUuids">Game UUIDs</label>
+                    <textarea class="form-control" id="zoneGameUuids" rows="5"
+                              placeholder="One game UUID per line (or comma-separated). Find UUIDs on each game's admin details page."></textarea>
+                    <div class="form-text">Up to 60 games; shown in the order listed here.</div>
+                </div>
+
+                <div class="mb-3 d-none" id="zoneFilterFields">
+                    <label class="form-label" for="zoneFilterType">Filter by</label>
+                    <select class="form-select mb-2" id="zoneFilterType">
+                        <option value="library">Library</option>
+                        <option value="platform">Platform</option>
+                        <option value="genre">Genre</option>
+                    </select>
+
+                    <select class="form-select" id="zoneFilterValueLibrary">
+                        {% for lib in libraries %}
+                        <option value="{{ lib.uuid }}">{{ lib.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="form-select d-none" id="zoneFilterValuePlatform">
+                        {% for p in platforms %}
+                        <option value="{{ p.name }}">{{ p.value }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="form-select d-none" id="zoneFilterValueGenre">
+                        {% for g in genres %}
+                        <option value="{{ g.name }}">{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="alert alert-danger d-none" id="zoneModalError"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="zoneSaveBtn">Save zone</button>
             </div>
         </div>
     </div>

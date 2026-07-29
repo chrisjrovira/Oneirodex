@@ -3,13 +3,14 @@ from flask import render_template, redirect, url_for, flash, copy_current_reques
 from flask_login import login_required, current_user
 from gametheca.forms import AddGameForm
 from gametheca.models import Game, Library, UnmatchedFolder, Category, Developer, Publisher
-from gametheca.utils.functions import read_first_nfo_content, PLATFORM_IDS
+from gametheca.utils.functions import read_first_nfo_content, PLATFORM_IDS, load_scanning_filter_patterns
 from gametheca.utils.auth import admin_required
 from gametheca.utils.scanning import refresh_images_in_background
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories, sanitize_path_for_logging
 from gametheca.utils.functions import sanitize_string_input
 from gametheca.utils.game_core import check_existing_game_by_igdb_id
+from gametheca.utils.gamenames import clean_game_name
 from gametheca import db
 from threading import Thread
 from sqlalchemy.exc import SQLAlchemyError
@@ -26,7 +27,23 @@ def add_game_manual():
     full_disk_path = request.args.get('full_disk_path', None)
     library_uuid = request.args.get('library_uuid') or session.get('selected_library_uuid')
     from_unmatched = request.args.get('from_unmatched', 'false') == 'true'  # Detect origin
-    game_name = os.path.basename(full_disk_path) if full_disk_path else ''
+    raw_folder_name = os.path.basename(full_disk_path.rstrip('/\\')) if full_disk_path else ''
+    # "Fix search": prefill the identify workbench with a scanner-cleaned title
+    # (release-group tags / dots / underscores stripped) instead of the raw
+    # folder name, so IGDB search actually finds a match on the first try.
+    game_name = raw_folder_name
+    if raw_folder_name:
+        try:
+            insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
+            cleaned_name = clean_game_name(raw_folder_name, insensitive_patterns, sensitive_patterns)
+            if cleaned_name:
+                game_name = cleaned_name
+        except Exception as exc:
+            log_system_event(
+                f"Failed to clean folder name for identify search prefill: {exc}",
+                event_type='form',
+                event_level='warning'
+            )
 
     form = AddGameForm()
 

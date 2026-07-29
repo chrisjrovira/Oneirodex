@@ -51,26 +51,30 @@ export function TileSizeControl({
 
     window.clearTimeout(saveTimerRef.current)
     saveTimerRef.current = window.setTimeout(() => {
-      void persist(normalized)
+      // Persist a clean whole percent — the fractional value only matters
+      // for the smooth in-flight drag feel, not for the saved preference.
+      void persist(Math.round(normalized))
     }, PREF_SAVE_DEBOUNCE_MS)
   }
+
+  const displayPercent = Math.round(percent)
 
   return (
     <div className="gt-tile-size" role="group" aria-label="Library tile size">
       <span className="gt-tile-size__label" aria-hidden="true">
-        {percent}%
+        {displayPercent}%
       </span>
       <input
         type="range"
         className="gt-tile-size__slider"
         min={TILE_PERCENT_MIN}
         max={TILE_PERCENT_MAX}
-        step={1}
+        step="any"
         value={percent}
         aria-valuemin={TILE_PERCENT_MIN}
         aria-valuemax={TILE_PERCENT_MAX}
-        aria-valuenow={percent}
-        aria-valuetext={`${percent} percent`}
+        aria-valuenow={displayPercent}
+        aria-valuetext={`${displayPercent} percent`}
         aria-label="Library tile size percent"
         onChange={(event) => handleChange(Number(event.target.value))}
       />

@@ -367,7 +367,17 @@ def apply_pack_to_game(
         is_downloaded=True,
     )
     db.session.add(image)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        # The file already landed on disk; remove it so we don't leak an
+        # orphaned image with no matching database row.
+        try:
+            dest_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
     return {
         'game_uuid': game_uuid,
         'pack_id': pack_id,

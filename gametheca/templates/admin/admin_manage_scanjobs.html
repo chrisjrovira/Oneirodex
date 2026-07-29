@@ -370,6 +370,14 @@
                             <button type="submit" class="admin_manage_scanjobs-clearunmatched-btn btn btn-warning" data-toggle="tooltip" title="Remove only folders with 'Unmatched' status, keeping identified items" onclick="return confirm('Are you sure you want to clear all unmatched folders? This cannot be undone.');">Clear Unmatched</button>
                             <button type="button" id="reclassifyDuplicatesBtn" class="btn btn-secondary" data-toggle="tooltip" title="Change false Duplicate rows (different folder titles, same IGDB) back to Unmatched">Fix false duplicates</button>
                         </form>
+                        <div class="btn-group" role="group" aria-label="Export unmatched folders">
+                            <a id="exportUnmatchedCsvBtn" class="btn btn-outline-light btn-sm" href="{{ url_for('apis.export_unmatched_folders', status='all', format='csv') }}" data-toggle="tooltip" title="Download the current filter as CSV">
+                                {{ icons.icon('download') }} Export CSV
+                            </a>
+                            <a id="exportUnmatchedJsonBtn" class="btn btn-outline-light btn-sm" href="{{ url_for('apis.export_unmatched_folders', status='all', format='json') }}" data-toggle="tooltip" title="Download the current filter as JSON">
+                                {{ icons.icon('download') }} Export JSON
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Filter Controls -->
@@ -554,8 +562,8 @@
 
                     <!-- Controls -->
                     <div class="row mb-3">
-                        <div class="col-md-6">
-                            <div class="btn-group">
+                        <div class="col-md-7">
+                            <div class="btn-group flex-wrap">
                                 <button class="btn btn-success" onclick="downloadBatch(10)">
                                     {{ icons.icon('download') }} Download 10
                                 </button>
@@ -565,16 +573,20 @@
                                 <button class="btn btn-primary" onclick="downloadBatch(100)">
                                     {{ icons.icon('download') }} Download 100
                                 </button>
+                                <button id="retryFailedBtn" class="btn btn-warning" onclick="retryFailed()" title="Retry every image the queue could not download">
+                                    {{ icons.icon('refresh') }} Retry failed
+                                </button>
                                 <button class="btn btn-secondary" onclick="refreshQueue()">
                                     {{ icons.icon('refresh') }} Refresh
                                 </button>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="d-flex gap-2">
+                        <div class="col-md-5">
+                            <div class="d-flex gap-2 flex-wrap justify-content-md-end">
                                 <select id="status-filter" class="form-select" onchange="applyFilters()">
                                     <option value="all">All Images</option>
                                     <option value="pending">Pending Only</option>
+                                    <option value="failed">Failed Only</option>
                                     <option value="downloaded">Downloaded Only</option>
                                 </select>
                                 <select id="type-filter" class="form-select" onchange="applyFilters()">
@@ -582,6 +594,10 @@
                                     <option value="cover">Covers</option>
                                     <option value="screenshot">Screenshots</option>
                                 </select>
+                                <div class="form-check form-switch align-self-center ms-1" style="white-space: nowrap;">
+                                    <input class="form-check-input" type="checkbox" id="group-by-game" onchange="applyFilters()">
+                                    <label class="form-check-label" for="group-by-game">Group by game</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -591,9 +607,10 @@
 
                     <!-- Image Queue Table -->
                     <div class="table-responsive">
-                        <table class="table table-dark table-striped">
+                        <table class="table table-dark table-striped align-middle">
                             <thead>
                                 <tr>
+                                    <th>Preview</th>
                                     <th>Game</th>
                                     <th>Type</th>
                                     <th>Status</th>
@@ -604,7 +621,7 @@
                             </thead>
                             <tbody id="image-table-body">
                                 <tr>
-                                    <td colspan="6" class="text-center">
+                                    <td colspan="7" class="text-center">
                                         <span class="gt-spinner" aria-hidden="true"></span> Loading...
                                     </td>
                                 </tr>
@@ -810,6 +827,15 @@
     // Image Queue functionality
     let currentPage = 1;
 
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     // Initialize image queue when tab is shown
     document.addEventListener('DOMContentLoaded', function() {
         // Load image queue only when the tab is active
@@ -830,10 +856,13 @@
     async function loadImageQueue() {
         const statusFilter = document.getElementById('status-filter')?.value || 'all';
         const typeFilter = document.getElementById('type-filter')?.value || 'all';
+        const groupByGame = document.getElementById('group-by-game')?.checked || false;
+        // Grouping needs the whole filtered set in view, not just one page.
+        const perPage = groupByGame ? 500 : 50;
 
         const params = new URLSearchParams({
-            page: currentPage,
-            per_page: 50,
+            page: groupByGame ? 1 : currentPage,
+            per_page: perPage,
             status: statusFilter,
             type: typeFilter
         });
@@ -841,7 +870,7 @@
         try {
             const tableBody = document.getElementById('image-table-body');
             if (tableBody) {
-                tableBody.innerHTML = '<tr><td colspan="6" class="text-center"><span class="gt-spinner" aria-hidden="true"></span> Loading...</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="gt-spinner" aria-hidden="true"></span> Loading...</td></tr>';
             }
 
             const response = await fetch(`/admin/api/image_queue_list?${params}`);
@@ -852,63 +881,140 @@
                 return;
             }
 
-            renderImageTable(data.images);
-            renderPagination(data.pagination);
+            if (groupByGame) {
+                renderImageTableGrouped(data.images);
+                const paginationNav = document.getElementById('pagination-nav');
+                if (paginationNav) paginationNav.style.display = 'none';
+            } else {
+                renderImageTable(data.images);
+                renderPagination(data.pagination);
+            }
 
         } catch (error) {
             console.error('Error loading image queue:', error);
             showMessage('Error loading image queue', 'danger');
             const tableBody = document.getElementById('image-table-body');
             if (tableBody) {
-                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error loading data</td></tr>';
             }
         }
     }
 
-    // Render image table
+    function statusBadgeFor(image) {
+        const status = image.status || (image.is_downloaded ? 'downloaded' : 'pending');
+        if (status === 'downloaded') {
+            return image.file_missing
+                ? '<span class="badge bg-danger" title="Marked downloaded but the file is missing on disk">File missing</span>'
+                : '<span class="badge bg-success">Downloaded</span>';
+        }
+        if (status === 'failed') {
+            const reason = image.last_error ? escapeHtml(image.last_error) : 'Download failed for an unknown reason.';
+            return `<span class="badge bg-danger" data-toggle="tooltip" title="${reason}">Failed</span>`;
+        }
+        return '<span class="badge bg-warning">Pending</span>';
+    }
+
+    function previewCellFor(image) {
+        if (image.local_url) {
+            return `<img src="${escapeHtml(image.local_url)}" alt="" class="image-queue-thumb" loading="lazy">`;
+        }
+        return '<span class="image-queue-thumb image-queue-thumb--empty" aria-hidden="true"></span>';
+    }
+
+    function actionsCellFor(image) {
+        const status = image.status || (image.is_downloaded ? 'downloaded' : 'pending');
+        const retryOrDownload = status === 'failed'
+            ? `<button class="btn btn-sm btn-warning me-1" onclick="downloadSingle(${image.id})" title="Retry download">
+                    ${ICON_DOWNLOAD_SVG} Retry
+               </button>`
+            : (status === 'pending'
+                ? `<button class="btn btn-sm btn-success me-1" onclick="downloadSingle(${image.id})" title="Download">
+                        ${ICON_DOWNLOAD_SVG}
+                   </button>`
+                : '');
+        return `
+            ${retryOrDownload}
+            <button class="btn btn-sm btn-danger" onclick="deleteSingle(${image.id})" title="Delete">
+                ${ICON_TRASH_SVG}
+            </button>
+        `;
+    }
+
+    function imageRowHtml(image, { showGame = true } = {}) {
+        const typeBadge = image.image_type === 'cover' ?
+            '<span class="badge bg-primary">Cover</span>' :
+            '<span class="badge bg-info">Screenshot</span>';
+
+        const downloadUrl = image.download_url ?
+            escapeHtml(image.download_url.substring(0, 50)) + '...' : 'No URL';
+
+        return `
+            <tr>
+                <td>${previewCellFor(image)}</td>
+                <td>
+                    ${showGame ? `<strong>${escapeHtml(image.game_name)}</strong><br><small class="text-muted">${escapeHtml(image.game_uuid)}</small>` : ''}
+                </td>
+                <td>${typeBadge}</td>
+                <td>${statusBadgeFor(image)}</td>
+                <td><small>${downloadUrl}</small></td>
+                <td><small>${escapeHtml(image.created_at)}</small></td>
+                <td>${actionsCellFor(image)}</td>
+            </tr>
+        `;
+    }
+
+    // Render image table (flat, paginated)
     function renderImageTable(images) {
         const tbody = document.getElementById('image-table-body');
         if (!tbody) return;
 
         if (images.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No images found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No images found</td></tr>';
             return;
         }
 
-        const html = images.map(image => {
-            const statusBadge = image.is_downloaded ?
-                '<span class="badge bg-success">Downloaded</span>' :
-                '<span class="badge bg-warning">Pending</span>';
+        tbody.innerHTML = images.map(image => imageRowHtml(image)).join('');
+    }
 
-            const typeBadge = image.image_type === 'cover' ?
-                '<span class="badge bg-primary">Cover</span>' :
-                '<span class="badge bg-info">Screenshot</span>';
+    // Render image table grouped by game — clearer status at a glance per title.
+    function renderImageTableGrouped(images) {
+        const tbody = document.getElementById('image-table-body');
+        if (!tbody) return;
 
-            const downloadUrl = image.download_url ?
-                image.download_url.substring(0, 50) + '...' : 'No URL';
+        if (images.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No images found</td></tr>';
+            return;
+        }
 
-            return `
-                <tr>
-                    <td>
-                        <strong>${image.game_name}</strong>
-                        <br><small class="text-muted">${image.game_uuid}</small>
-                    </td>
-                    <td>${typeBadge}</td>
-                    <td>${statusBadge}</td>
-                    <td><small>${downloadUrl}</small></td>
-                    <td><small>${image.created_at}</small></td>
-                    <td>
-                        ${!image.is_downloaded ? `
-                            <button class="btn btn-sm btn-success me-1" onclick="downloadSingle(${image.id})" title="Download">
-                                ${ICON_DOWNLOAD_SVG}
-                            </button>
-                        ` : ''}
-                        <button class="btn btn-sm btn-danger" onclick="deleteSingle(${image.id})" title="Delete">
-                            ${ICON_TRASH_SVG}
-                        </button>
+        const groups = new Map();
+        images.forEach(image => {
+            const key = image.game_uuid || 'unknown';
+            if (!groups.has(key)) {
+                groups.set(key, { name: image.game_name || 'Unknown', uuid: image.game_uuid || '', items: [] });
+            }
+            groups.get(key).items.push(image);
+        });
+
+        const sortedGroups = Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+        const html = sortedGroups.map(group => {
+            const failedCount = group.items.filter(i => (i.status || (i.is_downloaded ? 'downloaded' : 'pending')) === 'failed').length;
+            const pendingCount = group.items.filter(i => (i.status || (i.is_downloaded ? 'downloaded' : 'pending')) === 'pending').length;
+            const summary = [
+                failedCount ? `<span class="badge bg-danger ms-1">${failedCount} failed</span>` : '',
+                pendingCount ? `<span class="badge bg-warning ms-1">${pendingCount} pending</span>` : ''
+            ].join('');
+            const headerRow = `
+                <tr class="image-queue-group-header">
+                    <td colspan="7">
+                        <strong>${escapeHtml(group.name)}</strong>
+                        <small class="text-muted">${escapeHtml(group.uuid)}</small>
+                        ${summary}
                     </td>
                 </tr>
             `;
+            const itemRows = group.items.map(image => imageRowHtml(image, { showGame: false })).join('');
+            return headerRow + itemRows;
         }).join('');
 
         tbody.innerHTML = html;
@@ -987,7 +1093,7 @@
             const result = await response.json();
 
             if (result.success) {
-                showMessage(result.message, 'success');
+                showMessage(result.message, result.failed ? 'warning' : 'success');
                 loadImageQueue();
             } else {
                 showMessage('Download failed: ' + result.message, 'danger');
@@ -999,7 +1105,7 @@
         }
     }
 
-    // Download single image
+    // Download (or retry) a single image
     async function downloadSingle(imageId) {
         try {
             const response = await fetch('/admin/api/download_images', {
@@ -1013,8 +1119,12 @@
 
             const result = await response.json();
 
-            if (result.success) {
+            if (result.success && result.downloaded > 0) {
                 showMessage(result.message, 'success');
+                loadImageQueue();
+            } else if (result.success) {
+                const reason = result.errors && result.errors[0] ? result.errors[0].error : 'unknown reason';
+                showMessage(`Download failed: ${reason}`, 'danger');
                 loadImageQueue();
             } else {
                 showMessage('Download failed: ' + result.message, 'danger');
@@ -1023,6 +1133,36 @@
         } catch (error) {
             console.error('Error downloading image:', error);
             showMessage('Error downloading image', 'danger');
+        }
+    }
+
+    // Retry every image the queue previously failed to download
+    async function retryFailed() {
+        const btn = document.getElementById('retryFailedBtn');
+        if (btn) btn.disabled = true;
+        try {
+            const response = await fetch('/admin/api/download_images', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRFUtils.getToken()
+                },
+                body: JSON.stringify({ retry_failed: true })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage(result.message, result.failed ? 'warning' : 'success');
+                loadImageQueue();
+            } else {
+                showMessage('Retry failed: ' + result.message, 'danger');
+            }
+        } catch (error) {
+            console.error('Error retrying failed images:', error);
+            showMessage('Error retrying failed images', 'danger');
+        } finally {
+            if (btn) btn.disabled = false;
         }
     }
 

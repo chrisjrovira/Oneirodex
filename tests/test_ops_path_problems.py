@@ -22,6 +22,46 @@ def test_games_ro_mount_is_not_a_path_problem():
     assert problems == []
 
 
+def test_base_folder_ro_mount_is_not_a_path_problem():
+    problems = _path_problems(
+        {
+            'BASE_FOLDER_POSIX': {
+                'path': '/storage',
+                'exists': True,
+                'read': True,
+                'write': False,
+            },
+            'BASE_FOLDER_WINDOWS': {
+                'path': '/storage',
+                'exists': True,
+                'read': True,
+                'write': False,
+            },
+            'UPLOAD_FOLDER': {
+                'path': '/app/gametheca/static/library',
+                'exists': True,
+                'read': True,
+                'write': True,
+            },
+        }
+    )
+    assert problems == []
+
+
+def test_base_folder_missing_still_reported():
+    problems = _path_problems(
+        {
+            'BASE_FOLDER_POSIX': {
+                'path': '/storage',
+                'exists': False,
+                'read': False,
+                'write': False,
+            }
+        }
+    )
+    assert problems == [{'key': 'BASE_FOLDER_POSIX', 'reason': 'missing'}]
+
+
 def test_games_missing_still_reported():
     problems = _path_problems(
         {

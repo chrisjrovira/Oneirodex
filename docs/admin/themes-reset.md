@@ -19,6 +19,15 @@ After any deploy that changes tokens, admin CSS, or preset fingerprints:
 
 Or delete `themes/default` (and stale presets) under the library volume and restart so boot sync can reinstall.
 
+**Two different things after an Unraid `git pull` + rebuild:**
+
+| Asset | Where it lives | How it updates |
+|---|---|---|
+| Admin / library color theme CSS (`gt-*` tokens, swatch grid) | `gametheca/setup/default_theme/` → copied onto the **library volume** on boot | Needs **Reset Default Themes** (or delete `themes/default` + restart) — a plain rebuild alone does not overwrite already-installed volume copies |
+| Browser Play room skins (`play-skins.css` / `play-skins.js`, per-system bezel/wallpaper, aspect-lock vars) | `gametheca/static/vendor/webretro/` — served **directly from the image**, not copied to the library volume | Picks up on a normal `docker compose build --no-cache && docker compose up -d` — **no** Reset Default Themes needed, but the browser tab needs a hard-refresh (Ctrl+F5) to drop cached CSS/JS |
+
+If a fresh Unraid pull looks half-applied (new play-skins room art shows but admin still looks old, or vice versa), check which of the two you skipped.
+
 ## Apply a theme
 
 - Members: preferences swatch grid.

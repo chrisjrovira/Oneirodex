@@ -202,9 +202,9 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-admin-legacy {
-  max-width: 1100px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 0.65rem 0.9rem 1.5rem;
+  padding: 0.65rem 1.25rem 1.5rem;
   color: var(--gt-text);
 }
 
@@ -260,16 +260,24 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-admin-main {
   flex: 1;
-  padding: 0.75rem 0.9rem 1.5rem;
-  max-width: 1100px;
+  padding: 0.75rem 1.25rem 1.5rem;
+  max-width: 1600px;
   width: 100%;
   margin: 0 auto;
 }
 
+/* Demoted: the top nav already names the active section (active link +
+   optional "<Section> home" button), so the in-page title is a redundant
+   giant heading — keep it for a11y landmark purposes but shrink it to a
+   compact eyebrow label instead of a second hero heading. */
 .gt-admin-page h1 {
   margin: 0 0 0.25rem;
   font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
 }
 
 .gt-admin-lede {
@@ -400,9 +408,9 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-admin-legacy {
-  max-width: 1100px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 0.65rem 0.9rem 1.5rem;
+  padding: 0.65rem 1.25rem 1.5rem;
 }
 
 .gt-admin-legacy .settings-shell-header .btn,

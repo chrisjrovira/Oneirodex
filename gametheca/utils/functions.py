@@ -308,7 +308,12 @@ def read_first_nfo_content(full_disk_path):
     return None
 
 def download_image(url, save_path):
-    """Download an image from a URL and save it to the specified path."""
+    """Download an image from a URL and save it to the specified path.
+
+    Returns (success, error_message). ``error_message`` is ``None`` on
+    success so callers (image queue, art studio, batch downloaders) can
+    surface *why* a download failed instead of silently marking it done.
+    """
     if not url.startswith(('http://', 'https://')):
         url = 'https:' + url
 
@@ -317,8 +322,9 @@ def download_image(url, save_path):
     from gametheca.utils.security import validate_user_outbound_http_url
     ok, result = validate_user_outbound_http_url(url)
     if not ok:
+        error = f"Blocked outbound URL: {result}"
         print(f"download_image blocked: {result}")
-        return False
+        return False, error
     url = result
 
     try:
@@ -332,20 +338,34 @@ def download_image(url, save_path):
                     os.makedirs(directory, exist_ok=True)
                     print(f"Successfully created the directory '{directory}'.")
                 except Exception as e:
-                    print(f"Failed to create the directory '{directory}': {e}")
-                    return
+                    error = f"Failed to create directory '{directory}': {e}"
+                    print(error)
+                    return False, error
 
             if os.access(directory, os.W_OK):
                 with open(save_path, 'wb') as f:
                     f.write(response.content)
+                return True, None
             else:
-                print(f"Error: The directory '{directory}' is not writable.")
+                error = f"Directory '{directory}' is not writable by the GameTheca process."
+                print(f"Error: {error}")
+                return False, error
         else:
+            error = f"HTTP {response.status_code} downloading image."
             print(f"Failed to download the image. Status Code: {response.status_code}")
+            return False, error
     except requests.exceptions.RequestException as e:
+        error = f"Network error: {e}"
         print(f"Error downloading image from {url}: {e}")
-    except Exception as e:
+        return False, error
+    except OSError as e:
+        error = f"Disk error writing to '{save_path}': {e}"
         print(f"An error occurred while saving the image to {save_path}: {e}")
+        return False, error
+    except Exception as e:
+        error = f"Unexpected error: {e}"
+        print(f"An error occurred while saving the image to {save_path}: {e}")
+        return False, error
 
 def comma_separated_urls(form, field):
     """Validate comma-separated YouTube embed URLs."""

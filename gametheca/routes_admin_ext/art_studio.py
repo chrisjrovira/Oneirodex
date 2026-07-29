@@ -78,6 +78,10 @@ def art_studio_generate():
         return jsonify({**manifest, 'preview_url': preview}), 201
     except ValueError as exc:
         return jsonify({'error': str(exc)}), 400
+    except PermissionError as exc:
+        return jsonify({'error': f'Permission denied writing generated art pack: {exc}'}), 500
+    except OSError as exc:
+        return jsonify({'error': f'Failed to write generated art pack to disk: {exc}'}), 500
 
 
 @admin2_bp.route('/admin/api/art-studio/download/<pack_id>', methods=['GET'])
@@ -91,6 +95,10 @@ def art_studio_download(pack_id: str):
         return jsonify({'error': str(exc)}), 400
     except FileNotFoundError:
         return jsonify({'error': 'Pack not found'}), 404
+    except PermissionError as exc:
+        return jsonify({'error': f'Permission denied reading art pack: {exc}'}), 500
+    except OSError as exc:
+        return jsonify({'error': f'Failed to read art pack from disk: {exc}'}), 500
     return send_file(
         io.BytesIO(payload),
         mimetype='application/zip',
@@ -124,3 +132,9 @@ def art_studio_apply():
         return jsonify({'error': str(exc)}), 404
     except (ValueError, FileNotFoundError) as exc:
         return jsonify({'error': str(exc)}), 400
+    except PermissionError as exc:
+        return jsonify({'error': f'Permission denied writing cover art: {exc}'}), 500
+    except OSError as exc:
+        return jsonify({'error': f'Failed to write cover art to disk: {exc}'}), 500
+    except Exception as exc:  # noqa: BLE001 - surface DB/commit failures as JSON, not an HTML 500 page
+        return jsonify({'error': f'Unexpected error applying pack: {exc}'}), 500

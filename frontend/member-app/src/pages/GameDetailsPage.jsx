@@ -178,7 +178,7 @@ export function GameDetailsPage() {
             src={coverUrl(game.cover_url)}
             alt=""
           />
-          <BadgeStack game={game} preferredCorner="bottom-left" maxVisible={2} />
+          <BadgeStack game={game} preferredCorner="top-left" maxVisible={2} />
         </div>
         <div className="gt-details-page__hero-main">
           <h1>{game.name}</h1>

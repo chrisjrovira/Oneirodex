@@ -7,7 +7,7 @@ Route: `/library`
 - Dense cover grid with filters (platform, status, freshness, etc.).
 - Tile size comes from your preferences (percent slider in TopNav) and animates smoothly on the grid.
 - **Filters** sit in a **sticky left-hand column** on desktop (floats while the grid scrolls). On phones/narrow tablets (≤900px), Filters open as a drawer/sheet (same pattern as the top-nav hamburger).
-- Title-card chrome: **menu** top-right · **favorite** bottom-right of the cover · transitional badges (UPDATE / OUT / NEW / VR / …) **top-left** · **PLAY** sits under the badge stack when both are present (badges win top-left).
+- Title-card chrome: **menu** + **favorite** stack together in the **top-right** band (menu above, favorite below) · transitional badges (UPDATE / OUT / NEW / VR / …) own **top-left** exclusively (no overlap with favorite) · **PLAY** sits under the badge stack when both are present (badges win top-left).
 - **VR** is a tile badge in the same top-left stack (not dismissable). It is **not** a Library filter chip — use **More → VR** for the VR catalog.
 - Title-card badges may also show NEW / UPDATE / freshness OUT/~ / **LANG** / **PATCH** when signals exist.
 - Quick **badge filter chips** in the LHN (UPDATE · OUT/~ · NEW · RELEASE · LANG) toggle the same signals as browse filters (`has_updates`, `freshness_behind`, `new_import`, `recent_release`, `needs_translation`); they persist with other library filters. Legacy `is_vr=1` URL params still apply if present.

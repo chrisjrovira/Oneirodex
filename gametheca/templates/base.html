@@ -53,7 +53,8 @@
 
 
 {% set admin_chrome = request.path.startswith('/admin') %}
-{% if not is_setup_mode %}
+{% set hide_lhn = request.path.startswith('/settings_profile') or request.path.startswith('/settings_password') %}
+{% if not is_setup_mode and not hide_lhn %}
 <div id="sidebar" class="sidebar{% if admin_chrome %} collapsed{% endif %}">
 {% if current_user.is_authenticated %}
     <div class="useraccount-minimenu-container">
@@ -136,7 +137,7 @@
     
 </div>
 {% endif %}
-<div id="content" class="{% if is_setup_mode %}setup-mode-content{% endif %}{% if admin_chrome %} collapsed{% endif %}">
+<div id="content" class="{% if is_setup_mode %}setup-mode-content{% endif %}{% if admin_chrome %} collapsed{% endif %}{% if hide_lhn %} no-sidebar{% endif %}">
     {% include 'partials/flash_messages.html' %}
     {% block content %}{% endblock %}
 </div>
