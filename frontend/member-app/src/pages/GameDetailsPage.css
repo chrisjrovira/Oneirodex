@@ -63,7 +63,8 @@
 
 .gt-details-page__summary {
   margin: 0;
-  max-width: 70ch;
+  max-width: none;
+  width: 100%;
   line-height: 1.55;
   white-space: pre-wrap;
 }

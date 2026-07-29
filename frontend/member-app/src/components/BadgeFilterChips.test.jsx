@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
   BadgeFilterChips,
+  BADGE_FILTER_CHIPS,
   badgeFiltersFromSearchParams,
   BADGE_FILTER_PARAMS,
   toggleBadgeFilter,
@@ -13,7 +14,7 @@ function cleanFilters(filters) {
   )
 }
 
-test('badgeFiltersFromSearchParams reads truthy chip params', () => {
+test('badgeFiltersFromSearchParams reads truthy chip params including legacy is_vr', () => {
   const params = new URLSearchParams('is_vr=1&has_updates=true&genre=Action')
   expect(badgeFiltersFromSearchParams(params)).toEqual({
     is_vr: '1',
@@ -23,13 +24,13 @@ test('badgeFiltersFromSearchParams reads truthy chip params', () => {
 
 test('toggleBadgeFilter sets and clears param', () => {
   const applied = []
-  toggleBadgeFilter({ sort_by: 'name' }, 'is_vr', (next) => applied.push(next), cleanFilters)
-  expect(applied[0]).toEqual({ sort_by: 'name', is_vr: '1' })
-  toggleBadgeFilter(applied[0], 'is_vr', (next) => applied.push(next), cleanFilters)
+  toggleBadgeFilter({ sort_by: 'name' }, 'has_updates', (next) => applied.push(next), cleanFilters)
+  expect(applied[0]).toEqual({ sort_by: 'name', has_updates: '1' })
+  toggleBadgeFilter(applied[0], 'has_updates', (next) => applied.push(next), cleanFilters)
   expect(applied[1]).toEqual({ sort_by: 'name' })
 })
 
-test('BadgeFilterChips toggles VR and UPDATE', async () => {
+test('BadgeFilterChips omits VR and toggles UPDATE / LANG', async () => {
   const user = userEvent.setup()
   const applied = []
   const filters = { sort_by: 'name' }
@@ -42,10 +43,13 @@ test('BadgeFilterChips toggles VR and UPDATE', async () => {
     />,
   )
 
+  expect(BADGE_FILTER_CHIPS.map((c) => c.param)).not.toContain('is_vr')
   expect(BADGE_FILTER_PARAMS).toContain('is_vr')
   expect(BADGE_FILTER_PARAMS).toContain('needs_translation')
-  await user.click(screen.getByRole('button', { name: 'VR' }))
-  expect(applied[0]).toEqual({ sort_by: 'name', is_vr: '1' })
+  expect(screen.queryByRole('button', { name: 'VR' })).toBeNull()
+
+  await user.click(screen.getByRole('button', { name: 'UPDATE' }))
+  expect(applied[0]).toEqual({ sort_by: 'name', has_updates: '1' })
 
   rerender(
     <BadgeFilterChips
@@ -54,22 +58,11 @@ test('BadgeFilterChips toggles VR and UPDATE', async () => {
       cleanFilters={cleanFilters}
     />,
   )
-  expect(screen.getByRole('button', { name: 'VR' })).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByRole('button', { name: 'UPDATE' })).toHaveAttribute('aria-pressed', 'true')
 
-  await user.click(screen.getByRole('button', { name: 'UPDATE' }))
-  expect(applied[1]).toEqual({ sort_by: 'name', is_vr: '1', has_updates: '1' })
-
-  rerender(
-    <BadgeFilterChips
-      filters={applied[1]}
-      onApply={(next) => applied.push(next)}
-      cleanFilters={cleanFilters}
-    />,
-  )
   await user.click(screen.getByRole('button', { name: 'LANG' }))
-  expect(applied[2]).toEqual({
+  expect(applied[1]).toEqual({
     sort_by: 'name',
-    is_vr: '1',
     has_updates: '1',
     needs_translation: '1',
   })

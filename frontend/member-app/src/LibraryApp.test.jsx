@@ -60,11 +60,7 @@ test('page flip replaces cards and does not duplicate grid roots', async () => {
   expect(document.querySelectorAll('[data-library-grid]').length).toBe(1)
 })
 
-test('renders filter bar into the sidebar mount when present', async () => {
-  const sidebarRoot = document.createElement('div')
-  sidebarRoot.id = 'library-filters-root'
-  document.body.appendChild(sidebarRoot)
-
+test('renders floating LHN filter column with the grid', async () => {
   const fetchMock = vi.fn((url) => {
     if (url.startsWith('/browse_games?')) {
       return jsonResponse({
@@ -91,11 +87,13 @@ test('renders filter bar into the sidebar mount when present', async () => {
   )
 
   await waitFor(() =>
-    expect(sidebarRoot.querySelector('.library-filters')).not.toBeNull(),
+    expect(container.querySelector('.library-layout__filters .library-filters')).not.toBeNull(),
   )
-  expect(container.querySelector('.library-filters')).toBeNull()
+  expect(container.querySelector('.library-layout')).not.toBeNull()
+  expect(container.querySelector('.library-layout__main')).not.toBeNull()
+  expect(screen.queryByRole('button', { name: 'VR' })).toBeNull()
+  expect(screen.getByRole('button', { name: 'UPDATE' })).toBeInTheDocument()
 
-  sidebarRoot.remove()
   vi.unstubAllGlobals()
 })
 

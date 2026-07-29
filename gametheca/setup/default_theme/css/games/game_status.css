@@ -40,11 +40,11 @@
     opacity: 0.7;
 }
 
-/* Status Button on Game Cards (Library Grid) */
+/* Status Button on Game Cards (Library Grid) — left of bottom-right favorite */
 .game-status-btn {
     position: absolute;
     bottom: 8px;
-    right: 8px;
+    right: 44px;
     width: 32px;
     height: 32px;
     background-color: rgba(0, 0, 0, 0.7);

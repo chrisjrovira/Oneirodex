@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta, timezone
+from time import perf_counter
 from urllib.parse import urlparse
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
 
 from gametheca import db
 from gametheca.models import (
@@ -15,6 +16,7 @@ from gametheca.models import (
     UnmatchedFolder,
 )
 from gametheca.utils.game_servers import probe_server_health
+from gametheca.utils.health_probes import build_readiness
 from gametheca.utils.livekit_rtc import livekit_config, livekit_enabled
 from gametheca.utils.malware_scan import malware_scan_enabled, module_status
 from gametheca.utils.ops_issues import derive_issues
@@ -23,8 +25,10 @@ from gametheca.utils.status import get_config_values, get_system_info
 from gametheca.utils.system_stats import (
     get_cpu_usage,
     get_disk_usage,
-    get_memory_usage,
     get_games_folder_usage,
+    get_load_average,
+    get_memory_usage,
+    get_process_memory,
 )
 from gametheca.utils.uptime import (
     get_formatted_app_uptime,
@@ -249,17 +253,84 @@ def _malware_pulse():
 
 
 def _companion_pulse():
-    """Count companion devices seen recently via heartbeat."""
-    since = datetime.now(timezone.utc) - timedelta(minutes=_COMPANION_ONLINE_MINUTES)
+    """Count companion devices seen recently via heartbeat + last-seen buckets."""
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(minutes=_COMPANION_ONLINE_MINUTES)
+    since_1h = now - timedelta(hours=1)
+    since_24h = now - timedelta(hours=24)
+
     online = db.session.execute(
         select(func.count(ClientDevice.id)).where(ClientDevice.last_seen_at >= since)
     ).scalar() or 0
     total = db.session.execute(select(func.count(ClientDevice.id))).scalar() or 0
+    within_1h = db.session.execute(
+        select(func.count(ClientDevice.id)).where(ClientDevice.last_seen_at >= since_1h)
+    ).scalar() or 0
+    within_24h = db.session.execute(
+        select(func.count(ClientDevice.id)).where(ClientDevice.last_seen_at >= since_24h)
+    ).scalar() or 0
+    newest = db.session.execute(select(func.max(ClientDevice.last_seen_at))).scalar()
+
+    registered_by_kind = dict(
+        db.session.execute(
+            select(ClientDevice.device_kind, func.count(ClientDevice.id)).group_by(
+                ClientDevice.device_kind
+            )
+        ).all()
+    )
+    online_by_kind = dict(
+        db.session.execute(
+            select(ClientDevice.device_kind, func.count(ClientDevice.id))
+            .where(ClientDevice.last_seen_at >= since)
+            .group_by(ClientDevice.device_kind)
+        ).all()
+    )
+    by_kind = {}
+    for kind in sorted({*(registered_by_kind.keys()), *(online_by_kind.keys())}):
+        label = kind or 'companion'
+        by_kind[label] = {
+            'registered': int(registered_by_kind.get(kind) or 0),
+            'online': int(online_by_kind.get(kind) or 0),
+        }
+
     return {
         'online': online,
         'registered': total,
         'window_minutes': _COMPANION_ONLINE_MINUTES,
+        'by_kind': by_kind,
+        'last_seen': {
+            'newest': newest.isoformat() if newest else None,
+            'within_1h': within_1h,
+            'within_24h': within_24h,
+            'stale': max(0, total - online),
+        },
     }
+
+
+def _db_ping_ms():
+    """Cheap SELECT 1 latency in milliseconds; None when DB unreachable."""
+    try:
+        started = perf_counter()
+        db.session.execute(text('SELECT 1'))
+        return round((perf_counter() - started) * 1000, 2)
+    except Exception:
+        return None
+
+
+def _readyz_pulse():
+    """Reuse readiness probe payload + wall-clock check_ms (no HTTP hop)."""
+    try:
+        started = perf_counter()
+        payload, status = build_readiness()
+        check_ms = round((perf_counter() - started) * 1000, 2)
+        return {
+            'status': payload.get('status'),
+            'http_status': status,
+            'checks': payload.get('checks'),
+            'check_ms': check_ms,
+        }
+    except Exception:
+        return None
 
 
 def _queue_pulse():
@@ -316,6 +387,7 @@ def _services_snapshot():
         'companions': _companion_pulse(),
         'queues': _queue_pulse(),
         'game_servers': _game_servers_pulse(),
+        'readyz': _readyz_pulse(),
         'malware_module_enabled': malware_scan_enabled(),
     }
 
@@ -337,6 +409,9 @@ def build_ops_summary(app_start_time):
                 'python': system_info.get('Python Version'),
                 'cpu': cpu,
                 'memory': memory,
+                'load_avg': get_load_average(),
+                'process': get_process_memory(),
+                'db_ping_ms': _db_ping_ms(),
                 'disk_base': disk_base,
                 'disk_games': disk_games,
                 'uptime_system': get_formatted_system_uptime(),

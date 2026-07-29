@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { HUB_LINKS } from './navConfig'
+import {
+  MeterBar,
+  MetricTile,
+  OpsStatusBanner,
+  companionKindRows,
+  formatBytes,
+  formatLoadAvg,
+  formatReadyz,
+  na,
+} from './opsWidgets'
 import './ops.css'
 
 async function getJson(url) {
@@ -10,25 +20,6 @@ async function getJson(url) {
   }
   if (!response.ok) throw new Error(`${url} ${response.status}`)
   return response.json()
-}
-
-function formatBytes(bytes) {
-  if (bytes == null || !Number.isFinite(Number(bytes))) return '—'
-  const n = Number(bytes)
-  if (n === 0) return '0 B'
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-  const index = Math.min(Math.floor(Math.log(Math.abs(n)) / Math.log(1024)), units.length - 1)
-  const value = n / 1024 ** index
-  return `${value >= 10 || index === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[index]}`
-}
-
-function Meter({ label, value }) {
-  if (!value) return null
-  return (
-    <li>
-      {label}: {value.percent ?? '—'}% ({formatBytes(value.used)} / {formatBytes(value.total)})
-    </li>
-  )
 }
 
 /** Honest scan glance: processed (= success+failed) / total, matching Scan Jobs. */
@@ -47,6 +38,17 @@ export function formatScanJobCounters(job) {
     return `${job.progress}%`
   }
   return '—'
+}
+
+function livekitLabel(livekit) {
+  if (!livekit) return 'n/a'
+  if (livekit.configured) {
+    if (livekit.reachable === true) return 'reachable'
+    if (livekit.reachable === false) return 'unreachable'
+    return 'configured'
+  }
+  if (livekit.enabled) return 'enabled (missing secrets)'
+  return 'off'
 }
 
 export function OpsPage() {
@@ -88,15 +90,19 @@ export function OpsPage() {
   const host = snapshot?.host
   const library = snapshot?.library
   const scans = snapshot?.scans
+  const services = snapshot?.services
   const issues = snapshot?.issues
   const severity = issues?.overall || 'good'
+  const companions = services?.companions
+  const kindRows = companionKindRows(companions?.by_kind)
+  const lastSeen = companions?.last_seen
 
   return (
     <div className="gt-admin-page gt-ops-page">
       <div className="gt-ops-header">
         <div>
           <h1>System · Ops</h1>
-          <p className="gt-admin-lede">Live glance for host health, library pulse, and scans.</p>
+          <p className="gt-admin-lede">Observability console — host, readiness, companions, scans (~15s).</p>
         </div>
         <button type="button" className="gt-btn gt-btn--accent" onClick={refresh} disabled={loading}>
           {loading ? 'Refreshing…' : 'Refresh'}
@@ -109,139 +115,272 @@ export function OpsPage() {
         </div>
       ) : null}
 
-      <section className={`gt-ops-status gt-ops-status--${severity}`} aria-label="System status">
-        <strong>
-          {severity === 'bad'
-            ? 'Action required'
-            : severity === 'warn'
-              ? 'Attention needed'
-              : 'All systems healthy'}
-        </strong>
-        {snapshot?.as_of ? <span>Updated {new Date(snapshot.as_of).toLocaleString()}</span> : null}
-      </section>
+      <OpsStatusBanner
+        severity={severity}
+        asOf={snapshot?.as_of}
+        items={issues?.items}
+        ariaLabel="System status"
+      />
 
-      <div className="gt-ops-grid">
-        <section className="gt-admin-card">
-          <h2>Host</h2>
+      <div className="gt-ops-strip" aria-label="Key metrics">
+        <MetricTile label="CPU" value={na(host?.cpu?.percent, '%')} hint={na(host?.cpu?.cores_logical, ' cores')} />
+        <MetricTile label="Load 1/5/15" value={formatLoadAvg(host?.load_avg)} hint="host" />
+        <MetricTile
+          label="Memory"
+          value={na(host?.memory?.percent, '%')}
+          hint={
+            host?.memory
+              ? `${formatBytes(host.memory.used)} / ${formatBytes(host.memory.total)}`
+              : 'n/a'
+          }
+        />
+        <MetricTile
+          label="Process RSS"
+          value={formatBytes(host?.process?.rss_bytes)}
+          hint={host?.process?.pid != null ? `pid ${host.process.pid}` : 'n/a'}
+        />
+        <MetricTile label="DB ping" value={host?.db_ping_ms != null ? `${host.db_ping_ms} ms` : 'n/a'} hint="SELECT 1" />
+        <MetricTile label="Readyz" value={formatReadyz(services?.readyz)} hint={na(services?.readyz?.http_status)} />
+        <MetricTile
+          label="Companions"
+          value={`${companions?.online ?? 0} / ${companions?.registered ?? 0}`}
+          hint={`${lastSeen?.within_1h ?? 0} in 1h · ${lastSeen?.stale ?? 0} stale`}
+        />
+        <MetricTile
+          label="Games disk"
+          value={na(host?.disk_games?.percent ?? host?.disk_base?.percent, '%')}
+          hint="volume use"
+        />
+      </div>
+
+      <div className="gt-ops-console">
+        <section className="gt-ops-panel">
+          <h2>Host meters</h2>
           {!host ? (
             <p>{snapshot?.host_error || 'Host data unavailable.'}</p>
           ) : (
             <>
-              <p>
+              <p className="gt-ops-panel__lede">
                 <strong>{host.hostname || 'Unknown host'}</strong>
-                <br />
+                {' · '}
                 {host.os || 'Unknown OS'} · {host.ip || 'No IP'}
+                {' · '}
+                up {host.uptime_system || 'n/a'} / app {host.uptime_app || 'n/a'}
               </p>
-              <ul className="gt-ops-list">
-                <li>
-                  CPU: {host.cpu?.percent ?? '—'}% ({host.cpu?.cores_logical ?? '—'} cores)
-                </li>
-                <Meter label="Memory" value={host.memory} />
-                <Meter label="App disk" value={host.disk_base} />
-                <Meter label="Games disk" value={host.disk_games} />
-                <li>System uptime: {host.uptime_system || '—'}</li>
-                <li>App uptime: {host.uptime_app || '—'}</li>
-              </ul>
+              <div className="gt-ops-meters">
+                <MeterBar
+                  label="CPU"
+                  percent={host.cpu?.percent}
+                  detail={host.cpu?.cores_logical != null ? `${host.cpu.cores_logical} logical cores` : null}
+                />
+                <MeterBar
+                  label="Memory"
+                  percent={host.memory?.percent}
+                  detail={
+                    host.memory
+                      ? `${formatBytes(host.memory.used)} / ${formatBytes(host.memory.total)}`
+                      : null
+                  }
+                />
+                <MeterBar
+                  label="App disk"
+                  percent={host.disk_base?.percent}
+                  detail={
+                    host.disk_base
+                      ? `${formatBytes(host.disk_base.used)} / ${formatBytes(host.disk_base.total)}`
+                      : null
+                  }
+                />
+                <MeterBar
+                  label="Games disk"
+                  percent={host.disk_games?.percent}
+                  detail={
+                    host.disk_games
+                      ? `${formatBytes(host.disk_games.used)} / ${formatBytes(host.disk_games.total)}`
+                      : null
+                  }
+                />
+              </div>
             </>
           )}
         </section>
 
-        <section className="gt-admin-card">
+        <section className="gt-ops-panel">
           <h2>Services</h2>
-          {!snapshot?.services ? (
+          {!services ? (
             <p>{snapshot?.services_error || 'Services data unavailable.'}</p>
           ) : (
-            <ul className="gt-ops-list">
-              <li>
-                LiveKit:{' '}
-                {snapshot.services.livekit?.configured
-                  ? snapshot.services.livekit.reachable === true
-                    ? 'reachable'
-                    : snapshot.services.livekit.reachable === false
-                      ? 'unreachable'
-                      : 'configured'
-                  : snapshot.services.livekit?.enabled
-                    ? 'enabled (missing secrets)'
-                    : 'off'}
-              </li>
-              <li>
-                Malware scan:{' '}
-                {snapshot.services.malware?.enabled ? 'on' : 'off'}
-                {snapshot.services.malware?.enabled
-                  ? ` · ClamAV ${
-                      snapshot.services.malware.clamav_reachable ? 'up' : 'down (heuristics only)'
-                    }`
-                  : ''}
-              </li>
-              <li>
-                Companions online: {snapshot.services.companions?.online ?? 0} /{' '}
-                {snapshot.services.companions?.registered ?? 0} registered
-              </li>
-              <li>
-                Queues: {snapshot.services.queues?.scans_active ?? 0} scans active ·{' '}
-                {snapshot.services.queues?.scans_pending ?? 0} pending ·{' '}
-                {snapshot.services.queues?.downloads_open ?? 0} downloads
-              </li>
-            </ul>
+            <table className="gt-ops-table">
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th>Detail</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Readyz</td>
+                  <td>{formatReadyz(services.readyz)}</td>
+                  <td>
+                    {services.readyz?.checks
+                      ? Object.entries(services.readyz.checks)
+                          .map(([k, v]) => `${k}:${typeof v === 'object' ? v?.status || JSON.stringify(v) : v}`)
+                          .join(' · ') || 'n/a'
+                      : 'n/a'}
+                  </td>
+                </tr>
+                <tr>
+                  <td>LiveKit</td>
+                  <td>{livekitLabel(services.livekit)}</td>
+                  <td>{services.livekit?.error || '—'}</td>
+                </tr>
+                <tr>
+                  <td>Malware</td>
+                  <td>{services.malware?.enabled ? 'on' : 'off'}</td>
+                  <td>
+                    {services.malware?.enabled
+                      ? `ClamAV ${services.malware.clamav_reachable ? 'up' : 'down (heuristics only)'}`
+                      : '—'}
+                  </td>
+                </tr>
+                <tr>
+                  <td>Queues</td>
+                  <td>
+                    {services.queues?.scans_active ?? 0} active · {services.queues?.scans_pending ?? 0} pending
+                  </td>
+                  <td>{services.queues?.downloads_open ?? 0} downloads open</td>
+                </tr>
+                {(services.game_servers?.servers || []).map((server) => (
+                  <tr key={server.uuid || server.display_name}>
+                    <td>Game server · {server.display_name || 'unnamed'}</td>
+                    <td>
+                      {server.reachable === true
+                        ? 'reachable'
+                        : server.reachable === false
+                          ? 'unreachable'
+                          : 'n/a'}
+                    </td>
+                    <td>{server.error || server.method || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </section>
 
-        <section className="gt-admin-card">
-          <h2>Library pulse</h2>
-          {!library ? (
-            <p>{snapshot?.library_error || 'Library data unavailable.'}</p>
-          ) : (
-            <ul className="gt-ops-list">
-              <li>Libraries: {library.libraries ?? 0}</li>
-              <li>Games: {library.games ?? 0}</li>
-              <li>Unmatched folders: {library.unmatched_folders ?? 0}</li>
-              <li>Open downloads: {library.download_requests_open ?? 0}</li>
-            </ul>
-          )}
-        </section>
-
-        <section className="gt-admin-card">
-          <h2>Scans</h2>
-          {!scans ? (
-            <p>{snapshot?.scans_error || 'Scan data unavailable.'}</p>
+        <section className="gt-ops-panel">
+          <h2>Companions</h2>
+          {!companions ? (
+            <p>n/a</p>
           ) : (
             <>
-              <p>{scans.active_count ?? 0} active</p>
-              {(scans.jobs || []).length === 0 ? (
-                <p className="gt-admin-lede">No active or recent scan jobs.</p>
+              <p className="gt-ops-panel__lede">
+                Online {companions.online ?? 0} / {companions.registered ?? 0}
+                {' · '}
+                window {companions.window_minutes ?? 3}m
+                {' · '}
+                newest {lastSeen?.newest ? new Date(lastSeen.newest).toLocaleString() : 'n/a'}
+                {' · '}
+                1h {lastSeen?.within_1h ?? 0} · 24h {lastSeen?.within_24h ?? 0} · stale {lastSeen?.stale ?? 0}
+              </p>
+              {kindRows.length === 0 ? (
+                <p className="gt-admin-lede">No registered companions by kind.</p>
               ) : (
-                <ul className="gt-ops-list">
-                  {scans.jobs.map((job) => (
-                    <li key={job.id}>
-                      #{job.id_short || job.id} {job.library || 'library'} · {job.status}
-                      {' · '}
-                      {formatScanJobCounters(job)}
-                      {job.current_processing ? (
-                        <>
-                          <br />
-                          <span className="gt-admin-lede">{job.current_processing}</span>
-                        </>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
+                <table className="gt-ops-table">
+                  <thead>
+                    <tr>
+                      <th>Kind</th>
+                      <th>Online</th>
+                      <th>Registered</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {kindRows.map((row) => (
+                      <tr key={row.kind}>
+                        <td>{row.kind}</td>
+                        <td>{row.online}</td>
+                        <td>{row.registered}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </>
           )}
         </section>
 
-        <section className="gt-admin-card">
+        <section className="gt-ops-panel">
+          <h2>Library pulse</h2>
+          {!library ? (
+            <p>{snapshot?.library_error || 'Library data unavailable.'}</p>
+          ) : (
+            <div className="gt-ops-strip gt-ops-strip--compact">
+              <MetricTile label="Libraries" value={na(library.libraries)} />
+              <MetricTile label="Games" value={na(library.games)} />
+              <MetricTile label="Unmatched" value={na(library.unmatched_folders)} />
+              <MetricTile label="Open downloads" value={na(library.download_requests_open)} />
+            </div>
+          )}
+        </section>
+
+        <section className="gt-ops-panel gt-ops-panel--wide">
+          <h2>Scans</h2>
+          {!scans ? (
+            <p>{snapshot?.scans_error || 'Scan data unavailable.'}</p>
+          ) : (scans.jobs || []).length === 0 ? (
+            <p className="gt-admin-lede">{scans.active_count ?? 0} active · no recent jobs.</p>
+          ) : (
+            <table className="gt-ops-table">
+              <thead>
+                <tr>
+                  <th>Job</th>
+                  <th>Library</th>
+                  <th>Status</th>
+                  <th>Progress</th>
+                  <th>Current</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scans.jobs.map((job) => (
+                  <tr key={job.id}>
+                    <td>
+                      <code>#{job.id_short || job.id}</code>
+                    </td>
+                    <td>{job.library || '—'}</td>
+                    <td>{job.status}</td>
+                    <td>{formatScanJobCounters(job)}</td>
+                    <td className="gt-ops-table__muted">{job.current_processing || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+
+        <section className="gt-ops-panel gt-ops-panel--wide">
           <h2>Recent errors</h2>
           {(snapshot?.recent_errors || []).length === 0 ? (
             <p className="gt-admin-lede">{snapshot?.recent_errors_error || 'No recent errors.'}</p>
           ) : (
-            <ul className="gt-ops-list">
-              {snapshot.recent_errors.slice(0, 6).map((event) => (
-                <li key={event.id}>
-                  <code>{event.event_type}</code> {event.text}
-                </li>
-              ))}
-            </ul>
+            <table className="gt-ops-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody>
+                {snapshot.recent_errors.slice(0, 8).map((event) => (
+                  <tr key={event.id}>
+                    <td>
+                      <code>{event.event_type}</code>
+                    </td>
+                    <td>{event.text}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </section>
       </div>

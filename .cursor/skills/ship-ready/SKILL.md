@@ -1,7 +1,7 @@
 ---
 name: ship-ready
 description: >-
-  Commits and optionally pushes GameTheca work using repo conventions. Use when
+  Commits and always pushes GameTheca work using repo conventions. Use when
   the user says commit, ship, push, open PR, or ship to GitHub. Never commit
   unprompted. Includes docs-sync check and conventional commits.
 disable-model-invocation: true
@@ -33,22 +33,22 @@ Optional body.
 
 Never `git config`; never `--no-verify` unless user demands; never amend unless user asks and amend rules allow.
 
-## Push / PR
+## Push (always)
 
-Only if user said push / ship to GitHub / open PR:
+**Hard rule:** After a successful commit from this skill, **always** `git push` to the tracked remote (create upstream with `-u` if needed). Do not leave ship commits local-only.
 
 ```powershell
 git push -u origin HEAD
-# gh pr create if asked and gh available
+# gh pr create only if user asked for a PR
 ```
 
-Return commit hash + PR URL.
+If push fails (auth/network), report the error and the local commit hash — do not pretend the ship completed remotely.
 
 ## Output
 
 ```
 ### Ship
 **Commit:** <hash> <subject>
-**Remote:** pushed | local only
+**Remote:** pushed
 **PR:** <url or n/a>
 ```

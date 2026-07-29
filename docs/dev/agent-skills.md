@@ -16,7 +16,7 @@ Token-efficient workflows for maintainers and teammates. Skills live in `.cursor
 |---|---|---|
 | **wave-continue** | keep building, next wave, finish plan | Slice loop until blocked |
 | **verify-slice** | verify, test, smoke | Smallest pytest/vitest |
-| **ship-ready** | commit, push, ship, PR | Conventional commit (+ push if asked) |
+| **ship-ready** | commit, push, ship, PR | Conventional commit + **always push** to origin |
 | **issue-assess** | triage, assess ticket | Severity / area only |
 | **issue-fix** | fix #N, implement ticket | Code + PR, no auto-merge |
 

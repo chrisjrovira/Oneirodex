@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { preferencesFromShell, savePreferences } from '../api/preferences'
 import {
   clampTileVarsForNarrowViewport,
@@ -8,6 +9,8 @@ import {
   TILE_PERCENT_MIN,
 } from '../utils/tileSize'
 import './TileSizeControl.css'
+
+const PREF_SAVE_DEBOUNCE_MS = 320
 
 export function applyTileSizeCssVars(sizeOrPercent) {
   const isNarrow =
@@ -29,12 +32,9 @@ export function TileSizeControl({
   shellConfig = {},
 }) {
   const percent = normalizeTilePercent(value)
+  const saveTimerRef = useRef(0)
 
-  async function handleChange(nextPercent) {
-    const normalized = normalizeTilePercent(nextPercent)
-    applyTileSizeCssVars(normalized)
-    onChange?.(String(normalized))
-
+  async function persist(normalized) {
     try {
       await savePreferences(
         preferencesFromShell(shellConfig, { tile_size: String(normalized) }),
@@ -42,6 +42,17 @@ export function TileSizeControl({
     } catch {
       // Preference persistence is best-effort; CSS vars already applied.
     }
+  }
+
+  function handleChange(nextPercent) {
+    const normalized = normalizeTilePercent(nextPercent)
+    applyTileSizeCssVars(normalized)
+    onChange?.(String(normalized))
+
+    window.clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = window.setTimeout(() => {
+      void persist(normalized)
+    }, PREF_SAVE_DEBOUNCE_MS)
   }
 
   return (

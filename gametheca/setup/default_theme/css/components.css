@@ -84,12 +84,13 @@
     }
 }
 
-/* Popup Menu Button */
+/* Popup Menu Button — top-right (favorite moved to cover bottom-right) */
 .button-glass-hamburger {
     position: absolute;
     top: 10px;
-    left: 10px;
-    z-index: 13;
+    right: 10px;
+    left: auto;
+    z-index: 15;
     background-color: var(--btn-hamburger-bg);
     border-radius: 50%;
     padding: 1px 6px;
@@ -107,14 +108,17 @@
     color: var(--text-white);
 }
 
-.game-card:hover .button-glass-hamburger {
-    opacity: 1; 
+.game-card:hover .button-glass-hamburger,
+.button-glass-hamburger:focus-visible,
+.button-glass-hamburger[aria-expanded='true'] {
+    opacity: 1;
 }
 
-/* Favorite Button */
+/* Favorite Button — bottom-right of cover */
 .favorite-btn {
     position: absolute;
-    top: 10px;
+    top: auto;
+    bottom: 10px;
     right: 10px;
     width: 30px;
     height: 30px;
@@ -124,7 +128,7 @@
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.3s ease;
-    z-index: 13;
+    z-index: 15;
 }
 
 .favorite-btn i {
@@ -136,7 +140,9 @@
     background-color: var(--btn-hamburger-hover);
 }
 
-.game-card:hover .favorite-btn {
+.game-card:hover .favorite-btn,
+.favorite-btn:focus-visible,
+.favorite-btn.favorited {
     opacity: 1;
 }
 
@@ -147,6 +153,13 @@
 .favorite-btn.processing {
     pointer-events: none;
     opacity: 0.7;
+}
+
+/* Tile action menu anchors under top-right hamburger */
+.game-card > .popup-menu {
+    top: 42px;
+    right: 8px;
+    left: auto;
 }
 
 /* Legacy single badges (kept for non-React pages) */
@@ -211,6 +224,7 @@
     pointer-events: auto;
 }
 
+/* Clear favorite / status controls at bottom-right */
 .gt-badge-stack--bottom-left {
     bottom: 8px;
     left: 8px;
@@ -219,12 +233,13 @@
 }
 
 .gt-badge-stack--bottom-right {
-    bottom: 8px;
+    bottom: 44px;
     right: 8px;
     left: auto;
     top: auto;
 }
 
+/* Clear PLAY chip; hamburger is top-right so top-left is primary for UPDATE/OUT/NEW */
 .gt-badge-stack--top-left {
     top: 8px;
     left: 8px;
@@ -233,10 +248,25 @@
 }
 
 .gt-badge-stack--top-right {
-    top: 8px;
+    top: 44px;
     right: 8px;
     left: auto;
     bottom: auto;
+}
+
+/* VR always stacks over the system/console chip (bottom-left) */
+.gt-badge-stack--vr {
+    z-index: 13;
+    bottom: 8px;
+    left: 8px;
+    right: auto;
+    top: auto;
+    max-width: min(40%, 5rem);
+    pointer-events: none;
+}
+
+.game-card:has(.gt-platform-chip) .gt-badge-stack--vr {
+    bottom: 1.85rem;
 }
 
 @keyframes gt-spin {

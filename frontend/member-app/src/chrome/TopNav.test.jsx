@@ -76,3 +76,14 @@ test('search hint opens command palette callback', async () => {
   await user.click(screen.getByRole('button', { name: /search commands/i }))
   expect(onOpenCommandPalette).toHaveBeenCalled()
 })
+
+test('active primary link uses quiet underline class without pill fill', () => {
+  renderNav({ isAdmin: false })
+  const library = screen.getByRole('navigation', { name: 'Primary' }).querySelector(
+    'a.gt-topnav__link.active[href="/library"]',
+  )
+  expect(library).toBeTruthy()
+  expect(library.className).toContain('active')
+  // Pill fill removed in CSS — class remains `active` for NavLink; style is underline/weight.
+  expect(library).not.toHaveClass('gt-topnav__pill')
+})

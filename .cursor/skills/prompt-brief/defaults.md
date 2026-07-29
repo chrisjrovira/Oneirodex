@@ -26,7 +26,7 @@ Use these unless the user **explicitly** overrides in the same message.
 |---|---|
 | Docs | Always docs-sync; Docs rewrites program canvas to current truth **every Docs turn / every wave end / every commit pass**; live README screenshots on every commit/ship pass |
 | Commit | Only when user says commit / ship / push |
-| Push | Only when user says push / ship to GitHub |
+| Push | **Always** after ship/commit (ship-ready pushes to origin); PR only when asked |
 | Tests | Smallest relevant pytest/vitest slice |
 | Admin UI | Hybrid React shell + Jinja forms OK until migrated |
 | Branch | Stay on current feature branch unless asked |

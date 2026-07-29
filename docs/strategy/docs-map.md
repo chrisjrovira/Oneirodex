@@ -55,7 +55,7 @@
 | Guide | Audience | Status | Notes |
 |---|---|---|---|
 | Getting started (web) | End users | Have | [getting-started.md](../user/getting-started.md) |
-| Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) |
+| Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) — Pass A–F tile/LHN/details; store logos theme-adaptive (PSN · Xbox · Amazon · Humble · itch · EA · Ubisoft SVG · Fandom · unknown) |
 | Preferences & themes / icons | End users | Have | [preferences-themes.md](../user/preferences-themes.md) |
 | Downloading games | End users | Have | [downloads.md](../user/downloads.md) |
 | Browser / companion play matrix | End users | Have | [browser-play.md](../user/browser-play.md) · sample free ROMs [samples/free-roms/](../../samples/free-roms/README.md) |
@@ -88,7 +88,7 @@
 | Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — feature defaults ON · OIDC opt-in · malware block-on-hit · ClamAV profile |
 | Support inbox | Have | [support-inbox.md](../admin/support-inbox.md) |
-| Ops summary (`services` + `scans` contract) | Have | [ops-summary.md](../admin/ops-summary.md) — LiveKit · malware · companions · queues · scan folder counters · SRV-2 note |
+| Ops summary (`services` + `scans` contract) | Have | [ops-summary.md](../admin/ops-summary.md) — Grafana enrich (`load_avg` / process / db_ping / readyz) · issues.items · LiveKit · malware · companions · queues · scan counters |
 | Troubleshooting | Have | [troubleshooting.md](../admin/troubleshooting.md) — Features / malware / OIDC notes |
 | First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 8 |
 | Propose-only scan & proposals | Create | |
@@ -171,7 +171,7 @@ Also: Friends companion dock + `/social-companion` pop-out, Support report form,
 | Area | Action |
 |---|---|
 | README | Synced for 0.2.0 — **live PNG screenshots** (hero · Library · Systems) · Chat capture queued · feature defaults ON · OIDC opt-in · ClamAV profile · Friends companion · no Discord |
-| [progress.md](progress.md) | Jul 27 PM locks · CH/ART/MOD/SRV **shipped** · GOW/LIGHT/TC-1/Desktop **in flight** · no 1.1 track |
+| [progress.md](progress.md) | Jul 28 — Member UI + Ops Pass A–F **uncommitted** · store logos theme-adaptive (gap closed) · Chat capture blocked · Unraid waits human ship |
 | CHANGELOG | Unreleased catch-up for waves 14–17 + malware / Features; bump when cutting 0.2.0 |
 | `.env.example` | Includes LiveKit + SUPPORT_GITHUB_* + malware scan |
 | In-app Help (`/help`) | Ctrl/Cmd+K · `/healthz`/`/readyz` · Friends · Report · no Discord |
@@ -200,7 +200,8 @@ docs/
 ## 9. Immediate next documentation sprint
 
 1. Re-run Capture when UI changes — [CAPTURE.md](../assets/readme/CAPTURE.md) (README live PNGs + `docs/media/` base set; **Chat blocked** on login 500 until app healthy)  
-2. Browser play platform matrix guide refresh  
-3. Remaining Create runbooks as incidents hit production  
-4. CHANGELOG bump when cutting 0.2.0  
-5. Game details / freshness badges user guide (**Create**)
+2. ~~Human store logo assets~~ **Done** — theme-adaptive store marks (Ubisoft SVG; others PNG masks) — [library-and-systems.md](../user/library-and-systems.md)  
+3. Browser play platform matrix guide refresh  
+4. Remaining Create runbooks as incidents hit production  
+5. CHANGELOG bump when cutting 0.2.0 (include Member UI + Ops Pass A–F after human ship)  
+6. Game details / freshness badges user guide (**Create**)

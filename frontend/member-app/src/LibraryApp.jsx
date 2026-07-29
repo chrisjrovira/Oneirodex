@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchBrowseGames } from './api/browse'
 import { applyPlatformSkin, clearPlatformSkin } from './chrome/platformSkins'
@@ -69,9 +68,11 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
     () => createTranslator(initialConfig.locale),
     [initialConfig.locale],
   )
+  const filtersPanelId = useId()
   const [searchParams, setSearchParams] = useSearchParams()
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(initialConfig.perPage)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const defaultFilters = {
     sort_by: initialConfig.defaultSort,
     sort_order: initialConfig.defaultSortOrder,
@@ -154,6 +155,29 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
     }
   }, [filters, page, perPage, retryCount])
 
+  useEffect(() => {
+    function onResize() {
+      if (window.matchMedia('(min-width: 901px)').matches) {
+        setFiltersOpen(false)
+      }
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  useEffect(() => {
+    if (!filtersOpen) {
+      return undefined
+    }
+    function onKeyDown(event) {
+      if (event.key === 'Escape') {
+        setFiltersOpen(false)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [filtersOpen])
+
   const retry = () => {
     setRetryCount((count) => count + 1)
   }
@@ -162,12 +186,14 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
     writeLibraryFilters(nextFilters)
     setPage(1)
     setFilters(nextFilters)
+    setFiltersOpen(false)
   }
 
   const clearFilters = () => {
     writeLibraryFilters(defaultFilters)
     setPage(1)
     setFilters(defaultFilters)
+    setFiltersOpen(false)
     if (searchParamsHaveLibraryFilters(searchParams)) {
       setSearchParams({}, { replace: true })
     }
@@ -270,12 +296,37 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
       />
     </div>
   )
-  const filtersRoot = document.getElementById('library-filters-root')
 
   return (
-    <>
-      {filtersRoot ? createPortal(filterBar, filtersRoot) : filterBar}
-      {content}
-    </>
+    <div className="library-layout">
+      <button
+        type="button"
+        className="library-filters-mobile-toggle"
+        aria-expanded={filtersOpen}
+        aria-controls={filtersPanelId}
+        onClick={() => setFiltersOpen((open) => !open)}
+      >
+        {filtersOpen ? t('Close filters') : t('Filters')}
+      </button>
+
+      {filtersOpen ? (
+        <button
+          type="button"
+          className="library-filters-backdrop"
+          aria-label={t('Close filters')}
+          onClick={() => setFiltersOpen(false)}
+        />
+      ) : null}
+
+      <aside
+        id={filtersPanelId}
+        className={`library-layout__filters${filtersOpen ? ' is-open' : ''}`}
+        aria-label={t('Library filters')}
+      >
+        {filterBar}
+      </aside>
+
+      <div className="library-layout__main">{content}</div>
+    </div>
   )
 }

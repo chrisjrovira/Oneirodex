@@ -3,39 +3,26 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 
-def test_build_ops_summary_includes_required_keys():
-    with patch(
-        'gametheca.utils.ops_summary.get_cpu_usage',
-        return_value={'percent': 1, 'cores_physical': 2, 'cores_logical': 4},
-    ) as get_cpu_usage, patch(
-        'gametheca.utils.ops_summary.get_memory_usage',
-        return_value={'total': 8, 'used': 4, 'available': 4, 'percent': 50},
-    ), patch(
-        'gametheca.utils.ops_summary.get_disk_usage',
-        return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40},
-    ), patch(
-        'gametheca.utils.ops_summary.get_games_folder_usage',
-        return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40},
-    ), patch(
-        'gametheca.utils.ops_summary.get_system_info',
-        return_value={
+def _host_patches(**overrides):
+    """Common host/network/library mocks for build_ops_summary tests."""
+    defaults = {
+        'get_cpu_usage': {'percent': 1, 'cores_physical': 2, 'cores_logical': 4},
+        'get_memory_usage': {'total': 8, 'used': 4, 'available': 4, 'percent': 50},
+        'get_disk_usage': {'total': 1, 'used': 1, 'free': 0, 'percent': 40},
+        'get_games_folder_usage': {'total': 1, 'used': 1, 'free': 0, 'percent': 40},
+        'get_system_info': {
             'Operating System': 'Linux',
             'Hostname': 'h',
             'IP Address': '1.2.3.4',
             'Python Version': '3.12',
         },
-    ), patch(
-        'gametheca.utils.ops_summary.get_config_values',
-        return_value={},
-    ), patch(
-        'gametheca.utils.ops_summary.get_formatted_system_uptime',
-        return_value='1h',
-    ), patch(
-        'gametheca.utils.ops_summary.get_formatted_app_uptime',
-        return_value='1h',
-    ), patch(
-        'gametheca.utils.ops_summary.get_network_stats',
-        return_value={
+        'get_config_values': {},
+        'get_formatted_system_uptime': '1h',
+        'get_formatted_app_uptime': '1h',
+        'get_load_average': {'1': 0.5, '5': 0.4, '15': 0.3},
+        'get_process_memory': {'pid': 42, 'rss_bytes': 1048576},
+        '_db_ping_ms': 1.25,
+        'get_network_stats': {
             'bytes_sent': 0,
             'bytes_recv': 0,
             'packets_sent': 0,
@@ -46,34 +33,98 @@ def test_build_ops_summary_includes_required_keys():
             'dropout': 0,
             'connections': 0,
         },
-    ), patch(
-        'gametheca.utils.ops_summary._library_pulse',
-        return_value={
+        '_library_pulse': {
             'libraries': 1,
             'games': 2,
             'unmatched_folders': 0,
             'download_requests_open': 0,
         },
-    ), patch(
-        'gametheca.utils.ops_summary._scan_snapshot',
-        return_value={'active_count': 0, 'jobs': [], 'failure_count': 0},
-    ), patch(
-        'gametheca.utils.ops_summary._recent_errors',
-        return_value=([], 0),
-    ), patch(
-        'gametheca.utils.ops_summary._services_snapshot',
-        return_value={
+        '_scan_snapshot': {'active_count': 0, 'jobs': [], 'failure_count': 0},
+        '_recent_errors': ([], 0),
+        '_services_snapshot': {
             'livekit': {'enabled': False, 'configured': False, 'reachable': None},
             'malware': {'enabled': True, 'clamav_reachable': False},
-            'companions': {'online': 0, 'registered': 0, 'window_minutes': 3},
+            'companions': {
+                'online': 0,
+                'registered': 0,
+                'window_minutes': 3,
+                'by_kind': {},
+                'last_seen': {
+                    'newest': None,
+                    'within_1h': 0,
+                    'within_24h': 0,
+                    'stale': 0,
+                },
+            },
             'queues': {
                 'scans_active': 0,
                 'scans_pending': 0,
                 'scans_failures_24h': 0,
                 'downloads_open': 0,
             },
+            'readyz': {
+                'status': 'ok',
+                'http_status': 200,
+                'checks': {'database': {'ok': True, 'error': None}},
+                'check_ms': 2.0,
+            },
             'malware_module_enabled': True,
         },
+    }
+    defaults.update(overrides)
+    return defaults
+
+
+def test_build_ops_summary_includes_required_keys():
+    values = _host_patches()
+    with patch(
+        'gametheca.utils.ops_summary.get_cpu_usage',
+        return_value=values['get_cpu_usage'],
+    ) as get_cpu_usage, patch(
+        'gametheca.utils.ops_summary.get_memory_usage',
+        return_value=values['get_memory_usage'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_disk_usage',
+        return_value=values['get_disk_usage'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_games_folder_usage',
+        return_value=values['get_games_folder_usage'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_system_info',
+        return_value=values['get_system_info'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_config_values',
+        return_value=values['get_config_values'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_formatted_system_uptime',
+        return_value=values['get_formatted_system_uptime'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_formatted_app_uptime',
+        return_value=values['get_formatted_app_uptime'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_load_average',
+        return_value=values['get_load_average'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_process_memory',
+        return_value=values['get_process_memory'],
+    ), patch(
+        'gametheca.utils.ops_summary._db_ping_ms',
+        return_value=values['_db_ping_ms'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_network_stats',
+        return_value=values['get_network_stats'],
+    ), patch(
+        'gametheca.utils.ops_summary._library_pulse',
+        return_value=values['_library_pulse'],
+    ), patch(
+        'gametheca.utils.ops_summary._scan_snapshot',
+        return_value=values['_scan_snapshot'],
+    ), patch(
+        'gametheca.utils.ops_summary._recent_errors',
+        return_value=values['_recent_errors'],
+    ), patch(
+        'gametheca.utils.ops_summary._services_snapshot',
+        return_value=values['_services_snapshot'],
     ):
         from gametheca.utils.ops_summary import build_ops_summary
 
@@ -91,8 +142,83 @@ def test_build_ops_summary_includes_required_keys():
     }
     assert result['services']['companions']['online'] == 0
     assert result['host']['cpu']['cores_logical'] == 4
+    assert result['host']['load_avg'] == {'1': 0.5, '5': 0.4, '15': 0.3}
+    assert result['host']['process'] == {'pid': 42, 'rss_bytes': 1048576}
+    assert result['host']['db_ping_ms'] == 1.25
+    assert result['services']['readyz']['status'] == 'ok'
     assert result['issues']['overall'] == 'good'
+    assert set(result['issues'].keys()) == {'overall', 'items'}
+    assert isinstance(result['issues']['items'], list)
     get_cpu_usage.assert_called_once_with()
+
+
+def test_build_ops_summary_host_enrichment_none_when_unavailable():
+    values = _host_patches(
+        get_load_average=None,
+        get_process_memory=None,
+        _db_ping_ms=None,
+    )
+    with patch(
+        'gametheca.utils.ops_summary.get_cpu_usage',
+        return_value=values['get_cpu_usage'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_memory_usage',
+        return_value=values['get_memory_usage'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_disk_usage',
+        return_value=values['get_disk_usage'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_games_folder_usage',
+        return_value=values['get_games_folder_usage'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_system_info',
+        return_value=values['get_system_info'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_config_values',
+        return_value=values['get_config_values'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_formatted_system_uptime',
+        return_value=values['get_formatted_system_uptime'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_formatted_app_uptime',
+        return_value=values['get_formatted_app_uptime'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_load_average',
+        return_value=None,
+    ), patch(
+        'gametheca.utils.ops_summary.get_process_memory',
+        return_value=None,
+    ), patch(
+        'gametheca.utils.ops_summary._db_ping_ms',
+        return_value=None,
+    ), patch(
+        'gametheca.utils.ops_summary.get_network_stats',
+        return_value=values['get_network_stats'],
+    ), patch(
+        'gametheca.utils.ops_summary._library_pulse',
+        return_value=values['_library_pulse'],
+    ), patch(
+        'gametheca.utils.ops_summary._scan_snapshot',
+        return_value=values['_scan_snapshot'],
+    ), patch(
+        'gametheca.utils.ops_summary._recent_errors',
+        return_value=values['_recent_errors'],
+    ), patch(
+        'gametheca.utils.ops_summary._services_snapshot',
+        return_value={
+            **values['_services_snapshot'],
+            'readyz': None,
+        },
+    ):
+        from gametheca.utils.ops_summary import build_ops_summary
+
+        result = build_ops_summary(datetime.now(timezone.utc))
+
+    assert result['host']['load_avg'] is None
+    assert result['host']['process'] is None
+    assert result['host']['db_ping_ms'] is None
+    assert result['services']['readyz'] is None
+    assert result['issues']['overall'] == 'good'
 
 
 def test_scan_snapshot_counts_active_folder_failures():
@@ -177,66 +303,55 @@ def test_scan_snapshot_includes_recent_terminal_jobs():
 
 
 def test_build_ops_summary_keeps_other_sections_on_network_failure():
+    values = _host_patches()
     with patch(
         'gametheca.utils.ops_summary.get_cpu_usage',
-        return_value={'percent': 1, 'cores_physical': 2, 'cores_logical': 4},
+        return_value=values['get_cpu_usage'],
     ), patch(
         'gametheca.utils.ops_summary.get_memory_usage',
-        return_value={'total': 8, 'used': 4, 'available': 4, 'percent': 50},
+        return_value=values['get_memory_usage'],
     ), patch(
         'gametheca.utils.ops_summary.get_disk_usage',
-        return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40},
+        return_value=values['get_disk_usage'],
     ), patch(
         'gametheca.utils.ops_summary.get_games_folder_usage',
-        return_value={'total': 1, 'used': 1, 'free': 0, 'percent': 40},
+        return_value=values['get_games_folder_usage'],
     ), patch(
         'gametheca.utils.ops_summary.get_system_info',
-        return_value={
-            'Operating System': 'Linux',
-            'Hostname': 'h',
-            'IP Address': '1.2.3.4',
-            'Python Version': '3.12',
-        },
+        return_value=values['get_system_info'],
     ), patch(
         'gametheca.utils.ops_summary.get_config_values',
-        return_value={},
+        return_value=values['get_config_values'],
     ), patch(
         'gametheca.utils.ops_summary.get_formatted_system_uptime',
-        return_value='1h',
+        return_value=values['get_formatted_system_uptime'],
     ), patch(
         'gametheca.utils.ops_summary.get_formatted_app_uptime',
-        return_value='1h',
+        return_value=values['get_formatted_app_uptime'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_load_average',
+        return_value=values['get_load_average'],
+    ), patch(
+        'gametheca.utils.ops_summary.get_process_memory',
+        return_value=values['get_process_memory'],
+    ), patch(
+        'gametheca.utils.ops_summary._db_ping_ms',
+        return_value=values['_db_ping_ms'],
     ), patch(
         'gametheca.utils.ops_summary.get_network_stats',
         side_effect=RuntimeError('secret connection string'),
     ), patch(
         'gametheca.utils.ops_summary._library_pulse',
-        return_value={
-            'libraries': 1,
-            'games': 2,
-            'unmatched_folders': 0,
-            'download_requests_open': 0,
-        },
+        return_value=values['_library_pulse'],
     ), patch(
         'gametheca.utils.ops_summary._scan_snapshot',
-        return_value={'active_count': 0, 'jobs': [], 'failure_count': 0},
+        return_value=values['_scan_snapshot'],
     ), patch(
         'gametheca.utils.ops_summary._recent_errors',
-        return_value=([], 0),
+        return_value=values['_recent_errors'],
     ), patch(
         'gametheca.utils.ops_summary._services_snapshot',
-        return_value={
-            'livekit': {'enabled': False, 'configured': False},
-            'malware': {'enabled': True, 'clamav_reachable': False},
-            'companions': {'online': 0, 'registered': 0, 'window_minutes': 3},
-            'queues': {
-                'scans_active': 0,
-                'scans_pending': 0,
-                'scans_failures_24h': 0,
-                'downloads_open': 0,
-            },
-            'malware_module_enabled': True,
-        },
+        return_value=values['_services_snapshot'],
     ):
         from gametheca.utils.ops_summary import build_ops_summary
 
@@ -246,7 +361,133 @@ def test_build_ops_summary_keeps_other_sections_on_network_failure():
     assert result['network_error'] == 'Network data unavailable'
     assert 'secret connection string' not in result['network_error']
     assert result['host']['hostname'] == 'h'
+    assert result['host']['db_ping_ms'] == 1.25
     assert result['scans'] == {'active_count': 0, 'jobs': []}
     assert result['library']['games'] == 2
     assert result['services']['companions']['online'] == 0
     assert result['recent_errors'] == []
+
+
+def test_db_ping_ms_returns_none_on_failure():
+    with patch(
+        'gametheca.utils.ops_summary.db.session.execute',
+        side_effect=RuntimeError('db down'),
+    ):
+        from gametheca.utils.ops_summary import _db_ping_ms
+
+        assert _db_ping_ms() is None
+
+
+def test_db_ping_ms_returns_latency():
+    with patch('gametheca.utils.ops_summary.db.session.execute', return_value=None):
+        from gametheca.utils.ops_summary import _db_ping_ms
+
+        ms = _db_ping_ms()
+    assert isinstance(ms, float)
+    assert ms >= 0
+
+
+def test_readyz_pulse_includes_timing_and_checks():
+    payload = {
+        'status': 'ok',
+        'probe': 'readiness',
+        'checks': {
+            'database': {'ok': True, 'error': None},
+            'initialization': {'ok': True, 'complete': True, 'testing_bypass': False},
+        },
+    }
+    with patch(
+        'gametheca.utils.ops_summary.build_readiness',
+        return_value=(payload, 200),
+    ):
+        from gametheca.utils.ops_summary import _readyz_pulse
+
+        result = _readyz_pulse()
+
+    assert result['status'] == 'ok'
+    assert result['http_status'] == 200
+    assert result['checks']['database']['ok'] is True
+    assert isinstance(result['check_ms'], float)
+    assert result['check_ms'] >= 0
+
+
+def test_readyz_pulse_none_when_unavailable():
+    with patch(
+        'gametheca.utils.ops_summary.build_readiness',
+        side_effect=RuntimeError('no app'),
+    ):
+        from gametheca.utils.ops_summary import _readyz_pulse
+
+        assert _readyz_pulse() is None
+
+
+def test_companion_pulse_last_seen_breakdown():
+    newest = datetime(2026, 7, 28, 18, 0, tzinfo=timezone.utc)
+    scalars = [
+        MagicMock(scalar=MagicMock(return_value=1)),  # online
+        MagicMock(scalar=MagicMock(return_value=3)),  # registered
+        MagicMock(scalar=MagicMock(return_value=2)),  # within_1h
+        MagicMock(scalar=MagicMock(return_value=3)),  # within_24h
+        MagicMock(scalar=MagicMock(return_value=newest)),  # newest
+        MagicMock(all=MagicMock(return_value=[('companion', 2), ('thin', 1)])),
+        MagicMock(all=MagicMock(return_value=[('companion', 1)])),
+    ]
+
+    def _execute(_stmt):
+        return scalars.pop(0)
+
+    with patch(
+        'gametheca.utils.ops_summary.db.session.execute',
+        side_effect=_execute,
+    ):
+        from gametheca.utils.ops_summary import _companion_pulse
+
+        result = _companion_pulse()
+
+    assert result['online'] == 1
+    assert result['registered'] == 3
+    assert result['window_minutes'] == 3
+    assert result['by_kind'] == {
+        'companion': {'registered': 2, 'online': 1},
+        'thin': {'registered': 1, 'online': 0},
+    }
+    assert result['last_seen'] == {
+        'newest': newest.isoformat(),
+        'within_1h': 2,
+        'within_24h': 3,
+        'stale': 2,
+    }
+
+
+def test_get_load_average_none_when_unavailable():
+    import gametheca.utils.system_stats as stats_mod
+
+    with patch.object(
+        stats_mod.os,
+        'getloadavg',
+        create=True,
+        side_effect=OSError('no loadavg'),
+    ):
+        assert stats_mod.get_load_average() is None
+
+
+def test_get_load_average_returns_values_when_available():
+    import gametheca.utils.system_stats as stats_mod
+
+    with patch.object(
+        stats_mod.os,
+        'getloadavg',
+        create=True,
+        return_value=(0.12, 0.34, 0.56),
+    ):
+        assert stats_mod.get_load_average() == {'1': 0.12, '5': 0.34, '15': 0.56}
+
+
+def test_get_process_memory_none_when_unavailable():
+    with patch(
+        'gametheca.utils.system_stats.psutil.Process',
+        side_effect=RuntimeError('denied'),
+    ):
+        from gametheca.utils.system_stats import get_process_memory
+
+        assert get_process_memory() is None

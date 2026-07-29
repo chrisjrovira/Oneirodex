@@ -13,6 +13,7 @@ Quick checks before pinging an admin.
 | Can’t find a page | Nav clutter | **Ctrl+K** / ⌘K command palette — [faq.md](faq.md) |
 | Chat cramped on phone | Old frontend build | Admin rebuild `member-app` (Chat stacks ≤900px) |
 | Huge tiles on phone | Pref L/XL before density polish | Rebuild; tiles clamp automatically under 900px |
+| Some store links on details look like plain text | Logo assets not shipped yet for that store | Expected for itch · Humble · EA · Ubisoft · Xbox · PSN · Amazon · wikia/fandom · unknown — link still works; Steam/GOG/Epic/IGDB/YouTube/Wikipedia/official have marks |
 
 ## Downloads
 

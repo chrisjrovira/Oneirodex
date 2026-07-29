@@ -127,6 +127,7 @@ export function GameCard({
           id={`menuButton-${game.uuid}`}
           type="button"
           className="button-glass-hamburger"
+          data-chrome-anchor="top-right"
           aria-label={`Open actions for ${game.name}`}
           aria-expanded={menuOpen}
           aria-controls={`popupMenu-${game.uuid}`}
@@ -145,6 +146,7 @@ export function GameCard({
           className={`favorite-btn${isFavorite ? ' favorited' : ''}${favoritePending ? ' processing' : ''}`}
           data-game-uuid={game.uuid}
           data-is-favorite={String(isFavorite)}
+          data-chrome-anchor="bottom-right"
           aria-label={`${isFavorite ? 'Remove' : 'Add'} ${game.name} ${isFavorite ? 'from' : 'to'} favorites`}
           aria-pressed={isFavorite}
           disabled={favoritePending}
@@ -377,8 +379,8 @@ export function GameCard({
 
         <BadgeStack
           game={game}
-          preferredCorner="bottom-right"
-          collidesWithTitle={Boolean(game.badge_title_collision) || Boolean(game.library_platform)}
+          preferredCorner="top-left"
+          collidesWithTitle={Boolean(game.badge_title_collision)}
         />
       </div>
     </div>

@@ -1,6 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_CARDS } from './navConfig'
+import {
+  MeterBar,
+  MetricTile,
+  OpsStatusBanner,
+  companionKindRows,
+  formatBytes,
+  formatLoadAvg,
+  formatReadyz,
+  na,
+} from './opsWidgets'
 
 async function getJson(url) {
   const response = await fetch(url, { credentials: 'same-origin' })
@@ -39,96 +49,187 @@ function LinkRow({ links }) {
 export function DashboardPage() {
   const [summary, setSummary] = useState(null)
   const [error, setError] = useState(null)
+  const requestRef = useRef({ id: 0, controller: null })
+
+  const refresh = useCallback(() => {
+    requestRef.current.controller?.abort()
+    const controller = new AbortController()
+    const id = requestRef.current.id + 1
+    requestRef.current = { id, controller }
+    getJson('/admin/api/ops/summary')
+      .then((data) => {
+        if (requestRef.current.id !== id || controller.signal.aborted) return
+        setSummary(data)
+        setError(null)
+      })
+      .catch((err) => {
+        if (err.name === 'AbortError') return
+        if (requestRef.current.id !== id) return
+        setError(err)
+      })
+  }, [])
 
   useEffect(() => {
-    const controller = new AbortController()
-    getJson('/admin/api/ops/summary')
-      .then(setSummary)
-      .catch((err) => {
-        if (err.name !== 'AbortError') setError(err)
-      })
-    return () => controller.abort()
-  }, [])
+    refresh()
+    const timer = window.setInterval(refresh, 15000)
+    return () => {
+      window.clearInterval(timer)
+      requestRef.current.controller?.abort()
+    }
+  }, [refresh])
 
   const library = summary?.library
   const scans = summary?.scans
   const host = summary?.host
+  const services = summary?.services
   const issues = summary?.issues
   const disk = host?.disk_games || host?.disk_base
   const severity = issues?.overall || 'good'
+  const companions = services?.companions
+  const kindRows = companionKindRows(companions?.by_kind)
 
   return (
-    <Page title="Dashboard" lede="Ops glance for libraries, scans, and system health.">
+    <Page title="Dashboard" lede="Observability glance — libraries, host pulse, and open issues (~15s).">
       {error ? (
         <div role="alert" className="gt-admin-alert">
           Unable to load ops summary. Open System for details.
         </div>
       ) : null}
 
-      <section className={`gt-ops-status gt-ops-status--${severity}`} aria-label="Health">
-        <strong>
-          {severity === 'bad'
-            ? 'Action required'
-            : severity === 'warn'
-              ? 'Attention needed'
-              : 'All systems healthy'}
-        </strong>
-        {summary?.as_of ? <span>Updated {new Date(summary.as_of).toLocaleString()}</span> : null}
-      </section>
+      <OpsStatusBanner
+        severity={severity}
+        asOf={summary?.as_of}
+        items={issues?.items}
+        ariaLabel="Health"
+      />
 
-      <div className="gt-admin-card-grid">
-        <div className="gt-admin-card">
-          <h2>Libraries</h2>
-          <p className="gt-admin-metric">{library?.libraries ?? '—'}</p>
-          <p className="gt-admin-lede">configured folders</p>
-        </div>
-        <div className="gt-admin-card">
-          <h2>Games</h2>
-          <p className="gt-admin-metric">{library?.games ?? '—'}</p>
-          <p className="gt-admin-lede">
-            {library?.unmatched_folders != null
-              ? `${library.unmatched_folders} unmatched folders`
-              : 'in catalogue'}
-          </p>
-        </div>
-        <div className="gt-admin-card">
-          <h2>Scan jobs</h2>
-          <p className="gt-admin-metric">{scans?.active_count ?? '—'}</p>
-          <p className="gt-admin-lede">
-            {(scans?.jobs || [])[0]
+      <div className="gt-ops-strip" aria-label="Key metrics">
+        <MetricTile label="Libraries" value={na(library?.libraries)} hint="folders" />
+        <MetricTile
+          label="Games"
+          value={na(library?.games)}
+          hint={
+            library?.unmatched_folders != null
+              ? `${library.unmatched_folders} unmatched`
+              : 'catalogue'
+          }
+        />
+        <MetricTile
+          label="Scans"
+          value={na(scans?.active_count)}
+          hint={
+            (scans?.jobs || [])[0]
               ? `${scans.jobs[0].library || 'job'} · ${scans.jobs[0].progress}%`
-              : 'active now'}
-          </p>
-        </div>
-        <div className="gt-admin-card">
-          <h2>Disk</h2>
-          <p className="gt-admin-metric">
-            {disk?.percent != null ? `${disk.percent}%` : '—'}
-          </p>
-          <p className="gt-admin-lede">
-            {disk?.free != null || disk?.used != null
-              ? `used on games volume`
-              : 'See Storage settings'}
-          </p>
-        </div>
+              : 'active'
+          }
+        />
+        <MetricTile
+          label="Disk"
+          value={disk?.percent != null ? `${disk.percent}%` : 'n/a'}
+          hint="games volume"
+        />
+        <MetricTile label="Load 1/5/15" value={formatLoadAvg(host?.load_avg)} />
+        <MetricTile
+          label="Process RSS"
+          value={formatBytes(host?.process?.rss_bytes)}
+          hint={host?.process?.pid != null ? `pid ${host.process.pid}` : 'n/a'}
+        />
+        <MetricTile
+          label="DB ping"
+          value={host?.db_ping_ms != null ? `${host.db_ping_ms} ms` : 'n/a'}
+        />
+        <MetricTile label="Readyz" value={formatReadyz(services?.readyz)} />
+        <MetricTile
+          label="Companions"
+          value={`${companions?.online ?? 0} / ${companions?.registered ?? 0}`}
+          hint={
+            kindRows.length
+              ? kindRows.map((r) => `${r.kind} ${r.online}/${r.registered}`).join(' · ')
+              : 'by kind n/a'
+          }
+        />
       </div>
 
-      {(summary?.recent_errors || []).length > 0 ? (
-        <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
-          <h2>Recent errors</h2>
-          <ul className="gt-ops-list">
-            {summary.recent_errors.slice(0, 4).map((event) => (
-              <li key={event.id}>
-                <code>{event.event_type}</code> {event.text}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <div className="gt-ops-console">
+        <section className="gt-ops-panel">
+          <h2>Host meters</h2>
+          {!host ? (
+            <p className="gt-admin-lede">Host data unavailable.</p>
+          ) : (
+            <div className="gt-ops-meters">
+              <MeterBar label="CPU" percent={host.cpu?.percent} />
+              <MeterBar
+                label="Memory"
+                percent={host.memory?.percent}
+                detail={
+                  host.memory
+                    ? `${formatBytes(host.memory.used)} / ${formatBytes(host.memory.total)}`
+                    : null
+                }
+              />
+              <MeterBar label="Games disk" percent={disk?.percent} />
+            </div>
+          )}
+        </section>
+
+        <section className="gt-ops-panel">
+          <h2>Companions by kind</h2>
+          {kindRows.length === 0 ? (
+            <p className="gt-admin-lede">
+              {companions
+                ? `Online ${companions.online ?? 0} / ${companions.registered ?? 0} · last seen 1h ${companions.last_seen?.within_1h ?? 0}`
+                : 'n/a'}
+            </p>
+          ) : (
+            <table className="gt-ops-table">
+              <thead>
+                <tr>
+                  <th>Kind</th>
+                  <th>Online</th>
+                  <th>Registered</th>
+                </tr>
+              </thead>
+              <tbody>
+                {kindRows.map((row) => (
+                  <tr key={row.kind}>
+                    <td>{row.kind}</td>
+                    <td>{row.online}</td>
+                    <td>{row.registered}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+
+        {(summary?.recent_errors || []).length > 0 ? (
+          <section className="gt-ops-panel gt-ops-panel--wide">
+            <h2>Recent errors</h2>
+            <table className="gt-ops-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.recent_errors.slice(0, 4).map((event) => (
+                  <tr key={event.id}>
+                    <td>
+                      <code>{event.event_type}</code>
+                    </td>
+                    <td>{event.text}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        ) : null}
+      </div>
 
       <LinkRow
         links={[
-          { href: '/admin/ops', label: 'Ops glance' },
+          { href: '/admin/ops', label: 'Ops console' },
           { href: '/scan_management', label: 'Scans' },
           { href: '/libraries', label: 'Libraries' },
           { href: '/admin/settings', label: 'Settings' },
@@ -296,7 +397,10 @@ export function HelpPage() {
   return (
     <Page title="Admin help" lede="Ops chrome is a React top bar — no member left nav.">
       <ul>
-        <li>Dashboard and Ops show live summary from <code>/admin/api/ops/summary</code>.</li>
+        <li>
+          Dashboard and Ops are an observability console (~15s poll) from{' '}
+          <code>/admin/api/ops/summary</code> — status strip, meters, issues list, services/scans tables.
+        </li>
         <li>Libraries list comes from <code>/api/get_libraries</code>.</li>
         <li>Settings cards open module pages (Arr, AI, Themes, Storage, …).</li>
         <li>

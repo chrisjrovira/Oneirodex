@@ -73,7 +73,7 @@ const FAQ_SECTIONS = [
     items: [
       'Preferences → Preferred game language (default en-US) is separate from UI language.',
       'Game details show ROM region/language chips when filenames include No-Intro-style tags.',
-      'Library LANG chip / LANG badge filters and marks titles that may not match your preferred language; PATCH marks curated extras.',
+      'Library left-column LANG chip / LANG badge filters and marks titles that may not match your preferred language; PATCH marks curated extras.',
       'When the ROM may not match your preference, open Translations & patches for .ips/.bps/.ups extras.',
       'Apply patches with Flips and keep a backup of the original ROM — see docs/user/translation-patches.md.',
       'No fan patch? Companion/native RetroArch can use AI Service live OCR/MT overlay when the operator enables ENABLE_ROM_AI_TRANSLATE.',
@@ -88,6 +88,7 @@ const FAQ_SECTIONS = [
       'More → Big Picture for gamepad-first browse: A open, X download, B Attract, Y Friends, Esc exit (DualSense: × □ ○ △).',
       'Steam Deck / Steam Input can remap the browser if you launch it from Steam — GameTheca uses the standard Gamepad API.',
       'VR browse (/vr when enabled) is headset-friendly for any seat — not Quest-only. PSVR2/SteamVR: use a desktop browser on the PC + Big Picture with a normal pad.',
+      'Library tiles show a non-dismissable VR badge over the system chip when a title is tagged VR (not a Library filter chip).',
       'Quest / standalone: open /vr in the headset browser (optional Add to Home). Play heavy PC titles via Moonlight to the household host.',
       'Sense / VR controllers are for SteamVR games; they do not reliably drive the GameTheca website.',
     ],

@@ -30,13 +30,13 @@ After login you land in the **member SPA** with a **top nav** (no left sidebar):
 
 If Discover/Library look unstyled, the deploy is missing **`member-app.css`** — ask an admin to rebuild the image.
 
-On phones and narrow tablets (≤900px), the top nav becomes a **hamburger** menu, Chat stacks channels above messages with larger touch targets, library tiles clamp denser, and Library **filters / pagination** stack full-width (your saved tile preference still applies on desktop).
+On phones and narrow tablets (≤900px), the top nav becomes a **hamburger** menu, Library **filters** open as a left drawer/sheet, Chat stacks channels above messages with larger touch targets, library tiles clamp denser, and pagination wraps full-width (your saved tile preference still applies on desktop).
 
 ## First things to try
 
-1. Open **Library** and filter by platform or search.
+1. Open **Library** and filter by platform or search (sticky Filters on desktop; drawer ≤900px). Tile size is the TopNav percent slider.
 2. Open **Systems** and pick a console family.
-3. Open a game → **Download** (streaming zip).
+3. Open a game → details (full-width summary, screenshot lightbox, store/catalog marks when known) → **Download** (streaming zip).
 4. Open preferences (account menu) → theme swatch + icon pack + tile size.
 5. Optional: **Friends** pill / **More → Friends window**, **Activity** (presence / voice if enabled), **Chat**, or **Report issue**.
 

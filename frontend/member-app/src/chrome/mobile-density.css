@@ -56,6 +56,11 @@
     gap: 0.55rem;
   }
 
+  .library-layout {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
   .library-filters.container-filtersandsort {
     display: grid;
     grid-template-columns: 1fr;

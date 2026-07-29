@@ -1,8 +1,32 @@
+/* Smooth tile-size CSS var transitions (registered properties). */
+@property --gt-tile-min {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 180px;
+}
+
+@property --gt-tile-gap {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 10px;
+}
+
+html {
+  transition: --gt-tile-min 0.22s ease, --gt-tile-gap 0.22s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    transition: none;
+  }
+}
+
 .game-library-container[data-library-grid]:not([data-library-virtual]) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min, 180px), 1fr));
   gap: var(--gt-tile-gap, 10px);
   align-items: start;
+  transition: gap 0.22s ease;
 }
 
 .game-library-container[data-library-virtual] {
@@ -15,4 +39,12 @@
   gap: var(--gt-tile-gap, 10px);
   align-items: start;
   box-sizing: border-box;
+  transition: gap 0.22s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-library-container[data-library-grid]:not([data-library-virtual]),
+  .game-library-row {
+    transition: none;
+  }
 }

@@ -1,7 +1,7 @@
 /** Badge chip toggles for library browse (maps to /browse_games badge params). */
 
+/** Chips shown in the Library LHN panel. VR is tile badge-only — not a filter chip. */
 export const BADGE_FILTER_CHIPS = [
-  { param: 'is_vr', label: 'VR', title: 'Virtual Reality titles' },
   { param: 'has_updates', label: 'UPDATE', title: 'Updates available' },
   { param: 'freshness_behind', label: 'OUT/~', title: 'Behind store version' },
   { param: 'new_import', label: 'NEW', title: 'Newly added to library' },
@@ -13,7 +13,11 @@ export const BADGE_FILTER_CHIPS = [
   },
 ]
 
-export const BADGE_FILTER_PARAMS = BADGE_FILTER_CHIPS.map((chip) => chip.param)
+/** URL/API badge params still recognized (includes legacy is_vr deep-links). */
+export const BADGE_FILTER_PARAMS = [
+  'is_vr',
+  ...BADGE_FILTER_CHIPS.map((chip) => chip.param),
+]
 
 /**
  * @param {URLSearchParams} searchParams

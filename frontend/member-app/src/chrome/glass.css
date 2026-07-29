@@ -71,6 +71,7 @@
   pointer-events: none;
 }
 
+/* PLAY stays top-left; hamburger is top-right so they no longer collide */
 .game-card .gt-tile-play {
   position: absolute;
   z-index: 14;
@@ -90,6 +91,11 @@
   color: var(--gt-accent-contrast, #0b0d10);
   background: var(--gt-accent, #2fd67b);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* When PLAY is present, nudge UPDATE/OUT/NEW stack below it */
+.game-card:has(.gt-tile-play) .gt-badge-stack--top-left {
+  top: 2.35rem;
 }
 
 .game-card .gt-tile-play:hover,

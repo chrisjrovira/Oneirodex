@@ -16,6 +16,20 @@ test('renders L and VR badges via BadgeStack when flags set', () => {
   render(<GameCard game={baseGame} showPlayStatus={false} isAdmin={false} />)
   expect(screen.getByTitle(/local metadata/i)).toHaveTextContent('L')
   expect(screen.getByTitle(/virtual reality/i)).toHaveTextContent('VR')
+  expect(screen.getByLabelText(/vr badge/i)).toHaveAttribute('data-vr-anchor', 'platform')
+  expect(screen.getByLabelText(/game badges/i)).toHaveAttribute('data-corner', 'top-left')
+})
+
+test('places hamburger top-right and favorite bottom-right of cover', () => {
+  render(<GameCard game={baseGame} showPlayStatus={false} isAdmin={false} />)
+  expect(screen.getByRole('button', { name: /open actions for archery kings vr/i })).toHaveAttribute(
+    'data-chrome-anchor',
+    'top-right',
+  )
+  expect(screen.getByRole('button', { name: /add archery kings vr to favorites/i })).toHaveAttribute(
+    'data-chrome-anchor',
+    'bottom-right',
+  )
 })
 
 test('omits BadgeStack when no signals', () => {
@@ -27,4 +41,5 @@ test('omits BadgeStack when no signals', () => {
     />,
   )
   expect(screen.queryByLabelText(/game badges/i)).toBeNull()
+  expect(screen.queryByLabelText(/vr badge/i)).toBeNull()
 })

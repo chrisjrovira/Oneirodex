@@ -3,32 +3,65 @@
   flex-wrap: wrap;
   gap: 0.45rem;
   list-style: none;
+  margin: 0;
   padding: 0;
+}
+
+.gt-store-links__item {
+  display: contents;
 }
 
 .gt-store-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  min-height: 2rem;
-  padding: 0.25rem 0.65rem 0.25rem 0.45rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gt-store-color, #2fd67b) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-store-color, #2fd67b) 16%, transparent);
+  gap: 0.4rem;
+  min-height: 2.1rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--gt-store-color, #2fd67b) 50%, transparent);
+  background: color-mix(in srgb, var(--gt-store-color, #2fd67b) 14%, var(--gt-surface, #141820));
   color: var(--gt-text, #f2f4f8);
   text-decoration: none;
   font-size: 0.78rem;
   font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.gt-store-link:hover {
+.gt-store-link:hover,
+.gt-store-link:focus-visible {
   border-color: var(--gt-store-color, #2fd67b);
+  background: color-mix(in srgb, var(--gt-store-color, #2fd67b) 22%, var(--gt-surface, #141820));
+  outline: none;
 }
 
 .gt-store-link__icon {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1.15rem;
+  height: 1.15rem;
   flex: 0 0 auto;
+  color: var(--gt-store-color, #2fd67b);
+}
+
+/* PNG silhouettes: recolor with theme text via mask + currentColor */
+.gt-store-link__icon--mask {
+  display: inline-block;
+  background-color: currentColor;
+  color: var(--gt-text, #f2f4f8);
+  -webkit-mask-image: var(--gt-store-mask);
+  mask-image: var(--gt-store-mask);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.gt-store-link--epic .gt-store-link__icon,
+.gt-store-link--wikipedia .gt-store-link__icon,
+.gt-store-link--twitter .gt-store-link__icon,
+.gt-store-link--apple .gt-store-link__icon,
+.gt-store-link--ubisoft .gt-store-link__icon {
+  color: var(--gt-text, #f2f4f8);
 }
 
 .gt-store-link__label {

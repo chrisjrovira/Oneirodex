@@ -9,6 +9,8 @@ import {
   readCssPx,
 } from './gameGridLayout'
 
+const TILE_REMEASURE_DEBOUNCE_MS = 160
+
 function measureGridMetrics(el) {
   if (!el) {
     return { width: 0, tileMin: 180, gap: 10, scrollMargin: 0 }
@@ -20,6 +22,15 @@ function measureGridMetrics(el) {
   const scrollMargin =
     Number.isFinite(top) ? top + (window.scrollY || 0) : el.offsetTop || 0
   return { width, tileMin, gap, scrollMargin }
+}
+
+function metricsEqual(a, b) {
+  return (
+    a.width === b.width &&
+    a.tileMin === b.tileMin &&
+    a.gap === b.gap &&
+    a.scrollMargin === b.scrollMargin
+  )
 }
 
 export function GameGrid({
@@ -44,32 +55,63 @@ export function GameGrid({
       return undefined
     }
 
-    const update = () => {
-      setMetrics(measureGridMetrics(el))
+    let tileTimer = 0
+    let resizeRaf = 0
+
+    const commit = (next) => {
+      setMetrics((current) => (metricsEqual(current, next) ? current : next))
     }
-    update()
+
+    const updateNow = () => {
+      commit(measureGridMetrics(el))
+    }
+
+    /** Resize / scroll-margin: immediate (batched via rAF). */
+    const updateResize = () => {
+      if (resizeRaf) {
+        cancelAnimationFrame(resizeRaf)
+      }
+      resizeRaf = requestAnimationFrame(() => {
+        resizeRaf = 0
+        updateNow()
+      })
+    }
+
+    /**
+     * Tile size slider writes --gt-tile-* on <html> every tick.
+     * Debounce remeasure so CSS var transitions can run without virtualizer thrash.
+     */
+    const updateTileVars = () => {
+      window.clearTimeout(tileTimer)
+      tileTimer = window.setTimeout(updateNow, TILE_REMEASURE_DEBOUNCE_MS)
+    }
+
+    updateNow()
 
     let resizeObserver
     if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(update)
+      resizeObserver = new ResizeObserver(updateResize)
       resizeObserver.observe(el)
     }
 
-    // Tile size slider writes --gt-tile-* on <html>; remeasure when that changes.
     const mutationObserver =
       typeof MutationObserver !== 'undefined'
-        ? new MutationObserver(update)
+        ? new MutationObserver(updateTileVars)
         : null
     mutationObserver?.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['style'],
     })
 
-    window.addEventListener('resize', update)
+    window.addEventListener('resize', updateResize)
     return () => {
+      window.clearTimeout(tileTimer)
+      if (resizeRaf) {
+        cancelAnimationFrame(resizeRaf)
+      }
       resizeObserver?.disconnect()
       mutationObserver?.disconnect()
-      window.removeEventListener('resize', update)
+      window.removeEventListener('resize', updateResize)
     }
   }, [])
 

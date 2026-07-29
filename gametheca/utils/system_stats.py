@@ -84,6 +84,44 @@ def format_bytes(bytes_value):
         bytes_value /= 1024
     return f"{bytes_value:.2f} PB"
 
+def get_load_average():
+    """Return 1/5/15-minute load averages when the OS exposes them.
+
+    Linux/macOS via ``os.getloadavg``; Windows and restricted hosts return None.
+    """
+    try:
+        one, five, fifteen = os.getloadavg()
+        return {
+            '1': round(float(one), 2),
+            '5': round(float(five), 2),
+            '15': round(float(fifteen), 2),
+        }
+    except (AttributeError, OSError) as e:
+        # Windows has no getloadavg; some containers deny /proc/loadavg.
+        print(f"Load average unavailable: {e}")
+        return None
+    except Exception as e:
+        print(f"Error getting load average: {e}")
+        return None
+
+
+def get_process_memory():
+    """Return this process RSS (bytes) when cheaply available via psutil."""
+    try:
+        proc = psutil.Process()
+        rss = int(proc.memory_info().rss)
+        return {
+            'pid': proc.pid,
+            'rss_bytes': rss,
+        }
+    except (psutil.Error, OSError, AttributeError) as e:
+        print(f"Process memory unavailable: {e}")
+        return None
+    except Exception as e:
+        print(f"Error getting process memory: {e}")
+        return None
+
+
 def get_process_count():
     """Get number of running processes"""
     try:

@@ -4,7 +4,7 @@ Some ROMs ship in a region or language that does not match your preferred game l
 
 ## Library filter
 
-On Library, the **LANG** badge chip filters to titles whose ROM language is known and does **not** match your preferred game language. Unknown / unlabeled ROMs are left out of that filter. Cover badges show **LANG** on mismatch and **PATCH** when a translation patch exists in extras.
+On Library, the **LANG** badge chip (in the left filter column) filters to titles whose ROM language is known and does **not** match your preferred game language. Unknown / unlabeled ROMs are left out of that filter. Cover badges show **LANG** on mismatch and **PATCH** when a translation patch exists in extras.
 
 ## Safety
 

@@ -31,7 +31,8 @@ export function listDismissedKinds(gameUuid) {
 }
 
 export function dismissBadge(gameUuid, kind) {
-  if (!gameUuid || !kind) {
+  // VR is badge-only chrome over the platform chip — never dismissable.
+  if (!gameUuid || !kind || kind === 'VR') {
     return
   }
   const store = readStore()
@@ -55,5 +56,5 @@ export function filterDismissedBadges(gameUuid, badges) {
   if (dismissed.size === 0) {
     return badges
   }
-  return badges.filter((badge) => !dismissed.has(badge.kind))
+  return badges.filter((badge) => badge.kind === 'VR' || !dismissed.has(badge.kind))
 }
