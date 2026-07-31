@@ -67,10 +67,16 @@ def test_ai_config_endpoint_and_save_ui():
 
 
 def test_storage_page_surfaces_env_gates():
+    # Wave 14a: Jinja emptied to SPA shell; env gates live in React + GET /api/storage/status.
     html = _read(TEMPLATES / 'storage.html')
-    assert 'helpers_enabled' in html
+    assert 'React StoragePage' in html or 'admin-app' in html
     assert 'ENABLE_HARDLINK_HELPERS' in html
     assert 'ALLOW_HARDLINK_APPLY' in html
+    assert 'GET /api/storage/status' in html or '/api/storage/status' in html
+    spa = _read(ROOT / 'frontend' / 'admin-app' / 'src' / 'StoragePage.jsx')
+    assert '/api/storage/status' in spa
+    assert '/api/storage/hardlink/preview' in spa
+    assert 'allow_apply' in spa
     src = _read(ROOT / 'gametheca' / 'routes_admin_ext' / 'settings.py')
     assert 'hardlink_helpers_on' in src
     assert 'helpers_enabled=helpers_on' in src

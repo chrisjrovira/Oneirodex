@@ -7,6 +7,8 @@
 
 A full clone can balloon past **1 GB** from regenerable caches while the **shipped** surface stays small: Python app + vendored WebRetro cores (~72 MB) + SPA built inside Docker. Local `node_modules` and Tauri `target/` are **dev-only**.
 
+**Unraid host disk is separate:** if the array/cache is ~99% full, free space on the **NAS** before `git pull` / `docker compose build` — wiping workspace caches here does not free array capacity. See [unraid-deploy.md § Deploy gates](unraid-deploy.md#deploy-gates-operator-checklist). Prefer repo access via **UNC** or **`Y:`**; never remap **`Z:`** (game share).
+
 ## KEEP (never delete)
 
 | Path | Why |

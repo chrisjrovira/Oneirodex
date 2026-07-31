@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 
 from flask import current_app, url_for
 from sqlalchemy import and_, exists, select
@@ -91,8 +92,56 @@ def _ai_target_lang_hint(preferred_locale: str | None) -> str:
     return pref.split('-')[0] or 'en'
 
 
+def _parse_video_urls(raw) -> list[str]:
+    """Normalize Game.video_urls (CSV string or list) into a clean URL list."""
+    if raw is None or raw == '':
+        return []
+    if isinstance(raw, list):
+        return [str(u).strip() for u in raw if str(u).strip()]
+    if isinstance(raw, str):
+        return [part.strip() for part in raw.split(',') if part.strip()]
+    return []
+
+
+def _youtube_embed_url(video_url: str) -> str | None:
+    patterns = [
+        r'youtube\.com/watch\?v=([a-zA-Z0-9_-]+)',
+        r'youtube\.com/embed/([a-zA-Z0-9_-]+)',
+        r'youtu\.be/([a-zA-Z0-9_-]+)',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, video_url or '')
+        if match:
+            return f'https://www.youtube.com/embed/{match.group(1)}'
+    if video_url and ('youtube.com' in video_url or 'youtu.be' in video_url):
+        return video_url
+    return None
+
+
+def _classify_extra_type(extra) -> str:
+    kind = (getattr(extra, 'extra_kind', None) or '').strip().lower()
+    if kind in ('dlc', 'extra', 'manual', 'translation_patch'):
+        return kind
+    name = os.path.basename(getattr(extra, 'file_path', None) or '').lower()
+    if 'dlc' in name:
+        return 'dlc'
+    if kind:
+        return kind
+    return 'extra'
+
+
+def _extra_on_server(extra) -> bool:
+    path = getattr(extra, 'file_path', None) or ''
+    if not path:
+        return False
+    try:
+        return os.path.exists(path)
+    except OSError:
+        return False
+
+
 def build_game_details_payload(game, user) -> dict:
-    """JSON-safe details payload (no disk paths)."""
+    """JSON-safe details payload. Disk paths only for admin viewers."""
     user_id = getattr(user, 'id', None) if user is not None else None
     updates = db.session.execute(
         select(GameUpdate).filter_by(game_uuid=game.uuid)
@@ -150,9 +199,18 @@ def build_game_details_payload(game, user) -> dict:
             cover_image = img
         elif image_type == 'screenshot':
             raw = getattr(img, 'url', None) or ''
-            if raw.startswith('http') or raw.startswith('/'):
+            download_url = getattr(img, 'download_url', None) or ''
+            if download_url.startswith('//'):
+                download_url = f'https:{download_url}'
+            is_downloaded = bool(getattr(img, 'is_downloaded', False))
+            if raw.startswith(('http://', 'https://', '/')):
                 screenshots.append(raw)
-            else:
+            elif is_downloaded and raw:
+                screenshots.append(url_for('static', filename=f'library/images/{raw}'))
+            elif download_url.startswith(('http://', 'https://')):
+                # Pending / failed local download — still show remote IGDB art
+                screenshots.append(download_url)
+            elif raw:
                 screenshots.append(url_for('static', filename=f'library/images/{raw}'))
     platform_key = library_platform_key(game)
     platform_label = None
@@ -217,11 +275,38 @@ def build_game_details_payload(game, user) -> dict:
                 ),
             }
 
-    video_urls = getattr(game, 'video_urls', None) or []
-    if not isinstance(video_urls, list):
-        video_urls = []
+    video_urls = _parse_video_urls(getattr(game, 'video_urls', None))
+    trailers = []
+    for url in video_urls:
+        embed = _youtube_embed_url(url)
+        trailers.append({
+            'url': url,
+            'embed_url': embed or url,
+            'provider': 'youtube' if embed else 'unknown',
+        })
 
-    return {
+    youtube_demo_url = None
+    if not trailers:
+        for url_row in game.urls:
+            url_type = (getattr(url_row, 'url_type', None) or '').lower()
+            href = getattr(url_row, 'url', None) or ''
+            if 'youtube' in url_type or 'youtu.be' in href or 'youtube.com' in href:
+                youtube_demo_url = href
+                break
+
+    extras_list = []
+    for extra in extras:
+        extras_list.append({
+            'uuid': extra.uuid,
+            'type': _classify_extra_type(extra),
+            'name': os.path.basename(extra.file_path or '') or extra.uuid[:8],
+            'on_server': _extra_on_server(extra),
+            'extra_kind': getattr(extra, 'extra_kind', None),
+            'download_url': f'/download_other/extra/{game.uuid}/{extra.uuid}',
+        })
+
+    is_admin = bool(getattr(user, 'role', None) == 'admin')
+    payload = {
         'id': game.id,
         'uuid': game.uuid,
         'igdb_id': game.igdb_id,
@@ -249,9 +334,15 @@ def build_game_details_payload(game, user) -> dict:
         'slug': game.slug,
         'status': game.status.value if game.status else None,
         'category': game.category.value if game.category else None,
+        'item_kind': getattr(game, 'item_kind', None) or 'game',
+        'content_kind': getattr(game, 'item_kind', None) or 'game',
         'url_igdb': game.url_igdb,
         'url': game.url,
+        # Frontend field map: video_urls (string list) + trailers (structured)
         'video_urls': video_urls,
+        'trailers': trailers,
+        'has_trailers': bool(trailers),
+        'youtube_demo_url': youtube_demo_url,
         'genres': [genre.name for genre in game.genres],
         'game_modes': [mode.name for mode in game.game_modes],
         'themes': [theme.name for theme in game.themes],
@@ -300,6 +391,7 @@ def build_game_details_payload(game, user) -> dict:
         'library_platform_label': platform_label,
         'updates_count': len(updates),
         'extras_count': len(extras),
+        'extras': extras_list,
         'nfo_content': (
             sanitize_string_input(game.nfo_content, 10000) if game.nfo_content else None
         ),
@@ -312,12 +404,13 @@ def build_game_details_payload(game, user) -> dict:
             for url in game.urls
         ],
         'screenshots': screenshots,
+        'screenshot_count': len(screenshots),
         'is_favorite': is_favorite,
         'user_status': user_status,
         'status_icon': status_icon,
         'status_label': status_label,
         'playtime': playtime,
-        'is_admin': bool(getattr(user, 'role', None) == 'admin'),
+        'is_admin': is_admin,
         **browse_play_fields(game),
         **game_card_flags(game),
         **web_lifecycle_fields(
@@ -327,3 +420,8 @@ def build_game_details_payload(game, user) -> dict:
             client_state=lifecycle_map.get(game.uuid),
         ),
     }
+    if is_admin:
+        disk = getattr(game, 'full_disk_path', None) or None
+        payload['full_disk_path'] = disk
+        payload['server_path'] = disk
+    return payload

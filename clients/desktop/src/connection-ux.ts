@@ -9,6 +9,8 @@ export type CompanionUiAction =
   | 'apply_patch'
   | 'apply_mods'
   | 'apply_mod_pack'
+  | 'open_path'
+  | 'reveal_path'
 
 /** Actions that need a reachable GameTheca server (download stream / patch stage). */
 export function actionNeedsServer(action: CompanionUiAction): boolean {
@@ -89,7 +91,7 @@ export function friendsOpenStatus(
         tone: 'info',
       }
     }
-    return { message: 'Friends window focused (always on top).', tone: 'success' }
+    return { message: 'Friends popup focused (always on top, bottom-right).', tone: 'success' }
   }
   if (how === 'browser') {
     const suffix =

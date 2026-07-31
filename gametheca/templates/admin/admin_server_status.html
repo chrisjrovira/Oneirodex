@@ -13,71 +13,68 @@
     </div>
 {% endif %}
 {% endwith %}
-        
-<div class="container">
-    <div class="glass-panel">
-        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-    </div>
-</div>
-        
-<div class="container-settings">
-    <div class="container-serverstatus-version">
+
+<div class="container-settings gt-adminpage gt-adminpage--xl gt-server-status">
+    <div class="gt-adminpage-header">
         <div>
-            <h1>
+            <h1 class="gt-adminpage-title">
                 {{ icons.icon('server', size=26) }} Server Status
                 <span class="status-indicator status-good" title="Server is running"></span>
             </h1>
+            <p class="gt-adminpage-lede">GameTheca server version: {{ app_version }}</p>
         </div>
-        <div class="server-status-summary">
-            <span>{{ icons.icon('clock') }} System Uptime: {{ system_info['System Uptime'] }}</span>
-            <span>{{ icons.icon('clock') }} App Uptime: {{ system_info['Application Uptime'] }}</span>
-            <span>{{ icons.icon('users') }} Active Users: {{ active_users|default('N/A') }}</span>
-        </div>
-        <div>
-            <p>GameTheca server version: {{ app_version }}</p>
+        <div class="gt-adminpage-header-actions server-status-summary">
+            <span>{{ icons.icon('clock') }} System: {{ system_info['System Uptime'] }}</span>
+            <span>{{ icons.icon('clock') }} App: {{ system_info['Application Uptime'] }}</span>
+            <span>{{ icons.icon('users') }} Active: {{ active_users|default('N/A') }}</span>
         </div>
     </div>
-    <div class="container mt-5">
-        <!-- System Resources -->
-        <div class="info-block">
-            <h3>{{ icons.icon('chip', size=22) }} System Resources</h3>
-            
-            <div class="row resource-cards">
-                <div class="col-md-4">
-                    <h4>{{ icons.icon('activity', size=20) }} CPU Usage</h4>
-                    <div class="progress" style="height: 25px;">
-                        <div class="progress-bar" id="cpuBar" role="progressbar"
-                                style="width: {{ cpu_usage.percent|default(0) }}%;"
-                                aria-valuenow="{{ cpu_usage.percent|default(0) }}"
-                                aria-valuemin="0" aria-valuemax="100">
-                        {{ cpu_usage.percent|default('N/A') }}%
-                        </div>
-                    </div>
-                    <div class="cpu-details mt-2">
-                        <p>Physical Cores: {{ cpu_usage.cores_physical|default('N/A') }}</p>
-                        <p>Logical Cores: {{ cpu_usage.cores_logical|default('N/A') }}</p>
-                        <p>Running Processes: {{ process_count|default('N/A') }}</p>
-                        <p>Open Files: {{ open_files|default('N/A') }}</p>
-                    </div>
+
+    <div class="gt-adminpage-panel info-block">
+        <div class="gt-adminpage-panel-header">
+            <h2>{{ icons.icon('chip', size=22) }} System Resources</h2>
+        </div>
+
+        <div class="row resource-cards">
+            <div class="col-md-4">
+                <h4>{{ icons.icon('activity', size=20) }} CPU Usage</h4>
+                <div class="gt-meter" id="cpuMeter"
+                     role="progressbar"
+                     aria-valuenow="{{ cpu_usage.percent|default(0) }}"
+                     aria-valuemin="0"
+                     aria-valuemax="100"
+                     aria-label="CPU usage">
+                    <div class="gt-meter__fill" id="cpuBar" style="width: {{ cpu_usage.percent|default(0) }}%;"></div>
+                    <span class="gt-meter__label">{{ cpu_usage.percent|default('N/A') }}%</span>
                 </div>
-                <div class="col-md-4">
-                    <h4>{{ icons.icon('chip', size=20) }} Memory Usage</h4>
-                    <canvas id="memoryChart"></canvas>
-                </div>
-                <div class="col-md-4">
-                    <h4>{{ icons.icon('server', size=20) }} Disk Usage (Base Folder)</h4>
-                    <canvas id="diskChart"></canvas>
-                </div>
-                <div class="col-md-4">
-                    <h4>{{ icons.icon('folder', size=20) }} Games Folder Usage</h4>
-                    <canvas id="gamesDiskChart"></canvas>
+                <div class="cpu-details mt-2">
+                    <p>Physical Cores: {{ cpu_usage.cores_physical|default('N/A') }}</p>
+                    <p>Logical Cores: {{ cpu_usage.cores_logical|default('N/A') }}</p>
+                    <p>Running Processes: {{ process_count|default('N/A') }}</p>
+                    <p>Open Files: {{ open_files|default('N/A') }}</p>
                 </div>
             </div>
+            <div class="col-md-4">
+                <h4>{{ icons.icon('chip', size=20) }} Memory Usage</h4>
+                <canvas id="memoryChart"></canvas>
+            </div>
+            <div class="col-md-4">
+                <h4>{{ icons.icon('server', size=20) }} Disk Usage (Base Folder)</h4>
+                <canvas id="diskChart"></canvas>
+            </div>
+            <div class="col-md-4">
+                <h4>{{ icons.icon('folder', size=20) }} Games Folder Usage</h4>
+                <canvas id="gamesDiskChart"></canvas>
+            </div>
         </div>
-        <!-- Application Configuration -->
-        <div class="info-block">
-            <h3>{{ icons.icon('cogs', size=22) }} Application Configuration</h3>
-            <table class="table table-dark table-striped">
+    </div>
+
+    <div class="gt-adminpage-panel info-block">
+        <div class="gt-adminpage-panel-header">
+            <h2>{{ icons.icon('cogs', size=22) }} Application Configuration</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table gt-adminpage-table">
                 <thead>
                     <tr>
                         <th>Key</th>
@@ -100,11 +97,14 @@
                 </tbody>
             </table>
         </div>
-        <!-- Configuration Dump -->
-        <div class="info-block">
-            <h3>{{ icons.icon('info', size=22) }} Configuration Parameters</h3>
+    </div>
 
-            <table class="table table-dark table-striped">
+    <div class="gt-adminpage-panel info-block">
+        <div class="gt-adminpage-panel-header">
+            <h2>{{ icons.icon('info', size=22) }} Configuration Parameters</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table gt-adminpage-table">
                 <thead>
                     <tr>
                         <th>Key</th>
@@ -123,11 +123,14 @@
                 </tbody>
             </table>
         </div>
-        
-        <!-- Database Information -->
-        <div class="info-block">
-            <h3>{{ icons.icon('server', size=22) }} Database Information</h3>
-            <table class="table table-dark table-striped">
+    </div>
+
+    <div class="gt-adminpage-panel info-block">
+        <div class="gt-adminpage-panel-header">
+            <h2>{{ icons.icon('server', size=22) }} Database Information</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table gt-adminpage-table">
                 <thead>
                     <tr>
                         <th>Parameter</th>
@@ -154,53 +157,60 @@
                 </tbody>
             </table>
         </div>
-        
-        <!-- Log Information -->
-        <div class="info-block">
-            <h3>{{ icons.icon('clipboard-list', size=22) }} Log Information</h3>
-            <div class="row">
-                <div class="col-md-6">
-                    <h4>{{ icons.icon('list', size=20) }} Total Log Entries</h4>
-                    <p>{{ log_count }}</p>
-                </div>
-                <div class="col-md-6">
-                    <h4>{{ icons.icon('clock', size=20) }} Latest Log Entry</h4>
-                    {% if latest_log %}
-                    <p>{{ latest_log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} - {{ latest_log.event_text }}</p>
-                    {% else %}
-                    <p>No log entries found</p>
-                    {% endif %}
-                </div>
+    </div>
+
+    <div class="gt-adminpage-panel info-block">
+        <div class="gt-adminpage-panel-header">
+            <h2>{{ icons.icon('clipboard-list', size=22) }} Log Information</h2>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h4>{{ icons.icon('list', size=20) }} Total Log Entries</h4>
+                <p>{{ log_count }}</p>
+            </div>
+            <div class="col-md-6">
+                <h4>{{ icons.icon('clock', size=20) }} Latest Log Entry</h4>
+                {% if latest_log %}
+                <p>
+                    <time class="gt-locale-time" datetime="{{ latest_log.timestamp.isoformat() }}">
+                        {{ latest_log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </time>
+                    — {{ latest_log.event_text }}
+                </p>
+                {% else %}
+                <p>No log entries found</p>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Add Chart.js library -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='vendor/chart.js/4.4.1/chart.umd.min.js') }}"></script>
 <script src="{{ 'js/chart-utils.js'|theme_asset }}"></script>
-
-<!-- Add our server status JavaScript -->
 <script src="{{ 'js/admin/server_status.js'|theme_asset }}"></script>
 
 <script>
-    // Initialize tooltips
     document.addEventListener('DOMContentLoaded', function() {
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        document.querySelectorAll('time.gt-locale-time[datetime]').forEach(function (el) {
+            var d = new Date(el.getAttribute('datetime'));
+            if (!isNaN(d.getTime())) {
+                el.textContent = d.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' });
+            }
         });
     });
 
-    // Initialize server data
     initializeServerData({
         cpuUsage: {{ cpu_usage.percent|default(0) }},
         memoryUsage: {% if memory_usage %}{{ memory_usage|tojson }}{% else %}null{% endif %},
         diskUsage: {% if disk_usage %}{{ disk_usage|tojson }}{% else %}null{% endif %},
         gamesUsage: {% if games_usage %}{{ games_usage|tojson }}{% else %}null{% endif %}
     });
-    
-    // Initialize all charts and components
+
     document.addEventListener('DOMContentLoaded', initializeServerStatus);
 </script>
 {% endblock %}

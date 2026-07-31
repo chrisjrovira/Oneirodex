@@ -4,12 +4,14 @@
 
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 
-
-<!-- Back to Dashboard Button -->
-
-<div class="container">
-    <div class="glass-panel">
-        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+<div class="container-settings gt-adminpage gt-adminpage--lg">
+    <div class="gt-adminpage-header">
+        <div>
+            <h1 class="gt-adminpage-title">Newsletter</h1>
+            <p class="gt-adminpage-lede">Compose and send announcements to members.</p>
+        </div>
+    </div>
+    <div class="gt-adminpage-panel">
         <!-- Add CKEditor CDN -->
         <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
         <style>
@@ -19,11 +21,6 @@
                 color: var(--gt-text) !important;
             }
         </style>
-    </div>
-</div>
-<div class="container-settings gt-adminpage gt-adminpage--lg">
-    <div class="card">
-        <h1 class="gt-adminpage-title">Newsletter</h1>
         <form action="" method="post" novalidate>
             {{ form.hidden_tag() }}
             <div class="mb-3">
@@ -57,7 +54,7 @@
        <!-- Newsletter History Table -->
        <div class="newsletter-history mt-5">
            <h2>Newsletter History</h2>
-           <table class="table table-dark">
+           <table class="table gt-adminpage-table">
                <thead>
                    <tr>
                        <th>Subject</th>

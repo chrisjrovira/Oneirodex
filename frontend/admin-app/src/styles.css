@@ -361,6 +361,53 @@ body.admin-shell.modal-open > .modal-backdrop {
   border-bottom-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
 }
 
+.gt-admin-card-grid--integrations {
+  grid-template-columns: repeat(auto-fill, minmax(14.5rem, 1fr));
+}
+
+.gt-admin-inventory__group + .gt-admin-inventory__group {
+  margin-top: 0.85rem;
+}
+
+.gt-admin-inventory__category {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
+}
+
+.gt-admin-inventory__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.gt-admin-inventory__list a {
+  font-size: 0.88rem;
+  color: var(--gt-accent);
+  text-decoration: none;
+}
+
+.gt-admin-inventory__list a:hover,
+.gt-admin-inventory__list a:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
+.gt-admin-inventory__status {
+  font-size: 0.85rem;
+}
+
+.gt-admin-inventory__notes {
+  font-size: 0.82rem;
+  color: var(--gt-text-muted);
+}
+
 .gt-btn {
   display: inline-flex;
   align-items: center;
@@ -447,6 +494,17 @@ body.admin-shell.modal-open > .modal-backdrop {
   display: block;
   font-size: 0.9rem;
   color: var(--gt-text-muted);
+}
+
+.gt-admin-field {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--gt-text-muted);
+  margin-bottom: 0.65rem;
+}
+
+.gt-admin-field .gt-admin-input {
+  margin-bottom: 0;
 }
 
 .gt-art-studio {
@@ -654,6 +712,63 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-admin-lede--warn {
   color: #f5a623;
+}
+
+.gt-admin-banner {
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
+  color: var(--gt-text);
+  font-size: 0.9rem;
+}
+
+.gt-admin-banner--warn {
+  border-color: color-mix(in srgb, #f5a623 45%, transparent);
+  background: color-mix(in srgb, #f5a623 12%, transparent);
+  color: #f5d9a0;
+}
+
+.gt-admin-banner--info {
+  border-color: color-mix(in srgb, var(--gt-text-muted) 45%, transparent);
+  background: color-mix(in srgb, var(--gt-text-muted) 10%, transparent);
+  color: var(--gt-text-muted);
+}
+
+.gt-admin-banner--ok {
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
+  color: var(--gt-text);
+}
+
+.gt-storage-result-list {
+  margin: 0 0 0.75rem;
+  padding-left: 1.15rem;
+  color: var(--gt-text);
+  font-size: 0.92rem;
+}
+
+.gt-storage-result-list li {
+  margin: 0.25rem 0;
+}
+
+.gt-storage-raw {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--gt-text-muted);
+}
+
+.gt-storage-raw pre,
+.gt-admin-output {
+  margin: 0.5rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
+  overflow: auto;
+  font-size: 0.8rem;
+  max-height: 18rem;
 }
 
 .gt-artwork-picker__controls {
@@ -910,6 +1025,29 @@ body.admin-shell.modal-open > .modal-backdrop {
   }
 }
 
+@media (max-width: 1100px) {
+  .gt-admin-topbar {
+    flex-wrap: wrap;
+    row-gap: 0.35rem;
+  }
+
+  .gt-admin-nav {
+    order: 3;
+    flex: 1 1 100%;
+    padding-top: 0.15rem;
+    border-top: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .gt-admin-actions {
+    margin-left: auto;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+}
+
 @media (max-width: 900px) {
   .gt-admin-topbar {
     flex-wrap: wrap;
@@ -925,5 +1063,9 @@ body.admin-shell.modal-open > .modal-backdrop {
 
   .gt-admin-actions {
     margin-left: auto;
+  }
+
+  .gt-admin-brand-role {
+    display: none;
   }
 }

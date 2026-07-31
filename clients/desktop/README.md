@@ -1,6 +1,13 @@
 # GameTheca Desktop Companion
 
-Windows-first companion client for **Download · Install · Update · Uninstall** against a GameTheca server.
+Windows-first Tauri client with **two build flavors** against a GameTheca server:
+
+| Flavor | Command | What it does |
+|---|---|---|
+| **Full companion** (default) | `npm run tauri:build` | **Download · Install · Update · Uninstall · Play** |
+| **Thin client** | `npm run tauri:build:thin` | Connect + Open library / Friends only — **no** install pipeline |
+
+Thin is not “coming later”: TC-2 shell is buildable today. See [thin-client.md](../../docs/user/thin-client.md) · strategy [thin-client.md](../../docs/strategy/thin-client.md).
 
 ## Stack
 
@@ -24,7 +31,7 @@ npm install
 npm run tauri:dev
 ```
 
-This starts the Vite dev server on port **1420** and opens the Tauri window.
+This starts the Vite dev server on port **1420** and opens the Tauri window (full companion mode).
 
 ### Other commands
 
@@ -33,12 +40,16 @@ This starts the Vite dev server on port **1420** and opens the Tauri window.
 | `npm test` | Run Vitest unit tests (auth, lifecycle, connect, download/install helpers) |
 | `npm run dev` | Vite only (browser preview; Tauri invoke calls are no-ops) |
 | `npm run build` | Typecheck + production frontend bundle to `dist/` |
-| `npm run tauri:build` | Build the desktop binary (requires Rust + icons for bundling) |
+| `npm run build:thin` | Frontend bundle with `VITE_CLIENT_MODE=thin` |
+| `npm run tauri:build` | Full companion unsigned EXE (requires Rust) |
+| `npm run tauri:build:thin` | Thin flavor via `src-tauri/tauri.thin.conf.json` (connect + library/Friends; no FS lifecycle ACL) |
+
+**Caveat:** both flavors write the same Cargo output path (`src-tauri/target/release/gametheca-desktop.exe`). Copy/rename (`GameTheca-full.exe` / `GameTheca-thin.exe`) before rebuilding the other flavor — [desktop-code-signing.md](../../docs/runbooks/desktop-code-signing.md).
 
 ## Auth & config persistence
 
 1. Enter your **server base URL** (e.g. `https://gametheca.example.com`).
-2. Enter a personal **API token** (`gt_<prefix>_<secret>`) from Admin → API tokens. The token must include the **`write:download`** scope.
+2. Enter a personal **API token** (`gt_<hexprefix>_<urlsafe-secret>`; secret may include `_`/`-`) from **Account → API tokens** (or Admin). Full companion needs the **Desktop companion** preset (`read:library` + **`write:download`**). Thin uses the **Thin client** preset (no download).
 3. Click **Connect** — validates via `GET /api/collections`, then loads a library preview via search.
 4. Non-secret settings (base URL) are saved to app data as JSON; the API token goes to the OS credential store:
 
@@ -91,7 +102,7 @@ After **two consecutive heartbeat failures**, the UI switches to **Offline**: Do
 
 ## Friends window
 
-**Open friends window** creates or focuses a separate always-on-top Tauri label `social` pointed at `{baseUrl}/social-companion`. Capability file `capabilities/social.json` grants only `core:default` (no FS / launch ACL). Main window keeps create/focus/always-on-top/close permissions so a Server URL change can recreate the webview. Friends open uses the **form Server URL** (Connect not required); companion heartbeat Offline does not block Friends.
+**Open friends window** creates or focuses a compact bottom-right always-on-top Tauri label `social` (~360×560, work-area anchored) pointed at `{baseUrl}/social-companion`. Capability file `capabilities/social.json` grants only `core:default` (no FS / launch ACL). Main window keeps create/focus/always-on-top/close permissions so a Server URL change can recreate the webview. Friends open uses the **form Server URL** (Connect not required); companion heartbeat Offline does not block Friends.
 
 ## Project layout
 
@@ -117,8 +128,9 @@ clients/desktop/
     app.ts                # Minimal UI
   src-tauri/
     src/lib.rs            # Config, secure_store_*, lifecycle, installs, zip extract commands
-    tauri.conf.json
-    capabilities/         # default (main) + social (least-privilege)
+    tauri.conf.json       # Full companion
+    tauri.thin.conf.json  # Thin flavor (stripped capabilities)
+    capabilities/         # default + social (full); thin-main + thin-library + social (thin)
     permissions/
 ```
 
@@ -137,12 +149,14 @@ Unit tests mock `fetch`, Tauri `invoke`, and the download initiate API — no li
 - Store publishing / Apple notarization
 - Bundled torrent/debrid acquisition (BYO connectors only)
 - OIDC / Authentik setup (see server runbooks separately)
+- **Android APK** — spike notes only ([android-apk-vr.md](../../docs/strategy/android-apk-vr.md)); not built from this README
+- Native OpenXR / Quest-store GameTheca shell — headset path is browser `/vr` + Big Picture ([headset-vr.md](../../docs/strategy/headset-vr.md))
 
 ## Distribution (unsigned only)
 
-**Product stance:** Windows code-signing certificates will never be pursued. Unsigned `gametheca-desktop.exe` is the supported path. CI (`.github/workflows/desktop-build.yml`) builds and uploads an unsigned artifact — do not set signing secrets. See [desktop-code-signing.md](../../docs/runbooks/desktop-code-signing.md).
+**Product stance:** Windows code-signing certificates will never be pursued. Unsigned `gametheca-desktop.exe` is the supported path (full **or** thin flavor). CI (`.github/workflows/desktop-build.yml`) builds and uploads an unsigned **full** companion artifact — do not set signing secrets. Thin: run `npm run tauri:build:thin` locally and rename before a full rebuild. See [desktop-code-signing.md](../../docs/runbooks/desktop-code-signing.md).
 
 ## Server prerequisites
 
-- GameTheca server with user API token (`read:library` + **`write:download`** for download/extract)
+- GameTheca server with user API token — full: `read:library` + **`write:download`**; thin: thin preset (no download)
 - HTTPS recommended

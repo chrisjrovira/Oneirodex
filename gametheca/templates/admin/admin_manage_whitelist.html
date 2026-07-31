@@ -4,36 +4,18 @@
 
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_whitelist.css'|theme_asset }}">
 
-<div class="container">
-    <div class="glass-panel">
-        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-    </div>
-</div>
-
-<div class="container-settings">
-
-    <div class="card">
-        <h1>Whitelist Management</h1>
-        <div class="row mt-4">
-            <div class="col-md-4">
-                <div class="image-whitelist">
-                    <img src="/static/newstyle/whitelist.jpg" alt="Gamers allowed on board" class="img-fluid shadow">
-                </div>
-            </div>
-            <div class="col-md-8">
-                <div class="card bg-dark text-white">
-                    <div class="card-body">
-                        <p class="card-text">
-                            The whitelist allows you to grant access to select email adresses, enabling them to self-register 
-                            on the login screen. The <a href="{{ url_for('admin2.manage_invites') }}" class="text-info">INVITE SYSTEM</a> can also be used to grant access to users who are not on the whitelist.
-                        </p>
-                    </div>
-                </div>
-            </div>
+<div class="container-settings gt-adminpage gt-adminpage--xl">
+    <div class="gt-adminpage-header">
+        <div>
+            <h1 class="gt-adminpage-title">{{ icons.icon('list', size=26) }} Whitelist Management</h1>
+            <p class="gt-adminpage-lede">
+                Grant self-registration to selected email addresses.
+                The <a href="{{ url_for('admin2.manage_invites') }}">invite system</a> can also grant access to users who are not on the whitelist.
+            </p>
         </div>
+    </div>
 
-    
-    <div class="whitelist-controls">
+    <div class="gt-adminpage-panel">
         <form method="post" class="add-whitelist-form">
             {{ form.hidden_tag() }}
             <div class="input-group">
@@ -46,39 +28,40 @@
         </form>
     </div>
 
-    <div class="whitelist-table">
-        <table class="table table-dark table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Registration Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in whitelist %}
-                <tr>
-                    <td>{{ entry.email }}</td>
-                    <td>
-                        {% if entry.is_registered %}
-                            <span class="badge bg-success">Registered</span>
-                        {% else %}
-                            <span class="badge bg-warning">Not Registered</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <button class="btn btn-danger btn-sm delete-whitelist" 
-                                data-id="{{ entry.id }}"
-                                data-email="{{ entry.email }}">
-                            {{ icons.icon('trash') }} Delete
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="gt-adminpage-panel whitelist-table">
+        <div class="table-responsive">
+            <table class="table gt-adminpage-table table-hover">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Registration Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in whitelist %}
+                    <tr>
+                        <td>{{ entry.email }}</td>
+                        <td>
+                            {% if entry.is_registered %}
+                                <span class="badge bg-success">Registered</span>
+                            {% else %}
+                                <span class="badge bg-warning">Not Registered</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm delete-whitelist"
+                                    data-id="{{ entry.id }}"
+                                    data-email="{{ entry.email }}">
+                                {{ icons.icon('trash') }} Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 </div>
 
 <!-- Delete Confirmation Modal -->

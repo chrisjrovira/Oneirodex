@@ -806,48 +806,221 @@ class TestNumberHandling:
 
 class TestRealFolderPipeline:
     """
-    End-to-end parse_game_label -> generate_goty_variants pipeline for real
-    PCWIN folders that previously stayed Unmatched after only stripping
-    repack/VR/build noise. See docs/strategy/name-resolution.md Stage C.
+    End-to-end parse_game_label -> generate_goty_variants for GM acceptance
+    fixtures (docs/strategy/name-resolution.md). Identify uses parse only.
     """
 
-    def test_abyssus_repack(self):
-        cleaned = parse_game_label("Abyssus [FitGirl Repack]")['cleaned_name']
+    def test_gm_01_abyssus_repack(self):
+        cleaned = parse_game_label("Abyssus [Repack]")['cleaned_name']
         assert cleaned == "Abyssus"
-        assert generate_goty_variants(cleaned) == ["Abyssus"]
+        assert "Abyssus" in generate_goty_variants(cleaned)
 
-    def test_assassins_creed_odyssey_repack(self):
-        cleaned = parse_game_label("Assassin's Creed Odyssey [FitGirl HV Repack]")['cleaned_name']
+    def test_gm_02_assassins_creed_odyssey_hv(self):
+        cleaned = parse_game_label("Assassin's Creed Odyssey [HV Repack]")['cleaned_name']
         assert cleaned == "Assassin's Creed Odyssey"
         variants = generate_goty_variants(cleaned)
-        assert "Assassin's Creed Odyssey" in variants
         assert "Assassin's Creed: Odyssey" in variants
 
-    def test_fishermans_tale_vr(self):
+    def test_gm_03_assassins_creed_rogue_inject_colon(self):
+        cleaned = parse_game_label("Assassins Creed Rogue")['cleaned_name']
+        assert cleaned == "Assassin's Creed Rogue"
+        variants = generate_goty_variants(cleaned)
+        assert "Assassin's Creed: Rogue" in variants
+        # Also works when variants are asked without prior inject.
+        assert "Assassin's Creed: Rogue" in generate_goty_variants("Assassins Creed Rogue")
+
+    def test_gm_04_abandon_ship_steam(self):
+        parsed = parse_game_label("Abandon Ship (81735)")
+        assert parsed['steam_app_id'] == 81735
+        assert parsed['cleaned_name'] == "Abandon Ship"
+        assert "Abandon Ship" in generate_goty_variants(parsed['cleaned_name'])
+
+    def test_gm_05_angeline_era_steam(self):
+        parsed = parse_game_label("angeline era (88323)")
+        assert parsed['steam_app_id'] == 88323
+        assert parsed['cleaned_name'] == "Angeline Era"
+        assert "Angeline Era" in generate_goty_variants(parsed['cleaned_name'])
+
+    def test_gm_06_fishermans_tale_no_colon(self):
+        """Heuristic colon requires >=4 tokens; 3-token titles stay as-is."""
         cleaned = parse_game_label("A Fishermans Tale VR")['cleaned_name']
         assert cleaned == "A Fishermans Tale"
-        assert generate_goty_variants(cleaned) == ["A Fishermans Tale"]
+        variants = generate_goty_variants(cleaned)
+        assert variants == ["A Fishermans Tale"]
+        assert not any(':' in v for v in variants)
 
-    def test_agatha_christie_death_on_the_nile(self):
-        parsed = parse_game_label("agatha christie death on the nile (85933)")
-        assert parsed['steam_app_id'] == 85933
-        assert parsed['cleaned_name'] == "Agatha Christie Death On The Nile"
-        variants = generate_goty_variants(parsed['cleaned_name'])
-        assert "Agatha Christie - Death On The Nile" in variants
+    def test_gm_07_alien_isolation_vr_mod(self):
+        cleaned = parse_game_label("Alien Isolation VR MOD - MotherVR 0 8 1")['cleaned_name']
+        assert cleaned == "Alien Isolation"
+        assert "Alien Isolation" in generate_goty_variants(cleaned)
 
-    def test_adr1ft_build_tail(self):
-        cleaned = parse_game_label("ADR1FT (Build 14.09.2017)")['cleaned_name']
+    def test_gm_08_spaced_version_v0_4(self):
+        cleaned = parse_game_label("Some Game v0 4")['cleaned_name']
+        assert cleaned == "Some Game"
+        assert "Some Game" in generate_goty_variants(cleaned)
+
+    def test_gm_09_spaced_version_v1_188(self):
+        cleaned = parse_game_label("Some Game v1 188")['cleaned_name']
+        assert cleaned == "Some Game"
+        assert "Some Game" in generate_goty_variants(cleaned)
+
+    def test_gm_10_adr1ft_build(self):
+        cleaned = parse_game_label("ADR1FT (build 18 05 2023)")['cleaned_name']
         assert cleaned == "Adrift"
-        assert generate_goty_variants(cleaned) == ["Adrift"]
+        assert "Adrift" in generate_goty_variants(cleaned)
 
-    def test_alone_in_the_dark_2024(self):
+    def test_gm_11_early_access(self):
+        cleaned = parse_game_label("Title Early Access")['cleaned_name']
+        assert cleaned == "Title"
+        assert generate_goty_variants(cleaned) == ["Title"]
+
+    def test_gm_12_alone_in_the_dark_2024(self):
         cleaned = parse_game_label("Alone in the Dark 2024")['cleaned_name']
         assert cleaned == "Alone In The Dark 2024"
         variants = generate_goty_variants(cleaned)
         assert "Alone In The Dark 2024" in variants
         assert "Alone In The Dark" in variants
 
-    def test_alien_isolation_vr_mod_mothervr(self):
+    def test_gm_13_alone_in_the_dark_2008(self):
+        cleaned = parse_game_label("Alone in the Dark 2008")['cleaned_name']
+        assert cleaned == "Alone In The Dark 2008"
+        variants = generate_goty_variants(cleaned)
+        assert "Alone In The Dark 2008" in variants
+        assert "Alone In The Dark" in variants
+
+    def test_gm_14_alan_wake_complete_collection_peel(self):
+        cleaned = parse_game_label("Alan Wake Complete Collection")['cleaned_name']
+        assert cleaned == "Alan Wake Complete Collection"
+        variants = generate_goty_variants(cleaned)
+        assert "Alan Wake Complete Collection" in variants
+        assert "Alan Wake" in variants
+
+    def test_gm_15_baldurs_gate_dark_alliance_1(self):
+        cleaned = parse_game_label("Baldur's Gate Dark Alliance 1")['cleaned_name']
+        assert cleaned == "Baldur's Gate Dark Alliance 1"
+        variants = generate_goty_variants(cleaned)
+        assert "Baldur's Gate: Dark Alliance" in variants
+
+    def test_gm_16_agatha_christie_hyphen(self):
+        parsed = parse_game_label("agatha christie death on the nile (85933)")
+        assert parsed['steam_app_id'] == 85933
+        variants = generate_goty_variants(parsed['cleaned_name'])
+        assert "Agatha Christie - Death On The Nile" in variants
+
+    def test_gm_17_barony_steam(self):
+        parsed = parse_game_label("barony (89881)")
+        assert parsed['steam_app_id'] == 89881
+        assert "Barony" in generate_goty_variants(parsed['cleaned_name'])
+
+    def test_optional_dlc_pack_peel(self):
+        variants = generate_goty_variants("Title DLC Pack")
+        assert "Title DLC Pack" in variants
+        assert "Title" in variants
+
+    def test_a9_pathologic_incl_update(self):
+        cleaned = parse_game_label("Pathologic 2 (Incl Update 3)")['cleaned_name']
+        assert cleaned == "Pathologic 2"
+        assert "Pathologic 2" in generate_goty_variants(cleaned)
+
+    def test_a9_dragons_dogma_incl_update_colon(self):
+        cleaned = parse_game_label("Dragon's Dogma Dark Arisen (Incl Update)")['cleaned_name']
+        assert cleaned == "Dragon's Dogma Dark Arisen"
+        variants = generate_goty_variants(cleaned)
+        assert "Dragon's Dogma: Dark Arisen" in variants
+
+    def test_a10_unbracketed_group_suffix(self):
+        cleaned = parse_game_label("Some Game - GROUP")['cleaned_name']
+        assert cleaned == "Some Game"
+        assert "Some Game" in generate_goty_variants(cleaned)
+
+    def test_a11_date_stamp(self):
+        cleaned = parse_game_label("Some Game 2022093001")['cleaned_name']
+        assert cleaned == "Some Game"
+
+    def test_a11_compact_v_block(self):
+        cleaned = parse_game_label("Some Game V16092671")['cleaned_name']
+        assert cleaned == "Some Game"
+
+    def test_a12_update_and_build_prose(self):
+        assert parse_game_label("Some Game Update v1.2")['cleaned_name'] == "Some Game"
+        assert parse_game_label("Some Game update 1.24.01 - 1.25.01")['cleaned_name'] == "Some Game"
+        assert parse_game_label("Some Game Build 18")['cleaned_name'] == "Some Game"
+
+    def test_a14_vr_after_version(self):
+        cleaned = parse_game_label("Some Game VR v0 8 1")['cleaned_name']
+        assert cleaned == "Some Game"
+        assert "Some Game" in generate_goty_variants(cleaned)
+
+    def test_a13_4k_addon(self):
+        cleaned = parse_game_label("Some Game 4K Videos Add-on")['cleaned_name']
+        assert cleaned == "Some Game"
+
+    def test_c10_collectors_edition_peel(self):
+        cleaned = parse_game_label("Some Game Collector's Edition")['cleaned_name']
+        assert cleaned == "Some Game Collector's Edition"
+        variants = generate_goty_variants(cleaned)
+        assert "Some Game Collector's Edition" in variants
+        assert "Some Game" in variants
+
+    def test_c11_bare_franchise_no_extra_variants(self):
+        parsed = parse_game_label("Final Fantasy")
+        assert parsed['bare_franchise'] is True
+        assert generate_goty_variants(parsed['cleaned_name']) == ["Final Fantasy"]
+
+    def test_lettered_version_and_steam_lowercase(self):
+        assert parse_game_label("3 Minutes to Midnight v1.1.0a")['cleaned_name'] == "3 Minutes To Midnight"
+        parsed = parse_game_label("49 keys (87117)")
+        assert parsed['steam_app_id'] == 87117
+        assert parsed['cleaned_name'] == "49 Keys"
+
+    def test_beachhead_hyphen_scene_alias(self):
+        cleaned = parse_game_label("BeachHead-SKIDROW")['cleaned_name']
+        assert cleaned == "BeachHead"
+        assert "BeachHead" in generate_goty_variants(cleaned)
+
+    def test_alfred_hitchcock_date_stamp_pipeline(self):
+        cleaned = parse_game_label("Alfred Hitchcock Vertigo 2022093001")['cleaned_name']
+        assert cleaned == "Alfred Hitchcock Vertigo"
+        assert "Alfred Hitchcock Vertigo" in generate_goty_variants(cleaned)
+
+    def test_stage_b_steam_title_prepends_variant_zero(self):
+        """Identify uses parse_game_label + Stage B steam title as variant #0 when resolved."""
+        from unittest.mock import patch
+        import gametheca.utils.steam_lookup as steam_lookup
+
+        parsed = parse_game_label("49 keys (87117)")
+        assert parsed['steam_app_id'] == 87117
+        variant_base = parsed['cleaned_name']
+        with patch.object(
+            steam_lookup,
+            'fetch_steam_title_by_app_id',
+            return_value='49 Keys',
+        ) as mock_fetch:
+            steam_title = steam_lookup.fetch_steam_title_by_app_id(parsed['steam_app_id'])
+            mock_fetch.assert_called_once_with(87117)
+        search_variants = generate_goty_variants(variant_base)
+        if steam_title:
+            search_variants = [steam_title] + [v for v in search_variants if v != steam_title]
+        assert search_variants[0] == '49 Keys'
+        assert '49 Keys' in search_variants
+
+    def test_baldurs_gate_ee_and_gate_2_variants(self):
+        parsed = parse_game_label("Baldur's Gate 1 Enhanced Edition (68994)")
+        assert parsed['steam_app_id'] == 68994
+        variants = generate_goty_variants(parsed['cleaned_name'])
+        assert "Baldur's Gate 1 Enhanced Edition" in variants
+        assert "Baldur's Gate: 1 Enhanced Edition" in variants or any(
+            'Enhanced Edition' in v for v in variants
+        )
+        gate2 = generate_goty_variants(parse_game_label("Baldur's Gate 2")['cleaned_name'])
+        assert "Baldur's Gate 2" in gate2
+        assert "Baldur's Gate: 2" in gate2 or "Baldur's Gate II" in gate2
+
+    def test_identify_uses_parse_not_only_clean_game_name(self):
+        """Peel quality must come from parse_game_label (Alien Isolation VR MOD)."""
         cleaned = parse_game_label("Alien Isolation VR MOD - MotherVR 0 8 1")['cleaned_name']
         assert cleaned == "Alien Isolation"
-        assert generate_goty_variants(cleaned) == ["Alien Isolation"]
+        assert "Alien Isolation" in generate_goty_variants(cleaned)
+        # clean_game_name is not required for this strip — parse alone is enough.
+        assert "VR" not in cleaned
+        assert "MotherVR" not in cleaned

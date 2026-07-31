@@ -3,6 +3,8 @@
 **Date:** 2026-07-27 · **Status:** Waves 14–17 shipped; Friends companion + LiveKit lobby live  
 **Supersedes (partially):** [social.md](social.md) lite-only verdict — we deepen native social and add a **first-party voice path** via LiveKit (optional sidecar), with Stoat/Matrix remaining valid BYO alternatives.
 
+**Post-1.0 nice-to-have:** [native-rtc.md](native-rtc.md) (RTC-N1…N5 — mesh / thin SFU; LiveKit remains shipped optional default until cutover).
+
 ---
 
 ## Design references (capability language)
@@ -43,7 +45,7 @@ GameTheca social combines **household-first** patterns without cloning a single 
 | Activity feed (“X started Y”) | Household activity stream | Exists → SSE + friend filter | 14a |
 | User profiles (avatar, about, playtime) | Member profiles | Member profile pages | 14b |
 | Direct messages (1:1 text) | DM threads | Native DM threads | 15a |
-| Server / household channels | Scoped channels | Soft channels scoped to library household | 15b |
+| Server / household channels | Scoped channels | Soft channels + **left slide-out** (Wave 2b+3 Done, uncommitted); members create rooms; **Archive** / **Leave** in thread header | 15b · 2b · 3 |
 | @mentions + notifications | Mentions + alerts | In-app + optional email (instant / daily digest) — **no webhooks** | 15c |
 | Voice channels / party | Party voice | LiveKit rooms tied to “Now playing” / lobby | 16 |
 | Screen share (party) | Screenshare | LiveKit screenshare (opt-in) | 16b |
@@ -137,6 +139,13 @@ Nitro-style boosts · public discovery · unlimited guilds · stickers marketpla
 |---|---|
 | **17a** | Message reactions (fixed emoji set) · message search (`ILIKE`) | **Shipped** |
 | **17b** | Threads · watch-party spectator · custom emoji (upload capped) | **Shipped** — reply threads + spectator + admin custom emoji (max 20) |
+
+### Wave 2b — Chat slide-out (member UX)
+
+| Slice | Scope | Status |
+|---|---|---|
+| **2b** | Left slide-out under TopNav · Chat pill / More / Cmd+K / `/chat` · create room ACL · list `rooms`/`type`/`unread` · archive/leave APIs | **Shipped (code, uncommitted)** |
+| **3 (chat)** | Slide-out thread header **Archive** / **Leave** wired to APIs | **Shipped (code, uncommitted)** |
 
 ### Wave 18 — Clients & push
 

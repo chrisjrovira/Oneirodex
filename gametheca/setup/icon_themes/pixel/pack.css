@@ -1,7 +1,8 @@
 html[data-icon-pack="pixel"] .gt-icon {
-  stroke-width: 2.75;
-  stroke-linecap: square;
-  stroke-linejoin: miter;
+  stroke-width: var(--gt-icon-stroke, 2.75);
+  stroke-linecap: var(--gt-icon-linecap, square);
+  stroke-linejoin: var(--gt-icon-linejoin, miter);
   shape-rendering: crispEdges;
-  fill: none;
+  fill: var(--gt-icon-fill, none);
+  fill-opacity: var(--gt-icon-fill-opacity, 1);
 }

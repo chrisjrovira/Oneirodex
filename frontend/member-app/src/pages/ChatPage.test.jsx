@@ -1,7 +1,13 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { ChatPage } from './ChatPage'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { ChatPage, ChatPanel } from './ChatPage'
 
 beforeEach(() => {
+  try {
+    localStorage?.clear?.()
+  } catch {
+    // ignore
+  }
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input) => {
@@ -33,7 +39,7 @@ beforeEach(() => {
         return {
           ok: true,
           json: async () => ({
-            channels: [{ id: 1, name: 'household', kind: 'household' }],
+            channels: [{ id: 1, name: 'household', kind: 'channel' }],
           }),
         }
       }
@@ -49,12 +55,31 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-test('chat page loads channels and messages', async () => {
-  render(<ChatPage />)
+test('chat panel loads channels and messages', async () => {
+  render(<ChatPanel />)
 
-  await waitFor(() => {
-    expect(screen.getByText(/household/i)).toBeInTheDocument()
-  })
+  expect(await screen.findByRole('button', { name: /household/i })).toBeInTheDocument()
   expect(await screen.findByText('Hello household')).toBeInTheDocument()
   expect(screen.getByText('Alex')).toBeInTheDocument()
+})
+
+test('/chat deep-link opens chat event and redirects to library', async () => {
+  const onOpen = vi.fn()
+  window.addEventListener('gt-open-chat-panel', onOpen)
+  try {
+    render(
+      <MemoryRouter initialEntries={['/chat']}>
+        <Routes>
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/library" element={<div>LibraryPage</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    await waitFor(() => {
+      expect(onOpen).toHaveBeenCalled()
+      expect(screen.getByText('LibraryPage')).toBeInTheDocument()
+    })
+  } finally {
+    window.removeEventListener('gt-open-chat-panel', onOpen)
+  }
 })

@@ -1,54 +1,161 @@
 """
 Parse raw game folder/file labels into cleaned search names and Steam App ID hints.
 
-Designed for Unraid library naming: common scene/repack bracket tags, trailing (digits) App IDs, etc.
+Implements Stage A0–A14 from docs/strategy/name-resolution.md so identify can
+rely on parse_game_label alone (not clean_game_name) for strip quality.
 """
+import os
 import re
 
+# A1 — generic scene/repack bracket tags: [Repack], [HV Repack], [… Repack], [… HV Repack].
+# Alias tokens stay in this regex only (not public docs).
 _BRACKET_TAG_RE = re.compile(
-    # Match common scene/repack aliases in brackets (functional strip list for scan quality).
-    r'\[\s*(?:FitGirl(?:\s+HV)?|Dodi|CODEX|FLT|SKIDROW|EMPRESS|RUNE|PLAZA|HOODLUM|DARKSiDERS)'
-    r'\s*(?:Repack)?\s*\]',
+    r'\[\s*(?:[^\]]*?[^\s\]]\s+)?(?:HV\s+)?Repack\s*\]',
     re.IGNORECASE,
 )
-# Version junk like [1 0 4 1] or [1.0.4.1] in brackets — not useful for IGDB search.
+# A2 — version junk like [1 0 4 1] or [1.0.4.1] in brackets.
 _VERSION_BRACKET_RE = re.compile(
     r'\[\s*\d+(?:[\s._]+\d+)+\s*\]',
     re.IGNORECASE,
 )
-_STEAM_ID_RE = re.compile(r'\(\s*(\d{4,7})\s*\)\s*$')
-# Trailing "(Build 14.09.2017)" / "(build 123)" junk — not a Steam App ID.
+# A3 — trailing "(Build …)" / "(build …)" — not a Steam App ID.
 _BUILD_PAREN_RE = re.compile(r'\s*\(\s*build\b[^)]*\)\s*$', re.IGNORECASE)
-# Trailing "VR MOD ..." tails, with or without a leading hyphen (e.g.
-# "Alien Isolation VR MOD - MotherVR 0 8 1" -> "Alien Isolation").
+# A4 — VR / mod tails (order: VR MOD… → vendor-mod → spaced VR → glued VR).
 _VR_MOD_TAIL_RE = re.compile(r'\s*-?\s*\bVR\s+MOD\b.*$', re.IGNORECASE)
-# Trailing "MotherVR ..." / "- MotherVR ..." tails when VR MOD wasn't already
-# matched above (e.g. a bare "- MotherVR 1 2 3" suffix).
 _MOTHERVR_TAIL_RE = re.compile(r'\s*-?\s*\bMotherVR\b.*$', re.IGNORECASE)
-# Trailing standalone "VR" token (e.g. "A Fishermans Tale VR" -> "A Fishermans Tale").
 _TRAILING_VR_RE = re.compile(r'\s+VR\s*$', re.IGNORECASE)
-# Tiny alias map for obvious stylized titles that don't survive plain cleanup.
+# Glued product names like 3DSenVR (no whitespace before VR).
+_GLUED_TRAILING_VR_RE = re.compile(r'(?<=[A-Za-z0-9])VR\s*$', re.IGNORECASE)
+# A5 — trailing (digits) Steam App ID (4–7 digits).
+_STEAM_ID_RE = re.compile(r'\(\s*(\d{4,7})\s*\)\s*$')
+# A6 — trailing spaced/dotted version tails (v0 4, v1.188, v1.1.0a); not mid-title "v".
+_SPACED_VERSION_TAIL_RE = re.compile(
+    r'\s+\bv\d+(?:[.\s_]\d+)+[a-zA-Z]?\s*$',
+    re.IGNORECASE,
+)
+# A6 — trailing Early Access / EA tokens only.
+_EARLY_ACCESS_TAIL_RE = re.compile(
+    r'\s+\b(?:Early\s+Access|EA)\s*$',
+    re.IGNORECASE,
+)
+# A9 — (Incl Update…) / (Incl. Update N) parentheticals + platform parens.
+_INCL_UPDATE_PAREN_RE = re.compile(
+    r'\s*\(\s*Incl\.?\s+Update(?:\s+\d+)?\s*\)\s*$',
+    re.IGNORECASE,
+)
+_PLATFORM_PAREN_RE = re.compile(
+    r'\s*\(\s*oculus\s*\)\s*$',
+    re.IGNORECASE,
+)
+# A10 — unbracketed trailing scene/repack suffixes (code-only aliases; not public docs).
+# Household / generic shapes only — public docs say "scene/repack tags", never this list.
+_UNBRACKETED_SCENE_ALIASES = frozenset({
+    'scenegrp',
+    'scene',
+    'repack',
+    'proper',
+    'internal',
+    'rune',
+    'group',
+    # Hyphen-glued household suffixes (e.g. BeachHead-<alias>) — aliases in code only.
+    'skidrow',
+    'codex',
+    'cpy',
+    'plaza',
+    'reloaded',
+    'hoodlum',
+    'razor1911',
+    'empress',
+    'flt',
+    'dodi',
+})
+_UNBRACKETED_SCENE_TAIL_RE = re.compile(
+    r'(?:\s+-\s*|\s+|-)('
+    + '|'.join(re.escape(a) for a in sorted(_UNBRACKETED_SCENE_ALIASES, key=len, reverse=True))
+    + r')\s*$',
+    re.IGNORECASE,
+)
+# A11 — date-stamps YYYYMMDD / YYYYMMDDnn and compact single-block V########.
+_DATE_STAMP_TAIL_RE = re.compile(
+    r'\s+(?:(?:19|20)\d{6,10}|[Vv]\d{6,12})\s*$',
+)
+# A12 — Update / Build prose tails + version ranges.
+_UPDATE_RANGE_TAIL_RE = re.compile(
+    r'\s+\bupdate\s+\d+(?:[.\s_]\d+)*(?:\s*-\s*\d+(?:[.\s_]\d+)*)?\s*$',
+    re.IGNORECASE,
+)
+_UPDATE_VERSION_TAIL_RE = re.compile(
+    r'\s+\bUpdate\s+v?\d+(?:[.\s_]\d+)*[a-zA-Z]?\s*$',
+    re.IGNORECASE,
+)
+# After A6 peels `v…`, a bare trailing Update may remain (Update v1.2 → Update).
+_BARE_UPDATE_TAIL_RE = re.compile(
+    r'\s+\bUpdate\s*$',
+    re.IGNORECASE,
+)
+_BARE_BUILD_TAIL_RE = re.compile(
+    r'\s+\bBuild\s+\d+[a-zA-Z]?\s*$',
+    re.IGNORECASE,
+)
+# A13 — strip pure add-on / HV junk from cleaned display (edition peels → Stage C10).
+_ADDON_JUNK_TAIL_RE = re.compile(
+    r'\s+(?:4K\s+Videos?\s+Add-?ons?(?:\s+Repack)?|\bHV)\s*$',
+    re.IGNORECASE,
+)
+# A8 — smart quotes → ASCII apostrophe.
+_SMART_APOSTROPHE_RE = re.compile(r"[’‘ʼ´]")
+# A8 — franchise heads missing apostrophe on disk (inject before Stage C colon match).
+_FRANCHISE_APOSTROPHE_INJECT = (
+    (re.compile(r'^Assassins(\s+Creed\b)', re.IGNORECASE), "Assassin's"),
+    (re.compile(r'^Baldurs(\s+Gate\b)', re.IGNORECASE), "Baldur's"),
+)
+# C11 — bare franchise / one-token ambiguous labels → propose only (no auto-import).
+_BARE_FRANCHISE_LABELS = frozenset({
+    'final fantasy',
+    'battletoads',
+    'keeper',
+})
+_BARE_FRANCHISE_HEADS = frozenset({
+    "assassin's creed",
+    "baldur's gate",
+    'grand theft auto',
+    'the elder scrolls',
+    'far cry',
+    'call of duty',
+    'final fantasy',
+})
+# Tiny stylized aliases after A7.
 _ALIAS_MAP = {
     'adr1ft': 'Adrift',
 }
 
 
+def _basename_only(raw: str) -> str:
+    """A0 — trim and drop path segments (works for /, \\, and UNC-style labels)."""
+    text = (raw or '').strip()
+    if not text:
+        return ''
+    # Normalize separators so basename works even when host OS differs from label shape.
+    unified = text.replace('\\', '/')
+    return os.path.basename(unified.rstrip('/')) or unified
+
+
 def strip_repack_tags(raw: str) -> str:
-    """Remove common scene/repack bracket tags from a label."""
+    """A1 — remove generic scene/repack bracket tags from a label."""
     if not raw:
         return ''
     return _BRACKET_TAG_RE.sub('', raw).strip()
 
 
 def strip_version_brackets(raw: str) -> str:
-    """Remove bracketed multi-part version junk (e.g. [1 0 4 1])."""
+    """A2 — remove bracketed multi-part version junk (e.g. [1 0 4 1])."""
     if not raw:
         return ''
     return _VERSION_BRACKET_RE.sub('', raw).strip()
 
 
 def strip_build_tail(raw: str) -> str:
-    """Remove a trailing '(Build ...)' / '(build ...)' parenthetical."""
+    """A3 — remove a trailing '(Build ...)' / '(build ...)' parenthetical."""
     if not raw:
         return ''
     return _BUILD_PAREN_RE.sub('', raw).strip()
@@ -56,60 +163,242 @@ def strip_build_tail(raw: str) -> str:
 
 def strip_vr_noise_tail(raw: str) -> str:
     """
-    Remove trailing VR-repack noise: 'VR MOD ...', 'MotherVR ...' /
-    '- MotherVR ...' tails, and a bare trailing 'VR' token.
+    A4 / A14 — remove trailing VR/mod noise: 'VR MOD …', vendor-mod tails
+    ('MotherVR …'), spaced trailing 'VR', then glued trailing 'VR'
+    (e.g. 3DSenVR → 3DSen). Does not strip mid-token VR (7VR Wonders).
     """
     if not raw:
         return ''
     working = _VR_MOD_TAIL_RE.sub('', raw)
     working = _MOTHERVR_TAIL_RE.sub('', working)
     working = _TRAILING_VR_RE.sub('', working)
+    working = _GLUED_TRAILING_VR_RE.sub('', working)
     return working.strip()
+
+
+def detect_vr_suffix(raw: str) -> bool:
+    """True when the label has a peelable trailing VR / VR MOD / glued VR suffix."""
+    if not raw:
+        return False
+    text = raw.strip()
+    return bool(
+        _VR_MOD_TAIL_RE.search(text)
+        or _MOTHERVR_TAIL_RE.search(text)
+        or _TRAILING_VR_RE.search(text)
+        or _GLUED_TRAILING_VR_RE.search(text)
+    )
+
+
+def strip_version_access_tails(raw: str) -> str:
+    """A6 — strip trailing spaced/dotted v… versions and Early Access / EA."""
+    if not raw:
+        return ''
+    working = raw
+    # Repeat lightly: "Title v0 4 Early Access" → strip version then EA.
+    for _ in range(3):
+        next_pass = _SPACED_VERSION_TAIL_RE.sub('', working).strip()
+        next_pass = _EARLY_ACCESS_TAIL_RE.sub('', next_pass).strip()
+        if next_pass == working:
+            break
+        working = next_pass
+    return working
+
+
+def strip_incl_update_tails(raw: str) -> str:
+    """A9 — strip (Incl Update…) parentheticals and (oculus)-style platform parens."""
+    if not raw:
+        return ''
+    working = _INCL_UPDATE_PAREN_RE.sub('', raw).strip()
+    working = _PLATFORM_PAREN_RE.sub('', working).strip()
+    return working
+
+
+def strip_unbracketed_scene_suffix(raw: str) -> str:
+    """
+    A10 — strip trailing unbracketed scene/repack suffixes (hyphen or space).
+
+    Hyphen forms (BeachHead-ALIAS / Title - ALIAS) allow a single head token.
+    Space-only forms require ≥2 head tokens (avoids over-peel on generic aliases).
+    Alias list is code-only.
+    """
+    if not raw:
+        return ''
+    match = _UNBRACKETED_SCENE_TAIL_RE.search(raw)
+    if not match:
+        return raw.strip()
+    head = raw[: match.start()].strip(' -_')
+    if not head:
+        return raw.strip()
+    sep = raw[match.start() : match.start(1)]
+    min_tokens = 1 if '-' in sep else 2
+    if len(head.split()) < min_tokens:
+        return raw.strip()
+    return head
+
+
+def strip_date_stamp_tails(raw: str) -> str:
+    """A11 — strip trailing YYYYMMDD(nn) or compact V######## blocks."""
+    if not raw:
+        return ''
+    return _DATE_STAMP_TAIL_RE.sub('', raw).strip()
+
+
+def strip_update_build_prose_tails(raw: str) -> str:
+    """A12 — strip Update vX / update ranges / bare trailing Build N / bare Update."""
+    if not raw:
+        return ''
+    working = raw
+    for _ in range(3):
+        next_pass = _UPDATE_RANGE_TAIL_RE.sub('', working).strip()
+        next_pass = _UPDATE_VERSION_TAIL_RE.sub('', next_pass).strip()
+        next_pass = _BARE_BUILD_TAIL_RE.sub('', next_pass).strip()
+        next_pass = _BARE_UPDATE_TAIL_RE.sub('', next_pass).strip()
+        if next_pass == working:
+            break
+        working = next_pass
+    return working
+
+
+def strip_addon_junk_tails(raw: str) -> str:
+    """A13 — strip pure add-on / bare HV junk (edition peels stay for Stage C10)."""
+    if not raw:
+        return ''
+    return _ADDON_JUNK_TAIL_RE.sub('', raw).strip()
+
+
+def normalize_smart_apostrophes(raw: str) -> str:
+    """A8 — map smart quotes to ASCII apostrophe."""
+    if not raw:
+        return ''
+    return _SMART_APOSTROPHE_RE.sub("'", raw)
+
+
+def inject_franchise_apostrophes(raw: str) -> str:
+    """
+    A8 — inject missing apostrophes on known franchise heads
+    (Assassins Creed → Assassin's Creed) so Stage C colon heads can match.
+    """
+    if not raw:
+        return ''
+    working = raw
+    for pattern, head in _FRANCHISE_APOSTROPHE_INJECT:
+        match = pattern.match(working)
+        if match:
+            working = head + working[match.start(1) :]
+            break
+    return working
+
+
+def is_bare_franchise(name: str) -> bool:
+    """
+    C11 — True when the cleaned label is a known bare franchise / ambiguous
+    one-token head with no subtitle (propose / manual only; no auto-import).
+    """
+    if not name or not str(name).strip():
+        return False
+    folded = normalize_smart_apostrophes(str(name).strip()).casefold()
+    folded = inject_franchise_apostrophes(folded).casefold()
+    if folded in _BARE_FRANCHISE_LABELS:
+        return True
+    if folded in _BARE_FRANCHISE_HEADS:
+        return True
+    # Exact franchise colon-head with zero subtitle tokens.
+    tokens = folded.split()
+    if len(tokens) <= 2 and folded in _BARE_FRANCHISE_HEADS:
+        return True
+    return False
+
+
+def _title_case_tokens(working: str) -> str:
+    """A7 casing: title-case all-lowercase dumps; keep ALLCAPS+digit tokens."""
+    parts = []
+    for word in working.split(' '):
+        if not word:
+            continue
+        if word.isupper() or any(ch.isdigit() for ch in word):
+            parts.append(word)
+        elif word.lower() == word:
+            parts.append(word[:1].upper() + word[1:])
+        else:
+            parts.append(word)
+    return ' '.join(parts)
 
 
 def parse_game_label(raw: str) -> dict:
     """
     Parse a folder or file stem into a cleaned display/search name and optional Steam App ID.
 
+    Stage order (docs/strategy/name-resolution.md):
+      A0 basename/trim → A1 scene/repack → A2 version brackets → A3 (build …)
+      → A4 VR/mod → A5 (digits) steam_app_id → A6 spaced v… / Early Access
+      → A14 VR re-pass → A9 Incl Update → A10 unbracketed scene → A11 date-stamps
+      → A12 Update/Build prose → A13 add-on/HV junk → A7 normalize → A8 apostrophe.
+
     Returns:
-        dict with keys: raw (str), cleaned_name (str), steam_app_id (int|None)
+        dict with keys: raw, cleaned_name, steam_app_id, bare_franchise, had_vr_suffix
     """
     if not raw or not isinstance(raw, str):
-        return {'raw': raw or '', 'cleaned_name': '', 'steam_app_id': None}
+        return {
+            'raw': raw or '',
+            'cleaned_name': '',
+            'steam_app_id': None,
+            'bare_franchise': False,
+            'had_vr_suffix': False,
+        }
 
     steam_app_id = None
-    working = raw.strip()
+    had_vr_suffix = False
+    # A0
+    working = _basename_only(raw)
+    # A1
     working = strip_repack_tags(working)
+    # A2
     working = strip_version_brackets(working)
+    # A3
     working = strip_build_tail(working)
+    # A4
+    if detect_vr_suffix(working):
+        had_vr_suffix = True
     working = strip_vr_noise_tail(working)
-
+    # A5
     match = _STEAM_ID_RE.search(working)
     if match:
         steam_app_id = int(match.group(1))
         working = working[: match.start()].strip()
-
+    # A6
+    working = strip_version_access_tails(working)
+    # A14 — VR re-pass after version strip (Title VR v… → Title VR → Title)
+    if detect_vr_suffix(working):
+        had_vr_suffix = True
+    working = strip_vr_noise_tail(working)
+    # A9
+    working = strip_incl_update_tails(working)
+    # A10
+    working = strip_unbracketed_scene_suffix(working)
+    # A11
+    working = strip_date_stamp_tails(working)
+    # A12
+    working = strip_update_build_prose_tails(working)
+    # A13 — add-on / HV junk only (Complete/Collector/Legendary kept for C10)
+    working = strip_addon_junk_tails(working)
+    # A7 — whitespace / underscore normalize (casing after alias check)
     working = working.replace('_', ' ')
     working = re.sub(r'\s+', ' ', working).strip(' -_')
+    # A8 — smart quotes before casing so apostrophes survive title-case path
+    working = normalize_smart_apostrophes(working)
 
     aliased = _ALIAS_MAP.get(working.casefold())
     if aliased:
         cleaned = aliased
     else:
-        parts = []
-        for word in working.split(' '):
-            if not word:
-                continue
-            if word.isupper() or any(ch.isdigit() for ch in word):
-                parts.append(word)
-            elif word.lower() == word:
-                parts.append(word[:1].upper() + word[1:])
-            else:
-                parts.append(word)
+        cleaned = _title_case_tokens(working)
+        # A8 franchise inject after casing so heads match title-case disk labels
+        cleaned = inject_franchise_apostrophes(cleaned)
 
-        cleaned = ' '.join(parts)
     return {
         'raw': raw,
         'cleaned_name': cleaned,
         'steam_app_id': steam_app_id,
+        'bare_franchise': is_bare_franchise(cleaned),
+        'had_vr_suffix': had_vr_suffix,
     }

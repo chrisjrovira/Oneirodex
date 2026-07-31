@@ -1,73 +1,60 @@
-.container-settings {
-    background-color: color-mix(in srgb, var(--gt-bg, #000) 70%, transparent);
-    border-radius: 15px;
-    padding: 20px;
-    margin-top: 20px;
-}
+/* Admin → Server Status — densified under .gt-adminpage / aurora meters */
 
-.container-serverstatus-version {
+.gt-server-status .server-status-summary {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
     align-items: center;
-    padding: 15px;
-    margin-bottom: 20px;
-    background: color-mix(in srgb, var(--gt-text, #fff) 10%, transparent);
-    border-radius: 10px;
+    font-size: 0.9rem;
+    color: var(--gt-text-muted, color-mix(in srgb, var(--gt-text, #fff) 70%, transparent));
 }
 
-.info-block {
-    background: color-mix(in srgb, var(--gt-text, #fff) 10%, transparent);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 6px color-mix(in srgb, var(--gt-bg, #000) 10%, transparent);
+.gt-server-status .info-block {
+    /* panels already provide surface; keep light section chrome only */
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    margin-bottom: 0;
+    border-radius: 0;
 }
 
-.info-block h3 {
+.gt-server-status .info-block h3,
+.gt-server-status .info-block h4 {
     color: var(--gt-text, var(--text-white));
-    border-bottom: 2px solid var(--border-light-strong);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
 }
 
-.info-block h4 {
-    color: var(--gt-text, var(--text-white));
-    font-size: 1.1rem;
-    margin-bottom: 15px;
+.gt-server-status .info-block h4 {
+    font-size: 1.05rem;
+    margin-bottom: 0.75rem;
 }
 
-.progress {
-    background-color: var(--gt-bg, var(--bg-dark-primary));
-    border-radius: 15px;
-    overflow: hidden;
+.gt-meter.is-warn .gt-meter__fill {
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--gt-warning, #e6a23c) 50%, var(--gt-bg, #000)),
+        color-mix(in srgb, var(--gt-warning, #e6a23c) 65%, var(--gt-bg, #000))
+    );
 }
 
-.progress-bar {
-    background-color: color-mix(in srgb, var(--gt-success, var(--btn-success)) 55%, var(--gt-bg, #000));
-    transition: width 0.3s ease;
+.gt-meter.is-danger .gt-meter__fill {
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--gt-danger, #e74c3c) 50%, var(--gt-bg, #000)),
+        color-mix(in srgb, var(--gt-danger, #e74c3c) 65%, var(--gt-bg, #000))
+    );
 }
 
 .cpu-details {
     background: color-mix(in srgb, var(--gt-text, #fff) 5%, transparent);
-    padding: 10px;
-    border-radius: 8px;
-    margin-top: 10px;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--gt-adminpage-radius-sm, 8px);
+    margin-top: 0.65rem;
 }
 
 .cpu-details p {
-    margin: 5px 0;
+    margin: 0.25rem 0;
     color: var(--gt-text, var(--text-white));
-}
-
-/* Table styling inherited from table-components.css */
-
-.table th {
-    background: color-mix(in srgb, var(--gt-text, #fff) 10%, transparent);
-    border-color: var(--border-light-strong);
-}
-
-.table td {
-    border-color: var(--gt-border, var(--border-light));
+    font-size: 0.9rem;
 }
 
 .status-indicator {
@@ -75,7 +62,8 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    margin-right: 8px;
+    margin-left: 0.35rem;
+    vertical-align: middle;
 }
 
 .status-good {
@@ -104,40 +92,14 @@ canvas#gamesDiskChart {
     margin: 0 auto;
 }
 
-.resource-card {
-    background: color-mix(in srgb, var(--gt-text, #fff) 5%, transparent);
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 15px;
-    transition: transform 0.2s;
-}
-
-.resource-card:hover {
-    transform: translateY(-2px);
-}
-
-.fas {
-    margin-right: 8px;
-}
-
-.btn-secondary {
-    background-color: color-mix(in srgb, var(--gt-text, #fff) 20%, transparent);
-    border: none;
-    margin: 10px;
-    transition: background-color 0.3s;
-}
-
-.btn-secondary:hover {
-    background-color: color-mix(in srgb, var(--gt-text, #fff) 30%, transparent);
-}
-
 .resource-cards {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-around;
-    align-items: start;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
-/* Permission icons styling */
 .permission-icons {
     float: right;
     display: inline-flex;

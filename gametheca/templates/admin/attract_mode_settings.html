@@ -2,17 +2,20 @@
 {% block content %}
 {% import 'partials/icons.html' as icons %}
 
-<div class="container">
-    <div class="glass-panel">
-        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+<div class="container-settings gt-adminpage gt-adminpage--lg">
+    <div class="gt-adminpage-header">
+        <div>
+            <h1 class="gt-adminpage-title">{{ icons.icon('play', size=26) }} Attract Mode Settings</h1>
+            <p class="gt-adminpage-lede">Configure automatic trailer playback when the system is idle.</p>
+        </div>
+        <div class="gt-adminpage-header-actions">
+            <button type="submit" form="attractModeForm" class="btn btn-primary">
+                {{ icons.icon('save') }} Save Settings
+            </button>
+        </div>
     </div>
-</div>
 
-<div class="container-status-page container-settings">
-    <div class="card">
-        <h2>Attract Mode Settings</h2>
-        <p class="text-muted">Configure automatic trailer playback when the system is idle</p>
-
+    <div class="gt-adminpage-panel">
         <div id="settingsSavedNotification" class="alert alert-success" role="alert" style="display: none;">
             Attract mode settings saved successfully!
         </div>
@@ -23,14 +26,6 @@
 
         <div class="settingsform-admin">
             <form id="attractModeForm">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="mb-0">Attract Mode Configuration</h3>
-                    <button type="submit" class="btn btn-primary">
-                        {{ icons.icon('save') }} Save Settings
-                    </button>
-                </div>
-
-                <!-- Enable/Disable Section -->
                 <div class="settings-section mb-4">
                     <h5 class="section-header">
                         {{ icons.icon('cogs', size=18) }} General Settings
@@ -187,7 +182,7 @@
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end">
+                <div class="gt-adminpage-actions d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary btn-lg">
                         {{ icons.icon('save') }} Save Attract Mode Settings
                     </button>

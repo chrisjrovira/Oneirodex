@@ -202,7 +202,7 @@
                                 <h4 class="card-title">
                                     {{ icons.icon('tasks', size=20) }} Active Scan Jobs
                                 </h4>
-                                <p class="jobs-subtitle">Monitor and manage running scan operations</p>
+                                <p class="jobs-subtitle">Monitor running, queued, and recent scan operations</p>
                             </div>
                             <div class="jobs-controls">
                                 <form action="{{ url_for('main.clear_all_scan_jobs') }}" method="post" class="inline-form">
@@ -257,11 +257,11 @@
             </div>
 
             <!-- Manual Scan Tab -->
-            <div id="manualScan" class="admin_manage_scanjobs-manual-panel glass-panel tab-pane {% if active_tab == 'manual' %}active{% else %}fade{% endif %}"><br>
+            <div id="manualScan" class="admin_manage_scanjobs-manual-panel gt-adminpage-panel tab-pane {% if active_tab == 'manual' %}active{% else %}fade{% endif %}"><br>
                 <div class="admin_manage_scanjobs-tab-header">
                     <h3>Manual Folder Scan</h3>
                 </div>
-                <form action="" method="post">
+                <form id="manualScanForm" action="" method="post">
                     {{ manual_form.hidden_tag() }}
                     <!-- Library Selection -->
                     <div class="admin_manage_scanjobs-library form-group">
@@ -347,8 +347,8 @@
                 </div>
 
             <!-- Unmatched Folders Tab -->
-            <div id="unmatchedFolders" class="admin_manage_scanjobs-unmatched-container container tab-pane {% if active_tab == 'unmatched' %}active{% else %}fade{% endif %}"><br>
-                <div class="admin_manage_scanjobs-unmatched-panel glass-panel">
+            <div id="unmatchedFolders" class="admin_manage_scanjobs-unmatched-container tab-pane {% if active_tab == 'unmatched' %}active{% else %}fade{% endif %}"><br>
+                <div class="admin_manage_scanjobs-unmatched-panel gt-adminpage-panel">
                     <div class="admin_manage_scanjobs-tab-header">
                         <h3>Resolve Unmatched Folders</h3>
                     </div>
@@ -362,13 +362,14 @@
                         <form action="" method="post">
                             {{ csrf_form.csrf_token }}
                             <input type="hidden" name="submit" value="DeleteAllUnmatched">
-                            <button type="submit" class="admin_manage_scanjobs-clearall-btn btn btn-danger" data-toggle="tooltip" title="Remove all entries from the unmatched folders list" onclick="return confirm('Are you sure you want to delete all entries in the list? This cannot be undone.');">Clear All</button>
+                            <button type="submit" class="admin_manage_scanjobs-clearall-btn btn btn-outline-light btn-sm" data-toggle="tooltip" title="Remove all entries from the unmatched folders list" onclick="return confirm('Are you sure you want to delete all entries in the list? This cannot be undone.');">Clear All</button>
                         </form>
                         <form action="" method="post">
                             {{ csrf_form.csrf_token }}
                             <input type="hidden" name="submit" value="DeleteOnlyUnmatched">
-                            <button type="submit" class="admin_manage_scanjobs-clearunmatched-btn btn btn-warning" data-toggle="tooltip" title="Remove only folders with 'Unmatched' status, keeping identified items" onclick="return confirm('Are you sure you want to clear all unmatched folders? This cannot be undone.');">Clear Unmatched</button>
-                            <button type="button" id="reclassifyDuplicatesBtn" class="btn btn-secondary" data-toggle="tooltip" title="Change false Duplicate rows (different folder titles, same IGDB) back to Unmatched">Fix false duplicates</button>
+                            <button type="submit" class="admin_manage_scanjobs-clearunmatched-btn btn btn-outline-light btn-sm" data-toggle="tooltip" title="Remove only folders with 'Unmatched' status, keeping identified items" onclick="return confirm('Are you sure you want to clear all unmatched folders? This cannot be undone.');">Clear Unmatched</button>
+                            <button type="button" id="reclassifyDuplicatesBtn" class="btn btn-outline-light btn-sm" data-toggle="tooltip" title="Change false Duplicate rows (different folder titles, same IGDB) back to Unmatched">Fix false duplicates</button>
+                            <button type="button" id="backfillSuggestedKindBtn" class="btn btn-outline-light btn-sm" data-toggle="tooltip" title="Fill missing Suggested kind chips from on-disk scan proposals (legacy rows)">Backfill kind hints</button>
                         </form>
                         <div class="btn-group" role="group" aria-label="Export unmatched folders">
                             <a id="exportUnmatchedCsvBtn" class="btn btn-outline-light btn-sm" href="{{ url_for('apis.export_unmatched_folders', status='all', format='csv') }}" data-toggle="tooltip" title="Download the current filter as CSV">
@@ -401,20 +402,22 @@
                             Showing all entries
                         </div>
                     </div>
+                    <div class="unmatched-table-wrap">
                     <table id="unmatchedTable" class="simple-unmatched-table" style="border-radius: 15px;">
                         <thead>
                             <tr>
-                                <th>Folder Path</th>
-                                <th>Status</th>
-                                <th>Library</th>
-                                <th>Platform</th>
-                                <th>Actions</th>
+                                <th class="col-path">Folder Path</th>
+                                <th class="col-status">Status</th>
+                                <th class="col-library">Library</th>
+                                <th class="col-platform">Platform</th>
+                                <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="unmatchedFoldersTableBody">
                             <!-- This will be populated dynamically by JavaScript -->
                         </tbody>
                     </table>
+                    </div>
                     
                 </div>
 
@@ -422,38 +425,107 @@
 
             <!-- Scan Filters Tab -->
             <div id="scanFilters" class="admin_manage_scanjobs-filters-container container tab-pane {% if active_tab == 'scan_filters' %}active{% else %}fade{% endif %}">
-                <div class="admin_manage_scanjobs-filters-panel glass-panel">
-                    <div class="admin_manage_scanjobs-tab-header">
+                <div class="admin_manage_scanjobs-filters-panel gt-adminpage-panel gt-scan-filters">
+                    <div class="admin_manage_scanjobs-tab-header gt-scan-filters__header">
                         <h3>{{ icons.icon('filter', size=22) }} Scanning Filters</h3>
-                        <p>Manage scanning filter patterns to improve scanning speed.</p>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFilterModal">
-                            {{ icons.icon('plus') }} Add New Filter
+                        <p class="gt-adminpage-lede">Two jobs, one list: strip junk from folder <strong>names</strong>, or skip whole <strong>folders</strong> during scans.</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFilterModal" id="gtScanFilterAddBtn">
+                            {{ icons.icon('plus') }} Add filter
                         </button>
                     </div>
 
+                    <section class="gt-scan-filters__howto" aria-labelledby="gt-scan-filters-howto-title">
+                        <h4 id="gt-scan-filters-howto-title">How it works</h4>
+                        <ol class="gt-scan-filters__howto-list">
+                            <li><strong>Name tag</strong> — stored as plain text (e.g. <code>GOG</code>). Matcher strips <code>-GOG</code> / <code>.GOG</code> from folder basenames before IGDB search. Does not hide folders.</li>
+                            <li><strong>Skip folder</strong> — store with <code>dir:</code> prefix (e.g. <code>dir:_MyTools</code>). Folder listing skips matching basenames (case-insensitive fnmatch). Built-in emu/FE skips already exist; this adds yours.</li>
+                            <li><strong>Prefix globs</strong> for skips — prefer <code>dolphin*</code> / <code>GOD v*</code>, not <code>*dolphin*</code> / <code>GOD*</code>, so real titles are not skipped.</li>
+                            <li>Skip-dir is <strong>defense-in-depth</strong> — still point each library at the correct leaf; do not rely on skips to fix a family-root library.</li>
+                        </ol>
+                    </section>
+
+                    <section class="gt-scan-filters__examples" aria-labelledby="gt-scan-filters-examples-title">
+                        <h4 id="gt-scan-filters-examples-title">Examples</h4>
+                        <div class="gt-scan-filters__example-grid">
+                            <article class="gt-scan-filters__example">
+                                <span class="gt-scan-filters__kind-badge gt-scan-filters__kind-badge--name">Name tag</span>
+                                <code>GOG</code>
+                                <p>Cleans <code>Title-GOG</code> / <code>Title.GOG</code> for matching.</p>
+                            </article>
+                            <article class="gt-scan-filters__example">
+                                <span class="gt-scan-filters__kind-badge gt-scan-filters__kind-badge--dir">Skip folder</span>
+                                <code>dir:_MyTools</code>
+                                <p>Skips a folder literally named <code>_MyTools</code>.</p>
+                            </article>
+                            <article class="gt-scan-filters__example">
+                                <span class="gt-scan-filters__kind-badge gt-scan-filters__kind-badge--dir">Skip folder</span>
+                                <code>dir:OpenVR*</code>
+                                <p>Prefix glob — skips <code>OpenVR Metrics</code>, not mid-name matches.</p>
+                            </article>
+                            <article class="gt-scan-filters__example">
+                                <span class="gt-scan-filters__kind-badge gt-scan-filters__kind-badge--dir">Skip folder</span>
+                                <code>dir:Tools*</code>
+                                <p>Skips tool trees under a leaf without moving them off disk.</p>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section class="gt-scan-filters__quick" aria-labelledby="gt-scan-filters-quick-title">
+                        <h4 id="gt-scan-filters-quick-title">Quick add</h4>
+                        <p class="gt-scan-filters__quick-lede">Fills the add form — review and save. Does not submit until you confirm.</p>
+                        <div class="gt-scan-filters__chips" role="group" aria-label="Common filter presets">
+                            <button type="button" class="gt-scan-filters__chip" data-gt-filter-kind="name" data-gt-filter-pattern="GOG" data-gt-filter-case="no">Name · GOG</button>
+                            <button type="button" class="gt-scan-filters__chip" data-gt-filter-kind="name" data-gt-filter-pattern="Open Source" data-gt-filter-case="no">Name · Open Source</button>
+                            <button type="button" class="gt-scan-filters__chip" data-gt-filter-kind="name" data-gt-filter-pattern="Public Domain" data-gt-filter-case="no">Name · Public Domain</button>
+                            <button type="button" class="gt-scan-filters__chip" data-gt-filter-kind="dir" data-gt-filter-pattern="_MyTools" data-gt-filter-case="no">Skip · _MyTools</button>
+                            <button type="button" class="gt-scan-filters__chip" data-gt-filter-kind="dir" data-gt-filter-pattern="OpenVR*" data-gt-filter-case="no">Skip · OpenVR*</button>
+                            <button type="button" class="gt-scan-filters__chip" data-gt-filter-kind="dir" data-gt-filter-pattern="Tools*" data-gt-filter-case="no">Skip · Tools*</button>
+                            <button type="button" class="gt-scan-filters__chip" data-gt-filter-kind="dir" data-gt-filter-pattern="_Extras" data-gt-filter-case="no">Skip · _Extras</button>
+                        </div>
+                    </section>
+
                     <!-- Add Filter Modal -->
-                    <div class="modal fade" id="addFilterModal" tabindex="-1">
+                    <div class="modal fade" id="addFilterModal" tabindex="-1" aria-labelledby="addFilterModalTitle">
                         <div class="modal-dialog">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title">Add New Scanning Filter</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    <h5 class="modal-title" id="addFilterModalTitle">Add scanning filter</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
-                                <form action="" method="post">
+                                <form action="" method="post" id="gtScanFilterForm">
                                     <div class="modal-body">
                                         {{ release_group_form.hidden_tag() }}
+                                        <fieldset class="gt-scan-filters__kind-field">
+                                            <legend class="form-label">Filter type</legend>
+                                            <div class="gt-scan-filters__kind-toggle" role="radiogroup" aria-label="Filter type">
+                                                <label class="gt-scan-filters__kind-option">
+                                                    <input type="radio" name="gt_filter_kind" value="name" checked>
+                                                    <span>Name tag</span>
+                                                </label>
+                                                <label class="gt-scan-filters__kind-option">
+                                                    <input type="radio" name="gt_filter_kind" value="dir">
+                                                    <span>Skip folder <code>dir:</code></span>
+                                                </label>
+                                            </div>
+                                        </fieldset>
                                         <div class="mb-3">
-                                            <label for="filter_pattern" class="form-label">Scanning Filter Pattern</label>
-                                            {{ release_group_form.filter_pattern(class="form-control", id="filter_pattern") }}
+                                            <label for="filter_pattern_raw" class="form-label" id="gtFilterPatternLabel">Tag to strip</label>
+                                            <div class="gt-scan-filters__pattern-row">
+                                                <span class="gt-scan-filters__dir-prefix" id="gtFilterDirPrefix" hidden aria-hidden="true">dir:</span>
+                                                <input type="text" class="form-control" id="filter_pattern_raw" autocomplete="off" spellcheck="false" placeholder="e.g. GOG" aria-describedby="gtFilterPatternHint">
+                                            </div>
+                                            {{ release_group_form.filter_pattern(class="visually-hidden", id="filter_pattern", tabindex="-1", **{'aria-hidden': 'true'}) }}
+                                            <p class="gt-scan-filters__hint" id="gtFilterPatternHint">Stored as the tag only. Scan strips <code>-tag</code> and <code>.tag</code> from folder names.</p>
                                         </div>
-                                        <div class="mb-3 form-check">
-                                            {{ release_group_form.case_sensitive(class="form-check-input", id="case_sensitive") }}
-                                            <label class="form-check-label" for="case_sensitive">Case Sensitive</label>
+                                        <div class="mb-3" id="gtFilterCaseRow">
+                                            <label for="case_sensitive" class="form-label">Case sensitive</label>
+                                            {{ release_group_form.case_sensitive(class="form-select", id="case_sensitive") }}
+                                            <p class="gt-scan-filters__hint">Name tags only. Skip-folder globs are always case-insensitive.</p>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        <button type="submit" name="submit" value="AddReleaseGroup" class="btn btn-primary">Save Filter</button>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" name="submit" value="AddReleaseGroup" class="btn btn-primary">Save filter</button>
                                     </div>
                                 </form>
                             </div>
@@ -461,23 +533,38 @@
                     </div>
 
                     <hr>
-                    <h4>Existing Filters</h4>
-                    <table class="admin_manage_filters-table table table-dark table-striped table-hover">
+                    <h4>Existing filters</h4>
+                    <div class="table-responsive">
+                    <table class="admin_manage_filters-table table gt-adminpage-table table-hover">
                         <thead>
                             <tr>
-                                <th width="60%">Scanning Filter Pattern</th>
-                                <th width="20%">Case Sensitive</th>
-                                <th width="20%">Actions</th>
+                                <th scope="col">Kind</th>
+                                <th scope="col">Pattern</th>
+                                <th scope="col">Case sensitive</th>
+                                <th scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                         {% for group in scanning_filters %}
+                            {% set raw = (group.filter_pattern or '')|trim %}
+                            {% set is_dir = raw.lower().startswith('dir:') %}
                             <tr>
-                                <td>{{ group.filter_pattern }}</td>
                                 <td>
-                                    <span class="badge {% if group.case_sensitive %}bg-success{% else %}bg-secondary{% endif %}">
-                                        {{ 'Yes' if group.case_sensitive else 'No' }}
+                                    {% if is_dir %}
+                                    <span class="gt-scan-filters__kind-badge gt-scan-filters__kind-badge--dir">Skip folder</span>
+                                    {% else %}
+                                    <span class="gt-scan-filters__kind-badge gt-scan-filters__kind-badge--name">Name tag</span>
+                                    {% endif %}
+                                </td>
+                                <td><code class="gt-scan-filters__pattern">{{ group.filter_pattern }}</code></td>
+                                <td>
+                                    {% if is_dir %}
+                                    <span class="badge bg-secondary" title="Skip-folder globs ignore case">n/a</span>
+                                    {% else %}
+                                    <span class="badge {% if group.case_sensitive in [true, 'yes', 'Yes', 'True', '1', 1] %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ 'Yes' if group.case_sensitive in [true, 'yes', 'Yes', 'True', '1', 1] else 'No' }}
                                     </span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <form action="" method="post" style="display: inline;">
@@ -490,15 +577,20 @@
                                     </form>
                                 </td>
                             </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="gt-scan-filters__empty">No custom filters yet. Built-in skip-dir globs still apply for common emu/FE folders.</td>
+                            </tr>
                         {% endfor %}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
 
             <!-- File Extensions Tab -->
             <div id="fileExtensions" class="admin_manage_scanjobs-extensions-container container tab-pane {% if active_tab == 'file_extensions' %}active{% else %}fade{% endif %}">
-                <div class="admin_manage_scanjobs-extensions-panel glass-panel">
+                <div class="admin_manage_scanjobs-extensions-panel gt-adminpage-panel">
                     <div class="admin_manage_scanjobs-tab-header">
                         <h3>{{ icons.icon('plug', size=22) }} File Extensions</h3>
                         <p>Manage allowed file extensions for game file recognition.</p>
@@ -513,7 +605,7 @@
                                 </button>
                             </div>
                             <div class="card-body">
-                                <table class="table table-dark table-hover" id="allowedTypesTable">
+                                <table class="table gt-adminpage-table table-hover" id="allowedTypesTable">
                                     <thead>
                                         <tr>
                                             <th>Extension</th>
@@ -554,7 +646,7 @@
 
             <!-- Image Queue Tab -->
             <div id="imageQueue" class="admin_manage_scanjobs-imagequeue-container container tab-pane {% if active_tab == 'image_queue' %}active{% else %}fade{% endif %}">
-                <div class="admin_manage_scanjobs-imagequeue-panel glass-panel">
+                <div class="admin_manage_scanjobs-imagequeue-panel gt-adminpage-panel">
                     <div class="admin_manage_scanjobs-tab-header">
                         <h3>{{ icons.icon('image', size=22) }} Image Queue</h3>
                         <p>Manage game cover and screenshot downloads.</p>
@@ -619,7 +711,7 @@
 
                     <!-- Image Queue Table -->
                     <div class="table-responsive">
-                        <table class="table table-dark table-striped align-middle">
+                        <table class="table gt-adminpage-table align-middle">
                             <thead>
                                 <tr>
                                     <th>Preview</th>

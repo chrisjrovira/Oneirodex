@@ -1,26 +1,35 @@
 {% extends "base.html" %}
 {% block content %}
 
-<link rel="stylesheet" href="{{ 'css/login/registration_already_confirmed.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/setup/setup.css'|theme_asset }}">
 
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-    <div class="alert alert-info" role="alert">
-        {% for message in messages %}
-            {{ message }}<br>
-        {% endfor %}
-    </div>
-{% endif %}
-{% endwith %}
-<div class="container-base">
-    <div class="messages">
-        <div class="ai">
-            <div class="speech-bubble ai">
-                <h1>Already Confirmed</h1>
-                <p>Your account is already activated. You can log in and continue using our services.</p>
-                <a href="{{ url_for('login.login') }}" class="btn btn-success">Login</a>
+<div class="container-login">
+    <div class="content-login gt-setup" role="main" aria-labelledby="gt-already-confirmed-title">
+        <div class="gt-setup__brand">
+            <img
+                src="{{ url_for('static', filename='newstyle/gametheca_mark.svg') }}"
+                alt=""
+                class="gt-setup__mark"
+                width="56"
+                height="56"
+                decoding="async"
+            >
+            <h1 id="gt-already-confirmed-title" class="gt-setup__title">Already confirmed</h1>
+            <p class="gt-setup__lede">Your account is already activated. You can sign in and continue.</p>
+        </div>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-success" role="status">
+                {% for message in messages %}
+                    {{ message }}{% if not loop.last %}<br>{% endif %}
+                {% endfor %}
             </div>
+        {% endif %}
+        {% endwith %}
+        <div class="gt-setup__actions">
+            <a href="{{ url_for('login.login') }}" class="btn btn-primary">Sign in</a>
         </div>
     </div>
 </div>
+
 {% endblock %}

@@ -40,6 +40,9 @@ export function GameGrid({
   enableDeleteOnDisk = false,
   onToggleFavorite,
   hidePlatformChip = false,
+  selectionEnabled = false,
+  selectedIds = null,
+  onSelectionToggle,
 }) {
   const listRef = useRef(null)
   const [metrics, setMetrics] = useState(() => ({
@@ -143,14 +146,18 @@ export function GameGrid({
     enableDeleteOnDisk,
     onToggleFavorite,
     hidePlatformChip,
+    selectionEnabled,
+    onSelectionToggle,
   }
+
+  const selecting = selectionEnabled && selectedIds && selectedIds.size > 0
 
   // Empty list: keep a grid root for LibraryApp empty-state layout / tests.
   if (games.length === 0) {
     return (
       <div
         ref={listRef}
-        className="game-library-container"
+        className={`game-library-container${selecting ? ' is-selecting' : ''}`}
         data-library-grid
         data-library-virtual
       />
@@ -162,7 +169,7 @@ export function GameGrid({
   return (
     <div
       ref={listRef}
-      className="game-library-container"
+      className={`game-library-container${selecting ? ' is-selecting' : ''}`}
       data-library-grid
       data-library-virtual
       style={{
@@ -190,7 +197,12 @@ export function GameGrid({
             }}
           >
             {rowGames.map((game) => (
-              <GameCard key={game.uuid} game={game} {...cardProps} />
+              <GameCard
+                key={game.uuid}
+                game={game}
+                selected={Boolean(selectedIds?.has(game.uuid))}
+                {...cardProps}
+              />
             ))}
           </div>
         )

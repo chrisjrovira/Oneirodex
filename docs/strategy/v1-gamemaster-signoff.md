@@ -49,7 +49,7 @@ Explicit **do-not claims** for official 1.0.0 notes and external copy:
 
 1. **No scrape** — do not claim romhacking.net (or similar) scrape, pirate indexes, or auto-fetched DAT torrents.
 2. **No DRM store queues** — do not claim Steam/Epic/etc. download or install queues; ownership register only.
-3. **No bundled torrent/debrid marketplace** — BYO *arr only; not a GameTheca storefront.
+3. **No torrent/debrid marketplace** — native Torznab/Newznab registry + optional admin presets + BYO hubs OK; not a GameTheca storefront.
 4. **Honesty on browser vs companion** — do not claim browser Play for GameCube/Wii/Dreamcast/3DS/PS2/Vita, or for PCE/Commodore/DOS until WASM is actually present; do not claim PS5 / Xbox Series play.
 5. **No “we ship all WASM cores”** — cores are operator-placed / discover-on-disk; Python discovers `*_libretro.wasm`; JS allowlist follows installed cores.
 6. **No Discord / webhook** acquisition or notify paths in library/emulation copy.

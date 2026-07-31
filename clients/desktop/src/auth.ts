@@ -85,6 +85,51 @@ export function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.trim().replace(/\/+$/, '')
 }
 
+/** BOM / zero-width chars often sneak in on clipboard paste. */
+const INVISIBLE_CHARS = /[\u200B-\u200D\uFEFF]/g
+
+/**
+ * Trim paste noise before validating or storing a GameTheca API token.
+ * Strips BOM/zero-width, surrounding whitespace, and wrapping quotes.
+ */
+export function normalizeGamethecaToken(raw: string): string {
+  let value = raw.replace(INVISIBLE_CHARS, '').trim()
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1).replace(INVISIBLE_CHARS, '').trim()
+  }
+  return value
+}
+
+/**
+ * Client-side shape check aligned with server `generate_api_token` /
+ * `verify_bearer_token`: `gt_` + prefix + `_` + urlsafe secret.
+ * Secret may contain `_` and `-` (`secrets.token_urlsafe`).
+ */
 export function isGamethecaToken(token: string): boolean {
-  return /^gt_[a-zA-Z0-9]+_[a-zA-Z0-9]+$/.test(token.trim())
+  const normalized = normalizeGamethecaToken(token)
+  if (!normalized.startsWith('gt_')) {
+    return false
+  }
+  const body = normalized.slice('gt_'.length)
+  const sep = body.indexOf('_')
+  if (sep <= 0) {
+    return false
+  }
+  const prefix = body.slice(0, sep)
+  const secret = body.slice(sep + 1)
+  if (!prefix || !secret) {
+    return false
+  }
+  // Server uses token_hex(4) for prefix; accept hex-ish alphanumeric.
+  if (!/^[a-zA-Z0-9]+$/.test(prefix)) {
+    return false
+  }
+  // token_urlsafe charset: A-Za-z0-9 _ -
+  if (!/^[A-Za-z0-9_-]+$/.test(secret)) {
+    return false
+  }
+  return true
 }

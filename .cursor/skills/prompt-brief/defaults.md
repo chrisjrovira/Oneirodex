@@ -6,14 +6,14 @@ Use these unless the user **explicitly** overrides in the same message.
 
 | Default | Value |
 |---|---|
-| Product | Self-hosted household **gaming sphere** (library · systems · ownership/metadata · play · social · admin/ops · BYO acquire) — DRM-free vault, not a DRM store client |
+| Product | Self-hosted household **gaming sphere** (library · systems · ownership/metadata · play · social · admin/ops · acquire) — DRM-free vault, not a DRM store client |
 | Social | Native chat/presence; optional LiveKit; BYO Stoat/Matrix link |
 | Discord | **Never** — excised; no webhooks |
 | Windows code signing | **Never** — unsigned desktop builds only; no cert purchase |
 | Auth / OIDC | **Opt-in** — off by default |
 | Dangerous apply | AI auto-apply + hardlink apply stay **off** |
 | Scrape | No romhacking.net (or similar) scrape |
-| Acquire | BYO *arr/debrid only; no bundled pirate indexers |
+| Acquire | Native Torznab/Newznab registry (add one / bulk) + optional admin preset pack + BYO Prowlarr/Jackett/debrid hubs; no DRM store download queues; no magnet scrapers that bypass Torznab |
 | DRM stores | Ownership register-only; no download queues |
 | Support | In-app Report → GitHub Issues + admin inbox |
 | LLM | Cursor skills on demand; no paid keys in Flask |
@@ -40,6 +40,15 @@ Use these unless the user **explicitly** overrides in the same message.
 | DB | Postgres (`db` service or local Docker) |
 | Port | 5006 |
 | Support repo | `chrisjrovira/gametheca` |
+
+## Windows drive letters (this host — locked)
+
+| Letter | Meaning | Agent rule |
+|---|---|---|
+| **Y:** | GameTheca repo / ISO share (`…\isos\gametheca`) | Prefer `Y:\` or UNC `\\192.168.50.116\isos\gametheca` for repo cwd |
+| **Z:** | NAS games/storage mapping | **Never** `net use` / `subst` / remap **Z:** for agent tests |
+
+If UNC breaks npm/vitest: copy to `%TEMP%\gametheca-…` or use **existing Y:** — do **not** steal Z:. Prefer `pushd` UNC when it works.
 
 ## Reply style (token)
 

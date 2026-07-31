@@ -348,7 +348,7 @@ class TestFormChoices(unittest.TestCase):
             form = UserPreferencesForm()
             
             # Test items per page choices
-            expected_items = ['16', '20', '50', '100', '500', '1000']
+            expected_items = ['20', '50', '100', '200', '300', '400', '500', '1000']
             form_choices = [choice[0] for choice in form.items_per_page.choices]
             for item in expected_items:
                 self.assertIn(item, form_choices)

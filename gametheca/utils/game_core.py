@@ -31,10 +31,15 @@ from gametheca.utils.metadata_enrichment import apply_enriched_metadata
 from gametheca.utils.notifications import notify_admins_new_game
 from gametheca.utils.scanning import log_unmatched_folder, delete_game_images
 from gametheca.utils.event_logging import log_system_event
-from gametheca.utils.duplicate_check import should_mark_as_duplicate
+from gametheca.utils.duplicate_check import explain_duplicate_match, should_mark_as_duplicate
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from gametheca.utils.worker_caps import (
+    clamp_image_download_batch,
+    clamp_image_download_threads,
+    cooperative_yield,
+)
 
 # IGDB API mapping dictionaries for category, status, and player perspective
 category_mapping = {
@@ -81,12 +86,22 @@ def handle_existing_igdb_collision(
     Returns None (caller should abort import).
     """
     if should_mark_as_duplicate(existing_game, full_disk_path, game_name):
+        match = explain_duplicate_match(existing_game, full_disk_path, game_name)
         print(
             f"Duplicate folder for IGDB ID {igdb_id}: "
             f"'{game_name}' ≈ existing '{existing_game.name}' "
-            f"({existing_game.full_disk_path})"
+            f"({existing_game.full_disk_path}) reason={match['match_reason']} "
+            f"score={match['match_score']}"
         )
-        log_unmatched_folder(scan_job_id, full_disk_path, 'Duplicate', library_uuid=library_uuid)
+        log_unmatched_folder(
+            scan_job_id,
+            full_disk_path,
+            'Duplicate',
+            library_uuid=library_uuid,
+            matched_game_uuid=match.get('matched_game_uuid'),
+            match_reason=match.get('match_reason'),
+            match_score=match.get('match_score'),
+        )
         return None
 
     print(
@@ -109,7 +124,13 @@ def handle_existing_igdb_collision(
             'igdb_id': igdb_id,
             'reason': 'igdb_id_collision_different_folder_title',
         }
-        write_match_proposal(full_disk_path, proposal)
+        if write_match_proposal(full_disk_path, proposal):
+            try:
+                from gametheca.utils.match_proposal import sync_unmatched_kind_hint
+
+                sync_unmatched_kind_hint(full_disk_path, proposal)
+            except Exception:
+                pass
     except Exception as proposal_err:
         print(f"⚠️ Failed to write collision proposal for {full_disk_path}: {proposal_err}")
     return None
@@ -311,6 +332,9 @@ def create_game_instance(game_data, full_disk_path, folder_size_bytes, library_u
             steam_url='',
             times_downloaded=0
         )
+        from gametheca.utils.library_health import mark_game_path_ok
+
+        mark_game_path_ok(new_game)
 
         db.session.add(new_game)
         db.session.flush()
@@ -337,48 +361,129 @@ def create_game_instance(game_data, full_disk_path, folder_size_bytes, library_u
 
 
 
+def normalize_igdb_image_ref(image_data):
+    """Normalize an IGDB cover/screenshot ref to ``(id, url_or_none)``.
+
+    IGDB returns bare integer IDs when a field is requested without expansion
+    (``cover``, ``screenshots``) and dicts when expanded (``cover.url``).
+    Passing a dict into ``where id={...}`` silently fails to store a cover
+    while screenshot ID lists still succeed — the "screenshots yes, cover
+    placeholder" symptom after identify/match.
+    """
+    if image_data is None:
+        return None, None
+    if isinstance(image_data, dict):
+        raw_id = image_data.get('id')
+        image_id = None
+        if raw_id is not None and str(raw_id).strip() != '':
+            try:
+                image_id = int(raw_id)
+            except (TypeError, ValueError):
+                image_id = str(raw_id).strip()
+        download_url = None
+        raw_url = image_data.get('url')
+        if isinstance(raw_url, str) and raw_url.strip():
+            download_url = _absolute_igdb_image_url(raw_url)
+        if not download_url and image_data.get('image_id'):
+            stem = str(image_data['image_id']).strip()
+            if stem:
+                download_url = (
+                    f'https://images.igdb.com/igdb/image/upload/t_original/{stem}.jpg'
+                )
+        return image_id, download_url
+    if isinstance(image_data, (int, float)) and not isinstance(image_data, bool):
+        return int(image_data), None
+    text = str(image_data).strip()
+    if not text:
+        return None, None
+    if text.isdigit():
+        return int(text), None
+    if text.startswith(('http://', 'https://', '//')):
+        return None, _absolute_igdb_image_url(text)
+    return text, None
+
+
+def _absolute_igdb_image_url(url):
+    """Force https + prefer original size for local download / remote fallback."""
+    if not url:
+        return None
+    url = str(url).strip()
+    if not url:
+        return None
+    if url.startswith('//'):
+        url = 'https:' + url
+    elif not url.startswith(('http://', 'https://')):
+        if url.startswith('images.igdb.com/') or url.startswith('www.igdb.com/'):
+            url = 'https://' + url
+        else:
+            return url
+    return url.replace('/t_thumb/', '/t_original/')
+
+
+def _igdb_endpoint_for_image_type(image_type):
+    if image_type == 'cover':
+        return 'https://api.igdb.com/v4/covers'
+    if image_type == 'screenshot':
+        return 'https://api.igdb.com/v4/screenshots'
+    return None
+
+
+def _resolve_igdb_download_url(image_id, image_type, known_url=None):
+    """Return an absolute download URL, using known_url or a covers/screenshots lookup."""
+    if known_url:
+        return _absolute_igdb_image_url(known_url)
+    if image_id is None:
+        return None
+    endpoint = _igdb_endpoint_for_image_type(image_type)
+    if not endpoint:
+        return None
+    response = make_igdb_api_request(endpoint, f'fields url, image_id; where id={image_id};')
+    if not response or 'error' in response:
+        return None
+    row = response[0] if isinstance(response, list) and response else None
+    if not row:
+        return None
+    url = row.get('url')
+    if url:
+        return _absolute_igdb_image_url(url)
+    stem = row.get('image_id')
+    if stem:
+        return f'https://images.igdb.com/igdb/image/upload/t_original/{stem}.jpg'
+    return None
+
+
 def store_image_url_for_download(game_uuid, image_data, image_type='cover'):
-    """Store image URL in database for later async download."""
+    """Store image URL in database for later async download.
+
+    Accepts a bare IGDB image id, an expanded ``{id, url}`` dict, or a remote URL
+    string. Always persists a row when a download URL can be resolved so the UI
+    can show the remote cover before the local file lands.
+    """
     try:
-        # Get the image URL from IGDB API
-        if image_type == 'cover':
-            cover_query = f'fields url; where id={image_data};'
-            cover_response = make_igdb_api_request('https://api.igdb.com/v4/covers', cover_query)
-            if cover_response and 'error' not in cover_response:
-                download_url = cover_response[0].get('url')
-                if download_url and not download_url.startswith(('http://', 'https://')):
-                    download_url = 'https:' + download_url
-                download_url = download_url.replace('/t_thumb/', '/t_original/')
-            else:
-                print(f"Failed to retrieve URL for cover ID {image_data}.")
-                return
-        
-        elif image_type == 'screenshot':
-            screenshot_query = f'fields url; where id={image_data};'
-            response = make_igdb_api_request('https://api.igdb.com/v4/screenshots', screenshot_query)
-            if response and 'error' not in response:
-                download_url = response[0].get('url')
-                if download_url and not download_url.startswith(('http://', 'https://')):
-                    download_url = 'https:' + download_url
-                download_url = download_url.replace('/t_thumb/', '/t_original/')
-            else:
-                print(f"Failed to retrieve URL for screenshot ID {image_data}.")
-                return
-        
-        # Generate filename for when it gets downloaded
-        file_name = secure_filename(f"{game_uuid}_{image_type}_{image_data}.jpg")
-        
-        # Store image metadata with URL for later download
+        image_id, known_url = normalize_igdb_image_ref(image_data)
+        if image_type not in ('cover', 'screenshot'):
+            print(f"Unsupported image_type for store: {image_type}")
+            return
+
+        download_url = _resolve_igdb_download_url(image_id, image_type, known_url=known_url)
+        if not download_url:
+            print(f"Failed to resolve download URL for {image_type} ref {image_data!r}.")
+            return
+
+        id_part = image_id if image_id is not None else 'url'
+        file_name = secure_filename(f"{game_uuid}_{image_type}_{id_part}.jpg")
+
         image = Image(
             game_uuid=game_uuid,
             image_type=image_type,
-            url=file_name,  # Local filename when downloaded
-            igdb_image_id=str(image_data),
+            url=file_name,
+            igdb_image_id=str(image_id) if image_id is not None else None,
             download_url=download_url,
-            is_downloaded=False
+            is_downloaded=False,
+            last_error=None,
         )
         db.session.add(image)
-        
+
     except Exception as e:
         print(f"Error storing image URL for {image_type} {image_data}: {e}")
 
@@ -394,6 +499,8 @@ def smart_process_images_for_game(
 
     When download_immediately is False, only IGDB image URLs are stored (is_downloaded=False)
     so a background worker can fetch files later without blocking identify.
+
+    Cover and screenshot refs may be bare IGDB ids or expanded ``{id, url}`` objects.
     """
     if app is None:
         app = current_app._get_current_object()
@@ -402,23 +509,45 @@ def smart_process_images_for_game(
         with app.app_context():
             # Get settings to determine processing mode
             from gametheca.models import GlobalSettings
+            from gametheca.utils.cover_selection import image_save_path_status
+
             settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
             
-            # Store image URLs first (always)
-            if cover_data:
+            # Store image URLs first (always) — cover must not be skipped when
+            # IGDB returns an expanded object instead of a bare id.
+            if cover_data is not None:
                 store_image_url_for_download(game_uuid, cover_data, 'cover')
             if screenshots_data:
-                for screenshot_id in screenshots_data:
-                    store_image_url_for_download(game_uuid, screenshot_id, 'screenshot')
+                for screenshot_ref in screenshots_data:
+                    if screenshot_ref is not None:
+                        store_image_url_for_download(game_uuid, screenshot_ref, 'screenshot')
             db.session.commit()
 
             if not download_immediately:
+                return 0
+
+            path_status = image_save_path_status()
+            if not path_status.get('writable'):
+                err = path_status.get('error') or 'IMAGE_SAVE_PATH is not writable'
+                now = datetime.now(UTC)
+                pending = db.session.execute(
+                    select(Image).filter_by(game_uuid=game_uuid, is_downloaded=False)
+                ).scalars().all()
+                for image in pending:
+                    image.last_error = err
+                    image.last_attempt_at = now
+                if pending:
+                    db.session.commit()
+                print(f"Skipping eager image download for {game_uuid}: {err}")
+                # Remote download_url remains on each row for resolve_cover_url.
                 return 0
             
             # Decide processing mode based on settings
             if settings and settings.use_turbo_image_downloads:
                 # TURBO MODE - Download immediately with parallel processing
-                threads = settings.turbo_download_threads or 8
+                threads = clamp_image_download_threads(
+                    settings.turbo_download_threads or 4
+                )
                 return download_images_for_game_turbo(game_uuid, app, max_workers=threads)
             else:
                 # SINGLE THREAD MODE - Download one by one
@@ -531,7 +660,8 @@ def download_images_for_game_turbo(game_uuid, app=None, max_workers=5):
     """Download all pending images for a specific game using turbo mode."""
     if app is None:
         app = current_app._get_current_object()
-        
+    max_workers = clamp_image_download_threads(max_workers)
+
     try:
         with app.app_context():
             pending_images = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, is_downloaded=False)).scalars().all()
@@ -564,6 +694,7 @@ def download_images_for_game_turbo(game_uuid, app=None, max_workers=5):
                     except Exception as e:
                         print(f"❌ Failed downloading image {image.id}: {e}")
                         failed_images[image.id] = str(e)
+                    cooperative_yield()
             
             # Update database
             if successful_images:
@@ -592,50 +723,52 @@ def download_images_for_game_turbo(game_uuid, app=None, max_workers=5):
 
 
 def process_and_save_image(game_uuid, image_data, image_type='cover'):
-    url = None
-    save_path = None
-    file_name = None
+    """Fetch (or reuse) an IGDB image URL, download it, and persist an Image row.
 
-    if image_type == 'cover':
-        cover_query = f'fields url; where id={image_data};'
-        cover_response = make_igdb_api_request('https://api.igdb.com/v4/covers', cover_query)
-        if cover_response and 'error' not in cover_response:
-            url = cover_response[0].get('url')
-            if url:
-                file_name = secure_filename(f"{game_uuid}_cover_{image_data}.jpg")
-            else:
-                print(f"Cover URL not found for ID {image_data}.")
-                return
-        else:
-            print(f"Failed to retrieve URL for cover ID {image_data}.")
-            return
+    ``image_data`` may be a bare id or an expanded ``{id, url}`` dict. When the
+    dict already carries ``url``, skip the extra IGDB lookup so cover is not
+    dropped under rate limits while screenshots still land.
+    """
+    from gametheca.utils.cover_selection import image_save_path_status
 
-    elif image_type == 'screenshot':
-        screenshot_query = f'fields url; where id={image_data};'
-        response = make_igdb_api_request('https://api.igdb.com/v4/screenshots', screenshot_query)
-        if response and 'error' not in response:
-            url = response[0].get('url')
-            if url:
-                file_name = secure_filename(f"{game_uuid}_{image_data}.jpg")
-            else:
-                print(f"Screenshot URL not found for ID {image_data}.")
-                return
-
-    # Check if file_name is set before proceeding
-    if not file_name:
-        print("File name could not be set. Exiting.")
+    image_id, known_url = normalize_igdb_image_ref(image_data)
+    if image_type not in ('cover', 'screenshot'):
+        print(f"Unsupported image_type: {image_type}")
         return
+
+    url = _resolve_igdb_download_url(image_id, image_type, known_url=known_url)
+    if not url:
+        print(f"Failed to resolve URL for {image_type} ref {image_data!r}.")
+        return
+
+    id_part = image_id if image_id is not None else 'url'
+    file_name = secure_filename(f"{game_uuid}_{image_type}_{id_part}.jpg")
     save_path = os.path.join(current_app.config['IMAGE_SAVE_PATH'], file_name)
-    # Single download attempt (previously this ran twice for covers — once in
-    # the branch above, once here — silently doubling IGDB requests). The
-    # result is now recorded on the Image row instead of being discarded, so
-    # the queue/UI can tell a real failure from a still-pending download.
+
+    path_status = image_save_path_status()
+    if not path_status.get('writable'):
+        error = path_status.get('error') or 'IMAGE_SAVE_PATH is not writable'
+        image = Image(
+            game_uuid=game_uuid,
+            image_type=image_type,
+            url=file_name,
+            igdb_image_id=str(image_id) if image_id is not None else None,
+            download_url=url,
+            is_downloaded=False,
+            last_error=error,
+            last_attempt_at=datetime.now(UTC),
+        )
+        db.session.add(image)
+        print(f"Queued {image_type} for game {game_uuid} without download: {error}")
+        return
+
     success, error = download_image(url, save_path)
 
     image = Image(
         game_uuid=game_uuid,
         image_type=image_type,
         url=file_name,
+        igdb_image_id=str(image_id) if image_id is not None else None,
         download_url=url,
         is_downloaded=success,
         last_error=None if success else (error or 'Download failed for an unknown reason.'),
@@ -644,7 +777,7 @@ def process_and_save_image(game_uuid, image_data, image_type='cover'):
     db.session.add(image)
     if not success:
         print(f"Failed to download {image_type} for game {game_uuid}: {image.last_error}")
-    
+
     
 def fetch_and_store_game_urls(game_uuid, igdb_id):
     try:
@@ -672,8 +805,8 @@ def search_igdb_for_game(search_name, platform_id, limit=10):
     Search IGDB for games matching name (and optional platform).
     Returns a list of game dicts, or None if the API errors / returns empty.
     """
-    query_fields = """fields id, name, cover, summary, url, release_dates.date, platforms.name, genres.name, themes.name, game_modes.name,
-                      screenshots, videos.video_id, first_release_date, aggregated_rating, involved_companies, player_perspectives.name,
+    query_fields = """fields id, name, cover.url, cover.image_id, summary, url, release_dates.date, platforms.name, genres.name, themes.name, game_modes.name,
+                      screenshots.url, screenshots.image_id, videos.video_id, first_release_date, aggregated_rating, involved_companies, player_perspectives.name,
                       aggregated_rating_count, rating, rating_count, slug, status, category, total_rating,
                       total_rating_count;"""
     safe_limit = max(1, min(int(limit), 20))
@@ -875,9 +1008,11 @@ def retrieve_and_save_game(
 
                 db.session.commit()
                 print(f"Processing images for game: {new_game.name}")
-                # Use smart image processing
-                cover_data = response_json[0].get('cover', {}).get('id') if response_json[0].get('cover') else None
-                screenshots_data = [s['id'] for s in response_json[0].get('screenshots', [])]
+                # Use smart image processing — pass expanded cover/screenshot
+                # objects when present so store can reuse URLs without a second
+                # IGDB round-trip (bare ids still work).
+                cover_data = response_json[0].get('cover')
+                screenshots_data = response_json[0].get('screenshots') or []
                 if defer_enrichment:
                     queue_post_identify_enrichment(
                         new_game.uuid,
@@ -933,17 +1068,30 @@ def retrieve_and_save_game(
         if steam_title:
             print(f"Steam App ID {parsed_label['steam_app_id']} resolved to '{steam_title}'")
 
-    # Prefer parse_game_label cleaned folder basename for variants (keeps apostrophes,
-    # drops Steam IDs / repack / version-bracket junk). Fall back to scan-cleaned name.
+    # Prefer parse_game_label Stage A0–A14 cleaned basename for variants (repack/VR/EA/
+    # version strip, Steam ID, Incl Update, scene/date/Update prose, franchise inject).
+    # Fall back to scan-cleaned name. C11 bare franchise → propose only (no auto-import).
     variant_base = (parsed_label.get('cleaned_name') or '').strip() or game_name
+    bare_franchise = bool(parsed_label.get('bare_franchise'))
     search_variants = generate_goty_variants(variant_base)
-    if game_name and game_name.strip():
+    # Re-attach spaced " VR" when Stage A peeled a VR suffix (helps Steam/IGDB
+    # titles like "3DSen VR" after glued 3DSenVR → 3DSen).
+    if parsed_label.get('had_vr_suffix') and variant_base:
+        vr_variant = f'{variant_base} VR'
+        if vr_variant not in search_variants:
+            search_variants.insert(1 if search_variants else 0, vr_variant)
+    if game_name and game_name.strip() and not bare_franchise:
         for extra in generate_goty_variants(game_name):
             if extra not in search_variants:
                 search_variants.append(extra)
     if steam_title and steam_title not in search_variants:
         search_variants = [steam_title] + [v for v in search_variants if v != steam_title]
     print(f"Generated search variants for '{variant_base}': {search_variants}")
+    if bare_franchise:
+        print(
+            f"🏷️ [C11] Bare franchise label '{variant_base}' — "
+            "will propose/manual only (no auto-import)"
+        )
 
     response_json = None
     successful_search_name = None
@@ -980,12 +1128,17 @@ def retrieve_and_save_game(
         last_low_confidence_search = search_name
         print(f"Low-confidence / ambiguous results for '{search_name}' — not auto-importing")
 
-    # PROPOSE-ONLY MODE: never auto-import, even on a high-confidence match.
+    # PROPOSE-ONLY MODE / C11 bare franchise: never auto-import.
     # Write the proposal sidecar for admin review and stop short of creating a Game.
-    if selected_game is not None and is_propose_only_scan(settings):
+    if selected_game is not None and (is_propose_only_scan(settings) or bare_franchise):
+        reason = (
+            "bare franchise (C11)"
+            if bare_franchise
+            else "propose_only_scan is enabled"
+        )
         print(
             f"🧪 [PROPOSE-ONLY] High-confidence match found for '{game_name}' "
-            f"(→ {selected_game.get('name')}) but propose_only_scan is enabled — "
+            f"(→ {selected_game.get('name')}) but {reason} — "
             "writing proposal instead of importing."
         )
         try:
@@ -1086,9 +1239,11 @@ def retrieve_and_save_game(
             
             db.session.commit()
             print(f"Processing images for game: {new_game.name}")
-            # Use smart image processing that respects turbo/single-thread settings
-            cover_data = selected_game.get('cover') 
-            screenshots_data = selected_game.get('screenshots', [])
+            # Pass cover/screenshot refs as returned by IGDB (id or {id,url}).
+            # store_image_url_for_download normalizes both shapes so cover is
+            # not skipped when search returns expanded objects.
+            cover_data = selected_game.get('cover')
+            screenshots_data = selected_game.get('screenshots') or []
             if defer_enrichment:
                 queue_post_identify_enrichment(
                     new_game.uuid,
@@ -1168,19 +1323,39 @@ def retrieve_and_save_game(
                 return None
             
         print(f"No match found: {game_name} in library {library.name} on platform {library.platform.name}.")
-        if last_low_confidence_candidates:
-            try:
-                proposal = build_match_proposal(
-                    game_name,
-                    last_low_confidence_candidates,
+        # Enrich Unmatched proposal with Steam software/emulator candidates so
+        # gaming-adjacent titles (e.g. 3DSenVR) get an honest propose list
+        # instead of empty IGDB-only Unmatched.
+        try:
+            from gametheca.utils.software_identify import enrich_proposal_with_software
+
+            proposal = build_match_proposal(
+                raw_folder_label or game_name,
+                last_low_confidence_candidates or [],
+                steam_title=steam_title,
+            )
+            proposal = enrich_proposal_with_software(
+                proposal, raw_folder_label or game_name,
+            )
+            if write_match_proposal(full_disk_path, proposal):
+                soft_n = len(proposal.get('proposal', {}).get('software_candidates') or [])
+                kind = proposal.get('proposal', {}).get('suggested_kind')
+                print(
+                    f"📝 Wrote software-enriched match proposal for '{variant_base}' "
+                    f"(igdb_candidates={len(last_low_confidence_candidates or [])}, "
+                    f"software_candidates={soft_n}, suggested_kind={kind}) "
+                    f"→ {os.path.join(full_disk_path, 'gametheca.proposal.json')}"
                 )
-                if write_match_proposal(full_disk_path, proposal):
-                    print(
-                        f"📝 Wrote low-confidence match proposal for '{last_low_confidence_search}' "
-                        f"→ {os.path.join(full_disk_path, 'gametheca.proposal.json')}"
-                    )
-            except Exception as proposal_err:
-                print(f"⚠️ Failed to write match proposal for {full_disk_path}: {proposal_err}")
+                # Denormalize onto UnmatchedFolder when the row already exists
+                # (log_unmatched_folder also reads the sidecar when creating).
+                try:
+                    from gametheca.utils.match_proposal import sync_unmatched_kind_hint
+
+                    sync_unmatched_kind_hint(full_disk_path, proposal)
+                except Exception:
+                    pass
+        except Exception as proposal_err:
+            print(f"⚠️ Failed to write match proposal for {full_disk_path}: {proposal_err}")
         if has_request_context():
             flash("No game data found for the given name.")
         else:
@@ -1532,7 +1707,9 @@ def turbo_download_images(batch_size=100, max_workers=5, app=None):
     """MAXIMUM SPEED parallel image downloading with multiple threads."""
     if app is None:
         app = current_app._get_current_object()
-    
+    max_workers = clamp_image_download_threads(max_workers)
+    batch_size = clamp_image_download_batch(batch_size)
+
     try:
         with app.app_context():
             # Get pending images
@@ -1610,7 +1787,9 @@ def turbo_download_images(batch_size=100, max_workers=5, app=None):
 def start_turbo_background_downloader(interval_seconds=30, max_workers=4, batch_size=50):
     """Start a HIGH SPEED background downloader with parallel processing."""
     app = current_app._get_current_object()
-    
+    max_workers = clamp_image_download_threads(max_workers)
+    batch_size = clamp_image_download_batch(batch_size)
+
     def turbo_background_worker():
         from gametheca.utils.shutdown import should_continue_processing, sleep_interruptible
         print(f"🔥 TURBO BACKGROUND DOWNLOADER STARTED - {max_workers} workers, {batch_size} batch, {interval_seconds}s interval")
@@ -1762,8 +1941,10 @@ def queue_missing_images_for_download(missing_images_list, app=None):
                 print("🚀 Turbo mode enabled - triggering immediate download")
                 # Run a small batch download to start processing immediately
                 download_result = turbo_download_images(
-                    batch_size=min(20, queued_count), 
-                    max_workers=settings.turbo_download_threads or 4, 
+                    batch_size=min(20, queued_count),
+                    max_workers=clamp_image_download_threads(
+                        settings.turbo_download_threads or 4
+                    ),
                     app=app
                 )
                 print(f"⚡ Quick download result: {download_result.get('message', 'Download initiated')}")

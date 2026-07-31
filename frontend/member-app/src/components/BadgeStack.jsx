@@ -35,6 +35,7 @@ export function BadgeStack({
   game,
   preferredCorner = 'top-left',
   collidesWithTitle = false,
+  hasPlatformChip = false,
   maxVisible = 2,
   now,
   dismissible = true,
@@ -52,8 +53,11 @@ export function BadgeStack({
     return null
   }
 
-  const corner = resolveBadgeCorner(preferredCorner, collidesWithTitle)
   const hasVr = visible.some((badge) => badge.kind === 'VR')
+  const corner = resolveBadgeCorner(preferredCorner, collidesWithTitle, {
+    hasVr,
+    hasPlatformChip: Boolean(hasPlatformChip),
+  })
 
   function handleDismiss(kind, event) {
     if (kind === 'VR') {
@@ -76,7 +80,7 @@ export function BadgeStack({
     <div
       className={`gt-badge-stack gt-badge-stack--${corner}${hasVr ? ' gt-badge-stack--vr' : ''}${dismissible ? ' gt-badge-stack--interactive' : ''}`}
       data-corner={corner}
-      data-vr-in-stack={hasVr ? 'top-left' : undefined}
+      data-vr-in-stack={hasVr ? corner : undefined}
       aria-label="Game badges"
     >
       {visible.map((badge) => (

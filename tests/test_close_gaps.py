@@ -54,6 +54,9 @@ def test_format_duration_and_svg():
 
 
 def test_quality_score_blocks_group(app, db_session):
+    from sqlalchemy.orm.attributes import flag_modified
+    from gametheca.utils.quality_profiles import save_quality_profile
+
     settings = db_session.execute(select(GlobalSettings).limit(1)).scalars().first()
     if not settings:
         settings = GlobalSettings()
@@ -65,8 +68,17 @@ def test_quality_score_blocks_group(app, db_session):
         'min_size_mb': None,
         'max_size_mb': None,
     }
+    flag_modified(settings, 'quality_profiles')
     db_session.commit()
+    db_session.expire_all()
     with app.app_context():
+        save_quality_profile({
+            'preferred_groups': ['FITGIRL'],
+            'blocked_groups': ['DODI'],
+            'prefer_repack': True,
+            'min_size_mb': None,
+            'max_size_mb': None,
+        })
         good = score_release_title('Game-FITGIRL')
         bad = score_release_title('Game-DODI')
     assert good['score'] >= 10

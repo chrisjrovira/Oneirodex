@@ -71,7 +71,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
       <h2>What this client does</h2>
       <ul>
         <li>Opens your household library in a dedicated window</li>
-        <li>Friends companion (always-on-top)</li>
+        <li>Friends popup (bottom-right, always-on-top)</li>
         <li>Uses thin device capabilities (no download / install / native play)</li>
       </ul>
       <p class="hint">Need Install / Update / Play for PC titles? Use the full <strong>GameTheca</strong> desktop companion.</p>

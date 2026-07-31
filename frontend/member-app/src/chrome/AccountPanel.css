@@ -1,0 +1,129 @@
+/* Profile/account drawer — always below sticky TopNav, never a full takeover */
+
+.gt-account-panel__backdrop {
+  position: fixed;
+  top: var(--gt-topnav-offset, 2.75rem);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1090;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: color-mix(in srgb, var(--gt-bg, #0b0d10) 55%, transparent);
+  cursor: pointer;
+}
+
+.gt-account-panel {
+  position: fixed;
+  top: var(--gt-topnav-offset, 2.75rem);
+  right: 0;
+  bottom: 0;
+  z-index: 1091;
+  display: flex;
+  flex-direction: column;
+  width: min(20rem, 100vw);
+  padding: 0.75rem 0.85rem 1.15rem;
+  background: color-mix(in srgb, var(--gt-surface, #141820) 96%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent);
+  box-shadow: -10px 0 28px color-mix(in srgb, var(--gt-bg, #0b0d10) 45%, transparent);
+  color: var(--gt-text, #f2f4f8);
+  overflow-y: auto;
+}
+
+.gt-account-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+}
+
+.gt-account-panel__title {
+  margin: 0 0 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-account-panel__lede {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--gt-text, #f2f4f8);
+}
+
+.gt-account-panel__close {
+  flex-shrink: 0;
+  padding: 0.28rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.gt-account-panel__close:hover,
+.gt-account-panel__close:focus-visible {
+  color: var(--gt-accent, #2fd67b);
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+  outline: none;
+}
+
+.gt-account-panel__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.gt-account-panel__group {
+  margin: 0 0 0.65rem;
+  padding: 0;
+  border: none;
+}
+
+.gt-account-panel__group-label {
+  margin: 0 0 0.3rem;
+  padding: 0 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-account-panel__nav a {
+  display: block;
+  padding: 0.48rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.gt-account-panel__nav a:hover,
+.gt-account-panel__nav a:focus-visible,
+.gt-account-panel__nav a.active {
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 12%, transparent);
+  color: var(--gt-accent, #2fd67b);
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent);
+  outline: none;
+}
+
+.gt-account-panel__nav a[data-danger='true'] {
+  color: color-mix(in srgb, var(--gt-danger, #ff6b6b) 85%, var(--gt-text, #f2f4f8));
+}
+
+.gt-account-panel__nav a[data-danger='true']:hover,
+.gt-account-panel__nav a[data-danger='true']:focus-visible {
+  color: var(--gt-danger, #ff6b6b);
+  border-color: color-mix(in srgb, var(--gt-danger, #ff6b6b) 40%, transparent);
+  background: color-mix(in srgb, var(--gt-danger, #ff6b6b) 10%, transparent);
+}

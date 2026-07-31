@@ -33,7 +33,12 @@ from gametheca.models import (
 from gametheca.platform import LibraryPlatform
 from gametheca.utils.secondary_scrapers import game_card_flags
 from gametheca.utils.store_ownership import get_matched_owned_game_uuids, ownership_flags
-from gametheca.utils.functions import load_scanning_filter_patterns, format_size, PLATFORM_IDS
+from gametheca.utils.functions import (
+    load_scanning_filter_patterns,
+    format_size,
+    PLATFORM_IDS,
+    normalize_case_sensitive,
+)
 from gametheca.utils.local_metadata import has_local_metadata, has_local_images
 from gametheca.utilities import handle_auto_scan, handle_manual_scan, scan_and_add_games
 from gametheca.utils.auth import admin_required
@@ -49,6 +54,7 @@ from gametheca.utils.lifecycle import web_client_connected, web_lifecycle_fields
 from gametheca.utils.client_lifecycle import installed_game_uuids, load_lifecycle_map
 from gametheca.utils.play_url import browse_play_fields
 from gametheca.utils.browse_filters import apply_badge_filters
+from gametheca.utils.browse_pagination import normalize_page_size
 from gametheca.utils.rom_language import rom_browse_flags
 bp = Blueprint('main', __name__)
 
@@ -74,7 +80,7 @@ def inject_settings():
 def browse_games():
     print(f"Route: /browse_games - {current_user.name}")
     page = request.args.get('page', 1, type=int)
-    per_page = min(request.args.get('per_page', 20, type=int) or 20, 100)
+    per_page = normalize_page_size(request.args.get('per_page', 20, type=int))
     library_uuid = request.args.get('library_uuid')
     library_platform = request.args.get('library_platform')
     igdb_platform = request.args.get('igdb_platform')
@@ -178,7 +184,9 @@ def browse_games():
     if prefs is not None:
         preferred_locale = getattr(prefs, 'preferred_game_locale', None) or 'en-US'
 
-    settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    settings = db.session.execute(
+        select(GlobalSettings).order_by(GlobalSettings.id).limit(1)
+    ).scalars().first()
     owned_game_uuids = get_matched_owned_game_uuids(current_user_id) if current_user_id else set()
     lifecycle_map = load_lifecycle_map(current_user_id)
     client_connected = web_client_connected(user_id=current_user_id) if current_user_id else False
@@ -410,11 +418,10 @@ def scan_management():
         elif submit_action == 'DeleteOnlyUnmatched':
             return handle_delete_unmatched(all=False)
         elif submit_action == 'AddReleaseGroup' and release_group_form.validate_on_submit():
-            # Handle adding release group filter
-            case_sensitive_value = release_group_form.case_sensitive.data == 'yes'
+            # Canonical String column form ('yes'|'no') — matches edit_filters.
             new_group = ReleaseGroup(
                 filter_pattern=release_group_form.filter_pattern.data,
-                case_sensitive=case_sensitive_value
+                case_sensitive=normalize_case_sensitive(release_group_form.case_sensitive.data),
             )
             db.session.add(new_group)
             db.session.commit()
@@ -470,6 +477,13 @@ def cancel_scan_job(job_id):
         db.session.commit()
         flash(f"Scan job {job_id} is stopping. Waiting for threads to complete...")
         print(f"Scan job {job_id} is stopping. Waiting for threads to complete...")
+    elif job and job.status == 'Queued':
+        job.is_enabled = False
+        job.status = 'Cancelled'
+        job.error_message = 'Queued scan cancelled before start'
+        db.session.commit()
+        flash(f"Queued scan job {job_id} cancelled.")
+        print(f"Queued scan job {job_id} cancelled.")
     else:
         flash('Scan job not found or not in a cancellable state.', 'error')
     return redirect(url_for('main.scan_management'))

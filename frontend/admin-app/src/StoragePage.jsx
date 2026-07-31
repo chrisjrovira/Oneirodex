@@ -1,0 +1,261 @@
+import { useEffect, useState } from 'react'
+import { getJson, postJson } from './adminApi'
+
+const EMPTY_STATUS = {
+  helpers_enabled: false,
+  allow_apply: false,
+  games_path: '',
+  games_exists: false,
+  games_readable: false,
+  games_writable: false,
+  degrade_reason: null,
+}
+
+function formatBytes(n) {
+  const value = Number(n) || 0
+  if (value <= 0) return '0 B'
+  if (value < 1024) return `${value} B`
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`
+  if (value < 1024 * 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`
+  return `${(value / (1024 * 1024 * 1024)).toFixed(2)} GB`
+}
+
+export function StoragePage() {
+  const [status, setStatus] = useState(EMPTY_STATUS)
+  const [statusLoaded, setStatusLoaded] = useState(false)
+  const [statusError, setStatusError] = useState(null)
+  const [source, setSource] = useState('')
+  const [dest, setDest] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [actionError, setActionError] = useState(null)
+  const [result, setResult] = useState(null)
+  const [resultKind, setResultKind] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    getJson('/api/storage/status')
+      .then((data) => {
+        if (cancelled) return
+        setStatus({
+          helpers_enabled: Boolean(data?.helpers_enabled),
+          allow_apply: Boolean(data?.allow_apply),
+          games_path: data?.games_path || '',
+          games_exists: Boolean(data?.games_exists),
+          games_readable: Boolean(data?.games_readable),
+          games_writable: Boolean(data?.games_writable),
+          degrade_reason: data?.degrade_reason || null,
+        })
+        setStatusError(null)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        // Soft-fail: keep form usable; banners degrade to unknown/off.
+        setStatus(EMPTY_STATUS)
+        setStatusError(err.message || 'Could not load storage status')
+      })
+      .finally(() => {
+        if (!cancelled) setStatusLoaded(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  async function runAction(kind) {
+    const path =
+      kind === 'apply' ? '/api/storage/hardlink/apply' : '/api/storage/hardlink/preview'
+    if (busy) return
+    setBusy(true)
+    setActionError(null)
+    setResult(null)
+    setResultKind(null)
+    try {
+      const data = await postJson(path, {
+        source: source.trim(),
+        dest: dest.trim(),
+      })
+      setResult(data)
+      setResultKind(kind)
+    } catch (err) {
+      setActionError(err.message || `${kind} failed`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const helpersOn = status.helpers_enabled
+  const allowApply = status.allow_apply
+  const gamesRo = status.games_exists && !status.games_writable
+  const previewDisabled = busy || !helpersOn
+  const applyDisabled = busy || !allowApply
+
+  return (
+    <div className="gt-admin-page">
+      <h1>Storage / hardlinks</h1>
+      <p className="gt-admin-lede">
+        Preview same-volume hardlinks. Apply requires{' '}
+        <code>ALLOW_HARDLINK_APPLY=true</code>. Docker read-only games mounts fail writability
+        checks — preview still explains why.
+      </p>
+
+      {!statusLoaded ? (
+        <p className="gt-admin-lede" role="status">
+          Loading storage status…
+        </p>
+      ) : null}
+
+      {statusError ? (
+        <div className="gt-admin-banner gt-admin-banner--warn" role="status">
+          Status API unavailable ({statusError}). Preview/Apply may still work if helpers are on;
+          banners below assume helpers off until status loads.
+        </div>
+      ) : null}
+
+      {statusLoaded && !helpersOn ? (
+        <div className="gt-admin-banner gt-admin-banner--warn" role="status">
+          Hardlink helpers are <strong>off</strong>. Set{' '}
+          <code>ENABLE_HARDLINK_HELPERS=true</code> (and restart) before preview or apply will work.
+          Apply also needs <code>ALLOW_HARDLINK_APPLY=true</code> — both stay env-only safety gates.
+        </div>
+      ) : null}
+
+      {statusLoaded && helpersOn && !allowApply ? (
+        <div className="gt-admin-banner gt-admin-banner--info" role="status">
+          Helpers are <strong>on</strong>, but Apply is disabled until{' '}
+          <code>ALLOW_HARDLINK_APPLY=true</code> is set (safety default). Preview still works.
+        </div>
+      ) : null}
+
+      {statusLoaded && helpersOn && allowApply ? (
+        <div className="gt-admin-banner gt-admin-banner--ok" role="status">
+          Helpers and Apply are both <strong>enabled</strong> via environment flags.
+        </div>
+      ) : null}
+
+      {statusLoaded && gamesRo ? (
+        <div className="gt-admin-banner gt-admin-banner--warn" role="status">
+          Games mount is <strong>read-only</strong>
+          {status.games_path ? (
+            <>
+              {' '}
+              (<code>{status.games_path}</code>)
+            </>
+          ) : null}
+          . Hardlink apply into that tree will fail writability checks; preview can still show
+          reasons.
+        </div>
+      ) : null}
+
+      {statusLoaded && status.degrade_reason ? (
+        <p className="gt-admin-lede gt-admin-lede--warn" aria-live="polite">
+          {status.degrade_reason}
+        </p>
+      ) : null}
+
+      <div className="gt-admin-panel">
+        <label className="gt-admin-field">
+          Source file
+          <input
+            className="gt-admin-input"
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+            placeholder="C:\\games\\Title\\setup.exe"
+            aria-label="Source file"
+          />
+        </label>
+        <label className="gt-admin-field">
+          Destination path
+          <input
+            className="gt-admin-input"
+            value={dest}
+            onChange={(e) => setDest(e.target.value)}
+            placeholder="C:\\library\\Title\\setup.exe"
+            aria-label="Destination path"
+          />
+        </label>
+        <div className="gt-admin-actions-row">
+          <button
+            type="button"
+            className="gt-btn"
+            onClick={() => runAction('preview')}
+            disabled={previewDisabled}
+            title={!helpersOn ? 'ENABLE_HARDLINK_HELPERS is off' : undefined}
+          >
+            Preview
+          </button>
+          <button
+            type="button"
+            className="gt-btn"
+            onClick={() => runAction('apply')}
+            disabled={applyDisabled}
+            title={!allowApply ? 'ALLOW_HARDLINK_APPLY is off' : undefined}
+          >
+            Apply
+          </button>
+          <a className="gt-btn" href="/admin/settings">
+            Back to settings
+          </a>
+        </div>
+        {actionError ? (
+          <div className="gt-admin-alert" role="alert">
+            {actionError}
+          </div>
+        ) : null}
+      </div>
+
+      {result ? (
+        <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+          <h2 className="gt-admin-panel-title">
+            {resultKind === 'apply' ? 'Apply result' : 'Preview result'}
+          </h2>
+          <ul className="gt-storage-result-list" aria-live="polite">
+            <li>
+              Outcome:{' '}
+              <strong>
+                {result.applied
+                  ? 'Applied'
+                  : result.would_succeed || result.ok
+                    ? 'Would succeed'
+                    : 'Would not succeed'}
+              </strong>
+            </li>
+            <li>
+              Same volume:{' '}
+              <strong>{result.same_volume ? 'Yes' : 'No'}</strong>
+            </li>
+            <li>
+              Bytes estimate:{' '}
+              <strong>{formatBytes(result.bytes_saved_estimate)}</strong>
+            </li>
+            {(result.reasons || []).length ? (
+              <li>
+                Reasons:
+                <ul>
+                  {(result.reasons || []).map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </ul>
+              </li>
+            ) : (
+              <li>Reasons: none</li>
+            )}
+            {result.source ? (
+              <li>
+                Source: <code>{result.source}</code>
+              </li>
+            ) : null}
+            {result.dest ? (
+              <li>
+                Dest: <code>{result.dest}</code>
+              </li>
+            ) : null}
+          </ul>
+          <details className="gt-storage-raw">
+            <summary>Raw JSON</summary>
+            <pre className="gt-admin-output">{JSON.stringify(result, null, 2)}</pre>
+          </details>
+        </div>
+      ) : null}
+    </div>
+  )
+}

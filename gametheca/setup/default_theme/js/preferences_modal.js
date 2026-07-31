@@ -17,6 +17,19 @@
     // Tokens repainted for the live preview; --btn-primary is the legacy name
     // the older stylesheets still key on.
     var PREVIEW_TOKENS = ['--gt-accent', '--btn-primary'];
+    // Paired icon packs (Wave 2d) — keep in sync with PRESET_THEMES.
+    var PRESET_ICON_PACKS = {
+        aurora: 'pixel',
+        ember: 'filled',
+        violet: 'soft',
+        forest: 'outline',
+        ocean: 'duotone',
+        rose: 'soft',
+        mono: 'mono',
+        sunset: 'filled',
+        ice: 'soft',
+        default: 'outline'
+    };
 
     // Inline values displaced by the preview, so closing without saving restores
     // exactly what was there before (null = no preview active).
@@ -112,6 +125,10 @@
         var colour = accentOf(swatchFor(value));
         if (colour) {
             previewAccent(colour);
+        }
+        var paired = PRESET_ICON_PACKS[value];
+        if (paired) {
+            previewIconPack(paired);
         }
     }
 

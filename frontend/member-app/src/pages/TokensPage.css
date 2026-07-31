@@ -102,6 +102,19 @@
   background: color-mix(in srgb, var(--gt-surface, #111) 95%, transparent);
   font-size: 0.85rem;
   word-break: break-all;
+  user-select: all;
+  -webkit-user-select: all;
+  cursor: text;
+}
+
+.gt-tokens__secret-value:focus {
+  outline: 2px solid color-mix(in srgb, var(--gt-accent, #4a9) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.gt-tokens__copy-status {
+  margin: 0.55rem 0 0;
+  font-size: 0.9rem;
 }
 
 .gt-tokens__secret-actions {

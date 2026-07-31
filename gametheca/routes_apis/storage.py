@@ -1,4 +1,4 @@
-"""Storage helpers (hardlink preview/apply)."""
+"""Storage helpers (hardlink preview/apply + status honesty)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,11 @@ from flask_login import login_required
 
 from gametheca.utils.auth import admin_required
 from gametheca.utils.event_logging import log_system_event
-from gametheca.utils.hardlinks import apply_hardlink, preview_hardlink
+from gametheca.utils.hardlinks import (
+    apply_hardlink,
+    build_storage_status,
+    preview_hardlink,
+)
 from gametheca.utils.security import get_allowed_base_directories, is_safe_path
 
 from . import apis_bp
@@ -25,6 +29,14 @@ def _apply_allowed() -> bool:
     ).lower() in ('1', 'true', 'yes', 'on')
 
 
+def _games_path() -> str:
+    return (
+        current_app.config.get('DATA_FOLDER_GAMES')
+        or current_app.config.get('DATA_FOLDER_WAREZ')
+        or ''
+    )
+
+
 def _paths_allowed(source: str, dest: str) -> tuple[bool, str | None]:
     bases = get_allowed_base_directories(current_app)
     ok_s, err_s = is_safe_path(source, bases)
@@ -34,6 +46,21 @@ def _paths_allowed(source: str, dest: str) -> tuple[bool, str | None]:
     if not ok_d:
         return False, err_d or 'Unsafe destination path'
     return True, None
+
+
+@apis_bp.route('/storage/status', methods=['GET'])
+@login_required
+@admin_required
+def storage_status():
+    """Admin Storage UI honesty: flags + games-path probes (RO-safe)."""
+    helpers = _helpers_enabled()
+    # allow_apply mirrors the apply gate (helpers AND ALLOW_HARDLINK_APPLY).
+    allow = _apply_allowed()
+    return jsonify(build_storage_status(
+        helpers_enabled=helpers,
+        allow_apply=allow,
+        games_path=_games_path(),
+    ))
 
 
 @apis_bp.route('/storage/hardlink/preview', methods=['POST'])

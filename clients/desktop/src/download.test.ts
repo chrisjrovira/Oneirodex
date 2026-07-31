@@ -157,4 +157,43 @@ describe('client heartbeat helper', () => {
       }),
     )
   })
+
+  it('parses open_path commands that carry an absolute path', async () => {
+    const auth = createAuthStore()
+    auth.setBaseUrl('https://example.com')
+    auth.setToken('gt_prefix_secret')
+
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        commands: [
+          {
+            id: 'cmd-1',
+            action: 'open_path',
+            path: 'Z:\\games\\UnmatchedTitle',
+            game_uuid: '',
+          },
+          {
+            id: 'cmd-skip',
+            action: 'open_path',
+            game_uuid: 'game-1',
+          },
+        ],
+      }),
+    })
+    const commands = await postClientHeartbeat(auth, {
+      deviceId: 'device-1',
+      fetchImpl,
+    })
+    expect(commands).toEqual([
+      {
+        id: 'cmd-1',
+        game_uuid: '',
+        action: 'open_path',
+        path: 'Z:\\games\\UnmatchedTitle',
+        select: true,
+        created_at: undefined,
+      },
+    ])
+  })
 })

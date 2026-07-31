@@ -42,7 +42,7 @@ test('renders requests returned by the API', async () => {
   expect(await screen.findByText('Hollow Knight: Silksong')).toBeInTheDocument()
   expect(screen.getByText('Any edition works')).toBeInTheDocument()
   expect(screen.getByText('pending')).toBeInTheDocument()
-  expect(screen.getByText('2026-07-01')).toBeInTheDocument()
+  expect(screen.getByText('Jul 1, 2026')).toBeInTheDocument()
   expect(global.fetch).toHaveBeenCalledWith(
     '/api/requests',
     expect.objectContaining({ credentials: 'same-origin' }),

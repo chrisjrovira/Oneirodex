@@ -51,12 +51,16 @@ def validate_json_request(data: Dict[str, Any], required_fields: list[str]) -> t
     return True, None
 
 @admin2_bp.route('/admin/system_logs')
+@admin2_bp.route('/admin/server_logs')
 @login_required
 @admin_required
 def system_logs() -> str:
     """
     Display system logs with filtering and pagination.
-    
+
+    Canonical path: ``/admin/system_logs``. Alias ``/admin/server_logs`` matches
+    Admin SPA System nav (otherwise 404).
+
     Query parameters:
     - page: Page number (default: 1)
     - per_page: Items per page (default: 50, max: 200)

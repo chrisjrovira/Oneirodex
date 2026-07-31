@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createRequest, deleteRequest, fetchRequests, resolveRequest } from '../api/wishlist'
+import { formatLocaleDate } from '../utils/formatLocaleDate'
 import './WishlistPage.css'
 
 const RESOLVE_ACTIONS = [
@@ -99,10 +100,12 @@ export function WishlistPage({ shellConfig = {} } = {}) {
 
   return (
     <div className="gt-more-page gt-wishlist">
-      <div className="gt-page-header">
-        <h1>Wishlist</h1>
+      <div className="gt-page-header gt-wishlist__header">
+        <div>
+          <h1>Wishlist</h1>
+          <p className="gt-more-page__lede">Request titles you’d like added to the library.</p>
+        </div>
       </div>
-      <p className="gt-more-page__lede">Request titles you’d like added to the library.</p>
 
       <form className="gt-wishlist__form" onSubmit={handleCreate}>
         <label htmlFor="gt-wishlist-title">Title</label>
@@ -155,55 +158,65 @@ export function WishlistPage({ shellConfig = {} } = {}) {
         </div>
       ) : null}
 
-      {!error && !requests ? <p>Loading…</p> : null}
+      {!error && !requests ? <p className="gt-wishlist__empty">Loading…</p> : null}
 
       {!error && requests && requests.length === 0 ? (
-        <p>No requests yet. Add a title above and your librarians will take a look.</p>
+        <p className="gt-wishlist__empty">
+          No requests yet. Add a title above and your librarians will take a look.
+        </p>
       ) : null}
 
       {!error && requests && requests.length > 0 ? (
-        <ul className="gt-wishlist__list">
-          {requests.map((item) => (
-            <li key={item.id} className="gt-wishlist__card" data-request-id={item.id}>
-              <article>
-                <strong>{item.title}</strong>
-                {item.notes ? <p className="gt-wishlist__notes">{item.notes}</p> : null}
-                <span className="gt-wishlist__status" data-status={item.status}>
-                  {item.status}
-                </span>
-                {item.created_at ? (
-                  <time dateTime={item.created_at}>{String(item.created_at).slice(0, 10)}</time>
-                ) : null}
-                {item.linked_game_uuid ? (
-                  <a href={`/game_details/${item.linked_game_uuid}`}>Open game</a>
-                ) : null}
-                <div className="gt-wishlist__actions">
-                  {isLibrarian
-                    ? RESOLVE_ACTIONS.map((action) => (
-                        <button
-                          key={action.status}
-                          type="button"
-                          disabled={busyId === item.id}
-                          onClick={() => handleResolve(item.id, action.status)}
-                        >
-                          {action.label}
-                        </button>
-                      ))
-                    : null}
-                  {isLibrarian || item.status === 'pending' ? (
-                    <button
-                      type="button"
-                      disabled={busyId === item.id}
-                      onClick={() => handleCancel(item.id)}
-                    >
-                      Cancel
-                    </button>
+        <section aria-labelledby="wishlist-requests-heading">
+          <div className="gt-wishlist__section-head">
+            <h2 id="wishlist-requests-heading">Requests</h2>
+            <span className="gt-wishlist__count">{requests.length}</span>
+          </div>
+          <ul className="gt-wishlist__list">
+            {requests.map((item) => (
+              <li key={item.id} className="gt-wishlist__row" data-request-id={item.id}>
+                <article>
+                  <div className="gt-wishlist__row-head">
+                    <strong>{item.title}</strong>
+                    <span className="gt-wishlist__status" data-status={item.status}>
+                      {item.status}
+                    </span>
+                    {item.created_at ? (
+                      <time dateTime={item.created_at}>{formatLocaleDate(item.created_at)}</time>
+                    ) : null}
+                  </div>
+                  {item.notes ? <p className="gt-wishlist__notes">{item.notes}</p> : null}
+                  {item.linked_game_uuid ? (
+                    <a href={`/game_details/${item.linked_game_uuid}`}>Open game</a>
                   ) : null}
-                </div>
-              </article>
-            </li>
-          ))}
-        </ul>
+                  <div className="gt-wishlist__actions">
+                    {isLibrarian
+                      ? RESOLVE_ACTIONS.map((action) => (
+                          <button
+                            key={action.status}
+                            type="button"
+                            disabled={busyId === item.id}
+                            onClick={() => handleResolve(item.id, action.status)}
+                          >
+                            {action.label}
+                          </button>
+                        ))
+                      : null}
+                    {isLibrarian || item.status === 'pending' ? (
+                      <button
+                        type="button"
+                        disabled={busyId === item.id}
+                        onClick={() => handleCancel(item.id)}
+                      >
+                        Cancel
+                      </button>
+                    ) : null}
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
     </div>
   )

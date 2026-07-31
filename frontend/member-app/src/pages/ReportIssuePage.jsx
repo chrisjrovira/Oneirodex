@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import './ReportIssuePage.css'
 
 function csrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.content || ''
@@ -22,6 +23,8 @@ export function ReportIssuePage() {
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [logsOpen, setLogsOpen] = useState(false)
 
   async function submit(event) {
     event.preventDefault()
@@ -53,6 +56,8 @@ export function ReportIssuePage() {
       setTitle('')
       setBody('')
       setLogs('')
+      setDetailsOpen(false)
+      setLogsOpen(false)
     } catch (err) {
       setError(err.message || 'Submit failed')
     } finally {
@@ -61,17 +66,18 @@ export function ReportIssuePage() {
   }
 
   return (
-    <div className="gt-more-page">
+    <div className="gt-more-page gt-report">
       <div className="gt-page-header">
         <h1>Report issue</h1>
       </div>
       <p className="gt-more-page__lede">
-        Files a ticket for maintainers. Syncs to GitHub Issues when configured; admins are notified in-app.
+        Files a ticket for maintainers. Syncs to GitHub when configured; admins see it in-app.
       </p>
+
       {error ? <p role="alert">{error}</p> : null}
       {result ? (
-        <p>
-          Ticket #{result.id} saved
+        <div className="gt-report__result" role="status">
+          <strong>Ticket #{result.id} saved</strong>
           {result.github_sync === 'synced' && result.github_issue_url ? (
             <>
               {' · '}
@@ -84,56 +90,117 @@ export function ReportIssuePage() {
           {result.github_sync === 'error' ? ' · GitHub sync failed (ticket kept)' : null}
           {' · '}
           <Link to="/notifications">Notifications</Link>
-        </p>
+        </div>
       ) : null}
-      <form className="gt-updates__search-form" onSubmit={submit}>
-        <label>
-          Title
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={200} />
-        </label>
-        <label>
-          Symptom
-          <textarea value={body} onChange={(e) => setBody(e.target.value)} required rows={5} />
-        </label>
-        <label>
-          Area
-          <select value={area} onChange={(e) => setArea(e.target.value)}>
-            {AREAS.map((a) => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Severity
-          <select value={severity} onChange={(e) => setSeverity(e.target.value)}>
-            {['P0', 'P1', 'P2', 'P3'].map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Deploy
-          <select value={deploy} onChange={(e) => setDeploy(e.target.value)}>
-            {['Unraid', 'Compose', 'native', 'other'].map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Client
-          <input value={client} onChange={(e) => setClient(e.target.value)} placeholder="browser / companion version" />
-        </label>
-        <label>
-          URL
-          <input value={url} onChange={(e) => setUrl(e.target.value)} />
-        </label>
-        <label>
-          Logs (trimmed)
-          <textarea value={logs} onChange={(e) => setLogs(e.target.value)} rows={4} />
-        </label>
-        <button className="gt-btn" type="submit" disabled={busy}>
-          {busy ? 'Sending…' : 'Submit'}
-        </button>
+
+      <form className="gt-report__form" onSubmit={submit}>
+        <section className="gt-report__primary" aria-labelledby="report-primary-heading">
+          <h2 className="gt-report__section-title" id="report-primary-heading">
+            What happened
+          </h2>
+          <label className="gt-report__field">
+            <span>Title</span>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              maxLength={200}
+              placeholder="Short summary"
+            />
+          </label>
+          <label className="gt-report__field">
+            <span>Symptom</span>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              required
+              rows={3}
+              placeholder="What you expected vs what you saw"
+            />
+          </label>
+          <div className="gt-report__row">
+            <label className="gt-report__field">
+              <span>Area</span>
+              <select value={area} onChange={(e) => setArea(e.target.value)}>
+                {AREAS.map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </label>
+            <label className="gt-report__field">
+              <span>Severity</span>
+              <select value={severity} onChange={(e) => setSeverity(e.target.value)}>
+                {['P0', 'P1', 'P2', 'P3'].map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <details
+          className="gt-report__fold"
+          open={detailsOpen}
+          onToggle={(e) => setDetailsOpen(e.currentTarget.open)}
+        >
+          <summary>Context (deploy, client, URL)</summary>
+          {detailsOpen ? (
+            <div className="gt-report__fold-body">
+              <div className="gt-report__row">
+                <label className="gt-report__field">
+                  <span>Deploy</span>
+                  <select value={deploy} onChange={(e) => setDeploy(e.target.value)}>
+                    {['Unraid', 'Compose', 'native', 'other'].map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="gt-report__field">
+                  <span>Client</span>
+                  <input
+                    value={client}
+                    onChange={(e) => setClient(e.target.value)}
+                    placeholder="browser / companion version"
+                  />
+                </label>
+              </div>
+              <label className="gt-report__field">
+                <span>URL</span>
+                <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Page where it broke" />
+              </label>
+            </div>
+          ) : null}
+        </details>
+
+        <details
+          className="gt-report__fold"
+          open={logsOpen}
+          onToggle={(e) => setLogsOpen(e.currentTarget.open)}
+        >
+          <summary>Logs &amp; extras (optional)</summary>
+          {logsOpen ? (
+            <div className="gt-report__fold-body">
+              <label className="gt-report__field">
+                <span>Logs (trimmed)</span>
+                <textarea
+                  value={logs}
+                  onChange={(e) => setLogs(e.target.value)}
+                  rows={6}
+                  placeholder="Paste only the relevant lines"
+                />
+              </label>
+            </div>
+          ) : null}
+        </details>
+
+        <div className="gt-report__actions">
+          <button className="gt-btn" type="submit" disabled={busy}>
+            {busy ? 'Sending…' : 'Submit ticket'}
+          </button>
+          <Link className="gt-report__help-link" to="/help">
+            Help FAQ
+          </Link>
+        </div>
       </form>
     </div>
   )

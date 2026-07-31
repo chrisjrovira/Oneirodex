@@ -55,7 +55,7 @@ describe('connection-ux', () => {
   })
 
   it('explains Friends open outcomes for offline and auth', () => {
-    expect(friendsOpenStatus('focused', 'online').message).toMatch(/focused/i)
+    expect(friendsOpenStatus('focused', 'online').message).toMatch(/focused.*bottom-right/i)
     expect(friendsOpenStatus('focused', 'offline').tone).toBe('info')
     expect(friendsOpenStatus('opened', 'disconnected').message).toMatch(/sign in/i)
     expect(friendsOpenStatus('opened', 'offline').message).toMatch(/unreachable/i)

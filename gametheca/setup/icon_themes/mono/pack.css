@@ -1,7 +1,9 @@
 html[data-icon-pack="mono"] .gt-icon {
-  stroke-width: 0.5;
-  fill: currentColor;
-  fill-opacity: 1;
+  stroke-width: var(--gt-icon-stroke, 0.5);
+  stroke-linecap: var(--gt-icon-linecap, square);
+  stroke-linejoin: var(--gt-icon-linejoin, miter);
+  fill: var(--gt-icon-fill, currentColor);
+  fill-opacity: var(--gt-icon-fill-opacity, 1);
   stroke: currentColor;
   stroke-opacity: 0.15;
 }

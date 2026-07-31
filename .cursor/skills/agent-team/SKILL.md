@@ -125,6 +125,8 @@ Docs rewrites every Docs turn; PM refuses to close waves without **Canvas: synce
 
 **Tips:** One chat = one PM thread. Paste Unraid logs ≤40 lines. Say **ship** only when you want commit+push. Prefer “DoD: …” over long essays.
 
+**Windows drives (this host):** **Y:** = repo/ISO (`gametheca`); **Z:** = NAS — agents must **never** remap Z: for UNC workarounds (use Y: or `%TEMP%` copy). See `prompt-brief/defaults.md`.
+
 ## Shared Task prompt skeleton
 
 Every implementer Task from PM must include:

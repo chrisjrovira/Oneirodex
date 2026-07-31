@@ -33,15 +33,24 @@ export interface HeartbeatOptions {
   onUnreachable?: (error: unknown) => void
 }
 
-export type CompanionCommandAction = LifecycleAction | 'apply_patch' | 'apply_mod_pack'
+export type CompanionCommandAction =
+  | LifecycleAction
+  | 'apply_patch'
+  | 'apply_mod_pack'
+  | 'open_path'
 
 export interface CompanionCommand {
   id: string
+  /** Present for install lifecycle commands; may be empty for unmatched open_path. */
   game_uuid: string
   action: CompanionCommandAction
   created_at?: string
   kind?: 'base' | 'update' | 'extra'
   version_uuid?: string
+  /** Absolute OS path for open_path (library folder / unmatched / local install). */
+  path?: string
+  /** When true (default), select the item in its parent folder if it is a file. */
+  select?: boolean
 }
 
 export type CompanionCommandResult = 'ok' | 'busy' | 'error'
@@ -57,7 +66,8 @@ function isCompanionCommandAction(value: string): value is CompanionCommandActio
     value === 'update' ||
     value === 'uninstall' ||
     value === 'apply_patch' ||
-    value === 'apply_mod_pack'
+    value === 'apply_mod_pack' ||
+    value === 'open_path'
   )
 }
 
@@ -115,30 +125,49 @@ export async function postClientHeartbeat(
 
   const data = (await response.json().catch(() => ({}))) as { commands?: unknown }
   const raw = Array.isArray(data.commands) ? data.commands : []
-  return raw.flatMap((row) => {
+  const parsed: CompanionCommand[] = []
+  for (const row of raw) {
     if (!row || typeof row !== 'object') {
-      return []
+      continue
     }
     const record = row as Record<string, unknown>
     const action = String(record.action || '')
     const gameUuid = String(record.game_uuid || '').trim()
-    if (!gameUuid || !isCompanionCommandAction(action) || action === 'download') {
-      return []
+    const path = record.path != null ? String(record.path).trim() : ''
+    if (!isCompanionCommandAction(action) || action === 'download') {
+      continue
     }
-    return [
-      {
+    // Lifecycle commands need a game uuid; open_path needs an absolute path.
+    if (action === 'open_path') {
+      if (!path) {
+        continue
+      }
+      parsed.push({
         id: String(record.id || crypto.randomUUID()),
         game_uuid: gameUuid,
         action,
+        path,
+        select: record.select === false ? false : true,
         created_at: record.created_at ? String(record.created_at) : undefined,
-        kind:
-          record.kind === 'base' || record.kind === 'update' || record.kind === 'extra'
-            ? record.kind
-            : undefined,
-        version_uuid: record.version_uuid ? String(record.version_uuid) : undefined,
-      },
-    ]
-  })
+      })
+      continue
+    }
+    if (!gameUuid) {
+      continue
+    }
+    parsed.push({
+      id: String(record.id || crypto.randomUUID()),
+      game_uuid: gameUuid,
+      action,
+      created_at: record.created_at ? String(record.created_at) : undefined,
+      kind:
+        record.kind === 'base' || record.kind === 'update' || record.kind === 'extra'
+          ? record.kind
+          : undefined,
+      version_uuid: record.version_uuid ? String(record.version_uuid) : undefined,
+    })
+  }
+  return parsed
 }
 
 export interface HeartbeatScheduler {

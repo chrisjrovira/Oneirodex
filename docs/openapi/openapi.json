@@ -264,8 +264,26 @@
     "/api/updates/inbox": {
       "get": {
         "summary": "Freshness updates inbox",
+        "description": "Behind / heuristic-behind games. Includes generated_at for UI poll. Does not re-check stores — use POST /api/games/{uuid}/freshness/check or POST /api/admin/freshness/refresh.",
         "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Behind / heuristic-behind games" } }
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 200 } },
+          { "name": "library_uuid", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "count, limit, generated_at, items, freshness_check routes" } }
+      }
+    },
+    "/api/calendar": {
+      "get": {
+        "summary": "IGDB release calendar window",
+        "description": "Stable 200 with empty releases when IGDB off/empty. Query: days_ahead, days_behind, limit.",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [
+          { "name": "days_ahead", "in": "query", "schema": { "type": "integer", "default": 60 } },
+          { "name": "days_behind", "in": "query", "schema": { "type": "integer", "default": 14 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 40 } }
+        ],
+        "responses": { "200": { "description": "releases list + generated_at" } }
       }
     },
     "/api/playtime/sessions": {

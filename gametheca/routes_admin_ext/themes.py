@@ -7,10 +7,12 @@ from gametheca.forms import ThemeUploadForm
 from gametheca.utils.themes import ThemeManager
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.preset_themes import install_preset_themes
+from gametheca.utils.icon_themes import get_icon_pack
+import json
 import os
 import shutil
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 from . import admin2_bp
 
 # Configuration constants
@@ -21,6 +23,50 @@ WINDOWS_RESERVED_NAMES = {
     'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
     'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
 }
+
+def _read_theme_default_icon_pack(themes_root: Path, theme: str) -> Optional[str]:
+    """Return ``default_icon_pack`` from an installed theme's ``theme.json``, if any."""
+    theme_json = themes_root / theme / 'theme.json'
+    if not theme_json.is_file():
+        return None
+    try:
+        data = json.loads(theme_json.read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    pack = data.get('default_icon_pack')
+    if isinstance(pack, str) and pack.strip():
+        return pack.strip()
+    return None
+
+
+def resolve_apply_icon_pack(
+    payload: dict[str, Any],
+    form,
+    themes_root: Path,
+    theme: str,
+) -> Optional[str]:
+    """Resolve icon pack for theme apply.
+
+    Preference order matches Preferences pairing:
+    1. Explicit non-empty ``icon_pack`` in JSON/form body
+    2. Applied theme's ``theme.json`` ``default_icon_pack`` when present
+    3. ``None`` — leave the existing ``UserPreference.icon_pack`` unchanged
+
+    Returns a normalised pack id (unknown ids → ``outline`` via ``get_icon_pack``).
+    """
+    if isinstance(payload, dict) and 'icon_pack' in payload:
+        raw = payload.get('icon_pack')
+    else:
+        raw = form.get('icon_pack') if form is not None else None
+    if isinstance(raw, str) and raw.strip():
+        return get_icon_pack(raw.strip())['id']
+    from_theme = _read_theme_default_icon_pack(themes_root, theme)
+    if from_theme:
+        return get_icon_pack(from_theme)['id']
+    return None
+
 
 def validate_theme_file(file) -> tuple[bool, Optional[str]]:
     """Validate uploaded theme file for security and format requirements.
@@ -328,12 +374,16 @@ def reset_default_themes():
 def apply_theme():
     """Set the calling user's theme preference to an installed theme.
 
-    Accepts JSON ``{"theme": "<slug>"}`` or the same field as form data. CSRF is
+    Accepts JSON ``{"theme": "<slug>", "icon_pack": "<id>?"}`` or the same
+    fields as form data. When ``icon_pack`` is omitted/null/empty, falls back to
+    the applied theme's ``theme.json`` ``default_icon_pack`` when present —
+    same pairing Preferences uses. Persists on ``UserPreference`` (per-user;
+    there is no separate GlobalSettings household icon-pack field). CSRF is
     enforced app-wide by CSRFProtect, so callers must send the token exactly as
     the other admin POST endpoints require.
 
     Returns:
-        Response: JSON describing the applied theme, or an error.
+        Response: JSON describing the applied theme and icon pack, or an error.
     """
     payload = request.get_json(silent=True) or {}
     theme = payload.get('theme') or request.form.get('theme') or ''
@@ -350,13 +400,19 @@ def apply_theme():
     if theme != 'default' and not (themes_root / theme / 'theme.json').is_file():
         return jsonify({'success': False, 'error': f"Theme '{theme}' is not installed"}), 404
 
+    icon_pack = resolve_apply_icon_pack(payload, request.form, themes_root, theme)
+
     try:
         preferences = current_user.preferences
         if preferences is None:
             preferences = UserPreference(user_id=current_user.id, theme=theme)
+            if icon_pack:
+                preferences.icon_pack = icon_pack
             db.session.add(preferences)
         else:
             preferences.theme = theme
+            if icon_pack:
+                preferences.icon_pack = icon_pack
         db.session.commit()
     except Exception as e:
         db.session.rollback()
@@ -367,10 +423,11 @@ def apply_theme():
         )
         return jsonify({'success': False, 'error': 'Failed to apply theme'}), 500
 
+    applied_pack = getattr(preferences, 'icon_pack', None) or 'outline'
     log_system_event(
-        f"Theme '{theme}' applied by admin",
+        f"Theme '{theme}' applied by admin (icon_pack={applied_pack})",
         event_type='themes',
         event_level='information',
         audit_user=current_user.id
     )
-    return jsonify({'success': True, 'theme': theme}), 200
+    return jsonify({'success': True, 'theme': theme, 'icon_pack': applied_pack}), 200

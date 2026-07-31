@@ -51,6 +51,12 @@ pub struct LaunchGameResult {
     pub resolved_exe_path: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RevealPathResult {
+    pub path: String,
+    pub revealed_as: String,
+}
+
 fn app_data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     let dir = app
         .path()
@@ -648,6 +654,146 @@ fn rename_path(app: tauri::AppHandle, from: String, to: String) -> Result<(), St
     fs::rename(&source, &destination).map_err(|error| error.to_string())
 }
 
+fn is_absolute_os_path(path: &Path) -> bool {
+    if path.is_absolute() {
+        return true;
+    }
+    let s = path.to_string_lossy();
+    // UNC / drive letter may still parse absolute on Windows; keep explicit checks.
+    s.starts_with("\\\\")
+        || s.starts_with("//")
+        || (s.len() >= 3
+            && s.as_bytes()[0].is_ascii_alphabetic()
+            && s.as_bytes()[1] == b':'
+            && (s.as_bytes()[2] == b'\\' || s.as_bytes()[2] == b'/'))
+}
+
+fn path_has_dotdot_segment(path: &str) -> bool {
+    path.split(['/', '\\'])
+        .any(|segment| segment == "..")
+}
+
+/// Open `path` in Explorer (Windows), Finder (macOS), or the default file manager (Linux).
+/// When `select` is true and the path is a file, select it in the parent folder.
+#[tauri::command]
+fn reveal_path_in_os(path: String, select: Option<bool>) -> Result<RevealPathResult, String> {
+    let trimmed = path.trim();
+    if trimmed.is_empty() {
+        return Err("Path is required".into());
+    }
+    if trimmed.len() > 4096 {
+        return Err("Path is too long".into());
+    }
+    if trimmed.contains('\0') || trimmed.contains('\n') || trimmed.contains('\r') {
+        return Err("Path contains invalid control characters".into());
+    }
+    if path_has_dotdot_segment(trimmed) {
+        return Err("Path must not contain .. segments".into());
+    }
+
+    let target = PathBuf::from(trimmed);
+    if !is_absolute_os_path(&target) {
+        return Err("Path must be absolute".into());
+    }
+    if !target.exists() {
+        return Err(format!("Path does not exist on this machine: {trimmed}"));
+    }
+
+    let select_item = select.unwrap_or(true);
+    let revealed_as = if target.is_file() {
+        "file"
+    } else {
+        "directory"
+    };
+
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        let status = if select_item && target.is_file() {
+            // explorer /select,<path> — comma is part of the switch, not a shell.
+            std::process::Command::new("explorer")
+                .arg(format!("/select,{}", target.display()))
+                .creation_flags(CREATE_NO_WINDOW)
+                .status()
+                .map_err(|error| format!("Failed to start Explorer: {error}"))?
+        } else {
+            let folder = if target.is_file() {
+                target
+                    .parent()
+                    .map(Path::to_path_buf)
+                    .unwrap_or_else(|| target.clone())
+            } else {
+                target.clone()
+            };
+            std::process::Command::new("explorer")
+                .arg(folder.as_os_str())
+                .creation_flags(CREATE_NO_WINDOW)
+                .status()
+                .map_err(|error| format!("Failed to start Explorer: {error}"))?
+        };
+        // explorer.exe often returns non-zero even on success; existence check is enough.
+        let _ = status;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        let status = if select_item {
+            std::process::Command::new("open")
+                .args(["-R", trimmed])
+                .status()
+                .map_err(|error| format!("Failed to start Finder: {error}"))?
+        } else {
+            let open_target = if target.is_file() {
+                target
+                    .parent()
+                    .map(|p| p.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| trimmed.to_string())
+            } else {
+                trimmed.to_string()
+            };
+            std::process::Command::new("open")
+                .arg(&open_target)
+                .status()
+                .map_err(|error| format!("Failed to start Finder: {error}"))?
+        };
+        if !status.success() {
+            return Err(format!("open exited with status {status}"));
+        }
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        let open_target = if target.is_file() {
+            target
+                .parent()
+                .map(|p| p.to_string_lossy().into_owned())
+                .unwrap_or_else(|| trimmed.to_string())
+        } else {
+            trimmed.to_string()
+        };
+        let status = std::process::Command::new("xdg-open")
+            .arg(&open_target)
+            .status()
+            .map_err(|error| format!("Failed to start file manager: {error}"))?;
+        if !status.success() {
+            return Err(format!("xdg-open exited with status {status}"));
+        }
+        let _ = select_item;
+    }
+
+    #[cfg(not(any(windows, unix)))]
+    {
+        let _ = (select_item, revealed_as);
+        return Err("Reveal path is not supported on this OS".into());
+    }
+
+    Ok(RevealPathResult {
+        path: trimmed.to_string(),
+        revealed_as: revealed_as.to_string(),
+    })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -666,6 +812,7 @@ pub fn run() {
             append_file_bytes,
             extract_zip_archive,
             launch_game,
+            reveal_path_in_os,
             is_process_running,
             remove_path,
             rename_path,

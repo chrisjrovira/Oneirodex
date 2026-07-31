@@ -12,6 +12,7 @@ from gametheca.utils.functions import sanitize_string_input
 from gametheca.utils.game_core import check_existing_game_by_igdb_id
 from gametheca.utils.gamenames import clean_game_name
 from gametheca.utils.game_name_parse import parse_game_label
+from gametheca.utils.item_kind import normalize_item_kind
 from gametheca import db
 from threading import Thread
 from sqlalchemy.exc import SQLAlchemyError
@@ -126,6 +127,12 @@ def add_game_manual():
             video_urls=form.video_urls.data,
             library_uuid=form.library_uuid.data
         )
+        # Optional item_kind from form/query (game|experience|emulator|tool)
+        kind_raw = request.form.get('item_kind') or request.args.get('item_kind')
+        if kind_raw:
+            new_game.item_kind = normalize_item_kind(kind_raw)
+        elif is_custom_game:
+            new_game.item_kind = 'game'
         new_game.genres = form.genres.data
         new_game.game_modes = form.game_modes.data
         new_game.themes = form.themes.data
@@ -302,6 +309,9 @@ def link_existing_game():
 
     try:
         game.full_disk_path = full_disk_path
+        from gametheca.utils.library_health import mark_game_path_ok
+
+        mark_game_path_ok(game)
 
         unmatched_folder = db.session.execute(
             select(UnmatchedFolder).filter_by(folder_path=full_disk_path)

@@ -255,10 +255,17 @@
     bottom: auto;
 }
 
-/* VR rides in the top-left transitional stack (non-dismissable) */
+/* VR rides in the top-left transitional stack only (never overlaps system/platform chip) */
 .gt-badge-stack--vr {
     z-index: 13;
     max-width: min(78%, 13rem);
+}
+
+.gt-badge-stack--vr.gt-badge-stack--top-left {
+    top: 8px;
+    left: 8px;
+    right: auto;
+    bottom: auto;
 }
 
 @keyframes gt-spin {
@@ -316,8 +323,18 @@
 
 .spinner-overlay .gt-spinner,
 .loading-spinner .gt-spinner,
-.gt-loading-overlay .gt-spinner {
+.gt-loading-overlay .gt-spinner,
+.spinner-overlay .gt-loading-motif,
+.loading-spinner .gt-loading-motif,
+.gt-loading-overlay .gt-loading-motif {
     color: var(--gt-accent, #2fd67b);
+}
+
+.loading-spinner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 .spinner-overlay .progress-text {
@@ -385,6 +402,7 @@
 .gt-badge--owned { background: rgba(40, 130, 90, 0.95); }
 .gt-badge--muted { background: rgba(70, 70, 80, 0.95); }
 .gt-badge--meta { background: rgba(0, 110, 200, 0.95); }
+.gt-badge--kind { background: rgba(90, 110, 140, 0.95); }
 .gt-badge--overflow { background: rgba(30, 30, 30, 0.9); }
 
 /* GameTheca GameActionBar */

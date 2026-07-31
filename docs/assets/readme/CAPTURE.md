@@ -9,7 +9,7 @@ Live pixels from local Playwright capture (`scripts/capture_docs_media.py`). Pre
 | **Hero strip** | `hero-banner.png` | `/library` (same session) | Captured |
 | **Library + free ROMs** | `screenshot-library.png` | `library-free-roms.png` | Captured |
 | **Systems** | `screenshot-systems.png` | `systems-platforms.png` | Captured |
-| **Chat / Activity / Friends** | `screenshot-chat.png` | `/chat` (`chat-channels.png` in media) | **Blocked** — local `/login` + `/library` return 500; script slot ready; re-capture on next healthy ship pass |
+| **Chat / Activity / Friends** | `screenshot-chat.png` | `/chat` (`chat-channels.png` in media) | **Needed on ship** — Wave 2b–3 slide-out · Archive/Leave · Wave 4 Leave → muted badge; re-capture when `/login`+`/library` return 200 |
 
 Retired: `hero-banner.jpg`, `screenshot-*.jpg` — illustrative mock previews; do not restore to README.
 
@@ -48,3 +48,5 @@ Also useful later: Friends companion pop-out, voice lobby with LiveKit secrets.
    - plus Ops/Features/palette under `docs/media/screenshots/`
 
 **Note:** Capture blocks `/api/activity/stream` so a single-worker uvicorn is not stalled by SSE. Login + Library must return 200 (not 500) before capture can refresh pixels.
+
+**Waves 4–13 (2026-07-30):** Capture **needed on ship after Wave 14b** — `screenshot-chat.png` (Leave → muted badge) + Calendar densify + Updates auto-refresh/teaser under `docs/media/` + optional Library **multi-select sticky** (Select page · Favorite/Unfavorite · **Add to wishlist** · **Play status** · More freshness · Clear · partial-success toasts) + W12 theme swatches / More densify / fair factors if useful + Admin **`/admin/quality_profiles` SPA** (list · set active · new · delete · edit · score probe) + optional Unmatched **Why unmatched?** / `match_score` / Backfill kind hints + Ops **library health** MetricTile toned by grade + poor-grade factors light danger left edge (and refresh README Library/Systems/hero if presets drifted) — do not invent pixels. Waves **4–13** closed (uncommitted · W13 QA DoD: refresh_images **5/5** · quality **4/4** · vitest QualityProfiles **3/3**); finish-before-ship: **14a → 14b → ship (4–14)**; live `:5006` still **BLOCKED (env)** OK. Re-run when human ships and `/login`+`/library` are healthy.

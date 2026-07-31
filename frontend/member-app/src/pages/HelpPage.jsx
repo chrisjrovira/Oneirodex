@@ -1,112 +1,155 @@
-﻿import { useState } from 'react'
+﻿import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import './HelpPage.css'
 
 const FAQ_SECTIONS = [
   {
     id: 'getting-started',
-    title: 'Getting Started',
+    title: 'Getting started',
+    summary: 'Nav, Cmd+K, details, health checks',
     items: [
-      'Use the top navigation for Discover, Library, Systems, Downloads, and Favorites.',
-      'Press Ctrl+K (⌘K on Mac) or Search in the top nav to open the command palette and jump to any page.',
-      'Open More for Collections, Wishlist, Ownership, Big Picture, and other hubs.',
-      'Account → API tokens creates companion/thin secrets for the desktop client (shown once).',
-      'Press any key on Library to focus search, then filter by genre, platform, or release date.',
-      'Click a cover to open game details, screenshots, and download options.',
-      'If the site will not load, ask an admin to check /healthz (up) and /readyz (DB ready); Admins also use Ops → Services.',
+      'Top nav: Discover, Library, Systems, Downloads, Favorites.',
+      'Ctrl+K / ⌘K (or Search) opens the command palette. On Library it searches titles first.',
+      'More hubs Collections, Wishlist, Ownership, Big Picture, and related tools.',
+      'Account → API tokens for companion secrets (shown once). Prefer HTTPS copy; on plain HTTP use Copy (fallback) or select + Ctrl/⌘C.',
+      'Cover → details: trailers, Cheats (.cht create/upload), Extras & DLC honesty, screenshots, download. Admins: ⋮ → Edit / Open path (companion reveal).',
+      'Site down? Ask admin for /healthz, /readyz, or Ops → Services.',
+    ],
+  },
+  {
+    id: 'library',
+    title: 'Library & signals',
+    summary: 'Favorites, chips, tiles, trailers',
+    items: [
+      'Heart a cover; open Favorites from top nav.',
+      'Library multi-select: checkbox / long-press / Shift+click → Select page · Favorite · Unfavorite · Add to wishlist · Play status · Refresh freshness / Refresh covers (More; librarian+ · max 20) · Clear; Esc clears. Batch toasts report updated/queued / skipped / failed counts.',
+      'Kind chips: Games · Experiences · Emulators · Tools (multi-select → item_kind; none = all).',
+      'Signals chips: UPDATE · OUT/~ · NEW · RELEASE · LANG.',
+      'Tile size: header or top-nav control. Preferences (sectioned: Library · Look · Language) → items per page (20–1000).',
+      'Trailers empty state is normal without metadata. Details use embeds; YouTube demo when no trailers.',
+      'Extras & DLC lists on-server sidecars only — missing folders stay off-server.',
     ],
   },
   {
     id: 'systems',
     title: 'Systems & themes',
+    summary: 'Platform browse and accents',
     items: [
-      'Open Systems to browse by console or PC; each tile filters the library to that platform.',
-      'Library badge chips include VR, UPDATE, OUT/~, NEW, RELEASE, and LANG (ROM language mismatch vs Preferences → Preferred game language).',
-      'Inside a system, chrome accents and button motion follow that console family (Nintendo, Sony, Xbox, Sega, Retro, PC).',
-      'All-library / global search keeps the default green glass look.',
-      'Change themes in Preferences; after apply, hard-refresh so volume CSS loads.',
+      'Systems tiles filter the library by console/PC.',
+      'Badge chips include VR, UPDATE, OUT/~, NEW, RELEASE, LANG (vs Preferences → Preferred game language).',
+      'Inside a system, accents follow that family; global search keeps default glass.',
+      'Export packs (bottom of Systems): ES-DE gamelist.xml and Pegasus metadata for other frontends — optional; paths stay portable.',
+      'Change themes in Preferences; hard-refresh after apply so volume CSS loads.',
     ],
   },
   {
     id: 'downloads',
     title: 'Downloads',
+    summary: 'Zip queue and retention',
     items: [
-      'Use Download on a game page to start a zip on the server.',
-      'Some downloads need processing time before the file is ready.',
-      'Track progress under Downloads in the top nav.',
-      'Files stay available until you or an admin remove them.',
-    ],
-  },
-  {
-    id: 'library',
-    title: 'Your Library',
-    items: [
-      'Favorite games with the heart on a cover tile.',
-      'Open Favorites from the top nav for a quick shelf.',
-      'Use badge chips (including LANG) above the filter bar to narrow by update/freshness/language signals.',
-      'Adjust tile size from the control in the page header or top nav.',
-      'Customize accent themes and display options in Preferences (account menu).',
+      'Download on a game page starts a server zip.',
+      'Track progress under Downloads. Files stay until you or an admin remove them.',
     ],
   },
   {
     id: 'social',
     title: 'Social & voice',
+    summary: 'Friends, chat, LiveKit',
     items: [
-      'Friends pill (bottom-right) or More → Friends window for a stay-open friends list, DMs, and party invite — Pop out opens /social-companion.',
-      'More → Activity for presence and the optional LiveKit voice lobby.',
-      'More → Chat for household channels and DMs; react with emoji and search messages.',
-      'More → Notifications for alerts (optional email for mentions/DMs).',
-      'Voice needs the admin to enable LiveKit; otherwise use Community chat (Stoat/Matrix) if configured.',
-      'GameTheca does not use Discord bots or webhooks — chat, notifications, optional LiveKit, or BYO Stoat/Matrix only.',
+      'Friends pill or More → Friends: stay-open dock. Pop out uses /social-companion only.',
+      'Chat pill / More → Chat / Ctrl+K → Chat: left slide-out. Archive (creator/librarian) & Leave in the thread header. Leave on a household room mutes it (muted badge in the room list). /chat deep-links the same panel.',
+      'More → Activity for presence and optional LiveKit. More → Notifications: dense unread inbox; alert prefs under Alert preferences.',
+      'No Discord bots/webhooks — native chat, optional LiveKit, or BYO Stoat/Matrix.',
+    ],
+  },
+  {
+    id: 'updates-calendar',
+    title: 'Updates & calendar',
+    summary: 'Freshness inbox and release window',
+    items: [
+      'More → Updates: freshness inbox auto-refreshes while the tab is visible; use Refresh for an immediate pull. Search stores and apply packs stay as before (dense rows, less glass card clutter).',
+      'Updates also teases upcoming releases; open the full Release calendar for denser date · title rows and Ahead/Behind window controls.',
+      'More → Calendar is IGDB metadata only (no downloads). Wishlist and Playtime use the same dense More-page rhythm (honest empty/error).',
     ],
   },
   {
     id: 'free-games',
     title: 'Free games',
+    summary: 'News claims and ownership sync',
     items: [
-      'News → Free now lists current Steam / Epic / GOG / Amazon / itch / Humble free claims.',
-      'Claim opens the store page; if that store is linked under Ownership, you may also Open in app or Sync ownership.',
-      'GameTheca never downloads DRM titles for you — Sync ownership updates badges after you claim on the store.',
-      'Opt out of free-game alerts under Notifications → Preferences.',
+      'News tabs (Gaming · Free now · …) list current free claims under Free now. Claim on the store; Sync ownership if linked.',
+      'GameTheca never downloads DRM titles for you.',
+      'Opt out under Notifications → Alert preferences.',
     ],
   },
   {
     id: 'translations',
     title: 'Translations & patches',
+    summary: 'Locale chips and Flips',
     items: [
-      'Preferences → Preferred game language (default en-US) is separate from UI language.',
-      'Game details show ROM region/language chips when filenames include No-Intro-style tags.',
-      'Library left-column LANG chip / LANG badge filters and marks titles that may not match your preferred language; PATCH marks curated extras.',
-      'When the ROM may not match your preference, open Translations & patches for .ips/.bps/.ups extras.',
-      'Apply patches with Flips and keep a backup of the original ROM — see docs/user/translation-patches.md.',
-      'No fan patch? Companion/native RetroArch can use AI Service live OCR/MT overlay when the operator enables ENABLE_ROM_AI_TRANSLATE.',
-      'Admins can search an operator-owned local patch guide catalog (ENABLE_PATCH_CATALOG) — GameTheca never scrapes third-party DBs.',
-      'Companion “Apply with companion” appears only when the operator enables ENABLE_ROM_PATCH_APPLY and Flips is configured.',
+      'Preferred game language (default en-US) ≠ UI language.',
+      'LANG / PATCH chips mark mismatches and curated extras. Apply with Flips; keep a ROM backup.',
+      'AI overlay / patch catalog / companion apply only when the operator enables those flags.',
+    ],
+  },
+  {
+    id: 'cheats',
+    title: 'Cheats (.cht)',
+    summary: 'Details create / upload / play',
+    items: [
+      'Game details → Cheats: New cheat (name + code rows + dialect hint) or upload a RetroArch .cht.',
+      'Dialect labels are capability hints (Raw / GG-style / AR-style / GS-style) — files always save as .cht.',
+      'Browser play: open Play in browser, then pick the file from the play-bar cheat list. Quick Menu may still be needed to enable codes.',
+      'Companion stages the same library .cht files before RetroArch; heavy cores prefer companion over the browser FS.',
+      'PC / native titles: notes or BYO trainer path only — GameTheca does not inject memory cheats.',
     ],
   },
   {
     id: 'controllers-vr',
     title: 'Controllers & VR',
+    summary: 'Big Picture and headset browse',
     items: [
-      'More → Big Picture for gamepad-first browse: A open, X download, B Attract, Y Friends, Esc exit (DualSense: × □ ○ △).',
-      'Steam Deck / Steam Input can remap the browser if you launch it from Steam — GameTheca uses the standard Gamepad API.',
-      'VR browse (/vr when enabled) is headset-friendly for any seat — not Quest-only. PSVR2/SteamVR: use a desktop browser on the PC + Big Picture with a normal pad.',
-      'Library tiles show a non-dismissable VR badge over the system chip when a title is tagged VR (not a Library filter chip).',
-      'Quest / standalone: open /vr in the headset browser (optional Add to Home). Play heavy PC titles via Moonlight to the household host.',
-      'Sense / VR controllers are for SteamVR games; they do not reliably drive the GameTheca website.',
+      'More → Big Picture: A open, X download, B Attract, Y Friends, Esc exit.',
+      'VR browse (/vr) is headset-friendly for any seat — not Quest-only.',
+      'VR badge sits in the top-left stack; Sense controllers do not drive the website.',
     ],
   },
   {
     id: 'support',
-    title: 'Need Help?',
+    title: 'Need help?',
+    summary: 'Report issue and docs',
     items: [
-      'More → Report issue to file a ticket for maintainers (syncs to GitHub when configured).',
-      'Member FAQ & troubleshooting: ask your admin for the docs/user guides, or see the GitHub repo.',
-      'Repo: https://github.com/chrisjrovira/gametheca',
+      'More → Report issue: title required; symptom/logs optional. Context and Logs stay collapsed until expanded.',
+      'Ask your admin for docs/user guides, or see the GitHub repo.',
     ],
   },
 ]
 
 export function HelpPage() {
-  const [openIds, setOpenIds] = useState(() => new Set(FAQ_SECTIONS.map((s) => s.id)))
+  const [openIds, setOpenIds] = useState(() => {
+    const initial = new Set(['getting-started'])
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace(/^#/, '')
+      if (hash && FAQ_SECTIONS.some((s) => s.id === hash)) {
+        initial.add(hash)
+      }
+    }
+    return initial
+  })
+
+  useEffect(() => {
+    const hash = window.location.hash.replace(/^#/, '')
+    if (!hash) return
+    if (!FAQ_SECTIONS.some((s) => s.id === hash)) return
+    setOpenIds((current) => {
+      if (current.has(hash)) return current
+      const next = new Set(current)
+      next.add(hash)
+      return next
+    })
+    const el = document.getElementById(hash)
+    el?.scrollIntoView?.({ block: 'start' })
+  }, [])
 
   function toggle(id) {
     setOpenIds((current) => {
@@ -120,25 +163,65 @@ export function HelpPage() {
     })
   }
 
+  function expandAll() {
+    setOpenIds(new Set(FAQ_SECTIONS.map((s) => s.id)))
+  }
+
+  function collapseAll() {
+    setOpenIds(new Set())
+  }
+
   return (
     <div className="gt-more-page gt-help">
       <div className="gt-page-header">
-        <h1>Help & FAQ</h1>
+        <h1>Help</h1>
       </div>
-      <p className="gt-more-page__lede">Your guide to the GameTheca member library</p>
+      <p className="gt-more-page__lede">
+        Short answers for the member library. Expand a section when you need detail.
+      </p>
+
+      <div className="gt-help__toolbar">
+        <button type="button" className="gt-btn gt-btn--ghost" onClick={expandAll}>
+          Expand all
+        </button>
+        <button type="button" className="gt-btn gt-btn--ghost" onClick={collapseAll}>
+          Collapse all
+        </button>
+        <Link className="gt-help__support-link" to="/report">
+          Report an issue
+        </Link>
+      </div>
+
+      <div className="gt-help__toc" aria-label="Help topics">
+        {FAQ_SECTIONS.map((section) => (
+          <a key={section.id} href={`#${section.id}`} className="gt-help__toc-chip">
+            {section.title}
+          </a>
+        ))}
+      </div>
 
       <div className="gt-help__sections">
         {FAQ_SECTIONS.map((section) => {
           const open = openIds.has(section.id)
           return (
-            <section key={section.id} className="gt-help__section">
+            <section
+              key={section.id}
+              id={section.id}
+              className={`gt-help__section${open ? ' is-open' : ''}`}
+            >
               <h2>
                 <button
                   type="button"
                   aria-expanded={open}
                   onClick={() => toggle(section.id)}
                 >
-                  {section.title}
+                  <span className="gt-help__section-copy">
+                    <span className="gt-help__section-title">{section.title}</span>
+                    <span className="gt-help__section-summary">{section.summary}</span>
+                  </span>
+                  <span className="gt-help__chevron" aria-hidden="true">
+                    {open ? '−' : '+'}
+                  </span>
                 </button>
               </h2>
               {open ? (
@@ -152,6 +235,13 @@ export function HelpPage() {
           )
         })}
       </div>
+
+      <p className="gt-help__footer">
+        Repo:{' '}
+        <a href="https://github.com/chrisjrovira/gametheca" target="_blank" rel="noopener noreferrer">
+          chrisjrovira/gametheca
+        </a>
+      </p>
     </div>
   )
 }

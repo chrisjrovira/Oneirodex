@@ -39,7 +39,12 @@ def _host_patches(**overrides):
             'unmatched_folders': 0,
             'download_requests_open': 0,
         },
-        '_scan_snapshot': {'active_count': 0, 'jobs': [], 'failure_count': 0},
+        '_scan_snapshot': {
+            'active_count': 0,
+            'queued_count': 0,
+            'jobs': [],
+            'failure_count': 0,
+        },
         '_recent_errors': ([], 0),
         '_services_snapshot': {
             'livekit': {'enabled': False, 'configured': False, 'reachable': None},
@@ -59,6 +64,8 @@ def _host_patches(**overrides):
             'queues': {
                 'scans_active': 0,
                 'scans_pending': 0,
+                'scans_queued': 0,
+                'scans_scheduled': 0,
                 'scans_failures_24h': 0,
                 'downloads_open': 0,
             },
@@ -235,6 +242,8 @@ def test_scan_snapshot_counts_active_folder_failures():
     )
     active_result = MagicMock()
     active_result.scalars.return_value.all.return_value = [active_job]
+    queued_result = MagicMock()
+    queued_result.scalars.return_value.all.return_value = []
     recent_result = MagicMock()
     recent_result.scalars.return_value.all.return_value = []
     failure_result = MagicMock()
@@ -242,13 +251,13 @@ def test_scan_snapshot_counts_active_folder_failures():
 
     with patch(
         'gametheca.utils.ops_summary.db.session.execute',
-        side_effect=(active_result, recent_result, failure_result),
+        side_effect=(active_result, queued_result, recent_result, failure_result),
     ) as execute:
         from gametheca.utils.ops_summary import _scan_snapshot
 
         result = _scan_snapshot()
 
-    failure_query = str(execute.call_args_list[2].args[0])
+    failure_query = str(execute.call_args_list[3].args[0])
     assert 'folders_failed >' in failure_query
     job = result['jobs'][0]
     assert job['errors'] == 2
@@ -262,6 +271,7 @@ def test_scan_snapshot_counts_active_folder_failures():
     assert job['library'] == 'Games'
     assert job['progress'] == 75
     assert result['active_count'] == 1
+    assert result['queued_count'] == 0
     assert result['failure_count'] == 3
 
 
@@ -278,6 +288,8 @@ def test_scan_snapshot_includes_recent_terminal_jobs():
     )
     active_result = MagicMock()
     active_result.scalars.return_value.all.return_value = []
+    queued_result = MagicMock()
+    queued_result.scalars.return_value.all.return_value = []
     recent_result = MagicMock()
     recent_result.scalars.return_value.all.return_value = [completed]
     failure_result = MagicMock()
@@ -285,13 +297,14 @@ def test_scan_snapshot_includes_recent_terminal_jobs():
 
     with patch(
         'gametheca.utils.ops_summary.db.session.execute',
-        side_effect=(active_result, recent_result, failure_result),
+        side_effect=(active_result, queued_result, recent_result, failure_result),
     ):
         from gametheca.utils.ops_summary import _scan_snapshot
 
         result = _scan_snapshot()
 
     assert result['active_count'] == 0
+    assert result['queued_count'] == 0
     assert len(result['jobs']) == 1
     job = result['jobs'][0]
     assert job['status'] == 'Completed'

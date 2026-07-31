@@ -6,11 +6,17 @@ var currentPathAuto = '';
 var currentPathManual = '';
 
 function showSpinner() {
-    document.getElementById('globalSpinner').style.display = 'block';
+    var el = document.getElementById('globalSpinner');
+    if (!el) return;
+    el.style.display = 'flex';
+    if (window.GtLoadingMotifs) {
+        window.GtLoadingMotifs.mount(el, { size: 'lg' });
+    }
 }
 
 function hideSpinner() {
-    document.getElementById('globalSpinner').style.display = 'none';
+    var el = document.getElementById('globalSpinner');
+    if (el) el.style.display = 'none';
 }
 
 function escapeHtml(value) {
@@ -20,6 +26,97 @@ function escapeHtml(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+/** Machine codes from duplicate_check / scan → one-line librarian copy. */
+const UNMATCHED_MATCH_REASON_LABELS = {
+    same_path: 'Same on-disk path as an existing library game.',
+    title_vs_folder: 'Folder title closely matches an existing library game folder.',
+    title_vs_library_name: 'Folder title closely matches an existing library game name.',
+    title_below_threshold:
+        'IGDB hit exists, but the folder title differs too much to auto-mark as duplicate.',
+};
+
+const UNMATCHED_STATUS_FALLBACK = {
+    Duplicate:
+        'Another library game already uses this IGDB match and the folder title looks like the same game.',
+    Unmatched:
+        'Could not auto-match to IGDB (or IGDB already used by a different-titled folder).',
+    Ignore: 'Folder is ignored and will not be scanned.',
+    Pending: 'Awaiting classification.',
+};
+
+/**
+ * One-line “why unmatched?” explainer. Prefers Backend why_unmatched /
+ * unmatched_reason; else match_reason + suggested_kind*. Null-safe.
+ */
+function formatWhyUnmatched(folder) {
+    if (!folder || typeof folder !== 'object') return '';
+
+    const summary =
+        (folder.why_unmatched != null && String(folder.why_unmatched).trim()) ||
+        (folder.unmatched_reason != null && String(folder.unmatched_reason).trim()) ||
+        '';
+    if (summary) return summary;
+
+    const rawReason = folder.match_reason == null ? '' : String(folder.match_reason).trim();
+    let reason = '';
+    if (rawReason) {
+        const code = rawReason.toLowerCase();
+        reason = UNMATCHED_MATCH_REASON_LABELS[code] || rawReason;
+    }
+
+    const suggestedRaw = folder.suggested_kind == null
+        ? ''
+        : String(folder.suggested_kind).trim().toLowerCase();
+    const suggestedKind = ['experience', 'emulator', 'tool', 'game'].includes(suggestedRaw)
+        ? suggestedRaw
+        : '';
+    const suggestedLabel =
+        (folder.suggested_kind_label != null && String(folder.suggested_kind_label).trim()) ||
+        (suggestedKind === 'experience'
+            ? 'Experience'
+            : suggestedKind === 'emulator'
+                ? 'Emulator'
+                : suggestedKind === 'tool'
+                    ? 'Tool'
+                    : suggestedKind === 'game'
+                        ? 'Game'
+                        : '');
+    const candidate = folder.suggested_candidate_name == null
+        ? ''
+        : String(folder.suggested_candidate_name).trim();
+
+    if (suggestedLabel) {
+        const hint = candidate
+            ? `Scan suggests cataloging as ${suggestedLabel} (e.g. ${candidate}).`
+            : `Scan suggests cataloging as ${suggestedLabel}.`;
+        if (reason) return `${reason} ${hint}`;
+        if (folder.status === 'Unmatched' || folder.status === 'Pending') {
+            return `No IGDB game match. ${hint}`;
+        }
+        return hint;
+    }
+
+    if (reason) return reason;
+    if (folder.status && UNMATCHED_STATUS_FALLBACK[folder.status]) {
+        return UNMATCHED_STATUS_FALLBACK[folder.status];
+    }
+    return '';
+}
+
+/**
+ * Format Backend match_score beside Why unmatched?. Null-safe.
+ * ≤1 → two decimals; 1–100 → whole/one decimal.
+ */
+function formatMatchScore(score) {
+    if (score == null || score === '') return '';
+    const n = Number(score);
+    if (!Number.isFinite(n)) return '';
+    if (n > 1 && n <= 100) {
+        return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10);
+    }
+    return (Math.round(n * 100) / 100).toFixed(2);
 }
 
 // Lightweight toast, independent from showSuccessNotification so it can be
@@ -32,14 +129,189 @@ function showToast(message, variant) {
     notification.className = 'success-notification';
     if (variant === 'info') {
         notification.style.background = 'color-mix(in srgb, var(--gt-info, var(--btn-info)) 95%, transparent)';
+    } else if (variant === 'error' || variant === 'danger') {
+        notification.style.background = 'color-mix(in srgb, var(--gt-danger, var(--btn-danger)) 95%, transparent)';
+        notification.style.color = 'var(--gt-text, #fff)';
+    } else if (variant === 'warning') {
+        notification.style.background = 'color-mix(in srgb, var(--gt-warning, #d4a017) 95%, transparent)';
     }
-    notification.innerHTML = `${variant === 'info' ? 'ℹ' : '✓'} <span>${escapeHtml(message)}</span>`;
+    const glyph = variant === 'info' ? 'ℹ' : (variant === 'error' || variant === 'danger') ? '!' : '✓';
+    notification.innerHTML = `${glyph} <span>${escapeHtml(message)}</span>`;
     document.body.appendChild(notification);
     setTimeout(() => notification.classList.add('show'), 10);
     setTimeout(() => {
         notification.classList.add('hide');
         setTimeout(() => notification.remove(), 300);
     }, 3500);
+}
+
+/** Field map expected from Backend scan-start / refresh_all once queue/force ships. */
+const SCAN_QUEUE_POLICY = { QUEUE: 'queue', FORCE: 'force' };
+
+function isScanBusyStatus(status) {
+    return status === 'Running' || status === 'Stopping';
+}
+
+function isScanQueuedStatus(status) {
+    const s = String(status || '').toLowerCase();
+    return s === 'queued' || s === 'pending';
+}
+
+function buildScanQueueRequestFields(policy) {
+    const useForce = policy === SCAN_QUEUE_POLICY.FORCE;
+    return {
+        queue_policy: useForce ? SCAN_QUEUE_POLICY.FORCE : SCAN_QUEUE_POLICY.QUEUE,
+        force_parallel: useForce,
+    };
+}
+
+function isAlreadyRunningReject(httpStatus, body) {
+    if (httpStatus === 409) return true;
+    const status = String(body && body.status || '').toLowerCase();
+    if (status === 'rejected') {
+        const msg = `${(body && body.message) || ''} ${(body && body.error) || ''}`.toLowerCase();
+        return msg.includes('already') || msg.includes('running') || msg.includes('in progress');
+    }
+    const err = `${(body && body.error) || (body && body.message) || ''}`.toLowerCase();
+    return err.includes('already running') || err.includes('already in progress');
+}
+
+function toastForScanStartResponse(body, httpOk) {
+    const status = String(body && body.status || '').toLowerCase();
+    const message = String((body && (body.message || body.error)) || '').trim();
+    if (status === 'queued') {
+        const pos = body && body.position != null ? ` (position ${body.position})` : '';
+        return {
+            text: message || `Scan queued${pos}. It will start when the current job finishes.`,
+            variant: 'info',
+        };
+    }
+    if (status === 'started') {
+        const risk = String((body && body.risk) || '').trim();
+        const base = message || 'Scan started.';
+        return { text: risk ? `${base} ${risk}` : base, variant: risk ? 'warning' : 'success' };
+    }
+    if (status === 'rejected' || !httpOk) {
+        return { text: message || (body && body.error) || 'Scan request was rejected.', variant: 'error' };
+    }
+    if (httpOk && (body && (body.count != null || Array.isArray(body.queued)))) {
+        const count = body.count != null ? body.count : body.queued.length;
+        return { text: message || `Queued ${count} library refresh job(s).`, variant: 'info' };
+    }
+    if (httpOk) {
+        return { text: message || 'Scan request accepted.', variant: 'success' };
+    }
+    return { text: message || (body && body.error) || 'Scan request failed.', variant: 'error' };
+}
+
+function ensureScanConflictModal() {
+    let root = document.getElementById('gtScanConflictModal');
+    if (root) return root;
+    root = document.createElement('div');
+    root.id = 'gtScanConflictModal';
+    root.className = 'gt-scan-conflict';
+    root.hidden = true;
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-modal', 'true');
+    root.setAttribute('aria-labelledby', 'gtScanConflictTitle');
+    root.innerHTML = `
+        <div class="gt-scan-conflict__panel" role="document">
+            <div class="gt-scan-conflict__toolbar">
+                <h2 id="gtScanConflictTitle" class="gt-scan-conflict__title">Scan in progress</h2>
+                <button type="button" class="gt-scan-conflict__close" data-scan-conflict="cancel" aria-label="Close">×</button>
+            </div>
+            <p class="gt-scan-conflict__lede">
+                Another scan is already running. Queue this request (recommended) or force a parallel run.
+            </p>
+            <div class="gt-scan-conflict__choices">
+                <button type="button" class="btn btn-primary gt-scan-conflict__choice" data-scan-conflict="queue">
+                    Queue this scan
+                </button>
+                <p class="gt-scan-conflict__hint">Default — starts after the current job finishes (safer for Unraid/NAS load).</p>
+                <button type="button" class="btn btn-outline-warning gt-scan-conflict__choice" data-scan-conflict="force">
+                    Force run now (parallel)
+                </button>
+                <p class="gt-scan-conflict__warn" role="note">
+                    May spike CPU and disk I/O on Unraid/NAS while two scans share the same storage.
+                    Prefer Queue unless you know the host can take the load.
+                </p>
+            </div>
+            <div class="gt-scan-conflict__actions">
+                <button type="button" class="btn btn-secondary" data-scan-conflict="cancel">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(root);
+    return root;
+}
+
+/**
+ * @param {(policy: 'queue'|'force') => void} onChoose
+ * @param {() => void} [onCancel]
+ */
+function openScanConflictModal(onChoose, onCancel) {
+    const root = ensureScanConflictModal();
+    root.hidden = false;
+    const queueBtn = root.querySelector('[data-scan-conflict="queue"]');
+    if (queueBtn) queueBtn.focus();
+
+    function cleanup() {
+        root.hidden = true;
+        root.removeEventListener('click', onRootClick);
+        document.removeEventListener('keydown', onKey);
+        root.querySelectorAll('[data-scan-conflict]').forEach((el) => {
+            el.removeEventListener('click', onAction);
+        });
+    }
+
+    function onAction(event) {
+        const action = event.currentTarget.getAttribute('data-scan-conflict');
+        if (action === 'cancel') {
+            cleanup();
+            if (onCancel) onCancel();
+            return;
+        }
+        cleanup();
+        onChoose(action === 'force' ? SCAN_QUEUE_POLICY.FORCE : SCAN_QUEUE_POLICY.QUEUE);
+    }
+
+    function onRootClick(event) {
+        if (event.target === root) {
+            cleanup();
+            if (onCancel) onCancel();
+        }
+    }
+
+    function onKey(event) {
+        if (event.key === 'Escape') {
+            cleanup();
+            if (onCancel) onCancel();
+        }
+    }
+
+    root.querySelectorAll('[data-scan-conflict]').forEach((el) => {
+        el.addEventListener('click', onAction);
+    });
+    root.addEventListener('click', onRootClick);
+    document.addEventListener('keydown', onKey);
+}
+
+function applyQueueFieldsToForm(form, policy) {
+    const fields = buildScanQueueRequestFields(policy);
+    ;['queue_policy', 'force_parallel'].forEach((name) => {
+        let input = form.querySelector(`input[name="${name}"]`);
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            form.appendChild(input);
+        }
+        input.value = name === 'force_parallel' ? (fields.force_parallel ? '1' : '0') : fields.queue_policy;
+    });
+}
+
+function clearQueueFieldsFromForm(form) {
+    form.querySelectorAll('input[name="queue_policy"], input[name="force_parallel"]').forEach((el) => el.remove());
 }
 
 async function copyPathToClipboard(path) {
@@ -261,6 +533,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return { success, failed, total, processed, percentage };
     }
 
+    // Tracks whether any job is Running/Stopping — used by Start Scan conflict modal.
+    let scanBusy = false;
+
     const updateScanJobs = () => {
         fetch('/api/scan_jobs_status', {cache: 'no-store'})
             .then(response => {
@@ -271,12 +546,19 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 // Sort the data array to ensure the latest scan is at the top
-                data.sort((a, b) => new Date(b.last_run) - new Date(a.last_run));
+                // Queued jobs without last_run sort after active, before completed by id.
+                data.sort((a, b) => {
+                    const aBusy = isScanBusyStatus(a.status) ? 0 : isScanQueuedStatus(a.status) ? 1 : 2;
+                    const bBusy = isScanBusyStatus(b.status) ? 0 : isScanQueuedStatus(b.status) ? 1 : 2;
+                    if (aBusy !== bBusy) return aBusy - bBusy;
+                    return new Date(b.last_run || 0) - new Date(a.last_run || 0);
+                });
                 
                 // Clear the table body
                 scanJobsTableBody.innerHTML = '';
                 
-                const isAnyJobRunning = data.some(j => j.status === 'Running' || j.status === 'Stopping');
+                const isAnyJobRunning = data.some(j => isScanBusyStatus(j.status));
+                scanBusy = isAnyJobRunning;
                 
                 data.forEach(job => {
                     const { processed, total, percentage } = progressCounts(job);
@@ -310,6 +592,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </div>
                         `;
+                    } else if (isScanQueuedStatus(job.status)) {
+                        const pos = job.queue_position != null ? ` #${job.queue_position}` : '';
+                        progressColumn = `<span class="text-info">⏳ Queued${pos} — waiting for active scan</span>`;
                     } else if (job.status === 'Completed' || job.status === 'Scheduled') {
                         progressColumn = `<span class="text-success">✓ ${processed}/${total || processed}</span>`;
                     } else if (job.status === 'Cancelled') {
@@ -324,26 +609,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     // Create actions column content
-                    const actionsColumn = `
-                        ${job.status === 'Running' ?
-                            `<form action="/cancel_scan_job/${job.id}" method="post" style="display: inline-block;">
+                    let actionsColumn = '—';
+                    if (job.status === 'Running') {
+                        actionsColumn = `<form action="/cancel_scan_job/${job.id}" method="post" style="display: inline-block;">
                                 <input type="hidden" name="csrf_token" value="${csrfToken}">
                                 <button type="submit" class="btn btn-warning btn-sm" title="Cancel Scan">Stop</button>
-                            </form>` :
-                        job.status === 'Stopping' ?
-                            `<button class="btn btn-warning btn-sm" disabled title="Scan is stopping, please wait...">
+                            </form>`;
+                    } else if (job.status === 'Stopping') {
+                        actionsColumn = `<button class="btn btn-warning btn-sm" disabled title="Scan is stopping, please wait...">
                                 <span class="gt-spinner gt-spinner--sm" aria-hidden="true"></span>
                                 Stopping…
-                            </button>` :
-                            `${isAnyJobRunning ?
-                                `<button class="btn btn-info btn-sm" disabled title="Cannot restart while another scan is running">↻</button>` :
-                                `<form action="/restart_scan_job/${job.id}" method="post" style="display: inline-block;">
+                            </button>`;
+                    } else if (isScanQueuedStatus(job.status)) {
+                        actionsColumn = `<form action="/cancel_scan_job/${job.id}" method="post" style="display: inline-block;">
+                                <input type="hidden" name="csrf_token" value="${csrfToken}">
+                                <button type="submit" class="btn btn-outline-warning btn-sm" title="Cancel queued scan before it starts">Cancel queue</button>
+                            </form>`;
+                    } else if (isAnyJobRunning) {
+                        // Offer restart that can queue/force via conflict modal once Backend wires flags.
+                        actionsColumn = `<button type="button" class="btn btn-info btn-sm gt-scan-restart-busy"
+                                data-restart-url="/restart_scan_job/${job.id}"
+                                title="Another scan is running — queue or force restart">↻</button>`;
+                    } else {
+                        actionsColumn = `<form action="/restart_scan_job/${job.id}" method="post" style="display: inline-block;">
                                     <input type="hidden" name="csrf_token" value="${csrfToken}">
                                     <button type="submit" class="btn btn-info btn-sm" title="Restart Scan">↻</button>
-                                </form>`
-                            }`
-                        }
-                    `;
+                                </form>`;
+                    }
                     
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -356,9 +648,57 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     scanJobsTableBody.appendChild(row);
                 });
+
+                scanJobsTableBody.querySelectorAll('.gt-scan-restart-busy').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        const url = btn.getAttribute('data-restart-url');
+                        openScanConflictModal((policy) => {
+                            const form = document.createElement('form');
+                            form.method = 'post';
+                            form.action = url;
+                            const csrf = document.createElement('input');
+                            csrf.type = 'hidden';
+                            csrf.name = 'csrf_token';
+                            csrf.value = csrfToken;
+                            form.appendChild(csrf);
+                            applyQueueFieldsToForm(form, policy);
+                            document.body.appendChild(form);
+                            form.submit();
+                        });
+                    });
+                });
             })
             .catch(error => console.error('Error fetching scan jobs status:', error));
     };
+
+    function interceptScanFormSubmit(form) {
+        if (!form || form.dataset.scanConflictBound) return;
+        form.dataset.scanConflictBound = '1';
+        form.addEventListener('submit', function(event) {
+            // Allow programmatic re-submit after modal choice.
+            if (form.dataset.scanConflictProceed === '1') {
+                form.dataset.scanConflictProceed = '0';
+                return;
+            }
+            if (!scanBusy) {
+                clearQueueFieldsFromForm(form);
+                return;
+            }
+            event.preventDefault();
+            openScanConflictModal((policy) => {
+                applyQueueFieldsToForm(form, policy);
+                form.dataset.scanConflictProceed = '1';
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                } else {
+                    form.submit();
+                }
+            });
+        });
+    }
+
+    interceptScanFormSubmit(autoScanForm);
+    interceptScanFormSubmit(manualScanForm);
 
     const updateUnmatchedFolders = () => {
         showSpinner();
@@ -370,29 +710,88 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 data.forEach(folder => {
                     const escapedPath = escapeHtml(folder.folder_path);
+                    const folderName = String(folder.folder_path || '')
+                        .replace(/\\/g, '/')
+                        .split('/')
+                        .filter(Boolean)
+                        .pop() || '';
+                    const escapedName = escapeHtml(folderName);
+                    const ignoreLabel = folder.status === 'Ignore' ? 'Unignore' : 'Ignore';
+                    const canMarkKind = folder.status === 'Unmatched'
+                        || folder.status === 'Pending'
+                        || folder.status === 'Duplicate';
+                    // TODO(backend): unmatched list may omit suggested_kind until API reads proposal sidecars.
+                    const suggestedRaw = folder.suggested_kind == null ? '' : String(folder.suggested_kind).trim().toLowerCase();
+                    const suggestedKind = ['experience', 'emulator', 'tool'].includes(suggestedRaw)
+                        ? suggestedRaw
+                        : '';
+                    const suggestedLabel = suggestedKind === 'experience'
+                        ? 'Experience'
+                        : suggestedKind === 'emulator'
+                            ? 'Emulator'
+                            : suggestedKind === 'tool'
+                                ? 'Tool'
+                                : '';
+                    const markKindOrder = suggestedKind
+                        ? [suggestedKind, ...['experience', 'emulator', 'tool'].filter((k) => k !== suggestedKind)]
+                        : ['experience', 'emulator', 'tool'];
+                    const markKindButtons = canMarkKind ? markKindOrder.map((itemKind) => {
+                        const label = itemKind === 'experience'
+                            ? 'Experience'
+                            : itemKind === 'emulator'
+                                ? 'Emulator'
+                                : 'Tool';
+                        const isSuggested = suggestedKind === itemKind;
+                        const btnClass = isSuggested
+                            ? 'btn btn-outline-success btn-sm mark-kind-btn is-suggested'
+                            : 'btn btn-outline-light btn-sm mark-kind-btn';
+                        const title = isSuggested
+                            ? `Suggested: catalog as ${label} without an IGDB game match`
+                            : `Catalog as ${label} without an IGDB game match`;
+                        return `<button type="button" class="${btnClass}" data-folder-id="${escapeHtml(String(folder.id))}" data-item-kind="${itemKind}" data-name="${escapedName}" title="${escapeHtml(title)}">Mark as ${label}</button>`;
+                    }).join('\n') : '';
+                    const suggestedChip = suggestedKind
+                        ? `<span class="unmatched-suggested-kind" title="Suggested kind from scan proposal (software path)">Suggested ${escapeHtml(suggestedLabel)}</span>`
+                        : '';
+                    const whyLine = formatWhyUnmatched(folder);
+                    const matchScore = formatMatchScore(folder.match_score);
+                    const showWhyLabel = folder.status === 'Unmatched' || folder.status === 'Pending';
+                    const scoreHtml = matchScore
+                        ? `<span class="unmatched-why__score" title="Match confidence score">${escapeHtml(matchScore)}</span>`
+                        : '';
+                    const whyHtml = (whyLine || matchScore)
+                        ? `<span class="unmatched-why"${showWhyLabel ? '' : ' data-why-kind="status"'}>${
+                            showWhyLabel
+                                ? '<span class="unmatched-why__label">Why unmatched?</span> '
+                                : ''
+                          }${scoreHtml}${scoreHtml && whyLine ? ' ' : ''}${whyLine ? escapeHtml(whyLine) : ''}</span>`
+                        : '';
                     const actionsColumn = `
                         <div class="unmatched-row-actions">
-                        <button 
-                            onclick="window.toggleIgnoreStatus('${folder.id}', this)" 
-                            class="btn ${folder.status === 'Ignore' ? 'btn-warning' : 'btn-secondary'} btn-sm"
-                            title="Ignored folders are not scanned">
-                            </button>
-                        <button onclick="clearEntry('${folder.id}')" class="btn btn-info btn-sm" title="Remove from unmatched list">Clear</button>
-                        <form class="delete-folder-form" style="display: inline;">
-                            <input type="hidden" name="csrf_token" value="${csrfToken}">
-                            <input type="hidden" name="folder_path" value="${escapedPath}">
-                            <button type="submit" class="btn btn-danger btn-sm" title="Delete the folder from disk">Delete</button>
-                        </form>
+                        <button type="button" class="btn btn-outline-light btn-sm reveal-path-btn" data-path="${escapedPath}" title="Open path details popup (copy / companion explorer — does not leave this page)">Open path</button>
+                        <button type="button" class="btn btn-outline-light btn-sm copy-path-btn" data-path="${escapedPath}" title="Copy folder path to clipboard">Copy path</button>
                         <form action="/add_game_manual" method="GET" style="display: inline;">
                             <input type="hidden" name="full_disk_path" value="${escapedPath}">
                             <input type="hidden" name="library_uuid" value="${escapeHtml(folder.library_uuid)}">
                             <input type="hidden" name="platform_name" value="${escapeHtml(folder.platform_name)}">
                             <input type="hidden" name="platform_id" value="${escapeHtml(folder.platform_id)}">
                             <input type="hidden" name="from_unmatched" value="true">
-                            <button type="submit" class="btn btn-primary btn-sm" title="Fix search: opens manual add with a cleaned game name prefilled">Fix search</button>
+                            <button type="submit" class="btn btn-outline-light btn-sm" title="Identify as game: opens manual add with a cleaned game name prefilled">Identify as game</button>
                         </form>
-                        <button type="button" class="btn btn-outline-light btn-sm copy-path-btn" data-path="${escapedPath}" title="Copy folder path to clipboard">Copy path</button>
-                        <button type="button" class="btn btn-outline-light btn-sm reveal-path-btn" data-path="${escapedPath}" title="Best-effort: browse this path in Auto Scan, or copy it for the host file manager">Open / reveal</button>
+                        ${markKindButtons}
+                        <button
+                            type="button"
+                            onclick="window.toggleIgnoreStatus('${folder.id}', this)"
+                            class="btn btn-outline-light btn-sm"
+                            title="Ignored folders are not scanned">
+                            ${ignoreLabel}
+                        </button>
+                        <button type="button" onclick="clearEntry('${folder.id}')" class="btn btn-outline-light btn-sm" title="Remove from unmatched list">Clear</button>
+                        <form class="delete-folder-form" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="${csrfToken}">
+                            <input type="hidden" name="folder_path" value="${escapedPath}">
+                            <button type="submit" class="btn btn-outline-light btn-sm" title="Delete the folder from disk">Delete</button>
+                        </form>
                         </div>
                     `;
                     
@@ -402,11 +801,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     row.setAttribute('data-library-name', folder.library_name.toLowerCase());
                     row.setAttribute('data-platform-name', folder.platform_name.toLowerCase());
                     row.innerHTML = `
-                        <td>📁 ${escapedPath}</td>
-                        <td><span class="status-${folder.status.toLowerCase()}" title="${folder.status === 'Duplicate' ? 'Another library game already uses this IGDB match and the folder title looks like the same game' : (folder.status === 'Unmatched' ? 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder)' : '')}">${folder.status === 'Duplicate' ? 'Duplicate (same title)' : folder.status}</span></td>
-                        <td>${escapeHtml(folder.library_name)}</td>
-                        <td>${escapeHtml(folder.platform_name)}</td>
-                        <td>${actionsColumn}</td>
+                        <td class="col-path"><span class="unmatched-folder-path" title="${escapedPath}">${escapedPath}</span></td>
+                        <td class="col-status"><span class="status-${folder.status.toLowerCase()}" title="${folder.status === 'Duplicate' ? 'Another library game already uses this IGDB match and the folder title looks like the same game' : (folder.status === 'Unmatched' ? 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder)' : '')}">${folder.status === 'Duplicate' ? 'Duplicate (same title)' : folder.status}</span>${suggestedChip}${whyHtml}</td>
+                        <td class="col-library">${escapeHtml(folder.library_name)}</td>
+                        <td class="col-platform">${escapeHtml(folder.platform_name)}</td>
+                        <td class="col-actions">${actionsColumn}</td>
                     `;
                     unmatchedTableBody.appendChild(row);
                 });
@@ -426,6 +825,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Copy path / reveal path — event delegation so re-rendered rows stay wired
     // without re-escaping paths back into inline onclick strings (XSS-safe).
+    function markUnmatchedKind(folderId, itemKind, name, button) {
+        if (!folderId || !itemKind) return;
+        if (button) {
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+        }
+        const body = { item_kind: itemKind };
+        if (name) body.name = name;
+        const kindLabel = itemKind === 'experience'
+            ? 'Experience'
+            : itemKind === 'emulator'
+                ? 'Emulator'
+                : itemKind === 'tool'
+                    ? 'Tool'
+                    : itemKind;
+        fetch(`/api/unmatched_folders/${encodeURIComponent(folderId)}/mark_kind`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify(body),
+        })
+            .then((response) => response.json().catch(() => ({})).then((data) => {
+                if (!response.ok) {
+                    throw new Error(data.error || data.message || `mark_kind ${response.status}`);
+                }
+                return data;
+            }))
+            .then((data) => {
+                showToast(
+                    `Cataloged “${data.name || name || 'folder'}” as ${kindLabel} (no IGDB game match)`,
+                    'success',
+                );
+                return updateUnmatchedFolders();
+            })
+            .catch((err) => {
+                showToast(err?.message || `Could not mark as ${kindLabel}`, 'info');
+            })
+            .finally(() => {
+                if (button) {
+                    button.disabled = false;
+                    button.removeAttribute('aria-busy');
+                }
+            });
+    }
+
     if (unmatchedTableBody && !unmatchedTableBody.dataset.actionsWired) {
         unmatchedTableBody.addEventListener('click', function(event) {
             const copyBtn = event.target.closest('.copy-path-btn');
@@ -439,39 +886,129 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const revealBtn = event.target.closest('.reveal-path-btn');
             if (revealBtn) {
-                revealPath(revealBtn.dataset.path || '');
+                revealPath(revealBtn.dataset.path || '', revealBtn);
+                return;
+            }
+
+            const markBtn = event.target.closest('.mark-kind-btn');
+            if (markBtn) {
+                markUnmatchedKind(
+                    markBtn.dataset.folderId || '',
+                    markBtn.dataset.itemKind || '',
+                    markBtn.dataset.name || '',
+                    markBtn,
+                );
             }
         });
         unmatchedTableBody.dataset.actionsWired = 'true';
     }
 
-    // Best-effort "open / reveal": the browser can't open paths on the Unraid
-    // host directly, so first try to deep-link the Auto Scan folder browser to
-    // the folder; fall back to copy-to-clipboard + toast when that's not possible.
-    function revealPath(path) {
+    // Path popup — never navigate away to Auto Scan. Copy + optional companion open.
+    function revealPath(path, button) {
         if (!path) return;
 
-        fetch(`/api/browse_folders_ss?abs_path=${encodeURIComponent(path)}`, { cache: 'no-store' })
-            .then(response => response.ok ? response.json() : Promise.reject(response.status))
-            .then(data => {
-                if (data.outside_base || data.resolved_path === null || data.resolved_path === undefined) {
-                    return copyPathToClipboard(path).then(() => {
-                        showToast('Path copied — open in file manager on the host', 'info');
-                    });
-                }
+        if (button) {
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+        }
 
-                new bootstrap.Tab(document.querySelector('#autoScan-tab')).show();
-                const resolvedPath = data.resolved_path;
-                window.currentPathAuto = resolvedPath;
-                $('#folder_path').val(resolvedPath);
-                fetchFolders(resolvedPath, '#folderContents', '#loadingSpinner', '#upFolderBtn', '#folder_path', 'currentPathAuto');
-                showToast('Opened folder in Auto Scan browser', 'success');
-            })
-            .catch(() => {
-                copyPathToClipboard(path).then(() => {
-                    showToast('Path copied — open in file manager on the host', 'info');
-                });
+        showOpenPathModal(path, {
+            onDone: () => {
+                if (button) {
+                    button.disabled = false;
+                    button.removeAttribute('aria-busy');
+                }
+            },
+        });
+    }
+
+    function showOpenPathModal(path, { onDone } = {}) {
+        const existing = document.getElementById('gt-open-path-modal');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'gt-open-path-modal';
+        overlay.className = 'gt-open-path-modal';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.innerHTML = `
+          <div class="gt-open-path-modal__panel">
+            <div class="gt-open-path-modal__toolbar">
+              <h2>Folder path</h2>
+              <button type="button" class="gt-open-path-modal__close" aria-label="Close">×</button>
+            </div>
+            <p class="gt-open-path-modal__path"><code></code></p>
+            <div class="gt-open-path-modal__actions">
+              <button type="button" class="btn btn-primary btn-sm gt-open-path-copy">Copy path</button>
+              <button type="button" class="btn btn-outline-light btn-sm gt-open-path-explorer">Open in file explorer</button>
+            </div>
+            <p class="gt-open-path-modal__status" role="status"></p>
+          </div>
+        `;
+        const code = overlay.querySelector('code');
+        code.textContent = path;
+        const statusEl = overlay.querySelector('.gt-open-path-modal__status');
+
+        function close() {
+            overlay.remove();
+            onDone?.();
+        }
+
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) close();
+        });
+        overlay.querySelector('.gt-open-path-modal__close').addEventListener('click', close);
+        overlay.querySelector('.gt-open-path-copy').addEventListener('click', () => {
+            copyPathToClipboard(path).then(() => {
+                statusEl.textContent = 'Path copied to clipboard';
+                showToast('Path copied to clipboard', 'success');
             });
+        });
+        overlay.querySelector('.gt-open-path-explorer').addEventListener('click', () => {
+            statusEl.textContent = 'Queuing companion…';
+            fetch('/api/client/commands', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ game_uuid: '', action: 'open_path', path, select: true }),
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        return response.json().catch(() => ({})).then((data) => {
+                            throw new Error(data.error || `open_path ${response.status}`);
+                        });
+                    }
+                    statusEl.textContent = 'Queued open in file explorer for companion';
+                    showToast('Queued open in file explorer', 'success');
+                })
+                .catch((err) => {
+                    return copyPathToClipboard(path).then(() => {
+                        statusEl.textContent = `${err.message || 'Open failed'} — path copied as fallback`;
+                        showToast('Path copied (explorer open unavailable)', 'info');
+                    });
+                });
+        });
+
+        if (!document.getElementById('gt-open-path-modal-style')) {
+            const style = document.createElement('style');
+            style.id = 'gt-open-path-modal-style';
+            style.textContent = `
+              .gt-open-path-modal{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(5,7,10,.82)}
+              .gt-open-path-modal__panel{width:min(40rem,100%);display:flex;flex-direction:column;gap:.75rem;padding:1rem;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#141820;color:#f2f4f8}
+              .gt-open-path-modal__toolbar{display:flex;justify-content:space-between;align-items:center;gap:.75rem}
+              .gt-open-path-modal__toolbar h2{margin:0;font-size:1.05rem}
+              .gt-open-path-modal__close{width:2.2rem;height:2.2rem;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:#1c2230;color:#f2f4f8;font-size:1.35rem;cursor:pointer}
+              .gt-open-path-modal__path{margin:0;padding:.75rem;border-radius:8px;background:#1c2230;word-break:break-all}
+              .gt-open-path-modal__actions{display:flex;flex-wrap:wrap;gap:.5rem}
+              .gt-open-path-modal__status{margin:0;font-size:.85rem;opacity:.8;min-height:1.2em}
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(overlay);
     }
 
     // Filtering functionality
@@ -630,6 +1167,50 @@ document.addEventListener('DOMContentLoaded', function() {
                     .finally(() => { reclassifyBtn.disabled = false; });
             });
         }
+
+        const backfillKindBtn = document.getElementById('backfillSuggestedKindBtn');
+        if (backfillKindBtn) {
+            backfillKindBtn.addEventListener('click', function() {
+                if (!confirm(
+                    'Backfill Suggested kind hints from on-disk scan proposals for rows that still have null hints? Safe to re-run; only updates empty hints.',
+                )) {
+                    return;
+                }
+                backfillKindBtn.disabled = true;
+                fetch('/api/unmatched_folders/backfill_suggested_kind', {
+                    method: 'POST',
+                    headers: CSRFUtils.getHeaders({
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }),
+                    body: JSON.stringify({}),
+                })
+                    .then(async (r) => {
+                        const data = await r.json().catch(() => ({}));
+                        if (!r.ok) {
+                            throw new Error(data.error || data.message || 'Backfill failed');
+                        }
+                        return data;
+                    })
+                    .then(data => {
+                        const updated = data.updated ?? 0;
+                        const scanned = data.scanned ?? 0;
+                        showSuccessNotification(
+                            `Kind hints updated ${updated} of ${scanned} scanned` +
+                            (data.skipped_no_sidecar
+                                ? ` · ${data.skipped_no_sidecar} without proposal`
+                                : ''),
+                        );
+                        return updateUnmatchedFolders();
+                    })
+                    .then(() => filterUnmatchedRows())
+                    .catch(err => {
+                        console.error('Backfill kind hints failed:', err);
+                        showToast(err?.message || 'Backfill kind hints failed', 'error');
+                    })
+                    .finally(() => { backfillKindBtn.disabled = false; });
+            });
+        }
     }
 
     const refreshAllBtn = document.getElementById('refreshAllLibrariesBtn');
@@ -638,24 +1219,47 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!confirm('Refresh all libraries using each library’s last scan folder?')) {
                 return;
             }
-            refreshAllBtn.disabled = true;
-            fetch('/api/admin/libraries/refresh_all', {
-                method: 'POST',
-                headers: CSRFUtils.getHeaders({
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+
+            function postRefreshAll(policy) {
+                const fields = policy ? buildScanQueueRequestFields(policy) : {};
+                refreshAllBtn.disabled = true;
+                return fetch('/api/admin/libraries/refresh_all', {
+                    method: 'POST',
+                    headers: CSRFUtils.getHeaders({
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        Accept: 'application/json',
+                    }),
+                    body: JSON.stringify(fields),
                 })
-            })
-                .then(r => r.json().then(data => ({ ok: r.ok, data })))
-                .then(({ ok, data }) => {
-                    if (!ok) {
-                        alert(data.error || 'Refresh failed');
-                        return;
-                    }
-                    showSuccessNotification(`Queued ${data.count} library refresh job(s)`);
-                })
-                .catch(err => console.error('Refresh all failed:', err))
-                .finally(() => { refreshAllBtn.disabled = false; });
+                    .then(r => r.json().then(data => ({ ok: r.ok, status: r.status, data })).catch(() => ({
+                        ok: r.ok,
+                        status: r.status,
+                        data: { error: 'Refresh failed' },
+                    })))
+                    .then(({ ok, status, data }) => {
+                        if (isAlreadyRunningReject(status, data) && !policy) {
+                            openScanConflictModal((chosen) => {
+                                postRefreshAll(chosen);
+                            });
+                            return;
+                        }
+                        const toast = toastForScanStartResponse(data, ok);
+                        showToast(toast.text, toast.variant);
+                        if (ok) updateScanJobs();
+                    })
+                    .catch(err => {
+                        console.error('Refresh all failed:', err);
+                        showToast('Refresh all failed.', 'error');
+                    })
+                    .finally(() => { refreshAllBtn.disabled = false; });
+            }
+
+            if (scanBusy) {
+                openScanConflictModal((policy) => postRefreshAll(policy));
+                return;
+            }
+            postRefreshAll(null);
         });
     }
 
@@ -823,12 +1427,16 @@ function setupFolderBrowse(browseButtonId, folderContentsId, spinnerId, upButton
 
 function fetchFolders(path, folderContentsId, spinnerId, upButtonId, inputFieldId, currentPathVar) {
     console.log("Fetching folders for path:", path);
-    $(spinnerId).show();
+    var $spinner = $(spinnerId);
+    $spinner.css('display', 'inline-flex').show();
+    if (window.GtLoadingMotifs && $spinner[0]) {
+        window.GtLoadingMotifs.mount($spinner[0], { size: 'lg' });
+    }
     $.ajax({
         url: '/api/browse_folders_ss',
         data: { path: path },
         success: function(data) {
-            $(spinnerId).hide();
+            $spinner.hide();
             $(folderContentsId).empty();
             
             // Check if we're using the new response format or the old one
@@ -885,7 +1493,7 @@ function fetchFolders(path, folderContentsId, spinnerId, upButtonId, inputFieldI
             }
         },
         error: function(error) {
-            $(spinnerId).hide();
+            $spinner.hide();
             console.error("Error fetching folders:", error);
         }
     });
@@ -898,3 +1506,130 @@ function formatFileSize(bytes) {
     const i = Math.floor(Math.log(bytes) / Math.log(kilobyte));
     return parseFloat((bytes / Math.pow(kilobyte, i)).toFixed(2)) + ' ' + sizes[i];
 }
+
+/** Scan Filters tab — kind toggle, dir: prefix, quick-add chips (Wave 3). */
+(function initScanFiltersExplainUi() {
+    const DIR_PREFIX = 'dir:';
+    const form = document.getElementById('gtScanFilterForm');
+    if (!form) return;
+
+    const rawInput = document.getElementById('filter_pattern_raw');
+    const hiddenInput = document.getElementById('filter_pattern');
+    const dirPrefixEl = document.getElementById('gtFilterDirPrefix');
+    const labelEl = document.getElementById('gtFilterPatternLabel');
+    const hintEl = document.getElementById('gtFilterPatternHint');
+    const caseRow = document.getElementById('gtFilterCaseRow');
+    const caseSelect = document.getElementById('case_sensitive');
+    const modalEl = document.getElementById('addFilterModal');
+
+    const COPY = {
+        name: {
+            label: 'Tag to strip',
+            placeholder: 'e.g. GOG',
+            hint: 'Stored as the tag only. Scan strips -tag and .tag from folder names.',
+        },
+        dir: {
+            label: 'Folder glob',
+            placeholder: 'e.g. OpenVR* or _MyTools',
+            hint: 'Saved as dir:… Skip matching folder basenames (case-insensitive fnmatch). Prefer prefix globs.',
+        },
+    };
+
+    function selectedKind() {
+        const checked = form.querySelector('input[name="gt_filter_kind"]:checked');
+        return checked && checked.value === 'dir' ? 'dir' : 'name';
+    }
+
+    function stripDirPrefix(value) {
+        const text = String(value || '').trim();
+        if (text.toLowerCase().indexOf(DIR_PREFIX) === 0) {
+            return text.slice(DIR_PREFIX.length).trim();
+        }
+        return text;
+    }
+
+    function syncHiddenFromRaw() {
+        if (!rawInput || !hiddenInput) return;
+        const kind = selectedKind();
+        const body = String(rawInput.value || '').trim();
+        if (!body) {
+            hiddenInput.value = '';
+            return;
+        }
+        if (kind === 'dir') {
+            const glob = stripDirPrefix(body);
+            hiddenInput.value = glob ? (DIR_PREFIX + glob) : '';
+        } else {
+            hiddenInput.value = stripDirPrefix(body);
+        }
+    }
+
+    function applyKindUi() {
+        const kind = selectedKind();
+        const copy = COPY[kind] || COPY.name;
+        if (labelEl) labelEl.textContent = copy.label;
+        if (rawInput) rawInput.placeholder = copy.placeholder;
+        if (hintEl) hintEl.textContent = copy.hint;
+        if (dirPrefixEl) {
+            const show = kind === 'dir';
+            dirPrefixEl.hidden = !show;
+            dirPrefixEl.setAttribute('aria-hidden', show ? 'false' : 'true');
+        }
+        if (caseRow) {
+            caseRow.hidden = kind === 'dir';
+        }
+        if (kind === 'dir' && caseSelect) {
+            caseSelect.value = 'no';
+        }
+        if (rawInput) {
+            rawInput.value = stripDirPrefix(rawInput.value);
+        }
+        syncHiddenFromRaw();
+    }
+
+    function fillFilterForm(kind, pattern, caseSensitive) {
+        const kindRadio = form.querySelector(`input[name="gt_filter_kind"][value="${kind === 'dir' ? 'dir' : 'name'}"]`);
+        if (kindRadio) kindRadio.checked = true;
+        if (rawInput) rawInput.value = stripDirPrefix(pattern || '');
+        if (caseSelect) caseSelect.value = caseSensitive === 'yes' ? 'yes' : 'no';
+        applyKindUi();
+    }
+
+    form.querySelectorAll('input[name="gt_filter_kind"]').forEach((radio) => {
+        radio.addEventListener('change', applyKindUi);
+    });
+    if (rawInput) {
+        rawInput.addEventListener('input', syncHiddenFromRaw);
+        rawInput.addEventListener('change', syncHiddenFromRaw);
+    }
+    form.addEventListener('submit', syncHiddenFromRaw);
+
+    document.querySelectorAll('.gt-scan-filters__chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+            fillFilterForm(
+                chip.getAttribute('data-gt-filter-kind'),
+                chip.getAttribute('data-gt-filter-pattern'),
+                chip.getAttribute('data-gt-filter-case') || 'no'
+            );
+            if (modalEl && window.bootstrap && bootstrap.Modal) {
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            }
+            if (rawInput) {
+                rawInput.focus();
+                rawInput.select();
+            }
+        });
+    });
+
+    if (modalEl) {
+        modalEl.addEventListener('shown.bs.modal', () => {
+            applyKindUi();
+            if (rawInput && !rawInput.value) rawInput.focus();
+        });
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            fillFilterForm('name', '', 'no');
+        });
+    }
+
+    applyKindUi();
+})();

@@ -30,7 +30,7 @@ NEVER_BULK_ENABLE_ENV = frozenset({
 
 # (form_name, config_key, label, help, safety_lock)
 FEATURE_ENV_TOGGLES = (
-    ('enable_arr_module', 'ENABLE_ARR_MODULE', 'Arr / indexer module', 'Prowlarr/Jackett search UI', False),
+    ('enable_arr_module', 'ENABLE_ARR_MODULE', 'Arr / indexer module', 'Native Torznab/Newznab + optional Prowlarr/Jackett hubs + presets', False),
     ('enable_debrid', 'ENABLE_DEBRID', 'Debrid acquire', 'Real-Debrid / AllDebrid / etc. when tokens set', False),
     ('enable_game_assists', 'ENABLE_GAME_ASSISTS', 'Game assists', 'Single-player assist packs', False),
     ('enable_vr_browse', 'ENABLE_VR_BROWSE', 'VR browse', '/vr PWA catalog', False),

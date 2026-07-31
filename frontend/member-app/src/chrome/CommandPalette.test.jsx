@@ -1,8 +1,9 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { searchGames } from '../api/collections'
 import { openPreferencesModal } from '../api/preferences'
-import { buildPaletteCommands, CommandPalette } from './CommandPalette'
+import { buildPaletteCommands, CommandPalette, isLibrarySearchRoute } from './CommandPalette'
 
 const navigateMock = vi.fn()
 
@@ -22,9 +23,17 @@ vi.mock('../api/preferences', async () => {
   }
 })
 
-function renderPalette(shellConfig = {}, props = {}) {
+vi.mock('../api/collections', async () => {
+  const actual = await vi.importActual('../api/collections')
+  return {
+    ...actual,
+    searchGames: vi.fn(() => Promise.resolve([])),
+  }
+})
+
+function renderPalette(shellConfig = {}, props = {}, initialEntries = ['/library']) {
   return render(
-    <MemoryRouter initialEntries={['/library']}>
+    <MemoryRouter initialEntries={initialEntries}>
       <CommandPalette shellConfig={shellConfig} {...props} />
     </MemoryRouter>,
   )
@@ -33,6 +42,15 @@ function renderPalette(shellConfig = {}, props = {}) {
 beforeEach(() => {
   navigateMock.mockReset()
   openPreferencesModal.mockClear()
+  searchGames.mockReset()
+  searchGames.mockResolvedValue([])
+})
+
+test('isLibrarySearchRoute matches library paths', () => {
+  expect(isLibrarySearchRoute('/library')).toBe(true)
+  expect(isLibrarySearchRoute('/library/')).toBe(true)
+  expect(isLibrarySearchRoute('/discover')).toBe(false)
+  expect(isLibrarySearchRoute('/game_details/abc')).toBe(false)
 })
 
 test('buildPaletteCommands includes primary, more, and preferences', () => {
@@ -63,7 +81,7 @@ test('hides admin and help when flags are off', () => {
 
 test('opens with Ctrl+K and closes with Escape', async () => {
   const user = userEvent.setup()
-  renderPalette({ isAdmin: false })
+  renderPalette({ isAdmin: false }, {}, ['/discover'])
 
   expect(screen.queryByPlaceholderText(/search pages/i)).toBeNull()
 
@@ -74,9 +92,17 @@ test('opens with Ctrl+K and closes with Escape', async () => {
   expect(screen.queryByPlaceholderText(/search pages/i)).toBeNull()
 })
 
+test('on Library route uses Search library placeholder', async () => {
+  const user = userEvent.setup()
+  renderPalette({}, {})
+
+  await user.keyboard('{Control>}k{/Control}')
+  expect(screen.getByPlaceholderText(/search library/i)).toBeInTheDocument()
+})
+
 test('opens when open prop is true and filters by typeahead', async () => {
   const user = userEvent.setup()
-  renderPalette({ isAdmin: true, showHelp: true }, { open: true })
+  renderPalette({ isAdmin: true, showHelp: true }, { open: true }, ['/discover'])
 
   const dialog = screen.getByRole('dialog')
   expect(within(dialog).getByText('Library')).toBeInTheDocument()
@@ -87,17 +113,78 @@ test('opens when open prop is true and filters by typeahead', async () => {
   expect(within(dialog).queryByText('Library')).toBeNull()
 })
 
+test('Library mode searches titles via /api/search and navigates to details', async () => {
+  const user = userEvent.setup()
+  searchGames.mockResolvedValue([
+    { uuid: 'game-1', name: 'Celeste' },
+    { uuid: 'game-2', name: 'Celeste Classic' },
+  ])
+
+  renderPalette({}, { open: true })
+
+  await user.type(screen.getByPlaceholderText(/search library/i), 'cel')
+
+  await waitFor(() => {
+    expect(searchGames).toHaveBeenCalled()
+  })
+  expect(searchGames.mock.calls.at(-1)[0]).toBe('cel')
+
+  const dialog = screen.getByRole('dialog')
+  expect(await within(dialog).findByText('Celeste')).toBeInTheDocument()
+  expect(within(dialog).getByText('Search library')).toBeInTheDocument()
+  expect(within(dialog).getByText('Navigate')).toBeInTheDocument()
+
+  await user.click(within(dialog).getByText('Celeste'))
+  expect(navigateMock).toHaveBeenCalledWith('/game_details/game-1')
+})
+
 test('selecting a nav command navigates via useNavigate', async () => {
   const user = userEvent.setup()
-  renderPalette({}, { open: true })
+  renderPalette({}, { open: true }, ['/discover'])
 
   await user.click(screen.getByText('Systems'))
   expect(navigateMock).toHaveBeenCalledWith('/systems')
 })
 
+test('friends command opens dock event instead of navigating', async () => {
+  const user = userEvent.setup()
+  const onOpen = vi.fn()
+  window.addEventListener('gt-open-social-companion', onOpen)
+  try {
+    const friends = buildPaletteCommands({}).find((c) => c.id === 'friends')
+    expect(friends.action).toBe('open-friends')
+    expect(friends.to).toBeUndefined()
+
+    renderPalette({}, { open: true }, ['/discover'])
+    await user.click(screen.getByText('Friends'))
+    expect(onOpen).toHaveBeenCalledTimes(1)
+    expect(navigateMock).not.toHaveBeenCalled()
+  } finally {
+    window.removeEventListener('gt-open-social-companion', onOpen)
+  }
+})
+
+test('chat command opens slide-out event instead of navigating', async () => {
+  const user = userEvent.setup()
+  const onOpen = vi.fn()
+  window.addEventListener('gt-open-chat-panel', onOpen)
+  try {
+    const chat = buildPaletteCommands({}).find((c) => c.id === 'chat')
+    expect(chat.action).toBe('open-chat')
+    expect(chat.to).toBeUndefined()
+
+    renderPalette({}, { open: true }, ['/discover'])
+    await user.click(screen.getByText('Chat'))
+    expect(onOpen).toHaveBeenCalledTimes(1)
+    expect(navigateMock).not.toHaveBeenCalled()
+  } finally {
+    window.removeEventListener('gt-open-chat-panel', onOpen)
+  }
+})
+
 test('preferences command opens preferences modal', async () => {
   const user = userEvent.setup()
-  renderPalette({}, { open: true })
+  renderPalette({}, { open: true }, ['/discover'])
 
   await user.click(screen.getByText('Preferences'))
   expect(openPreferencesModal).toHaveBeenCalled()
@@ -108,7 +195,7 @@ test('admin external command uses location href', async () => {
   const loc = { href: '/library' }
   vi.stubGlobal('location', loc)
 
-  renderPalette({ isAdmin: true }, { open: true })
+  renderPalette({ isAdmin: true }, { open: true }, ['/discover'])
   await user.click(screen.getByText('Admin'))
   expect(loc.href).toBe('/admin/dashboard')
 

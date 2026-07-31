@@ -1,7 +1,9 @@
 html[data-icon-pack="duotone"] .gt-icon {
-  stroke-width: 1.75;
-  fill: currentColor;
-  fill-opacity: 0.22;
+  stroke-width: var(--gt-icon-stroke, 1.75);
+  stroke-linecap: var(--gt-icon-linecap, round);
+  stroke-linejoin: var(--gt-icon-linejoin, round);
+  fill: var(--gt-icon-fill, currentColor);
+  fill-opacity: var(--gt-icon-fill-opacity, 0.22);
 }
 html[data-icon-pack="duotone"] .gt-icon [fill="currentColor"] {
   fill-opacity: 0.55;

@@ -1,24 +1,36 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import './ScreenshotLightbox.css'
 
 /**
- * In-app screenshot viewer — keeps users in the SPA (no new tab).
+ * In-app media viewer — screenshots + video embeds.
+ * Double-click image or Fullscreen button uses the browser Fullscreen API.
  */
-export function ScreenshotLightbox({ urls = [], openIndex = null, onClose }) {
+export function ScreenshotLightbox({
+  urls = [],
+  openIndex = null,
+  onClose,
+  videos = [],
+  mode = 'screenshots',
+}) {
   const titleId = useId()
+  const stageRef = useRef(null)
   const [index, setIndex] = useState(0)
-  const open = openIndex != null && urls.length > 0
+  const [fsError, setFsError] = useState(null)
+  const isVideo = mode === 'videos'
+  const items = isVideo ? videos : urls
+  const open = openIndex != null && items.length > 0
 
   useEffect(() => {
     if (!open) return undefined
     setIndex(openIndex)
+    setFsError(null)
     const onKey = (event) => {
       if (event.key === 'Escape') onClose?.()
       if (event.key === 'ArrowRight') {
-        setIndex((current) => (current + 1) % urls.length)
+        setIndex((current) => (current + 1) % items.length)
       }
       if (event.key === 'ArrowLeft') {
-        setIndex((current) => (current - 1 + urls.length) % urls.length)
+        setIndex((current) => (current - 1 + items.length) % items.length)
       }
     }
     document.addEventListener('keydown', onKey)
@@ -27,12 +39,30 @@ export function ScreenshotLightbox({ urls = [], openIndex = null, onClose }) {
     return () => {
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = previous
+      if (document.fullscreenElement) {
+        document.exitFullscreen?.().catch(() => {})
+      }
     }
-  }, [open, openIndex, onClose, urls.length])
+  }, [open, openIndex, onClose, items.length])
 
   if (!open) return null
 
-  const src = urls[((index % urls.length) + urls.length) % urls.length]
+  const safeIndex = ((index % items.length) + items.length) % items.length
+  const current = items[safeIndex]
+
+  async function enterFullscreen() {
+    setFsError(null)
+    const node = stageRef.current
+    if (!node?.requestFullscreen) {
+      setFsError('Fullscreen is not available in this browser')
+      return
+    }
+    try {
+      await node.requestFullscreen()
+    } catch (err) {
+      setFsError(err?.message || 'Unable to enter fullscreen')
+    }
+  }
 
   return (
     <div
@@ -48,14 +78,28 @@ export function ScreenshotLightbox({ urls = [], openIndex = null, onClose }) {
       >
         <div className="gt-lightbox__toolbar">
           <h2 id={titleId} className="gt-lightbox__title">
-            Screenshot {(((index % urls.length) + urls.length) % urls.length) + 1} / {urls.length}
+            {isVideo ? 'Video' : 'Screenshot'} {safeIndex + 1} / {items.length}
           </h2>
-          <button type="button" className="gt-lightbox__close" onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          <div className="gt-lightbox__toolbar-actions">
+            <button
+              type="button"
+              className="gt-lightbox__fs"
+              onClick={() => void enterFullscreen()}
+            >
+              Fullscreen
+            </button>
+            <button type="button" className="gt-lightbox__close" onClick={onClose} aria-label="Close">
+              ×
+            </button>
+          </div>
         </div>
-        <div className="gt-lightbox__stage">
-          {urls.length > 1 ? (
+        {fsError ? (
+          <p className="gt-lightbox__fs-error" role="status">
+            {fsError}
+          </p>
+        ) : null}
+        <div className="gt-lightbox__stage" ref={stageRef}>
+          {items.length > 1 ? (
             <button
               type="button"
               className="gt-lightbox__nav"
@@ -65,8 +109,24 @@ export function ScreenshotLightbox({ urls = [], openIndex = null, onClose }) {
               ‹
             </button>
           ) : null}
-          <img src={src} alt="" className="gt-lightbox__img" />
-          {urls.length > 1 ? (
+          {isVideo ? (
+            <iframe
+              className="gt-lightbox__video"
+              title={`Game trailer ${safeIndex + 1}`}
+              src={current}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowFullScreen
+            />
+          ) : (
+            <img
+              src={current}
+              alt=""
+              className="gt-lightbox__img"
+              onDoubleClick={() => void enterFullscreen()}
+              title="Double-click for fullscreen"
+            />
+          )}
+          {items.length > 1 ? (
             <button
               type="button"
               className="gt-lightbox__nav"

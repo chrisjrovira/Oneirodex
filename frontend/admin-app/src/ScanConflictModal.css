@@ -1,0 +1,94 @@
+.gt-scan-conflict {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(5, 7, 10, 0.82);
+  backdrop-filter: blur(8px);
+}
+
+.gt-scan-conflict__panel {
+  width: min(32rem, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem 1.15rem;
+  border-radius: 14px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.14));
+  background: var(--gt-surface, #141820);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  color: var(--gt-text, #f2f4f8);
+}
+
+.gt-scan-conflict__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.gt-scan-conflict__title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.gt-scan-conflict__close {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.14));
+  background: var(--gt-surface-2, #1c2230);
+  color: var(--gt-text, #f2f4f8);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gt-scan-conflict__close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gt-scan-conflict__lede {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--gt-text-muted, #c4ccd8);
+}
+
+.gt-scan-conflict__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.gt-scan-conflict__choice {
+  justify-content: center;
+  width: 100%;
+}
+
+.gt-scan-conflict__choice--force {
+  border-color: color-mix(in srgb, var(--gt-warning, #d4a017) 55%, var(--gt-border, rgba(255, 255, 255, 0.14)));
+}
+
+.gt-scan-conflict__hint {
+  margin: 0 0 0.55rem;
+  font-size: 0.82rem;
+  color: var(--gt-text-muted, #c4ccd8);
+}
+
+.gt-scan-conflict__warn {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--gt-warning, #d4a017) 85%, var(--gt-text, #f2f4f8));
+}
+
+.gt-scan-conflict__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}

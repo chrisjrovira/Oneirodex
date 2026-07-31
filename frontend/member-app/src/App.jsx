@@ -3,6 +3,7 @@ import { Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { CommandPalette } from './chrome/CommandPalette'
 import { applyTileSizeCssVars } from './chrome/TileSizeControl'
 import { TopNav } from './chrome/TopNav'
+import { ChatSlideOut } from './components/ChatSlideOut'
 import { SocialCompanionDock } from './components/SocialCompanionDock'
 import { DiscoverApp } from './DiscoverApp'
 import { FavoritesApp } from './FavoritesApp'
@@ -103,6 +104,14 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
   const hideDock = location.pathname.startsWith('/social-companion')
   const detailsMatch = location.pathname.match(/^\/game_details\/([^/]+)/)
   const dockGameUuid = detailsMatch?.[1] || ''
+  // Admins create rooms; librarians also allowed by API — UI still shows form and surfaces 403.
+  const canCreateRooms = true
+  const chatViewer = {
+    userId: shellConfig.userId ?? null,
+    isLibrarian: Boolean(shellConfig.isLibrarian),
+    isAdmin: Boolean(shellConfig.isAdmin),
+    role: shellConfig.role || 'user',
+  }
   return (
     <>
       <a className="gt-skip-link" href="#main-content">
@@ -122,7 +131,12 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
       <main id="main-content" className="gt-main-content" tabIndex={-1}>
         <Outlet />
       </main>
-      {!hideDock ? <SocialCompanionDock mode="dock" gameUuid={dockGameUuid} /> : null}
+      {!hideDock ? (
+        <>
+          <ChatSlideOut canCreateRooms={canCreateRooms} viewer={chatViewer} />
+          <SocialCompanionDock mode="dock" gameUuid={dockGameUuid} />
+        </>
+      ) : null}
     </>
   )
 }

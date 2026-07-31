@@ -16,12 +16,18 @@ from . import apis_bp
 @login_required
 def notifications_list():
     unread_only = str(request.args.get('unread') or '').lower() in ('1', 'true', 'yes')
-    limit = min(100, max(1, int(request.args.get('limit') or 40)))
+    try:
+        limit = int(request.args.get('limit') or 40)
+    except (TypeError, ValueError):
+        limit = 40
+    limit = min(100, max(1, limit))
+    rows = list_notifications(
+        current_user.id, limit=limit, unread_only=unread_only,
+    )
     return jsonify({
-        'notifications': list_notifications(
-            current_user.id, limit=limit, unread_only=unread_only,
-        ),
+        'notifications': rows,
         'unread_count': unread_count(current_user.id),
+        'empty': len(rows) == 0,
     })
 
 

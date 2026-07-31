@@ -270,6 +270,81 @@ class TestImageProcessingFunctions:
         assert images[0].igdb_image_id == '98765'
         assert images[0].download_url == 'https://images.igdb.com/igdb/image/upload/t_original/test.jpg'
         assert images[0].is_downloaded is False
+
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
+    def test_store_image_url_accepts_expanded_cover_dict_without_api(
+        self, mock_api, db_session, sample_game, sample_global_settings
+    ):
+        """Expanded IGDB cover objects must store a cover row using the embedded URL.
+
+        Previously ``where id={...dict...}`` failed silently so screenshots landed
+        and the UI fell back to the branded 'No cover art' placeholder.
+        """
+        store_image_url_for_download(
+            sample_game.uuid,
+            {
+                'id': 4242,
+                'url': '//images.igdb.com/igdb/image/upload/t_thumb/co_aiwu.jpg',
+            },
+            'cover',
+        )
+
+        mock_api.assert_not_called()
+        images = db_session.query(Image).filter_by(
+            game_uuid=sample_game.uuid, image_type='cover'
+        ).all()
+        assert len(images) == 1
+        assert images[0].igdb_image_id == '4242'
+        assert images[0].download_url == (
+            'https://images.igdb.com/igdb/image/upload/t_original/co_aiwu.jpg'
+        )
+        assert images[0].is_downloaded is False
+
+    @patch('gametheca.utils.game_core.download_images_for_game')
+    @patch('gametheca.utils.game_core.make_igdb_api_request')
+    def test_smart_process_stores_cover_when_expanded_object(
+        self, mock_api, mock_download, app, db_session, sample_game, sample_global_settings
+    ):
+        sample_global_settings.use_turbo_image_downloads = False
+        db_session.commit()
+        mock_download.return_value = 1
+
+        with app.app_context():
+            result = smart_process_images_for_game(
+                sample_game.uuid,
+                cover_data={
+                    'id': 55,
+                    'url': '//images.igdb.com/igdb/image/upload/t_thumb/co55.jpg',
+                },
+                screenshots_data=[
+                    {'id': 66, 'url': '//images.igdb.com/igdb/image/upload/t_thumb/ss66.jpg'},
+                ],
+                app=app,
+            )
+
+        mock_api.assert_not_called()
+        covers = db_session.query(Image).filter_by(
+            game_uuid=sample_game.uuid, image_type='cover'
+        ).all()
+        shots = db_session.query(Image).filter_by(
+            game_uuid=sample_game.uuid, image_type='screenshot'
+        ).all()
+        assert len(covers) == 1
+        assert len(shots) == 1
+        assert covers[0].download_url.endswith('/t_original/co55.jpg')
+        assert shots[0].download_url.endswith('/t_original/ss66.jpg')
+        mock_download.assert_called_once()
+        assert result == 1
+
+    def test_normalize_igdb_image_ref_shapes(self):
+        from gametheca.utils.game_core import normalize_igdb_image_ref
+
+        assert normalize_igdb_image_ref(99) == (99, None)
+        assert normalize_igdb_image_ref({'id': 7, 'url': '//cdn/x.jpg'}) == (
+            7,
+            'https://cdn/x.jpg',
+        )
+        assert normalize_igdb_image_ref(None) == (None, None)
     
     @patch('gametheca.utils.game_core.make_igdb_api_request')
     def test_store_image_url_for_download_screenshot(self, mock_api, db_session, sample_game, sample_global_settings):

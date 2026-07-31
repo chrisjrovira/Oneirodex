@@ -3,25 +3,23 @@
 {% import 'partials/icons.html' as icons %}
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 
-<div class="container">
-    <div class="glass-panel">
-        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+<div class="container-status-page container-settings gt-adminpage gt-adminpage--xl gt-adminpage--spaced">
+    <div class="gt-adminpage-header">
+        <div>
+            <h1 class="gt-adminpage-title">{{ icons.icon('cogs', size=26) }} Manage GameTheca Settings</h1>
+            <p class="gt-adminpage-lede">Server configuration, scanning, and interface toggles.</p>
+        </div>
     </div>
-</div>
 
-
-<div class="container-status-page container-settings gt-adminpage gt-adminpage--xl">
-    <div class="card">
-        <h2 class="gt-adminpage-title">Manage GameTheca Settings</h2>
-
+    <div class="gt-adminpage-panel">
         <div id="settingsSavedNotification" class="alert alert-success" role="alert" style="display: none;">
-            Settings saved successfully, Captain!
+            Settings saved successfully.
         </div>
         <div class="settingsform-admin">
             <form id="settingsForm">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="mb-0">Server Configuration</h3>
-                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                    <h2 class="h5 mb-0">Server Configuration</h2>
+                    <button type="submit" class="btn btn-primary btn-sm">Save Settings</button>
                 </div>
 
                 <div class="row">
@@ -117,7 +115,7 @@
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="useTurboImageDownloads" checked>
-                                <label class="form-check-label" for="useTurboImageDownloads" data-toggle="tooltip" title="🚀 TURBO MODE: Use parallel multi-threaded downloading for game images (8 threads, 200 batch size). When disabled, uses single-thread sequential downloads. TURBO mode is 8-15x faster but uses more bandwidth.">
+                                <label class="form-check-label" for="useTurboImageDownloads" data-toggle="tooltip" title="TURBO MODE: parallel image downloads (default 4 threads, batch 100; runtime-capped for Unraid). When disabled, uses single-thread sequential downloads.">
                                     {{ icons.icon('rocket') }} Multithreaded Image Downloads
                                 </label>
                             </div>
@@ -125,11 +123,11 @@
                             <div class="row mb-2">
                                 <div class="col-6">
                                     <input type="number" class="form-control form-control-sm" id="turboDownloadThreads" name="turboDownloadThreads"
-                                        min="1" max="16" value="8" placeholder="Threads" data-toggle="tooltip" title="Number of simultaneous download threads for TURBO mode">
+                                        min="1" max="16" value="4" placeholder="Threads" data-toggle="tooltip" title="Simultaneous download threads for TURBO mode (default 4; runtime-capped)">
                                 </div>
                                 <div class="col-6">
                                     <input type="number" class="form-control form-control-sm" id="turboDownloadBatchSize" name="turboDownloadBatchSize"
-                                        min="10" max="500" value="200" placeholder="Batch size" data-toggle="tooltip" title="Number of images to process in each TURBO download batch">
+                                        min="10" max="500" value="100" placeholder="Batch size" data-toggle="tooltip" title="Images per TURBO download batch (default 100; runtime-capped)">
                                 </div>
                             </div>
 
@@ -258,12 +256,10 @@
             </form>
         </div>
     </div>
+    <p><a class="gt-adminpage-backlink" href="{{ url_for('site.admin_dashboard') }}">{{ icons.icon('arrow-left') }} Back to admin</a></p>
 </div>
-   
-<!-- Embed current_settings as JSON in a script tag -->
+
 <script id="currentSettings" type="application/json">{{ current_settings|tojson }}</script>
 <script id="csrf_token" type="application/json">{{ csrf_token() }}</script>
-
 <script src="{{ 'js/admin_manage_server_settings.js'|theme_asset }}"></script>
-
 {% endblock %}

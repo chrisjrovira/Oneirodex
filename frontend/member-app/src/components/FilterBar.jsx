@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
 import { fetchFilterOptions } from '../api/filters'
+import { BADGE_FILTER_CHIPS, toggleBadgeFilter } from './BadgeFilterChips'
+import {
+  ITEM_KIND_FILTER_CHIPS,
+  parseItemKindFilter,
+  toggleItemKindFilter,
+} from './ItemKindFilterChips'
 
 const EMPTY_OPTIONS = {
   libraries: [],
@@ -74,6 +80,11 @@ export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
     onClear()
   }
 
+  const applyBadgeToggle = (next) => {
+    setDraft(next)
+    onApply(next)
+  }
+
   const selects = SELECTS.map(([name, label, emptyLabel, source, valueField, textField]) => [
     name,
     t(label),
@@ -86,6 +97,52 @@ export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
   return (
     <form className="container-filtersandsort library-filters" onSubmit={submit}>
       {loadError && <p role="alert">{t('Unable to load filter options.')}</p>}
+      <fieldset className="library-filters__signals">
+        <legend>{t('Kind')}</legend>
+        <div className="gt-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
+          {ITEM_KIND_FILTER_CHIPS.map((chip) => {
+            const active = parseItemKindFilter(
+              filters.item_kind ?? draft.item_kind,
+            ).includes(chip.kind)
+            return (
+              <button
+                key={chip.kind}
+                type="button"
+                className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
+                aria-pressed={active}
+                title={t(chip.title)}
+                onClick={() =>
+                  toggleItemKindFilter(filters, chip.kind, applyBadgeToggle, cleanFilters)
+                }
+              >
+                {t(chip.label)}
+              </button>
+            )
+          })}
+        </div>
+      </fieldset>
+      <fieldset className="library-filters__signals">
+        <legend>{t('Signals')}</legend>
+        <div className="gt-badge-filter-chips" role="group" aria-label={t('Badge filters')}>
+          {BADGE_FILTER_CHIPS.map((chip) => {
+            const active = (filters[chip.param] ?? draft[chip.param]) === '1'
+            return (
+              <button
+                key={chip.param}
+                type="button"
+                className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
+                aria-pressed={active}
+                title={t(chip.title)}
+                onClick={() =>
+                  toggleBadgeFilter(filters, chip.param, applyBadgeToggle, cleanFilters)
+                }
+              >
+                {t(chip.label)}
+              </button>
+            )
+          })}
+        </div>
+      </fieldset>
       {selects.map(([name, label, emptyLabel, source, valueField, textField]) => (
         <label key={name}>
           {label}
@@ -160,8 +217,8 @@ export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
         </select>
       </label>
       <div className="button-group">
-        <button className="btn btn-primary" type="submit">{t('Apply')}</button>
-        <button className="btn btn-secondary" type="button" onClick={clear}>
+        <button className="gt-btn gt-btn--primary" type="submit">{t('Apply')}</button>
+        <button className="gt-btn gt-btn--secondary" type="button" onClick={clear}>
           {t('Clear')}
         </button>
       </div>

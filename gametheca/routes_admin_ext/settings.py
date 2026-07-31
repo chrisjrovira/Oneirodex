@@ -23,8 +23,9 @@ MIN_DOWNLOAD_THREADS = 1
 MAX_DOWNLOAD_THREADS = 20
 MIN_BATCH_SIZE = 10
 MAX_BATCH_SIZE = 1000
-DEFAULT_BATCH_SIZE = 200
-DEFAULT_DOWNLOAD_THREADS = 8
+# Unraid-safe defaults; runtime hard-capped further via worker_caps (≤4 / ≤100)
+DEFAULT_BATCH_SIZE = 100
+DEFAULT_DOWNLOAD_THREADS = 4
 
 # Default settings configuration
 DEFAULT_SETTINGS = {

@@ -1,17 +1,19 @@
 {% extends "base_admin.html" %}
 {% block content %}
-<div class="container mt-3">
-  <div class="glass-panel mb-3">
-    <a href="{{ url_for('admin2.integrations') }}" class="btn btn-secondary">← Integrations</a>
+{% import 'partials/icons.html' as icons %}
+<div class="container-settings gt-adminpage gt-adminpage--lg mt-3">
+  <div class="gt-adminpage-header">
+    <div>
+      <h1 class="gt-adminpage-title">ROM reference sets</h1>
+      <p class="gt-adminpage-lede">
+        Upload a No-Intro or Redump <code>.dat</code> you obtained yourself. GameTheca never ships
+        copyrighted DAT files. Systems then shows owned/total for that platform + region
+        (title match). See <code>docs/runbooks/reference-sets.md</code>.
+      </p>
+    </div>
   </div>
-  <div class="card p-3">
-    <h1>ROM reference sets</h1>
-    <p class="text-muted">
-      Upload a No-Intro or Redump <code>.dat</code> you obtained yourself. GameTheca never ships
-      copyrighted DAT files. Systems then shows owned/total for that platform + region
-      (title match). See <code>docs/runbooks/reference-sets.md</code>.
-    </p>
 
+  <div class="gt-adminpage-panel">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -71,39 +73,42 @@
     {% if not sets %}
     <p>No reference sets yet.</p>
     {% else %}
-    <table class="table table-sm">
-      <thead>
-        <tr>
-          <th>Platform</th>
-          <th>Region</th>
-          <th>Source</th>
-          <th>Entries</th>
-          <th>Name</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for s in sets %}
-        <tr>
-          <td><code>{{ s.library_platform }}</code></td>
-          <td>{{ s.region }}</td>
-          <td>{{ s.source }}</td>
-          <td>{{ s.entry_count }}</td>
-          <td>{{ s.name }}</td>
-          <td>
-            <form method="post" class="d-inline">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <input type="hidden" name="action" value="delete">
-              <input type="hidden" name="set_id" value="{{ s.id }}">
-              <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="table-responsive">
+      <table class="table gt-adminpage-table table-sm">
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>Region</th>
+            <th>Source</th>
+            <th>Entries</th>
+            <th>Name</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sets %}
+          <tr>
+            <td><code>{{ s.library_platform }}</code></td>
+            <td>{{ s.region }}</td>
+            <td>{{ s.source }}</td>
+            <td>{{ s.entry_count }}</td>
+            <td>{{ s.name }}</td>
+            <td>
+              <form method="post" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="set_id" value="{{ s.id }}">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
     {% endif %}
   </div>
+  <p><a class="gt-adminpage-backlink" href="{{ url_for('admin2.integrations') }}">{{ icons.icon('arrow-left') }} Back to Integrations</a></p>
 </div>
 <script>
 (function () {

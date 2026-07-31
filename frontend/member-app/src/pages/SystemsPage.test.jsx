@@ -43,6 +43,17 @@ test('renders system tiles linking into library platform filter', async () => {
     'href',
     '/library?library_platform=PCWIN',
   )
+  // Export packs live in a secondary section — not buried in the intro lede.
+  expect(screen.getByRole('heading', { name: 'Export packs' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /ES-DE gamelist/i })).toHaveAttribute(
+    'href',
+    '/api/export/esde',
+  )
+  expect(screen.getByRole('link', { name: /Pegasus metadata/i })).toHaveAttribute(
+    'href',
+    '/api/export/pegasus?platform=Library',
+  )
+  expect(screen.getByText(/EmulationStation Desktop Edition/i)).toBeInTheDocument()
 })
 
 test('shows error retry instead of empty state when fetch fails', async () => {

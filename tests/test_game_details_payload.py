@@ -64,7 +64,7 @@ def test_build_game_details_payload_omits_disk_paths():
         'gametheca.utils.game_details_payload.load_lifecycle_map',
         return_value={},
     ), patch(
-        'gametheca.utils.game_details_payload.resolve_cover_url',
+        'gametheca.utils.game_details_payload.resolve_game_cover_url',
         return_value='/static/newstyle/default_cover.jpg',
     ), patch(
         'gametheca.utils.game_details_payload.browse_play_fields',

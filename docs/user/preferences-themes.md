@@ -2,14 +2,15 @@
 
 ## Open preferences
 
-From the member SPA account / preferences control (preferences modal). Changes save to your user profile and usually reload the page.
+From the member SPA **Account** drawer (under TopNav) → **Preferences**, or Ctrl/Cmd+K → Preferences. The modal uses sectioned aurora chrome (`gt-prefs-modal`: Library · Look & density · Game language) — dense sections, **no heavy cards**. Changes save to your user profile and usually reload the page.
 
 ## Color theme presets
 
-- Pick a preset from the **swatch grid** (not name-only) — the underlying `<select>` is visually hidden (still keyboard/screen-reader reachable) for a slimmer picker.
+- Pick a preset from the **swatch grid** (modal Preferences and full `/settings_panel`) — the underlying `<select>` is visually hidden (still keyboard/screen-reader reachable) for a slimmer picker.
 - **Default (system)** is the built-in theme id `default` (saved explicitly — not `None`).
-- Default brand accent is green **`#2fd67b`** (Style B+C glass); other presets (Ocean, Forest, …) recolour accent and surfaces.
-- If swatches do nothing or accents look wrong (old teal/orange), the library volume may have stale theme files — ask an admin to **Reset Default Themes** after a rebuild (`GENERATOR_VERSION` 8).
+- Default brand accent is green **`#2fd67b`** (Style B+C glass); other presets (Aurora, Ember, Violet, Forest, Ocean, Rose, Mono, Sunset, Ice — **9** packs) recolour accent, surfaces, glass/CRT, typography, and paired icon geometry (`GENERATOR_VERSION` 10).
+- Picking a colour swatch also selects that preset’s paired icon pack (still changeable before Save).
+- If swatches do nothing, accents look wrong, or presets still look accent-only (pre–Wave 2d), the library volume may have stale theme files — ask an admin to **Reset Default Themes** after a rebuild.
 
 ## Icon packs (independent of color)
 
@@ -22,6 +23,11 @@ From the member SPA account / preferences control (preferences modal). Changes s
 - Preference: continuous **0–100% slider** (TopNav) — legacy S/M/L/XL values still load and map onto the scale.
 - Affects Library / Favorites / similar grids; denser gaps on smaller sizes; grid re-measures with a short debounce so dragging feels smooth instead of snapping between sizes.
 
+## Items per page
+
+- Preference: **items per page** for Library / similar browse grids.
+- Allowed values: **20 / 50 / 100 / 200 / 250 / 300 / 400 / 500 / 1000** (API allowlist; other values are rejected).
+
 ## Preferred game language
 
 - Preference: **Preferred game language** (BCP-47, default `en-US`).
@@ -32,5 +38,7 @@ From the member SPA account / preferences control (preferences modal). Changes s
 
 - Hard-refresh (Ctrl+F5) after a theme or icon-pack apply if CSS was just redeployed.
 - Admin theme install is separate from your personal preset — see [themes-reset.md](../admin/themes-reset.md).
+- If account/prefs chrome looks stale after deploy (`gt-account.css` / `modal-components` on the library volume), ask an admin for **Reset Default Themes**.
 - Icon packs install on app boot; they are not wiped by Reset Default Themes.
+- **Loading icons (admin):** household spinner mode — rotate catalogue or lock to one id (Admin → Themes → Loading icons). Members/SPA read `GET /api/loading-icon`. Motifs appear on Auto Scan browse + `PageStatus` loads. Details: [icon-themes.md](../strategy/icon-themes.md).
 - Social / voice / Report issue: [social-and-voice.md](social-and-voice.md) · [faq.md](faq.md).

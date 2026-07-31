@@ -1,4 +1,9 @@
-import { createAuthStore, isGamethecaToken, normalizeBaseUrl } from './auth.js'
+import {
+  createAuthStore,
+  isGamethecaToken,
+  normalizeBaseUrl,
+  normalizeGamethecaToken,
+} from './auth.js'
 import { createDesktopApi } from './api.js'
 import { kickoffDownload, pickDownloadVersion } from './download.js'
 import { kickoffInstall } from './install.js'
@@ -13,6 +18,8 @@ import {
   modApplyUiHint,
 } from './apply_mods.js'
 import { startClientHeartbeat, type HeartbeatScheduler } from './heartbeat.js'
+import { getInstallsDir } from './download.js'
+import { revealPathInOs } from './open-path.js'
 import {
   fetchLibraryPreview,
   formatDesktopApiError,
@@ -132,10 +139,13 @@ async function renderLifecyclePanel(): Promise<void> {
       const exeBit = install?.exePath
         ? `<div class="install-exe muted">exe: <code>${escapeHtml(install.exePath)}</code></div>`
         : ''
+      const revealBit = install?.extractPath
+        ? `<button type="button" class="action-btn action-btn--reveal" data-action="reveal_path" data-uuid="${escapeHtml(record.gameUuid)}" title="Open install folder in Explorer / Finder">Show in Explorer</button>`
+        : ''
       return `<li class="${stateClass}">
         <div><strong>${escapeHtml(title)}</strong> — <span class="state-pill">${escapeHtml(record.state)}</span></div>
         <div class="uuid muted"><code>${escapeHtml(record.gameUuid)}</code></div>
-        ${pathBit}${exeBit}
+        ${pathBit}${exeBit}${revealBit}
       </li>`
     })
     .join('')
@@ -200,6 +210,9 @@ function renderLibrary(): void {
         modsTrackingEnabled && (gamesWithEnabledMods.has(uuid) || canLaunchGame(state))
           ? `<button type="button" class="action-btn action-btn--mods" data-action="apply_mods" data-uuid="${escapeHtml(uuid)}"${modTitle} ${modDisabled}>Apply mods</button>`
           : ''
+      const revealButton = canLaunchGame(state)
+        ? `<button type="button" class="action-btn action-btn--reveal" data-action="reveal_path" data-uuid="${escapeHtml(uuid)}" title="Open install folder in Explorer / Finder">Show in Explorer</button>`
+        : ''
       const activityHtml = activity
         ? `<p class="activity">${escapeHtml(activity)}</p>`
         : ''
@@ -209,7 +222,7 @@ function renderLibrary(): void {
           <p class="uuid">${escapeHtml(uuid)}</p>
           <p class="state">State: <strong>${escapeHtml(state)}</strong></p>
           ${activityHtml}
-          <div class="actions">${playButton}${modButton}${actionButtons || (!playButton && !modButton ? '<span class="muted">No actions</span>' : '')}</div>
+          <div class="actions">${playButton}${revealButton}${modButton}${actionButtons || (!playButton && !modButton && !revealButton ? '<span class="muted">No actions</span>' : '')}</div>
         </article>
       `
     })
@@ -235,13 +248,13 @@ async function hydrateFromDisk(): Promise<void> {
 }
 async function handleConnect(): Promise<void> {
   const baseUrl = normalizeBaseUrl(els.baseUrl.value)
-  const token = els.token.value.trim()
+  const token = normalizeGamethecaToken(els.token.value)
   if (!baseUrl) {
     setStatus('Enter a server base URL.', 'error')
     return
   }
   if (!token || !isGamethecaToken(token)) {
-    setStatus('Enter a valid GameTheca API token (gt_<prefix>_<secret>).', 'error')
+    setStatus('Enter a valid GameTheca API token (gt_<prefix>_<urlsafe-secret>).', 'error')
     return
   }
   els.connectBtn.disabled = true
@@ -296,6 +309,9 @@ async function handleConnect(): Promise<void> {
       renderLibrary()
     },
     onCommands: async (command) => {
+      if (command.action === 'open_path') {
+        return runOpenPathCommand(command.path || '', { select: command.select })
+      }
       if (isActionBlockedOffline(command.action, connectionMode)) {
         setStatus(offlineBlockReason(command.action), 'error')
         return 'busy'
@@ -344,6 +360,43 @@ async function runPlayAction(uuid: string): Promise<void> {
   } finally {
     busyGames.delete(uuid)
     renderLibrary()
+  }
+}
+
+/** Reveal a path from a queued web command (library / unmatched) or local install. */
+async function runOpenPathCommand(
+  rawPath: string,
+  options: { select?: boolean; allowedRoots?: string[] } = {},
+): Promise<'ok' | 'busy' | 'error'> {
+  const result = await revealPathInOs(rawPath, {
+    select: options.select,
+    allowedRoots: options.allowedRoots,
+  })
+  if (!result.ok) {
+    setStatus(result.error, 'error')
+    return 'error'
+  }
+  setStatus(`Opened in file manager: ${result.path}`, 'success')
+  return 'ok'
+}
+
+async function runRevealInstallAction(uuid: string): Promise<void> {
+  try {
+    const installs = await loadInstallsFromDisk()
+    const extractPath = installs[uuid]?.extractPath
+    if (!extractPath) {
+      setStatus('No local install path to open.', 'error')
+      return
+    }
+    let allowedRoots: string[] | undefined
+    try {
+      allowedRoots = [await getInstallsDir()]
+    } catch {
+      allowedRoots = undefined
+    }
+    await runOpenPathCommand(extractPath, { select: false, allowedRoots })
+  } catch (error) {
+    setStatus(formatDesktopApiError(error), 'error')
   }
 }
 async function runApplyPatchCommand(
@@ -544,6 +597,10 @@ function handleLibraryClick(event: Event): void {
   if (!action || !uuid || !lifecycle) {
     return
   }
+  if (action === 'reveal_path') {
+    void runRevealInstallAction(uuid)
+    return
+  }
   if (action === 'play') {
     void (async () => {
       try {
@@ -617,7 +674,7 @@ export async function mountApp(root: HTMLElement): Promise<void> {
           </label>
           <label>
             API token
-            <input id="token" name="token" type="password" placeholder="gt_prefix_secret" autocomplete="off" />
+            <input id="token" name="token" type="password" placeholder="gt_… (paste from Account → API tokens)" autocomplete="off" />
           </label>
           <button id="connect-btn" type="submit">Connect</button>
           <button id="friends-btn" type="button">Open friends window</button>
@@ -661,6 +718,7 @@ export async function mountApp(root: HTMLElement): Promise<void> {
       })
   })
   els.library.addEventListener('click', handleLibraryClick)
+  els.lifecyclePanel.addEventListener('click', handleLibraryClick)
   await ensureLifecycleRegistry()
   await hydrateFromDisk()
   renderLibrary()

@@ -18,6 +18,12 @@ from gametheca.models import (
 from gametheca.utils.functions import read_first_nfo_content
 from gametheca.utils.igdb_api import make_igdb_api_request
 from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.pc_extras import (
+    classify_pc_extra_folder,
+    is_pc_library_platform,
+    iter_pc_extra_roots,
+)
+from gametheca.utils.rom_language import classify_patch_file
 
 
 def bump_scan_job_progress(
@@ -69,6 +75,13 @@ def try_add_game(game_name, full_disk_path, scan_job_id, library_uuid, check_exi
         existing_game = db.session.execute(select(Game).filter_by(full_disk_path=full_disk_path)).scalar_one_or_none()
         if existing_game:
             print(f"Game already exists in database: {game_name} at {full_disk_path}")
+            from gametheca.utils.library_health import (
+                PATH_STATUS_MISSING,
+                mark_game_path_ok,
+            )
+
+            if getattr(existing_game, 'path_status', None) == PATH_STATUS_MISSING:
+                mark_game_path_ok(existing_game)
             return False
 
     if malware_scan_enabled():
@@ -101,6 +114,12 @@ def process_game_with_fallback(game_name, full_disk_path, scan_job_id, library_u
     # Fast path - check cached sets first if provided
     if existing_game_paths and full_disk_path in existing_game_paths:
         print(f"Game already exists (fast path): {game_name} at {full_disk_path}")
+        from gametheca.utils.library_health import clear_restored_missing_path_status
+
+        clear_restored_missing_path_status(
+            [full_disk_path],
+            library_uuid=library_uuid,
+        )
         return True
     
     if existing_unmatched_paths and full_disk_path in existing_unmatched_paths:
@@ -127,6 +146,13 @@ def process_game_with_fallback(game_name, full_disk_path, scan_job_id, library_u
         existing_game = db.session.execute(select(Game).filter_by(full_disk_path=full_disk_path, library_uuid=library_uuid)).scalar_one_or_none()
         if existing_game:
             print(f"Game already exists in database: {game_name} at {full_disk_path}")
+            from gametheca.utils.library_health import (
+                PATH_STATUS_MISSING,
+                mark_game_path_ok,
+            )
+
+            if getattr(existing_game, 'path_status', None) == PATH_STATUS_MISSING:
+                mark_game_path_ok(existing_game)
             # Don't increment success counter for existing games to avoid inflated counts during rescans
             return True 
 
@@ -154,7 +180,29 @@ def process_game_with_fallback(game_name, full_disk_path, scan_job_id, library_u
 
 
 
-def log_unmatched_folder(scan_job_id, folder_path, matched_status, library_uuid=None):
+def log_unmatched_folder(
+    scan_job_id,
+    folder_path,
+    matched_status,
+    library_uuid=None,
+    *,
+    matched_game_uuid=None,
+    match_reason=None,
+    match_score=None,
+    suggested_kind=None,
+    suggested_candidate_name=None,
+):
+    # Denormalize proposal hint at log time (one sidecar read) so list API stays cheap.
+    if suggested_kind is None and suggested_candidate_name is None:
+        try:
+            from gametheca.utils.match_proposal import read_proposal_kind_hint
+
+            hint = read_proposal_kind_hint(folder_path)
+            suggested_kind = hint.get('suggested_kind')
+            suggested_candidate_name = hint.get('suggested_candidate_name')
+        except Exception:
+            pass
+
     existing_unmatched_folder = db.session.execute(select(UnmatchedFolder).filter_by(folder_path=folder_path)).scalar_one_or_none()
 
     if existing_unmatched_folder is None:
@@ -163,7 +211,12 @@ def log_unmatched_folder(scan_job_id, folder_path, matched_status, library_uuid=
             failed_time=datetime.now(timezone.utc),
             content_type='Games',
             library_uuid=library_uuid,
-            status=matched_status
+            status=matched_status,
+            matched_game_uuid=matched_game_uuid,
+            match_reason=match_reason,
+            match_score=match_score,
+            suggested_kind=suggested_kind,
+            suggested_candidate_name=suggested_candidate_name,
         )
         try:
             db.session.add(unmatched_folder)
@@ -172,11 +225,34 @@ def log_unmatched_folder(scan_job_id, folder_path, matched_status, library_uuid=
             print(f"[UNMATCHED] Status: {matched_status}")
             print(f"[UNMATCHED] Library UUID: {library_uuid}")
             print(f"[UNMATCHED] Scan Job ID: {scan_job_id}")
+            if match_reason:
+                print(f"[UNMATCHED] Match: {match_reason} score={match_score}")
+            if suggested_kind:
+                print(f"[UNMATCHED] suggested_kind={suggested_kind}")
         except IntegrityError:
             log_system_event(f"Failed to log unmatched folder: {folder_path}", event_type='scan', event_level='warning')
             db.session.rollback()
             print(f"[UNMATCHED ERROR] Failed to log unmatched folder due to a database error: {folder_path}")
     else:
+        # Refresh match metadata when re-encountered as Duplicate
+        if matched_status == 'Duplicate':
+            existing_unmatched_folder.status = 'Duplicate'
+            if matched_game_uuid:
+                existing_unmatched_folder.matched_game_uuid = matched_game_uuid
+            if match_reason:
+                existing_unmatched_folder.match_reason = match_reason
+            if match_score is not None:
+                existing_unmatched_folder.match_score = match_score
+        # Refresh kind hint when a newer proposal exists
+        if suggested_kind is not None:
+            existing_unmatched_folder.suggested_kind = suggested_kind
+        if suggested_candidate_name is not None:
+            existing_unmatched_folder.suggested_candidate_name = suggested_candidate_name
+        if matched_status == 'Duplicate' or suggested_kind is not None or suggested_candidate_name is not None:
+            try:
+                db.session.commit()
+            except SQLAlchemyError:
+                db.session.rollback()
         print(f"[UNMATCHED SKIPPED] Unmatched folder already logged for: {folder_path}. Status: {existing_unmatched_folder.status}")
         
 
@@ -242,7 +318,15 @@ def process_game_updates(game_name, full_disk_path, updates_folder, library_uuid
     
 
 
-def process_game_extras(game_name, full_disk_path, extras_folder, library_uuid, extras_folder_name=None):
+def process_game_extras(
+    game_name,
+    full_disk_path,
+    extras_folder,
+    library_uuid,
+    extras_folder_name=None,
+    *,
+    default_extra_kind=None,
+):
     # Use passed parameter or fallback to database query
     if extras_folder_name is None:
         settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
@@ -275,9 +359,12 @@ def process_game_extras(game_name, full_disk_path, extras_folder, library_uuid, 
             continue
 
         # Create or update GameExtra record
-        from gametheca.utils.rom_language import classify_patch_file
-
         patch_meta = classify_patch_file(extra_item) if os.path.isfile(extra_path) else None
+        folder_kind = None
+        if os.path.isdir(extra_path):
+            folder_kind = classify_pc_extra_folder(extra_item) or default_extra_kind
+        elif default_extra_kind:
+            folder_kind = default_extra_kind
         game_extra = db.session.execute(select(GameExtra).filter_by(game_uuid=game.uuid, file_path=extra_path)).scalar_one_or_none()
         if not game_extra:
             print(f"Creating new GameExtra record for {extra_path}")
@@ -295,6 +382,8 @@ def process_game_extras(game_name, full_disk_path, extras_folder, library_uuid, 
             game_extra.extra_kind = patch_meta['extra_kind']
             game_extra.patch_format = patch_meta['patch_format']
             game_extra.target_language = patch_meta['target_language']
+        elif folder_kind and not game_extra.extra_kind:
+            game_extra.extra_kind = folder_kind
 
     try:
         db.session.commit()
@@ -304,6 +393,75 @@ def process_game_extras(game_name, full_disk_path, extras_folder, library_uuid, 
         db.session.rollback()
 
     print(f"Finished processing extras for game: {game_name}")
+
+
+def process_pc_dlc_and_extra_roots(
+    game_name,
+    full_disk_path,
+    library_uuid,
+    *,
+    extras_folder_name=None,
+    update_folder_name=None,
+):
+    """PC-first: associate under-game DLC/extra folders and sibling DLC sidecars."""
+    library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalar_one_or_none()
+    if not library or not is_pc_library_platform(getattr(library, 'platform', None)):
+        return
+
+    for root in iter_pc_extra_roots(
+        full_disk_path,
+        configured_extras_name=extras_folder_name,
+        configured_updates_name=update_folder_name,
+        game_name=game_name,
+        include_sidecars=True,
+    ):
+        print(f"PC extra/DLC root found for {game_name}: {root['path']} ({root['extra_kind']})")
+        # Treat the folder itself as one GameExtra when it has no nested children to walk,
+        # and also walk children the same way as the configured extras folder.
+        process_game_extras(
+            game_name,
+            full_disk_path,
+            root['path'],
+            library_uuid,
+            extras_folder_name=extras_folder_name,
+            default_extra_kind=root['extra_kind'],
+        )
+        # Also register the root folder itself if it has no processable children.
+        game = db.session.execute(
+            select(Game).filter_by(full_disk_path=full_disk_path, library_uuid=library_uuid)
+        ).scalar_one_or_none()
+        if not game:
+            continue
+        existing = db.session.execute(
+            select(GameExtra).filter_by(game_uuid=game.uuid, file_path=root['path'])
+        ).scalar_one_or_none()
+        if existing:
+            if not existing.extra_kind:
+                existing.extra_kind = root['extra_kind']
+                try:
+                    db.session.commit()
+                except SQLAlchemyError:
+                    db.session.rollback()
+            continue
+        try:
+            children = [
+                n for n in os.listdir(root['path'])
+                if not n.lower().endswith(('.nfo', '.sfv'))
+            ]
+        except OSError:
+            children = []
+        if children:
+            continue
+        db.session.add(GameExtra(
+            game_uuid=game.uuid,
+            file_path=root['path'],
+            extra_kind=root['extra_kind'],
+            nfo_content=read_first_nfo_content(root['path']),
+        ))
+        try:
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
 
 
 def refresh_images_in_background(game_uuid):
@@ -337,7 +495,9 @@ def refresh_images_in_background(game_uuid):
 
                 cover_data = response_json[0].get('cover')
                 if cover_data:
-                    process_and_save_image(game.uuid, cover_data['id'], image_type='cover')
+                    # Pass the full cover object (id+url) so process_and_save_image
+                    # can reuse the URL without a second covers lookup.
+                    process_and_save_image(game.uuid, cover_data, image_type='cover')
 
                 screenshots_data = response_json[0].get('screenshots', [])
                 total_images = len(screenshots_data) + (1 if cover_data else 0)
@@ -345,7 +505,7 @@ def refresh_images_in_background(game_uuid):
 
                 if total_images > 0:
                     for screenshot in screenshots_data:
-                        process_and_save_image(game.uuid, screenshot['id'], image_type='screenshot')
+                        process_and_save_image(game.uuid, screenshot, image_type='screenshot')
                         processed += 1
                         progress = 60 + int((processed / total_images) * 30)
                         cache.set(f'image_refresh_progress_{game_uuid}', {'status': 'in_progress', 'progress': progress}, timeout=300)

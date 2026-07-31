@@ -1,13 +1,32 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { checkGameFreshness, fetchGameDetails, fetchGameVersions } from '../api/gameDetails'
+import {
+  checkGameFreshness,
+  cleanupOrphanVersions,
+  fetchGameDetails,
+  fetchGameVersions,
+} from '../api/gameDetails'
 import { attachPatchCatalogGuide, searchPatchCatalog } from '../api/patchCatalog'
 import { queueClientCommand } from '../api/clientCommands'
 import { BadgeStack } from '../components/BadgeStack'
+import { CheatsPanel } from '../components/CheatsPanel'
 import { ExternalStoreLinks } from '../components/ExternalStoreLinks'
 import { GameActionBar } from '../components/GameActionBar'
+import { OpenPathModal } from '../components/OpenPathModal'
 import { ScreenshotLightbox } from '../components/ScreenshotLightbox'
 import { coverUrl } from '../utils/coverUrl'
+import {
+  adminPathRows,
+  extrasPanelModel,
+  formatVersionSize,
+  isVersionDownloadable,
+  isVersionPathMissing,
+  trailerEmbedUrls,
+  youtubeDemoLink,
+} from '../utils/detailsMedia'
+import { formatLocaleDate } from '../utils/formatLocaleDate'
+import { ITEM_KIND_LABEL, resolveItemKind } from '../utils/itemKind'
+import { showToast } from '../utils/toast'
 import './GameDetailsPage.css'
 
 function formatPlaytime(seconds) {
@@ -23,14 +42,6 @@ function formatPlaytime(seconds) {
   return `${hours}h ${minutes}m`
 }
 
-function youtubeEmbed(url) {
-  if (!url || typeof url !== 'string') {
-    return null
-  }
-  const match = url.match(/(?:youtu\.be\/|v=)([\w-]{6,})/)
-  return match ? `https://www.youtube.com/embed/${match[1]}` : null
-}
-
 export function GameDetailsPage() {
   const { gameUuid } = useParams()
   const [game, setGame] = useState(null)
@@ -41,11 +52,18 @@ export function GameDetailsPage() {
   const [freshnessError, setFreshnessError] = useState(null)
   const [busyVersionKey, setBusyVersionKey] = useState(null)
   const [versionActionStatus, setVersionActionStatus] = useState(null)
+  const [cleanupBusy, setCleanupBusy] = useState(false)
   const [selectedCore, setSelectedCore] = useState('')
   const [catalogHits, setCatalogHits] = useState([])
   const [catalogBusy, setCatalogBusy] = useState(false)
   const [catalogStatus, setCatalogStatus] = useState(null)
   const [shotIndex, setShotIndex] = useState(null)
+  const [videoIndex, setVideoIndex] = useState(null)
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false)
+  const [summaryExpanded, setSummaryExpanded] = useState(false)
+  const [pathModal, setPathModal] = useState(null)
+  const [versionsLoading, setVersionsLoading] = useState(true)
+  const adminMenuRef = useRef(null)
 
   useEffect(() => {
     if (!gameUuid) {
@@ -55,6 +73,7 @@ export function GameDetailsPage() {
     let active = true
     setError(null)
     setGame(null)
+    setVersionsLoading(true)
 
     Promise.all([
       fetchGameDetails(gameUuid, { signal: controller.signal }),
@@ -66,10 +85,12 @@ export function GameDetailsPage() {
         }
         setGame(details)
         setVersions(Array.isArray(versionData.versions) ? versionData.versions : [])
+        setVersionsLoading(false)
       })
       .catch((err) => {
         if (active && err.name !== 'AbortError') {
           setError(err)
+          setVersionsLoading(false)
         }
       })
 
@@ -85,12 +106,33 @@ export function GameDetailsPage() {
     }
   }, [game?.emulator_core, game?.uuid])
 
-  const videoEmbeds = useMemo(() => {
-    if (!game?.video_urls) {
-      return []
+  useEffect(() => {
+    if (!adminMenuOpen) return undefined
+    function onDocClick(event) {
+      if (!adminMenuRef.current?.contains(event.target)) {
+        setAdminMenuOpen(false)
+      }
     }
-    return game.video_urls.map(youtubeEmbed).filter(Boolean)
-  }, [game])
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [adminMenuOpen])
+
+  const videoEmbeds = useMemo(() => trailerEmbedUrls(game), [game])
+
+  const demoLink = useMemo(() => youtubeDemoLink(game), [game])
+  const pathRows = useMemo(() => adminPathRows(game), [game])
+  const extrasModel = useMemo(
+    () => extrasPanelModel(game, versions, { loading: versionsLoading }),
+    [game, versions, versionsLoading],
+  )
+  const baseAndUpdates = useMemo(
+    () => versions.filter((row) => row.kind === 'base' || row.kind === 'update'),
+    [versions],
+  )
+  const hasMissingVersions = useMemo(
+    () => baseAndUpdates.some((row) => isVersionPathMissing(row)),
+    [baseAndUpdates],
+  )
 
   const playHref = useMemo(() => {
     if (!game?.can_play_in_browser) {
@@ -126,11 +168,40 @@ export function GameDetailsPage() {
       )
     } catch (err) {
       setFreshnessError(err)
-      if (window.$?.notify) {
-        window.$.notify(err?.message || 'Freshness check failed', 'error')
-      }
+      showToast(err?.message || 'Freshness check failed', 'error')
     } finally {
       setFreshnessBusy(false)
+    }
+  }
+
+  async function handleCleanupOrphans() {
+    if (!gameUuid || cleanupBusy || !game?.is_admin) {
+      return
+    }
+    setCleanupBusy(true)
+    setVersionActionStatus(null)
+    try {
+      const result = await cleanupOrphanVersions(gameUuid)
+      const removed =
+        Number(result.removed ?? result.removed_count ?? result.count ?? 0) || 0
+      const message =
+        result.message ||
+        (removed > 0
+          ? `Removed ${removed} missing version${removed === 1 ? '' : 's'}`
+          : 'No missing versions to remove')
+      setVersionActionStatus(message)
+      showToast(message, 'success')
+      const versionData = await fetchGameVersions(gameUuid).catch(() => ({ versions: [] }))
+      setVersions(Array.isArray(versionData.versions) ? versionData.versions : [])
+    } catch (err) {
+      const message =
+        err?.status === 404
+          ? 'Orphan cleanup is not available on this server yet'
+          : err?.message || 'Failed to remove missing versions'
+      setVersionActionStatus(message)
+      showToast(message, err?.status === 404 ? 'info' : 'error')
+    } finally {
+      setCleanupBusy(false)
     }
   }
 
@@ -154,6 +225,8 @@ export function GameDetailsPage() {
       </div>
     )
   }
+
+  const itemKind = resolveItemKind(game)
 
   return (
     <div className="gt-more-page gt-details-page">
@@ -183,11 +256,26 @@ export function GameDetailsPage() {
         <div className="gt-details-page__hero-main">
           <h1>{game.name}</h1>
           <p className="gt-details-page__meta-line">
-            {[game.developer, game.publisher, game.category, game.first_release_date]
+            {[
+              game.developer,
+              game.publisher,
+              game.category,
+              game.first_release_date
+                ? formatLocaleDate(game.first_release_date, { fallback: null })
+                : null,
+            ]
               .filter(Boolean)
               .join(' · ')}
           </p>
           <div className="gt-details-page__chips">
+            {itemKind !== 'game' ? (
+              <span
+                className="chip"
+                title="Library item kind — gaming software, not a main-game catalog match"
+              >
+                {ITEM_KIND_LABEL[itemKind]}
+              </span>
+            ) : null}
             {game.local_version ? (
               <span className="chip" title="Installed / library version">
                 Version {game.local_version}
@@ -227,6 +315,51 @@ export function GameDetailsPage() {
             clientConnected={Boolean(game.client_connected)}
             variant="full"
           />
+          {game.is_admin ? (
+            <div className="gt-details-page__admin-menu" ref={adminMenuRef}>
+              <button
+                type="button"
+                className="gt-btn gt-details-page__admin-menu-btn"
+                aria-expanded={adminMenuOpen}
+                aria-haspopup="menu"
+                aria-label="Admin actions"
+                onClick={() => setAdminMenuOpen((open) => !open)}
+              >
+                ⋮
+              </button>
+              {adminMenuOpen ? (
+                <div className="gt-details-page__admin-menu-panel" role="menu">
+                  <a
+                    className="gt-details-page__admin-menu-item"
+                    role="menuitem"
+                    href={`/game_edit/${game.uuid}`}
+                  >
+                    Edit Details
+                  </a>
+                  <a
+                    className="gt-details-page__admin-menu-item"
+                    role="menuitem"
+                    href={`/edit_game_images/${game.uuid}`}
+                  >
+                    Edit Images
+                  </a>
+                  {pathRows[0] ? (
+                    <button
+                      type="button"
+                      className="gt-details-page__admin-menu-item"
+                      role="menuitem"
+                      onClick={() => {
+                        setAdminMenuOpen(false)
+                        setPathModal(pathRows[0])
+                      }}
+                    >
+                      Open path
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           <div className="gt-details-page__quick">
             {playHref ? (
               <>
@@ -291,12 +424,104 @@ export function GameDetailsPage() {
         </div>
       </div>
 
-      {game.summary ? (
-        <section className="gt-details-page__section">
-          <h2>Summary</h2>
-          <p className="gt-details-page__summary">{game.summary}</p>
+      <div className="gt-details-page__content-grid">
+        {game.summary ? (
+          <section className="gt-details-page__section gt-details-page__section--summary">
+            <h2>Summary</h2>
+            <p
+              className={`gt-details-page__summary${summaryExpanded ? ' is-expanded' : ''}`}
+            >
+              {game.summary}
+            </p>
+            {String(game.summary).length > 420 ? (
+              <button
+                type="button"
+                className="gt-btn gt-details-page__summary-toggle"
+                onClick={() => setSummaryExpanded((open) => !open)}
+              >
+                {summaryExpanded ? 'Show less' : 'Show more'}
+              </button>
+            ) : null}
+          </section>
+        ) : null}
+
+        <section className="gt-details-page__section gt-details-page__section--facts">
+          <h2>Details</h2>
+          {pathRows.length > 0 ? (
+            <div className="gt-details-page__paths" aria-label="Admin paths">
+              {pathRows.map((row) => (
+                <div key={`${row.label}-${row.path}`} className="gt-details-page__path-row">
+                  <span className="gt-details-page__path-label">{row.label}</span>
+                  <code className="gt-details-page__path-value" title={row.path}>
+                    {row.path}
+                  </code>
+                  <button
+                    type="button"
+                    className="gt-btn"
+                    onClick={() => setPathModal(row)}
+                  >
+                    Open path
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <dl className="gt-details-page__facts">
+            {game.rating != null ? (
+              <>
+                <dt>Rating</dt>
+                <dd>
+                  {Number(game.rating).toFixed(0)}
+                  {game.rating_count ? ` (${game.rating_count})` : ''}
+                </dd>
+              </>
+            ) : null}
+            {game.genres?.length ? (
+              <>
+                <dt>Genres</dt>
+                <dd>
+                  {game.genres.map((name) => (
+                    <Link key={name} className="chip" to={`/library?genre=${encodeURIComponent(name)}`}>
+                      {name}
+                    </Link>
+                  ))}
+                </dd>
+              </>
+            ) : null}
+            {game.themes?.length ? (
+              <>
+                <dt>Themes</dt>
+                <dd>{game.themes.join(', ')}</dd>
+              </>
+            ) : null}
+            {game.platforms?.length ? (
+              <>
+                <dt>IGDB platforms</dt>
+                <dd>{game.platforms.join(', ')}</dd>
+              </>
+            ) : null}
+            {game.game_modes?.length ? (
+              <>
+                <dt>Modes</dt>
+                <dd>{game.game_modes.join(', ')}</dd>
+              </>
+            ) : null}
+            <dt>Playtime</dt>
+            <dd>
+              {formatPlaytime(game.playtime?.total_seconds)}
+              {game.playtime?.session_count
+                ? ` · ${game.playtime.session_count} session${game.playtime.session_count === 1 ? '' : 's'}`
+                : ''}
+            </dd>
+            {game.times_downloaded != null ? (
+              <>
+                <dt>Downloads</dt>
+                <dd>{game.times_downloaded}</dd>
+              </>
+            ) : null}
+          </dl>
         </section>
-      ) : null}
+      </div>
 
       {game.show_translations_block ? (
         <section className="gt-details-page__section" id="translations">
@@ -356,18 +581,11 @@ export function GameDetailsPage() {
                               })
                                 .then(() => {
                                   setVersionActionStatus(`${patch.label} queued for companion apply`)
-                                  if (window.$?.notify) {
-                                    window.$.notify(
-                                      `${patch.label} queued for companion apply`,
-                                      'success',
-                                    )
-                                  }
+                                  showToast(`${patch.label} queued for companion apply`, 'success')
                                 })
                                 .catch((err) => {
                                   setVersionActionStatus(err?.message || 'Failed to queue apply')
-                                  if (window.$?.notify) {
-                                    window.$.notify(err?.message || 'Queue failed', 'error')
-                                  }
+                                  showToast(err?.message || 'Queue failed', 'error')
                                 })
                                 .finally(() => {
                                   setBusyVersionKey(null)
@@ -491,9 +709,7 @@ export function GameDetailsPage() {
                               })
                                 .then(() => {
                                   setCatalogStatus('Guide attached to game')
-                                  if (window.$?.notify) {
-                                    window.$.notify('Guide attached', 'success')
-                                  }
+                                  showToast('Guide attached', 'success')
                                   setRetryCount((n) => n + 1)
                                 })
                                 .catch((err) => {
@@ -517,99 +733,72 @@ export function GameDetailsPage() {
         </section>
       ) : null}
 
-      <section className="gt-details-page__section">
-        <h2>Details</h2>
-        <dl className="gt-details-page__facts">
-          {game.rating != null ? (
-            <>
-              <dt>Rating</dt>
-              <dd>
-                {Number(game.rating).toFixed(0)}
-                {game.rating_count ? ` (${game.rating_count})` : ''}
-              </dd>
-            </>
-          ) : null}
-          {game.genres?.length ? (
-            <>
-              <dt>Genres</dt>
-              <dd>
-                {game.genres.map((name) => (
-                  <Link key={name} className="chip" to={`/library?genre=${encodeURIComponent(name)}`}>
-                    {name}
-                  </Link>
-                ))}
-              </dd>
-            </>
-          ) : null}
-          {game.themes?.length ? (
-            <>
-              <dt>Themes</dt>
-              <dd>{game.themes.join(', ')}</dd>
-            </>
-          ) : null}
-          {game.platforms?.length ? (
-            <>
-              <dt>IGDB platforms</dt>
-              <dd>{game.platforms.join(', ')}</dd>
-            </>
-          ) : null}
-          {game.game_modes?.length ? (
-            <>
-              <dt>Modes</dt>
-              <dd>{game.game_modes.join(', ')}</dd>
-            </>
-          ) : null}
-          <dt>Playtime</dt>
-          <dd>
-            {formatPlaytime(game.playtime?.total_seconds)}
-            {game.playtime?.session_count
-              ? ` · ${game.playtime.session_count} session${game.playtime.session_count === 1 ? '' : 's'}`
-              : ''}
-          </dd>
-          {game.times_downloaded != null ? (
-            <>
-              <dt>Downloads</dt>
-              <dd>{game.times_downloaded}</dd>
-            </>
-          ) : null}
-        </dl>
-      </section>
-
-      {versions.length > 0 ? (
+      {baseAndUpdates.length > 0 ? (
         <section className="gt-details-page__section" id="updates">
-          <h2>Versions & extras</h2>
+          <div className="gt-details-page__section-head">
+            <h2>Versions</h2>
+            {game.is_admin ? (
+              <button
+                type="button"
+                className="gt-btn gt-btn--secondary"
+                disabled={cleanupBusy}
+                onClick={() => void handleCleanupOrphans()}
+                title={
+                  hasMissingVersions
+                    ? 'Remove version rows whose files are missing on disk'
+                    : 'Scan and remove orphaned version rows'
+                }
+              >
+                {cleanupBusy ? 'Removing…' : 'Remove missing versions'}
+              </button>
+            ) : null}
+          </div>
           {versionActionStatus ? (
             <p className="gt-details-page__muted" role="status">
               {versionActionStatus}
             </p>
           ) : null}
           <ul className="gt-details-page__versions">
-            {versions.map((row) => {
+            {baseAndUpdates.map((row) => {
               const downloadHref =
                 row.kind === 'base'
                   ? `/download_game/${game.uuid}`
                   : `/download_other/${row.kind}/${game.uuid}/${row.uuid}`
               const versionKey = `${row.kind}:${row.uuid}`
+              const canDownload = isVersionDownloadable(row)
+              const pathMissing = isVersionPathMissing(row)
+              const sizeLabel = formatVersionSize(row.size)
               const canApply =
-                Boolean(game.client_connected) &&
-                (row.kind === 'update' || row.kind === 'extra')
+                Boolean(game.client_connected) && row.kind === 'update' && canDownload
               const applyBusy = busyVersionKey === versionKey
               return (
                 <li key={`${row.kind}-${row.id || row.uuid}`}>
                   <div className="gt-details-page__version-row">
-                    <div>
+                    <div className="gt-details-page__version-meta">
                       <strong>{row.label}</strong>
+                      {row.is_default ? (
+                        <span className="chip" title="Default download version">
+                          Default
+                        </span>
+                      ) : null}
                       <span className="gt-details-page__muted">
                         {' '}
                         · {row.kind}
-                        {row.is_default ? ' · default' : ''}
-                        {row.size ? ` · ${row.size}` : ''}
+                        {sizeLabel ? ` · ${sizeLabel}` : ''}
                       </span>
+                      {pathMissing ? (
+                        <span className="gt-details-page__muted gt-details-page__version-missing">
+                          {' '}
+                          · Missing on disk
+                        </span>
+                      ) : null}
                     </div>
                     <div className="gt-details-page__version-actions">
-                      <a className="gt-btn" href={downloadHref}>
-                        Download
-                      </a>
+                      {canDownload ? (
+                        <a className="gt-btn" href={downloadHref}>
+                          Download
+                        </a>
+                      ) : null}
                       {canApply ? (
                         <button
                           type="button"
@@ -624,15 +813,11 @@ export function GameDetailsPage() {
                             })
                               .then(() => {
                                 setVersionActionStatus(`${row.label} queued for companion`)
-                                if (window.$?.notify) {
-                                  window.$.notify(`${row.label} queued for companion`, 'success')
-                                }
+                                showToast(`${row.label} queued for companion`, 'success')
                               })
                               .catch((err) => {
                                 setVersionActionStatus(err?.message || 'Failed to queue apply')
-                                if (window.$?.notify) {
-                                  window.$.notify(err?.message || 'Queue failed', 'error')
-                                }
+                                showToast(err?.message || 'Queue failed', 'error')
                               })
                               .finally(() => {
                                 setBusyVersionKey(null)
@@ -651,6 +836,90 @@ export function GameDetailsPage() {
         </section>
       ) : null}
 
+      <CheatsPanel
+        gameUuid={game.uuid}
+        playHref={playHref}
+        libraryPlatform={game.library_platform || ''}
+      />
+
+      <section className="gt-details-page__section" id="extras">
+        <h2>Extras &amp; DLC</h2>
+        {extrasModel.loading ? (
+          <p className="gt-details-page__muted">Loading extras…</p>
+        ) : extrasModel.rows.length === 0 ? (
+          <p className="gt-details-page__muted">
+            No extras or DLC listed for this title yet.
+          </p>
+        ) : (
+          <ul className="gt-details-page__versions">
+            {extrasModel.rows.map((row) => {
+              const versionKey = `extra:${row.uuid || row.id}`
+              const applyBusy = busyVersionKey === versionKey
+              const onServer =
+                row.on_server === true ? 'On server' : row.on_server === false ? 'Not on server' : null
+              const sizeLabel = formatVersionSize(row.size)
+              const pathMissing = row.path_missing === true || isVersionPathMissing(row)
+              return (
+                <li key={row.id || row.uuid || row.label}>
+                  <div className="gt-details-page__version-row">
+                    <div className="gt-details-page__version-meta">
+                      <strong>{row.label}</strong>
+                      <span className="gt-details-page__muted">
+                        {' '}
+                        · {row.kind}
+                        {sizeLabel ? ` · ${sizeLabel}` : ''}
+                        {onServer ? ` · ${onServer}` : ''}
+                      </span>
+                      {pathMissing ? (
+                        <span className="gt-details-page__muted gt-details-page__version-missing">
+                          {' '}
+                          · Missing on disk
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="gt-details-page__version-actions">
+                      {row.download_url ? (
+                        <a className="gt-btn" href={row.download_url}>
+                          Download
+                        </a>
+                      ) : null}
+                      {game.client_connected && row.uuid && row.download_url ? (
+                        <button
+                          type="button"
+                          className="gt-btn"
+                          disabled={Boolean(busyVersionKey)}
+                          onClick={() => {
+                            setBusyVersionKey(versionKey)
+                            setVersionActionStatus(null)
+                            void queueClientCommand(game.uuid, 'update', {
+                              kind: 'extra',
+                              versionUuid: row.uuid,
+                            })
+                              .then(() => {
+                                setVersionActionStatus(`${row.label} queued for companion`)
+                                showToast(`${row.label} queued for companion`, 'success')
+                              })
+                              .catch((err) => {
+                                setVersionActionStatus(err?.message || 'Failed to queue apply')
+                                showToast(err?.message || 'Queue failed', 'error')
+                              })
+                              .finally(() => {
+                                setBusyVersionKey(null)
+                              })
+                          }}
+                        >
+                          {applyBusy ? 'Queuing…' : 'Apply with companion'}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
+
       {game.screenshots?.length ? (
         <section className="gt-details-page__section">
           <h2>Screenshots</h2>
@@ -661,7 +930,9 @@ export function GameDetailsPage() {
                 type="button"
                 className="gt-details-page__shot"
                 onClick={() => setShotIndex(index)}
+                onDoubleClick={() => setShotIndex(index)}
                 aria-label={`Open screenshot ${index + 1}`}
+                title="Click to open · double-click for fullscreen viewer"
               >
                 <img src={url} alt="" loading="lazy" />
               </button>
@@ -676,22 +947,59 @@ export function GameDetailsPage() {
         onClose={() => setShotIndex(null)}
       />
 
-      {videoEmbeds.length > 0 ? (
-        <section className="gt-details-page__section">
-          <h2>Videos</h2>
+      <section className="gt-details-page__section">
+        <h2>Trailers &amp; videos</h2>
+        {videoEmbeds.length > 0 ? (
           <div className="gt-details-page__videos">
-            {videoEmbeds.map((src) => (
-              <iframe
-                key={src}
-                title="Game trailer"
-                src={src}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+            {videoEmbeds.map((src, index) => (
+              <div key={src} className="gt-details-page__video-card">
+                <iframe
+                  title={`Game trailer ${index + 1}`}
+                  src={src}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  allowFullScreen
+                />
+                <div className="gt-details-page__video-actions">
+                  <button
+                    type="button"
+                    className="gt-btn"
+                    onClick={() => setVideoIndex(index)}
+                  >
+                    Fullscreen
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
-        </section>
-      ) : null}
+        ) : demoLink ? (
+          <p className="gt-details-page__muted">
+            No embedded trailer yet.{' '}
+            <a className="gt-btn" href={demoLink.href} target="_blank" rel="noreferrer">
+              {demoLink.label}
+            </a>
+          </p>
+        ) : (
+          <p className="gt-details-page__muted">
+            No trailers or videos for this title yet.
+          </p>
+        )}
+      </section>
+
+      <ScreenshotLightbox
+        mode="videos"
+        videos={videoEmbeds}
+        openIndex={videoIndex}
+        onClose={() => setVideoIndex(null)}
+      />
+
+      <OpenPathModal
+        open={Boolean(pathModal)}
+        path={pathModal?.path || ''}
+        label={pathModal?.label || 'Path'}
+        gameUuid={game.uuid}
+        clientConnected={Boolean(game.client_connected)}
+        onClose={() => setPathModal(null)}
+      />
     </div>
   )
 }

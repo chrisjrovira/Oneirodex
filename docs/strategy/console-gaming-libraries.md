@@ -53,8 +53,20 @@ Treat family folders as **navigation only**. Library `folder` must be the **ROM/
 | Stray PC / wrong-platform folders inside a console leaf | Leave on disk or move under `_pc`; do **not** fix via deep scan of the family |
 | Multipart `.rar` / incomplete sets (common under `MAME`) | Prefer extracted ROM dirs elsewhere, or defer library until extract; archive-only parents stay excluded |
 | Platform with no `LibraryPlatform` enum yet | Catalog as `OTHER` **or** defer until enum exists (see gaps) — do not invent play CTAs |
+| Emulator *install tree* that also nests a `ROMs` / dump leaf (e.g. portable PS1 / PSP apps) | Library the **ROM/dump leaf only** — never the emu root (`BIOS`, `plugins`, `memcards`, frontend exe, …) |
 
 **Allowed extensions** still gate `files` mode (`AllowedFileType`). Confirm ROM/disc extensions for that platform are enabled before a full scan. Prefer a small propose-only / test scan first.
+
+### Suggested apply order (capability)
+
+Ops creates leaf libs in this order when standing up the console tree (exact on-disk paths stay in the private Ops checklist):
+
+1. **NES** — typo Entertainment System leaf · prefer **folders** when title dirs dominate (mixed loose archives at the same leaf are a later consolidate chore, not a second lib on the family).  
+2. **Genesis / Mega Drive** — flat dump-set leaf (**files**) and/or `…/Genesis/ROMs` (**folders**); decide twin coverage before dual-scanning the same titles.  
+3. **PS1** — **`…/PlayStation/ROMs`** (**files**); never the portable emulator parent. Enable archive extensions if dumps are `.rar`/`.7z`.  
+4. Then as needed: **Neo Geo** AES dump and/or `Neo Geo/ROMs` · **PSP** `ROMs` leaf (not PPSSPP root) · **Switch** title-dir leaf · **Arcade/ROMs** (slice test first).
+
+Private Ops checklist (paths + accept boxes): `docs/_private/console-leaf-libs-checklist-2026-07-29.md` (gitignored vault).
 
 **Docker / Unraid:** map the share under `/storage/...` and use the container path as library folder (same as PC libs). Volume is often `:ro` — scans identify metadata; they do not rewrite the share.
 
@@ -119,14 +131,14 @@ Loose emulator zips/exes at the `Sega` parent: **never** part of a library root 
 
 | Disk leaf | `LibraryPlatform` | Mode | Depth |
 |---|---|---|---|
-| PS1 / PSX / PlayStation | `PSX` | files / folders | 1 |
+| PS1 / PSX / PlayStation **`…/ROMs`** (or flat dump leaf) — **not** a portable ePSXe/DuckStation install root | `PSX` | files / folders | 1 |
 | PS2 | `PS2` | folders often | 1 |
 | PS3 | `PS3` | folders | 1 |
 | PS4 / PS5 (if present) | `PS4` / `PS5` | folders | 1 | PS5 catalog-only play mode |
-| PSP (if present) | **`PSP`** · **companion** | files / folders | 1 | PPSSPP BYO; no WebRetro |
+| PSP **`…/ROMs`** (if present) — **not** a PPSSPP install root | **`PSP`** · **companion** | files / folders | 1 | PPSSPP BYO; no WebRetro |
 | PS Vita | `PSVITA` | folders | 1 |
 
-Skip: `duckstation-*` and other Sony-side emu installs at family or root.
+Skip: `duckstation-*` and other Sony-side emu installs at family or root. If a “PlayStation” folder is itself an emulator tree (`BIOS`, `plugins`, `memcards`, frontend `.exe`), point the library at its nested **ROMs** / dump leaf only.
 
 ### Atari (`ATARI/…`)
 
@@ -241,7 +253,7 @@ Priority lean: ops on per-leaf libs + skip-dir ≫ **LOCKED enum add** ≫ depth
 
 | Seat | Ask |
 |---|---|
-| **Ops / Admin** | Create one library per ROM leaf from the tables; exclude list; typo NES path as-is; test-scan before Arcade ~6k |
+| **Ops / Admin** | Create one library per ROM leaf from the tables; follow **Suggested apply order**; exclude list; typo NES path as-is; library nested `ROMs` under emu trees (PS1/PSP); test-scan before Arcade ~6k; private path checklist when available |
 | **@agent-backend** | LOCKED enum add list **shipped (code)**; scan DoD items 2–5 as needed |
 | **@agent-docs** | Keep [libraries-and-scans.md](../admin/libraries-and-scans.md) pointer current; program canvas when wave lands |
 | **@agent-uiux** | No UI required for ops brief; Systems badges already follow `LibraryPlatform` |

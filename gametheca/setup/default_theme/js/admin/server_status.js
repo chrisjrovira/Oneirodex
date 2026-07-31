@@ -1,7 +1,6 @@
-// Initialize data from template
+// Server Status page — CPU aurora meter + charts
 let cpuUsage, memoryUsage, diskUsage, gamesUsage;
 
-// Function to initialize data passed from template
 function initializeServerData(data) {
     cpuUsage = data.cpuUsage;
     memoryUsage = data.memoryUsage;
@@ -9,24 +8,29 @@ function initializeServerData(data) {
     gamesUsage = data.gamesUsage;
 }
 
-// Update CPU progress bar color based on usage
 function updateCpuBar() {
     const cpuBar = document.getElementById('cpuBar');
-    if (!cpuBar || !cpuUsage) return;
-    
-    if (cpuUsage > 90) {
-        cpuBar.classList.add('bg-danger');
-    } else if (cpuUsage > 50) {
-        cpuBar.classList.add('bg-warning');
-    } else {
-        cpuBar.classList.add('bg-success');
+    const cpuMeter = document.getElementById('cpuMeter');
+    const label = cpuMeter ? cpuMeter.querySelector('.gt-meter__label') : null;
+    if (!cpuBar || cpuUsage == null) return;
+
+    const pct = Number(cpuUsage) || 0;
+    cpuBar.style.width = pct + '%';
+    if (label) label.textContent = pct + '%';
+    if (cpuMeter) {
+        cpuMeter.setAttribute('aria-valuenow', String(pct));
+        cpuMeter.classList.remove('is-warn', 'is-danger');
+        if (pct > 90) {
+            cpuMeter.classList.add('is-danger');
+        } else if (pct > 50) {
+            cpuMeter.classList.add('is-warn');
+        }
     }
 }
 
-// Initialize Memory Usage Chart
 function initializeMemoryChart() {
     if (!memoryUsage) return;
-    
+
     const chartData = {
         labels: ['Used', 'Available'],
         datasets: [{
@@ -55,10 +59,9 @@ function initializeMemoryChart() {
     createChart('memoryChart', 'pie', chartData, chartOptions);
 }
 
-// Initialize Disk Usage Chart
 function initializeDiskChart() {
     if (!diskUsage) return;
-    
+
     const chartData = {
         labels: ['Used', 'Free'],
         datasets: [{
@@ -87,10 +90,9 @@ function initializeDiskChart() {
     createChart('diskChart', 'pie', chartData, chartOptions);
 }
 
-// Initialize Games Folder Usage Chart
 function initializeGamesDiskChart() {
     if (!gamesUsage) return;
-    
+
     const chartData = {
         labels: ['Used', 'Free'],
         datasets: [{
@@ -119,7 +121,6 @@ function initializeGamesDiskChart() {
     createChart('gamesDiskChart', 'pie', chartData, chartOptions);
 }
 
-// Initialize all charts and components
 function initializeServerStatus() {
     updateCpuBar();
     initializeMemoryChart();

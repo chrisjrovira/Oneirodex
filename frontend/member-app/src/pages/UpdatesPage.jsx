@@ -1,7 +1,13 @@
-﻿import { useEffect, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { fetchCalendar } from '../api/calendar'
 import { queueClientCommand } from '../api/clientCommands'
 import { addWantedUpdate, fetchStoreSearch, fetchUpdatesInbox } from '../api/updates'
+import { formatLocaleDate } from '../utils/formatLocaleDate'
+import { showToast } from '../utils/toast'
+
+const INBOX_POLL_MS = 50000
+const CALENDAR_TEASER_LIMIT = 5
 
 export function UpdatesPage() {
   const [items, setItems] = useState(null)
@@ -14,31 +20,115 @@ export function UpdatesPage() {
   const [searchError, setSearchError] = useState(null)
   const [busyKey, setBusyKey] = useState(null)
   const [statusByUuid, setStatusByUuid] = useState({})
+  const [manualRefreshing, setManualRefreshing] = useState(false)
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(null)
+  const [calendarTeaser, setCalendarTeaser] = useState(null)
   const searchRequestId = useRef(0)
+  const hasItemsRef = useRef(false)
+  const inboxRequestRef = useRef({ id: 0, controller: null })
+
+  const refreshInbox = useCallback((sourceMode = 'boot') => {
+    const isManual = sourceMode === 'manual'
+    const isBoot = sourceMode === 'boot' || sourceMode === 'retry'
+    inboxRequestRef.current.controller?.abort()
+    const controller = new AbortController()
+    const id = inboxRequestRef.current.id + 1
+    inboxRequestRef.current = { id, controller }
+
+    if (isManual) setManualRefreshing(true)
+    if (isBoot) {
+      setError(null)
+      if (!hasItemsRef.current) setItems(null)
+    }
+
+    return fetchUpdatesInbox({ signal: controller.signal, limit: 100 })
+      .then((data) => {
+        if (inboxRequestRef.current.id !== id || controller.signal.aborted) return
+        const next = Array.isArray(data.items) ? data.items : []
+        setItems(next)
+        setError(null)
+        setLastUpdatedAt(new Date())
+        hasItemsRef.current = true
+      })
+      .catch((err) => {
+        if (err.name === 'AbortError') return
+        if (inboxRequestRef.current.id !== id) return
+        setError(err)
+        if (isBoot && !hasItemsRef.current) setItems(null)
+      })
+      .finally(() => {
+        if (inboxRequestRef.current.id === id && isManual) {
+          setManualRefreshing(false)
+        }
+      })
+  }, [])
+
+  useEffect(() => {
+    void refreshInbox(retryCount === 0 ? 'boot' : 'retry')
+    return () => {
+      inboxRequestRef.current.controller?.abort()
+    }
+  }, [retryCount, refreshInbox])
+
+  useEffect(() => {
+    let timer = 0
+
+    function clearPoll() {
+      if (timer) {
+        window.clearInterval(timer)
+        timer = 0
+      }
+    }
+
+    function startPoll() {
+      clearPoll()
+      if (document.visibilityState === 'hidden') return
+      timer = window.setInterval(() => {
+        if (document.visibilityState === 'hidden') return
+        void refreshInbox('poll')
+      }, INBOX_POLL_MS)
+    }
+
+    function onVisibility() {
+      if (document.visibilityState === 'visible') {
+        void refreshInbox('poll')
+        startPoll()
+      } else {
+        clearPoll()
+      }
+    }
+
+    startPoll()
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      clearPoll()
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [refreshInbox])
 
   useEffect(() => {
     const controller = new AbortController()
     let active = true
-    setError(null)
-    setItems(null)
-
-    fetchUpdatesInbox({ signal: controller.signal, limit: 100 })
+    fetchCalendar({
+      signal: controller.signal,
+      daysAhead: 45,
+      daysBehind: 0,
+      limit: CALENDAR_TEASER_LIMIT,
+    })
       .then((data) => {
-        if (active) {
-          setItems(Array.isArray(data.items) ? data.items : [])
-        }
+        if (!active) return
+        const releases = Array.isArray(data.releases) ? data.releases : []
+        setCalendarTeaser(releases.slice(0, CALENDAR_TEASER_LIMIT))
       })
       .catch((err) => {
-        if (active && err.name !== 'AbortError') {
-          setError(err)
-        }
+        if (!active || err.name === 'AbortError') return
+        setCalendarTeaser([])
       })
-
     return () => {
       active = false
       controller.abort()
     }
-  }, [retryCount])
+  }, [])
 
   async function handleSearch(event) {
     event.preventDefault()
@@ -83,9 +173,7 @@ export function UpdatesPage() {
         ...prev,
         [game.uuid]: `${pack.kind} queued for companion`,
       }))
-      if (window.$?.notify) {
-        window.$.notify(`${pack.label} queued for companion`, 'success')
-      }
+      showToast(`${pack.label} queued for companion`, 'success')
     } catch (err) {
       setStatusByUuid((prev) => ({
         ...prev,
@@ -98,17 +186,40 @@ export function UpdatesPage() {
 
   return (
     <div className="gt-more-page gt-updates">
-      <div className="gt-page-header">
-        <h1>Updates</h1>
+      <div className="gt-page-header gt-updates__header">
+        <div>
+          <h1>Updates</h1>
+          <p className="gt-more-page__lede">
+            Library titles that look behind store versions. Download local Update/DLC packs from your
+            library, or queue the companion to apply them. Store search is discovery-only (Steam / GOG
+            links).
+          </p>
+        </div>
+        <div className="gt-updates__refresh">
+          {manualRefreshing ? (
+            <span className="gt-updates__refresh-status" role="status" aria-live="polite">
+              Refreshing…
+            </span>
+          ) : lastUpdatedAt ? (
+            <span className="gt-updates__refresh-status gt-updates__refresh-status--muted">
+              Updated {lastUpdatedAt.toLocaleTimeString()}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className="gt-btn"
+            disabled={manualRefreshing || (!items && !error)}
+            onClick={() => void refreshInbox('manual')}
+          >
+            {manualRefreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
       </div>
-      <p className="gt-more-page__lede">
-        Library titles that look behind store versions. Download local Update/DLC packs from your
-        library, or queue the companion to apply them. Store search is discovery-only (Steam / GOG
-        links).
-      </p>
 
-      <section className="gt-updates__search gt-glass-panel">
-        <h2>Search stores</h2>
+      <section className="gt-updates__search">
+        <div className="gt-updates__section-head">
+          <h2>Search stores</h2>
+        </div>
         <form className="gt-updates__search-form" onSubmit={handleSearch}>
           <label>
             Game name
@@ -177,14 +288,10 @@ export function UpdatesPage() {
                             store_id: String(hit.steam_app_id || hit.gog_id || ''),
                           })
                             .then(() => {
-                              if (window.$?.notify) {
-                                window.$.notify('Added to wanted updates', 'success')
-                              }
+                              showToast('Added to wanted updates', 'success')
                             })
                             .catch((err) => {
-                              if (window.$?.notify) {
-                                window.$.notify(err?.message || 'Wanted failed', 'error')
-                              }
+                              showToast(err?.message || 'Wanted failed', 'error')
                             })
                         }}
                       >
@@ -200,7 +307,9 @@ export function UpdatesPage() {
       </section>
 
       <section className="gt-updates__inbox">
-        <h2>Library freshness inbox</h2>
+        <div className="gt-updates__section-head">
+          <h2>Library freshness inbox</h2>
+        </div>
         {error ? (
           <div role="alert">
             <p>Unable to load updates.</p>
@@ -274,6 +383,34 @@ export function UpdatesPage() {
                 </li>
               )
             })}
+          </ul>
+        ) : null}
+      </section>
+
+      <section className="gt-updates__calendar" aria-labelledby="updates-calendar-heading">
+        <div className="gt-updates__calendar-head">
+          <h2 id="updates-calendar-heading">Upcoming releases</h2>
+          <Link className="gt-updates__calendar-link" to="/calendar">
+            Open calendar
+          </Link>
+        </div>
+        {calendarTeaser === null ? <p className="gt-updates__calendar-empty">Loading releases…</p> : null}
+        {calendarTeaser && calendarTeaser.length === 0 ? (
+          <p className="gt-updates__calendar-empty">
+            No upcoming releases in the next window.{' '}
+            <Link to="/calendar">Browse the full calendar</Link>
+          </p>
+        ) : null}
+        {calendarTeaser && calendarTeaser.length > 0 ? (
+          <ul className="gt-updates__calendar-list">
+            {calendarTeaser.map((item, index) => (
+              <li key={`${item.igdb_id || item.slug || item.name}-${item.first_release_date || index}`}>
+                <time dateTime={item.first_release_date || undefined}>
+                  {formatLocaleDate(item.first_release_date, { fallback: 'TBA' })}
+                </time>
+                <span>{item.name || 'Untitled'}</span>
+              </li>
+            ))}
           </ul>
         ) : null}
       </section>

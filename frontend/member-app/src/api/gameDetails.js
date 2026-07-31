@@ -50,3 +50,30 @@ export async function checkGameFreshness(gameUuid) {
   }
   return data
 }
+
+/**
+ * Librarian/admin: remove version rows whose files are missing on disk (Wave 14b).
+ * @param {string} gameUuid
+ * @returns {Promise<object>}
+ */
+export async function cleanupOrphanVersions(gameUuid) {
+  const response = await fetch(
+    `/api/games/${encodeURIComponent(gameUuid)}/versions/cleanup_orphans`,
+    {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken(),
+      },
+      body: '{}',
+    },
+  )
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    const error = new Error(data.error || `cleanup orphans ${response.status}`)
+    error.status = response.status
+    throw error
+  }
+  return data
+}

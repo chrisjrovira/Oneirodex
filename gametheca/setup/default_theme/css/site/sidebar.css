@@ -1,11 +1,18 @@
 /* Shared geometry for the inline SVG icons in templates/partials/icons.html.
    base.html links this stylesheet on every Jinja page, so it is the one place
    the .gt-icon defaults live. Colour is deliberately absent: the glyphs use
-   stroke="currentColor" and inherit whatever the active theme sets. */
+   stroke="currentColor" and inherit whatever the active theme sets.
+   Wave 2d: stroke/fill come from --gt-icon-* so each colour preset can own
+   an icon silhouette without fighting icon-pack CSS. */
 .gt-icon {
     display: inline-block;
     vertical-align: -0.15em;
     flex-shrink: 0;
+    stroke-width: var(--gt-icon-stroke, 2);
+    stroke-linecap: var(--gt-icon-linecap, round);
+    stroke-linejoin: var(--gt-icon-linejoin, round);
+    fill: var(--gt-icon-fill, none);
+    fill-opacity: var(--gt-icon-fill-opacity, 1);
 }
 
 .sidebar {

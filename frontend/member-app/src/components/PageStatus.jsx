@@ -1,4 +1,6 @@
 import './PageStatus.css'
+import { LoadingMotif } from './LoadingMotif'
+import { useLoadingMotifId } from './loadingMotifApi'
 
 /**
  * Shared loading / empty status for weak SPA pages.
@@ -10,7 +12,10 @@ export function PageStatus({
   loadingMessage = 'Loading…',
   children = null,
   className = '',
+  motifId = null,
 }) {
+  const resolvedMotif = useLoadingMotifId(motifId)
+
   if (loading) {
     return (
       <div
@@ -19,6 +24,7 @@ export function PageStatus({
         aria-busy="true"
         aria-live="polite"
       >
+        <LoadingMotif motifId={resolvedMotif} size="md" title={loadingMessage} />
         <p className="gt-page-status__message">{loadingMessage}</p>
       </div>
     )

@@ -8,6 +8,8 @@ import { OpsPage } from './OpsPage'
 import { ArtStudioPage } from './ArtStudioPage'
 import { ImagesPage } from './ImagesPage'
 import { RemotePlayPage } from './RemotePlayPage'
+import { QualityProfilesPage } from './QualityProfilesPage'
+import { StoragePage } from './StoragePage'
 import { HUB_LINKS, SETTINGS_CARDS } from './navConfig'
 import './ops.css'
 import {
@@ -73,6 +75,10 @@ function RoutedAdminPage() {
       return <ImagesPage />
     case 'remote_play':
       return <RemotePlayPage />
+    case 'quality_profiles':
+      return <QualityProfilesPage />
+    case 'storage':
+      return <StoragePage />
     case 'help':
       return <HelpPage />
     case 'plugins':

@@ -164,6 +164,10 @@ class Game(db.Model):
     url = db.Column(db.String)
     video_urls = db.Column(db.String, nullable=True)
     full_disk_path = db.Column(db.String, nullable=True)
+    # Disk presence signal from scan/identify (nullable = never checked).
+    # Values: ok | missing | empty — Ops health counts empty path + path_status=missing
+    # without live path.exists on every poll.
+    path_status = db.Column(db.String(16), nullable=True)
     # ROM file hashes for DAT set-completion matching (optional; filled on scan/rehash).
     file_crc = db.Column(db.String(16), nullable=True, index=True)
     file_md5 = db.Column(db.String(32), nullable=True, index=True)
@@ -211,6 +215,10 @@ class Game(db.Model):
     rom_region = db.Column(db.String(16), nullable=True)
     rom_languages = db.Column(db.String(64), nullable=True)  # CSV: en,ja,fr
     has_english = db.Column(db.Boolean, nullable=True)
+
+    # Library item kind (orthogonal to LibraryPlatform / IGDB Category):
+    # game | experience | emulator | tool — default game for existing rows.
+    item_kind = db.Column(db.String(16), nullable=False, default='game', server_default='game')
 
     def __repr__(self):
         return f"<Game id={self.id}, name={self.name}>"
@@ -593,7 +601,10 @@ class ScanJob(db.Model):
     content_type = db.Column(db.Enum('Games', name='content_type_enum'))
     schedule = db.Column(db.Enum('8_hours', '24_hours', '48_hours', name='schedule_enum'))
     is_enabled = db.Column(db.Boolean, default=True)
-    status = db.Column(db.Enum('Scheduled', 'Running', 'Stopping', 'Completed', 'Failed', 'Cancelled', name='status_enum'))
+    status = db.Column(db.Enum(
+        'Scheduled', 'Queued', 'Running', 'Stopping', 'Completed', 'Failed', 'Cancelled',
+        name='status_enum',
+    ))
     last_run = db.Column(db.DateTime, nullable=True)
     next_run = db.Column(db.DateTime, nullable=True)
     error_message = db.Column(db.Text)
@@ -620,6 +631,35 @@ class UnmatchedFolder(db.Model):
     failed_time = db.Column(db.DateTime)
     content_type = db.Column(db.Enum('Games', name='unmatched_folder_content_type_enum'))
     status = db.Column(db.Enum('Pending', 'Ignore', 'Duplicate', 'Unmatched', name='unmatched_folder_status_enum'))
+    # Wave 2a: how this row was matched when status=Duplicate (queryable glance)
+    matched_game_uuid = db.Column(db.String(36), nullable=True, index=True)
+    match_reason = db.Column(db.String(64), nullable=True)
+    match_score = db.Column(db.Float, nullable=True)
+    # Wave 4: denormalized from proposal sidecar at propose/log time (list API — no N+1)
+    suggested_kind = db.Column(db.String(16), nullable=True)
+    suggested_candidate_name = db.Column(db.String(255), nullable=True)
+
+
+class DuplicateFixLog(db.Model):
+    """Queryable admin/dev log of duplicate triage actions (merge/keep/ignore)."""
+
+    __tablename__ = 'duplicate_fix_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    unmatched_folder_id = db.Column(db.String(36), nullable=True, index=True)
+    folder_path = db.Column(db.String(1024), nullable=False)
+    matched_game_uuid = db.Column(db.String(36), nullable=True, index=True)
+    match_reason = db.Column(db.String(64), nullable=True)
+    match_score = db.Column(db.Float, nullable=True)
+    action = db.Column(db.String(32), nullable=False)  # merge | keep | ignore
+    actor_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    notes = db.Column(db.String(512), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    actor = db.relationship('User', backref='duplicate_fix_logs')
+
+    def __repr__(self):
+        return f"<DuplicateFixLog {self.action} path={self.folder_path!r}>"
 
 
 class UserPreference(db.Model):
@@ -729,12 +769,12 @@ class GlobalSettings(db.Model):
     enable_game_extras = db.Column(db.Boolean, default=True)
     extras_folder_name = db.Column(db.String(255), default='extras')
     site_url = db.Column(db.String(255), default='http://127.0.0.1')
-    # Image Download Settings
+    # Image Download Settings (Unraid-safe defaults; runtime also hard-capped in worker_caps)
     use_turbo_image_downloads = db.Column(db.Boolean, default=True)
-    turbo_download_threads = db.Column(db.Integer, default=8)
-    turbo_download_batch_size = db.Column(db.Integer, default=200)
-    # Scan Thread Settings  
-    scan_thread_count = db.Column(db.Integer, default=4)
+    turbo_download_threads = db.Column(db.Integer, default=4)
+    turbo_download_batch_size = db.Column(db.Integer, default=100)
+    # Scan Thread Settings (default 1 for shared NAS CPUs; hard max via worker_caps)
+    scan_thread_count = db.Column(db.Integer, default=1)
     # Setup State Tracking
     setup_in_progress = db.Column(db.Boolean, default=False)
     setup_current_step = db.Column(db.Integer, default=1)
@@ -798,6 +838,9 @@ class GlobalSettings(db.Model):
     # BYO Sunshine / Wolf remote play (Moonlight clients) — off by default
     enable_remote_play = db.Column(db.Boolean, default=False)
     remote_play_settings = db.Column(JSONEncodedDict, nullable=True)
+    # Loading icon: rotate catalogue vs lock to one id (member/admin loading UIs)
+    loading_icon_mode = db.Column(db.String(16), default='rotate')
+    loading_icon_id = db.Column(db.String(64), nullable=True)
 
     def __repr__(self):
         return f'<GlobalSettings id={self.id}, last_updated={self.last_updated}>'
@@ -969,15 +1012,22 @@ class ChatChannel(db.Model):
     is_child_safe = db.Column(db.Boolean, default=True, nullable=False)
     created_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    archived_at = db.Column(db.DateTime, nullable=True)
 
     def to_dict(self):
+        kind = self.kind
         return {
             'id': self.id,
-            'kind': self.kind,
+            'kind': kind,
+            # Slide-out alias — same as kind (channel | dm)
+            'type': kind,
             'name': self.name,
             'slug': self.slug,
             'is_child_safe': bool(self.is_child_safe),
+            'created_by_user_id': self.created_by_user_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
+            'archived': self.archived_at is not None,
+            'archived_at': self.archived_at.isoformat() if self.archived_at else None,
         }
 
 
@@ -1319,10 +1369,13 @@ class Announcement(db.Model):
     author_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
 
     def to_dict(self):
+        body = self.body or ''
         return {
             'id': self.id,
             'title': self.title,
-            'body': self.body,
+            'body': body,
+            # Compact preview for News / overhaul cards (full body still present).
+            'body_preview': body[:280],
             'published': self.published,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'author_user_id': self.author_user_id,
@@ -1415,19 +1468,22 @@ class SupportTicket(db.Model):
     resolved_at = db.Column(db.DateTime, nullable=True)
     resolved_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
 
-    def to_dict(self):
-        return {
+    def to_dict(self, *, compact: bool = False):
+        body = self.body or ''
+        logs = self.logs or ''
+        payload = {
             'id': self.id,
             'user_id': self.user_id,
             'title': self.title,
-            'body': self.body,
+            'body': body,
             'area': self.area,
             'severity': self.severity,
             'role_at_submit': self.role_at_submit,
             'deploy_hint': self.deploy_hint,
             'client_hint': self.client_hint,
             'url_hint': self.url_hint,
-            'logs': self.logs,
+            'logs': logs or None,
+            'has_logs': bool(logs.strip()),
             'status': self.status,
             'github_issue_number': self.github_issue_number,
             'github_issue_url': self.github_issue_url,
@@ -1436,6 +1492,13 @@ class SupportTicket(db.Model):
             'resolved_at': self.resolved_at.isoformat() if self.resolved_at else None,
             'resolved_by_user_id': self.resolved_by_user_id,
         }
+        if compact:
+            # List/inbox cards: short symptom, no log blob.
+            payload['body'] = body[:280]
+            payload['body_truncated'] = len(body) > 280
+            payload['body_preview'] = payload['body']
+            payload['logs'] = None
+        return payload
 
 
 class StoreAccount(db.Model):

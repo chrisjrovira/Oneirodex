@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchGameAssists } from '../api/assists'
 import { fetchRemotePlayStatus } from '../api/remotePlay'
 import { queueClientCommand } from '../api/clientCommands'
+import { showToast } from '../utils/toast'
 
 /**
  * @param {'full' | 'compact'} [variant='full']
@@ -108,9 +109,7 @@ export function GameActionBar({
 
   function explain(message) {
     setStatusMessage(message)
-    if (typeof window !== 'undefined' && window.$?.notify) {
-      window.$.notify(message, 'warn')
-    }
+    showToast(message, 'warn')
   }
 
   async function sendCommand(action) {
@@ -131,15 +130,11 @@ export function GameActionBar({
               : 'Uninstall queued for companion'
       setStatusMessage(label)
       onCommandQueued?.(action)
-      if (typeof window !== 'undefined' && window.$?.notify) {
-        window.$.notify(label, 'success')
-      }
+      showToast(label, 'success')
     } catch (err) {
       const message = err?.message || `Failed to queue ${action}`
       setStatusMessage(message)
-      if (typeof window !== 'undefined' && window.$?.notify) {
-        window.$.notify(message, 'error')
-      }
+      showToast(message, 'error')
     } finally {
       setBusyAction(null)
     }
@@ -210,9 +205,7 @@ export function GameActionBar({
       void navigator.clipboard.writeText(hint).then(
         () => {
           setStatusMessage(label)
-          if (typeof window !== 'undefined' && window.$?.notify) {
-            window.$.notify(label, 'success')
-          }
+          showToast(label, 'success')
         },
         () => explain('Could not copy — select and copy the host hint manually.'),
       )
@@ -310,9 +303,7 @@ export function GameActionBar({
               ? 'Assists available in companion overlay'
               : 'Open companion to use Assists (single-player only)'
             setStatusMessage(label)
-            if (typeof window !== 'undefined' && window.$?.notify) {
-              window.$.notify(label, clientConnected ? 'success' : 'warn')
-            }
+            showToast(label, clientConnected ? 'success' : 'warn')
           }}
         >
           Assists

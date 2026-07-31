@@ -5,6 +5,7 @@ from gametheca.models import ReleaseGroup
 from gametheca import db
 from sqlalchemy import select
 from gametheca.forms import ReleaseGroupForm
+from gametheca.utils.functions import normalize_case_sensitive
 from . import admin2_bp
 
 @admin2_bp.route('/admin/edit_filters', methods=['GET', 'POST'])
@@ -13,7 +14,10 @@ from . import admin2_bp
 def edit_filters():
     form = ReleaseGroupForm()
     if form.validate_on_submit():
-        new_group = ReleaseGroup(filter_pattern=form.filter_pattern.data, case_sensitive=form.case_sensitive.data)
+        new_group = ReleaseGroup(
+            filter_pattern=form.filter_pattern.data,
+            case_sensitive=normalize_case_sensitive(form.case_sensitive.data),
+        )
         db.session.add(new_group)
         db.session.commit()
         flash('New scanning filter added.')

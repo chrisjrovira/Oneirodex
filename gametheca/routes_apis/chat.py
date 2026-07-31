@@ -11,7 +11,9 @@ from gametheca.models import ChatChannel, ChatMessage, User
 from gametheca.utils.auth import admin_required
 from gametheca.utils.chat import (
     ALLOWED_REACTIONS,
+    archive_channel,
     create_household_channel,
+    leave_channel,
     list_channels_for_user,
     list_messages,
     mark_channel_read,
@@ -35,7 +37,9 @@ from . import apis_bp
 @apis_bp.route('/chat/channels', methods=['GET'])
 @login_required
 def chat_channels_list():
-    return jsonify({'channels': list_channels_for_user(current_user)})
+    channels = list_channels_for_user(current_user)
+    # `rooms` alias for slide-out dock (same payloads)
+    return jsonify({'channels': channels, 'rooms': channels})
 
 
 @apis_bp.route('/chat/channels', methods=['POST'])
@@ -53,7 +57,40 @@ def chat_channels_create():
         return jsonify({'error': str(exc)}), 403
     except ValueError as exc:
         return jsonify({'error': str(exc)}), 400
-    return jsonify({'ok': True, 'channel': ch.to_dict()}), 201
+    payload = ch.to_dict()
+    payload['muted'] = False
+    payload['unread'] = 0
+    return jsonify({'ok': True, 'channel': payload, 'room': payload}), 201
+
+
+@apis_bp.route('/chat/channels/<int:channel_id>/archive', methods=['POST'])
+@login_required
+def chat_channel_archive(channel_id: int):
+    ch = db.session.get(ChatChannel, channel_id)
+    if not ch or ch.archived_at is not None:
+        return jsonify({'error': 'Not found'}), 404
+    try:
+        archive_channel(current_user, ch)
+    except PermissionError as exc:
+        return jsonify({'error': str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({'ok': True, 'channel_id': ch.id, 'archived': True})
+
+
+@apis_bp.route('/chat/channels/<int:channel_id>/leave', methods=['POST'])
+@login_required
+def chat_channel_leave(channel_id: int):
+    ch = db.session.get(ChatChannel, channel_id)
+    if not ch or ch.archived_at is not None:
+        return jsonify({'error': 'Not found'}), 404
+    try:
+        leave_channel(current_user, ch)
+    except PermissionError:
+        return jsonify({'error': 'Not found'}), 404
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({'ok': True, 'channel_id': ch.id, 'left': True})
 
 
 @apis_bp.route('/chat/dm', methods=['POST'])

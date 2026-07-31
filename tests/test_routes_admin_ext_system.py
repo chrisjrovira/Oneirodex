@@ -255,7 +255,17 @@ class TestSystemLogsRoute:
         response = client.get('/admin/system_logs')
         assert response.status_code == 200
         assert b'System startup completed' in response.data
-    
+
+    def test_server_logs_alias_reachable(self, client, admin_user, sample_system_events):
+        """Admin SPA nav uses /admin/server_logs — must not 404."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/admin/server_logs')
+        assert response.status_code == 200
+        assert b'System startup completed' in response.data
+
     def test_system_logs_pagination(self, client, admin_user, sample_system_events):
         """Test pagination parameters."""
         with client.session_transaction() as sess:

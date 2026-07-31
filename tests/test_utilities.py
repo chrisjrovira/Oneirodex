@@ -165,22 +165,27 @@ class TestHandleAutoScanCore:
                                 assert result == 'redirected_response'
 
     def test_scan_already_running_comprehensive_checks(self, app, db_session):
-        """Test comprehensive behavior when scan is already running."""
-        test_uuid = str(uuid4())
+        """Second auto-scan while Running queues a Queued job (does not drop)."""
         mock_form = Mock()
         mock_form.validate_on_submit.return_value = True
-        mock_form.library_uuid.data = test_uuid
         mock_form.remove_missing.data = True
         mock_form.download_missing_images.data = False
-        
+        mock_form.force_updates_extras_scan.data = False
+        mock_form.fetch_hltb.data = False
+        mock_form.force_hltb_refetch.data = False
+        mock_form.schedule.data = ''
+        mock_form.folder_path.data = 'pc'
+        mock_form.scan_mode.data = 'folders'
+
         # Create library for the running scan job
         running_library = Library(
             uuid=str(uuid4()),
-            name="Running Scan Library", 
+            name="Running Scan Library",
             platform=LibraryPlatform.PCWIN
         )
         db_session.add(running_library)
-        
+        mock_form.library_uuid.data = running_library.uuid
+
         # Create actual running scan job in database
         running_job = ScanJob(
             folders={"/test/path": True},
@@ -188,7 +193,7 @@ class TestHandleAutoScanCore:
             status='Running',
             is_enabled=True,
             last_run=datetime.now(),
-            library_uuid=running_library.uuid,  # Use valid library UUID
+            library_uuid=running_library.uuid,
             error_message='',
             total_folders=5,
             folders_success=2,
@@ -197,7 +202,7 @@ class TestHandleAutoScanCore:
         )
         db_session.add(running_job)
         db_session.commit()
-        
+
         with app.app_context():
             with app.test_request_context():
                 with patch('gametheca.utilities.flash') as mock_flash:
@@ -205,46 +210,45 @@ class TestHandleAutoScanCore:
                         with patch('gametheca.utilities.url_for') as mock_url_for:
                             mock_session = {}
                             with patch('gametheca.utilities.session', mock_session):
-                                mock_url_for.return_value = '/scan_management'
-                                mock_redirect.return_value = 'blocked_response'
-                                
-                                result = handle_auto_scan(mock_form)
-                                
-                                # Verify exact flash message and category
-                                mock_flash.assert_called_once_with(
-                                    'A scan is already in progress. Please wait until the current scan completes.', 
-                                    'error'
-                                )
-                                
-                                # Verify session state management
-                                assert mock_session['active_tab'] == 'auto'
-                                
-                                # Verify redirect parameters
-                                mock_url_for.assert_called_once_with(
-                                    'main.scan_management',
-                                    library_uuid=test_uuid,
-                                    active_tab='auto'
-                                )
-                                
-                                # Critical assertion: Verify running job still exists unchanged
-                                # Query the job again instead of refreshing to avoid session issues
+                                with patch(
+                                    'gametheca.utilities.get_allowed_base_directories',
+                                    return_value=['/base'],
+                                ):
+                                    with patch(
+                                        'gametheca.utilities.is_safe_path',
+                                        return_value=(True, None),
+                                    ):
+                                        with patch('gametheca.utilities.os.path.exists', return_value=True):
+                                            with patch('gametheca.utilities.os.access', return_value=True):
+                                                with patch.dict(
+                                                    'gametheca.utilities.current_app.config',
+                                                    {'BASE_FOLDER_POSIX': '/base', 'BASE_FOLDER_WINDOWS': '/base'},
+                                                    clear=False,
+                                                ):
+                                                    mock_url_for.return_value = '/scan_management'
+                                                    mock_redirect.return_value = 'queued_response'
+
+                                                    result = handle_auto_scan(mock_form)
+
+                                assert mock_flash.called
+                                flash_msg, flash_cat = mock_flash.call_args[0]
+                                assert 'queued' in flash_msg.lower()
+                                assert flash_cat == 'info'
+                                assert mock_session.get('active_tab') == 'auto'
+
                                 persistent_job = db_session.get(ScanJob, running_job.id)
                                 assert persistent_job is not None
                                 assert persistent_job.status == 'Running'
                                 assert persistent_job.folders_success == 2
-                                assert persistent_job.folders_failed == 1
-                                
-                                # Verify no new scan job was created for our library
-                                new_jobs = db_session.execute(
-                                    select(ScanJob).filter_by(library_uuid=test_uuid)
+
+                                queued = db_session.execute(
+                                    select(ScanJob).filter_by(
+                                        library_uuid=running_library.uuid,
+                                        status='Queued',
+                                    )
                                 ).scalars().all()
-                                assert len(new_jobs) == 0, "No new scan job should be created when one is running"
-                                
-                                # Verify form data was accessed
-                                mock_form.validate_on_submit.assert_called_once()
-                                mock_form.remove_missing.data  # Should not raise AttributeError
-                                
-                                assert result == 'blocked_response'
+                                assert len(queued) == 1
+                                assert result == 'queued_response'
 
 
 class TestHandleManualScanCore:

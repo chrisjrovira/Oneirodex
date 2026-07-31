@@ -1,217 +1,175 @@
-/* Main container styling */
-.glass-panel-addgame {
-    background: var(--bg-dark-primary);
-    backdrop-filter: var(--backdrop-blur);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-xl);
-    margin: var(--spacing-lg) auto;
-    max-width: 1000px;
-    box-shadow: 0 4px 6px var(--bg-dark-tertiary);
-    color: var(--text-white);
+/* Identify workbench — densified under .gt-adminpage / --gt-* tokens */
+
+.gt-identify .gt-identify__meta {
+    margin-bottom: var(--gt-adminpage-gap, 1.25rem);
 }
 
-/* Header section */
-.game-edit-library-labels {
+.gt-identify .game-edit-library-labels {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-sm);
-    font-size: 1.4em;
-    color: var(--text-white);
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--gt-text-muted, #c4ccd8);
 }
 
-#library_display, #platform_display {
-    font-size: 1.2em;
-    font-weight: 500;
-    color: var(--text-white);
-    text-shadow: 2px 2px 4px var(--shadow-dark);
+.gt-identify #library_display,
+.gt-identify #platform_display {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--gt-text, #f2f4f8);
+    text-shadow: none;
 }
 
-/* Form sections */
-.game_edit-form-group-id,
-.game_edit-form-group-name,
-.game_edit-form-group-path {
-    background: var(--bg-dark-secondary);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-md);
-    margin-bottom: var(--spacing-lg);
+.gt-identify .game_edit-form-group-id,
+.gt-identify .game_edit-form-group-name,
+.gt-identify .game_edit-form-group-path,
+.gt-identify .game_edit-form-group-summary,
+.gt-identify .game_edit-form-group-storyline,
+.gt-identify .game_edit-form-group-url,
+.gt-identify .game_edit-form-group-video-url,
+.gt-identify .game_edit-form-group-status,
+.gt-identify .game_edit-form-group-release-type,
+.gt-identify .game_edit-form-group-rating,
+.gt-identify .game_edit-form-group-release-date,
+.gt-identify .game_edit-form-group-developer,
+.gt-identify .game_edit-form-group-publisher {
+    background: color-mix(in srgb, var(--gt-text) 4%, var(--gt-surface));
+    padding: 0.85rem 1rem;
+    border-radius: var(--gt-adminpage-radius-sm, 8px);
+    margin-bottom: 0.85rem;
+    border: 1px solid var(--gt-border);
 }
 
-/* Form controls */
-
-.form-control:focus {
-    background: color-mix(in srgb, var(--gt-text, #fff) 15%, transparent);
-    border-color: var(--border-light-30);
-    color: var(--gt-text, var(--text-white));
-    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 25%, transparent);
+.gt-identify .gt-identify__search-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 0.65rem 0 0.35rem;
 }
 
-/* Labels */
-label {
-    color: var(--text-white);
-    margin-bottom: var(--spacing-8);
+.gt-identify label {
+    color: var(--gt-text);
+    margin-bottom: 0.35rem;
     display: block;
-    font-size: 1.1em;
+    font-size: 0.92rem;
+    font-weight: 500;
 }
 
-/* Search results */
-#search-results {
-    background: var(--bg-dark-secondary);
-    border-radius: var(--border-radius-sm);
-    padding: var(--spacing-md);
-    margin-top: var(--spacing-md);
+.gt-identify .form-control {
+    background: var(--gt-surface-2);
+    border: 1px solid var(--gt-border);
+    color: var(--gt-text);
+    border-radius: var(--gt-adminpage-radius-sm, 8px);
 }
 
-.search-result-item {
-    padding: var(--spacing-12);
+.gt-identify .form-control:focus {
+    background: var(--gt-surface-2);
+    border-color: var(--gt-accent);
+    color: var(--gt-text);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gt-accent) 28%, transparent);
+}
+
+.gt-identify #search-results,
+.gt-identify .existing-game-results {
+    background: color-mix(in srgb, var(--gt-text) 3%, var(--gt-surface));
+    border-radius: var(--gt-adminpage-radius-sm, 8px);
+    padding: 0.5rem;
+    margin-top: 0.65rem;
+    border: 1px solid var(--gt-border);
+}
+
+.gt-identify .search-result-item,
+.gt-identify .existing-game-result-item {
+    padding: 0.55rem 0.65rem;
     border-radius: 6px;
-    margin-bottom: var(--spacing-8);
-    background: var(--bg-light-overlay);
-    transition: all var(--transition-normal);
+    margin-bottom: 0.35rem;
+    background: color-mix(in srgb, var(--gt-text) 5%, transparent);
+    transition: background 0.15s ease, border-color 0.15s ease;
     cursor: pointer;
     display: flex;
     align-items: center;
+    border: 1px solid transparent;
 }
 
-.search-result-item:hover {
-    background: var(--bg-light-overlay-hover);
-    transform: translateY(-2px);
+.gt-identify .search-result-item:hover,
+.gt-identify .existing-game-result-item:hover {
+    background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--gt-accent) 35%, transparent);
+    transform: none;
 }
 
-/* Details section */
-.details-section {
-    background: var(--bg-dark-secondary);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-md);
-    margin-top: var(--spacing-25);
+.gt-identify .details-section {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    margin-top: 0;
 }
 
-.details-section .btn {
-    background: var(--bg-light-overlay);
-    border: none;
-    width: 100%;
-    text-align: left;
-    padding: var(--spacing-12);
-    color: var(--text-white);
-    position: relative;
-}
-
-/* Checkbox groups */
-.group-game-details {
+.gt-identify .group-game-details {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--spacing-lg);
-    margin-top: var(--spacing-lg);
-    background: var(--bg-dark-tertiary);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-md);
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.85rem;
+    margin-top: 0.85rem;
+    background: color-mix(in srgb, var(--gt-text) 3%, var(--gt-surface));
+    padding: 0.85rem;
+    border-radius: var(--gt-adminpage-radius-sm, 8px);
+    border: 1px solid var(--gt-border);
 }
 
-.checkbox {
-    margin: var(--spacing-8) 0;
+.gt-identify .checkbox {
+    margin: 0.25rem 0;
 }
 
-.form-check-input {
-    background-color: var(--bg-light-overlay);
-    border-color: var(--border-light-strong);
+.gt-identify .form-check-input {
+    background-color: var(--gt-surface-2);
+    border-color: var(--gt-border);
 }
 
-.form-check-label {
-    color: var(--text-white);
-    margin-left: var(--spacing-8);
+.gt-identify .form-check-label {
+    color: var(--gt-text);
 }
 
-/* Save button styling */
-.game-edit-savebutton .btn-primary {
-    background-color: var(--gt-accent, var(--btn-primary));
-    color: var(--gt-accent-contrast, var(--text-white));
-    border: none;
-    padding: var(--spacing-sm) var(--spacing-25);
-    font-size: 1.1em;
-    transition: background-color var(--transition-normal);
+.gt-identify .form-text-muted {
+    color: var(--gt-text-muted);
+    font-size: 0.85rem;
 }
 
-.game-edit-savebutton .btn-primary:hover {
-    background-color: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 88%, var(--gt-bg, #000));
+.gt-identify .link-existing-game-panel h3 {
+    margin-top: 0;
+    font-size: 1.05rem;
 }
 
-/* Alert messages */
-.alert {
-    background: var(--bg-dark-secondary);
-    border: 1px solid var(--border-light-strong);
-    color: var(--text-white);
-    margin: var(--spacing-sm) 0;
+.gt-identify .link-existing-search-row {
+    margin: 0.65rem 0;
 }
 
-/* Essential information section */
-.essential-info {
-    background: var(--bg-dark-tertiary);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-md);
-    margin-bottom: var(--spacing-lg);
-}
-
-/* Glass panel top section */
-.glass-panel-addgame-top {
-    background: var(--bg-dark-tertiary);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-md);
-    margin-bottom: var(--spacing-lg);
+.gt-identify .link-existing-selection {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+    margin-top: 0.75rem;
 }
 
-/* Feedback text styling - using unified .form-text-muted from base.css */
-
-/* Invalid input highlighting */
-.invalid-input {
-    border: 2px solid var(--gt-danger, var(--btn-danger));
-    background: color-mix(in srgb, var(--gt-danger, var(--btn-danger)) 10%, transparent);
-}
-
-/* Link to Existing Library Game panel */
-.link-existing-game-panel {
-    background: var(--bg-dark-secondary);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-md);
-    margin-top: var(--spacing-lg);
-}
-
-.link-existing-game-panel h3 {
-    color: var(--text-white);
-    margin-bottom: var(--spacing-8);
-}
-
-.link-existing-search-row {
-    margin-bottom: var(--spacing-md);
-}
-
-.existing-game-results {
-    max-height: 260px;
-    overflow-y: auto;
-}
-
-.existing-game-results .search-result-item.selected {
-    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 35%, transparent);
-    border: 1px solid color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 60%, transparent);
-}
-
-.existing-game-result-name {
-    font-weight: 600;
-    display: block;
-}
-
-.existing-game-result-path {
-    font-size: 0.85em;
-    opacity: 0.75;
-    display: block;
-    word-break: break-all;
-}
-
-.link-existing-selection {
+/* Spinner overlay (unchanged behavior, aurora colors) */
+.gt-identify + .spinner-overlay,
+.spinner-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-md);
+    justify-content: center;
+    background: color-mix(in srgb, var(--gt-bg, #0b0d10) 72%, transparent);
+}
+
+.spinner-container {
+    text-align: center;
+    color: var(--gt-text);
+}
+
+.progress-text {
+    margin-top: 0.75rem;
+    color: var(--gt-text-muted);
 }

@@ -1,6 +1,14 @@
 # Settings & modules
 
-Admin settings use a **card grid** at `/admin/settings` (whole card → destination; `?section=` redirects). Chrome is the React admin top bar (`frontend/admin-app`); many forms remain Jinja until migrated. Live React bodies include Dashboard, Libraries/Scans hubs, Themes, Plugins, Announcements, **Support inbox**, and the **Integrations hub** (grouped IGDB · SMTP · OIDC · LiveKit · Support cards with deep links into classic forms).
+Admin settings use a **card grid** at `/admin/settings` (whole card → destination; `?section=` redirects). Chrome is the React admin top bar (`frontend/admin-app`); many forms remain Jinja until migrated. Live React bodies include Dashboard, Libraries/Scans hubs, Themes, Plugins, Announcements, **Support inbox**, and the **Integrations hub** (grouped cards for IGDB · Artwork & secondary metadata · SMTP · OIDC · LiveKit · Community · Acquire/Arr · Ownership · Remote play · Export packs · Support, with deep links into classic forms).
+
+**Integrations inventory API:** `GET /api/admin/integrations/inventory` (admin) returns `{integrations[{id,name,category,status,configured,enabled,admin_href,settings_href,notes}], count, hub_href}` covering IGDB, SteamGridDB, Giant Bomb, HLTB, Meta/Quest, SMTP, OIDC, Support, community chat, LiveKit, Arr connectors, and ownership register links — so the hub is not IGDB-only. The React Integrations page renders a **Provider inventory** grouped by category (with status + notes) under the hub cards. Classic `/admin/integrations` artwork tab anchors (`#steamgriddb`, `#giantbomb`, `#hltb`, `#meta_quest`, `#ownership`, `#livekit`, `#support`, `#indexers`, `#community`, `#email`, `#igdb`) deep-link the same surfaces.
+
+**Export packs:** Admin → Integrations → **Export packs** (and member Systems secondary section) download ES-DE `gamelist.xml` (`/api/export/esde`) and Pegasus metadata (`/api/export/pegasus`). Paths are portable under library roots — NAS/home mounts are not leaked.
+
+**Server logs alias:** Admin server logs/status is also at **`/admin/server_logs`**.
+
+**Worker caps (scan/turbo):** New installs default scan threads **1**, turbo threads **4**, turbo batch **100**; runtime hard-caps via `GT_SCAN_THREAD_CAP` / `GT_IMAGE_DOWNLOAD_THREAD_CAP` / `GT_IMAGE_DOWNLOAD_BATCH_CAP` — not Compose `SCAN_*` env vars. See [libraries-and-scans.md](libraries-and-scans.md) · [unraid-deploy.md](../runbooks/unraid-deploy.md#cpu--scan-load-unraid-safe-defaults).
 
 ## Hub badges
 
@@ -30,9 +38,15 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 
 ## Arr
 
-- Env: `ENABLE_ARR_MODULE`, `ENABLE_ARR_HARDLINK_PIPELINE`, plus Prowlarr/Jackett/qBittorrent URLs in `.env`.
+- Env: `ENABLE_ARR_MODULE`, `ENABLE_ARR_HARDLINK_PIPELINE`, plus optional Prowlarr/Jackett/qBittorrent URLs in `.env`.
 - Admin toggle via Arr settings / `PUT /api/arr/module` (env **or** DB enable).
-- On by default; disable under Features if you are not bringing your own indexers.
+- On by default; disable under Features if you are not using Acquire.
+- **Native indexers:** Admin → Arr registry stores Torznab/Newznab entries in `GlobalSettings.arr_settings.indexers` (add one, JSON/CSV bulk, curated presets with empty API keys). Search merges enabled native endpoints **and** configured Prowlarr **and** Jackett.
+- **Admin UI:** Arr page shows indexer table (ready/enabled/source, toggle, delete), add-one form, bulk JSON/CSV import, preset multi-select + Enable selected, hub URL fields, and `indexer_warnings` from status/search.
+- APIs: `GET/POST /api/arr/indexers`, `POST /api/arr/indexers/bulk`, `POST /api/arr/indexers/enable-presets`, `PUT|PATCH|DELETE /api/arr/indexers/<id>`.
+- Native indexer URLs use outbound SSRF checks (no LAN); hub URLs still respect `ALLOW_PRIVATE_LAN_URLS`.
+- Preset pack: `gametheca/data/indexer_presets.json` (no secrets; admin-only display names).
+- **Quality / release profiles (P1-12):** `GlobalSettings.quality_profiles` (multi-profile JSON). Admin → **Quality profiles** SPA at `/admin/quality_profiles` (`QualityProfilesPage`: list · set active · new · delete · edit · score probe; Jinja is an SPA shell). APIs: `GET/POST /api/quality-profiles`, `PUT /api/quality-profiles/active`, `GET/PUT/DELETE /api/quality-profiles/<id>`. Active profile scores Arr search and extends scan name-clean with blocked/excluded terms.
 
 ## AI
 
@@ -42,8 +56,11 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 
 ## Storage / hardlinks
 
-- `ENABLE_HARDLINK_HELPERS` and `ALLOW_HARDLINK_APPLY` are **env-only** safety gates (no DB toggle).
-- Hub banners explain why Apply is disabled when helpers/apply are off or the games mount is RO.
+- `ENABLE_HARDLINK_HELPERS` and `ALLOW_HARDLINK_APPLY` are **env-only** safety gates (no DB toggle). `ALLOW_HARDLINK_APPLY` stays **off** by product default.
+- Admin page: **Settings → Storage** (`/admin/storage`) — React `StoragePage` (Jinja emptied to SPA shell).
+- Status API: `GET /api/storage/status` — `helpers_enabled` · `allow_apply` · `games_path` · `games_exists` / `games_readable` / `games_writable` · `degrade_reason` (RO / apply-off honesty).
+- Preview / apply: `POST /api/storage/hardlink/preview` · `POST /api/storage/hardlink/apply` (apply gated by helpers **and** `ALLOW_HARDLINK_APPLY`). Preview surfaces readable reasons, including **destination parent not writable (read-only mount?)**.
+- Hub / page banners explain why Apply is disabled when helpers/apply are off or the games mount is RO.
 
 ## LiveKit voice
 
@@ -59,6 +76,14 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - **No Wolf/GOW in GameTheca image** — operator runs Sunshine/Wolf on a GPU host; LAN URLs need `ALLOW_PRIVATE_LAN_URLS=true`.
 - Plugin registry: `remote_play.moonlight`.
 - Guide: [gow-remote-play.md](../strategy/gow-remote-play.md).
+
+## Loading icons (admin lock / rotate)
+
+- DB: `GlobalSettings.loading_icon_mode` (`rotate` \| `lock`, default **rotate**), `loading_icon_id` (catalogue id or null).
+- Public bootstrap: `GET /api/loading-icon` (no admin auth — member/admin loading UIs).
+- Admin: `GET`/`PUT /api/admin/loading-icon/config` — lock requires a catalogue id; rotate clears id.
+- Catalogue ids: `ring`, `orbit`, `pulse`, `blocks`, `scan`, `arcade` — visuals are SPA/theme-owned.
+- Details: [icon-themes.md](../strategy/icon-themes.md).
 
 ## Malware scan
 

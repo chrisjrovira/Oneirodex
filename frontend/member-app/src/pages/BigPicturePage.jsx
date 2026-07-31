@@ -5,6 +5,7 @@ import { queueClientCommand } from '../api/clientCommands'
 import { VoiceLobby } from '../components/VoiceLobby'
 import { SocialCompanionDock } from '../components/SocialCompanionDock'
 import { coverUrl } from '../utils/coverUrl'
+import { showToast } from '../utils/toast'
 import './BigPicturePage.css'
 
 const DEFAULT_PER_PAGE = 48
@@ -330,9 +331,7 @@ export function BigPicturePage({ shellConfig = {} }) {
                     className="gt-bp__btn"
                     onClick={() => {
                       void queueClientCommand(selected.uuid, 'install').then(() => {
-                        if (window.$?.notify) {
-                          window.$.notify('Install queued for companion', 'success')
-                        }
+                        showToast('Install queued for companion', 'success')
                       })
                     }}
                   >

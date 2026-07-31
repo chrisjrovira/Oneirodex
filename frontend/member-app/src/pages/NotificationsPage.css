@@ -1,0 +1,266 @@
+/* Notifications — dense inbox, clear unread, prefs folded */
+
+.gt-notifications__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.gt-notifications__lede {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0;
+}
+
+.gt-notifications__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 22%, transparent);
+  color: var(--gt-accent, #2fd67b);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.gt-notifications__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gt-notifications__filters {
+  display: inline-flex;
+  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.gt-notifications__filters button {
+  padding: 0.35rem 0.65rem;
+  border: none;
+  background: transparent;
+  color: var(--gt-text-muted, #9aa3b2);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.gt-notifications__filters button + button {
+  border-left: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+}
+
+.gt-notifications__filters button.is-active,
+.gt-notifications__filters button:hover,
+.gt-notifications__filters button:focus-visible {
+  color: var(--gt-accent, #2fd67b);
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 12%, transparent);
+  outline: none;
+}
+
+.gt-notifications__prefs {
+  margin: 0.85rem 0 1rem;
+  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+  border-radius: 6px;
+}
+
+.gt-notifications__prefs summary {
+  cursor: pointer;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  list-style: none;
+}
+
+.gt-notifications__prefs summary::-webkit-details-marker {
+  display: none;
+}
+
+.gt-notifications__prefs summary::after {
+  content: '+';
+  float: right;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-notifications__prefs[open] summary::after {
+  content: '−';
+}
+
+.gt-notifications__pref-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.75rem 0.35rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.25rem 1rem;
+}
+
+.gt-notifications__pref {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.gt-notifications__pref strong {
+  display: block;
+  font-weight: 600;
+}
+
+.gt-notifications__pref-kind {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--gt-text-muted, #9aa3b2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gt-notifications__pref-note {
+  margin: 0;
+  padding: 0 0.75rem 0.65rem;
+  font-size: 0.8rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-notifications__section-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-notifications__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 75%, transparent);
+}
+
+.gt-notifications__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.55rem 1rem;
+  padding: 0.65rem 0.15rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 65%, transparent);
+}
+
+.gt-notifications__item.is-unread {
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 5%, transparent);
+  margin: 0 -0.35rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  border-radius: 4px;
+}
+
+.gt-notifications__item-main {
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+
+.gt-notifications__item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.55rem;
+}
+
+.gt-notifications__item-head strong {
+  font-size: 0.95rem;
+}
+
+.gt-notifications__item-head time {
+  margin-left: auto;
+  font-size: 0.78rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-notifications__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--gt-accent, #2fd67b);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.gt-notifications__dot.is-read {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 90%, transparent);
+}
+
+.gt-notifications__body {
+  margin: 0.25rem 0 0 0.95rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-notifications__item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.gt-notifications__item-actions a,
+.gt-notifications__item-actions button {
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--gt-accent, #2fd67b);
+  background: transparent;
+  border: none;
+  padding: 0.2rem 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.gt-notifications__item-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.gt-notifications__item-actions a:hover,
+.gt-notifications__item-actions a:focus-visible,
+.gt-notifications__item-actions button:hover:not(:disabled),
+.gt-notifications__item-actions button:focus-visible:not(:disabled) {
+  text-decoration: underline;
+  outline: none;
+}
+
+.gt-btn--ghost {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 85%, transparent);
+  color: var(--gt-text, #f2f4f8);
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.gt-btn--ghost:hover:not(:disabled),
+.gt-btn--ghost:focus-visible:not(:disabled) {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+  color: var(--gt-accent, #2fd67b);
+  outline: none;
+}
+
+.gt-btn--ghost:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

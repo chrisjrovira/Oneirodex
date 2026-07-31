@@ -2,96 +2,101 @@
 {% block content %}
 {% import 'partials/icons.html' as icons %}
 
-<link rel="stylesheet" href="{{ 'css/login/user_invites.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/settings/gt-account.css'|theme_asset }}">
 
-{% if not smtp_enabled %}
-<div class="alert alert-warning" role="alert">
-    {{ icons.icon('warning') }}
-    <strong>Warning:</strong> SMTP settings are not configured. Users will not be able to confirm their email addresses 
-    and activate their accounts. It is recommended to use the 
-    <a href="{{ url_for('admin2.manage_users') }}">user manager</a> to create accounts manually.
-</div>
-{% endif %}
+<div class="gt-account gt-account--wide">
+    <nav class="gt-account-nav" aria-label="Account">
+        <a href="{{ url_for('settings.settings_profile_view') }}">{{ icons.icon('user') }} Profile</a>
+        <a href="{{ url_for('settings.account_pw') }}">{{ icons.icon('key') }} Password</a>
+        <a href="{{ url_for('login.invites') }}">{{ icons.icon('envelope') }} Invites</a>
+        <a href="{{ url_for('library.library') }}">{{ icons.icon('library') }} Library</a>
+    </nav>
 
-<div class="glass-panel container py-4">
-    <h2 class="mb-3">Invite friends to your gamer crew!</h2>
-    <p>Invites expire automatically after 48 hours. If not used by then, the invite is returned to you.</p>
-    {% if site_url == 'http://127.0.0.1' and current_user.role == 'admin' %}
+    <header class="gt-account-header">
+        <h1 class="gt-account-title">Invites</h1>
+        <p class="gt-account-lede">Invite friends to your household library. Unused invites return after 48 hours.</p>
+    </header>
+
+    {% if not smtp_enabled %}
     <div class="alert alert-warning" role="alert">
-        {{ icons.icon('warning') }} Warning: Site URL is still set to default value (127.0.0.1). 
-        Please <a href="{{ url_for('admin2.new_server_settings') }}">configure the site URL</a> in admin settings for proper invite functionality.
+        {{ icons.icon('warning') }}
+        <strong>SMTP is not configured.</strong>
+        Invited users may not receive confirmation email. Prefer the
+        <a href="{{ url_for('admin2.manage_users') }}">user manager</a> to create accounts manually.
     </div>
     {% endif %}
-    <div class="alert alert-info" role="alert">
-        You have <strong>{{ remaining_invites }}</strong> out of <strong>{{ invite_quota }}</strong> invites left to send.
-    </div>
-    
 
-    <div class="mb-5">
-        <form action="{{ url_for('login.invites') }}" method="POST" class="row g-3">
+    {% if site_url == 'http://127.0.0.1' and current_user.role == 'admin' %}
+    <div class="alert alert-warning" role="alert">
+        {{ icons.icon('warning') }}
+        Site URL is still the default (127.0.0.1).
+        <a href="{{ url_for('admin2.new_server_settings') }}">Configure the site URL</a> for working invite links.
+    </div>
+    {% endif %}
+
+    <div class="gt-account-panel">
+        <div class="alert alert-info" role="status">
+            You have <strong>{{ remaining_invites }}</strong> out of <strong>{{ invite_quota }}</strong> invites left.
+        </div>
+
+        <form action="{{ url_for('login.invites') }}" method="POST" class="gt-account-actions" style="align-items: flex-end;">
             {{ form.hidden_tag() }}
-            <div class="col-auto">
+            <div class="form-group" style="flex: 1 1 16rem; margin-bottom: 0;">
+                {{ form.email.label(class="form-label") }}
                 {{ form.email(class="form-control") }}
             </div>
-            <div class="col-auto">
+            <div>
                 {{ form.submit(class="btn btn-primary") }}
             </div>
         </form>
-    </div>
 
-    <div class="list-group">
-        {% for invite in invites %}
-        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-            <div>
-                Invite Link: <span class="text-primary" id="invite-link-{{ invite.token }}">{{ site_url }}/register?token={{ invite.token }}</span><br>
-                Sent to: <strong>{{ invite.recipient_email }}</strong><br>
-                Status: <strong>{{ "Used" if invite.used else "Pending" }}</strong><br>
-                {% if invite.used %}
-                    Used by: <strong>{{ invite.used_by_user.name }}</strong><br>
-                    Used on: <strong>{{ invite.used_at.strftime('%Y-%m-%d %H:%M:%S') }}</strong><br>
-                {% else %}
-                    Expires in: 
-                    {% if invite.expires_at.tzinfo %}
-                        {% set seconds_remaining = (invite.expires_at - current_datetime).total_seconds() %}
+        <div class="gt-account-invite-list">
+            {% for invite in invites %}
+            <div class="gt-account-invite">
+                <div class="gt-account-invite__meta">
+                    <div>Invite link: <span id="invite-link-{{ invite.token }}">{{ site_url }}/register?token={{ invite.token }}</span></div>
+                    <div>Sent to: <strong>{{ invite.recipient_email }}</strong></div>
+                    <div>Status: <strong>{{ "Used" if invite.used else "Pending" }}</strong></div>
+                    {% if invite.used %}
+                        <div>Used by: <strong>{{ invite.used_by_user.name }}</strong></div>
+                        <div>Used on: <strong>{{ invite.used_at.strftime('%Y-%m-%d %H:%M:%S') }}</strong></div>
                     {% else %}
-                        {% set naive_current = current_datetime.replace(tzinfo=None) %}
-                        {% set seconds_remaining = (invite.expires_at - naive_current).total_seconds() %}
+                        {% if invite.expires_at.tzinfo %}
+                            {% set seconds_remaining = (invite.expires_at - current_datetime).total_seconds() %}
+                        {% else %}
+                            {% set naive_current = current_datetime.replace(tzinfo=None) %}
+                            {% set seconds_remaining = (invite.expires_at - naive_current).total_seconds() %}
+                        {% endif %}
+                        {% if seconds_remaining > 0 %}
+                            <div>Expires in: <strong>{{ (seconds_remaining // 3600)|int }} hours</strong></div>
+                        {% else %}
+                            <div><strong class="text-danger">Invite expired</strong></div>
+                        {% endif %}
                     {% endif %}
-                    {% if seconds_remaining > 0 %}
-                        <strong>{{ seconds_remaining // 3600 }} hours</strong>
+                </div>
+                <div class="gt-account-invite__actions">
+                    {% if not invite.used %}
+                        {% if invite.expires_at.tzinfo %}
+                            {% set button_seconds_remaining = (invite.expires_at - current_datetime).total_seconds() %}
+                        {% else %}
+                            {% set naive_current = current_datetime.replace(tzinfo=None) %}
+                            {% set button_seconds_remaining = (invite.expires_at - naive_current).total_seconds() %}
+                        {% endif %}
+                        <button type="button" class="btn btn-outline-secondary btn-sm" {% if button_seconds_remaining <= 0 %}disabled{% endif %}
+                        onclick="copyToClipboard('{{ site_url }}/register?token={{ invite.token }}')">Copy invite URL</button>
                     {% else %}
-                        <strong class="text-danger">INVITE EXPIRED</strong>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled>Copy invite URL</button>
                     {% endif %}
-                {% endif %}
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteInvite('{{ invite.token }}')">Delete</button>
+                </div>
             </div>
-            <div>
-                {% if not invite.used %}
-                    {% if invite.expires_at.tzinfo %}
-                        {% set button_seconds_remaining = (invite.expires_at - current_datetime).total_seconds() %}
-                    {% else %}
-                        {% set naive_current = current_datetime.replace(tzinfo=None) %}
-                        {% set button_seconds_remaining = (invite.expires_at - naive_current).total_seconds() %}
-                    {% endif %}
-                    <button type="button" class="btn btn-outline-secondary btn-sm" {% if button_seconds_remaining <= 0 %}disabled{% endif %}
-                    onclick="copyToClipboard('{{ site_url }}/register?token={{ invite.token }}')">Copy Invite URL</button>
-                {% else %}
-                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled>Copy Invite URL</button>
-                {% endif %}
-                <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteInvite('{{ invite.token }}')">Delete</button>
-            </div>
-            
-            <!-- Add CSRF token meta tag -->
-            <meta name="csrf-token" content="{{ csrf_token() }}">
+            {% else %}
+            <p class="gt-account-lede">No active invites yet.</p>
+            {% endfor %}
         </div>
-        {% else %}
-        <div class="list-group-item">You have no active invites. Invite some gamers onto your crew!</div>
-        {% endfor %}
     </div>
 </div>
 
-<!-- Embed CSRF token -->
 <script id="csrf_token" type="application/json">{{ csrf_token() }}</script>
-
-<!-- External JavaScript for invite management functionality -->
 <script src="{{ 'js/user_invites.js'|theme_asset }}"></script>
 {% endblock %}

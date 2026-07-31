@@ -1,9 +1,11 @@
 ﻿# Android APK · (headset VR → see headset-vr.md)
 
 **Date:** 2026-07-27  
-**Status:** Strategy lock — **APK** focus here; **headset/VR product** moved to [headset-vr.md](headset-vr.md) (SteamVR/PSVR2 first-class; Quest = friend seat)  
+**Status:** Strategy lock — **spike note only** (no shipped APK in this wave). **APK** focus here; **headset/VR product** moved to [headset-vr.md](headset-vr.md) (SteamVR/PSVR2 first-class; Quest = friend seat)  
 **Audience:** PM · Desktop · Ops · UI/UX  
 **Related:** [headset-vr.md](headset-vr.md) · [controller-input.md](controller-input.md) · [thin-client.md](thin-client.md) · [gow-remote-play.md](gow-remote-play.md) · `ENABLE_VR_BROWSE` · `/vr`
+
+> **Honesty:** This file is a planning spike. Do **not** treat the build sketch as a supported product path. Windows thin (`npm run tauri:build:thin`) is the shipped connect-only shell; Android APK is deferred (APK-0).
 
 ---
 
@@ -39,7 +41,7 @@
 | **4** | TWA / Play Store | HTTPS + asset links | Medium | Defer |
 | **5** | React Native / Flutter | Dual UI | High | **Reject** |
 
-### Build sketch (when wave opens)
+### Build sketch (spike only — not run in this honesty wave)
 
 ```text
 cd clients/desktop
@@ -47,6 +49,8 @@ npm run build:thin
 npx tauri android init
 npx tauri android build --apk
 ```
+
+Do **not** open `tauri android init` / APK packaging until APK-0 is explicitly scheduled.
 
 ### Quest-specific APK note
 

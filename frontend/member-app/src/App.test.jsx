@@ -14,6 +14,9 @@ vi.mock('./chrome/CommandPalette', () => ({
 vi.mock('./components/SocialCompanionDock', () => ({
   SocialCompanionDock: () => null,
 }))
+vi.mock('./components/ChatSlideOut', () => ({
+  ChatSlideOut: () => null,
+}))
 vi.mock('./pages/NewsPage', () => ({ NewsPage: () => <div><h1>News</h1></div> }))
 vi.mock('./pages/CollectionsPage', () => ({
   CollectionsPage: ({ shellConfig }) => <div>CollectionsPage:{shellConfig.tileSize}</div>,

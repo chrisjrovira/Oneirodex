@@ -6,19 +6,19 @@ Household social is first-party (no third-party chat webhooks). Optional voice u
 
 | Surface | Where | Notes |
 |---|---|---|
-| **Friends companion** | Floating dock · **Pop out** · `/social-companion` · desktop **Open friends window** | Stay-open friends list with DM / party invite / share — works beside Big Picture without living in the main library UI |
+| **Friends companion** | Floating dock · **More → Friends** · **Pop out** · `/social-companion` · desktop **Open friends window** | Stay-open friends list with DM / party invite / share — works beside Big Picture without living in the main library UI |
 | Presence / activity | **More → Activity** | Who’s online / recent play |
 | Profiles | `/members/<id>` | From friends / activity |
-| Notifications | **More → Notifications** | Friends, chat, admin alerts; optional email for mentions/DMs |
-| Chat (DMs + channels) | **More → Chat** | Reactions (Unicode + household custom) · search · reply threads · @mentions · mute |
+| Notifications | **More → Notifications** | Dense inbox with unread filter; alert prefs folded under **Alert preferences**; optional email for mentions/DMs |
+| Chat (DMs + channels) | Left slide-out · **More → Chat** · Chat pill · `/chat` deep-link | Rooms · messages · composer · create room · reactions · search · reply · mute · **Archive** / **Leave** (thread header) |
 | Voice lobby | Activity (+ Big Picture party) | LiveKit; **spectator** = listen-only token |
 | Community link | Preferences / More | BYO Stoat or Matrix URL if admin set it |
-| Report issue | **More → Report issue** | Ticket → admin inbox (+ GitHub when configured) |
+| Report issue | **More → Report issue** | Title required; symptom/logs optional · Context/Logs collapsed · ticket → admin inbox (+ GitHub when configured) |
 
 ## Friends companion (stay-open)
 
-- Library UI shows a **Friends** pill (bottom-right). Open it for presence, DMs, party invite, and share-game. The dock **starts closed** and only opens `/api/activity/stream` while open (avoids starving Discover/Library on single-worker ASGI).
-- **Pop out** opens `/social-companion` in a separate browser window you can park on a second monitor.
+- Library UI shows a **Friends** pill (bottom-right). **More → Friends** (and Ctrl/Cmd+K → Friends) opens the same dock in place — it does **not** swap the SPA to a full-page `/social-companion` shell. Open it for presence, DMs, party invite, and share-game. The dock **starts closed** and only opens `/api/activity/stream` while open (avoids starving Discover/Library on single-worker ASGI).
+- **Pop out** opens `/social-companion` in a separate browser window you can park on a second monitor (desktop companion uses the same host route).
 - **Big Picture:** header **Friends** or press **Y** — companion starts closed; open when you need it so the rail stays responsive.
 - **Desktop companion:** **Open friends window** creates or focuses an always-on-top Tauri webview to `/social-companion`. Needs a Server URL; uses your **site login** in that window (companion Connect optional). If the companion is Offline, the window still opens but may not load until the server is back — the status strip explains this. Least-privilege ACL — no install/launch from the Friends window. Same surfaces as web: dock · pop-out · Big Picture **Y**. See [desktop-companion.md](desktop-companion.md).
 
@@ -29,17 +29,33 @@ Household social is first-party (no third-party chat webhooks). Optional voice u
 - Instant and digest are independent — you can use either or both.
 - Free-game-only digests are not separate; free games are included in the daily digest.
 
+## Chat slide-out
+
+- Library UI shows a **Chat** pill (bottom-left). **More → Chat** and Ctrl/Cmd+K → Chat open the same **left slide-out** — TopNav and the page underneath stay available.
+- Layout: room list (channels + DMs) · message pane · composer. Use **More** in the room list for search and open-DM. **Add** creates a household room.
+- Dismiss with ×, the dimmed scrim, or Esc; reopen from the pill or More anytime. Open preference is remembered in localStorage.
+- `/chat` deep-links open the slide-out and replace to Library (no orphan full-page chat shell).
+- Friends dock **Chat** / DM actions open this panel in place (standalone `/social-companion` still uses `/chat` deep-link).
+
 ## Mute a channel or DM
 
-- Open **More → Chat**, select a channel, click **Mute** / **Unmute**.
-- Muted channels show `(muted)` in the sidebar.
+- Open Chat, select a channel, click **Mute** / **Unmute**.
+- Muted channels show `muted` in the sidebar.
 - While muted, you still see messages in Chat, but @mentions and DM notifications for that thread are suppressed.
+
+## Create / manage household rooms
+
+- Authenticated members (`user` / librarian / admin) can **create** from the slide-out **Add** field (`POST /api/chat/channels` with `name`, optional `slug`). Child accounts cannot create rooms — the API returns 403.
+- Member-created rooms are always child-safe; only librarian/admin may set `is_child_safe: false`.
+- **Archive** (thread header) — household rooms only; room creator or librarian+. Confirm, then `POST …/archive`. Room disappears from the list for everyone. Permission errors show as 403 copy.
+- **Leave** (thread header) — confirm, then `POST …/leave`. DMs drop membership (conversation leaves the list); household rooms mute (same effect as **Mute**; sidebar shows the **muted** badge; unmute later).
+- List payload includes `id`, `name`, `type`/`kind`, `unread`, `muted`, `created_by_user_id` (`rooms` alias on `GET /api/chat/channels`).
 
 ## Chat reactions & search
 
 - Click an emoji under a message to toggle your reaction (same emoji again removes it).
 - Admins can upload household custom emoji (Integrations → **Manage custom chat emoji**, max 20 images) — they appear next to the fixed Unicode set in Chat.
-- Use **Search messages** at the top of Chat (min 2 characters). Hits open the channel.
+- Open **More** in the room list → search messages (min 2 characters). Hits open the channel.
 
 ## Voice (LiveKit)
 

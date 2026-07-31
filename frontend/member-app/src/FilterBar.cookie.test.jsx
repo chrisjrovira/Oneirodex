@@ -125,3 +125,32 @@ test('apply persists selected filters and refreshes browse results', async () =>
     expect(browseUrls.at(-1)).toContain('genre=Action')
   })
 })
+
+test('kind chips set item_kind on browse and cookie', async () => {
+  const user = userEvent.setup()
+  const fetchMock = vi.fn((url) => {
+    if (url.startsWith('/browse_games?')) {
+      return jsonResponse({
+        games: [],
+        pages: 1,
+        current_page: 1,
+        total: 0,
+      })
+    }
+    return jsonResponse([])
+  })
+  vi.stubGlobal('fetch', fetchMock)
+
+  renderLibrary(<LibraryApp initialConfig={initialConfig} />)
+
+  await user.click(await screen.findByRole('button', { name: 'Games' }))
+  await user.click(screen.getByRole('button', { name: 'Emulators' }))
+
+  await waitFor(() => {
+    expect(decodeURIComponent(document.cookie)).toContain('"item_kind":"game,emulator"')
+    const browseUrls = fetchMock.mock.calls
+      .map(([url]) => url)
+      .filter((url) => url.startsWith('/browse_games?'))
+    expect(browseUrls.at(-1)).toContain('item_kind=game%2Cemulator')
+  })
+})

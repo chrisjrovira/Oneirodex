@@ -11,6 +11,9 @@ def fetch_release_calendar(*, days_ahead: int = 60, days_behind: int = 14, limit
     """
     Return IGDB games with first_release_date in [now-behind, now+ahead].
     Artwork/metadata only — never downloads games.
+
+    When IGDB is off, misconfigured, or returns empty/error, returns ``[]``
+    (never raises for empty/off — callers return stable HTTP 200).
     """
     days_ahead = max(1, min(int(days_ahead or 60), 180))
     days_behind = max(0, min(int(days_behind or 14), 90))
@@ -26,10 +29,12 @@ def fetch_release_calendar(*, days_ahead: int = 60, days_behind: int = 14, limit
         f' sort first_release_date asc;'
         f' limit {limit};'
     )
-    raw = make_igdb_api_request('https://api.igdb.com/v4/games', body)
+    try:
+        raw = make_igdb_api_request('https://api.igdb.com/v4/games', body)
+    except Exception:
+        return []
     if not isinstance(raw, list):
-        if isinstance(raw, dict) and raw.get('error'):
-            raise RuntimeError(str(raw.get('error')))
+        # IGDB off / auth fail / unexpected payload → empty, not an exception.
         return []
 
     items: list[dict] = []

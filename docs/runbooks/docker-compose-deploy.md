@@ -36,10 +36,18 @@ Do **not** conflate games (scan root) with library/uploads. Compose header has a
 
 If app loops on `no pg_hba.conf entry … no encryption`, recreate `db` with current Compose or use the one-liner in [container-wont-start.md](container-wont-start.md#3b-postgres-up-but-pg_hba-rejects-app-no-encryption).
 
+### Library root watch (optional Wave 3)
+
+`GT_LIBRARY_WATCH` stays **off by default** (`0` / unset). Compose bind-mounts only forward filesystem events the kernel delivers on that mount:
+
+- **Direct host binds** (local disk path → `/storage:ro`) — events may work; still debounce + queue, never assume zero misses.
+- **Unraid `/mnt/user` FUSE / network remounts** — host-side renames and many writes **often never reach** inotify inside the container. Prefer scheduled/manual scan; details: [unraid-deploy.md § Library root watch](unraid-deploy.md#library-root-watch-gt_library_watch--unraid-honesty).
+- When a watcher (or Admin) enqueues many paths while a scan is busy: use **Queue**, not force-parallel — [libraries-and-scans.md](../admin/libraries-and-scans.md#run-a-scan).
+
 ## After first start
 
 1. Complete setup wizard
-2. Admin → Themes → **Reset Default Themes** (ensures `#2fd67b` tokens / `GENERATOR_VERSION` 8)
+2. Admin → Themes → **Reset Default Themes** (ensures `#2fd67b` tokens / `GENERATOR_VERSION` 9)
 3. Add library under `/storage/...`, run a small scan
 
 ## Rebuild after frontend/theme changes
@@ -122,6 +130,8 @@ Prometheus/Grafana are **not** bundled. Near-realtime ops for operators = Admin 
 ### Workers
 
 Default `UVICORN_WORKERS=1` (Compose + `startweb-docker.sh`; override in `.env` / Compose env). Schedulers, SSE fan-out, and in-memory rate limits are **per worker** — keep **1** for single-node household ops until a shared cache lands. Set `UVICORN_WORKERS=2` only when you accept split in-process state.
+
+Scan / turbo image thread counts are **not** Compose env vars — set them under Admin → Server Settings. Unraid-safe defaults (scan **1**, turbo off or ≤4 threads during big libraries): [unraid-deploy.md § CPU / scan load](unraid-deploy.md#cpu--scan-load-unraid-safe-defaults). Keep `GT_LIBRARY_WATCH` off unless you accept best-effort events; watcher bursts should **queue**, not force-parallel.
 
 `/api/activity/stream` and `/api/events/stream` are handled **natively in ASGI** (not WsgiToAsgi) so a single open EventSource cannot freeze Discover/Admin on the same worker. Flask WSGI fallbacks return **503** (no sync generator). If pages hang with only static + activity-stream 200s in the logs, rebuild/restart so that ASGI path is live — see [admin troubleshooting](../admin/troubleshooting.md#spa-navigates-but-pagesadmin-hang-discover-stuck-on-loading).
 

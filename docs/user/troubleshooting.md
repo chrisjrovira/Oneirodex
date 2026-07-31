@@ -11,7 +11,7 @@ Quick checks before pinging an admin.
 | Spin forever (API 401/500) | Auth / server error | Hard refresh; re-login; admin check `/readyz` + logs |
 | Theme didn’t apply | Cache / wrong preference | Preferences → re-pick theme; hard refresh |
 | Can’t find a page | Nav clutter | **Ctrl+K** / ⌘K command palette — [faq.md](faq.md) |
-| Chat cramped on phone | Old frontend build | Admin rebuild `member-app` (Chat stacks ≤900px) |
+| Chat cramped on phone | Old frontend build | Admin rebuild `member-app` (Chat slide-out stacks ≤900px) |
 | Huge tiles on phone | Pref L/XL before density polish | Rebuild; tiles clamp automatically under 900px |
 | Some store links on details look like plain text | Logo assets not shipped yet for that store | Expected for itch · Humble · EA · Ubisoft · Xbox · PSN · Amazon · wikia/fandom · unknown — link still works; Steam/GOG/Epic/IGDB/YouTube/Wikipedia/official have marks |
 
@@ -39,7 +39,7 @@ Quick checks before pinging an admin.
 
 | Symptom | Likely cause | What to try |
 |---|---|---|
-| Friends pill missing | Old frontend build | Admin rebuild `member-app`; use **More → Friends window** |
+| Friends pill missing | Old frontend build | Admin rebuild `member-app`; use **More → Friends** |
 | Chat empty | No channels yet | Admin/librarian may need to create `#general` |
 | Voice token fails | LiveKit off / misconfigured | Admin: `ENABLE_LIVEKIT` + [livekit-unraid.md](../runbooks/livekit-unraid.md) |
 | Screenshare denied | Child account | Expected — camera/screenshare blocked for children |
@@ -49,7 +49,7 @@ Quick checks before pinging an admin.
 
 | Symptom | Likely cause | What to try |
 |---|---|---|
-| Connect fails 401/403 | Bad token / scopes | Account → API tokens: recreate with Desktop companion preset (or `read:library` + `write:download`) |
+| Connect fails 401/403 | Bad token / scopes / truncated paste | Account → API tokens: recreate with Desktop companion preset; paste full `gt_<prefix>_<secret>` (secret may include `-`/`_`). On HTTP LAN, select secret + Ctrl+C if Copy fails |
 | Download / Update greyed in companion | Offline heartbeat | Re-Connect; Play/Install/Uninstall still work — [desktop-companion.md](desktop-companion.md) |
 | Friends window can’t install games | By design (least-privilege) | Use the main companion window |
 | Update never appears | Local registry not merged | Re-Connect companion; see [desktop-companion.md](desktop-companion.md) |

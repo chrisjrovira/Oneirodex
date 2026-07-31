@@ -74,7 +74,15 @@ def game_indicates_vr(game):
 
 def game_card_flags(game):
     """Flags used by library cards / browse JSON payloads."""
-    return {'is_vr': game_indicates_vr(game)}
+    from gametheca.utils.item_kind import DEFAULT_ITEM_KIND, normalize_item_kind
+
+    kind = normalize_item_kind(getattr(game, 'item_kind', None) or DEFAULT_ITEM_KIND)
+    return {
+        'is_vr': game_indicates_vr(game),
+        'item_kind': kind,
+        # Alias for UI field maps that prefer content_kind wording
+        'content_kind': kind,
+    }
 
 
 def enrich_game_metadata(game_name, igdb_data=None, rawg_api_key=None):
@@ -100,8 +108,19 @@ def missing_core_fields(data):
     return not data.get('summary') or not data.get('genres') or not data.get('developer')
 
 
-def search_steam_games(game_name, limit=10):
-    """Return a list of Steam store search hits for manual identify UI."""
+def search_steam_games(game_name, limit=10, *, include_software=True):
+    """Return Steam store search hits for manual identify UI.
+
+    Includes Steam ``type`` (game/software/…) and inferred ``item_kind``.
+    Software/application hits are included by default so gaming-adjacent apps
+    (emulators, VR tools) can resolve without requiring an IGDB Main Game id.
+    Ownership/register only — never queues DRM downloads.
+    """
+    from gametheca.utils.item_kind import (
+        infer_item_kind_from_steam_type,
+        steam_type_is_software,
+    )
+
     try:
         clean_name = re.sub(r'[\(\)\[\]]', '', game_name or '')
         if not clean_name.strip():
@@ -113,18 +132,27 @@ def search_steam_games(game_name, limit=10):
         resp = request_with_backoff(search_url, host_key='steam', timeout=5)
         if resp is None:
             return []
-        items = (resp.json().get('items') or [])[:limit]
+        items = resp.json().get('items') or []
         results = []
         for item in items:
+            if len(results) >= limit:
+                break
+            steam_type = (item.get('type') or '').strip().lower() or None
+            if not include_software and steam_type_is_software(steam_type):
+                continue
             app_id = item.get('id')
+            name = item.get('name')
             results.append({
                 'source': 'steam',
                 'id': app_id,
-                'name': item.get('name'),
+                'name': name,
                 'url': f'https://store.steampowered.com/app/{app_id}/' if app_id else None,
                 'cover_url': (item.get('tiny_image') or None),
                 'summary': None,
                 'steam_app_id': app_id,
+                'steam_type': steam_type,
+                'item_kind': infer_item_kind_from_steam_type(steam_type, name=name),
+                'is_software': steam_type_is_software(steam_type),
             })
         return results
     except Exception as e:

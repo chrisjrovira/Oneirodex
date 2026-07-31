@@ -1,11 +1,17 @@
 import { render, screen } from '@testing-library/react'
+import { vi } from 'vitest'
 import { PageStatus } from './PageStatus'
+
+vi.mock('./loadingMotifApi', () => ({
+  useLoadingMotifId: () => 'orbit',
+}))
 
 test('loading state sets aria-busy and shows loading message', () => {
   render(<PageStatus loading loadingMessage="Loading Discover…" />)
   const status = screen.getByRole('status')
   expect(status).toHaveAttribute('aria-busy', 'true')
   expect(screen.getByText('Loading Discover…')).toBeInTheDocument()
+  expect(screen.getByRole('img', { name: 'Loading Discover…' })).toHaveAttribute('data-motif', 'orbit')
 })
 
 test('emptyMessage renders polite empty status', () => {

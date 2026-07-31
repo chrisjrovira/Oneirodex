@@ -1,4 +1,9 @@
-export { createAuthStore, isGamethecaToken, normalizeBaseUrl } from './auth.js'
+export {
+  createAuthStore,
+  isGamethecaToken,
+  normalizeBaseUrl,
+  normalizeGamethecaToken,
+} from './auth.js'
 export type { AuthConfig, AuthSnapshot, AuthStore, KeychainAdapter } from './auth.js'
 export { createDesktopApi } from './api.js'
 export { fetchLibraryPreview, validateConnection } from './connect.js'

@@ -4,7 +4,7 @@
 **Status:** Requirements + implementation — **in 1.0 scope** (CH-1…CH-5 before official 1.0.0)  
 **Audience:** PM · Backend · Ops · Docs · QA  
 **Upstream reference:** [germondai/trawl](https://github.com/germondai/trawl) (FlareSolverr-compatible self-hosted solver)  
-**Related:** [settings-modules.md](../admin/settings-modules.md) · [docker-compose-deploy.md](../runbooks/docker-compose-deploy.md) · [features.md](features.md) · [external-facing-scrub.md](external-facing-scrub.md) · [v1-readiness.md](v1-readiness.md)
+**Related:** [settings-modules.md](../admin/settings-modules.md) · [docker-compose-deploy.md](../runbooks/docker-compose-deploy.md) · [features.md](features.md) · [external-facing-scrub.md](external-facing-scrub.md) · [v1-readiness.md](v1-readiness.md) · **post-1.0 nice-to-have:** [native-challenge-solver.md](native-challenge-solver.md) (NCS-1…5 — GameTheca-owned solver; TRAWL stays 1.0 path)
 
 ---
 
@@ -31,7 +31,7 @@ BYO acquire (Prowlarr / Jackett / hoster HTTP / debrid resolve) increasingly hit
 
 GameTheca today calls connector URLs with plain `requests`. There is **no** challenge solver sidecar, no FlareSolverr URL field, and no captcha-token provider. Operators who already run TRAWL / FlareSolverr for *arr cannot point GameTheca at them.
 
-**Product intent:** continue building toward **reliable automation of JS challenges & captchas when needed for household download/search**, without shipping a public “captcha cracker as a service” or bundled pirate indexers.
+**Product intent:** continue building toward **reliable automation of JS challenges & captchas when needed for household download/search**, without shipping a public “captcha cracker as a service” or a torrent marketplace.
 
 ---
 
@@ -43,7 +43,7 @@ GameTheca today calls connector URLs with plain `requests`. There is **no** chal
 |---|---|
 | Default | **Off** — acquire works without it for open endpoints |
 | Hosting | Sidecar on LAN / Compose profile — **never** expose solver or MITM proxy to the public internet |
-| Indexers | Still **BYO** — no bundled pirate sources |
+| Indexers | Native Torznab/Newznab registry + optional admin presets + BYO hubs — **no** marketplace |
 | Legal frame | Owned-content / household library automation; same as `ENABLE_ARR_MODULE` |
 | Monetized cloud solvers | Optional later (API key) — never required |
 

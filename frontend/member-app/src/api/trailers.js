@@ -62,6 +62,7 @@ export async function fetchTrailerFilters({ signal } = {}) {
 /**
  * A 404 here means "nothing matched the filters", which is an empty result the
  * page renders rather than a failure, so it is returned instead of thrown.
+ * Backend empty library also returns 200 with has_videos:false + empty/cta.
  */
 export async function fetchRandomTrailer({ signal, filters } = {}) {
   const query = buildTrailerParams(filters).toString()
@@ -74,7 +75,10 @@ export async function fetchRandomTrailer({ signal, filters } = {}) {
     const data = await response.json().catch(() => ({}))
     return {
       has_videos: false,
+      empty: true,
+      code: data.code || 'no_trailers',
       message: data.message || 'No games with trailers found matching your filters',
+      cta: data.cta || null,
     }
   }
 

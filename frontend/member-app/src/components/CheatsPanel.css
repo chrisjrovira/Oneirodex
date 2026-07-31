@@ -1,0 +1,161 @@
+.gt-cheats-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gt-cheats-panel__lede {
+  margin: 0;
+  line-height: 1.45;
+  opacity: 0.78;
+  font-size: 0.92rem;
+}
+
+.gt-cheats-panel__lede a {
+  color: inherit;
+}
+
+.gt-cheats-panel__status {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.gt-cheats-panel__status[role='alert'] {
+  color: color-mix(in srgb, #f07178 80%, var(--gt-text, #e8f5ee));
+}
+
+.gt-cheats-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.gt-cheats-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+  background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 70%, transparent);
+}
+
+.gt-cheats-panel__row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.gt-cheats-panel__row-meta strong {
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.gt-cheats-panel__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.gt-cheats-panel__form,
+.gt-cheats-panel__upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px dashed color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent);
+  background: color-mix(in srgb, var(--gt-surface, #141820) 88%, transparent);
+}
+
+.gt-cheats-panel__form h3,
+.gt-cheats-panel__upload h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.gt-cheats-panel__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.gt-cheats-panel__field > span {
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  opacity: 0.72;
+}
+
+.gt-cheats-panel__field input,
+.gt-cheats-panel__field select,
+.gt-cheats-panel__code-row input {
+  width: 100%;
+  min-height: 2.1rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 7px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.14));
+  background: var(--gt-surface-2, #1c2230);
+  color: var(--gt-text, #f2f4f8);
+  font: inherit;
+}
+
+.gt-cheats-panel__field input:focus-visible,
+.gt-cheats-panel__field select:focus-visible,
+.gt-cheats-panel__code-row input:focus-visible {
+  outline: 2px solid var(--gt-accent, #2fd67b);
+  outline-offset: 1px;
+}
+
+.gt-cheats-panel__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(8rem, 0.8fr);
+  gap: 0.65rem;
+}
+
+.gt-cheats-panel__codes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.gt-cheats-panel__code-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
+  gap: 0.4rem;
+  align-items: end;
+}
+
+.gt-cheats-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.gt-cheats-panel__file {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .gt-cheats-panel__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gt-cheats-panel__code-row {
+    grid-template-columns: 1fr;
+  }
+
+  .gt-cheats-panel__row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

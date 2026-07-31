@@ -16,9 +16,14 @@ from gametheca.models import (
 from gametheca import db
 from gametheca.utils.game_core import remove_from_lib
 from gametheca.utils.gamenames import get_game_names_from_folder, get_game_names_from_files
-from gametheca.utils.scanning import process_game_with_fallback, process_game_updates, process_game_extras, is_scan_job_running, bump_scan_job_progress
+from gametheca.utils.scanning import process_game_with_fallback, process_game_updates, process_game_extras, process_pc_dlc_and_extra_roots, is_scan_job_running, bump_scan_job_progress
 from gametheca.utils.igdb_api import IGDBRateLimiter
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories
+from gametheca.utils.worker_caps import (
+    clamp_scan_threads,
+    cooperative_yield,
+    iter_chunks,
+)
 
 SCHEDULE_HOURS = {
     '8_hours': 8,
@@ -37,10 +42,24 @@ def compute_next_run(schedule_key, from_time=None):
     return base + timedelta(hours=hours)
 
 
-def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remove_missing=False, existing_job=None, download_missing_images=False, force_updates_extras_scan=False, fetch_hltb=False, force_hltb_refetch=False, schedule=None):
-    # Only check for running jobs if we're not restarting an existing job
-    if not existing_job and is_scan_job_running():
-        print("A scan is already in progress. Please wait for it to complete.")
+def _drain_scan_queue_safe():
+    """Best-effort FIFO promote after a scan leaves Running/Stopping."""
+    try:
+        from gametheca.utils.scan_queue import promote_next_queued_scan
+        promote_next_queued_scan(current_app._get_current_object())
+    except Exception as drain_exc:
+        print(f"[SCAN QUEUE] Drain failed: {drain_exc}")
+
+
+def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remove_missing=False, existing_job=None, download_missing_images=False, force_updates_extras_scan=False, fetch_hltb=False, force_hltb_refetch=False, schedule=None, force_parallel=False):
+    # Only check for running jobs if we're not restarting/resuming an existing job
+    # Prefer start_or_queue_scan() at call sites so second requests queue instead of dropping.
+    # force_parallel=True (admin opt-in) allows overlapping jobs; still respects thread caps.
+    if not existing_job and is_scan_job_running() and not force_parallel:
+        print(
+            "A scan is already in progress. Request dropped at worker entry — "
+            "callers should use start_or_queue_scan() so the request is queued."
+        )
         return
         
     # Cache settings once at the start of scan
@@ -49,7 +68,9 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
     extras_folder_name = settings_obj.extras_folder_name if settings_obj else 'extras'
     enable_game_updates = settings_obj.enable_game_updates if settings_obj else False
     enable_game_extras = settings_obj.enable_game_extras if settings_obj else False
-    scan_thread_count = settings_obj.scan_thread_count if settings_obj else 1
+    scan_thread_count = clamp_scan_threads(
+        settings_obj.scan_thread_count if settings_obj else 1
+    )
 
     # Extract local metadata settings into a plain dict (thread-safe)
     # We can't pass SQLAlchemy objects across threads, so extract values now
@@ -140,6 +161,7 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
             db.session.commit()
         except SQLAlchemyError as e:
             print(f"Database error when updating ScanJob with error: {str(e)}")
+        _drain_scan_queue_safe()
         return
 
     # Load patterns before they are used
@@ -167,12 +189,14 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
             scan_job_entry.status = 'Completed'
             scan_job_entry.error_message = "No games found."
             db.session.commit()
+            _drain_scan_queue_safe()
             return
     except Exception as e:
         scan_job_entry.status = 'Failed'
         scan_job_entry.error_message = str(e)
         db.session.commit()
         print(f"Error during pattern loading or game name extraction: {str(e)}")
+        _drain_scan_queue_safe()
         return
 
     def process_single_game(game_info, scan_job_id, library_uuid, update_folder_name, extras_folder_name, enable_game_updates, enable_game_extras, existing_game_paths, existing_unmatched_paths, igdb_rate_limiter, app, force_updates_extras_scan=False, fetch_hltb=False, force_hltb_refetch=False, settings=None):
@@ -197,6 +221,16 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
                 print(f"Force HLTB refetch enabled, will update HLTB data for existing game: {game_name}")
 
             if not should_process_existing:
+                with app.app_context():
+                    from gametheca.utils.library_health import (
+                        clear_restored_missing_path_status,
+                    )
+
+                    if clear_restored_missing_path_status(
+                        [full_disk_path],
+                        library_uuid=library_uuid,
+                    ):
+                        db.session.commit()
                 return {'game_name': game_name, 'success': True, 'already_exists': True}
 
             game_already_exists = True
@@ -242,6 +276,14 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
                                 process_game_extras(game_name, full_disk_path, extras_folder, library_uuid, extras_folder_name)
                             else:
                                 print(f"No extras folder found for game: {game_name}")
+                            # PC-first: also associate common DLC/extra folder names + sibling DLC sidecars
+                            process_pc_dlc_and_extra_roots(
+                                game_name,
+                                full_disk_path,
+                                library_uuid,
+                                extras_folder_name=extras_folder_name,
+                                update_folder_name=update_folder_name,
+                            )
                         else:
                             print(f"Extras scanning disabled, skipping for game: {game_name}")
 
@@ -296,105 +338,125 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
     scan_job_id = scan_job_entry.id
     total_to_process = len(game_names_with_paths)
     if scan_thread_count > 1:
-        # Multithreaded processing
-        print(f"Using multithreaded scanning with {scan_thread_count} threads")
+        # Multithreaded processing — bounded queue (chunked submit) + hard thread cap.
+        print(f"Using multithreaded scanning with {scan_thread_count} threads (capped)")
         processed_count = 0
+        app_obj = current_app._get_current_object()
+        chunk_size = max(scan_thread_count * 2, scan_thread_count)
         with ThreadPoolExecutor(max_workers=scan_thread_count) as executor:
-            # Submit all game processing tasks
-            future_to_game = {
-                executor.submit(process_single_game, game_info, scan_job_id, library_uuid,
-                              update_folder_name, extras_folder_name, enable_game_updates, enable_game_extras,
-                              existing_game_paths, existing_unmatched_paths, igdb_rate_limiter, current_app._get_current_object(),
-                              force_updates_extras_scan, fetch_hltb, force_hltb_refetch, settings_dict): game_info
-                for game_info in game_names_with_paths
-            }
-            
-            # Process completed futures — always count first, then honor Stop by
-            # cancelling pending work and draining in-flight results (do not return early).
-            for future in as_completed(future_to_game):
-                # Discard any worker-touched session state on the coordinator thread.
-                db.session.remove()
+            for chunk in iter_chunks(game_names_with_paths, chunk_size):
+                if scan_was_cancelled:
+                    break
+                future_to_game = {
+                    executor.submit(
+                        process_single_game,
+                        game_info,
+                        scan_job_id,
+                        library_uuid,
+                        update_folder_name,
+                        extras_folder_name,
+                        enable_game_updates,
+                        enable_game_extras,
+                        existing_game_paths,
+                        existing_unmatched_paths,
+                        igdb_rate_limiter,
+                        app_obj,
+                        force_updates_extras_scan,
+                        fetch_hltb,
+                        force_hltb_refetch,
+                        settings_dict,
+                    ): game_info
+                    for game_info in chunk
+                }
 
-                if future.cancelled():
-                    continue
+                # Process completed futures — always count first, then honor Stop by
+                # cancelling pending work and draining in-flight results (do not return early).
+                for future in as_completed(future_to_game):
+                    # Discard any worker-touched session state on the coordinator thread.
+                    db.session.remove()
 
-                game_info = future_to_game[future]
-                try:
-                    result = future.result()
-                    processed_count += 1
-                    label = (
-                        f"Processing: {result.get('game_name') or game_info['name']} "
-                        f"({processed_count}/{total_to_process})"
-                    )
-                    if result.get('success'):
-                        bump_scan_job_progress(
-                            scan_job_id,
-                            success=True,
-                            current_processing=label,
+                    if future.cancelled():
+                        continue
+
+                    game_info = future_to_game[future]
+                    try:
+                        result = future.result()
+                        processed_count += 1
+                        label = (
+                            f"Processing: {result.get('game_name') or game_info['name']} "
+                            f"({processed_count}/{total_to_process})"
                         )
-                    else:
+                        if result.get('success'):
+                            bump_scan_job_progress(
+                                scan_job_id,
+                                success=True,
+                                current_processing=label,
+                            )
+                        else:
+                            bump_scan_job_progress(
+                                scan_job_id,
+                                failed=True,
+                                current_processing=label,
+                            )
+                            if result.get('unmatched'):
+                                print(f"[SCAN INFO] Game '{result['game_name']}' was unmatched (not an error)")
+                            elif result.get('error'):
+                                error_line = f"Failed to process '{result['game_name']}': {result['error']}"
+                                job_row = db.session.get(ScanJob, scan_job_id)
+                                if job_row:
+                                    job_row.error_message = (job_row.error_message or "") + f"{error_line}\n"
+                                    db.session.commit()
+                                print(f"[SCAN ERROR] {error_line}")
+                                print(f"[SCAN ERROR] Game path: {game_info.get('full_path')}")
+                                print(f"[SCAN ERROR] Full result: {result}")
+
+                    except Exception as e:
+                        processed_count += 1
                         bump_scan_job_progress(
                             scan_job_id,
                             failed=True,
-                            current_processing=label,
+                            current_processing=f"Error: {game_info['name']} ({processed_count}/{total_to_process})",
                         )
-                        if result.get('unmatched'):
-                            print(f"[SCAN INFO] Game '{result['game_name']}' was unmatched (not an error)")
-                        elif result.get('error'):
-                            error_line = f"Failed to process '{result['game_name']}': {result['error']}"
-                            job_row = db.session.get(ScanJob, scan_job_id)
-                            if job_row:
-                                job_row.error_message = (job_row.error_message or "") + f"{error_line}\n"
-                                db.session.commit()
-                            print(f"[SCAN ERROR] {error_line}")
-                            print(f"[SCAN ERROR] Game path: {game_info.get('full_path')}")
-                            print(f"[SCAN ERROR] Full result: {result}")
-                        
-                except Exception as e:
-                    processed_count += 1
-                    bump_scan_job_progress(
-                        scan_job_id,
-                        failed=True,
-                        current_processing=f"Error: {game_info['name']} ({processed_count}/{total_to_process})",
-                    )
-                    error_line = f"Exception processing '{game_info['name']}': {str(e)}"
-                    job_row = db.session.get(ScanJob, scan_job_id)
-                    if job_row:
-                        job_row.error_message = (job_row.error_message or "") + f"{error_line}\n"
-                        db.session.commit()
-                    print(f"[SCAN EXCEPTION] {error_line}")
-                    print(f"[SCAN EXCEPTION] Game path: {game_info.get('full_path', 'unknown')}")
-                    print(f"[SCAN EXCEPTION] Full exception: {repr(e)}")
-                    import traceback
-                    print(f"[SCAN EXCEPTION] Traceback: {traceback.format_exc()}")
+                        error_line = f"Exception processing '{game_info['name']}': {str(e)}"
+                        job_row = db.session.get(ScanJob, scan_job_id)
+                        if job_row:
+                            job_row.error_message = (job_row.error_message or "") + f"{error_line}\n"
+                            db.session.commit()
+                        print(f"[SCAN EXCEPTION] {error_line}")
+                        print(f"[SCAN EXCEPTION] Game path: {game_info.get('full_path', 'unknown')}")
+                        print(f"[SCAN EXCEPTION] Full exception: {repr(e)}")
+                        import traceback
+                        print(f"[SCAN EXCEPTION] Traceback: {traceback.format_exc()}")
 
-                # After counting, check shutdown / user Stop
-                from gametheca.utils.shutdown import should_continue_processing
-                scan_job_entry = db.session.get(ScanJob, scan_job_id)
-                stop_requested = (
-                    not should_continue_processing()
-                    or not scan_job_entry
-                    or not scan_job_entry.is_enabled
-                )
-                if stop_requested:
-                    scan_was_cancelled = True
-                    for f in future_to_game:
-                        if not f.done():
-                            f.cancel()
-                    if scan_job_entry:
-                        scan_job_entry.status = 'Stopping'
-                        if not should_continue_processing():
-                            scan_job_entry.error_message = 'Scan cancelled due to application shutdown'
-                        else:
-                            scan_job_entry.error_message = (
-                                scan_job_entry.error_message
-                                or 'Scan is stopping, waiting for in-flight folders to finish'
+                    cooperative_yield()
+
+                    # After counting, check shutdown / user Stop
+                    from gametheca.utils.shutdown import should_continue_processing
+                    scan_job_entry = db.session.get(ScanJob, scan_job_id)
+                    stop_requested = (
+                        not should_continue_processing()
+                        or not scan_job_entry
+                        or not scan_job_entry.is_enabled
+                    )
+                    if stop_requested:
+                        scan_was_cancelled = True
+                        for f in future_to_game:
+                            if not f.done():
+                                f.cancel()
+                        if scan_job_entry:
+                            scan_job_entry.status = 'Stopping'
+                            if not should_continue_processing():
+                                scan_job_entry.error_message = 'Scan cancelled due to application shutdown'
+                            else:
+                                scan_job_entry.error_message = (
+                                    scan_job_entry.error_message
+                                    or 'Scan is stopping, waiting for in-flight folders to finish'
+                                )
+                            scan_job_entry.current_processing = (
+                                f"Stopping… ({processed_count}/{total_to_process})"
                             )
-                        scan_job_entry.current_processing = (
-                            f"Stopping… ({processed_count}/{total_to_process})"
-                        )
-                        db.session.commit()
-                    # Keep draining as_completed so in-flight results still bump counters
+                            db.session.commit()
+                        # Keep draining as_completed so in-flight results still bump counters
 
             # Finalize cancel after all futures settled (executor context waits on exit too)
             db.session.remove()
@@ -475,6 +537,14 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
                                 process_game_extras(game_name, full_disk_path, extras_folder, library_uuid, extras_folder_name)
                             else:
                                 print(f"No extras folder found for game: {game_name}")
+                            # PC-first: also associate common DLC/extra folder names + sibling DLC sidecars
+                            process_pc_dlc_and_extra_roots(
+                                game_name,
+                                full_disk_path,
+                                library_uuid,
+                                extras_folder_name=extras_folder_name,
+                                update_folder_name=update_folder_name,
+                            )
                         else:
                             print(f"Extras scanning disabled, skipping for game: {game_name}")
                     else:
@@ -525,6 +595,7 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
     if scan_was_cancelled:
         # Counters already finalized; skip Completed / remove_missing / image pass
         print(f"Scan cancelled for folder: {folder_path} with ScanJob ID: {scan_job_id}")
+        _drain_scan_queue_safe()
         return
 
     if scan_job_entry.status != 'Failed':
@@ -541,19 +612,35 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
             scan_job_entry.is_enabled = True
             print(f"Scheduled next scan for {scan_job_entry.next_run} ({job_schedule})")
     
-    # If remove_missing is enabled, check for games that no longer exist
-    if remove_missing:
-        print("Checking for missing games...")
-        games_in_library = db.session.execute(select(Game).filter_by(library_uuid=library_uuid)).scalars().all()
-        for game in games_in_library:
-            if not os.path.exists(game.full_disk_path):
-                print(f"Game no longer found at path: {game.full_disk_path}")
-                try:
-                    remove_from_lib(game.uuid)
-                    scan_job_entry.removed_count += 1
-                    print(f"Removed game {game.name} as it no longer exists at {game.full_disk_path}")
-                except Exception as e:
-                    print(f"Error removing game {game.name}: {e}")
+    # Persist path_status for every library game (cheap exists per row — not Ops poll).
+    # When remove_missing is enabled, also delete rows whose path is gone.
+    print("Refreshing path_status for library games...")
+    from gametheca.utils.library_health import (
+        PATH_STATUS_MISSING,
+        refresh_game_path_status,
+    )
+    games_in_library = db.session.execute(
+        select(Game).filter_by(library_uuid=library_uuid)
+    ).scalars().all()
+    for game in games_in_library:
+        try:
+            status = refresh_game_path_status(game)
+        except Exception as e:
+            print(f"Error refreshing path_status for {game.name}: {e}")
+            continue
+        if status != PATH_STATUS_MISSING:
+            continue
+        print(f"Game no longer found at path: {game.full_disk_path}")
+        if not remove_missing:
+            continue
+        try:
+            remove_from_lib(game.uuid)
+            scan_job_entry.removed_count += 1
+            print(
+                f"Removed game {game.name} as it no longer exists at {game.full_disk_path}"
+            )
+        except Exception as e:
+            print(f"Error removing game {game.name}: {e}")
 
     # If download_missing_images is enabled, check for and queue missing images
     if download_missing_images:
@@ -591,8 +678,9 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
         print(f"Scan completed for folder: {folder_path} with ScanJob ID: {scan_job_entry.id}")
     except SQLAlchemyError as e:
         print(f"Database error when finalizing ScanJob: {str(e)}")
-        
-        
+
+    # FIFO: promote next Queued scan once this job is no longer Running/Stopping.
+    _drain_scan_queue_safe()
 
 
 def handle_auto_scan(auto_form):
@@ -600,21 +688,21 @@ def handle_auto_scan(auto_form):
     print(f"Auto-scan form data: {auto_form.data}")
     library_uuid = auto_form.library_uuid.data
     if auto_form.validate_on_submit():
+        from flask import request
+        from flask_login import current_user
+        from gametheca.utils.scan_queue import (
+            parse_force_parallel,
+            parse_queue_policy,
+            start_or_queue_scan,
+        )
+
         remove_missing = auto_form.remove_missing.data
         download_missing_images = auto_form.download_missing_images.data
         force_updates_extras_scan = auto_form.force_updates_extras_scan.data
         fetch_hltb = auto_form.fetch_hltb.data
         force_hltb_refetch = auto_form.force_hltb_refetch.data
         schedule = (auto_form.schedule.data or '').strip() or None
-        
-        running_job = db.session.execute(select(ScanJob).filter_by(status='Running')).scalars().first()
-        if running_job:
-            print("A scan is already in progress. Please wait until the current scan completes.")
-            flash('A scan is already in progress. Please wait until the current scan completes.', 'danger')
-            session['active_tab'] = 'auto'
-            return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='auto'))
 
-    
         library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
         if not library:
             print("Selected library does not exist. Please select a valid library.")
@@ -622,53 +710,65 @@ def handle_auto_scan(auto_form):
             return redirect(url_for('main.scan_management', active_tab='auto'))
 
         folder_path = (auto_form.folder_path.data or '').strip()
-        scan_mode = auto_form.scan_mode.data        
-        print(f"Auto-scan form submitted. Library: {library.name}, Folder: {folder_path}, Scan mode: {scan_mode}, Download missing images: {download_missing_images}")
-        
-        # Validate folder path security
+        scan_mode = auto_form.scan_mode.data
+        print(
+            f"Auto-scan form submitted. Library: {library.name}, Folder: {folder_path}, "
+            f"Scan mode: {scan_mode}, Download missing images: {download_missing_images}"
+        )
+
         allowed_bases = get_allowed_base_directories(current_app)
         if not allowed_bases:
             flash('Service configuration error: No allowed base directories configured.', 'danger')
             return redirect(url_for('main.scan_management', active_tab='auto'))
-        
-        # Prepend the base path (empty browse path means scan the configured base directory)
-        base_dir = current_app.config.get('BASE_FOLDER_WINDOWS') if os.name == 'nt' else current_app.config.get('BASE_FOLDER_POSIX')
+
+        base_dir = (
+            current_app.config.get('BASE_FOLDER_WINDOWS')
+            if os.name == 'nt'
+            else current_app.config.get('BASE_FOLDER_POSIX')
+        )
         if not base_dir:
             flash('Service configuration error: Base folder is not configured for this OS.', 'danger')
             return redirect(url_for('main.scan_management', active_tab='auto'))
         full_path = base_dir if not folder_path else os.path.join(base_dir, folder_path)
-        
-        # Security validation: ensure the constructed path is within allowed directories
+
         is_safe, error_message = is_safe_path(full_path, allowed_bases)
         if not is_safe:
             print(f"Security error: Auto-scan path validation failed for {full_path}: {error_message}")
             flash(f"Access denied: {error_message}", 'danger')
             return redirect(url_for('main.scan_management', active_tab='auto'))
-        
+
         if not os.path.exists(full_path) or not os.access(full_path, os.R_OK):
             flash(f"Cannot access folder: {full_path}. Please check the path and permissions.", 'danger')
             print(f"Cannot access folder: {full_path}. Please check the path and permissions.", 'error')
             session['active_tab'] = 'auto'
             return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='auto'))
 
-        @copy_current_request_context
-        def start_scan():
-            scan_and_add_games(
-                full_path,
-                scan_mode,
-                library_uuid,
-                remove_missing,
-                download_missing_images=download_missing_images,
-                force_updates_extras_scan=force_updates_extras_scan,
-                fetch_hltb=fetch_hltb,
-                force_hltb_refetch=force_hltb_refetch,
-                schedule=schedule,
-            )
+        force_raw = request.form.get('force_parallel') or request.args.get('force_parallel')
+        policy_raw = request.form.get('queue_policy') or request.args.get('queue_policy')
+        queue_policy = parse_queue_policy(policy_raw, force_parallel=force_raw)
+        is_admin = bool(
+            getattr(current_user, 'is_authenticated', False)
+            and getattr(current_user, 'role', None) == 'admin'
+        )
 
-        thread = Thread(target=start_scan, daemon=True)
-        thread.start()
-        
-        flash(f"Auto-scan started for folder: {full_path} and library name: {library.name}", 'info')
+        result = start_or_queue_scan(
+            folder_path=full_path,
+            library_uuid=library_uuid,
+            scan_mode=scan_mode,
+            remove_missing=remove_missing,
+            download_missing_images=download_missing_images,
+            force_updates_extras_scan=force_updates_extras_scan,
+            fetch_hltb=fetch_hltb,
+            force_hltb_refetch=force_hltb_refetch,
+            schedule=schedule,
+            queue_policy=queue_policy,
+            allow_force=is_admin,
+            app=current_app._get_current_object(),
+        )
+        flash_cat = 'info' if result['status'] in ('started', 'queued') else 'danger'
+        if result['status'] == 'started' and parse_force_parallel(force_raw):
+            flash_cat = 'warning'
+        flash(result['message'], flash_cat)
         session['active_tab'] = 'auto'
     else:
         flash(f"Auto-scan form validation failed: {auto_form.errors}", 'danger')

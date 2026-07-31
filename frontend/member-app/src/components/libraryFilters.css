@@ -1,3 +1,17 @@
+.library-filters__signals {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.library-filters__signals legend {
+  padding: 0;
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  color: var(--gt-text-muted, #c4ccd8);
+}
+
 .gt-badge-filter-chips {
   display: flex;
   flex-wrap: wrap;
@@ -7,15 +21,15 @@
 .gt-badge-filter-chip {
   appearance: none;
   border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.14)) 80%, transparent);
-  background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 92%, transparent);
+  background: var(--gt-surface-2, #1c2230);
   color: var(--gt-text-muted, #c4ccd8);
   font: inherit;
   font-size: 0.72rem;
   font-weight: 650;
   letter-spacing: 0.04em;
   line-height: 1;
-  padding: 0.4rem 0.7rem;
-  border-radius: 999px;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }

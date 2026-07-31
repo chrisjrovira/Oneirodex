@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { requestOpenChatPanel } from '../hooks/chatPanelApi'
 import {
   mintPartyToken,
+  OPEN_SOCIAL_EVENT,
   openDirectMessage,
   openSocialPopoutWindow,
   partyInvitePath,
@@ -13,6 +15,7 @@ import {
   writeCompanionPinned,
 } from '../hooks/socialCompanionApi'
 import { useSocialCompanion } from '../hooks/useSocialCompanion'
+import { showToast } from '../utils/toast'
 import './SocialCompanionDock.css'
 
 function FriendRow({
@@ -98,7 +101,6 @@ export function SocialCompanionDock({
   open: openProp,
   onOpenChange,
 }) {
-  const navigate = useNavigate()
   const standalone = mode === 'standalone' || mode === 'popout'
   const bigPicture = mode === 'big-picture'
   const controlled = typeof openProp === 'boolean'
@@ -144,11 +146,18 @@ export function SocialCompanionDock({
     return () => window.removeEventListener('keydown', onKey)
   }, [bigPicture])
 
+  useEffect(() => {
+    if (standalone) return undefined
+    function onOpenRequest() {
+      setOpen(true)
+    }
+    window.addEventListener(OPEN_SOCIAL_EVENT, onOpenRequest)
+    return () => window.removeEventListener(OPEN_SOCIAL_EVENT, onOpenRequest)
+  }, [standalone])
+
   function notify(message, tone = 'info') {
     setToast(message)
-    if (typeof window !== 'undefined' && window.$?.notify) {
-      window.$.notify(message, tone === 'error' ? 'error' : tone === 'warn' ? 'warn' : 'success')
-    }
+    showToast(message, tone)
   }
 
   async function handleMessage(user) {
@@ -157,12 +166,12 @@ export function SocialCompanionDock({
     try {
       const data = await openDirectMessage({ userId: user.id, username: user.name })
       notify(`DM ready with ${user.name}`)
+      const channelId = data?.channel?.id
       if (standalone) {
         window.location.href = '/chat'
       } else {
-        navigate('/chat')
+        requestOpenChatPanel(channelId != null ? { channelId } : {})
       }
-      void data
     } catch (err) {
       notify(err.message || 'DM failed', 'error')
     } finally {
@@ -372,9 +381,19 @@ export function SocialCompanionDock({
       </form>
 
       <footer className="gt-social-dock__footer">
-        <Link className="gt-social-dock__footer-link" to="/chat">
+        <button
+          type="button"
+          className="gt-social-dock__footer-link"
+          onClick={() => {
+            if (standalone) {
+              window.location.href = '/chat'
+            } else {
+              requestOpenChatPanel()
+            }
+          }}
+        >
           Chat
-        </Link>
+        </button>
         <Link className="gt-social-dock__footer-link" to="/activity">
           Activity
         </Link>

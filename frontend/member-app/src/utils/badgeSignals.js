@@ -1,3 +1,5 @@
+import { ITEM_KIND_BADGE, resolveItemKind } from './itemKind'
+
 /** Days after import that a game still counts as NEW (library default). */
 export const NEW_IMPORT_WINDOW_DAYS = 14
 
@@ -8,7 +10,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 /**
  * Badge kinds ordered by display priority (highest first).
- * @typedef {'UPDATE' | 'OUT' | 'NEW' | 'RELEASE' | '~' | 'OWNED' | 'LANG' | 'PATCH' | 'VR' | 'L'} BadgeKind
+ * @typedef {'UPDATE' | 'OUT' | 'NEW' | 'EXP' | 'EMU' | 'TOOL' | 'RELEASE' | '~' | 'OWNED' | 'LANG' | 'PATCH' | 'VR' | 'L'} BadgeKind
  */
 
 /** @type {Record<BadgeKind, number>} */
@@ -16,6 +18,9 @@ export const BADGE_PRIORITY = {
   UPDATE: 100,
   OUT: 90,
   NEW: 80,
+  EXP: 74,
+  EMU: 74,
+  TOOL: 74,
   RELEASE: 70,
   '~': 60,
   LANG: 55,
@@ -150,6 +155,12 @@ export function collectBadgeSignals(game, options = {}) {
     })
   }
 
+  const itemKind = resolveItemKind(game)
+  const kindBadge = ITEM_KIND_BADGE[itemKind]
+  if (kindBadge) {
+    badges.push({ ...kindBadge })
+  }
+
   if (game.is_vr) {
     badges.push({
       kind: 'VR',
@@ -201,16 +212,25 @@ export function capBadges(badges, maxVisible = 2) {
  * Prefer top-left (UPDATE/OUT/NEW/VR) — hamburger + favorite now stack together
  * in the top-right band (hamburger on top, favorite directly under it), so
  * badges avoid that whole corner until top-left/bottom-left are unavailable.
- * VR lives in the same top-left transitional stack (never dismissable).
+ * VR always stays top-left (never overlaps the system/platform chip at bottom-left).
+ * When a platform chip occupies bottom-left, skip that corner.
  * Order: top-left → bottom-left → bottom-right → top-right
  *
  * @param {'bottom-left' | 'bottom-right' | 'top-left' | 'top-right'} preferred
  * @param {boolean} [collidesWithTitle]
+ * @param {{ hasVr?: boolean, hasPlatformChip?: boolean }} [options]
  */
-export function resolveBadgeCorner(preferred = 'top-left', collidesWithTitle = false) {
-  const order = ['top-left', 'bottom-left', 'bottom-right', 'top-right']
+export function resolveBadgeCorner(preferred = 'top-left', collidesWithTitle = false, options = {}) {
+  const { hasVr = false, hasPlatformChip = false } = options
+  // VR + transitional stack own top-left exclusively — never fall down onto the system chip.
+  if (hasVr) {
+    return 'top-left'
+  }
+  const order = ['top-left', 'bottom-left', 'bottom-right', 'top-right'].filter(
+    (corner) => !(hasPlatformChip && corner === 'bottom-left'),
+  )
   if (!collidesWithTitle) {
-    return preferred
+    return order.includes(preferred) ? preferred : order[0]
   }
   const start = order.indexOf(preferred)
   const idx = start < 0 ? 0 : start

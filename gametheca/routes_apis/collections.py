@@ -254,7 +254,8 @@ def list_announcements():
     if not include_drafts:
         query = query.filter_by(published=True)
     rows = db.session.execute(query).scalars().all()
-    return jsonify({'announcements': [a.to_dict() for a in rows]})
+    items = [a.to_dict() for a in rows]
+    return jsonify({'announcements': items, 'empty': len(items) == 0})
 
 
 @apis_bp.route('/announcements', methods=['POST'])
@@ -282,11 +283,17 @@ def create_announcement():
 @login_required
 def gaming_news_feed():
     """Best-effort top gaming headlines from public RSS feeds."""
+    from flask import current_app
+
     from gametheca.utils.gaming_news import fetch_gaming_headlines
 
-    limit = request.args.get('limit', 12, type=int)
-    items = fetch_gaming_headlines(limit=max(1, min(limit or 12, 30)))
-    return jsonify({'items': items})
+    limit = request.args.get('limit', 12, type=int) or 12
+    try:
+        items = fetch_gaming_headlines(limit=max(1, min(limit, 30)))
+    except Exception as exc:
+        current_app.logger.warning('gaming news feed failed: %s', exc)
+        items = []
+    return jsonify({'items': items, 'empty': len(items) == 0})
 
 
 @apis_bp.route('/news/free-games', methods=['GET'])
@@ -298,20 +305,35 @@ def free_games_feed():
     from gametheca.utils.free_games import connected_stores_for_user, list_active_offers
 
     if not bool(current_app.config.get('ENABLE_FREE_GAMES', True)):
-        return jsonify({'items': [], 'enabled': False, 'connected_stores': []})
+        return jsonify({
+            'items': [],
+            'enabled': False,
+            'connected_stores': [],
+            'empty': True,
+        })
 
     store = (request.args.get('store') or '').strip() or None
-    limit = request.args.get('limit', 40, type=int)
-    connected = connected_stores_for_user(current_user.id)
-    items = list_active_offers(
-        store=store,
-        limit=max(1, min(limit or 40, 100)),
-        connected_stores=connected,
-    )
+    limit = request.args.get('limit', 40, type=int) or 40
+    try:
+        connected = connected_stores_for_user(current_user.id)
+        items = list_active_offers(
+            store=store,
+            limit=max(1, min(limit, 100)),
+            connected_stores=connected,
+        )
+    except Exception as exc:
+        current_app.logger.warning('free-games feed failed: %s', exc)
+        return jsonify({
+            'items': [],
+            'enabled': True,
+            'connected_stores': [],
+            'empty': True,
+        })
     return jsonify({
         'items': items,
         'enabled': True,
         'connected_stores': sorted(connected),
+        'empty': len(items) == 0,
     })
 
 

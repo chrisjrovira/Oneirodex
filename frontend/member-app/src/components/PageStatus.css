@@ -16,6 +16,9 @@
 }
 
 .gt-page-status--loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 36%, transparent);
   color: var(--gt-accent, #2fd67b);
 }

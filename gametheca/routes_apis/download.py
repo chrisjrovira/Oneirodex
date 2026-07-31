@@ -14,8 +14,13 @@ from gametheca.utils.api_tokens import require_api_scope
 from gametheca.utils.auth import admin_required
 from gametheca.utils.event_bus import publish_download_event
 from gametheca.utils.event_logging import log_system_event
-from gametheca.utils.game_versions import list_game_versions, resolve_version_file
+from gametheca.utils.game_versions import (
+    cleanup_orphan_versions,
+    list_game_versions,
+    resolve_version_file,
+)
 from gametheca.utils.library_acl import user_can_access_game
+from gametheca.utils.rbac import librarian_required
 from gametheca.utils.security import get_allowed_base_directories, is_safe_path
 
 from . import apis_bp
@@ -129,10 +134,46 @@ def api_list_game_versions(game_uuid: str) -> Tuple[dict, int]:
             'label': v['label'],
             'is_default': v['is_default'],
             'size': v.get('size'),
+            'path_missing': bool(v.get('path_missing')),
+            'downloadable': bool(v.get('downloadable')),
         }
         for v in versions
     ]
     return jsonify({'game_uuid': game_uuid, 'versions': public}), 200
+
+
+@apis_bp.route('/games/<game_uuid>/versions/cleanup_orphans', methods=['POST'])
+@login_required
+@librarian_required
+def api_cleanup_orphan_versions(game_uuid: str) -> Tuple[dict, int]:
+    """Delete GameUpdate/GameExtra rows for this game whose files are gone."""
+    if not _UUID_RE.match(game_uuid):
+        return jsonify({'error': 'Invalid game UUID'}), 400
+
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game:
+        return jsonify({'error': 'Game not found'}), 404
+
+    if not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Access denied'}), 403
+
+    try:
+        result = cleanup_orphan_versions(game)
+        log_system_event(
+            f"Orphan version cleanup for {game.name}: "
+            f"removed={len(result['removed'])} kept={len(result['kept'])}",
+            event_type='game',
+            event_level='information',
+        )
+        return jsonify(result), 200
+    except Exception as exc:
+        db.session.rollback()
+        log_system_event(
+            f'Error cleaning orphan versions for {game_uuid}: {exc}',
+            event_type='game',
+            event_level='error',
+        )
+        return jsonify({'ok': False, 'error': 'Failed to clean orphan versions'}), 500
 
 
 @apis_bp.route('/downloads/games/<game_uuid>', methods=['POST'])

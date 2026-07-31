@@ -68,7 +68,9 @@ def _path_problems(config_values):
 
 def _library_pulse():
     """Return counts that describe the state of the game library."""
-    return {
+    from gametheca.utils.library_health import build_library_health_pulse
+
+    pulse = {
         'libraries': db.session.execute(select(func.count(Library.uuid))).scalar(),
         'games': db.session.execute(select(func.count(Game.id))).scalar(),
         'unmatched_folders': db.session.execute(
@@ -80,6 +82,20 @@ def _library_pulse():
             )
         ).scalar(),
     }
+    try:
+        pulse['health'] = build_library_health_pulse()
+    except Exception as exc:
+        # Keep pulse usable when health SQL fails — never tank Ops poll.
+        pulse['health'] = {
+            'score': None,
+            'grade': None,
+            'factors': [],
+            'games': pulse.get('games') or 0,
+            'thin': True,
+            'note': f'library health unavailable: {exc}',
+            'checked_at': datetime.now(timezone.utc).isoformat(),
+        }
+    return pulse
 
 
 def _scan_job_payload(job):
@@ -109,15 +125,26 @@ def _scan_job_payload(job):
 
 
 def _scan_snapshot():
-    """Return active + recent scan jobs (with live counters) and failure count."""
+    """Return active + queued + recent scan jobs (with live counters) and failure count."""
     active_jobs = db.session.execute(
         select(ScanJob)
         .where(ScanJob.status.in_(('Running', 'Stopping')))
         .order_by(ScanJob.last_progress_update.desc())
     ).scalars().all()
 
+    queued_jobs = db.session.execute(
+        select(ScanJob)
+        .where(ScanJob.status == 'Queued')
+        .order_by(ScanJob.last_run.asc().nullsfirst(), ScanJob.id.asc())
+    ).scalars().all()
+
     jobs = [_scan_job_payload(job) for job in active_jobs]
+    for idx, job in enumerate(queued_jobs, start=1):
+        payload = _scan_job_payload(job)
+        payload['queue_position'] = idx
+        jobs.append(payload)
     active_ids = {job.id for job in active_jobs}
+    queued_ids = {job.id for job in queued_jobs}
 
     since = datetime.now(timezone.utc) - timedelta(hours=24)
     # Recent terminal jobs so Unraid testing can report progress after a scan ends.
@@ -137,7 +164,7 @@ def _scan_snapshot():
     ).scalars().all()
 
     for job in recent_jobs:
-        if job.id in active_ids:
+        if job.id in active_ids or job.id in queued_ids:
             continue
         jobs.append(_scan_job_payload(job))
 
@@ -154,6 +181,7 @@ def _scan_snapshot():
 
     return {
         'active_count': len(active_jobs),
+        'queued_count': len(queued_jobs),
         'jobs': jobs,
         'failure_count': failure_count,
     }
@@ -347,12 +375,20 @@ def _queue_pulse():
             DownloadRequest.status.in_(('pending', 'processing'))
         )
     ).scalar() or 0
-    pending_scans = db.session.execute(
+    scheduled_scans = db.session.execute(
         select(func.count(ScanJob.id)).where(ScanJob.status == 'Scheduled')
     ).scalar() or 0
+    queued_scans = scans.get('queued_count')
+    if queued_scans is None:
+        queued_scans = db.session.execute(
+            select(func.count(ScanJob.id)).where(ScanJob.status == 'Queued')
+        ).scalar() or 0
     return {
         'scans_active': scans['active_count'],
-        'scans_pending': pending_scans,
+        # Prefer FIFO Queued depth; keep Scheduled visible for schedule honesty.
+        'scans_pending': int(queued_scans) + int(scheduled_scans),
+        'scans_queued': int(queued_scans),
+        'scans_scheduled': int(scheduled_scans),
         'scans_failures_24h': scans['failure_count'],
         'downloads_open': open_downloads,
     }
@@ -385,6 +421,25 @@ def _game_servers_pulse():
     }
 
 
+def _library_watch_pulse():
+    """Optional root-folder incremental watch (GT_LIBRARY_WATCH)."""
+    try:
+        from gametheca.utils.library_watch import get_library_watch_status
+
+        return get_library_watch_status()
+    except Exception as exc:
+        return {
+            'enabled': False,
+            'running': False,
+            'roots': 0,
+            'pending_libraries': 0,
+            'debounce_seconds': None,
+            'last_event_at': None,
+            'last_enqueue_at': None,
+            'note': f'library watch status unavailable: {exc}',
+        }
+
+
 def _services_snapshot():
     """Sidecar / companion / queue pulse for Admin Ops."""
     return {
@@ -395,6 +450,7 @@ def _services_snapshot():
         'game_servers': _game_servers_pulse(),
         'readyz': _readyz_pulse(),
         'malware_module_enabled': malware_scan_enabled(),
+        'library_watch': _library_watch_pulse(),
     }
 
 
@@ -442,6 +498,26 @@ def build_ops_summary(app_start_time):
     scan_failures = scans['failure_count'] if scans else 0
     recent_errors, recent_error_count = recent_errors_data or (None, 0)
 
+    # Stability signals for issues (optional kwargs on derive_issues).
+    db_reachable = None
+    if host is not None:
+        db_reachable = host.get('db_ping_ms') is not None
+    readyz_ok = None
+    companions_stale = None
+    if services:
+        readyz = services.get('readyz')
+        if readyz is None:
+            readyz_ok = False
+        elif isinstance(readyz, dict):
+            status = (readyz.get('status') or '').lower()
+            http_status = readyz.get('http_status')
+            readyz_ok = status in ('ok', 'ready', 'pass') or http_status == 200
+        companions = services.get('companions') or {}
+        last_seen = companions.get('last_seen') or {}
+        stale = last_seen.get('stale')
+        if isinstance(stale, int) and stale > 0:
+            companions_stale = stale
+
     summary = {
         'as_of': datetime.now(timezone.utc).isoformat(),
         'host': host,
@@ -452,6 +528,9 @@ def build_ops_summary(app_start_time):
             path_problems=_path_problems(config_values),
             scan_failures=scan_failures,
             recent_error_count=recent_error_count,
+            db_reachable=db_reachable,
+            readyz_ok=readyz_ok,
+            companions_stale=companions_stale,
         ),
         'scans': {
             'active_count': scans['active_count'],

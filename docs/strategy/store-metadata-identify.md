@@ -76,6 +76,26 @@ Never auto-force an IGDB collision. Ambiguous name matches → proposal queue / 
 
 ---
 
+## Gaming software / emulators / tools (non-Main-Game)
+
+IGDB `/games` has **no** separate “apps” catalog that covers household VR emulators and utilities. Steam **does** return `type=software` (and related) on storesearch.
+
+| Concept | Behavior |
+|---|---|
+| `item_kind` on `Game` | `game` \| `experience` \| `emulator` \| `tool` (default `game`). Orthogonal to `LibraryPlatform` and IGDB `Category`. JSON also aliases as `content_kind`. |
+| Browse filter | `GET /browse_games?item_kind=` (comma list or repeated; alias `content_kind=`) — omit = all kinds. Same param on `GET /api/favorites`. Library SPA **Kind** chips (Games · Experiences · Emulators · Tools) in FilterBar multi-select that param (UI vitest 13). |
+| Steam identify | `search_steam_games(..., include_software=True)` tags `steam_type` + `item_kind`. Never auto-import software as IGDB Main Game. |
+| IGDB miss | Proposal sidecar gains `software_candidates` + `suggested_kind` (`enrich_proposal_with_software`). |
+| Unmatched list hint | **Denormalized** onto `UnmatchedFolder.suggested_kind` + `suggested_candidate_name` at propose/log time. `GET /api/unmatched_folders` (+ export) returns those plus derived `suggested_kind_label`, `folder_name`, and deterministic `why_unmatched` / `unmatched_reason` (from `match_reason` · score · kind · folder name) — no list N+1 sidecar reads. Legacy null hints: `POST /api/unmatched_folders/backfill_suggested_kind` (idempotent one-shot). |
+| Unmatched catalog | `POST /api/unmatched_folders/<id>/mark_kind` → custom `igdb_id` + `item_kind`; clears Unmatched. Admin Unmatched tab + Dupe glance expose **Mark as Experience / Emulator / Tool** (+ Identify as game). Library cards/details show **EXP** / **EMU** / **TOOL**. |
+| Parse | Glued trailing VR peels (`3DSenVR` → `3DSen`) + search variant `3DSen VR`. |
+| Deny auto-as-game | Converter / metrics / ripper / editor-style labels → `tool` only (capability language; no Class A tokens). |
+| Platform stance | Stay on **PCWIN** (+ kind filter). No `APPS`/`TOOLS` platform enum. |
+
+Ownership remains **register-only** for DRM stores. No download/install queues for software or games.
+
+---
+
 ## Acceptance criteria — Backend provider stubs
 
 Extend identify search (same shape as `search_steam_games` / `search_gog_games`):

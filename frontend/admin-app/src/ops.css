@@ -7,6 +7,22 @@
   margin-bottom: 0.85rem;
 }
 
+.gt-ops-refresh {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.gt-ops-refresh__status {
+  font-size: 0.85rem;
+  color: var(--gt-accent);
+}
+
+.gt-ops-refresh__status--muted {
+  color: var(--gt-text-muted);
+}
+
 .gt-ops-status {
   display: flex;
   flex-direction: column;
@@ -43,6 +59,28 @@
 .gt-ops-status--bad {
   border-color: color-mix(in srgb, var(--gt-danger) 55%, transparent);
   color: #ffb4b4;
+}
+
+.gt-ops-issues-folds {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.gt-ops-issues-fold__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
+}
+
+.gt-ops-issues-fold--action .gt-ops-issues-fold__title {
+  color: color-mix(in srgb, var(--gt-danger) 75%, var(--gt-text));
+}
+
+.gt-ops-issues-fold--soft .gt-ops-issues-fold__title {
+  color: color-mix(in srgb, #d4b84a 70%, var(--gt-text));
 }
 
 .gt-ops-issues {
@@ -100,6 +138,23 @@
   min-width: 0;
 }
 
+/* Library health grade tones — reuse status/meter tokens (no new panel system). */
+.gt-ops-metric--good {
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+}
+
+.gt-ops-metric--fair {
+  border-color: color-mix(in srgb, #d4b84a 55%, transparent);
+}
+
+.gt-ops-metric--poor {
+  border-color: color-mix(in srgb, var(--gt-danger) 55%, transparent);
+}
+
+.gt-ops-metric--na {
+  border-color: var(--gt-border);
+}
+
 .gt-ops-metric__label {
   font-size: 0.72rem;
   text-transform: uppercase;
@@ -116,10 +171,84 @@
   word-break: break-word;
 }
 
+.gt-ops-metric--fair .gt-ops-metric__value {
+  color: #e6d28a;
+}
+
+.gt-ops-metric--poor .gt-ops-metric__value {
+  color: #ffb4b4;
+}
+
+.gt-ops-metric--na .gt-ops-metric__value {
+  color: var(--gt-text-muted);
+}
+
 .gt-ops-metric__hint {
   margin-top: 0.15rem;
   font-size: 0.75rem;
   color: var(--gt-text-muted);
+}
+
+.gt-ops-health-factors {
+  list-style: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.gt-ops-health-factors--empty {
+  margin-top: 0.55rem;
+  margin-bottom: 0;
+}
+
+/* Grade left-edge cues — reuse metric tones (no new card). */
+.gt-ops-health-factors--poor,
+.gt-ops-health-factors--fair {
+  padding-left: 0.45rem;
+}
+
+.gt-ops-health-factors--poor {
+  border-left: 2px solid color-mix(in srgb, var(--gt-danger) 40%, transparent);
+}
+
+.gt-ops-health-factors--poor .gt-ops-health-factors__item {
+  border-bottom-color: color-mix(in srgb, var(--gt-danger) 32%, transparent);
+}
+
+.gt-ops-health-factors--fair {
+  border-left: 2px solid color-mix(in srgb, #d4b84a 55%, transparent);
+}
+
+.gt-ops-health-factors--fair .gt-ops-health-factors__item {
+  border-bottom-color: color-mix(in srgb, #d4b84a 40%, transparent);
+}
+
+.gt-ops-health-factors__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--gt-text-muted);
+  padding: 0.2rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
+}
+
+.gt-ops-health-factors__item:last-child {
+  border-bottom: none;
+}
+
+.gt-ops-health-factors__label {
+  min-width: 0;
+  word-break: break-word;
+}
+
+.gt-ops-health-factors__count {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: var(--gt-text);
 }
 
 .gt-ops-console {
@@ -130,15 +259,51 @@
 }
 
 .gt-ops-panel {
+  display: flex;
+  flex-direction: column;
   padding: 0.85rem 1rem;
   border-radius: 10px;
   border: 1px solid var(--gt-border);
   background: var(--gt-surface);
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .gt-ops-panel--wide {
   grid-column: 1 / -1;
+}
+
+.gt-ops-panel--services {
+  min-height: 0;
+}
+
+.gt-ops-panel__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(22rem, 55vh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gt-ops-table--services {
+  table-layout: fixed;
+}
+
+.gt-ops-table--services th:nth-child(1),
+.gt-ops-table--services td:nth-child(1) {
+  width: 28%;
+}
+
+.gt-ops-table--services th:nth-child(2),
+.gt-ops-table--services td:nth-child(2) {
+  width: 26%;
+}
+
+.gt-ops-table--services td {
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .gt-ops-panel h2 {

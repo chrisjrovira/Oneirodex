@@ -12,6 +12,7 @@ from gametheca.models import (
     user_game_status,
     get_status_info,
 )
+from gametheca.utils.browse_filters import apply_item_kind_filter
 from gametheca.utils.client_lifecycle import load_lifecycle_map
 from gametheca.utils.local_metadata import has_local_images, has_local_metadata
 from gametheca.utils.lifecycle import web_lifecycle_fields
@@ -205,6 +206,7 @@ def favorites():
             current_user,
         )
     )
+    query = apply_item_kind_filter(query, request.args)
     pagination = db.paginate(query, page=page, per_page=per_page, error_out=False)
     games = pagination.items
     game_uuids = [game.uuid for game in games]

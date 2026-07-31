@@ -23,32 +23,38 @@ VALID_AREAS = frozenset({
 })
 VALID_SEV = frozenset({'P0', 'P1', 'P2', 'P3'})
 
+# Compact caps — logs/symptoms optional; avoid huge blobs in UI payloads.
+_BODY_MAX = 2000
+_LOGS_MAX = 4000
+
 
 @apis_bp.route('/support/tickets', methods=['POST'])
 @login_required
 def support_ticket_create():
     data = request.get_json(silent=True) or {}
     title = (data.get('title') or '').strip()[:200]
-    body = (data.get('body') or data.get('symptom') or '').strip()
-    if not title or not body:
-        return jsonify({'error': 'title and body required'}), 400
+    # Symptom/body optional for redesigned Report UI (title alone is enough).
+    body = (data.get('body') or data.get('symptom') or '').strip()[:_BODY_MAX]
+    if not title:
+        return jsonify({'error': 'title required'}), 400
     area = (data.get('area') or 'other').strip().lower()
     if area not in VALID_AREAS:
         area = 'other'
     severity = (data.get('severity') or 'P2').strip().upper()
     if severity not in VALID_SEV:
         severity = 'P2'
+    logs_raw = (data.get('logs') or '').strip()[:_LOGS_MAX]
     ticket = SupportTicket(
         user_id=current_user.id,
         title=title,
-        body=body[:8000],
+        body=body or '',
         area=area,
         severity=severity,
         role_at_submit=normalize_role(getattr(current_user, 'role', None)),
         deploy_hint=(data.get('deploy_hint') or data.get('deploy') or '')[:64] or None,
         client_hint=(data.get('client_hint') or data.get('client') or '')[:120] or None,
         url_hint=(data.get('url_hint') or data.get('url') or '')[:512] or None,
-        logs=(data.get('logs') or '')[:8000] or None,
+        logs=logs_raw or None,
         status='open',
         github_sync='pending',
     )
@@ -97,7 +103,10 @@ def support_tickets_list():
             SupportTicket.user_id == current_user.id,
         ).order_by(SupportTicket.created_at.desc()).limit(50)
     rows = db.session.execute(q).scalars().all()
-    return jsonify({'tickets': [r.to_dict() for r in rows]})
+    return jsonify({
+        'tickets': [r.to_dict(compact=True) for r in rows],
+        'empty': len(rows) == 0,
+    })
 
 
 @apis_bp.route('/support/tickets/<int:ticket_id>', methods=['GET'])

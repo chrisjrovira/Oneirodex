@@ -61,6 +61,25 @@ test('shows the no-results state when nothing matches', async () => {
   ).toBeInTheDocument()
   expect(screen.queryByTitle('Game trailer')).not.toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Go to Library' })).toBeInTheDocument()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
+test('shows structured empty + CTA for Backend no_trailers contract', async () => {
+  trailersApi.fetchRandomTrailer.mockResolvedValue({
+    has_videos: false,
+    empty: true,
+    code: 'no_trailers',
+    message: 'No trailers in your library yet.',
+    cta: { id: 'library', label: 'Browse Library', href: '/library' },
+  })
+
+  render(<TrailersPage />)
+
+  expect(await screen.findByText('No trailers in your library yet.')).toBeInTheDocument()
+  expect(screen.getByRole('status')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Browse Library' })).toHaveAttribute('href', '/library')
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.queryByText(/unable to load/i)).not.toBeInTheDocument()
 })
 
 test('rejects a non-YouTube embed URL', async () => {

@@ -22,7 +22,7 @@ test('more links exclude primary ids', () => {
 
 test('more links use SPA paths via to', () => {
   const more = getMoreLinks({ showTrailers: true, showHelp: true, enableVr: true })
-  const byId = Object.fromEntries(more.map((l) => [l.id, l.to]))
+  const byId = Object.fromEntries(more.map((l) => [l.id, l.to || l.action]))
   expect(byId.collections).toBe('/collections')
   expect(byId.news).toBe('/news')
   expect(byId.wishlist).toBe('/wishlist')
@@ -34,7 +34,14 @@ test('more links use SPA paths via to', () => {
   expect(byId.vr).toBe('/vr')
   expect(byId.trailers).toBe('/trailers')
   expect(byId.help).toBe('/help')
+  expect(byId.friends).toBe('open-friends')
+  expect(byId.chat).toBe('open-chat')
   for (const link of more) {
+    if (link.id === 'friends' || link.id === 'chat') {
+      expect(link.action).toBe(link.id === 'friends' ? 'open-friends' : 'open-chat')
+      expect(link.to).toBeUndefined()
+      continue
+    }
     expect(link.to).toBeTruthy()
     expect(link.href).toBeUndefined()
   }

@@ -1,7 +1,7 @@
 # UI Wave 0 — design tokens (GameTheca)
 
 These CSS variables are the shared foundation for web + future desktop client.
-Tracked source: `gametheca/setup/default_theme/css/gt-tokens.css` (presets regenerated at **`GENERATOR_VERSION` 8**).
+Tracked source: `gametheca/setup/default_theme/css/gt-tokens.css` (presets regenerated at **`GENERATOR_VERSION` 10**).
 
 Import after theme base.css or use as a reference when migrating React islands / admin SPA.
 

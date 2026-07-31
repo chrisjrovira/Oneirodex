@@ -1,4 +1,4 @@
-"""Queued companion commands from the web UI (install / update / uninstall)."""
+"""Queued companion commands from the web UI (install / update / uninstall / open_path)."""
 
 from __future__ import annotations
 
@@ -7,12 +7,22 @@ import os
 import threading
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 _LOCK = threading.Lock()
-_VALID_ACTIONS = frozenset({'download', 'install', 'update', 'uninstall', 'apply_patch', 'apply_mod_pack'})
+_VALID_ACTIONS = frozenset({
+    'download',
+    'install',
+    'update',
+    'uninstall',
+    'apply_patch',
+    'apply_mod_pack',
+    'open_path',
+})
 _VALID_KINDS = frozenset({'base', 'update', 'extra'})
 _IN_FLIGHT_TTL_SECONDS = 600
+_OPEN_PATH_MAX_LEN = 4096
 
 
 def rom_patch_apply_enabled() -> bool:
@@ -65,6 +75,84 @@ def _library_root() -> str:
     except RuntimeError:
         pass
     return os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'library')
+
+
+def _open_path_allowed_bases() -> list[str]:
+    """Configured library / scan roots that may be revealed via open_path."""
+    bases: list[str] = []
+    try:
+        from flask import current_app, has_app_context
+
+        if has_app_context():
+            from gametheca.utils.security import get_allowed_base_directories
+
+            for base in get_allowed_base_directories(current_app):
+                if base and base not in bases:
+                    bases.append(base)
+            # Include last successful scan roots (UnmatchedFolder paths live under these).
+            try:
+                from sqlalchemy import select
+
+                from gametheca import db
+                from gametheca.models import Library
+
+                for folder in db.session.execute(
+                    select(Library.last_scan_folder).where(Library.last_scan_folder.isnot(None))
+                ).scalars():
+                    cleaned = str(folder or '').strip()
+                    if cleaned and cleaned not in bases:
+                        bases.append(cleaned)
+            except Exception:
+                pass
+    except RuntimeError:
+        pass
+    return bases
+
+
+def _validate_open_path(path: str | None) -> str:
+    """Require an absolute path under configured library roots. Raises ValueError."""
+    cleaned = str(path or '').strip()
+    if not cleaned:
+        raise ValueError('path is required for open_path')
+    if len(cleaned) > _OPEN_PATH_MAX_LEN:
+        raise ValueError('path too long')
+    if any(ch in cleaned for ch in ('\x00', '\n', '\r')):
+        raise ValueError('path contains invalid characters')
+    try:
+        path_obj = Path(cleaned)
+    except (OSError, ValueError, TypeError) as exc:
+        raise ValueError('invalid path') from exc
+    if not path_obj.is_absolute():
+        raise ValueError('path must be absolute')
+
+    bases = _open_path_allowed_bases()
+    if not bases:
+        raise ValueError('no library roots configured for open_path')
+
+    from gametheca.utils.security import is_safe_path
+
+    try:
+        ok, err = is_safe_path(cleaned, bases)
+    except RuntimeError:
+        # is_safe_path may log via Flask; fall back to relative_to checks.
+        ok, err = False, 'Access denied - path outside allowed directories'
+        try:
+            resolved = path_obj.resolve(strict=False)
+            for base in bases:
+                if not base:
+                    continue
+                try:
+                    resolved.relative_to(Path(base).resolve(strict=False))
+                    ok, err = True, None
+                    break
+                except ValueError:
+                    continue
+        except (OSError, ValueError):
+            ok, err = False, 'invalid path'
+
+    if not ok:
+        raise ValueError(err or 'path outside allowed library roots')
+    return cleaned
 
 
 def _store_path(user_id: int) -> str:
@@ -122,7 +210,7 @@ def _reclaim_stale(queue: list[dict[str, Any]], *, now: datetime) -> list[dict[s
 def _public_command(row: dict[str, Any]) -> dict[str, Any]:
     delivered = {
         'id': str(row.get('id') or uuid.uuid4()),
-        'game_uuid': str(row['game_uuid']),
+        'game_uuid': str(row.get('game_uuid') or ''),
         'action': str(row['action']),
         'created_at': row.get('created_at'),
         'status': row.get('status') or 'pending',
@@ -131,7 +219,22 @@ def _public_command(row: dict[str, Any]) -> dict[str, Any]:
         delivered['kind'] = str(row['kind'])
     if row.get('version_uuid'):
         delivered['version_uuid'] = str(row['version_uuid'])
+    if row.get('path'):
+        delivered['path'] = str(row['path'])
+    if 'select' in row and row.get('select') is not None:
+        delivered['select'] = bool(row['select'])
     return delivered
+
+
+def _claimable(row: dict[str, Any]) -> bool:
+    action = row.get('action')
+    if action not in _VALID_ACTIONS:
+        return False
+    if row.get('status') != 'pending':
+        return False
+    if action == 'open_path':
+        return bool(str(row.get('path') or '').strip())
+    return bool(str(row.get('game_uuid') or '').strip())
 
 
 def enqueue_client_command(
@@ -141,16 +244,27 @@ def enqueue_client_command(
     *,
     kind: str | None = None,
     version_uuid: str | None = None,
+    path: str | None = None,
+    select: bool | None = None,
 ) -> dict[str, Any]:
     """Append a pending command for the companion to claim."""
     cleaned_uuid = str(game_uuid or '').strip()
     cleaned_action = str(action or '').strip().lower()
     cleaned_kind = str(kind or '').strip().lower() or None
     cleaned_version = str(version_uuid or '').strip() or None
-    if not cleaned_uuid:
-        raise ValueError('game_uuid is required')
     if cleaned_action not in _VALID_ACTIONS:
         raise ValueError(f'action must be one of: {", ".join(sorted(_VALID_ACTIONS))}')
+
+    cleaned_path: str | None = None
+    cleaned_select: bool | None = None
+    if cleaned_action == 'open_path':
+        cleaned_path = _validate_open_path(path)
+        cleaned_select = True if select is None else bool(select)
+        # game_uuid optional for unmatched folders / admin scanjobs.
+    else:
+        if not cleaned_uuid:
+            raise ValueError('game_uuid is required')
+
     if cleaned_action == 'apply_patch':
         if not rom_patch_apply_enabled():
             raise ValueError(
@@ -177,25 +291,30 @@ def enqueue_client_command(
         command['kind'] = cleaned_kind
     if cleaned_version:
         command['version_uuid'] = cleaned_version
+    if cleaned_path is not None:
+        command['path'] = cleaned_path
+    if cleaned_select is not None:
+        command['select'] = cleaned_select
 
-    path = _store_path(user_id)
+    store = _store_path(user_id)
     with _LOCK:
-        queue = _read_queue(path)
-        # Drop duplicate pending for same game+action+version.
-        queue = [
-            row
-            for row in queue
-            if not (
-                row.get('status') == 'pending'
-                and row.get('game_uuid') == cleaned_uuid
-                and row.get('action') == cleaned_action
+        queue = _read_queue(store)
+        # Drop duplicate pending for same game+action+version (or same open_path target).
+        def _is_duplicate(row: dict[str, Any]) -> bool:
+            if row.get('status') != 'pending' or row.get('action') != cleaned_action:
+                return False
+            if cleaned_action == 'open_path':
+                return (row.get('path') or None) == cleaned_path
+            return (
+                row.get('game_uuid') == cleaned_uuid
                 and (row.get('version_uuid') or None) == cleaned_version
             )
-        ]
+
+        queue = [row for row in queue if not _is_duplicate(row)]
         queue.append(command)
         if len(queue) > 50:
             queue = queue[-50:]
-        _write_queue(path, queue)
+        _write_queue(store, queue)
     return command
 
 
@@ -208,12 +327,7 @@ def claim_pending_commands(user_id: int, *, limit: int = 10) -> list[dict[str, A
         queue = _reclaim_stale(_read_queue(path), now=now)
         updated: list[dict[str, Any]] = []
         for row in queue:
-            if (
-                len(claimed) < limit
-                and row.get('status') == 'pending'
-                and row.get('action') in _VALID_ACTIONS
-                and row.get('game_uuid')
-            ):
+            if len(claimed) < limit and _claimable(row):
                 in_flight = dict(row)
                 in_flight['status'] = 'in_flight'
                 in_flight['claimed_at'] = now.isoformat()

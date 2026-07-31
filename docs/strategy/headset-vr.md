@@ -19,7 +19,7 @@ VR must work for **more than Meta Quest**. Household example: operator owns **PS
 
 | Seat | Hardware | How you use GameTheca | Play story |
 |---|---|---|---|
-| **PC VR owner (primary for many operators)** | **PSVR2 + SteamVR**, Index, Vive, Pico PC VR, etc. | Browser on **desktop** (second monitor / SteamVR dashboard overlay / Virtual Desktop browser) → `/vr` or **Big Picture**; thin companion on same PC | Native SteamVR titles on that PC; DRM-free flatscreen via companion; optional **Moonlight** only when streaming *from another* host |
+| **PC VR owner (primary for many operators)** | **PSVR2 + SteamVR**, Index, Vive, Pico PC VR, etc. | Browser on **desktop** (second monitor / SteamVR dashboard overlay / Virtual Desktop browser) → `/vr` or **Big Picture**; optional **thin** shell on same PC for browse/social only | Native SteamVR titles on that PC; DRM-free flatscreen via **full** companion (thin has **no** install pipeline); optional **Moonlight** only when streaming *from another* host |
 | **Standalone friend** | Quest 2/3/Pro, Pico standalone | Headset **browser PWA** → `/vr` | Browse + social; play via **Moonlight → household PC** or “ask companion PC” |
 | **Couch non-VR** | TV + gamepad | Big Picture in TV browser | Local companion / WebRetro |
 | **Phone/tablet** | Android thin APK / PWA | Thin shell | No local install pipeline |
@@ -71,4 +71,6 @@ VR must work for **more than Meta Quest**. Household example: operator owns **PS
 - Official Meta Store / SteamVR store app listing for 1.0  
 - Shipping a native OpenXR GameTheca shell  
 - Promising Sense-controller SPA navigation  
-- Quest-only marketing or docs
+- Quest-only marketing or docs  
+- Install / Update / Play pipeline on **thin** or headset browser seats — lifecycle stays on the **full** desktop companion  
+- Shipping an Android / Quest APK as the primary VR path (spike only — [android-apk-vr.md](android-apk-vr.md))

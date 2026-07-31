@@ -68,6 +68,10 @@ The play bar **Sync cloud saves** uses `gt-bridge.js` postMessage (`gt-export-sa
 
 If a deferred core is still warming, status may say to sync again after **Start**.
 
+## Cheats (`.cht`)
+
+Game details → **Cheats** manages the per-game RetroArch `.cht` library (`GET/POST/DELETE /api/games/{uuid}/cheats`). Create with name + code rows + dialect hint (Raw / GG-style / AR-style / GS-style — capability labels only), or upload a prebuilt `.cht`. The WebRetro play bar loads the same list for **Apply cheat**; companion stages files under `app_data/cheats/{uuid}/` before RetroArch. Quick Menu may still be required to enable codes. PC / native titles stay notes/BYO only — no memory injection. Stance: [cheats.md](../strategy/cheats.md) · companion: [desktop-companion.md](desktop-companion.md).
+
 Full plan: [emulation-coverage.md](../strategy/emulation-coverage.md).
 
 ## Sample free ROMs (legal only)

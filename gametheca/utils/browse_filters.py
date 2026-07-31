@@ -5,9 +5,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import and_, exists, or_, select
+from sqlalchemy import and_, exists, false, or_, select
 
 from gametheca.models import Game, GameUpdate, PlayerPerspective
+from gametheca.utils.item_kind import parse_item_kinds_param
 from gametheca.utils.lifecycle import FRESHNESS_BEHIND_STATUSES
 from gametheca.utils.rom_language import needs_translation_sql_filter
 from gametheca.utils.secondary_scrapers import VR_PERSPECTIVE_NAME
@@ -35,6 +36,39 @@ def _preferred_locale_from_user(user: Any | None) -> str:
     return getattr(prefs, 'preferred_game_locale', None) or 'en-US'
 
 
+def _item_kind_raw_from_args(args) -> str | None:
+    """Collect ``item_kind`` / ``content_kind`` (single, comma list, or repeated)."""
+    parts: list[str] = []
+    getlist = getattr(args, 'getlist', None)
+    if callable(getlist):
+        for key in ('item_kind', 'content_kind'):
+            for value in getlist(key) or []:
+                if value is not None and str(value).strip():
+                    parts.append(str(value).strip())
+    else:
+        for key in ('item_kind', 'content_kind'):
+            value = args.get(key) if hasattr(args, 'get') else None
+            if value is not None and str(value).strip():
+                parts.append(str(value).strip())
+    if not parts:
+        return None
+    return ','.join(parts)
+
+
+def apply_item_kind_filter(query, args):
+    """Filter by ``item_kind=`` / ``content_kind=`` (game|experience|emulator|tool).
+
+    Omit / blank → no filter (all kinds). Comma list or repeated params OK.
+    Unknown tokens ignored; only-unknown → empty result set.
+    """
+    kinds = parse_item_kinds_param(_item_kind_raw_from_args(args))
+    if kinds is None:
+        return query
+    if not kinds:
+        return query.filter(false())
+    return query.filter(Game.item_kind.in_(tuple(sorted(kinds))))
+
+
 def apply_badge_filters(query, args, *, user=None, now: datetime | None = None):
     """Apply optional badge chip query params to a Game select/query.
 
@@ -45,6 +79,8 @@ def apply_badge_filters(query, args, *, user=None, now: datetime | None = None):
       new_import=1        — date_identified/date_created within 14 days
       recent_release=1    — first_release_date within 30 days
       needs_translation=1 — ROM lang known and mismatches preferred_game_locale
+      item_kind=…         — game|experience|emulator|tool (comma list / repeated)
+      content_kind=…      — alias of item_kind
     """
     clock = now or datetime.now(timezone.utc)
     if clock.tzinfo is None:
@@ -86,4 +122,5 @@ def apply_badge_filters(query, args, *, user=None, now: datetime | None = None):
         preferred = _preferred_locale_from_user(user)
         query = query.filter(needs_translation_sql_filter(preferred))
 
+    query = apply_item_kind_filter(query, args)
     return query

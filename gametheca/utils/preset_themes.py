@@ -24,7 +24,7 @@ import shutil
 from datetime import date
 
 # Bump when the generator's output format changes so existing presets rebuild.
-GENERATOR_VERSION = 9
+GENERATOR_VERSION = 10
 
 # Key written into each generated theme.json; also our ownership proof.
 PRESET_MARKER_KEY = 'gametheca_preset'
@@ -34,89 +34,261 @@ PRESET_MARKER_KEY = 'gametheca_preset'
 PRESET_MANAGED_FILES = ('theme.json', 'css/base.css', 'css/gt-tokens.css')
 
 # Folder slug must match how preferences / theme_asset resolve paths.
-# Mix of arcade/retro cabinet looks and cleaner modern glass looks.
+# Wave 2d: each preset owns a colour language *and* a paired icon pack
+# (plus --gt-icon-* token overrides) so packs are not near-identical hues.
 # Avoid warm orange accents that clash with the default green system chrome.
 PRESET_THEMES = [
     {
         'slug': 'aurora',
         'name': 'Arcade Neon',
-        'description': 'CRT cyan glow — retro cabinet neon.',
+        'description': 'CRT cyan glow — chunky pixel icons, scanline glass.',
         'btn_primary': '#22d3ee',
         'btn_primary_hover': '#06b6d4',
         'bg_dark_40': 'rgba(10, 24, 32, 0.94)',
         'bg_dark_30': 'rgba(6, 16, 24, 0.97)',
+        'icon_pack': 'pixel',
+        'tokens': {
+            'gt-text': '#e0f7fa',
+            'gt-text-muted': '#7dd3e8',
+            'gt-border': 'rgba(34, 211, 238, 0.22)',
+            'gt-accent-2': '#a5f3fc',
+            'gt-glass-bg': 'rgba(6, 28, 36, 0.78)',
+            'gt-glass-border': 'rgba(34, 211, 238, 0.28)',
+            'gt-glass-blur': '10px',
+            'gt-crt-opacity': '0.09',
+            'gt-tile-gap': '8px',
+            'font-display': '"Lucida Console", "Courier New", monospace',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '2.75',
+            'gt-icon-linecap': 'square',
+            'gt-icon-linejoin': 'miter',
+            'gt-icon-fill': 'none',
+            'gt-icon-fill-opacity': '0',
+        },
     },
     {
         'slug': 'ember',
         'name': 'Hot Cabinet',
-        'description': 'Arcade magenta on deep cabinet black.',
+        'description': 'Arcade magenta — solid filled glyphs on cabinet black.',
         'btn_primary': '#f472b6',
         'btn_primary_hover': '#ec4899',
         'bg_dark_40': 'rgba(28, 10, 22, 0.94)',
         'bg_dark_30': 'rgba(18, 6, 14, 0.97)',
+        'icon_pack': 'filled',
+        'tokens': {
+            'gt-text': '#fce7f3',
+            'gt-text-muted': '#f9a8d4',
+            'gt-border': 'rgba(244, 114, 182, 0.24)',
+            'gt-accent-2': '#fb7185',
+            'gt-glass-bg': 'rgba(36, 8, 24, 0.8)',
+            'gt-glass-border': 'rgba(244, 114, 182, 0.3)',
+            'gt-glass-blur': '14px',
+            'gt-crt-opacity': '0.06',
+            'gt-tile-gap': '10px',
+            'font-display': '"Arial Black", "Segoe UI", sans-serif',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '1.25',
+            'gt-icon-linecap': 'round',
+            'gt-icon-linejoin': 'round',
+            'gt-icon-fill': 'currentColor',
+            'gt-icon-fill-opacity': '0.92',
+        },
     },
     {
         'slug': 'violet',
         'name': 'Modern Violet',
-        'description': 'Soft violet glass for a modern library.',
+        'description': 'Soft violet glass — thin soft stroke icons.',
         'btn_primary': '#a78bfa',
         'btn_primary_hover': '#8b5cf6',
         'bg_dark_40': 'rgba(22, 16, 36, 0.94)',
         'bg_dark_30': 'rgba(14, 10, 28, 0.97)',
+        'icon_pack': 'soft',
+        'tokens': {
+            'gt-text': '#f5f3ff',
+            'gt-text-muted': '#c4b5fd',
+            'gt-border': 'rgba(167, 139, 250, 0.2)',
+            'gt-accent-2': '#c4b5fd',
+            'gt-glass-bg': 'rgba(24, 16, 48, 0.7)',
+            'gt-glass-border': 'rgba(167, 139, 250, 0.26)',
+            'gt-glass-blur': '18px',
+            'gt-crt-opacity': '0.02',
+            'gt-tile-gap': '12px',
+            'font-display': '"Segoe UI Semibold", "Segoe UI", sans-serif',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '1.35',
+            'gt-icon-linecap': 'round',
+            'gt-icon-linejoin': 'round',
+            'gt-icon-fill': 'none',
+            'gt-icon-fill-opacity': '0',
+        },
     },
     {
         'slug': 'forest',
         'name': 'Vector Green',
-        'description': 'Phosphor green — classic vector arcade.',
+        'description': 'Phosphor green — crisp outline icons, low glass.',
         'btn_primary': '#4ade80',
         'btn_primary_hover': '#22c55e',
         'bg_dark_40': 'rgba(12, 24, 18, 0.94)',
         'bg_dark_30': 'rgba(8, 16, 12, 0.97)',
+        'icon_pack': 'outline',
+        'tokens': {
+            'gt-text': '#ecfdf5',
+            'gt-text-muted': '#86efac',
+            'gt-border': 'rgba(74, 222, 128, 0.18)',
+            'gt-accent-2': '#86efac',
+            'gt-glass-bg': 'rgba(8, 28, 16, 0.88)',
+            'gt-glass-border': 'rgba(74, 222, 128, 0.22)',
+            'gt-glass-blur': '6px',
+            'gt-crt-opacity': '0.07',
+            'gt-tile-gap': '9px',
+            'font-display': '"Courier New", "Lucida Console", monospace',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '2',
+            'gt-icon-linecap': 'butt',
+            'gt-icon-linejoin': 'miter',
+            'gt-icon-fill': 'none',
+            'gt-icon-fill-opacity': '0',
+        },
     },
     {
         'slug': 'ocean',
         'name': 'Modern Ocean',
-        'description': 'Clean deep blue modern chrome.',
+        'description': 'Deep blue chrome — duotone fill icons.',
         'btn_primary': '#3b82f6',
         'btn_primary_hover': '#2563eb',
         'bg_dark_40': 'rgba(10, 18, 36, 0.94)',
         'bg_dark_30': 'rgba(6, 12, 28, 0.97)',
+        'icon_pack': 'duotone',
+        'tokens': {
+            'gt-text': '#eff6ff',
+            'gt-text-muted': '#93c5fd',
+            'gt-border': 'rgba(59, 130, 246, 0.2)',
+            'gt-accent-2': '#60a5fa',
+            'gt-glass-bg': 'rgba(8, 20, 44, 0.74)',
+            'gt-glass-border': 'rgba(59, 130, 246, 0.28)',
+            'gt-glass-blur': '14px',
+            'gt-crt-opacity': '0.015',
+            'gt-tile-gap': '11px',
+            'font-display': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '1.75',
+            'gt-icon-linecap': 'round',
+            'gt-icon-linejoin': 'round',
+            'gt-icon-fill': 'currentColor',
+            'gt-icon-fill-opacity': '0.22',
+        },
     },
     {
         'slug': 'rose',
         'name': 'Modern Rose',
-        'description': 'Muted rose on charcoal glass.',
+        'description': 'Muted rose charcoal — soft thin strokes.',
         'btn_primary': '#fb7185',
         'btn_primary_hover': '#f43f5e',
         'bg_dark_40': 'rgba(28, 14, 20, 0.94)',
         'bg_dark_30': 'rgba(18, 8, 14, 0.97)',
+        'icon_pack': 'soft',
+        'tokens': {
+            'gt-text': '#fff1f2',
+            'gt-text-muted': '#fda4af',
+            'gt-border': 'rgba(251, 113, 133, 0.2)',
+            'gt-accent-2': '#fda4af',
+            'gt-glass-bg': 'rgba(32, 12, 20, 0.72)',
+            'gt-glass-border': 'rgba(251, 113, 133, 0.26)',
+            'gt-glass-blur': '16px',
+            'gt-crt-opacity': '0.025',
+            'gt-tile-gap': '12px',
+            'font-display': '"Georgia", "Times New Roman", serif',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '1.4',
+            'gt-icon-linecap': 'round',
+            'gt-icon-linejoin': 'round',
+            'gt-icon-fill': 'none',
+            'gt-icon-fill-opacity': '0',
+        },
     },
     {
         'slug': 'mono',
         'name': 'Modern Mono',
-        'description': 'Neutral slate — minimal modern chrome.',
+        'description': 'Neutral slate — heavy mono block icons.',
         'btn_primary': '#94a3b8',
         'btn_primary_hover': '#64748b',
         'bg_dark_40': 'rgba(18, 18, 22, 0.94)',
         'bg_dark_30': 'rgba(10, 10, 14, 0.97)',
+        'icon_pack': 'mono',
+        'tokens': {
+            'gt-text': '#f8fafc',
+            'gt-text-muted': '#94a3b8',
+            'gt-border': 'rgba(148, 163, 184, 0.18)',
+            'gt-accent-2': '#cbd5e1',
+            'gt-glass-bg': 'rgba(16, 16, 20, 0.82)',
+            'gt-glass-border': 'rgba(255, 255, 255, 0.1)',
+            'gt-glass-blur': '8px',
+            'gt-crt-opacity': '0.01',
+            'gt-tile-gap': '10px',
+            'font-display': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '0.5',
+            'gt-icon-linecap': 'square',
+            'gt-icon-linejoin': 'miter',
+            'gt-icon-fill': 'currentColor',
+            'gt-icon-fill-opacity': '1',
+        },
     },
     {
         'slug': 'sunset',
         'name': 'Coin Gold',
-        'description': 'Arcade coin-slot gold (not orange).',
+        'description': 'Coin-slot gold — filled glyphs, warm cabinet CRT.',
         'btn_primary': '#fbbf24',
         'btn_primary_hover': '#eab308',
         'bg_dark_40': 'rgba(24, 18, 8, 0.94)',
         'bg_dark_30': 'rgba(14, 10, 4, 0.97)',
+        'icon_pack': 'filled',
+        'tokens': {
+            'gt-text': '#fffbeb',
+            'gt-text-muted': '#fcd34d',
+            'gt-border': 'rgba(251, 191, 36, 0.22)',
+            'gt-accent-2': '#fde68a',
+            'gt-glass-bg': 'rgba(28, 20, 6, 0.8)',
+            'gt-glass-border': 'rgba(251, 191, 36, 0.3)',
+            'gt-glass-blur': '12px',
+            'gt-crt-opacity': '0.08',
+            'gt-tile-gap': '8px',
+            'font-display': '"Arial Black", "Impact", sans-serif',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '1.5',
+            'gt-icon-linecap': 'round',
+            'gt-icon-linejoin': 'round',
+            'gt-icon-fill': 'currentColor',
+            'gt-icon-fill-opacity': '0.88',
+        },
     },
     {
         'slug': 'ice',
         'name': 'Modern Ice',
-        'description': 'Pale sky accent on cold navy glass.',
+        'description': 'Pale sky on cold navy — soft stroke, high blur.',
         'btn_primary': '#7dd3fc',
         'btn_primary_hover': '#38bdf8',
         'bg_dark_40': 'rgba(12, 20, 32, 0.94)',
         'bg_dark_30': 'rgba(8, 14, 24, 0.97)',
+        'icon_pack': 'soft',
+        'tokens': {
+            'gt-text': '#f0f9ff',
+            'gt-text-muted': '#7dd3fc',
+            'gt-border': 'rgba(125, 211, 252, 0.2)',
+            'gt-accent-2': '#bae6fd',
+            'gt-glass-bg': 'rgba(10, 22, 40, 0.68)',
+            'gt-glass-border': 'rgba(125, 211, 252, 0.28)',
+            'gt-glass-blur': '20px',
+            'gt-crt-opacity': '0.02',
+            'gt-tile-gap': '12px',
+            'font-display': '"Segoe UI Light", "Segoe UI", sans-serif',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '1.25',
+            'gt-icon-linecap': 'round',
+            'gt-icon-linejoin': 'round',
+            'gt-icon-fill': 'none',
+            'gt-icon-fill-opacity': '0',
+        },
     },
 ]
 
@@ -257,7 +429,12 @@ def _relative_luminance(hex_color: str) -> float:
 
 
 def preset_tokens(preset: dict) -> dict:
-    """The --gt-* overrides that make this preset visually distinct."""
+    """The --gt-* overrides that make this preset visually distinct.
+
+    Base colours always derive from btn_primary / bg_dark_*. Optional
+    ``tokens`` on the preset expand glass, typography, CRT, and icon geometry
+    so packs diverge beyond accent hue alone.
+    """
     accent = preset['btn_primary']
     surface = _rgba_to_hex(preset.get('bg_dark_40', '')) or '#141820'
     tokens = {
@@ -268,7 +445,19 @@ def preset_tokens(preset: dict) -> dict:
         # Text drawn on top of the accent needs to flip with accent brightness.
         'gt-accent-contrast': '#0b0d10' if _relative_luminance(accent) > 0.30 else '#f2f4f8',
     }
+    extra = preset.get('tokens') or {}
+    if isinstance(extra, dict):
+        for name, value in extra.items():
+            if value is None or value == '':
+                continue
+            tokens[str(name)] = str(value)
     return tokens
+
+
+def preset_icon_pack(preset: dict) -> str:
+    """Paired icon pack id for a colour preset (outline if unset)."""
+    pack = preset.get('icon_pack') or 'outline'
+    return str(pack).strip() or 'outline'
 
 
 # --------------------------------------------------------------------------
@@ -339,17 +528,27 @@ def preset_needs_rebuild(target: str, preset: dict, fingerprint: str) -> bool:
 # Generation
 # --------------------------------------------------------------------------
 
-def _write_theme_json(path: str, *, name: str, description: str, slug: str, fingerprint: str) -> None:
+def _write_theme_json(
+    path: str,
+    *,
+    name: str,
+    description: str,
+    slug: str,
+    fingerprint: str,
+    icon_pack: str = 'outline',
+) -> None:
     payload = {
         'name': name,
         'author': 'GameTheca',
         'description': description,
         'version': '1.0.0',
         'release_date': date.today().isoformat(),
+        'default_icon_pack': icon_pack,
         PRESET_MARKER_KEY: {
             'slug': slug,
             'generator': GENERATOR_VERSION,
             'source': fingerprint,
+            'icon_pack': icon_pack,
         },
     }
     with open(path, 'w', encoding='utf-8') as fh:
@@ -410,6 +609,7 @@ def build_preset(source_root: str, target: str, preset: dict, fingerprint: str) 
         description=preset['description'],
         slug=preset['slug'],
         fingerprint=fingerprint,
+        icon_pack=preset_icon_pack(preset),
     )
     _write_preset_base_css(target, preset)
     _write_preset_tokens_css(source_root, target, preset)

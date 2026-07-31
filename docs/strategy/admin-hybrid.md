@@ -25,7 +25,7 @@ Progressive migration continues after 1.0 (Wave 3 remainder).
 | Support inbox | React |
 | Announcements | React |
 | Scans status (partial) | Live status tiles; start/forms may still Jinja |
-| Integrations hub | React **grouped cards** (IGDB · SMTP · OIDC · LiveKit · Support) when Jinja body is empty; deep links preserve classic forms |
+| Integrations hub | React **grouped cards** (IGDB · Artwork & secondary · SMTP · OIDC · LiveKit · Community · Acquire · Ownership · Remote play · Export packs · Support) when Jinja body is empty; **Provider inventory** from `/api/admin/integrations/inventory` (category groups + notes + deep links); classic forms preserved |
 
 ## Jinja-backed (expected)
 
@@ -37,6 +37,17 @@ templates. Operators may see React chrome wrapping a Jinja content region
 
 Exact template inventory: `gametheca/templates/admin/` (~40+ files). Do not treat
 “still Jinja” as a regression in 1.0 release notes.
+
+**P1 densify (Jul 29):** High-traffic Jinja bodies moved onto `gt-adminpage` /
+`--xl` (1600px) with aurora tables/panels — logs, status, whitelist, library
+create, SMTP/IGDB stubs, integrations tab body, users, downloads, invites,
+filters, extensions, image queue, discovery, statistics, newsletter, attract,
+help, chat emoji, reference sets, scanjobs tab panels. Redundant
+“Back to Dashboard” glass bars removed where React top-nav already covers nav.
+`.settings-container` max-width aligned to **1600px** (use
+`settings-container--narrow` or `gt-adminpage--sm/--md` for compact forms).
+After deploy: **Admin → Themes → Reset Themes**. Residual low-traffic:
+`new_server_info` / `new_server_settings`, `view_newsletter`, themes readme.
 
 ## Operator message
 

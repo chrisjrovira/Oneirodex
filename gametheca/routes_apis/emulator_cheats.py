@@ -13,6 +13,7 @@ from gametheca.models import Game
 from gametheca.utils.auth import admin_required
 from gametheca.utils.emulator_bios import bios_status_for_cores, list_bios_files, store_bios_file
 from gametheca.utils.emulator_cheats import (
+    create_cheat_file,
     delete_cheat_file,
     list_cheat_files,
     read_cheat_file,
@@ -37,19 +38,39 @@ def list_game_cheats(game_uuid):
 @apis_bp.route('/games/<game_uuid>/cheats', methods=['POST'])
 @login_required
 def upload_game_cheat(game_uuid):
+    """Upload a prebuilt .cht or easy-create from JSON body.
+
+    Multipart: ``file`` = .cht upload (legacy).
+    JSON: ``{ name, codes: [{desc?, code}], dialect? }`` → write .cht.
+    """
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
         return jsonify({'error': 'Game not found'}), 404
     if not user_can_access_game(current_user, game):
         return jsonify({'error': 'Forbidden'}), 403
+
     upload = request.files.get('file')
-    if upload is None:
-        return jsonify({'error': 'file required'}), 400
-    try:
-        row = store_cheat_file(game_uuid, upload)
-    except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify(row), 201
+    if upload is not None and (getattr(upload, 'filename', None) or '').strip():
+        try:
+            row = store_cheat_file(game_uuid, upload)
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
+        return jsonify(row), 201
+
+    data = request.get_json(silent=True)
+    if isinstance(data, dict):
+        try:
+            row = create_cheat_file(
+                game_uuid,
+                name=data.get('name'),
+                codes=data.get('codes'),
+                dialect=data.get('dialect'),
+            )
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
+        return jsonify(row), 201
+
+    return jsonify({'error': 'file required or JSON body with name and codes'}), 400
 
 
 @apis_bp.route('/games/<game_uuid>/cheats/<path:filename>', methods=['GET'])

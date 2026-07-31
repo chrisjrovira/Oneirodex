@@ -34,6 +34,7 @@ disable-model-invocation: true
 - Smallest relevant pytest/vitest first; then builds if UI touched
 - Truncate logs; cite paths and status codes
 - Note **BLOCKED (env)** when Postgres/login/Unraid unavailable — do not fake pass
+- **Windows UNC:** Prefer `Y:\` (repo/ISO) or `%TEMP%` copy for vitest/npm. **Never remap Z:** — Z: is the human’s NAS mapping (see `prompt-brief/defaults.md`)
 
 ## Wrong-seat refuse
 

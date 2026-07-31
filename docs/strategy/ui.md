@@ -1,17 +1,20 @@
 # UI Rebuild Plan — Sleeker GameTheca
 
-**Date:** 2026-07-23 · **Updated:** 2026-07-27  
+**Date:** 2026-07-23 · **Updated:** 2026-07-29  
 **Drivers:** Mixed Jinja + React islands, admin page sprawl, modern self-hosted library UX bar + 10-foot frontend patterns (Playnite fullscreen import/export integrations remain Class D).
 
-## Current product chrome (Jul 26)
+## Current product chrome (Jul 29)
 
 | Surface | State |
 |---|---|
-| Member SPA | Vite React app (`frontend/member-app`), **top nav** (no left sidebar), glass Style **B+C** |
-| Accent | Default **`#2fd67b`** green (not teal); `GENERATOR_VERSION` **8** regenerates preset tokens |
+| Member SPA | Vite React app (`frontend/member-app`), **compressed top nav** (no left sidebar), glass Style **B+C** · Profile/account under TopNav · Friends More→dock (not `/social-companion` SPA takeover) · Library page sizes through **1000** |
+| Accent | Default **`#2fd67b`** green (not teal); `GENERATOR_VERSION` **9** regenerates preset tokens |
 | Systems hub | `/systems` — browse-by-console families + platform skins |
-| Admin | **`base_admin.html`** + React top bar (`frontend/admin-app`); Themes page densified (`gt-themes-*` blocks); Settings hub cards tighter |
-| Required asset | Built `member-app.css` (+ `member-app.js`) must ship in image/dist — SPA chrome is unstyled without it |
+| Admin | **`base_admin.html`** + React top bar (`frontend/admin-app`); Themes page densified (`gt-themes-*` blocks); Settings hub cards tighter; **P1 densify wave (code):** logs · status · whitelist · library-create · SMTP/IGDB stubs · integrations Jinja body · users/downloads/invites/filters/extensions/image-queue/discovery/statistics/newsletter/attract/help/emoji/reference-sets — `gt-adminpage` / `--xl` · stripped redundant Back-to-Dashboard glass bars · `.settings-container` **1600px** (was 1100) · aurora `gt-meter` on server status |
+| Auth / account Jinja | **P0 aurora scrub shipped (code)** — login · register · reset · confirm use **`gt-setup`** centered aurora shell (no legacy LHN). Profile / password / settings panel / invites use **`gt-account`** panels + `hide_lhn`. Preferences modal = **`gt-prefs-modal`**. Identify workbench = **`gt-adminpage`**. Member SPA leaks closed: FilterBar `gt-btn*` (no Bootstrap `btn-primary`), `formatLocaleDate`, CSS `showToast` (no jQuery `$.notify`) |
+| Required asset | Built `member-app.css` (+ `member-app.js`) must ship in image/dist — SPA chrome is unstyled without it. After deploy: rebuild member-app dist **and** Admin → Themes → **Reset Themes** so library-volume copies pick up auth/account/identify **and P1 densified-admin** CSS (`admin-pages.css`, `admin-components.css`, `admin_server_status.css`, page CSS) |
+
+**P0 done / P1 partial (pre-aurora densify):** P0 auth · account · identify · member SPA button/date/toast leaks closed. **P1 densify (this wave, code):** high-traffic admin Jinja onto `gt-adminpage` + 1600px settings cap. **P1 residual:** `new_server_info.html` / `new_server_settings.html` · `view_newsletter.html` · `admin_manage_themes_readme.html` · remaining nested Bootstrap cards on low-traffic pages. **CDN → local vendor (Waves 12–13):** Bootstrap on `base_admin` / member `base` / `base_empty` (`static/vendor/bootstrap/5.3.2/`); Wave 13 also scrubbed jquery/datatables/notify/cropper/sortable/chart → `/static/vendor/...` (rebuild/restart picks up vendor — not Reset Themes). **Wave 13:** admin-app `QualityProfilesPage` at `/admin/quality_profiles` (Jinja emptied to SPA shell). Optional retire of dead `game_details.html`.
 
 Program board: Cursor canvas  
 `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
@@ -126,7 +129,7 @@ State machine per game/user: `not_downloaded` → `downloaded` → `installed` �
 - Design tokens CSS + Storybook or simple gallery page  
 - OpenAPI types → TS client  
 - Shared `frontend/design-system` package  
-- Command palette (Ctrl+K) for games + admin jumps — **nav jumps shipped** (member SPA `cmdk`); game search later  
+- Command palette (Ctrl+K) for games + admin jumps — **nav jumps shipped** (member SPA `cmdk`); **Library route title search shipped** (Search library group via `/api/search`)  
 - **`BadgeStack` prototype** on library-grid covers (static NEW/UPDATE fixtures)
 
 ### Wave 1 — Library & details (3–4 weeks) — largely shipped
@@ -141,7 +144,7 @@ State machine per game/user: `not_downloaded` → `downloaded` → `installed` �
 - Discover + collections + trailers under one SPA shell  
 - Top nav + Systems hub + green glass Style B+C  
 - Downloads queue UX (pause/resume when client exists)  
-- Preferences / theme picker (presets with swatches; `GENERATOR_VERSION` 8)  
+- Preferences / theme picker (presets with swatches; `GENERATOR_VERSION` 9)  
 - ~~Badge filter chips (“New”, “Updates”, “Releases”)~~ **Done** (O5)
 
 ### Wave 3 — Admin consolidation / React SPA (active program)
@@ -160,7 +163,7 @@ State machine per game/user: `not_downloaded` → `downloaded` → `installed` �
 
 1. Global search that returns games + admin entities  
 2. Sticky download/scan progress toaster (WebSocket)  
-3. “Why unmatched?” explainer on each unmatched row  
+3. ~~“Why unmatched?” explainer on each unmatched row~~ — **Done (Wave 5)** — one-liner from `why_unmatched` / `unmatched_reason` on Unmatched + Dupe glance · Backfill kind hints toolbar
 4. Theme swatches in preferences (not names only)  
 5. Batch actions on library selection (freshness, refresh images, favorite)  
 6. Confirm destructive admin actions with typed game/library name  

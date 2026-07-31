@@ -62,6 +62,8 @@
 
     "allow-launch-game",
 
+    "allow-reveal-path-in-os",
+
     "allow-is-process-running",
 
     "allow-get-flips-path",

@@ -1,14 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { HUB_LINKS } from './navConfig'
 import {
+  LibraryHealthFactors,
   MeterBar,
   MetricTile,
   OpsStatusBanner,
   companionKindRows,
   formatBytes,
+  formatLibraryHealthHint,
+  formatLibraryHealthValue,
+  formatLibraryWatchDetail,
+  formatLibraryWatchStatus,
   formatLoadAvg,
   formatReadyz,
+  libraryHealthTone,
   na,
+  normalizeLibraryHealth,
 } from './opsWidgets'
 import './ops.css'
 
@@ -30,6 +37,9 @@ export function formatScanJobCounters(job) {
   const processed = success + failed
   if (total > 0) {
     return `${processed}/${total}` + (failed ? ` · ${failed} failed` : '')
+  }
+  if (job?.status === 'Queued' || job?.status === 'Pending') {
+    return job?.queue_position != null ? `Queued #${job.queue_position}` : 'Queued'
   }
   if (job?.status === 'Running' || job?.status === 'Stopping') {
     return 'Starting…'
@@ -54,33 +64,44 @@ function livekitLabel(livekit) {
 export function OpsPage() {
   const [snapshot, setSnapshot] = useState(null)
   const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(true)
+  /** Initial mount only — never flash content away on background poll. */
+  const [bootLoading, setBootLoading] = useState(true)
+  /** Manual Refresh button feedback only. */
+  const [manualRefreshing, setManualRefreshing] = useState(false)
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(null)
   const requestRef = useRef({ id: 0, controller: null })
+  const hasSnapshotRef = useRef(false)
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback((source = 'poll') => {
+    const isManual = source === 'manual'
+    const isBoot = source === 'boot'
     requestRef.current.controller?.abort()
     const controller = new AbortController()
     const id = requestRef.current.id + 1
     requestRef.current = { id, controller }
-    setLoading(true)
+    if (isManual) setManualRefreshing(true)
     getJson('/admin/api/ops/summary')
       .then((data) => {
         if (requestRef.current.id !== id || controller.signal.aborted) return
         setSnapshot(data)
         setError(null)
-        setLoading(false)
+        setLastUpdatedAt(new Date())
+        hasSnapshotRef.current = true
+        if (isBoot) setBootLoading(false)
+        if (isManual) setManualRefreshing(false)
       })
       .catch((err) => {
         if (err.name === 'AbortError') return
         if (requestRef.current.id !== id) return
         setError(err)
-        setLoading(false)
+        if (isBoot || !hasSnapshotRef.current) setBootLoading(false)
+        if (isManual) setManualRefreshing(false)
       })
   }, [])
 
   useEffect(() => {
-    refresh()
-    const timer = window.setInterval(refresh, 15000)
+    refresh('boot')
+    const timer = window.setInterval(() => refresh('poll'), 15000)
     return () => {
       window.clearInterval(timer)
       requestRef.current.controller?.abort()
@@ -104,15 +125,37 @@ export function OpsPage() {
           <h1>System · Ops</h1>
           <p className="gt-admin-lede">Observability console — host, readiness, companions, scans (~15s).</p>
         </div>
-        <button type="button" className="gt-btn gt-btn--accent" onClick={refresh} disabled={loading}>
-          {loading ? 'Refreshing…' : 'Refresh'}
-        </button>
+        <div className="gt-ops-refresh">
+          {manualRefreshing ? (
+            <span className="gt-ops-refresh__status" role="status" aria-live="polite">
+              Refreshing…
+            </span>
+          ) : lastUpdatedAt ? (
+            <span className="gt-ops-refresh__status gt-ops-refresh__status--muted">
+              Updated {lastUpdatedAt.toLocaleTimeString()}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className="gt-btn gt-btn--accent"
+            onClick={() => refresh('manual')}
+            disabled={manualRefreshing || bootLoading}
+          >
+            {manualRefreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {error ? (
         <div role="alert" className="gt-admin-alert">
           Unable to load ops summary ({error.message}).
         </div>
+      ) : null}
+
+      {bootLoading && !snapshot ? (
+        <p className="gt-admin-lede" role="status">
+          Loading ops summary…
+        </p>
       ) : null}
 
       <OpsStatusBanner
@@ -150,6 +193,21 @@ export function OpsPage() {
           label="Games disk"
           value={na(host?.disk_games?.percent ?? host?.disk_base?.percent, '%')}
           hint="volume use"
+        />
+        <MetricTile
+          label="Library watch"
+          value={formatLibraryWatchStatus(services?.library_watch)}
+          hint={
+            services?.library_watch?.enabled
+              ? `${services.library_watch.roots ?? 0} roots · ${services.library_watch.pending_libraries ?? 0} pending`
+              : 'GT_LIBRARY_WATCH off'
+          }
+        />
+        <MetricTile
+          label="Library health"
+          value={formatLibraryHealthValue(library?.health)}
+          hint={formatLibraryHealthHint(library?.health)}
+          tone={libraryHealthTone(library?.health)}
         />
       </div>
 
@@ -205,67 +263,74 @@ export function OpsPage() {
           )}
         </section>
 
-        <section className="gt-ops-panel">
+        <section className="gt-ops-panel gt-ops-panel--services">
           <h2>Services</h2>
           {!services ? (
             <p>{snapshot?.services_error || 'Services data unavailable.'}</p>
           ) : (
-            <table className="gt-ops-table">
-              <thead>
-                <tr>
-                  <th>Service</th>
-                  <th>Status</th>
-                  <th>Detail</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Readyz</td>
-                  <td>{formatReadyz(services.readyz)}</td>
-                  <td>
-                    {services.readyz?.checks
-                      ? Object.entries(services.readyz.checks)
-                          .map(([k, v]) => `${k}:${typeof v === 'object' ? v?.status || JSON.stringify(v) : v}`)
-                          .join(' · ') || 'n/a'
-                      : 'n/a'}
-                  </td>
-                </tr>
-                <tr>
-                  <td>LiveKit</td>
-                  <td>{livekitLabel(services.livekit)}</td>
-                  <td>{services.livekit?.error || '—'}</td>
-                </tr>
-                <tr>
-                  <td>Malware</td>
-                  <td>{services.malware?.enabled ? 'on' : 'off'}</td>
-                  <td>
-                    {services.malware?.enabled
-                      ? `ClamAV ${services.malware.clamav_reachable ? 'up' : 'down (heuristics only)'}`
-                      : '—'}
-                  </td>
-                </tr>
-                <tr>
-                  <td>Queues</td>
-                  <td>
-                    {services.queues?.scans_active ?? 0} active · {services.queues?.scans_pending ?? 0} pending
-                  </td>
-                  <td>{services.queues?.downloads_open ?? 0} downloads open</td>
-                </tr>
-                {(services.game_servers?.servers || []).map((server) => (
-                  <tr key={server.uuid || server.display_name}>
-                    <td>Game server · {server.display_name || 'unnamed'}</td>
-                    <td>
-                      {server.reachable === true
-                        ? 'reachable'
-                        : server.reachable === false
-                          ? 'unreachable'
-                          : 'n/a'}
-                    </td>
-                    <td>{server.error || server.method || '—'}</td>
+            <div className="gt-ops-panel__scroll">
+              <table className="gt-ops-table gt-ops-table--services">
+                <thead>
+                  <tr>
+                    <th>Service</th>
+                    <th>Status</th>
+                    <th>Detail</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Readyz</td>
+                    <td>{formatReadyz(services.readyz)}</td>
+                    <td>
+                      {services.readyz?.checks
+                        ? Object.entries(services.readyz.checks)
+                            .map(([k, v]) => `${k}:${typeof v === 'object' ? v?.status || JSON.stringify(v) : v}`)
+                            .join(' · ') || 'n/a'
+                        : 'n/a'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>LiveKit</td>
+                    <td>{livekitLabel(services.livekit)}</td>
+                    <td>{services.livekit?.error || '—'}</td>
+                  </tr>
+                  <tr>
+                    <td>Malware</td>
+                    <td>{services.malware?.enabled ? 'on' : 'off'}</td>
+                    <td>
+                      {services.malware?.enabled
+                        ? `ClamAV ${services.malware.clamav_reachable ? 'up' : 'down (heuristics only)'}`
+                        : '—'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Queues</td>
+                    <td>
+                      {services.queues?.scans_active ?? 0} active · {services.queues?.scans_pending ?? 0} pending
+                    </td>
+                    <td>{services.queues?.downloads_open ?? 0} downloads open</td>
+                  </tr>
+                  <tr>
+                    <td>Library watch</td>
+                    <td>{formatLibraryWatchStatus(services.library_watch)}</td>
+                    <td>{formatLibraryWatchDetail(services.library_watch)}</td>
+                  </tr>
+                  {(services.game_servers?.servers || []).map((server) => (
+                    <tr key={server.uuid || server.display_name}>
+                      <td>Game server · {server.display_name || 'unnamed'}</td>
+                      <td>
+                        {server.reachable === true
+                          ? 'reachable'
+                          : server.reachable === false
+                            ? 'unreachable'
+                            : 'n/a'}
+                      </td>
+                      <td>{server.error || server.method || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
 
@@ -315,12 +380,24 @@ export function OpsPage() {
           {!library ? (
             <p>{snapshot?.library_error || 'Library data unavailable.'}</p>
           ) : (
-            <div className="gt-ops-strip gt-ops-strip--compact">
-              <MetricTile label="Libraries" value={na(library.libraries)} />
-              <MetricTile label="Games" value={na(library.games)} />
-              <MetricTile label="Unmatched" value={na(library.unmatched_folders)} />
-              <MetricTile label="Open downloads" value={na(library.download_requests_open)} />
-            </div>
+            <>
+              <div className="gt-ops-strip gt-ops-strip--compact">
+                <MetricTile label="Libraries" value={na(library.libraries)} />
+                <MetricTile label="Games" value={na(library.games)} />
+                <MetricTile label="Unmatched" value={na(library.unmatched_folders)} />
+                <MetricTile label="Open downloads" value={na(library.download_requests_open)} />
+                <MetricTile
+                  label="Health"
+                  value={formatLibraryHealthValue(library.health)}
+                  hint={
+                    normalizeLibraryHealth(library.health)?.grade ||
+                    formatLibraryHealthHint(library.health)
+                  }
+                  tone={libraryHealthTone(library.health)}
+                />
+              </div>
+              <LibraryHealthFactors health={library.health} />
+            </>
           )}
         </section>
 
@@ -329,9 +406,18 @@ export function OpsPage() {
           {!scans ? (
             <p>{snapshot?.scans_error || 'Scan data unavailable.'}</p>
           ) : (scans.jobs || []).length === 0 ? (
-            <p className="gt-admin-lede">{scans.active_count ?? 0} active · no recent jobs.</p>
+            <p className="gt-admin-lede">
+              {scans.active_count ?? 0} active
+              {scans.queued_count != null ? <> · {scans.queued_count} queued</> : null}
+              {' · '}no recent jobs.
+            </p>
           ) : (
-            <table className="gt-ops-table">
+            <>
+              <p className="gt-ops-panel__lede">
+                {scans.active_count ?? 0} active
+                {scans.queued_count != null ? <> · {scans.queued_count} queued</> : null}
+              </p>
+              <table className="gt-ops-table">
               <thead>
                 <tr>
                   <th>Job</th>
@@ -355,6 +441,7 @@ export function OpsPage() {
                 ))}
               </tbody>
             </table>
+            </>
           )}
         </section>
 

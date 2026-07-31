@@ -26,8 +26,8 @@ Kid mode uses the same browse controls; parental ACL already filters the list. D
 
 | You have… | Do this |
 |---|---|
-| **PSVR2 / Index / Vive via SteamVR** (PC VR) | On the **same PC**, open GameTheca in Chrome/Edge (desktop window or SteamVR overlay browser). Use **Big Picture** with a normal gamepad for couch control. Sense controllers are for SteamVR games, not for driving the website. |
-| **Quest / standalone** (friend seat) | Headset browser → `https://<server>/vr` → optional Add to Home (PWA). Play heavy titles via **Moonlight** to the household PC, or ask someone on the companion PC. |
+| **PSVR2 / Index / Vive via SteamVR** (PC VR) | On the **same PC**, open GameTheca in Chrome/Edge (desktop window or SteamVR overlay browser) → `/vr` or Library. Use **Big Picture** with a normal gamepad for couch control. Sense controllers are for SteamVR games, not for driving the website. DRM-free Install/Play needs the **full** companion — thin is browse/social only. |
+| **Quest / standalone** (friend seat) | Headset browser → `https://<server>/vr` → optional Add to Home (PWA). Play heavy titles via **Moonlight** to the household PC, or ask someone on the companion PC. No local install pipeline on the headset. |
 | **No headset** | Normal Library + Big Picture on TV. |
 
-Details and strategy: [headset-vr.md](../strategy/headset-vr.md) · [controller-input.md](../strategy/controller-input.md).
+Details and strategy: [headset-vr.md](../strategy/headset-vr.md) · [controller-input.md](../strategy/controller-input.md). Android APK is a spike only — [android-apk-vr.md](../strategy/android-apk-vr.md).

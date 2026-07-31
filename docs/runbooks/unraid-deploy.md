@@ -1,11 +1,41 @@
 # Unraid deploy — GameTheca
 
+## Deploy gates (operator checklist)
+
+Do these **before** and **after** every Unraid `git pull` / image rebuild. Agents cannot free host disk or run a live NAS rescan without an explicit human ship.
+
+### Before pull / build
+
+| Gate | Operator step | Why |
+|---|---|---|
+| **Free host disk** | Unraid Main / Shares: free space until the array is **well under ~99% full** (target: tens of GB free on the cache/array used by Docker) | Pull + `docker compose build` fail or evict other containers when the host is full |
+| **Workspace path** | Clone / edit from **UNC** (`\\<nas>\isos\gametheca`) or mapped **`Y:`** (repo share). **Never remap `Z:`** | `Z:` is the NAS **games** share. Remapping it breaks library scan roots and Ops path truth |
+| **Disk hygiene (dev caches)** | Optional: wipe regenerable local caches only — [workspace-disk-hygiene.md](workspace-disk-hygiene.md) | Shrinks build context; does **not** free Unraid array capacity by itself |
+
+### After deploy (every code image)
+
+1. Confirm readiness: `curl -f http://<unraid-ip>:5006/readyz`
+2. Admin → Themes → **Reset Default Themes** (library volume theme CSS/JS lag the image) — [themes-reset.md](../admin/themes-reset.md)
+3. Confirm the image rebuilt **`frontend/member-app` dist** (`member-app.css` / `.js` in View Source). Reset Themes alone does **not** refresh the SPA bundle
+4. Hard-refresh the browser; smoke Discover/Library + Admin Ops glance
+
+### After Stage A0–A8 lands on origin
+
+Only when the human has **shipped** the name-resolution code and the image is running that build:
+
+1. Confirm Library A (**PCWIN**, letter-bucket `…/_pc` root) has **`scan_depth=2`**
+2. Run a **propose-only** scan first; review Unmatched / proposals
+3. Then a **full** rescan at `scan_depth=2` — do **not** start overlapping full scans on the same tree
+
+Exact steps: [libraries-and-scans.md — After A0–A8](../admin/libraries-and-scans.md#after-a0a8-ship--library-a-pcwin-rescan). Strategy context: [name-resolution.md](../strategy/name-resolution.md).
+
 ## Prerequisites
 
 - Unraid 6.12+ with Docker / Compose Manager
 - A **games** share (read-only mount into the container — scan root only)
 - A writable **library** share for covers, themes, uploads (separate from games)
 - Postgres (compose `db` service or external)
+- Host disk **not** at ~99% before pull/build (see [Deploy gates](#deploy-gates-operator-checklist))
 
 ## Required environment
 
@@ -38,6 +68,24 @@ LIBRARY_HOST_PATH=/mnt/user/appdata/gametheca/library
 ```
 
 App libraries in Admin should point at paths under `/storage/...` (inside the container).
+
+### Library root watch (`GT_LIBRARY_WATCH`) — Unraid honesty
+
+Wave 3 optional watcher (Backend). **Safe default: off** (`GT_LIBRARY_WATCH=0` / unset). Do not enable until you understand mount-event limits below.
+
+| Mount style | Host path example | What the container sees | Event honesty |
+|---|---|---|---|
+| **User-share FUSE** | `/mnt/user/games` (typical Unraid) | Bind of FUSE tree into `/storage:ro` | Host-side add/rename/delete **often missed** or delayed — FUSE/`shfs` does not reliably forward inotify to the container |
+| **Disk / cache bind** | `/mnt/diskN/...` or `/mnt/cache/...` | Directer bind | Better chance of events, still not guaranteed across mover / cache↔array moves |
+| **NFS / SMB remount inside container** | Extra volume on a network path | Nested remote FS | **Do not rely on watch** — use scheduled / manual scan |
+
+**Operator rules**
+
+1. Leave watch **off** on household Unraid unless you accept missed events and will still run scheduled scans.
+2. When watch is on, it must see the **same mount** Admin libraries use (`/storage/...`). Watching a different host path than the games bind will miss library-root changes.
+3. Host renames/moves under `/mnt/user/...` may never fire inside the container — treat watch as **best-effort enqueue**, not a substitute for scan jobs.
+4. When the watcher enqueues many paths: prefer **Queue** (`queue_policy=queue`) over **Force parallel** — overlapping full/partial scans pin NAS CPU. See [§ CPU / scan load](#cpu--scan-load-unraid-safe-defaults) and [libraries-and-scans.md](../admin/libraries-and-scans.md#run-a-scan).
+5. Env: `.env.example` / `.env.unraid.example` — `GT_LIBRARY_WATCH=0` (default) and optional `GT_LIBRARY_WATCH_DEBOUNCE_SEC=3`. Details: [library-root-watch-spike.md](../admin/library-root-watch-spike.md). Ops pulse: `services.library_watch`.
 
 ### Console / emulator leaf libraries
 
@@ -93,7 +141,7 @@ docker compose --profile livekit --profile clamav --profile challenge up -d --bu
 3. Confirm healthy: `curl -f http://<unraid-ip>:5006/readyz` (Compose healthcheck uses this; `/healthz` is liveness-only)
 4. Open `http://<unraid-ip>:5006`
 5. Complete setup wizard (admin → SMTP optional → IGDB)
-6. Admin → Themes → **Reset Default Themes** (installs presets; regenerates at `GENERATOR_VERSION` 8)
+6. Admin → Themes → **Reset Default Themes** (installs presets; regenerates at `GENERATOR_VERSION` 9)
 7. Add a library pointing at `/storage/...`
 8. Run a small scan before a full library scan
 
@@ -105,21 +153,38 @@ Use this loop while Unraid-testing so the team can report status **without Disco
 |---|---|---|
 | Readiness | `curl -f http://<unraid-ip>:5006/readyz` | HTTP 200 (DB + init) |
 | Liveness | `curl -f http://<unraid-ip>:5006/healthz` | HTTP 200 (process up) |
-| Ops glance | Admin → Ops (`/admin/ops`) — polls `/admin/api/ops/summary` ~15s | `host` / `library` OK; `issues` not flagging games RO as bad; **Services** = LiveKit · malware/ClamAV · companions · queues · game_servers |
+| Ops glance | Admin → Ops (`/admin/ops`) — polls `/admin/api/ops/summary` ~15s | `host` / `library` OK; `issues` not flagging games RO as bad; disk % stays **Warning / Info** (not Action required); **Services** = LiveKit · malware/ClamAV · companions · queues · game_servers |
 | Scan progress | Admin → Scan jobs **or** Ops `scans.jobs[]` | `status` + `folders_success` / `folders_failed` / `total_folders` (+ `current_processing`); aliases `progress` / `errors` OK |
 | Container logs | `docker compose logs -f app` (and `db` / profile sidecars) | No crash loops; theme sync / `[OK]` lines |
 
 **Team feedback:** paste Ops summary highlights (`issues`, `scans.jobs[]` counters, `services.*` reachability) + last ~40 log lines — not chat webhooks.
 
+## CPU / scan load (Unraid-safe defaults)
+
+Scans and image downloads can pin a NAS CPU if parallelism is left high. **There is no Compose env for scan/image thread counts** — they live in **Admin → Settings → Server Settings** (`GlobalSettings`). Keep Compose `UVICORN_WORKERS=1` (already the Unraid template default).
+
+| Knob | Where | Unraid-safe default | Notes |
+|---|---|---|---|
+| `UVICORN_WORKERS` | `.env` / Compose | **1** | SSE/schedulers are per-worker; do not raise on single-node Unraid |
+| Game scan threads | Server Settings | **1** (max **2** on capable hosts) | UI/API already cap at 4; overlapping full scans still freeze the host — one job at a time |
+| Turbo image downloads | Server Settings | Off during first large scan, or threads **≤4**, batch **≤100** | Stored defaults are **4 / 100**; runtime also hard-caps via `GT_IMAGE_*` |
+| ClamAV profile | Compose `--profile clamav` | **Off** until needed | Heuristics + `ENABLE_MALWARE_SCAN` still run without the daemon; defs + on-add scans add CPU/IO |
+| Challenge / TRAWL | `--profile challenge` | Off unless Acquire needs it | Browser pool is heavy; old NAS → `TRAWL_IMAGE=…:baseline` |
+| `GT_LIBRARY_WATCH` | `.env` | **0** (off) | Best-effort root-folder watch; enqueues scans only — see [§ Library root watch](#library-root-watch-gt_library_watch--unraid-honesty) |
+| Watcher burst enqueue | Scan conflict UI / API | **Queue** (not force parallel) | Many path events → FIFO queue; force-parallel stacks jobs and spikes CPU |
+
+After Backend lands harder code caps/defaults: rebuild + recreate **app**, then open Server Settings once and confirm values match the safe row above (existing DB rows may keep old highs until clamped or re-saved).
+
 ## Theme / JS not updating?
 
-Library volume persists old theme files. After every code deploy:
+Library volume persists old theme files. After every code deploy (same as [Deploy gates → After deploy](#after-deploy-every-code-image)):
 
-1. `docker compose build --no-cache && docker compose up -d`
+1. Free disk if needed, then `docker compose build --no-cache && docker compose up -d`
 2. Watch logs for theme sync / `[OK] Default theme` / token presence
 3. Admin → Themes → **Reset Default Themes** (or delete `themes/default` under the library volume and restart)
+4. Confirm **`member-app.css` / `member-app.js`** load in the browser (View Source on Discover/Library). Missing CSS means the image rebuild did not include a fresh `frontend/member-app` dist — Reset Themes alone will not fix it
 
-Also confirm `member-app.css` loads in the browser (View Source on Discover/Library). Missing CSS means a rebuild is required — the SPA chrome will look unstyled without it.
+Full matrix: [themes-reset.md](../admin/themes-reset.md).
 
 ## Smoke checklist (Style B+C + Systems + Wave 5/6)
 
@@ -127,7 +192,7 @@ Also confirm `member-app.css` loads in the browser (View Source on Discover/Libr
 0a. After Jul 27 SSE/pg_hba fixes: `docker compose up -d --force-recreate db` then rebuild/restart **app** from a tree that includes `docker/postgres/pg_hba.conf` + ASGI activity SSE — [container-wont-start §3b](container-wont-start.md#3b-postgres-up-but-pg_hba-rejects-app-no-encryption) · [admin Discover hang](../admin/troubleshooting.md#spa-navigates-but-pagesadmin-hang-discover-stuck-on-loading)
 0b. Admin → Ops (`/admin/ops`): **Services** tile shows LiveKit · malware/ClamAV · companions · queues · game_servers (via `/admin/api/ops/summary`)
 0c. Console trees: leaf libs under `/storage/.../_console-gaming/...` only — not family roots; skip-dir is backup, not a substitute ([§ Console leaf libraries](#console--emulator-leaf-libraries))
-1. First-boot logs show theme tokens OK (or Reset Default Themes after `GENERATOR_VERSION` 8)
+1. First-boot logs show theme tokens OK (or Reset Default Themes after `GENERATOR_VERSION` 9)
 2. Discover/Library: View Source includes **`member-app.css`** and `member-app.js`
 3. Admin pages: View Source includes **`admin-app.css`** and `admin-app.js` (React admin SPA)
 4. Default accent reads **green `#2fd67b`** (not teal/orange); Ocean/Forest still recolour — hard refresh

@@ -1,6 +1,7 @@
 """Updates inbox — freshness-behind games in one place."""
 
 import os
+from datetime import datetime, timezone
 
 from flask import jsonify, request
 from flask_login import current_user, login_required
@@ -102,12 +103,25 @@ def _dlc_summary(game: Game) -> dict | None:
 @apis_bp.route('/updates/inbox', methods=['GET'])
 @login_required
 def updates_inbox():
-    """List games that look behind store versions (member + librarian/admin)."""
+    """List games that look behind store versions (member + librarian/admin).
+
+    Query:
+      limit (int, default 50, max 200) — page size (no offset; UI re-polls)
+      library_uuid (str, optional)
+
+    Payload includes ``generated_at`` for auto-refresh UI.     Freshness re-check
+    is **not** done here — use:
+      POST /api/games/<uuid>/freshness/check — single title
+      POST /api/games/batch/freshness/check — member multi-select (max 50; ``only_stale`` default true)
+      POST /api/admin/freshness/refresh — library-wide bulk (admin; ``only_stale`` default true)
+    """
     try:
         limit = min(int(request.args.get('limit') or 50), 200)
     except (TypeError, ValueError):
         limit = 50
+    limit = max(1, limit)
     library_uuid = (request.args.get('library_uuid') or '').strip() or None
+    generated_at = datetime.now(timezone.utc).isoformat()
 
     query = select(Game).filter(
         or_(
@@ -150,7 +164,24 @@ def updates_inbox():
             'client_connected': connected,
         })
 
-    return jsonify({'count': len(items), 'items': items})
+    return jsonify({
+        'count': len(items),
+        'limit': limit,
+        'generated_at': generated_at,
+        'items': items,
+        'freshness_check': {
+            'single': 'POST /api/games/<uuid>/freshness/check',
+            'batch_member': 'POST /api/games/batch/freshness/check',
+            'batch_member_limit': 50,
+            'bulk_admin': 'POST /api/admin/freshness/refresh',
+            'only_stale_default': True,
+            'note': (
+                'Inbox reads stored freshness_status only; poll this endpoint for UI '
+                'auto-refresh, then call freshness/check, member batch, or admin refresh '
+                'to re-probe stores.'
+            ),
+        },
+    })
 
 
 @apis_bp.route('/updates/store_search', methods=['GET'])

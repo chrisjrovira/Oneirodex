@@ -45,8 +45,6 @@
 
 .gt-more-page__list,
 .gt-news__list,
-.gt-calendar__list,
-.gt-playtime__list,
 .gt-updates__list {
   display: flex;
   flex-direction: column;
@@ -54,10 +52,7 @@
 }
 
 .gt-more-page__list > li,
-.gt-news__card,
-.gt-calendar__list > li,
-.gt-playtime__list > li,
-.gt-updates__list > li {
+.gt-news__card {
   display: flex;
   gap: 0.75rem;
   padding: 0.65rem 0.8rem;
@@ -67,10 +62,7 @@
   color: var(--gt-text);
 }
 
-.gt-news__card article,
-.gt-calendar__list > li > div,
-.gt-playtime__list > li,
-.gt-updates__list > li a {
+.gt-news__card article {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
@@ -78,20 +70,32 @@
   flex: 1;
 }
 
+/* Updates residual densify — row separators, not glass cards */
+.gt-updates__list {
+  gap: 0;
+}
+
+.gt-updates__list > li {
+  display: block;
+  padding: 0.55rem 0.1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 65%, transparent);
+  border-radius: 0;
+  color: var(--gt-text);
+}
+
 .gt-updates__list > li a {
   color: inherit;
   text-decoration: none;
 }
 
-.gt-updates__list > li a:hover,
-.gt-playtime__list > li a:hover {
+.gt-updates__list > li a:hover {
   color: var(--gt-accent);
 }
 
 .gt-news__card p,
 .gt-news__card time,
-.gt-calendar__list span,
-.gt-playtime__list span,
 .gt-updates__list span {
   color: var(--gt-text-muted);
   font-size: 0.9rem;
@@ -124,75 +128,136 @@
   color: var(--gt-accent);
 }
 
-.gt-calendar__list img {
-  width: 48px;
-  height: 64px;
-  object-fit: cover;
-  border-radius: 4px;
-  flex-shrink: 0;
-  background: var(--gt-surface-2);
-}
-
 .gt-help__sections {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.gt-help__section {
-  padding: 0.55rem 0.75rem;
-  background: var(--gt-surface);
-  border: 1px solid var(--gt-border);
-  border-radius: 6px;
-}
-
-.gt-help__section h2 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.gt-help__section h2 button {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.25rem 0;
-  background: transparent;
-  border: none;
-  color: var(--gt-text);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: left;
-}
-
-.gt-help__section h2 button:hover,
-.gt-help__section h2 button:focus-visible {
-  color: var(--gt-accent);
-}
-
-.gt-help__section ul {
-  margin: 0.35rem 0 0.15rem;
-  padding: 0 0 0 1.1rem;
-  list-style: disc;
-  color: var(--gt-text-muted);
-  font-size: 0.92rem;
-  line-height: 1.45;
-}
-
-.gt-help__section li {
-  margin-bottom: 0.25rem;
-}
+/* Help accordion chrome lives in HelpPage.css (Wave 2c). */
 
 .gt-updates__search {
   margin: 0 0 1.25rem;
-  padding: 0.85rem 1rem;
+  padding: 0;
 }
 
-.gt-updates__search h2,
-.gt-updates__inbox h2 {
-  margin: 0 0 0.65rem;
-  font-size: 1.05rem;
+.gt-updates__section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 0.55rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 75%, transparent);
+}
+
+.gt-updates__section-head h2,
+.gt-updates__inbox > .gt-updates__section-head h2 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-updates__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.gt-updates__header .gt-more-page__lede {
+  margin-bottom: 0;
+}
+
+.gt-updates__refresh {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.gt-updates__refresh-status {
+  font-size: 0.82rem;
+  color: var(--gt-text, #f2f4f8);
+}
+
+.gt-updates__refresh-status--muted {
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-updates__inbox > h2,
+.gt-updates__calendar h2 {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-updates__calendar {
+  margin: 1.35rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 75%, transparent);
+}
+
+.gt-updates__calendar-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.45rem 0.85rem;
+  margin-bottom: 0.55rem;
+}
+
+.gt-updates__calendar-head h2 {
+  margin: 0;
+}
+
+.gt-updates__calendar-link {
+  font-size: 0.85rem;
+  color: var(--gt-accent, #2fd67b);
+  text-decoration: none;
+}
+
+.gt-updates__calendar-link:hover,
+.gt-updates__calendar-link:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
+.gt-updates__calendar-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-updates__calendar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.gt-updates__calendar-list > li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 0.55rem 0.75rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 60%, transparent);
+  background: transparent;
+  font-size: 0.9rem;
+}
+
+.gt-updates__calendar-list time {
+  color: var(--gt-text-muted, #9aa3b2);
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 .gt-updates__search-form {

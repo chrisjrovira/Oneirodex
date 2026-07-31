@@ -1,8 +1,10 @@
 import pytest
 import os
 import json
+import shutil
 import tempfile
 import zipfile
+from pathlib import Path
 from flask import url_for
 from unittest.mock import patch, MagicMock, mock_open
 from gametheca.models import User
@@ -698,7 +700,10 @@ class TestApplyThemeRoute:
         response = client.post('/admin/themes/apply', json={'theme': 'default'})
 
         assert response.status_code == 200
-        assert response.get_json() == {'success': True, 'theme': 'default'}
+        body = response.get_json()
+        assert body['success'] is True
+        assert body['theme'] == 'default'
+        assert body['icon_pack'] == 'outline'
         db_session.refresh(admin_user)
         assert admin_user.preferences is not None
         assert admin_user.preferences.theme == 'default'
@@ -729,6 +734,93 @@ class TestApplyThemeRoute:
         assert response.status_code == 200
         db_session.refresh(admin_user)
         assert admin_user.preferences.theme == 'ember'
+
+    def test_apply_theme_persists_explicit_icon_pack(self, client, admin_user, db_session, app):
+        """Explicit icon_pack in the body is stored on UserPreference like Preferences."""
+        real_themes = Path(app.root_path) / 'static' / 'library' / 'themes'
+        real_theme = real_themes / 'aurora_icon_test'
+        real_theme.mkdir(parents=True, exist_ok=True)
+        (real_theme / 'theme.json').write_text(
+            json.dumps({'name': 'Aurora Icon Test', 'default_icon_pack': 'pixel'}),
+            encoding='utf-8',
+        )
+        try:
+            with client.session_transaction() as sess:
+                sess['_user_id'] = str(admin_user.id)
+                sess['_fresh'] = True
+
+            response = client.post(
+                '/admin/themes/apply',
+                json={'theme': 'aurora_icon_test', 'icon_pack': 'filled'},
+            )
+            assert response.status_code == 200
+            assert response.get_json() == {
+                'success': True,
+                'theme': 'aurora_icon_test',
+                'icon_pack': 'filled',
+            }
+            db_session.refresh(admin_user)
+            assert admin_user.preferences.theme == 'aurora_icon_test'
+            assert admin_user.preferences.icon_pack == 'filled'
+        finally:
+            shutil.rmtree(real_theme, ignore_errors=True)
+
+    def test_apply_theme_falls_back_to_theme_json_default_icon_pack(
+        self, client, admin_user, db_session, app
+    ):
+        """Omitting icon_pack uses theme.json default_icon_pack when present."""
+        real_themes = Path(app.root_path) / 'static' / 'library' / 'themes'
+        real_theme = real_themes / 'ember_icon_test'
+        real_theme.mkdir(parents=True, exist_ok=True)
+        (real_theme / 'theme.json').write_text(
+            json.dumps({'name': 'Ember Icon Test', 'default_icon_pack': 'filled'}),
+            encoding='utf-8',
+        )
+        try:
+            with client.session_transaction() as sess:
+                sess['_user_id'] = str(admin_user.id)
+                sess['_fresh'] = True
+
+            response = client.post(
+                '/admin/themes/apply',
+                json={'theme': 'ember_icon_test'},
+            )
+            assert response.status_code == 200
+            body = response.get_json()
+            assert body['success'] is True
+            assert body['theme'] == 'ember_icon_test'
+            assert body['icon_pack'] == 'filled'
+            db_session.refresh(admin_user)
+            assert admin_user.preferences.icon_pack == 'filled'
+        finally:
+            shutil.rmtree(real_theme, ignore_errors=True)
+
+    def test_apply_theme_null_icon_pack_uses_theme_json_default(
+        self, client, admin_user, db_session, app
+    ):
+        """JSON null icon_pack still falls back to theme.json default_icon_pack."""
+        real_themes = Path(app.root_path) / 'static' / 'library' / 'themes'
+        real_theme = real_themes / 'violet_icon_test'
+        real_theme.mkdir(parents=True, exist_ok=True)
+        (real_theme / 'theme.json').write_text(
+            json.dumps({'name': 'Violet Icon Test', 'default_icon_pack': 'soft'}),
+            encoding='utf-8',
+        )
+        try:
+            with client.session_transaction() as sess:
+                sess['_user_id'] = str(admin_user.id)
+                sess['_fresh'] = True
+
+            response = client.post(
+                '/admin/themes/apply',
+                json={'theme': 'violet_icon_test', 'icon_pack': None},
+            )
+            assert response.status_code == 200
+            assert response.get_json()['icon_pack'] == 'soft'
+            db_session.refresh(admin_user)
+            assert admin_user.preferences.icon_pack == 'soft'
+        finally:
+            shutil.rmtree(real_theme, ignore_errors=True)
 
 
 class TestThemeRoutesIntegration:

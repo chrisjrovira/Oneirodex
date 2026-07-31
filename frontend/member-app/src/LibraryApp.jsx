@@ -1,19 +1,29 @@
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import {
+  batchAddToWishlist,
+  batchCheckFreshness,
+  batchRefreshImages,
+  batchSetFavorite,
+  batchSetPlayStatus,
+} from './api/batchActions'
 import { fetchBrowseGames } from './api/browse'
 import { applyPlatformSkin, clearPlatformSkin } from './chrome/platformSkins'
 import {
-  BadgeFilterChips,
   BADGE_FILTER_PARAMS,
   badgeFiltersFromSearchParams,
 } from './components/BadgeFilterChips'
+import { itemKindFromSearchParams } from './components/ItemKindFilterChips'
 import { cleanFilters, FilterBar } from './components/FilterBar'
 import './components/libraryFilters.css'
 import { GameGrid } from './components/GameGrid'
 import { GameGridSkeleton } from './components/GameGridSkeleton'
+import { LibrarySelectionBar } from './components/LibrarySelectionBar'
 import { PaginationBar } from './components/PaginationBar'
 import { createTranslator } from './i18n'
+import { batchItemUuids, summarizeBatchOutcome } from './utils/batchOutcome'
 import { readLibraryFilters, writeLibraryFilters } from './utils/cookies'
+import { showToast } from './utils/toast'
 
 function EmptyState({ initialConfig, t }) {
   if (initialConfig.libraryCount === 0) {
@@ -36,6 +46,7 @@ function EmptyState({ initialConfig, t }) {
 function filtersFromSearchParams(searchParams) {
   const next = {
     ...badgeFiltersFromSearchParams(searchParams),
+    ...itemKindFromSearchParams(searchParams),
   }
   const libraryPlatform = searchParams.get('library_platform')
   if (libraryPlatform) {
@@ -56,17 +67,22 @@ function searchParamsHaveLibraryFilters(searchParams) {
   if (
     searchParams.has('library_platform') ||
     searchParams.has('genre') ||
-    searchParams.has('theme')
+    searchParams.has('theme') ||
+    searchParams.has('item_kind') ||
+    searchParams.has('content_kind')
   ) {
     return true
   }
   return BADGE_FILTER_PARAMS.some((param) => searchParams.has(param))
 }
 
-export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
+export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   const t = useMemo(
     () => createTranslator(initialConfig.locale),
     [initialConfig.locale],
+  )
+  const canBatchRefreshImages = Boolean(
+    shellConfig.isLibrarian || shellConfig.isAdmin || initialConfig.isAdmin,
   )
   const filtersPanelId = useId()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -89,6 +105,12 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const [selectionBusy, setSelectionBusy] = useState(false)
+  const [wishlistAvailable, setWishlistAvailable] = useState(true)
+  const [playStatusAvailable, setPlayStatusAvailable] = useState(true)
+  const [refreshImagesAvailable, setRefreshImagesAvailable] = useState(true)
+  const selectionAnchorRef = useRef(null)
 
   useEffect(() => {
     const fromUrl = filtersFromSearchParams(searchParams)
@@ -100,6 +122,7 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
         current.library_platform === fromUrl.library_platform &&
         current.genre === fromUrl.genre &&
         current.theme === fromUrl.theme &&
+        current.item_kind === fromUrl.item_kind &&
         BADGE_FILTER_PARAMS.every((param) => current[param] === fromUrl[param])
       if (same) {
         return current
@@ -166,17 +189,43 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
   }, [])
 
   useEffect(() => {
-    if (!filtersOpen) {
-      return undefined
-    }
     function onKeyDown(event) {
-      if (event.key === 'Escape') {
+      if (event.key !== 'Escape') {
+        return
+      }
+      if (selectedIds.size > 0) {
+        setSelectedIds(new Set())
+        selectionAnchorRef.current = null
+        return
+      }
+      if (filtersOpen) {
         setFiltersOpen(false)
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [filtersOpen])
+  }, [filtersOpen, selectedIds.size])
+
+  const clearSelection = () => {
+    setSelectedIds(new Set())
+    selectionAnchorRef.current = null
+  }
+
+  const selectPage = () => {
+    const pageGames = result?.games ?? []
+    if (pageGames.length === 0) {
+      return
+    }
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      for (const game of pageGames) {
+        if (game?.uuid) {
+          next.add(game.uuid)
+        }
+      }
+      return next
+    })
+  }
 
   const retry = () => {
     setRetryCount((count) => count + 1)
@@ -187,6 +236,7 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
     setPage(1)
     setFilters(nextFilters)
     setFiltersOpen(false)
+    clearSelection()
   }
 
   const clearFilters = () => {
@@ -194,8 +244,249 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
     setPage(1)
     setFilters(defaultFilters)
     setFiltersOpen(false)
+    clearSelection()
     if (searchParamsHaveLibraryFilters(searchParams)) {
       setSearchParams({}, { replace: true })
+    }
+  }
+
+  const handleSelectionToggle = (uuid, opts = {}) => {
+    const games = result?.games ?? []
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+
+      if (opts.range && games.length > 0) {
+        const anchor = selectionAnchorRef.current
+        const endIndex = games.findIndex((game) => game.uuid === uuid)
+        const startIndex = anchor
+          ? games.findIndex((game) => game.uuid === anchor)
+          : endIndex
+        if (endIndex >= 0 && startIndex >= 0) {
+          const from = Math.min(startIndex, endIndex)
+          const to = Math.max(startIndex, endIndex)
+          for (let i = from; i <= to; i += 1) {
+            next.add(games[i].uuid)
+          }
+          selectionAnchorRef.current = uuid
+          return next
+        }
+      }
+
+      if (opts.checked === true) {
+        next.add(uuid)
+      } else if (opts.checked === false) {
+        next.delete(uuid)
+      } else if (opts.fromLongPress || opts.additive) {
+        next.add(uuid)
+      } else if (next.has(uuid)) {
+        next.delete(uuid)
+      } else {
+        next.add(uuid)
+      }
+
+      selectionAnchorRef.current = uuid
+      return next
+    })
+  }
+
+  const favoriteByUuid = useMemo(() => {
+    const map = {}
+    for (const game of result?.games ?? []) {
+      map[game.uuid] = Boolean(game.is_favorite)
+    }
+    return map
+  }, [result])
+
+  const applyFavoriteResults = (uuids, favorite) => {
+    const idSet = new Set(uuids)
+    setResult((prev) => {
+      if (!prev?.games) {
+        return prev
+      }
+      return {
+        ...prev,
+        games: prev.games.map((game) =>
+          idSet.has(game.uuid) ? { ...game, is_favorite: favorite } : game,
+        ),
+      }
+    })
+  }
+
+  const applyPlayStatusResults = (updatedRows, status) => {
+    const byUuid = new Map()
+    if (Array.isArray(updatedRows)) {
+      for (const row of updatedRows) {
+        if (typeof row === 'string' && row) {
+          byUuid.set(row, status)
+          continue
+        }
+        if (row && typeof row === 'object' && typeof row.uuid === 'string') {
+          byUuid.set(row.uuid, row.status !== undefined ? row.status : status)
+        }
+      }
+    }
+    if (byUuid.size === 0) {
+      return
+    }
+    setResult((prev) => {
+      if (!prev?.games) {
+        return prev
+      }
+      return {
+        ...prev,
+        games: prev.games.map((game) =>
+          byUuid.has(game.uuid)
+            ? { ...game, user_status: byUuid.get(game.uuid) || '' }
+            : game,
+        ),
+      }
+    })
+  }
+
+  const runBatchFavorite = async (favorite) => {
+    const uuids = Array.from(selectedIds)
+    if (uuids.length === 0 || selectionBusy) {
+      return
+    }
+    setSelectionBusy(true)
+    try {
+      const outcome = await batchSetFavorite(uuids, favorite, { favoriteByUuid })
+      applyFavoriteResults(batchItemUuids(outcome.updated), favorite)
+      const summary = summarizeBatchOutcome(outcome, {
+        actionLabel: favorite ? t('Favorites') : t('Unfavorite'),
+        t,
+      })
+      showToast(summary.message, summary.tone)
+    } catch (err) {
+      showToast(err?.message || t('Favorite update failed'), 'error')
+    } finally {
+      setSelectionBusy(false)
+    }
+  }
+
+  const runBatchFreshness = async () => {
+    const uuids = Array.from(selectedIds)
+    if (uuids.length === 0 || selectionBusy) {
+      return
+    }
+    setSelectionBusy(true)
+    try {
+      const outcome = await batchCheckFreshness(uuids)
+      const updatedRows = outcome.updated || outcome.results || []
+      if (Array.isArray(updatedRows) && updatedRows.length > 0) {
+        const byUuid = new Map(
+          updatedRows
+            .filter((row) => row && row.uuid)
+            .map((row) => [row.uuid, row]),
+        )
+        if (byUuid.size > 0) {
+          setResult((prev) => {
+            if (!prev?.games) {
+              return prev
+            }
+            return {
+              ...prev,
+              games: prev.games.map((game) => {
+                const row = byUuid.get(game.uuid)
+                if (!row) {
+                  return game
+                }
+                return {
+                  ...game,
+                  freshness_status: row.status ?? row.freshness_status ?? game.freshness_status,
+                  freshness_confidence:
+                    row.confidence ?? row.freshness_confidence ?? game.freshness_confidence,
+                }
+              }),
+            }
+          })
+        }
+      }
+      const summary = summarizeBatchOutcome(outcome, {
+        actionLabel: t('Freshness'),
+        t,
+      })
+      showToast(summary.message, summary.tone)
+    } catch (err) {
+      showToast(err?.message || t('Freshness refresh failed'), 'error')
+    } finally {
+      setSelectionBusy(false)
+    }
+  }
+
+  const runBatchWishlist = async () => {
+    const uuids = Array.from(selectedIds)
+    if (uuids.length === 0 || selectionBusy || !wishlistAvailable) {
+      return
+    }
+    setSelectionBusy(true)
+    try {
+      const outcome = await batchAddToWishlist(uuids)
+      const summary = summarizeBatchOutcome(outcome, {
+        actionLabel: t('Wishlist'),
+        t,
+      })
+      showToast(summary.message, summary.tone)
+    } catch (err) {
+      if (err?.unavailable) {
+        setWishlistAvailable(false)
+      }
+      showToast(err?.message || t('Wishlist update failed'), 'error')
+    } finally {
+      setSelectionBusy(false)
+    }
+  }
+
+  const runBatchPlayStatus = async (status) => {
+    const uuids = Array.from(selectedIds)
+    if (uuids.length === 0 || selectionBusy || !playStatusAvailable) {
+      return
+    }
+    setSelectionBusy(true)
+    try {
+      const outcome = await batchSetPlayStatus(uuids, status)
+      applyPlayStatusResults(outcome.updated, status)
+      const summary = summarizeBatchOutcome(outcome, {
+        actionLabel: t('Play status'),
+        t,
+      })
+      showToast(summary.message, summary.tone)
+    } catch (err) {
+      if (err?.unavailable) {
+        setPlayStatusAvailable(false)
+      }
+      showToast(err?.message || t('Play status update failed'), 'error')
+    } finally {
+      setSelectionBusy(false)
+    }
+  }
+
+  const runBatchRefreshImages = async () => {
+    const uuids = Array.from(selectedIds)
+    if (
+      uuids.length === 0 ||
+      selectionBusy ||
+      !canBatchRefreshImages ||
+      !refreshImagesAvailable
+    ) {
+      return
+    }
+    setSelectionBusy(true)
+    try {
+      const outcome = await batchRefreshImages(uuids)
+      const summary = summarizeBatchOutcome(outcome, {
+        actionLabel: t('Refresh covers'),
+        successVerb: 'queued',
+        t,
+      })
+      showToast(summary.message, summary.tone)
+    } catch (err) {
+      if (err?.unavailable) {
+        setRefreshImagesAvailable(false)
+      }
+      showToast(err?.message || t('Cover refresh failed'), 'error')
+    } finally {
+      setSelectionBusy(false)
     }
   }
 
@@ -204,6 +495,17 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
   const showSkeleton = loading && !result
   const showRefreshing = loading && Boolean(result)
   const hidePlatformChip = Boolean(filters.library_platform)
+
+  const gridProps = {
+    games,
+    showPlayStatus: initialConfig.showPlayStatus,
+    isAdmin: initialConfig.isAdmin,
+    enableDeleteOnDisk: initialConfig.enableDeleteOnDisk,
+    hidePlatformChip,
+    selectionEnabled: true,
+    selectedIds,
+    onSelectionToggle: handleSelectionToggle,
+  }
 
   let content
   if (error && !result) {
@@ -223,8 +525,12 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
           page={page}
           pages={1}
           perPage={perPage}
-          onPageChange={setPage}
+          onPageChange={(nextPage) => {
+            clearSelection()
+            setPage(nextPage)
+          }}
           onPerPageChange={(nextPerPage) => {
+            clearSelection()
             setPage(1)
             setPerPage(nextPerPage)
           }}
@@ -243,34 +549,44 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
             </button>
           </div>
         )}
+        <LibrarySelectionBar
+          count={selectedIds.size}
+          busy={selectionBusy}
+          wishlistAvailable={wishlistAvailable}
+          playStatusAvailable={playStatusAvailable}
+          refreshImagesAvailable={refreshImagesAvailable}
+          onFavorite={() => void runBatchFavorite(true)}
+          onUnfavorite={() => void runBatchFavorite(false)}
+          onRefreshFreshness={() => void runBatchFreshness()}
+          onRefreshImages={
+            canBatchRefreshImages ? () => void runBatchRefreshImages() : undefined
+          }
+          onWishlist={() => void runBatchWishlist()}
+          onPlayStatus={(status) => void runBatchPlayStatus(status)}
+          onSelectPage={selectPage}
+          onClear={clearSelection}
+          t={t}
+        />
         <div className={showRefreshing ? 'library-grid-loading' : undefined}>
           {games.length === 0 ? (
             <>
-              <GameGrid
-                games={games}
-                showPlayStatus={initialConfig.showPlayStatus}
-                isAdmin={initialConfig.isAdmin}
-                enableDeleteOnDisk={initialConfig.enableDeleteOnDisk}
-                hidePlatformChip={hidePlatformChip}
-              />
+              <GameGrid {...gridProps} />
               <EmptyState initialConfig={initialConfig} t={t} />
             </>
           ) : (
-            <GameGrid
-              games={games}
-              showPlayStatus={initialConfig.showPlayStatus}
-              isAdmin={initialConfig.isAdmin}
-              enableDeleteOnDisk={initialConfig.enableDeleteOnDisk}
-              hidePlatformChip={hidePlatformChip}
-            />
+            <GameGrid {...gridProps} />
           )}
         </div>
         <PaginationBar
           page={page}
           pages={pages}
           perPage={perPage}
-          onPageChange={setPage}
+          onPageChange={(nextPage) => {
+            clearSelection()
+            setPage(nextPage)
+          }}
           onPerPageChange={(nextPerPage) => {
+            clearSelection()
             setPage(1)
             setPerPage(nextPerPage)
           }}
@@ -282,12 +598,6 @@ export function LibraryApp({ initialConfig, shellConfig: _shellConfig } = {}) {
 
   const filterBar = (
     <div className="library-filters-stack">
-      <BadgeFilterChips
-        filters={filters}
-        onApply={applyFilters}
-        cleanFilters={cleanFilters}
-        t={t}
-      />
       <FilterBar
         filters={filters}
         onApply={applyFilters}

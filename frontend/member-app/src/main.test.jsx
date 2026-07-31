@@ -68,6 +68,7 @@ test('parses SPA shell config including tileSize', () => {
   root.dataset.defaultSort = 'name'
   root.dataset.defaultSortOrder = 'asc'
   root.dataset.username = 'ada'
+  root.dataset.userId = '42'
   root.dataset.currentFilters = '{}'
 
   const config = parseShellConfig(root)
@@ -75,5 +76,6 @@ test('parses SPA shell config including tileSize', () => {
   expect(config.isAdmin).toBe(true)
   expect(config.perPage).toBe(50)
   expect(config.username).toBe('ada')
+  expect(config.userId).toBe(42)
   expect(config.sections).toBeUndefined()
 })

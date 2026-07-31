@@ -1,56 +1,68 @@
 {% extends "base.html" %}
-
 {% block content %}
 {% import 'partials/icons.html' as icons %}
 
-<link rel="stylesheet" href="{{ 'css/settings/settings_profile_view.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/settings/gt-account.css'|theme_asset }}">
 
-<div class="container my-4">
+<div class="gt-account">
+    <nav class="gt-account-nav" aria-label="Account">
+        <a href="{{ url_for('settings.settings_profile_view') }}">{{ icons.icon('user') }} Profile</a>
+        <a href="{{ url_for('settings.account_pw') }}">{{ icons.icon('key') }} Password</a>
+        <a href="{{ url_for('login.invites') }}">{{ icons.icon('envelope') }} Invites</a>
+        <a href="{{ url_for('library.library') }}">{{ icons.icon('library') }} Library</a>
+    </nav>
 
-    <div class="content-restricted-textblock">
-        <h2>{{ icons.icon('user', size=22, extra_class='me-2') }}User Profile</h2>
-        <div class="avatar-container">
-            <div class="settings_profile_view-edit-button">
+    <header class="gt-account-header">
+        <h1 class="gt-account-title">{{ icons.icon('user', size=22, extra_class='me-2') }}Profile</h1>
+        <p class="gt-account-lede">Your GameTheca account details.</p>
+    </header>
+
+    <section class="gt-account-section" aria-labelledby="profile-avatar-heading">
+        <h2 class="gt-account-section__title" id="profile-avatar-heading">Avatar</h2>
+        <div class="gt-account-profile-head">
+            <img
+                src="{{ url_for('static', filename=current_user.avatarpath) }}"
+                alt=""
+                class="gt-account-avatar"
+                title="Profile picture"
+            >
+            <div class="gt-account-actions" style="border-top: none; padding-top: 0; margin-top: 0; justify-content: center;">
                 <a href="{{ url_for('settings.settings_profile_edit') }}" class="btn btn-primary">
-                    {{ icons.icon('camera', extra_class='me-2') }}Change Avatar
+                    {{ icons.icon('camera', extra_class='me-2') }}Change avatar
                 </a>
             </div>
-            <img src="{{ url_for('static', filename=current_user.avatarpath) }}" 
-                 alt="User Avatar" 
-                 class="settings_profile_view-user-avatar"
-                 title="Profile Picture">
         </div>
-        <div class="settings_profile_view-userinfo">
+    </section>
+
+    <section class="gt-account-section" aria-labelledby="profile-details-heading">
+        <h2 class="gt-account-section__title" id="profile-details-heading">Account</h2>
+        <div class="gt-account-meta">
             <p>
-                <strong>{{ icons.icon('user', extra_class='me-2') }}Name:</strong>
+                <strong>Name</strong>
                 <span>{{ current_user.name }}</span>
             </p>
             <p>
-                <strong>{{ icons.icon('envelope', extra_class='me-2') }}Email:</strong>
+                <strong>Email</strong>
                 <span>{{ current_user.email }}</span>
             </p>
             <p>
-                <strong>{{ icons.icon('user', extra_class='me-2') }}Role:</strong>
+                <strong>Role</strong>
                 <span>{{ current_user.role|title }}</span>
             </p>
             <p>
-                <strong>{{ icons.icon('calendar', extra_class='me-2') }}Member Since:</strong>
+                <strong>Member since</strong>
                 <span>{{ current_user.created.strftime('%B %d, %Y') }}</span>
             </p>
             <p>
-                <strong>{{ icons.icon('info', extra_class='me-2') }}About:</strong>
+                <strong>About</strong>
                 <span>{{ current_user.about or 'No information provided' }}</span>
             </p>
             <p>
-                <strong>{{ icons.icon('ticket', extra_class='me-2') }}Invites:</strong>
+                <strong>Invites</strong>
                 <span>{{ remaining_invites }} out of {{ total_invites }}</span>
             </p>
         </div>
-
-    </div>
-</div>
-
-
+    </section>
 </div>
 
 {% endblock %}

@@ -15,17 +15,30 @@
     border: 1px solid var(--border-light);
 }
 
-/* Admin Container Variants */
+/* Admin Container Variants — align with gt-adminpage--xl (1600px).
+   Use .settings-container--narrow or gt-adminpage--sm/--md for intentional compact forms. */
 .smtp-settings-container,
 .admin-container,
 .settings-container {
-    max-width: 1100px;
+    max-width: 1600px;
     margin: var(--spacing-rem-xl) auto;
     padding: var(--spacing-rem-xl);
     background: var(--container-dark-primary);
     border-radius: var(--border-radius-md);
     box-shadow: var(--shadow-glass);
     border: 1px solid var(--border-light);
+}
+
+.settings-container--narrow {
+    max-width: 760px;
+}
+
+/* When densify shell classes are present, honor --gt-adminpage-max */
+.smtp-settings-container.gt-adminpage,
+.admin-container.gt-adminpage,
+.settings-container.gt-adminpage,
+.container-settings.gt-adminpage {
+    max-width: var(--gt-adminpage-max, 1600px);
 }
 
 .container-settings {

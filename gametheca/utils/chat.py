@@ -1,11 +1,12 @@
-"""Household chat channels + DMs (Wave 15) + reactions/search (Wave 17)."""
+"""Household chat channels + DMs (Wave 15) + reactions/search (Wave 17) + rooms (Wave 2b)."""
 
 from __future__ import annotations
 
 import re
 from collections import defaultdict
+from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from gametheca import db
 from gametheca.models import (
@@ -17,10 +18,11 @@ from gametheca.models import (
 )
 from gametheca.utils.custom_emoji import custom_reaction_keys
 from gametheca.utils.notifications import notify_user
-from gametheca.utils.rbac import normalize_role
+from gametheca.utils.rbac import normalize_role, role_at_least
 
 MENTION_RE = re.compile(r'@([A-Za-z0-9_.-]{2,64})')
 ALLOWED_REACTIONS = frozenset({'👍', '❤️', '😂', '🎉', '👀'})
+PROTECTED_CHANNEL_SLUGS = frozenset({'general', 'looking-for-players'})
 
 
 def is_allowed_reaction(emoji: str) -> bool:
@@ -73,6 +75,8 @@ def ensure_channel_membership(channel: ChatChannel, user: User) -> ChatChannelMe
 
 
 def user_can_access_channel(user: User, channel: ChatChannel) -> bool:
+    if channel.archived_at is not None:
+        return False
     role = normalize_role(getattr(user, 'role', None))
     if channel.kind == 'channel':
         if role == 'child' and not channel.is_child_safe:
@@ -80,6 +84,13 @@ def user_can_access_channel(user: User, channel: ChatChannel) -> bool:
         return True
     # DM: must be a member
     return _is_member(channel.id, user.id) is not None
+
+
+def _unread_for_member(channel_id: int, last_read_message_id: int | None) -> int:
+    q = select(func.count()).select_from(ChatMessage).where(ChatMessage.channel_id == channel_id)
+    if last_read_message_id is not None:
+        q = q.where(ChatMessage.id > last_read_message_id)
+    return int(db.session.execute(q).scalar() or 0)
 
 
 def list_channels_for_user(user: User) -> list[dict]:
@@ -90,18 +101,22 @@ def list_channels_for_user(user: User) -> list[dict]:
     ).scalars().all()
     out = []
     for ch in channels:
+        if ch.archived_at is not None:
+            continue
         if ch.kind == 'channel':
             if role == 'child' and not ch.is_child_safe:
                 continue
             member = ensure_channel_membership(ch, user)
             payload = ch.to_dict()
             payload['muted'] = bool(member.muted)
+            payload['unread'] = _unread_for_member(ch.id, member.last_read_message_id)
             out.append(payload)
             continue
         member = _is_member(ch.id, user.id)
         if member:
             payload = ch.to_dict()
             payload['muted'] = bool(member.muted)
+            payload['unread'] = _unread_for_member(ch.id, member.last_read_message_id)
             out.append(payload)
     return out
 
@@ -157,32 +172,93 @@ def open_or_create_dm(user: User, other: User) -> ChatChannel:
     return ch
 
 
+def _slugify_channel(name: str, slug: str | None = None) -> str:
+    raw = (slug or name or '').strip().lower()
+    clean = re.sub(r'[^a-z0-9-]+', '-', raw)
+    clean = re.sub(r'-+', '-', clean).strip('-')[:64]
+    return clean
+
+
 def create_household_channel(
     creator: User,
     *,
     name: str,
-    slug: str,
+    slug: str = '',
     is_child_safe: bool = True,
 ) -> ChatChannel:
+    """Create a household group channel (room).
+
+    ACL: authenticated ``user`` / ``librarian`` / ``admin`` may create.
+    ``child`` accounts cannot create rooms. Only librarian+ may set
+    ``is_child_safe=False``; members force child-safe rooms.
+    """
     role = normalize_role(getattr(creator, 'role', None))
-    if role not in ('admin', 'librarian'):
-        raise PermissionError('Only admins/librarians can create channels')
-    clean_slug = re.sub(r'[^a-z0-9-]', '', (slug or '').lower())[:64]
+    if role == 'child':
+        raise PermissionError('Child accounts cannot create channels')
+    if not role_at_least(role, 'user'):
+        raise PermissionError('Not allowed to create channels')
+    display = (name or '').strip()
+    clean_slug = _slugify_channel(display, slug)
     if not clean_slug:
-        raise ValueError('Invalid slug')
+        raise ValueError('Invalid name or slug')
     if db.session.execute(select(ChatChannel).where(ChatChannel.slug == clean_slug)).scalars().first():
         raise ValueError('Channel already exists')
+    # Only librarian/admin may mark a room as not child-safe
+    safe = True if role == 'user' else bool(is_child_safe)
     ch = ChatChannel(
         kind='channel',
-        name=(name or f'#{clean_slug}')[:120],
+        name=(display or f'#{clean_slug}')[:120],
         slug=clean_slug,
-        is_child_safe=bool(is_child_safe),
+        is_child_safe=safe,
         created_by_user_id=creator.id,
     )
     db.session.add(ch)
     db.session.commit()
     ensure_channel_membership(ch, creator)
     return ch
+
+
+def user_can_manage_channel(user: User, channel: ChatChannel) -> bool:
+    """Creator or librarian+ can archive / manage a household channel."""
+    if channel.kind != 'channel':
+        return False
+    role = normalize_role(getattr(user, 'role', None))
+    if role_at_least(role, 'librarian'):
+        return True
+    return channel.created_by_user_id is not None and channel.created_by_user_id == user.id
+
+
+def archive_channel(user: User, channel: ChatChannel) -> ChatChannel:
+    """Soft-delete a household channel (hide from lists / block access)."""
+    if channel.kind != 'channel':
+        raise ValueError('Only household channels can be archived')
+    if channel.archived_at is not None:
+        return channel
+    if channel.slug in PROTECTED_CHANNEL_SLUGS and not role_at_least(
+        getattr(user, 'role', None), 'librarian'
+    ):
+        raise PermissionError('Protected channels require librarian or admin')
+    if not user_can_manage_channel(user, channel):
+        raise PermissionError('Not allowed to archive this channel')
+    channel.archived_at = datetime.now(timezone.utc)
+    db.session.commit()
+    return channel
+
+
+def leave_channel(user: User, channel: ChatChannel) -> None:
+    """Leave a DM (drop membership). Household channels use mute or archive."""
+    if channel.kind == 'dm':
+        member = _is_member(channel.id, user.id)
+        if member is None:
+            raise PermissionError('Not found')
+        db.session.delete(member)
+        db.session.commit()
+        return
+    if channel.kind == 'channel':
+        # Open household rooms: leave = mute (membership retained for ACL)
+        set_channel_muted(user, channel, True)
+        return
+    raise ValueError('Unsupported channel kind')
 
 
 def list_messages(

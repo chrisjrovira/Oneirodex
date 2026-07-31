@@ -8,6 +8,7 @@
   data-is-admin="{{ 'true' if current_user.role == 'admin' else 'false' }}"
   data-is-librarian="{{ 'true' if current_user.role in ('admin', 'librarian') else 'false' }}"
   data-role="{{ current_user.role or 'user' }}"
+  data-user-id="{{ current_user.id or '' }}"
   data-show-trailers="{{ 'true' if show_trailers else 'false' }}"
   data-show-help="{{ 'true' if show_help_button else 'false' }}"
   data-enable-vr="{{ 'true' if enable_vr_browse else 'false' }}"

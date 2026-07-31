@@ -2,31 +2,29 @@
 {% block content %}
 {% import 'partials/icons.html' as icons %}
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
-<div class="container gt-adminpage gt-adminpage--lg gt-adminpage--spaced">
+<div class="container-settings gt-adminpage gt-adminpage--xl gt-adminpage--spaced">
     <div class="gt-adminpage-header">
         <div>
             <h1 class="gt-adminpage-title">{{ icons.icon('magnet', size=26) }} Arr module</h1>
             <p class="gt-adminpage-lede">
-                Optional indexer search (Prowlarr/Jackett) and download clients
-                (qBittorrent, Transmission, SABnzbd, NZBGet).
-                Feature-flagged — never downloads DRM store titles.
+                Native Torznab/Newznab indexers, optional Prowlarr/Jackett hubs, and download clients
+                (qBittorrent, Transmission, SABnzbd, NZBGet). Feature-flagged — never downloads DRM store titles.
             </p>
         </div>
     </div>
 
     <div class="gt-adminpage-panel">
         <div class="gt-adminpage-panel-header"><h2>Module enable</h2></div>
-        <p class="text-muted small mb-3">
+        <p class="text-muted small mb-2">
             Turn the module on here, or set <code>ENABLE_ARR_MODULE=true</code> in the environment.
-            Either path unlocks connectors. Env currently:
-            <strong>{% if env_enabled %}on{% else %}off{% endif %}</strong>.
+            Env currently: <strong>{% if env_enabled %}on{% else %}off{% endif %}</strong>.
         </p>
-        <div class="form-check form-switch mb-3">
+        <div class="form-check form-switch mb-2">
             <input class="form-check-input" type="checkbox" id="arr-enable"
                    {% if db_enabled %}checked{% endif %}>
             <label class="form-check-label" for="arr-enable">Enable Arr module (Admin toggle)</label>
         </div>
-        <button id="arr-enable-save" class="btn btn-primary">Save enable</button>
+        <button id="arr-enable-save" class="btn btn-primary btn-sm">Save enable</button>
         <div id="arr-enable-status" class="gt-adminpage-status mt-2 text-muted" aria-live="polite">
             Effective status: <strong>{% if enabled %}on{% else %}off{% endif %}</strong>
         </div>
@@ -34,97 +32,172 @@
 
     {% if enabled %}
     <div class="gt-adminpage-panel">
-        <div class="alert alert-success">Module flag is <strong>enabled</strong>.</div>
-        <div id="arr-status" class="gt-adminpage-status mb-3 text-muted">Loading connector status…</div>
-        <div class="row g-3 mb-4">
-            <div class="col-md-6">
-                <label class="form-label">Prowlarr URL</label>
-                <input id="prowlarr_url" class="form-control" placeholder="http://localhost:9696">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Prowlarr API key</label>
-                <input id="prowlarr_api_key" class="form-control" type="password" placeholder="leave blank to keep">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Jackett URL (fallback)</label>
-                <input id="jackett_url" class="form-control" placeholder="http://localhost:9117">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Jackett API key</label>
-                <input id="jackett_api_key" class="form-control" type="password" placeholder="leave blank to keep">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">qBittorrent URL</label>
-                <input id="qbittorrent_url" class="form-control" placeholder="http://localhost:8080">
-            </div>
+        <div class="gt-adminpage-panel-header"><h2>Connector status</h2></div>
+        <div id="arr-status" class="gt-adminpage-status mb-2 text-muted">Loading connector status…</div>
+        <div id="arr-indexer-warnings" class="d-none" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="gt-adminpage-panel">
+        <div class="gt-adminpage-panel-header"><h2>Native indexers</h2></div>
+        <p class="text-muted small mb-2">
+            Torznab/Newznab endpoints stored in Arr settings. GET never returns raw API keys
+            (<code>api_key_set</code> only). Search merges ready native indexers with configured hubs.
+        </p>
+        <div id="arr-indexer-msg" class="gt-adminpage-status mb-2 text-muted" aria-live="polite"></div>
+        <div class="table-responsive mb-3">
+            <table class="table gt-adminpage-table table-sm" id="arr-indexer-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Protocol</th>
+                        <th>URL</th>
+                        <th>Ready</th>
+                        <th>Enabled</th>
+                        <th>Source</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="arr-indexer-tbody">
+                    <tr><td colspan="7" class="text-muted">Loading…</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="h6 mb-2">Add one</h3>
+        <div class="row g-2 align-items-end mb-3">
             <div class="col-md-3">
-                <label class="form-label">qBit username</label>
-                <input id="qbittorrent_username" class="form-control" value="admin">
+                <label class="form-label" for="idx-name">Name</label>
+                <input id="idx-name" class="form-control form-control-sm" placeholder="My indexer">
             </div>
-            <div class="col-md-3">
-                <label class="form-label">qBit password</label>
-                <input id="qbittorrent_password" class="form-control" type="password" placeholder="leave blank to keep">
+            <div class="col-md-2">
+                <label class="form-label" for="idx-protocol">Protocol</label>
+                <select id="idx-protocol" class="form-select form-select-sm">
+                    <option value="torznab">torznab</option>
+                    <option value="newznab">newznab</option>
+                </select>
             </div>
-            <div class="col-md-6">
-                <label class="form-label">Transmission URL</label>
-                <input id="transmission_url" class="form-control" placeholder="http://localhost:9091">
+            <div class="col-md-4">
+                <label class="form-label" for="idx-url">URL</label>
+                <input id="idx-url" class="form-control form-control-sm" placeholder="https://…/api">
             </div>
-            <div class="col-md-3">
-                <label class="form-label">Transmission user</label>
-                <input id="transmission_username" class="form-control">
+            <div class="col-md-2">
+                <label class="form-label" for="idx-api-key">API key</label>
+                <input id="idx-api-key" class="form-control form-control-sm" type="password" autocomplete="off">
             </div>
-            <div class="col-md-3">
-                <label class="form-label">Transmission password</label>
-                <input id="transmission_password" class="form-control" type="password" placeholder="leave blank to keep">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">SABnzbd URL</label>
-                <input id="sabnzbd_url" class="form-control" placeholder="http://localhost:8080">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">SABnzbd API key</label>
-                <input id="sabnzbd_api_key" class="form-control" type="password" placeholder="leave blank to keep">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">NZBGet URL</label>
-                <input id="nzbget_url" class="form-control" placeholder="http://localhost:6789">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">NZBGet user</label>
-                <input id="nzbget_username" class="form-control">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">NZBGet password</label>
-                <input id="nzbget_password" class="form-control" type="password" placeholder="leave blank to keep">
+            <div class="col-md-1">
+                <button type="button" id="idx-add" class="btn btn-primary btn-sm w-100">Add</button>
             </div>
         </div>
-        <button id="arr-save" class="btn btn-primary">Save config</button>
+
+        <h3 class="h6 mb-2">Bulk import</h3>
+        <p class="text-muted small mb-1">
+            JSON array / <code>{"indexers":[…]}</code>, or CSV:
+            <code>name,protocol,url,api_key,enabled</code>
+        </p>
+        <textarea id="idx-bulk" class="form-control form-control-sm font-monospace mb-2" rows="4"
+                  placeholder='[{"name":"…","protocol":"torznab","url":"https://…","api_key":"…"}]'></textarea>
+        <button type="button" id="idx-bulk-import" class="btn btn-outline-secondary btn-sm mb-3">Import</button>
+
+        <h3 class="h6 mb-2">Presets</h3>
+        <p class="text-muted small mb-1">
+            Curated templates (no secrets). Enable copies them into the registry — set a real URL and API key before search.
+        </p>
+        <div id="arr-presets" class="mb-2"></div>
+        <button type="button" id="idx-enable-presets" class="btn btn-outline-primary btn-sm">Enable selected</button>
+    </div>
+
+    <div class="gt-adminpage-panel">
+        <div class="gt-adminpage-panel-header"><h2>Hubs &amp; download clients</h2></div>
+        <div class="row g-2 mb-3">
+            <div class="col-md-6">
+                <label class="form-label" for="prowlarr_url">Prowlarr URL</label>
+                <input id="prowlarr_url" class="form-control form-control-sm" placeholder="http://localhost:9696">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="prowlarr_api_key">Prowlarr API key</label>
+                <input id="prowlarr_api_key" class="form-control form-control-sm" type="password" placeholder="leave blank to keep">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="jackett_url">Jackett URL (fallback)</label>
+                <input id="jackett_url" class="form-control form-control-sm" placeholder="http://localhost:9117">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="jackett_api_key">Jackett API key</label>
+                <input id="jackett_api_key" class="form-control form-control-sm" type="password" placeholder="leave blank to keep">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="qbittorrent_url">qBittorrent URL</label>
+                <input id="qbittorrent_url" class="form-control form-control-sm" placeholder="http://localhost:8080">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="qbittorrent_username">qBit username</label>
+                <input id="qbittorrent_username" class="form-control form-control-sm" value="admin">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="qbittorrent_password">qBit password</label>
+                <input id="qbittorrent_password" class="form-control form-control-sm" type="password" placeholder="leave blank to keep">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="transmission_url">Transmission URL</label>
+                <input id="transmission_url" class="form-control form-control-sm" placeholder="http://localhost:9091">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="transmission_username">Transmission user</label>
+                <input id="transmission_username" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="transmission_password">Transmission password</label>
+                <input id="transmission_password" class="form-control form-control-sm" type="password" placeholder="leave blank to keep">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="sabnzbd_url">SABnzbd URL</label>
+                <input id="sabnzbd_url" class="form-control form-control-sm" placeholder="http://localhost:8080">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="sabnzbd_api_key">SABnzbd API key</label>
+                <input id="sabnzbd_api_key" class="form-control form-control-sm" type="password" placeholder="leave blank to keep">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="nzbget_url">NZBGet URL</label>
+                <input id="nzbget_url" class="form-control form-control-sm" placeholder="http://localhost:6789">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="nzbget_username">NZBGet user</label>
+                <input id="nzbget_username" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="nzbget_password">NZBGet password</label>
+                <input id="nzbget_password" class="form-control form-control-sm" type="password" placeholder="leave blank to keep">
+            </div>
+        </div>
+        <button id="arr-save" class="btn btn-primary btn-sm">Save hub config</button>
     </div>
 
     <div class="gt-adminpage-panel">
         <div class="gt-adminpage-panel-header"><h2>Search</h2></div>
-        <div class="input-group mb-3">
+        <div class="input-group input-group-sm mb-2">
             <input id="arr-query" class="form-control" placeholder="Search title…">
             <button id="arr-search" class="btn btn-secondary">Search</button>
         </div>
+        <div id="arr-search-warnings" class="d-none mb-2" role="status"></div>
         <div id="arr-results"></div>
     </div>
 
     <div class="gt-adminpage-panel">
         <div class="gt-adminpage-panel-header"><h2>Hardlink pipeline</h2></div>
-        <p class="text-muted small">
+        <p class="text-muted small mb-2">
             Preview completed qBittorrent downloads into a library folder.
             Requires <code>ENABLE_ARR_HARDLINK_PIPELINE</code> + hardlink helpers;
             apply also needs <code>ALLOW_HARDLINK_APPLY</code>.
             {% if hardlink_pipeline %}Pipeline flag: <strong>on</strong>.{% else %}Pipeline flag: <strong>off</strong>.{% endif %}
         </p>
         <div class="mb-2">
-            <label class="form-label">Library destination directory</label>
-            <input id="arr-hl-dest" class="form-control" placeholder="D:\Games\Incoming">
+            <label class="form-label" for="arr-hl-dest">Library destination directory</label>
+            <input id="arr-hl-dest" class="form-control form-control-sm" placeholder="D:\Games\Incoming">
         </div>
-        <div class="gt-adminpage-actions mb-3">
-            <button id="arr-hl-preview" class="btn btn-outline-secondary">Preview hardlinks</button>
-            <button id="arr-hl-apply" class="btn btn-warning">Apply OK proposals</button>
+        <div class="gt-adminpage-actions mb-2">
+            <button id="arr-hl-preview" class="btn btn-outline-secondary btn-sm">Preview hardlinks</button>
+            <button id="arr-hl-apply" class="btn btn-warning btn-sm">Apply OK proposals</button>
         </div>
         <pre id="arr-hl-out" class="gt-adminpage-output"></pre>
     </div>
@@ -143,6 +216,30 @@
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
   const headers = { 'Content-Type': 'application/json', 'X-CSRFToken': csrf };
 
+  function setMsg(el, text, isError) {
+    if (!el) return;
+    el.textContent = text || '';
+    el.classList.toggle('text-danger', !!isError);
+    el.classList.toggle('text-muted', !isError);
+  }
+
+  function renderWarnings(el, warnings) {
+    if (!el) return;
+    const list = Array.isArray(warnings) ? warnings.filter(Boolean) : [];
+    if (!list.length) {
+      el.classList.add('d-none');
+      el.textContent = '';
+      return;
+    }
+    el.classList.remove('d-none');
+    el.className = 'alert alert-warning py-2 px-3 small mb-2';
+    el.textContent = '';
+    const title = document.createElement('strong');
+    title.textContent = 'Indexer warnings: ';
+    el.appendChild(title);
+    el.appendChild(document.createTextNode(list.join(' · ')));
+  }
+
   document.getElementById('arr-enable-save')?.addEventListener('click', async () => {
     const enabled = document.getElementById('arr-enable').checked;
     const status = document.getElementById('arr-enable-status');
@@ -160,15 +257,217 @@
   });
 
   {% if enabled %}
+  let presetsCache = [];
+
   async function refreshStatus() {
     const res = await fetch('/api/arr/status');
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     const el = document.getElementById('arr-status');
-    if (!el) return;
-    el.textContent = (data.connectors || []).map(c =>
-      `${c.id}: ${c.configured ? 'configured' : 'not configured'}`
-    ).join(' · ') || data.message;
+    if (el) {
+      el.textContent = (data.connectors || []).map(c =>
+        `${c.id}: ${c.configured ? 'configured' : 'not configured'}`
+      ).join(' · ') || data.message || '';
+    }
+    renderWarnings(document.getElementById('arr-indexer-warnings'), data.indexer_warnings);
   }
+
+  function renderPresets(presets) {
+    const box = document.getElementById('arr-presets');
+    if (!box) return;
+    box.textContent = '';
+    presetsCache = Array.isArray(presets) ? presets : [];
+    if (!presetsCache.length) {
+      box.innerHTML = '<p class="text-muted small mb-0">No presets available.</p>';
+      return;
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'row g-1';
+    presetsCache.forEach((p) => {
+      const col = document.createElement('div');
+      col.className = 'col-md-4 col-lg-3';
+      const id = `preset-${p.id}`;
+      const check = document.createElement('div');
+      check.className = 'form-check';
+      const input = document.createElement('input');
+      input.className = 'form-check-input';
+      input.type = 'checkbox';
+      input.id = id;
+      input.value = p.id;
+      input.dataset.presetId = p.id;
+      const label = document.createElement('label');
+      label.className = 'form-check-label small';
+      label.htmlFor = id;
+      label.textContent = `${p.name || p.id} (${p.protocol || 'torznab'})`;
+      if (p.notes) label.title = p.notes;
+      check.appendChild(input);
+      check.appendChild(label);
+      col.appendChild(check);
+      wrap.appendChild(col);
+    });
+    box.appendChild(wrap);
+  }
+
+  function renderIndexers(indexers) {
+    const tbody = document.getElementById('arr-indexer-tbody');
+    if (!tbody) return;
+    tbody.textContent = '';
+    const rows = Array.isArray(indexers) ? indexers : [];
+    if (!rows.length) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 7;
+      td.className = 'text-muted';
+      td.textContent = 'No native indexers yet. Add one, import bulk, or enable presets.';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+    rows.forEach((row) => {
+      const tr = document.createElement('tr');
+      const cells = [
+        row.name || '—',
+        row.protocol || '—',
+        row.url || '—',
+        row.ready ? 'yes' : 'no',
+        null,
+        row.source || 'manual',
+      ];
+      cells.forEach((text, i) => {
+        const td = document.createElement('td');
+        if (i === 4) {
+          const toggle = document.createElement('input');
+          toggle.type = 'checkbox';
+          toggle.className = 'form-check-input';
+          toggle.checked = !!row.enabled;
+          toggle.title = 'Toggle enabled';
+          toggle.addEventListener('change', async () => {
+            const res = await fetch(`/api/arr/indexers/${encodeURIComponent(row.id)}`, {
+              method: 'PATCH', headers,
+              body: JSON.stringify({ enabled: toggle.checked }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              toggle.checked = !toggle.checked;
+              setMsg(document.getElementById('arr-indexer-msg'), data.error || 'Toggle failed', true);
+              return;
+            }
+            setMsg(document.getElementById('arr-indexer-msg'), 'Updated');
+            loadIndexers();
+            refreshStatus();
+          });
+          td.appendChild(toggle);
+        } else {
+          td.textContent = text;
+          if (i === 2) td.className = 'small text-break';
+        }
+        tr.appendChild(td);
+      });
+      const actions = document.createElement('td');
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-sm btn-outline-danger';
+      del.textContent = 'Delete';
+      del.addEventListener('click', async () => {
+        if (!confirm(`Delete indexer “${row.name || row.id}”?`)) return;
+        const res = await fetch(`/api/arr/indexers/${encodeURIComponent(row.id)}`, {
+          method: 'DELETE', headers,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setMsg(document.getElementById('arr-indexer-msg'), data.error || 'Delete failed', true);
+          return;
+        }
+        setMsg(document.getElementById('arr-indexer-msg'), 'Deleted');
+        loadIndexers();
+        refreshStatus();
+      });
+      actions.appendChild(del);
+      tr.appendChild(actions);
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function loadIndexers() {
+    const res = await fetch('/api/arr/indexers');
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMsg(document.getElementById('arr-indexer-msg'), data.error || 'Failed to load indexers', true);
+      return;
+    }
+    renderIndexers(data.indexers);
+    renderPresets(data.presets);
+  }
+
+  document.getElementById('idx-add')?.addEventListener('click', async () => {
+    const body = {
+      name: document.getElementById('idx-name').value.trim(),
+      protocol: document.getElementById('idx-protocol').value,
+      url: document.getElementById('idx-url').value.trim(),
+      api_key: document.getElementById('idx-api-key').value,
+      enabled: true,
+    };
+    const res = await fetch('/api/arr/indexers', {
+      method: 'POST', headers, body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMsg(document.getElementById('arr-indexer-msg'), data.error || 'Add failed', true);
+      return;
+    }
+    document.getElementById('idx-name').value = '';
+    document.getElementById('idx-url').value = '';
+    document.getElementById('idx-api-key').value = '';
+    setMsg(document.getElementById('arr-indexer-msg'), 'Indexer added');
+    loadIndexers();
+    refreshStatus();
+  });
+
+  document.getElementById('idx-bulk-import')?.addEventListener('click', async () => {
+    const raw = (document.getElementById('idx-bulk').value || '').trim();
+    if (!raw) {
+      setMsg(document.getElementById('arr-indexer-msg'), 'Paste JSON or CSV first', true);
+      return;
+    }
+    let body;
+    try {
+      body = JSON.parse(raw);
+    } catch (_) {
+      body = { text: raw };
+    }
+    const res = await fetch('/api/arr/indexers/bulk', {
+      method: 'POST', headers, body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMsg(document.getElementById('arr-indexer-msg'), data.error || 'Import failed', true);
+      return;
+    }
+    setMsg(document.getElementById('arr-indexer-msg'), `Imported ${data.count || 0}`);
+    document.getElementById('idx-bulk').value = '';
+    loadIndexers();
+    refreshStatus();
+  });
+
+  document.getElementById('idx-enable-presets')?.addEventListener('click', async () => {
+    const ids = [...document.querySelectorAll('#arr-presets input[type="checkbox"]:checked')]
+      .map((el) => el.dataset.presetId || el.value)
+      .filter(Boolean);
+    if (!ids.length) {
+      setMsg(document.getElementById('arr-indexer-msg'), 'Select at least one preset', true);
+      return;
+    }
+    const res = await fetch('/api/arr/indexers/enable-presets', {
+      method: 'POST', headers, body: JSON.stringify({ preset_ids: ids }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMsg(document.getElementById('arr-indexer-msg'), data.error || 'Enable presets failed', true);
+      return;
+    }
+    setMsg(document.getElementById('arr-indexer-msg'), `Enabled ${data.count || 0} preset(s) — set API keys before search`);
+    loadIndexers();
+    refreshStatus();
+  });
 
   async function loadConfig() {
     const res = await fetch('/api/arr/config');
@@ -219,7 +518,8 @@
     const box = document.getElementById('arr-results');
     box.innerHTML = 'Searching…';
     const res = await fetch('/api/arr/search?q=' + encodeURIComponent(q));
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    renderWarnings(document.getElementById('arr-search-warnings'), data.warnings);
     if (!res.ok) {
       box.textContent = data.error || 'Search failed';
       return;
@@ -293,6 +593,7 @@
   });
 
   loadConfig();
+  loadIndexers();
   refreshStatus();
   {% endif %}
 })();

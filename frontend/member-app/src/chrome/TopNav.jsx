@@ -3,11 +3,13 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { IconMenu, IconMore, IconUser, primaryIconById } from './icons'
 import { getContextLinks, getMoreLinks, getPrimaryLinks } from './navConfig'
 import { openPreferencesModal } from '../api/preferences'
+import { requestOpenChatPanel } from '../hooks/chatPanelApi'
+import { requestOpenSocialCompanion } from '../hooks/socialCompanionApi'
 import { TileSizeControl } from './TileSizeControl'
+import { AccountPanel } from './AccountPanel'
 import './TopNav.css'
-
 const ACCOUNT_LINKS = [
-  { id: 'profile', href: '/settings_profile_view', label: 'Profile' },
+  { id: 'profile', href: '#account-profile', label: 'Profile', profilePanel: true },
   { id: 'preferences', href: '/settings_panel', label: 'Preferences', preferences: true },
   { id: 'tokens', to: '/tokens', label: 'API tokens' },
   { id: 'password', href: '/settings_password', label: 'Change Password' },
@@ -33,6 +35,38 @@ function PrimaryLink({ link, onNavigate }) {
 }
 
 function MoreMenuLink({ link, onNavigate }) {
+  if (link.action === 'open-friends') {
+    return (
+      <button
+        type="button"
+        role="menuitem"
+        className="gt-topnav__menu-action"
+        onClick={(event) => {
+          event.preventDefault()
+          onNavigate?.()
+          requestOpenSocialCompanion()
+        }}
+      >
+        {link.label}
+      </button>
+    )
+  }
+  if (link.action === 'open-chat') {
+    return (
+      <button
+        type="button"
+        role="menuitem"
+        className="gt-topnav__menu-action"
+        onClick={(event) => {
+          event.preventDefault()
+          onNavigate?.()
+          requestOpenChatPanel()
+        }}
+      >
+        {link.label}
+      </button>
+    )
+  }
   if (link.to) {
     return (
       <NavLink to={link.to} role="menuitem" onClick={onNavigate}>
@@ -46,7 +80,6 @@ function MoreMenuLink({ link, onNavigate }) {
     </a>
   )
 }
-
 function commandPaletteHint() {
   if (typeof navigator === 'undefined') return 'Ctrl+K'
   const platform = navigator.platform || ''
@@ -74,6 +107,7 @@ export function TopNav({
   const [mobileOpen, setMobileOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [profilePanelOpen, setProfilePanelOpen] = useState(false)
   const rootRef = useRef(null)
   const moreId = useId()
   const accountId = useId()
@@ -92,6 +126,17 @@ export function TopNav({
     setMobileOpen(false)
     closeMenus()
   }
+
+  useEffect(() => {
+    const root = document.documentElement
+    function syncTopnavOffset() {
+      const height = rootRef.current?.offsetHeight || 44
+      root.style.setProperty('--gt-topnav-offset', `${height}px`)
+    }
+    syncTopnavOffset()
+    window.addEventListener('resize', syncTopnavOffset)
+    return () => window.removeEventListener('resize', syncTopnavOffset)
+  }, [mobileOpen])
 
   useEffect(() => {
     function onPointerDown(event) {
@@ -114,17 +159,21 @@ export function TopNav({
   }, [])
 
   useEffect(() => {
-    if (!mobileOpen) {
+    if (!mobileOpen && !profilePanelOpen) {
       return undefined
     }
     function onKeyDown(event) {
       if (event.key === 'Escape') {
+        if (profilePanelOpen) {
+          setProfilePanelOpen(false)
+          return
+        }
         closeMobile()
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [mobileOpen])
+  }, [mobileOpen, profilePanelOpen])
 
   async function handlePreferencesClick(event) {
     event.preventDefault()
@@ -136,7 +185,15 @@ export function TopNav({
     }
   }
 
+  function handleProfileClick(event) {
+    event.preventDefault()
+    closeMenus()
+    setMobileOpen(false)
+    setProfilePanelOpen(true)
+  }
+
   return (
+    <>
     <header className="gt-topnav" ref={rootRef}>
       <Link className="gt-topnav__brand" to="/discover" onClick={closeMobile}>
         <img
@@ -267,6 +324,18 @@ export function TopNav({
               <div className="gt-topnav__dropdown-panel" id={accountId} role="menu">
                 {username ? <div className="gt-topnav__username">{username}</div> : null}
                 {ACCOUNT_LINKS.map((link) => {
+                  if (link.profilePanel) {
+                    return (
+                      <a
+                        key={link.id}
+                        href={link.href}
+                        role="menuitem"
+                        onClick={handleProfileClick}
+                      >
+                        {link.label}
+                      </a>
+                    )
+                  }
                   if (link.preferences) {
                     return (
                       <a
@@ -303,5 +372,11 @@ export function TopNav({
         </div>
       </nav>
     </header>
+    <AccountPanel
+      open={profilePanelOpen}
+      onClose={() => setProfilePanelOpen(false)}
+      shellConfig={shellConfig}
+    />
+    </>
   )
 }

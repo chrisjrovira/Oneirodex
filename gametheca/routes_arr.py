@@ -19,6 +19,18 @@ from gametheca.utils.arr_hardlink_pipeline import (
     propose_hardlinks,
 )
 from gametheca.utils.auth import admin_required
+from gametheca.utils.indexer_registry import (
+    add_indexer,
+    bulk_import_indexers,
+    delete_indexer,
+    enable_presets,
+    get_indexer,
+    indexer_public_view,
+    indexer_status_summary,
+    list_indexers,
+    load_indexer_presets,
+    update_indexer,
+)
 from gametheca.utils.module_status import (
     arr_db_enabled,
     arr_module_on,
@@ -50,11 +62,16 @@ def arr_status():
             else 'disabled'
         ),
         'message': (
-            'Arr module ready — configure indexers/clients in Admin → Arr.'
+            'Arr module ready — configure native indexers, presets, and optional '
+            'Prowlarr/Jackett hubs in Admin → Arr.'
             if enabled
             else 'Arr module is disabled. Set ENABLE_ARR_MODULE=true or enable in Admin.'
         ),
         'connectors': connectors,
+        'indexer_warnings': next(
+            (c.get('warnings') or [] for c in connectors if c.get('id') == 'native_indexers'),
+            [],
+        ),
     })
 
 
@@ -118,6 +135,97 @@ def arr_config():
     return jsonify({'status': 'saved', 'config': saved})
 
 
+@arr_bp.route('/api/arr/indexers', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def arr_indexers():
+    """List native indexers + read-only presets catalog, or add one indexer."""
+    if not arr_module_enabled():
+        return jsonify({'error': 'Arr module is disabled'}), 403
+    if request.method == 'GET':
+        return jsonify({
+            'indexers': [indexer_public_view(row) for row in list_indexers()],
+            'presets': load_indexer_presets(),
+        })
+    data = request.get_json(silent=True) or {}
+    try:
+        row = add_indexer(data)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({'status': 'created', 'indexer': indexer_public_view(row)}), 201
+
+
+@arr_bp.route('/api/arr/indexers/bulk', methods=['POST'])
+@login_required
+@admin_required
+def arr_indexers_bulk():
+    if not arr_module_enabled():
+        return jsonify({'error': 'Arr module is disabled'}), 403
+    data = request.get_json(silent=True)
+    if data is None:
+        raw = (request.get_data(as_text=True) or '').strip()
+        data = raw
+    try:
+        created = bulk_import_indexers(data)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({
+        'status': 'imported',
+        'count': len(created),
+        'indexers': [indexer_public_view(row) for row in created],
+    }), 201
+
+
+@arr_bp.route('/api/arr/indexers/enable-presets', methods=['POST'])
+@login_required
+@admin_required
+def arr_indexers_enable_presets():
+    if not arr_module_enabled():
+        return jsonify({'error': 'Arr module is disabled'}), 403
+    data = request.get_json(silent=True) or {}
+    preset_ids = data.get('preset_ids') or data.get('ids') or []
+    if not isinstance(preset_ids, list):
+        return jsonify({'error': 'preset_ids must be an array'}), 400
+    try:
+        created = enable_presets(preset_ids)
+    except KeyError as exc:
+        return jsonify({'error': f'Unknown preset_id: {exc.args[0]}'}), 404
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({
+        'status': 'enabled',
+        'count': len(created),
+        'indexers': [indexer_public_view(row) for row in created],
+    }), 201
+
+
+@arr_bp.route('/api/arr/indexers/<indexer_id>', methods=['GET', 'PUT', 'PATCH', 'DELETE'])
+@login_required
+@admin_required
+def arr_indexer_one(indexer_id: str):
+    if not arr_module_enabled():
+        return jsonify({'error': 'Arr module is disabled'}), 403
+    if request.method == 'GET':
+        row = get_indexer(indexer_id)
+        if not row:
+            return jsonify({'error': 'Indexer not found'}), 404
+        return jsonify({'indexer': indexer_public_view(row)})
+    if request.method == 'DELETE':
+        if not delete_indexer(indexer_id):
+            return jsonify({'error': 'Indexer not found'}), 404
+        return jsonify({'status': 'deleted', 'id': indexer_id})
+    data = request.get_json(silent=True) or {}
+    try:
+        row = update_indexer(indexer_id, data)
+    except KeyError:
+        return jsonify({'error': 'Indexer not found'}), 404
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({'status': 'saved', 'indexer': indexer_public_view(row)})
+
+
 @arr_bp.route('/api/arr/search', methods=['GET'])
 @login_required
 @admin_required
@@ -135,13 +243,28 @@ def arr_search():
         hits = search_indexers(query, limit=limit)
     except RuntimeError as exc:
         return jsonify({'error': str(exc)}), 502
+    # Prefer active profile scores; drop hard-blocked / excluded hits unless
+    # ``include_disallowed=1`` (operators still see prefer-order for allowed).
+    include_disallowed = str(request.args.get('include_disallowed') or '').strip().lower() in {
+        '1', 'true', 'yes', 'on',
+    }
     results = []
+    excluded = 0
     for hit in hits:
         payload = hit.to_dict()
-        payload['quality'] = score_release_title(hit.title, size_bytes=hit.size)
+        quality = score_release_title(hit.title, size_bytes=hit.size)
+        payload['quality'] = quality
+        if not quality.get('allowed', True) and not include_disallowed:
+            excluded += 1
+            continue
         results.append(payload)
     results.sort(key=lambda item: item['quality']['score'], reverse=True)
-    return jsonify({'query': query, 'results': results})
+    return jsonify({
+        'query': query,
+        'results': results,
+        'excluded_by_quality': excluded,
+        'warnings': indexer_status_summary().get('warnings') or [],
+    })
 
 
 @arr_bp.route('/api/arr/download', methods=['POST'])

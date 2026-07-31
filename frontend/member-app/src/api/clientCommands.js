@@ -24,18 +24,24 @@ function csrfHeaders(additionalHeaders = {}) {
 }
 
 /**
- * Queue Install / Update / Uninstall / Apply patch for the desktop companion to claim.
+ * Queue Install / Update / Uninstall / Apply patch / Open path for the desktop companion.
  * @param {string} gameUuid
- * @param {'install' | 'update' | 'uninstall' | 'apply_patch'} action
- * @param {{ kind?: 'base' | 'update' | 'extra', versionUuid?: string }} [options]
+ * @param {'install' | 'update' | 'uninstall' | 'apply_patch' | 'apply_mod_pack' | 'open_path' | 'download'} action
+ * @param {{ kind?: 'base' | 'update' | 'extra', versionUuid?: string, path?: string, select?: boolean }} [options]
  */
 export async function queueClientCommand(gameUuid, action, options = {}) {
-  const body = { game_uuid: gameUuid, action }
+  const body = { game_uuid: gameUuid || '', action }
   if (options.kind) {
     body.kind = options.kind
   }
   if (options.versionUuid) {
     body.version_uuid = options.versionUuid
+  }
+  if (options.path) {
+    body.path = options.path
+  }
+  if (options.select != null) {
+    body.select = Boolean(options.select)
   }
   const response = await fetch('/api/client/commands', {
     method: 'POST',

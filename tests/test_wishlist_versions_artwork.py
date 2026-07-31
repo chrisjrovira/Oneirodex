@@ -9,9 +9,13 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import select
 
-from gametheca.models import Game, GameUpdate, Image, Library, User
+from gametheca.models import Game, GameExtra, GameUpdate, Image, Library, User
 from gametheca.platform import LibraryPlatform
-from gametheca.utils.game_versions import list_game_versions, resolve_version_file
+from gametheca.utils.game_versions import (
+    cleanup_orphan_versions,
+    list_game_versions,
+    resolve_version_file,
+)
 
 
 @pytest.fixture
@@ -88,6 +92,162 @@ def test_list_game_versions_includes_updates(db_session, lib):
     path, _, ver = resolve_version_file(game, kind='update', version_uuid=update.uuid)
     assert path == update.file_path
     assert ver == update.uuid
+
+
+def test_list_game_versions_marks_missing_path(db_session, lib):
+    game = Game(
+        uuid=str(uuid4()),
+        name=f'MissingPath {uuid4().hex[:6]}',
+        library_uuid=lib.uuid,
+        full_disk_path=f'/games/{uuid4().hex}',
+        size=50,
+    )
+    db_session.add(game)
+    db_session.flush()
+    orphan_update = GameUpdate(
+        uuid=str(uuid4()),
+        game_uuid=game.uuid,
+        file_path=f'/games/{game.uuid}/updates/gone.zip',
+    )
+    empty_extra = GameExtra(
+        uuid=str(uuid4()),
+        game_uuid=game.uuid,
+        file_path='',
+    )
+    db_session.add_all([orphan_update, empty_extra])
+    db_session.commit()
+
+    versions = list_game_versions(game)
+    by_uuid = {v['uuid']: v for v in versions}
+
+    assert by_uuid[orphan_update.uuid]['path_missing'] is True
+    assert by_uuid[orphan_update.uuid]['downloadable'] is False
+    assert by_uuid[orphan_update.uuid]['size'] is None
+
+    assert by_uuid[empty_extra.uuid]['path_missing'] is True
+    assert by_uuid[empty_extra.uuid]['downloadable'] is False
+
+
+def test_list_game_versions_fills_size_when_file_exists(db_session, lib, tmp_path):
+    update_file = tmp_path / 'patch.bin'
+    update_file.write_bytes(b'x' * 2048)
+    extra_file = tmp_path / 'manual.pdf'
+    extra_file.write_bytes(b'y' * 512)
+
+    game = Game(
+        uuid=str(uuid4()),
+        name=f'Sized {uuid4().hex[:6]}',
+        library_uuid=lib.uuid,
+        full_disk_path=str(tmp_path / 'base'),
+        size=999,
+    )
+    db_session.add(game)
+    db_session.flush()
+    update = GameUpdate(
+        uuid=str(uuid4()),
+        game_uuid=game.uuid,
+        file_path=str(update_file),
+    )
+    extra = GameExtra(
+        uuid=str(uuid4()),
+        game_uuid=game.uuid,
+        file_path=str(extra_file),
+    )
+    db_session.add_all([update, extra])
+    db_session.commit()
+
+    versions = list_game_versions(game)
+    by_uuid = {v['uuid']: v for v in versions}
+
+    assert by_uuid[update.uuid]['path_missing'] is False
+    assert by_uuid[update.uuid]['downloadable'] is True
+    assert by_uuid[update.uuid]['size'] == 2048
+
+    assert by_uuid[extra.uuid]['path_missing'] is False
+    assert by_uuid[extra.uuid]['downloadable'] is True
+    assert by_uuid[extra.uuid]['size'] == 512
+
+
+def test_cleanup_orphan_versions_removes_missing_keeps_present(db_session, lib, tmp_path):
+    present = tmp_path / 'keep.zip'
+    present.write_bytes(b'keep')
+
+    game = Game(
+        uuid=str(uuid4()),
+        name=f'Cleanup {uuid4().hex[:6]}',
+        library_uuid=lib.uuid,
+        full_disk_path=str(tmp_path),
+        size=1,
+    )
+    db_session.add(game)
+    db_session.flush()
+    keep_update = GameUpdate(
+        uuid=str(uuid4()),
+        game_uuid=game.uuid,
+        file_path=str(present),
+    )
+    gone_update = GameUpdate(
+        uuid=str(uuid4()),
+        game_uuid=game.uuid,
+        file_path=str(tmp_path / 'missing-update.zip'),
+    )
+    gone_extra = GameExtra(
+        uuid=str(uuid4()),
+        game_uuid=game.uuid,
+        file_path=str(tmp_path / 'missing-extra.bin'),
+    )
+    db_session.add_all([keep_update, gone_update, gone_extra])
+    db_session.commit()
+
+    result = cleanup_orphan_versions(game)
+    assert result['ok'] is True
+    removed_uuids = {row['uuid'] for row in result['removed']}
+    kept_uuids = {row['uuid'] for row in result['kept']}
+    assert gone_update.uuid in removed_uuids
+    assert gone_extra.uuid in removed_uuids
+    assert keep_update.uuid in kept_uuids
+
+    remaining_updates = db_session.execute(
+        select(GameUpdate).filter_by(game_uuid=game.uuid)
+    ).scalars().all()
+    remaining_extras = db_session.execute(
+        select(GameExtra).filter_by(game_uuid=game.uuid)
+    ).scalars().all()
+    assert [u.uuid for u in remaining_updates] == [keep_update.uuid]
+    assert remaining_extras == []
+
+
+def test_cleanup_orphans_api_librarian(client, app, db_session, admin, lib, tmp_path):
+    present = tmp_path / 'ok.zip'
+    present.write_bytes(b'ok')
+    game = Game(
+        uuid=str(uuid4()),
+        name=f'ApiCleanup {uuid4().hex[:6]}',
+        library_uuid=lib.uuid,
+        full_disk_path=str(tmp_path),
+    )
+    db_session.add(game)
+    db_session.flush()
+    gone = GameUpdate(
+        uuid=str(uuid4()),
+        game_uuid=game.uuid,
+        file_path=str(tmp_path / 'nope.zip'),
+    )
+    keep = GameUpdate(
+        uuid=str(uuid4()),
+        game_uuid=game.uuid,
+        file_path=str(present),
+    )
+    db_session.add_all([gone, keep])
+    db_session.commit()
+
+    _login(client, app, admin)
+    resp = client.post(f'/api/games/{game.uuid}/versions/cleanup_orphans')
+    assert resp.status_code == 200, resp.get_json()
+    body = resp.get_json()
+    assert body['ok'] is True
+    assert any(r['uuid'] == gone.uuid for r in body['removed'])
+    assert any(r['uuid'] == keep.uuid for r in body['kept'])
 
 
 def test_wishlist_create_cancel_and_admin_fulfill(client, app, db_session, user, admin, lib):

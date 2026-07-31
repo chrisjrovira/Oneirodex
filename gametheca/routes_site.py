@@ -149,8 +149,8 @@ def get_filter_options():
 def get_random_trailer():
     """API endpoint to get a random game with trailer (with optional filters)"""
     try:
-        # Start with base query
-        query = select(Game).filter(
+        # Select IDs only — DISTINCT on full Game rows fails on JSON columns (Postgres).
+        query = select(Game.id).filter(
             Game.video_urls.isnot(None),
             Game.video_urls != ''
         )
@@ -192,17 +192,35 @@ def get_random_trailer():
             except (ValueError, TypeError):
                 pass  # Invalid date format, skip filter
 
-        # Execute query with distinct to avoid duplicates from joins
-        games_with_videos = db.session.execute(query.distinct()).scalars().all()
+        game_ids = db.session.execute(query.distinct()).scalars().all()
 
-        if not games_with_videos:
+        if not game_ids:
             return jsonify({
                 'has_videos': False,
-                'message': 'No games with trailers found matching your filters'
-            }), 404
+                'empty': True,
+                'code': 'no_trailers',
+                'message': 'No games with trailers found matching your filters',
+                'cta': {
+                    'id': 'add_library',
+                    'label': 'Add games to your library',
+                    'href': '/admin/library/add',
+                },
+            }), 200
 
         # Select a random game
-        random_game = random.choice(games_with_videos)
+        random_game = db.session.get(Game, random.choice(game_ids))
+        if not random_game or not random_game.video_urls:
+            return jsonify({
+                'has_videos': False,
+                'empty': True,
+                'code': 'no_valid_urls',
+                'message': 'No valid video URLs found',
+                'cta': {
+                    'id': 'add_library',
+                    'label': 'Add games to your library',
+                    'href': '/admin/library/add',
+                },
+            }), 200
 
         # Parse video URLs (comma-separated)
         video_urls = [url.strip() for url in random_game.video_urls.split(',') if url.strip()]
@@ -211,8 +229,15 @@ def get_random_trailer():
             # If somehow we got empty URLs, try another game
             return jsonify({
                 'has_videos': False,
-                'message': 'No valid video URLs found'
-            }), 404
+                'empty': True,
+                'code': 'no_valid_urls',
+                'message': 'No valid video URLs found',
+                'cta': {
+                    'id': 'add_library',
+                    'label': 'Add games to your library',
+                    'href': '/admin/library/add',
+                },
+            }), 200
 
         # Pick a random video if multiple exist
         selected_video = random.choice(video_urls)
@@ -232,7 +257,9 @@ def get_random_trailer():
         print(f"Error fetching random trailer: {e}")
         return jsonify({
             'has_videos': False,
-            'message': 'Error fetching trailer'
+            'empty': False,
+            'code': 'trailer_error',
+            'message': 'Error fetching trailer',
         }), 500
 
 

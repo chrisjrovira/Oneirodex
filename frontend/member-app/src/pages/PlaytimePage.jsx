@@ -1,5 +1,7 @@
 ﻿import { useEffect, useState } from 'react'
 import { fetchMyPlaytime } from '../api/playtime'
+import { formatLocaleDate } from '../utils/formatLocaleDate'
+import './PlaytimePage.css'
 
 function formatDuration(totalSeconds) {
   const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0))
@@ -13,21 +15,6 @@ function formatDuration(totalSeconds) {
     return `${m}m ${String(s).padStart(2, '0')}s`
   }
   return `${s}s`
-}
-
-function formatDate(iso) {
-  if (!iso) {
-    return 'Never'
-  }
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) {
-    return '—'
-  }
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 
 export function PlaytimePage() {
@@ -63,10 +50,12 @@ export function PlaytimePage() {
 
   return (
     <div className="gt-more-page gt-playtime">
-      <div className="gt-page-header">
-        <h1>Playtime</h1>
+      <div className="gt-page-header gt-playtime__header">
+        <div>
+          <h1>Playtime</h1>
+          <p className="gt-more-page__lede">Your play history and time across the library.</p>
+        </div>
       </div>
-      <p className="gt-more-page__lede">Your play history and time across the library.</p>
 
       {error ? (
         <div role="alert">
@@ -77,39 +66,50 @@ export function PlaytimePage() {
         </div>
       ) : null}
 
-      {!error && !data ? <p>Loading…</p> : null}
+      {!error && !data ? <p className="gt-playtime__empty">Loading…</p> : null}
 
       {!error && data ? (
         <>
-          <section aria-label="Playtime summary">
-            <p>
-              Total playtime: <strong>{formatDuration(data.total_seconds)}</strong>
-            </p>
-            <p>
-              Games played: <strong>{games.length}</strong>
-            </p>
+          <section className="gt-playtime__summary" aria-label="Playtime summary">
+            <span>
+              Total <strong>{formatDuration(data.total_seconds)}</strong>
+            </span>
+            <span className="gt-playtime__summary-sep" aria-hidden="true">
+              ·
+            </span>
+            <span>
+              Games <strong>{games.length}</strong>
+            </span>
           </section>
 
           {games.length === 0 ? (
-            <p>No playtime recorded yet. Start a session from any game page.</p>
+            <p className="gt-playtime__empty">
+              No playtime recorded yet. Start a session from any game page.
+            </p>
           ) : (
-            <ul className="gt-playtime__list">
-              {games.map((row) => (
-                <li key={row.game_uuid}>
-                  <a href={`/game_details/${row.game_uuid}`}>
-                    <strong>{row.game_name || row.game_uuid}</strong>
-                  </a>
-                  <span>
-                    {formatDuration(row.total_seconds)}
-                    {' · '}
-                    {row.session_count || 0} session
-                    {row.session_count === 1 ? '' : 's'}
-                    {' · '}
-                    Last played {formatDate(row.last_played_at)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <section aria-labelledby="playtime-games-heading">
+              <div className="gt-playtime__section-head">
+                <h2 id="playtime-games-heading">Games</h2>
+                <span className="gt-playtime__count">{games.length}</span>
+              </div>
+              <ul className="gt-playtime__list">
+                {games.map((row) => (
+                  <li key={row.game_uuid} className="gt-playtime__row">
+                    <a className="gt-playtime__title-link" href={`/game_details/${row.game_uuid}`}>
+                      <strong>{row.game_name || row.game_uuid}</strong>
+                    </a>
+                    <span className="gt-playtime__meta">
+                      {formatDuration(row.total_seconds)}
+                      {' · '}
+                      {row.session_count || 0} session
+                      {row.session_count === 1 ? '' : 's'}
+                      {' · '}
+                      Last played {formatLocaleDate(row.last_played_at, { fallback: 'Never' })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
         </>
       ) : null}

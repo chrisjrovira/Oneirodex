@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-reveal-path-in-os"
+description = "Allows revealing a local path in Explorer / Finder / file manager."
+commands.allow = ["reveal_path_in_os"]

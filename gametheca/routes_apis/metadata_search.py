@@ -45,8 +45,11 @@ def search_metadata():
       name (required)
       source: steam|rawg|gog|epic|itch|giantbomb|meta_quest|meta|quest (required)
       limit: int (default 10, max 20)
+      include_software: bool (Steam only, default true) — include Steam
+        type=software/application hits for gaming-adjacent apps
 
     Meta Quest, Epic: ownership/register + metadata only — never DRM installs.
+    Steam results include steam_type + item_kind for UI kind badges.
     """
     name = (request.args.get('name') or '').strip()
     source_raw = (request.args.get('source') or '').strip().lower()
@@ -55,6 +58,8 @@ def search_metadata():
         limit = min(int(request.args.get('limit') or 10), 20)
     except (TypeError, ValueError):
         limit = 10
+    include_software_raw = (request.args.get('include_software') or '1').strip().lower()
+    include_software = include_software_raw not in ('0', 'false', 'no')
 
     if not name:
         return jsonify({'error': 'No game name provided'}), 400
@@ -68,7 +73,7 @@ def search_metadata():
         }), 400
 
     if source == 'steam':
-        results = search_steam_games(name, limit=limit)
+        results = search_steam_games(name, limit=limit, include_software=include_software)
     elif source == 'rawg':
         api_key = current_app.config.get('RAWG_API_KEY') or None
         results = search_rawg_games(name, api_key=api_key, limit=limit)
@@ -89,6 +94,13 @@ def search_metadata():
         'results': results,
         'ownership_only': source in ('meta_quest', 'epic'),
     }
+    if source == 'steam':
+        payload['include_software'] = include_software
+        payload['note'] = (
+            'Steam results may include type=software (emulators/tools). '
+            'Use item_kind for badges; never auto-treat software as IGDB Main Game. '
+            'Ownership register-only — no DRM download queues.'
+        )
     if source == 'meta_quest':
         payload['api_mode'] = get_meta_quest_api_mode()
         payload['unofficial_graphql'] = unofficial_graphql_enabled()
@@ -103,7 +115,9 @@ def search_metadata_sources():
     mode = get_meta_quest_api_mode()
     return jsonify({
         'sources': [
-            {'id': 'steam', 'name': 'Steam', 'needs_key': False, 'ownership_only': False},
+            {'id': 'steam', 'name': 'Steam', 'needs_key': False, 'ownership_only': False,
+             'includes_software': True,
+             'note': 'Includes Steam type=software by default; results carry item_kind.'},
             {'id': 'rawg', 'name': 'RAWG', 'needs_key': True, 'ownership_only': False},
             {'id': 'gog', 'name': 'GOG', 'needs_key': False, 'ownership_only': False},
             {'id': 'epic', 'name': 'Epic Games Store', 'needs_key': False, 'ownership_only': True},

@@ -2,14 +2,14 @@
 import { fetchAnnouncements } from '../api/announcements'
 import { claimFreeGameAssist, fetchFreeGames } from '../api/freeGames'
 import { fetchGamingNews } from '../api/gamingNews'
+import { formatLocaleDate } from '../utils/formatLocaleDate'
 import './NewsPage.css'
 
 function formatEndsAt(value) {
   if (!value) {
     return null
   }
-  const text = String(value)
-  return text.length >= 10 ? text.slice(0, 10) : text
+  return formatLocaleDate(value, { fallback: null })
 }
 
 function storeLabel(store) {
@@ -25,6 +25,12 @@ function storeLabel(store) {
   return map[store] || store || 'Store'
 }
 
+function truncate(text, max = 140) {
+  const value = String(text || '').trim()
+  if (value.length <= max) return value
+  return `${value.slice(0, max - 1).trim()}…`
+}
+
 export function NewsPage() {
   const [announcements, setAnnouncements] = useState(null)
   const [freeGames, setFreeGames] = useState(null)
@@ -32,6 +38,7 @@ export function NewsPage() {
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
   const [assistMsg, setAssistMsg] = useState({})
+  const [activeTab, setActiveTab] = useState('all')
 
   async function claimAssist(item) {
     if (!item?.id) {
@@ -43,7 +50,6 @@ export function NewsPage() {
         ...prev,
         [item.id]: result.message || (result.ok ? 'Ownership updated.' : result.error || 'Failed'),
       }))
-      // Prefer opening the claim page after registering intent
       const href = result.links?.protocol || result.links?.https || item.links?.https
       if (href && result.ok) {
         window.open(href, '_blank', 'noopener,noreferrer')
@@ -101,14 +107,39 @@ export function NewsPage() {
     }
   }, [retryCount])
 
+  const loading = !error && (!announcements || !freeGames || !headlines)
+  const showAdmins = activeTab === 'all' || activeTab === 'admins'
+  const showFree = activeTab === 'all' || activeTab === 'free'
+  const showHeadlines = activeTab === 'all' || activeTab === 'headlines'
+
   return (
     <div className="gt-more-page gt-news">
-      <div className="gt-page-header">
-        <h1>News</h1>
+      <div className="gt-page-header gt-news__header">
+        <div>
+          <h1>News</h1>
+          <p className="gt-more-page__lede">
+            Admin notes, free claims, and gaming headlines.
+          </p>
+        </div>
+        <nav className="gt-news__tabs" aria-label="News sections">
+          {[
+            ['all', 'All'],
+            ['admins', 'Admins'],
+            ['free', 'Free now'],
+            ['headlines', 'Headlines'],
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              className={activeTab === id ? 'is-active' : ''}
+              aria-pressed={activeTab === id}
+              onClick={() => setActiveTab(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
       </div>
-      <p className="gt-more-page__lede">
-        Admin announcements, free store claims, and gaming headlines.
-      </p>
 
       {error ? (
         <div role="alert">
@@ -119,24 +150,29 @@ export function NewsPage() {
         </div>
       ) : null}
 
-      {!error && !announcements ? <p>Loading…</p> : null}
+      {loading ? <p>Loading…</p> : null}
 
-      {!error && announcements ? (
-        <section className="gt-news__section">
-          <h2>From your admins</h2>
-          {announcements.length === 0 ? <p>No announcements yet.</p> : null}
+      {!error && announcements && showAdmins ? (
+        <section className="gt-news__section" aria-labelledby="news-admins-heading">
+          <div className="gt-news__section-head">
+            <h2 id="news-admins-heading">From your admins</h2>
+            <span className="gt-news__count">{announcements.length}</span>
+          </div>
+          {announcements.length === 0 ? <p className="gt-news__empty">No announcements yet.</p> : null}
           {announcements.length > 0 ? (
             <ul className="gt-news__list">
               {announcements.map((item) => (
-                <li key={item.id} className="gt-news__card">
+                <li key={item.id} className="gt-news__card gt-news__card--admin">
                   <article>
-                    <strong>{item.title}</strong>
-                    <p>{item.body}</p>
-                    {item.created_at ? (
-                      <time dateTime={item.created_at}>
-                        {String(item.created_at).slice(0, 10)}
-                      </time>
-                    ) : null}
+                    <header className="gt-news__card-head">
+                      <strong>{item.title}</strong>
+                      {item.created_at ? (
+                        <time dateTime={item.created_at}>
+                          {formatLocaleDate(item.created_at)}
+                        </time>
+                      ) : null}
+                    </header>
+                    <p>{truncate(item.body, 220)}</p>
                   </article>
                 </li>
               ))}
@@ -145,15 +181,17 @@ export function NewsPage() {
         </section>
       ) : null}
 
-      {!error && freeGames ? (
-        <section id="free-games" className="gt-news__section gt-news__free">
-          <h2>Free now</h2>
+      {!error && freeGames && showFree ? (
+        <section id="free-games" className="gt-news__section gt-news__free" aria-labelledby="news-free-heading">
+          <div className="gt-news__section-head">
+            <h2 id="news-free-heading">Free now</h2>
+            <span className="gt-news__count">{freeGames.length}</span>
+          </div>
           <p className="gt-news__hint">
-            Claim on the store site (or open the launcher if that account is linked). GameTheca does
-            not download DRM titles — after claiming on Steam, re-sync Ownership to badge your library.
+            Claim on the store. GameTheca does not download DRM titles — sync Ownership after claiming.
           </p>
           {freeGames.length === 0 ? (
-            <p>No free offers cached yet. Check back after the next refresh.</p>
+            <p className="gt-news__empty">No free offers cached yet. Check back after the next refresh.</p>
           ) : (
             <ul className="gt-news__list gt-news__free-list">
               {freeGames.map((item) => {
@@ -171,16 +209,18 @@ export function NewsPage() {
                             alt=""
                             loading="lazy"
                           />
-                        ) : null}
+                        ) : (
+                          <div className="gt-news__free-thumb gt-news__free-thumb--empty" aria-hidden="true" />
+                        )}
                         <div className="gt-news__free-body">
                           <p className="gt-news__meta">
                             <span className="gt-news__store">{storeLabel(item.store)}</span>
                             {item.worth ? <span>{item.worth}</span> : null}
                             {ends ? <time dateTime={item.ends_at}>Ends {ends}</time> : null}
-                            {item.connected ? <span>Linked</span> : null}
+                            {item.connected ? <span className="gt-news__linked">Linked</span> : null}
                           </p>
                           <strong>{item.title}</strong>
-                          {item.description ? <p>{item.description}</p> : null}
+                          {item.description ? <p>{truncate(item.description, 110)}</p> : null}
                           <p className="gt-news__actions">
                             {https ? (
                               <a className="gt-btn" href={https} target="_blank" rel="noreferrer">
@@ -216,23 +256,28 @@ export function NewsPage() {
         </section>
       ) : null}
 
-      {!error && headlines ? (
-        <section className="gt-news__section">
-          <h2>Gaming headlines</h2>
+      {!error && headlines && showHeadlines ? (
+        <section className="gt-news__section" aria-labelledby="news-headlines-heading">
+          <div className="gt-news__section-head">
+            <h2 id="news-headlines-heading">Gaming headlines</h2>
+            <span className="gt-news__count">{headlines.length}</span>
+          </div>
           {headlines.length === 0 ? (
-            <p>No external headlines available right now.</p>
+            <p className="gt-news__empty">No external headlines available right now.</p>
           ) : (
-            <ul className="gt-news__list">
+            <ul className="gt-news__list gt-news__headline-list">
               {headlines.map((item) => (
-                <li key={item.url} className="gt-news__card">
+                <li key={item.url} className="gt-news__card gt-news__headline">
                   <article>
-                    <a href={item.url} target="_blank" rel="noreferrer">
+                    <a className="gt-news__headline-link" href={item.url} target="_blank" rel="noreferrer">
                       <strong>{item.title}</strong>
                     </a>
-                    {item.summary ? <p>{item.summary}</p> : null}
+                    {item.summary ? <p>{truncate(item.summary, 160)}</p> : null}
                     <p className="gt-news__meta">
                       <span>{item.source}</span>
-                      {item.published_at ? <time>{String(item.published_at).slice(0, 16)}</time> : null}
+                      {item.published_at ? (
+                        <time dateTime={item.published_at}>{String(item.published_at).slice(0, 16)}</time>
+                      ) : null}
                     </p>
                   </article>
                 </li>

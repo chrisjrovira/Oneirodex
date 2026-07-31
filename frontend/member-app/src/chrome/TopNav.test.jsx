@@ -47,15 +47,38 @@ test('more menu uses SPA paths via NavLink', async () => {
   expect(screen.getByRole('menuitem', { name: 'Help' })).toHaveAttribute('href', '/help')
 })
 
-test('account menu matches base.html account URLs', async () => {
+test('more → Friends opens dock event without navigating to /social-companion', async () => {
   const user = userEvent.setup()
-  renderNav({ username: 'ada' })
+  const onOpen = vi.fn()
+  window.addEventListener('gt-open-social-companion', onOpen)
+  try {
+    renderNav({})
+    await user.click(screen.getByRole('button', { name: /more/i }))
+    const friends = screen.getByRole('menuitem', { name: 'Friends' })
+    expect(friends.tagName).toBe('BUTTON')
+    expect(friends).not.toHaveAttribute('href')
+    await user.click(friends)
+    expect(onOpen).toHaveBeenCalledTimes(1)
+    expect(window.location.pathname).not.toBe('/social-companion')
+  } finally {
+    window.removeEventListener('gt-open-social-companion', onOpen)
+  }
+})
+
+test('account menu opens profile panel under TopNav (no full takeover)', async () => {
+  const user = userEvent.setup()
+  renderNav({ username: 'ada', role: 'admin' })
   await user.click(screen.getByRole('button', { name: /account menu/i }))
-  expect(screen.getByRole('menuitem', { name: 'Profile' })).toHaveAttribute('href', '/settings_profile_view')
+  expect(screen.getByRole('menuitem', { name: 'Profile' })).toHaveAttribute('href', '#account-profile')
   expect(screen.getByRole('menuitem', { name: 'Preferences' })).toHaveAttribute('href', '/settings_panel')
   expect(screen.getByRole('menuitem', { name: 'API tokens' })).toHaveAttribute('href', '/tokens')
   expect(screen.getByRole('menuitem', { name: 'Change Password' })).toHaveAttribute('href', '/settings_password')
   expect(screen.getByRole('menuitem', { name: 'Logout' })).toHaveAttribute('href', '/logout')
+
+  await user.click(screen.getByRole('menuitem', { name: 'Profile' }))
+  expect(screen.getByRole('dialog', { name: 'Account' })).toBeInTheDocument()
+  expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument()
+  expect(screen.getByText('GameTheca')).toBeInTheDocument()
 })
 
 test('preferences opens modal path so theme reload can apply', async () => {

@@ -17,12 +17,13 @@
 | **B — Competitive intel** | Full peer catalogs, steal/ignore matrices, “stronger than X” roadmaps | **Not in public git.** Move to private vault (local-only path or private repo). Strategy in git speaks only in **GameTheca product language**. |
 | **C — Named rivals in marketing/stance** | Peer product names used only to say “we’re not them” in README, user/admin guides, Help, desktop README | **Rewrite** as capability non-goals without product names: e.g. “no bundled torrent marketplace”, “no DRM store download queues”, “no Discord webhooks”. |
 | **D — Integration / format brands (KEEP)** | Playnite **import**, ES-DE / Pegasus **export**, Prowlarr/Jackett/qBittorrent **connectors**, Steam/GOG/Epic **ownership register**, LiveKit, Authentik/OIDC | **Allowed** — these are shipped features or BYO tools operators configure. Do not strip APIs or user docs for Class D. |
+| **D2 — Admin Acquire presets (KEEP, admin-only)** | Curated Torznab/Newznab **preset display names** in Admin → Arr / `indexer_presets.json` / Arr admin UI | **Allowed in admin surfaces only** — operators enable presets and supply their own API keys/URLs. Still **ban** those display names from README, Help marketing, CHANGELOG headlines, member SPA marketing copy, and CI artifacts. |
 | **E — Cursor / agent private** | Agent transcripts, local canvases outside repo | Not uploaded with product; still scrub if someone pastes into Issues/PRs. |
 
 **Locked product non-goals (keep the rules, drop rival names in external streams):**
 
 - No Discord bots/webhooks  
-- No bundled pirate indexers / torrent marketplace  
+- No torrent **marketplace** storefront / magnet scrapers that bypass Torznab (native registry + optional admin presets + BYO hubs are OK)  
 - No DRM store download/install queues (ownership register-only OK)  
 - No romhacking.net scraping  
 - OIDC stays opt-in  

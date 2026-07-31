@@ -119,6 +119,7 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
         <Link className="gt-btn" to="/library">
           Browse all library
         </Link>
+        <ExportPacksSection />
       </div>
     )
   }
@@ -127,13 +128,6 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
     <div className="gt-more-page gt-systems-page">
       <p className="gt-more-page__lede">
         Browse your library by console or PC. Open a system to filter the grid and apply that era&apos;s chrome.
-        Export packs for external frontends:{' '}
-        <a className="gt-btn" href="/api/export/esde">
-          ES-DE gamelist.xml
-        </a>{' '}
-        <a className="gt-btn" href="/api/export/pegasus?platform=Library">
-          Pegasus metadata
-        </a>
       </p>
       {groups.map((group) => (
         <section key={group.id} className="gt-systems-group" data-family={group.id}>
@@ -211,6 +205,31 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
           </div>
         </section>
       ))}
+      <ExportPacksSection />
     </div>
+  )
+}
+
+function ExportPacksSection() {
+  return (
+    <section className="gt-systems-exports" aria-labelledby="gt-systems-exports-title">
+      <h2 id="gt-systems-exports-title" className="gt-systems-group__title">
+        Export packs
+      </h2>
+      <p className="gt-systems-exports__lede">
+        Optional downloads for other frontends — not required to browse here.{' '}
+        <strong>ES-DE</strong> gets a <code>gamelist.xml</code> (EmulationStation Desktop Edition
+        style list). <strong>Pegasus</strong> gets a metadata pack for its frontend. File paths stay
+        portable under your library roots so home/NAS mounts are not leaked.
+      </p>
+      <div className="gt-systems-exports__actions">
+        <a className="gt-btn" href="/api/export/esde">
+          ES-DE gamelist.xml
+        </a>
+        <a className="gt-btn" href="/api/export/pegasus?platform=Library">
+          Pegasus metadata
+        </a>
+      </div>
+    </section>
   )
 }

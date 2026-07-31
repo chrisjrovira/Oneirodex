@@ -1,5 +1,7 @@
 const STORAGE_OPEN = 'gt-social-companion-open'
 const STORAGE_PINNED = 'gt-social-companion-pinned'
+/** CustomEvent name — TopNav / CommandPalette open the dock without SPA navigation. */
+export const OPEN_SOCIAL_EVENT = 'gt-open-social-companion'
 
 function csrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.content || ''
@@ -126,4 +128,19 @@ export function openSocialPopoutWindow() {
     }
   }
   return win
+}
+
+/**
+ * Open the bottom-right Friends dock in-place (no `/social-companion` shell swap).
+ * Falls back to pop-out when the dock is not mounted (e.g. already on the popout host).
+ */
+export function requestOpenSocialCompanion() {
+  writeCompanionOpen(true)
+  if (typeof window === 'undefined') return null
+  const path = window.location?.pathname || ''
+  if (path.startsWith('/social-companion')) {
+    return openSocialPopoutWindow()
+  }
+  window.dispatchEvent(new CustomEvent(OPEN_SOCIAL_EVENT))
+  return null
 }

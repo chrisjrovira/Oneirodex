@@ -19,7 +19,7 @@ export const SETTINGS_CARDS = [
   { to: '/admin/quality_profiles', title: 'Quality Profiles', blurb: 'Release quality rules.' },
   { to: '/admin/detail_layout', title: 'Detail Layout', blurb: 'Game details field layout.' },
   { to: '/admin/ai', title: 'AI Assist', blurb: 'AI identification and helpers.' },
-  { to: '/admin/storage', title: 'Storage', blurb: 'Disk paths, BIOS under userdata/system, assists packs.' },
+  { to: '/admin/storage', title: 'Storage', blurb: 'Same-volume hardlink preview/apply helpers.' },
   { to: '/admin/themes', title: 'Themes', blurb: 'Apply presets; Reset Default Themes.' },
   { to: '/admin/art_studio', title: 'Art studio', blurb: 'Placeholders + artwork picker / image queue.' },
   { to: '/admin/art_studio#images', title: 'Art & images', blurb: 'Single-title artwork picker + mass image queue.' },
@@ -36,9 +36,20 @@ export const INTEGRATION_CARDS = [
     href: '/admin/igdb_settings',
     links: [
       { href: '/admin/igdb_settings', label: 'IGDB settings' },
+      { href: '/admin/integrations#igdb', label: 'Integrations · IGDB tab' },
+    ],
+  },
+  {
+    id: 'artwork',
+    title: 'Artwork & secondary metadata',
+    blurb: 'SteamGridDB covers, Giant Bomb, HowLongToBeat, Meta/Quest — not IGDB-only.',
+    href: '/admin/integrations#steamgriddb',
+    links: [
       { href: '/admin/integrations#steamgriddb', label: 'SteamGridDB art' },
       { href: '/admin/integrations#giantbomb', label: 'Giant Bomb' },
       { href: '/admin/integrations#hltb', label: 'HowLongToBeat' },
+      { href: '/admin/integrations#meta_quest', label: 'Meta / Quest ownership' },
+      { href: '/admin/art_studio#images', label: 'Art studio picker' },
     ],
   },
   {
@@ -46,7 +57,10 @@ export const INTEGRATION_CARDS = [
     title: 'SMTP',
     blurb: 'Outbound mail for invites, resets, and notices.',
     href: '/admin/smtp_settings',
-    links: [{ href: '/admin/smtp_settings', label: 'SMTP settings' }],
+    links: [
+      { href: '/admin/smtp_settings', label: 'SMTP settings' },
+      { href: '/admin/integrations#email', label: 'Integrations · Email tab' },
+    ],
   },
   {
     id: 'oidc',
@@ -66,6 +80,36 @@ export const INTEGRATION_CARDS = [
     ],
   },
   {
+    id: 'community',
+    title: 'Community chat',
+    blurb: 'Optional BYO Stoat/Matrix deep-link — not Discord webhooks.',
+    href: '/admin/integrations#community',
+    links: [
+      { href: '/admin/integrations#community', label: 'Community tab' },
+      { href: '/admin/chat_emoji', label: 'Custom chat emoji' },
+    ],
+  },
+  {
+    id: 'acquire',
+    title: 'Acquire / Arr',
+    blurb: 'Native Torznab registry + optional Prowlarr/Jackett/qBit hubs.',
+    href: '/admin/arr',
+    links: [
+      { href: '/admin/arr', label: 'Arr module' },
+      { href: '/admin/integrations#indexers', label: 'Integrations · Indexers' },
+    ],
+  },
+  {
+    id: 'ownership',
+    title: 'Ownership registers',
+    blurb: 'Store ownership sync is register-only — no DRM download queues.',
+    href: '/admin/integrations#ownership',
+    links: [
+      { href: '/admin/integrations#ownership', label: 'Ownership tab' },
+      { href: '/admin/integrations#meta_quest', label: 'Meta / Quest' },
+    ],
+  },
+  {
     id: 'remote_play',
     title: 'Remote play',
     blurb: 'BYO Sunshine/Wolf for Moonlight — enable under Features + host URL.',
@@ -73,6 +117,18 @@ export const INTEGRATION_CARDS = [
     links: [
       { href: '/admin/remote_play', label: 'Remote play settings' },
       { href: '/admin/features', label: 'Features toggle' },
+    ],
+  },
+  {
+    id: 'exports',
+    title: 'Export packs',
+    blurb:
+      'ES-DE gamelist.xml and Pegasus metadata for external frontends. Portable paths only — no NAS mount leaks.',
+    href: '/admin/plugins',
+    links: [
+      { href: '/api/export/esde', label: 'Download ES-DE gamelist.xml' },
+      { href: '/api/export/pegasus?platform=Library', label: 'Download Pegasus metadata' },
+      { href: '/admin/plugins', label: 'Plugins registry' },
     ],
   },
   {
@@ -114,6 +170,12 @@ export const HUB_LINKS = {
     { href: '/admin/integrations#steamgriddb', label: 'SteamGridDB art' },
     { href: '/admin/integrations#giantbomb', label: 'Giant Bomb' },
     { href: '/admin/integrations#hltb', label: 'HowLongToBeat' },
+    { href: '/admin/integrations#meta_quest', label: 'Meta / Quest' },
+    { href: '/admin/integrations#ownership', label: 'Ownership registers' },
+    { href: '/admin/integrations#community', label: 'Community chat' },
+    { href: '/admin/arr', label: 'Acquire / Arr' },
+    { href: '/api/export/esde', label: 'ES-DE export' },
+    { href: '/api/export/pegasus?platform=Library', label: 'Pegasus export' },
   ],
   system: [
     { href: '/admin/ops', label: 'Ops glance' },

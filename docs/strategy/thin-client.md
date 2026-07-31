@@ -3,7 +3,7 @@
 **Date:** 2026-07-27  
 **Status:** TC-1 protocol **shipped**. TC-2 thin shell **buildable** (`npm run tauri:build:thin` → unsigned EXE; connect + Open library / Friends only).  
 **Audience:** PM · Desktop · Backend · UI/UX · Docs  
-**Related:** [desktop-companion.md](../user/desktop-companion.md) · [v1-readiness.md](v1-readiness.md) · [features.md](features.md) · [social-av.md](social-av.md) · [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md)
+**Related:** [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](../user/thin-client.md) · [v1-readiness.md](v1-readiness.md) · [features.md](features.md) · [social-av.md](social-av.md) · [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md)
 
 ---
 
@@ -186,10 +186,10 @@ Wire thin shell to `@gametheca/api-client` (v1-readiness already lists this) so 
 | Doc | Action |
 |---|---|
 | This file | Living contract |
-| `docs/user/thin-client.md` | **Create** at TC-2 |
-| `docs/user/desktop-companion.md` | Contrast table “Companion vs Thin” |
+| `docs/user/thin-client.md` | **Have** — user thin note (TC-2) |
+| `docs/user/desktop-companion.md` | Thin build + token preset cross-link |
 | `docs/user/getting-started.md` | Which client to download |
-| `docs/user/faq.md` | “Why can’t I Install in Thin?” |
+| `docs/user/faq.md` | Thin preset called out on API tokens |
 | `docs/strategy/progress.md` | 1.0 backlog row |
 | `docs/strategy/docs-map.md` | Index |
 | `docs/strategy/v1-readiness.md` | TC-1 in 1.0 scope |

@@ -5,7 +5,12 @@ import re
 from gametheca import db
 from gametheca.models import Game
 from sqlalchemy import select
-from gametheca.utils.game_name_parse import parse_game_label
+from gametheca.utils.game_name_parse import (
+    inject_franchise_apostrophes,
+    is_bare_franchise,
+    normalize_smart_apostrophes,
+    parse_game_label,
+)
 
 LETTER_BUCKET_RE = re.compile(r'^_[a-z0-9#if]$', re.IGNORECASE)
 
@@ -45,10 +50,22 @@ _KNOWN_SUBTITLES = (
     "game of the year",
     "royal edition",
     "dark alliance",
+    "dark arisen",
     "remastered",
     "remake",
 )
-_SMART_APOSTROPHE_RE = re.compile(r"[’‘ʼ´]")
+# Stage C10 — edition peel tails (longest first). Keep full string; add peeled head.
+# Do not peel Remastered/Remake/Edition-alone identity tokens here.
+_EDITION_PEEL_PHRASES = (
+    "collector's edition",
+    "collectors edition",
+    "legendary edition",
+    "collector's",
+    "collectors",
+    "collector",
+    "legendary",
+    "complete",
+)
 # Franchise heads that use a hyphen (not colon) subtitle separator, e.g.
 # "Agatha Christie - Death on the Nile".
 _HYPHEN_SUBTITLE_HEADS = (
@@ -56,10 +73,21 @@ _HYPHEN_SUBTITLE_HEADS = (
 )
 # Franchise heads that take a colon subtitle when at least one token follows
 # (e.g. "Assassin's Creed Odyssey" -> "Assassin's Creed: Odyssey").
+# Match after A8 apostrophe inject (name-resolution.md Stage C).
 _FRANCHISE_COLON_HEADS = (
     "assassin's creed",
+    "baldur's gate",
+    "grand theft auto",
+    "the elder scrolls",
     "far cry",
     "call of duty",
+)
+# Stage C pack/collection peel tails (longest first).
+_PACK_TAIL_PHRASES = (
+    "complete collection",
+    "dlc pack",
+    "collection",
+    "pack",
 )
 _TRAILING_YEAR_RE = re.compile(r'^(?:19|20)\d{2}$')
 
@@ -213,8 +241,46 @@ def _dedupe_variants(items):
 
 
 def _normalize_apostrophes(name):
-    """Map smart quotes to ASCII apostrophe."""
-    return _SMART_APOSTROPHE_RE.sub("'", name)
+    """Map smart quotes to ASCII apostrophe (Stage A8)."""
+    return normalize_smart_apostrophes(name)
+
+
+def _pack_peel_variant(name):
+    """
+    Stage C pack/collection peel: keep full title first; add peeled head.
+
+    Tails: Complete Collection, Collection, DLC Pack, Pack — peel when ≥1
+    head token remains (exact pack titles stay as earlier variants).
+    """
+    if not name:
+        return None
+    lower = name.casefold()
+    for phrase in _PACK_TAIL_PHRASES:
+        suffix = ' ' + phrase
+        if not lower.endswith(suffix):
+            continue
+        head = name[: -len(suffix)].strip(' -_')
+        if head and len(head.split()) >= 1:
+            return head
+    return None
+
+
+def _edition_peel_variant(name):
+    """
+    Stage C10 — keep full title; add head without trailing Complete/Collector/
+    Legendary (and * Edition forms) when ≥2 head tokens remain.
+    """
+    if not name:
+        return None
+    lower = name.casefold()
+    for phrase in _EDITION_PEEL_PHRASES:
+        suffix = ' ' + phrase
+        if not lower.endswith(suffix):
+            continue
+        head = name[: -len(suffix)].strip(' -_')
+        if head and len(head.split()) >= 2:
+            return head
+    return None
 
 
 def _strip_trailing_bare_one(name):
@@ -352,14 +418,22 @@ def generate_goty_variants(base_name):
     """
     Generate ordered IGDB search variants for a folder/game label.
 
-    Covers GOTY spellings, known/heuristic colon subtitles, trailing bare '1'
-    strip, Arabic↔Roman sequel swaps, and a de-apostrophized copy.
-    See docs/strategy/name-resolution.md.
+    Stage C (docs/strategy/name-resolution.md): cleaned as-is (post A8 inject) →
+    franchise/known colon → drop bare 1 → sequel ↔ Roman → heuristic colon (≥4) →
+    year drop → pack/collection peel → edition peel (C10) → de-apostrophe →
+    hyphen/GOTY. C11 bare franchise → single variant only (no auto-import path).
     """
     if not base_name or not str(base_name).strip():
         return []
 
-    base_name = _normalize_apostrophes(str(base_name).strip())
+    # A8 normalize + franchise inject before colon-head match.
+    base_name = inject_franchise_apostrophes(
+        _normalize_apostrophes(str(base_name).strip())
+    )
+    # C11 — bare franchise / ambiguous one-token: do not invent sequel/edition variants.
+    if is_bare_franchise(base_name):
+        return [base_name]
+
     variants = [base_name]
 
     if 'GOTY' in base_name:
@@ -368,7 +442,7 @@ def generate_goty_variants(base_name):
         if no_goty_variant:
             variants.append(no_goty_variant)
 
-    # Known subtitle colon on original (may still include trailing bare 1).
+    # Known subtitle / franchise colon (may still include trailing bare 1).
     known_on_base = _known_subtitle_colon(base_name)
     if known_on_base:
         variants.append(known_on_base)
@@ -387,13 +461,11 @@ def generate_goty_variants(base_name):
         if franchise_stripped:
             variants.append(franchise_stripped)
 
-    # Heuristic colon on title core when known list did not already produce it.
+    # Heuristic colon on title core when known/franchise list did not produce it.
+    # Never invent colon for 3-token titles (A Fishermans Tale).
     core = stripped_one or base_name
     if not _known_subtitle_colon(core) and not _franchise_head_colon_variant(core):
         variants.extend(_colon_subtitle_variants(core))
-
-    # Hyphen ↔ space subtitle variant (e.g. Agatha Christie style).
-    variants.extend(_hyphen_subtitle_variants(base_name))
 
     for seed in (base_name, stripped_one) if stripped_one else (base_name,):
         variants.extend(_sequel_numeral_variants(seed))
@@ -403,7 +475,17 @@ def generate_goty_variants(base_name):
     if year_dropped:
         variants.append(year_dropped)
 
-    # Prefer de-apostrophe of the best colon form (without trailing bare 1) when present.
+    # Pack / collection peel — keep full string earlier; add peeled head.
+    pack_peeled = _pack_peel_variant(base_name)
+    if pack_peeled:
+        variants.append(pack_peeled)
+
+    # C10 edition peel — keep full; add Complete/Collector/Legendary head.
+    edition_peeled = _edition_peel_variant(base_name)
+    if edition_peeled:
+        variants.append(edition_peeled)
+
+    # Prefer de-apostrophe of the best colon form (without trailing bare 1).
     colon_hit = next(
         (v for v in variants if ': ' in v and not v.rstrip().endswith(' 1')),
         None,
@@ -411,6 +493,9 @@ def generate_goty_variants(base_name):
     deap = _deapostrophe_variant(colon_hit or core)
     if deap:
         variants.append(deap)
+
+    # Hyphen ↔ space / Agatha-style subtitle (Stage C row 9).
+    variants.extend(_hyphen_subtitle_variants(base_name))
 
     return _dedupe_variants(variants)
 

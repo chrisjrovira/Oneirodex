@@ -24,9 +24,13 @@
 </style>
 
 <div class="container-settings mt-4 gt-adminpage gt-adminpage--xl">
-    <div class="card">
-        <h2>{{ icons.icon('plug', size=22) }} Integrations</h2>
-        <p>Manage SMTP, IGDB, community chat, artwork providers, and OIDC / SSO.</p>
+    <div class="gt-adminpage-header">
+        <div>
+            <h1 class="gt-adminpage-title">{{ icons.icon('plug', size=26) }} Integrations</h1>
+            <p class="gt-adminpage-lede">SMTP, IGDB, community chat, artwork providers, and OIDC / SSO.</p>
+        </div>
+    </div>
+    <div class="gt-adminpage-panel">
 
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -111,8 +115,78 @@
             <!-- Artwork Providers Tab -->
             <div class="integrations-tab-pane tab-pane fade" id="artwork" role="tabpanel" aria-labelledby="artwork-tab">
                 <div class="tab-content-wrapper">
-                    <h4>{{ icons.icon('image', size=20) }} SteamGridDB Artwork</h4>
+                    <h4 id="steamgriddb">{{ icons.icon('image', size=20) }} SteamGridDB Artwork</h4>
                     {% include 'partials/integrations/steamgriddb_status.html' %}
+
+                    <hr class="my-4">
+                    <h4 id="giantbomb">{{ icons.icon('gamepad', size=20) }} Giant Bomb</h4>
+                    <p class="text-muted mb-2">
+                      Secondary metadata provider. Configure API key under server/env
+                      (<code>GIANTBOMB_API_KEY</code> / GlobalSettings) — deep-linked from
+                      Integrations inventory.
+                    </p>
+                    <p>
+                      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin2.new_server_settings') }}">
+                        Server settings
+                      </a>
+                    </p>
+
+                    <hr class="my-4">
+                    <h4 id="hltb">{{ icons.icon('help', size=20) }} HowLongToBeat</h4>
+                    <p class="text-muted mb-2">
+                      Playtime estimates — toggle under Server Settings
+                      (<code>enableHltbIntegration</code>). No API key required.
+                    </p>
+                    <p>
+                      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin2.new_server_settings') }}">
+                        Server settings
+                      </a>
+                    </p>
+
+                    <hr class="my-4">
+                    <h4 id="meta_quest">{{ icons.icon('gamepad', size=20) }} Meta / Quest ownership</h4>
+                    <p class="text-muted mb-2">
+                      Ownership register only (CSV / optional API mode). Never downloads or installs store binaries.
+                    </p>
+                    <p>
+                      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin2.features_settings_page') }}">Features</a>
+                      <a class="btn btn-outline-primary btn-sm" href="/admin/arr">Acquire / indexers</a>
+                    </p>
+
+                    <hr class="my-4">
+                    <h4 id="ownership">{{ icons.icon('plug', size=20) }} Store ownership</h4>
+                    <p class="text-muted mb-2">
+                      Steam and other DRM stores are register-only — no download queues.
+                    </p>
+                    <p>
+                      <a class="btn btn-outline-primary btn-sm" href="/admin/library_tools">Library tools</a>
+                    </p>
+
+                    <hr class="my-4">
+                    <h4 id="livekit">{{ icons.icon('users', size=20) }} LiveKit voice</h4>
+                    <p class="text-muted mb-2">
+                      Household voice SFU — enable under Features; secrets via <code>LIVEKIT_*</code> env.
+                    </p>
+                    <p>
+                      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin2.features_settings_page') }}">Features</a>
+                      <a class="btn btn-outline-primary btn-sm" href="/admin/ops">Ops voice pulse</a>
+                    </p>
+
+                    <hr class="my-4">
+                    <h4 id="support">{{ icons.icon('envelope', size=20) }} Support inbox</h4>
+                    <p class="text-muted mb-2">In-app Report → admin inbox + GitHub Issues.</p>
+                    <p>
+                      <a class="btn btn-outline-primary btn-sm" href="/admin/support">Open Support inbox</a>
+                    </p>
+
+                    <hr class="my-4">
+                    <h4 id="indexers">{{ icons.icon('download', size=20) }} Indexers / Acquire</h4>
+                    <p class="text-muted mb-2">
+                      Native Torznab/Newznab registry + optional Prowlarr/Jackett/qBit hubs.
+                    </p>
+                    <p>
+                      <a class="btn btn-outline-primary btn-sm" href="/admin/arr">Arr module</a>
+                    </p>
                 </div>
             </div>
 

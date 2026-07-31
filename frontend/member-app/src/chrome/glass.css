@@ -24,6 +24,31 @@
   outline: none;
 }
 
+.gt-btn--primary {
+  border-color: transparent;
+  background: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent-contrast, #0b0d10);
+}
+
+.gt-btn--primary:hover,
+.gt-btn--primary:focus-visible {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 88%, white);
+  color: var(--gt-accent-contrast, #0b0d10);
+}
+
+.gt-btn--secondary {
+  border-color: var(--gt-border, rgba(255, 255, 255, 0.12));
+  background: var(--gt-surface-2, #1c2230);
+  color: var(--gt-text);
+}
+
+.gt-btn--secondary:hover,
+.gt-btn--secondary:focus-visible {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+  color: var(--gt-accent, #2fd67b);
+}
+
 .gt-glass-panel {
   background: var(--gt-glass-bg);
   border: 1px solid var(--gt-glass-border);
@@ -69,6 +94,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   pointer-events: none;
+}
+
+/* Badges never share the platform chip corner — keep chip exclusive bottom-left */
+.game-card:has(.gt-badge-stack--bottom-left) .gt-platform-chip {
+  bottom: 2.45rem;
 }
 
 /* PLAY is a small bar control under badges — badges win true top-left */
@@ -124,4 +154,67 @@
 
 [data-platform] .game-card .gt-platform-chip {
   display: none;
+}
+
+/* Aurora toast host (member SPA — replaces $.notify) */
+.gt-toast-host {
+  position: fixed;
+  z-index: 2400;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.gt-toast {
+  pointer-events: auto;
+  padding: 0.7rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  background: var(--gt-surface, #141820);
+  color: var(--gt-text, #f2f4f8);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  animation: gt-toast-in 0.18s ease-out;
+}
+
+.gt-toast--success {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
+}
+
+.gt-toast--error {
+  border-color: color-mix(in srgb, var(--gt-danger, #ff6b6b) 65%, transparent);
+}
+
+.gt-toast--warn {
+  border-color: color-mix(in srgb, var(--gt-warning, #ffc94a) 65%, transparent);
+}
+
+.gt-toast--out {
+  opacity: 0;
+  transform: translateY(0.35rem);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+@keyframes gt-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.4rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-toast,
+  .gt-toast--out {
+    animation: none;
+    transition: none;
+  }
 }

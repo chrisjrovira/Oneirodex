@@ -36,7 +36,7 @@ async function getDownloadsDir(): Promise<string> {
   return invoke<string>('get_app_subdir', { subdir: 'downloads' })
 }
 
-async function getInstallsDir(): Promise<string> {
+export async function getInstallsDir(): Promise<string> {
   if (!isTauriRuntime()) {
     return '/tmp/gametheca/installs'
   }

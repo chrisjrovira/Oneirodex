@@ -2,29 +2,24 @@
 {% block content %}
 {% import 'partials/icons.html' as icons %}
 
-<!-- Include the custom CSS file -->
 <link rel="stylesheet" href="{{ 'css/admin/admin_system_logs.css'|theme_asset }}">
 
-<!-- Move DataTables CSS to head -->
-{% block head %}
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css">
-{% endblock %}
-
-<div class="container">
-    <div class="glass-panel">
-        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-    </div>
-</div>
-<div class="card">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>System Logs</h2>
+<div class="container-settings gt-adminpage gt-adminpage--xl">
+    <div class="gt-adminpage-header">
+        <div>
+            <h1 class="gt-adminpage-title">{{ icons.icon('clipboard-list', size=26) }} System Logs</h1>
+            <p class="gt-adminpage-lede">Server event history — filter, page, or clear.</p>
+        </div>
+        <div class="gt-adminpage-header-actions">
             <button type="button" class="btn btn-danger" id="clearLogsBtn">
                 {{ icons.icon('trash') }} Clear All Logs
             </button>
         </div>
+    </div>
+
+    <div class="gt-adminpage-panel">
         <div class="table-responsive">
-            <table class="table table-dark table-striped" id="logsTable">
+            <table class="table gt-adminpage-table" id="logsTable">
                 <thead>
                     <tr>
                         <th>Timestamp</th>
@@ -37,7 +32,11 @@
                 <tbody>
                     {% for log in logs.items %}
                     <tr class="log-level-{{ log.event_level.lower() }}">
-                        <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            <time class="gt-locale-time" datetime="{{ log.timestamp.isoformat() }}">
+                                {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                            </time>
+                        </td>
                         <td>{{ log.event_type }}</td>
                         <td>{{ log.event_level }}</td>
                         <td>{{ log.event_text }}</td>
@@ -55,7 +54,7 @@
                     <a class="page-link" href="{{ url_for('admin2.system_logs', page=logs.prev_num) }}">Previous</a>
                 </li>
                 {% endif %}
-                
+
                 {% for page_num in logs.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
                     {% if page_num %}
                         <li class="page-item {% if page_num == logs.page %}active{% endif %}">
@@ -65,7 +64,7 @@
                         <li class="page-item disabled"><span class="page-link">...</span></li>
                     {% endif %}
                 {% endfor %}
-                
+
                 {% if logs.has_next %}
                 <li class="page-item">
                     <a class="page-link" href="{{ url_for('admin2.system_logs', page=logs.next_num) }}">Next</a>
@@ -76,13 +75,15 @@
     </div>
 </div>
 
-
-
-{% block scripts %}
-    <!-- Add DataTables JavaScript -->
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
-    <script src="{{ 'js/admin_system_logs.js'|theme_asset }}"></script>
-{% endblock %}
+<script src="{{ 'js/admin_system_logs.js'|theme_asset }}"></script>
+<script>
+document.querySelectorAll('time.gt-locale-time[datetime]').forEach(function (el) {
+    var d = new Date(el.getAttribute('datetime'));
+    if (!isNaN(d.getTime())) {
+        el.textContent = d.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' });
+    }
+});
+</script>
 
 <!-- Clear Logs Warning Modal -->
 <div id="clearLogsModal" class="modal delete-game-modal" style="display:none; z-index: 15;">

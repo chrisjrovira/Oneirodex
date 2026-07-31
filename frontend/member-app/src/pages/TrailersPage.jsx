@@ -381,6 +381,7 @@ export function TrailersPage({ shellConfig: _shellConfig } = {}) {
   const [request, setRequest] = useState({ id: 0, filters: EMPTY_FILTERS })
   const [trailer, setTrailer] = useState(null)
   const [emptyMessage, setEmptyMessage] = useState(null)
+  const [emptyCta, setEmptyCta] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
   const [settings, setSettings] = useState(DEFAULT_SETTINGS)
@@ -412,6 +413,7 @@ export function TrailersPage({ shellConfig: _shellConfig } = {}) {
     setLoading(true)
     setError(null)
     setEmptyMessage(null)
+    setEmptyCta(null)
     setTrailer(null)
 
     fetchRandomTrailer({ signal: controller.signal, filters: request.filters })
@@ -422,7 +424,22 @@ export function TrailersPage({ shellConfig: _shellConfig } = {}) {
         if (data?.has_videos) {
           setTrailer(data)
         } else {
-          setEmptyMessage(data?.message || 'No games with trailers found')
+          const cta = data?.cta && typeof data.cta === 'object' ? data.cta : null
+          setEmptyMessage(
+            data?.message ||
+              (data?.code === 'no_trailers'
+                ? 'No trailers in your library yet.'
+                : 'No games with trailers found'),
+          )
+          setEmptyCta(
+            cta?.href
+              ? {
+                  id: cta.id || 'library',
+                  label: cta.label || 'Go to Library',
+                  href: cta.href,
+                }
+              : { id: 'library', label: 'Go to Library', href: '/library' },
+          )
         }
         setLoading(false)
       })
@@ -658,9 +675,13 @@ export function TrailersPage({ shellConfig: _shellConfig } = {}) {
       ) : null}
 
       {!loading && !error && emptyMessage ? (
-        <div className="gt-trailers__empty">
+        <div className="gt-trailers__empty" role="status">
           <p>{emptyMessage}</p>
-          <a href="/library">Go to Library</a>
+          {emptyCta?.href ? (
+            <a href={emptyCta.href}>{emptyCta.label || 'Go to Library'}</a>
+          ) : (
+            <a href="/library">Go to Library</a>
+          )}
         </div>
       ) : null}
 

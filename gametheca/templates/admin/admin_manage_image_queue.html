@@ -5,10 +5,6 @@
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 
 <div class="container gt-adminpage gt-adminpage--xl mt-4">
-    <div class="glass-panel">
-        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-    </div>
-
     <div class="gt-adminpage-header">
         <div>
             <h1 class="gt-adminpage-title">{{ icons.icon('image', size=26) }} Image Queue</h1>
@@ -55,7 +51,7 @@
 
     <!-- Image Queue Table -->
     <div class="table-responsive">
-        <table class="table table-dark table-striped">
+        <table class="table gt-adminpage-table">
             <thead>
                 <tr>
                     <th>Game</th>

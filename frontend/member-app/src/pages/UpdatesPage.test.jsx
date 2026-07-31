@@ -4,20 +4,38 @@ import { MemoryRouter } from 'react-router-dom'
 import { UpdatesPage } from './UpdatesPage'
 import * as updatesApi from '../api/updates'
 import * as clientCommands from '../api/clientCommands'
+import * as calendarApi from '../api/calendar'
 
 vi.mock('../api/updates', () => ({
   fetchUpdatesInbox: vi.fn(),
   fetchStoreSearch: vi.fn(),
+  addWantedUpdate: vi.fn(),
 }))
 
 vi.mock('../api/clientCommands', () => ({
   queueClientCommand: vi.fn(),
 }))
 
+vi.mock('../api/calendar', () => ({
+  fetchCalendar: vi.fn(),
+}))
+
 beforeEach(() => {
   updatesApi.fetchUpdatesInbox.mockReset()
   updatesApi.fetchStoreSearch.mockReset()
+  updatesApi.addWantedUpdate?.mockReset?.()
   clientCommands.queueClientCommand.mockReset()
+  calendarApi.fetchCalendar.mockReset()
+  calendarApi.fetchCalendar.mockResolvedValue({
+    releases: [
+      {
+        igdb_id: 9,
+        name: 'Soon Game',
+        first_release_date: '2026-09-01',
+        window: 'upcoming',
+      },
+    ],
+  })
   updatesApi.fetchUpdatesInbox.mockResolvedValue({
     items: [
       {
@@ -62,5 +80,73 @@ test('inbox shows apply action and queues companion update pack', async () => {
       versionUuid: 'upd-1',
     })
   })
-  expect(await screen.findByRole('status')).toHaveTextContent(/queued for companion/i)
+  expect(
+    await screen.findByText((_, el) => el?.classList?.contains('gt-updates__status') && /queued for companion/i.test(el.textContent || '')),
+  ).toBeInTheDocument()
+})
+
+test('manual Refresh shows brief feedback without wiping inbox', async () => {
+  const user = userEvent.setup()
+  let resolveInbox
+  updatesApi.fetchUpdatesInbox
+    .mockResolvedValueOnce({
+      items: [
+        {
+          uuid: 'game-1',
+          name: 'Behind Game',
+          freshness_status: 'behind',
+          local_version: '1.0',
+          remote_version_summary: 'STEAM: 1.1',
+          updates_count: 1,
+          client_connected: false,
+        },
+      ],
+    })
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveInbox = resolve
+        }),
+    )
+
+  render(
+    <MemoryRouter>
+      <UpdatesPage />
+    </MemoryRouter>,
+  )
+
+  expect(await screen.findByText('Behind Game')).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: /^Refresh$/i }))
+  expect(screen.getByRole('status')).toHaveTextContent(/Refreshing/i)
+  expect(screen.getByText('Behind Game')).toBeInTheDocument()
+
+  resolveInbox({
+    items: [
+      {
+        uuid: 'game-1',
+        name: 'Behind Game',
+        freshness_status: 'behind',
+        local_version: '1.0',
+        remote_version_summary: 'STEAM: 1.2',
+        updates_count: 1,
+        client_connected: false,
+      },
+    ],
+  })
+
+  await waitFor(() => {
+    expect(screen.queryByText(/^Refreshing…$/)).not.toBeInTheDocument()
+  })
+})
+
+test('shows upcoming releases teaser with calendar link', async () => {
+  render(
+    <MemoryRouter>
+      <UpdatesPage />
+    </MemoryRouter>,
+  )
+
+  expect(await screen.findByRole('heading', { name: /Upcoming releases/i })).toBeInTheDocument()
+  expect(await screen.findByText('Soon Game')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /Open calendar/i })).toHaveAttribute('href', '/calendar')
 })

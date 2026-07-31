@@ -6,6 +6,7 @@ and never touch the database or the real static/library/themes folder.
 
 import json
 import os
+import re
 import shutil
 
 import pytest
@@ -119,8 +120,33 @@ class TestPresetGeneration:
         aurora = read(str(themes_root / 'aurora' / 'css' / 'gt-tokens.css'))
         assert '--gt-bg: #061018;' in aurora
         assert '--gt-surface: #0a1820;' in aurora
-        # Tokens the preset does not override survive from the source file.
-        assert '--gt-text: #f2f4f8;' in aurora
+        # Wave 2d: presets override text / glass / icon geometry, not only accent.
+        assert '--gt-text: #e0f7fa;' in aurora
+        assert '--gt-icon-stroke: 2.75;' in aurora
+        assert '--gt-crt-opacity: 0.09;' in aurora
+
+    def test_every_preset_pairs_an_icon_pack(self, source_tree, themes_root):
+        install_preset_themes(str(themes_root), str(source_tree))
+        packs = set()
+        for preset in PRESET_THEMES:
+            data = json.loads(read(str(themes_root / preset['slug'] / 'theme.json')))
+            assert data.get('default_icon_pack') == preset['icon_pack']
+            packs.add(preset['icon_pack'])
+        # At least three distinct icon languages across the preset set.
+        assert len(packs) >= 3
+
+    def test_presets_diverge_beyond_accent(self, source_tree, themes_root):
+        install_preset_themes(str(themes_root), str(source_tree))
+        strokes = {
+            slug: re.search(r'--gt-icon-stroke:\s*([^;]+);', read(str(themes_root / slug / 'css' / 'gt-tokens.css'))).group(1)
+            for slug in PRESET_SLUGS
+        }
+        blurs = {
+            slug: re.search(r'--gt-glass-blur:\s*([^;]+);', read(str(themes_root / slug / 'css' / 'gt-tokens.css'))).group(1)
+            for slug in PRESET_SLUGS
+        }
+        assert len(set(strokes.values())) >= 4, strokes
+        assert len(set(blurs.values())) >= 4, blurs
 
     def test_accent_contrast_flips_with_accent_brightness(self):
         light_accent = preset_tokens({'btn_primary': '#7dd3fc', 'bg_dark_30': '', 'bg_dark_40': ''})

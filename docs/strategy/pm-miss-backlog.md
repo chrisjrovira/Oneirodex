@@ -44,6 +44,16 @@
 | **SCRUB-6b** | P1 | human | Search GitHub.com Issues/PR bodies | Checklist only |
 | **OPS-CERT** | P0 | human | Authentik · Hub publish · Unraid rebuild | Outside agents — desktop unsigned only (no code-signing cert) |
 
+## Nice-to-have backlog (post-1.0 — not 1.0 misses)
+
+Priority **nice-to-have** — plans only; do not treat as P0/P1 1.0 gates. Shipped sidecars stay until cutover.
+
+| id | priority | owner | outcome | DoD |
+|---|---|---|---|---|
+| **NCS** | nice-to-have | backend + ops + qa | Native challenge solver replaces TRAWL as Compose `challenge` default; FlareSolverr-compat BYO kept | [native-challenge-solver.md](native-challenge-solver.md) NCS-1…5 |
+| **RTC-N** | nice-to-have | backend + ui + desk + ops | Native mesh/thin SFU; LiveKit demoted to BYO | [native-rtc.md](native-rtc.md) RTC-N1…N5 |
+| **MAL-N** | nice-to-have | backend + ops + qa + docs | Native malware engine; ClamAV demoted to BYO; heuristics tier-0 stays | [native-malware-scan.md](native-malware-scan.md) MAL-N1…N5 |
+
 ## Sequencing (this dispatch)
 
 ```text

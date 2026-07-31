@@ -15,7 +15,8 @@ from gametheca.utils.functions import (
     format_size, square_image, get_folder_size_in_bytes, get_folder_size_in_bytes_updates,
     read_first_nfo_content, download_image, comma_separated_urls, website_category_to_string,
     PLATFORM_IDS, load_scanning_filter_patterns, get_library_count, get_games_count,
-    delete_associations_for_game, sanitize_string_input
+    delete_associations_for_game, sanitize_string_input,
+    is_case_sensitive_flag, normalize_case_sensitive,
 )
 
 
@@ -636,6 +637,50 @@ class TestLoadScanningFilterPatterns:
                 assert insensitive == []
                 assert sensitive == []
                 mock_print.assert_called()
+
+    def test_is_case_sensitive_flag_shapes(self):
+        """Accept bool, yes/no, 1/0, and true/false string forms."""
+        for truthy in (True, 'yes', 'Yes', 'YES', 'true', 'True', '1', 1, 'y', 'on'):
+            assert is_case_sensitive_flag(truthy) is True
+        for falsy in (False, 'no', 'No', 'false', 'False', '0', 0, '', None, 'maybe'):
+            assert is_case_sensitive_flag(falsy) is False
+
+    def test_normalize_case_sensitive_canonical(self):
+        """Write path always stores 'yes'|'no' for the String column."""
+        assert normalize_case_sensitive(True) == 'yes'
+        assert normalize_case_sensitive('yes') == 'yes'
+        assert normalize_case_sensitive(1) == 'yes'
+        assert normalize_case_sensitive('true') == 'yes'
+        assert normalize_case_sensitive(False) == 'no'
+        assert normalize_case_sensitive('no') == 'no'
+        assert normalize_case_sensitive(0) == 'no'
+        assert normalize_case_sensitive(None) == 'no'
+
+    def test_load_scanning_filter_patterns_bool_and_string_shapes(self, db_session):
+        """Load path treats bool and 'yes'|'no' rows the same."""
+        unique = 'CS_SHAPE'
+        yes_str = ReleaseGroup(filter_pattern=f'{unique}_YES_STR', case_sensitive='yes')
+        no_str = ReleaseGroup(filter_pattern=f'{unique}_NO_STR', case_sensitive='no')
+        yes_bool = ReleaseGroup(filter_pattern=f'{unique}_YES_BOOL', case_sensitive=True)
+        no_bool = ReleaseGroup(filter_pattern=f'{unique}_NO_BOOL', case_sensitive=False)
+        yes_one = ReleaseGroup(filter_pattern=f'{unique}_YES_1', case_sensitive='1')
+        no_zero = ReleaseGroup(filter_pattern=f'{unique}_NO_0', case_sensitive='0')
+        yes_true = ReleaseGroup(filter_pattern=f'{unique}_YES_TRUE', case_sensitive='true')
+        for rg in (yes_str, no_str, yes_bool, no_bool, yes_one, no_zero, yes_true):
+            db_session.add(rg)
+        db_session.commit()
+
+        _insensitive, sensitive = load_scanning_filter_patterns()
+        sensitive_dict = {pattern: flag for pattern, flag in sensitive}
+
+        assert sensitive_dict[f'-{unique}_YES_STR'] is True
+        assert sensitive_dict[f'.{unique}_YES_STR'] is True
+        assert sensitive_dict[f'-{unique}_NO_STR'] is False
+        assert sensitive_dict[f'-{unique}_YES_BOOL'] is True
+        assert sensitive_dict[f'-{unique}_NO_BOOL'] is False
+        assert sensitive_dict[f'-{unique}_YES_1'] is True
+        assert sensitive_dict[f'-{unique}_NO_0'] is False
+        assert sensitive_dict[f'-{unique}_YES_TRUE'] is True
 
 
 class TestGetLibraryCount:

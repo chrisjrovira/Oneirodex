@@ -711,6 +711,41 @@
     border-radius: var(--gt-adminpage-radius-sm);
 }
 
+/* Aurora meters (prefer over Bootstrap .progress on densified pages) */
+.gt-meter {
+    position: relative;
+    width: 100%;
+    height: 1.5rem;
+    background: color-mix(in srgb, var(--gt-bg, #000) 55%, var(--gt-surface, #1a1a1a));
+    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    border-radius: var(--gt-adminpage-radius-sm, 8px);
+    overflow: hidden;
+}
+
+.gt-meter__fill {
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--gt-accent, var(--gt-success, #2fd67b)) 45%, var(--gt-bg, #000)),
+        color-mix(in srgb, var(--gt-accent, var(--gt-success, #2fd67b)) 65%, var(--gt-bg, #000))
+    );
+    transition: width 0.35s ease;
+    border-radius: inherit;
+}
+
+.gt-meter__label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gt-text, #fff);
+    text-shadow: 0 0 3px var(--gt-bg, #000);
+    pointer-events: none;
+}
+
 /* --------------------------------------------------------- responsive */
 
 @media (max-width: 768px) {

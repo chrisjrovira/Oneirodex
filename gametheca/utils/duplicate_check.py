@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+from typing import Any
 
 from gametheca.utils.game_name_parse import parse_game_label
 from gametheca.utils.match_scoring import score_candidate
@@ -31,6 +32,55 @@ def folder_basename(path: str | None) -> str:
     return os.path.basename(path.replace('\\', '/').rstrip('/'))
 
 
+def explain_duplicate_match(
+    existing_game,
+    new_full_disk_path: str,
+    new_raw_name: str | None = None,
+    *,
+    title_threshold: float = DEFAULT_TITLE_THRESHOLD,
+) -> dict[str, Any]:
+    """
+    Return a structured match explanation for UI glance + fix logging.
+
+    Keys: is_duplicate, match_reason, match_score, matched_game_uuid, threshold
+    """
+    existing_uuid = getattr(existing_game, 'uuid', None)
+    existing_path = getattr(existing_game, 'full_disk_path', None) or ''
+    existing_norm = normalize_disk_path(existing_path)
+    new_norm = normalize_disk_path(new_full_disk_path)
+
+    if existing_norm and new_norm and existing_norm == new_norm:
+        return {
+            'is_duplicate': True,
+            'match_reason': 'same_path',
+            'match_score': 1.0,
+            'matched_game_uuid': existing_uuid,
+            'threshold': title_threshold,
+        }
+
+    new_label = new_raw_name or folder_basename(new_full_disk_path)
+    existing_label = folder_basename(existing_path) or (getattr(existing_game, 'name', None) or '')
+
+    new_cleaned = parse_game_label(new_label).get('cleaned_name') or new_label
+    existing_cleaned = parse_game_label(existing_label).get('cleaned_name') or existing_label
+    library_name = getattr(existing_game, 'name', None) or ''
+
+    score_vs_folder = score_candidate(new_cleaned, existing_cleaned)
+    score_vs_library = score_candidate(new_cleaned, library_name) if library_name else 0.0
+    best = max(score_vs_folder, score_vs_library)
+    reason = 'title_vs_folder' if score_vs_folder >= score_vs_library else 'title_vs_library_name'
+    is_dup = best >= title_threshold
+    return {
+        'is_duplicate': is_dup,
+        'match_reason': reason if is_dup else 'title_below_threshold',
+        'match_score': round(float(best), 4),
+        'matched_game_uuid': existing_uuid if is_dup else None,
+        'threshold': title_threshold,
+        'score_vs_folder': round(float(score_vs_folder), 4),
+        'score_vs_library': round(float(score_vs_library), 4),
+    }
+
+
 def should_mark_as_duplicate(
     existing_game,
     new_full_disk_path: str,
@@ -46,19 +96,11 @@ def should_mark_as_duplicate(
     package (e.g. "Alan Wake Complete Collection" vs "Alan Wake") — those
     should stay Unmatched for human review / link-existing, not "Duplicate".
     """
-    existing_path = getattr(existing_game, 'full_disk_path', None) or ''
-    if normalize_disk_path(existing_path) and normalize_disk_path(existing_path) == normalize_disk_path(
-        new_full_disk_path
-    ):
-        return True
-
-    new_label = new_raw_name or folder_basename(new_full_disk_path)
-    existing_label = folder_basename(existing_path) or (getattr(existing_game, 'name', None) or '')
-
-    new_cleaned = parse_game_label(new_label).get('cleaned_name') or new_label
-    existing_cleaned = parse_game_label(existing_label).get('cleaned_name') or existing_label
-    library_name = getattr(existing_game, 'name', None) or ''
-
-    score_vs_folder = score_candidate(new_cleaned, existing_cleaned)
-    score_vs_library = score_candidate(new_cleaned, library_name) if library_name else 0.0
-    return max(score_vs_folder, score_vs_library) >= title_threshold
+    return bool(
+        explain_duplicate_match(
+            existing_game,
+            new_full_disk_path,
+            new_raw_name,
+            title_threshold=title_threshold,
+        )['is_duplicate']
+    )

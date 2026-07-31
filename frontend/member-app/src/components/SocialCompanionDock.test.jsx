@@ -87,6 +87,19 @@ test('launcher opens collapsed dock', async () => {
   })
 })
 
+test('gt-open-social-companion event opens the dock', async () => {
+  render(
+    <MemoryRouter>
+      <SocialCompanionDock mode="dock" defaultOpen={false} />
+    </MemoryRouter>,
+  )
+  expect(screen.getByRole('button', { name: /open friends companion/i })).toBeInTheDocument()
+  window.dispatchEvent(new CustomEvent('gt-open-social-companion'))
+  await waitFor(() => {
+    expect(screen.getByLabelText(/friends companion/i)).toBeInTheDocument()
+  })
+})
+
 test('closed dock never opens activity EventSource', async () => {
   render(
     <MemoryRouter>

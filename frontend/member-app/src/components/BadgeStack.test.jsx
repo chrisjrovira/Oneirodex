@@ -5,6 +5,29 @@ import { dismissBadge, filterDismissedBadges } from '../utils/badgeDismiss'
 
 const now = new Date('2026-07-23T12:00:00Z')
 
+test('collectBadgeSignals includes EXP/EMU/TOOL for non-game kinds', () => {
+  expect(
+    collectBadgeSignals({ item_kind: 'experience' }, { now }).map((b) => b.kind),
+  ).toEqual(['EXP'])
+  expect(
+    collectBadgeSignals({ content_kind: 'emulator' }, { now }).map((b) => b.kind),
+  ).toEqual(['EMU'])
+  expect(collectBadgeSignals({ item_kind: 'tool' }, { now }).map((b) => b.kind)).toEqual([
+    'TOOL',
+  ])
+  expect(collectBadgeSignals({ item_kind: 'game' }, { now })).toEqual([])
+})
+
+test('BadgeStack renders EMU badge for emulator kind', () => {
+  render(
+    <BadgeStack
+      game={{ item_kind: 'emulator', name: 'Emulator Fixture' }}
+      now={now}
+    />,
+  )
+  expect(screen.getByTitle(/emulator/i)).toHaveTextContent('EMU')
+})
+
 test('resolveBadgeCorner prefers top-left and shifts on title collision', () => {
   expect(resolveBadgeCorner('top-left', false)).toBe('top-left')
   expect(resolveBadgeCorner('top-left', true)).toBe('bottom-left')
@@ -12,6 +35,12 @@ test('resolveBadgeCorner prefers top-left and shifts on title collision', () => 
   // tried before top-right when cascading away from a collision.
   expect(resolveBadgeCorner('bottom-left', true)).toBe('bottom-right')
   expect(resolveBadgeCorner('bottom-right', true)).toBe('top-right')
+})
+
+test('resolveBadgeCorner keeps VR top-left and skips platform chip corner', () => {
+  expect(resolveBadgeCorner('top-left', true, { hasVr: true })).toBe('top-left')
+  expect(resolveBadgeCorner('top-left', true, { hasPlatformChip: true })).toBe('bottom-right')
+  expect(resolveBadgeCorner('bottom-left', false, { hasPlatformChip: true })).toBe('top-left')
 })
 
 test('collectBadgeSignals orders NEW and freshness', () => {
@@ -106,6 +135,20 @@ test('VR badge joins top-left transitional stack and is not dismissable', () => 
   // Even if a stale dismiss store listed VR, filter always keeps it.
   expect(filtered.some((b) => b.kind === 'VR')).toBe(true)
   expect(filtered.map((b) => b.kind)).toContain('VR')
+})
+
+test('VR stays top-left even when title collides or platform chip is present', () => {
+  render(
+    <BadgeStack
+      game={{ is_vr: true, name: 'VR Collide', date_identified: '2026-07-20T00:00:00Z' }}
+      collidesWithTitle
+      hasPlatformChip
+      now={now}
+    />,
+  )
+  const stack = screen.getByLabelText(/game badges/i)
+  expect(stack).toHaveAttribute('data-corner', 'top-left')
+  expect(stack).toHaveAttribute('data-vr-in-stack', 'top-left')
 })
 
 test('VR-only stack still anchors top-left', () => {

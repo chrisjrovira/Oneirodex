@@ -30,11 +30,36 @@
   gap: 0.75rem;
 }
 
+.gt-lightbox__toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .gt-lightbox__title {
   margin: 0;
   font-size: 0.95rem;
   color: var(--gt-text-muted, #c4ccd8);
   font-weight: 600;
+}
+
+.gt-lightbox__fs {
+  min-height: 2.2rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 40%, transparent);
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 14%, transparent);
+  color: var(--gt-accent, #2fd67b);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gt-lightbox__fs-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--gt-text-muted, #c4ccd8);
 }
 
 .gt-lightbox__close {
@@ -55,6 +80,8 @@
   gap: 0.5rem;
   min-height: 0;
   flex: 1;
+  background: #0b0d10;
+  border-radius: 8px;
 }
 
 .gt-lightbox__img {
@@ -62,6 +89,17 @@
   width: 100%;
   max-height: min(78vh, 780px);
   object-fit: contain;
+  border-radius: 8px;
+  background: #0b0d10;
+  cursor: zoom-in;
+}
+
+.gt-lightbox__video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: min(78vh, 780px);
+  border: 0;
   border-radius: 8px;
   background: #0b0d10;
 }

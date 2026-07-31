@@ -6,6 +6,7 @@
   --gt-text-muted: #c4ccd8;
   --gt-accent: #2fd67b;
   --gt-accent-contrast: #0b0d10;
+  --gt-accent-2: #86efac;
   /* Semantic status colours. Deliberately not part of preset_tokens(): a
      failure must read as red in every theme. Each clears 4.5:1 against the
      lightest surface any preset produces (#362824), so they are safe as body
@@ -28,4 +29,10 @@
   --gt-platform-motion: none;
   --font-ui: "Segoe UI", "Helvetica Neue", sans-serif;
   --font-display: "Arial Black", "Segoe UI", sans-serif;
+  /* Icon geometry — presets override; icon packs read these with pack fallbacks */
+  --gt-icon-stroke: 2;
+  --gt-icon-linecap: round;
+  --gt-icon-linejoin: round;
+  --gt-icon-fill: none;
+  --gt-icon-fill-opacity: 1;
 }

@@ -84,49 +84,81 @@
         </div>
     </section>
 
+    <section class="gt-themes-block" aria-labelledby="gt-themes-loading-heading">
+        <div class="gt-themes-block-head">
+            <h2 id="gt-themes-loading-heading">Loading icons</h2>
+            <p class="gt-themes-block-hint">
+                Animated system motifs for Auto Scan and other loading surfaces.
+                Rotate picks a random motif per session; lock pins one for everyone.
+            </p>
+        </div>
+        <form id="gtLoadingIconForm" class="gt-themes-loading" data-config-url="/api/admin/loading-icon/config">
+            <div class="gt-themes-loading__modes" role="radiogroup" aria-label="Loading icon mode">
+                <label class="gt-themes-loading__mode">
+                    <input type="radio" name="loading_icon_mode" value="rotate" checked>
+                    <span>Rotate catalogue</span>
+                </label>
+                <label class="gt-themes-loading__mode">
+                    <input type="radio" name="loading_icon_mode" value="lock">
+                    <span>Lock to one</span>
+                </label>
+            </div>
+            <div class="gt-themes-loading__pick">
+                <label class="gt-themes-upload-label" for="gtLoadingIconId">Motif</label>
+                <select id="gtLoadingIconId" name="loading_icon_id" class="form-select gt-themes-loading__select" disabled>
+                    <option value="">Loading catalogue…</option>
+                </select>
+                <div id="gtLoadingIconPreview" class="gt-themes-loading__preview" aria-hidden="true"></div>
+            </div>
+            <div class="gt-themes-loading__actions">
+                <button type="submit" class="btn btn-primary gt-themes-btn">Save loading icons</button>
+                <p class="theme-apply-status" id="gtLoadingIconStatus" role="status" aria-live="polite"></p>
+            </div>
+        </form>
+    </section>
+
     <section class="gt-themes-block" aria-labelledby="gt-themes-installed-heading">
         <div class="gt-themes-block-head">
             <h2 id="gt-themes-installed-heading">Installed</h2>
             <p class="gt-themes-block-hint">
                 Themes on the library volume. Delete removes custom uploads only.
+                After theme CSS source edits: use <strong>Reset Default Themes</strong> so volume copies pick up tokens/motifs.
             </p>
         </div>
-        <div class="themes-grid">
-            <article class="theme-card default-theme{% if active_theme == 'default' %} is-active{% endif %}">
-                <header class="theme-card-head">
-                    <h3>{{ default_theme.name }}</h3>
-                    <span class="theme-card-badge">Default</span>
-                </header>
-                <dl class="theme-card-meta">
-                    <div><dt>Author</dt><dd>{{ default_theme.author }}</dd></div>
-                    <div><dt>Released</dt><dd>{{ default_theme.release_date }}</dd></div>
-                </dl>
-                {% if default_theme.description %}
-                <p class="theme-card-desc">{{ default_theme.description }}</p>
-                {% endif %}
-            </article>
+        <div class="themes-list" role="list" aria-label="Installed themes">
+            <div class="theme-list-row default-theme{% if active_theme == 'default' %} is-active{% endif %}" role="listitem">
+                <div class="theme-list-row__main">
+                    <div class="theme-list-row__title">
+                        <strong>{{ default_theme.name }}</strong>
+                        <span class="theme-card-badge">Default</span>
+                    </div>
+                    <p class="theme-list-row__meta">
+                        {{ default_theme.author }} · {{ default_theme.release_date }}
+                        {% if default_theme.description %} — {{ default_theme.description }}{% endif %}
+                    </p>
+                </div>
+            </div>
             {% for theme in themes %}
             {% if theme.folder != 'default' %}
-            <article class="theme-card{% if active_theme == theme.folder %} is-active{% endif %}">
-                <header class="theme-card-head">
-                    <h3>{{ theme.name }}</h3>
-                    {% if active_theme == theme.folder %}<span class="theme-card-badge theme-card-badge--live">Active</span>{% endif %}
-                </header>
-                <dl class="theme-card-meta">
-                    <div><dt>Folder</dt><dd><code>{{ theme.folder }}</code></dd></div>
-                    <div><dt>Author</dt><dd>{{ theme.author }}</dd></div>
-                    <div><dt>Released</dt><dd>{{ theme.release_date }}</dd></div>
-                </dl>
-                {% if theme.description %}
-                <p class="theme-card-desc">{{ theme.description }}</p>
-                {% endif %}
+            <div class="theme-list-row{% if active_theme == theme.folder %} is-active{% endif %}" role="listitem">
+                <div class="theme-list-row__main">
+                    <div class="theme-list-row__title">
+                        <strong>{{ theme.name }}</strong>
+                        {% if active_theme == theme.folder %}<span class="theme-card-badge theme-card-badge--live">Active</span>{% endif %}
+                    </div>
+                    <p class="theme-list-row__meta">
+                        <code>{{ theme.folder }}</code>
+                        · {{ theme.author }} · {{ theme.release_date }}
+                        {% if theme.description %} — {{ theme.description }}{% endif %}
+                    </p>
+                </div>
                 <form action="{{ url_for('admin2.delete_theme', theme_name=theme.folder) }}" method="POST"
-                      class="theme-card-actions"
+                      class="theme-list-row__actions"
                       onsubmit="return confirm('Delete this theme?');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    <button type="submit" class="btn btn-outline-light btn-sm">Delete</button>
                 </form>
-            </article>
+            </div>
             {% endif %}
             {% endfor %}
         </div>
@@ -137,57 +169,197 @@
 (function () {
     const grid = document.getElementById('adminThemeGrid');
     const status = document.getElementById('adminThemeStatus');
-    if (!grid) {
+    // Paired icon packs — keep in sync with PRESET_THEMES in preset_themes.py
+    const PRESET_ICON_PACKS = {
+        aurora: 'pixel',
+        ember: 'filled',
+        violet: 'soft',
+        forest: 'outline',
+        ocean: 'duotone',
+        rose: 'soft',
+        mono: 'mono',
+        sunset: 'filled',
+        ice: 'soft',
+        default: 'outline',
+    };
+
+    if (grid) {
+        function setStatus(message, isError) {
+            if (status) {
+                status.textContent = message;
+                status.classList.toggle('is-error', !!isError);
+            }
+        }
+
+        grid.addEventListener('click', function (event) {
+            const swatch = event.target.closest('.theme-swatch');
+            if (!swatch || swatch.disabled) {
+                return;
+            }
+
+            const theme = swatch.dataset.theme;
+            grid.querySelectorAll('.theme-swatch').forEach(function (button) {
+                button.disabled = true;
+            });
+            setStatus('Applying ' + swatch.title + '\u2026', false);
+
+            fetch(grid.dataset.applyUrl, {
+                method: 'POST',
+                headers: CSRFUtils.getHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({
+                    theme: theme,
+                    icon_pack: PRESET_ICON_PACKS[theme] || null,
+                })
+            })
+            .then(function (response) {
+                return response.json().then(function (data) {
+                    return { ok: response.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                if (!result.ok || !result.data.success) {
+                    throw new Error(result.data.error || 'Failed to apply theme');
+                }
+                grid.querySelectorAll('.theme-swatch').forEach(function (button) {
+                    const isSelected = button.dataset.theme === theme;
+                    button.classList.toggle('is-selected', isSelected);
+                    button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+                });
+                setStatus('Theme applied. Reloading\u2026', false);
+                window.location.reload();
+            })
+            .catch(function (error) {
+                console.error('Error:', error);
+                setStatus(error.message, true);
+                grid.querySelectorAll('.theme-swatch').forEach(function (button) {
+                    button.disabled = false;
+                });
+            });
+        });
+    }
+
+    // ---- Loading icon lock / rotate ----
+    const form = document.getElementById('gtLoadingIconForm');
+    if (!form) {
         return;
     }
+    const select = document.getElementById('gtLoadingIconId');
+    const preview = document.getElementById('gtLoadingIconPreview');
+    const loadStatus = document.getElementById('gtLoadingIconStatus');
+    const configUrl = form.dataset.configUrl;
 
-    function setStatus(message, isError) {
-        if (status) {
-            status.textContent = message;
-            status.classList.toggle('is-error', !!isError);
+    function setLoadStatus(message, isError) {
+        if (loadStatus) {
+            loadStatus.textContent = message || '';
+            loadStatus.classList.toggle('is-error', !!isError);
         }
     }
 
-    grid.addEventListener('click', function (event) {
-        const swatch = event.target.closest('.theme-swatch');
-        if (!swatch || swatch.disabled) {
+    function selectedMode() {
+        const checked = form.querySelector('input[name="loading_icon_mode"]:checked');
+        return checked ? checked.value : 'rotate';
+    }
+
+    function syncLockUi() {
+        const lock = selectedMode() === 'lock';
+        if (select) {
+            select.disabled = !lock;
+            select.required = lock;
+        }
+        refreshPreview();
+    }
+
+    function refreshPreview() {
+        if (!preview || !window.GtLoadingMotifs) {
             return;
         }
+        preview.innerHTML = '';
+        const mode = selectedMode();
+        const id = mode === 'lock' ? select.value : null;
+        if (mode === 'lock' && id) {
+            preview.appendChild(window.GtLoadingMotifs.buildNode(id, 'gt-loading-motif--lg'));
+        } else if (window.GtLoadingMotifs.CATALOGUE) {
+            window.GtLoadingMotifs.CATALOGUE.forEach(function (motifId) {
+                preview.appendChild(window.GtLoadingMotifs.buildNode(motifId, 'gt-loading-motif--sm'));
+            });
+        }
+    }
 
-        const theme = swatch.dataset.theme;
-        grid.querySelectorAll('.theme-swatch').forEach(function (button) {
-            button.disabled = true;
-        });
-        setStatus('Applying ' + swatch.title + '\u2026', false);
+    form.querySelectorAll('input[name="loading_icon_mode"]').forEach(function (input) {
+        input.addEventListener('change', syncLockUi);
+    });
+    if (select) {
+        select.addEventListener('change', refreshPreview);
+    }
 
-        fetch(grid.dataset.applyUrl, {
-            method: 'POST',
-            headers: CSRFUtils.getHeaders({ 'Content-Type': 'application/json' }),
-            body: JSON.stringify({ theme: theme })
+    fetch(configUrl, {
+        credentials: 'same-origin',
+        headers: CSRFUtils.getHeaders({ Accept: 'application/json' }),
+    })
+    .then(function (res) {
+        if (!res.ok) throw new Error('Could not load loading-icon settings');
+        return res.json();
+    })
+    .then(function (data) {
+        const catalogue = data.catalogue || [];
+        if (select) {
+            select.innerHTML = '';
+            catalogue.forEach(function (row) {
+                const opt = document.createElement('option');
+                opt.value = row.id;
+                opt.textContent = row.name || row.id;
+                if (row.description) opt.title = row.description;
+                select.appendChild(opt);
+            });
+            if (data.loading_icon_id || data.stored_id) {
+                select.value = data.loading_icon_id || data.stored_id;
+            } else if (catalogue[0]) {
+                select.value = catalogue[0].id;
+            }
+        }
+        const mode = data.stored_mode || data.loading_icon_mode || 'rotate';
+        const radio = form.querySelector('input[name="loading_icon_mode"][value="' + mode + '"]');
+        if (radio) radio.checked = true;
+        syncLockUi();
+    })
+    .catch(function (err) {
+        setLoadStatus(err.message || 'Failed to load settings', true);
+    });
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const mode = selectedMode();
+        const payload = { loading_icon_mode: mode };
+        if (mode === 'lock') {
+            payload.loading_icon_id = select.value;
+        }
+        setLoadStatus('Saving\u2026', false);
+        fetch(configUrl, {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: CSRFUtils.getHeaders({
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            }),
+            body: JSON.stringify(payload),
         })
-        .then(function (response) {
-            return response.json().then(function (data) {
-                return { ok: response.ok, data: data };
+        .then(function (res) {
+            return res.json().then(function (data) {
+                return { ok: res.ok, data: data };
             });
         })
         .then(function (result) {
-            if (!result.ok || !result.data.success) {
-                throw new Error(result.data.error || 'Failed to apply theme');
+            if (!result.ok) {
+                throw new Error(result.data.error || 'Save failed');
             }
-            grid.querySelectorAll('.theme-swatch').forEach(function (button) {
-                const isSelected = button.dataset.theme === theme;
-                button.classList.toggle('is-selected', isSelected);
-                button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
-            });
-            setStatus('Theme applied. Reloading\u2026', false);
-            window.location.reload();
+            if (window.GtLoadingMotifs) {
+                window.GtLoadingMotifs.clearCache();
+            }
+            setLoadStatus('Saved.', false);
+            syncLockUi();
         })
-        .catch(function (error) {
-            console.error('Error:', error);
-            setStatus(error.message, true);
-            grid.querySelectorAll('.theme-swatch').forEach(function (button) {
-                button.disabled = false;
-            });
+        .catch(function (err) {
+            setLoadStatus(err.message || 'Save failed', true);
         });
     });
 })();

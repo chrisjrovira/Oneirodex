@@ -38,6 +38,8 @@ function getCsrfToken() {
   return document.querySelector('input[name="csrf_token"]')?.value || ''
 }
 
+const LONG_PRESS_MS = 480
+
 export function GameCard({
   game,
   showPlayStatus = false,
@@ -45,8 +47,13 @@ export function GameCard({
   enableDeleteOnDisk = false,
   onToggleFavorite,
   hidePlatformChip = false,
+  selectionEnabled = false,
+  selected = false,
+  onSelectionToggle,
 }) {
   const cardRef = useRef(null)
+  const longPressTimer = useRef(0)
+  const longPressFired = useRef(false)
   const [isFavorite, setIsFavorite] = useState(Boolean(game.is_favorite))
   const [favoritePending, setFavoritePending] = useState(false)
   const [status, setStatus] = useState(game.user_status || '')
@@ -71,6 +78,12 @@ export function GameCard({
     setMenuOpen(false)
     setStatusOpen(false)
   }, [game.uuid, game.cover_url, game.is_favorite, game.user_status])
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(longPressTimer.current)
+    }
+  }, [])
 
   useEffect(() => {
     if (!menuOpen && !statusOpen) {
@@ -119,14 +132,88 @@ export function GameCard({
     }
   }
 
+  const clearLongPress = () => {
+    window.clearTimeout(longPressTimer.current)
+    longPressTimer.current = 0
+  }
+
+  const handleSelectPointerDown = (event) => {
+    if (!selectionEnabled || !onSelectionToggle) {
+      return
+    }
+    if (event.button != null && event.button !== 0) {
+      return
+    }
+    const tag = event.target?.closest?.('button, a, input, select, textarea, label')
+    if (tag) {
+      return
+    }
+    longPressFired.current = false
+    clearLongPress()
+    longPressTimer.current = window.setTimeout(() => {
+      longPressFired.current = true
+      onSelectionToggle(game.uuid, { additive: true, fromLongPress: true })
+    }, LONG_PRESS_MS)
+  }
+
+  const handleSelectClick = (event) => {
+    if (!selectionEnabled || !onSelectionToggle) {
+      return
+    }
+    if (longPressFired.current) {
+      event.preventDefault()
+      event.stopPropagation()
+      longPressFired.current = false
+      return
+    }
+    if (event.shiftKey) {
+      event.preventDefault()
+      event.stopPropagation()
+      onSelectionToggle(game.uuid, { range: true, shiftKey: true })
+    }
+  }
+
+  const containerClass = [
+    'game-card-container',
+    selectionEnabled ? 'is-selectable' : '',
+    selected ? 'is-selected' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <div className="game-card-container" ref={cardRef}>
+    <div
+      className={containerClass}
+      ref={cardRef}
+      data-selected={selected ? 'true' : 'false'}
+      onPointerDown={handleSelectPointerDown}
+      onPointerUp={clearLongPress}
+      onPointerLeave={clearLongPress}
+      onPointerCancel={clearLongPress}
+      onClickCapture={handleSelectClick}
+    >
       <span className="visually-hidden">{game.name}</span>
       <div
         className="game-card"
         data-name={game.name}
         data-genres={(game.genres || []).join(', ')}
       >
+        {selectionEnabled ? (
+          <input
+            type="checkbox"
+            className="gt-tile-select"
+            checked={selected}
+            aria-label={`Select ${game.name}`}
+            onChange={(event) => {
+              onSelectionToggle?.(game.uuid, {
+                additive: true,
+                checked: event.target.checked,
+              })
+            }}
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+          />
+        ) : null}
         <button
           id={`menuButton-${game.uuid}`}
           type="button"
@@ -394,6 +481,7 @@ export function GameCard({
           game={game}
           preferredCorner="top-left"
           collidesWithTitle={Boolean(game.badge_title_collision)}
+          hasPlatformChip={!hidePlatformChip && Boolean(game.library_platform)}
         />
       </div>
     </div>

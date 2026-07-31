@@ -1,7 +1,7 @@
 # Security suite — GameTheca
 
 **Date:** 2026-07-26 · **Status:** active  
-**Related:** [social-av.md](social-av.md) · full-app review canvas
+**Related:** [social-av.md](social-av.md) · full-app review canvas · **malware (shipped):** `ENABLE_MALWARE_SCAN` + heuristics + optional ClamAV — [settings-modules.md](../admin/settings-modules.md) · **post-1.0 nice-to-have:** [native-malware-scan.md](native-malware-scan.md) (MAL-N1…N5 — native engine; ClamAV stays optional until cutover)
 
 ## Baseline (already strong)
 

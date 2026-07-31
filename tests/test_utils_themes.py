@@ -128,6 +128,9 @@ class TestGetInstalledThemes:
         mock_listdir.return_value = ['theme1', 'theme2', 'invalid_folder']
         
         def isdir_side_effect(path):
+            # theme_folder itself must be a dir (guard in get_installed_themes)
+            if path == theme_manager.theme_folder:
+                return True
             return 'theme1' in path or 'theme2' in path
         
         def exists_side_effect(path):

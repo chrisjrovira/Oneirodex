@@ -22,8 +22,9 @@ class PluginInfo:
 _BUILTIN: list[PluginInfo] = [
     PluginInfo('provider.igdb', 'IGDB', 'metadata', 'Primary game metadata provider'),
     PluginInfo('provider.steamgriddb', 'SteamGridDB', 'metadata', 'Cover / hero art'),
-    PluginInfo('arr.prowlarr', 'Prowlarr', 'acquire', 'BYO indexer manager'),
-    PluginInfo('arr.jackett', 'Jackett', 'acquire', 'BYO indexer proxy'),
+    PluginInfo('arr.native', 'Native indexers', 'acquire', 'Torznab/Newznab registry + curated presets'),
+    PluginInfo('arr.prowlarr', 'Prowlarr', 'acquire', 'Optional BYO indexer manager hub'),
+    PluginInfo('arr.jackett', 'Jackett', 'acquire', 'Optional BYO indexer proxy hub'),
     PluginInfo('client.qbittorrent', 'qBittorrent', 'download', 'Primary torrent client'),
     PluginInfo('client.transmission', 'Transmission', 'download', 'Optional torrent client'),
     PluginInfo('client.deluge', 'Deluge', 'download', 'Optional torrent client'),
@@ -54,7 +55,9 @@ def _runtime_status_map() -> dict[str, str]:
         for row in connector_status():
             cid = row.get('id')
             configured = bool(row.get('configured'))
-            if cid == 'prowlarr':
+            if cid == 'native_indexers':
+                status['arr.native'] = 'configured' if configured else 'available'
+            elif cid == 'prowlarr':
                 status['arr.prowlarr'] = 'configured' if configured else 'available'
             elif cid == 'jackett':
                 status['arr.jackett'] = 'configured' if configured else 'available'

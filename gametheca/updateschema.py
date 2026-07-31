@@ -143,10 +143,10 @@ class DatabaseManager:
         ADD COLUMN IF NOT EXISTS use_turbo_image_downloads BOOLEAN DEFAULT TRUE;
 
         ALTER TABLE global_settings
-        ADD COLUMN IF NOT EXISTS turbo_download_threads INTEGER DEFAULT 8;
+        ADD COLUMN IF NOT EXISTS turbo_download_threads INTEGER DEFAULT 4;
 
         ALTER TABLE global_settings
-        ADD COLUMN IF NOT EXISTS turbo_download_batch_size INTEGER DEFAULT 200;
+        ADD COLUMN IF NOT EXISTS turbo_download_batch_size INTEGER DEFAULT 100;
 
         ALTER TABLE global_settings
         ADD COLUMN IF NOT EXISTS scan_thread_count INTEGER DEFAULT 1;
@@ -193,6 +193,14 @@ class DatabaseManager:
         BEGIN
             IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'Stopping' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'status_enum')) THEN
                 ALTER TYPE status_enum ADD VALUE 'Stopping';
+            END IF;
+        END $$;
+
+        -- Add 'Queued' value for FIFO scan requests while another job is Running
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'Queued' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'status_enum')) THEN
+                ALTER TYPE status_enum ADD VALUE 'Queued';
             END IF;
         END $$;
 
@@ -706,6 +714,12 @@ class DatabaseManager:
         ALTER TABLE global_settings
         ADD COLUMN IF NOT EXISTS admin_notify_support BOOLEAN DEFAULT TRUE;
 
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS loading_icon_mode VARCHAR(16) DEFAULT 'rotate';
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS loading_icon_id VARCHAR(64);
+
         CREATE TABLE IF NOT EXISTS support_tickets (
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -895,6 +909,37 @@ class DatabaseManager:
         CREATE INDEX IF NOT EXISTS ix_games_name ON games(name);
         CREATE INDEX IF NOT EXISTS ix_games_date_created ON games(date_created DESC);
         CREATE INDEX IF NOT EXISTS ix_games_rating ON games(rating);
+
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS matched_game_uuid VARCHAR(36);
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS match_reason VARCHAR(64);
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS match_score DOUBLE PRECISION;
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS suggested_kind VARCHAR(16);
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS suggested_candidate_name VARCHAR(255);
+        CREATE INDEX IF NOT EXISTS ix_unmatched_folders_matched_game_uuid ON unmatched_folders(matched_game_uuid);
+
+        ALTER TABLE games ADD COLUMN IF NOT EXISTS item_kind VARCHAR(16) DEFAULT 'game';
+        UPDATE games SET item_kind = 'game' WHERE item_kind IS NULL;
+        CREATE INDEX IF NOT EXISTS ix_games_item_kind ON games(item_kind);
+
+        ALTER TABLE games ADD COLUMN IF NOT EXISTS path_status VARCHAR(16);
+        CREATE INDEX IF NOT EXISTS ix_games_path_status ON games(path_status);
+
+        CREATE TABLE IF NOT EXISTS duplicate_fix_logs (
+            id SERIAL PRIMARY KEY,
+            unmatched_folder_id VARCHAR(36),
+            folder_path VARCHAR(1024) NOT NULL,
+            matched_game_uuid VARCHAR(36),
+            match_reason VARCHAR(64),
+            match_score DOUBLE PRECISION,
+            action VARCHAR(32) NOT NULL,
+            actor_user_id INTEGER REFERENCES users(id),
+            notes VARCHAR(512),
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS ix_duplicate_fix_logs_created_at ON duplicate_fix_logs(created_at DESC);
+        CREATE INDEX IF NOT EXISTS ix_duplicate_fix_logs_matched_game ON duplicate_fix_logs(matched_game_uuid);
+
+        ALTER TABLE chat_channels ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP;
 
         """
         print("Upgrading database to the latest schema")

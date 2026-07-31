@@ -59,23 +59,63 @@ document.addEventListener('DOMContentLoaded', function() {
         keyboard: true,
         focus: true
     });
+    var deleteWarningMessage = document.getElementById('deleteWarningMessage');
+    var deleteConfirmTyped = document.getElementById('deleteConfirmTyped');
+    var deleteConfirmExpected = document.getElementById('deleteConfirmExpected');
+    var DELETE_ALL_PHRASE = 'DELETE ALL LIBRARIES';
+
+    function syncTypedConfirm(expected) {
+        var phrase = String(expected || '').trim();
+        if (deleteConfirmExpected) {
+            deleteConfirmExpected.textContent = phrase;
+        }
+        if (deleteConfirmTyped) {
+            deleteConfirmTyped.value = '';
+            deleteConfirmTyped.placeholder = phrase;
+            deleteConfirmTyped.focus();
+        }
+        if (confirmDeleteButton) {
+            confirmDeleteButton.disabled = true;
+        }
+    }
+
+    function typedMatches(expected) {
+        if (!deleteConfirmTyped) return false;
+        return deleteConfirmTyped.value.trim() === String(expected || '').trim();
+    }
+
+    if (deleteConfirmTyped) {
+        deleteConfirmTyped.addEventListener('input', function () {
+            var expected = deleteConfirmExpected ? deleteConfirmExpected.textContent : '';
+            if (confirmDeleteButton) {
+                confirmDeleteButton.disabled = !typedMatches(expected);
+            }
+        });
+    }
 
     // Handle individual delete buttons
     document.querySelectorAll('.delete-btn').forEach(button => {
         button.addEventListener('click', function(event) {
             event.preventDefault();
             event.stopPropagation();
-            console.log('clicked delete button');
             var libraryUuid = this.getAttribute('data-library-uuid');
-            document.querySelector('#deleteWarningModal .modal-body').textContent = 'Are you sure you want to delete this library? This action cannot be undone.';
+            var libraryName = (this.getAttribute('data-library-name') || '').trim() || libraryUuid;
+            if (deleteWarningMessage) {
+                deleteWarningMessage.textContent =
+                    'Delete library “' + libraryName + '”? This removes the library record and cannot be undone.';
+            }
             deleteForm.action = baseDeleteUrl + libraryUuid;
             confirmDeleteButton.textContent = 'Confirm Delete';
+            syncTypedConfirm(libraryName);
 
             deleteWarningModal.show();
 
             confirmDeleteButton.onclick = function(confirmEvent) {
                 confirmEvent.preventDefault();
                 confirmEvent.stopPropagation();
+                if (!typedMatches(libraryName)) {
+                    return;
+                }
                 // Hide the modal
                 deleteWarningModal.hide();
                 // Show the spinner with initial progress
@@ -121,13 +161,20 @@ document.addEventListener('DOMContentLoaded', function() {
     var deleteAllGamesBtn = document.getElementById('deleteAllGamesBtn');
     if (deleteAllGamesBtn) {
         deleteAllGamesBtn.addEventListener('click', function() {
-            document.querySelector('#deleteWarningModal .modal-body').textContent = 'Are you sure you want to delete all libraries? This action cannot be undone.';
+            if (deleteWarningMessage) {
+                deleteWarningMessage.textContent =
+                    'Delete all libraries? This action cannot be undone.';
+            }
             deleteForm.action = deleteAllUrl;
             confirmDeleteButton.textContent = 'Confirm Delete All Libraries';
+            syncTypedConfirm(DELETE_ALL_PHRASE);
 
             deleteWarningModal.show();
             
             confirmDeleteButton.onclick = function() {
+                if (!typedMatches(DELETE_ALL_PHRASE)) {
+                    return;
+                }
                 // Hide the modal
                 deleteWarningModal.hide();
                 // Show the spinner

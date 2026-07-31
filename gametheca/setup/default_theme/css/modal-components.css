@@ -278,3 +278,139 @@
         align-items: center;
     }
 }
+
+/* Preferences modal — sectioned aurora (Bootstrap modal behavior kept) */
+.gt-prefs-modal .gt-prefs-modal__panel {
+    background: var(--gt-surface, #141820);
+    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    border-radius: 10px;
+    color: var(--gt-text, #f2f4f8);
+    box-shadow: 0 16px 40px color-mix(in srgb, var(--gt-bg, #0b0d10) 50%, transparent);
+    overflow: hidden;
+}
+
+.gt-prefs-modal .gt-prefs-modal__header {
+    border-bottom: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    background: transparent;
+    padding: 0.75rem 1rem;
+}
+
+.gt-prefs-modal .gt-prefs-modal__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gt-text, #f2f4f8);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.gt-prefs-modal .gt-prefs-modal__close {
+    filter: invert(1) grayscale(1);
+    opacity: 0.75;
+}
+
+.gt-prefs-modal .gt-prefs-modal__body {
+    padding: 0.65rem 1rem 1rem;
+}
+
+.gt-prefs-modal .gt-prefs-section {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 70%, transparent);
+}
+
+.gt-prefs-modal .gt-prefs-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.gt-prefs-modal .gt-prefs-section__title {
+    margin: 0 0 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-prefs-modal .gt-prefs-section__hint {
+    margin: 0 0 0.55rem;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-prefs-modal .gt-prefs-section__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.65rem;
+}
+
+.gt-prefs-modal .gt-prefs-field {
+    margin-bottom: 0.65rem;
+}
+
+.gt-prefs-modal .gt-prefs-field:last-child {
+    margin-bottom: 0;
+}
+
+.gt-prefs-modal .gt-prefs-range {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.gt-prefs-modal .gt-prefs-range__value {
+    min-width: 2.75rem;
+    font-size: 0.82rem;
+    color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-prefs-modal .gt-prefs-modal__body .form-label {
+    color: var(--gt-text, #f2f4f8);
+    font-weight: 500;
+    font-size: 0.88rem;
+    margin-bottom: 0.3rem;
+}
+
+.gt-prefs-modal .gt-prefs-modal__body .form-control,
+.gt-prefs-modal .gt-prefs-modal__body .form-select {
+    background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 90%, transparent);
+    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    color: var(--gt-text, #f2f4f8);
+    border-radius: 6px;
+}
+
+.gt-prefs-modal .gt-prefs-modal__body .form-control:focus,
+.gt-prefs-modal .gt-prefs-modal__body .form-select:focus {
+    border-color: var(--gt-accent, #2fd67b);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent);
+}
+
+.gt-prefs-modal .gt-prefs-modal__body .form-text,
+.gt-prefs-modal .gt-prefs-modal__body .text-muted {
+    color: var(--gt-text-muted, #9aa3b2) !important;
+}
+
+.gt-prefs-modal .gt-prefs-modal__footer {
+    border-top: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    background: transparent;
+    gap: 0.5rem;
+    padding: 0.7rem 1rem;
+}
+
+.gt-prefs-modal .gt-prefs-modal__footer .btn-primary {
+    background: var(--gt-accent, #2fd67b);
+    border-color: var(--gt-accent, #2fd67b);
+    color: var(--gt-accent-contrast, #0b0d10);
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+.gt-prefs-modal .gt-prefs-modal__footer .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    color: var(--gt-text, #f2f4f8);
+    font-weight: 600;
+    border-radius: 6px;
+}

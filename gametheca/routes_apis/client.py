@@ -113,18 +113,41 @@ def client_lifecycle_post():
 @apis_bp.route('/client/commands', methods=['POST'])
 @login_required
 def client_commands_post():
-    """Queue a companion action from the member SPA / game details island."""
+    """Queue a companion action from the member SPA / admin scanjobs / game details."""
     data = request.get_json(silent=True) or {}
     game_uuid = (data.get('game_uuid') or '').strip()
+    action = (data.get('action') or '').strip().lower()
+    kind = data.get('kind')
+    version_uuid = (data.get('version_uuid') or '').strip() or None
+    open_path = (data.get('path') or '').strip() or None
+    select = data.get('select')
+
+    if action == 'open_path':
+        # Unmatched / admin scanjobs may omit game_uuid; matched titles still ACL-check.
+        if game_uuid:
+            game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+            if not game:
+                return jsonify({'error': 'Game not found'}), 404
+            if not user_can_access_game(current_user, game):
+                return jsonify({'error': 'Forbidden'}), 403
+        try:
+            command = enqueue_client_command(
+                current_user.id,
+                game_uuid,
+                action,
+                path=open_path,
+                select=None if select is None else bool(select),
+            )
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
+        return jsonify({'ok': True, 'command': command}), 201
+
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
         return jsonify({'error': 'Game not found'}), 404
     if not user_can_access_game(current_user, game):
         return jsonify({'error': 'Forbidden'}), 403
 
-    kind = data.get('kind')
-    version_uuid = (data.get('version_uuid') or '').strip() or None
-    action = (data.get('action') or '').strip().lower()
     if kind in ('update', 'extra') and version_uuid:
         Model = GameUpdate if kind == 'update' else GameExtra
         pack = db.session.execute(

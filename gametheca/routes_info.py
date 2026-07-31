@@ -170,3 +170,16 @@ def ops_summary_api():
         return jsonify(build_ops_summary(app_start_time))
     except Exception as exc:
         return jsonify({'error': str(exc)}), 503
+
+
+@info_bp.route('/admin/api/library/health')
+@login_required
+@admin_required
+def library_health_api():
+    """Lightweight library health pulse (same payload as ops ``library.health``)."""
+    try:
+        from gametheca.utils.library_health import build_library_health_pulse
+
+        return jsonify(build_library_health_pulse())
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 503

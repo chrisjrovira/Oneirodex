@@ -12,6 +12,7 @@ from sqlalchemy import select, func
 from gametheca.models import GlobalSettings
 from flask import url_for, current_app
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories
+from gametheca.utils.quality_profiles import active_exclude_terms_for_scan
 
 # Default cap for recursive size walks (NAS/Unraid trees can take minutes otherwise).
 _DEFAULT_FOLDER_SIZE_TIMEOUT_SEC = 60
@@ -529,6 +530,33 @@ def load_skip_dir_patterns():
         return list(DEFAULT_SKIP_DIR_GLOBS)
 
 
+# Truthy forms historically written by scan_management (bool) vs edit_filters ('yes'|'no').
+_CASE_SENSITIVE_TRUE = frozenset({'yes', 'true', '1', 'y', 'on'})
+
+
+def is_case_sensitive_flag(value) -> bool:
+    """Normalize ReleaseGroup.case_sensitive stored forms to bool.
+
+    Accepts bool, int/float (nonzero), and common string forms
+    (``'yes'|'no'``, ``'true'|'false'``, ``'1'|'0'``).
+    """
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    text = str(value).strip().lower()
+    if not text:
+        return False
+    return text in _CASE_SENSITIVE_TRUE
+
+
+def normalize_case_sensitive(value) -> str:
+    """Canonical DB string for ``filters.case_sensitive`` (String column)."""
+    return 'yes' if is_case_sensitive_flag(value) else 'no'
+
+
 def load_scanning_filter_patterns():
     try:
         # Fetching insensitive patterns (not case-sensitive).
@@ -544,25 +572,29 @@ def load_scanning_filter_patterns():
         ] + [
             "." + rg.filter_pattern for rg in name_filter_rows
         ]
-        
-        # Initializing list for sensitive patterns (case-sensitive)
+
+        # Rows with a case_sensitive flag (any stored shape) drive the
+        # (pattern, is_case_sensitive) pairs used by name cleaning.
         sensitive_patterns = []
         for rg in db.session.execute(select(ReleaseGroup).filter(ReleaseGroup.case_sensitive.isnot(None))).scalars().all():
             if (rg.filter_pattern or '').strip().lower().startswith(_DIR_FILTER_PREFIX):
                 continue
-            pattern = rg.case_sensitive
-            is_case_sensitive = False
-            if pattern.lower() == 'yes':
-                is_case_sensitive = True
-                pattern = "-" + rg.filter_pattern
-                sensitive_patterns.append((pattern, is_case_sensitive))
-                pattern = "." + rg.filter_pattern
-                sensitive_patterns.append((pattern, is_case_sensitive))
-            elif pattern.lower() == 'no':
-                pattern = "-" + rg.filter_pattern
-                sensitive_patterns.append((pattern, is_case_sensitive))
-                pattern = "." + rg.filter_pattern
-                sensitive_patterns.append((pattern, is_case_sensitive))
+            is_case_sensitive = is_case_sensitive_flag(rg.case_sensitive)
+            sensitive_patterns.append(("-" + rg.filter_pattern, is_case_sensitive))
+            sensitive_patterns.append(("." + rg.filter_pattern, is_case_sensitive))
+
+        # Active quality profile blocked groups / excluded terms (P1-12) —
+        # same strip shape as ReleaseGroup name cleaners (-tag / .tag).
+        try:
+            for term in active_exclude_terms_for_scan():
+                if not term:
+                    continue
+                insensitive_patterns.append("-" + term)
+                insensitive_patterns.append("." + term)
+                sensitive_patterns.append(("-" + term, False))
+                sensitive_patterns.append(("." + term, False))
+        except Exception as qp_exc:
+            print(f"Quality profile scan filters skipped: {qp_exc}")
 
         return insensitive_patterns, sensitive_patterns
     except SQLAlchemyError as e:

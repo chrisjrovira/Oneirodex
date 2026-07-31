@@ -3,20 +3,14 @@
 {% import 'partials/icons.html' as icons %}
 {% block head %}
     <!-- Add DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='vendor/datatables/1.13.7/css/dataTables.bootstrap5.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='vendor/datatables/responsive/2.5.0/css/responsive.bootstrap5.min.css') }}">
 {% endblock %}
 
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_users.css'|theme_asset }}">
-<div class="container">
-    <div class="glass-panel">
-        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-    </div>
-</div>
 
 <div class="container gt-adminpage gt-adminpage--xl gt-adminpage--spaced">
-<div class="card">
 <div class="gt-adminpage-header">
     <div><h2 class="gt-adminpage-title">User Management</h2></div>
     <div class="gt-adminpage-header-actions">
@@ -24,7 +18,7 @@
     </div>
 </div>
     <div class="table-responsive">
-        <table id="usersTable" class="table table-dark table-hover display responsive nowrap">
+        <table id="usersTable" class="table gt-adminpage-table table-hover display responsive nowrap">
             <thead>
                 <tr>
                     <th>Avatar</th>
@@ -77,7 +71,6 @@
             </tbody>
         </table>
     </div>
-</div>
 </div>
 
 <!-- Edit User Modal -->
@@ -218,7 +211,7 @@
         </div>
     </div>
 </div>
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+<script type="text/javascript" charset="utf8" src="{{ url_for('static', filename='vendor/datatables/1.13.7/js/jquery.dataTables.min.js') }}"></script>
 
 <script src="{{ 'js/admin_manage_users.js'|theme_asset }}"></script>
 <script src="{{ 'js/admin/users_table.js'|theme_asset }}"></script>

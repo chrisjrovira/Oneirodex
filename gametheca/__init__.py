@@ -193,6 +193,11 @@ def create_app():
             except Exception as exc:
                 print(f"[SCAN SCHEDULER] Could not start: {exc}")
             try:
+                from gametheca.utils.library_watch import start_library_watch
+                start_library_watch(app)
+            except Exception as exc:
+                print(f"[LIBRARY WATCH] Could not start: {exc}")
+            try:
                 from gametheca.utils.free_games_poller import start_free_games_scheduler
                 start_free_games_scheduler(app)
             except Exception as exc:

@@ -1,14 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { DupeGlance } from './DupeGlance'
 import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_CARDS } from './navConfig'
+import { OpenPathModal } from './OpenPathModal'
+import {
+  hasActiveScan,
+  isScanQueuedStatus,
+  normalizeScanJobsList,
+} from './scanQueuePolicy'
 import {
   MeterBar,
   MetricTile,
   OpsStatusBanner,
   companionKindRows,
   formatBytes,
+  formatLibraryHealthHint,
+  formatLibraryHealthValue,
   formatLoadAvg,
   formatReadyz,
+  libraryHealthTone,
   na,
 } from './opsWidgets'
 
@@ -49,29 +59,42 @@ function LinkRow({ links }) {
 export function DashboardPage() {
   const [summary, setSummary] = useState(null)
   const [error, setError] = useState(null)
+  const [bootLoading, setBootLoading] = useState(true)
+  const [manualRefreshing, setManualRefreshing] = useState(false)
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(null)
   const requestRef = useRef({ id: 0, controller: null })
+  const hasSummaryRef = useRef(false)
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback((source = 'poll') => {
+    const isManual = source === 'manual'
+    const isBoot = source === 'boot'
     requestRef.current.controller?.abort()
     const controller = new AbortController()
     const id = requestRef.current.id + 1
     requestRef.current = { id, controller }
+    if (isManual) setManualRefreshing(true)
     getJson('/admin/api/ops/summary')
       .then((data) => {
         if (requestRef.current.id !== id || controller.signal.aborted) return
         setSummary(data)
         setError(null)
+        setLastUpdatedAt(new Date())
+        hasSummaryRef.current = true
+        if (isBoot) setBootLoading(false)
+        if (isManual) setManualRefreshing(false)
       })
       .catch((err) => {
         if (err.name === 'AbortError') return
         if (requestRef.current.id !== id) return
         setError(err)
+        if (isBoot || !hasSummaryRef.current) setBootLoading(false)
+        if (isManual) setManualRefreshing(false)
       })
   }, [])
 
   useEffect(() => {
-    refresh()
-    const timer = window.setInterval(refresh, 15000)
+    refresh('boot')
+    const timer = window.setInterval(() => refresh('poll'), 15000)
     return () => {
       window.clearInterval(timer)
       requestRef.current.controller?.abort()
@@ -90,10 +113,36 @@ export function DashboardPage() {
 
   return (
     <Page title="Dashboard" lede="Observability glance — libraries, host pulse, and open issues (~15s).">
+      <div className="gt-ops-refresh" style={{ marginBottom: '0.85rem' }}>
+        {manualRefreshing ? (
+          <span className="gt-ops-refresh__status" role="status" aria-live="polite">
+            Refreshing…
+          </span>
+        ) : lastUpdatedAt ? (
+          <span className="gt-ops-refresh__status gt-ops-refresh__status--muted">
+            Updated {lastUpdatedAt.toLocaleTimeString()}
+          </span>
+        ) : null}
+        <button
+          type="button"
+          className="gt-btn gt-btn--accent"
+          onClick={() => refresh('manual')}
+          disabled={manualRefreshing || bootLoading}
+        >
+          {manualRefreshing ? 'Refreshing…' : 'Refresh'}
+        </button>
+      </div>
+
       {error ? (
         <div role="alert" className="gt-admin-alert">
           Unable to load ops summary. Open System for details.
         </div>
+      ) : null}
+
+      {bootLoading && !summary ? (
+        <p className="gt-admin-lede" role="status">
+          Loading dashboard…
+        </p>
       ) : null}
 
       <OpsStatusBanner
@@ -113,6 +162,12 @@ export function DashboardPage() {
               ? `${library.unmatched_folders} unmatched`
               : 'catalogue'
           }
+        />
+        <MetricTile
+          label="Library health"
+          value={formatLibraryHealthValue(library?.health)}
+          hint={formatLibraryHealthHint(library?.health)}
+          tone={libraryHealthTone(library?.health)}
         />
         <MetricTile
           label="Scans"
@@ -313,11 +368,80 @@ export function HubPage({ title, lede, links }) {
   )
 }
 
+const INVENTORY_CATEGORY_ORDER = [
+  'metadata',
+  'artwork',
+  'email',
+  'auth',
+  'support',
+  'social',
+  'rtc',
+  'acquire',
+  'ownership',
+]
+
+const INVENTORY_CATEGORY_LABELS = {
+  metadata: 'Metadata',
+  artwork: 'Artwork',
+  email: 'Email',
+  auth: 'Auth / SSO',
+  support: 'Support',
+  social: 'Social',
+  rtc: 'Voice / RTC',
+  acquire: 'Acquire',
+  ownership: 'Ownership',
+}
+
+function groupInventoryByCategory(rows) {
+  const groups = new Map()
+  for (const row of rows) {
+    const key = row.category || 'other'
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key).push(row)
+  }
+  const ordered = INVENTORY_CATEGORY_ORDER.filter((id) => groups.has(id)).map((id) => ({
+    id,
+    label: INVENTORY_CATEGORY_LABELS[id] || id,
+    rows: groups.get(id),
+  }))
+  for (const [id, groupRows] of groups) {
+    if (!INVENTORY_CATEGORY_ORDER.includes(id)) {
+      ordered.push({ id, label: INVENTORY_CATEGORY_LABELS[id] || id, rows: groupRows })
+    }
+  }
+  return ordered
+}
+
+function inventoryHref(row) {
+  return row.settings_href || row.admin_href || '/admin/integrations'
+}
+
 export function IntegrationsPage() {
+  const [inventory, setInventory] = useState(null)
+  const [inventoryError, setInventoryError] = useState(false)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    getJson('/api/admin/integrations/inventory')
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setInventory(Array.isArray(data?.integrations) ? data.integrations : [])
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setInventoryError(true)
+        }
+      })
+    return () => controller.abort()
+  }, [])
+
+  const inventoryGroups = inventory ? groupInventoryByCategory(inventory) : []
+
   return (
     <Page
       title="Integrations"
-      lede="Grouped entry points for metadata, mail, SSO, voice, and support. Classic Jinja forms stay behind these deep links — hybrid chrome only."
+      lede="All providers in one place — metadata, artwork, mail, SSO, voice, acquire, ownership, and export packs. Classic Jinja forms stay behind these deep links."
     >
       <div className="gt-admin-card-grid gt-admin-card-grid--integrations">
         {INTEGRATION_CARDS.map((card) => (
@@ -328,7 +452,7 @@ export function IntegrationsPage() {
             <p>{card.blurb}</p>
             <ul className="gt-admin-card__links">
               {(card.links || []).map((link) => (
-                <li key={link.href}>
+                <li key={`${link.href}-${link.label}`}>
                   <a href={link.href}>{link.label}</a>
                 </li>
               ))}
@@ -336,10 +460,60 @@ export function IntegrationsPage() {
           </section>
         ))}
       </div>
+
+      {!inventory && !inventoryError ? (
+        <div className="gt-admin-panel gt-admin-inventory" style={{ marginTop: '1rem' }}>
+          <p>Loading provider inventory…</p>
+        </div>
+      ) : null}
+
+      {inventory && inventory.length > 0 ? (
+        <div className="gt-admin-panel gt-admin-inventory" style={{ marginTop: '1rem' }}>
+          <h2>Provider inventory</h2>
+          <p>
+            Live status from <code>GET /api/admin/integrations/inventory</code> — every provider
+            with a deep link (not IGDB-only).
+          </p>
+          {inventoryGroups.map((group) => (
+            <div key={group.id} className="gt-admin-inventory__group">
+              <h3 className="gt-admin-inventory__category">{group.label}</h3>
+              <ul className="gt-admin-inventory__list" aria-label={`${group.label} integrations`}>
+                {group.rows.map((row) => (
+                  <li key={row.id || row.name}>
+                    <a href={inventoryHref(row)}>{row.name}</a>
+                    {' — '}
+                    <span className="gt-admin-inventory__status">
+                      {row.status || (row.configured ? 'configured' : 'available')}
+                    </span>
+                    {row.notes ? (
+                      <span className="gt-admin-inventory__notes"> · {row.notes}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {inventory && inventory.length === 0 && !inventoryError ? (
+        <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+          <p>Provider inventory returned no rows — use the cards above.</p>
+        </div>
+      ) : null}
+
+      {inventoryError ? (
+        <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+          <p>Provider inventory unavailable — use the cards above.</p>
+        </div>
+      ) : null}
+
       <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
         <p>
-          Full Integrations tabs (SMTP · IGDB · community · artwork · OIDC) still render when Jinja
-          content is present. This React hub is the fallback chrome when the classic body is empty.
+          Full Integrations tabs (SMTP · IGDB · community · artwork · ownership · OIDC · indexers)
+          still render when Jinja content is present. This React hub is the fallback chrome when the
+          classic body is empty. Member Systems also lists export packs under a secondary{' '}
+          <strong>Export packs</strong> section (not buried in the page intro).
         </p>
       </div>
     </Page>
@@ -409,8 +583,18 @@ export function HelpPage() {
           <code>ENABLE_ACTIVITY_FEED</code>, <code>ENABLE_PCDOS_BROWSER</code> (on by default; needs vendored dosbox WASM).
         </li>
         <li>
-          Plugins registry: <code>GET /api/plugins</code>. Exports: <code>/api/export/esde</code>,{' '}
-          <code>/api/export/pegasus</code>. Emulator health: <code>/api/emulator/health</code>.
+          Integrations hub lists every provider via{' '}
+          <code>GET /api/admin/integrations/inventory</code> (metadata · artwork · mail · SSO ·
+          voice · acquire · ownership) — not IGDB-only. Cards deep-link classic forms.
+        </li>
+        <li>
+          Export packs (ES-DE <code>gamelist.xml</code> · Pegasus metadata): Admin → Integrations →{' '}
+          <strong>Export packs</strong>, or member Systems secondary section. Endpoints:{' '}
+          <code>/api/export/esde</code>, <code>/api/export/pegasus</code>. Paths stay portable.
+        </li>
+        <li>
+          Plugins registry: <code>GET /api/plugins</code>. Emulator health:{' '}
+          <code>/api/emulator/health</code>.
         </li>
         <li>
           Emulator: BIOS + <code>.cht</code> via <code>/api/emulator/*</code>; WebRetro play bar
@@ -477,6 +661,7 @@ export function ScansPage() {
   const [status, setStatus] = useState(null)
   const [error, setError] = useState(null)
   const [updatedAt, setUpdatedAt] = useState(null)
+  const [pathModal, setPathModal] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -500,12 +685,15 @@ export function ScansPage() {
     }
   }, [])
 
-  const running = Boolean(status && (status.running || status.is_running))
+  const jobs = normalizeScanJobsList(status)
+  const running = hasActiveScan(jobs) || Boolean(status && !Array.isArray(status) && (status.running || status.is_running))
+  const queuedJobs = jobs.filter((job) => isScanQueuedStatus(job?.status))
+  const recentJobs = jobs.slice(0, 12)
   const progress = status?.progress ?? status?.percent ?? null
   const message = status?.message || status?.status_message || status?.phase || null
 
   return (
-    <Page title="Scans & recognition" lede="Scan jobs, identify workbench, and image queue.">
+    <Page title="Scans & recognition" lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja).">
       <LinkRow links={HUB_LINKS.scans} />
       {error ? <div role="alert">Unable to load scan status.</div> : null}
       <div className="gt-admin-panel">
@@ -515,6 +703,7 @@ export function ScansPage() {
           <>
             <p>
               Running: {running ? 'yes' : 'no'}
+              {queuedJobs.length ? <> · queued {queuedJobs.length}</> : null}
               {status.job_id ? (
                 <>
                   {' '}
@@ -524,12 +713,55 @@ export function ScansPage() {
               {progress != null ? <> · progress {String(progress)}</> : null}
             </p>
             {message ? <p className="gt-admin-lede">{message}</p> : null}
+            {recentJobs.length > 0 ? (
+              <table className="gt-admin-table">
+                <thead>
+                  <tr>
+                    <th>Job</th>
+                    <th>Library</th>
+                    <th>Status</th>
+                    <th>Path</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentJobs.map((job) => (
+                    <tr key={job.id}>
+                      <td>
+                        <code>{String(job.id).slice(0, 8)}</code>
+                      </td>
+                      <td>{job.library_name || job.library || '—'}</td>
+                      <td>
+                        {job.status}
+                        {job.queue_position != null && isScanQueuedStatus(job.status)
+                          ? ` (#${job.queue_position})`
+                          : ''}
+                      </td>
+                      <td>{job.scan_folder || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="gt-admin-lede">No scan jobs yet.</p>
+            )}
             {updatedAt ? (
               <p className="gt-admin-lede">Live status · last refresh {updatedAt.toLocaleTimeString()}</p>
             ) : null}
+            <p className="gt-admin-lede">
+              When a scan is already running, Auto Scan / Refresh all offer <strong>Queue</strong> (default) or{' '}
+              <strong>Force parallel</strong> with an Unraid/NAS load warning.
+            </p>
           </>
         )}
       </div>
+      <DupeGlance onOpenPath={setPathModal} />
+      <OpenPathModal
+        open={Boolean(pathModal)}
+        path={pathModal?.path || ''}
+        label={pathModal?.label || 'Path'}
+        matchReason={pathModal?.matchReason || ''}
+        onClose={() => setPathModal(null)}
+      />
     </Page>
   )
 }
@@ -549,6 +781,8 @@ export function resolveAdminPage(pathname) {
   if (pathname === '/admin/art_studio') return 'art_studio'
   if (pathname === '/admin/images') return 'images'
   if (pathname === '/admin/remote_play') return 'remote_play'
+  if (pathname === '/admin/quality_profiles') return 'quality_profiles'
+  if (pathname === '/admin/storage') return 'storage'
   if (pathname === '/admin/help') return 'help'
   if (pathname.startsWith('/scan_management') || pathname.includes('image_queue') || pathname.includes('game_identify') || pathname.includes('game_edit')) {
     return 'scans'
@@ -588,7 +822,6 @@ export function resolveAdminPage(pathname) {
   if (
     pathname.includes('settings') ||
     pathname.includes('emulator') ||
-    pathname.includes('quality') ||
     pathname.includes('detail_layout') ||
     pathname.includes('/admin/ai') ||
     pathname.includes('/admin/storage') ||

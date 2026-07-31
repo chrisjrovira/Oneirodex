@@ -2,7 +2,7 @@
 
 **From:** Program Manager  
 **To:** Backend · Ops · UI/UX · Desktop · Docs · QA · Game Master  
-**Read first:** Locked defaults (no Discord; OIDC opt-in; no bundled indexers; scrub Class A/B intel)
+**Read first:** Locked defaults (no Discord; OIDC opt-in; no torrent marketplace — native registry + admin presets OK; scrub Class A/B intel)
 
 ---
 

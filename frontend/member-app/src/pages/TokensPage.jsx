@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createToken, listTokens, revokeToken } from '../api/tokens'
+import { copyText } from '../utils/copyText'
+import { showToast } from '../utils/toast'
 import './TokensPage.css'
 
 const PRESET_FALLBACK = {
@@ -34,6 +36,7 @@ export function TokensPage() {
   const [createdSecret, setCreatedSecret] = useState(null)
   const [copyState, setCopyState] = useState('idle')
   const [retryCount, setRetryCount] = useState(0)
+  const secretCodeRef = useRef(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -110,12 +113,14 @@ export function TokensPage() {
 
   async function copySecret() {
     if (!createdSecret?.secret) return
-    try {
-      await navigator.clipboard.writeText(createdSecret.secret)
+    const ok = await copyText(createdSecret.secret, { selectEl: secretCodeRef.current })
+    if (ok) {
       setCopyState('copied')
-    } catch {
-      setCopyState('failed')
+      showToast('Token secret copied', 'success')
+      return
     }
+    setCopyState('failed')
+    showToast('Clipboard unavailable — select the secret and copy manually', 'warn')
   }
 
   const activeTokens = tokens.filter((row) => !row.revoked)
@@ -129,6 +134,9 @@ export function TokensPage() {
       <p className="gt-more-page__lede">
         Create personal access tokens for the desktop companion. The full secret is shown once —
         paste it into the companion Connect screen; it is stored in the OS keyring, not in this UI.
+        Format is <code>gt_&lt;prefix&gt;_&lt;secret&gt;</code> (secret may include <code>-</code> /{' '}
+        <code>_</code>). Copy prefers HTTPS; on plain HTTP LAN, use Copy (fallback) or select the
+        secret manually.
       </p>
 
       {error ? (
@@ -150,7 +158,9 @@ export function TokensPage() {
             {createdSecret.name}
             {createdSecret.prefix ? ` · prefix ${createdSecret.prefix}…` : null}
           </p>
-          <code className="gt-tokens__secret-value">{createdSecret.secret}</code>
+          <code ref={secretCodeRef} className="gt-tokens__secret-value" tabIndex={0}>
+            {createdSecret.secret}
+          </code>
           <div className="gt-tokens__secret-actions">
             <button type="button" className="gt-btn gt-btn--primary" onClick={() => void copySecret()}>
               {copyState === 'copied' ? 'Copied' : 'Copy secret'}
@@ -166,8 +176,16 @@ export function TokensPage() {
               Done
             </button>
           </div>
+          {copyState === 'copied' ? (
+            <p role="status" className="gt-tokens__copy-status">
+              Secret copied. Paste the full token into the companion Connect screen.
+            </p>
+          ) : null}
           {copyState === 'failed' ? (
-            <p role="alert">Clipboard unavailable — select and copy the secret manually.</p>
+            <p role="alert" className="gt-tokens__copy-status">
+              Clipboard unavailable (common on plain HTTP). Triple-click or focus the secret above
+              and press Ctrl+C / ⌘C — paste the full <code>gt_…</code> string without trimming.
+            </p>
           ) : null}
         </section>
       ) : null}

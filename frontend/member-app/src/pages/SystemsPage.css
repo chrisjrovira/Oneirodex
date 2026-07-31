@@ -210,3 +210,27 @@
 .gt-systems-tile__region--empty {
   opacity: 0.55;
 }
+
+.gt-systems-exports {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--gt-glass-border, rgba(255, 255, 255, 0.14)) 80%, transparent);
+}
+
+.gt-systems-exports__lede {
+  margin: 0 0 0.85rem;
+  max-width: 40rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--gt-text-muted);
+}
+
+.gt-systems-exports__lede code {
+  font-size: 0.82em;
+}
+
+.gt-systems-exports__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}

@@ -2,89 +2,79 @@
 {% block content %}
 {% import 'partials/icons.html' as icons %}
 
-<div class="container">
-    <div class="glass-panel">
-        <a href="{{ url_for('site.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-    </div>
-</div>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+<script src="{{ url_for('static', filename='vendor/sortablejs/1.14.0/Sortable.min.js') }}"></script>
 
 <link rel="stylesheet" href="{{ 'css/admin/admin_discovery_sections.css'|theme_asset }}">
-
 <script src="{{ 'js/admin/discovery_sections.js'|theme_asset }}"></script>
 
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header gt-adminpage-panel-header">
-                    <h2>{{ icons.icon('compass', size=22) }} Discovery Sections Management</h2>
-                    <button class="btn btn-primary btn-sm" type="button" id="add-zone-btn">
-                        {{ icons.icon('plus') }} Add Zone
-                    </button>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">
-                        Drag to reorder, toggle visibility, or add a custom zone below (a manual game
-                        pick list, or a library / platform / genre filter). Built-in shelves can be
-                        reordered and hidden but not deleted.
-                    </p>
-                    <div id="discovery-sections-list" class="sections-list">
-                        {% for section in sections %}
-                        <div class="section-item"
-                             data-section-id="{{ section.id }}"
-                             data-section-type="{{ section.section_type }}"
-                             data-section-name="{{ section.name }}"
-                             {% if section.section_type == 'custom' %}
-                             data-section-config='{{ (section.config or {})|tojson }}'
-                             {% endif %}>
-                            <div class="section-content">
-                                <div class="drag-handle-container">
-                                {{ icons.icon('grip', extra_class='drag-handle') }}
-                                </div>
-                                <span class="section-name">{{ section.name }}</span>
-                                {% if section.section_type == 'custom' %}
-                                    <span class="section-badge section-badge--custom">Custom</span>
-                                    <span class="section-count">{{ zone_descriptions.get(section.id, 'Custom zone') }}</span>
-                                {% else %}
-                                    <span class="section-count">
-                                        {% if section_counts[section.identifier] > 0 %}
-                                            ({{ section_counts[section.identifier] }} items)
-                                        {% else %}
-                                            (empty)
-                                        {% endif %}
-                                    </span>
-                                {% endif %}
-                                <div class="section-controls">
-                                    {% if section.section_type == 'custom' %}
-                                    <button type="button" class="btn btn-sm btn-outline-secondary zone-edit-btn"
-                                            data-section-id="{{ section.id }}" title="Edit zone">
-                                        {{ icons.icon('edit', title='Edit') }}
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger zone-delete-btn"
-                                            data-section-id="{{ section.id }}" title="Delete zone">
-                                        {{ icons.icon('trash', title='Delete') }}
-                                    </button>
-                                    {% endif %}
-                                    <div class="form-check form-switch">
-                                        <input type="checkbox" 
-                                               class="form-check-input section-visibility-toggle" 
-                                               id="visibility-{{ section.id }}"
-                                               data-section-id="{{ section.id }}"
-                                               {% if section.is_visible %}checked{% endif %}>
-                                        <label class="form-check-label" for="visibility-{{ section.id }}">
-                                            Visible
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
+<div class="container-settings gt-adminpage gt-adminpage--xl">
+    <div class="gt-adminpage-header">
+        <div>
+            <h1 class="gt-adminpage-title">{{ icons.icon('compass', size=26) }} Discovery Sections</h1>
+            <p class="gt-adminpage-lede">
+                Drag to reorder, toggle visibility, or add a custom zone (manual game list or library / platform / genre filter).
+                Built-in shelves can be reordered and hidden but not deleted.
+            </p>
+        </div>
+        <div class="gt-adminpage-header-actions">
+            <button class="btn btn-primary btn-sm" type="button" id="add-zone-btn">
+                {{ icons.icon('plus') }} Add Zone
+            </button>
+        </div>
+    </div>
+
+    <div class="gt-adminpage-panel">
+        <div id="discovery-sections-list" class="sections-list">
+            {% for section in sections %}
+            <div class="section-item"
+                 data-section-id="{{ section.id }}"
+                 data-section-type="{{ section.section_type }}"
+                 data-section-name="{{ section.name }}"
+                 {% if section.section_type == 'custom' %}
+                 data-section-config='{{ (section.config or {})|tojson }}'
+                 {% endif %}>
+                <div class="section-content">
+                    <div class="drag-handle-container">
+                    {{ icons.icon('grip', extra_class='drag-handle') }}
+                    </div>
+                    <span class="section-name">{{ section.name }}</span>
+                    {% if section.section_type == 'custom' %}
+                        <span class="section-badge section-badge--custom">Custom</span>
+                        <span class="section-count">{{ zone_descriptions.get(section.id, 'Custom zone') }}</span>
+                    {% else %}
+                        <span class="section-count">
+                            {% if section_counts[section.identifier] > 0 %}
+                                ({{ section_counts[section.identifier] }} items)
+                            {% else %}
+                                (empty)
+                            {% endif %}
+                        </span>
+                    {% endif %}
+                    <div class="section-controls">
+                        {% if section.section_type == 'custom' %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary zone-edit-btn"
+                                data-section-id="{{ section.id }}" title="Edit zone">
+                            {{ icons.icon('edit', title='Edit') }}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger zone-delete-btn"
+                                data-section-id="{{ section.id }}" title="Delete zone">
+                            {{ icons.icon('trash', title='Delete') }}
+                        </button>
+                        {% endif %}
+                        <div class="form-check form-switch">
+                            <input type="checkbox"
+                                   class="form-check-input section-visibility-toggle"
+                                   id="visibility-{{ section.id }}"
+                                   data-section-id="{{ section.id }}"
+                                   {% if section.is_visible %}checked{% endif %}>
+                            <label class="form-check-label" for="visibility-{{ section.id }}">
+                                Visible
+                            </label>
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
     </div>
 </div>
