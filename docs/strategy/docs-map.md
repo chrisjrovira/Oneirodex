@@ -165,7 +165,7 @@
 
 Capture at **1920×1080** and **1280×800**; dark default + one alternate preset. Store under `docs/media/screenshots/`; sync README slots under `docs/assets/readme/` (live PNG only — **retired** illustrative `hero-banner.jpg` / `screenshot-*.jpg`).
 
-Checklist: [../assets/readme/CAPTURE.md](../assets/readme/CAPTURE.md) — README **live** for hero, Library, Systems; **Capture needed on ship (Waves 4–14 ready)** — `screenshot-chat.png` (Wave 2b–3 slide-out · Archive/Leave · muted badge) + Calendar/Updates densify shots + optional Library multi-select sticky (Select page · partial toasts · Waves 9–11 Add to wishlist / Play status / More freshness) + Wave 12 theme swatches / More densify / fair factors · Library Refresh covers · Admin `/admin/quality_profiles` SPA · Admin `/admin/storage` SPA · **details versions Missing-on-disk / Remove missing** + optional Ops library health MetricTile grade tone / poor factors danger edge + refresh Library/Systems/hero if Wave **2d** presets drifted; run when `/login`+`/library` return 200. Docs media **done** for Ops Services, Library free ROMs, Systems, Ctrl/Cmd+K, Features, health JSON, and tour video (`docs/media/`).
+Checklist: [../assets/readme/CAPTURE.md](../assets/readme/CAPTURE.md) — README **live** for hero, Library, Systems; **Capture needed** (Waves **4–14 shipped on main @ c35a927b**) — `screenshot-chat.png` (Wave 2b–3 slide-out · Archive/Leave · muted badge) + Calendar/Updates densify shots + Library multi-select sticky (Select page · partial toasts · Waves 9–11 Add to wishlist / Play status / More freshness) + Wave 12 theme swatches / More densify / fair factors · Library Refresh covers · Admin `/admin/quality_profiles` SPA · Admin `/admin/storage` SPA · **details versions Missing-on-disk / Remove missing** + Ops library health MetricTile grade tone / poor factors danger edge + refresh Library/Systems/hero if Wave **2d** presets drifted; run when `/login`+`/library` return 200. Docs media **done** for Ops Services, Library free ROMs, Systems, Ctrl/Cmd+K, Features, health JSON, and tour video (`docs/media/`).
 
 **Refresh rule:** Re-run `scripts/capture_docs_media.py` (or copy freshest shots into readme slots) on every commit/ship pass that touches member/admin UI.
 
@@ -178,7 +178,7 @@ Also: Friends companion dock + `/social-companion` pop-out, Support report form,
 | Area | Action |
 |---|---|
 | README | Synced for 0.2.0 — **live PNG screenshots** (hero · Library · Systems) · Chat Capture **needed** · feature defaults ON · OIDC opt-in · ClamAV profile · Friends companion · no Discord |
-| [progress.md](progress.md) | Jul 30 — **Wave 14b closed** (uncommitted · QA DoD met: versions artwork **7/7** · GameDetails+detailsMedia **15/15** · `path_missing`/`downloadable`/`size` · cleanup_orphans · Default chip · Missing on disk · Remove missing) · Waves **4–14b** closed uncommitted · **ready-for-ship** · live `:5006` **BLOCKED (env)** OK · **Next:** Human ship Waves **4–14** (commit+push) · Capture **needed on ship** · do **not** invent Wave 15 · Reset Themes + local vendor rebuild/restart post-deploy · Unraid free disk waits human · deploy: app restart for updateschema `path_status` |
+| [progress.md](progress.md) | Jul 30 — **Waves 4–14 shipped on main @ c35a927b** (`feat: ship Waves 4-14 polish through storage and versions`) · W14b QA DoD met (versions artwork **7/7** · GameDetails+detailsMedia **15/15**) · Bootstrap/vendor in tree · live `:5006` **BLOCKED (env)** OK · **Next:** Capture when `:5006` healthy · Unraid free disk → rebuild · Reset Themes · app restart for `path_status` · do **not** invent Wave 15 |
 | CHANGELOG | Unreleased catch-up for waves 14–17 + malware / Features; bump when cutting 0.2.0 |
 | `.env.example` | Includes LiveKit + SUPPORT_GITHUB_* + malware scan |
 | In-app Help (`/help`) | Accordion Help · Chat slide-out · Preferences sectioned · Report Context/Logs collapsed · News tabs · Notifications dense · API token urlsafe/`-`/`_` + HTTP Copy · Ctrl/Cmd+K · Signals · Friends · no Discord |
@@ -206,10 +206,10 @@ docs/
 
 ## 9. Immediate next documentation sprint
 
-1. Re-run Capture on human ship (**Waves 4–14 ready**) — [CAPTURE.md](../assets/readme/CAPTURE.md) (README live PNGs + `docs/media/` base set; **Chat + Calendar/Updates + optional Wave 9–13 multi-select sticky / Select page / W11 wishlist+play-status / W12 theme swatches / More densify / Refresh covers / Admin `/admin/quality_profiles` · `/admin/storage` · details versions Missing-on-disk / Remove missing + Wave 2d theme refresh needed** until login healthy)  
+1. Capture when `:5006` healthy (**Waves 4–14 shipped @ c35a927b**) — [CAPTURE.md](../assets/readme/CAPTURE.md) (README live PNGs + `docs/media/` base set; **Chat + Calendar/Updates + Wave 9–13 multi-select sticky / Select page / W11 wishlist+play-status / W12 theme swatches / More densify / Refresh covers / Admin `/admin/quality_profiles` · `/admin/storage` · details versions Missing-on-disk / Remove missing + Wave 2d theme refresh needed** until login healthy)  
 2. ~~Human store logo assets~~ **Done** — theme-adaptive store marks (Ubisoft SVG; others PNG masks) — [library-and-systems.md](../user/library-and-systems.md)  
 3. Browser play platform matrix guide refresh  
 4. Remaining Create runbooks as incidents hit production  
-5. CHANGELOG bump when cutting 0.2.0 (include Member UI + Ops Pass A–F + Wave 1+2 feedback fixes after human ship)  
+5. CHANGELOG bump when cutting 0.2.0 (include Member UI + Ops Pass A–F + Wave 1+2 feedback fixes + Waves 4–14)  
 6. Game details / freshness badges user guide (**Create**)  
 7. Human: Unraid `git pull` + rebuild, **Reset Default Themes**, and **free disk space** (host reported ~99% full) before the pull/rebuild — see [progress.md](progress.md) Operator-owned
