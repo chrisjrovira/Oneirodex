@@ -5,9 +5,13 @@
  *   queue_policy: 'queue' | 'force'   (default queue)
  *   force_parallel: true | '1'        (alias for queue_policy=force)
  *
+ * Surfaces (same fields): Auto Scan · Manual Scan when busy (Jinja
+ * admin_manage_scanjobs.js interceptScanFormSubmit) · Refresh all ·
+ * restart-while-busy. Idle Manual does not send these (List Games identify).
+ *
  * Response:
  *   status: 'queued' | 'started' | 'rejected'
- *   job_id?, position?, message?, error?
+ *   job_id?, position?, message?, error?, coalesced?, coalesced_count?, risk?
  *
  * Legacy: HTTP 409 + { error: 'A scan is already running' }
  */
@@ -49,8 +53,9 @@ export function normalizeScanJobsList(jobsOrPayload) {
 }
 
 /**
- * Build request fields for a second scan start.
- * @param {'queue'|'force'} policy
+ * Build request fields for a scan start / refresh_all retry.
+ * Default (missing / unknown) is queue — never omit fields on a conflict retry.
+ * @param {'queue'|'force'|string|null|undefined} [policy]
  */
 export function buildScanQueueRequestFields(policy) {
   const useForce = policy === SCAN_QUEUE_POLICY.FORCE
@@ -76,14 +81,41 @@ export function isAlreadyRunningReject(httpStatus, body) {
  * Operator-facing toast copy from Backend response field map.
  * @returns {{ text: string, variant: 'success'|'info'|'error' }}
  */
+/** True when Backend coalesced this request into an existing Queued job. */
+export function isScanCoalesced(body) {
+  if (body?.coalesced === true) return true
+  if (Number(body?.coalesced_count) > 0) return true
+  if (Array.isArray(body?.jobs) && body.jobs.some((job) => job?.coalesced === true)) {
+    return true
+  }
+  return false
+}
+
 export function toastForScanStartResponse(body, httpOk = true) {
   const status = String(body?.status || '').toLowerCase()
   const message = (body?.message || body?.error || '').trim()
+  const coalescedSuffix = isScanCoalesced(body) ? ' · coalesced' : ''
 
   if (status === SCAN_START_STATUS.QUEUED) {
-    const pos = body?.position != null ? ` (position ${body.position})` : ''
+    const position =
+      body?.position != null
+        ? body.position
+        : body?.jobs?.[0]?.position != null
+          ? body.jobs[0].position
+          : null
+    if (position != null) {
+      return { text: `Queued · position ${position}${coalescedSuffix}`, variant: 'info' }
+    }
+    if (body?.count != null) {
+      return {
+        text: message || `Queued · ${body.count} library refresh job(s)${coalescedSuffix}`,
+        variant: 'info',
+      }
+    }
     return {
-      text: message || `Scan queued${pos}. It will start when the current job finishes.`,
+      text:
+        message ||
+        `Queued · waiting for the current job to finish.${coalescedSuffix ? ' (coalesced)' : ''}`,
       variant: 'info',
     }
   }
@@ -104,7 +136,7 @@ export function toastForScanStartResponse(body, httpOk = true) {
   if (httpOk && (body?.count != null || Array.isArray(body?.queued))) {
     const count = body.count ?? body.queued?.length ?? 0
     return {
-      text: message || `Queued ${count} library refresh job(s).`,
+      text: message || `Queued · ${count} library refresh job(s)`,
       variant: 'info',
     }
   }
@@ -112,6 +144,14 @@ export function toastForScanStartResponse(body, httpOk = true) {
     return { text: message || 'Scan request accepted.', variant: 'success' }
   }
   return { text: message || body?.error || 'Scan request failed.', variant: 'error' }
+}
+
+/** Map toastForScanStartResponse variant → admin showToast tone. */
+export function toastToneForScanVariant(variant) {
+  if (variant === 'warning') return 'warn'
+  if (variant === 'error' || variant === 'danger') return 'error'
+  if (variant === 'success') return 'success'
+  return 'info'
 }
 
 export const SCAN_CONFLICT_COPY = Object.freeze({

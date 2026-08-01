@@ -13,6 +13,9 @@ export interface RetroArchAiTranslateHint {
   targetLang?: string
 }
 
+/** Native PC platforms — never stage RetroArch `.cht` (Wave 19 GM lock). */
+export const PC_PLATFORMS_NO_RETROARCH_CHEATS = ['PCWIN', 'PCDOS', 'MAC', 'OTHER'] as const
+
 export interface RetroArchProfile {
   core: string
   system: string
@@ -24,9 +27,46 @@ export interface RetroArchProfile {
   /** Override staging root (must be under companion app_data/cheats when writing) */
   cheatsDir?: string
   cheatFilename?: string
+  /**
+   * Server launch/browse payload (`cheat_surface`).
+   * Stage `.cht` only when `retroarch`. Soft-degrade when absent: hide for PC_* platforms.
+   */
+  cheatSurface?: string | null
   apiBase?: string
   /** Optional AI Service overlay hint (config in RetroArch UI; CLI does not set URL reliably) */
   aiTranslate?: RetroArchAiTranslateHint
+}
+
+/**
+ * Wave 19 — stage companion `.cht` only for RetroArch surfaces.
+ * Prefer explicit `cheat_surface === 'retroarch'`. When absent, keep prior
+ * staging for console systems but never for PCWIN/PCDOS/MAC/OTHER.
+ */
+export function shouldStageRetroArchCheat(opts: {
+  cheatSurface?: string | null
+  system?: string | null
+  gameUuid?: string | null
+  cheatFilename?: string | null
+}): boolean {
+  if (!opts.gameUuid || !opts.cheatFilename) {
+    return false
+  }
+  const surface = String(opts.cheatSurface ?? '')
+    .trim()
+    .toLowerCase()
+  if (surface === 'retroarch') {
+    return true
+  }
+  if (surface) {
+    return false
+  }
+  const system = String(opts.system ?? '')
+    .trim()
+    .toUpperCase()
+  if ((PC_PLATFORMS_NO_RETROARCH_CHEATS as readonly string[]).includes(system)) {
+    return false
+  }
+  return true
 }
 
 /**
@@ -101,16 +141,29 @@ export function resolveCheatStagePath(cheatsDir: string, gameUuid: string, filen
 /**
  * Download a .cht from GameTheca and write it under companion app_data/cheats/.
  * Reuses Tauri `write_file_bytes` (ACL allows downloads + cheats roots).
+ * Gated by {@link shouldStageRetroArchCheat} when `cheatSurface` / `system` are known.
  */
 export async function stageCheatFile(opts: {
   gameUuid: string
   filename: string
   apiBase?: string
   cheatsDir?: string
+  cheatSurface?: string | null
+  system?: string | null
   fetchImpl?: typeof fetch
 }): Promise<{ ok: true; path: string } | { ok: false; error: string }> {
   if (!isTauriRuntime()) {
     return { ok: false, error: 'Companion runtime required to stage cheats' }
+  }
+  if (
+    !shouldStageRetroArchCheat({
+      cheatSurface: opts.cheatSurface,
+      system: opts.system,
+      gameUuid: opts.gameUuid,
+      cheatFilename: opts.filename,
+    })
+  ) {
+    return { ok: false, error: 'cheat staging skipped: not retroarch surface' }
   }
   const fetched = await fetchCheatText(opts)
   if (!fetched.ok) {
@@ -151,12 +204,21 @@ export async function launchRetroArchProfile(profile: RetroArchProfile): Promise
     throw new Error('RetroArch launch requires the desktop companion')
   }
   let cheatPath: string | undefined
-  if (profile.gameUuid && profile.cheatFilename) {
-    const staged = await stageCheatFile({
+  if (
+    shouldStageRetroArchCheat({
+      cheatSurface: profile.cheatSurface,
+      system: profile.system,
       gameUuid: profile.gameUuid,
-      filename: profile.cheatFilename,
+      cheatFilename: profile.cheatFilename,
+    })
+  ) {
+    const staged = await stageCheatFile({
+      gameUuid: profile.gameUuid!,
+      filename: profile.cheatFilename!,
       apiBase: profile.apiBase,
       cheatsDir: profile.cheatsDir,
+      cheatSurface: profile.cheatSurface,
+      system: profile.system,
     })
     if (staged.ok) {
       cheatPath = staged.path

@@ -7,6 +7,7 @@ import {
   listCheats,
   uploadCheat,
 } from '../api/cheats'
+import { showsRetroarchCheats } from '../utils/detailsMedia'
 import { showToast } from '../utils/toast'
 import './CheatsPanel.css'
 
@@ -21,16 +22,15 @@ function formatSize(bytes) {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function isPcNativePlatform(libraryPlatform) {
-  const key = String(libraryPlatform || '').toUpperCase()
-  return key === 'PCWIN' || key === 'PC' || key === 'WINDOWS' || key.startsWith('PC_')
-}
-
 /**
- * Game details Cheats panel — create / upload / list / delete `.cht` files.
- * WebRetro play bar already lists the same library files for apply.
+ * Game details Cheats panel - create / upload / list / delete `.cht` files.
+ * Only mounts when Backend `cheat_surface === 'retroarch'` (Wave 19 GM lock).
  */
-export function CheatsPanel({ gameUuid, playHref = null, libraryPlatform = '' }) {
+export function CheatsPanel({
+  gameUuid,
+  playHref = null,
+  cheatSurface = 'retroarch',
+}) {
   const formId = useId()
   const [cheats, setCheats] = useState([])
   const [loading, setLoading] = useState(true)
@@ -43,10 +43,10 @@ export function CheatsPanel({ gameUuid, playHref = null, libraryPlatform = '' })
   const [uploadFile, setUploadFile] = useState(null)
   const [reloadTick, setReloadTick] = useState(0)
 
-  const pcHonesty = isPcNativePlatform(libraryPlatform)
+  const allowed = showsRetroarchCheats({ cheat_surface: cheatSurface })
 
   useEffect(() => {
-    if (!gameUuid) {
+    if (!gameUuid || !allowed) {
       return undefined
     }
     const controller = new AbortController()
@@ -69,7 +69,11 @@ export function CheatsPanel({ gameUuid, playHref = null, libraryPlatform = '' })
       active = false
       controller.abort()
     }
-  }, [gameUuid, reloadTick])
+  }, [gameUuid, reloadTick, allowed])
+
+  if (!allowed) {
+    return null
+  }
 
   function refresh(message) {
     if (message) {
@@ -159,15 +163,7 @@ export function CheatsPanel({ gameUuid, playHref = null, libraryPlatform = '' })
       <p className="gt-cheats-panel__lede">
         Household RetroArch <code>.cht</code> files for this title. Browser play loads them from the
         play bar cheat list; companion stages the same files before RetroArch. Quick Menu may still
-        be required to enable codes.
-        {pcHonesty ? (
-          <>
-            {' '}
-            PC / native titles: attach operator notes or a BYO trainer path only — GameTheca does
-            not inject memory cheats.
-          </>
-        ) : null}{' '}
-        See <Link to="/help#cheats">Help → Cheats</Link>.
+        be required to enable codes. See <Link to="/help#cheats">Help → Cheats</Link>.
       </p>
 
       {loading ? <p className="gt-cheats-panel__status">Loading cheats…</p> : null}
@@ -186,7 +182,7 @@ export function CheatsPanel({ gameUuid, playHref = null, libraryPlatform = '' })
       ) : null}
 
       {!loading && !error && cheats.length === 0 ? (
-        <p className="gt-cheats-panel__status">No <code>.cht</code> files yet — create one or upload.</p>
+        <p className="gt-cheats-panel__status">No <code>.cht</code> files yet - create one or upload.</p>
       ) : null}
 
       {cheats.length > 0 ? (

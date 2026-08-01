@@ -16,6 +16,8 @@ cp .env.docker.example .env          # local/NAS
 # Set SECRET_KEY (required — container refuses the placeholder)
 # Set DATA_FOLDER_GAMES = HOST games path (DATA_FOLDER_WAREZ deprecated alias)
 # Set LIBRARY_HOST_PATH = HOST library/appdata path (default ./data/library)
+# Optional BIOS: EMULATOR_BIOS_HOST_PATH + uncomment bios bind in compose
+#   (appdata only — never games share; never commit firmware binaries)
 # Do NOT set DATABASE_URL=@localhost — Compose builds URL with host "db"
 docker compose up -d --build
 ```
@@ -30,6 +32,7 @@ Do **not** conflate games (scan root) with library/uploads. Compose header has a
 |---|---|---|---|---|
 | **Games** | `DATA_FOLDER_GAMES` (alias `DATA_FOLDER_WAREZ`) | `/storage` | **ro** | Scan root only — never uploads |
 | **Library / uploads** | `LIBRARY_HOST_PATH` | `/app/gametheca/static/library` | **rw** | Covers, themes, uploads |
+| **Optional BIOS / firmware** | `EMULATOR_BIOS_HOST_PATH` (uncomment bind in compose) | `/app/gametheca/static/library/bios` | **rw** | Private host firmware under appdata — not games. Public stance remains Admin upload-only — [unraid-deploy.md § Local private BIOS](unraid-deploy.md#local-private-bios-mount-vs-public-upload) |
 | Optional WebRetro cores | `WEBRETRO_CORES_HOST_PATH` (uncomment in compose) | `/app/gametheca/static/vendor/webretro/cores` | rw | Operator WASM cores — [webretro-cores.md](webretro-cores.md) |
 | Postgres | Compose volume `db_data` | `/var/lib/postgresql/data/pgdata` | rw | DB |
 | pg_hba | `./docker/postgres/pg_hba.conf` | `/etc/gametheca/pg_hba.conf` | ro | App↔db TCP without SSL (scram still required) |
@@ -57,6 +60,8 @@ docker compose build --no-cache && docker compose up -d
 ```
 
 Then Reset Default Themes if the library volume still has stale CSS.
+
+**Admin SPA build note:** `frontend-build` copies `gametheca/setup/default_theme/js/stageECandidates.js` and `unmatchedTriage.js` into the build tree before `admin-app` `npm run build` so relative SoT re-exports resolve (those files are not under `frontend/admin-app/`).
 
 ## Other optional profiles
 

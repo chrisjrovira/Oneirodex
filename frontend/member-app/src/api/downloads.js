@@ -23,6 +23,44 @@ function csrfHeaders(additionalHeaders = {}) {
   }
 }
 
+function raiseDownloadError(data, status, fallback) {
+  const error = new Error(data?.hint || data?.error || fallback)
+  error.status = status
+  error.code = data?.code
+  error.hint = data?.hint
+  error.data = data
+  return error
+}
+
+/**
+ * Initiate a library download via API (honors 410 path_missing honesty).
+ * @param {string} gameUuid
+ * @param {{ kind?: 'base' | 'update' | 'extra', versionUuid?: string, signal?: AbortSignal }} [options]
+ */
+export async function initiateGameDownload(gameUuid, { kind = 'base', versionUuid, signal } = {}) {
+  const body = { kind: kind || 'base' }
+  if (versionUuid) {
+    body.version_uuid = versionUuid
+  }
+
+  const response = await fetch(`/api/downloads/games/${encodeURIComponent(gameUuid)}`, {
+    method: 'POST',
+    signal,
+    credentials: 'same-origin',
+    headers: csrfHeaders({
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    }),
+    body: JSON.stringify(body),
+  })
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw raiseDownloadError(data, response.status, `download ${response.status}`)
+  }
+  return data
+}
+
 export async function fetchMyDownloads({ signal } = {}) {
   const response = await fetch('/api/my_downloads', {
     signal,

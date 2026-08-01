@@ -71,6 +71,24 @@ def mark_game_path_ok(game: Game) -> None:
     game.path_status = PATH_STATUS_OK if path else PATH_STATUS_EMPTY
 
 
+def path_health_fields(game) -> dict:
+    """Browse / favorites / discover card fields for disk presence honesty.
+
+    ``path_status`` is the persisted scan signal (``ok``|``missing``|``empty``|null).
+    ``path_missing`` is True only when status is explicitly ``missing`` (files gone,
+    remove-missing off) — UI badge hook for Library tiles.
+    """
+    status = getattr(game, 'path_status', None)
+    if status is not None:
+        status = str(status).strip().lower() or None
+        if status not in (PATH_STATUS_OK, PATH_STATUS_MISSING, PATH_STATUS_EMPTY):
+            status = None
+    return {
+        'path_status': status,
+        'path_missing': status == PATH_STATUS_MISSING,
+    }
+
+
 def _normalize_disk_path(path: str | None) -> str:
     if not path:
         return ''

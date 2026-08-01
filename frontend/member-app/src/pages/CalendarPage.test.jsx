@@ -1,13 +1,43 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { CalendarPage } from './CalendarPage'
+import {
+  CalendarPage,
+  buildMonthCells,
+  readCalendarView,
+  writeCalendarView,
+} from './CalendarPage'
 import * as calendarApi from '../api/calendar'
 
 vi.mock('../api/calendar', () => ({
   fetchCalendar: vi.fn(),
 }))
 
+const VIEW_KEY = 'gt.calendar.view'
+
+function installLocalStorageMock() {
+  const store = new Map()
+  const api = {
+    getItem: (key) => (store.has(key) ? store.get(key) : null),
+    setItem: (key, value) => {
+      store.set(String(key), String(value))
+    },
+    removeItem: (key) => {
+      store.delete(key)
+    },
+    clear: () => {
+      store.clear()
+    },
+  }
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    writable: true,
+    value: api,
+  })
+  return api
+}
+
 beforeEach(() => {
+  installLocalStorageMock()
   calendarApi.fetchCalendar.mockReset()
   calendarApi.fetchCalendar.mockResolvedValue({
     count: 1,
@@ -23,6 +53,7 @@ beforeEach(() => {
       },
     ],
   })
+  window.localStorage.removeItem(VIEW_KEY)
 })
 
 test('lists dense release rows with date, title, and link', async () => {
@@ -71,4 +102,87 @@ test('window controls pass days_ahead and days_behind', async () => {
       expect.objectContaining({ daysAhead: 90, daysBehind: 7 }),
     )
   })
+})
+
+test('view switcher persists selection in localStorage', async () => {
+  const user = userEvent.setup()
+  render(<CalendarPage />)
+  await screen.findByText('Example Title')
+
+  expect(screen.getByRole('button', { name: 'List' })).toHaveAttribute('aria-pressed', 'true')
+  await user.click(screen.getByRole('button', { name: 'Month' }))
+  expect(screen.getByRole('button', { name: 'Month' })).toHaveAttribute('aria-pressed', 'true')
+  expect(window.localStorage.getItem(VIEW_KEY)).toBe('month')
+
+  await user.click(screen.getByRole('button', { name: 'Agenda' }))
+  expect(window.localStorage.getItem(VIEW_KEY)).toBe('agenda')
+  expect(screen.getByRole('button', { name: 'Agenda' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('restores persisted calendar view on mount', async () => {
+  writeCalendarView('agenda')
+  expect(readCalendarView()).toBe('agenda')
+
+  render(<CalendarPage />)
+  await screen.findByText('Example Title')
+  expect(screen.getByRole('button', { name: 'Agenda' })).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByText(/Week of/i)).toBeInTheDocument()
+})
+
+test('month view renders release markers from mock data', async () => {
+  const user = userEvent.setup()
+  calendarApi.fetchCalendar.mockResolvedValue({
+    count: 2,
+    releases: [
+      {
+        igdb_id: 1,
+        name: 'August Drop',
+        slug: 'august-drop',
+        first_release_date: '2026-08-15',
+        window: 'upcoming',
+      },
+      {
+        igdb_id: 2,
+        name: 'Same Day Sequel',
+        slug: 'same-day-sequel',
+        first_release_date: '2026-08-15',
+        window: 'upcoming',
+      },
+    ],
+  })
+
+  render(<CalendarPage />)
+  await screen.findByText('August Drop')
+
+  await user.click(screen.getByRole('button', { name: 'Month' }))
+
+  let guard = 0
+  while (guard < 24) {
+    const label = screen.getByRole('heading', { level: 3 })
+    if (/August 2026/i.test(label.textContent || '')) break
+    await user.click(screen.getByRole('button', { name: 'Next month' }))
+    guard += 1
+  }
+  expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(/August 2026/i)
+
+  const dayBtn = screen.getByRole('gridcell', { name: /15, 2 releases/i })
+  expect(dayBtn).toHaveClass('has-releases')
+  expect(dayBtn.querySelectorAll('.gt-calendar__dot')).toHaveLength(2)
+
+  await user.click(dayBtn)
+  const panel = screen.getByText(/Aug/i, { selector: 'h4' }).closest('.gt-calendar__day-panel')
+  expect(within(panel).getByText('August Drop')).toBeInTheDocument()
+  expect(within(panel).getByText('Same Day Sequel')).toBeInTheDocument()
+})
+
+test('buildMonthCells indexes markers by date key', () => {
+  const byDate = new Map([
+    ['2026-08-15', [{ name: 'A' }, { name: 'B' }]],
+    ['2026-08-01', [{ name: 'C' }]],
+  ])
+  const cells = buildMonthCells(2026, 7, byDate)
+  const day15 = cells.find((c) => c.inMonth && c.day === 15)
+  const day1 = cells.find((c) => c.inMonth && c.day === 1)
+  expect(day15?.releases).toHaveLength(2)
+  expect(day1?.releases).toHaveLength(1)
 })

@@ -140,11 +140,18 @@ export function MeterBar({ label, percent, detail }) {
   )
 }
 
+const METRIC_TONES = new Set([
+  'good',
+  'fair',
+  'poor',
+  'na',
+  'action',
+  'warning',
+  'info',
+])
+
 export function MetricTile({ label, value, hint, tone }) {
-  const toneClass =
-    tone === 'good' || tone === 'fair' || tone === 'poor' || tone === 'na'
-      ? ` gt-ops-metric--${tone}`
-      : ''
+  const toneClass = METRIC_TONES.has(tone) ? ` gt-ops-metric--${tone}` : ''
   return (
     <div className={`gt-ops-metric${toneClass}`}>
       <div className="gt-ops-metric__label">{label}</div>
@@ -152,6 +159,58 @@ export function MetricTile({ label, value, hint, tone }) {
       {hint ? <div className="gt-ops-metric__hint">{hint}</div> : null}
     </div>
   )
+}
+
+/** Disk / CPU-style percent → good | warning | action | na (aurora issue tones). */
+export function percentHealthTone(percent) {
+  if (percent == null || !Number.isFinite(Number(percent))) return 'na'
+  const pct = Number(percent)
+  if (pct >= 95) return 'action'
+  if (pct >= 85) return 'warning'
+  if (pct >= 70) return 'fair'
+  return 'good'
+}
+
+/** Readyz string/object → good | action | warning | info | na. */
+export function readyzTone(readyz) {
+  if (!readyz) return 'na'
+  const status = String(readyz.status || readyz || '').toLowerCase()
+  if (status === 'ok' || status === 'ready' || status === 'pass') return 'good'
+  if (status === 'fail' || status === 'failed' || status === 'error' || status === 'down') {
+    return 'action'
+  }
+  if (status === 'degraded' || status === 'warn' || status === 'warning') return 'warning'
+  if (status === 'unknown' || status === 'n/a') return 'na'
+  return 'info'
+}
+
+/** Active scan count → info when busy, good when idle, na when missing. */
+export function scansActiveTone(activeCount) {
+  if (activeCount == null || !Number.isFinite(Number(activeCount))) return 'na'
+  return Number(activeCount) > 0 ? 'info' : 'good'
+}
+
+/** Companions online/registered → good / fair / warning / na. */
+export function companionsTone(companions) {
+  if (!companions) return 'na'
+  const online = Number(companions.online)
+  const registered = Number(companions.registered)
+  if (!Number.isFinite(registered) || registered <= 0) {
+    return Number.isFinite(online) && online > 0 ? 'info' : 'na'
+  }
+  if (!Number.isFinite(online) || online <= 0) return 'warning'
+  if (online < registered) return 'fair'
+  return 'good'
+}
+
+/** DB ping ms → good / fair / warning / action / na. */
+export function dbPingTone(ms) {
+  if (ms == null || !Number.isFinite(Number(ms))) return 'na'
+  const n = Number(ms)
+  if (n >= 500) return 'action'
+  if (n >= 200) return 'warning'
+  if (n >= 80) return 'fair'
+  return 'good'
 }
 
 export function formatLoadAvg(loadAvg) {

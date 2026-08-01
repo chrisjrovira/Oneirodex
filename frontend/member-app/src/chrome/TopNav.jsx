@@ -113,7 +113,7 @@ export function TopNav({
   const accountId = useId()
   const paletteHint = commandPaletteHint()
 
-  const primaryLinks = getPrimaryLinks().filter((link) => link.id !== 'admin' || isAdmin)
+  const primaryLinks = getPrimaryLinks()
   const moreLinks = getMoreLinks({ showTrailers, showHelp, enableVr })
   const contextLinks = getContextLinks(pathname, { isAdmin })
 

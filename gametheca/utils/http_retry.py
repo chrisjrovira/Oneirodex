@@ -12,6 +12,10 @@ _MIN_INTERVAL_SEC = {
     'epic': 1.0,
     'itch': 1.0,
     'giantbomb': 1.0,
+    # MobyGames non-commercial: max ~1 req/sec (720/hr).
+    'mobygames': 1.0,
+    # TheGamesDB free tier is monthly-quota limited — keep polite spacing.
+    'thegamesdb': 1.0,
 }
 
 

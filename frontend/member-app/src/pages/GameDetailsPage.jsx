@@ -7,6 +7,7 @@ import {
   fetchGameVersions,
 } from '../api/gameDetails'
 import { attachPatchCatalogGuide, searchPatchCatalog } from '../api/patchCatalog'
+import { initiateGameDownload } from '../api/downloads'
 import { queueClientCommand } from '../api/clientCommands'
 import { BadgeStack } from '../components/BadgeStack'
 import { CheatsPanel } from '../components/CheatsPanel'
@@ -21,11 +22,20 @@ import {
   formatVersionSize,
   isVersionDownloadable,
   isVersionPathMissing,
+  showsRetroarchCheats,
   trailerEmbedUrls,
   youtubeDemoLink,
 } from '../utils/detailsMedia'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { ITEM_KIND_LABEL, resolveItemKind } from '../utils/itemKind'
+import {
+  FIRMWARE_ADMIN_HREF,
+  FIRMWARE_HELP_HREF,
+  firmwareBlockHint,
+  firmwareBlockMessage,
+  honestyApiErrorMessage,
+  isFirmwarePlayBlocked,
+} from '../utils/playHonesty'
 import { showToast } from '../utils/toast'
 import './GameDetailsPage.css'
 
@@ -135,7 +145,7 @@ export function GameDetailsPage() {
   )
 
   const playHref = useMemo(() => {
-    if (!game?.can_play_in_browser) {
+    if (!game?.can_play_in_browser || isFirmwarePlayBlocked(game)) {
       return null
     }
     const cores = Array.isArray(game.emulator_cores) ? game.emulator_cores : []
@@ -146,8 +156,36 @@ export function GameDetailsPage() {
     const platform = game.library_platform
       ? `&platform=${encodeURIComponent(game.library_platform)}`
       : ''
-    return `/static/vendor/webretro/webretro.html?guid=${encodeURIComponent(game.uuid)}&core=${encodeURIComponent(core)}${platform}`
+    const cheatSurface = showsRetroarchCheats(game)
+      ? `&cheat_surface=${encodeURIComponent('retroarch')}`
+      : ''
+    return `/static/vendor/webretro/webretro.html?guid=${encodeURIComponent(game.uuid)}&core=${encodeURIComponent(core)}${platform}${cheatSurface}`
   }, [game, selectedCore])
+
+  const firmwareBlocked = isFirmwarePlayBlocked(game)
+  const firmwareMessage = firmwareBlocked ? firmwareBlockMessage(game) : null
+  const firmwareHint = firmwareBlocked ? firmwareBlockHint(game) : null
+
+  async function handleVersionDownload({ kind = 'base', versionUuid, label }) {
+    if (!game?.uuid || busyVersionKey) {
+      return
+    }
+    const versionKey = `download:${kind}:${versionUuid || 'base'}`
+    setBusyVersionKey(versionKey)
+    setVersionActionStatus(null)
+    try {
+      await initiateGameDownload(game.uuid, { kind, versionUuid })
+      setVersionActionStatus(`${label || 'Download'} ready - opening Downloads`)
+      showToast(`${label || 'Download'} ready - opening Downloads`, 'success')
+      window.location.assign('/downloads')
+    } catch (err) {
+      const message = honestyApiErrorMessage(err, 'Download failed')
+      setVersionActionStatus(message)
+      showToast(message, 'error')
+    } finally {
+      setBusyVersionKey(null)
+    }
+  }
 
   async function handleFreshnessCheck() {
     if (!gameUuid || freshnessBusy) {
@@ -245,90 +283,35 @@ export function GameDetailsPage() {
       </div>
 
       <div className="gt-details-page__hero">
-        <div className="gt-details-page__cover-wrap">
+        <div
+          className={`gt-details-page__cover-wrap${adminMenuOpen ? ' gt-details-page__cover-wrap--menu-open' : ''}`}
+        >
           <img
             className="gt-details-page__cover"
             src={coverUrl(game.cover_url)}
             alt=""
           />
           <BadgeStack game={game} preferredCorner="top-left" maxVisible={2} />
-        </div>
-        <div className="gt-details-page__hero-main">
-          <h1>{game.name}</h1>
-          <p className="gt-details-page__meta-line">
-            {[
-              game.developer,
-              game.publisher,
-              game.category,
-              game.first_release_date
-                ? formatLocaleDate(game.first_release_date, { fallback: null })
-                : null,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
-          <div className="gt-details-page__chips">
-            {itemKind !== 'game' ? (
-              <span
-                className="chip"
-                title="Library item kind — gaming software, not a main-game catalog match"
-              >
-                {ITEM_KIND_LABEL[itemKind]}
-              </span>
-            ) : null}
-            {game.local_version ? (
-              <span className="chip" title="Installed / library version">
-                Version {game.local_version}
-              </span>
-            ) : null}
-            {game.remote_version_summary ? (
-              <span className="chip" title="Remote / store version summary">
-                Remote {game.remote_version_summary}
-              </span>
-            ) : null}
-            {game.size ? <span className="chip">{game.size}</span> : null}
-            {game.status_label ? <span className="chip">{game.status_label}</span> : null}
-            {game.rom_region || game.rom_languages ? (
-              <span className="chip" title="ROM region / languages from filename">
-                {[game.rom_region, game.rom_languages].filter(Boolean).join(' · ') || 'ROM lang'}
-                {game.preferred_locale_matches === true
-                  ? ` · matches ${game.preferred_game_locale || 'en-US'}`
-                  : null}
-                {game.preferred_locale_matches === false
-                  ? ` · no ${game.preferred_game_locale || 'en-US'}`
-                  : null}
-                {game.has_english === false ? ' · no EN' : null}
-              </span>
-            ) : null}
-            {game.freshness_status ? (
-              <span className="chip">Freshness: {game.freshness_status}</span>
-            ) : null}
-            {game.hltb_main_story != null ? (
-              <span className="chip">HLTB main {Number(game.hltb_main_story).toFixed(1)}h</span>
-            ) : null}
-            {game.is_favorite ? <span className="chip">Favorite</span> : null}
-          </div>
-          <GameActionBar
-            gameUuid={game.uuid}
-            gameName={game.name}
-            lifecycleState={game.lifecycle_state || 'not_downloaded'}
-            clientConnected={Boolean(game.client_connected)}
-            variant="full"
-          />
           {game.is_admin ? (
             <div className="gt-details-page__admin-menu" ref={adminMenuRef}>
               <button
                 type="button"
-                className="gt-btn gt-details-page__admin-menu-btn"
+                className="gt-details-page__admin-menu-btn"
+                data-chrome-anchor="top-right"
                 aria-expanded={adminMenuOpen}
                 aria-haspopup="menu"
+                aria-controls={adminMenuOpen ? 'gt-details-admin-menu' : undefined}
                 aria-label="Admin actions"
                 onClick={() => setAdminMenuOpen((open) => !open)}
               >
-                ⋮
+                <span aria-hidden="true">⋮</span>
               </button>
               {adminMenuOpen ? (
-                <div className="gt-details-page__admin-menu-panel" role="menu">
+                <div
+                  id="gt-details-admin-menu"
+                  className="gt-details-page__admin-menu-panel"
+                  role="menu"
+                >
                   <a
                     className="gt-details-page__admin-menu-item"
                     role="menuitem"
@@ -360,6 +343,69 @@ export function GameDetailsPage() {
               ) : null}
             </div>
           ) : null}
+        </div>
+        <div className="gt-details-page__hero-main">
+          <h1>{game.name}</h1>
+          <p className="gt-details-page__meta-line">
+            {[
+              game.developer,
+              game.publisher,
+              game.category,
+              game.first_release_date
+                ? formatLocaleDate(game.first_release_date, { fallback: null })
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+          <div className="gt-details-page__chips">
+            {itemKind !== 'game' ? (
+              <span
+                className="chip gt-chip"
+                title="Library item kind - gaming software, not a main-game catalog match"
+              >
+                {ITEM_KIND_LABEL[itemKind]}
+              </span>
+            ) : null}
+            {game.local_version ? (
+              <span className="chip gt-chip" title="Installed / library version">
+                Version {game.local_version}
+              </span>
+            ) : null}
+            {game.remote_version_summary ? (
+              <span className="chip gt-chip" title="Remote / store version summary">
+                Remote {game.remote_version_summary}
+              </span>
+            ) : null}
+            {game.size ? <span className="chip gt-chip">{game.size}</span> : null}
+            {game.status_label ? <span className="chip gt-chip">{game.status_label}</span> : null}
+            {game.rom_region || game.rom_languages ? (
+              <span className="chip gt-chip" title="ROM region / languages from filename">
+                {[game.rom_region, game.rom_languages].filter(Boolean).join(' · ') || 'ROM lang'}
+                {game.preferred_locale_matches === true
+                  ? ` · matches ${game.preferred_game_locale || 'en-US'}`
+                  : null}
+                {game.preferred_locale_matches === false
+                  ? ` · no ${game.preferred_game_locale || 'en-US'}`
+                  : null}
+                {game.has_english === false ? ' · no EN' : null}
+              </span>
+            ) : null}
+            {game.freshness_status ? (
+              <span className="chip gt-chip">Freshness: {game.freshness_status}</span>
+            ) : null}
+            {game.hltb_main_story != null ? (
+              <span className="chip gt-chip">HLTB main {Number(game.hltb_main_story).toFixed(1)}h</span>
+            ) : null}
+            {game.is_favorite ? <span className="chip gt-chip">Favorite</span> : null}
+          </div>
+          <GameActionBar
+            gameUuid={game.uuid}
+            gameName={game.name}
+            lifecycleState={game.lifecycle_state || 'not_downloaded'}
+            clientConnected={Boolean(game.client_connected)}
+            variant="full"
+          />
           <div className="gt-details-page__quick">
             {playHref ? (
               <>
@@ -382,14 +428,16 @@ export function GameDetailsPage() {
                   Play in browser
                 </a>
               </>
-            ) : game.play_blocker === 'unsupported_archive' ? (
+            ) : firmwareBlocked || game.play_blocker === 'unsupported_archive' ? (
               <button
                 type="button"
                 className="gt-btn gt-btn--primary"
                 disabled
                 title={
-                  game.companion_hint ||
-                  'This archive type cannot be extracted for browser play. Use .zip / .7z / .rar / ROM.gz or a raw ROM.'
+                  firmwareBlocked
+                    ? firmwareMessage
+                    : game.companion_hint ||
+                      'This archive type cannot be extracted for browser play. Use .zip / .7z / .rar / ROM.gz or a raw ROM.'
                 }
               >
                 Play in browser
@@ -416,6 +464,22 @@ export function GameDetailsPage() {
               {freshnessBusy ? 'Checking…' : 'Check stores'}
             </button>
           </div>
+          {firmwareBlocked ? (
+            <p className="gt-details-page__play-honesty" role="status">
+              <span>{firmwareMessage}</span>
+              {firmwareHint ? (
+                <span className="gt-details-page__muted"> {firmwareHint}</span>
+              ) : null}{' '}
+              <Link to={FIRMWARE_HELP_HREF}>Help → Browser play</Link>
+              {game.is_admin ? (
+                <>
+                  {' '}
+                  ·{' '}
+                  <a href={FIRMWARE_ADMIN_HREF}>Admin → Emulators</a>
+                </>
+              ) : null}
+            </p>
+          ) : null}
           {freshnessError ? (
             <p className="gt-details-page__muted" role="alert">
               Store check failed: {String(freshnessError.message || freshnessError)}
@@ -481,7 +545,11 @@ export function GameDetailsPage() {
                 <dt>Genres</dt>
                 <dd>
                   {game.genres.map((name) => (
-                    <Link key={name} className="chip" to={`/library?genre=${encodeURIComponent(name)}`}>
+                    <Link
+                      key={name}
+                      className="chip gt-chip"
+                      to={`/library?genre=${encodeURIComponent(name)}`}
+                    >
                       {name}
                     </Link>
                   ))}
@@ -632,7 +700,7 @@ export function GameDetailsPage() {
             <div className="gt-details-page__catalog">
               <h3>Operator catalog</h3>
               <p className="gt-details-page__muted">
-                Search your local YAML/JSON patch guide catalog (metadata only — no third-party scrape).
+                Search your local YAML/JSON patch guide catalog (metadata only - no third-party scrape).
               </p>
               <button
                 type="button"
@@ -760,24 +828,22 @@ export function GameDetailsPage() {
           ) : null}
           <ul className="gt-details-page__versions">
             {baseAndUpdates.map((row) => {
-              const downloadHref =
-                row.kind === 'base'
-                  ? `/download_game/${game.uuid}`
-                  : `/download_other/${row.kind}/${game.uuid}/${row.uuid}`
               const versionKey = `${row.kind}:${row.uuid}`
+              const downloadKey = `download:${row.kind}:${row.uuid || 'base'}`
               const canDownload = isVersionDownloadable(row)
               const pathMissing = isVersionPathMissing(row)
               const sizeLabel = formatVersionSize(row.size)
               const canApply =
                 Boolean(game.client_connected) && row.kind === 'update' && canDownload
               const applyBusy = busyVersionKey === versionKey
+              const downloadBusy = busyVersionKey === downloadKey
               return (
                 <li key={`${row.kind}-${row.id || row.uuid}`}>
                   <div className="gt-details-page__version-row">
                     <div className="gt-details-page__version-meta">
                       <strong>{row.label}</strong>
                       {row.is_default ? (
-                        <span className="chip" title="Default download version">
+                        <span className="chip gt-chip" title="Default download version">
                           Default
                         </span>
                       ) : null}
@@ -795,9 +861,20 @@ export function GameDetailsPage() {
                     </div>
                     <div className="gt-details-page__version-actions">
                       {canDownload ? (
-                        <a className="gt-btn" href={downloadHref}>
-                          Download
-                        </a>
+                        <button
+                          type="button"
+                          className="gt-btn"
+                          disabled={Boolean(busyVersionKey)}
+                          onClick={() => {
+                            void handleVersionDownload({
+                              kind: row.kind === 'update' ? 'update' : 'base',
+                              versionUuid: row.kind === 'update' ? row.uuid : undefined,
+                              label: row.label,
+                            })
+                          }}
+                        >
+                          {downloadBusy ? 'Queuing…' : 'Download'}
+                        </button>
                       ) : null}
                       {canApply ? (
                         <button
@@ -836,11 +913,13 @@ export function GameDetailsPage() {
         </section>
       ) : null}
 
-      <CheatsPanel
-        gameUuid={game.uuid}
-        playHref={playHref}
-        libraryPlatform={game.library_platform || ''}
-      />
+      {showsRetroarchCheats(game) ? (
+        <CheatsPanel
+          gameUuid={game.uuid}
+          playHref={playHref}
+          cheatSurface={game.cheat_surface}
+        />
+      ) : null}
 
       <section className="gt-details-page__section" id="extras">
         <h2>Extras &amp; DLC</h2>
@@ -878,12 +957,25 @@ export function GameDetailsPage() {
                       ) : null}
                     </div>
                     <div className="gt-details-page__version-actions">
-                      {row.download_url ? (
-                        <a className="gt-btn" href={row.download_url}>
-                          Download
-                        </a>
+                      {row.download_url && !pathMissing ? (
+                        <button
+                          type="button"
+                          className="gt-btn"
+                          disabled={Boolean(busyVersionKey)}
+                          onClick={() => {
+                            void handleVersionDownload({
+                              kind: 'extra',
+                              versionUuid: row.uuid,
+                              label: row.label,
+                            })
+                          }}
+                        >
+                          {busyVersionKey === `download:extra:${row.uuid || 'base'}`
+                            ? 'Queuing…'
+                            : 'Download'}
+                        </button>
                       ) : null}
-                      {game.client_connected && row.uuid && row.download_url ? (
+                      {game.client_connected && row.uuid && row.download_url && !pathMissing ? (
                         <button
                           type="button"
                           className="gt-btn"

@@ -12,7 +12,7 @@ import './ChatSlideOut.css'
 
 /**
  * Left slide-out chat chrome — dismissible, reopen from launcher / More / Cmd+K / /chat deep-link.
- * TopNav stays available; panel sits under --gt-topnav-offset.
+ * TopNav stays available; panel sits under --gt-topnav-offset. Expand widens to a full room.
  */
 export function ChatSlideOut({
   defaultOpen,
@@ -29,12 +29,14 @@ export function ChatSlideOut({
   })
   const open = controlled ? openProp : uncontrolledOpen
   const [channelId, setChannelId] = useState(null)
+  const [expanded, setExpanded] = useState(false)
   const titleId = useId()
 
   function setOpen(next) {
     const value = typeof next === 'function' ? next(open) : next
     if (!controlled) setUncontrolledOpen(value)
     onOpenChange?.(value)
+    if (!value) setExpanded(false)
   }
 
   useEffect(() => {
@@ -46,6 +48,7 @@ export function ChatSlideOut({
     function onOpenRequest(event) {
       const detail = event?.detail || {}
       if (detail.channelId != null) setChannelId(detail.channelId)
+      if (detail.expanded) setExpanded(true)
       setOpen(true)
     }
     function onCloseRequest() {
@@ -106,7 +109,7 @@ export function ChatSlideOut({
             onClick={handleClose}
           />
           <aside
-            className="gt-chat-slide gt-glass-panel is-open"
+            className={`gt-chat-slide gt-glass-panel is-open${expanded ? ' is-expanded' : ''}`}
             role="dialog"
             aria-modal="false"
             aria-labelledby={titleId}
@@ -116,19 +119,34 @@ export function ChatSlideOut({
                 <h2 id={titleId} className="gt-chat-slide__title">
                   Chat
                 </h2>
-                <p className="gt-chat-slide__sub">Household rooms &amp; DMs</p>
+                <p className="gt-chat-slide__sub">
+                  {expanded
+                    ? 'Full household room — channels, thread, voice'
+                    : 'Household rooms & DMs'}
+                </p>
               </div>
-              <button
-                type="button"
-                className="gt-chat-slide__close"
-                aria-label="Hide chat"
-                onClick={handleClose}
-              >
-                ×
-              </button>
+              <div className="gt-chat-slide__header-actions">
+                <button
+                  type="button"
+                  className="gt-chat-slide__expand"
+                  aria-pressed={expanded}
+                  onClick={() => setExpanded((v) => !v)}
+                >
+                  {expanded ? 'Compact' : 'Expand'}
+                </button>
+                <button
+                  type="button"
+                  className="gt-chat-slide__close"
+                  aria-label="Hide chat"
+                  onClick={handleClose}
+                >
+                  ×
+                </button>
+              </div>
             </header>
             <ChatPanel
               compact
+              expanded={expanded}
               initialChannelId={channelId}
               canCreateRooms={canCreateRooms}
               viewer={viewer}

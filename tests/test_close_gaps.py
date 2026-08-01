@@ -171,9 +171,15 @@ def test_resolve_7z_without_py7zr(tmp_path, monkeypatch):
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, '__import__', fake_import)
+    monkeypatch.setattr(
+        'gametheca.utils.rom_archive.find_archive_extractors',
+        lambda: {},
+    )
     with pytest.raises(ArchiveRomError) as exc:
         resolve_playable_rom_path(str(seven), cache_dir=str(tmp_path / 'c'))
     assert exc.value.status_code == 415
+    assert exc.value.code == 'missing_extractor'
+    assert '7z' in (exc.value.hint or '').lower() or 'p7zip' in (exc.value.hint or '').lower()
 
 
 def test_encrypted_save_roundtrip(client, app, db_session, admin, tmp_path, monkeypatch):

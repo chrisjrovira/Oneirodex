@@ -1,4 +1,4 @@
-/* News — sectioned hierarchy with tabs; denser cards, truncated copy */
+/* News — hero strip + magazine densify; aurora; no card dump */
 
 .gt-news__header {
   display: flex;
@@ -43,6 +43,96 @@
   outline: none;
 }
 
+/* Featured strip — one composition lead */
+
+.gt-news__hero {
+  position: relative;
+  margin: 0 0 1.35rem;
+  padding: 1.15rem 1.2rem 1.25rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      125deg,
+      color-mix(in srgb, var(--gt-accent, #2fd67b) 16%, transparent) 0%,
+      transparent 42%
+    ),
+    linear-gradient(
+      200deg,
+      color-mix(in srgb, var(--gt-surface-2, #1c2230) 92%, #0a1620) 0%,
+      color-mix(in srgb, var(--gt-surface, #141820) 96%, transparent) 100%
+    );
+  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 22%, transparent);
+}
+
+.gt-news__hero::after {
+  content: '';
+  position: absolute;
+  inset: auto -10% -40% 40%;
+  height: 70%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--gt-accent, #2fd67b) 18%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.gt-news__hero-kicker {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gt-accent, #2fd67b);
+}
+
+.gt-news__hero-title {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 0.45rem;
+  font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--gt-text, #f2f4f8);
+  max-width: 36rem;
+}
+
+.gt-news__hero-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.gt-news__hero-link:hover .gt-news__hero-title,
+.gt-news__hero-link:focus-visible .gt-news__hero-title {
+  color: var(--gt-accent, #2fd67b);
+  outline: none;
+}
+
+.gt-news__hero-body {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 0.65rem;
+  max-width: 40rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--gt-text, #f2f4f8) 82%, var(--gt-text-muted, #9aa3b2));
+}
+
+.gt-news__hero-meta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.85rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
 .gt-news__section {
   margin: 0 0 1.35rem;
 }
@@ -85,27 +175,63 @@
   font-size: 0.9rem;
 }
 
-.gt-news__list {
+/* Admin rail — hairline densify, accent edge */
+
+.gt-news__rail {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.gt-news__free-list {
+.gt-news__rail-item {
+  padding: 0.65rem 0.15rem 0.65rem 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 60%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 50%, transparent);
+  background: transparent;
+}
+
+.gt-news__rail-item article {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.gt-news__rail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.75rem;
+}
+
+.gt-news__rail-head time,
+.gt-news__rail-item p {
+  color: var(--gt-text-muted, #9aa3b2);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.gt-news__rail-head time {
+  margin-left: auto;
+  font-size: 0.78rem;
+}
+
+/* Free strip */
+
+.gt-news__free-strip {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   gap: 0.65rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.gt-news__headline-list {
-  gap: 0;
-}
-
-.gt-news__card {
-  display: block;
+.gt-news__free-tile {
   padding: 0.7rem 0.8rem;
   background: color-mix(in srgb, var(--gt-surface, #141820) 88%, transparent);
   border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
@@ -113,60 +239,18 @@
   color: var(--gt-text, #f2f4f8);
 }
 
-.gt-news__card--admin {
-  border-left: 3px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
-}
-
-.gt-news__headline {
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  background: transparent;
-  padding: 0.65rem 0.1rem;
-}
-
-.gt-news__headline + .gt-news__headline {
-  border-top: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 65%, transparent);
-}
-
-.gt-news__card article {
+.gt-news__free-tile article {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   min-width: 0;
 }
 
-.gt-news__card-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.4rem 0.75rem;
-}
-
-.gt-news__card-head time,
-.gt-news__card p,
-.gt-news__card time {
+.gt-news__free-tile p {
   color: var(--gt-text-muted, #9aa3b2);
   font-size: 0.88rem;
   line-height: 1.4;
   margin: 0;
-}
-
-.gt-news__card-head time {
-  margin-left: auto;
-  font-size: 0.78rem;
-}
-
-.gt-news__headline-link {
-  color: inherit;
-  text-decoration: none;
-}
-
-.gt-news__headline-link:hover strong,
-.gt-news__headline-link:focus-visible strong {
-  color: var(--gt-accent, #2fd67b);
-  outline: none;
 }
 
 .gt-news__free-row {
@@ -246,8 +330,54 @@
   color: var(--gt-text-muted, #9aa3b2);
 }
 
+/* Magazine headlines */
+
+.gt-news__magazine {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.gt-news__mag-row {
+  padding: 0.7rem 0.1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 65%, transparent);
+  background: transparent;
+}
+
+.gt-news__mag-row article {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.gt-news__mag-row p {
+  margin: 0;
+  color: var(--gt-text-muted, #9aa3b2);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.gt-news__mag-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.gt-news__mag-link:hover strong,
+.gt-news__mag-link:focus-visible strong {
+  color: var(--gt-accent, #2fd67b);
+  outline: none;
+}
+
 @media (max-width: 640px) {
-  .gt-news__free-list {
+  .gt-news__free-strip {
     grid-template-columns: 1fr;
+  }
+
+  .gt-news__hero {
+    padding: 0.95rem 0.9rem 1.05rem;
   }
 }

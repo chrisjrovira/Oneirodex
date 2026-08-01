@@ -33,7 +33,7 @@ beforeEach(() => {
 function renderPanel(props = {}) {
   return render(
     <MemoryRouter>
-      <CheatsPanel gameUuid={GAME_UUID} {...props} />
+      <CheatsPanel gameUuid={GAME_UUID} cheatSurface="retroarch" {...props} />
     </MemoryRouter>,
   )
 }
@@ -58,7 +58,7 @@ test('create form posts name, dialect, and code rows', async () => {
       ],
     })
 
-  renderPanel({ playHref: '/static/vendor/webretro/webretro.html?guid=x&core=nestopia' })
+  renderPanel({ playHref: '/static/vendor/webretro/webretro.html?guid=x&core=nestopia&cheat_surface=retroarch' })
 
   expect(await screen.findByRole('heading', { name: 'Cheats' })).toBeInTheDocument()
   expect(screen.getByText(/create one or upload/i)).toBeInTheDocument()
@@ -79,13 +79,19 @@ test('create form posts name, dialect, and code rows', async () => {
   expect(await screen.findByText('Infinite_lives.cht')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: /Play in browser/i })).toHaveAttribute(
     'href',
-    '/static/vendor/webretro/webretro.html?guid=x&core=nestopia',
+    '/static/vendor/webretro/webretro.html?guid=x&core=nestopia&cheat_surface=retroarch',
   )
 })
 
-test('PC honesty note when library platform is PC native', async () => {
-  renderPanel({ libraryPlatform: 'PCWIN' })
-  expect(await screen.findByText(/does not inject memory cheats/i)).toBeInTheDocument()
+test('omits panel entirely when cheat_surface is not retroarch', () => {
+  const { container } = renderPanel({ cheatSurface: 'none' })
+  expect(container).toBeEmptyDOMElement()
+  expect(cheatsApi.listCheats).not.toHaveBeenCalled()
+})
+
+test('omits panel for empty / PC-style surfaces', () => {
+  const { container } = renderPanel({ cheatSurface: '' })
+  expect(container).toBeEmptyDOMElement()
 })
 
 test('shows create-unavailable message without toast spam path', async () => {

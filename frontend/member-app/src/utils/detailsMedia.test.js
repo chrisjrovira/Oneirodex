@@ -5,6 +5,7 @@ import {
   isVersionDownloadable,
   isVersionPathMissing,
   parseVideoUrls,
+  showsRetroarchCheats,
   trailerEmbedUrls,
   youtubeDemoLink,
   youtubeEmbed,
@@ -89,6 +90,15 @@ test('youtubeDemoLink prefers youtube_demo_url then demo_url then urls', () => {
     label: 'YouTube',
   })
   expect(youtubeDemoLink({})).toBeNull()
+})
+
+test('showsRetroarchCheats requires cheat_surface retroarch', () => {
+  expect(showsRetroarchCheats({ cheat_surface: 'retroarch' })).toBe(true)
+  expect(showsRetroarchCheats({ cheat_surface: 'RETROARCH' })).toBe(true)
+  expect(showsRetroarchCheats({ cheat_surface: 'none' })).toBe(false)
+  expect(showsRetroarchCheats({ library_platform: 'SNES' })).toBe(false)
+  expect(showsRetroarchCheats({ library_platform: 'PCWIN' })).toBe(false)
+  expect(showsRetroarchCheats(null)).toBe(false)
 })
 
 test('adminPathRows uses full_disk_path and server_path for admins', () => {

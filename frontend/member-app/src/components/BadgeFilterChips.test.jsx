@@ -44,9 +44,12 @@ test('BadgeFilterChips omits VR and toggles UPDATE / LANG', async () => {
   )
 
   expect(BADGE_FILTER_CHIPS.map((c) => c.param)).not.toContain('is_vr')
+  expect(BADGE_FILTER_CHIPS.map((c) => c.param)).toContain('path_missing')
   expect(BADGE_FILTER_PARAMS).toContain('is_vr')
   expect(BADGE_FILTER_PARAMS).toContain('needs_translation')
+  expect(BADGE_FILTER_PARAMS).toContain('path_missing')
   expect(screen.queryByRole('button', { name: 'VR' })).toBeNull()
+  expect(screen.getByRole('button', { name: 'MISSING' })).toBeInTheDocument()
 
   await user.click(screen.getByRole('button', { name: 'UPDATE' }))
   expect(applied[0]).toEqual({ sort_by: 'name', has_updates: '1' })

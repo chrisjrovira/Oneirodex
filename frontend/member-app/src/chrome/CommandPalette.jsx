@@ -30,13 +30,22 @@ export function buildPaletteCommands(shellConfig = {}) {
   }
 
   for (const link of getPrimaryLinks()) {
-    if (link.id === 'admin' && !isAdmin) continue
     push({
       id: link.id,
       label: link.label,
       to: link.to,
       href: link.href,
       external: Boolean(link.external),
+      group: 'Navigate',
+    })
+  }
+
+  if (isAdmin) {
+    push({
+      id: 'admin',
+      label: 'Admin',
+      href: '/admin/dashboard',
+      external: true,
       group: 'Navigate',
     })
   }

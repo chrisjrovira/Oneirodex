@@ -45,19 +45,19 @@ export function GameDetailsApp({
         <BadgeStack game={game} preferredCorner="bottom-left" maxVisible={2} />
       </div>
       <div className="gt-details-react__meta">
-        {sizeLabel ? <span className="chip">{sizeLabel}</span> : null}
+        {sizeLabel ? <span className="chip gt-chip">{sizeLabel}</span> : null}
         {freshnessStatus ? (
-          <span className="chip" title="Store freshness">
+          <span className="chip gt-chip" title="Store freshness">
             Freshness: {freshnessStatus}
           </span>
         ) : null}
         {hltbBits.length > 0 ? (
-          <span className="chip" title="HowLongToBeat">
+          <span className="chip gt-chip" title="HowLongToBeat">
             HLTB: {hltbBits.join(' · ')}
           </span>
         ) : null}
         {libraryUuid ? (
-          <span className="chip" title="Library">
+          <span className="chip gt-chip" title="Library">
             Library {String(libraryUuid).slice(0, 8)}…
           </span>
         ) : null}

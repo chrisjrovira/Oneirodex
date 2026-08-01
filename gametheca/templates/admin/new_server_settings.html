@@ -188,10 +188,16 @@
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="proposeOnlyScan">
-                                <label class="form-check-label" for="proposeOnlyScan" data-toggle="tooltip" title="When enabled, the scanner never auto-imports games — not even on a high-confidence IGDB match. Instead it writes a gametheca.proposal.json sidecar for every unmatched folder so an admin can review and approve matches manually.">
+                                <label class="form-check-label" for="proposeOnlyScan" data-toggle="tooltip" title="When enabled, the scanner never auto-imports games — not even on a high-confidence IGDB match. Instead it writes a gametheca.proposal.json sidecar for every unmatched folder so an admin can review and approve matches manually. Prefer this for a first pass on large PC or many-leaf console trees.">
                                     {{ icons.icon('help') }} Propose-Only Scan Mode
                                 </label>
                             </div>
+                            <p class="form-text text-muted small mb-2">
+                                Honesty: propose-only never auto-imports, even on high-confidence matches.
+                                Match thresholds and peel profile live under
+                                <a href="/admin/scan_match">Scan / match policy</a>
+                                (soft-degrades if Backend mid-rollout). No mega-library or depth-3 family walk.
+                            </p>
                         </div>
                     </div>
 

@@ -1,9 +1,9 @@
 # Folder → IGDB name-resolution rules
 
 **Audience:** Backend (scan / `game_name_parse` / `gamenames` / `match_scoring` / identify) · Ops/Docs (scan depth)  
-**Date:** 2026-07-29 · **Owner:** Game Master (rules) → Backend (**Done** A0–A14) → Ops (rescan after ship)  
-**Status:** Stage A0–A14 + C10–C11 **Done** in `parse_game_label` / `generate_goty_variants` / identify (code landed; uncommitted until human ships) · **QA 166 PASS** (parse/gamenames/scoring) · next Ops = **documented** Library A PCWIN propose-only → full rescan `scan_depth=2` (live rescan waits human ship)  
-**Related:** [libraries-and-scans.md](../admin/libraries-and-scans.md) · design `docs/superpowers/specs/2026-07-22-game-recognition-and-rename-design.md`
+**Date:** 2026-07-31 · **Owner:** Game Master (rules) → Backend (**Done** A0–A14 · **Done** B15–B20 console ROM peel · **Done** W21-BE-3 easy-title scoring) → Ops (rescan after ship)  
+**Status:** Stage A0–A14 + C10–C11 **Done** in `parse_game_label` / `generate_goty_variants` / identify (code landed; uncommitted until human ships) · **QA 166 PASS** (parse/gamenames/scoring) · Stage **B15–B20** + **C12** article-reorder **Done** · **W21-BE-3 Done (uncommitted)** — remaster primary-head peel · sequel asymmetry cap · stylized compact variants · equivalent-title collapse (`tests/test_w21_be3_easy_title_igdb.py`) · default threshold **still 0.92** · next Ops = **documented** Library A PCWIN propose-only → full rescan `scan_depth=2` (live rescan waits human ship)  
+**Related:** [libraries-and-scans.md](../admin/libraries-and-scans.md) · [store-metadata-identify.md](store-metadata-identify.md) · design `docs/superpowers/specs/2026-07-22-game-recognition-and-rename-design.md`
 
 ## Gap (evidence) — historical pre-A9; A9–A14 now shipped
 
@@ -95,9 +95,60 @@ A9–A13 may run before A7 as long as Steam ID extract (A5) still sees a trailin
 | Observation | Likely cause | Action |
 |---|---|---|
 | `steam_app_id` **not** extracted | Digits not trailing / not 4–7 / junk after paren | Peel order (A9–A12 before A5, or A5 allow peelable suffix) |
-| ID extracted; Steam title **null** | Store lookup fail / removed app / rate limit | Soft-fail; rely on folder variants; do not invent title |
+| ID extracted; Steam title **null** | Store lookup fail / removed app / rate limit / **wrong namespace** (not a Steam App ID) | Soft-fail; Stage D falls through to exact Steam/GOG title — **do not** invent `steam_app_id` (W21 harden) |
+| Digits peel OK; Steam `appdetails` false; IGDB id≠title | Local/catalog ID in parens (not Steam/IGDB/GOG) | Rely on cleaned title + Stage C / Stage D exact; Stage E propose-only Moby/TGDB |
 | Steam title present; still Unmatched | IGDB search/score gap, not peel | Stage C / scorer — **not** a new A-strip |
 | ID looks like build, not App ID | 4–7 digits that are builds mid-name | Keep A5 **trailing-only**; A3/A12 for Build prose |
+
+### Stage B15–B20 — Console ROM file-leaf peel (**Done** 2026-07-31)
+
+**Audience:** Backend (scan identify · `scan_mode=files` file-leaf) · Ops (console leaf libraries)  
+**Pilot:** **GB/GBC** libraries with `scan_mode=files` — helper works cross-platform; identify wires pilot gate via `should_use_console_rom_peel`.  
+**Entry point:** `parse_console_rom_label` in `gametheca/utils/rom_name_peel.py` (shared peel regex also powers DAT `normalize_set_title` via `normalize_rom_peel_core`).  
+**Hard rule:** Match-only — strip tags for IGDB search quality; **no** mass rename · **no** new HTTP routes.  
+**Naming conventions:** GoodTools / No-Intro bracket and parenthetical shapes are documented as **dump-set naming conventions** — not pirate-index brands. Alias token lists stay **in code only**.
+
+When identify selects console ROM peel (pilot: GB/GBC + files mode), `parse_console_rom_label` runs instead of `parse_game_label`. Returns `transforms[]` trail (W20-2 parity), `propose_only`, and `is_multicart`. Identify treats `propose_only` / multicart like C11 bare franchise — **propose/manual only**, no auto-import.
+
+| # | Rule | Notes |
+|---|---|---|
+| **B15** | Strip known ROM/archive extensions | `.gb` `.gbc` `.gba` `.nes` `.sfc` `.z64` `.md` `.bin` `.zip` `.7z` … |
+| **B16** | Strip GoodTools / dump **bracket** tags | `[!]` `[S]` `[b1]` … — iterative until stable |
+| **B17** | Strip No-Intro **region** and **language-list** parentheticals | `(USA)` `(Europe, Japan)` `(En,Fr,De)` … |
+| **B18** | Strip revision / hardware / status parentheticals | `(Rev A)` `(SGB Enhanced)` `(Proto)` `(Beta)` `(Unl)` `(Virtual Console)` … |
+| **B19** | Strip trailing metadata parentheticals | Year `(1995)` · publisher `(SNK)` · region shorthand `(Jp-US)` · leftover short `(…)` ≤40 chars |
+| **B20** | Normalize title for IGDB search | `_`→space · smart-apostrophe · franchise inject (A8 parity) · ROM title-case (IGDB-style small words) |
+
+**Pipeline order (shipped):** B15→B16→B17→B18→B19 (metadata)→B19 (remaining parens)→B20.
+
+**Propose-only (no auto-import):** detected on **raw basename** before peel — multicart shapes (`N-in-1`, `Maxi N`, Action Replay / Game Genie, `[BIOS]`) · hack/translated bracket flags `[h]` `[T]` `[tr]` · status parens `(Proto)` `(Beta)` `(Demo)` `(Sample)` `(Unl)` `(Aftermarket)` `(Pirate)` `(Hacker)`. Identify sets `bare_franchise` path → proposal queue.
+
+**Stage C12 — article-reorder variants:** when cleaned name ends with `, The` / `, A` / `, An`, `generate_goty_variants` adds reordered search copy (e.g. `Legend of Zelda, The` → + `The Legend of Zelda`). Keep both forms; scorer gap required for auto-import.
+
+**Shared DAT peel:** `normalize_set_title` / `normalize_rom_peel_core` run B15–B19 (no B20 title-case) so reference-set hash keys and ownership registers share the same strip quality as identify.
+
+**DAT unique-hash identify (W21-BE-DAT):** After peel + IGDB miss (+ Stage D miss), console leaves may auto-identify via a **unique** uploaded reference-set CRC/MD5/SHA1 hit (`try_dat_hash_identify`) before Stage E TGDB propose — never title-only fuzzy from DAT names; multicart / ambiguous / no DAT stay Unmatched.
+
+#### Console ROM acceptance fixtures (B15–B20 + C12)
+
+Backend unit tests: `tests/test_console_rom_peel.py` — GM AC table **16** rows + extras · transform trail continuity · C12 article reorder · propose-only flags · pilot gate · shared DAT normalize.
+
+| # | File basename (shape) | `cleaned_name` | Notes |
+|---|---|---|---|
+| 1 | `Pokemon - Red Version (USA, Europe) (SGB Enhanced) (Rev A) [!].gb` | `Pokemon - Red Version` | region + rev + dump brackets |
+| 2 | `Legend of Zelda, The (USA) (Rev B) [!].gb` | `Legend of Zelda, The` | C12 → + `The Legend of Zelda` |
+| 3 | `Tetris (World) (Rev 1) [!].gb` | `Tetris` | |
+| 4 | `Super Mario Land (Japan) [S][!].gb` | `Super Mario Land` | |
+| 5 | `Kirby's Dream Land (USA, Europe) (Rev A) (SGB Enhanced) [!].gb` | `Kirby's Dream Land` | apostrophe preserved |
+| 6 | `Final Fantasy Legend, The (USA) (Rev 1) [!].gb` | `Final Fantasy Legend, The` | C12 → + `The Final Fantasy Legend` |
+| 7 | `Metroid II - Return of Samus (USA, Europe) (Rev A) [!].gb` | `Metroid II - Return of Samus` | sequel numeral kept |
+| 8 | `Double Dragon (1995)(SNK)(Jp-US)[!].zip` | `Double Dragon` | metadata parens chain |
+| 9 | `Game (Europe) (En,Fr,De).gb` | `Game` | lang list peeled; region captured for `rom_language` |
+| 10 | `4-in-1 Fun Pak (USA) [!].gb` | `4-in-1 Fun Pak` | **propose_only** (multicart) |
+| 11 | `Some Hack (USA) [h].gb` | `Some Hack` | **propose_only** (hack flag) |
+| 12 | `Early Game (Proto) (USA) [!].gb` | `Early Game` | **propose_only** (proto) |
+
+Pilot gate: `should_use_console_rom_peel` → **true** for GB/GBC + `scan_mode=files` (or file path when scan_mode unset); **false** for PCWIN and folder-leaf scan.
 
 ### Stage C — Ordered search variants
 
@@ -117,8 +168,24 @@ Given cleaned tokens from Stage A:
 | 9 | Hyphen ↔ space / GOTY | Existing `generate_goty_variants` | |
 | **10** | Edition peel (post-A13) | Keep full; add head without trailing Complete/Collector/Legendary when ≥2 head tokens | `Title Collector's Edition` → + `Title` |
 | **11** | Do **not** auto-variant bare franchise-only labels | Single-token or known ambiguous franchise heads with no subtitle → leave for Fix search / propose | `Final Fantasy`, `Battletoads`, `Keeper` |
+| **12** | Article reorder (console ROM peel) | When cleaned ends with `, The` / `, A` / `, An` → add reordered variant; keep original | `Legend of Zelda, The` → + `The Legend of Zelda` |
+| **13** | Stylized compact (`Nx Word`) | When cleaned matches `^\d+x\s+…` → add glued search copy | `1000x Resist` → + `1000xResist` |
 
 **Do not** make heuristic colon (row 5), pack peel (row 7), or edition peel (row 10) the sole auto-import path — require existing high-confidence score + gap.
+
+### W21-BE-3 — easy cleaned-title IGDB misses (scoring edges)
+
+Clean labels that still landed Unmatched after A0–A14 (no paren Steam ID dependency):
+
+| Miss mode | Example | Root cause | Smallest fix (threshold stays ≥ **0.92**) |
+|---|---|---|---|
+| Remaster / subtitle SKU | `Broken Sword 2` vs `Broken Sword 2 - the Smoking Mirror: Remastered` | SequenceMatcher ~0.48 | Primary-head peel in `match_scoring` when head equals folder and tail is hyphen remaster **or** remaster/edition packaging **or** head already has a sequel token |
+| Franchise sequel nest | `Resident Evil` vs `Resident Evil 2/3/4` | Sibling scores ~0.96 → gap < 0.08 | Digit-extended sequel asymmetry cap (≤0.85) so exact 1.0 clears default gap |
+| Stylized glue | `1000x Resist` vs IGDB `1000xRESIST` | Alnum score already 1.0; search may miss spaced form; dual spelling fake-ambiguity | Stage C13 compact variant + collapse equivalent alnum titles before gap classify |
+| Exact single-token | `chasm` → `Chasm` | Already high when IGDB returns exact; do **not** boost `Chasm: The Rift` | Colon alternate-game titles stay unboosted (no remaster packaging / no sequel on head) |
+
+**Out:** no global threshold drop · no fuzzy Stage D/E auto-import · no DAT hash (W21-BE-DAT).  
+**Tests:** `tests/test_w21_be3_easy_title_igdb.py` (+ Stage D/E regression green).
 
 ### Easy vs skip / manual (post-A8 residue)
 
@@ -244,8 +311,20 @@ Canonical target: **Baldur's Gate: Dark Alliance**. Must not auto-pick BG3 / BG1
 - [x] A14 VR re-pass after A6 (`Title VR v…`)
 - [x] Lettered `v1.1.0a` in A6; fixtures 18–29 (+ household shapes)
 - [x] C11 bare franchise → propose/manual only (`bare_franchise` on parse; identify skips auto-import)
+- [x] **W20-2 transform trail** — `parse_game_label` returns ordered `transforms: [{stage, before, after, reason?}]` for peels that changed the label; attached on proposal sidecar + unmatched/dupe API rows; short `match_reason` codes unchanged (`tests/test_w20_match_transform_trail.py`) · **UI Done** Name transform trail `<details>` on Dupe glance + scanjobs Unmatched (soft-degrade; vitest **19/19**)
 - [ ] Skip-dir / Admin `dir:` for PC tools (OpenVR Metrics, converters, editors) — Ops + Backend config, not IGDB force-match
 - [ ] Steam unmatched triage logging (`steam_app_id` extracted? Steam title null?) — optional follow-up
+
+### Done — Console ROM peel wave (2026-07-31)
+
+- [x] **`parse_console_rom_label`** — Stages B15–B20 + `transforms[]` trail (W20-2 parity)
+- [x] **Shared peel** — `normalize_rom_peel_core` / `normalize_set_title` (DAT keys)
+- [x] **Pilot wire** — GB/GBC + `scan_mode=files` in identify (`should_use_console_rom_peel`)
+- [x] **C12 article-reorder** — `generate_goty_variants` trailing `, The` / `, A` / `, An`
+- [x] **Propose-only** — multicart · hack `[h]`/`[T]`/`[tr]` · proto/beta/demo/sample/unl/aftermarket/pirate
+- [x] Unit fixtures — `tests/test_console_rom_peel.py` (**QA PASS 42/42**)
+- [x] No mass rename; strip tags for matching only
+- [x] No new HTTP routes
 
 ## Explicit non-goals
 
@@ -260,10 +339,12 @@ Canonical target: **Baldur's Gate: Dark Alliance**. Must not auto-pick BG3 / BG1
 | Seat | File / area | Work |
 |---|---|---|
 | **@agent-backend** | `gametheca/utils/game_name_parse.py` | **Done** A0–A14 (Incl Update · unbracketed scene/repack · date-stamps · Update/Build prose · edition/add-on · VR re-pass · `bare_franchise`) |
-| **@agent-backend** | `gametheca/utils/gamenames.py` | **Done** Stage C + C10 edition peel + C11 bare-franchise single-variant |
-| **@agent-backend** | `gametheca/utils/match_scoring.py` | Keep `steam_title` bump; do not loosen auto-import threshold |
-| **@agent-backend** | `gametheca/utils/game_core.py` (scan identify) | **Done** variant_base = `parse_game_label` only; C11 propose-only on bare franchise |
+| **@agent-backend** | `gametheca/utils/gamenames.py` | **Done** Stage C + C10 edition peel + C11 bare-franchise + **C13** stylized compact (W21-BE-3) |
+| **@agent-backend** | `gametheca/utils/match_scoring.py` | **Done W21-BE-3** remaster primary-head · sequel asymmetry cap · equivalent-title collapse; threshold ≥0.92 |
+| **@agent-backend** | `gametheca/utils/game_core.py` (scan identify) | **Done** variant_base = `parse_game_label` (PC/folder) or `parse_console_rom_label` (GB/GBC files pilot); C11 + ROM propose-only |
+| **@agent-backend** | `gametheca/utils/rom_name_peel.py` | **Done** B15–B20 · shared DAT peel · pilot gate · propose-only / multicart detect |
 | **@agent-backend** / **@agent-ops** | skip-dir / Admin `dir:` | PCWIN tool folders (OpenVR Metrics, converters, editors) — skip, do not match |
 | **@agent-qa** | `tests/test_utils_game_name_parse.py`, `tests/test_utils_gamenames.py` (+ scoring) | **Done** A0–A14 + C10/C11 · **QA 166 PASS** |
-| **@agent-docs** | this file + progress + canvas | Residuals truth sync · canvas rewrite |
+| **@agent-qa** | `tests/test_console_rom_peel.py` | **QA PASS 42/42** (B15–B20 · C12 · pilot gate · propose-only · set_completion · rom_language) |
+| **@agent-docs** | this file + progress + canvas | **Done** B15–B20 section · canvas rewrite |
 | **@agent-ops** | Unraid rescan Library A PCWIN `scan_depth=2` | **Documented** — propose-only then full after human ship; prefer ship A9+ before second full rescan |

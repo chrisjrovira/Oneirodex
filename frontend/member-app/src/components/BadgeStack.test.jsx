@@ -1,6 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import { BadgeStack } from './BadgeStack'
-import { collectBadgeSignals, resolveBadgeCorner, capBadges } from '../utils/badgeSignals'
+import {
+  collectBadgeSignals,
+  isPathMissing,
+  resolveBadgeCorner,
+  capBadges,
+} from '../utils/badgeSignals'
 import { dismissBadge, filterDismissedBadges } from '../utils/badgeDismiss'
 
 const now = new Date('2026-07-23T12:00:00Z')
@@ -159,4 +164,46 @@ test('VR-only stack still anchors top-left', () => {
   expect(stack).toHaveAttribute('data-corner', 'top-left')
   expect(stack).toHaveAttribute('data-vr-in-stack', 'top-left')
   expect(screen.getByTitle(/virtual reality/i)).toHaveTextContent('VR')
+})
+
+test('isPathMissing accepts path_status and path_missing', () => {
+  expect(isPathMissing({ path_status: 'missing' })).toBe(true)
+  expect(isPathMissing({ path_missing: true })).toBe(true)
+  expect(isPathMissing({ path_status: 'ok' })).toBe(false)
+  expect(isPathMissing({ path_missing: false })).toBe(false)
+  expect(isPathMissing({})).toBe(false)
+})
+
+test('BadgeStack renders MISSING when path is gone', () => {
+  render(
+    <BadgeStack
+      game={{ path_status: 'missing', name: 'Gone Title', date_identified: '2026-07-20T00:00:00Z' }}
+      now={now}
+    />,
+  )
+  const stack = screen.getByLabelText(/game badges/i)
+  expect(stack).toHaveAttribute('data-corner', 'top-left')
+  expect(stack).toHaveAttribute('data-missing-in-stack', 'top-left')
+  expect(screen.getByTitle(/removed from disk/i)).toHaveTextContent('MISSING')
+  expect(screen.getByTitle(/newly added/i)).toHaveTextContent('NEW')
+  expect(stack.querySelector('[data-badge="MISSING"] .gt-badge__dismiss')).toBeNull()
+})
+
+test('BadgeStack omits MISSING when path is ok', () => {
+  render(
+    <BadgeStack game={{ path_status: 'ok', name: 'Present Title' }} now={now} />,
+  )
+  expect(screen.queryByTitle(/removed from disk/i)).toBeNull()
+  expect(screen.queryByLabelText(/game badges/i)).toBeNull()
+})
+
+test('collectBadgeSignals includes MISSING ahead of NEW', () => {
+  const badges = collectBadgeSignals(
+    {
+      path_missing: true,
+      date_identified: '2026-07-20T00:00:00Z',
+    },
+    { now },
+  )
+  expect(badges.map((b) => b.kind)).toEqual(['MISSING', 'NEW'])
 })

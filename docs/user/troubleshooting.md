@@ -27,10 +27,10 @@ Quick checks before pinging an admin.
 
 | Symptom | Likely cause | What to try |
 |---|---|---|
-| Core won’t start | Unsupported system / missing BIOS | See admin emulator profiles; some systems are companion-only |
+| Core won’t start | Unsupported system / missing BIOS | See admin emulator profiles; some systems are companion-only. Confirm required BIOS names under Admin → emulator BIOS — [browser-play.md](browser-play.md#bios--firmware-filenames-only) |
 | Save missing | Cloud save flag / encrypt | Re-try; admin check emulator saves settings |
 | Play fails / blank after Start (zip/7z/rar/gz) | Archive has no playable ROM, wrong member, or missing unrar/py7zr | Prefer one ROM per archive; use `.zip` with a known ROM ext; single-file `game.nes.gz` is OK — not `.tar.gz`. Check `/api/downloadrom/<uuid>` JSON (`error`, `code`, optional `hint`) |
-| PS1 (or other `.cue`-based disc) never starts / stuck loading ROM | Large cue+bin download still in flight, or BIOS missing | Disc sets download as a bundled `play.zip` (cue + bin/img together) and can take a while on slower storage/network — let it finish. Confirm the correct SCPH/region BIOS is uploaded under Admin → emulator BIOS — [browser-play.md](browser-play.md#ps1-and-other-disccue-downloads-are-bundled-as-a-zip) |
+| PS1 (or other `.cue`-based disc) never starts / stuck loading ROM | Large cue+bin download still in flight, or BIOS missing | Disc sets download as a bundled `play.zip` (cue + bin/img together) and can take a while on slower storage/network — let it finish. Confirm SCPH/region BIOS via Admin upload **or** household private BIOS mount — [browser-play.md](browser-play.md#bios--firmware-filenames-only) · [PS1 zip note](browser-play.md#ps1-and-other-disccue-downloads-are-bundled-as-a-zip) |
 | No browser Play button on a scanned `.gz` | Non-ROM gzip (e.g. `.tar.gz`) | Repack as `.zip` / raw ROM; Play is suppressed for unsupported archives |
 | No sound on Start | Browser autoplay policy suspends audio until a page gesture | Click once into the play screen, then press Start |
 | SNES game crackles / audio pitch shifts on busy scenes | WASM CPU pressure causing emulation slowdown | Pre-start gear → **Reduce Slowdown (Overclock)**; still choppy → use desktop companion for that title — [browser-play.md](browser-play.md#audiovideo-tuning--wasm-limits-snes-and-friends) |
@@ -49,7 +49,7 @@ Quick checks before pinging an admin.
 
 | Symptom | Likely cause | What to try |
 |---|---|---|
-| Connect fails 401/403 | Bad token / scopes / truncated paste | Account → API tokens: recreate with Desktop companion preset; paste full `gt_<prefix>_<secret>` (secret may include `-`/`_`). On HTTP LAN, select secret + Ctrl+C if Copy fails |
+| Connect fails 401/403 | Bad token / scopes / truncated paste | Account → API tokens: recreate with Desktop companion preset; paste full `gt_<prefix>_<secret>` (hyphens/`_` in the secret are normal — do not truncate after `-`). **Copy secret** copies the raw token only. On HTTP LAN, select the secret field + Ctrl+C if Copy fails. Server WARNING: `api_token_auth_failed reason=… prefix=…` |
 | Download / Update greyed in companion | Offline heartbeat | Re-Connect; Play/Install/Uninstall still work — [desktop-companion.md](desktop-companion.md) |
 | Friends window can’t install games | By design (least-privilege) | Use the main companion window |
 | Update never appears | Local registry not merged | Re-Connect companion; see [desktop-companion.md](desktop-companion.md) |

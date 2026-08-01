@@ -10,13 +10,14 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 /**
  * Badge kinds ordered by display priority (highest first).
- * @typedef {'UPDATE' | 'OUT' | 'NEW' | 'EXP' | 'EMU' | 'TOOL' | 'RELEASE' | '~' | 'OWNED' | 'LANG' | 'PATCH' | 'VR' | 'L'} BadgeKind
+ * @typedef {'UPDATE' | 'OUT' | 'MISSING' | 'NEW' | 'EXP' | 'EMU' | 'TOOL' | 'RELEASE' | '~' | 'OWNED' | 'LANG' | 'PATCH' | 'VR' | 'L'} BadgeKind
  */
 
 /** @type {Record<BadgeKind, number>} */
 export const BADGE_PRIORITY = {
   UPDATE: 100,
   OUT: 90,
+  MISSING: 85,
   NEW: 80,
   EXP: 74,
   EMU: 74,
@@ -28,6 +29,22 @@ export const BADGE_PRIORITY = {
   PATCH: 45,
   VR: 20,
   L: 10,
+}
+
+/**
+ * True when browse/details payload marks the title as removed from disk.
+ * Accepts `path_status=missing` or boolean `path_missing`.
+ * @param {object | null | undefined} game
+ */
+export function isPathMissing(game) {
+  if (!game || typeof game !== 'object') {
+    return false
+  }
+  if (game.path_missing === true || game.path_missing === 1 || game.path_missing === '1') {
+    return true
+  }
+  const status = String(game.path_status || '').trim().toLowerCase()
+  return status === 'missing'
 }
 
 /**
@@ -100,6 +117,15 @@ export function collectBadgeSignals(game, options = {}) {
         tone: 'warn',
       })
     }
+  }
+
+  if (isPathMissing(game)) {
+    badges.push({
+      kind: 'MISSING',
+      label: 'MISSING',
+      title: 'Removed from disk — game files are no longer on disk',
+      tone: 'missing',
+    })
   }
 
   const identified =
@@ -209,21 +235,21 @@ export function capBadges(badges, maxVisible = 2) {
 
 /**
  * Corner placement with collision fallbacks.
- * Prefer top-left (UPDATE/OUT/NEW/VR) — hamburger + favorite now stack together
+ * Prefer top-left (UPDATE/OUT/MISSING/NEW/VR) — hamburger + favorite now stack together
  * in the top-right band (hamburger on top, favorite directly under it), so
  * badges avoid that whole corner until top-left/bottom-left are unavailable.
- * VR always stays top-left (never overlaps the system/platform chip at bottom-left).
+ * VR / MISSING always stay top-left (never overlap the system/platform chip at bottom-left).
  * When a platform chip occupies bottom-left, skip that corner.
  * Order: top-left → bottom-left → bottom-right → top-right
  *
  * @param {'bottom-left' | 'bottom-right' | 'top-left' | 'top-right'} preferred
  * @param {boolean} [collidesWithTitle]
- * @param {{ hasVr?: boolean, hasPlatformChip?: boolean }} [options]
+ * @param {{ hasVr?: boolean, hasMissing?: boolean, hasPlatformChip?: boolean }} [options]
  */
 export function resolveBadgeCorner(preferred = 'top-left', collidesWithTitle = false, options = {}) {
-  const { hasVr = false, hasPlatformChip = false } = options
-  // VR + transitional stack own top-left exclusively — never fall down onto the system chip.
-  if (hasVr) {
+  const { hasVr = false, hasMissing = false, hasPlatformChip = false } = options
+  // VR / MISSING + transitional stack own top-left exclusively — never fall onto the system chip.
+  if (hasVr || hasMissing) {
     return 'top-left'
   }
   const order = ['top-left', 'bottom-left', 'bottom-right', 'top-right'].filter(

@@ -4,40 +4,22 @@ from __future__ import annotations
 
 import re
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from gametheca import db
 from gametheca.models import Game, Library, ReferenceSet, ReferenceSetEntry
-from gametheca.platform import LibraryPlatform
+from gametheca.platform import LibraryPlatform, NATIVE_PC_PLATFORMS
 from gametheca.utils.library_acl import apply_game_access_filters
 
 VALID_REGIONS = frozenset({'USA', 'EUR', 'JPN', 'WORLD', 'OTHER'})
 VALID_SOURCES = frozenset({'nointro', 'redump', 'other'})
 REGION_PREF_ORDER = ('USA', 'EUR', 'JPN', 'WORLD', 'OTHER')
 
-# Parenthetical / bracket tags commonly found in No-Intro / Redump names.
-_REGION_PAREN = re.compile(
-    r'\s*\((?:USA|Europe|Japan|World|UE|JU|EU|JP|U|J|E|Asia|Brazil|Korea|'
-    r'Australia|France|Germany|Spain|Italy|Netherlands|Sweden|China|'
-    r'Hong Kong|Taiwan|Russia|En,Fr,De|En,Ja)[^)]*\)',
-    re.IGNORECASE,
-)
-_REV_PAREN = re.compile(
-    r'\s*\((?:Rev\s*[A-Z0-9]+|v?\d+(?:\.\d+)*|Proto|Beta|Sample|Demo|'
-    r'Unl|Aftermarket|Pirate|Virtual Console|Switch Online|Wii U Virtual Console|'
-    r'GB Compatibility|SGB Enhanced|NTSC|PAL|NTSC-J)[^)]*\)',
-    re.IGNORECASE,
-)
-_DUMP_BRACKETS = re.compile(r'\s*\[[^\]]*\]')
-_MULTI_SPACE = re.compile(r'\s+')
-_EXT = re.compile(
-    r'\.(?:nes|sfc|smc|n64|z64|v64|gb|gbc|gba|nds|gba|md|gen|sms|gg|'
-    r'iso|cue|bin|chd|img|rom|zip|7z|rar)$',
-    re.IGNORECASE,
-)
+from gametheca.utils.rom_name_peel import normalize_set_title_from_peel
 _CLRMAME_GAME = re.compile(
     r'game\s*\(\s*name\s+"([^"]+)"(.*?)\)\s*(?=game\s*\(|$)',
     re.IGNORECASE | re.DOTALL,
@@ -81,17 +63,7 @@ def normalize_source(raw: str | None) -> str:
 
 def normalize_set_title(name: str | None) -> str:
     """Normalize DAT / library title for fuzzy ownership matching."""
-    text = (name or '').strip()
-    if not text:
-        return ''
-    text = _EXT.sub('', text)
-    text = _DUMP_BRACKETS.sub('', text)
-    text = _REGION_PAREN.sub('', text)
-    text = _REV_PAREN.sub('', text)
-    # Strip any remaining simple parentheticals that look like dump tags.
-    text = re.sub(r'\s*\([^)]{1,40}\)', '', text)
-    text = _MULTI_SPACE.sub(' ', text).strip().lower()
-    return text
+    return normalize_set_title_from_peel(name)
 
 
 def _rom_attrs_from_xml_game(node: ET.Element) -> dict[str, Any]:
@@ -482,3 +454,199 @@ def rehash_library_platform(library_platform: str, *, limit: int = 5000) -> dict
             skipped += 1
     db.session.commit()
     return {'platform': platform, 'considered': len(games), 'hashed': hashed, 'skipped': skipped}
+
+
+def is_dat_hash_identify_platform(library_platform: str | None) -> bool:
+    """True for console/ROM leaves — skip native PC store libraries."""
+    key = (library_platform or '').strip().upper()
+    if not key or key in NATIVE_PC_PLATFORMS:
+        return False
+    try:
+        LibraryPlatform[key]
+    except KeyError:
+        return False
+    return True
+
+
+def _entry_match_method(
+    entry: ReferenceSetEntry,
+    *,
+    crc: str | None,
+    md5: str | None,
+    sha1: str | None,
+) -> str | None:
+    """Strongest hash that links file digests to this DAT row (sha1 > md5 > crc)."""
+    if sha1 and entry.sha1 and entry.sha1.lower() == sha1:
+        return 'sha1'
+    if md5 and entry.md5 and entry.md5.lower() == md5:
+        return 'md5'
+    if crc and entry.crc and entry.crc.lower() == crc:
+        return 'crc'
+    return None
+
+
+def lookup_unique_dat_hash_hit(
+    *,
+    library_platform: str,
+    crc: str | None = None,
+    md5: str | None = None,
+    sha1: str | None = None,
+) -> dict[str, Any] | None:
+    """
+    Return a unique DAT entry for console identify when exactly one title matches.
+
+    Scope: all uploaded reference sets for ``library_platform``. Uniqueness is by
+    ``normalized_name`` (region/rev peel). Multiple distinct titles sharing a hash
+    (multicart / ambiguous) → None. No DAT / no hashable digests → None.
+    Title-only matching is never used here.
+    """
+    if not is_dat_hash_identify_platform(library_platform):
+        return None
+    platform = validate_library_platform(library_platform)
+    crc_n = (crc or '').strip().lower() or None
+    md5_n = (md5 or '').strip().lower() or None
+    sha1_n = (sha1 or '').strip().lower() or None
+    if not crc_n and not md5_n and not sha1_n:
+        return None
+
+    set_ids = list(
+        db.session.execute(
+            select(ReferenceSet.id).filter_by(library_platform=platform)
+        ).scalars().all()
+    )
+    if not set_ids:
+        return None
+
+    clauses = []
+    if crc_n:
+        clauses.append(ReferenceSetEntry.crc == crc_n)
+    if md5_n:
+        clauses.append(ReferenceSetEntry.md5 == md5_n)
+    if sha1_n:
+        clauses.append(ReferenceSetEntry.sha1 == sha1_n)
+    if not clauses:
+        return None
+
+    rows = list(
+        db.session.execute(
+            select(ReferenceSetEntry, ReferenceSet)
+            .join(ReferenceSet, ReferenceSetEntry.set_id == ReferenceSet.id)
+            .filter(ReferenceSetEntry.set_id.in_(set_ids))
+            .filter(or_(*clauses))
+        ).all()
+    )
+    if not rows:
+        return None
+
+    by_norm: dict[str, tuple[ReferenceSetEntry, ReferenceSet, str]] = {}
+    for entry, ref in rows:
+        method = _entry_match_method(entry, crc=crc_n, md5=md5_n, sha1=sha1_n)
+        if not method:
+            continue
+        norm = (entry.normalized_name or '').strip()
+        if not norm:
+            continue
+        prev = by_norm.get(norm)
+        if prev is None:
+            by_norm[norm] = (entry, ref, method)
+            continue
+        # Prefer stronger method / keep first entry for same title.
+        rank = {'sha1': 3, 'md5': 2, 'crc': 1}
+        if rank.get(method, 0) > rank.get(prev[2], 0):
+            by_norm[norm] = (entry, ref, method)
+
+    if len(by_norm) != 1:
+        return None
+
+    entry, ref, method = next(iter(by_norm.values()))
+    return {
+        'name': entry.name,
+        'normalized_name': entry.normalized_name,
+        'crc': entry.crc,
+        'md5': entry.md5,
+        'sha1': entry.sha1,
+        'match_method': method,
+        'set_id': ref.id,
+        'set_name': ref.name,
+        'source': ref.source,
+        'region': ref.region,
+        'library_platform': platform,
+        'identify_path': 'dat_hash',
+        'match_reason': f'dat_unique_{method}',
+    }
+
+
+def try_dat_hash_identify(
+    *,
+    full_disk_path: str,
+    library_uuid: str,
+    library_platform: str | None,
+    size: int = 0,
+    hashes: dict[str, str] | None = None,
+) -> Game | None:
+    """
+    IGDB-miss DAT short-circuit: unique CRC/MD5/SHA1 → custom-range Game.
+
+    Returns Game on unique hit; None on miss / ambiguous / PC / unhashable /
+    missing reference set. Caller commits. Never fuzzy-matches DAT titles.
+    """
+    if not is_dat_hash_identify_platform(library_platform):
+        return None
+
+    from gametheca.utils.rom_hash import hash_rom_file
+    from gametheca.utils.software_identify import create_custom_kinded_game
+
+    digest = hashes
+    if digest is None:
+        digest = hash_rom_file(full_disk_path)
+    if not digest:
+        return None
+
+    hit = lookup_unique_dat_hash_hit(
+        library_platform=library_platform or '',
+        crc=digest.get('crc'),
+        md5=digest.get('md5'),
+        sha1=digest.get('sha1'),
+    )
+    if not hit:
+        return None
+
+    name = (hit.get('name') or '').strip() or 'Untitled'
+    method = hit.get('match_method') or 'hash'
+    source = hit.get('source') or 'dat'
+    summary = (
+        f'Identified via reference DAT ({source}, unique {method}). '
+        f'Set: {hit.get("set_name") or "unknown"}.'
+    )
+
+    def _stamp_hashes(game: Game) -> None:
+        game.file_crc = digest.get('crc')
+        game.file_md5 = digest.get('md5')
+        game.file_sha1 = digest.get('sha1')
+
+    existing = db.session.execute(
+        select(Game).filter(
+            Game.full_disk_path == full_disk_path,
+            Game.library_uuid == library_uuid,
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        existing.name = name
+        existing.summary = summary
+        existing.date_identified = datetime.now(timezone.utc)
+        existing.path_status = 'ok'
+        _stamp_hashes(existing)
+        db.session.flush()
+        return existing
+
+    game = create_custom_kinded_game(
+        name=name,
+        full_disk_path=full_disk_path,
+        library_uuid=library_uuid,
+        item_kind='game',
+        summary=summary,
+        size=size,
+    )
+    _stamp_hashes(game)
+    db.session.flush()
+    return game

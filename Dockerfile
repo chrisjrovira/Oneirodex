@@ -13,6 +13,11 @@ COPY frontend/admin-app/package*.json frontend/admin-app/
 WORKDIR /build/frontend/admin-app
 RUN npm ci
 COPY frontend/admin-app/ .
+# admin-app re-exports theme SoT (../../../gametheca/... from src/); stage needs those files before vite build
+WORKDIR /build
+COPY gametheca/setup/default_theme/js/stageECandidates.js gametheca/setup/default_theme/js/
+COPY gametheca/setup/default_theme/js/unmatchedTriage.js gametheca/setup/default_theme/js/
+WORKDIR /build/frontend/admin-app
 RUN mkdir -p ../../gametheca/static/dist/admin-app && npm run build
 
 WORKDIR /build

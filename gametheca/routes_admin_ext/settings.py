@@ -55,7 +55,16 @@ DEFAULT_SETTINGS = {
     'writeLocalMetadata': True,
     'useLocalImages': True,
     'localMetadataFilename': 'gametheca.json',
-    'proposeOnlyScan': False
+    'proposeOnlyScan': False,
+    # W20-4 Scan / match policy (also GET|PUT /api/admin/scan-match/config)
+    'matchHighThreshold': 0.92,
+    'matchAmbiguousGap': 0.08,
+    'dupeTitleThreshold': 0.85,
+    'peelProfile': 'conservative',
+    'enableYearDropVariant': True,
+    'enablePackPeelVariant': True,
+    'enableEditionPeelVariant': True,
+    'enableSequelNumeralVariant': True,
 }
 
 # Settings hub sections rendered as one-click cards on /admin/settings.
@@ -67,6 +76,12 @@ SETTINGS_SHELL_SECTIONS = {
         'icon': 'cogs',
         'description': 'Scan threads, download batching, folder names, and site metadata.',
         'endpoint': 'admin2.new_server_settings',
+    },
+    'scan_match': {
+        'label': 'Scan / match policy',
+        'icon': 'clipboard-list',
+        'description': 'Propose-only default, dupe/match thresholds, and peel profile.',
+        'endpoint': 'admin2.scan_match_settings_page',
     },
     'attract': {
         'label': 'Attract Mode',
@@ -233,6 +248,25 @@ def validate_settings_data(settings_data):
             errors.append("Local metadata filename too long (max 50 characters)")
         elif '/' in metadata_filename or '\\' in metadata_filename:
             errors.append("Local metadata filename cannot contain path separators")
+
+    # W20-4 scan/match policy (also validated on dedicated API)
+    for thr_field, label in (
+        ('matchHighThreshold', 'Match high threshold'),
+        ('matchAmbiguousGap', 'Match ambiguous gap'),
+        ('dupeTitleThreshold', 'Dupe title threshold'),
+        ('match_high_threshold', 'Match high threshold'),
+        ('match_ambiguous_gap', 'Match ambiguous gap'),
+        ('dupe_title_threshold', 'Dupe title threshold'),
+    ):
+        value = settings_data.get(thr_field)
+        if value is not None:
+            if not isinstance(value, (int, float)) or not (0.0 <= float(value) <= 1.0):
+                errors.append(f"{label} must be a number between 0 and 1")
+
+    peel = settings_data.get('peelProfile', settings_data.get('peel_profile'))
+    if peel is not None:
+        if str(peel).strip().lower() not in ('conservative', 'aggressive'):
+            errors.append("Peel profile must be 'conservative' or 'aggressive'")
 
     return errors
 
@@ -614,3 +648,11 @@ def storage_page():
         helpers_enabled=helpers_on,
         allow_apply=allow_apply,
     )
+
+
+@admin2_bp.route('/admin/scan_match', methods=['GET'])
+@login_required
+@admin_required
+def scan_match_settings_page():
+    """React ScanMatchSettingsPage shell (W20-4). Config via /api/admin/scan-match/config."""
+    return render_template('admin/admin_scan_match_settings.html')

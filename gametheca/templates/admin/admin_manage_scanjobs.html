@@ -53,16 +53,14 @@
                 <form id="autoScanForm" action="" method="post">
                     {{ auto_form.hidden_tag() }}
 
-                    <!-- Config and Path Row (Side by Side) -->
-                    <div class="config-path-row">
-                        <!-- Configuration Card -->
-                        <div class="config-card">
+                    <!-- Single composition: config + location -->
+                    <div class="auto-scan-panel config-card">
                         <div class="card-header">
-                            <h4 class="card-title">{{ icons.icon('cogs', size=20) }} Scan Configuration</h4>
+                            <h4 class="card-title">{{ icons.icon('cogs', size=20) }} Auto Scan</h4>
+                            <p class="auto-scan-panel__lede">Library, options, and folder path — one setup panel.</p>
                         </div>
                         <div class="card-content">
                             <div class="config-grid">
-                                <!-- Library Selection -->
                                 <div class="config-item">
                                     {{ auto_form.library_uuid.label(class="config-label", **{"data-toggle": "tooltip", "title": "Choose which library to scan games into"}) }}
                                     {{ auto_form.library_uuid(class="form-control config-input", id="libraryUuid", onchange='onLibraryChange(this.value, "auto")') }}
@@ -73,7 +71,6 @@
                                     {% endif %}
                                 </div>
 
-                                <!-- Scan Mode -->
                                 <div class="config-item">
                                     <label class="config-label" data-toggle="tooltip" title="Choose how your games are organized on disk">{{ auto_form.scan_mode.label.text }}</label>
                                     <div class="radio-group">
@@ -95,8 +92,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            
-                            <!-- Options Row -->
+
                             <div class="options-row">
                                 <div class="option-item">
                                     <div class="form-check modern-checkbox">
@@ -104,14 +100,14 @@
                                         {{ auto_form.remove_missing.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Remove games from library if their folders no longer exist on disk"}) }}
                                     </div>
                                 </div>
-                                
+
                                 <div class="option-item">
                                     <div class="form-check modern-checkbox">
                                         {{ auto_form.download_missing_images(class="form-check-input") }}
                                         {{ auto_form.download_missing_images.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Automatically download cover art and screenshots for games missing images"}) }}
                                     </div>
                                 </div>
-                                
+
                                 <div class="option-item">
                                     <div class="form-check modern-checkbox">
                                         {{ auto_form.force_updates_extras_scan(class="form-check-input", id="force-updates-extras-auto") }}
@@ -138,48 +134,50 @@
                                     {{ auto_form.schedule(class="form-control config-input") }}
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                        
-                    <!-- Path Selection Card -->
-                    <div class="path-card">
-                        <div class="card-header">
-                            <h4 class="card-title">{{ icons.icon('folder', size=20) }} Scan Location</h4>
-                        </div>
-                        <div class="card-content">
-                            <div class="path-input-group">
-                                {{ auto_form.folder_path.label(class="config-label", **{"data-toggle": "tooltip", "title": "Browse or enter the path to scan for games. Leave empty to scan the configured base directory. Click a folder to select it, then Start Scan."}) }}
-                                <div class="scan-controls-group" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-                                    <button type="submit" name="submit" value="AutoScan" class="btn btn-primary browse-btn" style="margin-right: 10px;">
+
+                            <div class="auto-scan-location">
+                                <h5 class="auto-scan-location__title">{{ icons.icon('folder', size=18) }} Scan location</h5>
+                                <div class="path-input-group">
+                                    {{ auto_form.folder_path.label(class="config-label", **{"data-toggle": "tooltip", "title": "Browse or enter the path to scan for games. Leave empty to scan the configured base directory. Click a folder to select it, then Start Scan."}) }}
+                                    <div class="input-with-button">
+                                        {{ auto_form.folder_path(class="form-control path-input", placeholder="Select a folder below, or leave empty for base directory") }}
+                                        <button id="browseFoldersBtn" type="button" class="btn btn-info browse-btn" data-browse-url="{{ url_for('apis.browse_folders_ss') }}">
+                                            {{ icons.icon('search') }} Browse
+                                        </button>
+                                        <div id="loadingSpinner" class="loading-spinner" style="display: none;" role="status" aria-live="polite">
+                                            <span class="gt-spinner gt-spinner--sm" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Loading folders…</span>
+                                        </div>
+                                    </div>
+                                    {% if auto_form.folder_path.errors %}
+                                        {% for error in auto_form.folder_path.errors %}
+                                            <div class="alert alert-danger">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+
+                                <div class="folder-browser">
+                                    <button id="upFolderBtn" type="button" class="btn btn-secondary up-btn" style="display: none;">
+                                        {{ icons.icon('updates') }} Up
+                                    </button>
+                                    <div id="folderContents" class="folder-contents"></div>
+                                </div>
+
+                                <div class="scan-controls-group auto-scan-actions">
+                                    <button type="submit" name="submit" value="AutoScan" class="btn btn-primary browse-btn" id="autoScanStartBtn">
                                         {{ icons.icon('play') }} Start Scan
                                     </button>
-                                    <div id="loadingSpinner" class="loading-spinner" style="display: none;" role="status" aria-live="polite">
-                                        <span class="gt-spinner gt-spinner--lg" aria-hidden="true"></span>
-                                        <span class="visually-hidden">Loading folders…</span>
+                                    <div id="autoScanStatus" class="auto-scan-status" hidden role="status" aria-live="polite" data-state="idle">
+                                        <span class="auto-scan-status__motif" aria-hidden="true">
+                                            <span class="gt-spinner gt-spinner--sm"></span>
+                                        </span>
+                                        <span class="auto-scan-status__label">Idle</span>
+                                        <span class="auto-scan-status__timing" hidden></span>
                                     </div>
                                 </div>
-                                <div class="input-with-button">
-                                    {{ auto_form.folder_path(class="form-control path-input", placeholder="Select a folder below, or leave empty for base directory") }}
-                                    <button id="browseFoldersBtn" type="button" class="btn btn-info browse-btn" data-browse-url="{{ url_for('apis.browse_folders_ss') }}">
-                                        {{ icons.icon('search') }} Browse
-                                    </button>
-                                </div>
-                                {% if auto_form.folder_path.errors %}
-                                    {% for error in auto_form.folder_path.errors %}
-                                        <div class="alert alert-danger">{{ error }}</div>
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
-                            
-                            <div class="folder-browser">
-                                <button id="upFolderBtn" type="button" class="btn btn-secondary up-btn" style="display: none;">
-                                    {{ icons.icon('updates') }} Up
-                                </button>
-                                <div id="folderContents" class="folder-contents"></div>
                             </div>
                         </div>
                     </div>
-                    </div><!-- Close config-path-row -->
                 </form>
                 {% else %}
                 <div class="no-libraries-card">
@@ -216,6 +214,41 @@
                     </div>
                     
                     <div class="card-content">
+                        <div
+                            id="scanJobsFilters"
+                            class="scan-jobs-filters"
+                            role="group"
+                            aria-label="Filter scan jobs"
+                        >
+                            <div class="scan-jobs-filters__statuses" role="group" aria-label="Status">
+                                <button type="button" class="scan-jobs-filter-chip is-active" data-scan-status="All" aria-pressed="true">All</button>
+                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Running" aria-pressed="false">Running</button>
+                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Queued" aria-pressed="false">Queued</button>
+                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Completed" aria-pressed="false">Completed</button>
+                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Failed" aria-pressed="false">Failed</button>
+                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Cancelled" aria-pressed="false">Cancelled</button>
+                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Scheduled" aria-pressed="false">Scheduled</button>
+                            </div>
+                            <div class="scan-jobs-filters__meta">
+                                <label class="scan-jobs-filters__field">
+                                    <span class="visually-hidden">Library</span>
+                                    <select id="scanJobsLibraryFilter" class="form-control scan-jobs-filters__select" aria-label="Filter by library">
+                                        <option value="">All libraries</option>
+                                    </select>
+                                </label>
+                                <label class="scan-jobs-filters__field scan-jobs-filters__field--grow">
+                                    <span class="visually-hidden">Folder path</span>
+                                    <input
+                                        id="scanJobsPathFilter"
+                                        type="search"
+                                        class="form-control scan-jobs-filters__input"
+                                        placeholder="Search folder path…"
+                                        aria-label="Search folder path"
+                                        autocomplete="off"
+                                    >
+                                </label>
+                            </div>
+                        </div>
                         <div class="jobs-table-wrapper">
                             <table id="scanJobsTable" class="simple-jobs-table">
                                 <thead>
@@ -381,21 +414,54 @@
                         </div>
                     </div>
 
-                    <!-- Filter Controls -->
-                    <div class="unmatched-filters">
+                    <!-- Filter Controls (Wave 17: status · q · why · suggested_kind) -->
+                    <div class="unmatched-filters" id="unmatchedFiltersToolbar">
                         <div class="filter-row">
-                            <div class="filter-buttons">
-                                <button class="filter-btn active" data-filter="all">All</button>
-                                <button class="filter-btn" data-filter="Unmatched">Unmatched</button>
-                                <button class="filter-btn" data-filter="Duplicate" title="Same title already in library (IGDB copy)">Duplicates</button>
-                                <button class="filter-btn" data-filter="Ignore">Ignored</button>
-                                <button class="filter-btn" data-filter="Pending">Pending</button>
+                            <div class="filter-buttons" role="group" aria-label="Status filter">
+                                <button type="button" class="filter-btn active" data-filter="all">All</button>
+                                <button type="button" class="filter-btn" data-filter="Unmatched">Unmatched</button>
+                                <button type="button" class="filter-btn" data-filter="Duplicate" title="Same title already in library (IGDB copy)">Duplicates</button>
+                                <button type="button" class="filter-btn" data-filter="Ignore">Ignored</button>
+                                <button type="button" class="filter-btn" data-filter="Pending">Pending</button>
                             </div>
                             <div class="search-container">
-                                <input type="text"
+                                <input type="search"
                                        id="unmatchedSearch"
                                        class="search-input"
-                                       placeholder="Search folder path, library, or platform...">
+                                       placeholder="Search path, name, library, platform, or dupe title…"
+                                       autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="filter-row filter-row--chips">
+                            <div class="filter-chip-group" role="group" aria-label="Leaf type">
+                                <span class="filter-chip-label">Leaf</span>
+                                <button type="button" class="filter-chip active" data-leaf-filter="all">All</button>
+                                <button type="button" class="filter-chip" data-leaf-filter="file-leaf" title="ROM or archive file registered as scan leaf">File leaf</button>
+                                <button type="button" class="filter-chip" data-leaf-filter="folder-leaf" title="Named game folder">Folder leaf</button>
+                            </div>
+                            <div class="filter-chip-group" role="group" aria-label="Triage hints">
+                                <span class="filter-chip-label">Triage</span>
+                                <button type="button" class="filter-chip active" data-triage-filter="all">All</button>
+                                <button type="button" class="filter-chip" data-triage-filter="platform-mismatch" title="Path folder name disagrees with library platform">Platform mismatch</button>
+                                <button type="button" class="filter-chip" data-triage-filter="garbage" title="Installers, redistributables, temp scaffolding">Garbage</button>
+                            </div>
+                        </div>
+                        <div class="filter-row filter-row--chips">
+                            <div class="filter-chip-group" role="group" aria-label="Why / match reason">
+                                <span class="filter-chip-label">Why</span>
+                                <button type="button" class="filter-chip active" data-why-filter="all">All</button>
+                                <button type="button" class="filter-chip" data-why-filter="same_path">Same path</button>
+                                <button type="button" class="filter-chip" data-why-filter="title_vs_folder">Title vs folder</button>
+                                <button type="button" class="filter-chip" data-why-filter="title_vs_library_name">Title vs library</button>
+                                <button type="button" class="filter-chip" data-why-filter="title_below_threshold">Below threshold</button>
+                            </div>
+                            <div class="filter-chip-group" role="group" aria-label="Suggested kind">
+                                <span class="filter-chip-label">Kind</span>
+                                <button type="button" class="filter-chip active" data-kind-filter="all">All</button>
+                                <button type="button" class="filter-chip" data-kind-filter="experience">Experience</button>
+                                <button type="button" class="filter-chip" data-kind-filter="emulator">Emulator</button>
+                                <button type="button" class="filter-chip" data-kind-filter="tool">Tool</button>
+                                <button type="button" class="filter-chip" data-kind-filter="none" title="No suggested kind">No hint</button>
                             </div>
                         </div>
                         <div class="results-info" id="resultsInfo">
@@ -406,7 +472,10 @@
                     <table id="unmatchedTable" class="simple-unmatched-table" style="border-radius: 15px;">
                         <thead>
                             <tr>
-                                <th class="col-path">Folder Path</th>
+                                <th class="col-select">
+                                    <input type="checkbox" id="unmatchedSelectAll" title="Select all visible rows" aria-label="Select all visible unmatched rows">
+                                </th>
+                                <th class="col-path">Folder</th>
                                 <th class="col-status">Status</th>
                                 <th class="col-library">Library</th>
                                 <th class="col-platform">Platform</th>
@@ -417,6 +486,23 @@
                             <!-- This will be populated dynamically by JavaScript -->
                         </tbody>
                     </table>
+                    </div>
+
+                    <!-- Sticky batch bar (Wave 17) -->
+                    <div id="unmatchedBatchBar" class="unmatched-batch-bar" hidden>
+                        <div class="unmatched-batch-bar__count" id="unmatchedBatchCount">0 selected</div>
+                        <div class="unmatched-batch-bar__actions">
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="clear" title="Remove selected from unmatched list">Clear selected</button>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="mark_experience" title="Catalog selected as Experience">Mark Experience</button>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="mark_emulator" title="Catalog selected as Emulator">Mark Emulator</button>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="mark_tool" title="Catalog selected as Tool">Mark Tool</button>
+                            <span class="unmatched-batch-bar__sep" aria-hidden="true"></span>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="merge" title="Duplicate: keep library game, clear row">Merge</button>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="keep" title="Duplicate: reclassify as Unmatched">Keep</button>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="ignore" title="Duplicate: set Ignore">Ignore dupes</button>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="ignore_selected" title="Set Ignore on all selected rows (garbage / scaffolding triage)">Ignore selected</button>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="deselect" title="Clear selection">Deselect</button>
+                        </div>
                     </div>
                     
                 </div>
@@ -588,58 +674,21 @@
                 </div>
             </div>
 
-            <!-- File Extensions Tab -->
+            <!-- File Extensions Tab — deep-link to unified React ExtensionsPage -->
             <div id="fileExtensions" class="admin_manage_scanjobs-extensions-container container tab-pane {% if active_tab == 'file_extensions' %}active{% else %}fade{% endif %}">
                 <div class="admin_manage_scanjobs-extensions-panel gt-adminpage-panel">
                     <div class="admin_manage_scanjobs-tab-header">
                         <h3>{{ icons.icon('plug', size=22) }} File Extensions</h3>
-                        <p>Manage allowed file extensions for game file recognition.</p>
+                        <p>Scan recognition suffixes live on the dedicated Extensions page (one surface — no duplicate editor here).</p>
                     </div>
-
-                    <div class="extensions-table">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4>Allowed File Types</h4>
-                                <button class="btn btn-primary btn-sm" onclick="addFileType('allowed')">
-                                    {{ icons.icon('plus') }} Add New
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                <table class="table gt-adminpage-table table-hover" id="allowedTypesTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Extension</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for type in allowed_file_types %}
-                                        <tr data-id="{{ type.id }}" data-category="allowed">
-                                            <td class="type-value">{{ type.value }}</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-warning" onclick="editFileType(this)" title="Edit">
-                                                    {{ icons.icon('edit', title='Edit') }}
-                                                </button>
-                                                <button class="btn btn-sm btn-danger" onclick="deleteFileType('allowed', {{ type.id }})" title="Delete">
-                                                    {{ icons.icon('trash', title='Delete') }}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="extensions-info mt-3">
-                        <div class="info-panel">
-                            <h5>File Extensions</h5>
-                            <p>The extensions listed here are used to identify game files during the scanning process. Only files with these extensions will be recognized as games when scanning folders.</p>
-                            <hr>
-                            <p>This helps ensure that only valid game files are added to your library.</p>
-                            <p class="mb-0">Add or remove extensions as needed to match the types of game files in your collection.</p>
-                        </div>
+                    <div class="gt-adminpage-panel" style="padding: 1rem;">
+                        <p class="gt-adminpage-lede" style="max-width: 36rem;">
+                            Add, remove, and group allowed file extensions used when scanning library folders.
+                            Archives, disc images, and cartridge dumps are managed in one dense admin console.
+                        </p>
+                        <a class="btn btn-primary" href="{{ url_for('admin2.extensions') }}">
+                            {{ icons.icon('plug') }} Open File Extensions
+                        </a>
                     </div>
                 </div>
             </div>
@@ -745,30 +794,6 @@
     </div>
 </div>
 
-<!-- Add/Edit Modal for Extensions -->
-<div class="modal fade" id="fileTypeModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add/Edit File Type</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="modalTypeCategory">
-                <input type="hidden" id="modalTypeId">
-                <div class="form-group">
-                    <label for="fileTypeValue">File Extension:</label>
-                    <input type="text" class="form-control" id="fileTypeValue" maxlength="10">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveFileType()">Save</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Write Permissions Error Modal -->
 <div class="modal fade" id="permissionsErrorModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -838,94 +863,6 @@
         url.searchParams.set('library_uuid', libraryUuid);
         url.searchParams.set('active_tab', scanType === 'manual' ? 'manual' : 'auto');
         window.location.href = url.toString();
-    }
-
-    // File Extensions functionality
-    function addFileType(category) {
-        document.getElementById('modalTypeCategory').value = category;
-        document.getElementById('modalTypeId').value = '';
-        document.getElementById('fileTypeValue').value = '';
-        document.querySelector('#fileTypeModal .modal-title').textContent = 'Add File Type';
-        new bootstrap.Modal(document.getElementById('fileTypeModal')).show();
-    }
-
-    function editFileType(button) {
-        const row = button.closest('tr');
-        const typeId = row.dataset.id;
-        const category = row.dataset.category;
-        const currentValue = row.querySelector('.type-value').textContent;
-
-        document.getElementById('modalTypeCategory').value = category;
-        document.getElementById('modalTypeId').value = typeId;
-        document.getElementById('fileTypeValue').value = currentValue;
-        document.querySelector('#fileTypeModal .modal-title').textContent = 'Edit File Type';
-        new bootstrap.Modal(document.getElementById('fileTypeModal')).show();
-    }
-
-    function saveFileType() {
-        const category = document.getElementById('modalTypeCategory').value;
-        const typeId = document.getElementById('modalTypeId').value;
-        const value = document.getElementById('fileTypeValue').value;
-
-        if (!value.trim()) {
-            alert('Please enter a file extension');
-            return;
-        }
-
-        const url = `/api/file_types/${category}`;
-        const method = typeId ? 'PUT' : 'POST';
-
-        const body = typeId ?
-            JSON.stringify({ id: parseInt(typeId), value: value }) :
-            JSON.stringify({ value: value });
-
-        fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': CSRFUtils.getToken()
-            },
-            body: body
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success || data.id || data.value) {
-                location.reload();
-            } else {
-                alert('Error: ' + (data.error || data.message || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred');
-        });
-    }
-
-    function deleteFileType(category, typeId) {
-        if (!confirm('Are you sure you want to delete this file type?')) {
-            return;
-        }
-
-        fetch(`/api/file_types/${category}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': CSRFUtils.getToken()
-            },
-            body: JSON.stringify({ id: parseInt(typeId) })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + (data.error || data.message || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred');
-        });
     }
 
     // Image Queue functionality

@@ -13,11 +13,17 @@ function partyRoomForGame(gameUuid) {
  * Voice lobby — mints LiveKit JWT when ENABLE_LIVEKIT is on.
  * Party mode uses opaque room ids (game UUID), never titles.
  */
-export function VoiceLobby({ defaultRoom = 'household:lobby', gameUuid = '', compact = false }) {
+export function VoiceLobby({
+  defaultRoom = 'household:lobby',
+  gameUuid = '',
+  compact = false,
+  defaultScreenshare = false,
+  roomLabel = '',
+}) {
   const initialRoom = gameUuid ? partyRoomForGame(gameUuid) : defaultRoom
   const [status, setStatus] = useState(null)
   const [room, setRoom] = useState(initialRoom)
-  const [screenshare, setScreenshare] = useState(false)
+  const [screenshare, setScreenshare] = useState(Boolean(defaultScreenshare))
   const [spectator, setSpectator] = useState(false)
   const [tokenInfo, setTokenInfo] = useState(null)
   const [error, setError] = useState(null)
@@ -26,6 +32,10 @@ export function VoiceLobby({ defaultRoom = 'household:lobby', gameUuid = '', com
   useEffect(() => {
     setRoom(gameUuid ? partyRoomForGame(gameUuid) : defaultRoom)
   }, [gameUuid, defaultRoom])
+
+  useEffect(() => {
+    setScreenshare(Boolean(defaultScreenshare))
+  }, [defaultScreenshare])
 
   useEffect(() => {
     fetch('/api/rtc/status', { credentials: 'same-origin' })
@@ -78,12 +88,17 @@ export function VoiceLobby({ defaultRoom = 'household:lobby', gameUuid = '', com
 
   return (
     <section className={compact ? 'gt-voice-lobby gt-voice-lobby--compact' : 'gt-voice-lobby'}>
-      {!compact ? <h2>Voice lobby</h2> : <h3>Party voice</h3>}
+      {!compact ? <h2>Voice lobby</h2> : <h3>{roomLabel || 'Party voice'}</h3>}
       {!compact ? (
         <p className="gt-more-page__lede">
           Household voice via LiveKit SFU. Room ids stay opaque (no game titles in the SFU).
         </p>
-      ) : null}
+      ) : (
+        <p className="gt-voice-lobby__hint">
+          Voice &amp; screenshare use LiveKit. Child accounts: audio OK; camera/screenshare may be
+          blocked by the server.
+        </p>
+      )}
       <label>
         Room
         <input value={room} onChange={(e) => setRoom(e.target.value)} />
@@ -110,7 +125,7 @@ export function VoiceLobby({ defaultRoom = 'household:lobby', gameUuid = '', com
         Spectator (listen only — no mic/camera publish)
       </label>
       <button type="button" className="gt-btn" disabled={busy} onClick={() => void joinLobby()}>
-        {busy ? 'Connecting…' : 'Get voice token'}
+        {busy ? 'Connecting…' : screenshare ? 'Get voice + screenshare token' : 'Get voice token'}
       </button>
       {error ? <p role="alert">{error}</p> : null}
       {tokenInfo ? (

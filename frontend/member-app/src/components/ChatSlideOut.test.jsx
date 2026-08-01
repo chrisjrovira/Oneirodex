@@ -49,6 +49,9 @@ beforeEach(() => {
       if (url.includes('/api/rtc/status')) {
         return { ok: true, json: async () => ({ enabled: false }) }
       }
+      if (/\/api\/chat\/channels\/\d+\/attachments/.test(url)) {
+        return { ok: false, status: 404, json: async () => ({ error: 'Not found' }) }
+      }
       return { ok: true, json: async () => ({}) }
     }),
   )
@@ -57,6 +60,18 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
+})
+
+test('expand widens slide-out room chrome', async () => {
+  const user = userEvent.setup()
+  render(<ChatSlideOut defaultOpen />)
+
+  const dialog = await screen.findByRole('dialog', { name: /chat/i })
+  expect(dialog).not.toHaveClass('is-expanded')
+  await user.click(screen.getByRole('button', { name: /^expand$/i }))
+  expect(dialog).toHaveClass('is-expanded')
+  expect(screen.getByText(/full household room/i)).toBeInTheDocument()
+  expect(dialog.textContent).not.toMatch(/discord/i)
 })
 
 test('launcher opens left chat slide-out with room list', async () => {
@@ -122,6 +137,9 @@ test('create room posts to channels API', async () => {
     if (url.includes('/api/rtc/status')) {
       return { ok: true, json: async () => ({ enabled: false }) }
     }
+    if (/\/api\/chat\/channels\/\d+\/attachments/.test(url)) {
+      return { ok: false, status: 404, json: async () => ({ error: 'Not found' }) }
+    }
     return { ok: true, json: async () => ({}) }
   })
 
@@ -167,6 +185,9 @@ function mockChatFetch({ channels, onArchive, onLeave } = {}) {
     }
     if (url.includes('/api/rtc/status')) {
       return { ok: true, json: async () => ({ enabled: false }) }
+    }
+    if (/\/api\/chat\/channels\/\d+\/attachments/.test(url)) {
+      return { ok: false, status: 404, json: async () => ({ error: 'Not found' }) }
     }
     return { ok: true, json: async () => ({}) }
   })
@@ -258,6 +279,9 @@ test('leave household channel refreshes list and shows muted badge', async () =>
     }
     if (url.includes('/api/rtc/status')) {
       return { ok: true, json: async () => ({ enabled: false }) }
+    }
+    if (/\/api\/chat\/channels\/\d+\/attachments/.test(url)) {
+      return { ok: false, status: 404, json: async () => ({ error: 'Not found' }) }
     }
     return { ok: true, json: async () => ({}) }
   })

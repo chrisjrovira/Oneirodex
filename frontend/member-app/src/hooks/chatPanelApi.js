@@ -68,3 +68,96 @@ export function canArchiveChannel(channel, viewer = {}) {
 export function canLeaveChannel(channel) {
   return Boolean(channel?.id)
 }
+
+/** Soft-wired upload path — Backend may land in parallel; UI feature-detects 404. */
+export function chatAttachmentUploadUrl(channelId) {
+  return `/api/chat/channels/${channelId}/attachments`
+}
+
+export function isImageAttachment(att) {
+  if (!att || typeof att !== 'object') return false
+  const ct = String(att.content_type || att.mime || att.mime_type || '').toLowerCase()
+  if (ct.startsWith('image/')) return true
+  const name = String(att.filename || att.name || att.url || '').toLowerCase()
+  return /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(name)
+}
+
+export function normalizeAttachments(raw) {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .filter((row) => row && typeof row === 'object')
+    .map((row) => ({
+      id: row.id ?? row.attachment_id ?? null,
+      url: row.url || row.href || row.download_url || '',
+      filename: row.filename || row.name || row.original_name || 'file',
+      content_type: row.content_type || row.mime || row.mime_type || '',
+      size: row.size ?? row.byte_size ?? null,
+    }))
+    .filter((row) => row.url || row.id != null)
+}
+
+/**
+ * Probe whether channel attachment upload exists (OPTIONS or empty POST → 404 = off).
+ * @returns {Promise<'yes'|'no'|'unknown'>}
+ */
+export async function probeChatAttachmentUpload(channelId) {
+  if (!channelId) return 'unknown'
+  const url = chatAttachmentUploadUrl(channelId)
+  try {
+    const optionsRes = await fetch(url, { method: 'OPTIONS', credentials: 'same-origin' })
+    if (optionsRes.status === 404) return 'no'
+    if (optionsRes.ok || optionsRes.status === 204 || optionsRes.status === 405) return 'yes'
+  } catch {
+    // Fall through to a no-body POST probe.
+  }
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+      body: new FormData(),
+    })
+    if (response.status === 404 || response.status === 405) return 'no'
+    // 400/401/403/413/415 → route exists
+    if (response.status !== 404) return 'yes'
+  } catch {
+    return 'unknown'
+  }
+  return 'no'
+}
+
+/**
+ * Multipart upload for chat attach. Soft-degrades on 404.
+ * @returns {Promise<{ ok: boolean, unavailable?: boolean, attachment?: object, error?: string, status: number }>}
+ */
+export async function uploadChatAttachment(channelId, file, { csrf = '' } = {}) {
+  if (!channelId || !file) {
+    return { ok: false, status: 0, error: 'Missing channel or file' }
+  }
+  const form = new FormData()
+  form.append('file', file)
+  const response = await fetch(chatAttachmentUploadUrl(channelId), {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'X-CSRFToken': csrf },
+    body: form,
+  })
+  const data = await response.json().catch(() => ({}))
+  if (response.status === 404 || response.status === 405) {
+    return {
+      ok: false,
+      unavailable: true,
+      status: response.status,
+      error: data.error || 'File attach isn’t available yet',
+    }
+  }
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      error: data.error || 'Upload failed',
+    }
+  }
+  const attachment = data.attachment || data.file || data
+  return { ok: true, status: response.status, attachment }
+}

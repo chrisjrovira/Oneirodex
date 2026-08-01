@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Callable
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from gametheca.utils.gamenames import LETTER_BUCKET_RE, should_skip_scan_dir
 
@@ -206,16 +206,45 @@ def has_active_or_queued_scan(library_uuid: str, folder_path: str) -> bool:
     return False
 
 
+def library_should_watch(lib) -> bool:
+    """Whether this library participates under the env master switch.
+
+    ``GT_LIBRARY_WATCH`` must be on for any watching (Unraid FUSE safety).
+    Per-library ``watch_enabled``:
+      - ``None`` (default) → follow global (watch when env on)
+      - ``True`` → watch when env on
+      - ``False`` → opt-out even when env on
+    """
+    if not is_library_watch_enabled():
+        return False
+    flag = getattr(lib, 'watch_enabled', None)
+    # Explicit False only (None/True follow global). Avoid `not flag` so None stays in.
+    if flag is False:
+        return False
+    return True
+
+
+def library_watch_effective(lib) -> bool:
+    """Public effective watch state for API payloads (env ∩ per-lib)."""
+    return library_should_watch(lib)
+
+
 def list_watchable_libraries() -> list[dict]:
-    """Libraries with a readable ``last_scan_folder`` root."""
+    """Libraries with a readable ``last_scan_folder`` root that opt into watch."""
     from gametheca import db
     from gametheca.models import Library
 
     libs = db.session.execute(
-        select(Library).where(Library.last_scan_folder.isnot(None))
+        select(Library).where(
+            Library.last_scan_folder.isnot(None),
+            # null / True watch when env on; False = opt-out (SQL-side for honesty)
+            or_(Library.watch_enabled.is_(None), Library.watch_enabled.is_(True)),
+        )
     ).scalars().all()
     out = []
     for lib in libs:
+        if not library_should_watch(lib):
+            continue
         folder = (lib.last_scan_folder or '').strip()
         if not folder:
             continue
@@ -228,6 +257,7 @@ def list_watchable_libraries() -> list[dict]:
             'name': lib.name,
             'folder': folder,
             'scan_depth': int(getattr(lib, 'scan_depth', 1) or 1),
+            'watch_enabled': getattr(lib, 'watch_enabled', None),
         })
     return out
 

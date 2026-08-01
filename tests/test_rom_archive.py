@@ -13,7 +13,9 @@ from gametheca.utils.rom_archive import (
     ArchiveRomError,
     bundle_playable_rom_zip,
     choose_rom_member,
+    extract_rom_from_rar,
     extract_rom_from_zip,
+    find_archive_extractors,
     path_supports_browser_extract,
     resolve_playable_rom_path,
 )
@@ -229,3 +231,118 @@ def test_bundle_cue_without_companions_unchanged(tmp_path):
     assert result_path == str(cue_path)
     assert filename == 'lone.cue'
     assert not (cache / 'play.zip').exists()
+
+
+def test_rar_missing_extractor_returns_hint(tmp_path, monkeypatch):
+    rar_path = tmp_path / 'game.rar'
+    rar_path.write_bytes(b'Rar!\x00fake')
+
+    import builtins
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == 'rarfile':
+            raise ImportError('no rarfile')
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, '__import__', fake_import)
+    monkeypatch.setattr(
+        'gametheca.utils.rom_archive.find_archive_extractors',
+        lambda: {},
+    )
+    with pytest.raises(ArchiveRomError) as exc:
+        resolve_playable_rom_path(str(rar_path), cache_dir=str(tmp_path / 'c'))
+    payload = exc.value.to_dict()
+    assert exc.value.status_code == 415
+    assert payload['code'] == 'missing_extractor'
+    assert 'error' in payload
+    assert 'hint' in payload
+    hint = payload['hint'].lower()
+    assert '7z' in hint or 'bsdtar' in hint or 'p7zip' in hint
+    assert 'zip' in hint
+
+
+def test_rar_extract_via_stubbed_7z(tmp_path, monkeypatch):
+    """When 7z is on PATH (stubbed), extract succeeds without rarfile."""
+    rar_path = tmp_path / 'pack.rar'
+    rar_path.write_bytes(b'fake-rar')
+    fake_7z = tmp_path / 'fake-7z'
+    fake_7z.write_text('#!/bin/sh\n', encoding='utf-8')
+    cache = tmp_path / 'cache'
+    cache.mkdir()
+
+    list_calls = {'n': 0}
+
+    def fake_run(cmdline, **kwargs):
+        from subprocess import CompletedProcess
+
+        if 'l' in cmdline and '-slt' in cmdline:
+            list_calls['n'] += 1
+            stdout = (
+                'Path = nested/Hero.nes\n'
+                'Size = 9\n'
+                'Attributes = A\n'
+                '\n'
+            )
+            return CompletedProcess(cmdline, 0, stdout=stdout, stderr='')
+        if 'e' in cmdline or 'x' in cmdline:
+            dest = cache / 'Hero.nes'
+            dest.write_bytes(b'NESROMDAT')
+            return CompletedProcess(cmdline, 0, stdout='', stderr='')
+        return CompletedProcess(cmdline, 1, stdout='', stderr=f'unexpected {cmdline}')
+
+    import builtins
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == 'rarfile':
+            raise ImportError('no rarfile')
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, '__import__', fake_import)
+    monkeypatch.setattr(
+        'gametheca.utils.rom_archive.find_archive_extractors',
+        lambda: {'7z': str(fake_7z)},
+    )
+    monkeypatch.setattr('gametheca.utils.rom_archive._run_extractor', fake_run)
+
+    path, name = resolve_playable_rom_path(
+        str(rar_path),
+        cache_dir=str(cache),
+        platform='NES',
+    )
+    assert name == 'Hero.nes'
+    assert Path(path).read_bytes() == b'NESROMDAT'
+    assert list_calls['n'] >= 1
+
+
+def test_find_archive_extractors_shape(monkeypatch):
+    monkeypatch.setattr(
+        'gametheca.utils.rom_archive.shutil.which',
+        lambda name: f'/usr/bin/{name}' if name in ('7z', 'bsdtar') else None,
+    )
+    found = find_archive_extractors()
+    assert found['7z'] == '/usr/bin/7z'
+    assert found['bsdtar'] == '/usr/bin/bsdtar'
+    assert 'unrar' not in found
+
+
+def test_extract_rom_from_rar_missing_tool_direct(tmp_path, monkeypatch):
+    rar_path = tmp_path / 'x.rar'
+    rar_path.write_bytes(b'x')
+    monkeypatch.setattr(
+        'gametheca.utils.rom_archive.find_archive_extractors',
+        lambda: {},
+    )
+    import builtins
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == 'rarfile':
+            raise ImportError('no')
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, '__import__', fake_import)
+    with pytest.raises(ArchiveRomError) as exc:
+        extract_rom_from_rar(str(rar_path), str(tmp_path / 'c'))
+    assert exc.value.code == 'missing_extractor'

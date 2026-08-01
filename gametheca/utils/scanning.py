@@ -160,7 +160,7 @@ def process_game_with_fallback(game_name, full_disk_path, scan_job_id, library_u
     # Try to add the game, now using library_uuid
     if not try_add_game(game_name, full_disk_path, scan_job_id, library_uuid=library_uuid, check_exists=False, fetch_hltb=fetch_hltb, settings=settings):
         # Truncate name from the right — cap attempts so one bad title cannot
-        # burn minutes of IGDB round-trips (ShareWarez-era unbounded loop).
+        # burn minutes of IGDB round-trips (legacy unbounded fallback loop).
         parts = game_name.split()
         max_fallback = min(3, max(0, len(parts) - 1))
         for i in range(len(parts) - 1, len(parts) - 1 - max_fallback, -1):
@@ -191,15 +191,24 @@ def log_unmatched_folder(
     match_score=None,
     suggested_kind=None,
     suggested_candidate_name=None,
+    stage_e_candidates=None,
+    stage_e=None,
 ):
     # Denormalize proposal hint at log time (one sidecar read) so list API stays cheap.
-    if suggested_kind is None and suggested_candidate_name is None:
+    if (
+        suggested_kind is None
+        and suggested_candidate_name is None
+        and stage_e_candidates is None
+        and stage_e is None
+    ):
         try:
             from gametheca.utils.match_proposal import read_proposal_kind_hint
 
             hint = read_proposal_kind_hint(folder_path)
             suggested_kind = hint.get('suggested_kind')
             suggested_candidate_name = hint.get('suggested_candidate_name')
+            stage_e_candidates = hint.get('stage_e_candidates')
+            stage_e = hint.get('stage_e')
         except Exception:
             pass
 
@@ -217,6 +226,8 @@ def log_unmatched_folder(
             match_score=match_score,
             suggested_kind=suggested_kind,
             suggested_candidate_name=suggested_candidate_name,
+            stage_e_candidates=stage_e_candidates,
+            stage_e=stage_e,
         )
         try:
             db.session.add(unmatched_folder)
@@ -229,6 +240,8 @@ def log_unmatched_folder(
                 print(f"[UNMATCHED] Match: {match_reason} score={match_score}")
             if suggested_kind:
                 print(f"[UNMATCHED] suggested_kind={suggested_kind}")
+            if stage_e_candidates:
+                print(f"[UNMATCHED] stage_e_candidates={len(stage_e_candidates)}")
         except IntegrityError:
             log_system_event(f"Failed to log unmatched folder: {folder_path}", event_type='scan', event_level='warning')
             db.session.rollback()
@@ -243,12 +256,22 @@ def log_unmatched_folder(
                 existing_unmatched_folder.match_reason = match_reason
             if match_score is not None:
                 existing_unmatched_folder.match_score = match_score
-        # Refresh kind hint when a newer proposal exists
+        # Refresh kind / Stage E hint when a newer proposal exists
         if suggested_kind is not None:
             existing_unmatched_folder.suggested_kind = suggested_kind
         if suggested_candidate_name is not None:
             existing_unmatched_folder.suggested_candidate_name = suggested_candidate_name
-        if matched_status == 'Duplicate' or suggested_kind is not None or suggested_candidate_name is not None:
+        if stage_e_candidates is not None:
+            existing_unmatched_folder.stage_e_candidates = stage_e_candidates
+        if stage_e is not None:
+            existing_unmatched_folder.stage_e = stage_e
+        if (
+            matched_status == 'Duplicate'
+            or suggested_kind is not None
+            or suggested_candidate_name is not None
+            or stage_e_candidates is not None
+            or stage_e is not None
+        ):
             try:
                 db.session.commit()
             except SQLAlchemyError:

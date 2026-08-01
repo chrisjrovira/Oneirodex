@@ -211,6 +211,23 @@ def api_initiate_game_download(game_uuid: str) -> Tuple[dict, int]:
     except LookupError as exc:
         return jsonify({'error': str(exc)}), 404
 
+    # Refuse downloads when the version path is gone (Wave 14b residual / 15a).
+    if (
+        file_location is None
+        or not str(file_location).strip()
+        or not (os.path.isfile(file_location) or os.path.isdir(file_location))
+    ):
+        return jsonify({
+            'error': 'Version file is missing on disk',
+            'code': 'path_missing',
+            'hint': (
+                'This install path is gone. Use game details → Remove missing versions '
+                '(librarian+) or re-scan after restoring files.'
+            ),
+            'path_missing': True,
+            'downloadable': False,
+        }), 410
+
     allowed_bases = get_allowed_base_directories(current_app)
     if not allowed_bases:
         return jsonify({'error': 'Server configuration error'}), 500

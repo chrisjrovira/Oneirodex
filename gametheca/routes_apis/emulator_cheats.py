@@ -10,6 +10,7 @@ from sqlalchemy import select
 
 from gametheca import db
 from gametheca.models import Game
+from gametheca.platform import cheat_surface_for_platform
 from gametheca.utils.auth import admin_required
 from gametheca.utils.emulator_bios import bios_status_for_cores, list_bios_files, store_bios_file
 from gametheca.utils.emulator_cheats import (
@@ -20,8 +21,24 @@ from gametheca.utils.emulator_cheats import (
     store_cheat_file,
 )
 from gametheca.utils.library_acl import user_can_access_game
+from gametheca.utils.play_url import library_platform_key
 
 from . import apis_bp
+
+
+def _game_cheat_surface(game) -> str:
+    return cheat_surface_for_platform(library_platform_key(game))
+
+
+def _refuse_non_retroarch(game):
+    """Mutating .cht ops only for RetroArch-capable platforms (GM Wave 19)."""
+    surface = _game_cheat_surface(game)
+    if surface != 'retroarch':
+        return jsonify({
+            'error': 'RetroArch cheats are not available for this platform',
+            'cheat_surface': surface,
+        }), 403
+    return None
 
 
 @apis_bp.route('/games/<game_uuid>/cheats', methods=['GET'])
@@ -32,7 +49,13 @@ def list_game_cheats(game_uuid):
         return jsonify({'error': 'Game not found'}), 404
     if not user_can_access_game(current_user, game):
         return jsonify({'error': 'Forbidden'}), 403
-    return jsonify({'game_uuid': game_uuid, 'cheats': list_cheat_files(game_uuid)})
+    surface = _game_cheat_surface(game)
+    cheats = list_cheat_files(game_uuid) if surface == 'retroarch' else []
+    return jsonify({
+        'game_uuid': game_uuid,
+        'cheat_surface': surface,
+        'cheats': cheats,
+    })
 
 
 @apis_bp.route('/games/<game_uuid>/cheats', methods=['POST'])
@@ -48,6 +71,9 @@ def upload_game_cheat(game_uuid):
         return jsonify({'error': 'Game not found'}), 404
     if not user_can_access_game(current_user, game):
         return jsonify({'error': 'Forbidden'}), 403
+    refused = _refuse_non_retroarch(game)
+    if refused is not None:
+        return refused
 
     upload = request.files.get('file')
     if upload is not None and (getattr(upload, 'filename', None) or '').strip():
@@ -81,6 +107,9 @@ def download_game_cheat(game_uuid, filename):
         return jsonify({'error': 'Game not found'}), 404
     if not user_can_access_game(current_user, game):
         return jsonify({'error': 'Forbidden'}), 403
+    refused = _refuse_non_retroarch(game)
+    if refused is not None:
+        return refused
     try:
         payload = read_cheat_file(game_uuid, filename)
     except (ValueError, FileNotFoundError) as exc:
@@ -101,6 +130,9 @@ def remove_game_cheat(game_uuid, filename):
         return jsonify({'error': 'Game not found'}), 404
     if not user_can_access_game(current_user, game):
         return jsonify({'error': 'Forbidden'}), 403
+    refused = _refuse_non_retroarch(game)
+    if refused is not None:
+        return refused
     try:
         delete_cheat_file(game_uuid, filename)
     except ValueError as exc:

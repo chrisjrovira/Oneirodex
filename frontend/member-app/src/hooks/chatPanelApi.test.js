@@ -1,4 +1,10 @@
-import { canArchiveChannel, canLeaveChannel, slugifyRoomName } from './chatPanelApi'
+import {
+  canArchiveChannel,
+  canLeaveChannel,
+  isImageAttachment,
+  normalizeAttachments,
+  slugifyRoomName,
+} from './chatPanelApi'
 
 test('slugifyRoomName lowercases and hyphens', () => {
   expect(slugifyRoomName('Party Night!')).toBe('party-night')
@@ -20,4 +26,19 @@ test('canLeaveChannel requires an active room id', () => {
   expect(canLeaveChannel({ id: 1, kind: 'dm' })).toBe(true)
   expect(canLeaveChannel({})).toBe(false)
   expect(canLeaveChannel(null)).toBe(false)
+})
+
+test('normalizeAttachments and isImageAttachment feature-detect payload shapes', () => {
+  expect(isImageAttachment({ content_type: 'image/png', filename: 'a.png' })).toBe(true)
+  expect(isImageAttachment({ filename: 'notes.txt', content_type: 'text/plain' })).toBe(false)
+  expect(normalizeAttachments([{ id: 1, url: '/a.png', filename: 'a.png', mime: 'image/png' }])).toEqual([
+    {
+      id: 1,
+      url: '/a.png',
+      filename: 'a.png',
+      content_type: 'image/png',
+      size: null,
+    },
+  ])
+  expect(normalizeAttachments(null)).toEqual([])
 })

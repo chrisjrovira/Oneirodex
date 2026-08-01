@@ -155,6 +155,18 @@
   border-color: var(--gt-border);
 }
 
+.gt-ops-metric--action {
+  border-color: color-mix(in srgb, var(--gt-danger) 55%, transparent);
+}
+
+.gt-ops-metric--warning {
+  border-color: color-mix(in srgb, #d4b84a 55%, transparent);
+}
+
+.gt-ops-metric--info {
+  border-color: color-mix(in srgb, #6cb6ff 50%, transparent);
+}
+
 .gt-ops-metric__label {
   font-size: 0.72rem;
   text-transform: uppercase;
@@ -169,6 +181,7 @@
   color: var(--gt-accent);
   font-variant-numeric: tabular-nums;
   word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .gt-ops-metric--fair .gt-ops-metric__value {
@@ -179,8 +192,39 @@
   color: #ffb4b4;
 }
 
+.gt-ops-metric--action .gt-ops-metric__value {
+  color: #ffb4b4;
+}
+
+.gt-ops-metric--warning .gt-ops-metric__value {
+  color: #e6d28a;
+}
+
+.gt-ops-metric--info .gt-ops-metric__value {
+  color: #9cc9ff;
+}
+
 .gt-ops-metric--na .gt-ops-metric__value {
   color: var(--gt-text-muted);
+}
+
+.gt-ops-refresh--footer {
+  margin-top: 0;
+  justify-content: flex-end;
+  flex: 1 1 auto;
+}
+
+.gt-admin-dashboard-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.gt-admin-dashboard-footer .gt-admin-actions-row {
+  margin: 0;
 }
 
 .gt-ops-metric__hint {

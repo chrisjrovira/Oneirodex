@@ -17,6 +17,8 @@ from gametheca.utils.secondary_scrapers import (
     search_epic_games,
     search_giantbomb_games,
     search_itch_games,
+    search_mobygames_games,
+    search_thegamesdb_games,
 )
 
 
@@ -155,6 +157,123 @@ def test_search_giantbomb_games_mocked(mock_req, mock_key):
     assert results[0]['source'] == 'giantbomb'
 
 
+@patch('gametheca.utils.providers.mobygames.get_mobygames_api_key', return_value=None)
+def test_search_mobygames_without_key_returns_empty(mock_key):
+    assert search_mobygames_games('Doom') == []
+    mock_key.assert_called()
+
+
+@patch('gametheca.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
+@patch('gametheca.utils.secondary_scrapers.request_with_backoff')
+def test_search_mobygames_games_mocked(mock_req, mock_key):
+    resp = MagicMock()
+    resp.content = b'{}'
+    resp.json.return_value = {
+        'games': [
+            {
+                'game_id': 15,
+                'title': 'Doom',
+                'moby_url': 'https://www.mobygames.com/game/15/doom/',
+                'description': '<p>Classic <b>shooter</b></p>',
+                'moby_score': 4.1,
+                'sample_cover': {
+                    'image': 'https://cdn.example/doom-cover.jpg',
+                    'thumbnail_image': 'https://cdn.example/doom-thumb.jpg',
+                },
+                'platforms': [
+                    {'platform_id': 2, 'platform_name': 'DOS'},
+                    {'platform_id': 3, 'platform_name': 'Windows'},
+                ],
+            }
+        ]
+    }
+    mock_req.return_value = resp
+    results = search_mobygames_games('Doom', limit=5)
+    assert len(results) == 1
+    hit = results[0]
+    assert hit['source'] == 'mobygames'
+    assert hit['id'] == 15
+    assert hit['mobygames_id'] == 15
+    assert hit['name'] == 'Doom'
+    assert hit['cover_url'] == 'https://cdn.example/doom-cover.jpg'
+    assert hit['summary'] == 'Classic shooter'
+    assert 'install' not in hit
+    assert 'download_url' not in hit
+    assert mock_req.call_args.kwargs['host_key'] == 'mobygames'
+    assert mock_req.call_args.kwargs['params']['title'] == 'Doom'
+    assert mock_req.call_args.kwargs['params']['api_key'] == 'moby-key'
+
+
+@patch('gametheca.utils.providers.thegamesdb.get_thegamesdb_api_key', return_value=None)
+def test_search_thegamesdb_without_key_returns_empty(mock_key):
+    assert search_thegamesdb_games('Sonic') == []
+    mock_key.assert_called()
+
+
+@patch('gametheca.utils.providers.thegamesdb.get_thegamesdb_api_key', return_value='tgdb-key')
+@patch('gametheca.utils.secondary_scrapers.request_with_backoff')
+def test_search_thegamesdb_games_mocked(mock_req, mock_key):
+    resp = MagicMock()
+    resp.content = b'{}'
+    resp.json.return_value = {
+        'code': 200,
+        'status': 'Success',
+        'data': {
+            'count': 1,
+            'games': [
+                {
+                    'id': 42,
+                    'game_title': 'Sonic the Hedgehog',
+                    'release_date': '1991-06-23',
+                    'platform': 18,
+                    'overview': 'Blue blur on Genesis.',
+                }
+            ],
+        },
+        'include': {
+            'boxart': {
+                'base_url': {
+                    'large': 'https://cdn.thegamesdb.net/images/large/',
+                    'medium': 'https://cdn.thegamesdb.net/images/medium/',
+                },
+                'data': {
+                    '42': [
+                        {
+                            'id': 1,
+                            'type': 'boxart',
+                            'side': 'front',
+                            'filename': 'boxart/front/42-1.jpg',
+                        }
+                    ]
+                },
+            },
+            'platform': {
+                'data': {
+                    '18': {'id': 18, 'name': 'Sega Genesis', 'alias': 'sega-genesis'},
+                }
+            },
+        },
+    }
+    mock_req.return_value = resp
+    results = search_thegamesdb_games('Sonic', limit=5)
+    assert len(results) == 1
+    hit = results[0]
+    assert hit['source'] == 'thegamesdb'
+    assert hit['id'] == 42
+    assert hit['thegamesdb_id'] == 42
+    assert hit['name'] == 'Sonic the Hedgehog'
+    assert hit['url'] == 'https://thegamesdb.net/game.php?id=42'
+    assert hit['cover_url'] == 'https://cdn.thegamesdb.net/images/large/boxart/front/42-1.jpg'
+    assert hit['summary'] == 'Blue blur on Genesis.'
+    assert hit['platforms'] == ['Sega Genesis']
+    assert 'install' not in hit
+    assert 'download_url' not in hit
+    assert mock_req.call_args.kwargs['host_key'] == 'thegamesdb'
+    assert mock_req.call_args.kwargs['params']['name'] == 'Sonic'
+    assert mock_req.call_args.kwargs['params']['apikey'] == 'tgdb-key'
+    assert 'boxart' in mock_req.call_args.kwargs['params']['include']
+
+
 def test_metadata_search_sources_endpoint(client, db_session, admin_user_for_meta):
     with client.session_transaction() as sess:
         sess['_user_id'] = str(admin_user_for_meta.id)
@@ -166,11 +285,21 @@ def test_metadata_search_sources_endpoint(client, db_session, admin_user_for_met
     assert 'epic' in ids
     assert 'itch' in ids
     assert 'giantbomb' in ids
+    assert 'mobygames' in ids
+    assert 'thegamesdb' in ids
     meta = next(s for s in resp.get_json()['sources'] if s['id'] == 'meta_quest')
     assert meta['ownership_only'] is True
     assert meta['api_mode'] in ('igdb', 'csv_only', 'disabled', 'unofficial_graphql')
     assert meta['unofficial_graphql'] is False
     assert 'meta' in meta.get('aliases', [])
+    moby = next(s for s in resp.get_json()['sources'] if s['id'] == 'mobygames')
+    assert moby['needs_key'] is True
+    assert 'key_configured' in moby
+    assert 'moby' in moby.get('aliases', [])
+    tgdb = next(s for s in resp.get_json()['sources'] if s['id'] == 'thegamesdb')
+    assert tgdb['needs_key'] is True
+    assert 'key_configured' in tgdb
+    assert 'tgdb' in tgdb.get('aliases', [])
 
 
 @pytest.fixture
@@ -223,3 +352,91 @@ def test_search_metadata_meta_quest_route(mock_search, client, db_session, admin
     assert data['source'] == 'meta_quest'
     assert data['ownership_only'] is True
     assert len(data['results']) == 1
+
+
+@patch('gametheca.routes_apis.metadata_search.get_mobygames_api_key', return_value=None)
+@patch('gametheca.routes_apis.metadata_search.search_mobygames_games', return_value=[])
+def test_search_metadata_mobygames_honest_without_key(
+    mock_search, mock_key, client, db_session, admin_user_for_meta,
+):
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(admin_user_for_meta.id)
+        sess['_fresh'] = True
+    resp = client.get('/api/search_metadata?name=Doom&source=mobygames')
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['source'] == 'mobygames'
+    assert data['results'] == []
+    assert data['needs_key'] is True
+    assert data['key_configured'] is False
+    assert 'MOBYGAMES_API_KEY' in data['note']
+
+
+@patch('gametheca.routes_apis.metadata_search.get_mobygames_api_key', return_value='moby-key')
+@patch('gametheca.routes_apis.metadata_search.search_mobygames_games')
+def test_search_metadata_moby_alias(mock_search, mock_key, client, db_session, admin_user_for_meta):
+    mock_search.return_value = [
+        {
+            'source': 'mobygames',
+            'id': 15,
+            'name': 'Doom',
+            'url': 'https://www.mobygames.com/game/15/doom/',
+            'cover_url': 'https://cdn.example/doom.jpg',
+            'mobygames_id': 15,
+        }
+    ]
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(admin_user_for_meta.id)
+        sess['_fresh'] = True
+    resp = client.get('/api/search_metadata?name=Doom&source=moby')
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['source'] == 'mobygames'
+    assert data['key_configured'] is True
+    assert len(data['results']) == 1
+    assert data['results'][0]['mobygames_id'] == 15
+    mock_search.assert_called_once()
+
+
+@patch('gametheca.routes_apis.metadata_search.get_thegamesdb_api_key', return_value=None)
+@patch('gametheca.routes_apis.metadata_search.search_thegamesdb_games', return_value=[])
+def test_search_metadata_thegamesdb_honest_without_key(
+    mock_search, mock_key, client, db_session, admin_user_for_meta,
+):
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(admin_user_for_meta.id)
+        sess['_fresh'] = True
+    resp = client.get('/api/search_metadata?name=Sonic&source=thegamesdb')
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['source'] == 'thegamesdb'
+    assert data['results'] == []
+    assert data['needs_key'] is True
+    assert data['key_configured'] is False
+    assert 'THEGAMESDB_API_KEY' in data['note']
+
+
+@patch('gametheca.routes_apis.metadata_search.get_thegamesdb_api_key', return_value='tgdb-key')
+@patch('gametheca.routes_apis.metadata_search.search_thegamesdb_games')
+def test_search_metadata_tgdb_alias(mock_search, mock_key, client, db_session, admin_user_for_meta):
+    mock_search.return_value = [
+        {
+            'source': 'thegamesdb',
+            'id': 42,
+            'name': 'Sonic the Hedgehog',
+            'url': 'https://thegamesdb.net/game.php?id=42',
+            'cover_url': 'https://cdn.thegamesdb.net/images/large/boxart/front/42-1.jpg',
+            'thegamesdb_id': 42,
+        }
+    ]
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(admin_user_for_meta.id)
+        sess['_fresh'] = True
+    resp = client.get('/api/search_metadata?name=Sonic&source=tgdb')
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['source'] == 'thegamesdb'
+    assert data['key_configured'] is True
+    assert len(data['results']) == 1
+    assert data['results'][0]['thegamesdb_id'] == 42
+    mock_search.assert_called_once()

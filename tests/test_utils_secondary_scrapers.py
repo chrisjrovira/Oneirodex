@@ -66,8 +66,15 @@ def test_game_card_flags_include_is_vr():
         player_perspectives=[SimpleNamespace(name=VR_PERSPECTIVE_NAME)]
     )
     plain = SimpleNamespace(player_perspectives=[SimpleNamespace(name='Bird view')])
-    assert game_card_flags(vr_game) == {'is_vr': True}
-    assert game_card_flags(plain) == {'is_vr': False}
+    vr_flags = game_card_flags(vr_game)
+    plain_flags = game_card_flags(plain)
+    assert vr_flags['is_vr'] is True
+    assert plain_flags['is_vr'] is False
+    for flags in (vr_flags, plain_flags):
+        assert 'item_kind' in flags
+        assert 'content_kind' in flags
+        assert 'path_missing' in flags
+        assert 'path_status' in flags
 
 
 def test_apply_steam_enrichment_adds_vr_perspective():
@@ -134,10 +141,12 @@ def test_apply_steam_enrichment_no_steam_data():
 def test_enrich_game_with_steam_delegates(mock_fetch, mock_apply):
     from gametheca.utils.game_core import enrich_game_with_steam
 
-    game = SimpleNamespace(name='Archery Kings VR', player_perspectives=[])
+    game = SimpleNamespace(name='Archery Kings VR', player_perspectives=[], genres=[], game_modes=[])
     mock_fetch.return_value = {
         'summary': 'Bow time',
         'player_perspectives': ['Virtual Reality'],
+        'genres': ['Sports', 'Action'],
+        'game_modes': ['Single player'],
         'is_vr': True,
         'steam_app_id': 802340,
     }
@@ -147,11 +156,45 @@ def test_enrich_game_with_steam_delegates(mock_fetch, mock_apply):
 
     assert result['is_vr'] is True
     assert result['applied'] is True
+    assert result['genres_added'] == ['Sports', 'Action']
+    assert result['game_modes_added'] == ['Single player']
     mock_fetch.assert_called_once_with('Archery Kings VR')
     mock_apply.assert_called_once()
     assert mock_apply.call_args.args[0] is game
     assert mock_apply.call_args.args[1]['player_perspectives'] == ['Virtual Reality']
+    assert mock_apply.call_args.args[1]['genres'] == ['Sports', 'Action']
+    assert mock_apply.call_args.args[1]['game_modes'] == ['Single player']
     assert callable(mock_apply.call_args.kwargs['perspective_factory'])
+    assert callable(mock_apply.call_args.kwargs['genre_factory'])
+    assert callable(mock_apply.call_args.kwargs['game_mode_factory'])
+
+
+@patch('gametheca.utils.game_core.apply_enriched_metadata')
+@patch('gametheca.utils.game_core.fetch_steam_data')
+def test_enrich_game_with_steam_applies_genres(mock_fetch, mock_apply):
+    """W20-3: Steam enrich must pass genres (and mapped modes) into apply_enriched_metadata."""
+    from gametheca.utils.game_core import enrich_game_with_steam
+
+    game = SimpleNamespace(name='Half-Life', player_perspectives=[], genres=[], game_modes=[])
+    mock_fetch.return_value = {
+        'summary': 'Gordon',
+        'player_perspectives': [],
+        'genres': ['Action'],
+        'game_modes': ['Single player', 'Multiplayer'],
+        'is_vr': False,
+        'steam_app_id': 70,
+    }
+    mock_apply.return_value = True
+
+    result = enrich_game_with_steam(game)
+
+    assert result['applied'] is True
+    assert result['genres_added'] == ['Action']
+    assert result['game_modes_added'] == ['Single player', 'Multiplayer']
+    enriched = mock_apply.call_args.args[1]
+    assert enriched['genres'] == ['Action']
+    assert enriched['game_modes'] == ['Single player', 'Multiplayer']
+    assert enriched['summary'] == 'Gordon'
 
 
 @patch('gametheca.utils.game_core.apply_enriched_metadata')
@@ -302,6 +345,8 @@ def test_fetch_steam_data_sets_is_vr_for_archery_kings_style_payload():
 
     assert data is not None
     assert data['is_vr'] is True
+    assert data['genres'] == ['Sports']
+    assert 'Single player' in data['game_modes']
     assert VR_PERSPECTIVE_NAME in [
         normalize_perspective_name(n) for n in data['player_perspectives']
     ]

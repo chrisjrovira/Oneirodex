@@ -14,11 +14,25 @@
   color: var(--gt-accent, #2fd67b);
 }
 
+.gt-report {
+  min-width: 0;
+  width: 100%;
+  max-width: min(100%, 72rem);
+  box-sizing: border-box;
+}
+
+.gt-report .gt-more-page__lede {
+  max-width: min(100%, 56rem);
+  overflow-wrap: break-word;
+}
+
 .gt-report__form {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  max-width: 36rem;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
 }
 
 .gt-report__primary {
@@ -46,6 +60,7 @@
   gap: 0.3rem;
   margin-bottom: 0.65rem;
   font-size: 0.88rem;
+  min-width: 0;
 }
 
 .gt-report__field span {

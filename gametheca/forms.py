@@ -315,7 +315,36 @@ class LibraryForm(FlaskForm):
         coerce=int,
         validators=[DataRequired()],
     )
+    watch_enabled = SelectField(
+        'Incremental watch',
+        choices=[
+            ('default', 'Follow global (GT_LIBRARY_WATCH)'),
+            ('on', 'Prefer watch when global is on'),
+            ('off', 'Opt out (never watch this library)'),
+        ],
+        default='default',
+        validators=[DataRequired()],
+    )
     image = FileField('Library Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Images only!')])
+
+
+def coerce_library_watch_enabled(raw):
+    """Map LibraryForm watch_enabled → DB null/True/False."""
+    text = (str(raw) if raw is not None else 'default').strip().lower()
+    if text in ('off', '0', 'false', 'no', 'disabled'):
+        return False
+    if text in ('on', '1', 'true', 'yes', 'enabled'):
+        return True
+    return None
+
+
+def library_watch_form_value(flag):
+    """Map DB watch_enabled → LibraryForm choice value."""
+    if flag is False:
+        return 'off'
+    if flag is True:
+        return 'on'
+    return 'default'
 
 class ThemeUploadForm(FlaskForm):
     theme_zip = FileField('Theme ZIP File', validators=[

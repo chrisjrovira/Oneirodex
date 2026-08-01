@@ -4,96 +4,110 @@
 
 <link rel="stylesheet" href="{{ 'css/games/game_edit_images.css'|theme_asset }}">
 
-<html>
-    <head>
-        <title>Edit Game Images</title>
-    </head>
+<div class="gt-edit-images" data-page="edit-game-images">
+  <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content gt-edit-images__modal">
+        <div class="modal-header">
+          <h5 class="modal-title" id="errorModalLabel">Upload Error</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="errorModalMessage">An unexpected error occurred. Please try again.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <body>
-        <!-- Error Modal -->
-        <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="errorModalLabel">Upload Error</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p id="errorModalMessage">An unexpected error occurred. Please try again.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <header class="gt-edit-images__header">
+    <p class="gt-edit-images__eyebrow">Library · Artwork</p>
+    <h1 class="gt-edit-images__title">Edit Images</h1>
+    <p class="gt-edit-images__game-name">{{ game.name }}</p>
+    <p class="gt-edit-images__lede">
+      Cover, screenshots, and artwork search. Changes apply to the library item immediately.
+    </p>
+    <div class="gt-edit-images__actions">
+      <a class="btn btn-secondary" href="{{ url_for('games.game_details', game_uuid=game.uuid) }}">Back to details</a>
+      <a class="btn btn-secondary" href="{{ url_for('games.game_edit', game_uuid=game.uuid) }}">Edit details</a>
+    </div>
+  </header>
 
-        <h3>Edit Images for Game: </h3>
-        <h2>{{ game.name }}</h2>
-        <div class="glass-panel glass-panel-image-editor-cover">
-            <h3>Cover Image</h3>
-            <div id="cover-image-editor" class="image-editor-image">
-                <div class="cover-image-container">
-                    <div class="spinner" id="coverSpinner"></div>
-                    {% if cover_image %}
-                        <img src="{{ url_for('static', filename='library/images/' + cover_image.url) }}" 
-                             alt="Cover Image"
-                             data-image-id="{{ cover_image.id }}"
-                             id="cover-preview-img">
-                    <div class="delete-cover-image-container">
-                        <button class="btn btn-danger" onclick="deleteImage({{ cover_image.id }})">Delete Cover Image</button>
-                    </div>                    
-                {% else %}
-                    <img src="{{ url_for('static', filename='newstyle/default_cover.jpg') }}" alt="Default Cover Image" id="cover-preview-img">
-                {% endif %}
-            </div>
-            <div class="glass-panel glass-panel-image-editor-upload">
-                <input type="file" id="cover-image-input" class="form-control mt-3">
-            </div>
-            <div class="glass-panel glass-panel-image-editor-upload mt-3" id="sgdb-cover-picker" data-game-uuid="{{ game.uuid }}">
-                <h4>Artwork search (SteamGridDB / IGDB)</h4>
-                <p class="text-muted small mb-2">Artwork only — search and apply cover, logo, or hero (SGDB). IGDB / Giant Bomb covers only. Failed applies show the server error below.</p>
-                <div class="d-flex gap-2 flex-wrap align-items-center">
-                    <select id="sgdb-provider" class="form-select" style="max-width: 180px" aria-label="Artwork provider">
-                        <option value="steamgriddb">SteamGridDB</option>
-                        <option value="igdb">IGDB</option>
-                        <option value="giantbomb">Giant Bomb</option>
-                    </select>
-                    <select id="sgdb-image-type" class="form-select" style="max-width: 140px" aria-label="Image type">
-                        <option value="cover">Cover</option>
-                        <option value="logo">Logo</option>
-                        <option value="hero">Hero</option>
-                    </select>
-                    <input type="search" id="sgdb-query" class="form-control" style="max-width: 280px" value="{{ game.name }}" placeholder="Search title">
-                    <button type="button" class="btn btn-secondary" id="sgdb-search-btn">Search</button>
-                </div>
-                <p id="sgdb-status" class="small mt-2" aria-live="polite"></p>
-                <div id="sgdb-results" class="d-flex flex-wrap gap-2 mt-2"></div>
-            </div>
-        </div>
+  <section class="gt-edit-images__panel gt-edit-images__panel--cover" aria-labelledby="gt-edit-cover-heading">
+    <h2 id="gt-edit-cover-heading">Cover Image</h2>
+    <div id="cover-image-editor" class="image-editor-image">
+      <div class="cover-image-container">
+        <div class="spinner" id="coverSpinner" aria-hidden="true"></div>
+        {% if cover_image %}
+          <img src="{{ url_for('static', filename='library/images/' + cover_image.url) }}"
+               alt="Cover Image"
+               data-image-id="{{ cover_image.id }}"
+               id="cover-preview-img">
+          <div class="delete-cover-image-container">
+            <button class="btn btn-danger" type="button" onclick="deleteImage({{ cover_image.id }})">Delete Cover Image</button>
+          </div>
+        {% else %}
+          <img src="{{ url_for('static', filename='newstyle/default_cover.jpg') }}" alt="Default Cover Image" id="cover-preview-img">
+        {% endif %}
+      </div>
+    </div>
 
-        <div class="glass-panel glass-panel-image-editor">
-            <div id="image-editor-list" class="image-editor-list">
-                {% for image in images %}
-                <div class="image-editor-image" id="image-{{ image.id }}">
-                    <button class="btn btn-danger" onclick="deleteImage({{ image.id }})">Delete</button>
-                    <img src="{{ url_for('static', filename='library/images/' + image.url) }}" alt="Image">
-                    
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        <div class="glass-panel glass-panel-image-editor-upload">
-            <h3>Upload Screenshot(s)</h3>
-            <div id="upload-area" data-game-uuid="{{ game.uuid }}" class="border p-3">Drag and Drop Images Here</div>
-            <input type="file" id="file-input" multiple class="form-control mt-3">
-            <script>
-                var gameUuid = "{{ game.uuid }}";
-            </script>
-            <script src="{{ 'js/game_edit_images.js'|theme_asset }}"></script>
-            <button id="upload-button" class="btn btn-primary">Upload</button>
-        </div>
-    </body>
-</html>
+    <div class="gt-edit-images__upload-block">
+      <label class="gt-edit-images__label" for="cover-image-input">Upload cover</label>
+      <input type="file" id="cover-image-input" class="form-control" accept="image/*">
+    </div>
+
+    <div class="gt-edit-images__upload-block" id="sgdb-cover-picker" data-game-uuid="{{ game.uuid }}">
+      <h3>Artwork search (SteamGridDB / IGDB)</h3>
+      <p class="gt-edit-images__hint">
+        Artwork only - search and apply cover, logo, or hero (SGDB). IGDB / Giant Bomb covers only.
+        Failed applies show the server error below.
+      </p>
+      <div class="gt-edit-images__search-row">
+        <select id="sgdb-provider" class="form-select" aria-label="Artwork provider">
+          <option value="steamgriddb">SteamGridDB</option>
+          <option value="igdb">IGDB</option>
+          <option value="giantbomb">Giant Bomb</option>
+        </select>
+        <select id="sgdb-image-type" class="form-select" aria-label="Image type">
+          <option value="cover">Cover</option>
+          <option value="logo">Logo</option>
+          <option value="hero">Hero</option>
+        </select>
+        <input type="search" id="sgdb-query" class="form-control" value="{{ game.name }}" placeholder="Search title">
+        <button type="button" class="btn btn-secondary" id="sgdb-search-btn">Search</button>
+      </div>
+      <p id="sgdb-status" class="gt-edit-images__status" aria-live="polite"></p>
+      <div id="sgdb-results" class="gt-edit-images__results"></div>
+    </div>
+  </section>
+
+  <section class="gt-edit-images__panel" aria-labelledby="gt-edit-shots-heading">
+    <h2 id="gt-edit-shots-heading">Screenshots</h2>
+    <div id="image-editor-list" class="image-editor-list">
+      {% for image in images %}
+      <div class="image-editor-image" id="image-{{ image.id }}">
+        <button class="btn btn-danger" type="button" onclick="deleteImage({{ image.id }})">Delete</button>
+        <img src="{{ url_for('static', filename='library/images/' + image.url) }}" alt="Screenshot">
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="gt-edit-images__panel gt-edit-images__panel--upload" aria-labelledby="gt-edit-upload-heading">
+    <h2 id="gt-edit-upload-heading">Upload Screenshot(s)</h2>
+    <div id="upload-area" data-game-uuid="{{ game.uuid }}" class="gt-edit-images__dropzone">
+      Drag and drop images here, or choose files below
+    </div>
+    <input type="file" id="file-input" multiple class="form-control" accept="image/*">
+    <script>
+      var gameUuid = "{{ game.uuid }}";
+    </script>
+    <script src="{{ 'js/game_edit_images.js'|theme_asset }}"></script>
+    <button id="upload-button" class="btn btn-primary" type="button">Upload</button>
+  </section>
+</div>
 
 {% endblock %}

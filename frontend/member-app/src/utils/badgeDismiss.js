@@ -31,8 +31,8 @@ export function listDismissedKinds(gameUuid) {
 }
 
 export function dismissBadge(gameUuid, kind) {
-  // VR joins the top-left transitional stack — never dismissable.
-  if (!gameUuid || !kind || kind === 'VR') {
+  // VR / MISSING join the top-left transitional stack — never dismissable.
+  if (!gameUuid || !kind || kind === 'VR' || kind === 'MISSING') {
     return
   }
   const store = readStore()
@@ -56,5 +56,7 @@ export function filterDismissedBadges(gameUuid, badges) {
   if (dismissed.size === 0) {
     return badges
   }
-  return badges.filter((badge) => badge.kind === 'VR' || !dismissed.has(badge.kind))
+  return badges.filter(
+    (badge) => badge.kind === 'VR' || badge.kind === 'MISSING' || !dismissed.has(badge.kind),
+  )
 }

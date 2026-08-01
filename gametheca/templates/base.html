@@ -9,6 +9,7 @@
     
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>GameTheca</title>
+    {% include 'partials/favicon.html' %}
     {% block styles %}
     <script src="{{ url_for('static', filename='vendor/jquery/3.7.1/jquery.min.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatables/1.13.7/css/jquery.dataTables.min.css') }}">

@@ -58,6 +58,7 @@ curl -sS -b cookies.txt \
 
 - Title match can false-positive (shared names) or miss (IGDB-renamed library titles vs No-Intro names).
 - **Hash match** (CRC/MD5/SHA1) wins when both the DAT entry and the library file have hashes. New scans hash single-file ROM paths automatically; use **Rehash platform** on the admin page (or `POST /api/reference-sets/rehash`) for existing libraries.
+- **First-scan identify:** a **unique** hash hit against uploaded DATs for the library platform can auto-create a custom Game after IGDB miss (before TheGamesDB propose). Ambiguous hashes and title-only DAT names never auto-import.
 - Hashes are of the on-disk file (or the single ROM-like file inside a folder). Archives / multi-disc folders may not match No-Intro inner-ROM CRCs until you dump/extract first.
 - Home-brew / unlicensed / proto entries may appear in some DATs — filter upstream if you want “retail only.”
 - PC Windows / store libraries are a poor fit; this feature targets ROM console libraries.

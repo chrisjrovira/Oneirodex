@@ -58,7 +58,7 @@ async function createAndRevealSecret(user, secret = 'gt_efgh_one-time_secret_val
     token: {
       id: 8,
       name: 'My PC',
-      token_prefix: 'gt_efgh',
+      token_prefix: 'efgh',
       scopes: ['read:library', 'write:download'],
       created_at: '2026-07-28T12:00:00+00:00',
       last_used_at: null,
@@ -99,7 +99,7 @@ async function createAndRevealSecret(user, secret = 'gt_efgh_one-time_secret_val
         {
           id: 8,
           name: 'My PC',
-          token_prefix: 'gt_efgh',
+          token_prefix: 'efgh',
           scopes: ['read:library', 'write:download'],
           created_at: '2026-07-28T12:00:00+00:00',
           last_used_at: null,
@@ -116,8 +116,9 @@ async function createAndRevealSecret(user, secret = 'gt_efgh_one-time_secret_val
   expect(await screen.findByText('Living room PC')).toBeInTheDocument()
   await user.type(screen.getByLabelText(/^Name$/i), 'My PC')
   await user.click(screen.getByRole('button', { name: /create token/i }))
-  expect(await screen.findByText(secret)).toBeInTheDocument()
-  return secret
+  const field = await screen.findByLabelText(/one-time secret/i)
+  expect(field).toHaveValue(secret)
+  return { secret, field }
 }
 
 test('lists tokens and creates with companion preset', async () => {
@@ -134,25 +135,45 @@ test('lists tokens and creates with companion preset', async () => {
   expect(screen.getByRole('status')).toHaveTextContent(/store this secret now/i)
 })
 
-test('copy secret uses clipboard API and shows success', async () => {
+test('copy secret writes pure token string with no labels or junk', async () => {
   const user = userEvent.setup()
-  const secret = 'gt_efgh_one-time_secret_value'
+  const secret = 'gt_efgh_abc-def_ghi-jkl'
   const writeText = vi.fn().mockResolvedValue(undefined)
   vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
 
-  await createAndRevealSecret(user, secret)
+  const { field } = await createAndRevealSecret(user, secret)
+
+  expect(field).toHaveValue(secret)
+  expect(field.value).not.toMatch(/prefix|Store this|My PC|…/)
+  expect(field.value.endsWith('-jkl')).toBe(true)
+
   await user.click(screen.getByRole('button', { name: /copy secret/i }))
 
   await waitFor(() => {
+    expect(writeText).toHaveBeenCalledTimes(1)
     expect(writeText).toHaveBeenCalledWith(secret)
   })
+  expect(writeText.mock.calls[0][0]).toBe(secret)
+  expect(writeText.mock.calls[0][0]).not.toContain('…')
+  expect(writeText.mock.calls[0][0]).not.toContain('prefix')
   expect(await screen.findByRole('button', { name: /copied/i })).toBeInTheDocument()
   expect(showToast).toHaveBeenCalledWith('Token secret copied', 'success')
 })
 
+test('display keeps full urlsafe secret after final hyphen', async () => {
+  const user = userEvent.setup()
+  const secret = 'gt_9f2a_xY7-zQ9_rest'
+  await createAndRevealSecret(user, secret)
+
+  const field = screen.getByLabelText(/one-time secret/i)
+  expect(field).toHaveValue(secret)
+  expect(field.value).toContain('-zQ9_rest')
+  expect(screen.getByText(/hyphens and underscores/i)).toBeInTheDocument()
+})
+
 test('copy secret falls back when clipboard API rejects', async () => {
   const user = userEvent.setup()
-  const secret = 'gt_efgh_fallback_secret'
+  const secret = 'gt_efgh_fallback-secret_value'
   const writeText = vi.fn().mockRejectedValue(new Error('NotAllowedError'))
   vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
   const exec = stubExecCommand(true)
@@ -173,7 +194,7 @@ test('copy secret shows manual-select guidance when all copy paths fail', async 
   vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
   stubExecCommand(false)
 
-  await createAndRevealSecret(user, 'gt_efgh_manual_only')
+  const { field } = await createAndRevealSecret(user, 'gt_efgh_manual-only_secret')
   await user.click(screen.getByRole('button', { name: /copy secret/i }))
 
   expect(await screen.findByRole('alert')).toHaveTextContent(/clipboard unavailable/i)
@@ -181,6 +202,9 @@ test('copy secret shows manual-select guidance when all copy paths fail', async 
     expect.stringMatching(/clipboard unavailable/i),
     'warn',
   )
+  expect(field).toHaveFocus()
+  expect(field.selectionStart).toBe(0)
+  expect(field.selectionEnd).toBe(field.value.length)
 })
 
 test('revokes a token after confirm', async () => {

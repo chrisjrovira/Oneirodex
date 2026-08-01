@@ -198,6 +198,10 @@ platform_emulator_mapping = {
 }
 
 
+# Native PC / desktop family — cheat UI is pc_wand (not RetroArch .cht).
+# PCDOS keeps DOSBox cores for play, but GM Wave 19 locks cheats to pc_wand.
+NATIVE_PC_PLATFORMS = frozenset({'PCWIN', 'PCDOS', 'MAC', 'OTHER'})
+
 # Catalog-only: no Play CTA (current-gen bar + Switch / Arcade / Neo Geo AES).
 CATALOG_ONLY_PLATFORMS = frozenset({
     'PS5', 'XSX',
@@ -242,6 +246,23 @@ def mapped_core_ids(key: str | None) -> list[str]:
     for emu in platform_emulator_mapping.get(plat, []) or []:
         cores.append(emu.value if hasattr(emu, 'value') else str(emu))
     return cores
+
+
+def cheat_surface_for_platform(key: str | None) -> str:
+    """UI cheat surface: retroarch | pc_wand | none.
+
+    Wave 19 GM lock:
+    - NATIVE_PC (PCWIN/PCDOS/MAC/OTHER) → pc_wand (hide RetroArch .cht until wand ships)
+    - else if platform_emulator_mapping non-empty → retroarch
+    - else → none
+    """
+    if not key:
+        return 'none'
+    if key in NATIVE_PC_PLATFORMS:
+        return 'pc_wand'
+    if mapped_core_ids(key):
+        return 'retroarch'
+    return 'none'
 
 
 def pcdos_browser_enabled() -> bool:

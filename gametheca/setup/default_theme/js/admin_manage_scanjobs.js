@@ -1,4 +1,18 @@
 import { fileIcons as importedFileIcons } from './config/file_type_icons.js';
+import {
+    detectLeafType,
+    detectPlatformMismatch,
+    formatPlatformMismatchTitle,
+    isGarbageScaffolding,
+} from './unmatchedTriage.js';
+import {
+    hasStageEHints,
+    normalizeStageECandidates,
+    normalizeStageEMeta,
+    stageEChipSources,
+    stageEMatchModeLabel,
+    stageESourceLabel,
+} from './stageECandidates.js';
 
 const fileIcons = importedFileIcons || { default: 'fa-file' };
 
@@ -119,6 +133,179 @@ function formatMatchScore(score) {
     return (Math.round(n * 100) / 100).toFixed(2);
 }
 
+/**
+ * Ordered Stage A peel trail from Backend transforms[].
+ * Soft-degrades when missing / mid-rollout — returns [].
+ */
+function normalizeTransforms(folder) {
+    if (!folder || typeof folder !== 'object') return [];
+    const raw = folder.transforms;
+    if (!Array.isArray(raw) || raw.length === 0) return [];
+    return raw
+        .filter((step) => step && typeof step === 'object')
+        .map((step) => ({
+            stage: step.stage == null ? '' : String(step.stage).trim(),
+            before: step.before == null ? '' : String(step.before),
+            after: step.after == null ? '' : String(step.after),
+            reason: step.reason == null ? '' : String(step.reason).trim(),
+        }))
+        .filter((step) => step.stage || step.before || step.after);
+}
+
+/** HTML for expandable name transform trail (stage · before → after · reason). */
+function buildTransformTrailHtml(folder) {
+    const steps = normalizeTransforms(folder);
+    if (!steps.length) return '';
+    const items = steps.map((step) => {
+        const stage = escapeHtml(step.stage || '—');
+        const before = escapeHtml(step.before);
+        const after = escapeHtml(step.after);
+        const reason = step.reason
+            ? `<span class="unmatched-why__transform-reason">${escapeHtml(step.reason)}</span>`
+            : '';
+        return `<li class="unmatched-why__transform-step"><span class="unmatched-why__transform-stage">${stage}</span><span class="unmatched-why__transform-pair"><code>${before}</code> → <code>${after}</code></span>${reason}</li>`;
+    }).join('');
+    return `<details class="unmatched-why__transforms"><summary class="unmatched-why__transforms-summary">Name transform trail (${steps.length})</summary><ol class="unmatched-why__transform-list">${items}</ol></details>`;
+}
+
+/**
+ * Quiet Stage E propose-only chip + expandable candidates (Moby / TheGamesDB).
+ * Soft-degrades when list API has not flattened proposal fields yet.
+ */
+function buildStageEHtml(folder) {
+    if (!hasStageEHints(folder)) return '';
+    const candidates = normalizeStageECandidates(folder);
+    const meta = normalizeStageEMeta(folder);
+    const sources = stageEChipSources(candidates);
+    const chipDetail = sources.length ? sources.join(' · ') : 'catalog';
+    const title = escapeHtml(
+        'Propose-only catalog hints after Stage D miss — not auto-matched. Use Fix search / Identify to apply.',
+    );
+    const chip = `<span class="unmatched-stage-e-chip" title="${title}">Stage E · propose only · ${escapeHtml(chipDetail)}</span>`;
+    let body = '';
+    if (candidates.length > 0) {
+        const items = candidates.map((hit) => {
+            const source = escapeHtml(stageESourceLabel(hit.source));
+            const mode = stageEMatchModeLabel(hit.match_mode);
+            const label = escapeHtml(hit.name || hit.id || 'Candidate');
+            const nameHtml = hit.url
+                ? `<a class="unmatched-stage-e__name" href="${escapeHtml(hit.url)}" target="_blank" rel="noopener noreferrer">${label}</a>`
+                : `<span class="unmatched-stage-e__name">${label}</span>`;
+            const modeHtml = mode
+                ? `<span class="unmatched-stage-e__mode">${escapeHtml(mode)}</span>`
+                : '';
+            return `<li class="unmatched-stage-e__hit"><span class="unmatched-stage-e__source">${source}</span>${nameHtml}${modeHtml}</li>`;
+        }).join('');
+        body = `<details class="unmatched-stage-e__details"><summary class="unmatched-stage-e__summary">Stage E candidates (${candidates.length})</summary><p class="unmatched-stage-e__note">Catalog hints only — Identify to apply. Not auto-matched.</p><ul class="unmatched-stage-e__list">${items}</ul></details>`;
+    } else if (meta) {
+        const reason = escapeHtml(meta.match_reason || 'Stage E propose-only');
+        body = `<p class="unmatched-stage-e__meta" title="${title}">${reason} — Identify to apply.</p>`;
+    }
+    return `<div class="unmatched-stage-e">${chip}${body}</div>`;
+}
+
+/** Basename of a folder path (null-safe). */
+function unmatchedFolderBasename(path) {
+    const parts = String(path || '')
+        .replace(/\\/g, '/')
+        .split('/')
+        .filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : '';
+}
+
+/**
+ * Soft Wave 17 naming: prefer search_name, else folder_name / basename.
+ * Disk path is never renamed here — only Identify search prefill.
+ */
+function resolveUnmatchedSearchName(folder) {
+    if (!folder || typeof folder !== 'object') return '';
+    const soft =
+        (folder.search_name != null && String(folder.search_name).trim()) ||
+        (folder.display_name != null && String(folder.display_name).trim()) ||
+        '';
+    if (soft) return soft;
+    if (folder.folder_name != null && String(folder.folder_name).trim()) {
+        return String(folder.folder_name).trim();
+    }
+    return unmatchedFolderBasename(folder.folder_path);
+}
+
+/**
+ * Normalize matched library hit for “Dupe of …” (list `matched_game` /
+ * `duplicate_of`, flat matched_game_* fields, or /duplicates candidates).
+ */
+function normalizeMatchedGame(folder) {
+    if (!folder || typeof folder !== 'object') return null;
+    const nested = folder.matched_game || folder.duplicate_of;
+    if (nested && typeof nested === 'object') {
+        const uuid = nested.uuid || nested.matched_game_uuid || null;
+        const name = (nested.name || nested.title || '').trim();
+        const path = nested.path || nested.full_disk_path || '';
+        const cover = nested.cover_url || nested.cover || null;
+        if (!name && !uuid && !path) return null;
+        return {
+            uuid: uuid || null,
+            name: name || 'Library game',
+            path: path || '',
+            cover_url: cover || null,
+            match_score: nested.match_score != null ? nested.match_score : folder.match_score,
+        };
+    }
+    const flatName =
+        (folder.matched_game_name != null && String(folder.matched_game_name).trim()) ||
+        '';
+    const flatPath =
+        (folder.matched_game_path != null && String(folder.matched_game_path).trim()) ||
+        '';
+    const flatUuid = folder.matched_game_uuid || null;
+    // uuid alone is not enough — leave null so callers soft-enrich from /duplicates
+    if (!flatName && !flatPath) return null;
+    return {
+        uuid: flatUuid || null,
+        name: flatName || 'Library game',
+        path: flatPath,
+        cover_url: folder.matched_game_cover_url || null,
+        match_score: folder.match_score,
+    };
+}
+
+/** Compact “Dupe of …” HTML for base unmatched table (and status column). */
+function buildDupeOfHtml(folder) {
+    const hit = normalizeMatchedGame(folder);
+    if (!hit) return '';
+    const score = formatMatchScore(hit.match_score != null ? hit.match_score : folder.match_score);
+    const scoreChip = score
+        ? `<span class="unmatched-why__score" title="Match confidence score">${escapeHtml(score)}</span>`
+        : '';
+    const thumb = hit.cover_url
+        ? `<img class="unmatched-dupe-of__thumb" src="${escapeHtml(hit.cover_url)}" alt="" width="28" height="36" loading="lazy">`
+        : `<span class="unmatched-dupe-of__thumb unmatched-dupe-of__thumb--empty" aria-hidden="true"></span>`;
+    const title = escapeHtml(hit.name);
+    const detailsHref = hit.uuid
+        ? `/game_details/${encodeURIComponent(hit.uuid)}`
+        : '';
+    const titleHtml = detailsHref
+        ? `<a class="unmatched-dupe-of__title" href="${detailsHref}" title="Open library game details">${title}</a>`
+        : `<span class="unmatched-dupe-of__title">${title}</span>`;
+    const pathHtml = hit.path
+        ? `<button type="button" class="unmatched-dupe-of__path reveal-path-btn" data-path="${escapeHtml(hit.path)}" title="Open library game path">${escapeHtml(hit.path)}</button>`
+        : '';
+    const uuidHtml = hit.uuid
+        ? `<span class="unmatched-dupe-of__uuid" title="Library game UUID">${escapeHtml(hit.uuid)}</span>`
+        : '';
+    return `
+      <div class="unmatched-dupe-of" data-dupe-uuid="${escapeHtml(hit.uuid || '')}">
+        <span class="unmatched-dupe-of__label">Dupe of:</span>
+        ${thumb}
+        <div class="unmatched-dupe-of__meta">
+          ${titleHtml}
+          ${scoreChip}
+          ${uuidHtml}
+          ${pathHtml}
+        </div>
+      </div>`;
+}
+
 // Lightweight toast, independent from showSuccessNotification so it can be
 // used for both success and informational best-effort messages.
 function showToast(message, variant) {
@@ -154,7 +341,191 @@ function isScanBusyStatus(status) {
 
 function isScanQueuedStatus(status) {
     const s = String(status || '').toLowerCase();
-    return s === 'queued' || s === 'pending';
+    return s === 'queued' || s === 'pending' || s === 'scheduled';
+}
+
+const SCAN_JOB_FILTER_KEY = 'gt.scanJobs.filters';
+const SCAN_JOB_STATUS_OPTIONS = [
+    'Running',
+    'Queued',
+    'Completed',
+    'Failed',
+    'Cancelled',
+    'Scheduled',
+];
+
+/** Soft-format seconds → "2m 14s" / "1h 5m" (no fake precision). */
+function formatScanDurationSeconds(rawSeconds) {
+    const n = Number(rawSeconds);
+    if (!Number.isFinite(n) || n < 0) return '';
+    const total = Math.floor(n);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    if (h > 0) {
+        return m > 0 ? `${h}h ${m}m` : `${h}h`;
+    }
+    if (m > 0) {
+        return s > 0 ? `${m}m ${s}s` : `${m}m`;
+    }
+    return `${s}s`;
+}
+
+function scanJobElapsedLabel(job) {
+    if (!job) return '';
+    if (job.elapsed_label) return String(job.elapsed_label);
+    if (job.elapsed_seconds != null && job.elapsed_seconds !== '') {
+        return formatScanDurationSeconds(job.elapsed_seconds);
+    }
+    return '';
+}
+
+function scanJobEtaLabel(job) {
+    if (!job) return '';
+    if (job.eta_label) return String(job.eta_label);
+    if (job.eta_seconds != null && job.eta_seconds !== '') {
+        const formatted = formatScanDurationSeconds(job.eta_seconds);
+        return formatted ? `~${formatted} left` : '';
+    }
+    return '';
+}
+
+/** Compact timing line for job rows / running banner. Soft-degrade when fields absent. */
+function scanJobTimingLine(job) {
+    if (!job) return '';
+    const status = String(job.status || '');
+    const elapsed = scanJobElapsedLabel(job);
+    const eta = scanJobEtaLabel(job);
+    if (isScanQueuedStatus(status) && status.toLowerCase() !== 'scheduled') {
+        // Queued: show queue-wait elapsed if Backend sends it; never invent ETA.
+        return elapsed ? `Waited ${elapsed}` : '';
+    }
+    if (isScanBusyStatus(status)) {
+        const parts = [];
+        if (elapsed) parts.push(elapsed);
+        if (eta) parts.push(eta);
+        return parts.join(' · ');
+    }
+    return '';
+}
+
+function loadScanJobFilters() {
+    const defaults = { statuses: [], library_uuid: '', q: '' };
+    try {
+        const raw = localStorage.getItem(SCAN_JOB_FILTER_KEY);
+        if (!raw) return defaults;
+        const parsed = JSON.parse(raw);
+        const statuses = Array.isArray(parsed.statuses)
+            ? parsed.statuses.filter((s) => SCAN_JOB_STATUS_OPTIONS.includes(s))
+            : [];
+        return {
+            statuses,
+            library_uuid: String(parsed.library_uuid || ''),
+            q: String(parsed.q || ''),
+        };
+    } catch (_err) {
+        return defaults;
+    }
+}
+
+function saveScanJobFilters(filters) {
+    try {
+        localStorage.setItem(SCAN_JOB_FILTER_KEY, JSON.stringify({
+            statuses: Array.isArray(filters.statuses) ? filters.statuses : [],
+            library_uuid: String(filters.library_uuid || ''),
+            q: String(filters.q || ''),
+        }));
+    } catch (_err) {
+        /* ignore quota / private mode */
+    }
+}
+
+function jobMatchesStatusFilter(job, statuses) {
+    if (!statuses || !statuses.length) return true;
+    const status = String(job.status || '');
+    const cancelledByUser = status === 'Failed' && job.error_message === 'Scan cancelled by user';
+    return statuses.some((wanted) => {
+        if (wanted === 'Running') return status === 'Running' || status === 'Stopping';
+        if (wanted === 'Queued') {
+            const s = status.toLowerCase();
+            return s === 'queued' || s === 'pending';
+        }
+        if (wanted === 'Scheduled') return status === 'Scheduled';
+        if (wanted === 'Cancelled') return status === 'Cancelled' || cancelledByUser;
+        if (wanted === 'Failed') return status === 'Failed' && !cancelledByUser;
+        if (wanted === 'Completed') return status === 'Completed';
+        return status === wanted;
+    });
+}
+
+function filterScanJobsClientSide(jobs, filters) {
+    const list = Array.isArray(jobs) ? jobs : [];
+    const statuses = filters && filters.statuses ? filters.statuses : [];
+    const libraryUuid = String((filters && filters.library_uuid) || '').trim();
+    const q = String((filters && filters.q) || '').trim().toLowerCase();
+    return list.filter((job) => {
+        if (!jobMatchesStatusFilter(job, statuses)) return false;
+        if (libraryUuid && String(job.library_uuid || '') !== libraryUuid) return false;
+        if (q) {
+            const path = String(job.scan_folder || '').toLowerCase();
+            if (!path.includes(q)) return false;
+        }
+        return true;
+    });
+}
+
+function buildScanJobsStatusUrl(filters) {
+    const params = new URLSearchParams();
+    if (filters.statuses && filters.statuses.length) {
+        params.set('status', filters.statuses.join(','));
+    }
+    if (filters.library_uuid) params.set('library_uuid', filters.library_uuid);
+    if (filters.q) params.set('q', filters.q);
+    const qs = params.toString();
+    return qs ? `/api/scan_jobs_status?${qs}` : '/api/scan_jobs_status';
+}
+
+/** Animate motif to the right of Start Scan while running or queued. */
+function updateAutoScanStatusIcon(jobs) {
+    const el = document.getElementById('autoScanStatus');
+    if (!el) return;
+    const list = Array.isArray(jobs) ? jobs : [];
+    const busyJob = list.find((j) => isScanBusyStatus(j && j.status));
+    const queuedJob = list.find((j) => isScanQueuedStatus(j && j.status));
+    const busy = Boolean(busyJob);
+    const queued = Boolean(queuedJob);
+    const active = busy || queued;
+    const label = el.querySelector('.auto-scan-status__label');
+    const timingEl = el.querySelector('.auto-scan-status__timing');
+    const motifHost = el.querySelector('.auto-scan-status__motif');
+    if (!active) {
+        el.hidden = true;
+        el.dataset.state = 'idle';
+        if (label) label.textContent = 'Idle';
+        if (timingEl) {
+            timingEl.hidden = true;
+            timingEl.textContent = '';
+        }
+        return;
+    }
+    el.hidden = false;
+    el.dataset.state = busy ? 'running' : 'queued';
+    if (label) label.textContent = busy ? 'Scanning…' : 'Queued…';
+    const timing = scanJobTimingLine(busyJob || queuedJob);
+    if (timingEl) {
+        if (timing) {
+            timingEl.hidden = false;
+            timingEl.textContent = timing;
+        } else {
+            timingEl.hidden = true;
+            timingEl.textContent = '';
+        }
+    }
+    if (motifHost && window.GtLoadingMotifs) {
+        window.GtLoadingMotifs.mount(motifHost, { size: 'sm', forceId: 'scan' });
+    } else if (motifHost && !motifHost.querySelector('.gt-spinner, .gt-loading-motif')) {
+        motifHost.innerHTML = '<span class="gt-spinner gt-spinner--sm" aria-hidden="true"></span>';
+    }
 }
 
 function buildScanQueueRequestFields(policy) {
@@ -176,13 +547,37 @@ function isAlreadyRunningReject(httpStatus, body) {
     return err.includes('already running') || err.includes('already in progress');
 }
 
+function isScanCoalesced(body) {
+    if (!body) return false;
+    if (body.coalesced === true) return true;
+    if (Number(body.coalesced_count) > 0) return true;
+    if (Array.isArray(body.jobs) && body.jobs.some((job) => job && job.coalesced === true)) {
+        return true;
+    }
+    return false;
+}
+
 function toastForScanStartResponse(body, httpOk) {
     const status = String(body && body.status || '').toLowerCase();
     const message = String((body && (body.message || body.error)) || '').trim();
+    const coalescedSuffix = isScanCoalesced(body) ? ' · coalesced' : '';
     if (status === 'queued') {
-        const pos = body && body.position != null ? ` (position ${body.position})` : '';
+        const position = body && body.position != null
+            ? body.position
+            : (body && body.jobs && body.jobs[0] && body.jobs[0].position != null
+                ? body.jobs[0].position
+                : null);
+        if (position != null) {
+            return { text: `Queued · position ${position}${coalescedSuffix}`, variant: 'info' };
+        }
+        if (body && body.count != null) {
+            return {
+                text: message || `Queued · ${body.count} library refresh job(s)${coalescedSuffix}`,
+                variant: 'info',
+            };
+        }
         return {
-            text: message || `Scan queued${pos}. It will start when the current job finishes.`,
+            text: message || `Queued · waiting for the current job to finish.${coalescedSuffix ? ' (coalesced)' : ''}`,
             variant: 'info',
         };
     }
@@ -196,7 +591,7 @@ function toastForScanStartResponse(body, httpOk) {
     }
     if (httpOk && (body && (body.count != null || Array.isArray(body.queued)))) {
         const count = body.count != null ? body.count : body.queued.length;
-        return { text: message || `Queued ${count} library refresh job(s).`, variant: 'info' };
+        return { text: message || `Queued · ${count} library refresh job(s)`, variant: 'info' };
     }
     if (httpOk) {
         return { text: message || 'Scan request accepted.', variant: 'success' };
@@ -312,6 +707,33 @@ function applyQueueFieldsToForm(form, policy) {
 
 function clearQueueFieldsFromForm(form) {
     form.querySelectorAll('input[name="queue_policy"], input[name="force_parallel"]').forEach((el) => el.remove());
+}
+
+/**
+ * Preserve submit button name/value after conflict modal.
+ * Bare form.requestSubmit() / form.submit() drops `submit=AutoScan|ManualScan`
+ * and Flask routes the POST as "Unrecognized action".
+ */
+function ensureScanSubmitAction(form, submitter) {
+    const fromSubmitter =
+        submitter && submitter.getAttribute && submitter.getAttribute('name') === 'submit'
+            ? submitter.value
+            : '';
+    const fromButton = form.querySelector('button[type="submit"][name="submit"]');
+    const action =
+        fromSubmitter
+        || (fromButton && fromButton.value)
+        || (form.id === 'manualScanForm' ? 'ManualScan' : 'AutoScan');
+    let input = form.querySelector('input[data-gt-scan-submit-action]');
+    if (!input) {
+        input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'submit';
+        input.setAttribute('data-gt-scan-submit-action', '1');
+        form.appendChild(input);
+    }
+    input.value = action;
+    return { action, submitter: submitter && form.contains(submitter) ? submitter : fromButton };
 }
 
 async function copyPathToClipboard(path) {
@@ -535,9 +957,104 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Tracks whether any job is Running/Stopping — used by Start Scan conflict modal.
     let scanBusy = false;
+    let scanJobFilters = loadScanJobFilters();
+
+    function populateScanJobLibraryFilter() {
+        const select = document.getElementById('scanJobsLibraryFilter');
+        if (!select) return;
+        const source = document.getElementById('libraryUuid');
+        const previous = scanJobFilters.library_uuid || select.value || '';
+        const options = ['<option value="">All libraries</option>'];
+        if (source) {
+            Array.from(source.options).forEach((opt) => {
+                if (!opt.value) return;
+                options.push(
+                    `<option value="${escapeHtml(opt.value)}">${escapeHtml(opt.textContent || opt.value)}</option>`
+                );
+            });
+        }
+        select.innerHTML = options.join('');
+        select.value = previous;
+        scanJobFilters.library_uuid = select.value || '';
+    }
+
+    function syncScanJobFilterControls() {
+        const root = document.getElementById('scanJobsFilters');
+        if (!root) return;
+        root.querySelectorAll('[data-scan-status]').forEach((chip) => {
+            const status = chip.getAttribute('data-scan-status');
+            const active = !scanJobFilters.statuses.length
+                ? status === 'All'
+                : status !== 'All' && scanJobFilters.statuses.includes(status);
+            chip.classList.toggle('is-active', active);
+            chip.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        const librarySelect = document.getElementById('scanJobsLibraryFilter');
+        if (librarySelect) librarySelect.value = scanJobFilters.library_uuid || '';
+        const pathInput = document.getElementById('scanJobsPathFilter');
+        if (pathInput && pathInput.value !== (scanJobFilters.q || '')) {
+            pathInput.value = scanJobFilters.q || '';
+        }
+    }
+
+    function applyScanJobFilters(next) {
+        scanJobFilters = {
+            statuses: Array.isArray(next.statuses) ? next.statuses.slice() : [],
+            library_uuid: String(next.library_uuid || ''),
+            q: String(next.q || ''),
+        };
+        saveScanJobFilters(scanJobFilters);
+        syncScanJobFilterControls();
+        updateScanJobs();
+    }
+
+    function bindScanJobFilters() {
+        const root = document.getElementById('scanJobsFilters');
+        if (!root || root.dataset.bound === '1') return;
+        root.dataset.bound = '1';
+        populateScanJobLibraryFilter();
+        syncScanJobFilterControls();
+
+        root.querySelectorAll('[data-scan-status]').forEach((chip) => {
+            chip.addEventListener('click', () => {
+                const status = chip.getAttribute('data-scan-status');
+                if (status === 'All') {
+                    applyScanJobFilters({ ...scanJobFilters, statuses: [] });
+                    return;
+                }
+                const set = new Set(scanJobFilters.statuses);
+                if (set.has(status)) set.delete(status);
+                else set.add(status);
+                applyScanJobFilters({ ...scanJobFilters, statuses: Array.from(set) });
+            });
+        });
+
+        const librarySelect = document.getElementById('scanJobsLibraryFilter');
+        if (librarySelect) {
+            librarySelect.addEventListener('change', () => {
+                applyScanJobFilters({ ...scanJobFilters, library_uuid: librarySelect.value || '' });
+            });
+        }
+
+        const pathInput = document.getElementById('scanJobsPathFilter');
+        if (pathInput) {
+            let debounce = null;
+            pathInput.addEventListener('input', () => {
+                clearTimeout(debounce);
+                debounce = setTimeout(() => {
+                    applyScanJobFilters({ ...scanJobFilters, q: pathInput.value || '' });
+                }, 250);
+            });
+        }
+
+        const libraryUuid = document.getElementById('libraryUuid');
+        if (libraryUuid) {
+            libraryUuid.addEventListener('change', () => populateScanJobLibraryFilter());
+        }
+    }
 
     const updateScanJobs = () => {
-        fetch('/api/scan_jobs_status', {cache: 'no-store'})
+        fetch(buildScanJobsStatusUrl(scanJobFilters), { cache: 'no-store' })
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`scan_jobs_status HTTP ${response.status}`);
@@ -545,24 +1062,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                // Sort the data array to ensure the latest scan is at the top
-                // Queued jobs without last_run sort after active, before completed by id.
-                data.sort((a, b) => {
+                const allJobs = Array.isArray(data) ? data.slice() : [];
+                // Soft-degrade: Backend may ignore query params — always filter client-side.
+                const filtered = filterScanJobsClientSide(allJobs, scanJobFilters);
+
+                // Sort: active → queued → rest by last_run
+                filtered.sort((a, b) => {
                     const aBusy = isScanBusyStatus(a.status) ? 0 : isScanQueuedStatus(a.status) ? 1 : 2;
                     const bBusy = isScanBusyStatus(b.status) ? 0 : isScanQueuedStatus(b.status) ? 1 : 2;
                     if (aBusy !== bBusy) return aBusy - bBusy;
                     return new Date(b.last_run || 0) - new Date(a.last_run || 0);
                 });
-                
-                // Clear the table body
+
                 scanJobsTableBody.innerHTML = '';
-                
-                const isAnyJobRunning = data.some(j => isScanBusyStatus(j.status));
+
+                const isAnyJobRunning = allJobs.some(j => isScanBusyStatus(j.status));
                 scanBusy = isAnyJobRunning;
-                
-                data.forEach(job => {
+                // Banner uses full list so filters don't hide an active scan indicator.
+                updateAutoScanStatusIcon(allJobs);
+
+                if (!filtered.length) {
+                    const empty = document.createElement('tr');
+                    empty.className = 'jobs-empty-row';
+                    const hasFilters = (scanJobFilters.statuses && scanJobFilters.statuses.length)
+                        || scanJobFilters.library_uuid
+                        || (scanJobFilters.q && scanJobFilters.q.trim());
+                    empty.innerHTML = `<td colspan="6">${hasFilters
+                        ? 'No scan jobs match the current filters.'
+                        : 'No scan jobs yet. Click Start Scan after selecting a folder.'}</td>`;
+                    scanJobsTableBody.appendChild(empty);
+                    return;
+                }
+
+                filtered.forEach(job => {
                     const { processed, total, percentage } = progressCounts(job);
-                    // Create progress column content
+                    const timing = scanJobTimingLine(job);
+                    const timingHtml = timing
+                        ? `<div class="scan-job-timing" title="Elapsed / ETA">${escapeHtml(timing)}</div>`
+                        : '';
                     let progressColumn = '';
                     if (job.status === 'Running' && total > 0) {
                         progressColumn = `
@@ -573,9 +1110,19 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="progress-info">
                                     <span class="progress-numbers">${processed}/${total} (${percentage}%)</span>
                                 </div>
+                                ${timingHtml}
                                 <div class="progress-status">
-                                    <small class="text-bright-green">${job.current_processing || 'Processing...'}</small>
+                                    <small class="text-bright-green">${escapeHtml(job.current_processing || 'Processing...')}</small>
                                 </div>
+                            </div>
+                        `;
+                    } else if (job.status === 'Running') {
+                        progressColumn = `
+                            <div class="scan-progress">
+                                <div class="progress-status">
+                                    <span class="text-bright-green">${escapeHtml(job.current_processing || 'Processing...')}</span>
+                                </div>
+                                ${timingHtml}
                             </div>
                         `;
                     } else if (job.status === 'Stopping') {
@@ -587,6 +1134,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         Stopping… (${processed}/${total || '?'})
                                     </span>
                                 </div>
+                                ${timingHtml}
                                 <div class="progress-status">
                                     <small class="text-muted">Finishing in-flight folders, then cancelling the rest</small>
                                 </div>
@@ -594,7 +1142,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         `;
                     } else if (isScanQueuedStatus(job.status)) {
                         const pos = job.queue_position != null ? ` #${job.queue_position}` : '';
-                        progressColumn = `<span class="text-info">⏳ Queued${pos} — waiting for active scan</span>`;
+                        const waitNote = timing ? ` · ${escapeHtml(timing)}` : ' — waiting for active scan';
+                        progressColumn = `<span class="text-info">⏳ Queued${pos}${waitNote}</span>`;
                     } else if (job.status === 'Completed' || job.status === 'Scheduled') {
                         progressColumn = `<span class="text-success">✓ ${processed}/${total || processed}</span>`;
                     } else if (job.status === 'Cancelled') {
@@ -608,7 +1157,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         progressColumn = total ? `${processed}/${total}` : '—';
                     }
 
-                    // Create actions column content
                     let actionsColumn = '—';
                     if (job.status === 'Running') {
                         actionsColumn = `<form action="/cancel_scan_job/${job.id}" method="post" style="display: inline-block;">
@@ -626,7 +1174,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <button type="submit" class="btn btn-outline-warning btn-sm" title="Cancel queued scan before it starts">Cancel queue</button>
                             </form>`;
                     } else if (isAnyJobRunning) {
-                        // Offer restart that can queue/force via conflict modal once Backend wires flags.
                         actionsColumn = `<button type="button" class="btn btn-info btn-sm gt-scan-restart-busy"
                                 data-restart-url="/restart_scan_job/${job.id}"
                                 title="Another scan is running — queue or force restart">↻</button>`;
@@ -636,13 +1183,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <button type="submit" class="btn btn-info btn-sm" title="Restart Scan">↻</button>
                                 </form>`;
                     }
-                    
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${job.id.substring(0, 8)}</td>
-                        <td>${job.library_name || 'N/A'}</td>
-                        <td>${job.scan_folder || 'N/A'}</td>
-                        <td>${getDisplayStatus(job)}</td>
+                        <td>${escapeHtml(job.library_name || 'N/A')}</td>
+                        <td>${escapeHtml(job.scan_folder || 'N/A')}</td>
+                        <td>${escapeHtml(getDisplayStatus(job))}</td>
                         <td>${progressColumn}</td>
                         <td>${actionsColumn}</td>
                     `;
@@ -671,6 +1218,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error fetching scan jobs status:', error));
     };
 
+    bindScanJobFilters();
+
     function interceptScanFormSubmit(form) {
         if (!form || form.dataset.scanConflictBound) return;
         form.dataset.scanConflictBound = '1';
@@ -685,42 +1234,128 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             event.preventDefault();
+            const submitter = event.submitter || null;
             openScanConflictModal((policy) => {
                 applyQueueFieldsToForm(form, policy);
+                const ensured = ensureScanSubmitAction(form, submitter);
                 form.dataset.scanConflictProceed = '1';
                 if (typeof form.requestSubmit === 'function') {
-                    form.requestSubmit();
+                    if (ensured.submitter) {
+                        form.requestSubmit(ensured.submitter);
+                    } else {
+                        form.requestSubmit();
+                    }
                 } else {
-                    form.submit();
+                    HTMLFormElement.prototype.submit.call(form);
                 }
             });
         });
     }
 
     interceptScanFormSubmit(autoScanForm);
+    // Manual busy → same Queue/Force conflict UX as Auto (queue_policy / force_parallel).
+    // Idle Manual stays List Games identify — intercept clears queue fields when !scanBusy.
     interceptScanFormSubmit(manualScanForm);
+
+    // Wave 17 selection + soft filter state (client interim; prefer server q= when present)
+    const unmatchedSelectedIds = new Set();
+    let currentWhyFilter = 'all';
+    let currentKindFilter = 'all';
+    let currentLeafFilter = 'all';
+    let currentTriageFilter = 'all';
+    let unmatchedNameEndpointReady = null; // null=unknown, true/false after probe
+
+    function fetchUnmatchedList() {
+        const params = new URLSearchParams();
+        if (currentSearch) params.set('q', currentSearch);
+        if (currentFilter !== 'all') params.set('status', currentFilter);
+        if (currentWhyFilter !== 'all') {
+            params.set('why', currentWhyFilter);
+            params.set('match_reason', currentWhyFilter);
+        }
+        if (currentKindFilter !== 'all') {
+            params.set('suggested_kind', currentKindFilter === 'none' ? '' : currentKindFilter);
+        }
+        const qs = params.toString();
+        const url = qs ? `/api/unmatched_folders?${qs}` : '/api/unmatched_folders';
+        return fetch(url, { cache: 'no-store' })
+            .then((response) => {
+                if (!response.ok) throw new Error(`unmatched_folders ${response.status}`);
+                return response.json();
+            })
+            .then((data) => (Array.isArray(data) ? data : []));
+    }
+
+    /** Soft-enrich Duplicate rows with matched_game from /duplicates when list omits it. */
+    function enrichUnmatchedWithDuplicates(folders) {
+        const needs = folders.filter((f) => {
+            if (!(f.status === 'Duplicate' || f.matched_game_uuid || f.duplicate_of || f.matched_game)) {
+                return false;
+            }
+            return !normalizeMatchedGame(f);
+        });
+        if (!needs.length) return Promise.resolve(folders);
+        return fetch('/api/unmatched_folders/duplicates', { cache: 'no-store' })
+            .then((response) => (response.ok ? response.json() : { duplicates: [] }))
+            .then((payload) => {
+                const byId = new Map();
+                (payload.duplicates || []).forEach((dup) => {
+                    const cand = (dup.candidates && dup.candidates[0]) || null;
+                    if (!cand) return;
+                    byId.set(String(dup.id), {
+                        uuid: cand.uuid,
+                        name: cand.name,
+                        path: cand.path,
+                        cover_url: cand.cover_url,
+                        match_score: cand.match_score != null ? cand.match_score : dup.match_score,
+                        match_reason: cand.match_reason || dup.match_reason,
+                        transforms: Array.isArray(dup.transforms) ? dup.transforms : null,
+                    });
+                });
+                return folders.map((folder) => {
+                    const hit = byId.get(String(folder.id));
+                    const folderHasTrail = Array.isArray(folder.transforms) && folder.transforms.length > 0;
+                    const softTransforms =
+                        !folderHasTrail && hit && Array.isArray(hit.transforms) && hit.transforms.length
+                            ? hit.transforms
+                            : null;
+                    if (normalizeMatchedGame(folder)) {
+                        if (!softTransforms) return folder;
+                        return Object.assign({}, folder, { transforms: softTransforms });
+                    }
+                    if (!hit) return folder;
+                    const next = {
+                        matched_game: hit,
+                        match_score: folder.match_score != null ? folder.match_score : hit.match_score,
+                        match_reason: folder.match_reason || hit.match_reason,
+                    };
+                    if (softTransforms) next.transforms = softTransforms;
+                    return Object.assign({}, folder, next);
+                });
+            })
+            .catch(() => folders);
+    }
 
     const updateUnmatchedFolders = () => {
         showSpinner();
-        return fetch('/api/unmatched_folders', {cache: 'no-store'})
-            .then(response => response.json())
-            .then(data => {
-                // Clear the table body
+        const priorSelected = new Set(unmatchedSelectedIds);
+        return fetchUnmatchedList()
+            .then((data) => enrichUnmatchedWithDuplicates(data))
+            .then((data) => {
                 unmatchedTableBody.innerHTML = '';
-                
-                data.forEach(folder => {
+                unmatchedSelectedIds.clear();
+
+                data.forEach((folder) => {
                     const escapedPath = escapeHtml(folder.folder_path);
-                    const folderName = String(folder.folder_path || '')
-                        .replace(/\\/g, '/')
-                        .split('/')
-                        .filter(Boolean)
-                        .pop() || '';
-                    const escapedName = escapeHtml(folderName);
+                    const diskBasename = unmatchedFolderBasename(folder.folder_path);
+                    const searchName = resolveUnmatchedSearchName(folder);
+                    const escapedSearchName = escapeHtml(searchName);
+                    const escapedDisk = escapeHtml(diskBasename);
                     const ignoreLabel = folder.status === 'Ignore' ? 'Unignore' : 'Ignore';
                     const canMarkKind = folder.status === 'Unmatched'
                         || folder.status === 'Pending'
                         || folder.status === 'Duplicate';
-                    // TODO(backend): unmatched list may omit suggested_kind until API reads proposal sidecars.
+                    const isDuplicate = folder.status === 'Duplicate';
                     const suggestedRaw = folder.suggested_kind == null ? '' : String(folder.suggested_kind).trim().toLowerCase();
                     const suggestedKind = ['experience', 'emulator', 'tool'].includes(suggestedRaw)
                         ? suggestedRaw
@@ -737,6 +1372,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         : ['experience', 'emulator', 'tool'];
                     const markKindButtons = canMarkKind ? markKindOrder.map((itemKind) => {
                         const label = itemKind === 'experience'
+                            ? 'Exp'
+                            : itemKind === 'emulator'
+                                ? 'Emu'
+                                : 'Tool';
+                        const fullLabel = itemKind === 'experience'
                             ? 'Experience'
                             : itemKind === 'emulator'
                                 ? 'Emulator'
@@ -746,39 +1386,53 @@ document.addEventListener('DOMContentLoaded', function() {
                             ? 'btn btn-outline-success btn-sm mark-kind-btn is-suggested'
                             : 'btn btn-outline-light btn-sm mark-kind-btn';
                         const title = isSuggested
-                            ? `Suggested: catalog as ${label} without an IGDB game match`
-                            : `Catalog as ${label} without an IGDB game match`;
-                        return `<button type="button" class="${btnClass}" data-folder-id="${escapeHtml(String(folder.id))}" data-item-kind="${itemKind}" data-name="${escapedName}" title="${escapeHtml(title)}">Mark as ${label}</button>`;
+                            ? `Suggested: catalog as ${fullLabel} without an IGDB game match`
+                            : `Catalog as ${fullLabel} without an IGDB game match`;
+                        return `<button type="button" class="${btnClass}" data-folder-id="${escapeHtml(String(folder.id))}" data-item-kind="${itemKind}" data-name="${escapedSearchName}" title="${escapeHtml(title)}">Mark ${label}</button>`;
                     }).join('\n') : '';
                     const suggestedChip = suggestedKind
                         ? `<span class="unmatched-suggested-kind" title="Suggested kind from scan proposal (software path)">Suggested ${escapeHtml(suggestedLabel)}</span>`
                         : '';
                     const whyLine = formatWhyUnmatched(folder);
                     const matchScore = formatMatchScore(folder.match_score);
+                    const transformTrailHtml = buildTransformTrailHtml(folder);
+                    const stageEHtml = buildStageEHtml(folder);
                     const showWhyLabel = folder.status === 'Unmatched' || folder.status === 'Pending';
-                    const scoreHtml = matchScore
+                    const scoreHtml = matchScore && !isDuplicate
                         ? `<span class="unmatched-why__score" title="Match confidence score">${escapeHtml(matchScore)}</span>`
                         : '';
-                    const whyHtml = (whyLine || matchScore)
-                        ? `<span class="unmatched-why"${showWhyLabel ? '' : ' data-why-kind="status"'}>${
+                    const reasonLineHtml = (whyLine || (matchScore && !isDuplicate) || (showWhyLabel && (transformTrailHtml || stageEHtml)))
+                        ? `<p class="unmatched-why__line"${showWhyLabel ? '' : ' data-why-kind="status"'}>${
                             showWhyLabel
                                 ? '<span class="unmatched-why__label">Why unmatched?</span> '
                                 : ''
-                          }${scoreHtml}${scoreHtml && whyLine ? ' ' : ''}${whyLine ? escapeHtml(whyLine) : ''}</span>`
+                          }${scoreHtml}${scoreHtml && whyLine ? ' ' : ''}${whyLine ? escapeHtml(whyLine) : ''}</p>`
+                        : '';
+                    const whyHtml = (reasonLineHtml || transformTrailHtml || stageEHtml)
+                        ? `<div class="unmatched-why">${reasonLineHtml}${transformTrailHtml}${stageEHtml}</div>`
+                        : '';
+                    const dupeOfHtml = (isDuplicate || normalizeMatchedGame(folder))
+                        ? buildDupeOfHtml(folder)
+                        : '';
+                    const dupeFixButtons = isDuplicate
+                        ? `
+                        <button type="button" class="btn btn-outline-light btn-sm unmatched-fix-btn" data-folder-id="${escapeHtml(String(folder.id))}" data-fix-action="merge" title="Keep library game; clear this duplicate row">Merge</button>
+                        <button type="button" class="btn btn-outline-light btn-sm unmatched-fix-btn" data-folder-id="${escapeHtml(String(folder.id))}" data-fix-action="keep" title="Reclassify as Unmatched for further review">Keep</button>
+                        <button type="button" class="btn btn-outline-light btn-sm unmatched-fix-btn" data-folder-id="${escapeHtml(String(folder.id))}" data-fix-action="ignore" title="Ignore this duplicate folder">Ignore</button>`
                         : '';
                     const actionsColumn = `
                         <div class="unmatched-row-actions">
-                        <button type="button" class="btn btn-outline-light btn-sm reveal-path-btn" data-path="${escapedPath}" title="Open path details popup (copy / companion explorer — does not leave this page)">Open path</button>
-                        <button type="button" class="btn btn-outline-light btn-sm copy-path-btn" data-path="${escapedPath}" title="Copy folder path to clipboard">Copy path</button>
-                        <form action="/add_game_manual" method="GET" style="display: inline;">
+                        <button type="button" class="btn btn-outline-light btn-sm reveal-path-btn" data-path="${escapedPath}" title="Open path (companion / copy) — disk tidy this wave; no disk rename">Open path</button>
+                        <form action="/add_game_manual" method="GET" class="unmatched-identify-form" style="display: inline;">
                             <input type="hidden" name="full_disk_path" value="${escapedPath}">
-                            <input type="hidden" name="library_uuid" value="${escapeHtml(folder.library_uuid)}">
-                            <input type="hidden" name="platform_name" value="${escapeHtml(folder.platform_name)}">
-                            <input type="hidden" name="platform_id" value="${escapeHtml(folder.platform_id)}">
+                            <input type="hidden" name="library_uuid" value="${escapeHtml(folder.library_uuid || '')}">
+                            <input type="hidden" name="platform_name" value="${escapeHtml(folder.platform_name || '')}">
+                            <input type="hidden" name="platform_id" value="${escapeHtml(folder.platform_id || '')}">
                             <input type="hidden" name="from_unmatched" value="true">
-                            <button type="submit" class="btn btn-outline-light btn-sm" title="Identify as game: opens manual add with a cleaned game name prefilled">Identify as game</button>
+                            <button type="submit" class="btn btn-outline-light btn-sm" title="Identify as game — Fix search uses amended search name when set">Fix search</button>
                         </form>
                         ${markKindButtons}
+                        ${dupeFixButtons}
                         <button
                             type="button"
                             onclick="window.toggleIgnoreStatus('${folder.id}', this)"
@@ -794,28 +1448,90 @@ document.addEventListener('DOMContentLoaded', function() {
                         </form>
                         </div>
                     `;
-                    
+
+                    const matchReasonAttr = String(folder.match_reason || '').trim().toLowerCase();
+                    const kindAttr = suggestedKind || 'none';
+                    const leafType = detectLeafType(folder.folder_path);
+                    const platformMismatch = detectPlatformMismatch(
+                        folder.folder_path,
+                        folder.library_name,
+                        folder.platform_name,
+                    );
+                    const garbage = isGarbageScaffolding(folder);
+                    const leafBadgeClass = leafType === 'file-leaf'
+                        ? 'unmatched-leaf-badge'
+                        : 'unmatched-leaf-badge unmatched-leaf-badge--folder';
+                    const leafBadgeLabel = leafType === 'file-leaf' ? 'File leaf' : 'Folder leaf';
+                    const triageBadgesHtml = `
+                        <div class="unmatched-triage-badges">
+                          <span class="${leafBadgeClass}" title="${leafType === 'file-leaf' ? 'ROM or archive file is the scan leaf' : 'Named folder is the scan leaf'}">${leafBadgeLabel}</span>
+                          ${platformMismatch ? `<span class="unmatched-platform-mismatch" title="${escapeHtml(formatPlatformMismatchTitle(platformMismatch))}">Platform mismatch</span>` : ''}
+                          ${garbage ? '<span class="unmatched-garbage-badge" title="Likely installer, redistributable, or temp scaffolding">Garbage</span>' : ''}
+                        </div>`;
+                    const dupeHit = normalizeMatchedGame(folder);
+                    const searchBlob = [
+                        folder.folder_path,
+                        diskBasename,
+                        searchName,
+                        folder.library_name,
+                        folder.platform_name,
+                        folder.why_unmatched,
+                        folder.unmatched_reason,
+                        dupeHit && dupeHit.name,
+                        dupeHit && dupeHit.path,
+                    ].filter(Boolean).join(' ').toLowerCase();
+
                     const row = document.createElement('tr');
                     row.setAttribute('data-status', folder.status);
-                    row.setAttribute('data-folder-path', folder.folder_path.toLowerCase());
-                    row.setAttribute('data-library-name', folder.library_name.toLowerCase());
-                    row.setAttribute('data-platform-name', folder.platform_name.toLowerCase());
+                    row.setAttribute('data-folder-id', String(folder.id));
+                    row.setAttribute('data-folder-path', String(folder.folder_path || '').toLowerCase());
+                    row.setAttribute('data-library-name', String(folder.library_name || '').toLowerCase());
+                    row.setAttribute('data-platform-name', String(folder.platform_name || '').toLowerCase());
+                    row.setAttribute('data-match-reason', matchReasonAttr);
+                    row.setAttribute('data-suggested-kind', kindAttr);
+                    row.setAttribute('data-leaf-type', leafType);
+                    row.setAttribute('data-platform-mismatch', platformMismatch ? '1' : '0');
+                    row.setAttribute('data-garbage', garbage ? '1' : '0');
+                    row.setAttribute('data-search-blob', searchBlob);
                     row.innerHTML = `
-                        <td class="col-path"><span class="unmatched-folder-path" title="${escapedPath}">${escapedPath}</span></td>
-                        <td class="col-status"><span class="status-${folder.status.toLowerCase()}" title="${folder.status === 'Duplicate' ? 'Another library game already uses this IGDB match and the folder title looks like the same game' : (folder.status === 'Unmatched' ? 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder)' : '')}">${folder.status === 'Duplicate' ? 'Duplicate (same title)' : folder.status}</span>${suggestedChip}${whyHtml}</td>
-                        <td class="col-library">${escapeHtml(folder.library_name)}</td>
-                        <td class="col-platform">${escapeHtml(folder.platform_name)}</td>
+                        <td class="col-select">
+                          <input type="checkbox" class="unmatched-row-check" value="${escapeHtml(String(folder.id))}" aria-label="Select folder ${escapedDisk}">
+                        </td>
+                        <td class="col-path">
+                          <div class="unmatched-folder-cell">
+                            <div class="unmatched-amend">
+                              <label class="unmatched-amend__label" for="amend-${escapeHtml(String(folder.id))}">Amend naming</label>
+                              <div class="unmatched-amend__row">
+                                <input type="text" id="amend-${escapeHtml(String(folder.id))}" class="unmatched-amend__input" value="${escapedSearchName}" data-folder-id="${escapeHtml(String(folder.id))}" data-original="${escapedSearchName}" spellcheck="false" title="Soft search_name for Identify (does not rename on disk)">
+                                <button type="button" class="btn btn-outline-light btn-sm unmatched-amend__save" data-folder-id="${escapeHtml(String(folder.id))}" title="Save amended search name">Save</button>
+                              </div>
+                              <div class="unmatched-amend__ondisk">On disk: ${escapedDisk}</div>
+                            </div>
+                            ${triageBadgesHtml}
+                            <span class="unmatched-folder-path" title="${escapedPath}">${escapedPath}</span>
+                          </div>
+                        </td>
+                        <td class="col-status"><span class="status-${folder.status.toLowerCase()}" title="${folder.status === 'Duplicate' ? 'Another library game already uses this IGDB match and the folder title looks like the same game' : (folder.status === 'Unmatched' ? 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder)' : '')}">${folder.status === 'Duplicate' ? 'Duplicate (same title)' : folder.status}</span>${suggestedChip}${dupeOfHtml}${whyHtml}</td>
+                        <td class="col-library">${escapeHtml(folder.library_name || '')}</td>
+                        <td class="col-platform">${escapeHtml(folder.platform_name || '')}</td>
                         <td class="col-actions">${actionsColumn}</td>
                     `;
                     unmatchedTableBody.appendChild(row);
-                });
-                // Attach event listeners to the new forms
-                attachDeleteFolderFormListeners();
 
-                // Update results counter after data load
-                updateResultsCounter();
+                    if (priorSelected.has(String(folder.id))) {
+                        const check = row.querySelector('.unmatched-row-check');
+                        if (check) {
+                            check.checked = true;
+                            unmatchedSelectedIds.add(String(folder.id));
+                        }
+                    }
+                });
+                attachDeleteFolderFormListeners();
+                filterUnmatchedRows();
+                updateBatchBar();
+                updateSelectAllState();
             })
-            .catch(error => {
+            .catch((error) => {
                 console.error('Error fetching unmatched folders:', error);
             })
             .finally(() => {
@@ -898,9 +1614,170 @@ document.addEventListener('DOMContentLoaded', function() {
                     markBtn.dataset.name || '',
                     markBtn,
                 );
+                return;
+            }
+
+            const fixBtn = event.target.closest('.unmatched-fix-btn');
+            if (fixBtn) {
+                fixDuplicateFolder(
+                    fixBtn.dataset.folderId || '',
+                    fixBtn.dataset.fixAction || '',
+                    fixBtn,
+                );
+                return;
+            }
+
+            const amendSave = event.target.closest('.unmatched-amend__save');
+            if (amendSave) {
+                const folderId = amendSave.dataset.folderId || '';
+                const input = unmatchedTableBody.querySelector(`.unmatched-amend__input[data-folder-id="${CSS.escape(folderId)}"]`);
+                const searchName = input ? String(input.value || '').trim() : '';
+                saveAmendNaming(folderId, searchName, amendSave, input);
             }
         });
+
+        unmatchedTableBody.addEventListener('change', function(event) {
+            const check = event.target.closest('.unmatched-row-check');
+            if (!check) return;
+            const id = String(check.value || '');
+            if (!id) return;
+            if (check.checked) unmatchedSelectedIds.add(id);
+            else unmatchedSelectedIds.delete(id);
+            updateBatchBar();
+            updateSelectAllState();
+        });
+
+        unmatchedTableBody.addEventListener('keydown', function(event) {
+            if (event.key !== 'Enter') return;
+            const input = event.target.closest('.unmatched-amend__input');
+            if (!input) return;
+            event.preventDefault();
+            const folderId = input.dataset.folderId || '';
+            const saveBtn = unmatchedTableBody.querySelector(`.unmatched-amend__save[data-folder-id="${CSS.escape(folderId)}"]`);
+            saveAmendNaming(folderId, String(input.value || '').trim(), saveBtn, input);
+        });
+
         unmatchedTableBody.dataset.actionsWired = 'true';
+    }
+
+    function fixDuplicateFolder(folderId, action, button) {
+        if (!folderId || !action) return;
+        if (button) {
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+        }
+        fetch(`/api/unmatched_folders/${encodeURIComponent(folderId)}/fix`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({ action }),
+        })
+            .then((response) => response.json().catch(() => ({})).then((data) => {
+                if (!response.ok) {
+                    throw new Error(data.error || data.message || `fix ${response.status}`);
+                }
+                return data;
+            }))
+            .then((data) => {
+                const label = action === 'merge' ? 'Merged' : action === 'keep' ? 'Kept as Unmatched' : 'Ignored';
+                showToast(`${label} duplicate${data.folder_path ? ` · ${data.folder_path}` : ''}`, 'success');
+                return updateUnmatchedFolders();
+            })
+            .catch((err) => {
+                showToast(err?.message || `Could not ${action} duplicate`, 'info');
+            })
+            .finally(() => {
+                if (button) {
+                    button.disabled = false;
+                    button.removeAttribute('aria-busy');
+                }
+            });
+    }
+
+    /**
+     * Soft amend naming → Backend name endpoint when present.
+     * Body: { search_name, display_name? }. Never renames on disk.
+     */
+    function saveAmendNaming(folderId, searchName, button, input) {
+        if (!folderId) return;
+        if (!searchName) {
+            showToast('Amend naming needs a search name', 'info');
+            return;
+        }
+        if (button) {
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+        }
+        const body = { search_name: searchName, display_name: searchName };
+        const endpoints = [
+            { url: `/api/unmatched_folders/${encodeURIComponent(folderId)}/name`, method: 'PATCH' },
+            { url: `/api/unmatched_folders/${encodeURIComponent(folderId)}/name`, method: 'POST' },
+            { url: `/api/unmatched_folders/${encodeURIComponent(folderId)}/amend_name`, method: 'POST' },
+        ];
+
+        function tryNext(index) {
+            if (index >= endpoints.length) {
+                unmatchedNameEndpointReady = false;
+                if (input) {
+                    input.dataset.original = searchName;
+                    input.setAttribute('data-local-amended', '1');
+                }
+                const row = unmatchedTableBody.querySelector(`tr[data-folder-id="${CSS.escape(folderId)}"]`);
+                const markBtns = row ? row.querySelectorAll('.mark-kind-btn') : [];
+                markBtns.forEach((btn) => { btn.dataset.name = searchName; });
+                showToast('Amend naming kept for Fix search (server name endpoint not ready)', 'info');
+                if (button) {
+                    button.disabled = false;
+                    button.removeAttribute('aria-busy');
+                }
+                return;
+            }
+            if (unmatchedNameEndpointReady === false && index === 0) {
+                tryNext(endpoints.length);
+                return;
+            }
+            const ep = endpoints[index];
+            fetch(ep.url, {
+                method: ep.method,
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify(body),
+            })
+                .then(async (response) => {
+                    if (response.status === 404 || response.status === 405) {
+                        tryNext(index + 1);
+                        return;
+                    }
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        throw new Error(data.error || data.message || `amend ${response.status}`);
+                    }
+                    unmatchedNameEndpointReady = true;
+                    if (input) input.dataset.original = searchName;
+                    const row = unmatchedTableBody.querySelector(`tr[data-folder-id="${CSS.escape(folderId)}"]`);
+                    const markBtns = row ? row.querySelectorAll('.mark-kind-btn') : [];
+                    markBtns.forEach((btn) => { btn.dataset.name = searchName; });
+                    showToast(`Amend naming saved · “${searchName}”`, 'success');
+                    if (button) {
+                        button.disabled = false;
+                        button.removeAttribute('aria-busy');
+                    }
+                })
+                .catch((err) => {
+                    showToast(err?.message || 'Could not save amend naming', 'info');
+                    if (button) {
+                        button.disabled = false;
+                        button.removeAttribute('aria-busy');
+                    }
+                });
+        }
+        tryNext(0);
     }
 
     // Path popup — never navigate away to Auto Scan. Copy + optional companion open.
@@ -1048,37 +1925,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
         unmatchedRows.forEach(row => {
             const status = row.getAttribute('data-status');
-            const folderPath = row.getAttribute('data-folder-path') || '';
-            const libraryName = row.getAttribute('data-library-name') || '';
-            const platformName = row.getAttribute('data-platform-name') || '';
+            const searchBlob = row.getAttribute('data-search-blob')
+                || [
+                    row.getAttribute('data-folder-path') || '',
+                    row.getAttribute('data-library-name') || '',
+                    row.getAttribute('data-platform-name') || '',
+                ].join(' ');
+            const matchReason = row.getAttribute('data-match-reason') || '';
+            const suggestedKind = row.getAttribute('data-suggested-kind') || 'none';
+            const leafType = row.getAttribute('data-leaf-type') || 'folder-leaf';
+            const platformMismatch = row.getAttribute('data-platform-mismatch') === '1';
+            const garbage = row.getAttribute('data-garbage') === '1';
 
-            // Check status filter
             const statusMatch = currentFilter === 'all' || status === currentFilter;
+            const searchMatch = currentSearch === '' || searchBlob.includes(currentSearch);
+            const whyMatch = currentWhyFilter === 'all' || matchReason === currentWhyFilter;
+            const kindMatch = currentKindFilter === 'all'
+                || (currentKindFilter === 'none' ? suggestedKind === 'none' : suggestedKind === currentKindFilter);
+            const leafMatch = currentLeafFilter === 'all' || leafType === currentLeafFilter;
+            const triageMatch = currentTriageFilter === 'all'
+                || (currentTriageFilter === 'platform-mismatch' && platformMismatch)
+                || (currentTriageFilter === 'garbage' && garbage);
 
-            // Check search filter
-            const searchMatch = currentSearch === '' ||
-                folderPath.includes(currentSearch) ||
-                libraryName.includes(currentSearch) ||
-                platformName.includes(currentSearch);
+            let shouldShow = statusMatch && searchMatch && whyMatch && kindMatch && leafMatch && triageMatch;
 
-            // Special handling for ignored items
-            let shouldShow = statusMatch && searchMatch;
-
-            // For Option 2 behavior: Hide ignored items unless viewing "All" or "Ignored"
+            // Hide ignored items unless viewing "All" or "Ignored"
             if (status === 'Ignore' && currentFilter !== 'all' && currentFilter !== 'Ignore') {
                 shouldShow = false;
             }
 
             if (shouldShow) {
                 row.style.display = '';
-                row.classList.remove('row-fade-out'); // Remove fade-out class if present
+                row.classList.remove('row-fade-out');
                 visibleCount++;
             } else {
                 row.style.display = 'none';
+                const check = row.querySelector('.unmatched-row-check');
+                if (check && check.checked) {
+                    check.checked = false;
+                    unmatchedSelectedIds.delete(String(check.value || ''));
+                }
             }
         });
 
         updateResultsCounter(visibleCount, unmatchedRows.length);
+        updateBatchBar();
+        updateSelectAllState();
     }
 
     function updateResultsCounter(visible = null, total = null) {
@@ -1091,13 +1983,225 @@ document.addEventListener('DOMContentLoaded', function() {
             visible = Array.from(unmatchedRows).filter(row => row.style.display !== 'none').length;
         }
 
-        if (currentFilter === 'all' && currentSearch === '') {
+        const parts = [];
+        if (currentFilter !== 'all') parts.push(currentFilter);
+        if (currentWhyFilter !== 'all') parts.push(`why:${currentWhyFilter}`);
+        if (currentKindFilter !== 'all') parts.push(`kind:${currentKindFilter}`);
+        if (currentLeafFilter !== 'all') parts.push(`leaf:${currentLeafFilter}`);
+        if (currentTriageFilter !== 'all') parts.push(`triage:${currentTriageFilter}`);
+        const filterText = parts.length ? ` (${parts.join(' · ')})` : '';
+        const searchText = currentSearch ? ` matching "${currentSearch}"` : '';
+        if (currentFilter === 'all' && currentSearch === '' && currentWhyFilter === 'all'
+            && currentKindFilter === 'all' && currentLeafFilter === 'all' && currentTriageFilter === 'all') {
             resultsInfo.textContent = `Showing all ${total} entries`;
         } else {
-            const filterText = currentFilter !== 'all' ? ` (${currentFilter})` : '';
-            const searchText = currentSearch ? ` matching "${currentSearch}"` : '';
             resultsInfo.textContent = `Showing ${visible} of ${total} entries${filterText}${searchText}`;
         }
+    }
+
+    function updateBatchBar() {
+        const bar = document.getElementById('unmatchedBatchBar');
+        const countEl = document.getElementById('unmatchedBatchCount');
+        if (!bar || !countEl) return;
+        const n = unmatchedSelectedIds.size;
+        countEl.textContent = `${n} selected`;
+        bar.hidden = n === 0;
+    }
+
+    function updateSelectAllState() {
+        const selectAll = document.getElementById('unmatchedSelectAll');
+        if (!selectAll) return;
+        const visibleChecks = Array.from(
+            document.querySelectorAll('#unmatchedFoldersTableBody tr:not([style*="display: none"]) .unmatched-row-check, #unmatchedFoldersTableBody tr:not([hidden]) .unmatched-row-check'),
+        ).filter((el) => {
+            const row = el.closest('tr');
+            return row && row.style.display !== 'none';
+        });
+        const checked = visibleChecks.filter((el) => el.checked).length;
+        selectAll.checked = visibleChecks.length > 0 && checked === visibleChecks.length;
+        selectAll.indeterminate = checked > 0 && checked < visibleChecks.length;
+    }
+
+    function visibleUnmatchedRows() {
+        return Array.from(document.querySelectorAll('#unmatchedFoldersTableBody tr')).filter(
+            (row) => row.style.display !== 'none',
+        );
+    }
+
+    function runBatchAction(action) {
+        const ids = [...unmatchedSelectedIds];
+        if (!ids.length) return;
+
+        if (action === 'deselect') {
+            unmatchedSelectedIds.clear();
+            document.querySelectorAll('.unmatched-row-check').forEach((el) => { el.checked = false; });
+            updateBatchBar();
+            updateSelectAllState();
+            return;
+        }
+
+        if (action === 'ignore_selected') {
+            const ignoreIds = ids.filter((id) => {
+                const row = document.querySelector(`tr[data-folder-id="${CSS.escape(id)}"]`);
+                return row && row.getAttribute('data-status') !== 'Ignore';
+            });
+            if (!ignoreIds.length) {
+                showToast('Select rows that are not already Ignored', 'info');
+                return;
+            }
+            if (!confirm(`Ignore ${ignoreIds.length} selected entr${ignoreIds.length === 1 ? 'y' : 'ies'}?`)) return;
+            showSpinner();
+            softBatchPost(
+                '/api/unmatched_folders/batch/ignore',
+                { ids: ignoreIds },
+                () => Promise.all(ignoreIds.map((id) => fetch(`/toggle_ignore_status/${encodeURIComponent(id)}`, {
+                    method: 'POST',
+                    headers: CSRFUtils.getHeaders({
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }),
+                }).then((r) => r.json().catch(() => ({})).then((data) => ({ ok: r.ok && data.status === 'success', data }))))),
+            )
+                .then((results) => {
+                    const ok = Array.isArray(results)
+                        ? results.filter((r) => r.ok).length
+                        : (results?.ignored ?? results?.ok_count ?? ignoreIds.length);
+                    showSuccessNotification(`Ignored ${ok}/${ignoreIds.length} selected`);
+                    unmatchedSelectedIds.clear();
+                    return updateUnmatchedFolders();
+                })
+                .catch((err) => {
+                    console.error(err);
+                    showToast(err?.message || 'Batch ignore failed', 'info');
+                })
+                .finally(() => hideSpinner());
+            return;
+        }
+
+        if (action === 'clear') {
+            if (!confirm(`Clear ${ids.length} selected unmatched entr${ids.length === 1 ? 'y' : 'ies'}?`)) return;
+            showSpinner();
+            softBatchPost('/api/unmatched_folders/batch/clear', { ids }, () =>
+                Promise.all(ids.map((id) => fetch(`/clear_unmatched_entry/${encodeURIComponent(id)}`, {
+                    method: 'POST',
+                    headers: CSRFUtils.getHeaders({
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }),
+                }).then((r) => r.json().catch(() => ({}))))),
+            )
+                .then((result) => {
+                    const n = result?.cleared ?? result?.ok_count ?? ids.length;
+                    showSuccessNotification(`Cleared ${n} selected`);
+                    unmatchedSelectedIds.clear();
+                    return updateUnmatchedFolders();
+                })
+                .catch((err) => {
+                    console.error(err);
+                    showToast(err?.message || 'Batch clear failed', 'info');
+                })
+                .finally(() => hideSpinner());
+            return;
+        }
+
+        if (action.startsWith('mark_')) {
+            const itemKind = action.replace('mark_', '');
+            showSpinner();
+            softBatchPost(
+                '/api/unmatched_folders/batch/mark_kind',
+                { ids, item_kind: itemKind },
+                () => Promise.all(ids.map((id) => {
+                    const row = document.querySelector(`tr[data-folder-id="${CSS.escape(id)}"]`);
+                    const nameInput = row && row.querySelector('.unmatched-amend__input');
+                    const name = nameInput ? String(nameInput.value || '').trim() : '';
+                    const body = { item_kind: itemKind };
+                    if (name) body.name = name;
+                    return fetch(`/api/unmatched_folders/${encodeURIComponent(id)}/mark_kind`, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                        },
+                        body: JSON.stringify(body),
+                    }).then((r) => r.json().catch(() => ({})).then((data) => ({ ok: r.ok, data })));
+                })),
+            )
+                .then((results) => {
+                    const ok = Array.isArray(results)
+                        ? results.filter((r) => r.ok).length
+                        : (results?.updated ?? results?.ok_count ?? ids.length);
+                    showToast(`Marked ${ok}/${ids.length} as ${itemKind}`, ok ? 'success' : 'info');
+                    unmatchedSelectedIds.clear();
+                    return updateUnmatchedFolders();
+                })
+                .catch((err) => {
+                    console.error(err);
+                    showToast(err?.message || 'Batch mark kind failed', 'info');
+                })
+                .finally(() => hideSpinner());
+            return;
+        }
+
+        if (action === 'merge' || action === 'keep' || action === 'ignore') {
+            const dupIds = ids.filter((id) => {
+                const row = document.querySelector(`tr[data-folder-id="${CSS.escape(id)}"]`);
+                return row && row.getAttribute('data-status') === 'Duplicate';
+            });
+            if (!dupIds.length) {
+                showToast('Select Duplicate rows for Merge / Keep / Ignore', 'info');
+                return;
+            }
+            showSpinner();
+            softBatchPost(
+                '/api/unmatched_folders/batch/fix',
+                { ids: dupIds, action },
+                () => Promise.all(dupIds.map((id) => fetch(`/api/unmatched_folders/${encodeURIComponent(id)}/fix`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify({ action }),
+                }).then((r) => r.json().catch(() => ({})).then((data) => ({ ok: r.ok, data }))))),
+            )
+                .then((results) => {
+                    const ok = Array.isArray(results)
+                        ? results.filter((r) => r.ok).length
+                        : (results?.updated ?? results?.ok_count ?? dupIds.length);
+                    showToast(`Duplicate ${action}: ${ok}/${dupIds.length}`, ok ? 'success' : 'info');
+                    unmatchedSelectedIds.clear();
+                    return updateUnmatchedFolders();
+                })
+                .catch((err) => {
+                    console.error(err);
+                    showToast(err?.message || `Batch ${action} failed`, 'info');
+                })
+                .finally(() => hideSpinner());
+        }
+    }
+
+    /** Prefer Backend batch route; on 404 fall back to per-id fan-out. */
+    function softBatchPost(url, body, fallbackFn) {
+        return fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify(body),
+        }).then(async (response) => {
+            if (response.status === 404 || response.status === 405) {
+                return fallbackFn();
+            }
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.error || data.message || `batch ${response.status}`);
+            }
+            return data;
+        });
     }
 
     // Keep the Export CSV/JSON links in sync with whichever status filter is
@@ -1108,6 +2212,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!link) return;
             const url = new URL(link.href, window.location.origin);
             url.searchParams.set('status', currentFilter === 'all' ? 'all' : currentFilter);
+            if (currentSearch) url.searchParams.set('q', currentSearch);
+            else url.searchParams.delete('q');
             link.href = url.toString();
         });
     }
@@ -1116,28 +2222,90 @@ document.addEventListener('DOMContentLoaded', function() {
         // Filter button event listeners
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                // Remove active class from all buttons
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-
-                // Add active class to clicked button
                 this.classList.add('active');
-
-                // Update current filter
                 currentFilter = this.getAttribute('data-filter');
-
-                // Apply filtering
                 filterUnmatchedRows();
                 updateExportLinks();
             });
         });
 
-        // Search input event listener
+        document.querySelectorAll('[data-why-filter]').forEach((btn) => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('[data-why-filter]').forEach((b) => b.classList.remove('active'));
+                this.classList.add('active');
+                currentWhyFilter = this.getAttribute('data-why-filter') || 'all';
+                filterUnmatchedRows();
+            });
+        });
+
+        document.querySelectorAll('[data-kind-filter]').forEach((btn) => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('[data-kind-filter]').forEach((b) => b.classList.remove('active'));
+                this.classList.add('active');
+                currentKindFilter = this.getAttribute('data-kind-filter') || 'all';
+                filterUnmatchedRows();
+            });
+        });
+
+        document.querySelectorAll('[data-leaf-filter]').forEach((btn) => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('[data-leaf-filter]').forEach((b) => b.classList.remove('active'));
+                this.classList.add('active');
+                currentLeafFilter = this.getAttribute('data-leaf-filter') || 'all';
+                filterUnmatchedRows();
+            });
+        });
+
+        document.querySelectorAll('[data-triage-filter]').forEach((btn) => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('[data-triage-filter]').forEach((b) => b.classList.remove('active'));
+                this.classList.add('active');
+                currentTriageFilter = this.getAttribute('data-triage-filter') || 'all';
+                filterUnmatchedRows();
+            });
+        });
+
+        // Search input — client filter immediate; soft q= goes out on list refresh
         const searchInput = document.getElementById('unmatchedSearch');
         if (searchInput) {
             searchInput.addEventListener('input', function() {
-                currentSearch = this.value.toLowerCase();
+                currentSearch = this.value.toLowerCase().trim();
                 filterUnmatchedRows();
+                updateExportLinks();
             });
+            searchInput.addEventListener('keydown', function(event) {
+                if (event.key !== 'Enter') return;
+                event.preventDefault();
+                updateUnmatchedFolders().then(() => filterUnmatchedRows());
+            });
+        }
+
+        const selectAll = document.getElementById('unmatchedSelectAll');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                const rows = visibleUnmatchedRows();
+                rows.forEach((row) => {
+                    const check = row.querySelector('.unmatched-row-check');
+                    if (!check) return;
+                    check.checked = selectAll.checked;
+                    const id = String(check.value || '');
+                    if (selectAll.checked) unmatchedSelectedIds.add(id);
+                    else unmatchedSelectedIds.delete(id);
+                });
+                updateBatchBar();
+                updateSelectAllState();
+            });
+        }
+
+        const batchBar = document.getElementById('unmatchedBatchBar');
+        if (batchBar && !batchBar.dataset.wired) {
+            batchBar.addEventListener('click', (event) => {
+                const btn = event.target.closest('[data-batch-action]');
+                if (!btn) return;
+                runBatchAction(btn.getAttribute('data-batch-action') || '');
+            });
+            batchBar.dataset.wired = 'true';
         }
 
         const reclassifyBtn = document.getElementById('reclassifyDuplicatesBtn');
@@ -1221,7 +2389,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             function postRefreshAll(policy) {
-                const fields = policy ? buildScanQueueRequestFields(policy) : {};
+                // Always send queue_policy + force_parallel (default queue on first attempt).
+                const fields = buildScanQueueRequestFields(
+                    policy == null ? SCAN_QUEUE_POLICY.QUEUE : policy,
+                );
                 refreshAllBtn.disabled = true;
                 return fetch('/api/admin/libraries/refresh_all', {
                     method: 'POST',
@@ -1238,7 +2409,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         data: { error: 'Refresh failed' },
                     })))
                     .then(({ ok, status, data }) => {
-                        if (isAlreadyRunningReject(status, data) && !policy) {
+                        if (isAlreadyRunningReject(status, data) && policy == null) {
                             openScanConflictModal((chosen) => {
                                 postRefreshAll(chosen);
                             });

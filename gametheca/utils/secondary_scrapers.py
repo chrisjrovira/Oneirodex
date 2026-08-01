@@ -53,6 +53,39 @@ def steam_perspective_names(categories):
     return names
 
 
+# Steam store category description → IGDB-style GameMode.name (Game model supports GameMode M2M).
+# Steam "tags" / freeform keywords have no Game column — ignored by design.
+_STEAM_CATEGORY_TO_GAME_MODE = (
+    ('single-player', 'Single player'),
+    ('single player', 'Single player'),
+    ('multi-player', 'Multiplayer'),
+    ('multiplayer', 'Multiplayer'),
+    ('online pvp', 'Multiplayer'),
+    ('co-op', 'Co-operative'),
+    ('cooperative', 'Co-operative'),
+    ('shared/split screen', 'Split screen'),
+    ('split screen', 'Split screen'),
+    ('mmo', 'Massively Multiplayer Online (MMO)'),
+    ('massively multiplayer', 'Massively Multiplayer Online (MMO)'),
+)
+
+
+def steam_game_mode_names(categories):
+    """Map Steam store category descriptions onto IGDB-style game mode names."""
+    found = []
+    seen = set()
+    for raw in categories or []:
+        text = (raw or '').strip().lower()
+        if not text:
+            continue
+        for marker, mode_name in _STEAM_CATEGORY_TO_GAME_MODE:
+            if marker in text and mode_name not in seen:
+                seen.add(mode_name)
+                found.append(mode_name)
+                break
+    return found
+
+
 def perspectives_indicate_vr(perspective_names):
     if not perspective_names:
         return False
@@ -75,6 +108,7 @@ def game_indicates_vr(game):
 def game_card_flags(game):
     """Flags used by library cards / browse JSON payloads."""
     from gametheca.utils.item_kind import DEFAULT_ITEM_KIND, normalize_item_kind
+    from gametheca.utils.library_health import path_health_fields
 
     kind = normalize_item_kind(getattr(game, 'item_kind', None) or DEFAULT_ITEM_KIND)
     return {
@@ -82,6 +116,7 @@ def game_card_flags(game):
         'item_kind': kind,
         # Alias for UI field maps that prefer content_kind wording
         'content_kind': kind,
+        **path_health_fields(game),
     }
 
 
@@ -371,6 +406,144 @@ def search_giantbomb_games(game_name, api_key=None, limit=10):
         return []
 
 
+def search_mobygames_games(game_name, api_key=None, limit=10):
+    """Return MobyGames search hits for manual identify UI (optional API key).
+
+    Without ``MOBYGAMES_API_KEY`` / GlobalSettings key → empty list (honest miss).
+    Metadata / cover URLs only — never download or install binaries.
+    """
+    try:
+        from gametheca.utils.providers.mobygames import (
+            get_mobygames_api_key,
+            strip_moby_html,
+        )
+
+        key = (api_key or get_mobygames_api_key() or '').strip()
+        if not key:
+            return []
+        clean_name = re.sub(r'[\(\)\[\]]', '', game_name or '').strip()
+        if not clean_name:
+            return []
+        limit = max(1, min(int(limit or 10), 20))
+        resp = request_with_backoff(
+            'https://api.mobygames.com/v1/games',
+            host_key='mobygames',
+            params={
+                'api_key': key,
+                'title': clean_name,
+                'format': 'normal',
+                'limit': limit,
+            },
+            timeout=8,
+            headers={'User-Agent': 'GameTheca/1.0 (self-hosted library)'},
+        )
+        if resp is None:
+            return []
+        payload = resp.json() if resp.content else {}
+        results = []
+        for item in (payload.get('games') or [])[:limit]:
+            if not isinstance(item, dict):
+                continue
+            game_id = item.get('game_id') or item.get('id')
+            cover = item.get('sample_cover') or {}
+            cover_url = None
+            if isinstance(cover, dict):
+                cover_url = cover.get('image') or cover.get('thumbnail_image')
+            platforms = item.get('platforms') or []
+            platform_names = []
+            for plat in platforms:
+                if isinstance(plat, dict) and plat.get('platform_name'):
+                    platform_names.append(plat['platform_name'])
+            results.append({
+                'source': 'mobygames',
+                'id': game_id,
+                'name': item.get('title') or item.get('name'),
+                'url': item.get('moby_url'),
+                'cover_url': cover_url,
+                'summary': strip_moby_html(item.get('description')),
+                'mobygames_id': game_id,
+                'moby_score': item.get('moby_score'),
+                'platforms': platform_names[:8] or None,
+            })
+        return results
+    except Exception as e:
+        print(f"MobyGames search error for {game_name}: {e}")
+        return []
+
+
+def search_thegamesdb_games(game_name, api_key=None, limit=10):
+    """Return TheGamesDB search hits for manual identify UI (optional API key).
+
+    Without ``THEGAMESDB_API_KEY`` / GlobalSettings key → empty list (honest miss).
+    Console-friendly Class D catalog — metadata / cover URLs only.
+    Not wired into Stage D scan cascade (manual identify only).
+    """
+    try:
+        from gametheca.utils.providers.thegamesdb import (
+            TGDB_API_BASE,
+            get_thegamesdb_api_key,
+            pick_tgdb_cover_url,
+            resolve_tgdb_platform_name,
+            tgdb_game_url,
+        )
+
+        key = (api_key or get_thegamesdb_api_key() or '').strip()
+        if not key:
+            return []
+        clean_name = re.sub(r'[\(\)\[\]]', '', game_name or '').strip()
+        if not clean_name:
+            return []
+        limit = max(1, min(int(limit or 10), 20))
+        resp = request_with_backoff(
+            f'{TGDB_API_BASE}/v1.1/Games/ByGameName',
+            host_key='thegamesdb',
+            params={
+                'apikey': key,
+                'name': clean_name,
+                'fields': 'overview,players,publishers,genres,rating,platform',
+                'include': 'boxart,platform',
+            },
+            timeout=10,
+            headers={'User-Agent': 'GameTheca/1.0 (self-hosted library)'},
+        )
+        if resp is None:
+            return []
+        payload = resp.json() if resp.content else {}
+        data = payload.get('data') if isinstance(payload, dict) else None
+        games = (data or {}).get('games') if isinstance(data, dict) else None
+        if not isinstance(games, list):
+            return []
+        include = payload.get('include') if isinstance(payload, dict) else {}
+        if not isinstance(include, dict):
+            include = {}
+        include_boxart = include.get('boxart')
+        include_platform = include.get('platform')
+        results = []
+        for item in games[:limit]:
+            if not isinstance(item, dict):
+                continue
+            game_id = item.get('id')
+            platform_id = item.get('platform')
+            platform_name = resolve_tgdb_platform_name(platform_id, include_platform)
+            overview = item.get('overview')
+            summary = (str(overview).strip() if overview else None) or None
+            results.append({
+                'source': 'thegamesdb',
+                'id': game_id,
+                'name': item.get('game_title') or item.get('name'),
+                'url': tgdb_game_url(game_id),
+                'cover_url': pick_tgdb_cover_url(game_id, include_boxart),
+                'summary': summary,
+                'thegamesdb_id': game_id,
+                'release_date': item.get('release_date') or None,
+                'platforms': [platform_name] if platform_name else None,
+            })
+        return results
+    except Exception as e:
+        print(f"TheGamesDB search error for {game_name}: {e}")
+        return []
+
+
 def search_meta_quest_games(game_name, limit=10):
     """Proxy to Meta/Quest IGDB platform search (metadata / ownership only)."""
     from gametheca.utils.providers.meta_quest import search_meta_quest_games as _search
@@ -411,16 +584,20 @@ def fetch_steam_data(game_name):
             return None
 
         categories = [c.get('description', '') for c in app_info.get('categories', [])]
-        genres = [g.get('description', '') for g in app_info.get('genres', [])]
+        genres = [g.get('description', '') for g in app_info.get('genres', []) if g.get('description')]
         developers = app_info.get('developers', [])
         publishers = app_info.get('publishers', [])
 
         is_vr = categories_indicate_vr(categories)
         extracted_perspectives = steam_perspective_names(categories)
+        extracted_modes = steam_game_mode_names(categories)
 
         return {
             'summary': app_info.get('short_description'),
             'genres': genres,
+            # Steam categories that map onto GameMode; raw Steam category strings are
+            # not IGDB Category enum values and must not be written to Game.category.
+            'game_modes': extracted_modes,
             'developer': developers[0] if developers else None,
             'publisher': publishers[0] if publishers else None,
             'player_perspectives': extracted_perspectives,
@@ -489,15 +666,23 @@ def merge_metadata(primary, secondary):
     return primary
 
 
-def apply_steam_enrichment_to_game(game, game_name, get_or_create_entity, fetch_steam=None):
+def apply_steam_enrichment_to_game(
+    game,
+    game_name,
+    get_or_create_entity,
+    fetch_steam=None,
+    get_or_create_genre=None,
+    get_or_create_game_mode=None,
+):
     """
-    Fetch Steam store data and attach missing player perspectives (including VR).
+    Fetch Steam store data and attach missing summary / perspectives / genres / modes.
 
     get_or_create_entity(name=...) must return a perspective-like entity.
-    Caller typically binds PlayerPerspective via game_core.get_or_create_entity.
+    Optional get_or_create_genre / get_or_create_game_mode attach taxonomy the same
+    way as scan-path enrich (create-missing upsert). DRM binaries are never queued.
 
     Returns a result dict:
-      applied (bool), is_vr (bool), perspectives_added (list[str]), reason (str|None)
+      applied, is_vr, perspectives_added, genres_added, game_modes_added, reason
     """
     fetch = fetch_steam or fetch_steam_data
     steam_data = fetch(game_name)
@@ -506,6 +691,8 @@ def apply_steam_enrichment_to_game(game, game_name, get_or_create_entity, fetch_
             'applied': False,
             'is_vr': False,
             'perspectives_added': [],
+            'genres_added': [],
+            'game_modes_added': [],
             'reason': 'no_steam_data',
         }
 
@@ -529,6 +716,42 @@ def apply_steam_enrichment_to_game(game, game_name, get_or_create_entity, fetch_
         existing_names.add(name)
         perspectives_added.append(name)
 
+    genres_added = []
+    if get_or_create_genre:
+        existing_genres = {
+            (getattr(g, 'name', '') or '').strip().lower()
+            for g in (game.genres or [])
+        }
+        for genre_name in steam_data.get('genres') or []:
+            if not genre_name:
+                continue
+            key = genre_name.strip().lower()
+            if not key or key in existing_genres:
+                continue
+            entity = get_or_create_genre(name=genre_name.strip())
+            if entity not in (game.genres or []):
+                game.genres.append(entity)
+            existing_genres.add(key)
+            genres_added.append(genre_name.strip())
+
+    modes_added = []
+    if get_or_create_game_mode:
+        existing_modes = {
+            (getattr(m, 'name', '') or '').strip().lower()
+            for m in (game.game_modes or [])
+        }
+        for mode_name in steam_data.get('game_modes') or []:
+            if not mode_name:
+                continue
+            key = mode_name.strip().lower()
+            if not key or key in existing_modes:
+                continue
+            entity = get_or_create_game_mode(name=mode_name.strip())
+            if entity not in (game.game_modes or []):
+                game.game_modes.append(entity)
+            existing_modes.add(key)
+            modes_added.append(mode_name.strip())
+
     if not getattr(game, 'summary', None) and steam_data.get('summary'):
         game.summary = steam_data['summary']
 
@@ -536,6 +759,8 @@ def apply_steam_enrichment_to_game(game, game_name, get_or_create_entity, fetch_
         'applied': True,
         'is_vr': is_vr or VR_PERSPECTIVE_NAME in perspectives_added or game_indicates_vr(game),
         'perspectives_added': perspectives_added,
+        'genres_added': genres_added,
+        'game_modes_added': modes_added,
         'reason': None,
         'steam_app_id': steam_data.get('steam_app_id'),
     }

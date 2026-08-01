@@ -7,6 +7,7 @@ from gametheca.utils.auth import admin_required
 from gametheca.utils.scanning import refresh_images_in_background
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories, sanitize_path_for_logging
 from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.game_core import ensure_manual_identify_taxonomy
 from gametheca import db
 from threading import Thread
 from datetime import datetime, timezone
@@ -225,6 +226,14 @@ def game_edit(game_uuid):
         game.themes = form.themes.data
         game.platforms = form.platforms.data
         game.player_perspectives = form.player_perspectives.data
+        # Server-side IGDB taxonomy upsert so Identify apply matches scan parity
+        # (create-missing Genre/Theme/Platform/… instead of silent checkbox drop).
+        try:
+            igdb_numeric = int(form.igdb_id.data) if form.igdb_id.data is not None else None
+        except (TypeError, ValueError):
+            igdb_numeric = None
+        if igdb_numeric is not None and igdb_numeric < 2000000420:
+            ensure_manual_identify_taxonomy(game, igdb_numeric)
         
         # Updating size with error handling
         try:

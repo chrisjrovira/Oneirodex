@@ -2,9 +2,13 @@
 
 .gt-more-page {
   max-width: 72rem;
+  width: 100%;
+  min-width: 0;
   margin: 0 auto;
   padding: 0.75rem 1rem 2rem;
   color: var(--gt-text);
+  box-sizing: border-box;
+  overflow-wrap: break-word;
 }
 
 .gt-more-page .gt-page-header {

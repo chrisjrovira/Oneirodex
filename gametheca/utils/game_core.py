@@ -23,6 +23,11 @@ from gametheca.utils.gamenames import generate_goty_variants
 from gametheca.utils.match_scoring import select_best_match, rank_candidates
 from gametheca.utils.match_proposal import build_match_proposal, write_match_proposal
 from gametheca.utils.game_name_parse import parse_game_label
+from gametheca.utils.rom_name_peel import (
+    parse_console_rom_label,
+    should_use_console_rom_peel,
+)
+from gametheca.utils.scan_match_settings import resolve_scan_match_policy
 from gametheca.utils.steam_lookup import fetch_steam_title_by_app_id
 from gametheca.utils.secondary_scrapers import (
     fetch_steam_data, game_indicates_vr, normalize_perspective_name, VR_PERSPECTIVE_NAME
@@ -79,14 +84,21 @@ def handle_existing_igdb_collision(
     library_uuid,
     candidates=None,
     steam_title=None,
+    match_policy=None,
 ):
     """
     Same IGDB ID already in library. Mark Duplicate only for true title/path
     copies; otherwise Unmatched + proposal so remasters/collections can be reviewed.
     Returns None (caller should abort import).
     """
-    if should_mark_as_duplicate(existing_game, full_disk_path, game_name):
-        match = explain_duplicate_match(existing_game, full_disk_path, game_name)
+    policy = match_policy if isinstance(match_policy, dict) else resolve_scan_match_policy()
+    dupe_thr = policy.get('dupe_title_threshold')
+    if should_mark_as_duplicate(
+        existing_game, full_disk_path, game_name, title_threshold=dupe_thr,
+    ):
+        match = explain_duplicate_match(
+            existing_game, full_disk_path, game_name, title_threshold=dupe_thr,
+        )
         print(
             f"Duplicate folder for IGDB ID {igdb_id}: "
             f"'{game_name}' ≈ existing '{existing_game.name}' "
@@ -196,7 +208,11 @@ def is_propose_only_scan(settings):
 
 
 def enrich_game_with_steam(game, lookup_name=None):
-    """Backfill Steam store metadata (VR perspectives, summary) onto a Game instance.
+    """Backfill Steam store metadata onto a Game instance.
+
+    Attaches summary (when missing), VR/player perspectives, genres, and
+    GameMode rows mapped from Steam categories. Steam freeform tags have no
+    Game column and are skipped. Never queues DRM downloads.
 
     The Steam HTTP lookup happens first and touches no DB state; the
     resulting metadata is then attached inside a SQLAlchemy savepoint
@@ -209,6 +225,8 @@ def enrich_game_with_steam(game, lookup_name=None):
             'applied': False,
             'is_vr': False,
             'perspectives_added': [],
+            'genres_added': [],
+            'game_modes_added': [],
             'reason': 'no_name',
         }
         print("Steam enrichment skipped (no_name); Steam VR: no")
@@ -219,6 +237,8 @@ def enrich_game_with_steam(game, lookup_name=None):
             'applied': False,
             'is_vr': True,
             'perspectives_added': [],
+            'genres_added': [],
+            'game_modes_added': [],
             'reason': 'already_vr',
         }
         print(f"Steam enrichment for '{name}': skipped (already_vr); Steam VR: yes")
@@ -230,6 +250,8 @@ def enrich_game_with_steam(game, lookup_name=None):
             'applied': False,
             'is_vr': False,
             'perspectives_added': [],
+            'genres_added': [],
+            'game_modes_added': [],
             'reason': 'no_steam_data',
         }
         print(f"Steam enrichment for '{name}': skipped (no_steam_data); Steam VR: no")
@@ -246,22 +268,50 @@ def enrich_game_with_steam(game, lookup_name=None):
     ]
     new_names = [name_ for name_ in perspective_names if name_ and name_ not in existing_names]
 
+    existing_genres = {
+        (getattr(g, 'name', '') or '').strip().lower()
+        for g in (getattr(game, 'genres', None) or [])
+    }
+    new_genres = [
+        g.strip()
+        for g in (steam_data.get('genres') or [])
+        if g and g.strip() and g.strip().lower() not in existing_genres
+    ]
+
+    existing_modes = {
+        (getattr(m, 'name', '') or '').strip().lower()
+        for m in (getattr(game, 'game_modes', None) or [])
+    }
+    new_modes = [
+        m.strip()
+        for m in (steam_data.get('game_modes') or [])
+        if m and m.strip() and m.strip().lower() not in existing_modes
+    ]
+
     enriched = {
         'summary': steam_data.get('summary'),
         'player_perspectives': new_names,
+        'genres': new_genres,
+        'game_modes': new_modes,
     }
     applied_ok = apply_enriched_metadata(
         game,
         enriched,
         perspective_factory=lambda persp_name: get_or_create_entity(PlayerPerspective, name=persp_name),
+        genre_factory=lambda genre_name: get_or_create_entity(Genre, name=genre_name),
+        game_mode_factory=lambda mode_name: get_or_create_entity(GameMode, name=mode_name),
     )
     perspectives_added = new_names if applied_ok else []
+    genres_added = new_genres if applied_ok else []
+    modes_added = new_modes if applied_ok else []
     reason = None if applied_ok else 'enrichment_savepoint_rollback'
 
     result = {
         'applied': applied_ok,
         'is_vr': is_vr or VR_PERSPECTIVE_NAME in perspectives_added or game_indicates_vr(game),
         'perspectives_added': perspectives_added,
+        'genres_added': genres_added,
+        'game_modes_added': modes_added,
         'reason': reason,
         'steam_app_id': steam_data.get('steam_app_id'),
     }
@@ -270,15 +320,97 @@ def enrich_game_with_steam(game, lookup_name=None):
     app_txt = f"; steam_app_id={app_id}" if app_id else ''
     if applied_ok:
         added_txt = ', '.join(perspectives_added) if perspectives_added else 'none'
+        genre_txt = ', '.join(genres_added) if genres_added else 'none'
         print(
             f"Steam enrichment for '{name}': Steam VR: {vr_label}; "
-            f"perspectives_added=[{added_txt}]{app_txt}"
+            f"perspectives_added=[{added_txt}]; genres_added=[{genre_txt}]{app_txt}"
         )
     else:
         print(
             f"Steam enrichment for '{name}': skipped ({reason}); Steam VR: {vr_label}"
         )
     return result
+
+
+def attach_igdb_taxonomy_to_game(game, igdb_payload):
+    """Attach IGDB genres/themes/modes/platforms/perspectives with create-missing upsert.
+
+    Same behavior as scan identify (`retrieve_and_save_game`): names not yet in
+    the local taxonomy become new Genre/Theme/GameMode/Platform/PlayerPerspective
+    rows via `get_or_create_entity`, then are linked to the game. Existing
+    relations are preserved (union). Does not touch DRM binaries.
+    """
+    if not game or not isinstance(igdb_payload, dict):
+        return {
+            'genres': [],
+            'themes': [],
+            'game_modes': [],
+            'platforms': [],
+            'player_perspectives': [],
+        }
+
+    attached = {
+        'genres': [],
+        'themes': [],
+        'game_modes': [],
+        'platforms': [],
+        'player_perspectives': [],
+    }
+
+    def _attach(key, model_class, relation_attr):
+        entries = igdb_payload.get(key) or []
+        relation = getattr(game, relation_attr)
+        existing = {
+            (getattr(e, 'name', '') or '').strip().lower()
+            for e in (relation or [])
+        }
+        for entry in entries:
+            if isinstance(entry, dict):
+                raw_name = entry.get('name')
+            else:
+                raw_name = entry
+            if not raw_name:
+                continue
+            name = str(raw_name).strip()
+            if not name:
+                continue
+            lowered = name.lower()
+            entity = get_or_create_entity(model_class, name=name)
+            if lowered not in existing or entity not in relation:
+                if entity not in relation:
+                    relation.append(entity)
+                existing.add(lowered)
+                attached[key].append(name)
+
+    _attach('genres', Genre, 'genres')
+    _attach('themes', Theme, 'themes')
+    _attach('game_modes', GameMode, 'game_modes')
+    _attach('platforms', Platform, 'platforms')
+    _attach('player_perspectives', PlayerPerspective, 'player_perspectives')
+    return attached
+
+
+def ensure_manual_identify_taxonomy(game, igdb_id):
+    """Re-fetch IGDB by id and attach taxonomy on manual identify/apply.
+
+    Closes the form-checkbox gap: names absent from the DB taxonomy are created
+    instead of being silently dropped by the Identify UI. Custom-range ids
+    (>= 2000000420) skip the IGDB round-trip. Returns the attach summary or None.
+    """
+    if game is None or igdb_id is None:
+        return None
+    try:
+        numeric_id = int(igdb_id)
+    except (TypeError, ValueError):
+        return None
+    if numeric_id >= 2000000420:
+        return None
+
+    response = fetch_game_by_igdb_id(numeric_id)
+    if not response or not isinstance(response, list) or not response:
+        return None
+    return attach_igdb_taxonomy_to_game(game, response[0])
+
 
 
 def create_game_instance(game_data, full_disk_path, folder_size_bytes, library_uuid):
@@ -899,8 +1031,10 @@ def retrieve_and_save_game(
             'local_metadata_filename': settings_obj.local_metadata_filename if settings_obj else 'gametheca.json',
             'propose_only_scan': settings_obj.propose_only_scan if settings_obj else False,
         }
+        match_policy = resolve_scan_match_policy(settings_obj)
     elif not isinstance(settings, dict):
         # If it's a SQLAlchemy object, convert to dict
+        match_policy = resolve_scan_match_policy(settings)
         settings = {
             'use_local_metadata': settings.use_local_metadata,
             'write_local_metadata': settings.write_local_metadata,
@@ -908,6 +1042,12 @@ def retrieve_and_save_game(
             'local_metadata_filename': settings.local_metadata_filename or 'gametheca.json',
             'propose_only_scan': getattr(settings, 'propose_only_scan', False),
         }
+    else:
+        match_policy = resolve_scan_match_policy(settings)
+
+    settings['propose_only_scan'] = bool(
+        settings.get('propose_only_scan') or match_policy.get('propose_only_scan')
+    )
 
     # PRIORITY 1: Check for local metadata file (NEW!)
     if settings and settings.get('use_local_metadata'):
@@ -938,6 +1078,7 @@ def retrieve_and_save_game(
                         scan_job_id=scan_job_id,
                         library_uuid=library_uuid,
                         candidates=response_json,
+                        match_policy=match_policy,
                     )
 
                 # Create game from IGDB data (continue with existing logic at line 472)
@@ -960,12 +1101,7 @@ def retrieve_and_save_game(
                     print(f"Failed to create game instance from local metadata for {game_name}. Skipping further processing.")
                     return None
 
-                # Process genres, themes, etc. (same as existing code from line 481 onward)
-                if 'genres' in response_json[0]:
-                    for genre_data in response_json[0]['genres']:
-                        genre_name = genre_data['name']
-                        genre = get_or_create_entity(Genre, name=genre_name)
-                        new_game.genres.append(genre)
+                attach_igdb_taxonomy_to_game(new_game, response_json[0])
 
                 if 'involved_companies' in response_json[0]:
                     involved_company_ids = response_json[0]['involved_companies']
@@ -973,30 +1109,6 @@ def retrieve_and_save_game(
                         enumerate_companies(new_game, new_game.igdb_id, involved_company_ids)
                     else:
                         print("No involved companies found for game from local metadata.")
-
-                if 'themes' in response_json[0]:
-                    for theme_data in response_json[0]['themes']:
-                        theme_name = theme_data['name']
-                        theme = get_or_create_entity(Theme, name=theme_name)
-                        new_game.themes.append(theme)
-
-                if 'game_modes' in response_json[0]:
-                    for game_mode_data in response_json[0]['game_modes']:
-                        game_mode_name = game_mode_data['name']
-                        game_mode = get_or_create_entity(GameMode, name=game_mode_name)
-                        new_game.game_modes.append(game_mode)
-
-                if 'platforms' in response_json[0]:
-                    for platform_data in response_json[0]['platforms']:
-                        platform_name = platform_data['name']
-                        platform = get_or_create_entity(Platform, name=platform_name)
-                        new_game.platforms.append(platform)
-
-                if 'player_perspectives' in response_json[0]:
-                    for perspective_data in response_json[0]['player_perspectives']:
-                        perspective_name = perspective_data['name']
-                        perspective = get_or_create_entity(PlayerPerspective, name=perspective_name)
-                        new_game.player_perspectives.append(perspective)
 
                 if not defer_enrichment:
                     enrich_game_with_steam(new_game, lookup_name=new_game.name)
@@ -1058,22 +1170,37 @@ def retrieve_and_save_game(
 
     platform_id = PLATFORM_IDS.get(library.platform.name)
 
-    # PRIORITY 2: Search IGDB API by folder name (existing code)
+    # PRIORITY 2: Search IGDB API by folder/file name (existing code)
     # Prefer Steam App ID title hint when folder name contains (digits)
     raw_folder_label = os.path.basename(full_disk_path.rstrip('\\/'))
-    parsed_label = parse_game_label(raw_folder_label)
+    use_console_rom_peel = should_use_console_rom_peel(library, full_disk_path, settings)
+    if use_console_rom_peel:
+        parsed_label = parse_console_rom_label(
+            raw_folder_label,
+            platform=library.platform,
+        )
+    else:
+        parsed_label = parse_game_label(
+            raw_folder_label,
+            peel_profile=match_policy.get('peel_profile'),
+        )
     steam_title = None
     if parsed_label.get('steam_app_id'):
         steam_title = fetch_steam_title_by_app_id(parsed_label['steam_app_id'])
         if steam_title:
             print(f"Steam App ID {parsed_label['steam_app_id']} resolved to '{steam_title}'")
 
-    # Prefer parse_game_label Stage A0–A14 cleaned basename for variants (repack/VR/EA/
-    # version strip, Steam ID, Incl Update, scene/date/Update prose, franchise inject).
-    # Fall back to scan-cleaned name. C11 bare franchise → propose only (no auto-import).
+    # Prefer parse_game_label Stage A0–A14 (PC/folder) or console B15–B20 peel for
+    # files-mode ROM leaves. Fall back to scan-cleaned name. C11 bare franchise /
+    # ROM propose-only (proto/hack/unl/multicart) → propose only (no auto-import).
     variant_base = (parsed_label.get('cleaned_name') or '').strip() or game_name
     bare_franchise = bool(parsed_label.get('bare_franchise'))
-    search_variants = generate_goty_variants(variant_base)
+    rom_propose_only = bool(
+        parsed_label.get('propose_only') or parsed_label.get('is_multicart')
+    )
+    if rom_propose_only:
+        bare_franchise = True
+    search_variants = generate_goty_variants(variant_base, policy=match_policy)
     # Re-attach spaced " VR" when Stage A peeled a VR suffix (helps Steam/IGDB
     # titles like "3DSen VR" after glued 3DSenVR → 3DSen).
     if parsed_label.get('had_vr_suffix') and variant_base:
@@ -1081,15 +1208,23 @@ def retrieve_and_save_game(
         if vr_variant not in search_variants:
             search_variants.insert(1 if search_variants else 0, vr_variant)
     if game_name and game_name.strip() and not bare_franchise:
-        for extra in generate_goty_variants(game_name):
+        for extra in generate_goty_variants(game_name, policy=match_policy):
             if extra not in search_variants:
                 search_variants.append(extra)
     if steam_title and steam_title not in search_variants:
         search_variants = [steam_title] + [v for v in search_variants if v != steam_title]
     print(f"Generated search variants for '{variant_base}': {search_variants}")
     if bare_franchise:
+        reason_bits = []
+        if parsed_label.get('is_multicart'):
+            reason_bits.append('multicart')
+        if parsed_label.get('propose_only') and not parsed_label.get('is_multicart'):
+            reason_bits.append('ROM propose-only')
+        if parsed_label.get('bare_franchise'):
+            reason_bits.append('bare franchise (C11)')
+        detail = ', '.join(reason_bits) if reason_bits else 'propose/manual only'
         print(
-            f"🏷️ [C11] Bare franchise label '{variant_base}' — "
+            f"🏷️ [{detail}] Label '{variant_base}' — "
             "will propose/manual only (no auto-import)"
         )
 
@@ -1100,6 +1235,9 @@ def retrieve_and_save_game(
     last_low_confidence_candidates = None
     last_low_confidence_search = None
 
+    high_thr = match_policy.get('match_high_threshold')
+    amb_gap = match_policy.get('match_ambiguous_gap')
+
     # Try each variant until we find a high-confidence match
     for search_name in search_variants:
         print(f"Trying IGDB search with: '{search_name}'")
@@ -1108,7 +1246,13 @@ def retrieve_and_save_game(
             print(f"No match found for variant: '{search_name}'")
             continue
 
-        best, confidence = select_best_match(search_name, candidates, steam_title=steam_title)
+        best, confidence = select_best_match(
+            search_name,
+            candidates,
+            steam_title=steam_title,
+            high_threshold=high_thr,
+            ambiguous_gap=amb_gap,
+        )
         ranked = rank_candidates(search_name, candidates, steam_title=steam_title)
         print(
             f"IGDB candidates for '{search_name}': "
@@ -1176,6 +1320,7 @@ def retrieve_and_save_game(
                 library_uuid=library_uuid,
                 candidates=high_confidence_candidates or [selected_game],
                 steam_title=steam_title,
+                match_policy=match_policy,
             )
         else:
             nfo_content = read_first_nfo_content(full_disk_path)
@@ -1192,11 +1337,7 @@ def retrieve_and_save_game(
                 print(f"Failed to create game instance for {game_name}. Skipping further processing.")
                 return None
                     
-            if 'genres' in selected_game:
-                for genre_data in selected_game['genres']:
-                    genre_name = genre_data['name']
-                    genre = get_or_create_entity(Genre, name=genre_name)
-                    new_game.genres.append(genre)
+            attach_igdb_taxonomy_to_game(new_game, selected_game)
 
             if 'involved_companies' in selected_game:
                 involved_company_ids = selected_game['involved_companies']
@@ -1204,30 +1345,6 @@ def retrieve_and_save_game(
                     enumerate_companies(new_game, new_game.igdb_id, involved_company_ids)
                 else:
                     print(f"No involved companies found for {game_name}.")
-
-            if 'themes' in selected_game:
-                for theme_data in selected_game['themes']:
-                    theme_name = theme_data['name']
-                    theme = get_or_create_entity(Theme, name=theme_name)
-                    new_game.themes.append(theme)
-
-            if 'game_modes' in selected_game:
-                for game_mode_data in selected_game['game_modes']:
-                    game_mode_name = game_mode_data['name']
-                    game_mode = get_or_create_entity(GameMode, name=game_mode_name)
-                    new_game.game_modes.append(game_mode)
-
-            if 'platforms' in selected_game:
-                for platform_data in selected_game['platforms']:
-                    platform_name = platform_data['name']
-                    platform = get_or_create_entity(Platform, name=platform_name)
-                    new_game.platforms.append(platform)
-                    
-            if 'player_perspectives' in selected_game:
-                for perspective_data in selected_game['player_perspectives']:
-                    perspective_name = perspective_data['name']
-                    perspective = get_or_create_entity(PlayerPerspective, name=perspective_name)
-                    new_game.player_perspectives.append(perspective)
 
             if not defer_enrichment:
                 enrich_game_with_steam(new_game, lookup_name=new_game.name)
@@ -1323,11 +1440,142 @@ def retrieve_and_save_game(
                 return None
             
         print(f"No match found: {game_name} in library {library.name} on platform {library.platform.name}.")
+
+        # Stage D (W20-5a): IGDB miss → Steam App ID / exact storesearch or GOG
+        # exact title → custom-range Game. Skipped for C11 bare franchise and
+        # propose-only (those stay proposal / Unmatched). Ambiguous → fall through.
+        if not bare_franchise and not is_propose_only_scan(settings):
+            try:
+                from gametheca.utils.software_identify import try_stage_d_store_identify
+
+                stage_d_size = 0
+                if not defer_enrichment:
+                    try:
+                        stage_d_size = get_folder_size_in_bytes_updates(full_disk_path)
+                    except Exception as size_err:
+                        print(f"⚠️ [Stage D] Folder size skipped: {size_err}")
+                        stage_d_size = 0
+                stage_d_game = try_stage_d_store_identify(
+                    raw_label=raw_folder_label or game_name,
+                    cleaned_name=variant_base,
+                    full_disk_path=full_disk_path,
+                    library_uuid=library.uuid,
+                    steam_app_id=parsed_label.get('steam_app_id'),
+                    steam_title=steam_title,
+                    size=stage_d_size,
+                )
+                if stage_d_game is not None:
+                    print(
+                        f"✅ [Stage D] Custom game from store cascade: "
+                        f"'{stage_d_game.name}' (igdb_id={stage_d_game.igdb_id}, "
+                        f"steam_app_id={getattr(stage_d_game, 'steam_app_id', None)}, "
+                        f"item_kind={getattr(stage_d_game, 'item_kind', None)})"
+                    )
+                    try:
+                        db.session.commit()
+                    except Exception as commit_err:
+                        db.session.rollback()
+                        print(f"⚠️ [Stage D] Commit failed: {commit_err}")
+                        stage_d_game = None
+                if stage_d_game is not None:
+                    if settings and settings.get('write_local_metadata'):
+                        try:
+                            from gametheca.utils.local_metadata import write_local_metadata
+
+                            write_local_metadata(
+                                full_disk_path=full_disk_path,
+                                igdb_id=stage_d_game.igdb_id,
+                                game_title=stage_d_game.name,
+                                manually_verified=False,
+                                filename=settings.get(
+                                    'local_metadata_filename', 'gametheca.json',
+                                ),
+                            )
+                        except Exception as meta_err:
+                            print(f"⚠️ [Stage D] Local metadata write failed: {meta_err}")
+                    try:
+                        notify_admins_new_game(stage_d_game.uuid, stage_d_game.name)
+                    except Exception:
+                        pass
+                    return stage_d_game
+            except Exception as stage_d_err:
+                print(f"⚠️ [Stage D] Store cascade failed for {full_disk_path}: {stage_d_err}")
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+
+            # DAT unique hash (W21-BE-DAT): console IGDB miss → unique CRC/MD5/SHA1
+            # short-circuit before Stage E TGDB propose. Ambiguous / missing DAT /
+            # unhashable → fall through. Skipped for C11 / propose_only / multicart
+            # (same gate as Stage D).
+            try:
+                from gametheca.utils.set_completion import try_dat_hash_identify
+
+                platform_key = getattr(
+                    getattr(library, 'platform', None), 'name', None,
+                )
+                dat_size = 0
+                if not defer_enrichment:
+                    try:
+                        dat_size = get_folder_size_in_bytes_updates(full_disk_path)
+                    except Exception:
+                        dat_size = 0
+                dat_game = try_dat_hash_identify(
+                    full_disk_path=full_disk_path,
+                    library_uuid=library.uuid,
+                    library_platform=platform_key,
+                    size=dat_size,
+                )
+                if dat_game is not None:
+                    print(
+                        f"✅ [DAT] Unique hash identify: '{dat_game.name}' "
+                        f"(igdb_id={dat_game.igdb_id}, "
+                        f"crc={getattr(dat_game, 'file_crc', None)})"
+                    )
+                    try:
+                        db.session.commit()
+                    except Exception as commit_err:
+                        db.session.rollback()
+                        print(f"⚠️ [DAT] Commit failed: {commit_err}")
+                        dat_game = None
+                if dat_game is not None:
+                    if settings and settings.get('write_local_metadata'):
+                        try:
+                            from gametheca.utils.local_metadata import write_local_metadata
+
+                            write_local_metadata(
+                                full_disk_path=full_disk_path,
+                                igdb_id=dat_game.igdb_id,
+                                game_title=dat_game.name,
+                                manually_verified=False,
+                                filename=settings.get(
+                                    'local_metadata_filename', 'gametheca.json',
+                                ),
+                            )
+                        except Exception as meta_err:
+                            print(f"⚠️ [DAT] Local metadata write failed: {meta_err}")
+                    try:
+                        notify_admins_new_game(dat_game.uuid, dat_game.name)
+                    except Exception:
+                        pass
+                    return dat_game
+            except Exception as dat_err:
+                print(f"⚠️ [DAT] Hash identify failed for {full_disk_path}: {dat_err}")
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+
         # Enrich Unmatched proposal with Steam software/emulator candidates so
         # gaming-adjacent titles (e.g. 3DSenVR) get an honest propose list
-        # instead of empty IGDB-only Unmatched.
+        # instead of empty IGDB-only Unmatched. Stage E (after Stage D miss)
+        # adds propose-only MobyGames / TheGamesDB exact-title hints — no Game.
         try:
-            from gametheca.utils.software_identify import enrich_proposal_with_software
+            from gametheca.utils.software_identify import (
+                enrich_proposal_with_software,
+                enrich_proposal_with_stage_e,
+            )
 
             proposal = build_match_proposal(
                 raw_folder_label or game_name,
@@ -1337,13 +1585,27 @@ def retrieve_and_save_game(
             proposal = enrich_proposal_with_software(
                 proposal, raw_folder_label or game_name,
             )
+            try:
+                platform_key = getattr(
+                    getattr(library, 'platform', None), 'name', None,
+                )
+                proposal = enrich_proposal_with_stage_e(
+                    proposal,
+                    cleaned_name=variant_base,
+                    library_platform=platform_key,
+                )
+            except Exception as stage_e_err:
+                print(f"⚠️ [Stage E] Propose enrich failed for {full_disk_path}: {stage_e_err}")
             if write_match_proposal(full_disk_path, proposal):
-                soft_n = len(proposal.get('proposal', {}).get('software_candidates') or [])
-                kind = proposal.get('proposal', {}).get('suggested_kind')
+                body = proposal.get('proposal', {}) or {}
+                soft_n = len(body.get('software_candidates') or [])
+                stage_e_n = len(body.get('stage_e_candidates') or [])
+                kind = body.get('suggested_kind')
                 print(
                     f"📝 Wrote software-enriched match proposal for '{variant_base}' "
                     f"(igdb_candidates={len(last_low_confidence_candidates or [])}, "
-                    f"software_candidates={soft_n}, suggested_kind={kind}) "
+                    f"software_candidates={soft_n}, stage_e_candidates={stage_e_n}, "
+                    f"suggested_kind={kind}) "
                     f"→ {os.path.join(full_disk_path, 'gametheca.proposal.json')}"
                 )
                 # Denormalize onto UnmatchedFolder when the row already exists

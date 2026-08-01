@@ -1,6 +1,6 @@
 """Tests for scan queue / force-parallel start policy."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -12,10 +12,13 @@ from gametheca.platform import LibraryPlatform
 from gametheca.utils.scan_queue import (
     count_queued_jobs,
     create_scan_job_row,
+    drain_scan_queue,
+    find_queued_for_library,
     parse_force_parallel,
     parse_queue_policy,
     promote_next_queued_scan,
     queue_position,
+    reclaim_stale_busy_jobs,
     start_or_queue_scan,
 )
 
@@ -101,6 +104,31 @@ class TestStartOrQueueScan:
             still = db_session.get(ScanJob, running_job.id)
             assert still.status == 'Running'
 
+    def test_coalesces_duplicate_queued_same_library(
+        self, app, db_session, sample_library, running_job
+    ):
+        with app.app_context():
+            first = start_or_queue_scan(
+                folder_path='/games/pc',
+                library_uuid=sample_library.uuid,
+                queue_policy='queue',
+                allow_force=False,
+                app=app,
+            )
+            second = start_or_queue_scan(
+                folder_path='/games/pc',
+                library_uuid=sample_library.uuid,
+                queue_policy='queue',
+                allow_force=False,
+                app=app,
+            )
+            assert first['status'] == 'queued'
+            assert second['status'] == 'queued'
+            assert second['job_id'] == first['job_id']
+            assert second.get('coalesced') is True
+            assert count_queued_jobs() == 1
+            assert find_queued_for_library(sample_library.uuid, '/games/pc') is not None
+
     def test_force_parallel_starts_second_running(
         self, app, db_session, sample_library, running_job
     ):
@@ -164,6 +192,53 @@ class TestStartOrQueueScan:
             refreshed = db_session.get(ScanJob, queued.id)
             assert refreshed.status == 'Running'
             assert count_queued_jobs() == 0
+
+    def test_idle_with_queued_promotes_via_drain(
+        self, app, db_session, sample_library
+    ):
+        with app.app_context():
+            queued = create_scan_job_row(
+                folder_path='/games/stuck',
+                library_uuid=sample_library.uuid,
+                status='Queued',
+            )
+            with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
+                mock_thread.return_value.start = lambda: None
+                promoted = drain_scan_queue(app)
+            assert promoted is not None
+            assert promoted.id == queued.id
+            assert db_session.get(ScanJob, queued.id).status == 'Running'
+
+    def test_reclaim_stale_stopping_unblocks_queue(
+        self, app, db_session, sample_library
+    ):
+        with app.app_context():
+            stale = ScanJob(
+                folders={'/games': True},
+                content_type='Games',
+                status='Stopping',
+                is_enabled=False,
+                last_run=datetime.now(timezone.utc) - timedelta(hours=1),
+                last_progress_update=datetime.now(timezone.utc) - timedelta(hours=1),
+                library_uuid=sample_library.uuid,
+                scan_folder='/games',
+                error_message='Scan is stopping',
+            )
+            db_session.add(stale)
+            db_session.commit()
+            queued = create_scan_job_row(
+                folder_path='/games/after',
+                library_uuid=sample_library.uuid,
+                status='Queued',
+            )
+            n = reclaim_stale_busy_jobs(stopping_after_seconds=60)
+            assert n == 1
+            assert db_session.get(ScanJob, stale.id).status == 'Failed'
+            with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
+                mock_thread.return_value.start = lambda: None
+                promoted = promote_next_queued_scan(app)
+            assert promoted is not None
+            assert promoted.id == queued.id
 
 
 class TestLibraryScanApi:
@@ -253,3 +328,72 @@ class TestLibraryScanApi:
             },
         )
         assert resp.status_code in (401, 403, 302)
+
+
+class TestManualScanQueuesWhenBusy:
+    """Manual Scan form path: busy → start_or_queue_scan (queued), not hard reject."""
+
+    def test_manual_while_busy_queues(self, app, db_session, sample_library, running_job):
+        from unittest.mock import Mock, patch
+
+        from gametheca.utilities import handle_manual_scan
+
+        mock_form = Mock()
+        mock_form.validate_on_submit.return_value = True
+        mock_form.library_uuid.data = sample_library.uuid
+        mock_form.folder_path.data = 'pc'
+        mock_form.scan_mode.data = 'folders'
+        mock_form.force_updates_extras_scan.data = False
+        mock_form.fetch_hltb.data = False
+        mock_form.force_hltb_refetch.data = False
+
+        with app.app_context():
+            with app.test_request_context():
+                mock_session = {}
+                with patch('gametheca.utilities.session', mock_session):
+                    with patch('gametheca.utilities.flash') as mock_flash:
+                        with patch(
+                            'gametheca.utilities.redirect',
+                            return_value='ok',
+                        ):
+                            with patch(
+                                'gametheca.utilities.url_for',
+                                return_value='/scan',
+                            ):
+                                with patch(
+                                    'gametheca.utilities.get_allowed_base_directories',
+                                    return_value=['/base'],
+                                ):
+                                    with patch(
+                                        'gametheca.utilities.is_safe_path',
+                                        return_value=(True, None),
+                                    ):
+                                        with patch(
+                                            'gametheca.utilities.os.path.exists',
+                                            return_value=True,
+                                        ):
+                                            with patch(
+                                                'gametheca.utilities.os.access',
+                                                return_value=True,
+                                            ):
+                                                with patch.dict(
+                                                    'gametheca.utilities.current_app.config',
+                                                    {
+                                                        'BASE_FOLDER_POSIX': '/base',
+                                                        'BASE_FOLDER_WINDOWS': '/base',
+                                                    },
+                                                    clear=False,
+                                                ):
+                                                    handle_manual_scan(mock_form)
+
+                msg, cat = mock_flash.call_args[0]
+                assert 'queued' in msg.lower()
+                assert cat == 'info'
+                queued = db_session.execute(
+                    select(ScanJob).where(
+                        ScanJob.library_uuid == sample_library.uuid,
+                        ScanJob.status == 'Queued',
+                    )
+                ).scalars().all()
+                assert len(queued) == 1
+                assert queued[0].scan_folder.endswith('pc') or 'pc' in queued[0].scan_folder

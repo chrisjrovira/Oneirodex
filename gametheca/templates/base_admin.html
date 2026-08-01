@@ -6,7 +6,7 @@
     <meta charset="utf-8">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}GameTheca Admin{% endblock %}</title>
-    <link rel="icon" href="{{ url_for('static', filename='newstyle/gametheca_mark.svg') }}">
+    {% include 'partials/favicon.html' %}
     <script src="{{ url_for('static', filename='vendor/jquery/3.7.1/jquery.min.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatables/1.13.7/css/jquery.dataTables.min.css') }}">
     <script src="{{ url_for('static', filename='vendor/datatables/1.13.7/js/jquery.dataTables.min.js') }}"></script>

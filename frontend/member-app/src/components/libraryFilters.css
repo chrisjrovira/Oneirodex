@@ -1,3 +1,37 @@
+.library-filters__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  justify-content: flex-start;
+  margin-bottom: 0.15rem;
+}
+
+.library-filters__search {
+  flex: 1 1 8rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.library-filters__search-input {
+  width: 100%;
+  min-height: 2.15rem;
+  box-sizing: border-box;
+}
+
+.library-filters__visibility {
+  flex: 0 0 auto;
+  min-height: 2.15rem;
+  font-size: 0.8rem;
+}
+
+.library-filters__body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
 .library-filters__signals {
   margin: 0;
   padding: 0;

@@ -110,6 +110,9 @@ class Library(db.Model):
     scan_depth = db.Column(db.Integer, default=1, nullable=False)
     # Last successful scan root (used by refresh-all / scheduled scans)
     last_scan_folder = db.Column(db.String(512), nullable=True)
+    # Incremental watch intent under GT_LIBRARY_WATCH master switch.
+    # null = follow global (watch when env on); False = opt-out; True = prefer watch.
+    watch_enabled = db.Column(db.Boolean, nullable=True, default=None)
     games = db.relationship('Game', backref='library', lazy=True)
     unmatched_folders = relationship("UnmatchedFolder", backref='library', cascade="all, delete-orphan")
 
@@ -638,6 +641,12 @@ class UnmatchedFolder(db.Model):
     # Wave 4: denormalized from proposal sidecar at propose/log time (list API — no N+1)
     suggested_kind = db.Column(db.String(16), nullable=True)
     suggested_candidate_name = db.Column(db.String(255), nullable=True)
+    # W21-BE-2b: Stage E propose-only hints denormalized from proposal sidecar (list — no N+1)
+    stage_e_candidates = db.Column(db.JSON, nullable=True)
+    stage_e = db.Column(db.JSON, nullable=True)
+    # Wave 17: soft librarian naming (no disk rename / folder_path change)
+    search_name = db.Column(db.String(255), nullable=True)
+    display_name = db.Column(db.String(255), nullable=True)
 
 
 class DuplicateFixLog(db.Model):
@@ -817,6 +826,10 @@ class GlobalSettings(db.Model):
     encrypt_emulator_saves = db.Column(db.Boolean, default=False)
     # GiantBomb metadata key (optional)
     giantbomb_api_key = db.Column(db.String(255), nullable=True)
+    # MobyGames identify search key (optional — empty search when unset)
+    mobygames_api_key = db.Column(db.String(255), nullable=True)
+    # TheGamesDB identify search key (optional — empty search when unset)
+    thegamesdb_api_key = db.Column(db.String(255), nullable=True)
     # Preferred release groups / size bands for *arr scoring
     quality_profiles = db.Column(JSONEncodedDict, nullable=True)
     # Game details section order/visibility
@@ -1060,7 +1073,14 @@ class ChatMessage(db.Model):
     )
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
-    def to_dict(self, *, author_name: str | None = None, reactions: dict | None = None, mine: list | None = None):
+    def to_dict(
+        self,
+        *,
+        author_name: str | None = None,
+        reactions: dict | None = None,
+        mine: list | None = None,
+        attachments: list | None = None,
+    ):
         payload = {
             'id': self.id,
             'channel_id': self.channel_id,
@@ -1071,8 +1091,52 @@ class ChatMessage(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'reactions': reactions or {},
             'mine': mine or [],
+            'attachments': attachments if attachments is not None else [],
         }
         return payload
+
+
+class ChatMessageAttachment(db.Model):
+    """File/image attachment for a household chat message (Wave 16 chat)."""
+
+    __tablename__ = 'chat_message_attachments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    channel_id = db.Column(
+        db.Integer,
+        db.ForeignKey('chat_channels.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('chat_messages.id', ondelete='CASCADE'),
+        nullable=True,
+        index=True,
+    )
+    uploaded_by_user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    file_name = db.Column(db.String(120), nullable=False)
+    original_name = db.Column(db.String(255), nullable=False)
+    mime = db.Column(db.String(128), nullable=False)
+    size_bytes = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    def public_url(self) -> str:
+        return f'/static/library/chat-attachments/{self.file_name}'
+
+    def to_dict(self) -> dict:
+        return {
+            'id': self.id,
+            'url': self.public_url(),
+            'mime': self.mime,
+            'name': self.original_name,
+            'size': self.size_bytes,
+        }
 
 
 class ChatMessageReaction(db.Model):

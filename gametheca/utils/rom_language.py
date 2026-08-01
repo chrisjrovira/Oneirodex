@@ -6,20 +6,13 @@ import os
 import re
 from typing import Any
 
+from gametheca.utils.rom_name_peel import LANG_LIST_PAREN_RE, REGION_CAPTURE_RE
+
 # Capture the first region-like parenthetical for storage.
-_REGION_CAPTURE = re.compile(
-    r'\((USA|Europe|Japan|World|UE|JU|EU|JP|U|J|E|Asia|Brazil|Korea|'
-    r'Australia|France|Germany|Spain|Italy|Netherlands|Sweden|China|'
-    r'Hong Kong|Taiwan|Russia)(?:[^)]*)\)',
-    re.IGNORECASE,
-)
+_REGION_CAPTURE = REGION_CAPTURE_RE
 
 # Language lists inside parens, e.g. (En,Fr,De) or (En,Ja)
-_LANG_LIST = re.compile(
-    r'\(((?:En|Fr|De|Es|It|Nl|Pt|Ru|Ja|Zh|Ko|Pl|Sv|No|Da|Fi|Hu|Cs|Tr|Ar)'
-    r'(?:\s*,\s*(?:En|Fr|De|Es|It|Nl|Pt|Ru|Ja|Zh|Ko|Pl|Sv|No|Da|Fi|Hu|Cs|Tr|Ar))*)\)',
-    re.IGNORECASE,
-)
+_LANG_LIST = LANG_LIST_PAREN_RE
 
 _REGION_NORMALIZE = {
     'u': 'USA',

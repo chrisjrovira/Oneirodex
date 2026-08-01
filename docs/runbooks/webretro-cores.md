@@ -67,7 +67,7 @@ Play opens `webretro.html` → iframe `standalone.html?core=&rom=&nobundle=1`.
 |---|---|
 | Local CSS/JS (no jsDelivr on boot) | `standalone.html` → `/static/vendor/webretro/assets/*` |
 | Skip RetroArch asset bundle CDN storm | `nobundle=1` on the iframe URL |
-| Local BIOS path | `base.js` `biosCdn` → `/static/library/bios/` (admin uploads) |
+| Local BIOS path | `base.js` `biosCdn` → `/static/library/bios/` (Admin upload **or** optional private host mount — [unraid-deploy.md](unraid-deploy.md#local-private-bios-mount-vs-public-upload); never ship firmware in the image) |
 | Preload core JS/WASM + warm ROM cache | `webretro.html` `preloadPlayAssets()` |
 | Defer cloud-save API | After `mainCompleted` + `requestIdleCallback` |
 | Cache installed-cores allowlist | `GET /api/emulator/installed-cores.js` → `private, max-age=300` |

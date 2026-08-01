@@ -7,16 +7,40 @@ from flask import jsonify, current_app, request, Response
 from flask_login import login_required, current_user
 from gametheca import db
 from gametheca.models import ScanJob, UnmatchedFolder, Library, Game, DuplicateFixLog, Image
-from sqlalchemy import select
-from gametheca.utils.auth import admin_required
+from sqlalchemy import or_, select
+from gametheca.utils.auth import admin_required, librarian_required
 from gametheca.utils.cover_url import resolve_game_cover_url
 from gametheca.utils.duplicate_check import explain_duplicate_match, folder_basename, should_mark_as_duplicate
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.functions import PLATFORM_IDS
+from gametheca.utils.scan_job_timing import (
+    compute_scan_job_timing,
+    parse_scan_job_status_filter,
+)
+from gametheca.utils.scan_match_settings import resolve_scan_match_policy
 from . import apis_bp
 
 VALID_UNMATCHED_EXPORT_STATUSES = {'all', 'Unmatched', 'Duplicate', 'Ignore', 'Pending'}
 VALID_DUPLICATE_FIX_ACTIONS = {'merge', 'keep', 'ignore'}
+UNMATCHED_BATCH_ID_CAP = 100
+_MATCH_REASON_CODES = {
+    'same_path',
+    'title_vs_folder',
+    'title_vs_library_name',
+    'title_below_threshold',
+}
+
+
+def _soft_name(value) -> str | None:
+    text = (value or '').strip() if value is not None else ''
+    return text or None
+
+
+def _effective_search_name(folder: UnmatchedFolder) -> str | None:
+    """Librarian soft search_name, else disk basename (never renames disk)."""
+    return _soft_name(getattr(folder, 'search_name', None)) or (
+        folder_basename(folder.folder_path) or None
+    )
 
 
 def _suggested_kind_fields(folder: UnmatchedFolder) -> dict:
@@ -35,6 +59,28 @@ def _suggested_kind_fields(folder: UnmatchedFolder) -> dict:
         'suggested_kind_label': label,
         'suggested_candidate_name': candidate,
     }
+
+
+def _stage_e_fields(folder: UnmatchedFolder) -> dict:
+    """Stage E propose-only fields denormalized on UnmatchedFolder (soft-omit when absent)."""
+    out = {}
+    candidates = getattr(folder, 'stage_e_candidates', None)
+    if isinstance(candidates, list) and candidates:
+        out['stage_e_candidates'] = candidates
+    meta = getattr(folder, 'stage_e', None)
+    if isinstance(meta, dict) and meta:
+        out['stage_e'] = meta
+    return out
+
+
+def _label_transforms(folder: UnmatchedFolder) -> list:
+    """Ordered Stage A0–A14 peels for the disk folder basename (no disk rename)."""
+    from gametheca.utils.game_name_parse import parse_game_label
+
+    label = folder_basename(getattr(folder, 'folder_path', None) or '')
+    if not label:
+        return []
+    return list(parse_game_label(label).get('transforms') or [])
 
 
 def _why_unmatched_fields(
@@ -63,24 +109,89 @@ def _why_unmatched_fields(
         'folder_name': name,
         'why_unmatched': summary,
         'unmatched_reason': summary,  # alias for UI
+        # Peel trail for UI expanders; short match_reason codes stay for filters.
+        'transforms': _label_transforms(folder),
     }
 
 
-def _unmatched_list_row(folder: UnmatchedFolder, library_name, platform) -> dict:
+def _matched_game_payload(game: Game | None, cover_by_uuid: dict | None = None) -> dict | None:
+    if game is None:
+        return None
+    cover_url = None
+    if cover_by_uuid is not None:
+        cover_img = cover_by_uuid.get(game.uuid)
+        try:
+            cover_url = resolve_game_cover_url(game, cover_img)
+        except Exception:
+            cover_url = None
+    else:
+        cover_url = _cover_for_game(game)
+    return {
+        'uuid': game.uuid,
+        'name': game.name,
+        'path': game.full_disk_path,
+        'cover_url': cover_url,
+        'igdb_id': game.igdb_id,
+    }
+
+
+def _prefetch_matched_game_maps(folders: list) -> tuple[dict, dict]:
+    """Batch-load games + cover images for list/export (no N+1)."""
+    uuids = list({
+        getattr(f, 'matched_game_uuid', None)
+        for f in folders
+        if getattr(f, 'matched_game_uuid', None)
+    })
+    games_by_uuid: dict = {}
+    cover_by_uuid: dict = {}
+    if not uuids:
+        return games_by_uuid, cover_by_uuid
+    for game in db.session.execute(select(Game).filter(Game.uuid.in_(uuids))).scalars().all():
+        games_by_uuid[game.uuid] = game
+    for image in db.session.execute(
+        select(Image).filter(Image.game_uuid.in_(uuids), Image.image_type == 'cover')
+    ).scalars().all():
+        cover_by_uuid.setdefault(image.game_uuid, image)
+    return games_by_uuid, cover_by_uuid
+
+
+def _unmatched_list_row(
+    folder: UnmatchedFolder,
+    library_name,
+    platform,
+    *,
+    games_by_uuid: dict | None = None,
+    cover_by_uuid: dict | None = None,
+) -> dict:
     kind_fields = _suggested_kind_fields(folder)
+    matched_uuid = getattr(folder, 'matched_game_uuid', None)
+    include_matched = bool(getattr(folder, 'status', None) == 'Duplicate' or matched_uuid)
+    matched_game = None
+    if include_matched and matched_uuid:
+        if games_by_uuid is not None:
+            matched_game = _matched_game_payload(games_by_uuid.get(matched_uuid), cover_by_uuid)
+        else:
+            game = db.session.execute(select(Game).filter_by(uuid=matched_uuid)).scalars().first()
+            matched_game = _matched_game_payload(game)
+
     row = {
         'id': folder.id,
         'folder_path': folder.folder_path,
         'status': folder.status,
+        'library_uuid': getattr(folder, 'library_uuid', None),
         'library_name': library_name,
         'platform_name': platform.name if platform else '',
         'platform_id': PLATFORM_IDS.get(platform.name) if platform else None,
-        'matched_game_uuid': getattr(folder, 'matched_game_uuid', None),
+        'matched_game_uuid': matched_uuid,
         'match_reason': getattr(folder, 'match_reason', None),
         'match_score': getattr(folder, 'match_score', None),
+        'search_name': _soft_name(getattr(folder, 'search_name', None)),
+        'display_name': _soft_name(getattr(folder, 'display_name', None)),
+        'matched_game': matched_game if include_matched else None,
     }
     row.update(kind_fields)
     row.update(_why_unmatched_fields(folder, kind_fields))
+    row.update(_stage_e_fields(folder))
     return row
 
 
@@ -103,10 +214,12 @@ def _duplicate_compare_payload(folder: UnmatchedFolder, matched_game: Game | Non
     match_score = getattr(folder, 'match_score', None)
 
     if matched_game is not None:
+        dupe_thr = resolve_scan_match_policy().get('dupe_title_threshold')
         explanation = explain_duplicate_match(
             matched_game,
             folder.folder_path or '',
             folder_basename(folder.folder_path),
+            title_threshold=dupe_thr,
         )
         if match_reason is None:
             match_reason = explanation.get('match_reason')
@@ -123,7 +236,12 @@ def _duplicate_compare_payload(folder: UnmatchedFolder, matched_game: Game | Non
             'match_score': match_score,
         })
 
-    folder_title = folder_basename(folder.folder_path) or folder.folder_path
+    folder_title = (
+        _soft_name(getattr(folder, 'display_name', None))
+        or _soft_name(getattr(folder, 'search_name', None))
+        or folder_basename(folder.folder_path)
+        or folder.folder_path
+    )
     kind_fields = _suggested_kind_fields(folder)
     why_fields = _why_unmatched_fields(
         folder,
@@ -140,8 +258,12 @@ def _duplicate_compare_payload(folder: UnmatchedFolder, matched_game: Game | Non
         'matched_game_uuid': getattr(folder, 'matched_game_uuid', None),
         'match_reason': match_reason,
         'match_score': match_score,
+        'search_name': _soft_name(getattr(folder, 'search_name', None)),
+        'display_name': _soft_name(getattr(folder, 'display_name', None)),
+        'matched_game': _matched_game_payload(matched_game),
         **kind_fields,
         **why_fields,
+        **_stage_e_fields(folder),
         'titles': [
             {
                 'role': 'unmatched_folder',
@@ -164,38 +286,254 @@ def _duplicate_compare_payload(folder: UnmatchedFolder, matched_game: Game | Non
     }
 
 
+def _parse_unmatched_list_filters():
+    """Query params shared by list + export. Returns (filters_dict, error_response)."""
+    status = (request.args.get('status') or 'all').strip()
+    if status not in VALID_UNMATCHED_EXPORT_STATUSES:
+        return None, (
+            jsonify({'error': f"Invalid status. Choose one of: {sorted(VALID_UNMATCHED_EXPORT_STATUSES)}"}),
+            400,
+        )
+    return {
+        'status': status,
+        'q': (request.args.get('q') or request.args.get('name') or '').strip(),
+        'why': (request.args.get('why') or request.args.get('reason') or '').strip(),
+        'suggested_kind': (request.args.get('suggested_kind') or '').strip().lower(),
+        'library_uuid': (request.args.get('library_uuid') or '').strip(),
+    }, None
+
+
+def _apply_unmatched_filters(query, filters: dict):
+    status = filters.get('status') or 'all'
+    if status != 'all':
+        query = query.filter(UnmatchedFolder.status == status)
+
+    library_uuid = filters.get('library_uuid') or ''
+    if library_uuid:
+        query = query.filter(UnmatchedFolder.library_uuid == library_uuid)
+
+    suggested_kind = filters.get('suggested_kind') or ''
+    if suggested_kind:
+        query = query.filter(UnmatchedFolder.suggested_kind == suggested_kind)
+
+    q = filters.get('q') or ''
+    if q:
+        pattern = f'%{q}%'
+        query = query.filter(or_(
+            UnmatchedFolder.folder_path.ilike(pattern),
+            UnmatchedFolder.search_name.ilike(pattern),
+            UnmatchedFolder.display_name.ilike(pattern),
+        ))
+
+    why = filters.get('why') or ''
+    if why:
+        why_folded = why.strip()
+        why_lower = why_folded.lower()
+        status_aliases = {s.lower(): s for s in ('Unmatched', 'Duplicate', 'Ignore', 'Pending')}
+        if why_lower in status_aliases:
+            query = query.filter(UnmatchedFolder.status == status_aliases[why_lower])
+        elif why_lower in _MATCH_REASON_CODES:
+            query = query.filter(UnmatchedFolder.match_reason == why_lower)
+        elif why_lower in ('title', 'titles'):
+            query = query.filter(UnmatchedFolder.match_reason.ilike('title%'))
+        else:
+            query = query.filter(UnmatchedFolder.match_reason.ilike(f'%{why_folded}%'))
+
+    return query
+
+
+def _query_unmatched_rows(filters: dict):
+    query = (
+        select(UnmatchedFolder, Library.name.label('library_name'), Library.platform)
+        .join(Library)
+        .order_by(UnmatchedFolder.status.desc(), UnmatchedFolder.folder_path.asc())
+    )
+    query = _apply_unmatched_filters(query, filters)
+    return db.session.execute(query).all()
+
+
+def _parse_batch_ids(data: dict):
+    raw_ids = data.get('ids')
+    if raw_ids is None and isinstance(data.get('items'), list):
+        raw_ids = [item.get('id') for item in data['items'] if isinstance(item, dict)]
+    if not isinstance(raw_ids, list) or not raw_ids:
+        return None, (jsonify({'error': 'ids required (non-empty array)', 'ok': False}), 400)
+    ids = []
+    for value in raw_ids:
+        text = str(value or '').strip()
+        if text:
+            ids.append(text)
+    if not ids:
+        return None, (jsonify({'error': 'ids required (non-empty array)', 'ok': False}), 400)
+    if len(ids) > UNMATCHED_BATCH_ID_CAP:
+        return None, (jsonify({
+            'error': f'ids cap is {UNMATCHED_BATCH_ID_CAP}',
+            'ok': False,
+            'cap': UNMATCHED_BATCH_ID_CAP,
+            'requested': len(ids),
+        }), 400)
+    seen = set()
+    unique = []
+    for i in ids:
+        if i not in seen:
+            seen.add(i)
+            unique.append(i)
+    return unique, None
+
+
+def _apply_soft_amend(folder: UnmatchedFolder, data: dict) -> dict:
+    """Set soft search_name / display_name. Never touches folder_path / disk."""
+    changed = {}
+    if 'search_name' in data or 'name' in data:
+        raw = data['search_name'] if 'search_name' in data else data.get('name')
+        if raw is None or (isinstance(raw, str) and not raw.strip()):
+            folder.search_name = None
+            changed['search_name'] = None
+        else:
+            folder.search_name = str(raw).strip()[:255]
+            changed['search_name'] = folder.search_name
+    if 'display_name' in data:
+        raw = data.get('display_name')
+        if raw is None or (isinstance(raw, str) and not raw.strip()):
+            folder.display_name = None
+            changed['display_name'] = None
+        else:
+            folder.display_name = str(raw).strip()[:255]
+            changed['display_name'] = folder.display_name
+    return changed
+
+
+def _fix_one_duplicate(folder: UnmatchedFolder, action: str, notes: str | None = None) -> dict:
+    """Apply merge|keep|ignore; caller commits."""
+    matched_uuid = getattr(folder, 'matched_game_uuid', None)
+    match_reason = getattr(folder, 'match_reason', None)
+    match_score = getattr(folder, 'match_score', None)
+    folder_path = folder.folder_path
+    folder_id = folder.id
+
+    if action == 'merge':
+        db.session.delete(folder)
+        result_status = 'cleared'
+    elif action == 'keep':
+        folder.status = 'Unmatched'
+        result_status = 'Unmatched'
+    else:
+        folder.status = 'Ignore'
+        result_status = 'Ignore'
+
+    fix_log = DuplicateFixLog(
+        unmatched_folder_id=folder_id,
+        folder_path=folder_path or '',
+        matched_game_uuid=matched_uuid,
+        match_reason=match_reason,
+        match_score=match_score,
+        action=action,
+        actor_user_id=getattr(current_user, 'id', None),
+        notes=notes,
+    )
+    db.session.add(fix_log)
+    return {
+        'ok': True,
+        'id': folder_id,
+        'action': action,
+        'folder_id': folder_id,
+        'folder_path': folder_path,
+        'result_status': result_status,
+        'matched_game_uuid': matched_uuid,
+        'match_reason': match_reason,
+        'match_score': match_score,
+    }
+
+
+def _parse_scan_jobs_list_filters():
+    """Query params for GET /api/scan_jobs_status. Returns filters dict."""
+    statuses = parse_scan_job_status_filter(request.args.get('status'))
+    return {
+        'statuses': statuses,
+        'library_uuid': (request.args.get('library_uuid') or '').strip(),
+        'q': (request.args.get('q') or request.args.get('name') or '').strip(),
+    }
+
+
+def _query_scan_jobs(filters: dict):
+    """Filtered ScanJob list (server-side). Outerjoin Library for name substring."""
+    query = (
+        select(ScanJob)
+        .outerjoin(Library, ScanJob.library_uuid == Library.uuid)
+        .order_by(ScanJob.last_run.desc().nullslast())
+    )
+    statuses = filters.get('statuses') or []
+    if statuses:
+        query = query.where(ScanJob.status.in_(statuses))
+    library_uuid = filters.get('library_uuid') or ''
+    if library_uuid:
+        query = query.where(ScanJob.library_uuid == library_uuid)
+    q = filters.get('q') or ''
+    if q:
+        pattern = f'%{q}%'
+        query = query.where(or_(
+            ScanJob.scan_folder.ilike(pattern),
+            Library.name.ilike(pattern),
+        ))
+    return db.session.execute(query).scalars().unique().all()
+
+
+def _scan_job_status_row(job, *, queue_position_fn=None) -> dict:
+    folders_success = job.folders_success or 0
+    folders_failed = job.folders_failed or 0
+    total_folders = job.total_folders or 0
+    timing = compute_scan_job_timing(job)
+    processed = timing['folders_processed']
+    row = {
+        'id': job.id,
+        'library_name': job.library.name if job.library else 'No Library Assigned',
+        'library_uuid': job.library_uuid,
+        'folders': job.folders,
+        'status': job.status,
+        'total_folders': total_folders,
+        'folders_success': folders_success,
+        'folders_failed': folders_failed,
+        'folders_processed': processed,
+        'removed_count': job.removed_count or 0,
+        'scan_folder': job.scan_folder,
+        'setting_remove': bool(job.setting_remove),
+        'setting_filefolder': bool(job.setting_filefolder),
+        'setting_download_missing_images': bool(job.setting_download_missing_images),
+        'current_processing': job.current_processing,
+        'error_message': job.error_message or '',
+        'last_run': job.last_run.strftime('%Y-%m-%d %H:%M:%S') if job.last_run else 'Not Available',
+        'last_update': job.last_progress_update.isoformat() if job.last_progress_update else None,
+        'next_run': job.next_run.strftime('%Y-%m-%d %H:%M:%S') if job.next_run else 'Not Scheduled',
+        'progress_percentage': round(processed / total_folders * 100, 1) if total_folders > 0 else 0,
+        # Wave 18 timing — started_at == last_run (no separate create column)
+        'started_at': timing['started_at'],
+        'created_at': timing['created_at'],
+        'elapsed_seconds': timing['elapsed_seconds'],
+        'eta_seconds': timing['eta_seconds'],
+        'stalled': timing['stalled'],
+        'elapsed_label': timing['elapsed_label'],
+        'eta_label': timing['eta_label'],
+    }
+    if job.status == 'Queued' and queue_position_fn is not None:
+        row['queue_position'] = queue_position_fn(job.id)
+    return row
+
+
 @apis_bp.route('/scan_jobs_status', methods=['GET'])
 @login_required
 @admin_required
 def scan_jobs_status():
-    jobs = db.session.execute(select(ScanJob).order_by(ScanJob.last_run.desc())).scalars().all()
-    jobs_data = []
-    for job in jobs:
-        folders_success = job.folders_success or 0
-        folders_failed = job.folders_failed or 0
-        total_folders = job.total_folders or 0
-        processed = folders_success + folders_failed
-        jobs_data.append({
-            'id': job.id,
-            'library_name': job.library.name if job.library else 'No Library Assigned',
-            'library_uuid': job.library_uuid,
-            'folders': job.folders,
-            'status': job.status,
-            'total_folders': total_folders,
-            'folders_success': folders_success,
-            'folders_failed': folders_failed,
-            'removed_count': job.removed_count or 0,
-            'scan_folder': job.scan_folder,
-            'setting_remove': bool(job.setting_remove),
-            'setting_filefolder': bool(job.setting_filefolder),
-            'setting_download_missing_images': bool(job.setting_download_missing_images),
-            'current_processing': job.current_processing,
-            'error_message': job.error_message or '',
-            'last_run': job.last_run.strftime('%Y-%m-%d %H:%M:%S') if job.last_run else 'Not Available',
-            'last_update': job.last_progress_update.isoformat() if job.last_progress_update else None,
-            'next_run': job.next_run.strftime('%Y-%m-%d %H:%M:%S') if job.next_run else 'Not Scheduled',
-            'progress_percentage': round(processed / total_folders * 100, 1) if total_folders > 0 else 0,
-        })
+    from gametheca.utils.scan_queue import drain_scan_queue, queue_position
+
+    # Safety drain on status poll (admin UI ~2s) when idle+Queued stuck.
+    try:
+        drain_scan_queue(current_app._get_current_object())
+    except Exception:
+        pass
+
+    filters = _parse_scan_jobs_list_filters()
+    jobs = _query_scan_jobs(filters)
+    jobs_data = [_scan_job_status_row(job, queue_position_fn=queue_position) for job in jobs]
     return jsonify(jobs_data)
 
 
@@ -203,15 +541,23 @@ def scan_jobs_status():
 @login_required
 @admin_required
 def unmatched_folders():
-    unmatched = db.session.execute(
-        select(UnmatchedFolder, Library.name.label('library_name'), Library.platform)
-        .join(Library)
-        .order_by(UnmatchedFolder.status.desc())
-    ).all()
+    filters, err = _parse_unmatched_list_filters()
+    if err:
+        return err
+
+    rows = _query_unmatched_rows(filters)
+    folders = [folder for folder, _library_name, _platform in rows]
+    games_by_uuid, cover_by_uuid = _prefetch_matched_game_maps(folders)
 
     unmatched_data = [
-        _unmatched_list_row(folder, library_name, platform)
-        for folder, library_name, platform in unmatched
+        _unmatched_list_row(
+            folder,
+            library_name,
+            platform,
+            games_by_uuid=games_by_uuid,
+            cover_by_uuid=cover_by_uuid,
+        )
+        for folder, library_name, platform in rows
     ]
 
     return jsonify(unmatched_data)
@@ -241,8 +587,11 @@ def list_duplicate_candidates():
                 all_games = db.session.execute(select(Game)).scalars().all()
             best = None
             best_score = -1.0
+            dupe_thr = resolve_scan_match_policy().get('dupe_title_threshold')
             for game in all_games:
-                expl = explain_duplicate_match(game, folder.folder_path or '')
+                expl = explain_duplicate_match(
+                    game, folder.folder_path or '', title_threshold=dupe_thr,
+                )
                 if expl['is_duplicate'] and expl['match_score'] > best_score:
                     best = game
                     best_score = expl['match_score']
@@ -252,6 +601,277 @@ def list_duplicate_candidates():
             matched = best
         payload.append(_duplicate_compare_payload(folder, matched))
     return jsonify({'duplicates': payload, 'count': len(payload)})
+
+
+@apis_bp.route('/unmatched_folders/<folder_id>/name', methods=['PATCH', 'POST'])
+@login_required
+@librarian_required
+def amend_unmatched_folder_name(folder_id):
+    """Soft-amend librarian search/display names. Does NOT rename disk folder_path."""
+    data = request.get_json(silent=True) or {}
+    if not any(k in data for k in ('search_name', 'display_name', 'name')):
+        return jsonify({
+            'error': 'Provide search_name and/or display_name (name aliases search_name)',
+            'ok': False,
+            'disk_rename': False,
+        }), 400
+
+    folder = db.session.get(UnmatchedFolder, folder_id)
+    if not folder:
+        return jsonify({'error': 'Unmatched folder not found', 'ok': False}), 404
+
+    changed = _apply_soft_amend(folder, data)
+    if not changed:
+        return jsonify({
+            'error': 'Provide search_name and/or display_name (name aliases search_name)',
+            'ok': False,
+            'disk_rename': False,
+        }), 400
+
+    db.session.commit()
+    return jsonify({
+        'ok': True,
+        'id': folder.id,
+        'folder_path': folder.folder_path,
+        'folder_name': folder_basename(folder.folder_path) or None,
+        'search_name': _soft_name(folder.search_name),
+        'display_name': _soft_name(folder.display_name),
+        'effective_search_name': _effective_search_name(folder),
+        'changed': changed,
+        'disk_rename': False,
+        'note': 'Soft naming only; disk folder_path unchanged.',
+    })
+
+
+@apis_bp.route('/unmatched_folders/batch/clear', methods=['POST'])
+@login_required
+@librarian_required
+def batch_clear_unmatched_folders():
+    """Delete unmatched rows by id (DB only — no disk I/O). Partial success OK."""
+    data = request.get_json(silent=True) or {}
+    ids, err = _parse_batch_ids(data)
+    if err:
+        return err
+
+    results = []
+    cleared = 0
+    for folder_id in ids:
+        folder = db.session.get(UnmatchedFolder, folder_id)
+        if not folder:
+            results.append({'id': folder_id, 'ok': False, 'error': 'not_found'})
+            continue
+        try:
+            db.session.delete(folder)
+            db.session.commit()
+            results.append({'id': folder_id, 'ok': True, 'result': 'cleared'})
+            cleared += 1
+        except Exception as exc:
+            db.session.rollback()
+            results.append({'id': folder_id, 'ok': False, 'error': str(exc)})
+
+    return jsonify({
+        'ok': True,
+        'cleared': cleared,
+        'failed': sum(1 for r in results if not r.get('ok')),
+        'results': results,
+        'disk_io': False,
+    })
+
+
+@apis_bp.route('/unmatched_folders/batch/mark_kind', methods=['POST'])
+@login_required
+@librarian_required
+def batch_mark_unmatched_kind():
+    """Batch mark_kind. Partial success OK. No disk I/O."""
+    from gametheca.utils.item_kind import ITEM_KINDS, normalize_item_kind
+    from gametheca.utils.software_identify import mark_unmatched_as_kind
+
+    data = request.get_json(silent=True) or {}
+    ids, err = _parse_batch_ids(data)
+    if err:
+        return err
+
+    kind_raw = data.get('item_kind') or data.get('content_kind') or data.get('kind')
+    if not kind_raw or not str(kind_raw).strip():
+        return jsonify({
+            'error': f'item_kind required. Choose one of: {sorted(ITEM_KINDS)}',
+            'item_kinds': sorted(ITEM_KINDS),
+            'ok': False,
+        }), 400
+    folded = str(kind_raw).strip().lower()
+    _aliases = {'app', 'utility', 'utilities', 'software', 'emu', 'experiences'}
+    if folded not in ITEM_KINDS and folded not in _aliases:
+        return jsonify({
+            'error': f'Invalid item_kind. Choose one of: {sorted(ITEM_KINDS)}',
+            'item_kinds': sorted(ITEM_KINDS),
+            'ok': False,
+        }), 400
+    kind = normalize_item_kind(kind_raw)
+
+    results = []
+    marked = 0
+    for folder_id in ids:
+        folder = db.session.get(UnmatchedFolder, folder_id)
+        if not folder:
+            results.append({'id': folder_id, 'ok': False, 'error': 'not_found'})
+            continue
+        try:
+            game = mark_unmatched_as_kind(
+                folder,
+                item_kind=kind,
+                name=(data.get('name') or None),
+                steam_app_id=None,
+                summary=(data.get('summary') or None),
+            )
+            db.session.commit()
+            results.append({
+                'id': folder_id,
+                'ok': True,
+                'game_uuid': game.uuid,
+                'name': game.name,
+                'item_kind': game.item_kind,
+            })
+            marked += 1
+        except ValueError as exc:
+            db.session.rollback()
+            results.append({'id': folder_id, 'ok': False, 'error': str(exc)})
+        except Exception as exc:
+            db.session.rollback()
+            results.append({'id': folder_id, 'ok': False, 'error': str(exc)})
+
+    return jsonify({
+        'ok': True,
+        'item_kind': kind,
+        'marked': marked,
+        'failed': sum(1 for r in results if not r.get('ok')),
+        'results': results,
+        'disk_io': False,
+    })
+
+
+@apis_bp.route('/unmatched_folders/batch/fix', methods=['POST'])
+@login_required
+@librarian_required
+def batch_fix_unmatched_duplicates():
+    """Batch duplicate triage (merge|keep|ignore). Partial success OK. No disk I/O."""
+    data = request.get_json(silent=True) or {}
+    ids, err = _parse_batch_ids(data)
+    if err:
+        return err
+
+    action = (data.get('action') or '').strip().lower()
+    if action not in VALID_DUPLICATE_FIX_ACTIONS:
+        return jsonify({
+            'error': f"Invalid action. Choose one of: {sorted(VALID_DUPLICATE_FIX_ACTIONS)}",
+            'ok': False,
+        }), 400
+
+    notes = (data.get('notes') or '')[:512] or None
+    results = []
+    fixed = 0
+    for folder_id in ids:
+        folder = db.session.get(UnmatchedFolder, folder_id)
+        if not folder:
+            results.append({'id': folder_id, 'ok': False, 'error': 'not_found'})
+            continue
+        try:
+            result = _fix_one_duplicate(folder, action, notes=notes)
+            db.session.commit()
+            results.append(result)
+            fixed += 1
+        except Exception as exc:
+            db.session.rollback()
+            results.append({'id': folder_id, 'ok': False, 'error': str(exc)})
+
+    log_system_event(
+        f"Batch duplicate fix {action} by {getattr(current_user, 'name', 'admin')}: {fixed}/{len(ids)}",
+        event_type='duplicate_fix',
+        event_level='information',
+        audit_user=getattr(current_user, 'id', None),
+    )
+
+    return jsonify({
+        'ok': True,
+        'action': action,
+        'fixed': fixed,
+        'failed': sum(1 for r in results if not r.get('ok')),
+        'results': results,
+        'disk_io': False,
+    })
+
+
+@apis_bp.route('/unmatched_folders/batch/amend', methods=['POST'])
+@login_required
+@librarian_required
+def batch_amend_unmatched_names():
+    """Batch soft-amend search_name/display_name. Partial success OK. No disk rename."""
+    data = request.get_json(silent=True) or {}
+    items = data.get('items')
+    results = []
+    amended = 0
+
+    def _amend_one(folder_id: str, payload: dict):
+        nonlocal amended
+        folder = db.session.get(UnmatchedFolder, folder_id)
+        if not folder:
+            results.append({'id': folder_id, 'ok': False, 'error': 'not_found'})
+            return
+        if not any(k in payload for k in ('search_name', 'display_name', 'name')):
+            results.append({'id': folder_id, 'ok': False, 'error': 'search_name_or_display_name_required'})
+            return
+        try:
+            changed = _apply_soft_amend(folder, payload)
+            db.session.commit()
+            results.append({
+                'id': folder_id,
+                'ok': True,
+                'search_name': _soft_name(folder.search_name),
+                'display_name': _soft_name(folder.display_name),
+                'changed': changed,
+            })
+            amended += 1
+        except Exception as exc:
+            db.session.rollback()
+            results.append({'id': folder_id, 'ok': False, 'error': str(exc)})
+
+    if isinstance(items, list) and items:
+        if len(items) > UNMATCHED_BATCH_ID_CAP:
+            return jsonify({
+                'error': f'ids cap is {UNMATCHED_BATCH_ID_CAP}',
+                'ok': False,
+                'cap': UNMATCHED_BATCH_ID_CAP,
+                'requested': len(items),
+            }), 400
+        for item in items:
+            if not isinstance(item, dict):
+                results.append({'id': None, 'ok': False, 'error': 'invalid_item'})
+                continue
+            folder_id = str(item.get('id') or '').strip()
+            if not folder_id:
+                results.append({'id': None, 'ok': False, 'error': 'id_required'})
+                continue
+            _amend_one(folder_id, item)
+    else:
+        ids, err = _parse_batch_ids(data)
+        if err:
+            return err
+        if not any(k in data for k in ('search_name', 'display_name', 'name')):
+            return jsonify({
+                'error': 'Provide search_name and/or display_name (or items[] with per-id fields)',
+                'ok': False,
+                'disk_rename': False,
+            }), 400
+        for folder_id in ids:
+            _amend_one(folder_id, data)
+
+    return jsonify({
+        'ok': True,
+        'amended': amended,
+        'failed': sum(1 for r in results if not r.get('ok')),
+        'results': results,
+        'disk_rename': False,
+        'disk_io': False,
+    })
 
 
 @apis_bp.route('/unmatched_folders/<folder_id>/fix', methods=['POST'])
@@ -283,27 +903,7 @@ def fix_duplicate_unmatched(folder_id):
     match_score = getattr(folder, 'match_score', None)
     folder_path = folder.folder_path
 
-    if action == 'merge':
-        db.session.delete(folder)
-        result_status = 'cleared'
-    elif action == 'keep':
-        folder.status = 'Unmatched'
-        result_status = 'Unmatched'
-    else:  # ignore
-        folder.status = 'Ignore'
-        result_status = 'Ignore'
-
-    fix_log = DuplicateFixLog(
-        unmatched_folder_id=folder_id,
-        folder_path=folder_path or '',
-        matched_game_uuid=matched_uuid,
-        match_reason=match_reason,
-        match_score=match_score,
-        action=action,
-        actor_user_id=getattr(current_user, 'id', None),
-        notes=notes,
-    )
-    db.session.add(fix_log)
+    result = _fix_one_duplicate(folder, action, notes=notes)
     db.session.commit()
 
     log_system_event(
@@ -313,16 +913,23 @@ def fix_duplicate_unmatched(folder_id):
         audit_user=getattr(current_user, 'id', None),
     )
 
+    fix_log = db.session.execute(
+        select(DuplicateFixLog).filter_by(
+            unmatched_folder_id=folder_id,
+            action=action,
+        ).order_by(DuplicateFixLog.created_at.desc())
+    ).scalars().first()
+
     return jsonify({
         'ok': True,
         'action': action,
         'folder_id': folder_id,
         'folder_path': folder_path,
-        'result_status': result_status,
+        'result_status': result['result_status'],
         'matched_game_uuid': matched_uuid,
         'match_reason': match_reason,
         'match_score': match_score,
-        'fix_log_id': fix_log.id,
+        'fix_log_id': fix_log.id if fix_log else None,
     })
 
 
@@ -471,28 +1078,30 @@ def open_path_info():
 @admin_required
 def export_unmatched_folders():
     """Export unmatched/duplicate/ignored folders as CSV or JSON for offline triage."""
-    status = request.args.get('status', 'all')
-    if status not in VALID_UNMATCHED_EXPORT_STATUSES:
-        return jsonify({'error': f"Invalid status. Choose one of: {sorted(VALID_UNMATCHED_EXPORT_STATUSES)}"}), 400
+    filters, err = _parse_unmatched_list_filters()
+    if err:
+        return err
 
     fmt = (request.args.get('format', 'csv') or 'csv').lower()
     if fmt not in ('csv', 'json'):
         return jsonify({'error': "Invalid format. Choose 'csv' or 'json'."}), 400
 
-    query = (
-        select(UnmatchedFolder, Library.name.label('library_name'), Library.platform)
-        .join(Library)
-        .order_by(UnmatchedFolder.status.desc(), UnmatchedFolder.folder_path.asc())
-    )
-    if status != 'all':
-        query = query.filter(UnmatchedFolder.status == status)
+    rows = _query_unmatched_rows(filters)
+    folders = [folder for folder, _ln, _pl in rows]
+    games_by_uuid, cover_by_uuid = _prefetch_matched_game_maps(folders)
 
-    rows = db.session.execute(query).all()
-    export_rows = []
-    for folder, library_name, platform in rows:
-        # Export shares the list row shape (why_unmatched + suggested_kind + folder_name).
-        export_rows.append(_unmatched_list_row(folder, library_name, platform))
+    export_rows = [
+        _unmatched_list_row(
+            folder,
+            library_name,
+            platform,
+            games_by_uuid=games_by_uuid,
+            cover_by_uuid=cover_by_uuid,
+        )
+        for folder, library_name, platform in rows
+    ]
 
+    status = filters['status']
     filename_status = status if status != 'all' else 'all'
 
     if fmt == 'json':
@@ -504,14 +1113,26 @@ def export_unmatched_folders():
 
     buffer = io.StringIO()
     fieldnames = [
-        'id', 'folder_path', 'folder_name', 'status', 'library_name', 'platform_name',
+        'id', 'folder_path', 'folder_name', 'search_name', 'display_name',
+        'status', 'library_uuid', 'library_name', 'platform_name',
         'matched_game_uuid', 'match_reason', 'match_score',
+        'matched_game_name', 'matched_game_path', 'matched_game_cover_url', 'matched_game_igdb_id',
         'suggested_kind', 'suggested_kind_label', 'suggested_candidate_name',
         'why_unmatched', 'unmatched_reason',
     ]
+    flat_rows = []
+    for row in export_rows:
+        flat = dict(row)
+        mg = flat.pop('matched_game', None) or {}
+        flat['matched_game_name'] = mg.get('name')
+        flat['matched_game_path'] = mg.get('path')
+        flat['matched_game_cover_url'] = mg.get('cover_url')
+        flat['matched_game_igdb_id'] = mg.get('igdb_id')
+        flat_rows.append(flat)
+
     writer = csv.DictWriter(buffer, fieldnames=fieldnames, extrasaction='ignore')
     writer.writeheader()
-    writer.writerows(export_rows)
+    writer.writerows(flat_rows)
 
     return Response(
         buffer.getvalue(),
@@ -533,10 +1154,13 @@ def reclassify_duplicate_unmatched():
     changed = []
     kept = []
     games = db.session.execute(select(Game)).scalars().all()
+    dupe_thr = resolve_scan_match_policy().get('dupe_title_threshold')
     for folder in rows:
         is_true = False
         for game in games:
-            if should_mark_as_duplicate(game, folder.folder_path):
+            if should_mark_as_duplicate(
+                game, folder.folder_path, title_threshold=dupe_thr,
+            ):
                 is_true = True
                 break
         if is_true:

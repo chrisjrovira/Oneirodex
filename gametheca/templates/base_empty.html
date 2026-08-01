@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}GameTheca{% endblock %}</title>
+    {% include 'partials/favicon.html' %}
     {% block styles %}
     <script src="{{ url_for('static', filename='vendor/jquery/3.7.1/jquery.min.js') }}"></script>
     {# Local Bootstrap — no CDN. Theme CSS still needs Reset Themes after deploy. #}

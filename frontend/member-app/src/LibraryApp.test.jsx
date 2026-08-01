@@ -133,10 +133,10 @@ test('page change closes an open card menu before the next page loads', async ()
 
   await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
   await user.click(screen.getByRole('button', { name: /open actions for game a/i }))
-  expect(screen.getByRole('link', { name: 'Download' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Download' })).toBeInTheDocument()
 
   await user.click(screen.getByLabelText(/^Next$/i))
-  expect(screen.queryByRole('link', { name: 'Download' })).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Download' })).toBeNull()
 })
 
 test('selection bar Select page, Favorite bulk toast, Esc clears', async () => {
@@ -225,4 +225,63 @@ test('selection bar Select page, Favorite bulk toast, Esc clears', async () => {
 
   await user.keyboard('{Escape}')
   expect(screen.queryByText('2 selected')).toBeNull()
+})
+
+test('live title search sends name browse param after debounce', async () => {
+  const user = userEvent.setup()
+  const fetchMock = vi.fn((url) => {
+    if (url.startsWith('/browse_games?')) {
+      return jsonResponse({
+        games: [
+          {
+            uuid: 'a',
+            name: 'Celeste',
+            cover_url: '/static/x',
+            is_favorite: false,
+            has_local_override: false,
+            is_vr: false,
+            genres: [],
+          },
+        ],
+        pages: 1,
+        current_page: 1,
+        total: 1,
+      })
+    }
+    return jsonResponse([])
+  })
+  vi.stubGlobal('fetch', fetchMock)
+
+  renderLibrary(
+    <LibraryApp
+      initialConfig={{
+        perPage: 20,
+        showPlayStatus: false,
+        isAdmin: false,
+        libraryCount: 1,
+        gamesCount: 1,
+      }}
+    />,
+  )
+
+  await waitFor(() => expect(screen.getByText('Celeste')).toBeInTheDocument())
+
+  const input = screen.getByRole('searchbox', { name: /search library by title/i })
+  await user.type(input, 'cel')
+
+  await waitFor(
+    () => {
+      const named = fetchMock.mock.calls
+        .map(([url]) => String(url))
+        .filter((url) => url.startsWith('/browse_games?'))
+        .some((url) => {
+          const qs = new URL(url, 'http://local').searchParams
+          return qs.get('name') === 'cel'
+        })
+      expect(named).toBe(true)
+    },
+    { timeout: 2500 },
+  )
+
+  vi.unstubAllGlobals()
 })

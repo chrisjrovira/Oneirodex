@@ -1,9 +1,9 @@
 /** Platform family skins for Style B+C system-aware chrome. */
 
 const NINTENDO = new Set([
-  'NES', 'SNES', 'NGC', 'N64', 'GB', 'GBA', 'GBC', 'NDS', 'VB', 'WII', 'N3DS',
+  'NES', 'SNES', 'NGC', 'N64', 'GB', 'GBA', 'GBC', 'NDS', 'VB', 'WII', 'N3DS', 'SWITCH',
 ])
-const SONY = new Set(['PSX', 'PS2', 'PS3', 'PS4', 'PS5', 'PSVITA'])
+const SONY = new Set(['PSX', 'PS2', 'PS3', 'PS4', 'PS5', 'PSP', 'PSVITA'])
 const XBOX = new Set(['XBOX', 'X360', 'XONE', 'XSX'])
 const SEGA = new Set([
   'SEGA_MD', 'SEGA_MS', 'SEGA_CD', 'SEGA_32X', 'SEGA_GG', 'SEGA_SATURN', 'SEGA_DC',
@@ -12,7 +12,7 @@ const ATARI = new Set([
   'ATARI_7800', 'ATARI_5200', 'ATARI_2600', 'LYNX', 'JAGUAR',
   'PCE', 'PCFX', 'NGP', 'WS', 'COLECO', 'THREEDO', 'VECTREX',
   'VICE_X64SC', 'VICE_X128', 'VICE_XVIC', 'VICE_XPLUS4', 'VICE_XPET',
-  'NEOGEO_CD', 'INTV', 'CHAF', 'O2EM',
+  'NEOGEO_CD', 'NEOGEO', 'INTV', 'CHAF', 'O2EM', 'ARCADE',
 ])
 const PC = new Set(['PCWIN', 'PCDOS', 'MAC', 'OTHER'])
 

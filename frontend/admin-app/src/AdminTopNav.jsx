@@ -5,6 +5,7 @@ import { resolveAdminPage } from './pages'
 const SECTION_HOME = {
   dashboard: { href: '/admin/dashboard', label: 'Home' },
   libraries: { href: '/libraries', label: 'Libraries home' },
+  extensions: { href: '/libraries', label: 'Libraries home' },
   scans: { href: '/scan_management', label: 'Scans home' },
   settings: { href: '/admin/settings', label: 'Settings home' },
   themes: { href: '/admin/themes', label: 'Themes' },

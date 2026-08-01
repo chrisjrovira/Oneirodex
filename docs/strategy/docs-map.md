@@ -33,7 +33,7 @@
 | Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
 | Emulation coverage (Wave 19) | `docs/strategy/emulation-coverage.md` | Have |
-| Cheats (Wave 3 stance) | `docs/strategy/cheats.md` | Have — GM taxonomy: `.cht` canonical · easy-create · no scrapes |
+| Cheats (Wave 3 stance · Wave 19 surface) | `docs/strategy/cheats.md` | Have — GM taxonomy: `.cht` canonical · `cheat_surface` RetroArch-only · easy-create · no Class A trainer brands · no scrapes |
 | UI rebuild plan | `docs/strategy/ui.md` | Have |
 | Product roadmap | `docs/strategy/roadmap.md` | Have |
 | Execution progress | `docs/strategy/progress.md` | Have |
@@ -42,9 +42,9 @@
 | Admin hybrid inventory | `docs/strategy/admin-hybrid.md` | Have |
 | Upgrade notes (0.2 → 1.0) | `docs/strategy/upgrade-notes-1.0.md` | Have |
 | Game Master 1.0 domain sign-off | `docs/strategy/v1-gamemaster-signoff.md` | Have (gate 7) |
-| Folder → IGDB name-resolution rules | `docs/strategy/name-resolution.md` | Have — Stage A0–A8 **Done**; A9–A14 classified; glued VR peel for software titles; Backend DoD checked; code uncommitted until human ships |
-| Store metadata identify · ownership (Meta/Quest+) | `docs/strategy/store-metadata-identify.md` | Have — META-1 + **gaming software/emulator/tool** full `item_kind` loop (browse filter · mark_kind · badges · SPA Kind chips); unmatched `suggested_kind` denormalized (Wave 4) + legacy **backfill** + `why_unmatched` (Wave 5 Done); Steam software identify; DRM register-only; no LibraryPlatform.QUEST |
-| Console / emulator library layout | `docs/strategy/console-gaming-libraries.md` | Have — per-leaf libs · skip-dir DoD · no depth-3 walker |
+| Folder → IGDB name-resolution rules | `docs/strategy/name-resolution.md` | Have — Stage A0–A14 **Done**; **W20-2 transform trail Done**; **B15–B20 console ROM peel Done** (`parse_console_rom_label` · GB/GBC files pilot · shared DAT peel · C12 article-reorder · propose-only · **QA PASS 42/42**); code uncommitted until human ships |
+| Store metadata identify · ownership (Meta/Quest+) | `docs/strategy/store-metadata-identify.md` | Have — META-1 + **gaming software/emulator/tool** full `item_kind` loop (browse filter · mark_kind · badges · SPA Kind chips); unmatched `suggested_kind` denormalized (Wave 4) + legacy **backfill** + `why_unmatched` (Wave 5 Done); Steam software identify; **W20-3 enrich parity Done** (manual IGDB taxonomy upsert · Steam genres/modes); **W20-5a Stage D Done** (IGDB miss → Steam App ID / exact Steam / exact GOG custom before Unmatched · pytest 12/12); DRM register-only; no LibraryPlatform.QUEST |
+| Console / emulator library layout | `docs/strategy/console-gaming-libraries.md` | Have — per-leaf libs · skip-dir Done (W20-7 #4 · extended globs + repack regex + Admin `re:`/`dir:` · **QA PASS 56/56**) · no depth-3 walker |
 | Console / emulator tree → libraries | `docs/strategy/console-gaming-libraries.md` | Have — per-platform leaf libs; exclude emus/tools |
 | Docs map (this file) | `docs/strategy/docs-map.md` | Have |
 | Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) |
@@ -89,9 +89,9 @@
 
 | Guide | Status | Notes |
 |---|---|---|
-| Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — scan queue/force · unmatched · **Scanning filters** (name tag vs `dir:` skip · prefix globs · Reset Themes for scanjobs CSS/JS) |
+| Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — scan queue/force · unmatched · Wave 18 scan job timing/filters (honest ETA null when stalled) · Scan Jobs UI localStorage filters · **Scanning filters** (name tag vs `dir:` skip · prefix globs · Reset Themes for scanjobs CSS/JS) · **W20-1 Propose leaf libraries** (Libraries `#propose-leaf` + Library tools · propose-only · Confirm → `/admin/library/add` + first scan) · **W20-1b Import CSV/JSON** (Libraries `#import-leaf` + Library tools Import tab · preview-only · same Confirm create · soft-degrade 404) · **W20-2** `transforms[]` Why expander · **W20-5a Stage D** IGDB-miss → Steam/GOG custom before Unmatched · **W20-4** Scan/match policy **Done** (UI + BE `GET|PUT /api/admin/scan-match/config`) |
 | Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` 10 · Reset after Wave 2d · loading motifs on volume |
-| Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — feature defaults ON · OIDC opt-in · malware block-on-hit · ClamAV · native Arr indexers (add/bulk/presets) + Prowlarr/Jackett |
+| Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — feature defaults ON · OIDC opt-in · malware block-on-hit · ClamAV · native Arr indexers (add/bulk/presets) + Prowlarr/Jackett · **W20-4** Scan/match Settings **Done** (`/admin/scan_match` + `GET|PUT /api/admin/scan-match/config` · defaults 0.92/0.08/0.85/conservative) |
 | Discover sections (custom zones) | Have | [discover-sections.md](../admin/discover-sections.md) — manual pick / library / platform / genre zones, reorder + hide built-ins |
 | Support inbox | Have | [support-inbox.md](../admin/support-inbox.md) |
 | Ops summary (`services` + `scans` contract) | Have | [ops-summary.md](../admin/ops-summary.md) — Grafana enrich (`load_avg` / process / db_ping / readyz) · two-fold `issues.items` (`category` action\|warning\|info; **disk = info**) · LiveKit · malware · companions · queues · scan counters |
@@ -100,8 +100,8 @@
 | First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 10 |
 | Propose-only scan & proposals | Create | |
 | Library Doctor & rename templates | Create | |
-| Unmatched & false duplicates | Have | [libraries-and-scans.md#unmatched-folders](../admin/libraries-and-scans.md#unmatched-folders) — Dupe glance · merge/keep/ignore · OpenPathModal (no Auto Scan) · fix search · CSV/JSON export · PC extras sidecar |
-| Identify workbench | Update | |
+| Unmatched & false duplicates | Have | [libraries-and-scans.md#unmatched-folders](../admin/libraries-and-scans.md#unmatched-folders) — Wave 17: filters · batch · soft **Amend naming** · nested `matched_game` / **Dupe of** · **W20-2** `transforms[]` + **Name transform trail** expander (Dupe glance + scanjobs; soft-degrade) · Dupe glance · merge/keep/ignore · OpenPathModal · export · PC extras |
+| Identify workbench | Have | W20-3 enrich parity — Manual Identify upserts IGDB taxonomy · Steam genres/modes — [store-metadata-identify.md](store-metadata-identify.md) · [libraries-and-scans.md](../admin/libraries-and-scans.md) |
 | Freshness bulk & inbox | Update | |
 | Image queue / turbo downloads | Have | [libraries-and-scans.md#image-queue](../admin/libraries-and-scans.md#image-queue) — thumbnails, group by game, retry failed |
 | Users, invites, whitelist | Update | Classic Jinja + React hubs |
@@ -165,7 +165,7 @@
 
 Capture at **1920×1080** and **1280×800**; dark default + one alternate preset. Store under `docs/media/screenshots/`; sync README slots under `docs/assets/readme/` (live PNG only — **retired** illustrative `hero-banner.jpg` / `screenshot-*.jpg`).
 
-Checklist: [../assets/readme/CAPTURE.md](../assets/readme/CAPTURE.md) — README **live** for hero, Library, Systems; **Capture needed** (Waves **4–14 shipped on main @ c35a927b**) — `screenshot-chat.png` (Wave 2b–3 slide-out · Archive/Leave · muted badge) + Calendar/Updates densify shots + Library multi-select sticky (Select page · partial toasts · Waves 9–11 Add to wishlist / Play status / More freshness) + Wave 12 theme swatches / More densify / fair factors · Library Refresh covers · Admin `/admin/quality_profiles` SPA · Admin `/admin/storage` SPA · **details versions Missing-on-disk / Remove missing** + Ops library health MetricTile grade tone / poor factors danger edge + refresh Library/Systems/hero if Wave **2d** presets drifted; run when `/login`+`/library` return 200. Docs media **done** for Ops Services, Library free ROMs, Systems, Ctrl/Cmd+K, Features, health JSON, and tour video (`docs/media/`).
+Checklist: [../assets/readme/CAPTURE.md](../assets/readme/CAPTURE.md) — README **live** for hero, Library, Systems; **Capture needed** (Waves **4–14 shipped on main @ c35a927b** · Waves **15–19** uncommitted) — `screenshot-chat.png` (**Wave 16 full-room**) + **Wave 17 Unmatched** (filters · batch bar · Amend naming · Dupe of) + **Wave 18** Scan jobs timing/filters + details cover **⋮** + **Wave 19** Edit Images aurora · Cheats gate (retroarch-only) · full path wrap · chip underline/scale + Calendar/News · Library MISSING/multi-select · Admin Manual Queue/Force · prior W9–14 · theme refresh; run when `/login`+`/library` return 200. Docs media **done** for Ops Services, Library free ROMs, Systems, Ctrl/Cmd+K, Features, health JSON, and tour video (`docs/media/`).
 
 **Refresh rule:** Re-run `scripts/capture_docs_media.py` (or copy freshest shots into readme slots) on every commit/ship pass that touches member/admin UI.
 
@@ -178,8 +178,8 @@ Also: Friends companion dock + `/social-companion` pop-out, Support report form,
 | Area | Action |
 |---|---|
 | README | Synced for 0.2.0 — **live PNG screenshots** (hero · Library · Systems) · Chat Capture **needed** · feature defaults ON · OIDC opt-in · ClamAV profile · Friends companion · no Discord |
-| [progress.md](progress.md) | Jul 30 — **Waves 4–14 shipped on main @ c35a927b** (`feat: ship Waves 4-14 polish through storage and versions`) · W14b QA DoD met (versions artwork **7/7** · GameDetails+detailsMedia **15/15**) · Bootstrap/vendor in tree · live `:5006` **BLOCKED (env)** OK · **Next:** Capture when `:5006` healthy · Unraid free disk → rebuild · Reset Themes · app restart for `path_status` · do **not** invent Wave 15 |
-| CHANGELOG | Unreleased catch-up for waves 14–17 + malware / Features; bump when cutting 0.2.0 |
+| [progress.md](progress.md) | Jul 31 — **Wave 21 code + QA Done** · pytest **69/69** · vitest **27/27** · SHIP-OK automated · live `:5006` BLOCKED (env) OK · Next: **Ops** schema restart / ship-harden / DATs / keys / backfill / Neo Geo / `:5006` → **human ship** **15–20 + W21** · smoking gun: `(digits)` ≠ Steam App IDs · Waves **4–14** @ c35a927b · uncommitted until ship · no Class A · **Canvas: synced** |
+| CHANGELOG | Unreleased catch-up for waves 14–18 + indexer / Features; bump when cutting 0.2.0 |
 | `.env.example` | Includes LiveKit + SUPPORT_GITHUB_* + malware scan |
 | In-app Help (`/help`) | Accordion Help · Chat slide-out · Preferences sectioned · Report Context/Logs collapsed · News tabs · Notifications dense · API token urlsafe/`-`/`_` + HTTP Copy · Ctrl/Cmd+K · Signals · Friends · no Discord |
 | Discord | Excised from product — do not reintroduce |
@@ -206,10 +206,12 @@ docs/
 
 ## 9. Immediate next documentation sprint
 
-1. Capture when `:5006` healthy (**Waves 4–14 shipped @ c35a927b**) — [CAPTURE.md](../assets/readme/CAPTURE.md) (README live PNGs + `docs/media/` base set; **Chat + Calendar/Updates + Wave 9–13 multi-select sticky / Select page / W11 wishlist+play-status / W12 theme swatches / More densify / Refresh covers / Admin `/admin/quality_profiles` · `/admin/storage` · details versions Missing-on-disk / Remove missing + Wave 2d theme refresh needed** until login healthy)  
+1. Capture when `:5006` healthy (**Waves 4–14 on main · Waves 15–20 + W21 uncommitted**) — [CAPTURE.md](../assets/readme/CAPTURE.md) (README live PNGs + Wave 16 full-room Chat · **Wave 17 Unmatched** · **Wave 18** Scan jobs · **Wave 19** Edit Images / Cheats · W20 Identify chips + unmatched filters · **W21 Stage E chips** · theme refresh)  
 2. ~~Human store logo assets~~ **Done** — theme-adaptive store marks (Ubisoft SVG; others PNG masks) — [library-and-systems.md](../user/library-and-systems.md)  
-3. Browser play platform matrix guide refresh  
+3. Browser play platform matrix guide refresh (Wave 15c artistic rooms + firmware upload/`EMULATOR_BIOS_PATH`)  
 4. Remaining Create runbooks as incidents hit production  
-5. CHANGELOG bump when cutting 0.2.0 (include Member UI + Ops Pass A–F + Wave 1+2 feedback fixes + Waves 4–14)  
+5. CHANGELOG bump when cutting 0.2.0 (include Waves 4–14 + Waves 15–21 polish)  
 6. Game details / freshness badges user guide (**Create**)  
-7. Human: Unraid `git pull` + rebuild, **Reset Default Themes**, and **free disk space** (host reported ~99% full) before the pull/rebuild — see [progress.md](progress.md) Operator-owned
+7. Human: **Reset Default Themes** (scanjobs + identify JS + `stageECandidates.js`) · schema restart (+ `mobygames_api_key` + `thegamesdb_api_key` + Stage E JSON columns) · set Moby/TGDB keys · upload DATs · **ship** Waves 15–20 + **W21** harden **before** any Stage D App-ID / `(digits)` rescan · Next: **Ops** bring `:5006` up · Neo Geo re-leaf — see [progress.md](progress.md)  
+
+8. ~~Favicon Class A scrub~~ **Done** (uncommitted; hard-refresh after ship) — see [progress.md](progress.md)

@@ -16,6 +16,10 @@ from gametheca.models import (
     ChatMessageReaction,
     User,
 )
+from gametheca.utils.chat_attachments import (
+    attachments_for_messages,
+    bind_attachments_to_message,
+)
 from gametheca.utils.custom_emoji import custom_reaction_keys
 from gametheca.utils.notifications import notify_user
 from gametheca.utils.rbac import normalize_role, role_at_least
@@ -288,6 +292,7 @@ def list_messages(
         )
         rows.reverse()
     reaction_map = _reactions_for_messages([m.id for m in rows], viewer_user_id=viewer_user_id)
+    attachment_map = attachments_for_messages([m.id for m in rows])
     author_ids = {msg.user_id for msg in rows}
     authors: dict[int, User] = {}
     if author_ids:
@@ -304,6 +309,7 @@ def list_messages(
                 author_name=getattr(author, 'name', None),
                 reactions=meta['reactions'],
                 mine=meta['mine'],
+                attachments=attachment_map.get(msg.id, []),
             )
         )
     return out
@@ -380,8 +386,12 @@ def search_messages(user: User, query: str, *, limit: int = 20) -> list[dict]:
         if channel.kind == 'dm' and not _is_member(channel.id, user.id):
             continue
         author = db.session.get(User, msg.user_id)
+        att = attachments_for_messages([msg.id]).get(msg.id, [])
         out.append({
-            'message': msg.to_dict(author_name=getattr(author, 'name', None)),
+            'message': msg.to_dict(
+                author_name=getattr(author, 'name', None),
+                attachments=att,
+            ),
             'channel': channel.to_dict(),
         })
     return out
@@ -393,12 +403,17 @@ def post_message(
     body: str,
     *,
     parent_message_id: int | None = None,
+    attachment_ids: list[int] | None = None,
 ) -> ChatMessage:
     text = (body or '').strip()
-    if not text:
+    ids = list(attachment_ids or [])
+    if not text and not ids:
         raise ValueError('Message required')
-    if len(text) > 4000:
+    if text and len(text) > 4000:
         raise ValueError('Message too long')
+    if not text:
+        # Attachment-only messages use a stable placeholder body for search/notify.
+        text = ''
     if not user_can_access_channel(user, channel):
         raise PermissionError('Forbidden')
     ensure_channel_membership(channel, user)
@@ -415,7 +430,16 @@ def post_message(
         parent_message_id=parent_id,
     )
     db.session.add(msg)
-    db.session.commit()
+    db.session.flush()
+    if ids:
+        bind_attachments_to_message(
+            channel=channel,
+            user=user,
+            message_id=msg.id,
+            attachment_ids=ids,
+        )
+    else:
+        db.session.commit()
     _fanout_mentions_and_dm(channel, user, msg)
     return msg
 

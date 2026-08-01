@@ -410,7 +410,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 if (!data.results || !data.results.length) {
-                    resultsContainer.textContent = `No ${source.toUpperCase()} results found`;
+                    resultsContainer.textContent =
+                        (typeof data.note === 'string' && data.note.trim()) ||
+                        (data.needs_key && data.key_configured === false
+                            ? 'API key not configured — empty results.'
+                            : `No ${source.toUpperCase()} results found`);
                     return;
                 }
                 data.results.forEach(hit => {
@@ -455,10 +459,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchSteamBtn = document.querySelector('#search-steam');
     const searchGogBtn = document.querySelector('#search-gog');
     const searchRawgBtn = document.querySelector('#search-rawg');
+    const searchMobygamesBtn = document.querySelector('#search-mobygames');
+    const searchThegamesdbBtn = document.querySelector('#search-thegamesdb');
     if (searchSteamBtn) searchSteamBtn.addEventListener('click', () => searchExternalSource('steam'));
     if (searchGogBtn) searchGogBtn.addEventListener('click', () => searchExternalSource('gog'));
     if (searchRawgBtn) searchRawgBtn.addEventListener('click', () => searchExternalSource('rawg'));
+    if (searchMobygamesBtn) searchMobygamesBtn.addEventListener('click', () => searchExternalSource('mobygames'));
+    if (searchThegamesdbBtn) searchThegamesdbBtn.addEventListener('click', () => searchExternalSource('thegamesdb'));
     
+
     igdbIdInput.addEventListener('input', function() {
         this.value = this.value.replace(/\D/g, '');
         checkFieldsAndToggleSubmit();

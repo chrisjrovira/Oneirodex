@@ -21,6 +21,7 @@ import { GameGridSkeleton } from './components/GameGridSkeleton'
 import { LibrarySelectionBar } from './components/LibrarySelectionBar'
 import { PaginationBar } from './components/PaginationBar'
 import { createTranslator } from './i18n'
+import { isPathMissing } from './utils/badgeSignals'
 import { batchItemUuids, summarizeBatchOutcome } from './utils/batchOutcome'
 import { readLibraryFilters, writeLibraryFilters } from './utils/cookies'
 import { showToast } from './utils/toast'
@@ -60,6 +61,10 @@ function filtersFromSearchParams(searchParams) {
   if (theme) {
     next.theme = theme
   }
+  const name = (searchParams.get('name') || searchParams.get('q') || '').trim()
+  if (name) {
+    next.name = name
+  }
   return next
 }
 
@@ -69,7 +74,9 @@ function searchParamsHaveLibraryFilters(searchParams) {
     searchParams.has('genre') ||
     searchParams.has('theme') ||
     searchParams.has('item_kind') ||
-    searchParams.has('content_kind')
+    searchParams.has('content_kind') ||
+    searchParams.has('name') ||
+    searchParams.has('q')
   ) {
     return true
   }
@@ -123,6 +130,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
         current.genre === fromUrl.genre &&
         current.theme === fromUrl.theme &&
         current.item_kind === fromUrl.item_kind &&
+        current.name === fromUrl.name &&
         BADGE_FILTER_PARAMS.every((param) => current[param] === fromUrl[param])
       if (same) {
         return current
@@ -236,6 +244,14 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     setPage(1)
     setFilters(nextFilters)
     setFiltersOpen(false)
+    clearSelection()
+  }
+
+  /** Live title search — same filter apply, keep mobile LHN open while typing. */
+  const applyLiveSearch = (nextFilters) => {
+    writeLibraryFilters(nextFilters)
+    setPage(1)
+    setFilters(nextFilters)
     clearSelection()
   }
 
@@ -491,7 +507,14 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   }
 
   const pages = Math.max(result?.pages ?? 1, 1)
-  const games = result?.games ?? []
+  // Client filter when Backend browse param is not ready yet; still passes path_missing=1 to API.
+  const games = useMemo(() => {
+    const rows = result?.games ?? []
+    if (filters.path_missing !== '1') {
+      return rows
+    }
+    return rows.filter((game) => isPathMissing(game))
+  }, [result?.games, filters.path_missing])
   const showSkeleton = loading && !result
   const showRefreshing = loading && Boolean(result)
   const hidePlatformChip = Boolean(filters.library_platform)
@@ -601,6 +624,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
       <FilterBar
         filters={filters}
         onApply={applyFilters}
+        onLiveSearch={applyLiveSearch}
         onClear={clearFilters}
         t={t}
       />

@@ -22,6 +22,7 @@ from gametheca.utils.cover_url import resolve_game_cover_url
 from gametheca.utils.functions import format_size, get_url_icon, sanitize_string_input
 from gametheca.utils.lifecycle import web_lifecycle_fields
 from gametheca.utils.play_url import browse_play_fields, library_platform_key
+from gametheca.utils.rbac import normalize_role, role_at_least
 from gametheca.utils.rom_language import preferred_locale_matches
 from gametheca.utils.secondary_scrapers import game_card_flags
 
@@ -305,7 +306,10 @@ def build_game_details_payload(game, user) -> dict:
             'download_url': f'/download_other/extra/{game.uuid}/{extra.uuid}',
         })
 
-    is_admin = bool(getattr(user, 'role', None) == 'admin')
+    role = normalize_role(getattr(user, 'role', None) if user is not None else None)
+    is_admin = role == 'admin'
+    # Librarians/admins who can Edit Images also see full server disk paths.
+    show_disk_paths = bool(user is not None and role_at_least(role, 'librarian'))
     payload = {
         'id': game.id,
         'uuid': game.uuid,
@@ -420,7 +424,7 @@ def build_game_details_payload(game, user) -> dict:
             client_state=lifecycle_map.get(game.uuid),
         ),
     }
-    if is_admin:
+    if show_disk_paths:
         disk = getattr(game, 'full_disk_path', None) or None
         payload['full_disk_path'] = disk
         payload['server_path'] = disk

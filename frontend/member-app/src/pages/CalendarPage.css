@@ -1,4 +1,4 @@
-/* Release calendar — News-style dense list; window controls; no fake card clutter */
+/* Release calendar — List / Month / Agenda; aurora densify; no card clutter */
 
 .gt-calendar__header {
   display: flex;
@@ -11,6 +11,43 @@
 
 .gt-calendar__header .gt-more-page__lede {
   margin-bottom: 0;
+}
+
+.gt-calendar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.65rem 1rem;
+}
+
+.gt-calendar__views {
+  display: inline-flex;
+  flex-wrap: wrap;
+  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.gt-calendar__views button {
+  padding: 0.35rem 0.7rem;
+  border: none;
+  background: transparent;
+  color: var(--gt-text-muted, #9aa3b2);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.gt-calendar__views button + button {
+  border-left: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+}
+
+.gt-calendar__views button.is-active,
+.gt-calendar__views button:hover,
+.gt-calendar__views button:focus-visible {
+  color: var(--gt-accent, #2fd67b);
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 12%, transparent);
+  outline: none;
 }
 
 .gt-calendar__window {
@@ -131,9 +168,238 @@
   color: var(--gt-text-muted, #9aa3b2);
 }
 
+/* —— Month grid —— */
+
+.gt-calendar__month {
+  display: grid;
+  gap: 1rem;
+}
+
+.gt-calendar__month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.gt-calendar__month-label {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: var(--gt-text, #f2f4f8);
+}
+
+.gt-calendar__nav-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 85%, transparent);
+  background: color-mix(in srgb, var(--gt-surface, #141820) 88%, transparent);
+  color: var(--gt-text, #f2f4f8);
+  font: inherit;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gt-calendar__nav-btn:hover,
+.gt-calendar__nav-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+  color: var(--gt-accent, #2fd67b);
+  outline: none;
+}
+
+.gt-calendar__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.gt-calendar__weekday-row,
+.gt-calendar__day-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.2rem;
+}
+
+.gt-calendar__weekday {
+  padding: 0.25rem 0.15rem;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-calendar__day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.2rem;
+  min-height: 3.1rem;
+  padding: 0.35rem 0.2rem 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gt-text, #f2f4f8);
+  font: inherit;
+  cursor: pointer;
+}
+
+.gt-calendar__day.is-out {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.gt-calendar__day.has-releases {
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 8%, transparent);
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 22%, transparent);
+}
+
+.gt-calendar__day.is-selected {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 16%, transparent);
+}
+
+.gt-calendar__day:not(.is-out):hover,
+.gt-calendar__day:not(.is-out):focus-visible {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 40%, transparent);
+  outline: none;
+}
+
+.gt-calendar__day-num {
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.gt-calendar__markers {
+  display: flex;
+  gap: 0.15rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 0.4rem;
+}
+
+.gt-calendar__dot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: var(--gt-accent, #2fd67b);
+}
+
+.gt-calendar__day-panel {
+  padding-top: 0.35rem;
+  border-top: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 70%, transparent);
+}
+
+.gt-calendar__day-panel-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-calendar__day-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.gt-calendar__day-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.65rem;
+  padding: 0.45rem 0.1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 55%, transparent);
+}
+
+/* —— Agenda (by week) —— */
+
+.gt-calendar__agenda {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.gt-calendar__agenda-week {
+  margin: 0;
+}
+
+.gt-calendar__agenda-label {
+  margin: 0 0 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gt-accent, #2fd67b);
+}
+
+.gt-calendar__agenda-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gt-calendar__agenda-row {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 0.65rem 0.85rem;
+  align-items: baseline;
+  padding: 0.5rem 0.1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 55%, transparent);
+  position: relative;
+  padding-left: 0.85rem;
+}
+
+.gt-calendar__agenda-row::before {
+  content: '';
+  position: absolute;
+  left: 0.15rem;
+  top: 0.85rem;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 70%, transparent);
+}
+
+.gt-calendar__agenda-row time {
+  font-size: 0.8rem;
+  color: var(--gt-text-muted, #9aa3b2);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .gt-calendar__day {
+    min-height: 2.6rem;
+    padding: 0.25rem 0.1rem 0.3rem;
+  }
+
+  .gt-calendar__day-num {
+    font-size: 0.78rem;
+  }
+}
+
 @media (max-width: 520px) {
-  .gt-calendar__row {
+  .gt-calendar__row,
+  .gt-calendar__agenda-row {
     grid-template-columns: 1fr;
     gap: 0.2rem;
+  }
+
+  .gt-calendar__agenda-row {
+    padding-left: 0.85rem;
   }
 }

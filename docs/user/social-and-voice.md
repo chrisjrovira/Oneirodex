@@ -10,7 +10,7 @@ Household social is first-party (no third-party chat webhooks). Optional voice u
 | Presence / activity | **More → Activity** | Who’s online / recent play |
 | Profiles | `/members/<id>` | From friends / activity |
 | Notifications | **More → Notifications** | Dense inbox with unread filter; alert prefs folded under **Alert preferences**; optional email for mentions/DMs |
-| Chat (DMs + channels) | Left slide-out · **More → Chat** · Chat pill · `/chat` deep-link | Rooms · messages · composer · create room · reactions · search · reply · mute · **Archive** / **Leave** (thread header) |
+| Chat (DMs + channels) | Left slide-out · **More → Chat** · Chat pill · `/chat` deep-link | Full room: channel rail · thread · composer (emoji · attach) · reactions · search · reply · mute · **Archive** / **Leave** · **Voice** / **Screenshare** header entry · **Expand** for a wider panel |
 | Voice lobby | Activity (+ Big Picture party) | LiveKit; **spectator** = listen-only token |
 | Community link | Preferences / More | BYO Stoat or Matrix URL if admin set it |
 | Report issue | **More → Report issue** | Title required; symptom/logs optional · Context/Logs collapsed · ticket → admin inbox (+ GitHub when configured) |
@@ -32,10 +32,13 @@ Household social is first-party (no third-party chat webhooks). Optional voice u
 ## Chat slide-out
 
 - Library UI shows a **Chat** pill (bottom-left). **More → Chat** and Ctrl/Cmd+K → Chat open the same **left slide-out** — TopNav and the page underneath stay available.
-- Layout: room list (channels + DMs) · message pane · composer. Use **More** in the room list for search and open-DM. **Add** creates a household room.
+- Layout reads as a **full household room**: denser channel rail (Channels + Direct) · active thread · composer. Use **More** in the room list for search and open-DM. **Add** creates a household room. **Expand** / **Compact** widens the panel without leaving the library.
+- Composer: **emoji** picker (household fixed + admin custom set) · **Attach** (upload then send with `attachment_ids`). Soft-disables with a hint if the upload route is missing or the account is a **child**. Message bubbles render `attachments` (image thumb + download link).
+- Thread header: **Voice** and **Screenshare** open the LiveKit entry panel (child accounts: audio OK; camera/screenshare may be rejected by the server). Also **Mute** / **Leave** / **Archive**.
 - Dismiss with ×, the dimmed scrim, or Esc; reopen from the pill or More anytime. Open preference is remembered in localStorage.
 - `/chat` deep-links open the slide-out and replace to Library (no orphan full-page chat shell).
 - Friends dock **Chat** / DM actions open this panel in place (standalone `/social-companion` still uses `/chat` deep-link).
+- No Discord bots, webhooks, or Discord branding — native GameTheca chat only.
 
 ## Mute a channel or DM
 
@@ -56,6 +59,13 @@ Household social is first-party (no third-party chat webhooks). Optional voice u
 - Click an emoji under a message to toggle your reaction (same emoji again removes it).
 - Admins can upload household custom emoji (Integrations → **Manage custom chat emoji**, max 20 images) — they appear next to the fixed Unicode set in Chat.
 - Open **More** in the room list → search messages (min 2 characters). Hits open the channel.
+
+## Chat attachments (images & small files)
+
+- Members (`user` / librarian / admin) can attach images and small files in household rooms and DMs. **Child accounts cannot upload** (same policy as camera/screenshare).
+- Flow: upload first (`POST /api/chat/channels/<id>/attachments` multipart field `file`), then send with `attachment_ids` on `POST …/messages`. Body may be empty when attachments are present.
+- Limits: **5 MB** per file · **5** attachments per message · types: `png` / `jpg` / `webp` / `gif` / `txt` / `csv` / `pdf`.
+- Message payloads include `attachments: [{id, url, mime, name, size}]` (URL under `/static/library/chat-attachments/…`).
 
 ## Voice (LiveKit)
 

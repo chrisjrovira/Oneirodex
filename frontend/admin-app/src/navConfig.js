@@ -12,6 +12,11 @@ export const ADMIN_NAV = [
 
 export const SETTINGS_CARDS = [
   { to: '/admin/new_server_settings', title: 'Server Settings', blurb: 'Scan threads, download batching, site URL.' },
+  {
+    to: '/admin/scan_match',
+    title: 'Scan / match policy',
+    blurb: 'Propose-only, dupe/match thresholds, peel profile — soft-degrades if Backend mid-rollout.',
+  },
   { to: '/admin/attract_mode_settings', title: 'Attract Mode', blurb: 'Idle trailer slideshow and filters.' },
   { to: '/admin/emulator_profiles', title: 'Emulators', blurb: 'WebRetro cores, BIOS, cloud saves.' },
   { to: '/admin/reference_sets', title: 'ROM reference sets', blurb: 'Upload No-Intro/Redump DATs for set completeness.' },
@@ -143,6 +148,8 @@ export const INTEGRATION_CARDS = [
 export const HUB_LINKS = {
   libraries: [
     { href: '/libraries', label: 'Manage libraries' },
+    { href: '/libraries#propose-leaf', label: 'Propose leaf libraries' },
+    { href: '/libraries#import-leaf', label: 'Import leaf libraries' },
     { href: '/admin/library/add', label: 'Add library' },
     { href: '/admin/library_tools', label: 'Library tools' },
     { href: '/admin/filters', label: 'Release filters' },

@@ -521,6 +521,12 @@ class DatabaseManager:
         ADD COLUMN IF NOT EXISTS giantbomb_api_key VARCHAR(255);
 
         ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS mobygames_api_key VARCHAR(255);
+
+        ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS thegamesdb_api_key VARCHAR(255);
+
+        ALTER TABLE global_settings
         ADD COLUMN IF NOT EXISTS quality_profiles TEXT;
 
         ALTER TABLE global_settings
@@ -846,6 +852,25 @@ class DatabaseManager:
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
 
+        -- Wave 16 chat: pending-then-bind message attachments
+        CREATE TABLE IF NOT EXISTS chat_message_attachments (
+            id SERIAL PRIMARY KEY,
+            channel_id INTEGER NOT NULL REFERENCES chat_channels(id) ON DELETE CASCADE,
+            message_id INTEGER REFERENCES chat_messages(id) ON DELETE CASCADE,
+            uploaded_by_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            file_name VARCHAR(120) NOT NULL,
+            original_name VARCHAR(255) NOT NULL,
+            mime VARCHAR(128) NOT NULL,
+            size_bytes INTEGER NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS ix_chat_message_attachments_channel_id
+            ON chat_message_attachments(channel_id);
+        CREATE INDEX IF NOT EXISTS ix_chat_message_attachments_message_id
+            ON chat_message_attachments(message_id);
+        CREATE INDEX IF NOT EXISTS ix_chat_message_attachments_uploaded_by_user_id
+            ON chat_message_attachments(uploaded_by_user_id);
+
         CREATE TABLE IF NOT EXISTS reference_sets (
             id SERIAL PRIMARY KEY,
             library_platform VARCHAR(32) NOT NULL,
@@ -915,6 +940,10 @@ class DatabaseManager:
         ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS match_score DOUBLE PRECISION;
         ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS suggested_kind VARCHAR(16);
         ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS suggested_candidate_name VARCHAR(255);
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS stage_e_candidates JSON;
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS stage_e JSON;
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS search_name VARCHAR(255);
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS display_name VARCHAR(255);
         CREATE INDEX IF NOT EXISTS ix_unmatched_folders_matched_game_uuid ON unmatched_folders(matched_game_uuid);
 
         ALTER TABLE games ADD COLUMN IF NOT EXISTS item_kind VARCHAR(16) DEFAULT 'game';
@@ -923,6 +952,9 @@ class DatabaseManager:
 
         ALTER TABLE games ADD COLUMN IF NOT EXISTS path_status VARCHAR(16);
         CREATE INDEX IF NOT EXISTS ix_games_path_status ON games(path_status);
+
+        ALTER TABLE libraries ADD COLUMN IF NOT EXISTS watch_enabled BOOLEAN;
+        -- null = follow GT_LIBRARY_WATCH global; false = opt-out; true = prefer watch
 
         CREATE TABLE IF NOT EXISTS duplicate_fix_logs (
             id SERIAL PRIMARY KEY,

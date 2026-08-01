@@ -8,7 +8,14 @@ const ARTWORK_PROVIDERS = [
 ]
 
 /** Identify/metadata sources shown as chips (cover apply when hit has cover_url). */
-const IDENTIFY_CHIP_IDS = new Set(['meta_quest', 'epic', 'itch', 'giantbomb'])
+const IDENTIFY_CHIP_IDS = new Set([
+  'meta_quest',
+  'epic',
+  'itch',
+  'giantbomb',
+  'mobygames',
+  'thegamesdb',
+])
 
 /**
  * Admin artwork search + apply for one game.
@@ -109,6 +116,7 @@ export function ArtworkPicker({
         })
         const data = await getJson(`/api/search_metadata?${qs}`)
         const hits = Array.isArray(data.results) ? data.results : Array.isArray(data.games) ? data.games : []
+        const softNote = typeof data.note === 'string' ? data.note.trim() : ''
         rows = hits
           .map((hit, idx) => ({
             id: hit.id || hit.app_id || hit.store_id || `${identifySource}-${idx}`,
@@ -121,7 +129,18 @@ export function ArtworkPicker({
           .filter((r) => r.url || r.thumb_url)
         if (!rows.length && hits.length) {
           setStatus(
-            `${hits.length} identify hit(s) from ${identifySource} — no cover URLs to apply. Ownership/metadata only.`,
+            softNote ||
+              `${hits.length} identify hit(s) from ${identifySource} — no cover URLs to apply. Ownership/metadata only.`,
+          )
+          setResults([])
+          return
+        }
+        if (!rows.length) {
+          setStatus(
+            softNote ||
+              (data.needs_key && data.key_configured === false
+                ? 'API key not configured — empty results.'
+                : 'No results for that query.'),
           )
           setResults([])
           return
@@ -230,8 +249,8 @@ export function ArtworkPicker({
       ) : null}
       <p className="gt-admin-lede">
         Search SteamGridDB / IGDB / Giant Bomb and apply cover, logo, or hero. Identify chips
-        (Meta Quest / Epic / itch / Giant Bomb) use metadata sources — apply only when a cover URL
-        is present. Artwork only — never downloads games.
+        (Meta Quest / Epic / itch / Giant Bomb / MobyGames / TheGamesDB) use metadata sources — apply
+        only when a cover URL is present. Artwork only — never downloads games.
       </p>
 
       {!gameUuid ? (
@@ -272,6 +291,7 @@ export function ArtworkPicker({
               >
                 {src.name || src.id}
                 {src.ownership_only ? ' · own' : ''}
+                {src.needs_key && src.key_configured === false ? ' · key' : ''}
               </button>
             )
           })}

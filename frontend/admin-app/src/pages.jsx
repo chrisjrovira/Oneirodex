@@ -3,16 +3,22 @@ import { useLocation } from 'react-router-dom'
 import { DupeGlance } from './DupeGlance'
 import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_CARDS } from './navConfig'
 import { OpenPathModal } from './OpenPathModal'
+import { ImportLeafLibraries } from './ImportLeafLibraries'
+import { ProposeLeafLibraries } from './ProposeLeafLibraries'
+import { ScanConflictModal } from './ScanConflictModal'
 import {
   hasActiveScan,
   isScanQueuedStatus,
   normalizeScanJobsList,
 } from './scanQueuePolicy'
+import { useLibraryRefreshAll } from './useLibraryRefreshAll'
 import {
   MeterBar,
   MetricTile,
   OpsStatusBanner,
   companionKindRows,
+  companionsTone,
+  dbPingTone,
   formatBytes,
   formatLibraryHealthHint,
   formatLibraryHealthValue,
@@ -20,6 +26,9 @@ import {
   formatReadyz,
   libraryHealthTone,
   na,
+  percentHealthTone,
+  readyzTone,
+  scansActiveTone,
 } from './opsWidgets'
 
 async function getJson(url) {
@@ -111,28 +120,18 @@ export function DashboardPage() {
   const companions = services?.companions
   const kindRows = companionKindRows(companions?.by_kind)
 
+  const unmatched = library?.unmatched_folders
+  const gamesTone =
+    unmatched == null
+      ? library?.games != null
+        ? 'good'
+        : 'na'
+      : Number(unmatched) > 0
+        ? 'warning'
+        : 'good'
+
   return (
     <Page title="Dashboard" lede="Observability glance — libraries, host pulse, and open issues (~15s).">
-      <div className="gt-ops-refresh" style={{ marginBottom: '0.85rem' }}>
-        {manualRefreshing ? (
-          <span className="gt-ops-refresh__status" role="status" aria-live="polite">
-            Refreshing…
-          </span>
-        ) : lastUpdatedAt ? (
-          <span className="gt-ops-refresh__status gt-ops-refresh__status--muted">
-            Updated {lastUpdatedAt.toLocaleTimeString()}
-          </span>
-        ) : null}
-        <button
-          type="button"
-          className="gt-btn gt-btn--accent"
-          onClick={() => refresh('manual')}
-          disabled={manualRefreshing || bootLoading}
-        >
-          {manualRefreshing ? 'Refreshing…' : 'Refresh'}
-        </button>
-      </div>
-
       {error ? (
         <div role="alert" className="gt-admin-alert">
           Unable to load ops summary. Open System for details.
@@ -153,7 +152,12 @@ export function DashboardPage() {
       />
 
       <div className="gt-ops-strip" aria-label="Key metrics">
-        <MetricTile label="Libraries" value={na(library?.libraries)} hint="folders" />
+        <MetricTile
+          label="Libraries"
+          value={na(library?.libraries)}
+          hint="folders"
+          tone={library?.libraries != null ? 'info' : 'na'}
+        />
         <MetricTile
           label="Games"
           value={na(library?.games)}
@@ -162,6 +166,7 @@ export function DashboardPage() {
               ? `${library.unmatched_folders} unmatched`
               : 'catalogue'
           }
+          tone={gamesTone}
         />
         <MetricTile
           label="Library health"
@@ -177,23 +182,35 @@ export function DashboardPage() {
               ? `${scans.jobs[0].library || 'job'} · ${scans.jobs[0].progress}%`
               : 'active'
           }
+          tone={scansActiveTone(scans?.active_count)}
         />
         <MetricTile
           label="Disk"
           value={disk?.percent != null ? `${disk.percent}%` : 'n/a'}
           hint="games volume"
+          tone={percentHealthTone(disk?.percent)}
         />
-        <MetricTile label="Load 1/5/15" value={formatLoadAvg(host?.load_avg)} />
+        <MetricTile
+          label="Load 1/5/15"
+          value={formatLoadAvg(host?.load_avg)}
+          tone={host?.load_avg ? 'info' : 'na'}
+        />
         <MetricTile
           label="Process RSS"
           value={formatBytes(host?.process?.rss_bytes)}
           hint={host?.process?.pid != null ? `pid ${host.process.pid}` : 'n/a'}
+          tone={host?.process?.rss_bytes != null ? 'info' : 'na'}
         />
         <MetricTile
           label="DB ping"
           value={host?.db_ping_ms != null ? `${host.db_ping_ms} ms` : 'n/a'}
+          tone={dbPingTone(host?.db_ping_ms)}
         />
-        <MetricTile label="Readyz" value={formatReadyz(services?.readyz)} />
+        <MetricTile
+          label="Readyz"
+          value={formatReadyz(services?.readyz)}
+          tone={readyzTone(services?.readyz)}
+        />
         <MetricTile
           label="Companions"
           value={`${companions?.online ?? 0} / ${companions?.registered ?? 0}`}
@@ -202,6 +219,7 @@ export function DashboardPage() {
               ? kindRows.map((r) => `${r.kind} ${r.online}/${r.registered}`).join(' · ')
               : 'by kind n/a'
           }
+          tone={companionsTone(companions)}
         />
       </div>
 
@@ -282,15 +300,36 @@ export function DashboardPage() {
         ) : null}
       </div>
 
-      <LinkRow
-        links={[
-          { href: '/admin/ops', label: 'Ops console' },
-          { href: '/scan_management', label: 'Scans' },
-          { href: '/libraries', label: 'Libraries' },
-          { href: '/admin/settings', label: 'Settings' },
-          { href: '/admin/support', label: 'Support inbox' },
-        ]}
-      />
+      <div className="gt-admin-dashboard-footer">
+        <LinkRow
+          links={[
+            { href: '/admin/ops', label: 'Ops console' },
+            { href: '/scan_management', label: 'Scans' },
+            { href: '/libraries', label: 'Libraries' },
+            { href: '/admin/settings', label: 'Settings' },
+            { href: '/admin/support', label: 'Support inbox' },
+          ]}
+        />
+        <div className="gt-ops-refresh gt-ops-refresh--footer">
+          {manualRefreshing ? (
+            <span className="gt-ops-refresh__status" role="status" aria-live="polite">
+              Refreshing…
+            </span>
+          ) : lastUpdatedAt ? (
+            <span className="gt-ops-refresh__status gt-ops-refresh__status--muted">
+              Updated {lastUpdatedAt.toLocaleTimeString()}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className="gt-btn gt-btn--accent"
+            onClick={() => refresh('manual')}
+            disabled={manualRefreshing || bootLoading}
+          >
+            {manualRefreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
+      </div>
     </Page>
   )
 }
@@ -298,6 +337,13 @@ export function DashboardPage() {
 export function LibrariesPage() {
   const [rows, setRows] = useState(null)
   const [error, setError] = useState(null)
+  const {
+    conflictOpen,
+    refreshing,
+    startRefreshAll,
+    onConflictChoose,
+    onConflictClose,
+  } = useLibraryRefreshAll()
 
   useEffect(() => {
     getJson('/api/get_libraries')
@@ -309,7 +355,31 @@ export function LibrariesPage() {
     <Page title="Libraries" lede="Manage library folders and platforms.">
       {error ? <div role="alert">Unable to load libraries.</div> : null}
       <LinkRow links={HUB_LINKS.libraries} />
+      <p className="gt-admin-lede">
+        Library hero image:{' '}
+        <a href="/admin/art_studio#stock">Choose image from Backup &amp; stock</a>
+        {' · '}
+        <a href="/admin/manage_libraries">Full library forms</a>
+        {' · '}
+        <a href="#propose-leaf">Propose leaf libraries</a>
+        {' · '}
+        <a href="#import-leaf">Import CSV/JSON</a>
+      </p>
       <div className="gt-admin-panel">
+        <div className="gt-admin-panel__toolbar" style={{ marginBottom: '0.75rem' }}>
+          <button
+            type="button"
+            className="gt-btn gt-btn--accent"
+            onClick={() => void startRefreshAll()}
+            disabled={refreshing}
+          >
+            {refreshing ? 'Refreshing…' : 'Refresh all libraries'}
+          </button>
+          <p className="gt-admin-lede" style={{ margin: '0.35rem 0 0' }}>
+            Re-scans each library’s last scan folder. When a scan is already running, choose{' '}
+            <strong>Queue</strong> (default) or <strong>Force run now</strong>.
+          </p>
+        </div>
         {!rows ? (
           <p>Loading…</p>
         ) : rows.length === 0 ? (
@@ -335,6 +405,18 @@ export function LibrariesPage() {
           </table>
         )}
       </div>
+      <div id="propose-leaf">
+        <ProposeLeafLibraries />
+      </div>
+      <div id="import-leaf">
+        <ImportLeafLibraries />
+      </div>
+      <ScanConflictModal
+        open={conflictOpen}
+        busy={refreshing}
+        onChoose={onConflictChoose}
+        onClose={onConflictClose}
+      />
     </Page>
   )
 }
@@ -662,6 +744,13 @@ export function ScansPage() {
   const [error, setError] = useState(null)
   const [updatedAt, setUpdatedAt] = useState(null)
   const [pathModal, setPathModal] = useState(null)
+  const {
+    conflictOpen,
+    refreshing,
+    startRefreshAll,
+    onConflictChoose,
+    onConflictClose,
+  } = useLibraryRefreshAll()
 
   useEffect(() => {
     let cancelled = false
@@ -691,12 +780,29 @@ export function ScansPage() {
   const recentJobs = jobs.slice(0, 12)
   const progress = status?.progress ?? status?.percent ?? null
   const message = status?.message || status?.status_message || status?.phase || null
+  const scanMotifActive = running || queuedJobs.length > 0
 
   return (
-    <Page title="Scans & recognition" lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja).">
+    <Page title="Scans & recognition" lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja) or Refresh all here.">
       <LinkRow links={HUB_LINKS.scans} />
       {error ? <div role="alert">Unable to load scan status.</div> : null}
       <div className="gt-admin-panel">
+        <div className="gt-admin-panel__toolbar" style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button
+            type="button"
+            className="gt-btn gt-btn--accent"
+            onClick={() => void startRefreshAll()}
+            disabled={refreshing}
+          >
+            {refreshing ? 'Refreshing…' : 'Refresh all libraries'}
+          </button>
+          {scanMotifActive ? (
+            <span className="gt-admin-scan-live" role="status" aria-live="polite" data-state={running ? 'running' : 'queued'}>
+              <span className="gt-spinner gt-spinner--sm" aria-hidden="true" />
+              {running ? 'Scanning…' : `Queued… (${queuedJobs.length})`}
+            </span>
+          ) : null}
+        </div>
         {!status ? (
           <p>Loading…</p>
         ) : (
@@ -762,6 +868,12 @@ export function ScansPage() {
         matchReason={pathModal?.matchReason || ''}
         onClose={() => setPathModal(null)}
       />
+      <ScanConflictModal
+        open={conflictOpen}
+        busy={refreshing}
+        onChoose={onConflictChoose}
+        onClose={onConflictClose}
+      />
     </Page>
   )
 }
@@ -773,7 +885,8 @@ export function resolveAdminPage(pathname) {
   if (pathname === '/admin/support') return 'support'
   if (pathname === '/admin/invites') return 'invites'
   if (pathname === '/admin/plugins') return 'plugins'
-  if (pathname.startsWith('/libraries') || pathname.startsWith('/admin/library') || pathname.includes('library_tools') || pathname.includes('/admin/filters') || pathname.includes('/admin/extensions')) {
+  if (pathname === '/admin/extensions') return 'extensions'
+  if (pathname.startsWith('/libraries') || pathname.startsWith('/admin/library') || pathname.includes('library_tools') || pathname.includes('/admin/filters')) {
     return 'libraries'
   }
   if (pathname === '/admin/settings') return 'settings'
@@ -783,6 +896,7 @@ export function resolveAdminPage(pathname) {
   if (pathname === '/admin/remote_play') return 'remote_play'
   if (pathname === '/admin/quality_profiles') return 'quality_profiles'
   if (pathname === '/admin/storage') return 'storage'
+  if (pathname === '/admin/scan_match') return 'scan_match'
   if (pathname === '/admin/help') return 'help'
   if (pathname.startsWith('/scan_management') || pathname.includes('image_queue') || pathname.includes('game_identify') || pathname.includes('game_edit')) {
     return 'scans'

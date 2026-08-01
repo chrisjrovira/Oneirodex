@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { setGameStatus, toggleFavorite } from '../api/userActions'
 import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
 import { safeHttpUrl } from '../utils/safeUrl'
+import { platformChipLabels } from '../utils/platformAbbrev'
 import { BadgeStack } from './BadgeStack'
 import { GameActionBar } from './GameActionBar'
+import { firmwareBlockMessage, isFirmwarePlayBlocked } from '../utils/playHonesty'
 
 const DEFAULT_COVER = DEFAULT_COVER_URL
 
@@ -66,11 +68,20 @@ export function GameCard({
   const steamAppId = game.steam_app_id ? Number(game.steam_app_id) : null
   const steamStoreUrl = safeHttpUrl(game.steam_url) || (steamAppId ? `https://store.steampowered.com/app/${steamAppId}` : null)
   const steamRunUrl = steamAppId ? `steam://run/${steamAppId}` : null
-  const playDemoHref = game.play_url || game.demo_url || null
+  const firmwareBlocked = isFirmwarePlayBlocked(game)
+  const playDemoHref =
+    firmwareBlocked ? null : game.play_url || game.demo_url || null
   const archiveBlocked = game.play_blocker === 'unsupported_archive'
   const archiveBlockHint =
     game.companion_hint ||
     'This archive type cannot be extracted for browser play. Use .zip / .7z / .rar / ROM.gz or a raw ROM.'
+  const firmwareHint = firmwareBlockMessage(game)
+  const playBlocked = firmwareBlocked || archiveBlocked
+  const playBlockHint = firmwareBlocked ? firmwareHint : archiveBlockHint
+  const playBlockLabel = firmwareBlocked
+    ? 'firmware missing'
+    : 'unsupported archive'
+  const platformChip = !hidePlatformChip && game.library_platform ? platformChipLabels(game) : null
   useEffect(() => {
     setImgSrc(coverUrl(game.cover_url))
     setIsFavorite(Boolean(game.is_favorite))
@@ -364,6 +375,7 @@ export function GameCard({
               className={`game-status-btn${statusPending ? ' processing' : ''}`}
               data-game-uuid={game.uuid}
               data-current-status={status}
+              data-chrome-anchor="top-right"
               title={currentStatus.label}
               aria-label={`Game status: ${currentStatus.label}`}
               aria-expanded={statusOpen}
@@ -450,9 +462,9 @@ export function GameCard({
           />
         </a>
 
-        {!hidePlatformChip && game.library_platform ? (
-          <span className="gt-platform-chip" title={game.library_platform_label || game.library_platform}>
-            {game.library_platform_label || game.library_platform}
+        {platformChip ? (
+          <span className="gt-platform-chip" title={platformChip.full}>
+            {platformChip.abbrev}
           </span>
         ) : null}
 
@@ -466,12 +478,12 @@ export function GameCard({
           >
             Play
           </a>
-        ) : archiveBlocked ? (
+        ) : playBlocked ? (
           <span
             className="gt-tile-play gt-tile-play--disabled"
-            title={archiveBlockHint}
+            title={playBlockHint}
             aria-disabled="true"
-            aria-label={`${game.name}: browser play unavailable — unsupported archive`}
+            aria-label={`${game.name}: browser play unavailable — ${playBlockLabel}`}
           >
             Play
           </span>

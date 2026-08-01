@@ -1,24 +1,52 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ImagesPage } from './ImagesPage'
+import { StockPicker } from './StockPicker'
 import { getJson, postJson } from './adminApi'
 import { ART_STUDIO_SYSTEMS, skinForPlatform, systemLabel } from './platformSkins'
+import { showToast } from './utils/toast'
 
-const TILE_SIZES = [
-  { key: 'sm', width: 200, height: 300, label: '200×300' },
-  { key: 'md', width: 400, height: 600, label: '400×600' },
+const PREVIEW_VARIANTS = [
+  { key: 'sm', width: 200, height: 300, label: '200×300', kind: 'tile' },
+  { key: 'md', width: 400, height: 600, label: '400×600', kind: 'tile' },
+  { key: 'wide', width: 960, height: 540, label: '960×540', kind: 'wide' },
 ]
+
+const FALLBACK_ASSETS = [
+  {
+    key: 'cover',
+    label: 'Default cover',
+    path: '/static/newstyle/default_cover.jpg',
+    hint: 'Library tiles · missing covers',
+  },
+  {
+    key: 'library',
+    label: 'Default library',
+    path: '/static/newstyle/default_library.jpg',
+    hint: 'Wide / hero surfaces',
+  },
+]
+
+const PREVIEW_DEBOUNCE_MS = 420
 
 function initialTab() {
   if (typeof window === 'undefined') return 'studio'
   const hash = (window.location.hash || '').replace('#', '')
   if (hash === 'images' || hash === 'queue' || hash === 'picker') return 'images'
+  if (hash === 'stock' || hash === 'backup') return 'stock'
   return 'studio'
+}
+
+function tabHash(tab) {
+  if (tab === 'images') return '#images'
+  if (tab === 'stock') return '#stock'
+  return '#studio'
 }
 
 export function ArtStudioPage() {
   const [tab, setTab] = useState(initialTab)
   const [title, setTitle] = useState('')
   const [system, setSystem] = useState('')
+  const [variantKey, setVariantKey] = useState('md')
   const [previews, setPreviews] = useState({})
   const [packId, setPackId] = useState('')
   const [previewUrl, setPreviewUrl] = useState('')
@@ -29,18 +57,34 @@ export function ArtStudioPage() {
   const [missingCovers, setMissingCovers] = useState([])
   const [batchSelected, setBatchSelected] = useState(() => new Set())
   const [batchLog, setBatchLog] = useState('')
+  const [fallbackBust, setFallbackBust] = useState(() => Date.now())
+  const [batchOpen, setBatchOpen] = useState(false)
+  const [previewArtistic, setPreviewArtistic] = useState(true)
+  const previewReqId = useRef(0)
 
   const skin = useMemo(() => skinForPlatform(system), [system])
   const systemText = systemLabel(system)
   // Short platform id (SNES, PSX, …) matches Backend SYSTEM_TEMPLATES keys.
   const systemForApi = system || undefined
+  const activeVariant = PREVIEW_VARIANTS.find((v) => v.key === variantKey) || PREVIEW_VARIANTS[1]
+  const heroSrc =
+    previews[activeVariant.key] ||
+    (activeVariant.key === 'md' ? previewUrl : '') ||
+    ''
+  const hasTitle = Boolean(title.trim())
+  const previewBusy = busy === 'preview' || busy === 'preview-system' || busy === 'preview-live'
 
   const selectTab = (next) => {
     setTab(next)
     if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', next === 'images' ? '#images' : '#studio')
+      window.history.replaceState(null, '', tabHash(next))
     }
   }
+
+  const onStockApplied = useCallback(() => {
+    setFallbackBust(Date.now())
+    setMessage('Library default covers updated from stock pack. Hard-refresh member browsers.')
+  }, [])
 
   useEffect(() => {
     const onHash = () => setTab(initialTab())
@@ -48,64 +92,75 @@ export function ArtStudioPage() {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  const runPreview = useCallback(async () => {
-    setBusy('preview')
-    setError('')
-    setMessage('')
-    try {
-      const next = {}
-      for (const size of TILE_SIZES) {
-        const data = await postJson('/admin/api/art-studio/preview', {
-          title,
-          system: systemForApi,
-          width: size.width,
-          height: size.height,
-        })
-        next[size.key] = data.preview
+  const fetchPreviews = useCallback(
+    async (sizes, { soft = false, busyKey = 'preview', titleOverride } = {}) => {
+      const trimmed = (titleOverride ?? title).trim()
+      if (!trimmed) return
+      const reqId = ++previewReqId.current
+      setBusy(busyKey)
+      if (!soft) {
+        setError('')
+        setMessage('')
       }
-      setPreviews(next)
-      setPreviewUrl('')
-      setMessage('Preview refreshed at library tile sizes.')
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setBusy('')
-    }
-  }, [title, systemForApi])
-
-  // Re-preview when system changes and we already have a title + preview.
-  useEffect(() => {
-    if (!title.trim() || !Object.keys(previews).length) return undefined
-    let cancelled = false
-    setBusy('preview-system')
-    ;(async () => {
       try {
         const next = {}
-        for (const size of TILE_SIZES) {
+        for (const size of sizes) {
           const data = await postJson('/admin/api/art-studio/preview', {
-            title,
+            title: trimmed,
             system: systemForApi,
             width: size.width,
             height: size.height,
           })
-          if (cancelled) return
+          if (reqId !== previewReqId.current) return
           next[size.key] = data.preview
+          if (typeof data.artistic === 'boolean') setPreviewArtistic(data.artistic)
         }
-        if (!cancelled) {
-          setPreviews(next)
-          setMessage(`Preview updated for ${systemText || 'generic aurora'}.`)
-        }
+        if (reqId !== previewReqId.current) return
+        setPreviews((prev) => ({ ...prev, ...next }))
+        setPreviewUrl('')
+        if (!soft) setMessage('Artistic preview refreshed.')
       } catch (err) {
-        if (!cancelled) setError(err.message || 'Preview refresh failed')
+        if (reqId !== previewReqId.current) return
+        const text = err.message || 'Preview failed'
+        if (soft) {
+          showToast(text, 'warn')
+        } else {
+          setError(text)
+          showToast(text, 'error')
+        }
       } finally {
-        if (!cancelled) setBusy((b) => (b === 'preview-system' ? '' : b))
+        if (reqId === previewReqId.current) {
+          setBusy((b) => (b === busyKey ? '' : b))
+        }
       }
-    })()
-    return () => {
-      cancelled = true
+    },
+    [title, systemForApi],
+  )
+
+  const runPreview = useCallback(async () => {
+    const sizes = PREVIEW_VARIANTS.filter((v) => v.kind === 'tile' || v.key === variantKey)
+    await fetchPreviews(sizes, { soft: false, busyKey: 'preview' })
+  }, [fetchPreviews, variantKey])
+
+  // Live preview: title typing feels like painting a cover (debounced).
+  // System changes re-paint the active variant via the same debounce path.
+  useEffect(() => {
+    const trimmed = title.trim()
+    if (!trimmed) {
+      previewReqId.current += 1
+      setPreviews({})
+      setBusy((b) => (b.startsWith('preview') ? '' : b))
+      return undefined
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [system, systemForApi, systemText])
+    const timer = window.setTimeout(() => {
+      fetchPreviews([activeVariant], {
+        soft: true,
+        busyKey: 'preview-live',
+        titleOverride: trimmed,
+      })
+    }, PREVIEW_DEBOUNCE_MS)
+    return () => window.clearTimeout(timer)
+  }, [title, variantKey, system, systemForApi, activeVariant, fetchPreviews])
 
   const runGenerate = useCallback(async () => {
     setBusy('generate')
@@ -113,7 +168,7 @@ export function ArtStudioPage() {
     setMessage('')
     try {
       const data = await postJson('/admin/api/art-studio/generate', {
-        title,
+        title: title.trim(),
         system: systemForApi,
         format: 'webp',
       })
@@ -121,8 +176,10 @@ export function ArtStudioPage() {
       setPreviewUrl(data.preview_url)
       setPreviews({})
       setMessage(`Generated pack ${data.pack_id} (${data.files?.length || 0} sizes).`)
+      showToast('Art pack ready', 'success')
     } catch (err) {
       setError(err.message)
+      showToast(err.message || 'Generate failed', 'error')
     } finally {
       setBusy('')
     }
@@ -142,8 +199,10 @@ export function ArtStudioPage() {
         game_uuid: gameUuid.trim(),
       })
       setMessage(`Cover applied to ${data.game_uuid}.`)
+      showToast('Cover applied to game', 'success')
     } catch (err) {
       setError(err.message)
+      showToast(err.message || 'Apply failed', 'error')
     } finally {
       setBusy('')
     }
@@ -161,13 +220,45 @@ export function ArtStudioPage() {
         pack_id: packId,
         mode: 'fallback',
       })
-      setMessage('Fallback pack installed (default_cover.jpg + default_library.jpg). Hard-refresh browsers.')
+      setFallbackBust(Date.now())
+      setMessage('Library default covers updated. Hard-refresh member browsers.')
+      showToast('Fallback pack installed', 'success')
     } catch (err) {
       setError(err.message)
+      showToast(err.message || 'Fallback apply failed', 'error')
     } finally {
       setBusy('')
     }
   }, [packId])
+
+  const regenerateDefaults = useCallback(async () => {
+    const seed = title.trim() || 'GameTheca'
+    setBusy('regen-fallback')
+    setError('')
+    try {
+      const data = await postJson('/admin/api/art-studio/generate', {
+        title: seed,
+        system: systemForApi,
+        format: 'webp',
+      })
+      setPackId(data.pack_id)
+      setPreviewUrl(data.preview_url)
+      await postJson('/admin/api/art-studio/apply', {
+        pack_id: data.pack_id,
+        mode: 'fallback',
+      })
+      setFallbackBust(Date.now())
+      setMessage(
+        `Library defaults regenerated from “${seed}” (pack ${data.pack_id}). Hard-refresh browsers.`,
+      )
+      showToast('Library defaults refreshed', 'success')
+    } catch (err) {
+      setError(err.message)
+      showToast(err.message || 'Could not regenerate defaults', 'error')
+    } finally {
+      setBusy('')
+    }
+  }, [title, systemForApi])
 
   const loadMissing = useCallback(async () => {
     setBusy('missing')
@@ -178,6 +269,7 @@ export function ArtStudioPage() {
       const rows = worst.filter((g) => (g.issues || []).some((i) => i.code === 'missing_cover'))
       setMissingCovers(rows)
       setBatchSelected(new Set(rows.map((r) => r.uuid)))
+      setBatchOpen(true)
       setMessage(
         rows.length
           ? `${rows.length} no-cover title(s) in health sample.`
@@ -220,14 +312,10 @@ export function ArtStudioPage() {
         const applied = batch.applied ?? (Array.isArray(batch.results) ? batch.results.length : 0)
         const failed = batch.failed ?? (Array.isArray(batch.errors) ? batch.errors.length : 0)
         setMessage(`Batch generate finished — applied ${applied}, failed ${failed}.`)
-        const failLines = (batch.errors || [])
-          .map((r) => `✗ ${r.name || r.game_uuid}: ${r.error || 'failed'}`)
-        setBatchLog(
-          [
-            'Used POST /admin/api/art-studio/batch-generate.',
-            ...failLines,
-          ].join('\n'),
+        const failLines = (batch.errors || []).map(
+          (r) => `✗ ${r.name || r.game_uuid}: ${r.error || 'failed'}`,
         )
+        setBatchLog(['Used POST /admin/api/art-studio/batch-generate.', ...failLines].join('\n'))
         if (applied > 0) return
         lines.push('Batch-generate returned zero applies — trying covers/batch/apply generate_only…')
       } catch {
@@ -290,17 +378,34 @@ export function ArtStudioPage() {
   const previewChromeStyle = skin?.accent
     ? {
         borderColor: skin.accent,
-        boxShadow: `0 0 0 2px ${skin.accent}55, 0 8px 24px rgba(0,0,0,0.35)`,
+        boxShadow: `0 0 0 1px ${skin.accent}66, 0 18px 48px rgba(0,0,0,0.45)`,
       }
     : undefined
 
   return (
     <div className="gt-admin-page">
-      <h1>Art studio</h1>
-      <p className="gt-admin-lede">
-        Placeholders and artwork picking for admins — aurora tokens, no cloud AI. Use{' '}
-        <strong>Pick &amp; queue</strong> for SteamGridDB/IGDB search and mass downloads.
-      </p>
+      <header className="gt-art-studio-head">
+        <div>
+          <p className="gt-art-studio-kicker">Admin · Cover atelier</p>
+          <h1>Art studio</h1>
+          <p className="gt-admin-lede gt-art-studio-lede">
+            Type a title — watch an <strong>artistic</strong> cover form (motifs, bezels, initials).
+            Local Pillow renderer, aurora tokens, no cloud AI. Use{' '}
+            <strong>Pick &amp; queue</strong> for SteamGridDB / IGDB art.
+          </p>
+        </div>
+        {skin ? (
+          <span
+            className={`gt-art-studio-skin gt-art-studio-skin--${skin.family}`}
+            style={{ '--gt-art-skin': skin.accent }}
+          >
+            {skin.label}
+            {systemText ? ` · ${systemText}` : ''}
+          </span>
+        ) : (
+          <span className="gt-art-studio-skin">Generic aurora</span>
+        )}
+      </header>
 
       <div className="gt-art-tabs" role="tablist" aria-label="Art studio sections">
         <button
@@ -310,7 +415,16 @@ export function ArtStudioPage() {
           className={`gt-art-tabs__btn${tab === 'studio' ? ' is-active' : ''}`}
           onClick={() => selectTab('studio')}
         >
-          Placeholders
+          Studio
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'stock'}
+          className={`gt-art-tabs__btn${tab === 'stock' ? ' is-active' : ''}`}
+          onClick={() => selectTab('stock')}
+        >
+          Backup &amp; stock
         </button>
         <button
           type="button"
@@ -325,6 +439,39 @@ export function ArtStudioPage() {
 
       {tab === 'images' ? <ImagesPage embedded /> : null}
 
+      {tab === 'stock' ? (
+        <div className="gt-art-stock-tab">
+          <StockPicker onApplied={onStockApplied} showLibraryUuid />
+          <section className="gt-admin-panel gt-art-studio-fallbacks" aria-label="Current library defaults">
+            <div className="gt-art-studio-fallbacks__head">
+              <div>
+                <h2 className="gt-admin-panel-title">Current library defaults</h2>
+                <p className="gt-admin-lede">
+                  Live fallback assets after apply. Hard-refresh member browsers to see updates.
+                </p>
+              </div>
+            </div>
+            <div className="gt-art-studio-fallbacks__grid">
+              {FALLBACK_ASSETS.map((asset) => (
+                <figure key={asset.key} className="gt-art-studio-fallbacks__card">
+                  <img
+                    src={`${asset.path}?v=${fallbackBust}`}
+                    alt={asset.label}
+                    onError={(e) => {
+                      e.currentTarget.style.visibility = 'hidden'
+                    }}
+                  />
+                  <figcaption>
+                    <strong>{asset.label}</strong>
+                    <span>{asset.hint}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </section>
+        </div>
+      ) : null}
+
       {tab === 'studio' ? (
         <>
           {error ? (
@@ -332,22 +479,93 @@ export function ArtStudioPage() {
               {error}
             </div>
           ) : null}
-          {message ? <p className="gt-admin-lede">{message}</p> : null}
+          {message ? (
+            <p className="gt-admin-lede" role="status">
+              {message}
+            </p>
+          ) : null}
 
-          <div className="gt-admin-panel gt-art-studio">
-            <div className="gt-art-studio__form">
-              <label>
-                Title
+          <section className="gt-art-studio gt-art-studio--workspace" aria-label="Cover studio">
+            <div
+              className={`gt-art-studio__stage${skin ? ` gt-art-studio__stage--${skin.family}` : ''}`}
+              style={previewChromeStyle}
+              aria-busy={previewBusy}
+            >
+              {heroSrc ? (
+                <figure className="gt-art-studio__hero">
+                  {previewArtistic ? (
+                    <span className="gt-art-studio__mode-badge">Artistic</span>
+                  ) : null}
+                  <img
+                    src={heroSrc}
+                    alt={`${title || 'Cover'} preview ${activeVariant.label}`}
+                    width={activeVariant.width}
+                    height={activeVariant.height}
+                  />
+                  <figcaption>
+                    {activeVariant.label}
+                    {systemText ? ` · ${systemText}` : ''}
+                    {previewArtistic ? ' · artistic' : ''}
+                    {previewBusy ? ' · painting…' : ''}
+                  </figcaption>
+                </figure>
+              ) : (
+                <div className="gt-art-studio__empty" data-testid="art-studio-empty">
+                  <div className="gt-art-studio__empty-glow" aria-hidden="true" />
+                  <p className="gt-art-studio__empty-title">
+                    {previewBusy ? 'Painting cover…' : 'Name a title to paint a cover'}
+                  </p>
+                  <p className="gt-art-studio__empty-hint">
+                    Title-first atelier — Backend artistic compositions by default (motifs · bezels ·
+                    watermark), not gray placeholders.
+                  </p>
+                </div>
+              )}
+
+              <div className="gt-art-studio__thumbs" aria-label="Other tile sizes">
+                {PREVIEW_VARIANTS.filter((v) => v.key !== activeVariant.key && v.kind === 'tile').map(
+                  (size) => {
+                    const src = previews[size.key]
+                    return (
+                      <button
+                        key={size.key}
+                        type="button"
+                        className="gt-art-studio__thumb"
+                        onClick={() => setVariantKey(size.key)}
+                        title={`Show ${size.label}`}
+                      >
+                        {src ? (
+                          <img src={src} alt="" width={size.width} height={size.height} />
+                        ) : (
+                          <span>{size.label}</span>
+                        )}
+                      </button>
+                    )
+                  },
+                )}
+              </div>
+            </div>
+
+            <div className="gt-art-studio__controls">
+              <label className="gt-art-studio__title-field">
+                <span className="gt-art-studio__label">Title</span>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Chrono Trigger"
                   maxLength={120}
+                  autoComplete="off"
+                  aria-describedby="gt-art-title-hint"
                 />
               </label>
+              <p id="gt-art-title-hint" className="gt-art-studio__hint">
+                Typing refreshes the live artistic preview. Generate writes the full size pack with
+                the same renderer.
+              </p>
+
               <label>
-                System / platform
+                <span className="gt-art-studio__label">System / platform</span>
                 <select
                   value={system}
                   onChange={(e) => setSystem(e.target.value)}
@@ -360,169 +578,193 @@ export function ArtStudioPage() {
                   ))}
                 </select>
               </label>
-              <p className="gt-admin-lede">
-                {skin ? (
-                  <>
-                    Preview chrome: <strong>{skin.label}</strong> family
-                    {system ? <> · {systemText}</> : null}. System selector re-renders tiles at
-                    200×300 and 400×600 so title readability matches the library grid.
-                  </>
-                ) : (
-                  <>Generic aurora template (no platform accent).</>
-                )}
-              </p>
-              <div className="gt-admin-actions-row">
+
+              <fieldset className="gt-art-studio__variants">
+                <legend className="gt-art-studio__label">Preview size</legend>
+                <div className="gt-art-studio__variant-row" role="group" aria-label="Preview size">
+                  {PREVIEW_VARIANTS.map((v) => (
+                    <button
+                      key={v.key}
+                      type="button"
+                      className={`gt-art-studio__variant${variantKey === v.key ? ' is-active' : ''}`}
+                      aria-pressed={variantKey === v.key}
+                      onClick={() => setVariantKey(v.key)}
+                    >
+                      {v.label}
+                      <span className="gt-art-studio__variant-kind">{v.kind}</span>
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <div className="gt-admin-actions-row gt-art-studio__primary-actions">
                 <button
                   type="button"
                   className="gt-btn"
-                  disabled={!title || busy === 'preview' || busy === 'preview-system'}
+                  disabled={!hasTitle || previewBusy}
                   onClick={runPreview}
                 >
-                  {busy === 'preview' || busy === 'preview-system' ? 'Previewing…' : 'Preview tiles'}
+                  {previewBusy ? 'Previewing…' : 'Preview'}
                 </button>
                 <button
                   type="button"
                   className="gt-btn gt-btn--primary"
-                  disabled={!title || busy === 'generate'}
+                  disabled={!hasTitle || busy === 'generate'}
                   onClick={runGenerate}
                 >
-                  Generate all sizes
+                  {busy === 'generate' ? 'Generating…' : 'Generate pack'}
                 </button>
               </div>
-            </div>
 
-            <div className="gt-art-studio__preview-stack" aria-busy={busy === 'preview' || busy === 'preview-system'}>
-              {TILE_SIZES.map((size) => {
-                const src = previews[size.key] || (size.key === 'md' ? previewUrl : '')
-                return (
-                  <figure
-                    key={size.key}
-                    className={`gt-art-studio__tile gt-art-studio__tile--${size.key}${
-                      skin ? ` gt-art-studio__tile--${skin.family}` : ''
-                    }`}
-                    style={previewChromeStyle}
-                    data-platform={system || undefined}
-                  >
-                    <figcaption>
-                      {size.label}
-                      {system ? ` · ${systemText}` : ''}
-                    </figcaption>
-                    {src ? (
-                      <img
-                        src={src}
-                        alt={`${title || 'Cover'} preview ${size.label}`}
-                        width={size.width}
-                        height={size.height}
-                        style={{ width: size.width, height: size.height }}
-                      />
-                    ) : (
-                      <div
-                        className="gt-art-studio__tile-placeholder"
-                        style={{ width: size.width, height: size.height }}
-                      >
-                        <span>
-                          {busy === 'preview' || busy === 'preview-system'
-                            ? 'Loading…'
-                            : `Empty ${size.label}`}
-                        </span>
-                      </div>
-                    )}
-                  </figure>
-                )
-              })}
-              <p className="gt-admin-lede">
-                Tiles render at real pixel sizes (200×300 / 400×600) so title readability matches the
-                library grid.
-              </p>
-            </div>
-          </div>
-
-          {packId ? (
-            <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
-              <h2>Pack {packId}</h2>
-              <p className="gt-admin-lede">
-                Includes 2:3 tiles, 16:9 wides, 1:1 squares, and 1280×720 hero under{' '}
-                <code>static/library/generated/{packId}/</code>.
-              </p>
-              <div className="gt-admin-actions-row">
+              <div className="gt-art-studio__pack-actions">
                 {downloadZip ? (
                   <a className="gt-btn" href={downloadZip}>
                     Download ZIP
                   </a>
-                ) : null}
+                ) : (
+                  <button type="button" className="gt-btn" disabled>
+                    Download ZIP
+                  </button>
+                )}
                 <button
                   type="button"
                   className="gt-btn"
-                  disabled={busy === 'apply-fallback'}
+                  disabled={!packId || busy === 'apply-fallback'}
                   onClick={applyFallback}
                 >
-                  Set as fallback pack
+                  Set as fallback
                 </button>
               </div>
-              <label style={{ display: 'block', marginTop: '1rem' }}>
-                Attach to game UUID
+
+              <label className="gt-art-studio__uuid-field">
+                <span className="gt-art-studio__label">Apply to game UUID</span>
                 <input
                   type="text"
                   value={gameUuid}
                   onChange={(e) => setGameUuid(e.target.value)}
                   placeholder="game uuid"
+                  disabled={!packId}
                 />
               </label>
               <button
                 type="button"
                 className="gt-btn gt-btn--primary"
-                style={{ marginTop: '0.5rem' }}
-                disabled={busy === 'apply-game'}
+                disabled={!packId || !gameUuid.trim() || busy === 'apply-game'}
                 onClick={applyToGame}
               >
                 Apply cover to game
               </button>
-            </div>
-          ) : null}
 
-          <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
-            <h2>Batch placeholders for no-cover titles</h2>
-            <p className="gt-admin-lede">
-              Loads the library health sample, then applies procedural placeholders for checked
-              titles via <code>POST /admin/api/art-studio/batch-generate</code>, falling back to{' '}
-              <code>covers/batch/apply</code> (<code>policy=generate_only</code>) then per-title
-              generate/apply.
-            </p>
-            <div className="gt-admin-actions-row">
-              <button type="button" className="gt-btn" disabled={busy === 'missing'} onClick={loadMissing}>
-                Load no-cover list
-              </button>
+              {packId ? (
+                <p className="gt-art-studio__pack-meta">
+                  Pack <code className="gt-mono">{packId}</code> · tiles, wides, squares, hero under{' '}
+                  <code>static/library/generated/</code>
+                </p>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="gt-admin-panel gt-art-studio-fallbacks" aria-label="Library default covers">
+            <div className="gt-art-studio-fallbacks__head">
+              <div>
+                <h2 className="gt-admin-panel-title">Library default covers</h2>
+                <p className="gt-admin-lede">
+                  Site-wide fallbacks when a title has no downloaded art. Generate a pack above, then
+                  set as fallback — or open{' '}
+                  <button type="button" className="gt-art-inline-link" onClick={() => selectTab('stock')}>
+                    Backup &amp; stock
+                  </button>{' '}
+                  for platform packs and stock motifs.
+                </p>
+              </div>
               <button
                 type="button"
                 className="gt-btn gt-btn--primary"
-                disabled={busy === 'batch' || !batchSelected.size}
-                onClick={batchApplyPlaceholders}
+                disabled={busy === 'regen-fallback'}
+                onClick={regenerateDefaults}
               >
-                Apply placeholders ({batchSelected.size})
+                {busy === 'regen-fallback' ? 'Regenerating…' : 'Regenerate defaults'}
               </button>
             </div>
-            {missingCovers.length ? (
-              <ul className="gt-art-studio__batch-list">
-                {missingCovers.map((g) => (
-                  <li key={g.uuid}>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={batchSelected.has(g.uuid)}
-                        onChange={() => toggleBatch(g.uuid)}
-                      />
-                      {g.name} <code className="gt-mono">{g.uuid}</code>
-                    </label>
-                  </li>
-                ))}
-              </ul>
+            <div className="gt-art-studio-fallbacks__grid">
+              {FALLBACK_ASSETS.map((asset) => (
+                <figure key={asset.key} className="gt-art-studio-fallbacks__card">
+                  <img
+                    src={`${asset.path}?v=${fallbackBust}`}
+                    alt={asset.label}
+                    onError={(e) => {
+                      e.currentTarget.style.visibility = 'hidden'
+                    }}
+                  />
+                  <figcaption>
+                    <strong>{asset.label}</strong>
+                    <span>{asset.hint}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </section>
+
+          <section className="gt-admin-panel gt-art-studio-batch">
+            <button
+              type="button"
+              className="gt-art-studio-batch__toggle"
+              aria-expanded={batchOpen}
+              onClick={() => setBatchOpen((o) => !o)}
+            >
+              <h2 className="gt-admin-panel-title">Batch placeholders for no-cover titles</h2>
+              <span aria-hidden="true">{batchOpen ? '▾' : '▸'}</span>
+            </button>
+            {batchOpen ? (
+              <>
+                <p className="gt-admin-lede">
+                  Loads the library health sample, then applies procedural covers for checked titles
+                  via <code>POST /admin/api/art-studio/batch-generate</code>, falling back to{' '}
+                  <code>covers/batch/apply</code> (<code>policy=generate_only</code>) then per-title
+                  generate/apply.
+                </p>
+                <div className="gt-admin-actions-row">
+                  <button
+                    type="button"
+                    className="gt-btn"
+                    disabled={busy === 'missing'}
+                    onClick={loadMissing}
+                  >
+                    Load no-cover list
+                  </button>
+                  <button
+                    type="button"
+                    className="gt-btn gt-btn--primary"
+                    disabled={busy === 'batch' || !batchSelected.size}
+                    onClick={batchApplyPlaceholders}
+                  >
+                    Apply placeholders ({batchSelected.size})
+                  </button>
+                </div>
+                {missingCovers.length ? (
+                  <ul className="gt-art-studio__batch-list">
+                    {missingCovers.map((g) => (
+                      <li key={g.uuid}>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={batchSelected.has(g.uuid)}
+                            onChange={() => toggleBatch(g.uuid)}
+                          />
+                          {g.name} <code className="gt-mono">{g.uuid}</code>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {batchLog ? (
+                  <pre className="gt-art-studio__batch-log" aria-live="polite">
+                    {batchLog}
+                  </pre>
+                ) : null}
+              </>
             ) : null}
-            {batchLog ? (
-              <pre className="gt-art-studio__batch-log" aria-live="polite">
-                {batchLog}
-              </pre>
-            ) : null}
-          </div>
+          </section>
         </>
       ) : null}
     </div>

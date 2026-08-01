@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fetchFilterOptions } from '../api/filters'
 import { BADGE_FILTER_CHIPS, toggleBadgeFilter } from './BadgeFilterChips'
 import {
@@ -27,6 +27,29 @@ const SELECTS = [
   ['player_perspective', 'Player perspective', 'All Perspectives', 'playerPerspectives', 'name', 'name'],
 ]
 
+const FILTERS_VISIBLE_KEY = 'gt.library.filtersVisible'
+/** Debounce for type-to-search title filter (ms). */
+export const LIBRARY_SEARCH_DEBOUNCE_MS = 300
+
+function readFiltersVisible() {
+  try {
+    const raw = window.localStorage?.getItem(FILTERS_VISIBLE_KEY)
+    if (raw === '0' || raw === 'false') return false
+    if (raw === '1' || raw === 'true') return true
+  } catch {
+    /* ignore */
+  }
+  return true
+}
+
+function writeFiltersVisible(visible) {
+  try {
+    window.localStorage?.setItem(FILTERS_VISIBLE_KEY, visible ? '1' : '0')
+  } catch {
+    /* ignore */
+  }
+}
+
 export function cleanFilters(filters) {
   return Object.fromEntries(
     Object.entries(filters).filter(([key, value]) => {
@@ -36,15 +59,28 @@ export function cleanFilters(filters) {
       if (key === 'rating' && (value === 0 || value === '0')) {
         return false
       }
+      if (key === 'name' && typeof value === 'string' && !value.trim()) {
+        return false
+      }
       return true
     }),
   )
 }
 
-export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
+export function FilterBar({
+  filters,
+  onApply,
+  onClear,
+  onLiveSearch,
+  t = (key) => key,
+}) {
   const [draft, setDraft] = useState(filters)
   const [options, setOptions] = useState(EMPTY_OPTIONS)
   const [loadError, setLoadError] = useState(false)
+  const [filtersVisible, setFiltersVisible] = useState(readFiltersVisible)
+  const searchTimerRef = useRef(null)
+  const draftRef = useRef(draft)
+  draftRef.current = draft
 
   useEffect(() => {
     setDraft(filters)
@@ -63,6 +99,15 @@ export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
     return () => controller.abort()
   }, [])
 
+  useEffect(
+    () => () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current)
+      }
+    },
+    [],
+  )
+
   const update = (event) => {
     setDraft((current) => ({
       ...current,
@@ -70,12 +115,46 @@ export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
     }))
   }
 
+  const applyLiveName = (nameValue) => {
+    const next = cleanFilters({
+      ...draftRef.current,
+      name: typeof nameValue === 'string' ? nameValue.trim() : nameValue,
+    })
+    if (onLiveSearch) {
+      onLiveSearch(next)
+    } else {
+      onApply(next)
+    }
+  }
+
+  const onSearchChange = (event) => {
+    const value = event.target.value
+    setDraft((current) => ({
+      ...current,
+      name: value,
+    }))
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current)
+    }
+    searchTimerRef.current = setTimeout(() => {
+      applyLiveName(value)
+    }, LIBRARY_SEARCH_DEBOUNCE_MS)
+  }
+
   const submit = (event) => {
     event.preventDefault()
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current)
+      searchTimerRef.current = null
+    }
     onApply(cleanFilters(draft))
   }
 
   const clear = () => {
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current)
+      searchTimerRef.current = null
+    }
     setDraft({})
     onClear()
   }
@@ -83,6 +162,14 @@ export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
   const applyBadgeToggle = (next) => {
     setDraft(next)
     onApply(next)
+  }
+
+  const toggleVisibility = () => {
+    setFiltersVisible((current) => {
+      const next = !current
+      writeFiltersVisible(next)
+      return next
+    })
   }
 
   const selects = SELECTS.map(([name, label, emptyLabel, source, valueField, textField]) => [
@@ -96,132 +183,163 @@ export function FilterBar({ filters, onApply, onClear, t = (key) => key }) {
 
   return (
     <form className="container-filtersandsort library-filters" onSubmit={submit}>
-      {loadError && <p role="alert">{t('Unable to load filter options.')}</p>}
-      <fieldset className="library-filters__signals">
-        <legend>{t('Kind')}</legend>
-        <div className="gt-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
-          {ITEM_KIND_FILTER_CHIPS.map((chip) => {
-            const active = parseItemKindFilter(
-              filters.item_kind ?? draft.item_kind,
-            ).includes(chip.kind)
-            return (
-              <button
-                key={chip.kind}
-                type="button"
-                className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
-                aria-pressed={active}
-                title={t(chip.title)}
-                onClick={() =>
-                  toggleItemKindFilter(filters, chip.kind, applyBadgeToggle, cleanFilters)
-                }
-              >
-                {t(chip.label)}
-              </button>
-            )
-          })}
-        </div>
-      </fieldset>
-      <fieldset className="library-filters__signals">
-        <legend>{t('Signals')}</legend>
-        <div className="gt-badge-filter-chips" role="group" aria-label={t('Badge filters')}>
-          {BADGE_FILTER_CHIPS.map((chip) => {
-            const active = (filters[chip.param] ?? draft[chip.param]) === '1'
-            return (
-              <button
-                key={chip.param}
-                type="button"
-                className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
-                aria-pressed={active}
-                title={t(chip.title)}
-                onClick={() =>
-                  toggleBadgeFilter(filters, chip.param, applyBadgeToggle, cleanFilters)
-                }
-              >
-                {t(chip.label)}
-              </button>
-            )
-          })}
-        </div>
-      </fieldset>
-      {selects.map(([name, label, emptyLabel, source, valueField, textField]) => (
-        <label key={name}>
-          {label}
-          <select
-            className="form-control"
-            name={name}
-            value={draft[name] ?? ''}
-            onChange={update}
-          >
-            <option value="">{emptyLabel}</option>
-            {options[source].map((option) => (
-              <option
-                key={option.id ?? option[valueField]}
-                value={option[valueField]}
-              >
-                {option[textField]}
-              </option>
-            ))}
-          </select>
+      <div className="library-filters__toolbar">
+        <label className="library-filters__search">
+          <span className="visually-hidden">{t('Search library')}</span>
+          <input
+            type="search"
+            className="form-control library-filters__search-input"
+            name="name"
+            value={draft.name ?? ''}
+            placeholder={t('Search by title')}
+            aria-label={t('Search library by title')}
+            autoComplete="off"
+            onChange={onSearchChange}
+          />
         </label>
-      ))}
-      <label>
-        {t('Companion')}
-        <select
-          className="form-control"
-          name="installed_only"
-          value={draft.installed_only ?? ''}
-          onChange={update}
+        <button
+          type="button"
+          className="gt-btn gt-btn--secondary library-filters__visibility"
+          aria-expanded={filtersVisible}
+          aria-controls="library-filters-body"
+          onClick={toggleVisibility}
         >
-          <option value="">{t('All games')}</option>
-          <option value="1">{t('Companion installed')}</option>
-        </select>
-      </label>
-      <label>
-        {t('Rating')}
-        <input
-          type="range"
-          className="form-control-range rating-slider"
-          name="rating"
-          min="0"
-          max="100"
-          value={draft.rating ?? '0'}
-          onChange={update}
-        />
-        <span>{draft.rating ?? '0'}</span>
-      </label>
-      <label>
-        {t('Sort by')}
-        <select
-          className="form-control"
-          name="sort_by"
-          value={draft.sort_by ?? 'name'}
-          onChange={update}
-        >
-          <option value="name">{t('Name')}</option>
-          <option value="rating">{t('Rating')}</option>
-          <option value="first_release_date">{t('Date Released')}</option>
-          <option value="date_identified">{t('Date Added')}</option>
-          <option value="size">{t('Filesize')}</option>
-        </select>
-      </label>
-      <label>
-        {t('Sort order')}
-        <select
-          className="form-control"
-          name="sort_order"
-          value={draft.sort_order ?? 'asc'}
-          onChange={update}
-        >
-          <option value="asc">{t('Ascending')}</option>
-          <option value="desc">{t('Descending')}</option>
-        </select>
-      </label>
-      <div className="button-group">
-        <button className="gt-btn gt-btn--primary" type="submit">{t('Apply')}</button>
-        <button className="gt-btn gt-btn--secondary" type="button" onClick={clear}>
-          {t('Clear')}
+          {filtersVisible ? t('Hide filters') : t('Show filters')}
         </button>
       </div>
+
+      {filtersVisible ? (
+        <div id="library-filters-body" className="library-filters__body">
+          {loadError && <p role="alert">{t('Unable to load filter options.')}</p>}
+          {selects.map(([name, label, emptyLabel, source, valueField, textField]) => (
+            <label key={name}>
+              {label}
+              <select
+                className="form-control"
+                name={name}
+                value={draft[name] ?? ''}
+                onChange={update}
+              >
+                <option value="">{emptyLabel}</option>
+                {options[source].map((option) => (
+                  <option
+                    key={option.id ?? option[valueField]}
+                    value={option[valueField]}
+                  >
+                    {option[textField]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+          <label>
+            {t('Companion')}
+            <select
+              className="form-control"
+              name="installed_only"
+              value={draft.installed_only ?? ''}
+              onChange={update}
+            >
+              <option value="">{t('All games')}</option>
+              <option value="1">{t('Companion installed')}</option>
+            </select>
+          </label>
+          <label>
+            {t('Rating')}
+            <input
+              type="range"
+              className="form-control-range rating-slider"
+              name="rating"
+              min="0"
+              max="100"
+              value={draft.rating ?? '0'}
+              onChange={update}
+            />
+            <span>{draft.rating ?? '0'}</span>
+          </label>
+          <label>
+            {t('Sort by')}
+            <select
+              className="form-control"
+              name="sort_by"
+              value={draft.sort_by ?? 'name'}
+              onChange={update}
+            >
+              <option value="name">{t('Name')}</option>
+              <option value="rating">{t('Rating')}</option>
+              <option value="first_release_date">{t('Date Released')}</option>
+              <option value="date_identified">{t('Date Added')}</option>
+              <option value="size">{t('Filesize')}</option>
+            </select>
+          </label>
+          <label>
+            {t('Sort order')}
+            <select
+              className="form-control"
+              name="sort_order"
+              value={draft.sort_order ?? 'asc'}
+              onChange={update}
+            >
+              <option value="asc">{t('Ascending')}</option>
+              <option value="desc">{t('Descending')}</option>
+            </select>
+          </label>
+
+          <fieldset className="library-filters__signals">
+            <legend>{t('Kind')}</legend>
+            <div className="gt-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
+              {ITEM_KIND_FILTER_CHIPS.map((chip) => {
+                const active = parseItemKindFilter(
+                  filters.item_kind ?? draft.item_kind,
+                ).includes(chip.kind)
+                return (
+                  <button
+                    key={chip.kind}
+                    type="button"
+                    className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
+                    aria-pressed={active}
+                    title={t(chip.title)}
+                    onClick={() =>
+                      toggleItemKindFilter(filters, chip.kind, applyBadgeToggle, cleanFilters)
+                    }
+                  >
+                    {t(chip.label)}
+                  </button>
+                )
+              })}
+            </div>
+          </fieldset>
+          <fieldset className="library-filters__signals">
+            <legend>{t('Signals')}</legend>
+            <div className="gt-badge-filter-chips" role="group" aria-label={t('Badge filters')}>
+              {BADGE_FILTER_CHIPS.map((chip) => {
+                const active = (filters[chip.param] ?? draft[chip.param]) === '1'
+                return (
+                  <button
+                    key={chip.param}
+                    type="button"
+                    className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
+                    aria-pressed={active}
+                    title={t(chip.title)}
+                    onClick={() =>
+                      toggleBadgeFilter(filters, chip.param, applyBadgeToggle, cleanFilters)
+                    }
+                  >
+                    {t(chip.label)}
+                  </button>
+                )
+              })}
+            </div>
+          </fieldset>
+
+          <div className="button-group">
+            <button className="gt-btn gt-btn--primary" type="submit">{t('Apply')}</button>
+            <button className="gt-btn gt-btn--secondary" type="button" onClick={clear}>
+              {t('Clear')}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </form>
   )
 }

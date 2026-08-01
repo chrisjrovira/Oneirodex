@@ -17,15 +17,38 @@ GameTheca play modes for systems **below PS5 / Xbox Series**. Those two stay **c
 | Xbox · 360 · One · PS3 · PS4 | Catalog | Optional BYO | `play_mode=companion` + hints; no fake Play |
 | PS5 · Xbox Series | Catalog only | — | `play_mode=catalog` |
 
-Admin: upload BIOS via `/api/emulator-bios` (Settings / storage path). Browse API returns `bios` + `n64_note` on playable titles. Systems hub badges show **Browser** / **Companion** / **Catalog** per platform. Operator core drops: [webretro-cores.md](../runbooks/webretro-cores.md) · health: `GET /api/emulator/health` (`deferred_cores`) · JS allowlist: `GET /api/emulator/installed-cores.js`.
+Admin: upload BIOS via `/api/emulator-bios` (Settings / storage path), or on household Unraid optionally mount a private appdata BIOS folder — see [BIOS / firmware](#bios--firmware-filenames-only). Browse API returns `bios` + `n64_note` on playable titles. Systems hub badges show **Browser** / **Companion** / **Catalog** per platform. Operator core drops: [webretro-cores.md](../runbooks/webretro-cores.md) · health: `GET /api/emulator/health` (`deferred_cores`) · JS allowlist: `GET /api/emulator/installed-cores.js`.
+
+## BIOS / firmware (filenames only)
+
+GameTheca **does not ship** copyrighted BIOS binaries in git, CI artifacts, or the public Docker image. Operators supply legally obtained firmware they already own.
+
+| How | When | Notes |
+|---|---|---|
+| **Admin upload** (public / default) | Always available | `POST /api/emulator-bios` → container `…/static/library/bios/` (WebRetro `biosCdn`) |
+| **Local private mount** (household Unraid) | Optional | Bind host `/mnt/user/appdata/gametheca/bios` → `/app/gametheca/static/library/bios` — [unraid-deploy.md](../runbooks/unraid-deploy.md#local-private-bios-mount-vs-public-upload). Not the games share. |
+
+**Expected filenames** (checklist — no download links):
+
+| Core / family | Filenames |
+|---|---|
+| PS1 (`mednafen_psx_hw`) | `scph5500.bin` · `scph5501.bin` · `scph5502.bin` |
+| Sega CD (`genesis_plus_gx`) | `bios_CD_U.bin` · `bios_CD_E.bin` · `bios_CD_J.bin` |
+| Saturn (`yabause`) | `saturn_bios.bin` |
+| 3DO (`opera`) | `panafz1.bin` · `panafz10.bin` |
+| Neo Geo CD (`neocd`) | `neocd_f.rom` · `neocd_sf.rom` · `neocd_st.rom` · `neocd_z.rom` · `front-sp1.bin` |
+
+Admin → emulator BIOS shows which required names are present. Missing BIOS surfaces on browse play hints.
 
 ## Play shell (WebRetro room)
 
-Browser play opens `webretro.html` with a per-system **room** skin (wallpaper, bezel chrome, bar typography, ambient light) — not just an accent color. Pass `platform=` (or rely on `core=` mapping) so the skin applies immediately; the bar shows the system name.
+Browser play opens `webretro.html` with a per-system **artistic room** — multi-layer wallpaper, floor plane, ambient lamp, bezel material sheen, bar typography hierarchy (brand eyebrow + system label), and light motion (wall drift · lamp breathe · bezel specular) — not just an accent color. Pass `platform=` (or rely on `core=` mapping) so the skin applies immediately; the bar shows the system name as the hero label.
 
 - **← Library** on the play bar returns via `history.back()` when the referrer is same-origin, else falls back to `/library`.
-- Distinct rooms include NES den, SNES living room, Genesis arcade corner, PS1 CRT night, Dreamcast swirl, Arcade cabinet, GB/GBA handheld slabs, PC desk, and more.
+- Distinct rooms include NES den, SNES living room, Genesis arcade corner, PS1 CRT night, Dreamcast swirl, Arcade cabinet, GB/GBA handheld slabs, PC desk, and more — distinguishable at a glance without reading docs.
 - The emulator screen is **aspect-locked to the core's native shape** (SNES/NES/Genesis ~4:3, GBA 3:2, GB/GBC ~10:9, NDS portrait dual-screen, PSP/Vita ~16:9, etc.) instead of stretching to fill the bezel, so you no longer get big empty black bars around the picture.
+- Motion respects `prefers-reduced-motion`.
+- After deploy, hard-refresh the play tab (Ctrl+F5) so cached `play-skins.css` / `.js` drop. Smoke: `node gametheca/static/vendor/webretro/play-skins.assert.mjs`.
 
 ## Audio/video tuning + WASM limits (SNES and friends)
 
@@ -49,7 +72,9 @@ Browser Play streams via `GET /api/downloadrom/<uuid>` (ASGI). Server extracts a
 | `.rar` | Requires `rarfile` + a host `unrar`/`bsdtar`/`7z` binary — the Docker image ships `libarchive-tools` (`bsdtar`) + `p7zip-full` (`7z`) so this works out of the box in Compose/Unraid |
 | `.gz` | Single ROM wrappers only (`Adventure.nes.gz`). `.tar.gz` is **not** browser-playable (`play_blocker=unsupported_archive`) |
 
-Failures return JSON: `{"error": "…", "code": "…", "hint": "…"}` (`error` always present). The play shell (`webretro.html`) surfaces non-2xx `/api/downloadrom/` responses in an accessible `#gt-play-alert` region (`error` plus optional `hint`) instead of a silent `.catch`. Browse may set `play_blocker=unsupported_archive`; GameCard / Game Details show a disabled Play control with tooltip when that blocker is present.
+Failures return JSON: `{"error": "…", "code": "…", "hint": "…"}` (`error` always present). The play shell (`webretro.html`) surfaces non-2xx `/api/downloadrom/` responses in an accessible `#gt-play-alert` region (`error` plus optional `hint`) instead of a silent `.catch` — including `missing_extractor` (prefer `.zip` / host tools). Browse may set `play_blocker=unsupported_archive`; GameCard / Game Details show a disabled Play control with tooltip when that blocker is present.
+
+When `firmware_missing` is true, browse/details also return `bios_required`, `bios.message`, and `bios.hint`. Member SPA blocks Play (quiet honesty + Help / Admin → Emulators for librarians) — **never** a Download BIOS CTA. Version Download uses `POST /api/downloads/games/<uuid>` and toasts Backend `hint` on **410** `path_missing`.
 
 ### PS1 (and other disc/`.cue`) downloads are bundled as a zip
 
@@ -70,7 +95,7 @@ If a deferred core is still warming, status may say to sync again after **Start*
 
 ## Cheats (`.cht`)
 
-Game details → **Cheats** manages the per-game RetroArch `.cht` library (`GET/POST/DELETE /api/games/{uuid}/cheats`). Create with name + code rows + dialect hint (Raw / GG-style / AR-style / GS-style — capability labels only), or upload a prebuilt `.cht`. The WebRetro play bar loads the same list for **Apply cheat**; companion stages files under `app_data/cheats/{uuid}/` before RetroArch. Quick Menu may still be required to enable codes. PC / native titles stay notes/BYO only — no memory injection. Stance: [cheats.md](../strategy/cheats.md) · companion: [desktop-companion.md](desktop-companion.md).
+Browse/details payloads include **`cheat_surface`**: `retroarch` | `pc_wand` | `none`. Only `retroarch` exposes the `.cht` library (`GET/POST/DELETE /api/games/{uuid}/cheats`); create/upload/download/delete return **403** otherwise. Create with name + code rows + dialect hint (Raw / GG-style / AR-style / GS-style — capability labels only), or upload a prebuilt `.cht`. The WebRetro play bar loads the same list for **Apply cheat**; companion stages files under `app_data/cheats/{uuid}/` before RetroArch. Quick Menu may still be required to enable codes. PC / native (`PCWIN` / `PCDOS` / `MAC` / `OTHER`) report `pc_wand` — hide RetroArch cheats until a future wand ships; no memory injection. Stance: [cheats.md](../strategy/cheats.md) · companion: [desktop-companion.md](desktop-companion.md).
 
 Full plan: [emulation-coverage.md](../strategy/emulation-coverage.md).
 

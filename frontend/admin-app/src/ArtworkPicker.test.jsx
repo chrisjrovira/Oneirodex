@@ -24,6 +24,20 @@ test('ArtworkPicker searches covers and surfaces apply failure reason', async ()
             { id: 'epic', name: 'Epic Games Store', ownership_only: true },
             { id: 'itch', name: 'itch.io' },
             { id: 'giantbomb', name: 'GiantBomb', needs_key: true },
+            {
+              id: 'mobygames',
+              name: 'MobyGames',
+              needs_key: true,
+              key_configured: false,
+              note: 'Optional Class D catalog search (MOBYGAMES_API_KEY).',
+            },
+            {
+              id: 'thegamesdb',
+              name: 'TheGamesDB',
+              needs_key: true,
+              key_configured: false,
+              note: 'Optional Class D catalog search (THEGAMESDB_API_KEY).',
+            },
           ],
         }),
       }
@@ -63,6 +77,10 @@ test('ArtworkPicker searches covers and surfaces apply failure reason', async ()
 
   expect(await screen.findByRole('button', { name: /Meta Quest Store/i })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /Epic Games Store/i })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /MobyGames/i })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /MobyGames/i })).toHaveTextContent(/· key/)
+  expect(screen.getByRole('button', { name: /TheGamesDB/i })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /TheGamesDB/i })).toHaveTextContent(/· key/)
 
   fireEvent.click(screen.getByRole('button', { name: 'Search' }))
   expect(await screen.findByRole('button', { name: /Celeste/i })).toBeInTheDocument()
@@ -121,4 +139,118 @@ test('ArtworkPicker identify chip searches metadata source', async () => {
   expect(calls.some((c) => c.url.includes('/api/search_metadata?') && c.url.includes('source=meta_quest'))).toBe(
     true,
   )
+})
+
+test('ArtworkPicker MobyGames chip soft-honesty when key unset', async () => {
+  const calls = []
+  global.fetch = vi.fn(async (url, opts) => {
+    calls.push({ url: String(url), method: opts?.method || 'GET' })
+    const u = String(url)
+    if (u.includes('/api/providers') && !u.includes('/search')) {
+      return { ok: true, status: 200, json: async () => ({ providers: [] }) }
+    }
+    if (u.includes('/api/search_metadata/sources')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          sources: [
+            {
+              id: 'mobygames',
+              name: 'MobyGames',
+              needs_key: true,
+              key_configured: false,
+              note: 'Optional Class D catalog search (MOBYGAMES_API_KEY).',
+            },
+          ],
+        }),
+      }
+    }
+    if (u.includes('/api/search_metadata?')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          source: 'mobygames',
+          results: [],
+          needs_key: true,
+          key_configured: false,
+          note: 'MOBYGAMES_API_KEY not configured — empty results. Metadata only — never downloads games.',
+        }),
+      }
+    }
+    return { ok: true, status: 200, json: async () => ({}) }
+  })
+
+  render(
+    <MemoryRouter>
+      <ArtworkPicker gameUuid="abc-123" gameName="Celeste" />
+    </MemoryRouter>,
+  )
+
+  fireEvent.click(await screen.findByRole('button', { name: /MobyGames/i }))
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  expect(
+    await screen.findByText(/MOBYGAMES_API_KEY not configured — empty results/i),
+  ).toBeInTheDocument()
+  expect(calls.some((c) => c.url.includes('/api/search_metadata?') && c.url.includes('source=mobygames'))).toBe(
+    true,
+  )
+})
+
+test('ArtworkPicker TheGamesDB chip soft-honesty when key unset', async () => {
+  const calls = []
+  global.fetch = vi.fn(async (url, opts) => {
+    calls.push({ url: String(url), method: opts?.method || 'GET' })
+    const u = String(url)
+    if (u.includes('/api/providers') && !u.includes('/search')) {
+      return { ok: true, status: 200, json: async () => ({ providers: [] }) }
+    }
+    if (u.includes('/api/search_metadata/sources')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          sources: [
+            {
+              id: 'thegamesdb',
+              name: 'TheGamesDB',
+              needs_key: true,
+              key_configured: false,
+              note: 'Optional Class D catalog search (THEGAMESDB_API_KEY).',
+            },
+          ],
+        }),
+      }
+    }
+    if (u.includes('/api/search_metadata?')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          source: 'thegamesdb',
+          results: [],
+          needs_key: true,
+          key_configured: false,
+          note: 'THEGAMESDB_API_KEY not configured — empty results. Metadata only — never downloads games.',
+        }),
+      }
+    }
+    return { ok: true, status: 200, json: async () => ({}) }
+  })
+
+  render(
+    <MemoryRouter>
+      <ArtworkPicker gameUuid="abc-123" gameName="Sonic" />
+    </MemoryRouter>,
+  )
+
+  fireEvent.click(await screen.findByRole('button', { name: /TheGamesDB/i }))
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  expect(
+    await screen.findByText(/THEGAMESDB_API_KEY not configured — empty results/i),
+  ).toBeInTheDocument()
+  expect(
+    calls.some((c) => c.url.includes('/api/search_metadata?') && c.url.includes('source=thegamesdb')),
+  ).toBe(true)
 })

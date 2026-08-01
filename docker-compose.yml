@@ -15,6 +15,13 @@
 #     Mount:   → /app/gametheca/static/library  (RW)
 #     App env: UPLOAD_FOLDER=/app/gametheca/static/library  (hard-set below)
 #
+#   BIOS / FIRMWARE (optional — household Unraid only; never ship binaries in git/image)
+#     Host:    EMULATOR_BIOS_HOST_PATH  (appdata, NOT the games share)
+#     Mount:   → /app/gametheca/static/library/bios  (RW; nested under library mount)
+#     App env: EMULATOR_BIOS_PATH=/app/gametheca/static/library/bios
+#     Public/GitHub stance: Admin upload only — do not bake firmware into layers.
+#     Uncomment the bind below when the host folder has legally obtained files.
+#
 # Unraid path examples: .env.unraid.example
 # Profiles (opt-in): livekit | clamav | challenge
 # Observability: commented stub only — see docs/runbooks/observability-profile.md
@@ -93,6 +100,10 @@ services:
       - CHALLENGE_SOLVER_MAX_TIER=${CHALLENGE_SOLVER_MAX_TIER:-5}
       # Default 1 — SSE/schedulers single-process; override UVICORN_WORKERS=2 OK
       - UVICORN_WORKERS=${UVICORN_WORKERS:-1}
+      # Optional private BIOS mount (container path). Default matches static library bios
+      # so WebRetro / Admin see the same folder. Requires config.EMULATOR_BIOS_PATH
+      # from env (Backend) when overriding away from the default path.
+      - EMULATOR_BIOS_PATH=${EMULATOR_BIOS_PATH:-/app/gametheca/static/library/bios}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     # ----- UNRAID VOLUMES (see header) -----
@@ -105,6 +116,12 @@ services:
       # the shipped 24 cores OR run scripts/fetch-webretro-cores.sh --defaults first —
       # an empty mount hides image cores. See docs/runbooks/webretro-cores.md
       # - "${WEBRETRO_CORES_HOST_PATH}:/app/gametheca/static/vendor/webretro/cores"
+      # Optional private BIOS / firmware (RW appdata — NOT /storage:ro games).
+      # Host example: /mnt/user/appdata/gametheca/bios
+      # Nested bind overrides LIBRARY_HOST_PATH/bios so dumps stay out of the
+      # games share. Empty host dir is fine (Admin upload still works into it).
+      # Never commit BIOS binaries; never bake them into the public image.
+      # - "${EMULATOR_BIOS_HOST_PATH:-/mnt/user/appdata/gametheca/bios}:/app/gametheca/static/library/bios"
     depends_on:
       db:
         condition: service_healthy

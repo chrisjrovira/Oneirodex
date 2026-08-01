@@ -1,7 +1,20 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 
-import { normalizeBaseUrl } from './auth.js'
+import {
+  createAuthStore,
+  describeTokenPaste,
+  isGamethecaToken,
+  normalizeBaseUrl,
+  normalizeGamethecaToken,
+} from './auth.js'
+import { createDesktopApi } from './api.js'
 import { isTauriRuntime, loadStoredConfig, saveStoredConfig } from './config-store.js'
+import {
+  formatKeychainError,
+  logCompanion,
+  shapeInvalidConnectionResult,
+  validateConnection,
+} from './connect.js'
 import { keychainAdapter } from './keychain.js'
 import { joinUrl } from './paths.js'
 import { openSocialCompanionWindow } from './social-window.js'
@@ -49,6 +62,7 @@ async function openLibraryWindow(baseUrl: string): Promise<'opened' | 'focused' 
 /**
  * Thin client shell — connect-only. No download/install/launch.
  * Opens member SPA + Friends in least-privilege webviews.
+ * Token normalize / shape / optional validate share the full companion path.
  */
 export async function mountThinApp(root: HTMLElement): Promise<void> {
   root.innerHTML = `
@@ -62,6 +76,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
       <label>Thin API token (optional) <input id="token" type="password" placeholder="gt_… thin preset" autocomplete="off" /></label>
       <div class="actions">
         <button type="button" id="saveBtn">Save</button>
+        <button type="button" id="validateBtn">Validate token</button>
         <button type="button" id="openLibraryBtn" class="primary">Open library</button>
         <button type="button" id="openFriendsBtn">Open friends</button>
       </div>
@@ -86,14 +101,56 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
     statusEl.dataset.tone = tone
   }
 
+  function readNormalizedToken(): string {
+    const raw = tokenEl.value
+    logCompanion('thin', describeTokenPaste(raw))
+    const token = normalizeGamethecaToken(raw)
+    tokenEl.value = token
+    return token
+  }
+
   async function persistThinConfig(baseUrl: string, token: string): Promise<void> {
     // Config JSON never stores the token; optional thin token lives in the OS keyring.
     await saveStoredConfig({ baseUrl, token: null })
-    if (token) {
-      await keychainAdapter.save(token)
-    } else {
-      await keychainAdapter.clear()
+    try {
+      if (token) {
+        await keychainAdapter.save(token)
+      } else {
+        await keychainAdapter.clear()
+      }
+    } catch (error) {
+      throw new Error(formatKeychainError(error))
     }
+  }
+
+  /**
+   * Same normalize → shape → (optional) validateConnection path as full companion.
+   * Empty token is allowed (site session in webviews).
+   */
+  async function prepareThinCredentials(options: {
+    requireValidate: boolean
+  }): Promise<{ baseUrl: string; token: string } | null> {
+    const baseUrl = normalizeBaseUrl(baseUrlEl.value)
+    baseUrlEl.value = baseUrl
+    if (!baseUrl) {
+      setStatus('Enter a server base URL.', 'error')
+      return null
+    }
+    const token = readNormalizedToken()
+    if (token && !isGamethecaToken(token)) {
+      setStatus(shapeInvalidConnectionResult().message, 'error')
+      return null
+    }
+    if (token && options.requireValidate) {
+      const auth = createAuthStore({ baseUrl, token })
+      const api = createDesktopApi(auth)
+      const result = await validateConnection(api)
+      if (!result.ok) {
+        setStatus(result.message, 'error')
+        return null
+      }
+    }
+    return { baseUrl, token }
   }
 
   try {
@@ -101,18 +158,41 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
     if (stored.baseUrl) baseUrlEl.value = stored.baseUrl
     const fromKeychain = await keychainAdapter.load()
     const token = stored.token || fromKeychain
-    if (token) tokenEl.value = token
-  } catch {
-    // first run
+    if (token) tokenEl.value = normalizeGamethecaToken(token)
+  } catch (error) {
+    logCompanion('thin', `hydrate failed: ${error instanceof Error ? error.message : String(error)}`)
+    // first run / keyring load noise
   }
 
   root.querySelector('#saveBtn')!.addEventListener('click', () => {
     void (async () => {
       try {
-        const baseUrl = normalizeBaseUrl(baseUrlEl.value)
-        baseUrlEl.value = baseUrl
-        await persistThinConfig(baseUrl, tokenEl.value.trim())
-        setStatus('Saved. Open library or friends when ready.', 'success')
+        const prepared = await prepareThinCredentials({ requireValidate: false })
+        if (!prepared) return
+        await persistThinConfig(prepared.baseUrl, prepared.token)
+        setStatus(
+          prepared.token
+            ? 'Saved. Use Validate token to confirm the secret, or open library / friends.'
+            : 'Saved. Open library or friends when ready.',
+          'success',
+        )
+      } catch (err) {
+        setStatus(err instanceof Error ? err.message : String(err), 'error')
+      }
+    })()
+  })
+
+  root.querySelector('#validateBtn')!.addEventListener('click', () => {
+    void (async () => {
+      try {
+        const prepared = await prepareThinCredentials({ requireValidate: true })
+        if (!prepared) return
+        if (!prepared.token) {
+          setStatus('Paste a thin API token to validate (optional for library/friends site login).', 'error')
+          return
+        }
+        await persistThinConfig(prepared.baseUrl, prepared.token)
+        setStatus('Token validated against the server. Open library or friends when ready.', 'success')
       } catch (err) {
         setStatus(err instanceof Error ? err.message : String(err), 'error')
       }
@@ -122,10 +202,10 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
   root.querySelector('#openLibraryBtn')!.addEventListener('click', () => {
     void (async () => {
       try {
-        const baseUrl = normalizeBaseUrl(baseUrlEl.value)
-        baseUrlEl.value = baseUrl
-        await persistThinConfig(baseUrl, tokenEl.value.trim())
-        const result = await openLibraryWindow(baseUrl)
+        const prepared = await prepareThinCredentials({ requireValidate: false })
+        if (!prepared) return
+        await persistThinConfig(prepared.baseUrl, prepared.token)
+        const result = await openLibraryWindow(prepared.baseUrl)
         setStatus(
           result === 'focused' ? 'Library window focused.' : 'Library window opened — sign in if prompted.',
           'success',
@@ -139,10 +219,10 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
   root.querySelector('#openFriendsBtn')!.addEventListener('click', () => {
     void (async () => {
       try {
-        const baseUrl = normalizeBaseUrl(baseUrlEl.value)
-        baseUrlEl.value = baseUrl
-        await persistThinConfig(baseUrl, tokenEl.value.trim())
-        const result = await openSocialCompanionWindow(baseUrl)
+        const prepared = await prepareThinCredentials({ requireValidate: false })
+        if (!prepared) return
+        await persistThinConfig(prepared.baseUrl, prepared.token)
+        const result = await openSocialCompanionWindow(prepared.baseUrl)
         setStatus(
           result === 'focused' ? 'Friends window focused.' : 'Friends window opened — sign in if prompted.',
           'success',

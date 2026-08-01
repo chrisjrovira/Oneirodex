@@ -10,6 +10,15 @@ Admin settings use a **card grid** at `/admin/settings` (whole card → destinat
 
 **Worker caps (scan/turbo):** New installs default scan threads **1**, turbo threads **4**, turbo batch **100**; runtime hard-caps via `GT_SCAN_THREAD_CAP` / `GT_IMAGE_DOWNLOAD_THREAD_CAP` / `GT_IMAGE_DOWNLOAD_BATCH_CAP` — not Compose `SCAN_*` env vars. See [libraries-and-scans.md](libraries-and-scans.md) · [unraid-deploy.md](../runbooks/unraid-deploy.md#cpu--scan-load-unraid-safe-defaults).
 
+## Scan / match policy (W20-4)
+
+- **Done (uncommitted):** Admin → Settings → **Scan / match policy** (`/admin/scan_match`) — React `ScanMatchSettingsPage` (Jinja SPA shell) + Settings hub card · admin vitest **7/7** claimed · BE `GET`/`PUT` `/api/admin/scan-match/config` live (scoring / dupe / peel wired · pytest claimed **13+21**).
+- **Persist:** `GlobalSettings` (`settings.scan_match` JSON + `propose_only_scan`). Unset keys use defaults below.
+- **Defaults:** `match_high_threshold` **0.92** · `match_ambiguous_gap` **0.08** · `dupe_title_threshold` **0.85** · `peel_profile` `conservative` · Stage C safe variant toggles **on** (`enable_year_drop_variant` · `enable_pack_peel_variant` · `enable_edition_peel_variant` · `enable_sequel_numeral_variant`).
+- **Honesty:** propose-only never auto-imports (even high-confidence). API refuses mega-library / depth-3 family walk keys. `scanThreadCount` stays on Server Settings / worker caps.
+- Propose-only also remains on **Server Settings** (`proposeOnlyScan` / `propose_only_scan`) with a link to this page.
+- **Post-ship:** Reset Themes **not** required for this API (UI shell already shipped). Details: [libraries-and-scans.md](libraries-and-scans.md#scan--match-policy-w20-4).
+
 ## Hub badges
 
 Settings hub shows On/Off (and Storage “Apply off”) for optional modules so you can see state without opening each page.
@@ -117,16 +126,17 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 
 ## Art studio (cover placeholders)
 
-- **Admin → Settings → Art studio** or `/admin/art_studio` (React; admin/ops only). Tabs: **Placeholders** · **Pick & queue** (`#images`).
-- Local Pillow templates — aurora tokens (`--gt-*`), no paid cloud AI.
-- **System / platform** selector drives preview chrome + Backend system template keys (NES/SNES/…). Preview tiles at real **200×300** and **400×600**.
-- **Preview** → **Generate all sizes** (2:3 tiles, 16:9 wides, 1:1 squares, 1280×720 hero) under `static/library/generated/{pack_id}/`.
-- **Download ZIP** · **Set as fallback pack** (writes `default_cover.jpg` + `default_library.jpg`) · **Apply cover to game** (game UUID).
-- **Batch placeholders** for no-cover titles via `POST /admin/api/art-studio/batch-generate` (alias: `apply-batch`) first, then `POST /admin/api/covers/batch/apply` (`generate_only`) fallback.
+- **Admin → Settings → Art studio** or `/admin/art_studio` (React; admin/ops only). Tabs: **Studio** · **Backup & stock** (`#stock`) · **Pick & queue** (`#images`).
+- Local Pillow renderer — aurora tokens (`--gt-*`), no paid cloud AI. Preview/generate use **artistic** compositions by default (`artistic: true` on `POST /admin/api/art-studio/preview`; optional `artistic: false` for legacy flat A/B).
+- **Title-first studio:** large live preview stage; typing a title debounces preview. System / platform selector + preview size toggles (200×300 · 400×600 · 960×540 wide). Soft-fails preview lag with toast.
+- **Actions:** Preview · Generate pack · Download ZIP · Set as fallback · Apply to game UUID.
+- **Backup & stock** (`#stock`): thumbnail grid of platform packs + stock motifs from `GET /admin/api/art-studio/stock`; ungenerated packs auto-call `POST …/stock/generate` on apply. Select → preview → **Use as library default** / **Set fallback** via `POST /admin/api/art-studio/apply` (`mode=fallback|library`). Soft empty state if catalog 404. Library create/edit Jinja **Choose image** links here.
+- **Library default covers** panel shows current `default_cover.jpg` / `default_library.jpg` with **Regenerate defaults** CTA.
+- **Batch placeholders** (collapsed) for no-cover titles via `POST /admin/api/art-studio/batch-generate` (alias: `apply-batch`) first, then `POST /admin/api/covers/batch/apply` (`generate_only`) fallback.
 - **Auto-pick (ImagesPage):** `POST /admin/api/covers/batch/apply` with `policy=sgdb_then_igdb_then_generate` (library / platform / service filters). Mass search: `POST /admin/api/covers/batch/search`.
-- **Single-title picker:** `POST /admin/api/covers/search` + `POST /admin/api/covers/apply`. Identify chips from `GET /api/search_metadata/sources` (Meta Quest / Epic / itch / Giant Bomb) search via `GET /api/search_metadata?source=`.
+- **Single-title picker:** `POST /admin/api/covers/search` + `POST /admin/api/covers/apply`. Identify chips from `GET /api/search_metadata/sources` (Meta Quest / Epic / itch / Giant Bomb / MobyGames / TheGamesDB) search via `GET /api/search_metadata?source=`. Optional `MOBYGAMES_API_KEY` / `THEGAMESDB_API_KEY` — empty results when unset.
 - Queue rows show `failure_reason` (and `last_error` fallback); list responses surface `image_save_path.error` when the images volume is not writable.
-- API: `POST /admin/api/art-studio/preview|generate|apply|apply-batch`, `GET /admin/api/art-studio/download/<pack_id>`, `POST /admin/api/art-studio/batch-generate`; covers mass tools under `/admin/api/covers/*`.
+- API: `POST /admin/api/art-studio/preview|generate|apply|apply-batch`, `GET /admin/api/art-studio/download/<pack_id>`, `POST /admin/api/art-studio/batch-generate`, `GET /admin/api/art-studio/stock`, `POST /admin/api/art-studio/stock/generate`; covers mass tools under `/admin/api/covers/*`.
 - **System templates:** generated covers use per-system palette + glyph (NES/SNES/PS1/Switch/PC/…) so 200×300 tiles stay readable — not a generic subtitle-only placeholder.
 - **Meta Quest Store:** identify `GET /api/search_metadata?source=meta_quest|meta|quest` · ownership CSV `POST /api/ownership/meta_quest/csv` · `META_QUEST_API_MODE` / `META_QUEST_UNOFFICIAL_GRAPHQL` (off by default) — [store-metadata-identify.md](../strategy/store-metadata-identify.md).
 - Disk failures (read-only `IMAGE_SAVE_PATH` / generated-pack folder, out of space) surface as a JSON `error` and show in the red alert banner instead of a bare 500 — check the message for the exact path/permission problem. If applying a pack to a game fails partway (DB error after the file was written), the orphaned file is cleaned up automatically.

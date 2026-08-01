@@ -12,7 +12,7 @@ See [container-wont-start.md](../runbooks/container-wont-start.md) for SECRET_KE
 | Need server logs URL | **`/admin/server_logs`** (alias) or Admin → Server status/logs — [ops-summary.md](ops-summary.md) |
 | Ops tiles show **n/a** for load / RSS / db_ping | Expected when OS denies load averages (Windows), psutil unavailable, or DB unreachable — not a broken UI |
 | Ops flags `DATA_FOLDER_GAMES` / `BASE_FOLDER_POSIX` / `BASE_FOLDER_WINDOWS` `not writable` | Expected on Unraid `:ro` games mount (and its base folder) only on **older** builds — current Ops treats games + base folder as read-OK; rebuild/restart app if still bad. `UPLOAD_FOLDER` / library must stay RW |
-| Scan progress looks stalled / want live counters | **Admin → Ops** **Scans** tile (polls `/admin/api/ops/summary` ~15s) shows processed (`success+failed`) / `total`, plus failed count, `current_processing`, status — [ops-summary.md](ops-summary.md#scans-key) · Scan Jobs page for Stop/detail |
+| Scan progress looks stalled / want live counters | **Admin → Ops** **Scans** tile (polls `/admin/api/ops/summary` ~15s) shows processed (`success+failed`) / `total`, plus failed count, `current_processing`, status, elapsed/ETA when present (**ETA blank when stalled/unknown**) — [ops-summary.md](ops-summary.md#scans-key) · **Scan management** for status/library/path filters + Stop/detail |
 | Schema errors | Startup `updateschema` · [local-postgres-pytest.md](../runbooks/local-postgres-pytest.md) for local tests |
 | App loops waiting for DB: `no pg_hba … no encryption` | Postgres rejects non-SSL from Docker bridge — [container-wont-start §3b](../runbooks/container-wont-start.md#3b-postgres-up-but-pg_hba-rejects-app-no-encryption); recreate `db` with current Compose `pg_hba` mount |
 

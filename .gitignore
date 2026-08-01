@@ -131,8 +131,13 @@ docs/_private/
 # Legal sample ROM binaries (operator-fetched; never commit dumps)
 samples/free-roms/library/
 
-
+# Operator BIOS / firmware dumps (never commit; public image is upload-only)
+bios/
+**/bios/*.bin
+**/bios/*.rom
+gametheca/static/library/bios/
 
 # Icon packs installed from setup/icon_themes at boot (like themes/)
 gametheca/static/library/icon-themes/
 gametheca/static/library/chat-emoji/
+gametheca/static/library/chat-attachments/

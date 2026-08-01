@@ -79,10 +79,7 @@ test('popup exposes navigation actions and gates admin actions', async () => {
   const { rerender } = render(<GameCard game={game} isAdmin={false} />)
 
   await user.click(screen.getByRole('button', { name: /open actions for archery kings vr/i }))
-  expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute(
-    'href',
-    `/download_game/${game.uuid}`,
-  )
+  expect(screen.getByRole('button', { name: 'Download' })).toBeInTheDocument()
   expect(screen.queryByRole('link', { name: 'Edit Details' })).toBeNull()
   expect(screen.queryByRole('button', { name: 'Remove Game from DB' })).toBeNull()
   await user.click(screen.getByRole('button', { name: /open actions for archery kings vr/i }))

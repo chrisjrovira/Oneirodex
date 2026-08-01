@@ -1,9 +1,9 @@
 # Cover art studio — fallback art + admin art creator
 
 **Date:** 2026-07-27  
-**Status:** **ART-1…ART-3 shipped** (Jul 27) · **ART-5 shipped (shipping Jul 29)** — per-system templates + readable tiles · ArtStudioPage system previews — ART-4 ops quota deferred  
+**Status:** **ART-1…ART-3 shipped** (Jul 27) · **ART-5 shipped** · **ART-6 backend shipped** (stock/platform catalog + generate + library/fallback apply; UI picker parallel) — ART-4 ops quota deferred  
 **Audience:** UI/UX · Backend · Ops · Docs  
-**Related:** `gametheca/utils/cover_url.py` · icon themes · Themes admin · [v1-readiness.md](v1-readiness.md) · [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md)
+**Related:** `gametheca/utils/cover_url.py` · `gametheca/utils/cover_art_stock.py` · icon themes · Themes admin · [v1-readiness.md](v1-readiness.md) · [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md)
 
 ---
 
@@ -56,10 +56,46 @@ Operators also cannot generate on-brand placeholders (title text, system accent,
 ### Out of scope
 
 - Member self-serve generator (admin/ops only)  
-- Scraping third-party art marketplaces  
+- Scraping third-party art marketplaces / official console brand PNGs  
 - Replacing SteamGridDB provider (complement)
 
 ---
+
+## Stock + platform packs (ART-6)
+
+Operators pick from a catalog instead of only the single dull `default_library.jpg`:
+
+| Kind | Pack id examples | Storage |
+|---|---|---|
+| `platform` | `platform-nes`, `platform-psx`, `platform-pcwin` | `static/library/stock/{id}/` |
+| `stock` | `stock-controller`, `stock-crt-grid`, `stock-neon-court` | same |
+
+- **Catalog:** `GET /admin/api/art-studio/stock` → `{ items: [{ id, label, kind, platform?, pack_id, path, urls: { tile, wide, hero }, generated }], count }`
+- **Generate:** `POST /admin/api/art-studio/stock/generate` body `{ ids?: string[] }` — idempotent Pillow write of the size matrix
+- **Apply library:** `POST /admin/api/art-studio/apply` `{ pack_id, mode: "library", library_uuid }` → sets `Library.image_url` to the pack wide/hero static URL
+- **Apply fallback:** existing `{ pack_id, mode: "fallback" }` also resolves packs under `library/stock/`
+- Original geometry only (controller silhouette, cartridge, disc ring, CRT grid, neon court, …) — no scraped box art
+
+### Frontend handoff (exact)
+
+```http
+GET /admin/api/art-studio/stock
+→ 200 { "items": [ { "id": "platform-nes", "label": "NES", "kind": "platform", "platform": "nes", "pack_id": "platform-nes", "path": "library/stock/platform-nes", "urls": { "tile": "/static/library/stock/platform-nes/tile_400x600.webp", "wide": "…/wide_960x540.webp", "hero": "…/hero_1280x720.webp" }, "generated": true } ], "count": 34 }
+
+POST /admin/api/art-studio/stock/generate
+{ "ids": ["stock-controller", "platform-nes"] }   // omit ids = all
+→ 201 { "generated": [ { "pack_id", "title", "kind", "files": [...] } ], "count": 2 }
+
+POST /admin/api/art-studio/apply
+{ "pack_id": "stock-neon-court", "mode": "library", "library_uuid": "<uuid>" }
+→ 200 { "mode": "library", "library_uuid", "pack_id", "image_url", "filename" }
+
+POST /admin/api/art-studio/apply
+{ "pack_id": "platform-nes", "mode": "fallback" }
+→ 200 { "mode": "fallback", "pack_id", "paths": { "default_cover", "default_library" } }
+```
+
+UI: stock picker grid → Generate if `generated: false` → Apply to library (create/edit) or Set as fallback.
 
 ## Waves
 
@@ -69,6 +105,7 @@ Operators also cannot generate on-brand placeholders (title text, system accent,
 | ART-2 | Admin art creator API + size matrix export | Backend |
 | ART-3 | Admin UI: preview, download zip, attach to game / set fallback pack | UI/UX |
 | ART-5 | Per-system template packs + readable tile typography · ArtStudioPage system previews | UI/UX + Backend |
+| ART-6 | Stock / platform catalog API + Pillow packs under `library/stock/` · apply library/fallback · UI `#stock` picker | Backend shipped · UI/UX parallel |
 | ART-4 | Ops: disk quota for generated art; purge orphan | Ops |
 
 ---

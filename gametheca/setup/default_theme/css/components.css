@@ -401,6 +401,12 @@
 .gt-badge--info { background: rgba(70, 90, 160, 0.95); }
 .gt-badge--owned { background: rgba(40, 130, 90, 0.95); }
 .gt-badge--muted { background: rgba(70, 70, 80, 0.95); }
+.gt-badge--missing {
+    background: rgba(55, 58, 66, 0.92);
+    color: rgba(232, 228, 220, 0.95);
+    letter-spacing: 0.05em;
+    font-weight: 650;
+}
 .gt-badge--meta { background: rgba(0, 110, 200, 0.95); }
 .gt-badge--kind { background: rgba(90, 110, 140, 0.95); }
 .gt-badge--overflow { background: rgba(30, 30, 30, 0.9); }
@@ -546,17 +552,42 @@
     margin-left: 0px;
 }
 
-.chip {
-    display: inline-block;
-    padding: 0 15px;
-    height: 25px;
-    font-size: 0.8rem;
-    line-height: 25px;
-    border-radius: 25px;
-    background-color: var(--chip-bg-dark);
-    color: var(--text-white);
+.chip,
+.gt-chip,
+a.chip,
+a.gt-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: 1.55rem;
+    padding: 0.2rem 0.65rem;
     margin: 2px;
+    font-size: 0.72rem;
+    font-weight: 650;
+    letter-spacing: 0.03em;
+    line-height: 1.2;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.14)) 85%, transparent);
+    background-color: var(--chip-bg-dark, color-mix(in srgb, var(--gt-surface-2, #1c2230) 88%, transparent));
+    color: var(--text-white, var(--gt-text-muted, #c4ccd8));
     white-space: nowrap;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+a.chip:link,
+a.chip:visited,
+a.chip:hover,
+a.chip:active,
+a.chip:focus,
+a.gt-chip:link,
+a.gt-chip:visited,
+a.gt-chip:hover,
+a.gt-chip:active,
+a.gt-chip:focus {
+    text-decoration: none;
+    color: var(--text-white, var(--gt-text-muted, #c4ccd8));
 }
 
 .file-size-chip {

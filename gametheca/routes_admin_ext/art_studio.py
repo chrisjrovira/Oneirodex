@@ -23,6 +23,11 @@ from gametheca.utils.cover_art_studio import (
     save_pack,
     safe_pack_dir,
 )
+from gametheca.utils.cover_art_stock import (
+    apply_pack_to_library,
+    generate_stock_packs,
+    list_stock_catalog,
+)
 from gametheca.utils.cover_selection import list_games_for_cover_batch
 from gametheca.utils.event_logging import log_system_event
 from . import admin2_bp
@@ -55,13 +60,32 @@ def art_studio_preview():
     fmt = (data.get('format') or 'webp').lower()
     if fmt not in ('webp', 'png'):
         fmt = 'webp'
-    variant = 'wide' if width > height * 1.4 else 'tile'
-    img = render_cover_art(width, height, title=title, system=system, variant=variant)
+    if width == height:
+        variant = 'square'
+    elif width > height * 1.4:
+        variant = 'wide'
+    else:
+        variant = 'tile'
+    # artistic defaults ON — pass artistic=0 / false to preview the legacy flat template
+    artistic_raw = data.get('artistic', True)
+    if isinstance(artistic_raw, str):
+        artistic = artistic_raw.strip().lower() not in ('0', 'false', 'no', 'off')
+    else:
+        artistic = bool(artistic_raw)
+    img = render_cover_art(
+        width, height, title=title, system=system, variant=variant, artistic=artistic,
+    )
     buf = io.BytesIO()
     img.save(buf, format='WEBP' if fmt == 'webp' else 'PNG', quality=88)
     encoded = base64.b64encode(buf.getvalue()).decode('ascii')
     mime = 'image/webp' if fmt == 'webp' else 'image/png'
-    return jsonify({'preview': f'data:{mime};base64,{encoded}', 'width': width, 'height': height})
+    return jsonify({
+        'preview': f'data:{mime};base64,{encoded}',
+        'width': width,
+        'height': height,
+        'artistic': artistic,
+        'variant': variant,
+    })
 
 
 @admin2_bp.route('/admin/api/art-studio/generate', methods=['POST'])
@@ -112,12 +136,52 @@ def art_studio_download(pack_id: str):
     )
 
 
+@admin2_bp.route('/admin/api/art-studio/stock', methods=['GET'])
+@login_required
+@admin_required
+def art_studio_stock_catalog():
+    """Catalog of platform packs + stock gaming motifs operators can pick."""
+    try:
+        items = list_stock_catalog()
+        return jsonify({'items': items, 'count': len(items)})
+    except Exception as exc:  # noqa: BLE001
+        return jsonify({'error': f'Failed to list stock catalog: {exc}'}), 500
+
+
+@admin2_bp.route('/admin/api/art-studio/stock/generate', methods=['POST'])
+@login_required
+@admin_required
+def art_studio_stock_generate():
+    """Idempotent write of stock/platform packs under static/library/stock/."""
+    data = _json_body()
+    ids = data.get('ids')
+    if isinstance(ids, str):
+        ids = [i.strip() for i in ids.split(',') if i.strip()]
+    elif isinstance(ids, list):
+        ids = [str(i).strip() for i in ids if str(i).strip()]
+    else:
+        ids = None
+    fmt = (data.get('format') or 'webp').lower()
+    if fmt not in ('webp', 'png'):
+        fmt = 'webp'
+    try:
+        result = generate_stock_packs(ids, fmt=fmt)
+        log_system_event(f"Art studio stock generate count={result['count']}")
+        return jsonify(result), 201
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    except PermissionError as exc:
+        return jsonify({'error': f'Permission denied writing stock packs: {exc}'}), 500
+    except OSError as exc:
+        return jsonify({'error': f'Failed to write stock packs: {exc}'}), 500
+
+
 @admin2_bp.route('/admin/api/art-studio/apply', methods=['POST'])
 @login_required
 @admin_required
 def art_studio_apply():
     data = _json_body()
-    pack_id = (data.get('pack_id') or '').strip()
+    pack_id = (data.get('pack_id') or data.get('id') or '').strip()
     if not pack_id:
         return jsonify({'error': 'pack_id is required'}), 400
     mode = (data.get('mode') or 'game').strip().lower()
@@ -125,7 +189,14 @@ def art_studio_apply():
         if mode == 'fallback':
             paths = apply_pack_as_fallback(pack_id)
             log_system_event(f"Art studio set fallback pack {pack_id}")
-            return jsonify({'mode': 'fallback', 'paths': paths})
+            return jsonify({'mode': 'fallback', 'paths': paths, 'pack_id': pack_id})
+        if mode == 'library':
+            library_uuid = (data.get('library_uuid') or '').strip()
+            if not library_uuid:
+                return jsonify({'error': 'library_uuid is required for library mode'}), 400
+            result = apply_pack_to_library(pack_id, library_uuid)
+            log_system_event(f"Art studio applied pack {pack_id} to library {library_uuid}")
+            return jsonify({'mode': 'library', **result})
         game_uuid = (data.get('game_uuid') or '').strip()
         if not game_uuid:
             return jsonify({'error': 'game_uuid is required for game mode'}), 400

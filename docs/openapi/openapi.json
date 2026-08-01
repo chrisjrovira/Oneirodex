@@ -434,7 +434,7 @@
     },
     "/api/chat/channels/{channel_id}/messages": {
       "get": {
-        "summary": "List messages (includes reaction counts)",
+        "summary": "List messages (includes reaction counts + attachments)",
         "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
         "parameters": [
           { "name": "channel_id", "in": "path", "required": true, "schema": { "type": "integer" } },
@@ -444,12 +444,26 @@
         "responses": { "200": { "description": "Messages" } }
       },
       "post": {
-        "summary": "Post a message",
+        "summary": "Post a message (optional attachment_ids from prior upload)",
         "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
         "parameters": [
           { "name": "channel_id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/api/chat/channels/{channel_id}/attachments": {
+      "post": {
+        "summary": "Upload pending chat attachment (multipart file); child accounts 403",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [
+          { "name": "channel_id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "201": { "description": "Pending attachment + limits" },
+          "400": { "description": "Size/MIME/empty reject" },
+          "403": { "description": "Child upload ban or no channel access" }
+        }
       }
     },
     "/api/chat/messages/{message_id}/reactions": {

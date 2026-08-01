@@ -24,10 +24,11 @@ Produces unsigned `gametheca-desktop.exe` via `tauri.thin.conf.json` (capabiliti
 ## Connect
 
 1. **Account → API tokens** → create with the **Thin client** preset (`read:library` + `read:social` + `write:presence`; **no** `write:download`).
-2. Enter GameTheca base URL + token → Connect.
-3. Open library / Friends only — lifecycle CTAs are out of scope.
+2. Copy the one-time secret with **Copy secret** (or select the secret field). Format is `gt_<prefix>_<urlsafe-secret>` — **hyphens and underscores in the secret are normal**. Paste the **entire** string; truncating after a `-` always fails auth.
+3. Enter GameTheca base URL. Optional API token uses the same paste normalize / shape checks as the full companion. **Save** stores URL + token; **Validate token** runs the collections check (same as companion Connect).
+4. Open library / Friends only — lifecycle CTAs are out of scope.
 
-Token lives in the OS credential store (same pattern as the full companion), not plaintext `config.json`.
+Token lives in the OS credential store (same pattern as the full companion), not plaintext `config.json`. Credential-store failures surface in status (not opaque “Bad data”).
 
 ## Honesty
 

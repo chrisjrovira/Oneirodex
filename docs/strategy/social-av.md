@@ -1,6 +1,6 @@
 # Social + audio/video — household hangout roadmap
 
-**Date:** 2026-07-27 · **Status:** Waves 14–17 shipped; Friends companion + LiveKit lobby live  
+**Date:** 2026-07-30 · **Status:** Waves 14–17 shipped · Wave **16** full-room chat UI **19/19** + attachments BE **6/6** Done (uncommitted) · Friends companion + LiveKit lobby live  
 **Supersedes (partially):** [social.md](social.md) lite-only verdict — we deepen native social and add a **first-party voice path** via LiveKit (optional sidecar), with Stoat/Matrix remaining valid BYO alternatives.
 
 **Post-1.0 nice-to-have:** [native-rtc.md](native-rtc.md) (RTC-N1…N5 — mesh / thin SFU; LiveKit remains shipped optional default until cutover).
@@ -13,21 +13,21 @@ GameTheca social combines **household-first** patterns without cloning a single 
 
 | Layer | Ship in GameTheca | Avoid |
 |---|---|---|
-| Text chat | Rooms, DMs, mentions, reactions — native lite→mid | Public server discovery, bot/webhook platforms |
+| Text chat | Rooms, DMs, mentions, reactions, **file/image attachments** — native lite→mid | Public server discovery, bot/webhook platforms |
 | Voice | Low-latency party rooms tied to “now playing” (LiveKit, optional) | Separate voice-only client for everything |
 | Presence | In-game / library presence from play sessions + heartbeat | Public social graph / store pressure |
 | BYO chat | Stoat / Matrix deep links when native chat is not enough | Running a second full chat stack by default |
 | Library-adjacent cards | Activity tied to titles + ACL | Public multiplayer matchmaking marketplace |
 
 **Shipped companion:** stay-open Friends dock + `/social-companion` pop-out + Big Picture **Y** + desktop always-on-top **least-privilege** window — [social-and-voice.md](../user/social-and-voice.md) · [desktop-companion.md](../user/desktop-companion.md).  
-**Next polish:** denser party voice rooms and invite-to-room without third-party chat webhooks.
+**Next polish:** denser party voice rooms and invite-to-room without third-party chat webhooks (Wave 15 Manual Queue/Force UI closed).
 
 
 | Layer | Own in GameTheca | BYO / optional sidecar |
 |---|---|---|
 | Library, ACL, downloads, emu | **Core** | — |
 | Presence, friends, profiles, Activity | **Core** | — |
-| Text chat (channels, DMs, reactions) | **Native lite → mid** | Stoat / Matrix for full-featured chat |
+| Text chat (channels, DMs, reactions, attachments) | **Native lite → mid** | Stoat / Matrix for full-featured chat |
 | Voice / video | **LiveKit-backed rooms** (opt-in) | Stoat (LiveKit) or MatrixRTC |
 
 **Non-goals:** Shipping a bots platform or public server-template marketplace, public federation as default, recording/CDN of user media without explicit admin enable.
@@ -125,13 +125,15 @@ Nitro-style boosts · public discovery · unlimited guilds · stickers marketpla
 | **15b** | Household channels (`#general`, `#looking-for-players`) · RBAC-gated create · child-safe default channel | **Shipped** |
 | **15c** | Mentions · mute · email digest optional | **Shipped** — @mentions · mute API/UI · opt-in instant email · opt-in daily digest (mentions/DMs/free games) |
 
-### Wave 16 — Voice / video path start
+### Wave 16 — Voice / video path start (+ full-room chat + attachments)
 
-| Slice | Scope |
-|---|---|
+| Slice | Scope | Status |
+|---|---|---|
 | **16a** | Compose `livekit` profile · `/api/rtc/token` · voice lobby UI on Activity / Big Picture | **Shipped** |
-| **16b** | Party voice attached to “Now playing” game · screenshare flag | **Shipped** (opaque `household:party:<uuid>`) |
+| **16b** | Party voice attached to “Now playing” game · screenshare flag (screenshare stays LiveKit) | **Shipped** (opaque `household:party:<uuid>`) |
 | **16c** | Unraid runbook · connection tester · parental camera/mic policy | **Shipped** — [livekit-unraid.md](../runbooks/livekit-unraid.md); child camera/screenshare blocked |
+| **16 full-room UI** | Native full chat room (Discord-*like* UX — **not** Discord; **no** webhooks/bots): channel rail · thread · emoji/attach composer · Voice/Screenshare header · Expand | **Done (uncommitted — QA 19/19 PASS)** — [social-and-voice.md](../user/social-and-voice.md) |
+| **16 chat attachments** | Upload + bind file/image on messages · child upload ban · MIME/size allowlist | **Done (uncommitted — QA 6/6 PASS)** — `POST /api/chat/channels/<id>/attachments` · `attachment_ids` on send — [social-and-voice.md](../user/social-and-voice.md) |
 
 ### Wave 17 — Polish household-hangout gaps
 

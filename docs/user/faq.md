@@ -11,7 +11,7 @@
 Ask an admin to check your invite/whitelist and that the server is up (`/healthz` liveness · `/readyz` ready). SSO only works if Admin → Integrations has OIDC enabled *and* `OIDC_ENABLED=true`. After several failed passwords you may see “Too many login attempts” — wait a few minutes.
 
 **I can’t pair the desktop companion.**  
-Account menu → **API tokens** (`/tokens`). Create with the **Desktop companion** preset, copy the one-time secret into Connect. Format is `gt_<prefix>_<secret>` — the secret segment may include `-` / `_`; paste the **full** string (no trim). Thin seats use the **Thin client** preset (no download). Browser **Copy** prefers HTTPS; on plain HTTP LAN (common on Unraid), use the Copy fallback or select the secret and Ctrl+C / ⌘C. See [desktop-companion.md](desktop-companion.md) · [thin-client.md](thin-client.md).
+Account menu → **API tokens** (`/tokens`). Create with the **Desktop companion** preset, then **Copy secret** (raw `gt_…` only) into Connect. Format is `gt_<prefix>_<secret>` — the secret segment may include `-` / `_`; paste the **full** string (do not stop at the last `-`). Thin seats use the **Thin client** preset (no download). Browser **Copy** writes only the `gt_…` secret; on plain HTTP LAN (common on Unraid), use the Copy fallback or select the secret field and Ctrl+C / ⌘C. See [desktop-companion.md](desktop-companion.md) · [thin-client.md](thin-client.md).
 
 **Why can’t I Install / Play in the thin client?**  
 By design — thin is connect-only (browse / social / Big Picture). Use the **full** companion on the install PC. Build: `npm run tauri:build:thin` — [thin-client.md](thin-client.md).
@@ -34,7 +34,7 @@ Game details lists installs with honest presence: a version marked **Missing on 
 Preferences → items per page: **20 / 50 / 100 / 200 / 250 / 300 / 400 / 500 / 1000**.
 
 **What are Signals chips?**  
-Inside Library Filters: UPDATE · OUT/~ · NEW · RELEASE · LANG — same browse params as the badges; they persist with other filters. VR is a tile badge / More → VR, not a Signals chip.
+Inside Library Filters: UPDATE · OUT/~ · MISSING · NEW · RELEASE · LANG — same browse params as the badges; they persist with other filters. VR is a tile badge / More → VR, not a Signals chip. MISSING means files were removed from disk.
 
 **What are Kind chips?**  
 Inside Library Filters: Games · Experiences · Emulators · Tools — multi-select sets `item_kind` on browse (comma list). None selected = all kinds. Persist with other library filters.
@@ -43,7 +43,7 @@ Inside Library Filters: Games · Experiences · Emulators · Tools — multi-sel
 Yes via Library multi-select (checkbox / long-press / Shift+click · **Select page** for visible tiles): sticky Favorite / Unfavorite / **Add to wishlist** / **Play status** / Refresh freshness / **Refresh covers** (More; librarian+ · max 20) / Clear. Batch APIs: favorite set/clear (`POST /api/games/batch/favorite`, ≤100) · play status (`POST /api/games/batch/status`, ≤100; empty status clears) · wishlist queue (`POST /api/games/batch/wishlist`, ≤50; accounts that can request) · freshness re-probe (`POST /api/games/batch/freshness/check`, ≤50) · cover refresh (`POST /api/games/batch/refresh_images`, ≤20; 202 queued). Sticky **Refresh freshness** always re-probes the selection. Only titles you can see; partial-success toasts report updated/queued/skipped/failed. Admins still use library-wide `POST /api/admin/freshness/refresh`. No DRM download queues.
 
 **A folder didn’t show up after a scan?**  
-Librarians triage it under Admin → Scan management → Unmatched Folders (and Dupe glance). Each Unmatched row shows a **Why unmatched?** line so they can Identify as game or Mark as Experience/Emulator/Tool.
+Librarians triage it under Admin → Scan management → Unmatched Folders (and Dupe glance). Each Unmatched row shows a **Why unmatched?** line (and a **Name transform trail** expander when Backend sends peel steps) so they can Identify as game or Mark as Experience/Emulator/Tool.
 
 **Where are ES-DE / Pegasus export packs?**  
 On **Systems**, scroll to the secondary **Export packs** section (below the platform grid) — optional downloads of ES-DE `gamelist.xml` and Pegasus metadata for other frontends. Admins also find them under Integrations → Export packs. Paths stay portable (no NAS mount leaks). See [library-and-systems.md](library-and-systems.md).
@@ -97,12 +97,12 @@ No — public docs use GameTheca capability language only. Competitive intel sta
 **More → Updates** — freshness inbox (auto-refresh while the tab is visible; **Refresh** for an immediate pull), store search / apply packs, plus a short **Upcoming releases** teaser that links to the calendar.
 
 **Where is the release calendar?**  
-**More → Calendar** — dense IGDB release list (date · title · link) with Ahead/Behind window controls. Metadata only; GameTheca does not download those titles.
+**More → Calendar** — IGDB releases (metadata only) with Ahead/Behind window controls and a **List / Month / Agenda** view switcher (choice remembered in the browser). Month shows day markers; Agenda groups by week. GameTheca does not download those titles.
 
 ## News & notifications
 
 **Where is News?**  
-**More → News** — tabbed feed (Gaming · Free now · …) with truncated cards. Empty tabs return an honest empty state (HTTP 200), not an error.
+**More → News** — tabbed feed (All · Admins · Free now · Headlines) with a featured strip and magazine densify (truncated body · readable dates). Empty tabs return an honest empty state (HTTP 200), not an error.
 
 **Where do free Steam/Epic/GOG offers show up?**  
 **News → Free now.** Claim opens the store page (or launcher if that account is linked under Ownership). Details: [free-games.md](free-games.md).

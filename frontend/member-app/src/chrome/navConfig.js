@@ -6,7 +6,6 @@ export function getPrimaryLinks() {
     { id: 'systems', to: '/systems', label: 'Systems' },
     { id: 'downloads', to: '/downloads', label: 'Downloads' },
     { id: 'favorites', to: '/favorites', label: 'Favorites' },
-    { id: 'admin', href: '/admin/dashboard', label: 'Admin', external: true },
   ]
 }
 

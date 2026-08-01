@@ -64,7 +64,7 @@ def ai_triage():
         row = db.session.get(UnmatchedFolder, folder_id)
         if not row:
             return jsonify({'error': 'Unmatched folder not found'}), 404
-        name = _basename(row.folder_path)
+        name = (getattr(row, 'search_name', None) or '').strip() or _basename(row.folder_path)
         if not platform and row.library_uuid:
             lib = db.session.execute(
                 select(Library).filter_by(uuid=row.library_uuid),

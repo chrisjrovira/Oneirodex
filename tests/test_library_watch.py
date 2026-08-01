@@ -20,7 +20,9 @@ from gametheca.utils.library_watch import (
     get_library_watch_status,
     has_active_or_queued_scan,
     is_library_watch_enabled,
+    library_should_watch,
     library_watch_debounce_seconds,
+    list_watchable_libraries,
     start_library_watch,
 )
 
@@ -323,6 +325,33 @@ class TestEnqueueOnSyntheticEvents:
             select(Game).where(Game.uuid == game.uuid)
         ).scalar_one()
         assert refreshed.path_status == PATH_STATUS_OK
+
+
+class TestPerLibraryWatchOptOut:
+    def test_opt_out_excluded_from_watchable(self, app, db_session, sample_library, monkeypatch):
+        library, root = sample_library
+        monkeypatch.setenv('GT_LIBRARY_WATCH', '1')
+        # db_session fixture already provides app_context — do not nest another.
+        assert library_should_watch(library) is True
+        uuids = {row['uuid'] for row in list_watchable_libraries()}
+        assert library.uuid in uuids
+
+        library.watch_enabled = False
+        db_session.commit()
+        db_session.refresh(library)
+        assert library.watch_enabled is False
+        assert library_should_watch(library) is False
+        uuids = {row['uuid'] for row in list_watchable_libraries()}
+        assert library.uuid not in uuids
+
+    def test_env_off_never_watches_even_when_true(
+        self, app, db_session, sample_library, monkeypatch
+    ):
+        library, _root = sample_library
+        monkeypatch.delenv('GT_LIBRARY_WATCH', raising=False)
+        library.watch_enabled = True
+        db_session.commit()
+        assert library_should_watch(library) is False
 
 
 class TestOpsPulse:

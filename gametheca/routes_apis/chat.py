@@ -1,4 +1,4 @@
-"""Chat channels + DMs API (Wave 15)."""
+"""Chat channels + DMs API (Wave 15) + attachments (Wave 16)."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from gametheca.utils.chat import (
     ALLOWED_REACTIONS,
     archive_channel,
     create_household_channel,
+    ensure_channel_membership,
     leave_channel,
     list_channels_for_user,
     list_messages,
@@ -24,6 +25,12 @@ from gametheca.utils.chat import (
     toggle_reaction,
     user_can_access_channel,
 )
+from gametheca.utils.chat_attachments import (
+    MAX_ATTACHMENT_BYTES,
+    MAX_ATTACHMENTS_PER_MESSAGE,
+    attachments_for_messages,
+    upload_attachment,
+)
 from gametheca.utils.custom_emoji import (
     MAX_CUSTOM_EMOJI,
     delete_custom_emoji,
@@ -32,6 +39,16 @@ from gametheca.utils.custom_emoji import (
 )
 
 from . import apis_bp
+
+
+def _message_payload(msg: ChatMessage, *, author_name: str | None = None) -> dict:
+    att = attachments_for_messages([msg.id]).get(msg.id, [])
+    return msg.to_dict(
+        author_name=author_name,
+        reactions={},
+        mine=[],
+        attachments=att,
+    )
 
 
 @apis_bp.route('/chat/channels', methods=['GET'])
@@ -155,6 +172,31 @@ def chat_messages_list(channel_id: int):
     return jsonify({'messages': messages, 'channel': ch.to_dict()})
 
 
+@apis_bp.route('/chat/channels/<int:channel_id>/attachments', methods=['POST'])
+@login_required
+def chat_attachment_upload(channel_id: int):
+    """Upload a pending chat attachment (multipart). Bind via attachment_ids on send."""
+    ch = db.session.get(ChatChannel, channel_id)
+    if not ch or not user_can_access_channel(current_user, ch):
+        return jsonify({'error': 'Not found'}), 404
+    ensure_channel_membership(ch, current_user)
+    file = request.files.get('file') or request.files.get('attachment')
+    try:
+        row = upload_attachment(channel=ch, user=current_user, file=file)
+    except PermissionError as exc:
+        return jsonify({'error': str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({
+        'ok': True,
+        'attachment': row.to_dict(),
+        'limits': {
+            'max_bytes': MAX_ATTACHMENT_BYTES,
+            'max_per_message': MAX_ATTACHMENTS_PER_MESSAGE,
+        },
+    }), 201
+
+
 @apis_bp.route('/chat/channels/<int:channel_id>/messages', methods=['POST'])
 @login_required
 def chat_messages_post(channel_id: int):
@@ -169,19 +211,28 @@ def chat_messages_post(channel_id: int):
             parent_id = int(parent_raw)
         except (TypeError, ValueError):
             return jsonify({'error': 'Invalid parent_message_id'}), 400
+    raw_ids = data.get('attachment_ids') or []
+    if raw_ids and not isinstance(raw_ids, list):
+        return jsonify({'error': 'attachment_ids must be a list'}), 400
+    try:
+        attachment_ids = [int(x) for x in raw_ids] if raw_ids else []
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid attachment_ids'}), 400
     try:
         msg = post_message(
             ch,
             current_user,
             data.get('body') or '',
             parent_message_id=parent_id,
+            attachment_ids=attachment_ids,
         )
     except (ValueError, PermissionError) as exc:
+        db.session.rollback()
         code = 403 if isinstance(exc, PermissionError) else 400
         return jsonify({'error': str(exc)}), code
     return jsonify({
         'ok': True,
-        'message': msg.to_dict(author_name=current_user.name, reactions={}, mine=[]),
+        'message': _message_payload(msg, author_name=current_user.name),
     }), 201
 
 

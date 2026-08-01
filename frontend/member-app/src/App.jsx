@@ -5,6 +5,7 @@ import { applyTileSizeCssVars } from './chrome/TileSizeControl'
 import { TopNav } from './chrome/TopNav'
 import { ChatSlideOut } from './components/ChatSlideOut'
 import { SocialCompanionDock } from './components/SocialCompanionDock'
+import { useLibraryScanToasts } from './hooks/useLibraryScanToasts'
 import { DiscoverApp } from './DiscoverApp'
 import { FavoritesApp } from './FavoritesApp'
 import { LibraryApp } from './LibraryApp'
@@ -104,6 +105,8 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
   const hideDock = location.pathname.startsWith('/social-companion')
   const detailsMatch = location.pathname.match(/^\/game_details\/([^/]+)/)
   const dockGameUuid = detailsMatch?.[1] || ''
+  // Soft-fail when Backend watch/scan notification kind is not ready yet.
+  useLibraryScanToasts({ enabled: true })
   // Admins create rooms; librarians also allowed by API — UI still shows form and surfaces 403.
   const canCreateRooms = true
   const chatViewer = {

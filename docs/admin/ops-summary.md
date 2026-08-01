@@ -51,13 +51,20 @@ Built by `gametheca.utils.ops_summary._scan_snapshot`. Poll-friendly (~15s) glan
 | `jobs[].id` / `id_short` | Full UUID · first 8 chars |
 | `jobs[].status` | Enum casing: `Running` / `Stopping` / `Queued` / `Cancelled` / `Completed` / `Failed` |
 | `jobs[].queue_position` | 1-based FIFO position when `status=Queued` |
-| `jobs[].folders_success` / `folders_failed` / `total_folders` | Live folder counters |
+| Drain note | Ops poll best-effort promotes next Queued when idle (safety net alongside scan scheduler) |
+| `jobs[].folders_success` / `folders_failed` / `folders_processed` / `total_folders` | Live folder counters (`processed` = success + failed) |
 | `jobs[].current_processing` | Latest label from the scan coordinator (nullable) |
 | `jobs[].last_progress_update` | ISO timestamp of last counter bump (nullable) |
+| `jobs[].started_at` | ISO of `last_run` (run start; Queued = enqueue). `created_at` always null |
+| `jobs[].elapsed_seconds` / `elapsed_label` | Server-computed elapsed; terminal = start→last progress |
+| `jobs[].eta_seconds` / `eta_label` | Honest estimate from throughput; **null** when Queued / zero progress / total unknown / **stalled** / done (no fake countdown) |
+| `jobs[].stalled` | True when Running/Stopping with no progress bump for ≥120s |
 | `jobs[].library` | Library name when joined cheaply |
 | `jobs[].progress` / `errors` | Compat aliases (`%` of done folders · `folders_failed`) |
 
-**Ops UI (`/admin/ops` Scans table):** renders processed (`success+failed`) / `total`, with a `· N failed` suffix when failures > 0 (same honesty as Scan Jobs).
+List/poll with filters: `GET /api/scan_jobs_status?status=Running,Queued&library_uuid=&q=` — see [libraries-and-scans.md](libraries-and-scans.md#run-a-scan).
+
+**Ops UI (`/admin/ops` Scans table):** renders processed (`success+failed`) / `total`, with a `· N failed` suffix when failures > 0 (same honesty as Scan Jobs). Timing fields paint elapsed/ETA when present; ETA stays blank when null/stalled. Full filter chrome (status · library · path, localStorage) lives on **Scan management** — see [libraries-and-scans.md](libraries-and-scans.md#run-a-scan).
 
 ## `services` key
 

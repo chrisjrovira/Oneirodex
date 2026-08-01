@@ -37,16 +37,15 @@ def _run_due_jobs(app):
     from gametheca import db
     from gametheca.models import ScanJob
     from gametheca.utilities import scan_and_add_games
-    from gametheca.utils.scan_queue import is_scan_busy, promote_next_queued_scan
-    from gametheca.utils.scanning import is_scan_job_running
+    from gametheca.utils.scan_queue import drain_scan_queue, is_scan_busy
 
     # Prefer explicit FIFO Queued requests over recurring Scheduled jobs.
-    if not is_scan_busy():
-        promoted = promote_next_queued_scan(app)
-        if promoted:
-            return
+    # Also reclaim stale Stopping/Running so idle+Queued cannot stick forever.
+    promoted = drain_scan_queue(app)
+    if promoted:
+        return
 
-    if is_scan_job_running():
+    if is_scan_busy():
         return
 
     now = datetime.now(timezone.utc)

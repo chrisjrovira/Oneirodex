@@ -28,8 +28,12 @@ test('renders GameTheca wordmark and primary SPA links', () => {
   expect(nav.querySelector('a.gt-topnav__link[href="/library"]')).toHaveTextContent(/^Library$/i)
   expect(nav.querySelector('a[href="/systems"]')).toHaveTextContent(/systems/i)
   expect(nav.querySelector('a[href="/downloads"]')).toHaveTextContent(/downloads/i)
-  expect(nav.querySelector('a[href="/favorites"]')).toHaveTextContent(/favorites/i)
-  expect(nav.querySelector('a[href="/admin/dashboard"]')).toHaveTextContent(/^Admin$/i)
+  expect(nav.querySelector('a.gt-topnav__link[href="/favorites"]')).toHaveTextContent(/favorites/i)
+  // Admin lives in context strip — not a primary link beside Favorites
+  expect(nav.querySelector('a.gt-topnav__link[href="/admin/dashboard"]')).toBeNull()
+  expect(nav.querySelector('a.gt-topnav__context-link[href="/admin/dashboard"]')).toHaveTextContent(
+    /^Admin$/i,
+  )
 })
 
 test('hides admin when not admin', () => {

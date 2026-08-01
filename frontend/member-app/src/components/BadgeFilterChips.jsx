@@ -4,6 +4,7 @@
 export const BADGE_FILTER_CHIPS = [
   { param: 'has_updates', label: 'UPDATE', title: 'Updates available' },
   { param: 'freshness_behind', label: 'OUT/~', title: 'Behind store version' },
+  { param: 'path_missing', label: 'MISSING', title: 'Removed from disk' },
   { param: 'new_import', label: 'NEW', title: 'Newly added to library' },
   { param: 'recent_release', label: 'RELEASE', title: 'Recent release window' },
   {

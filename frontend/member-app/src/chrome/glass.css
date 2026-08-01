@@ -156,12 +156,21 @@
   display: none;
 }
 
-/* Aurora toast host (member SPA — replaces $.notify) */
+/* Quiet MISSING path badge (member SPA — also in default_theme components.css) */
+.gt-badge--missing {
+  background: rgba(55, 58, 66, 0.92);
+  color: rgba(232, 228, 220, 0.95);
+  letter-spacing: 0.05em;
+  font-weight: 650;
+}
+
+/* Aurora toast host (member SPA — replaces $.notify) — top-right, auto-dismiss */
 .gt-toast-host {
   position: fixed;
   z-index: 2400;
+  top: 1rem;
   right: 1rem;
-  bottom: 1rem;
+  bottom: auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -196,14 +205,14 @@
 
 .gt-toast--out {
   opacity: 0;
-  transform: translateY(0.35rem);
+  transform: translateY(-0.35rem);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 @keyframes gt-toast-in {
   from {
     opacity: 0;
-    transform: translateY(0.4rem);
+    transform: translateY(-0.4rem);
   }
   to {
     opacity: 1;
@@ -217,4 +226,54 @@
     animation: none;
     transition: none;
   }
+}
+
+/* Shared tag / meta chips (Library + Details + Discover islands) */
+.chip,
+.gt-chip,
+a.chip,
+a.gt-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  box-sizing: border-box;
+  min-height: 1.55rem;
+  padding: 0.2rem 0.65rem;
+  margin: 0;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.14)) 85%, transparent);
+  background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 88%, transparent);
+  color: var(--gt-text-muted, #c4ccd8);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+a.chip:link,
+a.chip:visited,
+a.chip:hover,
+a.chip:active,
+a.chip:focus,
+a.gt-chip:link,
+a.gt-chip:visited,
+a.gt-chip:hover,
+a.gt-chip:active,
+a.gt-chip:focus {
+  text-decoration: none;
+  color: var(--gt-text-muted, #c4ccd8);
+}
+
+a.chip:hover,
+a.chip:focus-visible,
+a.gt-chip:hover,
+a.gt-chip:focus-visible {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+  color: var(--gt-text, #f2f4f8);
+  text-decoration: none;
 }

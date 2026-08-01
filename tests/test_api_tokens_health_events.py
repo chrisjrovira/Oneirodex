@@ -12,8 +12,11 @@ from gametheca.platform import LibraryPlatform
 from gametheca.utils.api_tokens import (
     VALID_SCOPES,
     generate_api_token,
+    is_raw_api_token,
     revoke_api_token,
+    scrub_token_prefix_for_log,
     verify_bearer_token,
+    verify_bearer_token_detailed,
 )
 from gametheca.utils.event_bus import event_bus
 from gametheca.utils.library_health import score_game, summarize_library_health
@@ -63,7 +66,13 @@ def test_generate_and_verify_api_token(db_session, user):
     row, raw = generate_api_token(user, 'CLI', ['read:library'])
     assert row.token_prefix
     assert raw.startswith('gt_')
+    assert is_raw_api_token(raw)
     assert 'admin' not in (row.scopes or [])
+    # Purity: no whitespace, labels, or trailing junk after the urlsafe secret.
+    assert raw == raw.strip()
+    assert ' ' not in raw
+    assert '\n' not in raw
+    assert '…' not in raw
 
     found_user, found_token = verify_bearer_token(raw)
     assert found_user.id == user.id
@@ -71,6 +80,89 @@ def test_generate_and_verify_api_token(db_session, user):
 
     bad_user, bad_token = verify_bearer_token('gt_deadbeef_not-a-real-secret')
     assert bad_user is None and bad_token is None
+
+    # Truncating at a hyphen inside the secret always fails verification.
+    if '-' in raw:
+        truncated = raw.rsplit('-', 1)[0]
+        trunc_user, trunc_token, trunc_reason = verify_bearer_token_detailed(truncated)
+        assert trunc_user is None and trunc_token is None
+        assert trunc_reason in {'malformed', 'bad_hash', 'unknown_prefix'}
+
+
+def test_verify_bearer_token_detailed_reasons(db_session, user):
+    row, raw = generate_api_token(user, 'reasons', ['read:library'])
+    ok_user, ok_token, ok_reason = verify_bearer_token_detailed(raw)
+    assert ok_user.id == user.id
+    assert ok_token.id == row.id
+    assert ok_reason is None
+
+    _, _, malformed = verify_bearer_token_detailed('not-a-token')
+    assert malformed == 'malformed'
+
+    _, _, unknown = verify_bearer_token_detailed('gt_deadbeef_not-a-real-secret')
+    assert unknown == 'unknown_prefix'
+
+    # Same prefix, wrong secret → bad_hash (prefix exists from generate).
+    prefix = row.token_prefix
+    _, _, bad_hash = verify_bearer_token_detailed(f'gt_{prefix}_wrong-secret-value')
+    assert bad_hash == 'bad_hash'
+
+
+def test_scrub_token_prefix_never_includes_secret():
+    assert scrub_token_prefix_for_log('gt_ab12cd34_super-secret-value') == 'ab12cd34'
+    assert scrub_token_prefix_for_log('Bearer junk') == 'none'
+    assert scrub_token_prefix_for_log('gt_onlyprefix') == 'malformed'
+    assert 'secret' not in scrub_token_prefix_for_log('gt_ab12cd34_super-secret-value')
+
+
+def test_bearer_auth_failure_logs_warning_without_secret(client, db_session, user, caplog):
+    import logging
+
+    row, raw = generate_api_token(user, 'logcheck', ['read:library'])
+    prefix = row.token_prefix
+    bad = f'gt_{prefix}_definitely-wrong-secret'
+
+    with caplog.at_level(logging.WARNING, logger='gametheca.utils.api_tokens'):
+        resp = client.get(
+            '/api/tokens',
+            headers={'Authorization': f'Bearer {bad}'},
+        )
+
+    # Unauthenticated after failed Bearer — login_required rejects (401 or redirect).
+    assert resp.status_code in {401, 302, 403}
+    matching = [r for r in caplog.records if 'api_token_auth_failed' in r.getMessage()]
+    assert matching, 'expected api_token_auth_failed WARNING when Bearer verify fails'
+    msg = matching[-1].getMessage()
+    assert 'reason=bad_hash' in msg
+    assert f'prefix={prefix}' in msg
+    assert bad not in msg
+    assert 'definitely-wrong-secret' not in msg
+    assert raw not in msg
+
+
+def test_create_token_secret_payload_is_pure(client, db_session, user):
+    _row, raw = generate_api_token(user, 'auth', ['read:library'])
+    headers = {
+        'Authorization': f'Bearer {raw}',
+        'Content-Type': 'application/json',
+    }
+    created = client.post(
+        '/api/tokens',
+        headers=headers,
+        data=json.dumps({'name': 'Pure', 'preset': 'companion'}),
+    )
+    assert created.status_code == 201
+    body = created.get_json()
+    secret = body['secret']
+    assert is_raw_api_token(secret)
+    assert secret == secret.strip()
+    assert 'warning' in body
+    assert secret not in body['warning']
+    assert body['token']['token_prefix'] in secret
+    # Round-trip the returned secret.
+    found_user, found_token = verify_bearer_token(secret)
+    assert found_user.id == user.id
+    assert found_token is not None
 
 
 def test_revoke_api_token(db_session, user):

@@ -30,7 +30,7 @@ After login you land in the **member SPA** with a **top nav** (no left sidebar):
 
 **Command palette:** press **Ctrl+K** (⌘K on Mac) or the top-nav **Search** hint to jump to any primary/More page, Preferences, Admin, or Help. On **Library**, Ctrl+K searches **library titles** first. Screenshot backlog for palette / Ops / health probes: [CAPTURE.md](../assets/readme/CAPTURE.md).
 
-Library **page size** options go up through **200–1000** (full allowlist 20/50/100/200/250/300/400/500/1000) — [preferences-themes.md](preferences-themes.md). Library Filters include **Signals** chips (UPDATE · OUT/~ · NEW · RELEASE · LANG).
+Library **page size** options go up through **200–1000** (full allowlist 20/50/100/200/250/300/400/500/1000) — [preferences-themes.md](preferences-themes.md). Library Filters include **Signals** chips (UPDATE · OUT/~ · MISSING · NEW · RELEASE · LANG).
 
 If Discover/Library look unstyled, the deploy is missing **`member-app.css`** — ask an admin to rebuild the image.
 

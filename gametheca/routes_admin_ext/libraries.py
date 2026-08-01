@@ -4,7 +4,7 @@ from gametheca.utils.auth import admin_required
 from gametheca.models import Library, LibraryPlatform
 from gametheca import db
 from sqlalchemy import select
-from gametheca.forms import LibraryForm
+from gametheca.forms import LibraryForm, coerce_library_watch_enabled, library_watch_form_value
 from gametheca.utils.event_logging import log_system_event
 from PIL import Image as PILImage
 from uuid import uuid4
@@ -97,6 +97,7 @@ def add_library():
             return render_template('admin/admin_manage_library_create.html', form=form, library=None, page_title=page_title)
 
         library.scan_depth = int(form.scan_depth.data or 1)
+        library.watch_enabled = coerce_library_watch_enabled(form.watch_enabled.data)
 
         # Process image upload
         file = form.image.data
@@ -132,6 +133,7 @@ def edit_library(library_uuid):
     if request.method == 'GET':
         form.platform.data = library.platform.name
         form.scan_depth.data = getattr(library, 'scan_depth', 1) or 1
+        form.watch_enabled.data = library_watch_form_value(getattr(library, 'watch_enabled', None))
         print(f"Setting initial platform value: {form.platform.data}")
 
     if form.validate_on_submit():
@@ -144,6 +146,7 @@ def edit_library(library_uuid):
             return render_template('admin/admin_manage_library_create.html', form=form, library=library, page_title=page_title)
 
         library.scan_depth = int(form.scan_depth.data or 1)
+        library.watch_enabled = coerce_library_watch_enabled(form.watch_enabled.data)
 
         # Process image upload
         file = form.image.data

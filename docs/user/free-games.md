@@ -8,7 +8,7 @@ This is **not** a DRM download client. Claiming always happens on Steam / Epic /
 
 | Surface | What you get |
 |---|---|
-| **News → Free now** (or News tab **Free now**) | Active offers with Claim, Open in app, Sync ownership — truncated cards; empty tab is honest HTTP 200 |
+| **News → Free now** (or News tab **Free now** / `#free-games`) | Active offers with Claim, Open in app, Sync ownership — strip tiles under the News featured composition; empty tab is honest HTTP 200 |
 | **Notifications** | Dense unread inbox · `Free on …` alerts for newly seen offers (opt out under Alert preferences) |
 | Deep link | `/news#free-games` |
 

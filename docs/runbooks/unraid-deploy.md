@@ -57,6 +57,7 @@ Do **not** put covers, themes, or uploads on the games mount.
 |---|---|---|---|---|
 | **Games** | `DATA_FOLDER_GAMES` (alias `DATA_FOLDER_WAREZ`) | `/storage` | **ro** | Library scan root only — never uploads |
 | **Library / uploads** | `LIBRARY_HOST_PATH` | `/app/gametheca/static/library` | **rw** | Covers, themes, user uploads (`UPLOAD_FOLDER`) |
+| **Optional BIOS / firmware** | `EMULATOR_BIOS_HOST_PATH` (uncomment bind in compose) | `/app/gametheca/static/library/bios` | **rw** | Private household firmware folder under **appdata** — not the games share. See [Local private BIOS mount](#local-private-bios-mount-vs-public-upload) |
 | Postgres | Compose volume `db_data` | `/var/lib/postgresql/data/pgdata` | rw | DB |
 | Optional WebRetro cores | `WEBRETRO_CORES_HOST_PATH` (uncomment in compose) | `/app/gametheca/static/vendor/webretro/cores` | rw | Must include shipped cores — [webretro-cores.md](webretro-cores.md) |
 
@@ -65,9 +66,29 @@ Unraid path examples (edit to match your shares):
 ```bash
 DATA_FOLDER_GAMES=/mnt/user/games
 LIBRARY_HOST_PATH=/mnt/user/appdata/gametheca/library
+# Optional — after creating the host dir and uncommenting the compose bios bind:
+# EMULATOR_BIOS_HOST_PATH=/mnt/user/appdata/gametheca/bios
+# EMULATOR_BIOS_PATH=/app/gametheca/static/library/bios
 ```
 
 App libraries in Admin should point at paths under `/storage/...` (inside the container).
+
+### Local private BIOS mount vs public upload
+
+| Surface | How firmware reaches Play | Rule |
+|---|---|---|
+| **GitHub / public image** | Operator **uploads** via Admin → emulator BIOS (`POST /api/emulator-bios`) | **Never** ship BIOS binaries in git, CI artifacts, or public Docker layers as content |
+| **Local / household Unraid** | Optional bind of a **private** host folder you already own into the container | Mount under **appdata** (RW), never onto `/storage:ro` games |
+
+**Local mount steps (optional)**
+
+1. On the host: `mkdir -p /mnt/user/appdata/gametheca/bios`
+2. Place legally obtained firmware files you already own (names only — see [browser-play.md](../user/browser-play.md#bios--firmware-filenames-only)). No download links; GameTheca does not distribute BIOS packs.
+3. In `.env`: set `EMULATOR_BIOS_HOST_PATH=/mnt/user/appdata/gametheca/bios` and keep `EMULATOR_BIOS_PATH=/app/gametheca/static/library/bios` (Compose default).
+4. Uncomment the bios volume line in `docker-compose.yml`, then recreate the app container.
+5. Confirm Admin → emulator BIOS lists the files (or upload remaining names through the UI into the same folder).
+
+Without the optional bind, Admin upload still writes under the library volume at `…/library/bios` on the host. The dedicated appdata folder is for operators who keep firmware separate from covers/themes.
 
 ### Library root watch (`GT_LIBRARY_WATCH`) — Unraid honesty
 

@@ -5,7 +5,9 @@ import type { GamethecaClient } from '@gametheca/api-client'
 import {
   fetchLibraryPreview,
   formatDesktopApiError,
+  formatKeychainError,
   mergeUpdateSignalsFromLibrary,
+  shapeInvalidConnectionResult,
   validateConnection,
 } from './connect.js'
 import { createLifecycleRegistry } from './lifecycle.js'
@@ -38,7 +40,62 @@ describe('validateConnection', () => {
     })
 
     const result = await validateConnection(client)
-    expect(result).toEqual({ ok: false, message: 'Unauthorized' })
+    expect(result).toEqual({ ok: false, message: 'Unauthorized', cause: 'unknown' })
+  })
+
+  it('maps 401 to full-secret / hyphen guidance', async () => {
+    const client = mockClient({
+      browse: {
+        listCollections: vi.fn(async () => {
+          throw new GamethecaApiError(401, { error: 'unauthorized' })
+        }),
+        search: vi.fn(),
+      },
+    })
+
+    const result = await validateConnection(client)
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.cause).toBe('unauthorized')
+      expect(result.message).toMatch(/full one-time secret/i)
+      expect(result.message).toMatch(/hyphen/i)
+    }
+  })
+
+  it('maps network failures distinctly from 401', async () => {
+    const client = mockClient({
+      browse: {
+        listCollections: vi.fn(async () => {
+          throw new TypeError('Failed to fetch')
+        }),
+        search: vi.fn(),
+      },
+    })
+
+    const result = await validateConnection(client)
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.cause).toBe('network')
+      expect(result.message).toMatch(/Network\/TLS\/CORS/i)
+    }
+  })
+
+  it('maps opaque failed-to-load style errors as network', async () => {
+    const client = mockClient({
+      browse: {
+        listCollections: vi.fn(async () => {
+          throw new TypeError('Failed to load')
+        }),
+        search: vi.fn(),
+      },
+    })
+
+    const result = await validateConnection(client)
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.cause).toBe('network')
+      expect(result.message).toMatch(/Network\/TLS\/CORS/i)
+    }
   })
 
   it('maps 403 API errors to scope guidance', async () => {
@@ -54,6 +111,7 @@ describe('validateConnection', () => {
     const result = await validateConnection(client)
     expect(result.ok).toBe(false)
     if (!result.ok) {
+      expect(result.cause).toBe('forbidden')
       expect(result.message).toContain('403')
       expect(result.message).toContain('read:library')
     }
@@ -65,6 +123,20 @@ describe('formatDesktopApiError', () => {
     expect(formatDesktopApiError(new Error('Command append_file_bytes not allowed'))).toContain(
       'Companion permission error',
     )
+  })
+
+  it('maps keyring Bad data to credential-store copy', () => {
+    expect(formatKeychainError(new Error('Bad data'))).toMatch(/credential store/i)
+    expect(formatDesktopApiError(new Error('Bad data'))).toMatch(/credential store/i)
+  })
+})
+
+describe('shapeInvalidConnectionResult', () => {
+  it('explains paste noise and hyphen safety', () => {
+    const result = shapeInvalidConnectionResult()
+    expect(result.cause).toBe('shape_invalid')
+    expect(result.message).toMatch(/gt_<prefix>_<urlsafe-secret>/)
+    expect(result.message).toMatch(/hyphen/i)
   })
 })
 

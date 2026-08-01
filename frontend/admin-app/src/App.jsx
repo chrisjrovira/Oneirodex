@@ -10,6 +10,8 @@ import { ImagesPage } from './ImagesPage'
 import { RemotePlayPage } from './RemotePlayPage'
 import { QualityProfilesPage } from './QualityProfilesPage'
 import { StoragePage } from './StoragePage'
+import { ScanMatchSettingsPage } from './ScanMatchSettingsPage'
+import { ExtensionsPage } from './ExtensionsPage'
 import { HUB_LINKS, SETTINGS_CARDS } from './navConfig'
 import './ops.css'
 import {
@@ -79,6 +81,10 @@ function RoutedAdminPage() {
       return <QualityProfilesPage />
     case 'storage':
       return <StoragePage />
+    case 'scan_match':
+      return <ScanMatchSettingsPage />
+    case 'extensions':
+      return <ExtensionsPage />
     case 'help':
       return <HelpPage />
     case 'plugins':

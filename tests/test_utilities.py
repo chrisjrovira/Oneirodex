@@ -269,34 +269,84 @@ class TestHandleManualScanCore:
                             with patch('gametheca.utilities.url_for'):
                                 handle_manual_scan(mock_form)
                                 
-                                mock_flash.assert_called_with('Manual scan form validation failed.', 'error')
+                                mock_flash.assert_called_with('Manual scan form validation failed.', 'danger')
                                 assert mock_session['active_tab'] == 'manual'
 
-    def test_scan_already_running(self, app):
-        """Test behavior when scan is already running."""
+    def test_scan_already_running_queues(self, app, db_session):
+        """Manual while Running queues via start_or_queue_scan (not hard reject)."""
         mock_form = Mock()
         mock_form.validate_on_submit.return_value = True
-        mock_form.library_uuid.data = str(uuid4())
-        
-        mock_running_job = Mock()
-        
+        mock_form.folder_path.data = 'pc'
+        mock_form.scan_mode.data = 'folders'
+        mock_form.force_updates_extras_scan.data = False
+        mock_form.fetch_hltb.data = False
+        mock_form.force_hltb_refetch.data = False
+
+        library = Library(
+            uuid=str(uuid4()),
+            name="Manual Queue Library",
+            platform=LibraryPlatform.PCWIN,
+        )
+        db_session.add(library)
+        mock_form.library_uuid.data = library.uuid
+
+        running_job = ScanJob(
+            folders={"/base/pc": True},
+            content_type='Games',
+            status='Running',
+            is_enabled=True,
+            last_run=datetime.now(),
+            library_uuid=library.uuid,
+            error_message='',
+            total_folders=5,
+            folders_success=1,
+            folders_failed=0,
+            scan_folder='/base/pc',
+        )
+        db_session.add(running_job)
+        db_session.commit()
+
         with app.app_context():
             with app.test_request_context():
-                with patch('gametheca.utilities.db.session') as mock_db_session:
-                    mock_session = {}
-                    with patch('gametheca.utilities.session', mock_session):
-                        with patch('gametheca.utilities.flash') as mock_flash:
-                            with patch('gametheca.utilities.redirect'):
-                                with patch('gametheca.utilities.url_for'):
-                                    mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_running_job
-                                    
-                                    handle_manual_scan(mock_form)
-                                    
-                                    mock_flash.assert_called_with(
-                                        'A scan is already in progress. Please wait until the current scan completes.', 
-                                        'error'
-                                    )
-                                    assert mock_session['active_tab'] == 'manual'
+                mock_session = {}
+                with patch('gametheca.utilities.session', mock_session):
+                    with patch('gametheca.utilities.flash') as mock_flash:
+                        with patch('gametheca.utilities.redirect') as mock_redirect:
+                            with patch('gametheca.utilities.url_for') as mock_url_for:
+                                with patch(
+                                    'gametheca.utilities.get_allowed_base_directories',
+                                    return_value=['/base'],
+                                ):
+                                    with patch(
+                                        'gametheca.utilities.is_safe_path',
+                                        return_value=(True, None),
+                                    ):
+                                        with patch('gametheca.utilities.os.path.exists', return_value=True):
+                                            with patch('gametheca.utilities.os.access', return_value=True):
+                                                with patch.dict(
+                                                    'gametheca.utilities.current_app.config',
+                                                    {
+                                                        'BASE_FOLDER_POSIX': '/base',
+                                                        'BASE_FOLDER_WINDOWS': '/base',
+                                                    },
+                                                    clear=False,
+                                                ):
+                                                    mock_url_for.return_value = '/scan_management'
+                                                    mock_redirect.return_value = 'queued_response'
+                                                    result = handle_manual_scan(mock_form)
+
+                flash_msg, flash_cat = mock_flash.call_args[0]
+                assert 'queued' in flash_msg.lower()
+                assert flash_cat == 'info'
+                assert mock_session.get('active_tab') == 'manual'
+                queued = db_session.execute(
+                    select(ScanJob).filter_by(
+                        library_uuid=library.uuid,
+                        status='Queued',
+                    )
+                ).scalars().all()
+                assert len(queued) == 1
+                assert result == 'queued_response'
 
 
 class TestUtilitiesWithRealDatabase:

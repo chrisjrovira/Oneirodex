@@ -24,6 +24,7 @@ beforeEach(() => {
   gamingNewsApi.fetchGamingNews.mockReset()
   freeGamesApi.fetchFreeGames.mockResolvedValue({ items: [] })
   gamingNewsApi.fetchGamingNews.mockResolvedValue({ items: [] })
+  window.location.hash = ''
 })
 
 test('lists announcement cards from API', async () => {
@@ -104,4 +105,44 @@ test('section tabs filter free offers without a long scroll dump', async () => {
   expect(screen.getByText('Free Space Adventure')).toBeInTheDocument()
   expect(screen.queryByText('Industry headline')).not.toBeInTheDocument()
   expect(screen.queryByText('No announcements yet.')).not.toBeInTheDocument()
+})
+
+test('News layout smoke: hero strip and magazine densify', async () => {
+  announcementsApi.fetchAnnouncements.mockResolvedValue({
+    announcements: [
+      {
+        id: 1,
+        title: 'Household note',
+        body: 'Servers stay up this weekend.',
+        created_at: '2026-07-28T12:00:00+00:00',
+      },
+      {
+        id: 2,
+        title: 'Second note',
+        body: 'Backup finished.',
+        created_at: '2026-07-20T12:00:00+00:00',
+      },
+    ],
+  })
+  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+    items: [
+      {
+        url: 'https://example.test/story',
+        title: 'Studio ships patch',
+        summary: 'A long summary that should truncate in the magazine densify row for readability.',
+        source: 'Wire',
+        published_at: '2026-07-29T08:00:00+00:00',
+      },
+    ],
+  })
+
+  const { container } = render(<NewsPage />)
+
+  expect(await screen.findByText('Household note')).toBeInTheDocument()
+  expect(container.querySelector('.gt-news__hero')).toBeTruthy()
+  expect(container.querySelector('.gt-news__hero-title')).toHaveTextContent('Household note')
+  expect(screen.getByText('Second note')).toBeInTheDocument()
+  expect(container.querySelector('.gt-news__magazine')).toBeTruthy()
+  expect(screen.getByText('Studio ships patch')).toBeInTheDocument()
+  expect(screen.getByLabelText('News sections')).toBeInTheDocument()
 })

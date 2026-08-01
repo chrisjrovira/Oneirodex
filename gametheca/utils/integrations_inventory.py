@@ -90,6 +90,18 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
     )
 
     gb_key = bool(settings and getattr(settings, 'giantbomb_api_key', None))
+    try:
+        from gametheca.utils.providers.mobygames import get_mobygames_api_key
+
+        moby_key = bool(get_mobygames_api_key())
+    except Exception:
+        moby_key = bool(settings and getattr(settings, 'mobygames_api_key', None))
+    try:
+        from gametheca.utils.providers.thegamesdb import get_thegamesdb_api_key
+
+        tgdb_key = bool(get_thegamesdb_api_key())
+    except Exception:
+        tgdb_key = bool(settings and getattr(settings, 'thegamesdb_api_key', None))
     add(
         id='giantbomb',
         name='Giant Bomb',
@@ -97,6 +109,22 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         admin_href='/admin/integrations#giantbomb',
         configured=gb_key,
         notes='Secondary metadata / wiki',
+    )
+    add(
+        id='mobygames',
+        name='MobyGames',
+        category='metadata',
+        admin_href='/admin/integrations#mobygames',
+        configured=moby_key,
+        notes='Optional Class D identify search (MOBYGAMES_API_KEY)',
+    )
+    add(
+        id='thegamesdb',
+        name='TheGamesDB',
+        category='metadata',
+        admin_href='/admin/integrations#thegamesdb',
+        configured=tgdb_key,
+        notes='Optional Class D identify / covers (THEGAMESDB_API_KEY)',
     )
 
     hltb_on = bool(settings and getattr(settings, 'enable_hltb_integration', True))

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { fetchAnnouncements } from '../api/announcements'
 import { claimFreeGameAssist, fetchFreeGames } from '../api/freeGames'
 import { fetchGamingNews } from '../api/gamingNews'
@@ -31,6 +31,13 @@ function truncate(text, max = 140) {
   return `${value.slice(0, max - 1).trim()}…`
 }
 
+function tabFromHash() {
+  if (typeof window === 'undefined') return null
+  const hash = (window.location.hash || '').replace(/^#/, '')
+  if (hash === 'free-games' || hash === 'free') return 'free'
+  return null
+}
+
 export function NewsPage() {
   const [announcements, setAnnouncements] = useState(null)
   const [freeGames, setFreeGames] = useState(null)
@@ -38,7 +45,7 @@ export function NewsPage() {
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
   const [assistMsg, setAssistMsg] = useState({})
-  const [activeTab, setActiveTab] = useState('all')
+  const [activeTab, setActiveTab] = useState(() => tabFromHash() || 'all')
 
   async function claimAssist(item) {
     if (!item?.id) {
@@ -61,6 +68,15 @@ export function NewsPage() {
       }))
     }
   }
+
+  useEffect(() => {
+    function onHash() {
+      const fromHash = tabFromHash()
+      if (fromHash) setActiveTab(fromHash)
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -112,6 +128,29 @@ export function NewsPage() {
   const showFree = activeTab === 'all' || activeTab === 'free'
   const showHeadlines = activeTab === 'all' || activeTab === 'headlines'
 
+  const featured = useMemo(() => {
+    if (activeTab === 'free' || activeTab === 'headlines') return null
+    if (announcements?.length) {
+      return { kind: 'admin', item: announcements[0] }
+    }
+    if (activeTab === 'admins') return null
+    if (headlines?.length) {
+      return { kind: 'headline', item: headlines[0] }
+    }
+    if (freeGames?.length) {
+      return { kind: 'free', item: freeGames[0] }
+    }
+    return null
+  }, [activeTab, announcements, headlines, freeGames])
+
+  const adminRest =
+    announcements && featured?.kind === 'admin'
+      ? announcements.slice(1)
+      : announcements || []
+  const headlineRest =
+    headlines && featured?.kind === 'headline' ? headlines.slice(1) : headlines || []
+  const freeRest = freeGames && featured?.kind === 'free' ? freeGames.slice(1) : freeGames || []
+
   return (
     <div className="gt-more-page gt-news">
       <div className="gt-page-header gt-news__header">
@@ -152,6 +191,66 @@ export function NewsPage() {
 
       {loading ? <p>Loading…</p> : null}
 
+      {!error && !loading && featured && (activeTab === 'all' || activeTab === 'admins') ? (
+        <section className="gt-news__hero" aria-label="Featured">
+          <p className="gt-news__hero-kicker">
+            {featured.kind === 'admin'
+              ? 'From your admins'
+              : featured.kind === 'free'
+                ? 'Free now'
+                : 'Headline'}
+          </p>
+          {featured.kind === 'headline' ? (
+            <a
+              className="gt-news__hero-link"
+              href={featured.item.url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <h2 className="gt-news__hero-title">{featured.item.title}</h2>
+            </a>
+          ) : (
+            <h2 className="gt-news__hero-title">{featured.item.title}</h2>
+          )}
+          {featured.kind === 'admin' && featured.item.body ? (
+            <p className="gt-news__hero-body">{truncate(featured.item.body, 280)}</p>
+          ) : null}
+          {featured.kind === 'headline' && featured.item.summary ? (
+            <p className="gt-news__hero-body">{truncate(featured.item.summary, 220)}</p>
+          ) : null}
+          {featured.kind === 'free' && featured.item.description ? (
+            <p className="gt-news__hero-body">{truncate(featured.item.description, 180)}</p>
+          ) : null}
+          <p className="gt-news__hero-meta">
+            {featured.kind === 'admin' && featured.item.created_at ? (
+              <time dateTime={featured.item.created_at}>
+                {formatLocaleDate(featured.item.created_at)}
+              </time>
+            ) : null}
+            {featured.kind === 'headline' ? (
+              <>
+                <span>{featured.item.source}</span>
+                {featured.item.published_at ? (
+                  <time dateTime={featured.item.published_at}>
+                    {formatLocaleDate(featured.item.published_at)}
+                  </time>
+                ) : null}
+              </>
+            ) : null}
+            {featured.kind === 'free' ? (
+              <>
+                <span className="gt-news__store">{storeLabel(featured.item.store)}</span>
+                {featured.item.ends_at ? (
+                  <time dateTime={featured.item.ends_at}>
+                    Ends {formatEndsAt(featured.item.ends_at)}
+                  </time>
+                ) : null}
+              </>
+            ) : null}
+          </p>
+        </section>
+      ) : null}
+
       {!error && announcements && showAdmins ? (
         <section className="gt-news__section" aria-labelledby="news-admins-heading">
           <div className="gt-news__section-head">
@@ -159,12 +258,12 @@ export function NewsPage() {
             <span className="gt-news__count">{announcements.length}</span>
           </div>
           {announcements.length === 0 ? <p className="gt-news__empty">No announcements yet.</p> : null}
-          {announcements.length > 0 ? (
-            <ul className="gt-news__list">
-              {announcements.map((item) => (
-                <li key={item.id} className="gt-news__card gt-news__card--admin">
+          {adminRest.length > 0 ? (
+            <ul className="gt-news__rail">
+              {adminRest.map((item) => (
+                <li key={item.id} className="gt-news__rail-item gt-news__rail-item--admin">
                   <article>
-                    <header className="gt-news__card-head">
+                    <header className="gt-news__rail-head">
                       <strong>{item.title}</strong>
                       {item.created_at ? (
                         <time dateTime={item.created_at}>
@@ -193,13 +292,13 @@ export function NewsPage() {
           {freeGames.length === 0 ? (
             <p className="gt-news__empty">No free offers cached yet. Check back after the next refresh.</p>
           ) : (
-            <ul className="gt-news__list gt-news__free-list">
-              {freeGames.map((item) => {
+            <ul className="gt-news__free-strip">
+              {(activeTab === 'free' ? freeGames : freeRest).map((item) => {
                 const https = item.links?.https || item.claim_url || item.store_url
                 const protocol = item.links?.protocol
                 const ends = formatEndsAt(item.ends_at)
                 return (
-                  <li key={`${item.store}-${item.external_id}`} className="gt-news__card gt-news__free-card">
+                  <li key={`${item.store}-${item.external_id}`} className="gt-news__free-tile">
                     <article>
                       <div className="gt-news__free-row">
                         {item.image_url ? (
@@ -265,18 +364,20 @@ export function NewsPage() {
           {headlines.length === 0 ? (
             <p className="gt-news__empty">No external headlines available right now.</p>
           ) : (
-            <ul className="gt-news__list gt-news__headline-list">
-              {headlines.map((item) => (
-                <li key={item.url} className="gt-news__card gt-news__headline">
+            <ul className="gt-news__magazine">
+              {(activeTab === 'headlines' ? headlines : headlineRest).map((item) => (
+                <li key={item.url} className="gt-news__mag-row">
                   <article>
-                    <a className="gt-news__headline-link" href={item.url} target="_blank" rel="noreferrer">
+                    <a className="gt-news__mag-link" href={item.url} target="_blank" rel="noreferrer">
                       <strong>{item.title}</strong>
                     </a>
                     {item.summary ? <p>{truncate(item.summary, 160)}</p> : null}
                     <p className="gt-news__meta">
                       <span>{item.source}</span>
                       {item.published_at ? (
-                        <time dateTime={item.published_at}>{String(item.published_at).slice(0, 16)}</time>
+                        <time dateTime={item.published_at}>
+                          {formatLocaleDate(item.published_at)}
+                        </time>
                       ) : null}
                     </p>
                   </article>

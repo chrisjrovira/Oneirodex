@@ -21,6 +21,7 @@ from gametheca.utils.livekit_rtc import livekit_config, livekit_enabled
 from gametheca.utils.malware_scan import malware_scan_enabled, module_status
 from gametheca.utils.ops_issues import derive_issues
 from gametheca.utils.ops_network import get_network_stats
+from gametheca.utils.scan_job_timing import compute_scan_job_timing
 from gametheca.utils.status import get_config_values, get_system_info
 from gametheca.utils.system_stats import (
     get_cpu_usage,
@@ -99,11 +100,12 @@ def _library_pulse():
 
 
 def _scan_job_payload(job):
-    """Serialize a ScanJob for Ops glance (~15s poll) — honest folder counters."""
+    """Serialize a ScanJob for Ops glance (~15s poll) — honest folder counters + timing."""
     total = job.total_folders or 0
     success = job.folders_success or 0
     failed = job.folders_failed or 0
-    completed = success + failed
+    timing = compute_scan_job_timing(job)
+    completed = timing['folders_processed']
     progress = round(completed * 100 / total) if total > 0 else 0
     job_id = job.id or ''
     last_update = job.last_progress_update
@@ -115,9 +117,18 @@ def _scan_job_payload(job):
         'status': job.status,
         'folders_success': success,
         'folders_failed': failed,
+        'folders_processed': completed,
         'total_folders': total,
         'current_processing': job.current_processing,
         'last_progress_update': last_update.isoformat() if last_update else None,
+        # Wave 18 timing (started_at == last_run; created_at always null)
+        'started_at': timing['started_at'],
+        'created_at': timing['created_at'],
+        'elapsed_seconds': timing['elapsed_seconds'],
+        'eta_seconds': timing['eta_seconds'],
+        'stalled': timing['stalled'],
+        'elapsed_label': timing['elapsed_label'],
+        'eta_label': timing['eta_label'],
         # Backward-compatible aliases for existing Ops / Dashboard tiles
         'progress': progress,
         'errors': failed,
@@ -126,6 +137,14 @@ def _scan_job_payload(job):
 
 def _scan_snapshot():
     """Return active + queued + recent scan jobs (with live counters) and failure count."""
+    # Safety drain: if idle with Queued jobs (missed promote), start next on Ops poll.
+    try:
+        from gametheca.utils.scan_queue import drain_scan_queue
+        from flask import current_app
+        drain_scan_queue(current_app._get_current_object())
+    except Exception:
+        pass
+
     active_jobs = db.session.execute(
         select(ScanJob)
         .where(ScanJob.status.in_(('Running', 'Stopping')))

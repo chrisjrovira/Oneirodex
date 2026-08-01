@@ -7,19 +7,40 @@
   <div class="gt-adminpage-header">
     <div>
       <h2 class="gt-adminpage-title">{{ icons.icon('wand', size=22) }} Library Recognition Tools</h2>
-      <p class="gt-adminpage-lede">Doctor dry-run, match proposals, and disk rename helpers for libraries with scene/repack tags and Steam App IDs.</p>
+      <p class="gt-adminpage-lede">Propose leaf libraries from a console tree, doctor dry-run, match proposals, and disk rename helpers.</p>
     </div>
   </div>
 
   <ul class="nav nav-tabs" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-doctor" type="button">Library Doctor</button></li>
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-propose-leaf" type="button">Propose leaf libraries</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-import-leaf" type="button">Import CSV/JSON</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-doctor" type="button">Library Doctor</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-proposals" type="button">Proposals</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rename" type="button">Rename Game</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-freshness" type="button">Freshness</button></li>
   </ul>
 
   <div class="tab-content">
-    <div class="tab-pane fade show active" id="tab-doctor">
+    <div class="tab-pane fade show active" id="tab-propose-leaf">
+      <p class="text-muted mb-3">
+        Many-leaf model: propose per-platform ROM leaves under a console tree, multi-select, then
+        <strong>Confirm create</strong>. Propose never writes libraries; family mega-lib roots are never suggested.
+        Also available on <a href="/libraries#propose-leaf">Libraries</a>.
+      </p>
+      <div id="propose-leaf-mount"></div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-import-leaf">
+      <p class="text-muted mb-3">
+        Upload or paste CSV/JSON leaf definitions → <strong>Preview</strong> → multi-select →
+        <strong>Confirm create</strong> (same create path as Propose). Preview never writes libraries;
+        family mega-lib parents are rejected into row errors.
+        Also available on <a href="/libraries#import-leaf">Libraries</a>.
+      </p>
+      <div id="import-leaf-mount"></div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-doctor">
       <div class="mb-3">
         <label class="form-label">Roots (one path per line)</label>
         <textarea id="doctorRoots" class="form-control" rows="4" placeholder="E:\_software-games&#10;E:\games&#10;Z:\_software\_games\_pc"></textarea>

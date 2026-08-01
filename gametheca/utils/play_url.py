@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from gametheca.platform import (
+    cheat_surface_for_platform,
     core_is_browser_playable,
     mapped_core_ids,
     pcdos_browser_enabled,
@@ -75,6 +76,14 @@ COMPANION_PREFERRED_BLOCKERS = frozenset({
     'NGC', 'WII', 'SEGA_DC', 'N3DS', 'PS2', 'PSVITA',
 })
 
+# Honest operator path — never ship copyrighted BIOS binaries in-repo/image.
+BIOS_UPLOAD_HINT = (
+    'Upload legally obtained firmware via Admin → emulator BIOS (POST /api/emulator-bios), '
+    'or mount a private host BIOS directory and set EMULATOR_BIOS_PATH '
+    '(see bios_root() / Compose volume). '
+    'GameTheca does not ship copyrighted BIOS files.'
+)
+
 
 def companion_hint_for(key: str | None, cores: list[str] | None = None) -> str | None:
     if not key:
@@ -100,28 +109,34 @@ def library_platform_key(game) -> str | None:
 def browse_play_fields(game) -> dict[str, Any]:
     """Fields for GameCard play / demo links."""
     key = library_platform_key(game)
+    surface = cheat_surface_for_platform(key)
+
+    def finish(payload: dict[str, Any]) -> dict[str, Any]:
+        payload['cheat_surface'] = surface
+        return payload
+
     mode = play_mode_for_platform(key)
     if not key:
-        return {
+        return finish({
             'play_url': None,
             'can_play_in_browser': False,
             'emulator_cores': [],
             'play_mode': 'none',
-        }
+        })
     if mode == 'catalog':
-        return {
+        return finish({
             'play_url': None,
             'can_play_in_browser': False,
             'emulator_cores': [],
             'library_platform': key,
             'play_mode': 'catalog',
             'play_blocker': 'catalog_only',
-        }
+        })
 
     # Suppress Play when on-disk path cannot be extracted for WebRetro (e.g. .tar.gz).
     disk_path = getattr(game, 'full_disk_path', None)
     if disk_path and not path_supports_browser_extract(disk_path):
-        return {
+        return finish({
             'play_url': None,
             'can_play_in_browser': False,
             'emulator_cores': [],
@@ -132,7 +147,7 @@ def browse_play_fields(game) -> dict[str, Any]:
                 'This file type cannot be extracted for browser play '
                 '(use .zip / .7z / .rar / ROM.gz or a raw ROM).'
             ),
-        }
+        })
 
     # Wave 19b — PC DOS: companion by default; browser only with flag + vendored WASM.
     if key == 'PCDOS':
@@ -141,7 +156,7 @@ def browse_play_fields(game) -> dict[str, Any]:
         wasm_ready = any(core_is_browser_playable(c) for c in companion)
         if not (flag_on and wasm_ready):
             blocker = 'pcdos_flag_off' if not flag_on else 'pcdos_wasm_missing'
-            return {
+            return finish({
                 'play_url': None,
                 'can_play_in_browser': False,
                 'emulator_cores': [],
@@ -153,7 +168,7 @@ def browse_play_fields(game) -> dict[str, Any]:
                     'PC DOS plays via desktop companion / RetroArch (dosbox_pure). '
                     'Browser play needs ENABLE_PCDOS_BROWSER=true and a vendored dosbox WASM core.'
                 ),
-            }
+            })
 
     if key not in WEBRETRO_PLATFORMS:
         companion = mapped_core_ids(key)
@@ -162,7 +177,7 @@ def browse_play_fields(game) -> dict[str, Any]:
             if key in COMPANION_PREFERRED_BLOCKERS
             else 'companion_or_catalog'
         )
-        return {
+        return finish({
             'play_url': None,
             'can_play_in_browser': False,
             'emulator_cores': [],
@@ -171,7 +186,7 @@ def browse_play_fields(game) -> dict[str, Any]:
             'play_mode': mode,
             'play_blocker': blocker,
             'companion_hint': companion_hint_for(key, companion),
-        }
+        })
     try:
         from gametheca.utils.emulator_profiles import resolve_emulators_for_platform
 
@@ -190,7 +205,7 @@ def browse_play_fields(game) -> dict[str, Any]:
 
     if not cores:
         companion = mapped_core_ids(key)
-        return {
+        return finish({
             'play_url': None,
             'can_play_in_browser': False,
             'emulator_cores': [],
@@ -199,40 +214,56 @@ def browse_play_fields(game) -> dict[str, Any]:
             'play_mode': mode if mode != 'browser' else 'companion',
             'play_blocker': 'no_browser_core',
             'companion_hint': companion_hint_for(key, companion),
-        }
+        })
 
     core = cores[0]
     bios_hint = None
+    bios_required = False
+    firmware_missing = False
     try:
         from gametheca.utils.emulator_bios import BIOS_REQUIREMENTS, list_bios_files
 
-        required = BIOS_REQUIREMENTS.get(core) or []
+        required = list(BIOS_REQUIREMENTS.get(core) or [])
+        bios_required = bool(required)
         if required:
             present = {row['name'].lower() for row in list_bios_files()}
             found = [name for name in required if name.lower() in present]
-            if not found:
+            firmware_missing = len(found) == 0
+            if firmware_missing:
                 bios_hint = {
                     'core': core,
                     'ready': False,
                     'missing': required,
-                    'message': f'{core} needs BIOS under userdata/system (none found yet)',
+                    'bios_required': True,
+                    'firmware_missing': True,
+                    'message': (
+                        f'{core} needs BIOS under Admin → emulator BIOS '
+                        f'(missing: {", ".join(required)})'
+                    ),
+                    'hint': BIOS_UPLOAD_HINT,
                 }
             else:
                 bios_hint = {
                     'core': core,
                     'ready': True,
                     'present': found,
+                    'missing': [name for name in required if name not in found],
+                    'bios_required': True,
+                    'firmware_missing': False,
                     'message': None,
+                    'hint': None,
                 }
     except Exception:
         bios_hint = None
+        bios_required = False
+        firmware_missing = False
 
     n64_note = None
     if key == 'N64':
         n64_note = 'N64 WebRetro cores can be flaky on some titles — try the other core in Emulator profiles if play fails.'
 
     platform_q = f'&platform={key}' if key else ''
-    return {
+    return finish({
         'play_url': (
             f'/static/vendor/webretro/webretro.html?guid={game.uuid}&core={core}{platform_q}'
         ),
@@ -242,6 +273,8 @@ def browse_play_fields(game) -> dict[str, Any]:
         'library_platform': key,
         'webretro_installed_cores': sorted(get_effective_installed_cores()),
         'bios': bios_hint,
+        'bios_required': bios_required,
+        'firmware_missing': firmware_missing,
         'n64_note': n64_note,
         'play_mode': 'browser',
-    }
+    })

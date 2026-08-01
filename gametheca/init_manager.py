@@ -329,7 +329,8 @@ class InitializationManager:
             'zip', 'rar', '7z', 'iso', 'nfo', 'nes', 'sfc', 'smc', 'sms', '32x',
             'gen', 'gg', 'gba', 'gb', 'gbc', 'ndc', 'prg', 'dat', 'tap', 'z64',
             'd64', 'dsk', 'img', 'bin', 'st', 'stx', 'j64', 'jag', 'lnx', 'adf',
-            'ngc', 'gz', 'm2v', 'ogg', 'fpt', 'fpl', 'vec', 'pce', 'a78', 'rom'
+            'ngc', 'gz', 'm2v', 'ogg', 'fpt', 'fpl', 'vec', 'pce', 'a78', 'rom',
+            'nsp', 'xci', 'nsz', 'xcz',
         ]
 
         existing_types = {ft.value for ft in session.execute(select(AllowedFileType)).scalars().all()}
@@ -467,6 +468,7 @@ class InitializationManager:
                 job.current_processing = None
 
             _safe_print(f"Cleaned up {len(orphaned_jobs)} orphaned scan jobs")
+            # Queued jobs stay Queued; scan_scheduler drain promotes on next tick.
         else:
             _safe_print("No orphaned scan jobs found")
 

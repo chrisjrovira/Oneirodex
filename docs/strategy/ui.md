@@ -164,6 +164,7 @@ State machine per game/user: `not_downloaded` → `downloaded` → `installed` �
 1. Global search that returns games + admin entities  
 2. Sticky download/scan progress toaster (WebSocket)  
 3. ~~“Why unmatched?” explainer on each unmatched row~~ — **Done (Wave 5)** — one-liner from `why_unmatched` / `unmatched_reason` on Unmatched + Dupe glance · Backfill kind hints toolbar
+3b. ~~W20-2 name transform trail under Why~~ — **Done (uncommitted)** — ordered `transforms[]` expander (stage · before → after · reason?) on Dupe glance + scanjobs; soft-degrade when missing
 4. Theme swatches in preferences (not names only)  
 5. Batch actions on library selection (freshness, refresh images, favorite)  
 6. Confirm destructive admin actions with typed game/library name  

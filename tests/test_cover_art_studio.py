@@ -58,6 +58,42 @@ def test_tile_title_readable_min_font_at_200x300():
     assert any(lo != hi for lo, hi in extrema)
 
 
+def test_title_driven_art_differs_from_empty_and_other_titles():
+    """Titled artistic covers must not match empty-title or a different title."""
+    empty = render_cover_art(400, 600, title='', system='NES', artistic=True)
+    titled_a = render_cover_art(400, 600, title='Chrono Trigger', system='NES', artistic=True)
+    titled_b = render_cover_art(400, 600, title='Super Metroid', system='NES', artistic=True)
+    assert empty.tobytes() != titled_a.tobytes()
+    assert titled_a.tobytes() != titled_b.tobytes()
+    assert empty.size == titled_a.size == (400, 600)
+
+
+def test_unicode_title_does_not_crash():
+    img = render_cover_art(400, 600, title='ゼルダの伝説 風のタクト', system='NGC', artistic=True)
+    assert img.size == (400, 600)
+    img2 = render_cover_art(256, 256, title='Игротека — тест', variant='square')
+    assert img2.size == (256, 256)
+
+
+def test_variants_known_sizes_are_designed_not_crash():
+    cases = [
+        ('tile', 200, 300),
+        ('tile', 400, 600),
+        ('wide', 960, 540),
+        ('square', 256, 256),
+        ('hero', 1280, 720),
+    ]
+    for variant, w, h in cases:
+        img = render_cover_art(w, h, title='Variant Probe', system='PS1', variant=variant)
+        assert img.size == (w, h)
+        extrema = img.getextrema()
+        assert any(lo != hi for lo, hi in extrema)
+
+
+def test_artistic_false_still_renders():
+    img = render_cover_art(200, 300, title='Legacy Flat', system='GBA', artistic=False)
+    assert img.size == (200, 300)
+
 
 def test_generate_size_matrix_has_all_outlets():
     files = generate_size_matrix('Demo Title', system='NES')
@@ -107,8 +143,12 @@ def test_bake_default_fallbacks(tmp_path):
         paths = bake_default_fallbacks()
     assert Path(paths['default_cover']).is_file()
     assert Path(paths['default_library']).is_file()
+    assert Path(paths['default_library_large']).is_file()
     cover = Image.open(paths['default_cover'])
     assert cover.size == (600, 900)
+    # Branded blank is not a flat single-color box
+    extrema = cover.getextrema()
+    assert any(lo != hi for lo, hi in extrema)
 
 
 @pytest.fixture

@@ -25,8 +25,21 @@ const initialConfig = {
   currentFilters: {},
 }
 
+beforeEach(() => {
+  try {
+    window.localStorage?.removeItem('gt.library.filtersVisible')
+  } catch {
+    /* vitest may omit localStorage */
+  }
+})
+
 afterEach(() => {
   document.cookie = 'libraryFilters=; Max-Age=0; path=/'
+  try {
+    window.localStorage?.removeItem('gt.library.filtersVisible')
+  } catch {
+    /* ignore */
+  }
   vi.unstubAllGlobals()
 })
 

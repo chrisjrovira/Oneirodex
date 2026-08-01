@@ -46,6 +46,9 @@ beforeEach(() => {
       if (url.includes('/api/rtc/status')) {
         return { ok: true, json: async () => ({ enabled: false }) }
       }
+      if (/\/api\/chat\/channels\/\d+\/attachments/.test(url)) {
+        return { ok: false, status: 404, json: async () => ({ error: 'Not found' }) }
+      }
       return { ok: true, json: async () => ({}) }
     }),
   )

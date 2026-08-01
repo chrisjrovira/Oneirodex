@@ -42,7 +42,8 @@ def explain_duplicate_match(
     """
     Return a structured match explanation for UI glance + fix logging.
 
-    Keys: is_duplicate, match_reason, match_score, matched_game_uuid, threshold
+    Keys: is_duplicate, match_reason (short code), match_score, matched_game_uuid,
+    threshold, transforms (ordered Stage A peels for the new folder label)
     """
     existing_uuid = getattr(existing_game, 'uuid', None)
     existing_path = getattr(existing_game, 'full_disk_path', None) or ''
@@ -50,20 +51,24 @@ def explain_duplicate_match(
     new_norm = normalize_disk_path(new_full_disk_path)
 
     if existing_norm and new_norm and existing_norm == new_norm:
+        label = new_raw_name or folder_basename(new_full_disk_path)
         return {
             'is_duplicate': True,
             'match_reason': 'same_path',
             'match_score': 1.0,
             'matched_game_uuid': existing_uuid,
             'threshold': title_threshold,
+            'transforms': list(parse_game_label(label).get('transforms') or []),
         }
 
     new_label = new_raw_name or folder_basename(new_full_disk_path)
     existing_label = folder_basename(existing_path) or (getattr(existing_game, 'name', None) or '')
 
-    new_cleaned = parse_game_label(new_label).get('cleaned_name') or new_label
+    new_parsed = parse_game_label(new_label)
+    new_cleaned = new_parsed.get('cleaned_name') or new_label
     existing_cleaned = parse_game_label(existing_label).get('cleaned_name') or existing_label
     library_name = getattr(existing_game, 'name', None) or ''
+    transforms = list(new_parsed.get('transforms') or [])
 
     score_vs_folder = score_candidate(new_cleaned, existing_cleaned)
     score_vs_library = score_candidate(new_cleaned, library_name) if library_name else 0.0
@@ -78,6 +83,7 @@ def explain_duplicate_match(
         'threshold': title_threshold,
         'score_vs_folder': round(float(score_vs_folder), 4),
         'score_vs_library': round(float(score_vs_library), 4),
+        'transforms': transforms,
     }
 
 

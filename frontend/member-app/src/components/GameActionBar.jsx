@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { fetchGameAssists } from '../api/assists'
+import { initiateGameDownload } from '../api/downloads'
 import { fetchRemotePlayStatus } from '../api/remotePlay'
 import { queueClientCommand } from '../api/clientCommands'
+import { honestyApiErrorMessage } from '../utils/playHonesty'
 import { showToast } from '../utils/toast'
 
 /**
@@ -33,6 +35,7 @@ export function GameActionBar({
   const downloadUrl = downloadHref || `/download_game/${gameUuid}`
   const updatesUrl = updateHref || `/game_details/${gameUuid}#updates`
   const compact = variant === 'compact'
+  const useLegacyDownloadHref = Boolean(downloadHref)
 
   useEffect(() => {
     if (assistPackProp !== undefined) {
@@ -190,6 +193,30 @@ export function GameActionBar({
     void sendCommand('uninstall')
   }
 
+  async function onDownloadClick(event) {
+    if (useLegacyDownloadHref) {
+      return
+    }
+    event.preventDefault()
+    if (!gameUuid || busyAction) {
+      return
+    }
+    setBusyAction('download_file')
+    setStatusMessage('')
+    try {
+      await initiateGameDownload(gameUuid)
+      setStatusMessage('Download ready — opening Downloads')
+      showToast('Download ready — opening Downloads', 'success')
+      window.location.assign('/downloads')
+    } catch (err) {
+      const message = honestyApiErrorMessage(err, 'Download failed')
+      setStatusMessage(message)
+      showToast(message, 'error')
+    } finally {
+      setBusyAction(null)
+    }
+  }
+
   function onRemotePlayClick() {
     const hint =
       remotePlay?.copy_hint ||
@@ -241,9 +268,23 @@ export function GameActionBar({
           {clientConnected ? 'Companion online' : 'Companion offline'}
         </span>
       ) : null}
-      <a className="gt-action-bar__btn gt-action-bar__btn--primary" href={downloadUrl}>
-        Download
-      </a>
+      {useLegacyDownloadHref ? (
+        <a className="gt-action-bar__btn gt-action-bar__btn--primary" href={downloadUrl}>
+          Download
+        </a>
+      ) : (
+        <button
+          type="button"
+          className="gt-action-bar__btn gt-action-bar__btn--primary"
+          data-action="download"
+          disabled={busyAction === 'download_file'}
+          onClick={(event) => {
+            void onDownloadClick(event)
+          }}
+        >
+          {busyAction === 'download_file' ? 'Queuing…' : 'Download'}
+        </button>
+      )}
       <button
         type="button"
         className="gt-action-bar__btn"

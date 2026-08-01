@@ -40,6 +40,66 @@ def empty_kind_hint() -> dict:
         'suggested_kind': None,
         'suggested_kind_label': None,
         'suggested_candidate_name': None,
+        'stage_e_candidates': None,
+        'stage_e': None,
+    }
+
+
+def _normalize_stage_e_candidates(raw) -> list | None:
+    """Scrub Stage E candidate rows for list/export denormalize. Empty → None."""
+    if not isinstance(raw, list) or not raw:
+        return None
+    out = []
+    for hit in raw:
+        if not isinstance(hit, dict):
+            continue
+        name = (hit.get('name') or '').strip() or None
+        source = (hit.get('source') or '').strip() or None
+        hit_id = hit.get('id')
+        if hit_id is not None:
+            hit_id = str(hit_id).strip() or None
+        if not (name or hit_id or source):
+            continue
+        row = {
+            'source': source or 'unknown',
+            'id': hit_id or hit.get('mobygames_id') or hit.get('thegamesdb_id'),
+            'name': name,
+            'url': (hit.get('url') or '').strip() or None,
+            'cover_url': (hit.get('cover_url') or '').strip() or None,
+            'match_mode': (hit.get('match_mode') or '').strip() or None,
+            'propose_only': hit.get('propose_only') is not False,
+            'identify_path': (hit.get('identify_path') or 'stage_e').strip() or 'stage_e',
+        }
+        if hit.get('mobygames_id') is not None:
+            row['mobygames_id'] = hit.get('mobygames_id')
+        if hit.get('thegamesdb_id') is not None:
+            row['thegamesdb_id'] = hit.get('thegamesdb_id')
+        if hit.get('platforms') is not None:
+            row['platforms'] = hit.get('platforms')
+        out.append(row)
+    return out or None
+
+
+def _normalize_stage_e_meta(raw) -> dict | None:
+    """Scrub Stage E meta for list/export. Empty → None."""
+    if not isinstance(raw, dict):
+        return None
+    match_reason = (raw.get('match_reason') or '').strip() or None
+    identify_path = (raw.get('identify_path') or '').strip() or None
+    skipped_raw = raw.get('skipped')
+    skipped = (
+        [str(s) for s in skipped_raw if s is not None and str(s).strip()]
+        if isinstance(skipped_raw, list)
+        else []
+    )
+    propose_only = raw.get('propose_only')
+    if not match_reason and not identify_path and not skipped and propose_only is None:
+        return None
+    return {
+        'match_reason': match_reason,
+        'identify_path': identify_path or 'stage_e',
+        'skipped': skipped,
+        'propose_only': propose_only is not False,
     }
 
 
@@ -47,7 +107,8 @@ def hint_fields_from_proposal(proposal: dict | None) -> dict:
     """Extract cheap list-hint fields from an in-memory proposal payload.
 
     Returns suggested_kind (game|experience|emulator|tool|null),
-    suggested_kind_label, and suggested_candidate_name (top software hit).
+    suggested_kind_label, suggested_candidate_name (top software / Stage E hit),
+    and optional stage_e_candidates / stage_e (propose-only; None when absent).
     """
     from gametheca.utils.item_kind import ITEM_KINDS, coerce_item_kind_token
 
@@ -81,6 +142,21 @@ def hint_fields_from_proposal(proposal: dict | None) -> dict:
                 if top_kind is not None:
                     out['suggested_kind'] = top_kind
                     out['suggested_kind_label'] = SUGGESTED_KIND_LABELS.get(top_kind)
+    # Stage E propose-only catalog hint (Moby/TGDB) when software left no name.
+    stage_e_candidates = _normalize_stage_e_candidates(body.get('stage_e_candidates'))
+    stage_e_meta = _normalize_stage_e_meta(body.get('stage_e'))
+    out['stage_e_candidates'] = stage_e_candidates
+    out['stage_e'] = stage_e_meta
+    if not out.get('suggested_candidate_name'):
+        stage_name = (body.get('suggested_candidate_name') or '').strip() or None
+        if not stage_name and stage_e_candidates:
+            for hit in stage_e_candidates:
+                if hit.get('match_mode') in ('moby_exact', 'tgdb_exact'):
+                    stage_name = (hit.get('name') or '').strip() or None
+                    if stage_name:
+                        break
+        if stage_name:
+            out['suggested_candidate_name'] = stage_name
     return out
 
 
@@ -98,7 +174,7 @@ def read_proposal_kind_hint(folder_path: str) -> dict:
 
 
 def sync_unmatched_kind_hint(folder_path: str, proposal: dict | None = None) -> bool:
-    """Denormalize suggested_kind (+ candidate name) onto UnmatchedFolder by path.
+    """Denormalize suggested_kind (+ Stage E) onto UnmatchedFolder by path.
 
     Prefer calling after write_match_proposal or from log_unmatched_folder so the
     list API never N+1-reads sidecars. Returns True when a row was updated.
@@ -122,6 +198,9 @@ def sync_unmatched_kind_hint(folder_path: str, proposal: dict | None = None) -> 
         return False
     folder.suggested_kind = hint.get('suggested_kind')
     folder.suggested_candidate_name = hint.get('suggested_candidate_name')
+    # Soft-clear when proposal has no Stage E (avoid stale chips after re-propose).
+    folder.stage_e_candidates = hint.get('stage_e_candidates')
+    folder.stage_e = hint.get('stage_e')
     try:
         db.session.commit()
     except Exception:
@@ -139,6 +218,7 @@ def backfill_unmatched_suggested_kind(
 
     Admin/CLI-safe. Idempotent — rows that already have suggested_kind are skipped.
     Sidecar reads happen only for null-hint candidates (no list-endpoint N+1).
+    When writing, also denormalizes Stage E fields from the same sidecar read.
     Single commit when writing. Returns count summary.
     """
     from sqlalchemy import select
@@ -173,7 +253,14 @@ def backfill_unmatched_suggested_kind(
         hint = read_proposal_kind_hint(path)
         kind = hint.get('suggested_kind')
         candidate = hint.get('suggested_candidate_name')
-        if kind is None and candidate is None:
+        stage_e_candidates = hint.get('stage_e_candidates')
+        stage_e = hint.get('stage_e')
+        if (
+            kind is None
+            and candidate is None
+            and stage_e_candidates is None
+            and stage_e is None
+        ):
             skipped_empty_hint += 1
             continue
         updated += 1
@@ -183,6 +270,10 @@ def backfill_unmatched_suggested_kind(
             folder.suggested_kind = kind
         if candidate is not None:
             folder.suggested_candidate_name = candidate
+        if stage_e_candidates is not None:
+            folder.stage_e_candidates = stage_e_candidates
+        if stage_e is not None:
+            folder.stage_e = stage_e
 
     committed = False
     if not dry_run and updated:
@@ -311,6 +402,9 @@ def build_match_proposal(
         'cleaned_name': cleaned,
         'steam_app_id': parsed.get('steam_app_id'),
         'had_vr_suffix': bool(parsed.get('had_vr_suffix')),
+        # Ordered Stage A0–A14 peels for UI "Why unmatched?" expanders.
+        # Short match_reason codes stay on UnmatchedFolder / filters.
+        'transforms': list(parsed.get('transforms') or []),
         'candidates': [
             {
                 'igdb_id': c.get('id'),

@@ -92,7 +92,7 @@ test('DupeGlance Mark as Emulator calls mark_kind and catalogs without IGDB', as
   await screen.findByRole('heading', { name: 'Dupe glance' })
   await user.selectOptions(screen.getByLabelText(/status/i), 'Unmatched')
   expect(await screen.findByText('/games/3DSenVR')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Identify as game' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Fix search' })).toBeInTheDocument()
 
   await user.click(screen.getByRole('button', { name: 'Mark as Emulator' }))
 
@@ -280,6 +280,182 @@ test('DupeGlance tolerates null why fields without crashing', async () => {
   expect(screen.getByText(/Could not auto-match to IGDB/i)).toBeInTheDocument()
 })
 
+test('DupeGlance shows ordered transform trail when transforms present', async () => {
+  const user = userEvent.setup()
+  getJson.mockResolvedValue([
+    {
+      id: 21,
+      folder_path: '/games/Some Game (Repack) v1.2',
+      status: 'Unmatched',
+      library_name: 'PC',
+      platform_name: 'PCWIN',
+      why_unmatched: 'No IGDB hit after peels.',
+      transforms: [
+        {
+          stage: 'A1',
+          before: 'Some Game (Repack) v1.2',
+          after: 'Some Game v1.2',
+          reason: 'scene_repack_brackets',
+        },
+        {
+          stage: 'A6',
+          before: 'Some Game v1.2',
+          after: 'Some Game',
+          reason: 'version_access_tails',
+        },
+      ],
+    },
+  ])
+
+  render(<DupeGlance onOpenPath={() => {}} />)
+  await user.selectOptions(screen.getByLabelText(/status/i), 'Unmatched')
+  expect(await screen.findByText(/Why unmatched\?/i)).toBeInTheDocument()
+  expect(screen.getByText(/No IGDB hit after peels\./i)).toBeInTheDocument()
+  const summary = screen.getByText(/Name transform trail \(2\)/i)
+  expect(summary).toBeInTheDocument()
+  await user.click(summary)
+  const trail = summary.closest('details')
+  expect(trail).not.toBeNull()
+  expect(trail.querySelector('.gt-dupe-glance__transform-list')).not.toBeNull()
+  const steps = trail.querySelectorAll('.gt-dupe-glance__transform-step')
+  expect(steps).toHaveLength(2)
+  expect(steps[0]).toHaveTextContent(/A1/)
+  expect(steps[0]).toHaveTextContent('Some Game (Repack) v1.2')
+  expect(steps[0]).toHaveTextContent('Some Game v1.2')
+  expect(steps[0]).toHaveTextContent(/scene_repack_brackets/)
+  expect(steps[1]).toHaveTextContent(/A6/)
+  expect(steps[1]).toHaveTextContent('Some Game v1.2')
+  expect(steps[1]).toHaveTextContent('Some Game')
+  expect(steps[1]).toHaveTextContent(/version_access_tails/)
+})
+
+test('DupeGlance soft-degrades when transforms missing (mid-rollout)', async () => {
+  const user = userEvent.setup()
+  getJson.mockResolvedValue([
+    {
+      id: 22,
+      folder_path: '/games/NoTrailYet',
+      status: 'Unmatched',
+      library_name: 'PC',
+      platform_name: 'PCWIN',
+      why_unmatched: 'Still waiting on trail field.',
+      // transforms omitted on purpose
+    },
+  ])
+
+  render(<DupeGlance onOpenPath={() => {}} />)
+  await user.selectOptions(screen.getByLabelText(/status/i), 'Unmatched')
+  expect(await screen.findByText(/Why unmatched\?/i)).toBeInTheDocument()
+  expect(screen.getByText(/Still waiting on trail field\./i)).toBeInTheDocument()
+  expect(screen.queryByText(/Name transform trail/i)).not.toBeInTheDocument()
+})
+
+test('DupeGlance soft-degrades when transforms is empty array', async () => {
+  const user = userEvent.setup()
+  getJson.mockResolvedValue([
+    {
+      id: 23,
+      folder_path: '/games/EmptyTrail',
+      status: 'Unmatched',
+      library_name: 'PC',
+      platform_name: 'PCWIN',
+      why_unmatched: 'Clean basename; no peels.',
+      transforms: [],
+    },
+  ])
+
+  render(<DupeGlance onOpenPath={() => {}} />)
+  await user.selectOptions(screen.getByLabelText(/status/i), 'Unmatched')
+  expect(await screen.findByText(/Clean basename; no peels\./i)).toBeInTheDocument()
+  expect(screen.queryByText(/Name transform trail/i)).not.toBeInTheDocument()
+})
+
+test('DupeGlance shows Stage E propose-only chip and expandable candidates', async () => {
+  const user = userEvent.setup()
+  getJson.mockResolvedValue([
+    {
+      id: 31,
+      folder_path: '/games/Doom',
+      status: 'Unmatched',
+      library_name: 'PC',
+      platform_name: 'PCWIN',
+      why_unmatched: 'No IGDB hit after Stage D.',
+      stage_e_candidates: [
+        {
+          source: 'mobygames',
+          id: '42',
+          name: 'Doom',
+          url: 'https://www.mobygames.com/game/42',
+          match_mode: 'moby_exact',
+          propose_only: true,
+          identify_path: 'stage_e',
+        },
+      ],
+      stage_e: {
+        match_reason: 'stage_e_moby_exact',
+        identify_path: 'stage_e',
+        skipped: ['tgdb_pc_skipped'],
+        propose_only: true,
+      },
+    },
+  ])
+
+  render(<DupeGlance onOpenPath={() => {}} />)
+  await user.selectOptions(screen.getByLabelText(/status/i), 'Unmatched')
+  expect(await screen.findByText(/Why unmatched\?/i)).toBeInTheDocument()
+  expect(screen.getByText(/Stage E · propose only · MobyGames/i)).toBeInTheDocument()
+  const summary = screen.getByText(/Stage E candidates \(1\)/i)
+  expect(summary).toBeInTheDocument()
+  await user.click(summary)
+  expect(screen.getByText(/Catalog hints only — Identify to apply/i)).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Doom' })).toHaveAttribute(
+    'href',
+    'https://www.mobygames.com/game/42',
+  )
+  expect(screen.getByText('Exact')).toBeInTheDocument()
+})
+
+test('DupeGlance soft-degrades Stage E when fields absent (mid-rollout)', async () => {
+  const user = userEvent.setup()
+  getJson.mockResolvedValue([
+    {
+      id: 32,
+      folder_path: '/games/NoStageEYet',
+      status: 'Unmatched',
+      library_name: 'PC',
+      platform_name: 'PCWIN',
+      why_unmatched: 'Legacy unmatched row.',
+      suggested_candidate_name: 'Maybe Soft Hint',
+      // stage_e* omitted on purpose
+    },
+  ])
+
+  render(<DupeGlance onOpenPath={() => {}} />)
+  await user.selectOptions(screen.getByLabelText(/status/i), 'Unmatched')
+  expect(await screen.findByText(/Legacy unmatched row\./i)).toBeInTheDocument()
+  expect(screen.queryByText(/Stage E/i)).not.toBeInTheDocument()
+  expect(screen.queryByText(/Stage E candidates/i)).not.toBeInTheDocument()
+})
+
+test('normalizeTransforms ignores malformed steps and keeps order', async () => {
+  const { normalizeTransforms } = await import('./DupeGlance')
+  expect(normalizeTransforms(null)).toEqual([])
+  expect(normalizeTransforms({})).toEqual([])
+  expect(
+    normalizeTransforms({
+      transforms: [
+        null,
+        { stage: 'A0', before: 'raw/path', after: 'raw', reason: 'basename_trim' },
+        { stage: 'A7', before: 'raw', after: 'Raw', reason: 'title_case' },
+        'skip-me',
+      ],
+    }),
+  ).toEqual([
+    { stage: 'A0', before: 'raw/path', after: 'raw', reason: 'basename_trim' },
+    { stage: 'A7', before: 'raw', after: 'Raw', reason: 'title_case' },
+  ])
+})
+
 test('DupeGlance Backfill kind hints confirms then posts and shows count', async () => {
   const user = userEvent.setup()
   const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
@@ -317,4 +493,78 @@ test('DupeGlance Backfill kind hints aborts when confirm is cancelled', async ()
     expect.anything(),
   )
   confirmSpy.mockRestore()
+})
+
+test('DupeGlance shows Dupe of matched_game hit on Duplicate rows', async () => {
+  getJson.mockImplementation(async (url) => {
+    if (String(url).includes('/duplicates')) {
+      return {
+        duplicates: [
+          {
+            id: 1,
+            candidates: [
+              {
+                uuid: 'game-celeste',
+                name: 'Celeste',
+                path: '/library/Celeste',
+                cover_url: '/covers/celeste.jpg',
+                match_score: 0.98,
+              },
+            ],
+          },
+        ],
+      }
+    }
+    return [
+      {
+        id: 1,
+        folder_path: '/games/Celeste',
+        status: 'Duplicate',
+        library_name: 'PC',
+        platform_name: 'PCWIN',
+        matched_game_uuid: 'game-celeste',
+        match_reason: 'title_vs_folder',
+      },
+    ]
+  })
+
+  render(<DupeGlance onOpenPath={() => {}} />)
+  expect(await screen.findByText(/Dupe of:/i)).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Celeste' })).toHaveAttribute(
+    'href',
+    '/game_details/game-celeste',
+  )
+  expect(screen.getByText('/library/Celeste')).toBeInTheDocument()
+  expect(screen.getByTitle('Match confidence score')).toHaveTextContent('0.98')
+  expect(screen.getByRole('button', { name: 'Merge' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Keep' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Ignore' })).toBeInTheDocument()
+})
+
+test('DupeGlance Merge posts fix action', async () => {
+  const user = userEvent.setup()
+  getJson.mockResolvedValue([
+    {
+      id: 1,
+      folder_path: '/games/Celeste',
+      status: 'Duplicate',
+      library_name: 'PC',
+      platform_name: 'PCWIN',
+      matched_game: {
+        uuid: 'game-celeste',
+        name: 'Celeste',
+        path: '/library/Celeste',
+      },
+    },
+  ])
+  postJson.mockResolvedValue({ ok: true, action: 'merge', folder_path: '/games/Celeste' })
+
+  render(<DupeGlance onOpenPath={() => {}} />)
+  await screen.findByText(/Dupe of:/i)
+  await user.click(screen.getByRole('button', { name: 'Merge' }))
+
+  await waitFor(() => {
+    expect(postJson).toHaveBeenCalledWith('/api/unmatched_folders/1/fix', { action: 'merge' })
+  })
+  expect(await screen.findByText(/Merged · \/games\/Celeste/i)).toBeInTheDocument()
 })

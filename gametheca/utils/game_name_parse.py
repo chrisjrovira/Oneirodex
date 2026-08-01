@@ -213,12 +213,13 @@ def strip_incl_update_tails(raw: str) -> str:
     return working
 
 
-def strip_unbracketed_scene_suffix(raw: str) -> str:
+def strip_unbracketed_scene_suffix(raw: str, *, peel_profile: str = 'conservative') -> str:
     """
     A10 — strip trailing unbracketed scene/repack suffixes (hyphen or space).
 
     Hyphen forms (BeachHead-ALIAS / Title - ALIAS) allow a single head token.
-    Space-only forms require ≥2 head tokens (avoids over-peel on generic aliases).
+    Space-only forms require ≥2 head tokens (avoids over-peel on generic aliases)
+    unless peel_profile is 'aggressive' (min 1 token).
     Alias list is code-only.
     """
     if not raw:
@@ -230,10 +231,41 @@ def strip_unbracketed_scene_suffix(raw: str) -> str:
     if not head:
         return raw.strip()
     sep = raw[match.start() : match.start(1)]
-    min_tokens = 1 if '-' in sep else 2
+    profile = (peel_profile or 'conservative').strip().lower()
+    if profile == 'aggressive':
+        min_tokens = 1
+    else:
+        min_tokens = 1 if '-' in sep else 2
     if len(head.split()) < min_tokens:
         return raw.strip()
     return head
+
+
+def strip_edition_display_tails(raw: str) -> str:
+    """
+    Aggressive peel only — strip Complete/Collector/Legendary from cleaned display
+    when ≥2 head tokens remain (conservative leaves these for Stage C10 variants).
+    """
+    if not raw:
+        return ''
+    lower = raw.casefold()
+    for phrase in (
+        "collector's edition",
+        "collectors edition",
+        "legendary edition",
+        "collector's",
+        "collectors",
+        "collector",
+        "legendary",
+        "complete",
+    ):
+        suffix = ' ' + phrase
+        if not lower.endswith(suffix):
+            continue
+        head = raw[: -len(suffix)].strip(' -_')
+        if head and len(head.split()) >= 2:
+            return head
+    return raw.strip()
 
 
 def strip_date_stamp_tails(raw: str) -> str:
@@ -324,7 +356,36 @@ def _title_case_tokens(working: str) -> str:
     return ' '.join(parts)
 
 
-def parse_game_label(raw: str) -> dict:
+def _empty_parse_result(raw: str = '') -> dict:
+    return {
+        'raw': raw or '',
+        'cleaned_name': '',
+        'steam_app_id': None,
+        'bare_franchise': False,
+        'had_vr_suffix': False,
+        'transforms': [],
+        'peel_profile': 'conservative',
+    }
+
+
+def _record_transform(
+    transforms: list,
+    stage: str,
+    before: str,
+    after: str,
+    reason: str | None = None,
+) -> str:
+    """Append a peel step when the string changed; return the new working value."""
+    if after == before:
+        return after
+    step = {'stage': stage, 'before': before, 'after': after}
+    if reason:
+        step['reason'] = reason
+    transforms.append(step)
+    return after
+
+
+def parse_game_label(raw: str, *, peel_profile: str | None = None) -> dict:
     """
     Parse a folder or file stem into a cleaned display/search name and optional Steam App ID.
 
@@ -334,66 +395,138 @@ def parse_game_label(raw: str) -> dict:
       → A14 VR re-pass → A9 Incl Update → A10 unbracketed scene → A11 date-stamps
       → A12 Update/Build prose → A13 add-on/HV junk → A7 normalize → A8 apostrophe.
 
+    peel_profile:
+      conservative (default) — shipped A0–A14 behavior.
+      aggressive — A10 allows single-token space peels; also strips Complete/Collector/
+      Legendary from cleaned_name when ≥2 head tokens remain.
+
     Returns:
-        dict with keys: raw, cleaned_name, steam_app_id, bare_franchise, had_vr_suffix
+        dict with keys: raw, cleaned_name, steam_app_id, bare_franchise, had_vr_suffix,
+        transforms (ordered list of {stage, before, after, reason?} for steps that changed
+        the label — for unmatched/dupe/proposal explainers; short match_reason codes stay separate)
     """
     if not raw or not isinstance(raw, str):
-        return {
-            'raw': raw or '',
-            'cleaned_name': '',
-            'steam_app_id': None,
-            'bare_franchise': False,
-            'had_vr_suffix': False,
-        }
+        return _empty_parse_result(raw if isinstance(raw, str) else '')
+
+    profile = (peel_profile or 'conservative').strip().lower()
+    if profile not in ('conservative', 'aggressive'):
+        profile = 'conservative'
 
     steam_app_id = None
     had_vr_suffix = False
+    transforms: list = []
+
     # A0
+    before = raw
     working = _basename_only(raw)
+    working = _record_transform(
+        transforms, 'A0', before, working, reason='basename_trim',
+    )
     # A1
-    working = strip_repack_tags(working)
+    working = _record_transform(
+        transforms, 'A1', working, strip_repack_tags(working),
+        reason='scene_repack_brackets',
+    )
     # A2
-    working = strip_version_brackets(working)
+    working = _record_transform(
+        transforms, 'A2', working, strip_version_brackets(working),
+        reason='version_brackets',
+    )
     # A3
-    working = strip_build_tail(working)
+    working = _record_transform(
+        transforms, 'A3', working, strip_build_tail(working),
+        reason='build_paren',
+    )
     # A4
     if detect_vr_suffix(working):
         had_vr_suffix = True
-    working = strip_vr_noise_tail(working)
+    working = _record_transform(
+        transforms, 'A4', working, strip_vr_noise_tail(working),
+        reason='vr_mod_tail',
+    )
     # A5
     match = _STEAM_ID_RE.search(working)
     if match:
         steam_app_id = int(match.group(1))
-        working = working[: match.start()].strip()
+        working = _record_transform(
+            transforms, 'A5', working, working[: match.start()].strip(),
+            reason='steam_app_id',
+        )
     # A6
-    working = strip_version_access_tails(working)
+    working = _record_transform(
+        transforms, 'A6', working, strip_version_access_tails(working),
+        reason='version_or_early_access',
+    )
     # A14 — VR re-pass after version strip (Title VR v… → Title VR → Title)
     if detect_vr_suffix(working):
         had_vr_suffix = True
-    working = strip_vr_noise_tail(working)
+    working = _record_transform(
+        transforms, 'A14', working, strip_vr_noise_tail(working),
+        reason='vr_repass',
+    )
     # A9
-    working = strip_incl_update_tails(working)
+    working = _record_transform(
+        transforms, 'A9', working, strip_incl_update_tails(working),
+        reason='incl_update_paren',
+    )
     # A10
-    working = strip_unbracketed_scene_suffix(working)
+    working = _record_transform(
+        transforms, 'A10', working,
+        strip_unbracketed_scene_suffix(working, peel_profile=profile),
+        reason='unbracketed_scene_suffix',
+    )
     # A11
-    working = strip_date_stamp_tails(working)
+    working = _record_transform(
+        transforms, 'A11', working, strip_date_stamp_tails(working),
+        reason='date_stamp',
+    )
     # A12
-    working = strip_update_build_prose_tails(working)
+    working = _record_transform(
+        transforms, 'A12', working, strip_update_build_prose_tails(working),
+        reason='update_build_prose',
+    )
     # A13 — add-on / HV junk only (Complete/Collector/Legendary kept for C10)
-    working = strip_addon_junk_tails(working)
+    working = _record_transform(
+        transforms, 'A13', working, strip_addon_junk_tails(working),
+        reason='addon_hv_junk',
+    )
+    # Aggressive: also peel edition tails into cleaned display (still no mega-lib).
+    if profile == 'aggressive':
+        working = _record_transform(
+            transforms, 'A13b', working, strip_edition_display_tails(working),
+            reason='aggressive_edition_display_peel',
+        )
     # A7 — whitespace / underscore normalize (casing after alias check)
+    before = working
     working = working.replace('_', ' ')
     working = re.sub(r'\s+', ' ', working).strip(' -_')
+    working = _record_transform(
+        transforms, 'A7', before, working, reason='whitespace_normalize',
+    )
     # A8 — smart quotes before casing so apostrophes survive title-case path
-    working = normalize_smart_apostrophes(working)
+    working = _record_transform(
+        transforms, 'A8', working, normalize_smart_apostrophes(working),
+        reason='smart_apostrophe',
+    )
 
+    before_case = working
     aliased = _ALIAS_MAP.get(working.casefold())
     if aliased:
         cleaned = aliased
+        cleaned = _record_transform(
+            transforms, 'A7', before_case, cleaned, reason='stylized_alias',
+        )
     else:
         cleaned = _title_case_tokens(working)
+        if cleaned != before_case:
+            cleaned = _record_transform(
+                transforms, 'A7', before_case, cleaned, reason='title_case',
+            )
         # A8 franchise inject after casing so heads match title-case disk labels
-        cleaned = inject_franchise_apostrophes(cleaned)
+        cleaned = _record_transform(
+            transforms, 'A8', cleaned, inject_franchise_apostrophes(cleaned),
+            reason='franchise_apostrophe_inject',
+        )
 
     return {
         'raw': raw,
@@ -401,4 +534,6 @@ def parse_game_label(raw: str) -> dict:
         'steam_app_id': steam_app_id,
         'bare_franchise': is_bare_franchise(cleaned),
         'had_vr_suffix': had_vr_suffix,
+        'transforms': transforms,
+        'peel_profile': profile,
     }

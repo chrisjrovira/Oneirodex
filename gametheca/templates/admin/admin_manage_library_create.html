@@ -8,7 +8,7 @@
 	<div class="gt-adminpage-header">
 		<div>
 			<h1 class="gt-adminpage-title">{{ page_title }}</h1>
-			<p class="gt-adminpage-lede">Name, platform, scan depth, and library image.</p>
+			<p class="gt-adminpage-lede">Name, platform, scan depth, watch intent, and library image.</p>
 		</div>
 	</div>
 
@@ -63,9 +63,30 @@
 				</div>
 			{% endif %}
 		</div>
+		<div class="admin_manage_library_create-form-watch mb-3">
+			<label class="form-label" for="libraryWatchEnabled">Update library when folders change</label>
+			{{ form.watch_enabled(class="form-select", id="libraryWatchEnabled") }}
+			<small class="form-text text-muted">
+				Incremental folder watch for this library. Global
+				<code>GT_LIBRARY_WATCH</code> may still gate Unraid — check Ops → Library watch.
+				Opt-out skips this library even when the env is on.
+			</small>
+			{% if form.watch_enabled.errors %}
+				<div class="text-danger small mt-1">
+					{% for error in form.watch_enabled.errors %}
+						<div>{{ error }}</div>
+					{% endfor %}
+				</div>
+			{% endif %}
+		</div>
 		<div class="admin_manage_library_create-form-library-image mb-3">
 			{{ form.image.label(class="form-label") }}
 			{{ form.image(class="form-control", id="imageInput") }}
+			<p class="form-text text-muted mb-0 mt-2">
+				Or
+				<a href="{{ url_for('admin2.art_studio_page') }}#stock">Choose image</a>
+				from Art Studio platform &amp; stock packs (Backup &amp; stock).
+			</p>
 			{% if form.image.errors %}
 				<div class="text-danger small mt-1">
 					{% for error in form.image.errors %}

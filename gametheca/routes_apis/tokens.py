@@ -10,6 +10,7 @@ from gametheca.utils.api_tokens import (
     TOKEN_SCOPE_PRESETS,
     VALID_SCOPES,
     generate_api_token,
+    is_raw_api_token,
     revoke_api_token,
 )
 
@@ -53,6 +54,10 @@ def create_api_token():
         return jsonify({'error': 'admin scope requires admin role'}), 403
 
     row, raw = generate_api_token(current_user, name, scopes)
+    # Contract: `secret` is the raw token only — no labels, expiry, or HTML.
+    if not is_raw_api_token(raw):
+        current_app.logger.error('api_token_create_impure prefix=%s', row.token_prefix)
+        return jsonify({'error': 'Token generation failed purity check'}), 500
     return jsonify({
         'token': row.to_public_dict(),
         'secret': raw,

@@ -1,15 +1,10 @@
 ﻿import { getContextLinks, getPrimaryLinks, getMoreLinks } from './navConfig'
 
-test('primary links are locked set', () => {
+test('primary links are locked set without Admin', () => {
   expect(getPrimaryLinks().map((l) => l.id)).toEqual([
-    'discover', 'library', 'systems', 'downloads', 'favorites', 'admin',
+    'discover', 'library', 'systems', 'downloads', 'favorites',
   ])
-})
-
-test('admin is external dashboard path', () => {
-  const admin = getPrimaryLinks().find((l) => l.id === 'admin')
-  expect(admin.href).toBe('/admin/dashboard')
-  expect(admin.external).toBe(true)
+  expect(getPrimaryLinks().some((l) => l.id === 'admin')).toBe(false)
 })
 
 test('more links exclude primary ids', () => {

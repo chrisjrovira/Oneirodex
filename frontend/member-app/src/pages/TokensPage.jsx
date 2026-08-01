@@ -36,7 +36,7 @@ export function TokensPage() {
   const [createdSecret, setCreatedSecret] = useState(null)
   const [copyState, setCopyState] = useState('idle')
   const [retryCount, setRetryCount] = useState(0)
-  const secretCodeRef = useRef(null)
+  const secretInputRef = useRef(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -80,8 +80,12 @@ export function TokensPage() {
     setCopyState('idle')
     try {
       const result = await createToken({ name: trimmed, preset })
+      const secret = typeof result.secret === 'string' ? result.secret.trim() : ''
+      if (!secret) {
+        throw new Error('Create token succeeded but no one-time secret was returned.')
+      }
       setCreatedSecret({
-        secret: result.secret,
+        secret,
         warning: result.warning || 'Store this secret now; it will not be shown again.',
         name: result.token?.name || trimmed,
         prefix: result.token?.token_prefix || '',
@@ -111,15 +115,26 @@ export function TokensPage() {
     }
   }
 
+  function selectSecretForManualCopy() {
+    const input = secretInputRef.current
+    if (!input) return
+    input.focus()
+    input.select()
+    input.setSelectionRange(0, input.value.length)
+  }
+
   async function copySecret() {
     if (!createdSecret?.secret) return
-    const ok = await copyText(createdSecret.secret, { selectEl: secretCodeRef.current })
+    // Copy the in-memory string only — never DOM textContent (avoids whitespace /
+    // sibling labels / prefix ellipsis leaking into the clipboard).
+    const ok = await copyText(createdSecret.secret)
     if (ok) {
       setCopyState('copied')
       showToast('Token secret copied', 'success')
       return
     }
     setCopyState('failed')
+    selectSecretForManualCopy()
     showToast('Clipboard unavailable — select the secret and copy manually', 'warn')
   }
 
@@ -134,9 +149,10 @@ export function TokensPage() {
       <p className="gt-more-page__lede">
         Create personal access tokens for the desktop companion. The full secret is shown once —
         paste it into the companion Connect screen; it is stored in the OS keyring, not in this UI.
-        Format is <code>gt_&lt;prefix&gt;_&lt;secret&gt;</code> (secret may include <code>-</code> /{' '}
-        <code>_</code>). Copy prefers HTTPS; on plain HTTP LAN, use Copy (fallback) or select the
-        secret manually.
+        Format is <code>gt_&lt;prefix&gt;_&lt;secret&gt;</code>. Hyphens and underscores inside the
+        secret are normal (URL-safe) — paste the <strong>entire</strong> string; do not stop at the
+        last <code>-</code>. Copy prefers HTTPS; on plain HTTP LAN, use Copy or select the field
+        and Ctrl+C / ⌘C.
       </p>
 
       {error ? (
@@ -156,11 +172,30 @@ export function TokensPage() {
           </p>
           <p className="gt-tokens__secret-meta">
             {createdSecret.name}
-            {createdSecret.prefix ? ` · prefix ${createdSecret.prefix}…` : null}
+            {createdSecret.prefix ? ` · prefix ${createdSecret.prefix}` : null}
           </p>
-          <code ref={secretCodeRef} className="gt-tokens__secret-value" tabIndex={0}>
-            {createdSecret.secret}
-          </code>
+          <label className="gt-tokens__secret-label" htmlFor="gt-tokens-one-time-secret">
+            One-time secret
+          </label>
+          <input
+            ref={secretInputRef}
+            id="gt-tokens-one-time-secret"
+            type="text"
+            readOnly
+            spellCheck={false}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            className="gt-tokens__secret-value"
+            value={createdSecret.secret}
+            onFocus={(event) => {
+              event.target.select()
+              event.target.setSelectionRange(0, event.target.value.length)
+            }}
+          />
+          <p className="gt-tokens__secret-hint">
+            Includes <code>-</code> / <code>_</code> when present — that is expected, not truncation.
+          </p>
           <div className="gt-tokens__secret-actions">
             <button type="button" className="gt-btn gt-btn--primary" onClick={() => void copySecret()}>
               {copyState === 'copied' ? 'Copied' : 'Copy secret'}
@@ -183,8 +218,9 @@ export function TokensPage() {
           ) : null}
           {copyState === 'failed' ? (
             <p role="alert" className="gt-tokens__copy-status">
-              Clipboard unavailable (common on plain HTTP). Triple-click or focus the secret above
-              and press Ctrl+C / ⌘C — paste the full <code>gt_…</code> string without trimming.
+              Clipboard unavailable (common on plain HTTP). The secret field is selected — press
+              Ctrl+C / ⌘C and paste the full <code>gt_…</code> string without trimming at{' '}
+              <code>-</code>.
             </p>
           ) : null}
         </section>
@@ -253,7 +289,7 @@ export function TokensPage() {
               <li key={row.id} className="gt-tokens__row">
                 <div className="gt-tokens__row-main">
                   <strong>{row.name}</strong>
-                  <span className="gt-tokens__prefix">{row.token_prefix}…</span>
+                  <span className="gt-tokens__prefix">{row.token_prefix}</span>
                   <span className="gt-tokens__scopes">{(row.scopes || []).join(', ')}</span>
                   <span className="gt-tokens__meta">
                     Created {formatWhen(row.created_at)}

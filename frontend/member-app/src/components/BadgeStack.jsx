@@ -12,23 +12,25 @@ import {
 } from '../utils/badgeDismiss'
 
 /**
- * Cap flexible badges but always keep VR in the top-left transitional stack.
+ * Cap flexible badges but always keep VR / MISSING in the top-left transitional stack.
  */
-function capWithPinnedVr(badges, maxVisible = 2) {
-  const vr = badges.find((badge) => badge.kind === 'VR') || null
-  const rest = badges.filter((badge) => badge.kind !== 'VR')
+const PINNED_BADGE_KINDS = new Set(['VR', 'MISSING'])
+
+function capWithPinnedStatus(badges, maxVisible = 2) {
+  const pinned = badges.filter((badge) => PINNED_BADGE_KINDS.has(badge.kind))
+  const rest = badges.filter((badge) => !PINNED_BADGE_KINDS.has(badge.kind))
   const { visible: restVisible, overflow } = capBadges(rest, maxVisible)
-  if (!vr) {
+  if (pinned.length === 0) {
     return { visible: restVisible, overflow }
   }
-  return { visible: [...restVisible, vr], overflow }
+  return { visible: [...restVisible, ...pinned], overflow }
 }
 
 /**
  * Netflix/Roku-style overlay badge stack for title cards.
  * Default corner: top-left (hamburger + favorite now stack together in the
  * top-right band, one under the other).
- * VR joins the top-left transitional stack and is never dismissable.
+ * VR / MISSING join the top-left transitional stack and are never dismissable.
  * Badges win top-left over the PLAY chip (PLAY is nudged in CSS when a stack is present).
  */
 export function BadgeStack({
@@ -46,21 +48,25 @@ export function BadgeStack({
     return filterDismissedBadges(game?.uuid, collectBadgeSignals(game, { now }))
   }, [game, now, dismissTick])
 
-  const { visible, overflow } = capWithPinnedVr(badges, maxVisible)
+  const { visible, overflow } = capWithPinnedStatus(badges, maxVisible)
   const hasMain = visible.length > 0 || overflow > 0
-  const dismissed = listDismissedKinds(game?.uuid).filter((kind) => kind !== 'VR')
+  const dismissed = listDismissedKinds(game?.uuid).filter(
+    (kind) => !PINNED_BADGE_KINDS.has(kind),
+  )
   if (!hasMain && !(dismissible && dismissed.length > 0)) {
     return null
   }
 
   const hasVr = visible.some((badge) => badge.kind === 'VR')
+  const hasMissing = visible.some((badge) => badge.kind === 'MISSING')
   const corner = resolveBadgeCorner(preferredCorner, collidesWithTitle, {
     hasVr,
+    hasMissing,
     hasPlatformChip: Boolean(hasPlatformChip),
   })
 
   function handleDismiss(kind, event) {
-    if (kind === 'VR') {
+    if (PINNED_BADGE_KINDS.has(kind)) {
       return
     }
     event.preventDefault()
@@ -78,9 +84,10 @@ export function BadgeStack({
 
   return (
     <div
-      className={`gt-badge-stack gt-badge-stack--${corner}${hasVr ? ' gt-badge-stack--vr' : ''}${dismissible ? ' gt-badge-stack--interactive' : ''}`}
+      className={`gt-badge-stack gt-badge-stack--${corner}${hasVr ? ' gt-badge-stack--vr' : ''}${hasMissing ? ' gt-badge-stack--missing' : ''}${dismissible ? ' gt-badge-stack--interactive' : ''}`}
       data-corner={corner}
       data-vr-in-stack={hasVr ? corner : undefined}
+      data-missing-in-stack={hasMissing ? corner : undefined}
       aria-label="Game badges"
     >
       {visible.map((badge) => (
@@ -91,7 +98,7 @@ export function BadgeStack({
           title={badge.title}
         >
           <span className="gt-badge__label">{badge.label}</span>
-          {dismissible && badge.kind !== 'VR' ? (
+          {dismissible && !PINNED_BADGE_KINDS.has(badge.kind) ? (
             <button
               type="button"
               className="gt-badge__dismiss"

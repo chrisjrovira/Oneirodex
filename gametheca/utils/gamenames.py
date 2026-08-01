@@ -11,20 +11,36 @@ from gametheca.utils.game_name_parse import (
     normalize_smart_apostrophes,
     parse_game_label,
 )
+from gametheca.utils.rom_name_peel import rom_title_case
 
 LETTER_BUCKET_RE = re.compile(r'^_[a-z0-9#if]$', re.IGNORECASE)
 
 
-def should_skip_scan_dir(name, skip_dir_patterns=None):
-    """True when folder basename matches a skip-dir glob (case-insensitive fnmatch)."""
-    if not name or not skip_dir_patterns:
+def should_skip_scan_dir(name, skip_dir_patterns=None, skip_dir_regexes=None):
+    """True when folder basename matches a skip-dir glob or regex (case-insensitive)."""
+    if not name:
         return False
+    if skip_dir_patterns is None:
+        from gametheca.utils.functions import DEFAULT_SKIP_DIR_GLOBS
+        skip_dir_patterns = DEFAULT_SKIP_DIR_GLOBS
+    if skip_dir_regexes is None:
+        from gametheca.utils.functions import DEFAULT_SKIP_DIR_REGEXES
+        skip_dir_regexes = DEFAULT_SKIP_DIR_REGEXES
     folded = name.casefold()
     for pattern in skip_dir_patterns:
         if not pattern:
             continue
         if fnmatch.fnmatch(folded, str(pattern).casefold()):
             return True
+    for pattern in skip_dir_regexes:
+        if not pattern:
+            continue
+        try:
+            if pattern.search(name):
+                return True
+        except AttributeError:
+            if re.search(str(pattern), name, re.IGNORECASE):
+                return True
     return False
 
 
@@ -90,9 +106,14 @@ _PACK_TAIL_PHRASES = (
     "pack",
 )
 _TRAILING_YEAR_RE = re.compile(r'^(?:19|20)\d{2}$')
+# Stylized glued titles IGDB often stores without the space (`1000xRESIST`).
+_STYLIZED_COMPACT_RE = re.compile(
+    r'^(\d+x)\s+(.+)$',
+    re.IGNORECASE,
+)
 
 
-def _list_game_dirs(folder_path, scan_depth=1, skip_dir_patterns=None):
+def _list_game_dirs(folder_path, scan_depth=1, skip_dir_patterns=None, skip_dir_regexes=None):
     """Return list of (item_name, full_path) game directories honoring scan_depth.
 
     scan_depth=2 unwraps letter buckets (_a…_z, _#) used by layouts like
@@ -119,7 +140,7 @@ def _list_game_dirs(folder_path, scan_depth=1, skip_dir_patterns=None):
         full_path = os.path.join(folder_path, item)
         if not os.path.isdir(full_path):
             continue
-        if should_skip_scan_dir(item, patterns):
+        if should_skip_scan_dir(item, patterns, skip_dir_regexes):
             continue
         if depth >= 2 and LETTER_BUCKET_RE.match(item):
             try:
@@ -130,7 +151,7 @@ def _list_game_dirs(folder_path, scan_depth=1, skip_dir_patterns=None):
                 child_path = os.path.join(full_path, child)
                 if not os.path.isdir(child_path):
                     continue
-                if should_skip_scan_dir(child, patterns):
+                if should_skip_scan_dir(child, patterns, skip_dir_regexes):
                     continue
                 results.append((child, child_path))
         else:
@@ -144,6 +165,7 @@ def get_game_names_from_folder(
     sensitive_patterns,
     scan_depth=1,
     skip_dir_patterns=None,
+    skip_dir_regexes=None,
 ):
     if not os.path.exists(folder_path) or not os.access(folder_path, os.R_OK):
         print(f"Error: The folder '{folder_path}' does not exist or is not readable.")
@@ -151,7 +173,8 @@ def get_game_names_from_folder(
         return []
     game_names_with_paths = []
     for item, full_path in _list_game_dirs(
-        folder_path, scan_depth=scan_depth, skip_dir_patterns=skip_dir_patterns
+        folder_path, scan_depth=scan_depth, skip_dir_patterns=skip_dir_patterns,
+        skip_dir_regexes=skip_dir_regexes,
     ):
         game_name = clean_game_name(item, insensitive_patterns, sensitive_patterns)
         game_names_with_paths.append({'name': game_name, 'full_path': full_path})
@@ -414,17 +437,66 @@ def _deapostrophe_variant(name):
     return cleaned if cleaned and cleaned != name else None
 
 
-def generate_goty_variants(base_name):
+def _article_reorder_variant(name: str) -> str | None:
+    """C12 — reorder trailing article suffix (`, The` / `, A` / `, An`)."""
+    if not name:
+        return None
+    for suffix in (', The', ', A', ', An'):
+        if name.endswith(suffix):
+            article = suffix[2:].strip()
+            head = name[: -len(suffix)].strip()
+            if head:
+                return rom_title_case(f'{article} {head}')
+    return None
+
+
+def _stylized_compact_variants(name: str) -> list[str]:
+    """
+    W21-BE-3 — glued search copies for stylized `Nx Word` labels.
+
+    IGDB often stores `1000xRESIST` while folders keep `1000x Resist`. Scoring
+    already treats them as equal after alnum normalize; search still needs the
+    compact query or the API may return nothing.
+    """
+    if not name:
+        return []
+    match = _STYLIZED_COMPACT_RE.match(name.strip())
+    if not match:
+        return []
+    prefix, rest = match.group(1), match.group(2).strip()
+    if not rest:
+        return []
+    # Preserve folder casing on the digit+x prefix; drop spaces in the tail.
+    compact = prefix + re.sub(r'\s+', '', rest)
+    out = [compact]
+    upper_tail = prefix + re.sub(r'\s+', '', rest).upper()
+    if upper_tail.casefold() != compact.casefold():
+        out.append(upper_tail)
+    return out
+
+
+def generate_goty_variants(base_name, *, policy=None):
     """
     Generate ordered IGDB search variants for a folder/game label.
 
     Stage C (docs/strategy/name-resolution.md): cleaned as-is (post A8 inject) →
+    article reorder (C12) → stylized compact `Nx Word` (C13 / W21-BE-3) →
     franchise/known colon → drop bare 1 → sequel ↔ Roman → heuristic colon (≥4) →
     year drop → pack/collection peel → edition peel (C10) → de-apostrophe →
     hyphen/GOTY. C11 bare franchise → single variant only (no auto-import path).
+
+    policy (optional dict from resolve_scan_match_policy): toggles
+    enable_year_drop_variant / enable_pack_peel_variant /
+    enable_edition_peel_variant / enable_sequel_numeral_variant (default True).
     """
     if not base_name or not str(base_name).strip():
         return []
+
+    toggles = policy if isinstance(policy, dict) else {}
+    enable_year = toggles.get('enable_year_drop_variant', True)
+    enable_pack = toggles.get('enable_pack_peel_variant', True)
+    enable_edition = toggles.get('enable_edition_peel_variant', True)
+    enable_sequel = toggles.get('enable_sequel_numeral_variant', True)
 
     # A8 normalize + franchise inject before colon-head match.
     base_name = inject_franchise_apostrophes(
@@ -435,6 +507,13 @@ def generate_goty_variants(base_name):
         return [base_name]
 
     variants = [base_name]
+
+    article_variant = _article_reorder_variant(base_name)
+    if article_variant:
+        variants.append(article_variant)
+
+    # Stylized compact (`1000x Resist` → `1000xResist` / `1000xRESIST`) for IGDB search.
+    variants.extend(_stylized_compact_variants(base_name))
 
     if 'GOTY' in base_name:
         variants.append(base_name.replace('GOTY', 'G.O.T.Y.'))
@@ -467,23 +546,27 @@ def generate_goty_variants(base_name):
     if not _known_subtitle_colon(core) and not _franchise_head_colon_variant(core):
         variants.extend(_colon_subtitle_variants(core))
 
-    for seed in (base_name, stripped_one) if stripped_one else (base_name,):
-        variants.extend(_sequel_numeral_variants(seed))
+    if enable_sequel:
+        for seed in (base_name, stripped_one) if stripped_one else (base_name,):
+            variants.extend(_sequel_numeral_variants(seed))
 
     # Trailing 4-digit year dropped as an additional search variant.
-    year_dropped = _drop_trailing_year_variant(base_name)
-    if year_dropped:
-        variants.append(year_dropped)
+    if enable_year:
+        year_dropped = _drop_trailing_year_variant(base_name)
+        if year_dropped:
+            variants.append(year_dropped)
 
     # Pack / collection peel — keep full string earlier; add peeled head.
-    pack_peeled = _pack_peel_variant(base_name)
-    if pack_peeled:
-        variants.append(pack_peeled)
+    if enable_pack:
+        pack_peeled = _pack_peel_variant(base_name)
+        if pack_peeled:
+            variants.append(pack_peeled)
 
     # C10 edition peel — keep full; add Complete/Collector/Legendary head.
-    edition_peeled = _edition_peel_variant(base_name)
-    if edition_peeled:
-        variants.append(edition_peeled)
+    if enable_edition:
+        edition_peeled = _edition_peel_variant(base_name)
+        if edition_peeled:
+            variants.append(edition_peeled)
 
     # Prefer de-apostrophe of the best colon form (without trailing bare 1).
     colon_hit = next(

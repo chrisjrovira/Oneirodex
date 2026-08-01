@@ -9,7 +9,7 @@ from gametheca.utils.scanning import refresh_images_in_background
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories, sanitize_path_for_logging
 from gametheca.utils.functions import sanitize_string_input
-from gametheca.utils.game_core import check_existing_game_by_igdb_id
+from gametheca.utils.game_core import check_existing_game_by_igdb_id, ensure_manual_identify_taxonomy
 from gametheca.utils.gamenames import clean_game_name
 from gametheca.utils.game_name_parse import parse_game_label
 from gametheca.utils.item_kind import normalize_item_kind
@@ -33,11 +33,19 @@ def add_game_manual():
     # "Fix search": prefill the identify workbench with a scanner-cleaned title
     # (release-group tags / dots / underscores / VR-repack / build tails stripped)
     # instead of the raw folder name, so IGDB search actually finds a match on
-    # the first try. Prefer parse_game_label's cleaned_name — it keeps original
-    # casing (e.g. "Assassin's Creed") and applies the small alias map, unlike
+    # the first try. Prefer soft UnmatchedFolder.search_name when set (Wave 17);
+    # else parse_game_label's cleaned_name — it keeps original casing (e.g.
+    # "Assassin's Creed") and applies the small alias map, unlike
     # clean_game_name's heavier pipeline which re-title-cases everything.
-    game_name = raw_folder_name
-    if raw_folder_name:
+    soft_search = None
+    if from_unmatched and full_disk_path:
+        uf = db.session.execute(
+            select(UnmatchedFolder).filter_by(folder_path=full_disk_path)
+        ).scalars().first()
+        if uf:
+            soft_search = (getattr(uf, 'search_name', None) or '').strip() or None
+    game_name = soft_search or raw_folder_name
+    if raw_folder_name and not soft_search:
         try:
             cleaned_name = parse_game_label(raw_folder_name).get('cleaned_name') or ''
             if not cleaned_name:
@@ -138,6 +146,10 @@ def add_game_manual():
         new_game.themes = form.themes.data
         new_game.platforms = form.platforms.data
         new_game.player_perspectives = form.player_perspectives.data
+        # Server-side IGDB taxonomy upsert (create-missing) so names absent from
+        # the form checkbox list are not silently dropped on manual identify.
+        if not is_custom_game:
+            ensure_manual_identify_taxonomy(new_game, form.igdb_id.data)
 
         # Handle developer with input sanitization
         if form.developer.data and form.developer.data != 'Not Found':

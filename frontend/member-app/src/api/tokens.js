@@ -47,10 +47,35 @@ export async function listTokens({ signal } = {}) {
 }
 
 /**
+ * One-time create payload secret only — never labels, prefix ellipsis, or HTML.
+ * Prefers `raw`, then `secret`, then a string `token`. Outer whitespace only;
+ * do not truncate at `-` (urlsafe secrets may include `-` / `_`).
+ *
+ * @param {unknown} data
+ * @returns {string}
+ */
+export function extractOneTimeSecret(data) {
+  if (!data || typeof data !== 'object') {
+    return ''
+  }
+  const record = /** @type {Record<string, unknown>} */ (data)
+  const candidates = [record.raw, record.secret, record.token]
+  for (const candidate of candidates) {
+    if (typeof candidate !== 'string') continue
+    const trimmed = candidate.trim()
+    if (trimmed.startsWith('gt_')) {
+      return trimmed
+    }
+  }
+  return ''
+}
+
+/**
  * @param {{ name: string, preset?: 'companion' | 'thin', scopes?: string[] }} body
  * @returns {Promise<{
  *   token: Record<string, unknown>,
  *   secret: string,
+ *   raw?: string,
  *   warning?: string,
  * }>}
  */
@@ -64,7 +89,12 @@ export async function createToken(body) {
   if (!response.ok) {
     throw await readError(response, 'Create token')
   }
-  return response.json()
+  const data = await response.json()
+  const secret = extractOneTimeSecret(data)
+  return {
+    ...data,
+    secret,
+  }
 }
 
 /** @param {number} tokenId */

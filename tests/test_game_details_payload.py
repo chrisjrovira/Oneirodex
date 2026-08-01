@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from gametheca.utils.game_details_payload import build_game_details_payload
 
 
-def test_build_game_details_payload_omits_disk_paths():
+def _demo_game(**overrides):
     game = SimpleNamespace(
         id=1,
         uuid='11111111-1111-4111-8111-111111111111',
@@ -56,10 +56,15 @@ def test_build_game_details_payload_omits_disk_paths():
         images=MagicMock(),
         updates=[],
         extras=[],
+        full_disk_path='/vault/pc/Demo',
     )
     game.images.all.return_value = []
-    user = SimpleNamespace(id=7, role='user')
+    for key, value in overrides.items():
+        setattr(game, key, value)
+    return game
 
+
+def _build(game, user):
     with patch('gametheca.utils.game_details_payload.db') as mock_db, patch(
         'gametheca.utils.game_details_payload.load_lifecycle_map',
         return_value={},
@@ -68,7 +73,11 @@ def test_build_game_details_payload_omits_disk_paths():
         return_value='/static/newstyle/default_cover.jpg',
     ), patch(
         'gametheca.utils.game_details_payload.browse_play_fields',
-        return_value={'play_url': None, 'can_play_in_browser': False},
+        return_value={
+            'play_url': None,
+            'can_play_in_browser': False,
+            'cheat_surface': 'pc_wand',
+        },
     ), patch(
         'gametheca.utils.game_details_payload.game_card_flags',
         return_value={},
@@ -84,10 +93,35 @@ def test_build_game_details_payload_omits_disk_paths():
         mock_db.session.execute.return_value.scalars.return_value.all.return_value = []
         mock_db.session.execute.return_value.scalars.return_value.first.return_value = None
         mock_db.session.execute.return_value.first.return_value = None
-        payload = build_game_details_payload(game, user)
+        return build_game_details_payload(game, user)
+
+
+def test_build_game_details_payload_omits_disk_paths():
+    game = _demo_game()
+    user = SimpleNamespace(id=7, role='user')
+    payload = _build(game, user)
 
     assert payload['uuid'] == game.uuid
     assert payload['name'] == 'Demo'
     assert 'full_disk_path' not in payload
+    assert 'server_path' not in payload
     assert payload['cover_url']
     assert payload['rating'] == 80
+
+
+def test_build_game_details_payload_admin_full_disk_path():
+    game = _demo_game(full_disk_path='/vault/pc/Demo')
+    admin = SimpleNamespace(id=1, role='admin')
+    payload = _build(game, admin)
+    assert payload['full_disk_path'] == '/vault/pc/Demo'
+    assert payload['server_path'] == '/vault/pc/Demo'
+    assert payload['is_admin'] is True
+
+
+def test_build_game_details_payload_librarian_full_disk_path():
+    game = _demo_game(full_disk_path='/vault/nes/Demo')
+    librarian = SimpleNamespace(id=2, role='librarian')
+    payload = _build(game, librarian)
+    assert payload['full_disk_path'] == '/vault/nes/Demo'
+    assert payload['server_path'] == '/vault/nes/Demo'
+    assert payload['is_admin'] is False

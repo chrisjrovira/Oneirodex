@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { FilterBar, cleanFilters } from './components/FilterBar'
+import { FilterBar, LIBRARY_SEARCH_DEBOUNCE_MS, cleanFilters } from './components/FilterBar'
 
 vi.mock('./api/filters', () => ({
   fetchFilterOptions: () =>
@@ -15,10 +15,30 @@ vi.mock('./api/filters', () => ({
     }),
 }))
 
+function clearFiltersVisibleFlag() {
+  try {
+    window.localStorage?.removeItem('gt.library.filtersVisible')
+  } catch {
+    /* jsdom / node without localStorage */
+  }
+}
+
+beforeEach(() => {
+  clearFiltersVisibleFlag()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+})
+
 test('cleanFilters drops empty and zero rating', () => {
   expect(cleanFilters({ genre: 'Action', rating: '0', theme: '' })).toEqual({
     genre: 'Action',
   })
+})
+
+test('cleanFilters drops blank name search', () => {
+  expect(cleanFilters({ name: '  ', genre: 'Action' })).toEqual({ genre: 'Action' })
 })
 
 test('FilterBar uses aurora button classes', async () => {
@@ -40,6 +60,58 @@ test('FilterBar uses aurora button classes', async () => {
   expect(onApply).toHaveBeenCalled()
 })
 
+test('typing in library search debounces name apply', async () => {
+  const user = userEvent.setup()
+  const onLiveSearch = vi.fn()
+  const onApply = vi.fn()
+
+  render(
+    <FilterBar
+      filters={{}}
+      onApply={onApply}
+      onLiveSearch={onLiveSearch}
+      onClear={() => {}}
+    />,
+  )
+
+  const input = screen.getByRole('searchbox', { name: /search library by title/i })
+  await user.type(input, 'cel')
+  expect(onLiveSearch).not.toHaveBeenCalled()
+
+  await waitFor(
+    () => {
+      expect(onLiveSearch).toHaveBeenCalledWith({ name: 'cel' })
+    },
+    { timeout: LIBRARY_SEARCH_DEBOUNCE_MS + 1500 },
+  )
+  expect(onApply).not.toHaveBeenCalled()
+})
+
+test('clearing library search restores filters without name', async () => {
+  const user = userEvent.setup()
+  const onLiveSearch = vi.fn()
+
+  render(
+    <FilterBar
+      filters={{ name: 'cel', genre: 'Action' }}
+      onApply={() => {}}
+      onLiveSearch={onLiveSearch}
+      onClear={() => {}}
+    />,
+  )
+
+  const input = screen.getByRole('searchbox', { name: /search library by title/i })
+  expect(input).toHaveValue('cel')
+  await user.clear(input)
+
+  await waitFor(
+    () => {
+      expect(onLiveSearch).toHaveBeenCalledWith({ genre: 'Action' })
+    },
+    { timeout: LIBRARY_SEARCH_DEBOUNCE_MS + 1500 },
+  )
+})
+
 test('FilterBar hosts signal chips in the filter section', async () => {
   const user = userEvent.setup()
   const onApply = vi.fn()
@@ -55,6 +127,38 @@ test('FilterBar hosts signal chips in the filter section', async () => {
 
   await user.click(screen.getByRole('button', { name: 'UPDATE' }))
   expect(onApply).toHaveBeenCalledWith({ has_updates: '1' })
+})
+
+test('FilterBar Hide/Show filters persists and Kind/Signals sit above Apply', async () => {
+  const user = userEvent.setup()
+  clearFiltersVisibleFlag()
+
+  const { container } = render(
+    <FilterBar filters={{}} onApply={() => {}} onClear={() => {}} />,
+  )
+
+  const body = container.querySelector('#library-filters-body')
+  expect(body).toBeTruthy()
+  const kind = screen.getByRole('group', { name: 'Kind filters' })
+  const signals = screen.getByRole('group', { name: 'Badge filters' })
+  const apply = screen.getByRole('button', { name: 'Apply' })
+  expect(
+    kind.compareDocumentPosition(signals) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy()
+  expect(
+    signals.compareDocumentPosition(apply) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy()
+
+  await user.click(screen.getByRole('button', { name: 'Hide filters' }))
+  expect(screen.queryByRole('button', { name: 'Apply' })).toBeNull()
+  expect(screen.getByRole('button', { name: 'Show filters' })).toBeInTheDocument()
+  expect(window.localStorage?.getItem('gt.library.filtersVisible') ?? '0').toBe('0')
+  // Title search stays visible when the rest of the filter body is collapsed
+  expect(screen.getByRole('searchbox', { name: /search library by title/i })).toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: 'Show filters' }))
+  expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument()
+  expect(window.localStorage?.getItem('gt.library.filtersVisible') ?? '1').toBe('1')
 })
 
 test('FilterBar kind chips drive item_kind browse param', async () => {

@@ -2,9 +2,19 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GameActionBar } from './GameActionBar'
 import * as clientCommands from '../api/clientCommands'
+import * as downloadsApi from '../api/downloads'
+import { showToast } from '../utils/toast'
 
 vi.mock('../api/clientCommands', () => ({
   queueClientCommand: vi.fn(),
+}))
+
+vi.mock('../api/downloads', () => ({
+  initiateGameDownload: vi.fn(),
+}))
+
+vi.mock('../utils/toast', () => ({
+  showToast: vi.fn(),
 }))
 
 vi.mock('../api/assists', () => ({
@@ -17,10 +27,16 @@ vi.mock('../api/remotePlay', () => ({
 
 beforeEach(() => {
   clientCommands.queueClientCommand.mockReset()
+  downloadsApi.initiateGameDownload.mockReset()
+  showToast.mockReset()
 })
 
-test('Download is always available; Install explains when companion offline', async () => {
+test('Download queues via API; Install explains when companion offline', async () => {
   const user = userEvent.setup()
+  downloadsApi.initiateGameDownload.mockResolvedValue({ download_id: 1, status: 'available' })
+  const assign = vi.fn()
+  vi.stubGlobal('location', { ...window.location, assign })
+
   render(
     <GameActionBar
       gameUuid="abc"
@@ -29,14 +45,43 @@ test('Download is always available; Install explains when companion offline', as
       assistPack={null}
     />,
   )
-  expect(screen.getByRole('link', { name: /^Download$/i })).toHaveAttribute(
-    'href',
-    '/download_game/abc',
-  )
+  expect(screen.getByRole('button', { name: /^Download$/i })).toBeInTheDocument()
   expect(screen.getByText(/companion offline/i)).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: /^Download$/i }))
+  await waitFor(() => {
+    expect(downloadsApi.initiateGameDownload).toHaveBeenCalledWith('abc')
+  })
+  expect(assign).toHaveBeenCalledWith('/downloads')
   await user.click(screen.getByRole('button', { name: /^Install$/i }))
   expect(await screen.findByRole('status')).toHaveTextContent(/companion/i)
   expect(clientCommands.queueClientCommand).not.toHaveBeenCalled()
+  vi.unstubAllGlobals()
+})
+
+test('Download toasts Backend hint on 410 path_missing', async () => {
+  const user = userEvent.setup()
+  const err = new Error('Version file is missing on disk')
+  err.status = 410
+  err.code = 'path_missing'
+  err.hint = 'This install path is gone. Use Remove missing versions.'
+  err.data = { code: 'path_missing', hint: err.hint }
+  downloadsApi.initiateGameDownload.mockRejectedValue(err)
+
+  render(
+    <GameActionBar
+      gameUuid="abc"
+      gameName="Demo"
+      lifecycleState="not_downloaded"
+      assistPack={null}
+    />,
+  )
+  await user.click(screen.getByRole('button', { name: /^Download$/i }))
+  await waitFor(() => {
+    expect(showToast).toHaveBeenCalledWith(
+      'This install path is gone. Use Remove missing versions.',
+      'error',
+    )
+  })
 })
 
 test('Get with companion queues download when connected and not downloaded', async () => {

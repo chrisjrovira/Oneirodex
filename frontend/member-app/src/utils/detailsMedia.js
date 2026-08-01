@@ -82,7 +82,19 @@ export function youtubeDemoLink(game) {
 }
 
 /**
+ * Wave 19 — RetroArch `.cht` surface only when Backend says so.
+ * Prefer `cheat_surface === 'retroarch'`. Never invent Flask flags here.
+ * @param {object | null | undefined} game
+ * @returns {boolean}
+ */
+export function showsRetroarchCheats(game) {
+  if (!game || typeof game !== 'object') return false
+  return String(game.cheat_surface || '').trim().toLowerCase() === 'retroarch'
+}
+
+/**
  * Admin path rows from details payload (full_disk_path / server_path / optional admin_paths).
+ * Shows the full path string when Backend exposes it (no basename truncation in UI).
  * @param {object} game
  * @returns {{ label: string, path: string }[]}
  */

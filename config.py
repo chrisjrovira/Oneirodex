@@ -66,6 +66,9 @@ class Config(object):
     # Emulator save-state sync (WebRetro / companion)
     ENABLE_EMULATOR_SAVE_SYNC = os.getenv('ENABLE_EMULATOR_SAVE_SYNC', 'true').lower() == 'true'
     ENCRYPT_EMULATOR_SAVES = os.getenv('ENCRYPT_EMULATOR_SAVES', 'false').lower() == 'true'
+    # Optional private BIOS/firmware dir (operator upload or host volume). Never vendor blobs.
+    # When unset, bios_root() falls back to static/library/bios.
+    EMULATOR_BIOS_PATH = os.getenv('EMULATOR_BIOS_PATH') or None
 
     # Ollama AI assist (suggestions on; silent rename stays off)
     ENABLE_AI_ASSIST = os.getenv('ENABLE_AI_ASSIST', 'true').lower() == 'true'

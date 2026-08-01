@@ -1,5 +1,6 @@
 import {
   createAuthStore,
+  describeTokenPaste,
   isGamethecaToken,
   normalizeBaseUrl,
   normalizeGamethecaToken,
@@ -23,7 +24,10 @@ import { revealPathInOs } from './open-path.js'
 import {
   fetchLibraryPreview,
   formatDesktopApiError,
+  formatKeychainError,
+  logCompanion,
   mergeUpdateSignalsFromLibrary,
+  shapeInvalidConnectionResult,
   validateConnection,
 } from './connect.js'
 import { loadStoredConfig, saveStoredConfig } from './config-store.js'
@@ -241,20 +245,31 @@ async function hydrateFromDisk(): Promise<void> {
   const stored = await loadStoredConfig()
   auth.setBaseUrl(stored.baseUrl)
   auth.setToken(stored.token)
-  await auth.hydrateFromKeychain(keychainAdapter)
+  try {
+    await auth.hydrateFromKeychain(keychainAdapter)
+  } catch (error) {
+    logCompanion('keyring', `hydrate failed: ${error instanceof Error ? error.message : String(error)}`)
+    setStatus(formatKeychainError(error), 'error')
+  }
   els.baseUrl.value = auth.getBaseUrl()
-  els.token.value = auth.getToken() ?? ''
+  const token = auth.getToken()
+  els.token.value = token ? normalizeGamethecaToken(token) : ''
   renderAuthSummary()
 }
 async function handleConnect(): Promise<void> {
   const baseUrl = normalizeBaseUrl(els.baseUrl.value)
-  const token = normalizeGamethecaToken(els.token.value)
+  const rawToken = els.token.value
+  logCompanion('connect', describeTokenPaste(rawToken))
+  const token = normalizeGamethecaToken(rawToken)
+  els.baseUrl.value = baseUrl
+  els.token.value = token
   if (!baseUrl) {
     setStatus('Enter a server base URL.', 'error')
     return
   }
   if (!token || !isGamethecaToken(token)) {
-    setStatus('Enter a valid GameTheca API token (gt_<prefix>_<urlsafe-secret>).', 'error')
+    const shape = shapeInvalidConnectionResult()
+    setStatus(shape.message, 'error')
     return
   }
   els.connectBtn.disabled = true
@@ -275,8 +290,17 @@ async function handleConnect(): Promise<void> {
     els.connectBtn.disabled = false
     return
   }
-  await saveStoredConfig({ baseUrl, token })
-  await auth.persistToKeychain(keychainAdapter)
+  try {
+    await saveStoredConfig({ baseUrl, token })
+    await auth.persistToKeychain(keychainAdapter)
+  } catch (error) {
+    sessionActive = false
+    setConnectionMode('disconnected')
+    setStatus(formatKeychainError(error), 'error')
+    renderAuthSummary()
+    els.connectBtn.disabled = false
+    return
+  }
   libraryGames = await fetchLibraryPreview(api)
   try {
     const summary = await fetchModsSummaryGameUuids(auth)

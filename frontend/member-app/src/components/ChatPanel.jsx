@@ -1,11 +1,23 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { PageStatus } from './PageStatus'
 import { VoiceLobby } from './VoiceLobby'
-import { canArchiveChannel, canLeaveChannel, slugifyRoomName } from '../hooks/chatPanelApi'
+import {
+  canArchiveChannel,
+  canLeaveChannel,
+  isImageAttachment,
+  normalizeAttachments,
+  probeChatAttachmentUpload,
+  slugifyRoomName,
+  uploadChatAttachment,
+} from '../hooks/chatPanelApi'
 import '../pages/ChatPage.css'
 
 const FIXED_REACTION_EMOJIS = ['👍', '❤️', '😂', '🎉', '👀']
 const POLL_MS = 8000
+const MAX_ATTACHMENTS_PER_MESSAGE = 5
+const ATTACH_ACCEPT = '.png,.jpg,.jpeg,.webp,.gif,.txt,.csv,.pdf,image/png,image/jpeg,image/webp,image/gif,text/plain,text/csv,application/pdf'
+const ATTACH_HINT_UNAVAILABLE = 'File attach isn’t available yet — uploads land when the server enables them.'
+const ATTACH_HINT_CHILD = 'Child accounts can’t upload attachments.'
 
 function csrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.content || ''
@@ -24,6 +36,46 @@ function ReactionLabel({ item }) {
     )
   }
   return item.emoji
+}
+
+function MessageAttachments({ attachments }) {
+  const list = normalizeAttachments(attachments)
+  if (!list.length) return null
+  return (
+    <ul className="gt-chat-attachments" aria-label="Attachments">
+      {list.map((att) => {
+        const key = att.id ?? att.url ?? att.filename
+        const image = isImageAttachment(att)
+        return (
+          <li key={key} className="gt-chat-attachment">
+            {image && att.url ? (
+              <a
+                className="gt-chat-attachment__thumb"
+                href={att.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img src={att.url} alt={att.filename || 'Image attachment'} loading="lazy" />
+              </a>
+            ) : null}
+            {att.url ? (
+              <a
+                className="gt-chat-attachment__link"
+                href={att.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={att.filename || undefined}
+              >
+                {image ? 'Open image' : att.filename || 'Download file'}
+              </a>
+            ) : (
+              <span className="gt-chat-attachment__link">{att.filename || 'Attachment'}</span>
+            )}
+          </li>
+        )
+      })}
+    </ul>
+  )
 }
 
 function mergeById(existing, incoming) {
@@ -54,6 +106,8 @@ export function ChatPanel({
   canCreateRooms = true,
   viewer = {},
   onClose,
+  onExpandToggle,
+  expanded = false,
 }) {
   const [channels, setChannels] = useState([])
   const [channelsLoading, setChannelsLoading] = useState(true)
@@ -71,11 +125,21 @@ export function ChatPanel({
   const [creatingRoom, setCreatingRoom] = useState(false)
   const [roomActionBusy, setRoomActionBusy] = useState(false)
   const [showTools, setShowTools] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [pendingAttachments, setPendingAttachments] = useState([])
+  const [attachAvailable, setAttachAvailable] = useState(null) // null | true | false
+  const [attachBusy, setAttachBusy] = useState(false)
+  const [voiceOpen, setVoiceOpen] = useState(false)
+  const [preferScreenshare, setPreferScreenshare] = useState(false)
   const [reactionItems, setReactionItems] = useState(
     FIXED_REACTION_EMOJIS.map((emoji) => ({ emoji, label: emoji })),
   )
   const messagesRef = useRef([])
   const listEndRef = useRef(null)
+  const composerRef = useRef(null)
+  const fileInputRef = useRef(null)
+  const emojiPickerId = useId()
+  const viewerIsChild = String(viewer?.role || '').toLowerCase() === 'child'
 
   useEffect(() => {
     messagesRef.current = messages
@@ -88,6 +152,29 @@ export function ChatPanel({
   useEffect(() => {
     if (initialChannelId != null) setActiveId(initialChannelId)
   }, [initialChannelId])
+
+  useEffect(() => {
+    setPendingAttachments([])
+    setShowEmojiPicker(false)
+    setReplyTo(null)
+  }, [activeId])
+
+  useEffect(() => {
+    if (viewerIsChild) {
+      setAttachAvailable(false)
+      return undefined
+    }
+    if (!activeId || attachAvailable === false) return undefined
+    let cancelled = false
+    void probeChatAttachmentUpload(activeId).then((result) => {
+      if (cancelled) return
+      if (result === 'no') setAttachAvailable(false)
+      else if (result === 'yes') setAttachAvailable(true)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [activeId, attachAvailable, viewerIsChild])
 
   function showStatus(text, { isError = false } = {}) {
     setMsg(text)
@@ -199,17 +286,89 @@ export function ChatPanel({
     }
   }, [activeId])
 
+  function insertEmoji(item) {
+    const insert = item.url ? `:${item.label || item.emoji}:` : item.emoji
+    const el = composerRef.current
+    if (el && typeof el.selectionStart === 'number') {
+      const start = el.selectionStart
+      const end = el.selectionEnd
+      const next = `${body.slice(0, start)}${insert}${body.slice(end)}`
+      setBody(next)
+      requestAnimationFrame(() => {
+        el.focus()
+        const pos = start + insert.length
+        el.setSelectionRange(pos, pos)
+      })
+    } else {
+      setBody((prev) => `${prev}${insert}`)
+    }
+    setShowEmojiPicker(false)
+  }
+
+  async function handleAttachFiles(event) {
+    const files = Array.from(event.target.files || [])
+    event.target.value = ''
+    if (!files.length || !activeId) return
+    if (viewerIsChild) {
+      setAttachAvailable(false)
+      showStatus(ATTACH_HINT_CHILD, { isError: true })
+      return
+    }
+    if (attachAvailable === false) {
+      showStatus(ATTACH_HINT_UNAVAILABLE, { isError: true })
+      return
+    }
+    const roomLeft = MAX_ATTACHMENTS_PER_MESSAGE - pendingAttachments.length
+    if (roomLeft <= 0) {
+      showStatus(`Max ${MAX_ATTACHMENTS_PER_MESSAGE} attachments per message`, { isError: true })
+      return
+    }
+    setAttachBusy(true)
+    showStatus(null)
+    try {
+      for (const file of files.slice(0, roomLeft)) {
+        const result = await uploadChatAttachment(activeId, file, { csrf: csrfToken() })
+        if (result.unavailable) {
+          setAttachAvailable(false)
+          showStatus(ATTACH_HINT_UNAVAILABLE, { isError: true })
+          return
+        }
+        if (!result.ok) {
+          if (result.status === 403) {
+            setAttachAvailable(false)
+            showStatus(result.error || ATTACH_HINT_CHILD, { isError: true })
+            return
+          }
+          showStatus(result.error || 'Upload failed', { isError: true })
+          return
+        }
+        const normalized = normalizeAttachments([result.attachment])[0]
+        if (normalized) {
+          setPendingAttachments((prev) => [...prev, normalized])
+          setAttachAvailable(true)
+        }
+      }
+    } finally {
+      setAttachBusy(false)
+    }
+  }
+
   async function sendMessage(event) {
     event.preventDefault()
-    if (!activeId || !body.trim()) return
+    if (!activeId) return
+    const trimmed = body.trim()
+    const attachmentIds = pendingAttachments.map((a) => a.id).filter((id) => id != null)
+    if (!trimmed && !attachmentIds.length) return
+    const payload = {
+      body: trimmed,
+      parent_message_id: replyTo?.id || undefined,
+    }
+    if (attachmentIds.length) payload.attachment_ids = attachmentIds
     const response = await fetch(`/api/chat/channels/${activeId}/messages`, {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
-      body: JSON.stringify({
-        body,
-        parent_message_id: replyTo?.id || undefined,
-      }),
+      body: JSON.stringify(payload),
     })
     const data = await response.json().catch(() => ({}))
     if (!response.ok) {
@@ -218,6 +377,8 @@ export function ChatPanel({
     }
     setBody('')
     setReplyTo(null)
+    setPendingAttachments([])
+    setShowEmojiPicker(false)
     showStatus(null)
     await loadMessages(activeId)
   }
@@ -399,9 +560,7 @@ export function ChatPanel({
         setMessages([])
         setReplyTo(null)
       } else {
-        // Household leave = mute; bias list immediately, then refresh so API muted wins.
-        const mutedAfterLeave =
-          typeof data.muted === 'boolean' ? data.muted : true
+        const mutedAfterLeave = typeof data.muted === 'boolean' ? data.muted : true
         setChannels((prev) =>
           prev.map((ch) => (ch.id === leftId ? { ...ch, muted: mutedAfterLeave } : ch)),
         )
@@ -410,6 +569,11 @@ export function ChatPanel({
     } finally {
       setRoomActionBusy(false)
     }
+  }
+
+  function openVoice({ screenshare = false } = {}) {
+    setPreferScreenshare(screenshare)
+    setVoiceOpen(true)
   }
 
   if (error) {
@@ -421,13 +585,24 @@ export function ChatPanel({
   }
 
   const active = channels.find((c) => c.id === activeId)
-  const roomChannels = channels.filter((c) => c.kind !== 'dm')
-  const dmChannels = channels.filter((c) => c.kind === 'dm')
+  const roomChannels = channels.filter((c) => c.kind !== 'dm' && c.type !== 'dm')
+  const dmChannels = channels.filter((c) => c.kind === 'dm' || c.type === 'dm')
   const showArchive = canArchiveChannel(active, viewer)
   const showLeave = canLeaveChannel(active)
+  const attachDisabled =
+    !activeId || attachAvailable === false || attachBusy || viewerIsChild
+  const canSend =
+    Boolean(activeId) && (Boolean(body.trim()) || pendingAttachments.length > 0) && !attachBusy
+  const attachHint = viewerIsChild
+    ? ATTACH_HINT_CHILD
+    : attachAvailable === false
+      ? ATTACH_HINT_UNAVAILABLE
+      : null
 
   return (
-    <div className={`gt-chat-panel${compact ? ' gt-chat-panel--compact' : ''}`}>
+    <div
+      className={`gt-chat-panel${compact ? ' gt-chat-panel--compact' : ''}${expanded ? ' gt-chat-panel--expanded' : ''}`}
+    >
       <div className="gt-chat-layout">
         <aside className="gt-chat-channels" aria-label="Rooms">
           <div className="gt-chat-channels__head">
@@ -509,24 +684,34 @@ export function ChatPanel({
           ) : (
             <div className="gt-chat-channel-groups">
               {roomChannels.length > 0 ? (
-                <ul className="gt-chat-channel-list" aria-label="Channels">
-                  {roomChannels.map((ch) => (
-                    <li key={ch.id}>
-                      <button
-                        type="button"
-                        className={`gt-chat-channel${ch.muted ? ' is-muted' : ''}`}
-                        onClick={() => setActiveId(ch.id)}
-                        aria-pressed={ch.id === activeId}
-                      >
-                        <span className="gt-chat-channel__hash" aria-hidden="true">
-                          #
-                        </span>
-                        <span className="gt-chat-channel__name">{ch.name?.replace(/^#/, '') || ch.name}</span>
-                        {ch.muted ? <span className="gt-chat-channel__muted">muted</span> : null}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <p className="gt-chat-channel-label">Channels</p>
+                  <ul className="gt-chat-channel-list" aria-label="Channels">
+                    {roomChannels.map((ch) => (
+                      <li key={ch.id}>
+                        <button
+                          type="button"
+                          className={`gt-chat-channel${ch.muted ? ' is-muted' : ''}${ch.id === activeId ? ' is-active' : ''}`}
+                          onClick={() => setActiveId(ch.id)}
+                          aria-pressed={ch.id === activeId}
+                        >
+                          <span className="gt-chat-channel__hash" aria-hidden="true">
+                            #
+                          </span>
+                          <span className="gt-chat-channel__name">
+                            {ch.name?.replace(/^#/, '') || ch.name}
+                          </span>
+                          {ch.unread ? (
+                            <span className="gt-chat-channel__unread" aria-label={`${ch.unread} unread`}>
+                              {ch.unread > 99 ? '99+' : ch.unread}
+                            </span>
+                          ) : null}
+                          {ch.muted ? <span className="gt-chat-channel__muted">muted</span> : null}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
               ) : null}
               {dmChannels.length > 0 ? (
                 <>
@@ -536,7 +721,7 @@ export function ChatPanel({
                       <li key={ch.id}>
                         <button
                           type="button"
-                          className={`gt-chat-channel${ch.muted ? ' is-muted' : ''}`}
+                          className={`gt-chat-channel${ch.muted ? ' is-muted' : ''}${ch.id === activeId ? ' is-active' : ''}`}
                           onClick={() => setActiveId(ch.id)}
                           aria-pressed={ch.id === activeId}
                         >
@@ -544,6 +729,11 @@ export function ChatPanel({
                             @
                           </span>
                           <span className="gt-chat-channel__name">{ch.name}</span>
+                          {ch.unread ? (
+                            <span className="gt-chat-channel__unread" aria-label={`${ch.unread} unread`}>
+                              {ch.unread > 99 ? '99+' : ch.unread}
+                            </span>
+                          ) : null}
                           {ch.muted ? <span className="gt-chat-channel__muted">muted</span> : null}
                         </button>
                       </li>
@@ -579,7 +769,7 @@ export function ChatPanel({
         <section className="gt-chat-thread" aria-label="Messages">
           <div className="gt-chat-thread__head">
             <div className="gt-chat-thread__title">
-              {active?.kind === 'dm' ? (
+              {active?.kind === 'dm' || active?.type === 'dm' ? (
                 <strong>{active?.name || 'Select a room'}</strong>
               ) : (
                 <strong>
@@ -587,18 +777,39 @@ export function ChatPanel({
                   {active?.name?.replace(/^#/, '') || 'Select a room'}
                 </strong>
               )}
+              <span className="gt-chat-thread__subtitle">Household room</span>
             </div>
             <div className="gt-chat-thread__actions">
               {active ? (
-                <button
-                  type="button"
-                  className="gt-chat-icon-btn"
-                  onClick={() => void toggleMute()}
-                  aria-pressed={Boolean(active.muted)}
-                  disabled={roomActionBusy}
-                >
-                  {active.muted ? 'Unmute' : 'Mute'}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="gt-chat-icon-btn gt-chat-icon-btn--accent"
+                    onClick={() => openVoice({ screenshare: false })}
+                    aria-pressed={voiceOpen && !preferScreenshare}
+                    title="Join household voice"
+                  >
+                    Voice
+                  </button>
+                  <button
+                    type="button"
+                    className="gt-chat-icon-btn gt-chat-icon-btn--accent"
+                    onClick={() => openVoice({ screenshare: true })}
+                    aria-pressed={voiceOpen && preferScreenshare}
+                    title="Request screenshare (may be blocked for child accounts)"
+                  >
+                    Screenshare
+                  </button>
+                  <button
+                    type="button"
+                    className="gt-chat-icon-btn"
+                    onClick={() => void toggleMute()}
+                    aria-pressed={Boolean(active.muted)}
+                    disabled={roomActionBusy}
+                  >
+                    {active.muted ? 'Unmute' : 'Mute'}
+                  </button>
+                </>
               ) : null}
               {showLeave ? (
                 <button
@@ -620,6 +831,17 @@ export function ChatPanel({
                   Archive
                 </button>
               ) : null}
+              {typeof onExpandToggle === 'function' ? (
+                <button
+                  type="button"
+                  className="gt-chat-icon-btn"
+                  onClick={onExpandToggle}
+                  aria-pressed={expanded}
+                  title={expanded ? 'Compact chat panel' : 'Expand chat panel'}
+                >
+                  {expanded ? 'Compact' : 'Expand'}
+                </button>
+              ) : null}
               {onClose ? (
                 <button type="button" className="gt-chat-icon-btn" aria-label="Close chat" onClick={onClose}>
                   ×
@@ -627,6 +849,29 @@ export function ChatPanel({
               ) : null}
             </div>
           </div>
+
+          {voiceOpen ? (
+            <div className="gt-chat-voice gt-chat-voice--header" aria-label="Voice and screenshare">
+              <div className="gt-chat-voice__bar">
+                <span className="gt-chat-voice__label">
+                  {preferScreenshare ? 'Screenshare entry' : 'Voice entry'}
+                </span>
+                <button
+                  type="button"
+                  className="gt-chat-icon-btn"
+                  onClick={() => setVoiceOpen(false)}
+                  aria-label="Hide voice panel"
+                >
+                  Hide
+                </button>
+              </div>
+              <VoiceLobby
+                compact
+                defaultScreenshare={preferScreenshare}
+                roomLabel={preferScreenshare ? 'Screenshare' : 'Voice'}
+              />
+            </div>
+          ) : null}
 
           {msg ? (
             <p className={`gt-chat-status${msgIsError ? ' is-error' : ''}`} role={msgIsError ? 'alert' : 'status'}>
@@ -661,7 +906,10 @@ export function ChatPanel({
                         </time>
                       </div>
                     ) : null}
-                    <p className="gt-chat-msg__body">{m.body}</p>
+                    {m.body && String(m.body).trim() ? (
+                      <p className="gt-chat-msg__body">{m.body}</p>
+                    ) : null}
+                    <MessageAttachments attachments={m.attachments} />
                     <div className="gt-chat-msg__actions">
                       <button type="button" onClick={() => setReplyTo(m)}>
                         Reply
@@ -702,8 +950,90 @@ export function ChatPanel({
             </div>
           ) : null}
 
+          {pendingAttachments.length > 0 ? (
+            <ul className="gt-chat-pending-attachments" aria-label="Pending attachments">
+              {pendingAttachments.map((att) => (
+                <li key={att.id ?? att.filename}>
+                  <span>{att.filename || 'file'}</span>
+                  <button
+                    type="button"
+                    className="gt-chat-icon-btn"
+                    aria-label={`Remove ${att.filename || 'attachment'}`}
+                    onClick={() =>
+                      setPendingAttachments((prev) => prev.filter((row) => row !== att))
+                    }
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {attachHint ? (
+            <p className="gt-chat-attach-hint" role="status">
+              {attachHint}
+            </p>
+          ) : null}
+
+          {showEmojiPicker ? (
+            <div id={emojiPickerId} className="gt-chat-emoji-picker" role="listbox" aria-label="Emoji">
+              {reactionItems.map((item) => (
+                <button
+                  key={item.emoji}
+                  type="button"
+                  role="option"
+                  className="gt-chat-emoji-picker__btn"
+                  title={item.label}
+                  onClick={() => insertEmoji(item)}
+                >
+                  <ReactionLabel item={item} />
+                </button>
+              ))}
+            </div>
+          ) : null}
+
           <form className="gt-chat-composer" onSubmit={sendMessage}>
+            <div className="gt-chat-composer__tools">
+              <button
+                type="button"
+                className="gt-chat-composer__tool"
+                aria-label="Insert emoji"
+                aria-expanded={showEmojiPicker}
+                aria-controls={emojiPickerId}
+                disabled={!activeId}
+                onClick={() => setShowEmojiPicker((v) => !v)}
+              >
+                🙂
+              </button>
+              <button
+                type="button"
+                className="gt-chat-composer__tool"
+                aria-label="Attach file"
+                title={
+                  viewerIsChild
+                    ? ATTACH_HINT_CHILD
+                    : attachAvailable === false
+                      ? ATTACH_HINT_UNAVAILABLE
+                      : 'Attach image or file'
+                }
+                disabled={attachDisabled}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                📎
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="gt-chat-sr-only"
+                tabIndex={-1}
+                accept={ATTACH_ACCEPT}
+                multiple
+                onChange={(event) => void handleAttachFiles(event)}
+              />
+            </div>
             <textarea
+              ref={composerRef}
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder={active ? `Message ${active.name}` : 'Select a room first'}
@@ -716,15 +1046,11 @@ export function ChatPanel({
                 }
               }}
             />
-            <button className="gt-btn gt-btn--primary" type="submit" disabled={!activeId || !body.trim()}>
+            <button className="gt-btn gt-btn--primary" type="submit" disabled={!canSend}>
               Send
             </button>
           </form>
         </section>
-      </div>
-
-      <div className="gt-chat-voice">
-        <VoiceLobby compact />
       </div>
     </div>
   )

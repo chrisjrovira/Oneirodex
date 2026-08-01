@@ -7,11 +7,12 @@ still subject to per-job ``scan_thread_count`` / ``worker_caps``.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import os
+from datetime import datetime, timedelta, timezone
 from threading import Thread
 
 from flask import current_app
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import SQLAlchemyError
 
 from gametheca import db
@@ -27,6 +28,15 @@ QUEUE_DEFAULT_MESSAGE = (
     'A scan is already running. This request was queued and will start '
     'when the current job finishes (FIFO).'
 )
+
+COALESCE_MESSAGE = (
+    'A scan for this library folder is already queued. Reusing the existing '
+    'Queued job instead of creating another (coalesced).'
+)
+
+# Stopping should finish quickly; Running without progress is likely orphaned.
+STALE_STOPPING_SECONDS = 10 * 60
+STALE_RUNNING_SECONDS = 6 * 60 * 60
 
 
 def parse_force_parallel(raw) -> bool:
@@ -52,6 +62,15 @@ def parse_queue_policy(raw, force_parallel=None) -> str:
     if text in ('force', 'force_parallel', 'parallel', 'concurrent'):
         return 'force'
     return 'queue'
+
+
+def _norm_folder(path: str | None) -> str:
+    if not path:
+        return ''
+    try:
+        return os.path.normcase(os.path.normpath(str(path).strip()))
+    except Exception:
+        return str(path).strip().lower()
 
 
 def is_scan_busy() -> bool:
@@ -85,6 +104,23 @@ def queue_position(job_id: str) -> int | None:
     for idx, job in enumerate(list_queued_jobs(), start=1):
         if job.id == job_id:
             return idx
+    return None
+
+
+def find_queued_for_library(library_uuid: str, folder_path: str) -> ScanJob | None:
+    """Return an existing Queued job for the same library root, if any."""
+    folder_n = _norm_folder(folder_path)
+    rows = db.session.execute(
+        select(ScanJob)
+        .where(
+            ScanJob.library_uuid == library_uuid,
+            ScanJob.status == 'Queued',
+        )
+        .order_by(ScanJob.last_run.asc().nullsfirst(), ScanJob.id.asc())
+    ).scalars().all()
+    for row in rows:
+        if _norm_folder(row.scan_folder) == folder_n:
+            return row
     return None
 
 
@@ -195,6 +231,16 @@ def start_or_queue_scan(
     busy = is_scan_busy()
 
     if busy and not force:
+        existing_queued = find_queued_for_library(library_uuid, folder_path)
+        if existing_queued:
+            position = queue_position(existing_queued.id) or 1
+            return {
+                'status': 'queued',
+                'job_id': existing_queued.id,
+                'position': position,
+                'coalesced': True,
+                'message': f'{COALESCE_MESSAGE} Position {position}.',
+            }
         job = create_scan_job_row(
             folder_path=folder_path,
             library_uuid=library_uuid,
@@ -276,6 +322,65 @@ def start_or_queue_scan(
     }
 
 
+def reclaim_stale_busy_jobs(
+    *,
+    stopping_after_seconds: int = STALE_STOPPING_SECONDS,
+    running_after_seconds: int = STALE_RUNNING_SECONDS,
+) -> int:
+    """Mark orphaned Running/Stopping jobs Failed so the FIFO queue can drain.
+
+    Returns the number of jobs reclaimed.
+    """
+    now = datetime.now(timezone.utc)
+    stopping_cutoff = now - timedelta(seconds=max(60, int(stopping_after_seconds)))
+    running_cutoff = now - timedelta(seconds=max(60, int(running_after_seconds)))
+
+    busy_jobs = db.session.execute(
+        select(ScanJob).where(ScanJob.status.in_(('Running', 'Stopping')))
+    ).scalars().all()
+
+    reclaimed = 0
+    for job in busy_jobs:
+        anchor = job.last_progress_update or job.last_run
+        if anchor is None:
+            # Never progressed and no last_run — treat as immediately reclaimable Stopping,
+            # but give Running a chance unless it has been Queued→Running without a worker.
+            if job.status != 'Stopping':
+                continue
+            anchor = now - timedelta(seconds=stopping_after_seconds + 1)
+        if anchor.tzinfo is None:
+            anchor = anchor.replace(tzinfo=timezone.utc)
+
+        if job.status == 'Stopping' and anchor <= stopping_cutoff:
+            job.status = 'Failed'
+            job.is_enabled = False
+            job.current_processing = None
+            job.error_message = (
+                (job.error_message or '').strip()
+                or 'Scan stuck in Stopping; reclaimed so queued scans can start.'
+            )
+            reclaimed += 1
+        elif job.status == 'Running' and anchor <= running_cutoff:
+            job.status = 'Failed'
+            job.is_enabled = False
+            job.current_processing = None
+            job.error_message = (
+                (job.error_message or '').strip()
+                or 'Scan stuck in Running without progress; reclaimed so queued scans can start.'
+            )
+            reclaimed += 1
+
+    if reclaimed:
+        try:
+            db.session.commit()
+            print(f'[SCAN QUEUE] Reclaimed {reclaimed} stale Running/Stopping job(s)')
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f'[SCAN QUEUE] Failed to reclaim stale jobs: {exc}')
+            return 0
+    return reclaimed
+
+
 def promote_next_queued_scan(app=None) -> ScanJob | None:
     """If no scan is busy, promote the oldest Queued job to Running and start it.
 
@@ -294,9 +399,23 @@ def promote_next_queued_scan(app=None) -> ScanJob | None:
     if not next_job:
         return None
 
-    next_job.status = 'Running'
-    next_job.last_run = datetime.now(timezone.utc)
-    next_job.error_message = ''
+    # Conditional claim: only promote if this row is still Queued.
+    now = datetime.now(timezone.utc)
+    claimed = db.session.execute(
+        update(ScanJob)
+        .where(
+            ScanJob.id == next_job.id,
+            ScanJob.status == 'Queued',
+        )
+        .values(
+            status='Running',
+            last_run=now,
+            error_message='',
+            is_enabled=True,
+            current_processing=None,
+        )
+    )
+    rowcount = claimed.rowcount or 0
     try:
         db.session.commit()
     except SQLAlchemyError as exc:
@@ -304,25 +423,78 @@ def promote_next_queued_scan(app=None) -> ScanJob | None:
         print(f'[SCAN QUEUE] Failed to promote queued job: {exc}')
         return None
 
+    if rowcount != 1:
+        return None
+
+    db.session.expire_all()
+    promoted = db.session.get(ScanJob, next_job.id)
+    if not promoted or promoted.status != 'Running':
+        return None
+
+    # Another worker may have started in parallel — roll back claim if so.
+    other_busy = db.session.execute(
+        select(ScanJob.id).where(
+            ScanJob.status.in_(('Running', 'Stopping')),
+            ScanJob.id != promoted.id,
+        ).limit(1)
+    ).first()
+    if other_busy:
+        promoted.status = 'Queued'
+        try:
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+        print(
+            f'[SCAN QUEUE] Rolled back promote of {promoted.id} — another job is busy'
+        )
+        return None
+
     try:
         from gametheca.utils.event_bus import publish_scan_event
-        publish_scan_event(next_job.id, 'Running')
+        publish_scan_event(promoted.id, 'Running')
     except Exception:
         pass
 
     flask_app = app or current_app._get_current_object()
-    print(f'[SCAN QUEUE] Promoting queued job {next_job.id} for {next_job.scan_folder}')
-    _start_job_thread(next_job, flask_app, force_parallel=False)
-    return next_job
+    print(f'[SCAN QUEUE] Promoting queued job {promoted.id} for {promoted.scan_folder}')
+    _start_job_thread(promoted, flask_app, force_parallel=False)
+    return promoted
+
+
+def drain_scan_queue(app=None) -> ScanJob | None:
+    """Reclaim stale busy jobs then promote the next Queued scan (safety drain)."""
+    try:
+        reclaim_stale_busy_jobs()
+    except Exception as exc:
+        print(f'[SCAN QUEUE] Stale reclaim failed: {exc}')
+    try:
+        return promote_next_queued_scan(app)
+    except Exception as exc:
+        print(f'[SCAN QUEUE] Promote failed: {exc}')
+        return None
 
 
 def enqueue_library_refresh_jobs(libraries_with_folders: list[dict]) -> dict:
     """Create Queued ScanJobs for refresh-all when a scan is already busy.
 
     ``libraries_with_folders`` items: ``{uuid, name, folder}``.
+    Coalesces when the same library folder is already Queued.
     """
     created = []
+    coalesced = 0
     for item in libraries_with_folders:
+        existing = find_queued_for_library(item['uuid'], item['folder'])
+        if existing:
+            coalesced += 1
+            created.append({
+                'uuid': item['uuid'],
+                'name': item.get('name'),
+                'folder': item['folder'],
+                'job_id': existing.id,
+                'position': queue_position(existing.id),
+                'coalesced': True,
+            })
+            continue
         job = create_scan_job_row(
             folder_path=item['folder'],
             library_uuid=item['uuid'],
@@ -336,12 +508,16 @@ def enqueue_library_refresh_jobs(libraries_with_folders: list[dict]) -> dict:
             'job_id': job.id,
             'position': queue_position(job.id),
         })
+    msg = (
+        f'{len(created)} library refresh scan(s) queued (FIFO). '
+        'They start when the current Running/Stopping job finishes.'
+    )
+    if coalesced:
+        msg += f' {coalesced} already-queued library folder(s) coalesced.'
     return {
         'status': 'queued',
         'jobs': created,
         'count': len(created),
-        'message': (
-            f'{len(created)} library refresh scan(s) queued (FIFO). '
-            'They start when the current Running/Stopping job finishes.'
-        ),
+        'coalesced_count': coalesced,
+        'message': msg,
     }

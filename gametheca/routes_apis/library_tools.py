@@ -19,12 +19,106 @@ from gametheca.utils.match_proposal import (
     remove_proposal_files,
 )
 from gametheca.utils.library_doctor import doctor_dry_run, doctor_write_proposals, iter_game_folders
+from gametheca.utils.propose_leaf_libraries import propose_leaf_libraries
+from gametheca.utils.import_leaf_libraries import preview_from_csv, preview_from_json
 
 from . import apis_bp
 
 
 def _allowed_bases():
     return get_allowed_base_directories(current_app)
+
+
+@apis_bp.route('/library_tools/propose_leaf_libraries', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def propose_leaf_libraries_api():
+    """Propose candidate leaf libraries under a console/tree root (never creates).
+
+    Body/query: ``root`` (or ``path``) — absolute path under allowed bases.
+    Returns ``{status, root, candidates:[{path, suggested_name, platform,
+    scan_mode, scan_depth, reason}], count}``. Does **not** insert Library rows.
+    """
+    data = request.get_json(silent=True) or {}
+    root = (
+        data.get('root')
+        or data.get('path')
+        or request.args.get('root')
+        or request.args.get('path')
+        or ''
+    )
+    root = str(root).strip()
+    if not root:
+        return jsonify({'status': 'error', 'message': 'root path required'}), 400
+
+    safe, err = is_safe_path(root, _allowed_bases())
+    if not safe:
+        return jsonify({'status': 'error', 'message': err or 'Unsafe path'}), 403
+
+    if not os.path.isdir(root):
+        return jsonify({'status': 'error', 'message': 'root is not a directory'}), 400
+
+    candidates = propose_leaf_libraries(root)
+    return jsonify({
+        'status': 'ok',
+        'root': os.path.normpath(root),
+        'candidates': candidates,
+        'count': len(candidates),
+        'auto_create': False,
+    })
+
+
+@apis_bp.route('/library_tools/import_leaf_libraries/preview', methods=['POST'])
+@login_required
+@admin_required
+def import_leaf_libraries_preview_api():
+    """Preview/validate CSV or JSON leaf library definitions (never creates).
+
+    Accepts:
+      - JSON body: array of rows, or ``{candidates|items|libraries|rows: [...]}``
+      - multipart ``file`` upload (``.json`` / ``.csv``, UTF-8)
+
+    Each row: ``path``, ``suggested_name``/``name``, ``platform``, ``scan_mode``,
+    ``scan_depth`` (same shape as propose-from-tree candidates).
+
+    Returns ``{status, auto_create:false, candidates, errors, count, error_count,
+    create_hint}``. Create selected rows client-side via existing
+    ``POST /admin/library/add`` + ``POST /api/admin/libraries/scan`` (propose UI).
+    """
+    bases = _allowed_bases()
+    upload = request.files.get('file')
+    if upload and upload.filename:
+        filename = (upload.filename or '').lower()
+        raw = upload.read()
+        try:
+            text = raw.decode('utf-8-sig')
+        except UnicodeDecodeError:
+            return jsonify({
+                'status': 'error',
+                'message': 'File must be UTF-8 text',
+                'auto_create': False,
+            }), 400
+        if filename.endswith('.csv') or (request.form.get('format') or '').lower() == 'csv':
+            result = preview_from_csv(text, allowed_bases=bases)
+        else:
+            result = preview_from_json(text, allowed_bases=bases)
+        return jsonify(result)
+
+    data = request.get_json(silent=True)
+    if data is None:
+        # Allow raw CSV text under form field `csv` / `text`
+        csv_text = request.form.get('csv') or request.form.get('text')
+        if csv_text:
+            result = preview_from_csv(csv_text, allowed_bases=bases)
+            return jsonify(result)
+        return jsonify({
+            'status': 'error',
+            'message': 'JSON body or file upload required',
+            'auto_create': False,
+        }), 400
+
+    result = preview_from_json(data, allowed_bases=bases)
+    return jsonify(result)
 
 
 @apis_bp.route('/library_tools/rename/preview', methods=['POST'])

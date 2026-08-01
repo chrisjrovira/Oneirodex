@@ -40,11 +40,12 @@
     opacity: 0.7;
 }
 
-/* Status Button on Game Cards (Library Grid) — left of bottom-right favorite */
+/* Status Button on Game Cards — right-side chrome stack (under hamburger + favorite) */
 .game-status-btn {
     position: absolute;
-    bottom: 8px;
-    right: 44px;
+    top: 78px;
+    bottom: auto;
+    right: 10px;
     width: 32px;
     height: 32px;
     background-color: rgba(0, 0, 0, 0.7);
@@ -54,7 +55,7 @@
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.2s ease;
-    z-index: 12;
+    z-index: 15;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -62,6 +63,14 @@
 
 .game-card:hover .game-status-btn {
     opacity: 1;
+}
+
+.game-card:has(.game-status-btn) > .popup-menu {
+    top: 116px;
+}
+
+.game-card:has(.game-status-btn) .gt-badge-stack--top-right {
+    top: 118px;
 }
 
 .game-status-btn:hover {
@@ -102,11 +111,12 @@
     font-size: 14px;
 }
 
-/* Status Dropdown Menu */
+/* Status Dropdown Menu — opens below the right-side status control */
 .status-dropdown {
     position: absolute;
-    bottom: 50px;
-    right: 0;
+    top: 116px;
+    bottom: auto;
+    right: 8px;
     min-width: 180px;
     background: var(--pagination-bg);
     backdrop-filter: blur(10px);

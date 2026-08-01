@@ -505,9 +505,39 @@ DEFAULT_SKIP_DIR_GLOBS = (
     'pegasus*',
     'pegasus-fe*',
     'GOD v*',  # tool folder e.g. "GOD v1.0" — not "God of War"
+    # Emulator install scaffolding (defense-in-depth when lib is pointed too high)
+    'Config',
+    'Lang',
+    'Plugin',
+    'ROMs',
+    'docs',
+    # Scan-root / lane leaks — never game folders
+    '_console-gaming',
+    '_pc',
+    # Walkthrough / guide trees (not games)
+    'walkthroughs',
+    '_walkthroughs',
+    '*walkthrough*',
+    # Mod / VR-mod pack folders (generic markers — avoid ``*mod*`` mid-title false positives)
+    '* MOD',
+    '* MOD *',
+    '*-MOD',
+    '*-MOD-*',
+    '* VR Mod*',
+    '* VR mod*',
+)
+
+# Folder basenames matching these regexes are skipped (repack bracket tags, etc.).
+# Operators may add more via Admin scanning filters prefixed with ``re:``.
+DEFAULT_SKIP_DIR_REGEXES = (
+    re.compile(
+        r'\[\s*(?:[^\]]*?[^\s\]]\s+)?(?:HV\s+)?Repack\s*\]',
+        re.IGNORECASE,
+    ),
 )
 
 _DIR_FILTER_PREFIX = 'dir:'
+_REGEX_FILTER_PREFIX = 're:'
 
 
 def load_skip_dir_patterns():
@@ -528,6 +558,30 @@ def load_skip_dir_patterns():
     except SQLAlchemyError as e:
         print(f"An error occurred while fetching skip-dir patterns: {e}")
         return list(DEFAULT_SKIP_DIR_GLOBS)
+
+
+def load_skip_dir_regex_patterns():
+    """Built-in skip-dir regexes plus Admin scanning filters prefixed with ``re:``."""
+    patterns = list(DEFAULT_SKIP_DIR_REGEXES)
+    try:
+        rows = db.session.execute(
+            select(ReleaseGroup).filter(ReleaseGroup.filter_pattern.isnot(None))
+        ).scalars().all()
+        for rg in rows:
+            raw = (rg.filter_pattern or '').strip()
+            if not raw.lower().startswith(_REGEX_FILTER_PREFIX):
+                continue
+            extra = raw[len(_REGEX_FILTER_PREFIX):].strip()
+            if not extra:
+                continue
+            try:
+                patterns.append(re.compile(extra, re.IGNORECASE))
+            except re.error as exc:
+                print(f"Invalid skip-dir regex filter {extra!r}: {exc}")
+        return patterns
+    except SQLAlchemyError as e:
+        print(f"An error occurred while fetching skip-dir regex patterns: {e}")
+        return list(DEFAULT_SKIP_DIR_REGEXES)
 
 
 # Truthy forms historically written by scan_management (bool) vs edit_filters ('yes'|'no').
@@ -566,6 +620,7 @@ def load_scanning_filter_patterns():
                 select(ReleaseGroup).filter(ReleaseGroup.filter_pattern.isnot(None))
             ).scalars().all()
             if not (rg.filter_pattern or '').strip().lower().startswith(_DIR_FILTER_PREFIX)
+            and not (rg.filter_pattern or '').strip().lower().startswith(_REGEX_FILTER_PREFIX)
         ]
         insensitive_patterns = [
             "-" + rg.filter_pattern for rg in name_filter_rows
@@ -577,7 +632,8 @@ def load_scanning_filter_patterns():
         # (pattern, is_case_sensitive) pairs used by name cleaning.
         sensitive_patterns = []
         for rg in db.session.execute(select(ReleaseGroup).filter(ReleaseGroup.case_sensitive.isnot(None))).scalars().all():
-            if (rg.filter_pattern or '').strip().lower().startswith(_DIR_FILTER_PREFIX):
+            raw_fp = (rg.filter_pattern or '').strip().lower()
+            if raw_fp.startswith(_DIR_FILTER_PREFIX) or raw_fp.startswith(_REGEX_FILTER_PREFIX):
                 continue
             is_case_sensitive = is_case_sensitive_flag(rg.case_sensitive)
             sensitive_patterns.append(("-" + rg.filter_pattern, is_case_sensitive))

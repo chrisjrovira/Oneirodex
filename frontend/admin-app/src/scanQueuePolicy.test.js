@@ -8,11 +8,18 @@ import {
   isScanBusyStatus,
   isScanQueuedStatus,
   normalizeScanJobsList,
+  isScanCoalesced,
   toastForScanStartResponse,
+  toastToneForScanVariant,
 } from './scanQueuePolicy'
 
 describe('scanQueuePolicy', () => {
   test('buildScanQueueRequestFields defaults queue and maps force', () => {
+    // Shared by Auto Scan, Manual busy (Jinja intercept), Refresh all, restart-while-busy.
+    expect(buildScanQueueRequestFields()).toEqual({
+      queue_policy: 'queue',
+      force_parallel: false,
+    })
     expect(buildScanQueueRequestFields(SCAN_QUEUE_POLICY.QUEUE)).toEqual({
       queue_policy: 'queue',
       force_parallel: false,
@@ -21,6 +28,21 @@ describe('scanQueuePolicy', () => {
       queue_policy: 'force',
       force_parallel: true,
     })
+    expect(buildScanQueueRequestFields('unknown')).toEqual({
+      queue_policy: 'queue',
+      force_parallel: false,
+    })
+  })
+
+  test('Manual busy and Auto Scan share the same conflict field map', () => {
+    // Smoke: classic Manual busy posts these via applyQueueFieldsToForm; idle Manual omits them.
+    const queue = buildScanQueueRequestFields(SCAN_QUEUE_POLICY.QUEUE)
+    const force = buildScanQueueRequestFields(SCAN_QUEUE_POLICY.FORCE)
+    expect(Object.keys(queue).sort()).toEqual(['force_parallel', 'queue_policy'])
+    expect(queue).toEqual({ queue_policy: 'queue', force_parallel: false })
+    expect(force).toEqual({ queue_policy: 'force', force_parallel: true })
+    expect(SCAN_CONFLICT_COPY.queueLabel).toMatch(/Queue/i)
+    expect(SCAN_CONFLICT_COPY.forceLabel).toMatch(/Force/i)
   })
 
   test('busy and queued status helpers', () => {
@@ -29,6 +51,7 @@ describe('scanQueuePolicy', () => {
     expect(isScanBusyStatus('Queued')).toBe(false)
     expect(isScanQueuedStatus('Queued')).toBe(true)
     expect(isScanQueuedStatus('pending')).toBe(true)
+    expect(isScanQueuedStatus('scheduled')).toBe(true)
     expect(isScanQueuedStatus('Running')).toBe(false)
   })
 
@@ -51,7 +74,31 @@ describe('scanQueuePolicy', () => {
 
   test('toastForScanStartResponse maps queued|started|rejected', () => {
     expect(toastForScanStartResponse({ status: 'queued', position: 2 }).variant).toBe('info')
-    expect(toastForScanStartResponse({ status: 'queued', position: 2 }).text).toMatch(/position 2/)
+    expect(toastForScanStartResponse({ status: 'queued', position: 2 }).text).toBe(
+      'Queued · position 2',
+    )
+    expect(
+      toastForScanStartResponse({
+        status: 'queued',
+        jobs: [{ position: 3 }],
+        message: 'long backend copy',
+      }).text,
+    ).toBe('Queued · position 3')
+    expect(
+      toastForScanStartResponse({
+        status: 'queued',
+        position: 1,
+        coalesced: true,
+      }).text,
+    ).toBe('Queued · position 1 · coalesced')
+    expect(
+      toastForScanStartResponse({
+        status: 'queued',
+        position: 2,
+        jobs: [{ position: 2, coalesced: true }],
+      }).text,
+    ).toBe('Queued · position 2 · coalesced')
+    expect(isScanCoalesced({ coalesced_count: 1 })).toBe(true)
     expect(toastForScanStartResponse({ status: 'started' }).variant).toBe('success')
     expect(
       toastForScanStartResponse({ status: 'started', message: 'Scan started.', risk: 'NAS risk' })
@@ -62,7 +109,9 @@ describe('scanQueuePolicy', () => {
         .text,
     ).toMatch(/NAS risk/)
     expect(toastForScanStartResponse({ status: 'rejected', error: 'Nope' }, false).text).toBe('Nope')
-    expect(toastForScanStartResponse({ count: 3 }, true).text).toMatch(/Queued 3/)
+    expect(toastForScanStartResponse({ count: 3 }, true).text).toMatch(/Queued · 3/)
+    expect(toastToneForScanVariant('warning')).toBe('warn')
+    expect(toastToneForScanVariant('info')).toBe('info')
   })
 
   test('conflict copy stays honest about Unraid/NAS load', () => {

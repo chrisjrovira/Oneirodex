@@ -1,5 +1,15 @@
 # gametheca/routes_site.py
-from flask import Blueprint, render_template, redirect, url_for, current_app, send_from_directory, jsonify, request
+from flask import (
+    Blueprint,
+    render_template,
+    redirect,
+    url_for,
+    current_app,
+    send_from_directory,
+    jsonify,
+    request,
+    make_response,
+)
 from flask_login import login_required, logout_user, current_user
 
 from gametheca.utils.member_spa import render_member_spa
@@ -82,10 +92,14 @@ def favorites():
 
 @site_bp.route('/favicon.ico')
 def favicon():
-    favidir = "icons"
-    full_dir = os.path.join(current_app.static_folder, favidir)
-    # print(f"Full dir: {full_dir}" if os.path.isdir(full_dir) else f"Dir not found: {full_dir}")
-    return send_from_directory(full_dir, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    """Browser fallback for /favicon.ico — GameTheca mark from static/icons/."""
+    full_dir = os.path.join(current_app.static_folder, 'icons')
+    resp = make_response(
+        send_from_directory(full_dir, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    )
+    # Short TTL so post-rebrand browsers pick up the new mark without a hard purge.
+    resp.headers['Cache-Control'] = 'public, max-age=3600'
+    return resp
 
 
 @site_bp.route('/trailers')

@@ -81,11 +81,15 @@ Skip these as library `folder` values. Names are patterns from the evidence tree
 | `_Emulators`, `Emulators` | App installs, not ROMs |
 | `*duckstation*`, `yuzu*`, `ryujinx*`, `xenia*`, `bsnes*`, `mgba*`, `snes9x*`, `virtualjaguar*`, `pcsx2*`, `dolphin*`, `citra*`, `flycast*`, `vita3k*`, `retroarch*` | Emulator binaries / portable installs (prefer **prefix** globs — avoid `*dolphin*` / `*yuzu*` mid-name false positives) |
 | `cru-*`, `pegasus*`, `pegasus-fe*`, `GOD v*`, other FE/tools | Frontends / utilities (`GOD v*` only — not `GOD*` / `GOD *`, which skip *God of War*) |
+| `Config`, `Lang`, `Plugin`, `ROMs`, `docs` | Emulator install scaffolding when a lib is pointed too high |
+| `_console-gaming`, `_pc`, `walkthroughs` / `*walkthrough*` | Scan-root / lane / guide-tree leaks — not game folders |
+| `* MOD`, `*-MOD*`, `* VR Mod*` | Mod / VR-mod pack folders (generic markers — not mid-title `*mod*`) |
+| Folder names with generic `[… Repack]` bracket tags | Scene/repack install folders — built-in regex skip (W20-7) |
 | Family-only parents without a dedicated ROM leaf: bare `NINTENDO`, `Sega`, `Sony`, `ATARI` when children are mixed platforms + emus | Wrong unit of scan |
 | Archive-only parents (multipart rar packs with no extracted sets) | Scanner will invent junk titles or stall on archives |
 | Root `_console-gaming` itself | Same failure mode as depth-1/2 on the mix |
 
-**Skip-dir (shipped):** folder listing ignores built-in emu/FE/tool **prefix** globs (`_Emulators`, `yuzu*`, `ryujinx*`, `dolphin*`, `bsnes*`, `pegasus*`, `cru-*`, `GOD v*`, …) plus Admin Scanning filters prefixed `dir:`. This is **defense-in-depth only** — **correct leaf paths** remain the control; do not point a lib at a family root and rely on skips.
+**Skip-dir (shipped):** folder listing ignores built-in emu/FE/tool **prefix** globs (`_Emulators`, `yuzu*`, `ryujinx*`, `dolphin*`, `bsnes*`, `pegasus*`, `cru-*`, `GOD v*`, …), scaffolding dirs (`Config`, `Lang`, `Plugin`, `ROMs`, `docs`), scan-root leaks (`_console-gaming`, `_pc`, walkthrough trees), mod/VR-mod markers, and generic `[… Repack]` bracket-tag folder names (regex). Operators add extras via Admin Scanning filters prefixed `dir:` (fnmatch) or `re:` (regex). This is **defense-in-depth only** — **correct leaf paths** remain the control; do not point a lib at a family root and rely on skips.
 
 ---
 
@@ -238,10 +242,10 @@ When PM scheduled this add list, Backend was done when:
 Ops can apply the family tables with **current** scan code (interim `OTHER` / defer for LOCKED enums). Schedule Backend if we want safer mistakes and less manual leaf hunting:
 
 1. **Docs/ops remain source of truth** for this tree until code ships; no forced mass-rename tool.
-2. **Skip-dir patterns (library or global):** ignore directory names matching emu/FE/tool heuristics (`_Emulators`, `*yuzu*`, `*ryujinx*`, `bsnes*`, `mGBA*`, `pegasus*`, `cru-*`, …) when listing game dirs — defense in depth if someone points a lib too high. *(Shipped in code — keep tests green.)*
+2. **Skip-dir patterns (library or global):** ignore directory names matching emu/FE/tool **prefix** globs, scaffolding dirs, scan-root/walkthrough leaks, MOD/VR-mod markers, and generic `[… Repack]` bracket tags (regex) when listing game dirs — defense in depth if someone points a lib too high. Operators add `dir:` (fnmatch) or `re:` (regex) via Admin Scan Filters. *(Shipped in code — W20-7 handoff #4; keep tests green.)*
 3. **Do not implement `scan_depth=3` as “walk family trees”** without an explicit product design: letter-bucket semantics must stay; deep walk of mixed trees recreates the mega-library failure mode.
 4. **Optional:** `files` mode recursive **opt-in** (or depth for files) for nested dump layouts — today files mode is flat-only; operators must point at the flat leaf.
-5. **Optional library tools:** “propose libraries from tree” that lists platform-looking leaves under a console root and suggests `LibraryPlatform` + mode — propose-only, never auto-create without admin confirm.
+5. **Optional library tools:** “propose libraries from tree” that lists platform-looking leaves under a console root and suggests `LibraryPlatform` + mode — propose-only, never auto-create without admin confirm. **Shipped (code, W20-1):** `GET|POST /api/library_tools/propose_leaf_libraries` · Admin UI confirm/create on Libraries + Library tools · candidates `{ path, suggested_name, platform, scan_mode, scan_depth, reason }` · `auto_create: false` · family/emu rejected · nested `ROMs` preferred · layout→mode heuristics · AllowedFileType seed adds `nsp`/`xci`/`nsz`/`xcz` · tests `tests/test_propose_leaf_libraries.py` + admin Vitest.
 6. **Enum wave:** implement the **LOCKED enum add list** above (not a separate invent-as-you-go backlog).
 7. **Tests:** fixtures for “family root must not be scanned as games”; skip-pattern unit tests; enum play_mode honesty; no scrape / no Discord.
 
@@ -254,9 +258,9 @@ Priority lean: ops on per-leaf libs + skip-dir ≫ **LOCKED enum add** ≫ depth
 | Seat | Ask |
 |---|---|
 | **Ops / Admin** | Create one library per ROM leaf from the tables; follow **Suggested apply order**; exclude list; typo NES path as-is; library nested `ROMs` under emu trees (PS1/PSP); test-scan before Arcade ~6k; private path checklist when available |
-| **@agent-backend** | LOCKED enum add list **shipped (code)**; scan DoD items 2–5 as needed |
+| **@agent-backend** | LOCKED enum add list **shipped (code)**; skip-dir **Done (W20-7 #4 · uncommitted · extended globs + repack regex + Admin `re:`/`dir:`)**; **W20-1 propose leaf libs shipped (code)** |
 | **@agent-docs** | Keep [libraries-and-scans.md](../admin/libraries-and-scans.md) pointer current; program canvas when wave lands |
-| **@agent-uiux** | No UI required for ops brief; Systems badges already follow `LibraryPlatform` |
+| **@agent-uiux** | W20-1: Admin confirm/create UI shipped (Libraries + Library tools mount; create-on-confirm only) |
 | **@agent-desktop** | Companion launch still keyed by platform enum — wrong library platform ⇒ wrong core hints |
 
 ## Do not

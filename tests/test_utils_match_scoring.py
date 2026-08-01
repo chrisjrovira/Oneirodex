@@ -11,7 +11,7 @@ def test_exact_match_high_score():
     assert score_candidate("Barony", "Barony") >= 0.99
 
 
-def test_fitgirl_cleaned_vs_igdb_title():
+def test_cleaned_title_vs_igdb_title():
     score = score_candidate("Assassin's Creed Shadows", "Assassin's Creed Shadows")
     assert score >= 0.95
 
@@ -46,7 +46,7 @@ def test_steam_title_helps_noisy_folder_label():
 
 def test_beachhead_peel_scores_clean():
     assert score_candidate("BeachHead", "Beach Head 2000") > score_candidate(
-        "BeachHead-SKIDROW", "Beach Head 2000"
+        "BeachHead-SCENEGRP", "Beach Head 2000"
     )
 
 

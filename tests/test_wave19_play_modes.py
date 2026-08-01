@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 from gametheca.platform import (
     LibraryPlatform,
+    cheat_surface_for_platform,
     play_mode_for_platform,
 )
 from gametheca.utils.play_url import browse_play_fields
@@ -208,3 +209,33 @@ def test_wave19b_pcdos_flag_on_but_no_wasm(monkeypatch):
     fields = browse_play_fields(game)
     assert fields['can_play_in_browser'] is False
     assert fields['play_blocker'] == 'pcdos_wasm_missing'
+
+
+def test_wave19_cheat_surface_pc_vs_console():
+    """GM lock: NATIVE_PC → pc_wand; mapped emu → retroarch; empty → none."""
+    assert cheat_surface_for_platform('PCWIN') == 'pc_wand'
+    assert cheat_surface_for_platform('PCDOS') == 'pc_wand'
+    assert cheat_surface_for_platform('MAC') == 'pc_wand'
+    assert cheat_surface_for_platform('OTHER') == 'pc_wand'
+    assert cheat_surface_for_platform('NES') == 'retroarch'
+    assert cheat_surface_for_platform('SNES') == 'retroarch'
+    assert cheat_surface_for_platform('WII') == 'retroarch'
+    assert cheat_surface_for_platform('PS5') == 'none'
+    assert cheat_surface_for_platform('SWITCH') == 'none'
+    assert cheat_surface_for_platform(None) == 'none'
+
+    pc = browse_play_fields(
+        SimpleNamespace(
+            uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+            library=SimpleNamespace(platform=SimpleNamespace(name='PCWIN')),
+        )
+    )
+    assert pc['cheat_surface'] == 'pc_wand'
+
+    nes = browse_play_fields(
+        SimpleNamespace(
+            uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+            library=SimpleNamespace(platform=SimpleNamespace(name='NES')),
+        )
+    )
+    assert nes['cheat_surface'] == 'retroarch'

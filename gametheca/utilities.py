@@ -9,6 +9,7 @@ from flask import current_app, flash, redirect, url_for, session, copy_current_r
 from gametheca.utils.functions import (
     load_scanning_filter_patterns,
     load_skip_dir_patterns,
+    load_skip_dir_regex_patterns,
 )
 from gametheca.models import (
     Game, Library, AllowedFileType, ScanJob, GlobalSettings, UnmatchedFolder
@@ -24,6 +25,7 @@ from gametheca.utils.worker_caps import (
     cooperative_yield,
     iter_chunks,
 )
+from gametheca.utils.scan_match_settings import resolve_scan_match_policy
 
 SCHEDULE_HOURS = {
     '8_hours': 8,
@@ -45,10 +47,31 @@ def compute_next_run(schedule_key, from_time=None):
 def _drain_scan_queue_safe():
     """Best-effort FIFO promote after a scan leaves Running/Stopping."""
     try:
-        from gametheca.utils.scan_queue import promote_next_queued_scan
-        promote_next_queued_scan(current_app._get_current_object())
+        from gametheca.utils.scan_queue import drain_scan_queue
+        drain_scan_queue(current_app._get_current_object())
     except Exception as drain_exc:
         print(f"[SCAN QUEUE] Drain failed: {drain_exc}")
+
+
+def _fail_scan_job_and_drain(job_or_id, error_message):
+    """Mark a job Failed (if still busy) and promote the next Queued scan."""
+    try:
+        job = job_or_id
+        if isinstance(job_or_id, str):
+            job = db.session.get(ScanJob, job_or_id)
+        if job and job.status in ('Running', 'Stopping', 'Queued'):
+            job.status = 'Failed'
+            job.is_enabled = False
+            job.current_processing = None
+            job.error_message = error_message
+            try:
+                db.session.commit()
+            except SQLAlchemyError as exc:
+                print(f"[SCAN QUEUE] Failed to mark job Failed: {exc}")
+                db.session.rollback()
+    except Exception as exc:
+        print(f"[SCAN QUEUE] fail-and-drain helper error: {exc}")
+    _drain_scan_queue_safe()
 
 
 def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remove_missing=False, existing_job=None, download_missing_images=False, force_updates_extras_scan=False, fetch_hltb=False, force_hltb_refetch=False, schedule=None, force_parallel=False):
@@ -61,7 +84,67 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
             "callers should use start_or_queue_scan() so the request is queued."
         )
         return
-        
+
+    scan_job_id = getattr(existing_job, 'id', None)
+    try:
+        body_job_id = _scan_and_add_games_body(
+            folder_path,
+            scan_mode=scan_mode,
+            library_uuid=library_uuid,
+            remove_missing=remove_missing,
+            existing_job=existing_job,
+            download_missing_images=download_missing_images,
+            force_updates_extras_scan=force_updates_extras_scan,
+            fetch_hltb=fetch_hltb,
+            force_hltb_refetch=force_hltb_refetch,
+            schedule=schedule,
+            force_parallel=force_parallel,
+        )
+        if body_job_id:
+            scan_job_id = body_job_id
+    except Exception as exc:
+        print(f"[SCAN] Unhandled scan failure: {exc}")
+        if not scan_job_id:
+            try:
+                stuck = db.session.execute(
+                    select(ScanJob.id).where(
+                        ScanJob.library_uuid == library_uuid,
+                        ScanJob.status.in_(('Running', 'Stopping')),
+                    ).order_by(ScanJob.last_run.desc()).limit(1)
+                ).scalar()
+                scan_job_id = stuck
+            except Exception:
+                pass
+        if scan_job_id:
+            _fail_scan_job_and_drain(scan_job_id, f'Scan crashed: {exc}')
+        raise
+    finally:
+        # Safety net: never leave *this* job Running/Stopping forever (blocks FIFO).
+        if scan_job_id:
+            try:
+                leftover = db.session.get(ScanJob, scan_job_id)
+                if leftover and leftover.status in ('Running', 'Stopping'):
+                    prior = leftover.status
+                    leftover.status = 'Failed'
+                    leftover.is_enabled = False
+                    leftover.current_processing = None
+                    leftover.error_message = (
+                        leftover.error_message
+                        or 'Scan ended without a terminal status; marked Failed so the queue can drain.'
+                    )
+                    db.session.commit()
+                    print(
+                        f"[SCAN QUEUE] Safety-net Failed for stuck job {leftover.id} "
+                        f"(was still {prior})"
+                    )
+                    _drain_scan_queue_safe()
+            except Exception as safety_exc:
+                print(f"[SCAN QUEUE] Safety-net drain failed: {safety_exc}")
+
+
+def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None, remove_missing=False, existing_job=None, download_missing_images=False, force_updates_extras_scan=False, fetch_hltb=False, force_hltb_refetch=False, schedule=None, force_parallel=False):
+    """Core scan worker. Returns ScanJob id when known."""
+    scan_job_entry = None
     # Cache settings once at the start of scan
     settings_obj = db.session.execute(select(GlobalSettings)).scalars().first()
     update_folder_name = settings_obj.update_folder_name if settings_obj else 'updates'
@@ -72,14 +155,27 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
         settings_obj.scan_thread_count if settings_obj else 1
     )
 
-    # Extract local metadata settings into a plain dict (thread-safe)
-    # We can't pass SQLAlchemy objects across threads, so extract values now
+    # Extract local metadata + scan/match policy into a plain dict (thread-safe).
+    # We can't pass SQLAlchemy objects across threads, so extract values now.
+    match_policy = resolve_scan_match_policy(settings_obj)
     settings_dict = {
         'use_local_metadata': settings_obj.use_local_metadata if settings_obj else False,
         'write_local_metadata': settings_obj.write_local_metadata if settings_obj else False,
         'use_local_images': settings_obj.use_local_images if settings_obj else False,
         'local_metadata_filename': settings_obj.local_metadata_filename if settings_obj else 'gametheca.json',
-        'propose_only_scan': getattr(settings_obj, 'propose_only_scan', False) if settings_obj else False,
+        'propose_only_scan': match_policy.get('propose_only_scan', False),
+        'scan_mode': scan_mode,
+        # W20-4 — identify/dupe/peel must see admin overrides, not only code defaults.
+        **{k: match_policy[k] for k in (
+            'dupe_title_threshold',
+            'match_high_threshold',
+            'match_ambiguous_gap',
+            'peel_profile',
+            'enable_year_drop_variant',
+            'enable_pack_peel_variant',
+            'enable_edition_peel_variant',
+            'enable_sequel_numeral_variant',
+        )},
     }
 
     # Log local metadata settings once at scan start
@@ -103,24 +199,14 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
     )
     print(f"Prefetched {len(existing_game_paths)} existing games and {len(existing_unmatched_paths)} unmatched folders")
     
-    # First, find the library and its platform
-    library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
-    if not library:
-        print(f"Library with UUID {library_uuid} not found.")
-        return
-
-    # Get allowed file types from database
-    allowed_extensions = [ext.value.lower() for ext in db.session.execute(select(AllowedFileType)).scalars().all()]
-    if not allowed_extensions:
-        print("No allowed file types found in database. Please configure them in the admin panel.")
-        return
-
-    print(f"Starting auto scan for games in folder: {folder_path} with scan mode: {scan_mode} and library UUID: {library_uuid} for platform: {library.platform.name}")
-    
-    # Use existing job or create new one
+    # Use existing job or create new one (before library/extension gates so early
+    # failures can mark the job Failed instead of leaving it Running forever).
     if existing_job:
         # Re-query the job to ensure it's bound to the current session
         scan_job_entry = db.session.get(ScanJob, existing_job.id)
+        if not scan_job_entry:
+            print(f"Existing scan job {existing_job.id} not found.")
+            return getattr(existing_job, 'id', None)
         print(f"Using existing scan job: {scan_job_entry.id}")
     else:
         # Create initial scan job
@@ -149,7 +235,47 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
             db.session.commit()
         except SQLAlchemyError as e:
             print(f"Database error when adding ScanJob: {str(e)}")
-            return  # cannot proceed without ScanJob
+            return None  # cannot proceed without ScanJob
+
+    job_id = scan_job_entry.id
+
+    # Library + allowed extensions (after job exists so failures mark Failed + drain).
+    library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
+    if not library:
+        error_message = f"Library with UUID {library_uuid} not found."
+        print(error_message)
+        scan_job_entry.status = 'Failed'
+        scan_job_entry.error_message = error_message
+        try:
+            db.session.commit()
+        except SQLAlchemyError as e:
+            print(f"Database error when updating ScanJob with error: {str(e)}")
+        _drain_scan_queue_safe()
+        return job_id
+
+    allowed_extensions = [
+        ext.value.lower()
+        for ext in db.session.execute(select(AllowedFileType)).scalars().all()
+    ]
+    if not allowed_extensions:
+        error_message = (
+            "No allowed file types found in database. "
+            "Please configure them in the admin panel."
+        )
+        print(error_message)
+        scan_job_entry.status = 'Failed'
+        scan_job_entry.error_message = error_message
+        try:
+            db.session.commit()
+        except SQLAlchemyError as e:
+            print(f"Database error when updating ScanJob with error: {str(e)}")
+        _drain_scan_queue_safe()
+        return job_id
+
+    print(
+        f"Starting auto scan for games in folder: {folder_path} with scan mode: "
+        f"{scan_mode} and library UUID: {library_uuid} for platform: {library.platform.name}"
+    )
 
     # Check access perm
     if not os.path.exists(folder_path) or not os.access(folder_path, os.R_OK):
@@ -162,11 +288,12 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
         except SQLAlchemyError as e:
             print(f"Database error when updating ScanJob with error: {str(e)}")
         _drain_scan_queue_safe()
-        return
+        return job_id
 
     # Load patterns before they are used
     insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
     skip_dir_patterns = load_skip_dir_patterns()
+    skip_dir_regexes = load_skip_dir_regex_patterns()
 
     try:
         # Use database-stored allowed extensions
@@ -178,6 +305,7 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
                 sensitive_patterns,
                 scan_depth=scan_depth,
                 skip_dir_patterns=skip_dir_patterns,
+                skip_dir_regexes=skip_dir_regexes,
             )
         elif scan_mode == 'files':
             game_names_with_paths = get_game_names_from_files(folder_path, allowed_extensions, insensitive_patterns, sensitive_patterns)
@@ -190,14 +318,14 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
             scan_job_entry.error_message = "No games found."
             db.session.commit()
             _drain_scan_queue_safe()
-            return
+            return job_id
     except Exception as e:
         scan_job_entry.status = 'Failed'
         scan_job_entry.error_message = str(e)
         db.session.commit()
         print(f"Error during pattern loading or game name extraction: {str(e)}")
         _drain_scan_queue_safe()
-        return
+        return job_id
 
     def process_single_game(game_info, scan_job_id, library_uuid, update_folder_name, extras_folder_name, enable_game_updates, enable_game_extras, existing_game_paths, existing_unmatched_paths, igdb_rate_limiter, app, force_updates_extras_scan=False, fetch_hltb=False, force_hltb_refetch=False, settings=None):
         """Process a single game with rate limiting and thread-safe database operations."""
@@ -590,13 +718,13 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
     db.session.remove()
     scan_job_entry = db.session.get(ScanJob, scan_job_id)
     if not scan_job_entry:
-        return
+        return scan_job_id
 
     if scan_was_cancelled:
         # Counters already finalized; skip Completed / remove_missing / image pass
         print(f"Scan cancelled for folder: {folder_path} with ScanJob ID: {scan_job_id}")
         _drain_scan_queue_safe()
-        return
+        return scan_job_id
 
     if scan_job_entry.status != 'Failed':
         scan_job_entry.status = 'Completed'
@@ -681,6 +809,7 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
 
     # FIFO: promote next Queued scan once this job is no longer Running/Stopping.
     _drain_scan_queue_safe()
+    return scan_job_id
 
 
 def handle_auto_scan(auto_form):
@@ -781,23 +910,25 @@ def handle_manual_scan(manual_form):
     session['active_tab'] = 'manual'
     library_uuid = manual_form.library_uuid.data
     if manual_form.validate_on_submit():
-        # check job status
-        running_job = db.session.execute(select(ScanJob).filter_by(status='Running')).scalars().first()
-        if running_job:
-            flash('A scan is already in progress. Please wait until the current scan completes.', 'danger')
-            session['active_tab'] = 'manual'
-            return redirect(url_for('main.scan_management', active_tab='manual'))
-        
+        from flask import request
+        from flask_login import current_user
+        from gametheca.utils.scan_queue import (
+            is_scan_busy,
+            parse_force_parallel,
+            parse_queue_policy,
+            start_or_queue_scan,
+        )
+
         folder_path = (manual_form.folder_path.data or '').strip()
         scan_mode = manual_form.scan_mode.data
         force_updates_extras_scan = manual_form.force_updates_extras_scan.data
         fetch_hltb = manual_form.fetch_hltb.data
         force_hltb_refetch = manual_form.force_hltb_refetch.data
-        
+
         if not library_uuid:
             flash('Please select a library.', 'danger')
             return redirect(url_for('main.scan_management', active_tab='manual'))
-        
+
         # Store library_uuid in session for use in identify page
         session['selected_library_uuid'] = library_uuid
         print(f"Manual scan: Selected library UUID: {library_uuid}")
@@ -814,13 +945,48 @@ def handle_manual_scan(manual_form):
             return redirect(url_for('main.scan_management', active_tab='manual'))
         full_path = base_dir if not folder_path else os.path.join(base_dir, folder_path)
         print(f"Manual scan form submitted. Full path: {full_path}, Library UUID: {library_uuid}")
-        
+
         # Security validation: ensure the constructed path is within allowed directories
         is_safe, error_message = is_safe_path(full_path, allowed_bases)
         if not is_safe:
             print(f"Security error: Manual scan path validation failed for {full_path}: {error_message}")
             flash(f"Access denied: {error_message}", 'danger')
             return redirect(url_for('main.scan_management', active_tab='manual'))
+
+        if not (os.path.exists(full_path) and os.access(full_path, os.R_OK)):
+            flash("Folder does not exist or cannot be accessed.", "danger")
+            return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='manual'))
+
+        # Busy → same queue contract as Auto Scan (queue by default; admin may force).
+        # Idle Manual remains identify "List Games" (does not start a ScanJob).
+        if is_scan_busy():
+            force_raw = request.form.get('force_parallel') or request.args.get('force_parallel')
+            policy_raw = request.form.get('queue_policy') or request.args.get('queue_policy')
+            queue_policy = parse_queue_policy(policy_raw, force_parallel=force_raw)
+            is_admin = bool(
+                getattr(current_user, 'is_authenticated', False)
+                and getattr(current_user, 'role', None) == 'admin'
+            )
+            result = start_or_queue_scan(
+                folder_path=full_path,
+                library_uuid=library_uuid,
+                scan_mode=scan_mode,
+                remove_missing=False,
+                download_missing_images=False,
+                force_updates_extras_scan=force_updates_extras_scan,
+                fetch_hltb=fetch_hltb,
+                force_hltb_refetch=force_hltb_refetch,
+                schedule=None,
+                queue_policy=queue_policy,
+                allow_force=is_admin,
+                app=current_app._get_current_object(),
+            )
+            flash_cat = 'info' if result['status'] in ('started', 'queued') else 'danger'
+            if result['status'] == 'started' and parse_force_parallel(force_raw):
+                flash_cat = 'warning'
+            flash(result['message'], flash_cat)
+            session['active_tab'] = 'manual'
+            return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='manual'))
 
         # Check write permissions if local metadata writing is enabled
         from gametheca.utils.local_metadata import check_library_write_permissions
@@ -839,40 +1005,38 @@ def handle_manual_scan(manual_form):
                 flash('Write permission check failed. Please review the permission errors.', 'danger')
                 return redirect(url_for('main.scan_management', active_tab='manual', show_permissions_modal='true'))
 
-        if os.path.exists(full_path) and os.access(full_path, os.R_OK):
-            print("Folder exists and can be accessed.")
-            insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
-            skip_dir_patterns = load_skip_dir_patterns()
-            if scan_mode == 'folders':
-                lib = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
-                scan_depth = getattr(lib, 'scan_depth', 1) or 1 if lib else 1
-                games_with_paths = get_game_names_from_folder(
-                    full_path,
-                    insensitive_patterns,
-                    sensitive_patterns,
-                    scan_depth=scan_depth,
-                    skip_dir_patterns=skip_dir_patterns,
-                )
-            else:  # files mode
-                # Load allowed file types from database
-                allowed_file_types = db.session.execute(select(AllowedFileType)).scalars().all()
-                supported_extensions = [file_type.value for file_type in allowed_file_types]
-                if not supported_extensions:
-                    flash("No allowed file types defined in the database.", "danger")
-                    return redirect(url_for('main.scan_management', active_tab='manual'))
-                
-                games_with_paths = get_game_names_from_files(full_path, supported_extensions, insensitive_patterns, sensitive_patterns)
-            session['game_paths'] = {game['name']: game['full_path'] for game in games_with_paths}
-            session['force_updates_extras_scan'] = force_updates_extras_scan
-            session['fetch_hltb'] = fetch_hltb
-            session['force_hltb_refetch'] = force_hltb_refetch
-            print(f"Found {len(session['game_paths'])} games in the folder.")
-            flash('Manual scan processed for folder: ' + full_path, 'info')
-            
-        else:
-            flash("Folder does not exist or cannot be accessed.", "danger")
+        print("Folder exists and can be accessed.")
+        insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
+        skip_dir_patterns = load_skip_dir_patterns()
+        skip_dir_regexes = load_skip_dir_regex_patterns()
+        if scan_mode == 'folders':
+            lib = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
+            scan_depth = getattr(lib, 'scan_depth', 1) or 1 if lib else 1
+            games_with_paths = get_game_names_from_folder(
+                full_path,
+                insensitive_patterns,
+                sensitive_patterns,
+                scan_depth=scan_depth,
+                skip_dir_patterns=skip_dir_patterns,
+                skip_dir_regexes=skip_dir_regexes,
+            )
+        else:  # files mode
+            # Load allowed file types from database
+            allowed_file_types = db.session.execute(select(AllowedFileType)).scalars().all()
+            supported_extensions = [file_type.value for file_type in allowed_file_types]
+            if not supported_extensions:
+                flash("No allowed file types defined in the database.", "danger")
+                return redirect(url_for('main.scan_management', active_tab='manual'))
+
+            games_with_paths = get_game_names_from_files(full_path, supported_extensions, insensitive_patterns, sensitive_patterns)
+        session['game_paths'] = {game['name']: game['full_path'] for game in games_with_paths}
+        session['force_updates_extras_scan'] = force_updates_extras_scan
+        session['fetch_hltb'] = fetch_hltb
+        session['force_hltb_refetch'] = force_hltb_refetch
+        print(f"Found {len(session['game_paths'])} games in the folder.")
+        flash('Manual scan processed for folder: ' + full_path, 'info')
     else:
         flash('Manual scan form validation failed.', 'danger')
-        
+
     print("Game paths: ", session.get('game_paths', {}))
     return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='manual'))

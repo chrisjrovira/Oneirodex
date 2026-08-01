@@ -16,6 +16,7 @@ import {
   fetchCheatText,
   resolveCheatStagePath,
   safeCheatFilename,
+  shouldStageRetroArchCheat,
   stageCheatFile,
   wineLaunchEnv,
 } from './retroarch.js'
@@ -102,6 +103,8 @@ describe('retroarch companion helpers', () => {
       gameUuid: 'game-42',
       filename: 'inf.cht',
       apiBase: 'https://gt.example',
+      cheatSurface: 'retroarch',
+      system: 'SNES',
       fetchImpl,
     })
     expect(result).toEqual({
@@ -123,9 +126,73 @@ describe('retroarch companion helpers', () => {
     const result = await stageCheatFile({
       gameUuid: 'game-42',
       filename: 'missing.cht',
+      cheatSurface: 'retroarch',
       fetchImpl,
     })
     expect(result).toEqual({ ok: false, error: 'cheat download 404' })
+    expect(invoke).not.toHaveBeenCalledWith('write_file_bytes', expect.anything())
+  })
+
+  it('shouldStageRetroArchCheat gates on cheat_surface=retroarch', () => {
+    expect(
+      shouldStageRetroArchCheat({
+        cheatSurface: 'retroarch',
+        gameUuid: 'g1',
+        cheatFilename: 'inf.cht',
+        system: 'SNES',
+      }),
+    ).toBe(true)
+    expect(
+      shouldStageRetroArchCheat({
+        cheatSurface: 'pc_wand',
+        gameUuid: 'g1',
+        cheatFilename: 'inf.cht',
+        system: 'PCWIN',
+      }),
+    ).toBe(false)
+    expect(
+      shouldStageRetroArchCheat({
+        cheatSurface: 'none',
+        gameUuid: 'g1',
+        cheatFilename: 'inf.cht',
+        system: 'PS5',
+      }),
+    ).toBe(false)
+  })
+
+  it('shouldStageRetroArchCheat soft-degrades: hide PC platforms when surface absent', () => {
+    for (const system of ['PCWIN', 'PCDOS', 'MAC', 'OTHER']) {
+      expect(
+        shouldStageRetroArchCheat({
+          gameUuid: 'g1',
+          cheatFilename: 'inf.cht',
+          system,
+        }),
+      ).toBe(false)
+    }
+    expect(
+      shouldStageRetroArchCheat({
+        gameUuid: 'g1',
+        cheatFilename: 'inf.cht',
+        system: 'SNES',
+      }),
+    ).toBe(true)
+  })
+
+  it('stageCheatFile skips non-retroarch surfaces without fetch', async () => {
+    const fetchImpl = vi.fn()
+    const result = await stageCheatFile({
+      gameUuid: 'game-42',
+      filename: 'inf.cht',
+      cheatSurface: 'pc_wand',
+      system: 'PCWIN',
+      fetchImpl,
+    })
+    expect(result).toEqual({
+      ok: false,
+      error: 'cheat staging skipped: not retroarch surface',
+    })
+    expect(fetchImpl).not.toHaveBeenCalled()
     expect(invoke).not.toHaveBeenCalledWith('write_file_bytes', expect.anything())
   })
 })
