@@ -1,5 +1,7 @@
 # Library & Systems
 
+> 🎬 Watch: [browsing the library](../media/video/howto/howto-library.webm) · [a game page](../media/video/howto/howto-game-details.webm) · [Discover](../media/video/howto/howto-discover.webm) · [Systems](../media/video/howto/howto-systems.webm) — [all how-to videos](../media/video/howto/README.md)
+
 ## Library
 
 Route: `/library`

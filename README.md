@@ -100,7 +100,13 @@ GameTheca is a **Flask + React** game library server you run at home (or on a NA
 </p>
 
 <p align="center">
-  <em>Chat — household channels, DMs, reactions — live capture queued (<a href="docs/assets/readme/CAPTURE.md">CAPTURE.md</a>)</em>
+  <img src="docs/assets/readme/screenshot-chat.png" alt="Chat — household rooms, spaces and channels" width="900" />
+  <br/><em>Chat — household rooms, spaces &amp; channels, reactions, voice</em>
+</p>
+
+<p align="center">
+  🎬 <strong>How-to videos</strong> — short worked examples per section:
+  <a href="docs/media/video/howto/README.md">library · game page · discover · systems · chat &amp; spaces · themes · admin</a>
 </p>
 
 <details>

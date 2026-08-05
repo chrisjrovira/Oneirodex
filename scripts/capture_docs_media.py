@@ -30,6 +30,41 @@ USER = os.environ.get("CAPTURE_USER", "admin")
 PASSWORD = os.environ.get("CAPTURE_PASS", "CaptureAdmin1!")
 
 
+# Text that means the page failed. A shot of one of these must never reach a
+# README slot — a broken frame shipped as product art is worse than a stale one.
+_ERROR_MARKERS = (
+    "internal server error",
+    "500 internal server",
+    "502 bad gateway",
+    "503 service unavailable",
+    "504 gateway",
+    "not found",
+    "traceback (most recent call last)",
+    "werkzeug debugger",
+)
+
+
+def page_is_healthy(page) -> tuple[bool, str]:
+    """True when the page looks like real UI rather than an error.
+
+    Checked before every capture: a single 500 during a run would otherwise
+    overwrite good pixels with an error page and sync it straight to the README.
+    """
+    try:
+        body = (page.inner_text("body", timeout=5_000) or "").strip()
+    except Exception as exc:  # noqa: BLE001
+        return False, f"could not read body ({type(exc).__name__})"
+
+    low = body.lower()
+    for marker in _ERROR_MARKERS:
+        # Short bodies only: "not found" legitimately appears in empty states.
+        if marker in low and len(body) < 600:
+            return False, f"error page ({marker!r})"
+    if len(body) < 40:
+        return False, f"page nearly empty ({len(body)} chars)"
+    return True, "ok"
+
+
 def _sync_readme(src: Path, dest_name: str) -> None:
     """Copy a media shot into the canonical README slot."""
     README_ASSETS.mkdir(parents=True, exist_ok=True)
@@ -76,7 +111,7 @@ def login(page) -> None:
     print("after login:", page.url)
 
 
-def capture_tour(page) -> None:
+def capture_tour(page) -> list[str]:
     # (path, media name, full_page, optional README slot filenames)
     pages = [
         ("/library", "library-free-roms", False, ("screenshot-library.png", "hero-banner.png")),
@@ -88,9 +123,37 @@ def capture_tour(page) -> None:
         ("/admin/integrations", "admin-integrations", True, ()),
         ("/libraries", "admin-libraries", True, ()),
     ]
+    failures: list[str] = []
     for path, name, full, readme_slots in pages:
         if not _goto(page, path):
+            failures.append(f"{path} (navigation)")
             continue
+        healthy, why = page_is_healthy(page)
+        if not healthy:
+            # Keep whatever is already on disk rather than replacing it with this.
+            print(f"SKIP {path}: {why} — existing {name}.png left untouched")
+            failures.append(f"{path} ({why})")
+            continue
+        if path == "/library":
+            # Default tile size leaves a sparse grid mostly empty on a small
+            # library. Push it up so the hero frame is filled by artwork.
+            try:
+                slider = page.locator('input[type="range"]').first
+                if slider.count() and slider.is_visible():
+                    slider.fill("85")
+                    page.wait_for_timeout(900)
+            except Exception as exc:  # noqa: BLE001
+                print("tile size:", exc)
+        if path == "/chat":
+            # Chat opens as a slide-out over the library; Expand gives it the
+            # full pane so the shot is of chat rather than half a dark grid.
+            try:
+                expand = page.locator('button:has-text("Expand")').first
+                if expand.count() and expand.is_visible():
+                    expand.click(timeout=5_000)
+                    page.wait_for_timeout(900)
+            except Exception as exc:  # noqa: BLE001
+                print("chat expand:", exc)
         if path == "/admin/ops":
             try:
                 page.wait_for_selector("text=LiveKit", timeout=15_000)
@@ -114,7 +177,7 @@ def capture_tour(page) -> None:
         except Exception as exc:  # noqa: BLE001
             print("shot fail", name, exc)
 
-    if _goto(page, "/library"):
+    if _goto(page, "/library") and page_is_healthy(page)[0]:
         try:
             page.keyboard.press("Control+K")
             page.wait_for_timeout(700)
@@ -122,6 +185,12 @@ def capture_tour(page) -> None:
             page.keyboard.press("Escape")
         except Exception as exc:  # noqa: BLE001
             print("palette fail", exc)
+
+    if failures:
+        print("\n!! captures skipped (pixels NOT refreshed):")
+        for item in failures:
+            print("   -", item)
+    return failures
 
 
 def main() -> int:
@@ -150,9 +219,10 @@ def main() -> int:
         )
         page = context.new_page()
         page.set_default_timeout(20_000)
+        skipped: list[str] = []
         try:
             login(page)
-            capture_tour(page)
+            skipped = capture_tour(page)
             # dwell for video
             _goto(page, "/library")
             page.keyboard.press("Control+K")
@@ -193,6 +263,10 @@ def main() -> int:
             print(f"{probe} failed:", exc)
 
     print("done. shots in", SHOT_DIR)
+    if skipped:
+        # Non-zero so a partial run cannot be mistaken for a clean refresh.
+        print(f"INCOMPLETE: {len(skipped)} surface(s) not refreshed")
+        return 3
     return 0
 
 

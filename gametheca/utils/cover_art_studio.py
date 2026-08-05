@@ -620,6 +620,31 @@ def _fit_title_font(
     return _load_font(min_size)
 
 
+def _fit_subtitle_font(
+    subtitle: str,
+    max_width: int,
+    preferred_size: int,
+    min_size: int = 9,
+) -> ImageFont.ImageFont:
+    """Largest subtitle font that still fits on one line.
+
+    The subtitle is a single unwrapped line, so unlike the title it has no way
+    to absorb overflow — without this it simply runs off both edges of the
+    canvas. Long platform names ("Nintendo Entertainment System (NES)") are the
+    normal case here, not an edge case.
+    """
+    if not subtitle:
+        return _load_font(preferred_size)
+    size = max(preferred_size, min_size)
+    while size > min_size:
+        font = _load_font(size)
+        bbox = font.getbbox(subtitle)
+        if (bbox[2] - bbox[0]) <= max_width:
+            return font
+        size -= 1
+    return _load_font(min_size)
+
+
 def _draw_title_block(
     draw: ImageDraw.ImageDraw,
     width: int,
@@ -676,7 +701,7 @@ def _draw_title_block(
         sub_size = max(11, int(getattr(title_font, 'size', max_title) * 0.42))
     except (TypeError, ValueError):
         sub_size = 11
-    sub_font = _load_font(sub_size)
+    sub_font = _fit_subtitle_font(subtitle, max_text_w, sub_size)
 
     lines = _wrap_title(headline, title_font, max_text_w)
     line_heights = [title_font.getbbox(line)[3] - title_font.getbbox(line)[1] for line in lines]
@@ -706,12 +731,18 @@ def _draw_title_block(
         draw.text((x, y), line, fill=GT_TEXT, font=title_font)
         y += lh + 4
 
+    # `line_heights` is ink height (bbox[3]-bbox[1]), which omits the descent —
+    # advancing by it alone drops the subtitle onto the title's descenders.
+    # Clear the last line's descent before placing the subtitle.
+    last_descent = max(0, title_font.getbbox(lines[-1])[3] - line_heights[-1]) if lines else 0
     sw = sub_bbox[2] - sub_bbox[0]
     if text_left is not None:
         sx = text_left
     else:
         sx = (width - sw) // 2
-    draw.text((sx, y + 8), subtitle, fill=accent, font=sub_font)
+    # Never let the subtitle start past the left margin or run off the right.
+    sx = max(pad if text_left is None else text_left, sx)
+    draw.text((sx, y + last_descent + 10), subtitle, fill=accent, font=sub_font)
 
 
 def render_cover_art(

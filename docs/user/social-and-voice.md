@@ -1,5 +1,7 @@
 # Social, chat & voice
 
+> 🎬 Watch: [rooms, spaces & channels](../media/video/howto/howto-chat-spaces.webm) — [all how-to videos](../media/video/howto/README.md)
+
 Household social is first-party (no third-party chat webhooks). Optional voice uses LiveKit.
 
 ## What members get

@@ -1,5 +1,7 @@
 # Discover sections (storefront shelves, zones & events)
 
+> 🎬 Watch: [arranging shelves & scheduling events](../media/video/howto/howto-admin-discover.webm) — [all how-to videos](../media/video/howto/README.md)
+
 Admin → **Discovery Sections Management** (`/admin/discovery_sections`) controls the shelves members see on `/discover`.
 
 ## Built-in vs custom

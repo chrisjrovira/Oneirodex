@@ -1,5 +1,7 @@
 # Preferences & themes
 
+> 🎬 Watch: [themes, icons & fonts](../media/video/howto/howto-preferences.webm) — [all how-to videos](../media/video/howto/README.md)
+
 ## Open preferences
 
 From the member SPA **Account** drawer (under TopNav) → **Preferences**, or Ctrl/Cmd+K → Preferences. The modal uses sectioned aurora chrome (`gt-prefs-modal`: Library · Look & density · Game language) — dense sections, **no heavy cards**. Changes save to your user profile and usually reload the page.

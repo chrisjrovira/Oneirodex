@@ -145,5 +145,8 @@ gametheca/static/library/chat-attachments/
 # Uploaded/dropped-in theme fonts (operator-supplied, like icon packs above)
 gametheca/static/library/fonts/
 
+# Art-studio output — generated per install, not source
+gametheca/static/library/generated/
+
 # Debris from an unexpanded shell variable — never a real project path
 %TEMP%/

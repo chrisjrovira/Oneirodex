@@ -1,5 +1,7 @@
 # Libraries & scans
 
+> 🎬 Watch: [libraries & scan management](../media/video/howto/howto-admin-libraries.webm) · [ops health](../media/video/howto/howto-admin-ops.webm) — [all how-to videos](../media/video/howto/README.md)
+
 Admin surfaces today are **Jinja** under `base_admin` (top bar). A React admin SPA is planned; paths below stay valid during migration.
 
 ## Add a library

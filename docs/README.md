@@ -31,7 +31,8 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Product / recent waves | [strategy/social-spaces-and-storefront.md](strategy/social-spaces-and-storefront.md) (W23/W25 design) · [strategy/roadmap-w26-ux-overhaul.md](strategy/roadmap-w26-ux-overhaul.md) (UX backlog + FEAT-D) · [strategy/review-2026-08-03-findings.md](strategy/review-2026-08-03-findings.md) · [strategy/competitive-scan-2026-08-04.md](strategy/competitive-scan-2026-08-04.md) |
 | Docs inventory | [strategy/docs-map.md](strategy/docs-map.md) |
 | API | [openapi/openapi.json](openapi/openapi.json) |
-| README media | [assets/readme/](assets/readme/) |
+| How-to videos | [media/video/howto/](media/video/howto/README.md) — one worked example per section (members + admins) |
+| README media | [assets/readme/](assets/readme/) · capture recipe [CAPTURE.md](assets/readme/CAPTURE.md) |
 
 ## Layout
 
