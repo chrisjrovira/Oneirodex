@@ -28,7 +28,7 @@ Read [checklist.md](checklist.md) for the inventory map. Prefer **update existin
 | Optional sidecar (LiveKit, OIDC, arr) | Dedicated runbook + docs-map status + settings-modules |
 | Support / triage | `docs/dev/issue-assess-agent.md`, `docs/dev/agent-skills.md`, skills if workflow changed |
 | Security posture | `docs/strategy/security.md`, FAQ/troubleshooting security notes |
-| Competitive claims | Private vault (`docs/_private/`) + [external-facing-scrub.md](../../docs/strategy/external-facing-scrub.md) when positioning changes |
+| Competitive claims | Private vault (`docs/_private/`) + [external-facing-scrub.md](../../../docs/strategy/external-facing-scrub.md) when positioning changes |
 | Social / A/V | `docs/strategy/social-av.md` (+ `social.md` pointer) |
 | Break-glass ops | `docs/runbooks/container-wont-start.md` or new runbook; link from `docs/README.md` |
 | Troubleshooting symptoms | `docs/user/troubleshooting.md` and/or `docs/admin/troubleshooting.md` |

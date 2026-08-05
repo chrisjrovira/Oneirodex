@@ -44,7 +44,7 @@ Prior miss (still covered): `Baldur's Gate Dark Alliance 1` → `Baldur's Gate: 
 | `…/_pc` with children `_a`…`_z`, `_#` | **2** | Depth 1 treats buckets as “games”; depth 2 unwraps buckets → real titles |
 | Flat roots (`E:\_software-games`, `E:\games`) | **1** | Immediate children *are* games |
 
-Documented for operators in [libraries-and-scans.md](../admin/libraries-and-scans.md) (including [After A0–A8 PCWIN rescan](../admin/libraries-and-scans.md#after-a0a8-ship--library-a-pcwin-rescan)). Wrong depth = thousands of false “games.”
+Documented for operators in [libraries-and-scans.md](../admin/libraries-and-scans.md) (including [After A0–A14 PCWIN rescan](../admin/libraries-and-scans.md#after-a0a14-ship--library-a-pcwin-rescan)). Wrong depth = thousands of false “games.”
 
 ---
 

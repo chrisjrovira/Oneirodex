@@ -88,6 +88,11 @@ class Config(object):
     OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://127.0.0.1:11434')
     OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3.2')
 
+    # Theme fonts. Empty FONT_PATH means the default under static/library/fonts,
+    # which is what a Compose deploy wants (it already persists that volume).
+    FONT_PATH = os.getenv('FONT_PATH', '')
+    FONT_MAX_BYTES = int(os.getenv('FONT_MAX_BYTES', str(8 * 1024 * 1024)))
+
     # Hardlink helpers on; filesystem apply remains a safety lock
     ENABLE_HARDLINK_HELPERS = os.getenv('ENABLE_HARDLINK_HELPERS', 'true').lower() == 'true'
     ALLOW_HARDLINK_APPLY = os.getenv('ALLOW_HARDLINK_APPLY', 'false').lower() == 'true'

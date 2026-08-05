@@ -63,11 +63,11 @@
 |---|---|---|---|
 | Getting started (web) | End users | Have | [getting-started.md](../user/getting-started.md) |
 | Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) — Signals chips · Ctrl+K title search · details trailers/extras/`on_server` · OpenPathModal · page sizes →1000 · Friends dock |
-| Preferences & themes / icons | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — Wave 2d 9 distinct presets + paired icon packs · loading icons admin tip |
+| Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — Wave 2d 9 distinct presets + paired icon packs · loading icons admin tip · **font picker** (files operator-supplied — admin [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md)) |
 | Downloading games | End users | Have | [downloads.md](../user/downloads.md) — native Torznab/Newznab + optional Prowlarr/Jackett merge |
 | Browser / companion play matrix | End users | Have | [browser-play.md](../user/browser-play.md) · sample free ROMs [samples/free-roms/](../../samples/free-roms/README.md) |
 | Free games (News claims) | End users | Have | [free-games.md](../user/free-games.md) |
-| Social, chat & voice | End users | Have | [social-and-voice.md](../user/social-and-voice.md) — includes Friends companion |
+| Social, chat & voice | End users | Have | [social-and-voice.md](../user/social-and-voice.md) — includes Friends companion · **W23 Spaces** (household vs invite-only servers, text + voice channels, invite codes) · per-room LiveKit authorization |
 | FAQ | End users | Have | [faq.md](../user/faq.md) — aligned with HelpPage |
 | Troubleshooting | End users | Have | [troubleshooting.md](../user/troubleshooting.md) |
 | Game details / freshness badges | End users | Create | Tile contract in [library-and-systems.md](../user/library-and-systems.md) (no OUT/~ /RELEASE; four-corner; UPDATE alone) — optional dedicated guide |
@@ -97,7 +97,8 @@
 | Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — **W22-1 Done** unified chrome (`/libraries` · `/scan_management`) · multi-select sticky **Scan**/**Edit**/**Delete** → `POST …/batch/{scan,edit,delete}` · **BE batch APIs Done** (`force` skips typed names; UI prefers batch / 404 soft-degrade) · Layout chips · `gt-toast-host` · scan queue/force · unmatched · **UID-005** top actions / Resolve pills / client sort · Wave 18 timing/filters · **Scanning filters** · **W20-1/1b** propose/import · **W20-2** trail · **W20-4** scan-match · **W20-5a** Stage D · post-deploy Reset Themes (`admin_manage_libs` for sticky Scan/Edit · `admin_manage_scanjobs`) |
 | Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` 10 · Reset after Wave 2d · **W22-1** `admin_manage_libs` + `admin_manage_scanjobs` (+ **UID-005** · Soft title/Utility) · loading motifs on volume |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — feature defaults ON · OIDC opt-in · malware block-on-hit · ClamAV · native Arr indexers (add/bulk/presets) + Prowlarr/Jackett · **W20-4** Scan/match Settings **Done** (`/admin/scan_match` + `GET|PUT /api/admin/scan-match/config` · defaults 0.92/0.08/0.85/conservative) |
-| Discover sections (custom zones) | Have | [discover-sections.md](../admin/discover-sections.md) — manual pick / library / platform / genre zones, reorder + hide built-ins |
+| Discover sections (storefront · zones · events) | Have | [discover-sections.md](../admin/discover-sections.md) — manual pick / library / platform / genre zones, reorder + hide built-ins · **W25** storefront shelves (`curated_for_you` · `upcoming`) · `shelf`/`hero`/`carousel` layouts · scheduled **events** (`starts_at`/`ends_at`, UTC) |
+| Theme fonts & batch artwork | Have | [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md) — OFL/era faces (no manufacturer typefaces; **files operator-supplied**, `installed` reported honestly) · magic-byte validated upload · `<uuid>[_<kind>]` batch image upload |
 | Support inbox | Have | [support-inbox.md](../admin/support-inbox.md) |
 | Ops summary (`services` + `scans` contract) | Have | [ops-summary.md](../admin/ops-summary.md) — Grafana enrich (`load_avg` / process / db_ping / readyz) · two-fold `issues.items` (`category` action\|warning\|info; **disk = info**) · LiveKit · malware · companions · queues · scan counters |
 | Library root watch | Have | [library-root-watch-spike.md](../admin/library-root-watch-spike.md) — Wave 3 optional `GT_LIBRARY_WATCH` (default off); Ops `services.library_watch` |

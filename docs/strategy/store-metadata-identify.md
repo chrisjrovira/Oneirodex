@@ -175,11 +175,11 @@ Class D catalog source for **manual** identify + **Stage E propose-only** exact-
 
 **Code:** `gametheca/utils/providers/mobygames.py` · `search_mobygames_games` in `secondary_scrapers.py` · `metadata_search.py` · `updateschema` column `mobygames_api_key`.
 
-**Tests:** claimed **27/27** (mocked HTTP — no live MobyGames calls) including Stage D regression (cascade still Steam/GOG-only; MobyGames not auto-imported). BE [0e5c9db1](0e5c9db1-bbaf-4566-bdd6-6736924b4ef1).
+**Tests:** claimed **27/27** (mocked HTTP — no live MobyGames calls) including Stage D regression (cascade still Steam/GOG-only; MobyGames not auto-imported). BE `0e5c9db1-bbaf-4566-bdd6-6736924b4ef1`.
 
 **Env:** `.env.example` → `MOBYGAMES_API_KEY=` · key signup: https://www.mobygames.com/info/api/
 
-**Ops:** app restart for `mobygames_api_key` column · set `MOBYGAMES_API_KEY` (or Admin key) for live hits · **UI Identify chip Done** — ArtworkPicker + Jinja Search MobyGames · vitest **3/3** claimed (UI [cb422066](cb422066-9428-4fe4-9a0a-02a15d463476)).
+**Ops:** app restart for `mobygames_api_key` column · set `MOBYGAMES_API_KEY` (or Admin key) for live hits · **UI Identify chip Done** — ArtworkPicker + Jinja Search MobyGames · vitest **3/3** claimed (UI `cb422066-9428-4fe4-9a0a-02a15d463476`).
 
 ---
 
@@ -200,7 +200,7 @@ Class D catalog source for **manual** console-leaf identify / covers + **Stage E
 
 **UI:** ArtworkPicker Identify chip (`thegamesdb` in `IDENTIFY_CHIP_IDS`) · Jinja **Search TheGamesDB** · `admin_game_identify.js` sends canonical `source=thegamesdb` · soft honesty via API `note` / `needs_key` / `· key` chip.
 
-**Tests:** pytest claimed **31/31** (mocked HTTP; Stage D Steam/GOG-only) · BE [5cccddb6](5cccddb6-2b9b-40c9-8cd8-05111a5a6c71) · admin vitest ArtworkPicker **4/4** (incl. TheGamesDB soft-honesty) · UI [5d558888](5d558888-febc-4c1b-bf9f-07610fff342d).
+**Tests:** pytest claimed **31/31** (mocked HTTP; Stage D Steam/GOG-only) · BE `5cccddb6-2b9b-40c9-8cd8-05111a5a6c71` · admin vitest ArtworkPicker **4/4** (incl. TheGamesDB soft-honesty) · UI `5d558888-febc-4c1b-bf9f-07610fff342d`.
 
 **Env:** `.env.example` → `THEGAMESDB_API_KEY=` · key signup: https://thegamesdb.net/api/register.php
 

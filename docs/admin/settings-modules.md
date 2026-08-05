@@ -143,11 +143,60 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - Guide: [cover-art-studio.md](../strategy/cover-art-studio.md).
 - Artwork picker: [steamgriddb-artwork.md](../runbooks/steamgriddb-artwork.md) · [libraries-and-scans.md](libraries-and-scans.md#image-queue).
 
+## Generated cover art
+
+Optional, **off by default**, and self-hosted only. This is the one feature that
+talks to an endpoint outside the process, so it stays opt-in.
+
+| Flag | Effect |
+|---|---|
+| `ENABLE_AI_ARTWORK` | Master switch — default **false** |
+| `AI_ARTWORK_URL` | Your endpoint, e.g. `http://sdnext:7860`. No default; generation refuses without it |
+| `AI_ARTWORK_ENGINE` | `a1111` (default) — the A1111 REST API, which **AUTOMATIC1111**, **SD.Next** and **Forge** all implement |
+
+- Calls `POST /sdapi/v1/txt2img` on your endpoint. Nothing leaves your network;
+  there is no hosted provider and no API key to buy.
+- `AI_ARTWORK_ENGINE=comfyui` is recognised but **not implemented** — it raises
+  a clear error naming the missing workflow rather than silently producing
+  nothing. Use `a1111` for now.
+- Generated rows are marked `is_generated` with `generated_by`. Regenerating
+  replaces only the previous *generated* image, so hand-picked or scraped art is
+  never clobbered.
+- Routes: `POST /admin/api/artwork/generate` (one game) ·
+  `POST /admin/api/artwork/generate/batch` (fill missing covers).
+- Compose has a commented sidecar block — see `docker-compose.yml` under the
+  `artwork` profile.
+
+Prefer to supply your own art instead? See
+[theme-fonts-and-images.md](theme-fonts-and-images.md#batch-artwork-upload).
+
+## Scan freshness checks
+
+| Flag | Effect |
+|---|---|
+| `SCAN_CHECK_FRESHNESS` | Check version / updates / DLC after a library scan — default **false** |
+| `SCAN_FRESHNESS_LIMIT` | Titles checked per run; default **50** |
+
+Off by default deliberately: each check is outbound store HTTP traffic, so a
+routine scan must not start doing it without being asked. The cap keeps a large
+first scan from turning into thousands of requests.
+
+## Theme fonts
+
+| Flag | Effect |
+|---|---|
+| `FONT_PATH` | Where uploaded/dropped-in fonts live. Empty = `static/library/fonts` |
+| `FONT_MAX_BYTES` | Per-file upload cap; default `8388608` (8MB) |
+
+Font *files* are operator-supplied — the registry ships the faces, not the
+binaries. Full guide: [theme-fonts-and-images.md](theme-fonts-and-images.md).
+
 ## Other env toggles
 
 | Flag | Effect |
 |---|---|
 | `ENABLE_VR_BROWSE` | Member VR catalogue |
+| `DAT_HASH_INNER_ARCHIVE` | Open zip/7z/rar and hash the inner dump when the outer archive hash misses (default on) |
 | `ENABLE_FREE_GAMES` | News free-games poller + API (default on) |
 | `FREE_GAMES_POLL_HOURS` | Free-games refresh interval (default 3) |
 | `ENABLE_EMAIL_DIGEST` | Batched digest scheduler (default on; members still opt in) |

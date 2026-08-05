@@ -780,7 +780,7 @@ DATABASE_URL=postgresql://gamethecauser:$DB_PASSWORD@localhost:5432/gametheca
 # Test database (only needed if running unit tests)
 TEST_DATABASE_URL=postgresql://gamethecauser:$DB_PASSWORD@localhost:5432/gamethecatest
 
-# Game files directory (DATA_FOLDER_WAREZ is a deprecated alias)
+# Game files directory
 DATA_FOLDER_GAMES=$GAMES_DIR
 
 # Base folders for path resolution

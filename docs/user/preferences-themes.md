@@ -18,6 +18,24 @@ From the member SPA **Account** drawer (under TopNav) → **Preferences**, or Ct
 - Packs only change glyph weight/style; they use `currentColor`, so they work with **any** color theme (e.g. Aurora + Pixel).
 - Details: [icon-themes.md](../strategy/icon-themes.md).
 
+## Fonts
+
+- Preferences → **Font** picks the typeface used across the UI, independently of
+  your color theme and icon pack.
+- Faces are chosen to evoke an era rather than imitate a brand: an 8-bit pixel
+  face, a compact handheld face, an arcade face, a 32-bit/disc face, and a CRT
+  terminal face — plus **System UI**, the default, which uses your own device's
+  fonts.
+- Emulator and library surfaces can pick an era-appropriate face per system
+  automatically (a Game Boy title gets the compact pixel face, a PS1 title the
+  disc-era one).
+
+> **If a font seems to do nothing:** the picker lists faces, but the font *files*
+> are supplied by whoever runs your server — GameTheca cannot legally bundle
+> console manufacturers' typefaces, and does not vendor the open-licence ones
+> either. A face whose file is not installed falls back to a standard system
+> font. Ask your admin to install it — [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md).
+
 ## Tile size
 
 - Preference: continuous **0–100% slider** (TopNav) — legacy S/M/L/XL values still load and map onto the scale.

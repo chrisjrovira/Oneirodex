@@ -41,7 +41,7 @@ Play matrix: [browser-play.md](browser-play.md).
 
 ## Discover & more
 
-- **Discover** (`/discover`) — shelves / discovery rails.
+- **Discover** (`/discover`) — storefront shelves: **Curated for you** (unplayed titles in genres you already favourite), **Upcoming** (releases still ahead), plus whatever shelves your admin has arranged. Some shelves are **timed events** and appear only during their run. A shelf with nothing honest to show is hidden rather than padded — a brand-new account with no favourites yet will see fewer shelves until it has something to go on.
 - **Favorites**, **Collections**, **Wishlist**, **Updates** (freshness inbox + calendar teaser), **Ownership**, **Big Picture**, optional **VR** / **Trailers** / **Calendar** — under primary nav or **More**.
 - **Admin** is not a primary TopNav button beside Favorites — admins reach `/admin/dashboard` from the section **context** strip (and Ctrl+K → Admin).
 - **Trailers** empty library returns HTTP 200 with a CTA (not an error) — open a title with trailer metadata or ask an admin to enrich covers/videos.
@@ -53,5 +53,26 @@ Game details (`/game_details/<uuid>`) is a full member SPA page under the same T
 **Store / catalog marks (shipped):** Steam · GOG · Epic · PlayStation · Xbox · Amazon/Prime Gaming · Humble · itch.io · EA · Ubisoft · Fandom/Wikia · IGDB · YouTube · Wikipedia · official site · common socials · unknown fallback mark. Icons are **theme-adaptive** (light/dark aurora): PNG silhouettes use CSS `mask-image` + `currentColor` / `--gt-text`; SVG path brands use `fill="currentColor"`. Chip border/hover keeps a brand accent (`--gt-store-color`); Ubisoft is an inline SVG (supplied PNG was solid black / unusable).
 
 **Logo gap:** none for the former human-asset list (itch · Humble · EA · Ubisoft · Xbox · PSN · Amazon · wikia/fandom · unknown). Remaining unmatched store types still open with the unknown mark + plain label.
+
+## Related media
+
+Above the screenshots, a game can carry the **media connected to it** —
+adaptations, tie-ins, novelisations, documentaries, and soundtracks. Click any
+card for a popup with the detail and a link out to where that thing legitimately
+lives.
+
+- Kinds: film · TV series · anime · book · comic · soundtrack/music · podcast.
+- Relations: adaptation · tie-in · soundtrack · novelisation · documentary ·
+  inspired by.
+- Only the kinds actually present are shown — you never get a row of empty
+  categories, and a game with no related media shows **no section at all**.
+- Librarians and admins add entries; every member can read them.
+
+**This is context, not a tracker.** There is deliberately nothing to mark
+watched, rate, or progress — those fields do not exist on the model. Links must
+point at a store or streaming page; anything download-shaped is refused outright.
+
+API: `GET`/`POST /api/games/<uuid>/related_media` ·
+`DELETE /api/games/<uuid>/related_media/<id>`.
 
 Related: [getting-started.md](getting-started.md) · [downloads.md](downloads.md) · [translation-patches.md](translation-patches.md) · [preferences-themes.md](preferences-themes.md)

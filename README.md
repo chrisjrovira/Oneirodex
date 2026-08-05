@@ -53,28 +53,35 @@ GameTheca is a **Flask + React** game library server you run at home (or on a NA
 ### 📚 Library & discovery
 - 🔍 Multi-threaded folder scanning & identification (IGDB · Steam · GOG · RAWG)
 - 🖼️ Covers, screenshots, filters, discovery shelves, **Systems** hub by console family
+- 🛍️ **Storefront Discover** — *Curated for you* + *Upcoming* shelves, hero / carousel layouts, and **shelves as timed events** with start & end dates — [discover-sections.md](docs/admin/discover-sections.md)
 - 🏷️ Library badges & freshness (`NEW` · `UPDATE` · `OUT` / `~`)
 - 📊 ROM **set completeness** (upload your own No-Intro / Redump DATs) + multi-region heatmap chips
 - 🌐 ROM language chips · preferred `en-US` · optional translation / patch catalog hooks
+- 🎞️ **Related media** on a game — adaptations, tie-ins, soundtracks as context (never a tracker, never a download)
 
 ### 👥 Household access
 - ✉️ Invite-based membership + parental / library ACL
 - 🎨 Color themes **and** independent icon packs (Outline · Filled · Duotone · Pixel · Soft · Mono)
+- 🔤 **Themeable fonts** with era-appropriate faces per system — files are operator-supplied ([theme-fonts-and-images.md](docs/admin/theme-fonts-and-images.md))
 - 📱 Mobile density polish (hamburger nav · stacked filters · Chat touch targets ≤900px)
 
 ### 🎮 Play & companion
 - 🌍 Browser play via **WebRetro** (cloud save bridge · cheats) for supported systems
 - 💻 **Desktop companion** (Tauri) for install / launch / updates · unsigned by default
-- 💾 Emulator BIOS admin · companion core honesty badges on Systems
+- 💾 Emulator BIOS admin · companion core honesty badges on Systems — [emulator-bios.md](docs/runbooks/emulator-bios.md)
+- 🛋️ Play **rooms** grouped by setting (CRT living room · arcade cabinet · handheld · disc era · desk)
+- 📝 **PC cheat notes** — reference notes, not a trainer; never writes game binaries
 
 ### 💬 Social & support
+- 🏛️ **Spaces** — servers with their own text *and* voice channels, household-wide or invite-only
 - 🟢 Presence · profiles · notifications · DMs · household channels · @mentions · reactions · threads
 - 👥 **Friends companion** (dock · pop-out · Big Picture **Y** · desktop always-on-top window)
-- 🎙️ Optional **LiveKit** voice lobby (`docker compose --profile livekit`)
+- 🎙️ Optional **LiveKit** voice (`docker compose --profile livekit`)
 - 🎫 In-app **Report issue** → admin Support inbox (+ GitHub Issues when configured)
 
 ### 🧩 Optional modules
 - 📡 *arr + hardlink pipeline · 🤖 Ollama AI assist · 🥽 VR / Quest PWA · 🔐 OIDC / Authentik SSO (opt-in)
+- 🖌️ **Generated cover art** against your own self-hosted A1111-compatible endpoint (AUTOMATIC1111 · SD.Next · Forge) — **off by default**, nothing leaves your network
 - 🛡️ Login rate limit (app + [proxy runbook](docs/runbooks/login-rate-limit-proxy.md)) · malware scan (heuristics on by default; optional [ClamAV profile](docs/runbooks/docker-compose-deploy.md#clamav-malware-scan))
 - ⚙️ Most `ENABLE_*` modules **on** by default — OIDC, AI auto-apply, and hardlink apply stay off until you opt in ([settings-modules.md](docs/admin/settings-modules.md))
 
@@ -159,7 +166,7 @@ Force the setup wizard: `./startweb.sh --force-setup` (required when upgrading f
 |---|---|
 | `DATABASE_URL` | Postgres URL (`db` host inside Compose) |
 | `SECRET_KEY` | **Required** — container refuses the placeholder |
-| `DATA_FOLDER_GAMES` | Root of on-disk games (`DATA_FOLDER_WAREZ` deprecated alias) |
+| `DATA_FOLDER_GAMES` | Root of on-disk games — **required** (see upgrade note below) |
 | `UPLOAD_FOLDER` | Covers / themes (Compose: `/app/gametheca/static/library`) |
 | `LIBRARY_HOST_PATH` | Host path mounted to `UPLOAD_FOLDER` in Docker |
 | `ENABLE_LIVEKIT` / `LIVEKIT_*` | Household voice (on by default; needs secrets + profile) |
@@ -173,8 +180,14 @@ Force the setup wizard: `./startweb.sh --force-setup` (required when upgrading f
 | `OIDC_LOCK_ROLES` | Don’t overwrite roles on every SSO login |
 | `ENABLE_LOGIN_RATE_LIMIT` | In-process login / reset rate limit (default on) |
 | `ENABLE_PATCH_CATALOG` / `ENABLE_ROM_AI_TRANSLATE` | ROM patch / AI translate hooks (on by default) |
+| `ENABLE_AI_ARTWORK` / `AI_ARTWORK_URL` / `AI_ARTWORK_ENGINE` | Generated cover art — **off by default**; point at your own A1111-compatible endpoint (`a1111` engine covers AUTOMATIC1111 / SD.Next / Forge) |
+| `SCAN_CHECK_FRESHNESS` / `SCAN_FRESHNESS_LIMIT` | Check versions / updates / DLC after a scan — **off by default** (it is store HTTP traffic); cap defaults to 50 titles |
+| `DAT_HASH_INNER_ARCHIVE` | Open zip/7z/rar and hash the inner dump when the outer archive hash misses (on) |
+| `FONT_PATH` / `FONT_MAX_BYTES` | Where uploaded theme fonts live (default `static/library/fonts`) and the per-file cap (default 8MB) |
 
 Full lists: [`.env.example`](.env.example) · [`.env.docker.example`](.env.docker.example) · [`.env.unraid.example`](.env.unraid.example) · [settings-modules.md](docs/admin/settings-modules.md)
+
+> ⚠️ **Upgrading from ≤ 0.1.0:** `DATA_FOLDER_WAREZ` has been **removed**, including the Compose volume fallback that quietly used it. If your `.env` still sets only that key, the container starts with no games mounted at `/storage`. Rename it to `DATA_FOLDER_GAMES` before you redeploy.
 
 ---
 
@@ -258,10 +271,11 @@ Still stuck? **More → Report issue** (members) or open a GitHub issue with dep
 |---|---|
 | 👋 Members | [Getting started](docs/user/getting-started.md) · [FAQ](docs/user/faq.md) · [Troubleshooting](docs/user/troubleshooting.md) |
 | 🎮 Play | [Browser play](docs/user/browser-play.md) · [Desktop companion](docs/user/desktop-companion.md) · [Free games](docs/user/free-games.md) |
-| 💬 Social | [Social & voice](docs/user/social-and-voice.md) |
+| 💬 Social | [Social & voice](docs/user/social-and-voice.md) · [Spaces](docs/user/social-and-voice.md#spaces-servers-with-their-own-channels) |
 | 🗂️ Library | [Library & systems](docs/user/library-and-systems.md) · [Translation patches](docs/user/translation-patches.md) |
-| 🛡️ Admins | [Libraries & scans](docs/admin/libraries-and-scans.md) · [Support inbox](docs/admin/support-inbox.md) · [Settings modules](docs/admin/settings-modules.md) |
-| 🚢 Operators | [Unraid](docs/runbooks/unraid-deploy.md) · [Compose](docs/runbooks/docker-compose-deploy.md) · [LiveKit](docs/runbooks/livekit-unraid.md) · [OIDC](docs/runbooks/oidc-sso.md) · [WebRetro cores](docs/runbooks/webretro-cores.md) · [Reference sets](docs/runbooks/reference-sets.md) |
+| 🎨 Look & feel | [Preferences & themes](docs/user/preferences-themes.md) · [Fonts & image uploads](docs/admin/theme-fonts-and-images.md) |
+| 🛡️ Admins | [Libraries & scans](docs/admin/libraries-and-scans.md) · [Discover sections](docs/admin/discover-sections.md) · [Support inbox](docs/admin/support-inbox.md) · [Settings modules](docs/admin/settings-modules.md) |
+| 🚢 Operators | [Unraid](docs/runbooks/unraid-deploy.md) · [Compose](docs/runbooks/docker-compose-deploy.md) · [LiveKit](docs/runbooks/livekit-unraid.md) · [OIDC](docs/runbooks/oidc-sso.md) · [WebRetro cores](docs/runbooks/webretro-cores.md) · [Emulator BIOS](docs/runbooks/emulator-bios.md) · [Reference sets](docs/runbooks/reference-sets.md) |
 | 🗺️ Roadmap | [Strategy](docs/strategy/README.md) · [Progress](docs/strategy/progress.md) · [Docs index](docs/README.md) |
 | 🔌 API | [openapi.json](docs/openapi/openapi.json) |
 

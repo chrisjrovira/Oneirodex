@@ -27,7 +27,7 @@ Only when the human has **shipped** the name-resolution code and the image is ru
 2. Run a **propose-only** scan first; review Unmatched / proposals
 3. Then a **full** rescan at `scan_depth=2` — do **not** start overlapping full scans on the same tree
 
-Exact steps: [libraries-and-scans.md — After A0–A8](../admin/libraries-and-scans.md#after-a0a8-ship--library-a-pcwin-rescan). Strategy context: [name-resolution.md](../strategy/name-resolution.md).
+Exact steps: [libraries-and-scans.md — After A0–A14](../admin/libraries-and-scans.md#after-a0a14-ship--library-a-pcwin-rescan). Strategy context: [name-resolution.md](../strategy/name-resolution.md).
 
 ## Prerequisites
 

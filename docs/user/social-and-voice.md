@@ -54,6 +54,45 @@ Household social is first-party (no third-party chat webhooks). Optional voice u
 - **Leave** (thread header) — confirm, then `POST …/leave`. DMs drop membership (conversation leaves the list); household rooms mute (same effect as **Mute**; sidebar shows the **muted** badge; unmute later).
 - List payload includes `id`, `name`, `type`/`kind`, `unread`, `muted`, `created_by_user_id` (`rooms` alias on `GET /api/chat/channels`).
 
+## Spaces (servers with their own channels)
+
+A **space** is a server: it owns its own set of **text and voice channels**,
+separate from the household-wide rooms above. Use one for a friend group, a
+co-op run, or a topic that shouldn't fill the household list.
+
+### Two kinds of space
+
+| Visibility | Who's in it |
+|---|---|
+| `household` | Everyone in the household, automatically |
+| `invite` | Only people who redeemed an invite — **not** visible to the rest of the household |
+
+That second one is the point: an invite-only space is genuinely scoped. Members
+outside it cannot list its channels, read its messages, or join its voice.
+
+### Using spaces
+
+- The **space rail** on the left of Chat switches between spaces; channels for
+  the selected space appear beside it.
+- Create a space, then add channels to it with a `text` or `voice` kind.
+- **Invites** are codes you generate and share. Redeem one to join; an owner can
+  revoke a code, and revoking does not remove people who already joined.
+- Voice channels get a room of their own — joining one requires membership of
+  that space, checked server-side every time a token is minted.
+
+### API
+
+| Method | Route | Purpose |
+|---|---|---|
+| `GET` / `POST` | `/api/chat/spaces` | List spaces you can see · create one |
+| `POST` | `/api/chat/spaces/<id>/channels` | Add a text or voice channel |
+| `GET` / `POST` | `/api/chat/spaces/<id>/members` | Roster · add a member |
+| `DELETE` | `/api/chat/spaces/<id>/members/<user_id>` | Remove a member |
+| `GET` / `POST` | `/api/chat/spaces/<id>/invites` | List · mint an invite code |
+| `POST` | `/api/chat/spaces/invites/<id>/revoke` | Revoke a code |
+| `POST` | `/api/chat/spaces/join` | Redeem a code |
+| `GET` | `/api/chat/spaces/<id>/voice/<channel_id>/room` | Voice token for that channel |
+
 ## Chat reactions & search
 
 - Click an emoji under a message to toggle your reaction (same emoji again removes it).
@@ -71,8 +110,13 @@ Household social is first-party (no third-party chat webhooks). Optional voice u
 
 1. Admin enables LiveKit (`ENABLE_LIVEKIT`, API key/secret, `LIVEKIT_URL`) and optionally `docker compose --profile livekit up -d`.
 2. Open **Activity** → Voice lobby → **Get voice token** (or Big Picture party voice on a focused game).
-3. Room ids are opaque (`household:lobby`, `household:party:<game-uuid>`) — game titles are not sent to the SFU.
+3. Room ids are opaque (`household:lobby`, `household:party:<game-uuid>`, `voice:<channel-id>`) — game titles are not sent to the SFU.
 4. Child accounts: audio OK; camera/screenshare requests are rejected.
+
+Every room is authorised against a real access check before a token is issued —
+space voice needs membership of that space, a party room needs access to that
+game, and the household lobby is closed to child accounts. An unrecognised room
+name is **denied**, not allowed through.
 
 Ops detail: [livekit-unraid.md](../runbooks/livekit-unraid.md) · plan: [social-av.md](../strategy/social-av.md).
 
