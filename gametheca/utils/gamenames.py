@@ -5,6 +5,7 @@ import re
 from gametheca import db
 from gametheca.models import Game
 from sqlalchemy import select
+from gametheca.utils.fandom_alias import expand_fandom_search_variants
 from gametheca.utils.game_name_parse import (
     inject_franchise_apostrophes,
     is_bare_franchise,
@@ -111,6 +112,11 @@ _STYLIZED_COMPACT_RE = re.compile(
     r'^(\d+x)\s+(.+)$',
     re.IGNORECASE,
 )
+# C14 — dotted acronym tokens (S.W.A.R.M. / G.O.T.Y.) → punctuation-light (SWARM).
+# ≥2 letter+period pairs; optional final letter+period. Token-local only.
+_DOTTED_ACRONYM_TOKEN_RE = re.compile(
+    r'(?<![A-Za-z0-9])((?:[A-Za-z]\.){2,}[A-Za-z]\.?)(?![A-Za-z0-9])',
+)
 
 
 def _list_game_dirs(folder_path, scan_depth=1, skip_dir_patterns=None, skip_dir_regexes=None):
@@ -198,9 +204,21 @@ def get_game_names_from_files(folder_path, extensions, insensitive_patterns, sen
             cleaned_game_name = clean_game_name(game_name_without_extension, insensitive_patterns, sensitive_patterns)
             # print(f"Extracted and cleaned game name: {cleaned_game_name}")
             full_path = os.path.join(folder_path, file_name)
-            
+
             game_names_with_paths.append({'name': cleaned_game_name, 'full_path': full_path, 'file_type': extension})
             # print(f"Added cleaned game name with path: {cleaned_game_name} at {full_path}")
+
+    # BE-DET-5 — cue+bin siblings are one image set (keep .cue, drop companions).
+    try:
+        from gametheca.utils.multi_disc import filter_cue_bin_companions
+
+        before = len(game_names_with_paths)
+        game_names_with_paths = filter_cue_bin_companions(game_names_with_paths)
+        dropped = before - len(game_names_with_paths)
+        if dropped:
+            print(f"Filtered {dropped} cue companion file(s) from scan listing")
+    except Exception as filter_err:  # noqa: BLE001 — scan must continue
+        print(f"cue+bin companion filter skipped: {filter_err}")
 
     # print(f"Game names with paths extracted from files: {game_names_with_paths}")
     return game_names_with_paths
@@ -438,7 +456,11 @@ def _deapostrophe_variant(name):
 
 
 def _article_reorder_variant(name: str) -> str | None:
-    """C12 — reorder trailing article suffix (`, The` / `, A` / `, An`)."""
+    """C12 — reorder trailing article suffix (`, The` / `, A` / `, An`).
+
+    Also handles article before a hyphen subtitle:
+    ``Legend of Zelda, The - Ocarina of Time`` → ``The Legend of Zelda - Ocarina of Time``.
+    """
     if not name:
         return None
     for suffix in (', The', ', A', ', An'):
@@ -447,6 +469,15 @@ def _article_reorder_variant(name: str) -> str | None:
             head = name[: -len(suffix)].strip()
             if head:
                 return rom_title_case(f'{article} {head}')
+        # Mid-title article before `` - `` subtitle (console No-Intro style).
+        marker = f'{suffix} - '
+        idx = name.find(marker)
+        if idx > 0:
+            article = suffix[2:].strip()
+            head = name[:idx].strip()
+            rest = name[idx + len(marker) :].strip()
+            if head and rest:
+                return rom_title_case(f'{article} {head} - {rest}')
     return None
 
 
@@ -475,15 +506,42 @@ def _stylized_compact_variants(name: str) -> list[str]:
     return out
 
 
+def _punctuation_light_variants(name: str) -> list[str]:
+    """
+    C14 / W22-M2 — collapse dotted acronym tokens only.
+
+    ``Armorines - Project S.W.A.R.M.`` → ``Armorines - Project SWARM``.
+    Additive search variant; never replaces the cleaned display primary.
+    Keeps hyphens, apostrophes, commas, and spaces elsewhere.
+    """
+    if not name or not str(name).strip():
+        return []
+    text = str(name).strip()
+    if not _DOTTED_ACRONYM_TOKEN_RE.search(text):
+        return []
+
+    def _collapse(match: re.Match) -> str:
+        return match.group(1).replace('.', '')
+
+    light = _DOTTED_ACRONYM_TOKEN_RE.sub(_collapse, text)
+    light = re.sub(r'\s+', ' ', light).strip()
+    if not light or light.casefold() == text.casefold():
+        return []
+    return [light]
+
+
 def generate_goty_variants(base_name, *, policy=None):
     """
     Generate ordered IGDB search variants for a folder/game label.
 
     Stage C (docs/strategy/name-resolution.md): cleaned as-is (post A8 inject) →
     article reorder (C12) → stylized compact `Nx Word` (C13 / W21-BE-3) →
+    punctuation-light dotted acronyms (C14 / W22-M2) →
     franchise/known colon → drop bare 1 → sequel ↔ Roman → heuristic colon (≥4) →
     year drop → pack/collection peel → edition peel (C10) → de-apostrophe →
-    hyphen/GOTY. C11 bare franchise → single variant only (no auto-import path).
+    hyphen/GOTY → BE-DET-9 fandom soft alias / regional / remaster variants
+    (propose-first at identify). C11 bare franchise → single variant only
+    (plus soft fandom search copies when registered).
 
     policy (optional dict from resolve_scan_match_policy): toggles
     enable_year_drop_variant / enable_pack_peel_variant /
@@ -503,8 +561,11 @@ def generate_goty_variants(base_name, *, policy=None):
         _normalize_apostrophes(str(base_name).strip())
     )
     # C11 — bare franchise / ambiguous one-token: do not invent sequel/edition variants.
+    # BE-DET-9: still allow soft fandom search copies (identify stays propose-first).
     if is_bare_franchise(base_name):
-        return [base_name]
+        bare = [base_name]
+        bare.extend(expand_fandom_search_variants(base_name))
+        return _dedupe_variants(bare)
 
     variants = [base_name]
 
@@ -514,6 +575,13 @@ def generate_goty_variants(base_name, *, policy=None):
 
     # Stylized compact (`1000x Resist` → `1000xResist` / `1000xRESIST`) for IGDB search.
     variants.extend(_stylized_compact_variants(base_name))
+
+    # C14 — dotted acronym collapse (`S.W.A.R.M.` → `SWARM`); additive only.
+    variants.extend(_punctuation_light_variants(base_name))
+    article_light = _punctuation_light_variants(article_variant) if article_variant else []
+    for light in article_light:
+        if light not in variants:
+            variants.append(light)
 
     if 'GOTY' in base_name:
         variants.append(base_name.replace('GOTY', 'G.O.T.Y.'))
@@ -579,6 +647,9 @@ def generate_goty_variants(base_name, *, policy=None):
 
     # Hyphen ↔ space / Agatha-style subtitle (Stage C row 9).
     variants.extend(_hyphen_subtitle_variants(base_name))
+
+    # BE-DET-9 — soft alias / remaster / regional EN↔JP search copies (propose-first).
+    variants.extend(expand_fandom_search_variants(base_name))
 
     return _dedupe_variants(variants)
 

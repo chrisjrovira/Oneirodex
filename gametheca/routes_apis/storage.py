@@ -30,11 +30,7 @@ def _apply_allowed() -> bool:
 
 
 def _games_path() -> str:
-    return (
-        current_app.config.get('DATA_FOLDER_GAMES')
-        or current_app.config.get('DATA_FOLDER_WAREZ')
-        or ''
-    )
+    return current_app.config.get('DATA_FOLDER_GAMES') or ''
 
 
 def _paths_allowed(source: str, dest: str) -> tuple[bool, str | None]:

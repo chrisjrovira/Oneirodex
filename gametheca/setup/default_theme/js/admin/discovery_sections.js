@@ -125,12 +125,143 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- UX-C10: pick games by name instead of pasting UUIDs ----------------
+    const zoneGameSearch = document.getElementById('zoneGameSearch');
+    const zoneGameSearchBtn = document.getElementById('zoneGameSearchBtn');
+    const zoneGameHits = document.getElementById('zoneGameHits');
+    const zonePicked = document.getElementById('zonePicked');
+    const zonePickedCount = document.getElementById('zonePickedCount');
+    const ZONE_MAX_GAMES = 60;
+
+    // uuid -> display name. The textarea stays the source of truth on submit,
+    // so the advanced paste path keeps working unchanged.
+    let picked = [];
+
+    function syncPickedToTextarea() {
+        zoneGameUuidsInput.value = picked.map((p) => p.uuid).join('\n');
+        if (zonePickedCount) zonePickedCount.textContent = `(${picked.length})`;
+    }
+
+    function renderPicked() {
+        if (!zonePicked) return;
+        zonePicked.innerHTML = '';
+        if (!picked.length) {
+            const empty = document.createElement('li');
+            empty.className = 'list-group-item text-muted small';
+            empty.textContent = 'No games yet — search above to add some.';
+            zonePicked.appendChild(empty);
+        }
+        picked.forEach((entry, index) => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex align-items-center gap-2';
+
+            const order = document.createElement('span');
+            order.className = 'text-muted small';
+            order.textContent = String(index + 1);
+
+            const name = document.createElement('span');
+            name.className = 'flex-grow-1';
+            // textContent — titles come from scraped store metadata.
+            name.textContent = entry.name || entry.uuid;
+
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'btn btn-sm btn-outline-danger';
+            remove.textContent = 'Remove';
+            remove.addEventListener('click', () => {
+                picked = picked.filter((p) => p.uuid !== entry.uuid);
+                renderPicked();
+                syncPickedToTextarea();
+            });
+
+            li.appendChild(order);
+            li.appendChild(name);
+            li.appendChild(remove);
+            zonePicked.appendChild(li);
+        });
+        syncPickedToTextarea();
+    }
+
+    function addPicked(uuid, name) {
+        if (!uuid) return;
+        if (picked.some((p) => p.uuid === uuid)) return;
+        if (picked.length >= ZONE_MAX_GAMES) {
+            zoneModalError.textContent = `A zone holds at most ${ZONE_MAX_GAMES} games.`;
+            zoneModalError.classList.remove('d-none');
+            return;
+        }
+        picked.push({ uuid, name });
+        renderPicked();
+    }
+
+    async function searchZoneGames() {
+        const q = (zoneGameSearch && zoneGameSearch.value || '').trim();
+        if (!q) return;
+        try {
+            const resp = await fetch(`/api/search?query=${encodeURIComponent(q)}`, {
+                credentials: 'same-origin',
+            });
+            const rows = await resp.json();
+            zoneGameHits.innerHTML = '';
+            const hits = Array.isArray(rows) ? rows.slice(0, 12) : [];
+            if (!hits.length) {
+                const none = document.createElement('div');
+                none.className = 'list-group-item text-muted small';
+                none.textContent = `No library games match “${q}”.`;
+                zoneGameHits.appendChild(none);
+            }
+            hits.forEach((hit) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'list-group-item list-group-item-action';
+                btn.textContent = hit.name || hit.uuid;
+                btn.addEventListener('click', () => {
+                    addPicked(hit.uuid, hit.name);
+                    zoneGameHits.classList.add('d-none');
+                    zoneGameSearch.value = '';
+                });
+                zoneGameHits.appendChild(btn);
+            });
+            zoneGameHits.classList.remove('d-none');
+        } catch (err) {
+            zoneModalError.textContent = 'Could not search the library.';
+            zoneModalError.classList.remove('d-none');
+        }
+    }
+
+    if (zoneGameSearchBtn) zoneGameSearchBtn.addEventListener('click', () => void searchZoneGames());
+    if (zoneGameSearch) {
+        zoneGameSearch.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                void searchZoneGames();
+            }
+        });
+    }
+    // Hand-edited UUIDs win — the textarea remains the submitted value.
+    if (zoneGameUuidsInput) {
+        zoneGameUuidsInput.addEventListener('input', () => {
+            picked = zoneGameUuidsInput.value
+                .split(/[\s,]+/)
+                .map((s) => s.trim())
+                .filter(Boolean)
+                .map((uuid) => {
+                    const known = picked.find((p) => p.uuid === uuid);
+                    return { uuid, name: known ? known.name : uuid };
+                });
+            renderPicked();
+        });
+    }
+
     function resetZoneModal() {
         zoneModalError.classList.add('d-none');
         zoneModalError.textContent = '';
         zoneIdInput.value = '';
         zoneNameInput.value = '';
         zoneGameUuidsInput.value = '';
+        picked = [];
+        renderPicked();
+        if (zoneGameHits) zoneGameHits.classList.add('d-none');
         setZoneMode('manual');
         setFilterType('library');
     }
@@ -168,6 +299,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 setZoneMode('manual');
                 zoneGameUuidsInput.value = (config.game_uuids || []).join('\n');
+                // Existing zones open with their games listed, not as raw ids.
+                picked = (config.game_uuids || []).map((uuid) => ({ uuid, name: uuid }));
+                renderPicked();
             }
 
             zoneModal.show();

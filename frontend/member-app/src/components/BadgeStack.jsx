@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   capBadges,
   collectBadgeSignals,
-  resolveBadgeCorner,
+  layoutBadgesByCorner,
 } from '../utils/badgeSignals'
 import {
   clearDismissedBadges,
@@ -12,7 +12,7 @@ import {
 } from '../utils/badgeDismiss'
 
 /**
- * Cap flexible badges but always keep VR / MISSING in the top-left transitional stack.
+ * Cap flexible badges but always keep VR / MISSING visible (pinned).
  */
 const PINNED_BADGE_KINDS = new Set(['VR', 'MISSING'])
 
@@ -27,11 +27,9 @@ function capWithPinnedStatus(badges, maxVisible = 2) {
 }
 
 /**
- * Netflix/Roku-style overlay badge stack for title cards.
- * Default corner: top-left (hamburger + favorite now stack together in the
- * top-right band, one under the other).
- * VR / MISSING join the top-left transitional stack and are never dismissable.
- * Badges win top-left over the PLAY chip (PLAY is nudged in CSS when a stack is present).
+ * Corner-only badge overlays for title cards.
+ * Occupied corners only — no empty reserved slots.
+ * VR / MISSING pin top-left and are never dismissable.
  */
 export function BadgeStack({
   game,
@@ -42,14 +40,34 @@ export function BadgeStack({
   now,
   dismissible = true,
 }) {
+  void preferredCorner
   const [dismissTick, setDismissTick] = useState(0)
   const badges = useMemo(() => {
     void dismissTick
     return filterDismissedBadges(game?.uuid, collectBadgeSignals(game, { now }))
   }, [game, now, dismissTick])
 
-  const { visible, overflow } = capWithPinnedStatus(badges, maxVisible)
-  const hasMain = visible.length > 0 || overflow > 0
+  const { visible, overflow: cappedOverflow } = capWithPinnedStatus(badges, maxVisible)
+  const layout = layoutBadgesByCorner(visible, {
+    hasPlatformChip: Boolean(hasPlatformChip),
+    collidesWithTitle,
+    maxPerCorner: 2,
+  })
+
+  const layoutOverflow = layout.corners.reduce((sum, slot) => sum + slot.overflow, 0)
+  const totalOverflow = cappedOverflow + layoutOverflow
+  let corners = layout.corners.map((slot) => ({ ...slot, overflow: 0 }))
+  if (totalOverflow > 0) {
+    if (corners.length === 0) {
+      corners = [{ corner: 'top-left', badges: [], overflow: totalOverflow }]
+    } else {
+      corners = corners.map((slot, index) =>
+        index === 0 ? { ...slot, overflow: totalOverflow } : slot,
+      )
+    }
+  }
+
+  const hasMain = corners.some((c) => c.badges.length > 0 || c.overflow > 0)
   const dismissed = listDismissedKinds(game?.uuid).filter(
     (kind) => !PINNED_BADGE_KINDS.has(kind),
   )
@@ -57,13 +75,7 @@ export function BadgeStack({
     return null
   }
 
-  const hasVr = visible.some((badge) => badge.kind === 'VR')
-  const hasMissing = visible.some((badge) => badge.kind === 'MISSING')
-  const corner = resolveBadgeCorner(preferredCorner, collidesWithTitle, {
-    hasVr,
-    hasMissing,
-    hasPlatformChip: Boolean(hasPlatformChip),
-  })
+  const { hasVr, hasMissing } = layout
 
   function handleDismiss(kind, event) {
     if (PINNED_BADGE_KINDS.has(kind)) {
@@ -82,51 +94,71 @@ export function BadgeStack({
     setDismissTick((n) => n + 1)
   }
 
+  if (!hasMain && dismissible && dismissed.length > 0) {
+    return (
+      <div className="gt-badge-layers" aria-label="Game badges">
+        <div
+          className="gt-badge-stack gt-badge-stack--top-left gt-badge-stack--interactive"
+          data-corner="top-left"
+        >
+          <button
+            type="button"
+            className="gt-badge gt-badge--restore"
+            title="Restore hidden badges"
+            aria-label="Restore badges"
+            onClick={handleRestore}
+          >
+            Badges
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div
-      className={`gt-badge-stack gt-badge-stack--${corner}${hasVr ? ' gt-badge-stack--vr' : ''}${hasMissing ? ' gt-badge-stack--missing' : ''}${dismissible ? ' gt-badge-stack--interactive' : ''}`}
-      data-corner={corner}
-      data-vr-in-stack={hasVr ? corner : undefined}
-      data-missing-in-stack={hasMissing ? corner : undefined}
-      aria-label="Game badges"
-    >
-      {visible.map((badge) => (
-        <span
-          key={badge.kind}
-          className={`gt-badge gt-badge--${badge.tone}`}
-          data-badge={badge.kind}
-          title={badge.title}
+    <div className="gt-badge-layers" aria-label="Game badges">
+      {corners.map((slot) => (
+        <div
+          key={slot.corner}
+          className={`gt-badge-stack gt-badge-stack--${slot.corner}${
+            hasVr && slot.corner === 'top-left' ? ' gt-badge-stack--vr' : ''
+          }${hasMissing && slot.corner === 'top-left' ? ' gt-badge-stack--missing' : ''}${
+            dismissible ? ' gt-badge-stack--interactive' : ''
+          }`}
+          data-corner={slot.corner}
+          data-vr-in-stack={hasVr && slot.corner === 'top-left' ? 'top-left' : undefined}
+          data-missing-in-stack={
+            hasMissing && slot.corner === 'top-left' ? 'top-left' : undefined
+          }
         >
-          <span className="gt-badge__label">{badge.label}</span>
-          {dismissible && !PINNED_BADGE_KINDS.has(badge.kind) ? (
-            <button
-              type="button"
-              className="gt-badge__dismiss"
-              aria-label={`Hide ${badge.label} badge`}
-              title="Hide this badge"
-              onClick={(event) => handleDismiss(badge.kind, event)}
+          {slot.badges.map((badge) => (
+            <span
+              key={badge.kind}
+              className={`gt-badge gt-badge--${badge.tone}`}
+              data-badge={badge.kind}
+              title={badge.title}
             >
-              ×
-            </button>
-          ) : null}
-        </span>
+              <span className="gt-badge__label">{badge.label}</span>
+              {dismissible && !PINNED_BADGE_KINDS.has(badge.kind) ? (
+                <button
+                  type="button"
+                  className="gt-badge__dismiss"
+                  aria-label={`Hide ${badge.label} badge`}
+                  title="Hide this badge"
+                  onClick={(event) => handleDismiss(badge.kind, event)}
+                >
+                  ×
+                </button>
+              ) : null}
+            </span>
+          ))}
+          {slot.overflow > 0 && (
+            <span className="gt-badge gt-badge--overflow" title={`${slot.overflow} more badges`}>
+              +{slot.overflow}
+            </span>
+          )}
+        </div>
       ))}
-      {overflow > 0 && (
-        <span className="gt-badge gt-badge--overflow" title={`${overflow} more badges`}>
-          +{overflow}
-        </span>
-      )}
-      {dismissible && dismissed.length > 0 && visible.length === 0 ? (
-        <button
-          type="button"
-          className="gt-badge gt-badge--restore"
-          title="Restore hidden badges"
-          aria-label="Restore badges"
-          onClick={handleRestore}
-        >
-          Badges
-        </button>
-      ) : null}
     </div>
   )
 }

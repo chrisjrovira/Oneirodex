@@ -123,6 +123,12 @@ def game_edit(game_uuid):
         from gametheca.utils.library_health import mark_game_path_ok
 
         mark_game_path_ok(game)
+        try:
+            from gametheca.utils.rom_language import apply_rom_language_fields
+
+            apply_rom_language_fields(game, form.full_disk_path.data or game.name)
+        except Exception:
+            pass
         game.aggregated_rating = form.aggregated_rating.data
         game.first_release_date = form.first_release_date.data
 

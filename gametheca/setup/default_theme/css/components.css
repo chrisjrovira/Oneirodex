@@ -84,24 +84,44 @@
     }
 }
 
-/* Popup Menu Button — top-right (favorite stacks directly under it, same corner) */
+/* Tile top-right control stack — one size, one colour, one rhythm.
+   Order top to bottom: menu · favourite · play status · select.
+   Every control derives its offset from these vars so the stack cannot drift
+   out of alignment when a button is added or hidden. */
+.game-card {
+    --gt-tile-btn: 32px;
+    --gt-tile-gap: 4px;
+    --gt-tile-stack-top: 10px;
+    --gt-tile-stride: calc(var(--gt-tile-btn) + var(--gt-tile-gap));
+    --gt-tile-btn-bg: rgba(0, 0, 0, 0.7);
+    --gt-tile-btn-bg-hover: rgba(0, 0, 0, 0.9);
+    --gt-tile-btn-border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Popup Menu Button — first in the top-right stack */
 .button-glass-hamburger {
     position: absolute;
-    top: 10px;
+    top: var(--gt-tile-stack-top);
     right: 10px;
     left: auto;
     z-index: 15;
-    background-color: var(--btn-hamburger-bg);
-    border-radius: 50%;
-    padding: 1px 6px;
-    border: none;
+    width: var(--gt-tile-btn);
+    height: var(--gt-tile-btn);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--gt-tile-btn-bg);
+    backdrop-filter: blur(5px);
+    border-radius: 6px;
+    padding: 0;
+    border: var(--gt-tile-btn-border);
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
 .button-glass-hamburger:hover {
-    background-color: var(--btn-hamburger-hover);
+    background-color: var(--gt-tile-btn-bg-hover);
 }
 
 .button-glass-hamburger i {
@@ -114,17 +134,21 @@
     opacity: 1;
 }
 
-/* Favorite Button — top-right of cover, stacked directly under the hamburger */
+/* Favorite Button — second in the top-right stack */
 .favorite-btn {
     position: absolute;
-    top: 44px;
+    top: calc(var(--gt-tile-stack-top) + var(--gt-tile-stride));
     bottom: auto;
     right: 10px;
-    width: 30px;
-    height: 30px;
-    background-color: var(--btn-hamburger-bg);
-    border-radius: 50%;
-    border: none;
+    width: var(--gt-tile-btn);
+    height: var(--gt-tile-btn);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--gt-tile-btn-bg);
+    backdrop-filter: blur(5px);
+    border-radius: 6px;
+    border: var(--gt-tile-btn-border);
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -137,7 +161,7 @@
 }
 
 .favorite-btn:hover {
-    background-color: var(--btn-hamburger-hover);
+    background-color: var(--gt-tile-btn-bg-hover);
 }
 
 .game-card:hover .favorite-btn,
@@ -204,7 +228,15 @@
     color: #1a1a1a;
 }
 
-/* GameTheca BadgeStack — Netflix/Roku-style title-card overlays */
+/* Badge layers: occupied corners only — no empty reserved slots */
+.gt-badge-layers {
+    position: absolute;
+    inset: 0;
+    z-index: 12;
+    pointer-events: none;
+}
+
+/* GameTheca BadgeStack — corner occupants (content-sized, no fixed height reserve) */
 .gt-badge-stack {
     position: absolute;
     z-index: 12;
@@ -212,12 +244,13 @@
     flex-wrap: nowrap;
     gap: 4px;
     max-width: min(72%, 11rem);
-    max-height: 2.6rem;
-    overflow: hidden;
+    width: max-content;
+    height: auto;
+    overflow: visible;
     pointer-events: none;
-    padding: 2px;
-    border-radius: 6px;
-    background: rgba(0, 0, 0, 0.28);
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .gt-badge-stack--interactive {
@@ -231,15 +264,22 @@
     top: auto;
 }
 
-/* Clear the optional play-status button / badge at bottom-right */
+/* True bottom-right, level with bottom-left. This used to be lifted 44px to
+   clear a play-status button that now lives in the top-right stack, which left
+   UPDATE and friends floating one row above the corner on every tile. */
 .gt-badge-stack--bottom-right {
-    bottom: 44px;
+    bottom: 8px;
     right: 8px;
     left: auto;
     top: auto;
 }
 
-/* Badges win true top-left (UPDATE/OUT/NEW/VR); PLAY is nudged in glass.css when present */
+/* Only the details cover still has a button down here — lift badges there. */
+.game-card-coverimage:has(.game-status-btn-cover) .gt-badge-stack--bottom-right {
+    bottom: 52px;
+}
+
+/* Badges win true top-left (UPDATE/NEW/VR/MISSING); PLAY is nudged in glass.css when present */
 .gt-badge-stack--top-left {
     top: 8px;
     left: 8px;
@@ -247,9 +287,11 @@
     bottom: auto;
 }
 
-/* Clear the hamburger + favorite stack (top:10px hamburger, top:44px favorite) */
+/* Clear the two always-present controls (menu, favourite). The status/select
+   variants add their own offsets in game_status.css so the stack stays honest
+   about how many buttons are actually above it. */
 .gt-badge-stack--top-right {
-    top: 80px;
+    top: calc(var(--gt-tile-stack-top, 10px) + 2 * var(--gt-tile-stride, 36px) + 2px);
     right: 8px;
     left: auto;
     bottom: auto;
@@ -356,9 +398,11 @@
     justify-content: center;
     gap: 2px;
     position: relative;
-    min-height: 20px;
-    padding: 2px 7px;
-    border-radius: 4px;
+    box-sizing: border-box;
+    min-width: 1.35rem;
+    min-height: 1.35rem;
+    padding: 3px 6px;
+    border-radius: 6px;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -687,4 +731,57 @@ a.gt-chip:focus {
 }
 .gt-details-react__badges .gt-badge-stack {
   position: static;
+}
+
+/* --- Tile hover preview (UX-B3) ------------------------------------------- */
+
+/* Slightly more lift than the base hover, plus a thin glow in the active
+   accent so the treatment follows whichever theme is applied. */
+.game-card:hover,
+.game-card:focus-within {
+    transform: translateY(-3px) scale(1.045);
+    box-shadow:
+        0 10px 26px var(--shadow-dark-strong),
+        0 0 0 1px color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent),
+        0 0 14px 2px color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent);
+}
+
+.gt-tile-preview-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translate(-50%, 6px);
+    z-index: 17;
+    padding: 0.22rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(5px);
+    color: var(--text-white, #f2f4f8);
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.game-card:hover .gt-tile-preview-hint,
+.gt-tile-preview-hint:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .game-card:hover,
+    .game-card:focus-within {
+        transform: none;
+    }
+
+    .gt-tile-preview-hint {
+        transition: none;
+    }
 }

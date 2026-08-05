@@ -82,8 +82,8 @@
   bottom: 0.35rem;
   z-index: 2;
   max-width: calc(100% - 0.7rem);
-  padding: 0.12rem 0.4rem;
-  border-radius: 4px;
+  padding: 0.18rem 0.4rem;
+  border-radius: 6px;
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -94,6 +94,25 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   pointer-events: none;
+}
+
+/* Occupied-corner badge layers (member SPA mirror of theme components.css) */
+.gt-badge-layers {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+}
+
+.gt-badge-layers .gt-badge-stack--interactive {
+  pointer-events: auto;
+}
+
+.gt-badge {
+  border-radius: 6px;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  padding: 3px 6px;
 }
 
 /* Badges never share the platform chip corner — keep chip exclusive bottom-left */
@@ -123,7 +142,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
-/* Transitional badges (UPDATE/OUT/NEW/VR) keep top-left; nudge PLAY below */
+/* Transitional badges (UPDATE/NEW/VR/MISSING) keep top-left; nudge PLAY below */
 .game-card:has(.gt-badge-stack--top-left) .gt-tile-play {
   top: 2.35rem;
 }
@@ -180,7 +199,10 @@
 
 .gt-toast {
   pointer-events: auto;
-  padding: 0.7rem 0.95rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.7rem 0.6rem 0.7rem 0.95rem;
   border-radius: 10px;
   border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
   background: var(--gt-surface, #141820);
@@ -189,6 +211,32 @@
   font-size: 0.92rem;
   line-height: 1.35;
   animation: gt-toast-in 0.18s ease-out;
+}
+
+.gt-toast__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Dismissible — an error toast should not hold the reader hostage for 3s. */
+.gt-toast__close {
+  flex: 0 0 auto;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gt-text-muted, #9aa3b2);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gt-toast__close:hover,
+.gt-toast__close:focus-visible {
+  background: color-mix(in srgb, var(--gt-text, #f2f4f8) 14%, transparent);
+  color: var(--gt-text, #f2f4f8);
 }
 
 .gt-toast--success {

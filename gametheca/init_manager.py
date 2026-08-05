@@ -327,10 +327,12 @@ class InitializationManager:
 
         default_types = [
             'zip', 'rar', '7z', 'iso', 'nfo', 'nes', 'sfc', 'smc', 'sms', '32x',
-            'gen', 'gg', 'gba', 'gb', 'gbc', 'ndc', 'prg', 'dat', 'tap', 'z64',
-            'd64', 'dsk', 'img', 'bin', 'st', 'stx', 'j64', 'jag', 'lnx', 'adf',
-            'ngc', 'gz', 'm2v', 'ogg', 'fpt', 'fpl', 'vec', 'pce', 'a78', 'rom',
-            'nsp', 'xci', 'nsz', 'xcz',
+            'gen', 'gg', 'gba', 'gb', 'gbc', 'nds', 'ndc', 'prg', 'dat', 'tap',
+            'z64', 'n64', 'md', 'd64', 'dsk', 'img', 'bin', 'cue', 'chd', 'st',
+            'stx', 'j64', 'jag', 'lnx', 'adf', 'ngc', 'gcm', 'rvz', 'wbfs',
+            'wad', 'gz', 'm2v', 'ogg', 'fpt', 'fpl', 'vec', 'pce', 'a26', 'a52',
+            'a78', 'rom', 'pbp', 'cso', 'cia', '3ds', 'nsp', 'xci', 'nsz', 'xcz',
+            'gdi', 'cdi',
         ]
 
         existing_types = {ft.value for ft in session.execute(select(AllowedFileType)).scalars().all()}
@@ -357,7 +359,10 @@ class InitializationManager:
             {'name': 'Most Downloaded', 'identifier': 'most_downloaded', 'is_visible': True, 'display_order': 2},
             {'name': 'Highest Rated', 'identifier': 'highest_rated', 'is_visible': True, 'display_order': 3},
             {'name': 'Last Updated', 'identifier': 'last_updated', 'is_visible': True, 'display_order': 4},
-            {'name': 'Most Favorited', 'identifier': 'most_favorited', 'is_visible': True, 'display_order': 5}
+            {'name': 'Most Favorited', 'identifier': 'most_favorited', 'is_visible': True, 'display_order': 5},
+            # Storefront shelves (W25-STORE-1) — derived, hidden when empty.
+            {'name': 'Curated for you', 'identifier': 'curated_for_you', 'is_visible': True, 'display_order': 6},
+            {'name': 'Upcoming', 'identifier': 'upcoming', 'is_visible': True, 'display_order': 7},
         ]
 
         existing_sections = {section.identifier for section in session.execute(select(DiscoverySection)).scalars().all()}

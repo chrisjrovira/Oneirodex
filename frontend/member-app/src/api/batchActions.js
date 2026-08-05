@@ -141,7 +141,11 @@ export async function batchCheckFreshness(uuids) {
     return { ok: true, updated: [], skipped: [], errors: [], mode: 'noop' }
   }
 
-  const { response, data } = await postJson(BATCH_FRESHNESS_URL, { uuids: list })
+  // The sticky bar always re-probes the selection; the API defaults to stale-only.
+  const { response, data } = await postJson(BATCH_FRESHNESS_URL, {
+    uuids: list,
+    only_stale: false,
+  })
 
   if (response.ok) {
     return {

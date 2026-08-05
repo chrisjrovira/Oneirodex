@@ -10,6 +10,7 @@ const FAQ_SECTIONS = [
     items: [
       'Top nav: Discover, Library, Systems, Downloads, Favorites.',
       'Ctrl+K / ⌘K (or Search) opens the command palette. On Library it searches titles first.',
+      'On long scrollable pages, Jump to top / Jump to bottom controls appear bottom-left (hide when the page does not scroll).',
       'More hubs Collections, Wishlist, Ownership, Big Picture, and related tools.',
       'Account → API tokens for companion secrets (shown once). Paste the full gt_… string — hyphens/underscores inside are normal. Prefer HTTPS copy; on plain HTTP use Copy or select the secret field + Ctrl/⌘C.',
       'Cover → details: trailers, Cheats on RetroArch titles (.cht create/upload), Extras & DLC honesty, screenshots, download. Admins: ⋮ → Edit / Open path (companion reveal).',
@@ -23,8 +24,9 @@ const FAQ_SECTIONS = [
     items: [
       'Heart a cover; open Favorites from top nav.',
       'Library multi-select: checkbox / long-press / Shift+click → Select page · Favorite · Unfavorite · Add to wishlist · Play status · Refresh freshness / Refresh covers (More; librarian+ · max 20) · Clear; Esc clears. Batch toasts report updated/queued / skipped / failed counts.',
-      'Kind chips: Games · Experiences · Emulators · Tools (multi-select → item_kind; none = all).',
-      'Signals chips: UPDATE · OUT/~ · MISSING · NEW · RELEASE · LANG.',
+      'Kind chips: Games · Soft titles · Emulators · Utilities (multi-select → item_kind; none = all). Tile badges EXP / TOOL stay short; tooltips Soft title / Utility.',
+      'Desktop filters: chevron collapses the aside to a slim rail so covers reclaim the width (preference saved); chevron again restores. Narrow screens still use the Filters drawer.',
+      'Signals chips: UPDATE · MISSING · NEW · LANG.',
       'MISSING tile badge (top-left) means files were removed from disk - tooltip explains. Filter with the MISSING Signals chip when available.',
       'Tile size: header or top-nav control. Preferences (sectioned: Library · Look · Language) → items per page (20–1000).',
       'Trailers empty state is normal without metadata. Details use embeds; YouTube demo when no trailers.',
@@ -38,7 +40,7 @@ const FAQ_SECTIONS = [
     summary: 'Platform browse and accents',
     items: [
       'Systems tiles filter the library by console/PC.',
-      'Badge chips include VR, UPDATE, OUT/~, MISSING, NEW, RELEASE, LANG (vs Preferences → Preferred game language).',
+      'Tile badges use four corners only (occupied corners; no empty reserved slots) with rounded-square chrome. Signals: VR, UPDATE, MISSING, NEW, LANG (vs Preferences → Preferred game language). No OUT/~ / RELEASE on tiles.',
       'Inside a system, accents follow that family; global search keeps default glass.',
       'Export packs (bottom of Systems): ES-DE gamelist.xml and Pegasus metadata for other frontends — optional; paths stay portable.',
       'Change themes in Preferences; hard-refresh after apply so volume CSS loads.',

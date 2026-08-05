@@ -43,7 +43,6 @@ _COMPANION_ONLINE_MINUTES = 3
 # /storage — write is not required for scans, only for uploads/image paths.
 _READ_ONLY_OK_PATH_KEYS = frozenset({
     'DATA_FOLDER_GAMES',
-    'DATA_FOLDER_WAREZ',
     'BASE_FOLDER_POSIX',
     'BASE_FOLDER_WINDOWS',
 })

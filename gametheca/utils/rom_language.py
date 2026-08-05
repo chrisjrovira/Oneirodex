@@ -201,8 +201,29 @@ def rom_browse_flags(
     }
 
 
-def apply_rom_language_fields(game, path_or_name: str | None = None) -> None:
-    """Set rom_* columns on a Game from path or game.name."""
+def apply_rom_language_fields(
+    game,
+    path_or_name: str | None = None,
+    *,
+    peel: dict[str, Any] | None = None,
+) -> None:
+    """Set rom_* columns on a Game from peel capture or path/name parse.
+
+    Prefer console-peel captures when ``peel`` includes ``rom_region`` /
+    ``rom_languages`` keys (including explicit None). Otherwise parse the dump
+    label from ``path_or_name`` / ``game.full_disk_path`` / ``game.name``.
+    """
+    if isinstance(peel, dict) and ('rom_region' in peel or 'rom_languages' in peel):
+        game.rom_region = peel.get('rom_region')
+        game.rom_languages = peel.get('rom_languages')
+        if 'has_english' in peel:
+            game.has_english = peel.get('has_english')
+        else:
+            langs_raw = game.rom_languages or ''
+            langs = [part.strip() for part in langs_raw.split(',') if part.strip()]
+            game.has_english = ('en' in langs) if langs else None
+        return
+
     source = path_or_name or getattr(game, 'full_disk_path', None) or getattr(game, 'name', '') or ''
     parsed = parse_rom_language_tags(source)
     game.rom_region = parsed['rom_region']

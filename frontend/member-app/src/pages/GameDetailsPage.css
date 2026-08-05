@@ -167,9 +167,28 @@
   grid-template-columns: 1fr;
 }
 
-.gt-details-page__section--summary,
+/* The facts list is usually taller than the summary, which left a large dead
+   area under the summary. Collapse the row to the summary's own height and let
+   the facts rail overflow past it rather than inflating the row. */
+.gt-details-page__content-grid {
+  grid-template-rows: min-content;
+}
+
+.gt-details-page__section--summary {
+  margin-bottom: 0;
+  align-self: start;
+}
+
 .gt-details-page__section--facts {
   margin-bottom: 20px;
+  align-self: start;
+}
+
+/* Below the two-column break there is no rail, so restore normal spacing. */
+@media (max-width: 900px) {
+  .gt-details-page__section--summary {
+    margin-bottom: 20px;
+  }
 }
 
 .gt-details-page__paths {

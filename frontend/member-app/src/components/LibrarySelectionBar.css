@@ -106,22 +106,32 @@
   box-shadow: 0 8px 20px color-mix(in srgb, var(--gt-bg, #0b0e14) 55%, transparent);
 }
 
-/* Selection chrome on tiles — density-safe; checkbox only when selecting */
+/* Selection chrome on tiles — fourth in the top-right control stack.
+   It used to sit bottom-left, where it covered the system label. It now shares
+   the stack's size, colour and rhythm so all four controls line up. */
 .game-card-container.is-selectable .gt-tile-select {
   position: absolute;
-  left: 8px;
-  bottom: 8px;
+  right: 10px;
+  left: auto;
+  top: calc(var(--gt-tile-stack-top, 10px) + 3 * var(--gt-tile-stride, 36px));
+  bottom: auto;
   z-index: 16;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: var(--gt-tile-btn, 32px);
+  height: var(--gt-tile-btn, 32px);
   margin: 0;
   appearance: none;
-  border: 1.5px solid color-mix(in srgb, var(--gt-text, #f2f4f8) 70%, transparent);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--gt-surface, #141820) 75%, transparent);
+  border: var(--gt-tile-btn-border, 1px solid rgba(255, 255, 255, 0.2));
+  border-radius: 6px;
+  background: var(--gt-tile-btn-bg, rgba(0, 0, 0, 0.7));
+  backdrop-filter: blur(5px);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+/* Without a play-status button the select moves up one slot. */
+.game-card-container.is-selectable .game-card:not(:has(.game-status-btn)) .gt-tile-select {
+  top: calc(var(--gt-tile-stack-top, 10px) + 2 * var(--gt-tile-stride, 36px));
 }
 
 .game-card-container.is-selectable:hover .gt-tile-select,

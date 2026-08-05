@@ -1,6 +1,68 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { App } from './App'
+import { afterEach } from 'vitest'
+import { App, resolveRenderMode } from './App'
+
+// --- GT-A3: declared render mode ------------------------------------------
+
+function mountRoot({ render: mode, legacyHtml = '' } = {}) {
+  const root = document.createElement('div')
+  root.id = 'admin-app-root'
+  if (mode) root.dataset.adminRender = mode
+  document.body.appendChild(root)
+
+  const legacy = document.createElement('div')
+  legacy.id = 'admin-legacy-content'
+  legacy.innerHTML = legacyHtml
+  document.body.appendChild(legacy)
+
+  return root
+}
+
+afterEach(() => {
+  document.getElementById('admin-app-root')?.remove()
+  document.getElementById('admin-legacy-content')?.remove()
+})
+
+// A Jinja body full of forms and cards used to make the React page vanish.
+// With an explicit declaration it no longer can — this is the actual UID
+// behind "admin pages feel inconsistent".
+const HEAVY_LEGACY_BODY = `
+  <div class="card"><form><table><tr><td>
+    Server settings form with plenty of text to clear the 40 character floor.
+  </td></tr></table></form></div>
+`
+
+test('declared spa wins even when the Jinja body looks legacy', () => {
+  mountRoot({ render: 'spa', legacyHtml: HEAVY_LEGACY_BODY })
+  expect(resolveRenderMode()).toBe('spa')
+})
+
+test('declared legacy wins even when the Jinja body is empty', () => {
+  mountRoot({ render: 'legacy', legacyHtml: '' })
+  expect(resolveRenderMode()).toBe('legacy')
+})
+
+test('auto falls back to the old heuristic for unmigrated templates', () => {
+  mountRoot({ render: 'auto', legacyHtml: HEAVY_LEGACY_BODY })
+  expect(resolveRenderMode()).toBe('legacy')
+
+  document.getElementById('admin-legacy-content').innerHTML = ''
+  expect(resolveRenderMode()).toBe('spa')
+})
+
+test('a missing attribute behaves like auto', () => {
+  mountRoot({ legacyHtml: HEAVY_LEGACY_BODY })
+  expect(resolveRenderMode()).toBe('legacy')
+})
+
+test('an unknown value warns and falls back rather than blanking the page', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  mountRoot({ render: 'typo', legacyHtml: '' })
+  expect(resolveRenderMode()).toBe('spa')
+  expect(warn).toHaveBeenCalled()
+  warn.mockRestore()
+})
 
 test('integrations hub shows grouped cards', async () => {
   const originalFetch = global.fetch
@@ -102,8 +164,12 @@ test('renders admin brand and primary nav', () => {
   expect(screen.getByRole('navigation', { name: 'Admin' })).toBeInTheDocument()
   const nav = screen.getByRole('navigation', { name: 'Admin' })
   expect(nav.querySelector('a[href="/admin/dashboard"]')).toHaveTextContent('Dashboard')
-  expect(nav.querySelector('a[href="/libraries"]')).toHaveTextContent('Libraries')
   expect(nav.querySelector('a[href="/admin/settings"]')).toHaveTextContent('Settings')
+
+  // UX-C2: libraries and scans are one tabbed page, so they share one nav item.
+  const libraries = nav.querySelector('a[href="/scan_management?active_tab=libraries"]')
+  expect(libraries).toHaveTextContent('Libraries & scans')
+  expect(nav.querySelector('a[href="/libraries"]')).toBeNull()
 })
 
 test('users route shows React roster', async () => {

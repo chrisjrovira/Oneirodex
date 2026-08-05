@@ -43,7 +43,7 @@ Exact steps: [libraries-and-scans.md — After A0–A8](../admin/libraries-and-s
 |---|---|---|
 | `SECRET_KEY` | **Yes** | Must not be the example placeholder. Generate: `python -c "import secrets; print(secrets.token_urlsafe(64))"` |
 | `DATABASE_URL` | Yes (Compose builds it) | Host is always `db` — do not use `@localhost` |
-| `DATA_FOLDER_GAMES` | Yes | **Host** games path in `.env` (Compose mounts → `/storage:ro`). Container env hard-sets `/storage`. Alias: `DATA_FOLDER_WAREZ` (deprecated) |
+| `DATA_FOLDER_GAMES` | Yes | **Host** games path in `.env` (Compose mounts → `/storage:ro`). Container env hard-sets `/storage`. |
 | `LIBRARY_HOST_PATH` | Yes | **Host** appdata library path → `/app/gametheca/static/library` RW |
 | `POSTGRES_*` | If using bundled db | Match Compose `db` service |
 
@@ -55,7 +55,7 @@ Do **not** put covers, themes, or uploads on the games mount.
 
 | Role | Host env | Container mount | Mode | Purpose |
 |---|---|---|---|---|
-| **Games** | `DATA_FOLDER_GAMES` (alias `DATA_FOLDER_WAREZ`) | `/storage` | **ro** | Library scan root only — never uploads |
+| **Games** | `DATA_FOLDER_GAMES` | `/storage` | **ro** | Library scan root only — never uploads |
 | **Library / uploads** | `LIBRARY_HOST_PATH` | `/app/gametheca/static/library` | **rw** | Covers, themes, user uploads (`UPLOAD_FOLDER`) |
 | **Optional BIOS / firmware** | `EMULATOR_BIOS_HOST_PATH` (uncomment bind in compose) | `/app/gametheca/static/library/bios` | **rw** | Private household firmware folder under **appdata** — not the games share. See [Local private BIOS mount](#local-private-bios-mount-vs-public-upload) |
 | Postgres | Compose volume `db_data` | `/var/lib/postgresql/data/pgdata` | rw | DB |
@@ -165,6 +165,59 @@ docker compose --profile livekit --profile clamav --profile challenge up -d --bu
 6. Admin → Themes → **Reset Default Themes** (installs presets; regenerates at `GENERATOR_VERSION` 9)
 7. Add a library pointing at `/storage/...`
 8. Run a small scan before a full library scan
+
+## Factory wipe (still logging in after “wiped volumes”)
+
+**Symptom:** You deleted some Docker volumes / appdata, but the UI still accepts login and shows libraries. The wipe hit a **different** Compose project (or Portainer recreate without `-v`). Users/libraries live in the **live** Postgres named volume (`…_db_data`), not the games RO share.
+
+**Do this on the Unraid host (SSH or Unraid terminal):**
+
+1. **Identify the live project** (container names + `com.docker.compose.project`):
+
+```bash
+docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' | grep -i gametheca
+docker inspect gametheca-db --format '{{index .Config.Labels "com.docker.compose.project"}} → {{index .Config.Labels "com.docker.compose.project.working_dir"}}'
+docker inspect gametheca-app --format '{{index .Config.Labels "com.docker.compose.project"}} → {{index .Config.Labels "com.docker.compose.project.working_dir"}}'
+```
+
+2. **Identify the volume mounted on live Postgres:**
+
+```bash
+docker inspect gametheca-db --format '{{json .Mounts}}' | python3 -m json.tool
+# Look for Destination=/var/lib/postgresql/data/pgdata → Name= like <project>_db_data
+```
+
+3. **Confirm the app points at that DB** (Compose default host is `db`, not an external URL):
+
+```bash
+docker exec gametheca-app printenv DATABASE_URL DATABASE_HOST
+# Expect host `db` (or the compose service name). If host is a LAN IP / other container → external DB; wiping compose db_data will not clear login.
+```
+
+4. **Wipe THAT stack** from the project working_dir above (not a sibling `002`/`003`/`004` clone):
+
+```bash
+cd "$(docker inspect gametheca-db --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}')"
+# Capture library bind before down (needed to empty host files):
+LIB=$(docker inspect gametheca-app --format '{{range .Mounts}}{{if eq .Destination "/app/gametheca/static/library"}}{{.Source}}{{end}}{{end}}')
+echo "LIBRARY host path: $LIB"
+docker compose down -v
+docker volume ls | grep -i db_data   # live <project>_db_data must be GONE
+# Empty library bind (covers/themes/uploads) — does NOT touch /storage games RO:
+[ -n "$LIB" ] && [ -d "$LIB" ] && rm -rf "${LIB:?}/"*
+docker compose up -d --build
+```
+
+5. **Expect setup wizard** at `http://<unraid-ip>:5006` — login with old credentials must fail / redirect to setup. If login still works, you wiped the wrong project or `DATABASE_URL` is external.
+
+| Failure mode | Why login/libraries survive |
+|---|---|
+| Wrong project prefix (`gametheca` vs `002`/`003`/`004`) | `down -v` removed a sibling stack’s volume; live `…_db_data` untouched |
+| `docker compose down` **without** `-v` | Containers gone; named volume `db_data` kept |
+| Portainer “Recreate” / Update without removing volume | New container remounts same `…_db_data` |
+| External `DATABASE_URL` (LAN Postgres / other stack) | Compose `db_data` wipe is irrelevant — clear that DB or point Compose back to `db` |
+
+See also [container-wont-start.md](container-wont-start.md) (§3 / §3b — do **not** wipe `db_data` for `pg_hba` fixes).
 
 ## Monitor while testing
 

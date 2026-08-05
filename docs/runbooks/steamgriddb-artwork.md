@@ -2,7 +2,9 @@
 
 Enable community artwork from [SteamGridDB](https://www.steamgriddb.com/) for admin artwork search. GameTheca uses SteamGridDB for **artwork only** — it never downloads games or DRM payloads.
 
-Supported image types: **cover** (grids), **logo**, **hero**.
+Supported **search** image types (SteamGridDB API): **cover** (grids), **logo**, **hero**.
+
+Persisted **kinds** (BE-DET-10, `Image.image_type`): `cover` · `screenshot` · `box` · `cart` · `disc` · `logo` · `hero` · `fanart`. Apply may store any of these when you supply a URL; SGDB search still only returns cover/logo/hero.
 
 ## Enable
 
@@ -39,9 +41,9 @@ Without a key, `/api/providers` lists SteamGridDB as disabled and search returns
 { "url": "https://…", "image_type": "cover" }
 ```
 
-`image_type` may be `cover`, `logo`, or `hero`. Downloads the image (artwork only), saves under `library/images/`, replaces existing rows of that type, and returns `{ image_id, filename, cover_url|url, image_type }`.
+`image_type` / `kind` may be any locked kind (`cover` · `screenshot` · `box` · `cart` · `disc` · `logo` · `hero` · `fanart`). Downloads the image (artwork only), saves under `library/images/`, replaces existing singular rows of that type, and returns `{ image_id, filename, cover_url|url, image_type, kind }`.
 
-IGDB remains available as a second provider for **covers only**.
+IGDB remains available as a second provider for **covers only**. Queue filter: `GET /admin/api/image_queue_list?kind=box`. Per-game: `GET /api/game_images/<uuid>?kind=logo`.
 
 ## Admin UI
 

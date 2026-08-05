@@ -54,7 +54,7 @@ docker compose exec db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT pg_
 
 With current Compose, **do not** append to `$PGDATA/pg_hba.conf` — Postgres ignores it when `hba_file=/etc/gametheca/pg_hba.conf` is set. Edit the host file `docker/postgres/pg_hba.conf` and `force-recreate db` instead.
 
-Then restart the app container. Do **not** wipe `db_data` unless you intend to lose the library DB.
+Then restart the app container. Do **not** wipe `db_data` unless you intend to lose the library DB. Intentional clean slate (still logging in after a partial wipe): [unraid-deploy.md — Factory wipe](unraid-deploy.md#factory-wipe-still-logging-in-after-wiped-volumes).
 
 ### 4. Database URL points at production during tests
 

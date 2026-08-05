@@ -38,3 +38,39 @@
 .member-spa-content .game-library-container {
   color: var(--gt-text, #f2f4f8);
 }
+
+/* UID-009: jump top/bottom chrome (SPA also bundles ScrollJump.css). */
+.member-spa-content .gt-scroll-jump {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.3rem;
+  border-radius: 10px;
+  border: 1px solid var(--gt-glass-border, rgba(255, 255, 255, 0.14));
+  background: color-mix(in srgb, var(--gt-surface, #141820) 90%, transparent);
+  backdrop-filter: blur(var(--gt-glass-blur, 12px));
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+}
+
+.member-spa-content .gt-scroll-jump__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 35%, transparent);
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 10%, transparent);
+  color: var(--gt-text, #f2f4f8);
+  cursor: pointer;
+}
+
+.member-spa-content .gt-scroll-jump__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

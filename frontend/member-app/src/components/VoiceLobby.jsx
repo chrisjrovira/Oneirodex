@@ -11,16 +11,21 @@ function partyRoomForGame(gameUuid) {
 
 /**
  * Voice lobby — mints LiveKit JWT when ENABLE_LIVEKIT is on.
- * Party mode uses opaque room ids (game UUID), never titles.
+ *
+ * The room is **always** derived from context (a voice channel, a game party,
+ * or the household lobby) — never typed by the user. The server resolves every
+ * room name to real membership and denies anything it does not recognise, so a
+ * free-text box would only ever produce 403s and invite room-guessing.
  */
 export function VoiceLobby({
   defaultRoom = 'household:lobby',
   gameUuid = '',
+  room: fixedRoom = '',
   compact = false,
   defaultScreenshare = false,
   roomLabel = '',
 }) {
-  const initialRoom = gameUuid ? partyRoomForGame(gameUuid) : defaultRoom
+  const initialRoom = fixedRoom || (gameUuid ? partyRoomForGame(gameUuid) : defaultRoom)
   const [status, setStatus] = useState(null)
   const [room, setRoom] = useState(initialRoom)
   const [screenshare, setScreenshare] = useState(Boolean(defaultScreenshare))
@@ -30,8 +35,8 @@ export function VoiceLobby({
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    setRoom(gameUuid ? partyRoomForGame(gameUuid) : defaultRoom)
-  }, [gameUuid, defaultRoom])
+    setRoom(fixedRoom || (gameUuid ? partyRoomForGame(gameUuid) : defaultRoom))
+  }, [fixedRoom, gameUuid, defaultRoom])
 
   useEffect(() => {
     setScreenshare(Boolean(defaultScreenshare))
@@ -99,10 +104,9 @@ export function VoiceLobby({
           blocked by the server.
         </p>
       )}
-      <label>
-        Room
-        <input value={room} onChange={(e) => setRoom(e.target.value)} />
-      </label>
+      <p className="gt-voice-lobby__room">
+        Room: <code>{roomLabel || room}</code>
+      </p>
       <label>
         <input
           type="checkbox"

@@ -85,7 +85,7 @@ Built by `gametheca.utils.ops_summary._services_snapshot`. Brief field map:
 
 No Discord / webhook sinks — alerts stay in-app SystemEvents / optional SMTP digest.
 
-**Path issues:** `DATA_FOLDER_GAMES` / `DATA_FOLDER_WAREZ` / `BASE_FOLDER_POSIX` / `BASE_FOLDER_WINDOWS` need **exist + read** only (Compose Unraid often mounts `/storage:ro`, and the base folder that contains it inherits the same RO mount). Uploads / image paths still require write — a RO games/base mount must not appear as `not writable` in `issues`.
+**Path issues:** `DATA_FOLDER_GAMES` / `BASE_FOLDER_POSIX` / `BASE_FOLDER_WINDOWS` need **exist + read** only (Compose Unraid often mounts `/storage:ro`, and the base folder that contains it inherits the same RO mount). Uploads / image paths still require write — a RO games/base mount must not appear as `not writable` in `issues`.
 
 ## Related
 

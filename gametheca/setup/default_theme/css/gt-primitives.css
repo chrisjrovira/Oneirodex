@@ -1,0 +1,253 @@
+/* GT primitives (GT-A4)
+ * ---------------------------------------------------------------------------
+ * One source for the four shapes that every surface was re-inventing:
+ * button, input, card, section head — plus the empty/error blocks that pages
+ * were hand-rolling because PageStatus had no error state.
+ *
+ * Why this file exists
+ *   Before GT-A1/A4 there was a colour system (gt-tokens) but no shape system,
+ *   so 36 member stylesheets each defined their own `button {}` with slightly
+ *   different padding and radius, and 47 Jinja admin pages fell back to raw
+ *   Bootstrap. Two visual languages, neither authoritative.
+ *
+ * Rules for contributors
+ *   - Never hardcode px radius, spacing, or font-size in a component. Use the
+ *     --gt-* scales. If a value is missing from the scale, add it here rather
+ *     than inventing a local one.
+ *   - Do not restyle `button` as a bare element selector in page CSS. Apply
+ *     .gt-btn (or a modifier) instead, so themes can restyle every control.
+ *   - Loaded from base.html / base_admin.html / base_empty.html, so this is
+ *     available to Jinja pages and to both React SPAs.
+ *   - This is a theme asset: after editing, run Admin → Themes → Reset Default
+ *     Themes or the library theme copies will keep serving the old file.
+ */
+
+/* --------------------------------------------------------------------------
+   Button
+   -------------------------------------------------------------------------- */
+
+.gt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gt-space-2);
+  padding: var(--gt-space-2) var(--gt-space-4);
+  border: 1px solid var(--gt-border);
+  border-radius: var(--gt-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--gt-font-md);
+  line-height: var(--gt-line-tight);
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    border-color var(--gt-motion-fast) var(--gt-motion-ease),
+    color var(--gt-motion-fast) var(--gt-motion-ease),
+    background-color var(--gt-motion-fast) var(--gt-motion-ease);
+}
+
+.gt-btn:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: var(--gt-accent);
+  color: var(--gt-accent);
+}
+
+/* Keyboard focus must stay visible on every theme, including CRT/sharp packs
+   where the accent border alone can read as decoration. */
+.gt-btn:focus-visible,
+.gt-input:focus-visible,
+.gt-card:focus-visible {
+  outline: 2px solid var(--gt-focus-ring);
+  outline-offset: 2px;
+}
+
+.gt-btn:disabled,
+.gt-btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.gt-btn--primary {
+  background: var(--gt-accent);
+  border-color: var(--gt-accent);
+  color: var(--gt-accent-contrast);
+}
+
+.gt-btn--primary:hover:not(:disabled):not([aria-disabled='true']) {
+  background: color-mix(in srgb, var(--gt-accent) 85%, var(--gt-bg));
+  border-color: var(--gt-accent);
+  color: var(--gt-accent-contrast);
+}
+
+/* Destructive actions read as danger in every theme — semantic colours are
+   deliberately excluded from preset overrides for exactly this reason. */
+.gt-btn--danger:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: var(--gt-danger);
+  color: var(--gt-danger);
+}
+
+.gt-btn--quiet {
+  border-color: transparent;
+}
+
+.gt-btn--sm {
+  padding: var(--gt-space-1) var(--gt-space-3);
+  font-size: var(--gt-font-sm);
+}
+
+.gt-btn--pill {
+  border-radius: var(--gt-radius-pill);
+}
+
+/* Equal-width action bars (Unmatched resolve row, batch bars) */
+.gt-btn-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gt-space-2);
+}
+
+.gt-btn-bar--equal .gt-btn {
+  flex: 1 1 0;
+}
+
+/* --------------------------------------------------------------------------
+   Input
+   -------------------------------------------------------------------------- */
+
+.gt-input,
+.gt-select,
+.gt-textarea {
+  min-width: 0;
+  padding: var(--gt-space-2) var(--gt-space-3);
+  background: color-mix(in srgb, var(--gt-surface) 90%, transparent);
+  border: 1px solid var(--gt-border);
+  border-radius: var(--gt-radius-sm);
+  color: inherit;
+  font: inherit;
+  font-size: var(--gt-font-md);
+}
+
+.gt-input:disabled,
+.gt-select:disabled,
+.gt-textarea:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.gt-input::placeholder,
+.gt-textarea::placeholder {
+  color: var(--gt-text-muted);
+  opacity: 0.75;
+}
+
+/* --------------------------------------------------------------------------
+   Card / surface
+   -------------------------------------------------------------------------- */
+
+.gt-card {
+  padding: var(--gt-space-4);
+  background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
+  border: 1px solid var(--gt-border);
+  border-radius: var(--gt-radius-lg);
+}
+
+.gt-card--flat {
+  background: transparent;
+  box-shadow: none;
+}
+
+.gt-card--raised {
+  box-shadow: var(--gt-shadow-md);
+}
+
+/* --------------------------------------------------------------------------
+   Section head — the uppercase micro-label pattern that Wishlist, News,
+   Collections, Notifications and Tokens each redefined separately.
+   -------------------------------------------------------------------------- */
+
+.gt-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gt-space-3);
+  margin: 0 0 var(--gt-space-3);
+  padding-bottom: var(--gt-space-1);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--gt-border) 75%, transparent);
+}
+
+.gt-section-head__title {
+  margin: 0;
+  font-size: var(--gt-label-size);
+  font-weight: var(--gt-label-weight);
+  letter-spacing: var(--gt-label-tracking);
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
+}
+
+.gt-section-head__count {
+  font-size: var(--gt-font-xs);
+  color: var(--gt-text-muted);
+  opacity: 0.85;
+}
+
+/* --------------------------------------------------------------------------
+   Dense list rows (News-style) — shared by Wishlist, News, Notifications,
+   Updates, Activity so "a list" looks the same wherever it appears.
+   -------------------------------------------------------------------------- */
+
+.gt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gt-list__row {
+  padding: var(--gt-space-3) var(--gt-space-1);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--gt-border) 65%, transparent);
+}
+
+.gt-list__row:last-child {
+  border-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Empty / error blocks
+
+   Paired with the PageStatus React component so a Jinja page and an SPA page
+   report "nothing here" and "this failed" identically. Error is a real state,
+   not a toast: it stays on screen and owns a retry affordance.
+   -------------------------------------------------------------------------- */
+
+.gt-empty {
+  margin: 0;
+  color: var(--gt-text-muted);
+  font-size: var(--gt-font-md);
+}
+
+.gt-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gt-space-3);
+  padding: var(--gt-space-4);
+  border: 1px solid color-mix(in srgb, var(--gt-danger) 45%, transparent);
+  border-left: 3px solid var(--gt-danger);
+  border-radius: var(--gt-radius-sm);
+  background: color-mix(in srgb, var(--gt-danger) 8%, transparent);
+  color: var(--gt-text);
+  font-size: var(--gt-font-md);
+}
+
+.gt-error__message {
+  margin: 0;
+  flex: 1 1 12rem;
+}
+
+/* Technical detail (status code, backend reason) is available but never the
+   headline — operators need it, household members should not have to read it. */
+.gt-error__detail {
+  margin: var(--gt-space-1) 0 0;
+  color: var(--gt-text-muted);
+  font-size: var(--gt-font-xs);
+}

@@ -771,3 +771,51 @@
         overflow-x: auto;
     }
 }
+
+/* --- Statistics headline strip + table (UX-C13) ---------------------------- */
+
+.gt-stat-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+}
+
+.gt-stat-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    background: var(--gt-surface, #141820);
+}
+
+.gt-stat-tile__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-stat-tile__value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--gt-accent, #2fd67b);
+}
+
+.gt-stat-table {
+    font-size: 0.88rem;
+}
+
+.gt-stat-table .text-end {
+    text-align: right;
+}
+
+.gt-adminpage-subtitle {
+    margin: 0 0 0.6rem;
+    font-size: 1rem;
+    font-weight: 650;
+}

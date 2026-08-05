@@ -14,14 +14,19 @@ import {
   badgeFiltersFromSearchParams,
 } from './components/BadgeFilterChips'
 import { itemKindFromSearchParams } from './components/ItemKindFilterChips'
-import { cleanFilters, FilterBar } from './components/FilterBar'
+import {
+  cleanFilters,
+  FilterBar,
+  LibraryFiltersCollapseToggle,
+  readFiltersVisible,
+  writeFiltersVisible,
+} from './components/FilterBar'
 import './components/libraryFilters.css'
 import { GameGrid } from './components/GameGrid'
 import { GameGridSkeleton } from './components/GameGridSkeleton'
 import { LibrarySelectionBar } from './components/LibrarySelectionBar'
 import { PaginationBar } from './components/PaginationBar'
 import { createTranslator } from './i18n'
-import { isPathMissing } from './utils/badgeSignals'
 import { batchItemUuids, summarizeBatchOutcome } from './utils/batchOutcome'
 import { readLibraryFilters, writeLibraryFilters } from './utils/cookies'
 import { showToast } from './utils/toast'
@@ -96,6 +101,8 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(initialConfig.perPage)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  /** Desktop LHN: false = full panel, true = slim arrow rail (grid reclaims width). */
+  const [filtersCollapsed, setFiltersCollapsed] = useState(() => !readFiltersVisible())
   const defaultFilters = {
     sort_by: initialConfig.defaultSort,
     sort_order: initialConfig.defaultSortOrder,
@@ -507,14 +514,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   }
 
   const pages = Math.max(result?.pages ?? 1, 1)
-  // Client filter when Backend browse param is not ready yet; still passes path_missing=1 to API.
-  const games = useMemo(() => {
-    const rows = result?.games ?? []
-    if (filters.path_missing !== '1') {
-      return rows
-    }
-    return rows.filter((game) => isPathMissing(game))
-  }, [result?.games, filters.path_missing])
+  const games = result?.games ?? []
   const showSkeleton = loading && !result
   const showRefreshing = loading && Boolean(result)
   const hidePlatformChip = Boolean(filters.library_platform)
@@ -619,6 +619,14 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     )
   }
 
+  const toggleFiltersCollapsed = () => {
+    setFiltersCollapsed((current) => {
+      const next = !current
+      writeFiltersVisible(!next)
+      return next
+    })
+  }
+
   const filterBar = (
     <div className="library-filters-stack">
       <FilterBar
@@ -632,7 +640,9 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   )
 
   return (
-    <div className="library-layout">
+    <div
+      className={`library-layout${filtersCollapsed ? ' is-filters-collapsed' : ''}`}
+    >
       <button
         type="button"
         className="library-filters-mobile-toggle"
@@ -657,6 +667,12 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
         className={`library-layout__filters${filtersOpen ? ' is-open' : ''}`}
         aria-label={t('Library filters')}
       >
+        <LibraryFiltersCollapseToggle
+          collapsed={filtersCollapsed}
+          onToggle={toggleFiltersCollapsed}
+          controlsId={filtersPanelId}
+          t={t}
+        />
         {filterBar}
       </aside>
 

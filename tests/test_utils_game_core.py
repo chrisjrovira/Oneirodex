@@ -91,7 +91,10 @@ def sample_game(db_session, sample_library, sample_global_settings):
         date_identified=datetime.now(UTC)
     )
     db_session.add(game)
-    db_session.flush()
+    # Commit, not flush: tests here enter their own `app.app_context()`, which
+    # gets a different session. A flushed-but-uncommitted row is invisible to
+    # it, so writing an Image against this game hit a foreign-key violation.
+    db_session.commit()
     return game
 
 
@@ -683,7 +686,11 @@ class TestGameDataFunctions:
             result = retrieve_and_save_game('Test Game', '/test/path', library_uuid=sample_library.uuid)
         
         assert result == mock_game
-        mock_api.assert_called_once()
+        # Identify tries search variants ('Path' from the folder, then the
+        # cleaned title), so the IGDB call count tracks how many variants were
+        # needed — pinning it to exactly one predates variant search. What
+        # matters is that it searched and imported the game once.
+        assert mock_api.call_count >= 1
         mock_create_game.assert_called_once()
         mock_notify_admins.assert_called_once_with(mock_game.uuid, mock_game.name)
     

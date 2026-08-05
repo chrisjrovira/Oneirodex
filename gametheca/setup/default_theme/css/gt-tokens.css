@@ -35,4 +35,89 @@
   --gt-icon-linejoin: round;
   --gt-icon-fill: none;
   --gt-icon-fill-opacity: 1;
+
+  /* ----------------------------------------------------------------------
+     Shape scale (GT-A1)
+
+     Before this existed, every page invented its own geometry: 11 distinct
+     border-radius values across 36 stylesheets with no shared source. That is
+     why the product read as "inconsistent across pages" and why themes could
+     only ever tint — a preset had no shape surface to override.
+
+     Presets may override any of these via their `tokens` dict (see
+     preset_themes.preset_tokens), which is what turns a colour preset into a
+     visual language: sharp/CRT packs push these toward 0, soft packs upward.
+     ---------------------------------------------------------------------- */
+  --gt-radius-xs: 4px;
+  --gt-radius-sm: 6px;
+  --gt-radius-md: 8px;
+  --gt-radius-lg: 10px;
+  --gt-radius-xl: 12px;
+  --gt-radius-2xl: 16px;
+  --gt-radius-pill: 999px;
+  --gt-radius-circle: 50%;
+
+  /* ----------------------------------------------------------------------
+     Spacing scale — rem so it tracks user font size. Observed ad-hoc values
+     ranged 0.25–1rem in ~9 increments; these are the six that matter.
+     ---------------------------------------------------------------------- */
+  --gt-space-1: 0.25rem;
+  --gt-space-2: 0.4rem;
+  --gt-space-3: 0.5rem;
+  --gt-space-4: 0.75rem;
+  --gt-space-5: 1rem;
+  --gt-space-6: 1.5rem;
+
+  /* ----------------------------------------------------------------------
+     Type scale. `--gt-font-base` is 1rem so the whole scale is themeable and
+     respects the browser/user root size — do not hardcode px in components.
+     ---------------------------------------------------------------------- */
+  --gt-font-xs: 0.75rem;
+  --gt-font-sm: 0.82rem;
+  --gt-font-md: 0.88rem;
+  --gt-font-base: 1rem;
+  --gt-font-lg: 1.15rem;
+  --gt-font-xl: 1.4rem;
+  --gt-line-tight: 1.25;
+  --gt-line-base: 1.45;
+  /* Uppercase micro-labels (section heads, status chips) share one treatment */
+  --gt-label-size: var(--gt-font-xs);
+  --gt-label-weight: 700;
+  --gt-label-tracking: 0.06em;
+
+  /* Elevation — kept subtle; glass chrome carries most of the depth */
+  --gt-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --gt-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.32);
+  --gt-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.42);
+
+  /* Motion — components must reference these so motion-safe can zero them */
+  --gt-motion-fast: 120ms;
+  --gt-motion-base: 200ms;
+  --gt-motion-slow: 320ms;
+  --gt-motion-ease: cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+/* Single global motion-safe guard (GT-C3).
+
+   Previously only 9 of 36 member stylesheets carried their own
+   prefers-reduced-motion block, so honouring the OS setting depended on which
+   page you happened to be looking at. Zeroing the duration tokens here covers
+   every component that uses them; the explicit animation/transition overrides
+   catch components that have not migrated yet. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --gt-motion-fast: 0ms;
+    --gt-motion-base: 0ms;
+    --gt-motion-slow: 0ms;
+    --gt-platform-motion: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -113,6 +113,14 @@ def browse_play_fields(game) -> dict[str, Any]:
 
     def finish(payload: dict[str, Any]) -> dict[str, Any]:
         payload['cheat_surface'] = surface
+        # FEAT-D5: per-system room treatment so the play surface can dress
+        # itself for the era. Data only — the caller decides scope.
+        try:
+            from gametheca.utils.play_rooms import room_for_platform
+
+            payload['play_room'] = room_for_platform(key)
+        except Exception:  # noqa: BLE001 — cosmetics never block play
+            payload['play_room'] = None
         return payload
 
     mode = play_mode_for_platform(key)

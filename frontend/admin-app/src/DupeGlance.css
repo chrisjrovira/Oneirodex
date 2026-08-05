@@ -30,7 +30,7 @@
 .gt-dupe-glance__toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: 0.58rem;
   align-items: center;
 }
 
@@ -46,7 +46,7 @@
 
 .gt-dupe-glance__log {
   margin: 0 0 0.75rem;
-  padding: 0.55rem 0.7rem;
+  padding: 0.7rem 0.85rem;
   border-radius: 8px;
   font-size: 0.9rem;
 }
@@ -80,11 +80,11 @@
 
 .gt-dupe-glance__row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 0.65rem 0.75rem;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 0.55rem;
+  align-items: stretch;
+  padding: 0.8rem 0.9rem;
   border-radius: 10px;
   border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.1));
   background: var(--gt-surface-2, #1c2230);
@@ -95,7 +95,7 @@
   flex: 1 1 16rem;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.42rem;
 }
 
 .gt-dupe-glance__meta code {
@@ -106,26 +106,26 @@
 .gt-dupe-glance__chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.48rem;
   align-items: center;
 }
 
 .gt-dupe-glance__status {
   width: fit-content;
-  font-size: 0.75rem;
+  font-size: 0.84rem;
   font-weight: 650;
   letter-spacing: 0.03em;
-  padding: 0.2rem 0.45rem;
+  padding: 0.28rem 0.55rem;
   border-radius: 6px;
   background: color-mix(in srgb, var(--gt-accent, #2fd67b) 14%, transparent);
 }
 
 .gt-dupe-glance__suggested {
   width: fit-content;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 650;
   letter-spacing: 0.03em;
-  padding: 0.2rem 0.45rem;
+  padding: 0.28rem 0.55rem;
   border-radius: 6px;
   color: var(--gt-text, #f2f4f8);
   border: 1px dashed color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
@@ -139,7 +139,7 @@
 .gt-dupe-glance__why {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.48rem;
   margin-top: 0.15rem;
 }
 
@@ -157,7 +157,7 @@
 
 .gt-dupe-glance__transforms {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   color: var(--gt-text-muted, #c4ccd8);
 }
 
@@ -184,13 +184,13 @@
 
 .gt-dupe-glance__transform-list {
   margin: 0.35rem 0 0;
-  padding: 0.35rem 0.5rem 0.35rem 1.15rem;
+  padding: 0.45rem 0.62rem 0.35rem 1.15rem;
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 90%, transparent);
   background: color-mix(in srgb, var(--gt-surface, #141820) 55%, transparent);
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.42rem;
 }
 
 .gt-dupe-glance__transform-step {
@@ -207,14 +207,14 @@
 }
 
 .gt-dupe-glance__transform-pair code {
-  font-size: 0.74rem;
+  font-size: 0.83rem;
   word-break: break-word;
 }
 
 .gt-dupe-glance__transform-reason {
   display: inline-block;
   margin-left: 0.35rem;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   color: var(--gt-text-muted, #c4ccd8);
 }
 
@@ -225,16 +225,16 @@
 .gt-dupe-glance__stage-e {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.42rem;
   margin-top: 0.1rem;
 }
 
 .gt-dupe-glance__stage-e-chip {
   width: fit-content;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 650;
   letter-spacing: 0.03em;
-  padding: 0.2rem 0.45rem;
+  padding: 0.28rem 0.55rem;
   border-radius: 6px;
   color: var(--gt-text, #f2f4f8);
   border: 1px dashed color-mix(in srgb, var(--gt-info, #5eb8ff) 50%, transparent);
@@ -243,7 +243,7 @@
 
 .gt-dupe-glance__stage-e-details {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   color: var(--gt-text-muted, #c4ccd8);
 }
 
@@ -270,20 +270,20 @@
 
 .gt-dupe-glance__stage-e-note {
   margin: 0.3rem 0 0;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   color: var(--gt-text-muted, #c4ccd8);
 }
 
 .gt-dupe-glance__stage-e-list {
   list-style: none;
   margin: 0.35rem 0 0;
-  padding: 0.35rem 0.5rem;
+  padding: 0.45rem 0.62rem;
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 90%, transparent);
   background: color-mix(in srgb, var(--gt-surface, #141820) 55%, transparent);
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.42rem;
 }
 
 .gt-dupe-glance__stage-e-hit {
@@ -296,7 +296,7 @@
 
 .gt-dupe-glance__stage-e-source {
   font-weight: 650;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   color: var(--gt-text, #f2f4f8);
 }
 
@@ -311,7 +311,7 @@ a.gt-dupe-glance__stage-e-name {
 }
 
 .gt-dupe-glance__stage-e-mode {
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   color: var(--gt-text-muted, #c4ccd8);
 }
 
@@ -321,16 +321,16 @@ a.gt-dupe-glance__stage-e-name {
 
 .gt-dupe-glance__stage-e-meta {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   color: var(--gt-text-muted, #c4ccd8);
 }
 
 .gt-dupe-glance__match-score {
   display: inline-block;
   margin-right: 0.35rem;
-  padding: 0.05rem 0.35rem;
+  padding: 0.12rem 0.45rem;
   border-radius: 4px;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
@@ -342,14 +342,39 @@ a.gt-dupe-glance__stage-e-name {
 .gt-dupe-glance__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  max-width: 28rem;
-  justify-content: flex-end;
+  gap: 0.52rem;
+  width: 100%;
+  max-width: none;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 0.4rem 0.45rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.16)) 90%, transparent);
+  background: color-mix(in srgb, var(--gt-surface, #1a2030) 55%, transparent);
+}
+
+.gt-dupe-glance__sort {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.gt-dupe-glance__sort-label {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--gt-text-muted, #c4ccd8);
+  margin-right: 0.15rem;
+}
+
+.gt-dupe-glance__sort-btn.is-active {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
+  color: var(--gt-accent, #2fd67b);
 }
 
 .gt-dupe-glance__dupe-of {
   display: flex;
-  gap: 0.45rem;
+  gap: 0.58rem;
   align-items: flex-start;
   margin-top: 0.2rem;
   padding: 0.4rem 0.45rem;
@@ -358,9 +383,136 @@ a.gt-dupe-glance__stage-e-name {
   background: color-mix(in srgb, #ffc456 7%, transparent);
 }
 
+.gt-dupe-glance__compare {
+  display: flex;
+  flex-direction: column;
+  gap: 0.58rem;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.55rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, #ffc456 30%, transparent);
+  background: color-mix(in srgb, #ffc456 7%, transparent);
+}
+
+.gt-dupe-glance__compare-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.55rem;
+  align-items: baseline;
+}
+
+.gt-dupe-glance__compare-banner-text {
+  font-size: 0.85rem;
+  color: var(--gt-text-muted, #c4ccd8);
+}
+
+.gt-dupe-glance__compare-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+/* UX-C6: the two sides are compared value-by-value, so they need to read as
+   separate columns rather than one dense block. Breaks to stacked earlier —
+   at 720px each side was ~330px and the field rows wrapped into mush. */
+@media (max-width: 900px) {
+  .gt-dupe-glance__compare-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gt-dupe-glance__compare-side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.52rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 90%, transparent);
+  background: color-mix(in srgb, var(--gt-surface, #141820) 55%, transparent);
+}
+
+.gt-dupe-glance__compare-side--empty {
+  justify-content: center;
+  align-items: center;
+  min-height: 4.5rem;
+}
+
+.gt-dupe-glance__compare-missing {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--gt-text-muted, #c4ccd8);
+}
+
+.gt-dupe-glance__compare-head {
+  display: flex;
+  gap: 0.58rem;
+  align-items: flex-start;
+}
+
+.gt-dupe-glance__compare-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.gt-dupe-glance__compare-role {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted, #c4ccd8);
+}
+
+.gt-dupe-glance__compare-fields {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+}
+
+/* Wider label column: at 3.25rem the field names ("Folder", "Library") were
+   wrapping, which is what made the compare read as cramped. */
+.gt-dupe-glance__compare-field {
+  display: grid;
+  grid-template-columns: 4.25rem minmax(0, 1fr);
+  gap: 0.4rem 0.6rem;
+  align-items: start;
+  padding-bottom: 0.32rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.1)) 55%, transparent);
+}
+
+.gt-dupe-glance__compare-field:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.gt-dupe-glance__compare-field dt {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--gt-text-muted, #c4ccd8);
+  padding-top: 0.1rem;
+}
+
+.gt-dupe-glance__compare-field dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.84rem;
+  color: var(--gt-text, #f2f4f8);
+  word-break: break-word;
+}
+
+.gt-dupe-glance__compare-empty {
+  color: var(--gt-text-muted, #c4ccd8);
+  font-variant-numeric: tabular-nums;
+}
+
 .gt-dupe-glance__dupe-label {
   flex: 0 0 auto;
-  font-size: 0.68rem;
+  font-size: 0.86rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -411,7 +563,7 @@ a.gt-dupe-glance__dupe-title:hover {
 }
 
 .gt-dupe-glance__dupe-uuid {
-  font-size: 0.68rem;
+  font-size: 0.86rem;
   word-break: break-all;
   color: var(--gt-text-muted, #c4ccd8);
 }
@@ -426,7 +578,7 @@ a.gt-dupe-glance__dupe-title:hover {
   background: transparent;
   color: var(--gt-text-muted, #c4ccd8);
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   word-break: break-word;
   cursor: pointer;
@@ -450,6 +602,6 @@ a.gt-dupe-glance__dupe-title:hover {
 
 .gt-dupe-glance__ondisk {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.84rem;
   color: var(--gt-text-muted, #c4ccd8);
 }

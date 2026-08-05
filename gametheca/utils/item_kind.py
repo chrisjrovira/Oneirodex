@@ -13,9 +13,10 @@ DEFAULT_ITEM_KIND = 'game'
 
 ITEM_KIND_LABELS = {
     'game': 'Game',
-    'experience': 'Experience',
+    # W22-M6 — plain-language labels; API/DB tokens unchanged.
+    'experience': 'Soft title',
     'emulator': 'Emulator',
-    'tool': 'Tool',
+    'tool': 'Utility',
 }
 
 # Aliases accepted from UI / proposals / browse query params.
@@ -27,6 +28,10 @@ ITEM_KIND_ALIASES = {
     'emu': 'emulator',
     'emulators': 'emulator',
     'experiences': 'experience',
+    'soft title': 'experience',
+    'soft_title': 'experience',
+    'soft-title': 'experience',
+    'softtitles': 'experience',
     'games': 'game',
     'tools': 'tool',
 }

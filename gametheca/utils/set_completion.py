@@ -576,6 +576,44 @@ def lookup_unique_dat_hash_hit(
     }
 
 
+def _unique_hit_from_inner_digests(
+    *,
+    library_platform: str,
+    digests: list[dict[str, str]],
+) -> tuple[dict[str, Any], dict[str, str]] | None:
+    """
+    Map inner digests → unique DAT title.
+
+    Zero hits or multiple distinct normalized titles → None (skip / no invent).
+    """
+    by_norm: dict[str, tuple[dict[str, Any], dict[str, str]]] = {}
+    for digest in digests:
+        hit = lookup_unique_dat_hash_hit(
+            library_platform=library_platform,
+            crc=digest.get('crc'),
+            md5=digest.get('md5'),
+            sha1=digest.get('sha1'),
+        )
+        if not hit:
+            continue
+        norm = (hit.get('normalized_name') or '').strip()
+        if not norm:
+            continue
+        prev = by_norm.get(norm)
+        if prev is None:
+            by_norm[norm] = (hit, digest)
+            continue
+        # Same title from another member — keep stronger method if present.
+        rank = {'sha1': 3, 'md5': 2, 'crc': 1}
+        if rank.get(hit.get('match_method') or '', 0) > rank.get(
+            prev[0].get('match_method') or '', 0,
+        ):
+            by_norm[norm] = (hit, digest)
+    if len(by_norm) != 1:
+        return None
+    return next(iter(by_norm.values()))
+
+
 def try_dat_hash_identify(
     *,
     full_disk_path: str,
@@ -589,33 +627,61 @@ def try_dat_hash_identify(
 
     Returns Game on unique hit; None on miss / ambiguous / PC / unhashable /
     missing reference set. Caller commits. Never fuzzy-matches DAT titles.
+
+    When the outer file hash misses and the path is zip/7z/rar, optionally hash
+    inner primary dump candidate(s) (``DAT_HASH_INNER_ARCHIVE``, default ON).
+    Exactly one unique DAT title from inner digests identifies; zero or multiple
+    distinct titles → skip.
     """
     if not is_dat_hash_identify_platform(library_platform):
         return None
 
-    from gametheca.utils.rom_hash import hash_rom_file
+    from gametheca.utils.rom_hash import (
+        hash_archive_inner_primary_dumps,
+        hash_rom_file,
+    )
     from gametheca.utils.software_identify import create_custom_kinded_game
 
     digest = hashes
     if digest is None:
         digest = hash_rom_file(full_disk_path)
-    if not digest:
-        return None
 
-    hit = lookup_unique_dat_hash_hit(
-        library_platform=library_platform or '',
-        crc=digest.get('crc'),
-        md5=digest.get('md5'),
-        sha1=digest.get('sha1'),
-    )
+    platform_key = library_platform or ''
+    hit = None
+    identify_via = 'outer'
+    if digest:
+        hit = lookup_unique_dat_hash_hit(
+            library_platform=platform_key,
+            crc=digest.get('crc'),
+            md5=digest.get('md5'),
+            sha1=digest.get('sha1'),
+        )
+
     if not hit:
+        inner_digests = hash_archive_inner_primary_dumps(
+            full_disk_path,
+            platform=platform_key,
+        )
+        if not inner_digests:
+            return None
+        resolved = _unique_hit_from_inner_digests(
+            library_platform=platform_key,
+            digests=inner_digests,
+        )
+        if not resolved:
+            return None
+        hit, digest = resolved
+        identify_via = 'inner_archive'
+
+    if not hit or not digest:
         return None
 
     name = (hit.get('name') or '').strip() or 'Untitled'
     method = hit.get('match_method') or 'hash'
     source = hit.get('source') or 'dat'
+    via_note = 'inner archive dump, ' if identify_via == 'inner_archive' else ''
     summary = (
-        f'Identified via reference DAT ({source}, unique {method}). '
+        f'Identified via reference DAT ({source}, {via_note}unique {method}). '
         f'Set: {hit.get("set_name") or "unknown"}.'
     )
 
@@ -636,6 +702,12 @@ def try_dat_hash_identify(
         existing.date_identified = datetime.now(timezone.utc)
         existing.path_status = 'ok'
         _stamp_hashes(existing)
+        try:
+            from gametheca.utils.rom_language import apply_rom_language_fields
+
+            apply_rom_language_fields(existing, full_disk_path or name)
+        except Exception:
+            pass
         db.session.flush()
         return existing
 

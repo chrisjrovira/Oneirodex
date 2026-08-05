@@ -4,7 +4,7 @@ import { GameGrid } from './components/GameGrid'
 import { PaginationBar } from './components/PaginationBar'
 
 export function FavoritesApp({ initialConfig, shellConfig } = {}) {
-  const defaultPerPage = Number(shellConfig?.perPage) || Number(initialConfig?.perPage) || 20
+  const defaultPerPage = Number(shellConfig?.perPage) || Number(initialConfig?.perPage) || 50
   const [games, setGames] = useState(null)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)

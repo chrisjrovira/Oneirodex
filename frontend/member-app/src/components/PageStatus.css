@@ -1,7 +1,9 @@
+/* GT-A1: geometry now comes from the shared scales — no local px. */
+
 .gt-page-status {
-  margin: 0.35rem 0;
-  padding: 0.85rem 1rem;
-  border-radius: 10px;
+  margin: var(--gt-space-1) 0;
+  padding: var(--gt-space-4) var(--gt-space-5);
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-glass-border, color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent));
   background: var(--gt-glass-bg, color-mix(in srgb, var(--gt-surface, #141820) 88%, transparent));
   backdrop-filter: blur(var(--gt-glass-blur, 12px));
@@ -10,19 +12,45 @@
 
 .gt-page-status__message {
   margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.45;
+  font-size: var(--gt-font-md);
+  line-height: var(--gt-line-base);
   color: inherit;
 }
 
 .gt-page-status--loading {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--gt-space-4);
   border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 36%, transparent);
   color: var(--gt-accent, #2fd67b);
 }
 
 .gt-page-status--empty {
   border-style: dashed;
+}
+
+/* Error (GT-A2)
+   Danger tokens are intentionally outside preset overrides, so a failure reads
+   as a failure on every theme — including the low-chroma mono pack where an
+   accent-tinted border would not register as a problem. */
+.gt-page-status--error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gt-space-4);
+  border-color: color-mix(in srgb, var(--gt-danger) 45%, transparent);
+  border-left: 3px solid var(--gt-danger);
+  background: color-mix(in srgb, var(--gt-danger) 8%, var(--gt-surface));
+  color: var(--gt-text);
+}
+
+.gt-page-status__body {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.gt-page-status__detail {
+  margin: var(--gt-space-1) 0 0;
+  color: var(--gt-text-muted);
+  font-size: var(--gt-font-xs);
 }

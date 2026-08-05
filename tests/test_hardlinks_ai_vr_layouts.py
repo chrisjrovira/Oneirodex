@@ -87,6 +87,19 @@ def test_triage_parses_suggestions(app, monkeypatch):
 def test_ai_triage_disabled(client, app, admin):
     _login(client, app, admin)
     app.config['ENABLE_AI_ASSIST'] = False
+    # `ai_enabled()` ORs the config flag with GlobalSettings.enable_ai_assist,
+    # so config alone does not disable it once any test has left a row behind —
+    # the check has to establish both halves to be deterministic.
+    from gametheca import db
+    from gametheca.models import GlobalSettings
+
+    settings = db.session.execute(
+        db.select(GlobalSettings).order_by(GlobalSettings.id).limit(1),
+    ).scalars().first()
+    if settings is not None:
+        settings.enable_ai_assist = False
+        db.session.commit()
+
     resp = client.post('/api/ai/triage', json={'name': 'Foo'})
     assert resp.status_code == 403
 

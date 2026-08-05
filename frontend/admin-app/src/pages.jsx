@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { DupeGlance } from './DupeGlance'
-import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_CARDS } from './navConfig'
+import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_GROUPS } from './navConfig'
 import { OpenPathModal } from './OpenPathModal'
 import { ImportLeafLibraries } from './ImportLeafLibraries'
 import { ProposeLeafLibraries } from './ProposeLeafLibraries'
@@ -352,14 +352,17 @@ export function LibrariesPage() {
   }, [])
 
   return (
-    <Page title="Libraries" lede="Manage library folders and platforms.">
+    <Page title="Libraries & scans" lede="Manage library folders and platforms. Classic Jinja surfaces share the same Libraries / Auto / Manual / Unmatched tabs.">
       {error ? <div role="alert">Unable to load libraries.</div> : null}
       <LinkRow links={HUB_LINKS.libraries} />
       <p className="gt-admin-lede">
+        Prefer the unified classic page:{' '}
+        <a href="/scan_management?active_tab=libraries">Libraries &amp; scans</a>
+        {' · '}
         Library hero image:{' '}
         <a href="/admin/art_studio#stock">Choose image from Backup &amp; stock</a>
         {' · '}
-        <a href="/admin/manage_libraries">Full library forms</a>
+        <a href="/libraries">Full library forms</a>
         {' · '}
         <a href="#propose-leaf">Propose leaf libraries</a>
         {' · '}
@@ -422,16 +425,25 @@ export function LibrariesPage() {
 }
 
 export function SettingsPage() {
+  // Grouped rows, not a card grid (UX-C9): cards forced every module to the
+  // same visual weight and spread a short list over a lot of empty space.
   return (
-    <Page title="Settings" lede="One-click cards for server modules and theme controls.">
-      <div className="gt-admin-card-grid">
-        {SETTINGS_CARDS.map((card) => (
-          <a key={card.to} className="gt-admin-card" href={card.to}>
-            <h2>{card.title}</h2>
-            <p>{card.blurb}</p>
-          </a>
-        ))}
-      </div>
+    <Page title="Settings" lede="Server modules, matching policy, presentation, and extensions.">
+      {SETTINGS_GROUPS.map((group) => (
+        <section key={group.id} className="gt-admin-panel gt-settings-group">
+          <h2 className="gt-admin-panel-title">{group.title}</h2>
+          <ul className="gt-settings-list">
+            {group.items.map((item) => (
+              <li key={item.to}>
+                <a className="gt-settings-row" href={item.to}>
+                  <span className="gt-settings-row__title">{item.title}</span>
+                  <span className="gt-settings-row__blurb">{item.blurb}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
     </Page>
   )
 }
@@ -525,14 +537,19 @@ export function IntegrationsPage() {
       title="Integrations"
       lede="All providers in one place — metadata, artwork, mail, SSO, voice, acquire, ownership, and export packs. Classic Jinja forms stay behind these deep links."
     >
-      <div className="gt-admin-card-grid gt-admin-card-grid--integrations">
+      {/* Rows, not a card grid (UX-C11): providers carry wildly different link
+          counts, so an even grid left tall gaps beside the short ones. Same
+          dense treatment as Settings / Libraries. */}
+      <div className="gt-admin-panel gt-provider-list">
         {INTEGRATION_CARDS.map((card) => (
-          <section key={card.id} className="gt-admin-card gt-admin-card--hub" aria-labelledby={`int-${card.id}`}>
-            <h2 id={`int-${card.id}`}>
-              <a href={card.href}>{card.title}</a>
-            </h2>
-            <p>{card.blurb}</p>
-            <ul className="gt-admin-card__links">
+          <section key={card.id} className="gt-provider-row" aria-labelledby={`int-${card.id}`}>
+            <div className="gt-provider-row__head">
+              <h2 id={`int-${card.id}`} className="gt-provider-row__title">
+                <a href={card.href}>{card.title}</a>
+              </h2>
+              <p className="gt-provider-row__blurb">{card.blurb}</p>
+            </div>
+            <ul className="gt-provider-row__links">
               {(card.links || []).map((link) => (
                 <li key={`${link.href}-${link.label}`}>
                   <a href={link.href}>{link.label}</a>
@@ -783,8 +800,8 @@ export function ScansPage() {
   const scanMotifActive = running || queuedJobs.length > 0
 
   return (
-    <Page title="Scans & recognition" lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja) or Refresh all here.">
-      <LinkRow links={HUB_LINKS.scans} />
+    <Page title="Libraries & scans" lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja Libraries & scans) or Refresh all here.">
+      <LinkRow links={HUB_LINKS.libraries} />
       {error ? <div role="alert">Unable to load scan status.</div> : null}
       <div className="gt-admin-panel">
         <div className="gt-admin-panel__toolbar" style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -898,8 +915,10 @@ export function resolveAdminPage(pathname) {
   if (pathname === '/admin/storage') return 'storage'
   if (pathname === '/admin/scan_match') return 'scan_match'
   if (pathname === '/admin/help') return 'help'
+  // Scans live under the merged "Libraries & scans" nav item (UX-C2), so these
+  // paths must highlight 'libraries' — 'scans' is no longer a top-nav id.
   if (pathname.startsWith('/scan_management') || pathname.includes('image_queue') || pathname.includes('game_identify') || pathname.includes('game_edit')) {
-    return 'scans'
+    return 'libraries'
   }
   if (pathname.startsWith('/admin/users') || pathname.includes('manage_users') || pathname.includes('manage_invites') || pathname.includes('whitelist')) {
     return 'users'

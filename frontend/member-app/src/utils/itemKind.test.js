@@ -12,9 +12,12 @@ test('resolveItemKind reads item_kind and content_kind alias', () => {
 test('ITEM_KIND_BADGE covers non-game kinds only', () => {
   expect(ITEM_KIND_BADGE.game).toBeUndefined()
   expect(ITEM_KIND_BADGE.experience.label).toBe('EXP')
+  expect(ITEM_KIND_BADGE.experience.title).toMatch(/^Soft title/)
   expect(ITEM_KIND_BADGE.emulator.label).toBe('EMU')
   expect(ITEM_KIND_BADGE.tool.label).toBe('TOOL')
-  expect(ITEM_KIND_LABEL.tool).toBe('Tool')
+  expect(ITEM_KIND_BADGE.tool.title).toMatch(/^Utility/)
+  expect(ITEM_KIND_LABEL.experience).toBe('Soft title')
+  expect(ITEM_KIND_LABEL.tool).toBe('Utility')
 })
 
 test('folderBasename handles Windows and POSIX paths', () => {

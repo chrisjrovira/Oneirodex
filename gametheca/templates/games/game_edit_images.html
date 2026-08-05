@@ -102,12 +102,43 @@
       Drag and drop images here, or choose files below
     </div>
     <input type="file" id="file-input" multiple class="form-control" accept="image/*">
-    <script>
-      var gameUuid = "{{ game.uuid }}";
-    </script>
-    <script src="{{ 'js/game_edit_images.js'|theme_asset }}"></script>
     <button id="upload-button" class="btn btn-primary" type="button">Upload</button>
   </section>
+
+  <section class="gt-edit-images__panel" aria-labelledby="gt-edit-other-heading">
+    <h2 id="gt-edit-other-heading">Other artwork</h2>
+    <p class="gt-edit-images__hint">
+      Box, cart/disc label, logo, hero, and fan art — manually uploaded, one primary per kind
+      (except fan art). No provider search for these kinds yet.
+    </p>
+    <div id="other-image-list" class="image-editor-list">
+      {% for image in other_images %}
+      <div class="image-editor-image" id="image-{{ image.id }}" data-kind="{{ image.image_type }}">
+        <span class="gt-edit-images__label">{{ image.image_type|capitalize }}</span>
+        <button class="btn btn-danger" type="button" onclick="deleteImage({{ image.id }})">Delete</button>
+        <img src="{{ url_for('static', filename='library/images/' + image.url) }}" alt="{{ image.image_type }}">
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="gt-edit-images__upload-block">
+      <label class="gt-edit-images__label" for="other-image-kind">Kind</label>
+      <select id="other-image-kind" class="form-select">
+        {% for kind in allowed_kinds %}
+          {% if kind not in ('cover', 'screenshot') %}
+          <option value="{{ kind }}">{{ kind|capitalize }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <label class="gt-edit-images__label" for="other-image-input">Upload artwork</label>
+      <input type="file" id="other-image-input" class="form-control" accept="image/*">
+    </div>
+  </section>
+
+  <script>
+    var gameUuid = "{{ game.uuid }}";
+  </script>
+  <script src="{{ 'js/game_edit_images.js'|theme_asset }}"></script>
 </div>
 
 {% endblock %}

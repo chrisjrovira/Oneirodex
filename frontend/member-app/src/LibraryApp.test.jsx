@@ -91,8 +91,59 @@ test('renders floating LHN filter column with the grid', async () => {
   )
   expect(container.querySelector('.library-layout')).not.toBeNull()
   expect(container.querySelector('.library-layout__main')).not.toBeNull()
+  expect(container.querySelector('.library-layout.is-filters-collapsed')).toBeNull()
   expect(screen.queryByRole('button', { name: 'VR' })).toBeNull()
   expect(screen.getByRole('button', { name: 'UPDATE' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Hide filters' })).toBeInTheDocument()
+
+  vi.unstubAllGlobals()
+})
+
+test('collapsing LHN adds layout class and persists preference', async () => {
+  try {
+    window.localStorage?.removeItem('gt.library.filtersVisible')
+  } catch {
+    /* ignore */
+  }
+
+  const user = userEvent.setup()
+  const fetchMock = vi.fn((url) => {
+    if (url.startsWith('/browse_games?')) {
+      return jsonResponse({
+        games: [],
+        pages: 1,
+        current_page: 1,
+        total: 0,
+      })
+    }
+    return jsonResponse([])
+  })
+  vi.stubGlobal('fetch', fetchMock)
+
+  const { container } = renderLibrary(
+    <LibraryApp
+      initialConfig={{
+        perPage: 20,
+        showPlayStatus: false,
+        isAdmin: false,
+        libraryCount: 1,
+        gamesCount: 1,
+      }}
+    />,
+  )
+
+  await waitFor(() =>
+    expect(container.querySelector('.library-layout__filters .library-filters')).not.toBeNull(),
+  )
+
+  await user.click(screen.getByRole('button', { name: 'Hide filters' }))
+  expect(container.querySelector('.library-layout.is-filters-collapsed')).not.toBeNull()
+  expect(window.localStorage?.getItem('gt.library.filtersVisible')).toBe('0')
+  expect(screen.getByRole('button', { name: 'Show filters' })).toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: 'Show filters' }))
+  expect(container.querySelector('.library-layout.is-filters-collapsed')).toBeNull()
+  expect(window.localStorage?.getItem('gt.library.filtersVisible')).toBe('1')
 
   vi.unstubAllGlobals()
 })

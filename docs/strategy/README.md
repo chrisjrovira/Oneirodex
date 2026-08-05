@@ -27,17 +27,20 @@ Read in this order:
 | 4j | [name-resolution.md](name-resolution.md) | Folder → IGDB search variants · letter-bucket `scan_depth=2` |
 | 4k | [console-gaming-libraries.md](console-gaming-libraries.md) | `_console-gaming` → one library per platform leaf · exclude emus |
 | 5 | [ui.md](ui.md) | UI rebuild waves, BadgeStack, GameActionBar |
-| 6 | [progress.md](progress.md) | What shipped / what's next |
+| 6 | [progress.md](progress.md) | What shipped / what's next — Immediate **BE-DET-6** DAT inner archive · **W22 rem** (**BE-DET-5** multi-disc **QA PASS 119/119** · **BE-DET-4** region/lang **QA PASS 118/118** · **BE-DET-1…3** peel **QA PASS** 77/77 · 77/77 · 98/98 · match peel **QA PASS 138+10**) |
+| 6b | [roadmap-w22-plus.md](roadmap-w22-plus.md) | Feedback waves **W22–W25** (W21 = first-scan Done uncommitted) |
 | 7 | [social-av.md](social-av.md) | Household social + LiveKit waves |
 | 8 | [emulation-coverage.md](emulation-coverage.md) | Wave 19 — systems below PS5 / Series |
 | 9 | [security.md](security.md) | Security suite |
 | 10 | [docs-map.md](docs-map.md) | Documentation inventory & gaps |
+| 11 | [cloud-tco-ballpark.md](cloud-tco-ballpark.md) | Unraid vs cloud household cost ranges (Finance) |
 
 Member free-store claims: [../user/free-games.md](../user/free-games.md) (Wave 18).
 
 ## Stance (short)
 
 - **In scope:** scan/recognition, freshness, ops health, API/tokens, playtime, collections, companion lifecycle, ownership sync (register-only), free-store claim feed (deeplink-only), household social, optional LiveKit, in-app support → GitHub
+- **Deploy default:** Unraid / home NAS first — see [cloud-tco-ballpark.md](cloud-tco-ballpark.md) (Finance · Unraid-first)
 - **Out of scope:** Discord bots/webhooks; bundled torrent/debrid marketplace; DRM store download/install queues; always-on paid LLM inside Flask
 - **Optional:** feature-flagged *arr/debrid, LiveKit profile, OIDC, AI assist
 

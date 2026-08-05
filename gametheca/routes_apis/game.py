@@ -21,6 +21,11 @@ from gametheca.models import (
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.game_core import get_game_by_uuid
 from gametheca.utils.game_details_payload import build_game_details_payload
+from gametheca.utils.image_kinds import (
+    IMAGE_KIND_ORDER,
+    image_kinds_error_message,
+    parse_image_kind,
+)
 from gametheca.utils.rbac import can_request_games, librarian_required
 from gametheca.utils.library_acl import apply_game_access_filters, user_can_access_game, user_can_access_library
 from gametheca.utils.scanning import refresh_images_in_background
@@ -691,6 +696,55 @@ def game_screenshots(game_uuid):
     screenshots = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, image_type='screenshot')).scalars().all()
     screenshot_urls = [url_for('static', filename=f'library/images/{screenshot.url}') for screenshot in screenshots]
     return jsonify(screenshot_urls)
+
+
+@apis_bp.route('/game_images/<game_uuid>')
+@login_required
+def game_images(game_uuid):
+    """List persisted images for a game; optional kind/type filter (BE-DET-10)."""
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game:
+        return jsonify({'error': 'Game not found'}), 404
+    if not user_can_access_game(current_user, game):
+        return jsonify({'error': 'Forbidden'}), 403
+
+    raw_kind = request.args.get('kind') or request.args.get('type') or request.args.get('image_type') or 'all'
+    try:
+        kind_filter = parse_image_kind(raw_kind, default=None, allow_all=True)
+    except ValueError:
+        return jsonify({'error': image_kinds_error_message()}), 400
+
+    query = select(Image).filter_by(game_uuid=game_uuid)
+    if kind_filter != 'all':
+        query = query.filter(Image.image_type == kind_filter)
+    query = query.order_by(Image.image_type.asc(), Image.created_at.desc())
+    rows = db.session.execute(query).scalars().all()
+
+    images = []
+    for img in rows:
+        local_url = None
+        if img.url:
+            if img.url.startswith(('http://', 'https://', '/')):
+                local_url = img.url
+            else:
+                local_url = url_for('static', filename=f'library/images/{img.url}')
+        images.append({
+            'id': img.id,
+            'image_type': img.image_type,
+            'kind': img.image_type,
+            'url': local_url,
+            'download_url': img.download_url,
+            'is_downloaded': bool(img.is_downloaded),
+        })
+
+    return jsonify({
+        'game_uuid': game_uuid,
+        'kind_filter': kind_filter,
+        'allowed_kinds': list(IMAGE_KIND_ORDER),
+        'images': images,
+        'count': len(images),
+    })
+
 
 @apis_bp.route('/move_game_to_library', methods=['POST'])
 @login_required

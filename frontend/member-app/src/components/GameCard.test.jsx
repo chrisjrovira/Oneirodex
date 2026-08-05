@@ -1,6 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import { GameCard } from './GameCard'
 
+/** `data-corner` lives on the per-corner stack inside the badge-layers wrapper. */
+function badgeCorner(corner) {
+  return screen.getByLabelText(/game badges/i).querySelector(`[data-corner="${corner}"]`)
+}
+
 const baseGame = {
   uuid: '11111111-1111-4111-8111-111111111111',
   name: 'Archery Kings VR',
@@ -16,7 +21,7 @@ test('renders L and VR badges via BadgeStack when flags set', () => {
   render(<GameCard game={baseGame} showPlayStatus={false} isAdmin={false} />)
   expect(screen.getByTitle(/local metadata/i)).toHaveTextContent('L')
   expect(screen.getByTitle(/virtual reality/i)).toHaveTextContent('VR')
-  const stack = screen.getByLabelText(/game badges/i)
+  const stack = badgeCorner('top-left')
   expect(stack).toHaveAttribute('data-corner', 'top-left')
   expect(stack).toHaveAttribute('data-vr-in-stack', 'top-left')
 })
@@ -35,11 +40,13 @@ test('places hamburger and favorite together in the top-right stack', () => {
 })
 
 test('play status joins the top-right chrome stack; NEW stays top-left', () => {
+  // Relative to now — a hardcoded date silently ages out of the 14-day NEW window.
+  const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
   render(
     <GameCard
       game={{
         ...baseGame,
-        date_identified: '2026-07-20T00:00:00Z',
+        date_identified: twoDaysAgo,
         library_platform: 'PCWIN',
         library_platform_label: 'PC Windows',
       }}
@@ -51,8 +58,7 @@ test('play status joins the top-right chrome stack; NEW stays top-left', () => {
     'data-chrome-anchor',
     'top-right',
   )
-  const stack = screen.getByLabelText(/game badges/i)
-  expect(stack).toHaveAttribute('data-corner', 'top-left')
+  expect(badgeCorner('top-left')).toHaveAttribute('data-corner', 'top-left')
   expect(screen.getByTitle(/newly added/i)).toHaveTextContent('NEW')
   const chip = screen.getByTitle('PC Windows')
   expect(chip).toHaveTextContent('PC')
@@ -86,7 +92,7 @@ test('renders MISSING badge when path_status is missing', () => {
   const badge = screen.getByTitle(/removed from disk/i)
   expect(badge).toHaveTextContent('MISSING')
   expect(badge).toHaveAttribute('data-badge', 'MISSING')
-  expect(screen.getByLabelText(/game badges/i)).toHaveAttribute('data-corner', 'top-left')
+  expect(badgeCorner('top-left')).toHaveAttribute('data-corner', 'top-left')
 })
 
 test('renders MISSING badge when path_missing is true', () => {

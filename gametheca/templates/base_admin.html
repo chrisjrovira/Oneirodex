@@ -16,6 +16,9 @@
     <script src="{{ url_for('static', filename='vendor/notify/0.4.2/notify.min.js') }}"></script>
     <script src="{{ 'js/csrf-utils.js'|theme_asset }}"></script>
     <link rel="stylesheet" href="{{ 'css/gt-tokens.css'|theme_asset }}">
+    {# After tokens, before Bootstrap-shaped admin CSS, so admin pages and the
+       member SPA share one button/input/card language. #}
+    <link rel="stylesheet" href="{{ 'css/gt-primitives.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/base.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/modal-components.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/form-components.css'|theme_asset }}">
@@ -51,8 +54,20 @@
     {% block styles %}{% endblock %}
 </head>
 <body class="admin-shell admin-spa">
-{# React owns the top nav; Jinja page body stays visible for forms until fully migrated. #}
-<div id="admin-app-root" data-admin-chrome="1"></div>
+{# React owns the top nav; Jinja page body stays visible for forms until fully migrated.
+
+   data-admin-render (GT-A3) declares which body a page wants, replacing the old
+   runtime DOM-sniffing in App.jsx that guessed from markup shape:
+
+     spa    — React renders the body; this template contributes no page content
+     legacy — Jinja owns the body; React renders chrome only
+     auto   — legacy heuristic (default, for templates not yet migrated)
+
+   Pages must state their intent rather than have it inferred: under the old
+   heuristic, adding a `.card` or a <table> to a Jinja template silently deleted
+   the React body for that route. #}
+<div id="admin-app-root" data-admin-chrome="1"
+     data-admin-render="{% block admin_render %}auto{% endblock %}"></div>
 <div id="admin-legacy-content" class="gt-admin-legacy">
     {% include 'partials/flash_messages.html' ignore missing %}
     {% block content %}{% endblock %}

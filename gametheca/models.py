@@ -219,6 +219,11 @@ class Game(db.Model):
     rom_languages = db.Column(db.String(64), nullable=True)  # CSV: en,ja,fr
     has_english = db.Column(db.Boolean, nullable=True)
 
+    # Multi-disc set (BE-DET-5): primary path disc index + known disc count.
+    # Sibling discs attach as GameExtra(extra_kind='disc', disc_index=N).
+    disc_index = db.Column(db.Integer, nullable=True)
+    disc_count = db.Column(db.Integer, nullable=True)
+
     # Library item kind (orthogonal to LibraryPlatform / IGDB Category):
     # game | experience | emulator | tool — default game for existing rows.
     item_kind = db.Column(db.String(16), nullable=False, default='game', server_default='game')
@@ -253,10 +258,12 @@ class GameExtra(db.Model):
     file_path = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     # Optional typing for translation patches / manuals (O-ROM phase 2)
-    extra_kind = db.Column(db.String(32), nullable=True)  # translation_patch | manual | None
+    extra_kind = db.Column(db.String(32), nullable=True)  # translation_patch | manual | disc | None
     patch_format = db.Column(db.String(8), nullable=True)  # ips | bps | ups
     target_language = db.Column(db.String(16), nullable=True)
     source_url = db.Column(db.String(512), nullable=True)
+    # BE-DET-5 — disc sibling index when extra_kind='disc'
+    disc_index = db.Column(db.Integer, nullable=True)
 
     game = db.relationship('Game', back_populates='extras')
 
@@ -278,21 +285,122 @@ class GameURL(db.Model):
         return f"<GameURL id={self.id}, game_uuid={self.game_uuid}, url_type={self.url_type}, url={self.url}>"
 
 class Image(db.Model):
+    """Game artwork row. ``image_type`` is the kind enum (BE-DET-10):
+    cover | screenshot | box | cart | disc | logo | hero | fanart.
+    """
     __tablename__ = 'images'
 
     id = db.Column(db.Integer, primary_key=True)
     game_uuid = db.Column(db.String(36), db.ForeignKey('games.uuid'), nullable=False)
-    image_type = db.Column(db.String, nullable=False)
+    image_type = db.Column(db.String, nullable=False)  # kind — see image_kinds.IMAGE_KINDS
     url = db.Column(db.String, nullable=False)
     igdb_image_id = db.Column(db.String, nullable=True)  # IGDB image ID for reference
     download_url = db.Column(db.String, nullable=True)  # Full IGDB URL to download from
     is_downloaded = db.Column(db.Boolean, default=False, nullable=False)  # Download status
+    # FEAT-D3: generated art is labelled so it can be found and replaced later
+    # rather than passing as real cover art. `generated_by` records the engine.
+    is_generated = db.Column(db.Boolean, default=False, nullable=False)
+    generated_by = db.Column(db.String(32), nullable=True)
     last_error = db.Column(db.String(500), nullable=True)  # Most recent download failure reason, if any
     last_attempt_at = db.Column(db.DateTime, nullable=True)  # When the download was last attempted
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
         return f"<Image id={self.id}, game_uuid={self.game_uuid}, image_type={self.image_type}, url={self.url}, downloaded={self.is_downloaded}>"
+
+class GameRelatedMedia(db.Model):
+    """Other media attached to a game — adaptations, tie-ins, soundtracks.
+
+    Deliberately **not** media tracking. A film exists here only because it is
+    the adaptation of this game; nothing is rated, progressed or watched. It is
+    context on the game's page with a link out, which is what keeps this inside
+    the product's scope rather than turning GameTheca into a media tracker.
+    """
+
+    __tablename__ = 'game_related_media'
+
+    id = db.Column(db.Integer, primary_key=True)
+    game_uuid = db.Column(
+        db.String(36), db.ForeignKey('games.uuid', ondelete='CASCADE'),
+        nullable=False, index=True,
+    )
+    # film | series | anime | book | comic | music | podcast
+    media_kind = db.Column(db.String(16), nullable=False)
+    # adaptation | tie_in | soundtrack | novelisation | documentary | inspired_by
+    relation = db.Column(db.String(20), nullable=False, default='tie_in')
+    title = db.Column(db.String(240), nullable=False)
+    creator = db.Column(db.String(160), nullable=True)
+    year = db.Column(db.Integer, nullable=True)
+    summary = db.Column(db.String(1000), nullable=True)
+    # Where to go to actually watch/read/listen. Never a download link.
+    external_url = db.Column(db.String(500), nullable=True)
+    cover_url = db.Column(db.String(500), nullable=True)
+    display_order = db.Column(db.Integer, default=0, nullable=False)
+    created_by_user_id = db.Column(
+        db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True,
+    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'game_uuid': self.game_uuid,
+            'media_kind': self.media_kind,
+            'relation': self.relation,
+            'title': self.title,
+            'creator': self.creator,
+            'year': self.year,
+            'summary': self.summary,
+            'external_url': self.external_url,
+            'cover_url': self.cover_url,
+            'display_order': self.display_order or 0,
+        }
+
+
+class PcCheat(db.Model):
+    """Operator-authored cheat notes for installed PC games (FEAT-D2).
+
+    Deliberately **notes, not a trainer**: rows record what to change and how
+    (console command, config edit, save-editor field), and GameTheca never
+    writes to a game binary or injects into a running process. That keeps the
+    feature on the right side of the anti-cheat line and matches the patch
+    catalog stance — the data is operator-owned, not scraped from third-party
+    trainer sites.
+    """
+
+    __tablename__ = 'pc_cheats'
+
+    id = db.Column(db.Integer, primary_key=True)
+    game_uuid = db.Column(
+        db.String(36), db.ForeignKey('games.uuid', ondelete='CASCADE'),
+        nullable=False, index=True,
+    )
+    # console | config | save | launch_flag | note
+    method = db.Column(db.String(16), nullable=False, default='note')
+    label = db.Column(db.String(160), nullable=False)
+    # The thing to type / set. Kept verbatim so it can be copied exactly.
+    payload = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.String(1000), nullable=True)
+    # Single-player only by default — multiplayer cheating is out of scope and
+    # a good way to get an account banned.
+    single_player_only = db.Column(db.Boolean, default=True, nullable=False)
+    created_by_user_id = db.Column(
+        db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True,
+    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'game_uuid': self.game_uuid,
+            'method': self.method,
+            'label': self.label,
+            'payload': self.payload,
+            'notes': self.notes,
+            'single_player_only': bool(self.single_player_only),
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -647,6 +755,15 @@ class UnmatchedFolder(db.Model):
     # Wave 17: soft librarian naming (no disk rename / folder_path change)
     search_name = db.Column(db.String(255), nullable=True)
     display_name = db.Column(db.String(255), nullable=True)
+    # UX-C5: operator feedback that a proposed match is wrong. Kept apart from
+    # `match_reason`, which is the matcher explaining itself — this is a human
+    # contradicting it, and conflating the two would lose that distinction.
+    bad_match_reason = db.Column(db.String(32), nullable=True)
+    bad_match_note = db.Column(db.String(500), nullable=True)
+    bad_match_at = db.Column(db.DateTime, nullable=True)
+    bad_match_by_user_id = db.Column(
+        db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True,
+    )
 
 
 class DuplicateFixLog(db.Model):
@@ -680,7 +797,7 @@ class UserPreference(db.Model):
         db.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False
     )
-    items_per_page = db.Column(db.Integer, default=20)
+    items_per_page = db.Column(db.Integer, default=50)
     default_sort = db.Column(db.String(50), default='name')
     default_sort_order = db.Column(db.String(4), default='asc')
     theme = db.Column(db.String(50), default='default')
@@ -871,6 +988,32 @@ class DiscoverySection(db.Model):
     # Custom zone config, e.g. {"mode": "manual", "game_uuids": [...]}
     # or {"mode": "filter", "filter_type": "library|platform|genre", "filter_value": "..."}
     config = db.Column(JSONEncodedDict, nullable=True)
+    # W25-STORE-1: a shelf with a window is an "event" — it only renders inside it.
+    starts_at = db.Column(db.DateTime, nullable=True)
+    ends_at = db.Column(db.DateTime, nullable=True)
+    # Storefront treatment: shelf (default) | hero | carousel
+    layout = db.Column(db.String(20), default='shelf', nullable=False)
+
+    def is_live(self, now=None):
+        """True when the shelf is visible and inside its schedule window."""
+        if not self.is_visible:
+            return False
+        moment = now or datetime.now(timezone.utc)
+        if moment.tzinfo is None:
+            moment = moment.replace(tzinfo=timezone.utc)
+
+        def _aware(value):
+            if value is None:
+                return None
+            return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+        starts = _aware(self.starts_at)
+        ends = _aware(self.ends_at)
+        if starts and moment < starts:
+            return False
+        if ends and moment > ends:
+            return False
+        return True
 
     def __repr__(self):
         return f"<DiscoverySection {self.name}>"
@@ -1013,15 +1156,104 @@ class UserNotification(db.Model):
         }
 
 
+class ChatSpace(db.Model):
+    """A space ("server") holding text + voice channels (W23-SOCIAL-1).
+
+    ``visibility='household'`` auto-joins every non-child user; ``'invite'``
+    requires an explicit ChatSpaceMember row. Admin-created only.
+    Native first-party model — not Discord, no bridging.
+    """
+
+    __tablename__ = 'chat_spaces'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    slug = db.Column(db.String(64), nullable=True, unique=True)
+    description = db.Column(db.String(500), nullable=True)
+    # household = everyone (non-child) is a member; invite = explicit rows only
+    visibility = db.Column(db.String(16), nullable=False, default='household')
+    is_child_safe = db.Column(db.Boolean, default=True, nullable=False)
+    display_order = db.Column(db.Integer, default=0, nullable=False)
+    created_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    archived_at = db.Column(db.DateTime, nullable=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'slug': self.slug,
+            'description': self.description,
+            'visibility': self.visibility,
+            'is_child_safe': bool(self.is_child_safe),
+            'display_order': self.display_order or 0,
+            'created_by_user_id': self.created_by_user_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'archived': self.archived_at is not None,
+        }
+
+
+class ChatSpaceMember(db.Model):
+    __tablename__ = 'chat_space_members'
+    __table_args__ = (
+        db.UniqueConstraint('space_id', 'user_id', name='uq_chat_space_member'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    space_id = db.Column(db.Integer, db.ForeignKey('chat_spaces.id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    role = db.Column(db.String(16), nullable=False, default='member')  # owner | moderator | member
+    muted = db.Column(db.Boolean, default=False, nullable=False)
+    joined_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class ChatSpaceInvite(db.Model):
+    """Token invite into an ``invite``-visibility space."""
+
+    __tablename__ = 'chat_space_invites'
+
+    id = db.Column(db.Integer, primary_key=True)
+    space_id = db.Column(db.Integer, db.ForeignKey('chat_spaces.id', ondelete='CASCADE'), nullable=False, index=True)
+    token = db.Column(db.String(128), nullable=False, unique=True, index=True)
+    created_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=True)
+    max_uses = db.Column(db.Integer, nullable=True)
+    uses = db.Column(db.Integer, default=0, nullable=False)
+    revoked_at = db.Column(db.DateTime, nullable=True)
+
+    def to_dict(self, *, include_token: bool = False):
+        row = {
+            'id': self.id,
+            'space_id': self.space_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
+            'max_uses': self.max_uses,
+            'uses': self.uses or 0,
+            'revoked': self.revoked_at is not None,
+        }
+        if include_token:
+            row['token'] = self.token
+        return row
+
+
 class ChatChannel(db.Model):
-    """Household channel or 1:1 DM thread (Wave 15)."""
+    """Text or voice channel in a space, or a 1:1 DM thread (Wave 15 · W23-SOCIAL-1)."""
 
     __tablename__ = 'chat_channels'
 
     id = db.Column(db.Integer, primary_key=True)
-    kind = db.Column(db.String(16), nullable=False, default='channel')  # channel | dm
+    kind = db.Column(db.String(16), nullable=False, default='channel')  # channel | dm | voice
     name = db.Column(db.String(120), nullable=False)
     slug = db.Column(db.String(64), nullable=True, unique=True)
+    # DMs carry no space; space channels are access-gated by space membership.
+    space_id = db.Column(
+        db.Integer,
+        db.ForeignKey('chat_spaces.id', ondelete='CASCADE'),
+        nullable=True,
+        index=True,
+    )
+    display_order = db.Column(db.Integer, default=0, nullable=False)
     is_child_safe = db.Column(db.Boolean, default=True, nullable=False)
     created_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -1032,10 +1264,12 @@ class ChatChannel(db.Model):
         return {
             'id': self.id,
             'kind': kind,
-            # Slide-out alias — same as kind (channel | dm)
+            # Slide-out alias — same as kind (channel | dm | voice)
             'type': kind,
             'name': self.name,
             'slug': self.slug,
+            'space_id': self.space_id,
+            'display_order': self.display_order or 0,
             'is_child_safe': bool(self.is_child_safe),
             'created_by_user_id': self.created_by_user_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,

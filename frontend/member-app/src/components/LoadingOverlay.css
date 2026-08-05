@@ -1,0 +1,62 @@
+/* Floating busy indicator (UX-B6).
+
+   Fixed-position on purpose: inline spinners reflow the page every time the
+   server does something, which moves buttons under the pointer mid-click. */
+
+.gt-loading-overlay {
+  position: fixed;
+  right: 1rem;
+  bottom: 8.5rem; /* clear of the Friends dock and the Chat launcher */
+  z-index: 70;
+  pointer-events: none;
+}
+
+/* Long, page-owning work can dim the page; routine requests must not. */
+.gt-loading-overlay--blocking {
+  inset: 0;
+  right: auto;
+  bottom: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+
+.gt-loading-overlay__card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 38%, transparent);
+  background: color-mix(in srgb, var(--gt-surface, #141820) 94%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  color: var(--gt-text, #f2f4f8);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.gt-loading-overlay--blocking .gt-loading-overlay__card {
+  border-radius: 14px;
+  padding: 0.9rem 1.2rem;
+  font-size: 0.9rem;
+}
+
+.gt-loading-overlay__label {
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .gt-loading-overlay {
+    right: 0.65rem;
+    bottom: 7.5rem;
+  }
+
+  .gt-loading-overlay__label {
+    max-width: 12rem;
+    white-space: normal;
+  }
+}

@@ -1,4 +1,7 @@
 {% extends "base_admin.html" %}
+{# Jinja owns this body (profile forms + firmware React island) — declared so
+   the React shell never claims it (GT-A3). #}
+{% block admin_render %}legacy{% endblock %}
 {% block content %}
 {% import 'partials/icons.html' as icons %}
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
@@ -18,6 +21,10 @@
             <p class="text-muted">Loading…</p>
         </div>
     </div>
+    {# GT-B2 / UID-007 — React firmware panel mounts here (main.jsx). The page
+       stays declared `legacy` so the Jinja profile forms above keep rendering;
+       only firmware is React. #}
+    <div id="emulator-firmware-mount" class="gt-adminpage-panel"></div>
     <p><a class="gt-adminpage-backlink" href="{{ url_for('site.admin_dashboard') }}">{{ icons.icon('arrow-left') }} Back to admin</a></p>
 </div>
 <script>

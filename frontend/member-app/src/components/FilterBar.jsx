@@ -27,11 +27,12 @@ const SELECTS = [
   ['player_perspective', 'Player perspective', 'All Perspectives', 'playerPerspectives', 'name', 'name'],
 ]
 
-const FILTERS_VISIBLE_KEY = 'gt.library.filtersVisible'
+/** localStorage: '1' = LHN expanded (default), '0' = collapsed rail. */
+export const FILTERS_VISIBLE_KEY = 'gt.library.filtersVisible'
 /** Debounce for type-to-search title filter (ms). */
 export const LIBRARY_SEARCH_DEBOUNCE_MS = 300
 
-function readFiltersVisible() {
+export function readFiltersVisible() {
   try {
     const raw = window.localStorage?.getItem(FILTERS_VISIBLE_KEY)
     if (raw === '0' || raw === 'false') return false
@@ -42,7 +43,7 @@ function readFiltersVisible() {
   return true
 }
 
-function writeFiltersVisible(visible) {
+export function writeFiltersVisible(visible) {
   try {
     window.localStorage?.setItem(FILTERS_VISIBLE_KEY, visible ? '1' : '0')
   } catch {
@@ -67,6 +68,58 @@ export function cleanFilters(filters) {
   )
 }
 
+function CollapseChevron({ collapsed }) {
+  return (
+    <svg
+      className="library-filters-collapse__icon"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {collapsed ? (
+        <path
+          fill="currentColor"
+          d="M5.47 2.97a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06L9.44 8 5.47 4.03a.75.75 0 0 1 0-1.06z"
+        />
+      ) : (
+        <path
+          fill="currentColor"
+          d="M10.53 2.97a.75.75 0 0 0-1.06 0l-4.5 4.5a.75.75 0 0 0 0 1.06l4.5 4.5a.75.75 0 1 0 1.06-1.06L6.56 8l3.97-3.97a.75.75 0 0 0 0-1.06z"
+        />
+      )}
+    </svg>
+  )
+}
+
+/**
+ * Slim arrow that collapses/expands the Library LHN so the game grid reflows.
+ * Rendered by LibraryApp (layout owns width); kept next to FilterBar for a11y labels.
+ */
+export function LibraryFiltersCollapseToggle({
+  collapsed,
+  onToggle,
+  controlsId,
+  t = (key) => key,
+}) {
+  return (
+    <button
+      type="button"
+      className="library-filters-collapse"
+      aria-expanded={!collapsed}
+      aria-controls={controlsId}
+      title={collapsed ? t('Show filters') : t('Hide filters')}
+      onClick={onToggle}
+    >
+      <CollapseChevron collapsed={collapsed} />
+      <span className="visually-hidden">
+        {collapsed ? t('Show filters') : t('Hide filters')}
+      </span>
+    </button>
+  )
+}
+
 export function FilterBar({
   filters,
   onApply,
@@ -77,7 +130,6 @@ export function FilterBar({
   const [draft, setDraft] = useState(filters)
   const [options, setOptions] = useState(EMPTY_OPTIONS)
   const [loadError, setLoadError] = useState(false)
-  const [filtersVisible, setFiltersVisible] = useState(readFiltersVisible)
   const searchTimerRef = useRef(null)
   const draftRef = useRef(draft)
   draftRef.current = draft
@@ -164,14 +216,6 @@ export function FilterBar({
     onApply(next)
   }
 
-  const toggleVisibility = () => {
-    setFiltersVisible((current) => {
-      const next = !current
-      writeFiltersVisible(next)
-      return next
-    })
-  }
-
   const selects = SELECTS.map(([name, label, emptyLabel, source, valueField, textField]) => [
     name,
     t(label),
@@ -197,149 +241,138 @@ export function FilterBar({
             onChange={onSearchChange}
           />
         </label>
-        <button
-          type="button"
-          className="gt-btn gt-btn--secondary library-filters__visibility"
-          aria-expanded={filtersVisible}
-          aria-controls="library-filters-body"
-          onClick={toggleVisibility}
-        >
-          {filtersVisible ? t('Hide filters') : t('Show filters')}
-        </button>
       </div>
 
-      {filtersVisible ? (
-        <div id="library-filters-body" className="library-filters__body">
-          {loadError && <p role="alert">{t('Unable to load filter options.')}</p>}
-          {selects.map(([name, label, emptyLabel, source, valueField, textField]) => (
-            <label key={name}>
-              {label}
-              <select
-                className="form-control"
-                name={name}
-                value={draft[name] ?? ''}
-                onChange={update}
-              >
-                <option value="">{emptyLabel}</option>
-                {options[source].map((option) => (
-                  <option
-                    key={option.id ?? option[valueField]}
-                    value={option[valueField]}
-                  >
-                    {option[textField]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ))}
-          <label>
-            {t('Companion')}
+      <div id="library-filters-body" className="library-filters__body">
+        {loadError && <p role="alert">{t('Unable to load filter options.')}</p>}
+        {selects.map(([name, label, emptyLabel, source, valueField, textField]) => (
+          <label key={name}>
+            {label}
             <select
               className="form-control"
-              name="installed_only"
-              value={draft.installed_only ?? ''}
+              name={name}
+              value={draft[name] ?? ''}
               onChange={update}
             >
-              <option value="">{t('All games')}</option>
-              <option value="1">{t('Companion installed')}</option>
+              <option value="">{emptyLabel}</option>
+              {options[source].map((option) => (
+                <option
+                  key={option.id ?? option[valueField]}
+                  value={option[valueField]}
+                >
+                  {option[textField]}
+                </option>
+              ))}
             </select>
           </label>
-          <label>
-            {t('Rating')}
-            <input
-              type="range"
-              className="form-control-range rating-slider"
-              name="rating"
-              min="0"
-              max="100"
-              value={draft.rating ?? '0'}
-              onChange={update}
-            />
-            <span>{draft.rating ?? '0'}</span>
-          </label>
-          <label>
-            {t('Sort by')}
-            <select
-              className="form-control"
-              name="sort_by"
-              value={draft.sort_by ?? 'name'}
-              onChange={update}
-            >
-              <option value="name">{t('Name')}</option>
-              <option value="rating">{t('Rating')}</option>
-              <option value="first_release_date">{t('Date Released')}</option>
-              <option value="date_identified">{t('Date Added')}</option>
-              <option value="size">{t('Filesize')}</option>
-            </select>
-          </label>
-          <label>
-            {t('Sort order')}
-            <select
-              className="form-control"
-              name="sort_order"
-              value={draft.sort_order ?? 'asc'}
-              onChange={update}
-            >
-              <option value="asc">{t('Ascending')}</option>
-              <option value="desc">{t('Descending')}</option>
-            </select>
-          </label>
+        ))}
+        <label>
+          {t('Companion')}
+          <select
+            className="form-control"
+            name="installed_only"
+            value={draft.installed_only ?? ''}
+            onChange={update}
+          >
+            <option value="">{t('All games')}</option>
+            <option value="1">{t('Companion installed')}</option>
+          </select>
+        </label>
+        <label>
+          {t('Rating')}
+          <input
+            type="range"
+            className="form-control-range rating-slider"
+            name="rating"
+            min="0"
+            max="100"
+            value={draft.rating ?? '0'}
+            onChange={update}
+          />
+          <span>{draft.rating ?? '0'}</span>
+        </label>
+        <label>
+          {t('Sort by')}
+          <select
+            className="form-control"
+            name="sort_by"
+            value={draft.sort_by ?? 'name'}
+            onChange={update}
+          >
+            <option value="name">{t('Name')}</option>
+            <option value="rating">{t('Rating')}</option>
+            <option value="first_release_date">{t('Date Released')}</option>
+            <option value="date_identified">{t('Date Added')}</option>
+            <option value="size">{t('Filesize')}</option>
+          </select>
+        </label>
+        <label>
+          {t('Sort order')}
+          <select
+            className="form-control"
+            name="sort_order"
+            value={draft.sort_order ?? 'asc'}
+            onChange={update}
+          >
+            <option value="asc">{t('Ascending')}</option>
+            <option value="desc">{t('Descending')}</option>
+          </select>
+        </label>
 
-          <fieldset className="library-filters__signals">
-            <legend>{t('Kind')}</legend>
-            <div className="gt-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
-              {ITEM_KIND_FILTER_CHIPS.map((chip) => {
-                const active = parseItemKindFilter(
-                  filters.item_kind ?? draft.item_kind,
-                ).includes(chip.kind)
-                return (
-                  <button
-                    key={chip.kind}
-                    type="button"
-                    className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
-                    aria-pressed={active}
-                    title={t(chip.title)}
-                    onClick={() =>
-                      toggleItemKindFilter(filters, chip.kind, applyBadgeToggle, cleanFilters)
-                    }
-                  >
-                    {t(chip.label)}
-                  </button>
-                )
-              })}
-            </div>
-          </fieldset>
-          <fieldset className="library-filters__signals">
-            <legend>{t('Signals')}</legend>
-            <div className="gt-badge-filter-chips" role="group" aria-label={t('Badge filters')}>
-              {BADGE_FILTER_CHIPS.map((chip) => {
-                const active = (filters[chip.param] ?? draft[chip.param]) === '1'
-                return (
-                  <button
-                    key={chip.param}
-                    type="button"
-                    className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
-                    aria-pressed={active}
-                    title={t(chip.title)}
-                    onClick={() =>
-                      toggleBadgeFilter(filters, chip.param, applyBadgeToggle, cleanFilters)
-                    }
-                  >
-                    {t(chip.label)}
-                  </button>
-                )
-              })}
-            </div>
-          </fieldset>
-
-          <div className="button-group">
-            <button className="gt-btn gt-btn--primary" type="submit">{t('Apply')}</button>
-            <button className="gt-btn gt-btn--secondary" type="button" onClick={clear}>
-              {t('Clear')}
-            </button>
+        <fieldset className="library-filters__signals">
+          <legend>{t('Kind')}</legend>
+          <div className="gt-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
+            {ITEM_KIND_FILTER_CHIPS.map((chip) => {
+              const active = parseItemKindFilter(
+                filters.item_kind ?? draft.item_kind,
+              ).includes(chip.kind)
+              return (
+                <button
+                  key={chip.kind}
+                  type="button"
+                  className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
+                  aria-pressed={active}
+                  title={t(chip.title)}
+                  onClick={() =>
+                    toggleItemKindFilter(filters, chip.kind, applyBadgeToggle, cleanFilters)
+                  }
+                >
+                  {t(chip.label)}
+                </button>
+              )
+            })}
           </div>
+        </fieldset>
+        <fieldset className="library-filters__signals">
+          <legend>{t('Signals')}</legend>
+          <div className="gt-badge-filter-chips" role="group" aria-label={t('Badge filters')}>
+            {BADGE_FILTER_CHIPS.map((chip) => {
+              const active = (filters[chip.param] ?? draft[chip.param]) === '1'
+              return (
+                <button
+                  key={chip.param}
+                  type="button"
+                  className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
+                  aria-pressed={active}
+                  title={t(chip.title)}
+                  onClick={() =>
+                    toggleBadgeFilter(filters, chip.param, applyBadgeToggle, cleanFilters)
+                  }
+                >
+                  {t(chip.label)}
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
+
+        <div className="button-group">
+          <button className="gt-btn gt-btn--primary" type="submit">{t('Apply')}</button>
+          <button className="gt-btn gt-btn--secondary" type="button" onClick={clear}>
+            {t('Clear')}
+          </button>
         </div>
-      ) : null}
+      </div>
     </form>
   )
 }

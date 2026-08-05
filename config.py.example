@@ -5,9 +5,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/gametheca')
     
     # Host path to on-disk game files (Compose mounts to /storage in the container)
-    DATA_FOLDER_GAMES = os.getenv('DATA_FOLDER_GAMES') or os.getenv('DATA_FOLDER_WAREZ', 'Z:\gamez')
-    # Deprecated alias — prefer DATA_FOLDER_GAMES in new .env files
-    DATA_FOLDER_WAREZ = DATA_FOLDER_GAMES
+    DATA_FOLDER_GAMES = os.getenv('DATA_FOLDER_GAMES', 'Z:\gamez')
     
     # OS-specific base folder paths
     if os.name == 'nt':  # Windows

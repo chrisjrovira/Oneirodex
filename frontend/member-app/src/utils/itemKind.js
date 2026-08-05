@@ -10,7 +10,7 @@ export const ITEM_KIND_BADGE = Object.freeze({
   experience: {
     kind: 'EXP',
     label: 'EXP',
-    title: 'Experience — gaming software, not a main-game catalog match',
+    title: 'Soft title — gaming software, not a main-game catalog match',
     tone: 'kind',
   },
   emulator: {
@@ -22,17 +22,25 @@ export const ITEM_KIND_BADGE = Object.freeze({
   tool: {
     kind: 'TOOL',
     label: 'TOOL',
-    title: 'Tool — gaming software, not a main-game catalog match',
+    title: 'Utility — gaming software, not a main-game catalog match',
     tone: 'kind',
   },
 })
 
-/** Human labels for details chips / toasts. */
+/** Human labels for details chips / toasts (API tokens unchanged). */
 export const ITEM_KIND_LABEL = Object.freeze({
   game: 'Game',
-  experience: 'Experience',
+  experience: 'Soft title',
   emulator: 'Emulator',
-  tool: 'Tool',
+  tool: 'Utility',
+})
+
+/** Plural chip labels for Kind filter row. */
+export const ITEM_KIND_LABEL_PLURAL = Object.freeze({
+  game: 'Games',
+  experience: 'Soft titles',
+  emulator: 'Emulators',
+  tool: 'Utilities',
 })
 
 /**

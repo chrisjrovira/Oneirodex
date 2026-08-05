@@ -102,21 +102,24 @@ def test_discover_pc_sidecar_dlc(tmp_path):
 
 
 def test_list_duplicates_and_fix(client, app, db_session, admin, lib):
+    identified = datetime(2024, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
     game = Game(
         uuid=str(uuid4()),
         name='Same Title',
         library_uuid=lib.uuid,
         full_disk_path='/games/Same Title',
-        size=10,
+        size=1048576,
+        date_identified=identified,
     )
     db_session.add(game)
     db_session.flush()
 
+    failed = datetime(2025, 2, 1, 9, 0, 0, tzinfo=timezone.utc)
     folder = UnmatchedFolder(
         id=str(uuid4()),
         library_uuid=lib.uuid,
         folder_path='/games/Same Title (copy)',
-        failed_time=datetime.now(timezone.utc),
+        failed_time=failed,
         content_type='Games',
         status='Duplicate',
         matched_game_uuid=game.uuid,
@@ -137,6 +140,19 @@ def test_list_duplicates_and_fix(client, app, db_session, admin, lib):
     assert len(row['titles']) >= 2
     assert row['candidates'][0]['uuid'] == game.uuid
     assert row['candidates'][0]['path'] == '/games/Same Title'
+    # UID-016 disk meta on duplicate payload + candidate
+    assert 'size_bytes' in row and row['size_bytes'] is None
+    assert row['folder_mtime'] == failed.replace(tzinfo=None).isoformat()
+    assert row['failed_time'] == failed.replace(tzinfo=None).isoformat()
+    cand = row['candidates'][0]
+    assert cand['size_bytes'] == 1048576
+    assert cand['date_identified'] == identified.replace(tzinfo=None).isoformat()
+    assert cand['folder_mtime'] == identified.replace(tzinfo=None).isoformat()
+    assert cand['mtime'] == identified.replace(tzinfo=None).isoformat()
+    assert row['matched_game']['size_bytes'] == 1048576
+    assert row['matched_game']['date_identified'] == identified.replace(tzinfo=None).isoformat()
+    assert row['titles'][0]['folder_mtime'] == failed.replace(tzinfo=None).isoformat()
+    assert row['titles'][1]['size_bytes'] == 1048576
 
     fixed = client.post(
         f'/api/unmatched_folders/{folder.id}/fix',

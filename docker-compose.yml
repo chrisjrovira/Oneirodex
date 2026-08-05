@@ -6,7 +6,7 @@
 # Do NOT conflate these two mounts.
 #
 #   GAMES (scan root only — never uploads)
-#     Host:    DATA_FOLDER_GAMES  (alias: DATA_FOLDER_WAREZ, deprecated)
+#     Host:    DATA_FOLDER_GAMES
 #     Mount:   → /storage:ro
 #     App env: DATA_FOLDER_GAMES=/storage  (container path; hard-set below)
 #
@@ -109,7 +109,7 @@ services:
     # ----- UNRAID VOLUMES (see header) -----
     volumes:
       # Games: host DATA_FOLDER_GAMES → scan root only (RO). Never put uploads here.
-      - "${DATA_FOLDER_GAMES:-${DATA_FOLDER_WAREZ}}:/storage:ro"
+      - "${DATA_FOLDER_GAMES}:/storage:ro"
       # Library/uploads: host LIBRARY_HOST_PATH → covers, themes, uploads (RW)
       - "${LIBRARY_HOST_PATH:-./data/library}:/app/gametheca/static/library"
       # Optional WebRetro cores bind-mount (PCE/VICE/DOS). Host dir must include
@@ -231,6 +231,45 @@ services:
       start_period: 90s
 
   # ---------------------------------------------------------------------------
+  # profile: artwork — OPTIONAL generated cover art (FEAT-D3)
+  #
+  # Not started unless you ask for it:  docker compose --profile artwork up -d
+  # Then set in .env:  ENABLE_AI_ARTWORK=true
+  #                    AI_ARTWORK_URL=http://sdnext:7860
+  #
+  # SD.Next speaks the same /sdapi/v1/txt2img API as AUTOMATIC1111 and Forge, so
+  # AI_ARTWORK_ENGINE=a1111 covers all three. Nothing leaves your network.
+  #
+  # NOTE: image generation wants a GPU. Without one it will run on CPU and be
+  # extremely slow rather than fail — uncomment the `deploy` block for NVIDIA.
+  # ---------------------------------------------------------------------------
+  sdnext:
+    profiles: ['artwork']
+    image: ${SDNEXT_IMAGE:-saladtechnologies/sdnext:latest}
+    container_name: gametheca-sdnext
+    restart: unless-stopped
+    environment:
+      - SD_NOHASHING=true
+    volumes:
+      - sdnext_models:/app/models
+      - sdnext_outputs:/app/outputs
+    ports:
+      - "${SDNEXT_HOST_PORT:-7860}:7860"
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    healthcheck:
+      test: ['CMD', 'curl', '-sf', 'http://localhost:7860/sdapi/v1/sd-models']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+
+  # ---------------------------------------------------------------------------
   # profile: observability — OPTIONAL stub (not enabled; no images required)
   # Prometheus/Grafana are NOT bundled for 1.0. Prefer Admin → Ops + /healthz
   # + /readyz. When you add scrape later, uncomment and wire your own config —
@@ -266,4 +305,8 @@ volumes:
   challenge_redis_data:
     driver: local
   trawl_proxy_ca:
+    driver: local
+  sdnext_models:
+    driver: local
+  sdnext_outputs:
     driver: local

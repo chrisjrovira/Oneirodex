@@ -1,11 +1,11 @@
 /** Kind chip toggles for library browse (maps to /browse_games item_kind). */
 
-import { ITEM_KINDS, ITEM_KIND_LABEL } from '../utils/itemKind'
+import { ITEM_KINDS, ITEM_KIND_LABEL, ITEM_KIND_LABEL_PLURAL } from '../utils/itemKind'
 
 /** Chips shown in the Library Kind filter row. */
 export const ITEM_KIND_FILTER_CHIPS = ITEM_KINDS.map((kind) => ({
   kind,
-  label: `${ITEM_KIND_LABEL[kind]}s`,
+  label: ITEM_KIND_LABEL_PLURAL[kind],
   title: ITEM_KIND_LABEL[kind],
 }))
 
@@ -14,11 +14,18 @@ const KIND_ALIASES = Object.freeze({
   games: 'game',
   experience: 'experience',
   experiences: 'experience',
+  'soft title': 'experience',
+  soft_title: 'experience',
+  'soft-title': 'experience',
+  softtitles: 'experience',
+  'soft titles': 'experience',
   emulator: 'emulator',
   emulators: 'emulator',
   emu: 'emulator',
   tool: 'tool',
   tools: 'tool',
+  utility: 'tool',
+  utilities: 'tool',
 })
 
 /**

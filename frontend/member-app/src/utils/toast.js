@@ -20,16 +20,40 @@ export function showToast(message, tone = 'info') {
   const el = document.createElement('div')
   const safeTone = ['info', 'success', 'error', 'warn'].includes(tone) ? tone : 'info'
   el.className = `gt-toast gt-toast--${safeTone}`
-  el.textContent = String(message)
-  host.appendChild(el)
 
-  window.setTimeout(() => {
+  // textContent, not innerHTML — toast bodies carry server strings and game
+  // titles, which must never be parsed as markup.
+  const text = document.createElement('span')
+  text.className = 'gt-toast__text'
+  text.textContent = String(message)
+  el.appendChild(text)
+
+  let removeTimer = 0
+  let outTimer = 0
+
+  const remove = () => {
+    window.clearTimeout(removeTimer)
+    window.clearTimeout(outTimer)
     el.classList.add('gt-toast--out')
-    window.setTimeout(() => {
+    outTimer = window.setTimeout(() => {
       el.remove()
       if (host && !host.childElementCount) {
         host.remove()
       }
     }, 220)
-  }, 3200)
+  }
+
+  // Dismissible: errors in particular should not force a wait to read and clear.
+  const close = document.createElement('button')
+  close.type = 'button'
+  close.className = 'gt-toast__close'
+  close.setAttribute('aria-label', 'Dismiss notification')
+  close.textContent = '×'
+  close.addEventListener('click', remove)
+  el.appendChild(close)
+
+  host.appendChild(el)
+
+  removeTimer = window.setTimeout(remove, 3200)
+  return remove
 }

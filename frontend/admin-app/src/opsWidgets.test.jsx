@@ -1,5 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import {
+  booleanTone,
+  healthTone,
+  usageTone,
   formatLibraryHealthHint,
   formatLibraryHealthScore,
   formatLibraryHealthValue,
@@ -9,6 +12,7 @@ import {
   LibraryHealthFactors,
   libraryHealthFactorsGradeClass,
   libraryHealthTone,
+  MetricStrip,
   MetricTile,
   normalizeLibraryHealth,
   partitionIssues,
@@ -281,8 +285,87 @@ describe('partitionIssues + banner', () => {
   })
 
   test('severityLabel wording', () => {
-    expect(severityLabel('bad')).toBe('Action required')
-    expect(severityLabel('warn')).toBe('Warning / Info')
+    expect(severityLabel('bad')).toBe('Needs attention')
+    expect(severityLabel('warn')).toBe('Degraded')
     expect(severityLabel('good')).toBe('All systems healthy')
+  })
+
+  // GT-C1 (UID-013): the banner headline must never repeat a fold title, or the
+  // Dashboard shows the same words twice in a row.
+  test('banner headline never collides with a fold title', () => {
+    const foldTitles = ['Action required', 'Warning / Info']
+    for (const severity of ['bad', 'warn', 'good']) {
+      expect(foldTitles).not.toContain(severityLabel(severity))
+    }
+  })
+})
+
+// GT-C2 (UID-014): shared metric chrome for pages other than Dashboard/Ops.
+describe('MetricStrip', () => {
+  test('renders tiles with tone classes', () => {
+    const { container } = render(
+      <MetricStrip
+        label="Roster"
+        items={[
+          { id: 'a', label: 'Accounts', value: 4, hint: 'in household', tone: 'info' },
+          { id: 'b', label: 'Inactive', value: 2, tone: 'warning' },
+        ]}
+      />,
+    )
+    expect(screen.getByLabelText('Roster')).toBeInTheDocument()
+    expect(screen.getByText('Accounts')).toBeInTheDocument()
+    expect(container.querySelector('.gt-ops-metric--info')).toBeTruthy()
+    expect(container.querySelector('.gt-ops-metric--warning')).toBeTruthy()
+  })
+
+  test('skips entries with no value so pages need no branching', () => {
+    render(
+      <MetricStrip
+        items={[
+          { id: 'a', label: 'Present', value: 0 },
+          { id: 'b', label: 'Absent', value: undefined },
+        ]}
+      />,
+    )
+    expect(screen.getByText('Present')).toBeInTheDocument()
+    expect(screen.queryByText('Absent')).not.toBeInTheDocument()
+  })
+
+  test('renders nothing rather than an empty strip', () => {
+    const { container } = render(<MetricStrip items={[]} />)
+    expect(container.querySelector('.gt-ops-strip')).toBeNull()
+  })
+})
+
+describe('metric tone helpers (UX-C12)', () => {
+  test('usageTone escalates as a "higher is worse" metric climbs', () => {
+    expect(usageTone(10)).toBe('good')
+    expect(usageTone(90)).toBe('fair')
+    expect(usageTone(99)).toBe('poor')
+  })
+
+  test('usageTone takes custom thresholds for non-percentage metrics', () => {
+    // DB ping in ms: 40ms is fine, 300ms is not.
+    expect(usageTone(40, { warn: 50, bad: 250 })).toBe('good')
+    expect(usageTone(300, { warn: 50, bad: 250 })).toBe('poor')
+  })
+
+  test('healthTone escalates as a "higher is better" metric falls', () => {
+    expect(healthTone(90)).toBe('good')
+    expect(healthTone(40)).toBe('fair')
+    expect(healthTone(5)).toBe('poor')
+  })
+
+  test('unknown values are na, never a reassuring green', () => {
+    expect(usageTone(null)).toBe('na')
+    expect(usageTone(undefined)).toBe('na')
+    expect(usageTone('nonsense')).toBe('na')
+    expect(healthTone(null)).toBe('na')
+    expect(booleanTone(null)).toBe('na')
+  })
+
+  test('booleanTone maps a plain up/down signal', () => {
+    expect(booleanTone(true)).toBe('good')
+    expect(booleanTone(false)).toBe('poor')
   })
 })

@@ -14,12 +14,14 @@ function unhighlight(e) {
     document.getElementById('upload-area').classList.remove('highlight');
 }
 
+const OTHER_IMAGE_KINDS = ['box', 'cart', 'disc', 'logo', 'hero', 'fanart'];
+
 function uploadFile(file, gameUuid, csrfToken, imageType = 'screenshot') {
     console.log('Uploading file:', file.name);
     let url = `/upload_image/${gameUuid}`;
     let formData = new FormData();
     formData.append('file', file);
-    
+
     // Show spinner if this is a cover image upload
     if (imageType === 'cover') {
         document.getElementById('coverSpinner').style.display = 'block';
@@ -46,6 +48,8 @@ function uploadFile(file, gameUuid, csrfToken, imageType = 'screenshot') {
             if (imageType === 'cover') {
                 displayCoverImage(data);
                 document.getElementById('coverSpinner').style.display = 'none';
+            } else if (OTHER_IMAGE_KINDS.includes(imageType)) {
+                displayOtherImage(data);
             } else {
                 displayImage(data);
             }
@@ -105,6 +109,26 @@ function displayImage(data) {
     newImgDiv.className = 'image-editor-image'; // Add this line to set the class
 
     newImgDiv.innerHTML = `<button class="btn btn-danger" onclick="deleteImage(${data.image_id})">Delete</button><img src="${data.url}" alt="Image" class="image-editor-image" style="max-width: 300px; max-height: 300px;">`;
+    imageList.appendChild(newImgDiv);
+}
+
+const SINGULAR_OTHER_KINDS = ['box', 'cart', 'disc', 'logo', 'hero'];
+
+function displayOtherImage(data) {
+    let imageList = document.getElementById('other-image-list');
+    if (!imageList) return;
+
+    if (SINGULAR_OTHER_KINDS.includes(data.image_type)) {
+        imageList.querySelectorAll(`[data-kind="${data.image_type}"]`).forEach((el) => el.remove());
+    }
+
+    let newImgDiv = document.createElement('div');
+    newImgDiv.id = `image-${data.image_id}`;
+    newImgDiv.className = 'image-editor-image';
+    newImgDiv.setAttribute('data-kind', data.image_type);
+
+    const label = data.image_type.charAt(0).toUpperCase() + data.image_type.slice(1);
+    newImgDiv.innerHTML = `<span class="gt-edit-images__label">${label}</span><button class="btn btn-danger" onclick="deleteImage(${data.image_id})">Delete</button><img src="${data.url}" alt="${label}" style="max-width: 300px; max-height: 300px;">`;
     imageList.appendChild(newImgDiv);
 }
 
@@ -194,6 +218,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (file) {
             uploadFile(file, gameUuid, csrfToken, 'cover');
+        }
+    });
+
+    const otherImageInput = document.getElementById('other-image-input');
+    const otherImageKind = document.getElementById('other-image-kind');
+    otherImageInput?.addEventListener('change', function(e) {
+        let file = e.target.files[0];
+        let csrfToken = CSRFUtils.getToken();
+        let kind = (otherImageKind?.value || 'box');
+
+        if (file) {
+            uploadFile(file, gameUuid, csrfToken, kind);
+            otherImageInput.value = '';
         }
     });
 

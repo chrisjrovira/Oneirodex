@@ -20,11 +20,18 @@ from gametheca.utils.functions import (
 )
 from gametheca.utils.igdb_api import make_igdb_api_request
 from gametheca.utils.gamenames import generate_goty_variants
+from gametheca.utils.fandom_alias import (
+    fandom_match_reason,
+    fandom_suggested_kind,
+    is_fandom_soft_propose,
+)
 from gametheca.utils.match_scoring import select_best_match, rank_candidates
 from gametheca.utils.match_proposal import build_match_proposal, write_match_proposal
-from gametheca.utils.game_name_parse import parse_game_label
+from gametheca.utils.game_name_parse import parse_game_label, detect_update_packaging
+from gametheca.utils.image_kinds import IGDB_DOWNLOAD_KINDS
 from gametheca.utils.rom_name_peel import (
     parse_console_rom_label,
+    should_arcade_propose_first,
     should_use_console_rom_peel,
 )
 from gametheca.utils.scan_match_settings import resolve_scan_match_policy
@@ -85,12 +92,37 @@ def handle_existing_igdb_collision(
     candidates=None,
     steam_title=None,
     match_policy=None,
+    peel=None,
 ):
     """
     Same IGDB ID already in library. Mark Duplicate only for true title/path
     copies; otherwise Unmatched + proposal so remasters/collections can be reviewed.
-    Returns None (caller should abort import).
+
+    BE-DET-5: when both sides are clear multi-disc siblings (same cleaned title,
+    different disc index), attach the new path as a disc GameExtra and return
+    the existing Game (no second Game, no Duplicate trail).
+
+    Returns existing Game on multi-disc attach; None when caller should abort import.
     """
+    # BE-DET-5 — clear multi-disc sibling → one Game + disc index (not N Games).
+    try:
+        from gametheca.utils.multi_disc import try_attach_multi_disc_sibling
+
+        if try_attach_multi_disc_sibling(
+            existing_game=existing_game,
+            full_disk_path=full_disk_path,
+            game_name=game_name,
+            peel=peel,
+        ):
+            print(
+                f"📀 [MULTI-DISC] Attached disc sibling for IGDB ID {igdb_id}: "
+                f"'{game_name}' → existing '{existing_game.name}' "
+                f"({existing_game.full_disk_path})"
+            )
+            return existing_game
+    except Exception as multi_err:  # noqa: BLE001
+        print(f"⚠️ Multi-disc attach skipped for {full_disk_path}: {multi_err}")
+
     policy = match_policy if isinstance(match_policy, dict) else resolve_scan_match_policy()
     dupe_thr = policy.get('dupe_title_threshold')
     if should_mark_as_duplicate(
@@ -232,23 +264,15 @@ def enrich_game_with_steam(game, lookup_name=None):
         print("Steam enrichment skipped (no_name); Steam VR: no")
         return result
 
-    if game_indicates_vr(game):
-        result = {
-            'applied': False,
-            'is_vr': True,
-            'perspectives_added': [],
-            'genres_added': [],
-            'game_modes_added': [],
-            'reason': 'already_vr',
-        }
-        print(f"Steam enrichment for '{name}': skipped (already_vr); Steam VR: yes")
-        return result
+    # A game already flagged VR used to short-circuit here, which also skipped the
+    # summary/genre/mode backfill — VR detection is only one part of this pass.
+    already_vr = game_indicates_vr(game)
 
     steam_data = fetch_steam_data(name)
     if not steam_data:
         result = {
             'applied': False,
-            'is_vr': False,
+            'is_vr': already_vr,
             'perspectives_added': [],
             'genres_added': [],
             'game_modes_added': [],
@@ -305,6 +329,26 @@ def enrich_game_with_steam(game, lookup_name=None):
     genres_added = new_genres if applied_ok else []
     modes_added = new_modes if applied_ok else []
     reason = None if applied_ok else 'enrichment_savepoint_rollback'
+
+    # Scalar store fields the relation-oriented enrichment above does not cover:
+    # developer, publisher, release date and App ID were previously dropped, so
+    # even a successfully enriched game showed blank credits.
+    if applied_ok:
+        try:
+            from gametheca.utils.steam_metadata import (
+                apply_steam_metadata_to_game,
+                parse_steam_release_date,
+            )
+
+            apply_steam_metadata_to_game(game, {
+                'developer': steam_data.get('developer'),
+                'publisher': steam_data.get('publisher'),
+                'first_release_date': parse_steam_release_date(steam_data.get('release_date')),
+                'cover_url': steam_data.get('cover_url'),
+                'steam_app_id': steam_data.get('steam_app_id'),
+            })
+        except Exception as scalar_err:  # noqa: BLE001
+            print(f"Steam scalar backfill skipped for '{name}': {scalar_err}")
 
     result = {
         'applied': applied_ok,
@@ -413,7 +457,14 @@ def ensure_manual_identify_taxonomy(game, igdb_id):
 
 
 
-def create_game_instance(game_data, full_disk_path, folder_size_bytes, library_uuid):
+def create_game_instance(
+    game_data,
+    full_disk_path,
+    folder_size_bytes,
+    library_uuid,
+    *,
+    peel: dict | None = None,
+):
     global settings
     settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
     new_game = None  # Initialize new_game to None
@@ -479,9 +530,23 @@ def create_game_instance(game_data, full_disk_path, folder_size_bytes, library_u
         try:
             from gametheca.utils.rom_language import apply_rom_language_fields
 
-            apply_rom_language_fields(new_game, full_disk_path or new_game.name)
+            apply_rom_language_fields(
+                new_game,
+                full_disk_path or new_game.name,
+                peel=peel,
+            )
         except Exception as lang_err:  # noqa: BLE001
             print(f"create_game_instance ROM language parse skipped: {lang_err}")
+        try:
+            from gametheca.utils.multi_disc import apply_disc_fields
+
+            apply_disc_fields(
+                new_game,
+                full_disk_path or new_game.name,
+                peel=peel,
+            )
+        except Exception as disc_err:  # noqa: BLE001
+            print(f"create_game_instance disc index parse skipped: {disc_err}")
         fetch_and_store_game_urls(new_game.uuid, game_data['id'])
         print(f"create_game_instance Finished processing game '{new_game.name}'. URLs (if any) have been fetched and stored.")
         
@@ -593,7 +658,7 @@ def store_image_url_for_download(game_uuid, image_data, image_type='cover'):
     """
     try:
         image_id, known_url = normalize_igdb_image_ref(image_data)
-        if image_type not in ('cover', 'screenshot'):
+        if image_type not in IGDB_DOWNLOAD_KINDS:
             print(f"Unsupported image_type for store: {image_type}")
             return
 
@@ -864,7 +929,7 @@ def process_and_save_image(game_uuid, image_data, image_type='cover'):
     from gametheca.utils.cover_selection import image_save_path_status
 
     image_id, known_url = normalize_igdb_image_ref(image_data)
-    if image_type not in ('cover', 'screenshot'):
+    if image_type not in IGDB_DOWNLOAD_KINDS:
         print(f"Unsupported image_type: {image_type}")
         return
 
@@ -1079,6 +1144,7 @@ def retrieve_and_save_game(
                         library_uuid=library_uuid,
                         candidates=response_json,
                         match_policy=match_policy,
+                        peel=None,
                     )
 
                 # Create game from IGDB data (continue with existing logic at line 472)
@@ -1184,6 +1250,66 @@ def retrieve_and_save_game(
             raw_folder_label,
             peel_profile=match_policy.get('peel_profile'),
         )
+
+    # W22-M5 — bare UPDATE/Updates package folders: never auto-import, never Soft title.
+    update_meta = {
+        'is_bare_update_package': bool(parsed_label.get('is_bare_update_package')),
+        'update_folder_hint': bool(parsed_label.get('update_folder_hint')),
+        'match_reason': parsed_label.get('update_match_reason'),
+    }
+    if not use_console_rom_peel and not update_meta['match_reason']:
+        update_meta = detect_update_packaging(
+            raw_folder_label,
+            cleaned_name=parsed_label.get('cleaned_name'),
+            transforms=parsed_label.get('transforms'),
+        )
+    if update_meta.get('is_bare_update_package'):
+        print(
+            f"📦 [UPDATE-PACKAGE] Folder '{raw_folder_label}' looks like an update/"
+            "patch package — propose/Unmatched only (never auto-import / Soft title)."
+        )
+        try:
+            proposal = {
+                'proposal': {
+                    'cleaned_name': (parsed_label.get('cleaned_name') or '').strip(),
+                    'transforms': list(parsed_label.get('transforms') or []),
+                    'candidates': [],
+                    'confidence': 'none',
+                    'suggested_kind': None,
+                    'update_folder_hint': True,
+                    'is_bare_update_package': True,
+                    'match_reason': 'update_package_folder',
+                    'proposed_at': datetime.now(UTC).isoformat(),
+                }
+            }
+            if write_match_proposal(full_disk_path, proposal):
+                print(
+                    f"📝 [UPDATE-PACKAGE] Wrote update-package proposal for "
+                    f"'{raw_folder_label}'"
+                )
+            try:
+                from gametheca.utils.match_proposal import sync_unmatched_kind_hint
+
+                sync_unmatched_kind_hint(full_disk_path, proposal)
+            except Exception:
+                pass
+        except Exception as proposal_err:
+            print(
+                f"⚠️ Failed to write update-package proposal for "
+                f"{full_disk_path}: {proposal_err}"
+            )
+        if scan_job_id:
+            log_unmatched_folder(
+                scan_job_id,
+                full_disk_path,
+                'Unmatched',
+                library_uuid=library.uuid,
+                match_reason='update_package_folder',
+                suggested_kind=None,
+                suggested_candidate_name=None,
+            )
+        return None
+
     steam_title = None
     if parsed_label.get('steam_app_id'):
         steam_title = fetch_steam_title_by_app_id(parsed_label['steam_app_id'])
@@ -1193,10 +1319,19 @@ def retrieve_and_save_game(
     # Prefer parse_game_label Stage A0–A14 (PC/folder) or console B15–B20 peel for
     # files-mode ROM leaves. Fall back to scan-cleaned name. C11 bare franchise /
     # ROM propose-only (proto/hack/unl/multicart) → propose only (no auto-import).
+    # BE-DET-8: ARCADE set basenames + large ARCADE trees → propose-first.
+    # BE-DET-9: fandom soft alias / series / remaster / EN↔JP → propose-first.
     variant_base = (parsed_label.get('cleaned_name') or '').strip() or game_name
     bare_franchise = bool(parsed_label.get('bare_franchise'))
+    arcade_propose_first = should_arcade_propose_first(
+        library, full_disk_path, parsed_label,
+    )
+    fandom_soft_propose = is_fandom_soft_propose(variant_base)
     rom_propose_only = bool(
-        parsed_label.get('propose_only') or parsed_label.get('is_multicart')
+        parsed_label.get('propose_only')
+        or parsed_label.get('is_multicart')
+        or arcade_propose_first
+        or fandom_soft_propose
     )
     if rom_propose_only:
         bare_franchise = True
@@ -1218,8 +1353,17 @@ def retrieve_and_save_game(
         reason_bits = []
         if parsed_label.get('is_multicart'):
             reason_bits.append('multicart')
-        if parsed_label.get('propose_only') and not parsed_label.get('is_multicart'):
+        if arcade_propose_first:
+            if parsed_label.get('is_arcade_set'):
+                reason_bits.append('ARCADE set propose-first')
+            else:
+                reason_bits.append('large ARCADE propose-first')
+        elif parsed_label.get('propose_only') and not parsed_label.get('is_multicart'):
             reason_bits.append('ROM propose-only')
+        if fandom_soft_propose:
+            reason_bits.append(
+                fandom_match_reason(variant_base) or 'fandom soft alias'
+            )
         if parsed_label.get('bare_franchise'):
             reason_bits.append('bare franchise (C11)')
         detail = ', '.join(reason_bits) if reason_bits else 'propose/manual only'
@@ -1272,14 +1416,16 @@ def retrieve_and_save_game(
         last_low_confidence_search = search_name
         print(f"Low-confidence / ambiguous results for '{search_name}' — not auto-importing")
 
-    # PROPOSE-ONLY MODE / C11 bare franchise: never auto-import.
-    # Write the proposal sidecar for admin review and stop short of creating a Game.
+    # PROPOSE-ONLY MODE / C11 bare franchise / BE-DET-9 fandom soft:
+    # never auto-import. Write the proposal sidecar for admin review and stop
+    # short of creating a Game. Soft alias never invents IGDB IDs alone.
     if selected_game is not None and (is_propose_only_scan(settings) or bare_franchise):
-        reason = (
-            "bare franchise (C11)"
-            if bare_franchise
-            else "propose_only_scan is enabled"
-        )
+        if fandom_soft_propose:
+            reason = fandom_match_reason(variant_base) or 'fandom soft alias'
+        elif bare_franchise and not is_propose_only_scan(settings):
+            reason = "bare franchise (C11) / propose-first"
+        else:
+            reason = "propose_only_scan is enabled"
         print(
             f"🧪 [PROPOSE-ONLY] High-confidence match found for '{game_name}' "
             f"(→ {selected_game.get('name')}) but {reason} — "
@@ -1291,7 +1437,14 @@ def retrieve_and_save_game(
                 high_confidence_candidates or [selected_game],
                 steam_title=steam_title,
                 confidence='high',
+                suggested_kind=(
+                    fandom_suggested_kind(variant_base) if fandom_soft_propose else None
+                ),
             )
+            if fandom_soft_propose:
+                reason_code = fandom_match_reason(variant_base)
+                if reason_code:
+                    proposal['match_reason'] = reason_code
             if write_match_proposal(full_disk_path, proposal):
                 print(
                     f"📝 [PROPOSE-ONLY] Wrote high-confidence match proposal for '{successful_search_name}' "
@@ -1321,6 +1474,7 @@ def retrieve_and_save_game(
                 candidates=high_confidence_candidates or [selected_game],
                 steam_title=steam_title,
                 match_policy=match_policy,
+                peel=parsed_label if use_console_rom_peel else None,
             )
         else:
             nfo_content = read_first_nfo_content(full_disk_path)
@@ -1331,7 +1485,7 @@ def retrieve_and_save_game(
             else:
                 folder_size_bytes = get_folder_size_in_bytes_updates(full_disk_path)
                 print(f"Folder size for {full_disk_path}: {format_size(folder_size_bytes)}")
-            new_game = create_game_instance(game_data=selected_game, full_disk_path=full_disk_path, folder_size_bytes=folder_size_bytes, library_uuid=library.uuid)
+            new_game = create_game_instance(game_data=selected_game, full_disk_path=full_disk_path, folder_size_bytes=folder_size_bytes, library_uuid=library.uuid, peel=parsed_label if use_console_rom_peel else None)
             
             if new_game is None:
                 print(f"Failed to create game instance for {game_name}. Skipping further processing.")
@@ -1582,6 +1736,17 @@ def retrieve_and_save_game(
                 last_low_confidence_candidates or [],
                 steam_title=steam_title,
             )
+            if update_meta.get('update_folder_hint'):
+                body = proposal.setdefault('proposal', {})
+                body['update_folder_hint'] = True
+                body['match_reason'] = (
+                    update_meta.get('match_reason') or 'update_packaging_hint'
+                )
+                # UPDATE packaging ≠ Soft title — do not invent experience.
+                if body.get('suggested_kind') == 'experience' and not body.get(
+                    'software_candidates'
+                ):
+                    body['suggested_kind'] = None
             proposal = enrich_proposal_with_software(
                 proposal, raw_folder_label or game_name,
             )

@@ -1,0 +1,33 @@
+CWD: Y:\clients\desktop (via pushd -> Y:\clients\desktop)
+node_modules exists
+Running vitest...
+
+ RUN  v3.2.7 Y:/clients/desktop
+
+System.Management.Automation.RemoteException
+GĻGĻGĻGĻGĻGĻ Failed Suites 2 GĻGĻGĻGĻGĻGĻGĻ
+System.Management.Automation.RemoteException
+ FAIL  src/auth.test.ts [ src/auth.test.ts ]
+Error: Cannot find module 'Y:/clients/desktop/src/auth.test.ts'
+GĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻ
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+Caused by: Error: Failed to load url Y:/clients/desktop/src/auth.test.ts (resolved id: X:/gametheca/clients/desktop/src/auth.test.ts). Does the file exist?
+ G�� loadAndTransform node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35835:17
+System.Management.Automation.RemoteException
+GĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻ[1/2]GĻ
+System.Management.Automation.RemoteException
+ FAIL  src/connect.test.ts [ src/connect.test.ts ]
+Error: Cannot find module 'Y:/clients/desktop/src/connect.test.ts'
+GĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻ
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+Caused by: Error: Failed to load url Y:/clients/desktop/src/connect.test.ts (resolved id: X:/gametheca/clients/desktop/src/connect.test.ts). Does the file exist?
+ G�� loadAndTransform node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35835:17
+System.Management.Automation.RemoteException
+GĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻGĻ[2/2]GĻ
+System.Management.Automation.RemoteException
+
+ Test Files  2 failed (2)
+      Tests  no tests
+   Start at  23:22:07
+   Duration  131.54s (transform 636ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 94.38s)
+

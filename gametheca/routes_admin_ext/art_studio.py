@@ -72,8 +72,20 @@ def art_studio_preview():
         artistic = artistic_raw.strip().lower() not in ('0', 'false', 'no', 'off')
     else:
         artistic = bool(artistic_raw)
+    # FEAT-D4: operator overrides for the drawn text. Absent keys keep the
+    # derived values; an explicit empty subtitle means "no subtitle".
+    headline_override = data.get('headline')
+    subtitle_override = data.get('subtitle')
+    try:
+        title_scale = float(data.get('title_scale') or 1.0)
+    except (TypeError, ValueError):
+        title_scale = 1.0
+
     img = render_cover_art(
         width, height, title=title, system=system, variant=variant, artistic=artistic,
+        headline_override=headline_override,
+        subtitle_override=subtitle_override,
+        title_scale=title_scale,
     )
     buf = io.BytesIO()
     img.save(buf, format='WEBP' if fmt == 'webp' else 'PNG', quality=88)

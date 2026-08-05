@@ -111,11 +111,21 @@ def game_card_flags(game):
     from gametheca.utils.library_health import path_health_fields
 
     kind = normalize_item_kind(getattr(game, 'item_kind', None) or DEFAULT_ITEM_KIND)
+    disc_index = getattr(game, 'disc_index', None)
+    disc_count = getattr(game, 'disc_count', None)
+    try:
+        multi = bool(disc_count and int(disc_count) > 1)
+    except (TypeError, ValueError):
+        multi = False
     return {
         'is_vr': game_indicates_vr(game),
         'item_kind': kind,
         # Alias for UI field maps that prefer content_kind wording
         'content_kind': kind,
+        # BE-DET-5 — disc chip (UI later); browse exposes index/count without extras walk
+        'disc_index': disc_index,
+        'disc_count': disc_count,
+        'is_multi_disc': multi,
         **path_health_fields(game),
     }
 

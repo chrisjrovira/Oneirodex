@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { PageStatus } from './PageStatus'
+import { SpaceRail } from './SpaceRail'
 import { VoiceLobby } from './VoiceLobby'
 import {
   canArchiveChannel,
@@ -131,6 +132,9 @@ export function ChatPanel({
   const [attachBusy, setAttachBusy] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [preferScreenshare, setPreferScreenshare] = useState(false)
+  // Voice is scoped to the channel the member picked. Null = the household
+  // lobby; the server refuses any room it cannot resolve to real membership.
+  const [voiceChannel, setVoiceChannel] = useState(null)
   const [reactionItems, setReactionItems] = useState(
     FIXED_REACTION_EMOJIS.map((emoji) => ({ emoji, label: emoji })),
   )
@@ -744,6 +748,20 @@ export function ChatPanel({
             </div>
           )}
 
+          <SpaceRail
+            activeChannelId={activeId}
+            onSelectTextChannel={(channel) => {
+              setActiveId(channel.id)
+              void loadChannels()
+            }}
+            onSelectVoiceChannel={(channel) => {
+              setVoiceChannel(channel)
+              setPreferScreenshare(false)
+              setVoiceOpen(true)
+            }}
+            onJoined={() => void loadChannels()}
+          />
+
           {canCreateRooms ? (
             <form className="gt-chat-create-room" onSubmit={createRoom}>
               <label className="gt-chat-sr-only" htmlFor="gt-chat-new-room">
@@ -867,9 +885,22 @@ export function ChatPanel({
               </div>
               <VoiceLobby
                 compact
+                room={voiceChannel?.room || ''}
                 defaultScreenshare={preferScreenshare}
-                roomLabel={preferScreenshare ? 'Screenshare' : 'Voice'}
+                roomLabel={
+                  voiceChannel
+                    ? `${voiceChannel.name}${preferScreenshare ? ' · Screenshare' : ''}`
+                    : preferScreenshare
+                      ? 'Household lobby · Screenshare'
+                      : 'Household lobby'
+                }
               />
+              {!voiceChannel ? (
+                <p className="gt-chat-voice__hint">
+                  This is the shared household lobby, not this conversation. Pick a voice
+                  channel in a space to talk there instead.
+                </p>
+              ) : null}
             </div>
           ) : null}
 

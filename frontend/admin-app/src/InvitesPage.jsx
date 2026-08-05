@@ -1,4 +1,12 @@
 import { useEffect, useState } from 'react'
+import { DataTable } from './DataTable'
+
+const COLUMNS = [
+  { key: 'name', label: 'Name' },
+  { key: 'role', label: 'Role' },
+  { key: 'invite_quota', label: 'Quota', align: 'right' },
+  { key: 'unused_invites', label: 'Unused tokens', align: 'right' },
+]
 
 async function getJson(url) {
   const response = await fetch(url, { credentials: 'same-origin' })
@@ -13,11 +21,13 @@ async function getJson(url) {
 export function InvitesPage() {
   const [users, setUsers] = useState([])
   const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     getJson('/admin/api/invites')
       .then((data) => setUsers(Array.isArray(data.users) ? data.users : []))
       .catch((err) => setError(err))
+      .finally(() => setLoading(false))
   }, [])
 
   if (error) {
@@ -45,27 +55,12 @@ export function InvitesPage() {
           Support inbox
         </a>
       </div>
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Quota</th>
-            <th>Unused tokens</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.user_id || u.id}>
-              <td>{u.name}</td>
-              <td>{u.role}</td>
-              <td>{u.invite_quota}</td>
-              <td>{u.unused_invites}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {users.length === 0 ? <p>No users.</p> : null}
+      <DataTable
+        columns={COLUMNS}
+        rows={users}
+        getRowKey={(u) => u.user_id || u.id}
+        emptyMessage={loading ? 'Loading invites…' : 'No users.'}
+      />
     </div>
   )
 }

@@ -70,10 +70,13 @@ def sample_global_settings(db_session):
     if existing:
         return existing
     
+    # `max_concurrent_downloads` / `image_download_timeout` never existed on
+    # GlobalSettings — the fixture drifted from the model, so these four tests
+    # errored at setup on a clean DB (and failed confusingly on a dirty one).
     settings = GlobalSettings(
         use_turbo_image_downloads=False,
-        max_concurrent_downloads=5,
-        image_download_timeout=30,
+        turbo_download_threads=4,
+        turbo_download_batch_size=100,
         update_folder_name='Updates',
         extras_folder_name='Extras'
     )

@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { fetchAnnouncements } from '../api/announcements'
 import { claimFreeGameAssist, fetchFreeGames } from '../api/freeGames'
 import { fetchGamingNews } from '../api/gamingNews'
@@ -320,26 +321,43 @@ export function NewsPage() {
                           </p>
                           <strong>{item.title}</strong>
                           {item.description ? <p>{truncate(item.description, 110)}</p> : null}
+                          {/* FEAT-D6: one action that does the right thing.
+                              Linked store → claim assist opens the offer *and*
+                              registers ownership. Not linked → plain deeplink,
+                              with the reason it is not seamless stated once. */}
                           <p className="gt-news__actions">
-                            {https ? (
-                              <a className="gt-btn" href={https} target="_blank" rel="noreferrer">
-                                Claim
-                              </a>
-                            ) : null}
-                            {protocol && item.connected ? (
-                              <a className="gt-btn gt-btn--ghost" href={protocol}>
-                                Open in app
-                              </a>
-                            ) : null}
                             {item.connected && item.id ? (
-                              <button
-                                type="button"
-                                className="gt-btn gt-btn--ghost"
-                                onClick={() => void claimAssist(item)}
-                              >
-                                Sync ownership
-                              </button>
-                            ) : null}
+                              <>
+                                <button
+                                  type="button"
+                                  className="gt-btn gt-btn--primary"
+                                  onClick={() => void claimAssist(item)}
+                                >
+                                  Claim &amp; sync
+                                </button>
+                                {protocol ? (
+                                  <a className="gt-btn gt-btn--ghost" href={protocol}>
+                                    Open in app
+                                  </a>
+                                ) : null}
+                              </>
+                            ) : (
+                              <>
+                                {https ? (
+                                  <a
+                                    className="gt-btn gt-btn--primary"
+                                    href={https}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    Claim on {storeLabel(item.store)}
+                                  </a>
+                                ) : null}
+                                <Link className="gt-news__connect-hint" to="/ownership">
+                                  Link {storeLabel(item.store)} to sync automatically
+                                </Link>
+                              </>
+                            )}
                           </p>
                           {assistMsg[item.id] ? (
                             <p className="gt-news__assist-msg">{assistMsg[item.id]}</p>
@@ -364,23 +382,46 @@ export function NewsPage() {
           {headlines.length === 0 ? (
             <p className="gt-news__empty">No external headlines available right now.</p>
           ) : (
-            <ul className="gt-news__magazine">
+            /* Image-forward cards (UX-C14) — the way Steam/Epic present news.
+               Feeds that carry no artwork fall back to a text card rather than
+               a broken frame. */
+            <ul className="gt-news__cards">
               {(activeTab === 'headlines' ? headlines : headlineRest).map((item) => (
-                <li key={item.url} className="gt-news__mag-row">
-                  <article>
-                    <a className="gt-news__mag-link" href={item.url} target="_blank" rel="noreferrer">
-                      <strong>{item.title}</strong>
-                    </a>
-                    {item.summary ? <p>{truncate(item.summary, 160)}</p> : null}
-                    <p className="gt-news__meta">
-                      <span>{item.source}</span>
-                      {item.published_at ? (
-                        <time dateTime={item.published_at}>
-                          {formatLocaleDate(item.published_at)}
-                        </time>
+                <li key={item.url} className="gt-news__card">
+                  <a
+                    className="gt-news__card-link"
+                    href={item.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {item.image_url ? (
+                      <img
+                        className="gt-news__card-art"
+                        src={item.image_url}
+                        alt=""
+                        loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.classList.add('is-broken')
+                        }}
+                      />
+                    ) : (
+                      <span className="gt-news__card-art gt-news__card-art--empty" aria-hidden="true" />
+                    )}
+                    <span className="gt-news__card-body">
+                      <strong className="gt-news__card-title">{item.title}</strong>
+                      {item.summary ? (
+                        <span className="gt-news__card-summary">{truncate(item.summary, 140)}</span>
                       ) : null}
-                    </p>
-                  </article>
+                      <span className="gt-news__meta">
+                        <span className="gt-news__source">{item.source}</span>
+                        {item.published_at ? (
+                          <time dateTime={item.published_at}>
+                            {formatLocaleDate(item.published_at)}
+                          </time>
+                        ) : null}
+                      </span>
+                    </span>
+                  </a>
                 </li>
               ))}
             </ul>

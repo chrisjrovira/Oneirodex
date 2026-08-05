@@ -21,6 +21,7 @@ from gametheca.utils.cover_url import resolve_game_cover_url
 from gametheca.utils.library_acl import apply_game_access_filters, filter_libraries
 from gametheca.utils.client_lifecycle import load_lifecycle_map
 from gametheca.utils.discovery_zones import resolve_custom_zone_games
+from gametheca.utils.storefront import build_storefront_shelf
 from gametheca.utils.lifecycle import web_lifecycle_fields
 from gametheca.utils.play_url import browse_play_fields, library_platform_key
 
@@ -75,11 +76,23 @@ def serialize_discover_game(
     }
 
 
+# Storefront seed shelves are derived, so an empty one is hidden rather than
+# rendered as a sad empty row (W25-STORE-1).
+STOREFRONT_SHELF_IDS = frozenset({'curated_for_you', 'upcoming'})
+
+
 def build_discover_sections(user) -> list[dict]:
     """Build Discover shelf payloads for the signed-in user (HTML shell or JSON API)."""
-    visible_sections = db.session.execute(
-        select(DiscoverySection).filter_by(is_visible=True).order_by(DiscoverySection.display_order)
-    ).scalars().all()
+    # Scheduled shelves ("events") only render inside their window (W25-STORE-1).
+    visible_sections = [
+        section
+        for section in db.session.execute(
+            select(DiscoverySection)
+            .filter_by(is_visible=True)
+            .order_by(DiscoverySection.display_order)
+        ).scalars().all()
+        if section.is_live()
+    ]
     settings = db.session.execute(
         select(GlobalSettings).order_by(GlobalSettings.id).limit(1)
     ).scalars().first()
@@ -211,12 +224,24 @@ def build_discover_sections(user) -> list[dict]:
             section_data[section.identifier] = fetch_game_details(
                 resolve_custom_zone_games(section.config, user, limit=8)
             )
+        else:
+            storefront_games = build_storefront_shelf(section.identifier, user, limit=8)
+            if storefront_games is not None:
+                section_data[section.identifier] = fetch_game_details(storefront_games)
 
         if section.identifier != 'libraries':
+            games = section_data.get(section.identifier, [])
+            # Honest empty: a storefront shelf with nothing to say is hidden,
+            # not padded. Admin/custom shelves keep their existing behaviour.
+            if not games and section.identifier in STOREFRONT_SHELF_IDS:
+                continue
             discover_sections.append({
                 'identifier': section.identifier,
                 'title': section.name,
-                'games': section_data.get(section.identifier, []),
+                'layout': section.layout or 'shelf',
+                'is_event': bool(section.starts_at or section.ends_at),
+                'ends_at': section.ends_at.isoformat() if section.ends_at else None,
+                'games': games,
             })
 
     return discover_sections

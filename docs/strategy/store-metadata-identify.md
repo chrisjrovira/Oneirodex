@@ -149,14 +149,14 @@ Export `unmatched_folders_all.json` PC trailing `(4–7)` folders (~71) peel via
 | **PC** | Exact-title (casefold) **MobyGames** → `stage_e_candidates` on `gametheca.proposal.json` + denormalize `suggested_candidate_name` + `stage_e_candidates` / `stage_e` onto `UnmatchedFolder` (list/export); **never** create Game |
 | **Console** | Exact-title **TheGamesDB** with **platform filter** (library leaf ↔ TGDB platform names/aliases) → same propose-only sidecar; multi-hit / no platform corroboration → no preferred name |
 | **Keys** | `MOBYGAMES_API_KEY` / `THEGAMESDB_API_KEY` (or GlobalSettings) — unset → skip that source silently (`skipped[]` in proposal `stage_e`) |
-| **DAT hash short-circuit** | **Done (uncommitted, W21-BE-DAT)** — after Stage D miss on console leaves: hash ROM → unique DAT CRC/MD5/SHA1 across reference sets for that platform → custom-range Game with DAT title + honest summary provenance; ambiguous / missing DAT / unhashable / PC / C11 / `propose_only_scan` → leave Unmatched (Stage E may still propose TGDB) |
+| **DAT hash short-circuit** | **Done (uncommitted, W21-BE-DAT + BE-DET-6)** — after Stage D miss on console leaves: hash ROM → unique DAT CRC/MD5/SHA1 across reference sets for that platform → custom-range Game with DAT title + honest summary provenance; when outer archive hash misses, optionally hash **inner** primary dump candidate(s) in zip/7z/rar (`DAT_HASH_INNER_ARCHIVE`, default ON) and identify only on exactly one unique title; ambiguous / missing DAT / unhashable / PC / C11 / `propose_only_scan` → leave Unmatched (Stage E may still propose TGDB) |
 | **Forbidden** | Fuzzy multi-hit auto-import · Moby/TGDB Game create · pirate scrapers · romhacking · DRM queues · Meta GraphQL / Epic/itch cascade |
 
-**Code:** `resolve_stage_e_catalog_hints` / `enrich_proposal_with_stage_e` in `software_identify.py` · DAT unique-hash auto via `lookup_unique_dat_hash_hit` / `try_dat_hash_identify` in `set_completion.py` (hooked from `retrieve_and_save_game` after Stage D, before Stage E) · `hint_fields_from_proposal` reads `stage_e_candidates`.
+**Code:** `resolve_stage_e_catalog_hints` / `enrich_proposal_with_stage_e` in `software_identify.py` · DAT unique-hash auto via `lookup_unique_dat_hash_hit` / `try_dat_hash_identify` in `set_completion.py` (hooked from `retrieve_and_save_game` after Stage D, before Stage E; **BE-DET-6** inner archive digests via `hash_archive_inner_primary_dumps` in `rom_hash.py`) · `hint_fields_from_proposal` reads `stage_e_candidates`.
 
 **Proposal JSON:** `proposal.stage_e_candidates[]` (`source`, `id`, `name`, `url`, `cover_url`, `match_mode`, `propose_only: true`) · `proposal.stage_e` (`match_reason`, `skipped`, `propose_only`). **List/export (W21-BE-2b):** same fields denormalized onto `UnmatchedFolder` JSON columns — soft-omitted when absent.
 
-**Tests:** `tests/test_w21_stage_e_propose.py` (mocked HTTP) + `tests/test_w21_dat_hash_identify.py` (unique/ambiguous/missing DAT + propose_only skip) + Stage D regression `tests/test_w20_stage_d_store_cascade.py`.
+**Tests:** `tests/test_w21_stage_e_propose.py` (mocked HTTP) + `tests/test_w21_dat_hash_identify.py` (unique/ambiguous/missing DAT + propose_only skip) + `tests/test_be_det6_dat_inner_archive.py` (outer miss + unique inner · ambiguous inner skip · non-archive unchanged) + Stage D regression `tests/test_w20_stage_d_store_cascade.py`.
 
 ---
 

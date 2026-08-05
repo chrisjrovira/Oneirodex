@@ -466,7 +466,7 @@ def _fanout_mentions_and_dm(channel: ChatChannel, author: User, msg: ChatMessage
             if target.id == author.id or target.id in notified:
                 continue
             membership = _is_member(channel.id, target.id)
-            if membership is not None and membership.muted:
+            if membership is None or membership.muted:
                 continue
             notify_user(
                 target.id,

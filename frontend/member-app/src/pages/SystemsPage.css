@@ -234,3 +234,78 @@
   flex-wrap: wrap;
   gap: 0.55rem;
 }
+
+/* --- Room treatment on system tiles (FEAT-D5) ----------------------------- */
+/* Vars come from playRooms.js via inline style, so a tile is dressed for the
+   setting it was played in. Scoped to the tile — nothing leaks to the page. */
+
+.gt-systems-tile[data-room] {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--gt-room-accent, #e8c07d) 32%, transparent);
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--gt-room-glow, #ffb765) 14%, transparent),
+      transparent 58%
+    ),
+    color-mix(in srgb, var(--gt-room-backdrop, #1a1410) 78%, var(--gt-surface, #141820));
+}
+
+.gt-systems-tile[data-room]:hover,
+.gt-systems-tile[data-room]:focus-within {
+  border-color: color-mix(in srgb, var(--gt-room-accent, #e8c07d) 62%, transparent);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.4),
+    0 0 16px -2px color-mix(in srgb, var(--gt-room-glow, #ffb765) 45%, transparent);
+}
+
+.gt-systems-tile[data-room] .gt-systems-tile__name {
+  color: color-mix(in srgb, var(--gt-room-accent, #e8c07d) 85%, var(--gt-text, #f2f4f8));
+}
+
+/* Ambience: a light suggestion of the setting, never enough to fight the text. */
+.gt-systems-tile[data-room='crt_living_room']::after,
+.gt-systems-tile[data-room='arcade_cabinet']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+}
+
+.gt-systems-tile[data-room='crt_living_room']::after {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.16) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+.gt-systems-tile[data-room='arcade_cabinet']::after {
+  background: radial-gradient(
+    120% 60% at 50% -10%,
+    color-mix(in srgb, var(--gt-room-glow, #ff2d6f) 70%, transparent),
+    transparent 60%
+  );
+  opacity: 0.28;
+}
+
+.gt-systems-tile[data-room='desk']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--gt-room-glow, #5ef08a) 55%, transparent) 0 1px,
+    transparent 1px 4px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-systems-tile[data-room] {
+    transition: none;
+  }
+}

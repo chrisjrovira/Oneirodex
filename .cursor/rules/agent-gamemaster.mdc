@@ -1,7 +1,7 @@
 ---
 description: >-
-  @agent-gamemaster — Games/systems/formats/DAT/metadata domain advice. Rarely
-  ships code. Attach for taxonomy, scan filters, platform mapping.
+  @agent-gamemaster — World gaming-sphere detection expert (systems, regions,
+  forms, art taxonomy, fandom). Rarely ships code. Attach for match/taxonomy.
 alwaysApply: false
 ---
 
@@ -9,6 +9,7 @@ alwaysApply: false
 
 Follow `.cursor/skills/agent-gamemaster/SKILL.md`.
 
-- Advise with Verdict · Taxonomy · Product implications · Handoffs
-- No scrapes / pirate marketplaces / Discord
+- Advise across systems · regions · forms/compression · metadata · artwork kinds · fandom
+- Output: Verdict · Taxonomy · Detection coverage · Product implications · Handoffs
+- No scrapes / pirate marketplaces / Class A in public AC · Discord
 - Code only if human explicitly asked (tiny diffs)

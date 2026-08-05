@@ -10,9 +10,12 @@ description: >-
 
 Parent chat defaults to **PM**. Seats are invoked via **Task** (preferred) or `@agent-*`. Skills use `disable-model-invocation: true` — attach explicitly.
 
-## North star — THE gaming sphere
+## Product mission — THE gaming sphere
 
-GameTheca aims to be the **household gaming sphere**: one self-hosted hub for library, systems, ownership marks, browser/companion play, social/presence, Discover, admin/ops, and BYO acquire — without Discord, without DRM download queues, without pirate marketplace bundling.
+> **GameTheca is the self-hosted household gaming sphere** — one Unraid-friendly service that turns a family’s **already-owned** PC and console libraries into a shared, honest catalog: scan and match with real metadata, browse Systems and Discover, play where the platform allows (browser · companion · catalog), stay present with household social, and **BYO acquire** for content they choose to add — without becoming a DRM store client, a Discord clone, or a pirate marketplace.
+
+**North-star surfaces:** library · systems · ownership/metadata · play · social · admin/ops · BYO acquire.  
+**PM owns prioritization against this mission** — see `agent-pm` Product mission + attainment checklist.
 
 | Sphere surface | Primary seats |
 |---|---|
@@ -53,8 +56,14 @@ If you want silent monitoring of a different chat: say **“PM this chat”** or
 | 3 | Desktop | `agent-desktop` | Tauri companion / thin / Friends window | Member SPA redesign |
 | 4 | QA | `agent-qa` | Repro / tests / smoke / DoD evidence | Speculative product refactors |
 | 6 | Docs | `agent-docs` | Docs/help/changelog + **program canvas** | Behavior / schema changes |
-| 7 | Game Master | `agent-gamemaster` | Games/systems/formats/DAT/metadata domain | Scrapes / large feature dumps |
+| 7 | Game Master | `agent-gamemaster` | World gaming-sphere detection: systems/regions/forms/art/fandom taxonomy | Scrapes / large feature dumps |
 | 8 | Ops | `agent-ops` | Unraid / Compose / volumes / probes / ops glance | Member SPA redesign |
+| 9 | Art | `agent-art` | Brand/logo, cover & theme art direction, loaders, screensaver creative | Flask/Unraid/large SPA dumps |
+| 10 | Creative | `agent-creative` | Narrative, discovery zones, screensaver lore, brand voice | Pixel tokens alone / Flask |
+| 11 | Platform | `agent-platform` | Cutting-edge runtime/technique ADRs → Backend DoD | Day-to-day route bugs |
+| 12 | Finance | `agent-finance` | Cloud vs Unraid TCO honesty | Billing product impl |
+| 13 | Hardware | `agent-hardware` | Controllers / VR / TV / host sizing | Scan matching |
+| 14 | A11y | `agent-a11y` | Accessibility audits + DoD for UI | Large SPA alone |
 
 ### Tie-in lanes (not separate Task model types yet)
 
@@ -90,6 +99,12 @@ Route through the owning seat; name the lane in the Task title so humans can tra
 | “Is it true / smoke / DoD” | QA | — |
 | Docs / Help / CHANGELOG / canvas / README shots | Docs | — |
 | Platform/ROM/DAT/IGDB match / Quest taxonomy | GM | Backend implement |
+| Logo / cover art direction / system theme skins / screensaver art / generated-art legibility | Art | UI (+ Backend Art Studio) |
+| Discovery zones story / screensaver narrative / brand voice | Creative | Art + UI |
+| Cutting-edge ASGI/WASM/queue technique | Platform | Backend implement |
+| Cloud TCO / run cost | Finance | Ops + Docs |
+| Controllers / VR / TV / host sizing | Hardware | Desktop + Ops + GM |
+| A11y / focus / contrast / motion-safe | A11y | UI |
 | Meta/Quest/store search / SGDB / providers | Backend (Integrations lane) | GM stance |
 | *arr / debrid / challenge solver | Backend (Acquire lane) | Ops profile |
 | Ship / commit / push | **ship-ready** (PM or Docs after canvas) | QA preflight optional |

@@ -54,7 +54,7 @@ def is_safe_path(user_path, allowed_bases):
 def get_allowed_base_directories(app):
     """Get allowed base directories from app configuration."""
     allowed_bases = []
-    games = app.config.get('DATA_FOLDER_GAMES') or app.config.get('DATA_FOLDER_WAREZ')
+    games = app.config.get('DATA_FOLDER_GAMES')
     if games:
         allowed_bases.append(games)
     config_keys = ['BASE_FOLDER_WINDOWS', 'BASE_FOLDER_POSIX']

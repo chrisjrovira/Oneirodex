@@ -97,6 +97,13 @@ _BARE_BUILD_TAIL_RE = re.compile(
     r'\s+\bBuild\s+\d+[a-zA-Z]?\s*$',
     re.IGNORECASE,
 )
+# W22-M5 — folder basename that is itself an update package (never a game title).
+_BARE_UPDATE_PACKAGE_NAMES = frozenset({'update', 'updates'})
+# Trailing `` - UPDATE`` / `` UPDATE`` when ≥2 head tokens remain after peel.
+_TRAILING_UPDATE_SEP_RE = re.compile(
+    r'(?:\s+-\s*|\s+)\bUPDATES?\s*$',
+    re.IGNORECASE,
+)
 # A13 — strip pure add-on / HV junk from cleaned display (edition peels → Stage C10).
 _ADDON_JUNK_TAIL_RE = re.compile(
     r'\s+(?:4K\s+Videos?\s+Add-?ons?(?:\s+Repack)?|\bHV)\s*$',
@@ -356,6 +363,82 @@ def _title_case_tokens(working: str) -> str:
     return ' '.join(parts)
 
 
+def is_bare_update_package(name: str | None) -> bool:
+    """True when the folder basename is literally UPDATE / Updates / updates."""
+    if not name or not isinstance(name, str):
+        return False
+    folded = _basename_only(name).casefold().strip()
+    return folded in _BARE_UPDATE_PACKAGE_NAMES
+
+
+def detect_update_packaging(
+    raw: str | None,
+    *,
+    cleaned_name: str | None = None,
+    transforms: list | None = None,
+) -> dict:
+    """
+    W22-M5 — classify update/patch packaging on a folder label.
+
+    Returns:
+        is_bare_update_package — never auto-import; never map to Soft title.
+        update_folder_hint — Incl Update / Update prose / trailing UPDATE peeled.
+        match_reason — ``update_package_folder`` or ``update_packaging_hint`` or None.
+    """
+    empty = {
+        'is_bare_update_package': False,
+        'update_folder_hint': False,
+        'match_reason': None,
+    }
+    if not raw or not isinstance(raw, str):
+        return empty
+
+    basename = _basename_only(raw)
+    if is_bare_update_package(basename):
+        return {
+            'is_bare_update_package': True,
+            'update_folder_hint': True,
+            'match_reason': 'update_package_folder',
+        }
+
+    cleaned = (cleaned_name if cleaned_name is not None else '').strip()
+    # Peel emptied the title down to Update / empty → treat as bare package.
+    if not cleaned or cleaned.casefold() in _BARE_UPDATE_PACKAGE_NAMES:
+        if _TRAILING_UPDATE_SEP_RE.search(basename) or 'update' in basename.casefold():
+            return {
+                'is_bare_update_package': True,
+                'update_folder_hint': True,
+                'match_reason': 'update_package_folder',
+            }
+
+    hint = False
+    for step in transforms or ():
+        if not isinstance(step, dict):
+            continue
+        stage = (step.get('stage') or '').strip()
+        reason = (step.get('reason') or '').strip()
+        if stage == 'A9' and reason == 'incl_update_paren':
+            hint = True
+            break
+        if stage == 'A12' and reason == 'update_build_prose':
+            hint = True
+            break
+
+    if not hint and _TRAILING_UPDATE_SEP_RE.search(basename):
+        # Title - UPDATE / trailing UPDATE with a real head (≥2 tokens preferred).
+        head = _TRAILING_UPDATE_SEP_RE.sub('', basename).strip(' -_')
+        if head and len(head.split()) >= 1:
+            hint = True
+
+    if hint:
+        return {
+            'is_bare_update_package': False,
+            'update_folder_hint': True,
+            'match_reason': 'update_packaging_hint',
+        }
+    return empty
+
+
 def _empty_parse_result(raw: str = '') -> dict:
     return {
         'raw': raw or '',
@@ -365,6 +448,9 @@ def _empty_parse_result(raw: str = '') -> dict:
         'had_vr_suffix': False,
         'transforms': [],
         'peel_profile': 'conservative',
+        'update_folder_hint': False,
+        'is_bare_update_package': False,
+        'update_match_reason': None,
     }
 
 
@@ -403,7 +489,8 @@ def parse_game_label(raw: str, *, peel_profile: str | None = None) -> dict:
     Returns:
         dict with keys: raw, cleaned_name, steam_app_id, bare_franchise, had_vr_suffix,
         transforms (ordered list of {stage, before, after, reason?} for steps that changed
-        the label — for unmatched/dupe/proposal explainers; short match_reason codes stay separate)
+        the label — for unmatched/dupe/proposal explainers; short match_reason codes stay separate),
+        update_folder_hint / is_bare_update_package / update_match_reason (W22-M5)
     """
     if not raw or not isinstance(raw, str):
         return _empty_parse_result(raw if isinstance(raw, str) else '')
@@ -528,6 +615,10 @@ def parse_game_label(raw: str, *, peel_profile: str | None = None) -> dict:
             reason='franchise_apostrophe_inject',
         )
 
+    update_meta = detect_update_packaging(
+        raw, cleaned_name=cleaned, transforms=transforms,
+    )
+
     return {
         'raw': raw,
         'cleaned_name': cleaned,
@@ -536,4 +627,7 @@ def parse_game_label(raw: str, *, peel_profile: str | None = None) -> dict:
         'had_vr_suffix': had_vr_suffix,
         'transforms': transforms,
         'peel_profile': profile,
+        'update_folder_hint': bool(update_meta.get('update_folder_hint')),
+        'is_bare_update_package': bool(update_meta.get('is_bare_update_package')),
+        'update_match_reason': update_meta.get('match_reason'),
     }

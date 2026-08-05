@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { familyForPlatform } from '../chrome/platformSkins'
+import { roomIdForPlatform, roomStyle } from '../chrome/playRooms'
 import { SystemFamilyMark } from '../chrome/systemMarks'
 import './SystemsPage.css'
 
@@ -145,6 +146,10 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
                   data-platform={value}
                   data-family={group.id}
                   data-play-mode={platform.play_mode || undefined}
+                  /* FEAT-D5: dressed for the room it was played in, not the
+                     brand that made it. */
+                  data-room={roomIdForPlatform(value)}
+                  style={roomStyle(value)}
                 >
                   <Link
                     className="gt-systems-tile__main"

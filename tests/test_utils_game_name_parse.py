@@ -449,3 +449,60 @@ def test_strip_helpers_a9_a13_alone():
     assert strip_update_build_prose_tails("Some Game Build 18") == "Some Game"
     assert strip_addon_junk_tails("Some Game 4K Videos Add-on") == "Some Game"
     assert strip_addon_junk_tails("Some Game HV") == "Some Game"
+
+
+# --- W22-M5 UPDATE packaging hints ---
+
+def test_bare_update_package_folder_detected():
+    from gametheca.utils.game_name_parse import (
+        detect_update_packaging,
+        is_bare_update_package,
+    )
+
+    assert is_bare_update_package('UPDATE')
+    assert is_bare_update_package('Updates')
+    assert is_bare_update_package('updates')
+    assert is_bare_update_package('UPDATES')
+    assert not is_bare_update_package('Pathologic 2 (Incl Update 3)')
+
+    for name in ('UPDATE', 'Updates', 'updates', 'UPDATES'):
+        meta = detect_update_packaging(name)
+        assert meta['is_bare_update_package'] is True
+        assert meta['update_folder_hint'] is True
+        assert meta['match_reason'] == 'update_package_folder'
+
+
+def test_incl_update_sets_packaging_hint_not_bare():
+    r = parse_game_label('Pathologic 2 (Incl Update 3)')
+    assert r['cleaned_name'] == 'Pathologic 2'
+    assert r['update_folder_hint'] is True
+    assert r['is_bare_update_package'] is False
+    assert r['update_match_reason'] == 'update_packaging_hint'
+
+
+def test_update_prose_tail_sets_packaging_hint():
+    r = parse_game_label('Some Game Update v1.2')
+    assert r['cleaned_name'] == 'Some Game'
+    assert r['update_folder_hint'] is True
+    assert r['is_bare_update_package'] is False
+
+
+def test_trailing_update_sep_hint():
+    r = parse_game_label('Cool Title - UPDATE')
+    assert r['cleaned_name'] == 'Cool Title'
+    assert r['update_folder_hint'] is True
+    assert r['is_bare_update_package'] is False
+
+
+def test_format_why_unmatched_update_package():
+    from gametheca.utils.match_proposal import format_why_unmatched
+
+    text = format_why_unmatched(
+        status='Unmatched',
+        match_reason='update_package_folder',
+        folder_name='Updates',
+        suggested_kind=None,
+    )
+    assert 'update or patch package' in text
+    assert 'Soft title' not in text
+    assert 'Experience' not in text

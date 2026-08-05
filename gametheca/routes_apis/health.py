@@ -8,6 +8,7 @@ from gametheca import db
 from gametheca.models import Game
 from gametheca.utils.library_health import score_game, summarize_library_health
 from gametheca.utils.library_acl import user_can_access_game
+from gametheca.utils.api_response import api_error
 
 from . import apis_bp
 
@@ -16,7 +17,7 @@ from . import apis_bp
 @login_required
 def library_health_summary():
     if current_user.role != 'admin':
-        return jsonify({'error': 'Admin required'}), 403
+        return api_error('Admin required', code='forbidden')
     try:
         limit = min(int(request.args.get('limit') or 200), 2000)
     except (TypeError, ValueError):
@@ -30,7 +31,7 @@ def library_health_summary():
 def game_health_detail(game_uuid: str):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     return jsonify(score_game(game))

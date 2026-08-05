@@ -27,12 +27,36 @@ def fetch_steam_app_details(app_id: int, *, timeout: float = 5.0) -> dict | None
         if not isinstance(name, str) or not name.strip():
             return None
         steam_type = data.get('type')
+        # Carry the full content payload, not just identity: Stage D used to keep
+        # only name/type/image/description, so a Steam-identified game landed with
+        # no genres, developer, publisher or release date — none of the boxes filled.
+        genres = [
+            g.get('description', '').strip()
+            for g in (data.get('genres') or [])
+            if isinstance(g, dict) and (g.get('description') or '').strip()
+        ]
+        categories = [
+            c.get('description', '').strip()
+            for c in (data.get('categories') or [])
+            if isinstance(c, dict) and (c.get('description') or '').strip()
+        ]
+        developers = [d for d in (data.get('developers') or []) if isinstance(d, str) and d.strip()]
+        publishers = [p for p in (data.get('publishers') or []) if isinstance(p, str) and p.strip()]
+        release = data.get('release_date') or {}
         return {
             'steam_app_id': app_id,
             'name': name.strip(),
             'steam_type': (steam_type.strip().lower() if isinstance(steam_type, str) else None),
             'header_image': data.get('header_image'),
             'short_description': data.get('short_description'),
+            'genres': genres,
+            'categories': categories,
+            'developers': developers,
+            'publishers': publishers,
+            'release_date': (release.get('date') if isinstance(release, dict) else None),
+            'coming_soon': bool(release.get('coming_soon')) if isinstance(release, dict) else False,
+            'metacritic': ((data.get('metacritic') or {}).get('score')
+                           if isinstance(data.get('metacritic'), dict) else None),
         }
     except (requests.RequestException, ValueError, TypeError, AttributeError):
         return None

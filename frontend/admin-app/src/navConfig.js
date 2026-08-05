@@ -1,8 +1,9 @@
 /** Primary admin top nav. */
 export const ADMIN_NAV = [
   { id: 'dashboard', path: '/admin/dashboard', label: 'Dashboard' },
-  { id: 'libraries', path: '/libraries', label: 'Libraries' },
-  { id: 'scans', path: '/scan_management', label: 'Scans' },
+  // Libraries and scans are one tabbed page (UX-C2) — two top-nav buttons
+  // pointing into the same page was the leftover from before they merged.
+  { id: 'libraries', path: '/scan_management?active_tab=libraries', label: 'Libraries & scans' },
   { id: 'settings', path: '/admin/settings', label: 'Settings' },
   { id: 'content', path: '/admin/discovery_sections', label: 'Content' },
   { id: 'users', path: '/admin/users', label: 'Users' },
@@ -10,27 +11,54 @@ export const ADMIN_NAV = [
   { id: 'system', path: '/admin/ops', label: 'System' },
 ]
 
-export const SETTINGS_CARDS = [
-  { to: '/admin/new_server_settings', title: 'Server Settings', blurb: 'Scan threads, download batching, site URL.' },
+/** Settings rows, grouped like the scans page rather than a flat card grid (UX-C9). */
+export const SETTINGS_GROUPS = [
   {
-    to: '/admin/scan_match',
-    title: 'Scan / match policy',
-    blurb: 'Propose-only, dupe/match thresholds, peel profile — soft-degrades if Backend mid-rollout.',
+    id: 'library',
+    title: 'Library & matching',
+    items: [
+      { to: '/admin/new_server_settings', title: 'Server settings', blurb: 'Scan threads, download batching, site URL.' },
+      {
+        to: '/admin/scan_match',
+        title: 'Scan / match policy',
+        blurb: 'Propose-only, dupe/match thresholds, peel profile — soft-degrades if Backend mid-rollout.',
+      },
+      { to: '/admin/reference_sets', title: 'ROM reference sets', blurb: 'Upload No-Intro/Redump DATs for set completeness.' },
+      { to: '/admin/quality_profiles', title: 'Quality profiles', blurb: 'Release quality rules.' },
+      { to: '/admin/storage', title: 'Storage', blurb: 'Same-volume hardlink preview/apply helpers.' },
+    ],
   },
-  { to: '/admin/attract_mode_settings', title: 'Attract Mode', blurb: 'Idle trailer slideshow and filters.' },
-  { to: '/admin/emulator_profiles', title: 'Emulators', blurb: 'WebRetro cores, BIOS, cloud saves.' },
-  { to: '/admin/reference_sets', title: 'ROM reference sets', blurb: 'Upload No-Intro/Redump DATs for set completeness.' },
-  { to: '/admin/arr', title: 'Arr Module', blurb: 'BYO Prowlarr/Jackett + qBittorrent (no bundled indexers).' },
-  { to: '/admin/quality_profiles', title: 'Quality Profiles', blurb: 'Release quality rules.' },
-  { to: '/admin/detail_layout', title: 'Detail Layout', blurb: 'Game details field layout.' },
-  { to: '/admin/ai', title: 'AI Assist', blurb: 'AI identification and helpers.' },
-  { to: '/admin/storage', title: 'Storage', blurb: 'Same-volume hardlink preview/apply helpers.' },
-  { to: '/admin/themes', title: 'Themes', blurb: 'Apply presets; Reset Default Themes.' },
-  { to: '/admin/art_studio', title: 'Art studio', blurb: 'Placeholders + artwork picker / image queue.' },
-  { to: '/admin/art_studio#images', title: 'Art & images', blurb: 'Single-title artwork picker + mass image queue.' },
-  { to: '/admin/remote_play', title: 'Remote play', blurb: 'BYO Sunshine/Wolf Moonlight host — off by default.' },
-  { to: '/admin/plugins', title: 'Plugins', blurb: 'Connector / export / emu registry.' },
+  {
+    id: 'play',
+    title: 'Play & emulation',
+    items: [
+      { to: '/admin/emulator_profiles', title: 'Emulators', blurb: 'WebRetro cores, BIOS, cloud saves.' },
+      { to: '/admin/remote_play', title: 'Remote play', blurb: 'BYO Sunshine/Wolf Moonlight host — off by default.' },
+      { to: '/admin/arr', title: 'Arr module', blurb: 'BYO Prowlarr/Jackett + qBittorrent (no bundled indexers).' },
+    ],
+  },
+  {
+    id: 'presentation',
+    title: 'Presentation',
+    items: [
+      { to: '/admin/themes', title: 'Themes', blurb: 'Apply presets; Reset Default Themes.' },
+      { to: '/admin/art_studio', title: 'Art studio', blurb: 'Placeholders + artwork picker / image queue.' },
+      { to: '/admin/detail_layout', title: 'Detail layout', blurb: 'Game details field layout.' },
+      { to: '/admin/attract_mode_settings', title: 'Attract mode', blurb: 'Idle trailer slideshow and filters.' },
+    ],
+  },
+  {
+    id: 'extend',
+    title: 'Extend',
+    items: [
+      { to: '/admin/ai', title: 'AI assist', blurb: 'AI identification and helpers.' },
+      { to: '/admin/plugins', title: 'Plugins', blurb: 'Connector / export / emu registry.' },
+    ],
+  },
 ]
+
+/** Flat view — kept so existing links/tests that expect one list keep working. */
+export const SETTINGS_CARDS = SETTINGS_GROUPS.flatMap((group) => group.items)
 
 /** Grouped Integrations hub cards (React chrome; forms stay Jinja). */
 export const INTEGRATION_CARDS = [
@@ -146,17 +174,20 @@ export const INTEGRATION_CARDS = [
 ]
 
 export const HUB_LINKS = {
+  // One hub for the merged page (UX-C2): library management and scan jobs are
+  // tabs of the same screen, so they share one link list.
   libraries: [
-    { href: '/libraries', label: 'Manage libraries' },
-    { href: '/libraries#propose-leaf', label: 'Propose leaf libraries' },
-    { href: '/libraries#import-leaf', label: 'Import leaf libraries' },
-    { href: '/admin/library/add', label: 'Add library' },
-    { href: '/admin/library_tools', label: 'Library tools' },
-    { href: '/admin/filters', label: 'Release filters' },
-    { href: '/admin/extensions', label: 'Extensions' },
-  ],
-  scans: [
+    { href: '/scan_management?active_tab=libraries', label: 'Libraries' },
     { href: '/scan_management', label: 'Scan jobs' },
+    // Named for what they do, not how (UX-C4). Bulk add already existed via
+    // these two flows, but "propose/import leaf libraries" did not read as
+    // "add several at once", so the single-library form looked like the only way.
+    { href: '/admin/library/add', label: 'Add one library' },
+    { href: '/libraries#propose-leaf', label: 'Add many — scan a folder for libraries' },
+    { href: '/libraries#import-leaf', label: 'Add many — import CSV / JSON' },
+    { href: '/admin/library_tools', label: 'Library tools' },
+    { href: '/admin/edit_filters', label: 'Release filters' },
+    { href: '/admin/extensions', label: 'Extensions' },
     { href: '/admin/art_studio#images', label: 'Art & images' },
     { href: '/admin/image_queue', label: 'Image queue (classic)' },
   ],
@@ -185,8 +216,9 @@ export const HUB_LINKS = {
     { href: '/api/export/pegasus?platform=Library', label: 'Pegasus export' },
   ],
   system: [
+    // Server status is no longer its own section (UX-C1) — its signals live on
+    // the dashboard, so the standalone page is not offered as a destination.
     { href: '/admin/ops', label: 'Ops glance' },
-    { href: '/admin/server_status_page', label: 'Server status' },
     { href: '/admin/new_server_info', label: 'Server info' },
     { href: '/admin/server_logs', label: 'Server logs' },
     { href: '/admin/statistics', label: 'Statistics' },

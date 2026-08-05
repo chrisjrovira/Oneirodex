@@ -17,6 +17,9 @@ export function GameActionBar({
   variant = 'full',
   lifecycleState = 'not_downloaded',
   clientConnected = false,
+  // Details shows companion presence as a chip on the status row instead, so it
+  // can opt out rather than render the same fact twice.
+  showPresence = true,
   downloadHref,
   updateHref,
   className = '',
@@ -256,7 +259,7 @@ export function GameActionBar({
       data-lifecycle={lifecycleState}
       data-client={clientConnected ? 'connected' : 'absent'}
     >
-      {!compact ? (
+      {!compact && showPresence ? (
         <span
           className={`gt-action-bar__presence${clientConnected ? ' is-online' : ''}`}
           title={

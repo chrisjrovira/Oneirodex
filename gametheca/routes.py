@@ -43,6 +43,12 @@ from gametheca.utils.local_metadata import has_local_metadata, has_local_images
 from gametheca.utilities import handle_auto_scan, handle_manual_scan, scan_and_add_games
 from gametheca.utils.auth import admin_required
 from gametheca.utils.gamenames import get_game_names_from_folder, get_game_name_by_uuid
+from gametheca.utils.image_kinds import (
+    IMAGE_KIND_ORDER,
+    SINGULAR_IMAGE_KINDS,
+    image_kinds_error_message,
+    parse_image_kind,
+)
 from gametheca.utils.scanning import refresh_images_in_background, is_scan_job_running
 from gametheca.utils.game_core import delete_game
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories
@@ -552,7 +558,20 @@ def edit_game_images(game_uuid):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalar_one_or_none() or abort(404)
     cover_image = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, image_type='cover')).scalars().first()
     screenshots = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, image_type='screenshot')).scalars().all()
-    return render_template('games/game_edit_images.html', game=game, cover_image=cover_image, images=screenshots)
+    other_images = db.session.execute(
+        select(Image).filter(
+            Image.game_uuid == game_uuid,
+            Image.image_type.in_(['box', 'cart', 'disc', 'logo', 'hero', 'fanart']),
+        )
+    ).scalars().all()
+    return render_template(
+        'games/game_edit_images.html',
+        game=game,
+        cover_image=cover_image,
+        images=screenshots,
+        other_images=other_images,
+        allowed_kinds=list(IMAGE_KIND_ORDER),
+    )
 
 
 @bp.route('/upload_image/<game_uuid>', methods=['POST'])
@@ -569,7 +588,13 @@ def upload_image(game_uuid):
         return jsonify({'error': 'No file part'}), 400
 
     file = request.files['file']
-    image_type = request.form.get('image_type', 'screenshot')  # Default to 'screenshot'
+    try:
+        image_type = parse_image_kind(
+            request.form.get('image_type') or request.form.get('kind'),
+            default='screenshot',
+        )
+    except ValueError:
+        return jsonify({'error': image_kinds_error_message()}), 400
 
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
@@ -600,21 +625,21 @@ def upload_image(game_uuid):
     if file.content_length > 3 * 1024 * 1024:  # 3MB in bytes
         return jsonify({'error': 'File size exceeds the 3MB limit'}), 400
 
-    # Handle cover image logic
-    if image_type == 'cover':
-        # Check if a cover image already exists
-        existing_cover = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, image_type='cover')).scalars().first()
-        if existing_cover:
-            # If exists, delete the old cover image file and record
-            old_cover_path = os.path.join(current_app.config['IMAGE_SAVE_PATH'], existing_cover.url)
-            if os.path.exists(old_cover_path):
-                os.remove(old_cover_path)
-            db.session.delete(existing_cover)
-            db.session.commit()
+    # Singular kinds: replace existing primary of that kind
+    if image_type in SINGULAR_IMAGE_KINDS:
+        existing_rows = db.session.execute(
+            select(Image).filter_by(game_uuid=game_uuid, image_type=image_type)
+        ).scalars().all()
+        for existing in existing_rows:
+            old_path = os.path.join(current_app.config['IMAGE_SAVE_PATH'], existing.url)
+            if os.path.exists(old_path):
+                os.remove(old_path)
+            db.session.delete(existing)
+        db.session.commit()
     short_uuid = str(uuid.uuid4())[:8]
-    if image_type == 'cover':
+    if image_type in SINGULAR_IMAGE_KINDS:
         unique_identifier = str(uuid.uuid4())[:8]
-        filename = f"{game_uuid}_cover_{unique_identifier}.{file_extension}"
+        filename = f"{game_uuid}_{image_type}_{unique_identifier}.{file_extension}"
     else:
         unique_identifier = datetime.now().strftime('%Y%m%d%H%M%S')
         short_uuid = str(uuid.uuid4())[:8]
@@ -631,7 +656,9 @@ def upload_image(game_uuid):
         'message': 'File uploaded successfully',
         'url': url_for('static', filename=f'library/images/{filename}'),
         'flash': 'Image uploaded successfully!',
-        'image_id': new_image.id
+        'image_id': new_image.id,
+        'image_type': image_type,
+        'kind': image_type,
     })
 
 @bp.route('/delete_image', methods=['POST'])
@@ -1163,14 +1190,55 @@ def delete_full_library(library_uuid=None):
     if not library_uuid:
         return jsonify({'status': 'error', 'message': 'No library specified'}), 400
     
-    # Generate a unique job ID
-    job_id = str(uuid.uuid4())
-    
     # Get library info immediately for progress tracking
     library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalar_one_or_none()
     if not library:
         return jsonify({'status': 'error', 'message': 'Library not found'}), 404
-    
+
+    # Optional server-side typed confirm (W22-1). Legacy Jinja clients omit these
+    # and keep client-only typing. When confirm_name/force are present, enforce.
+    data = request.get_json(silent=True) or {}
+    force_raw = (
+        data.get('force') if 'force' in data
+        else (data.get('force_delete') if 'force_delete' in data
+              else (request.form.get('force') or request.form.get('force_delete')
+                    or request.args.get('force') or request.args.get('force_delete')))
+    )
+    confirm_raw = (
+        data.get('confirm_name') if 'confirm_name' in data
+        else (request.form.get('confirm_name') or request.args.get('confirm_name'))
+    )
+    if force_raw is not None or confirm_raw is not None:
+        from gametheca.utils.library_batch import (
+            parse_bool_flag,
+            parse_confirm_names,
+            require_confirm_or_force,
+        )
+        force = parse_bool_flag(force_raw, default=False)
+        confirm_names = parse_confirm_names(data)
+        confirm_err = require_confirm_or_force(
+            library_uuid=library.uuid,
+            library_name=library.name,
+            force=force,
+            confirm_names=confirm_names,
+            single_confirm_name=str(confirm_raw) if confirm_raw is not None else None,
+        )
+        if confirm_err:
+            return jsonify({
+                'status': 'error',
+                'error': confirm_err,
+                'message': (
+                    'Type the exact library name to confirm, or pass force=true '
+                    '(admin + CSRF still required).'
+                    if confirm_err == 'confirm_name_required'
+                    else 'confirm_name does not match library name.'
+                ),
+                'expected_name': library.name if confirm_err == 'confirm_name_mismatch' else None,
+            }), 400
+
+    # Generate a unique job ID
+    job_id = str(uuid.uuid4())
+
     # Create initial progress data immediately in main thread to prevent race condition
     deletion_progress[job_id] = {
         'status': 'initializing',

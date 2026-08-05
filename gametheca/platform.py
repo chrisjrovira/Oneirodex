@@ -58,6 +58,23 @@ class LibraryPlatform(PyEnum):
     NEOGEO = "Neo Geo AES"
     SWITCH = "Nintendo Switch"
     ARCADE = "Arcade"
+    # Console-gaming leaf systems present in real libraries but previously
+    # unrepresentable — a folder of these had nowhere to land.
+    AMIGA = "Commodore Amiga"
+    SEGA_SG1000 = "Sega SG-1000"
+    SUPERGRAFX = "PC Engine SuperGrafx"
+    PCE_CD = "PC Engine CD / TurboGrafx-CD"
+    NGPC = "Neo Geo Pocket Color"
+    SUPERVISION = "Watara Supervision"
+    GX4000 = "Amstrad GX4000"
+    ASTROCADE = "Bally Astrocade"
+    ARCADIA = "Emerson Arcadia 2001"
+    CREATIVISION = "VTech CreatiVision"
+    ADVISION = "Entex Adventure Vision"
+    STUDIO2 = "RCA Studio II"
+    ACTIONMAX = "WoW Action Max"
+    DAPHNE = "Daphne (laserdisc)"
+    PINBALL = "Pinball (Future Pinball / VP)"
 
 
 class Emulator(PyEnum):
@@ -105,6 +122,18 @@ class Emulator(PyEnum):
     CITRA = "citra"
     PCSX2 = "pcsx2"
     VITA3K = "vita3k"
+
+    # Console-gaming leaf cores. Companion/native unless listed in
+    # WEBRETR_INSTALLED_CORES — browser play stays honest about what it can run.
+    PUAE = "puae"                       # Commodore Amiga
+    MEDNAFEN_PCE = "mednafen_pce"       # PC Engine incl. CD
+    GEARSYSTEM = "gearsystem"           # Sega SG-1000 / MS / GG
+    POTATOR = "potator"                 # Watara Supervision
+    CAP32 = "cap32"                     # Amstrad CPC / GX4000
+    MAME2003_PLUS = "mame2003_plus"     # Astrocade / Arcadia / misc arcade
+    CRVISION = "crvision"               # VTech CreatiVision
+    DAPHNE = "daphne"                   # Laserdisc
+    MAME = "mame"                       # Full MAME for the long tail
 
     # Legacy aliases kept for admin profiles that still store old enum-style values.
     SEGA_MD = "genesis_plus_gx"
@@ -195,6 +224,24 @@ platform_emulator_mapping = {
     LibraryPlatform.NEOGEO: [],
     LibraryPlatform.SWITCH: [],
     LibraryPlatform.ARCADE: [],
+    # Console-gaming leaf systems. Cores are companion/native — none of these
+    # WASM builds ship in WebRetro yet, so browser play stays gated by
+    # WEBRETR_INSTALLED_CORES rather than promising a session it cannot start.
+    LibraryPlatform.AMIGA: [Emulator.PUAE],
+    LibraryPlatform.SEGA_SG1000: [Emulator.GEARSYSTEM, Emulator.GENESIS_PLUS_GX],
+    LibraryPlatform.SUPERGRAFX: [Emulator.MEDNAFEN_SUPERGRAFX],
+    LibraryPlatform.PCE_CD: [Emulator.MEDNAFEN_PCE, Emulator.MEDNAFEN_PCE_FAST],
+    LibraryPlatform.NGPC: [Emulator.MEDNAFEN_NGP],
+    LibraryPlatform.SUPERVISION: [Emulator.POTATOR],
+    LibraryPlatform.GX4000: [Emulator.CAP32],
+    LibraryPlatform.ASTROCADE: [Emulator.MAME2003_PLUS, Emulator.MAME],
+    LibraryPlatform.ARCADIA: [Emulator.MAME2003_PLUS, Emulator.MAME],
+    LibraryPlatform.CREATIVISION: [Emulator.CRVISION, Emulator.MAME],
+    LibraryPlatform.ADVISION: [Emulator.MAME],
+    LibraryPlatform.STUDIO2: [Emulator.MAME],
+    LibraryPlatform.ACTIONMAX: [],   # no emulation path — catalog only
+    LibraryPlatform.DAPHNE: [Emulator.DAPHNE],
+    LibraryPlatform.PINBALL: [],     # Future Pinball / VP are native Windows apps
 }
 
 
@@ -203,9 +250,12 @@ platform_emulator_mapping = {
 NATIVE_PC_PLATFORMS = frozenset({'PCWIN', 'PCDOS', 'MAC', 'OTHER'})
 
 # Catalog-only: no Play CTA (current-gen bar + Switch / Arcade / Neo Geo AES).
+# ACTIONMAX has no emulation path at all (VHS-driven light gun); PINBALL titles
+# are native Windows apps, not ROMs — both stay honest catalog entries.
 CATALOG_ONLY_PLATFORMS = frozenset({
     'PS5', 'XSX',
     'SWITCH', 'ARCADE', 'NEOGEO',
+    'ACTIONMAX', 'PINBALL',
 })
 
 # Prefer companion / native; browser cores not shipped (or not suitable).
@@ -213,6 +263,9 @@ COMPANION_PREFERRED_PLATFORMS = frozenset({
     'NGC', 'WII', 'PS2', 'PSVITA', 'SEGA_DC', 'N3DS', 'PCDOS',
     'PCE', 'PCFX', 'VICE_X64SC', 'VICE_X128', 'VICE_XVIC', 'VICE_XPLUS4', 'VICE_XPET',
     'PS3', 'PS4', 'PSP', 'XBOX', 'X360', 'XONE',
+    'AMIGA', 'SEGA_SG1000', 'SUPERGRAFX', 'PCE_CD', 'NGPC', 'SUPERVISION',
+    'GX4000', 'ASTROCADE', 'ARCADIA', 'CREATIVISION', 'ADVISION', 'STUDIO2',
+    'DAPHNE',
 })
 
 # Keys that currently have WebRetro WASM (mirrors play_url.WEBRETRO_PLATFORMS).

@@ -3,33 +3,51 @@ import { ITEM_KIND_BADGE, resolveItemKind } from './itemKind'
 /** Days after import that a game still counts as NEW (library default). */
 export const NEW_IMPORT_WINDOW_DAYS = 14
 
-/** Days after store/IGDB release that RELEASE badge may show. */
-export const RELEASE_WINDOW_DAYS = 30
-
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 /**
  * Badge kinds ordered by display priority (highest first).
- * @typedef {'UPDATE' | 'OUT' | 'MISSING' | 'NEW' | 'EXP' | 'EMU' | 'TOOL' | 'RELEASE' | '~' | 'OWNED' | 'LANG' | 'PATCH' | 'VR' | 'L'} BadgeKind
+ * Retired tile labels (2026-08-01): OUT · ~ · RELEASE — client omit only.
+ * @typedef {'UPDATE' | 'MISSING' | 'NEW' | 'EXP' | 'EMU' | 'TOOL' | 'OWNED' | 'LANG' | 'PATCH' | 'VR' | 'L'} BadgeKind
  */
 
 /** @type {Record<BadgeKind, number>} */
 export const BADGE_PRIORITY = {
   UPDATE: 100,
-  OUT: 90,
   MISSING: 85,
   NEW: 80,
   EXP: 74,
   EMU: 74,
   TOOL: 74,
-  RELEASE: 70,
-  '~': 60,
   LANG: 55,
   OWNED: 50,
   PATCH: 45,
   VR: 20,
   L: 10,
 }
+
+/** Preferred corner per kind (operator layout map for UID-001). */
+export const BADGE_CORNER_PREFERENCE = {
+  UPDATE: 'top-left',
+  MISSING: 'top-left',
+  NEW: 'top-left',
+  VR: 'top-left',
+  EXP: 'bottom-right',
+  EMU: 'bottom-right',
+  TOOL: 'bottom-right',
+  LANG: 'bottom-right',
+  OWNED: 'bottom-right',
+  PATCH: 'top-right',
+  L: 'top-right',
+}
+
+/** Corner visit order when preferred is taken or unavailable. */
+export const BADGE_CORNER_FALLBACK = [
+  'top-left',
+  'bottom-left',
+  'bottom-right',
+  'top-right',
+]
 
 /**
  * True when browse/details payload marks the title as removed from disk.
@@ -76,34 +94,21 @@ export function isWithinDays(date, windowDays, now = new Date()) {
  * Build ordered badge descriptors for a browse/API game object.
  *
  * @param {object} game
- * @param {{ now?: Date, newWindowDays?: number, releaseWindowDays?: number, maxVisible?: number }} [options]
+ * @param {{ now?: Date, newWindowDays?: number }} [options]
  * @returns {{ kind: BadgeKind, label: string, title: string, tone: string }[]}
  */
 export function collectBadgeSignals(game, options = {}) {
   const now = options.now || new Date()
   const newWindow = options.newWindowDays ?? NEW_IMPORT_WINDOW_DAYS
-  const releaseWindow = options.releaseWindowDays ?? RELEASE_WINDOW_DAYS
   const badges = []
 
   const freshness = game.freshness_status
+  // OUT / ~ retired — UPDATE alone when store is behind or local update flags fire.
   if (freshness === 'behind') {
-    badges.push({
-      kind: 'OUT',
-      label: 'OUT',
-      title: 'Behind store version (high confidence)',
-      tone: 'danger',
-    })
     badges.push({
       kind: 'UPDATE',
       label: 'UPDATE',
       title: 'Update available vs store',
-      tone: 'warn',
-    })
-  } else if (freshness === 'heuristic_behind') {
-    badges.push({
-      kind: '~',
-      label: '~',
-      title: 'Possibly behind store (heuristic)',
       tone: 'warn',
     })
   }
@@ -141,16 +146,7 @@ export function collectBadgeSignals(game, options = {}) {
     })
   }
 
-  const release =
-    parseDate(game.first_release_date) || parseDate(game.release_date)
-  if (isWithinDays(release, releaseWindow, now)) {
-    badges.push({
-      kind: 'RELEASE',
-      label: 'RELEASE',
-      title: 'Recent release window',
-      tone: 'info',
-    })
-  }
+  // RELEASE retired — first_release_date ignored for tile badges.
 
   if (game.owned || game.store_owned) {
     badges.push({
@@ -234,10 +230,130 @@ export function capBadges(badges, maxVisible = 2) {
 }
 
 /**
- * Corner placement with collision fallbacks.
- * Prefer top-left (UPDATE/OUT/MISSING/NEW/VR) — hamburger + favorite now stack together
- * in the top-right band (hamburger on top, favorite directly under it), so
- * badges avoid that whole corner until top-left/bottom-left are unavailable.
+ * Available corners for tile badges (skips bottom-left when platform chip owns it).
+ * @param {{ hasPlatformChip?: boolean }} [options]
+ * @returns {Array<'top-left' | 'top-right' | 'bottom-right' | 'bottom-left'>}
+ */
+export function availableBadgeCorners(options = {}) {
+  const { hasPlatformChip = false } = options
+  return BADGE_CORNER_FALLBACK.filter(
+    (corner) => !(hasPlatformChip && corner === 'bottom-left'),
+  )
+}
+
+/**
+ * Place badges into corners only — one tight stack per occupied corner.
+ * Empty corners are omitted (no spacers / reserved slots).
+ * Overflow `+N` is a corner occupant when present.
+ *
+ * @param {ReturnType<typeof collectBadgeSignals>} badges
+ * @param {{
+ *   hasPlatformChip?: boolean,
+ *   collidesWithTitle?: boolean,
+ *   maxPerCorner?: number,
+ * }} [options]
+ * @returns {{
+ *   corners: Array<{
+ *     corner: 'top-left' | 'top-right' | 'bottom-right' | 'bottom-left',
+ *     badges: ReturnType<typeof collectBadgeSignals>,
+ *     overflow: number,
+ *   }>,
+ *   hasVr: boolean,
+ *   hasMissing: boolean,
+ * }}
+ */
+export function layoutBadgesByCorner(badges, options = {}) {
+  const {
+    hasPlatformChip = false,
+    collidesWithTitle = false,
+    maxPerCorner = 2,
+  } = options
+
+  const corners = availableBadgeCorners({ hasPlatformChip })
+  /** @type {Map<string, ReturnType<typeof collectBadgeSignals>>} */
+  const buckets = new Map()
+  let overflow = 0
+  /** @type {string | null} */
+  let overflowAt = null
+
+  function room(corner) {
+    return (buckets.get(corner)?.length || 0) < maxPerCorner
+  }
+
+  function pickCorner(preferred, forceTopLeft = false) {
+    if (forceTopLeft && corners.includes('top-left') && room('top-left')) {
+      return 'top-left'
+    }
+    let start = corners.includes(preferred) ? preferred : corners[0]
+    if (collidesWithTitle && start === 'top-left' && !forceTopLeft && corners.length > 1) {
+      start = corners.find((c) => c !== 'top-left') || start
+    }
+    const ordered = [start, ...corners.filter((c) => c !== start)]
+    for (const corner of ordered) {
+      if (room(corner)) return corner
+    }
+    return null
+  }
+
+  function place(badge, forceTopLeft = false) {
+    const preferred = BADGE_CORNER_PREFERENCE[badge.kind] || 'top-left'
+    const corner = pickCorner(preferred, forceTopLeft)
+    if (!corner) {
+      overflow += 1
+      return
+    }
+    const list = buckets.get(corner) || []
+    list.push(badge)
+    buckets.set(corner, list)
+  }
+
+  const sorted = [...badges].sort(
+    (a, b) => (BADGE_PRIORITY[b.kind] || 0) - (BADGE_PRIORITY[a.kind] || 0),
+  )
+  const pinned = sorted.filter((b) => b.kind === 'VR' || b.kind === 'MISSING')
+  const flexible = sorted.filter((b) => b.kind !== 'VR' && b.kind !== 'MISSING')
+
+  for (const badge of pinned) {
+    place(badge, true)
+  }
+  for (const badge of flexible) {
+    place(badge, false)
+  }
+
+  if (overflow > 0) {
+    overflowAt =
+      corners.find((c) => room(c)) ||
+      [...buckets.keys()][0] ||
+      corners[0] ||
+      null
+    if (overflowAt && !buckets.has(overflowAt)) {
+      buckets.set(overflowAt, [])
+    }
+  }
+
+  const hasVr = sorted.some((b) => b.kind === 'VR')
+  const hasMissing = sorted.some((b) => b.kind === 'MISSING')
+
+  const result = []
+  for (const corner of BADGE_CORNER_FALLBACK) {
+    const list = buckets.get(corner)
+    const cornerOverflow = overflow > 0 && overflowAt === corner ? overflow : 0
+    if ((!list || list.length === 0) && cornerOverflow === 0) {
+      continue
+    }
+    result.push({
+      corner,
+      badges: list || [],
+      overflow: cornerOverflow,
+    })
+  }
+
+  return { corners: result, hasVr, hasMissing }
+}
+
+/**
+ * Corner placement with collision fallbacks (legacy single-stack helper).
+ * Prefer top-left (UPDATE/MISSING/NEW/VR) — hamburger + favorite stack top-right.
  * VR / MISSING always stay top-left (never overlap the system/platform chip at bottom-left).
  * When a platform chip occupies bottom-left, skip that corner.
  * Order: top-left → bottom-left → bottom-right → top-right
@@ -248,17 +364,16 @@ export function capBadges(badges, maxVisible = 2) {
  */
 export function resolveBadgeCorner(preferred = 'top-left', collidesWithTitle = false, options = {}) {
   const { hasVr = false, hasMissing = false, hasPlatformChip = false } = options
-  // VR / MISSING + transitional stack own top-left exclusively — never fall onto the system chip.
   if (hasVr || hasMissing) {
     return 'top-left'
   }
-  const order = ['top-left', 'bottom-left', 'bottom-right', 'top-right'].filter(
-    (corner) => !(hasPlatformChip && corner === 'bottom-left'),
-  )
+  const cascade = hasPlatformChip
+    ? availableBadgeCorners({ hasPlatformChip })
+    : ['top-left', 'bottom-left', 'bottom-right', 'top-right']
   if (!collidesWithTitle) {
-    return order.includes(preferred) ? preferred : order[0]
+    return cascade.includes(preferred) ? preferred : cascade[0]
   }
-  const start = order.indexOf(preferred)
+  const start = cascade.indexOf(preferred)
   const idx = start < 0 ? 0 : start
-  return order[(idx + 1) % order.length]
+  return cascade[(idx + 1) % cascade.length]
 }

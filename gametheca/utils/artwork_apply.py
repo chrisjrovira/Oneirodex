@@ -12,9 +12,16 @@ from werkzeug.utils import secure_filename
 
 from gametheca import db
 from gametheca.models import Game, Image
+from gametheca.utils.image_kinds import (
+    IMAGE_KINDS,
+    SINGULAR_IMAGE_KINDS,
+    image_kinds_error_message,
+    parse_image_kind,
+)
 from gametheca.utils.providers import get_provider
 
-VALID_IMAGE_TYPES = frozenset({'cover', 'logo', 'hero'})
+# Back-compat alias — full locked taxonomy (BE-DET-10).
+VALID_IMAGE_TYPES = IMAGE_KINDS
 
 
 def _extension_from_url_or_type(url: str, content_type: str | None) -> str:
@@ -44,11 +51,12 @@ def apply_cover_from_url(
     Download an absolute image URL and store it as game artwork.
 
     Artwork only — never downloads game binaries.
-    image_type: cover | logo | hero
+    image_type / kind: cover | screenshot | box | cart | disc | logo | hero | fanart
     """
-    image_type = (image_type or 'cover').strip().lower()
-    if image_type not in VALID_IMAGE_TYPES:
-        raise ValueError('image_type must be cover, logo, or hero')
+    try:
+        image_type = parse_image_kind(image_type, default='cover')
+    except ValueError as exc:
+        raise ValueError(image_kinds_error_message()) from exc
 
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
@@ -75,12 +83,13 @@ def apply_cover_from_url(
     with open(save_path, 'wb') as handle:
         handle.write(data)
 
-    # Cover/logo/hero: keep a single primary of each type
-    existing = db.session.execute(
-        select(Image).filter_by(game_uuid=game_uuid, image_type=image_type)
-    ).scalars().all()
-    for row in existing:
-        db.session.delete(row)
+    # Singular kinds: keep one primary row; screenshots may accumulate.
+    if image_type in SINGULAR_IMAGE_KINDS:
+        existing = db.session.execute(
+            select(Image).filter_by(game_uuid=game_uuid, image_type=image_type)
+        ).scalars().all()
+        for row in existing:
+            db.session.delete(row)
 
     image = Image(
         game_uuid=game_uuid,
@@ -96,6 +105,7 @@ def apply_cover_from_url(
         'game_uuid': game_uuid,
         'image_id': image.id,
         'image_type': image_type,
+        'kind': image_type,
         'filename': file_name,
         'cover_url': url_for('static', filename=f'library/images/{file_name}'),
         'url': url_for('static', filename=f'library/images/{file_name}'),

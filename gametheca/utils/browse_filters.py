@@ -134,6 +134,7 @@ def apply_badge_filters(query, args, *, user=None, now: datetime | None = None):
       needs_translation=1 — ROM lang known and mismatches preferred_game_locale
       item_kind=…         — game|experience|emulator|tool (comma list / repeated)
       content_kind=…      — alias of item_kind
+      path_missing=1      — MISSING badge chip (files gone from disk)
       path_status=…       — ok|missing|empty (comma list; admin/librarian tools)
       name=… / q=…        — case-insensitive title substring (Library type-to-search)
     """
@@ -178,6 +179,9 @@ def apply_badge_filters(query, args, *, user=None, now: datetime | None = None):
     if _flag(args, 'needs_translation'):
         preferred = _preferred_locale_from_user(user)
         query = query.filter(needs_translation_sql_filter(preferred))
+
+    if _flag(args, 'path_missing'):
+        query = query.filter(Game.path_status == PATH_STATUS_MISSING)
 
     query = apply_item_kind_filter(query, args)
     query = apply_path_status_filter(query, args)

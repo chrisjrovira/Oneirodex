@@ -1,9 +1,13 @@
 /* Left chat slide-out — aurora glass, under TopNav */
 
+/* Sits with Friends on the right. It used to be bottom-left, directly on top of
+   the ScrollJump up/down controls. */
 .gt-chat-slide__launcher {
   position: fixed;
-  left: 1rem;
-  bottom: 1rem;
+  right: 1rem;
+  left: auto;
+  /* Clear the Friends dock, which owns the bottom-right corner. */
+  bottom: 4.75rem;
   z-index: 55;
   display: inline-flex;
   align-items: center;
@@ -159,8 +163,9 @@
   }
 
   .gt-chat-slide__launcher {
-    left: 0.65rem;
-    bottom: 0.65rem;
+    right: 0.65rem;
+    left: auto;
+    bottom: 4.4rem;
   }
 }
 

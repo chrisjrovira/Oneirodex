@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from flask import current_app, has_request_context, render_template, request
+from markupsafe import escape
 from sqlalchemy import select
 
 from gametheca import db
@@ -105,12 +106,13 @@ def send_digest_for_user(user: User, prefs: UserPreference, *, now: datetime | N
             inbox_link=_absolute_link('/notifications'),
         )
     except Exception:
+        # Titles/bodies carry user-authored chat text — escape like the Jinja path does.
         lines = []
         for item in items:
-            snippet = (item['body'] or '')[:120]
+            snippet = escape((item['body'] or '')[:120])
             link = item.get('link') or ''
-            open_bit = f' — <a href="{link}">Open</a>' if link else ''
-            lines.append(f'<li><strong>{item["title"]}</strong> — {snippet}{open_bit}</li>')
+            open_bit = f' — <a href="{escape(link)}">Open</a>' if link else ''
+            lines.append(f'<li><strong>{escape(item["title"])}</strong> — {snippet}{open_bit}</li>')
         html = (
             f'<p>You have {len(items)} unread notification'
             f'{"s" if len(items) != 1 else ""}.</p>'

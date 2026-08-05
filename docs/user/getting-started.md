@@ -26,15 +26,15 @@ After login you land in the **member SPA** with a **top nav** (no left sidebar):
 
 **Profile / account** lives under the compressed TopNav account control (not a full-page takeover). **More → Friends** opens the stay-open Friends dock in place — it does **not** navigate to `/social-companion` as the main SPA shell.
 
-**Keyboard:** Tab to **Skip to main content** (first focusable control) to jump past the top nav into `#main-content`. Top nav and the **Ctrl/Cmd+K** command palette show a visible focus ring on keyboard focus.
+**Keyboard:** Tab to **Skip to main content** (first focusable control) to jump past the top nav into `#main-content`. Top nav and the **Ctrl/Cmd+K** command palette show a visible focus ring on keyboard focus. On long scrollable pages, **Jump to top** / **Jump to bottom** controls appear bottom-left (hide when the page doesn’t scroll).
 
 **Command palette:** press **Ctrl+K** (⌘K on Mac) or the top-nav **Search** hint to jump to any primary/More page, Preferences, Admin, or Help. On **Library**, Ctrl+K searches **library titles** first. Screenshot backlog for palette / Ops / health probes: [CAPTURE.md](../assets/readme/CAPTURE.md).
 
-Library **page size** options go up through **200–1000** (full allowlist 20/50/100/200/250/300/400/500/1000) — [preferences-themes.md](preferences-themes.md). Library Filters include **Signals** chips (UPDATE · OUT/~ · MISSING · NEW · RELEASE · LANG).
+Library **page size** options go up through **200–1000** (full allowlist 20/50/100/200/250/300/400/500/1000) — [preferences-themes.md](preferences-themes.md). Library Filters include **Signals** chips (UPDATE · MISSING · NEW · LANG). On desktop, a chevron collapses Filters to a slim rail so the grid reflows (preference saved); ≤900px still uses the Filters drawer.
 
 If Discover/Library look unstyled, the deploy is missing **`member-app.css`** — ask an admin to rebuild the image.
 
-On phones and narrow tablets (≤900px), the top nav becomes a **hamburger** menu, Library **filters** open as a left drawer/sheet, Chat slide-out goes full-width with channels stacked above messages, library tiles clamp denser, and pagination wraps full-width (your saved tile preference still applies on desktop).
+On phones and narrow tablets (≤900px), the top nav becomes a **hamburger** menu, Library **filters** open as a left drawer/sheet (desktop collapse rail does not apply), Chat slide-out goes full-width with channels stacked above messages, library tiles clamp denser, and pagination wraps full-width (your saved tile preference still applies on desktop).
 
 ## First things to try
 

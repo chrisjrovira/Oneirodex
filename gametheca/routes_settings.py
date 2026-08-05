@@ -228,7 +228,7 @@ def settings_panel():
     if request.method == 'GET':
         prefs = current_user.preferences
         if prefs:
-            form.items_per_page.data = prefs.items_per_page or 20
+            form.items_per_page.data = prefs.items_per_page or 50
             form.default_sort.data = prefs.default_sort or 'name'
             form.default_sort_order.data = prefs.default_sort_order or 'asc'
             form.theme.data = prefs.theme or 'default'

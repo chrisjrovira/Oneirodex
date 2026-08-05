@@ -1,10 +1,14 @@
 """Unit tests for ROM language / patch filename heuristics."""
 
+from types import SimpleNamespace
+
 from gametheca.utils.rom_language import (
+    apply_rom_language_fields,
     classify_patch_file,
     parse_rom_language_tags,
     preferred_locale_matches,
 )
+from gametheca.utils.rom_name_peel import parse_console_rom_label
 
 
 def test_parse_japan_region_implies_ja():
@@ -41,3 +45,44 @@ def test_classify_patch_file():
     assert meta['patch_format'] == 'bps'
     assert meta['target_language'] == 'en'
     assert classify_patch_file('readme.txt') is None
+
+
+def test_apply_rom_language_fields_persists_region_paren():
+    game = SimpleNamespace(name='x', full_disk_path=None, rom_region=None, rom_languages=None, has_english=None)
+    apply_rom_language_fields(game, r'C:\roms\Super Metroid (USA).sfc')
+    assert game.rom_region == 'USA'
+    assert game.rom_languages == 'en'
+    assert game.has_english is True
+
+
+def test_apply_rom_language_fields_persists_lang_list():
+    game = SimpleNamespace(name='x', full_disk_path=None, rom_region=None, rom_languages=None, has_english=None)
+    apply_rom_language_fields(game, 'Game (Europe) (En,Fr,De).nes')
+    assert game.rom_region == 'EUR'
+    assert game.rom_languages == 'en,fr,de'
+    assert game.has_english is True
+
+
+def test_apply_prefers_peel_capture_over_cleaned_name():
+    """Peel captures win even when game.name is already stripped of tags."""
+    game = SimpleNamespace(
+        name='Game',
+        full_disk_path=None,
+        rom_region=None,
+        rom_languages=None,
+        has_english=None,
+    )
+    peel = parse_console_rom_label('Game (Europe) (En,Fr,De).gb')
+    assert peel['cleaned_name'] == 'Game'
+    assert peel['rom_region'] == 'EUR'
+    apply_rom_language_fields(game, peel=peel)
+    assert game.rom_region == 'EUR'
+    assert game.rom_languages == 'en,fr,de'
+
+
+def test_console_peel_exposes_region_and_lang_keys():
+    peel = parse_console_rom_label('Final Fantasy (Japan).sfc')
+    assert peel['rom_region'] == 'JPN'
+    assert peel['rom_languages'] == 'ja'
+    assert peel['has_english'] is False
+    assert peel['languages'] == ['ja']

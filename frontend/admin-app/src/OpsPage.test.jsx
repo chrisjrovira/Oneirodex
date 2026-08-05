@@ -277,8 +277,10 @@ test('OpsPage status banner lists issues with href', async () => {
 
   render(<OpsPage />)
 
-  // Prefer heading role — banner strong also reads "Warning / Info"
+  // GT-C1: the banner headline is now "Degraded", so the fold title is the only
+  // "Warning / Info" on the page — assert that there is exactly one.
   expect(await screen.findByRole('heading', { name: 'Warning / Info' })).toBeInTheDocument()
+  expect(screen.getAllByText('Warning / Info')).toHaveLength(1)
   expect(screen.queryByRole('heading', { name: 'Action required' })).not.toBeInTheDocument()
   const issueLink = await screen.findByRole('link', {
     name: /1 scan job\(s\) failed or errored/i,
@@ -332,10 +334,12 @@ test('OpsPage splits action and warning folds; category maps to action', async (
     '/admin/system_logs',
   )
   expect(screen.getByText('Games disk 88% used')).toBeInTheDocument()
-  // Status strip strong label (banner head) — Action required wins over overall=warn
+  // Status strip strong label (banner head) — action items still win over overall=warn,
+  // but the headline is a verdict, not a repeat of the fold title (GT-C1).
   const status = screen.getByLabelText('System status')
   expect(status).toHaveClass('gt-ops-status--bad')
-  expect(status.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Action required')
+  expect(status.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Needs attention')
+  expect(screen.getAllByText('Action required')).toHaveLength(1)
 })
 
 test('OpsPage keeps disk_*_critical in Warning / Info fold', async () => {
@@ -370,7 +374,8 @@ test('OpsPage keeps disk_*_critical in Warning / Info fold', async () => {
   expect(screen.getByText('Games disk 96% used')).toBeInTheDocument()
   const status = screen.getByLabelText('System status')
   expect(status).toHaveClass('gt-ops-status--warn')
-  expect(status.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Warning / Info')
+  expect(status.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Degraded')
+  expect(screen.getAllByText('Warning / Info')).toHaveLength(1)
 })
 
 test('OpsPage manual Refresh shows status; poll does not wipe content', async () => {

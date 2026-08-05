@@ -36,12 +36,70 @@ def normalize_room_name(raw: str) -> str:
     return cleaned or 'lobby'
 
 
+def voice_room_name(channel_id: int) -> str:
+    """Canonical room id for a voice channel. Callers never pass free text."""
+    return f'voice:{int(channel_id)}'
+
+
+HOUSEHOLD_LOBBY = 'household:lobby'
+_PARTY_PREFIX = 'household:party:'
+_VOICE_PREFIX = 'voice:'
+
+
 def user_may_join_room(user, room: str) -> bool:
-    role = normalize_role(getattr(user, 'role', None))
-    room_l = (room or '').lower()
-    if role == 'child' and ('adult' in room_l or room_l.startswith('admin')):
+    """Resolve a room name to something the user demonstrably has access to.
+
+    Previously this only kept children out of rooms *named* "adult"/"admin",
+    which meant any authenticated user could mint a token for any room string —
+    and party rooms are keyed on game UUIDs that are visible in details URLs.
+    That was obscurity, not enforcement.
+
+    Every recognised room now resolves to a real access check, and **anything
+    unrecognised is denied**.
+    """
+    if getattr(user, 'id', None) is None:
         return False
-    return True
+
+    role = normalize_role(getattr(user, 'role', None))
+    name = (room or '').strip()
+    lowered = name.lower()
+
+    # Voice channel — membership of the owning space decides.
+    if lowered.startswith(_VOICE_PREFIX):
+        raw_id = name[len(_VOICE_PREFIX):]
+        if not raw_id.isdigit():
+            return False
+        from gametheca import db
+        from gametheca.models import ChatChannel
+        from gametheca.utils.chat_spaces import user_can_access_channel
+
+        channel = db.session.get(ChatChannel, int(raw_id))
+        if channel is None or channel.kind != 'voice' or channel.archived_at is not None:
+            return False
+        return user_can_access_channel(user, channel)
+
+    # Game party — you may join if you may see the game.
+    if lowered.startswith(_PARTY_PREFIX):
+        game_uuid = name[len(_PARTY_PREFIX):].strip()
+        if not game_uuid:
+            return False
+        from gametheca import db
+        from gametheca.models import Game
+        from gametheca.utils.library_acl import user_can_access_game
+        from sqlalchemy import select
+
+        game = db.session.execute(
+            select(Game).filter_by(uuid=game_uuid)
+        ).scalars().first()
+        if game is None:
+            return False
+        return bool(user_can_access_game(user, game))
+
+    # The one intentionally household-wide room.
+    if lowered == HOUSEHOLD_LOBBY:
+        return role != 'child'
+
+    return False
 
 
 def _b64url(data: bytes) -> str:

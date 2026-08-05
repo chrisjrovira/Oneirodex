@@ -6,7 +6,7 @@ Use these unless the user **explicitly** overrides in the same message.
 
 | Default | Value |
 |---|---|
-| Product | Self-hosted household **gaming sphere** (library · systems · ownership/metadata · play · social · admin/ops · acquire) — DRM-free vault, not a DRM store client |
+| Product | **Mission:** self-hosted household **gaming sphere** — already-owned PC/console libraries → shared honest catalog (library · systems · ownership/metadata · play · social · admin/ops · BYO acquire). DRM-free vault / Unraid+Compose home hub — **not** a DRM store client, Discord clone, or pirate marketplace. Full text: `agent-pm` Product mission |
 | Social | Native chat/presence; optional LiveKit; BYO Stoat/Matrix link |
 | Discord | **Never** — excised; no webhooks |
 | Windows code signing | **Never** — unsigned desktop builds only; no cert purchase |

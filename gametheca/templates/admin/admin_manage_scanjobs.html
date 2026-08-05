@@ -1,22 +1,52 @@
 {% extends "base_admin.html" %}
 {% block styles %}
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_scanjobs.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/admin/admin_manage_libs.css'|theme_asset }}">
+<style>
+  #deleteWarningModal.modal,
+  #batchEditModal.modal {
+    z-index: 1065 !important;
+    background: transparent !important;
+    pointer-events: none !important;
+  }
+  #deleteWarningModal .modal-dialog,
+  #batchEditModal .modal-dialog {
+    pointer-events: auto !important;
+    z-index: 1;
+  }
+  #deleteWarningModal .modal-content,
+  #deleteWarningModal .btn,
+  #batchEditModal .modal-content,
+  #batchEditModal .btn {
+    pointer-events: auto !important;
+  }
+  body.modal-open > .modal-backdrop {
+    z-index: 1060 !important;
+  }
+  #deleteSpinner.spinner-overlay {
+    z-index: 1070;
+  }
+</style>
 {% endblock %}
 {% block content %}
 {% import 'partials/icons.html' as icons %}
 
 <meta name="active-tab" content="{{ active_tab }}">
 <meta name="selected-library-uuid" content="{{ selected_library_uuid }}">
+<script src="{{ url_for('static', filename='vendor/sortablejs/1.15.2/Sortable.min.js') }}"></script>
 
 <div class="admin_manage_scanjobs-nav-panel mt-3">
     <div class="container-settings gt-adminpage gt-adminpage--xl">
         <div class="gt-adminpage-header">
             <div>
-                <h1 class="gt-adminpage-title">Scan management</h1>
-                <p class="gt-adminpage-lede">Auto / manual scans, unmatched folders, filters, and extensions.</p>
+                <h1 class="gt-adminpage-title">Libraries &amp; scans</h1>
+                <p class="gt-adminpage-lede">Manage libraries, run scans, triage unmatched folders, filters, and extensions — one place.</p>
             </div>
         </div>
         <ul class="admin_manage_scanjobs-nav-tabs nav nav-tabs">
+            <li class="admin_manage_scanjobs-nav-item nav-item">
+                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'libraries' %}active{% endif %}" id="libraries-tab" data-bs-toggle="tab" href="#librariesPanel">Libraries</a>
+            </li>
             <li class="admin_manage_scanjobs-nav-item nav-item">
                 <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'auto' or not active_tab %}active{% endif %}" id="autoScan-tab" data-bs-toggle="tab" href="#autoScan">Auto Scan</a>
             </li>
@@ -39,6 +69,11 @@
 
         <!-- Tab panes -->
         <div class="admin_manage_scanjobs-tab-content tab-content">
+            <!-- Libraries Tab (W22-1 unified with Library Management) -->
+            <div id="librariesPanel" class="admin_manage_scanjobs-tab-panel tab-pane {% if active_tab == 'libraries' %}active{% else %}fade{% endif %}">
+                {% include 'admin/partials/admin_libraries_panel.html' %}
+            </div>
+
             <!-- Auto Scan Tab -->
             <div id="autoScan" class="admin_manage_scanjobs-tab-panel tab-pane {% if active_tab == 'auto' or not active_tab %}active{% else %}fade{% endif %}">
 
@@ -391,24 +426,24 @@
                         <span class="visually-hidden">Working…</span>
                     </div>
 
-                    <div class="container-unmatched-buttons mb-3">
-                        <form action="" method="post">
-                            {{ csrf_form.csrf_token }}
-                            <input type="hidden" name="submit" value="DeleteAllUnmatched">
-                            <button type="submit" class="admin_manage_scanjobs-clearall-btn btn btn-outline-light btn-sm" data-toggle="tooltip" title="Remove all entries from the unmatched folders list" onclick="return confirm('Are you sure you want to delete all entries in the list? This cannot be undone.');">Clear All</button>
-                        </form>
-                        <form action="" method="post">
-                            {{ csrf_form.csrf_token }}
-                            <input type="hidden" name="submit" value="DeleteOnlyUnmatched">
-                            <button type="submit" class="admin_manage_scanjobs-clearunmatched-btn btn btn-outline-light btn-sm" data-toggle="tooltip" title="Remove only folders with 'Unmatched' status, keeping identified items" onclick="return confirm('Are you sure you want to clear all unmatched folders? This cannot be undone.');">Clear Unmatched</button>
-                            <button type="button" id="reclassifyDuplicatesBtn" class="btn btn-outline-light btn-sm" data-toggle="tooltip" title="Change false Duplicate rows (different folder titles, same IGDB) back to Unmatched">Fix false duplicates</button>
-                            <button type="button" id="backfillSuggestedKindBtn" class="btn btn-outline-light btn-sm" data-toggle="tooltip" title="Fill missing Suggested kind chips from on-disk scan proposals (legacy rows)">Backfill kind hints</button>
-                        </form>
-                        <div class="btn-group" role="group" aria-label="Export unmatched folders">
-                            <a id="exportUnmatchedCsvBtn" class="btn btn-outline-light btn-sm" href="{{ url_for('apis.export_unmatched_folders', status='all', format='csv') }}" data-toggle="tooltip" title="Download the current filter as CSV">
+                    <div class="unmatched-resolve-bar-wrap mb-3">
+                        <div class="container-unmatched-buttons unmatched-resolve-bar" role="toolbar" aria-label="Resolve unmatched folders">
+                            <form action="" method="post">
+                                {{ csrf_form.csrf_token }}
+                                <input type="hidden" name="submit" value="DeleteAllUnmatched">
+                                <button type="submit" class="admin_manage_scanjobs-clearall-btn unmatched-resolve-bar__pill" data-toggle="tooltip" title="Remove all entries from the unmatched folders list" onclick="return confirm('Are you sure you want to delete all entries in the list? This cannot be undone.');">Clear All</button>
+                            </form>
+                            <form action="" method="post">
+                                {{ csrf_form.csrf_token }}
+                                <input type="hidden" name="submit" value="DeleteOnlyUnmatched">
+                                <button type="submit" class="admin_manage_scanjobs-clearunmatched-btn unmatched-resolve-bar__pill" data-toggle="tooltip" title="Remove only folders with 'Unmatched' status, keeping identified items" onclick="return confirm('Are you sure you want to clear all unmatched folders? This cannot be undone.');">Clear Unmatched</button>
+                            </form>
+                            <button type="button" id="reclassifyDuplicatesBtn" class="unmatched-resolve-bar__pill" data-toggle="tooltip" title="Change false Duplicate rows (different folder titles, same IGDB) back to Unmatched">Fix false duplicates</button>
+                            <button type="button" id="backfillSuggestedKindBtn" class="unmatched-resolve-bar__pill" data-toggle="tooltip" title="Fill missing Suggested kind chips from on-disk scan proposals (legacy rows)">Backfill kind hints</button>
+                            <a id="exportUnmatchedCsvBtn" class="unmatched-resolve-bar__pill" href="{{ url_for('apis.export_unmatched_folders', status='all', format='csv') }}" data-toggle="tooltip" title="Download the current filter as CSV">
                                 {{ icons.icon('download') }} Export CSV
                             </a>
-                            <a id="exportUnmatchedJsonBtn" class="btn btn-outline-light btn-sm" href="{{ url_for('apis.export_unmatched_folders', status='all', format='json') }}" data-toggle="tooltip" title="Download the current filter as JSON">
+                            <a id="exportUnmatchedJsonBtn" class="unmatched-resolve-bar__pill" href="{{ url_for('apis.export_unmatched_folders', status='all', format='json') }}" data-toggle="tooltip" title="Download the current filter as JSON">
                                 {{ icons.icon('download') }} Export JSON
                             </a>
                         </div>
@@ -433,11 +468,11 @@
                             </div>
                         </div>
                         <div class="filter-row filter-row--chips">
-                            <div class="filter-chip-group" role="group" aria-label="Leaf type">
-                                <span class="filter-chip-label">Leaf</span>
+                            <div class="filter-chip-group" role="group" aria-label="Library layout">
+                                <span class="filter-chip-label">Layout</span>
                                 <button type="button" class="filter-chip active" data-leaf-filter="all">All</button>
-                                <button type="button" class="filter-chip" data-leaf-filter="file-leaf" title="ROM or archive file registered as scan leaf">File leaf</button>
-                                <button type="button" class="filter-chip" data-leaf-filter="folder-leaf" title="Named game folder">Folder leaf</button>
+                                <button type="button" class="filter-chip" data-leaf-filter="file-leaf" title="ROM or archive files in a folder (files scan mode)">ROM files library</button>
+                                <button type="button" class="filter-chip" data-leaf-filter="folder-leaf" title="Each game is its own named folder">Folder library</button>
                             </div>
                             <div class="filter-chip-group" role="group" aria-label="Triage hints">
                                 <span class="filter-chip-label">Triage</span>
@@ -458,9 +493,9 @@
                             <div class="filter-chip-group" role="group" aria-label="Suggested kind">
                                 <span class="filter-chip-label">Kind</span>
                                 <button type="button" class="filter-chip active" data-kind-filter="all">All</button>
-                                <button type="button" class="filter-chip" data-kind-filter="experience">Experience</button>
+                                <button type="button" class="filter-chip" data-kind-filter="experience">Soft title</button>
                                 <button type="button" class="filter-chip" data-kind-filter="emulator">Emulator</button>
-                                <button type="button" class="filter-chip" data-kind-filter="tool">Tool</button>
+                                <button type="button" class="filter-chip" data-kind-filter="tool">Utility</button>
                                 <button type="button" class="filter-chip" data-kind-filter="none" title="No suggested kind">No hint</button>
                             </div>
                         </div>
@@ -475,11 +510,26 @@
                                 <th class="col-select">
                                     <input type="checkbox" id="unmatchedSelectAll" title="Select all visible rows" aria-label="Select all visible unmatched rows">
                                 </th>
-                                <th class="col-path">Folder</th>
-                                <th class="col-status">Status</th>
-                                <th class="col-library">Library</th>
-                                <th class="col-platform">Platform</th>
-                                <th class="col-actions">Actions</th>
+                                <th class="col-path" scope="col">
+                                    <button type="button" class="unmatched-sort-btn" data-sort-key="folder" aria-pressed="false">
+                                        Folder <span class="unmatched-sort-btn__ind" aria-hidden="true"></span>
+                                    </button>
+                                </th>
+                                <th class="col-status" scope="col">
+                                    <button type="button" class="unmatched-sort-btn" data-sort-key="status" aria-pressed="false">
+                                        Status <span class="unmatched-sort-btn__ind" aria-hidden="true"></span>
+                                    </button>
+                                </th>
+                                <th class="col-library" scope="col">
+                                    <button type="button" class="unmatched-sort-btn" data-sort-key="library" aria-pressed="false">
+                                        Library <span class="unmatched-sort-btn__ind" aria-hidden="true"></span>
+                                    </button>
+                                </th>
+                                <th class="col-platform" scope="col">
+                                    <button type="button" class="unmatched-sort-btn" data-sort-key="platform" aria-pressed="false">
+                                        Platform <span class="unmatched-sort-btn__ind" aria-hidden="true"></span>
+                                    </button>
+                                </th>
                             </tr>
                         </thead>
                         <tbody id="unmatchedFoldersTableBody">
@@ -493,9 +543,9 @@
                         <div class="unmatched-batch-bar__count" id="unmatchedBatchCount">0 selected</div>
                         <div class="unmatched-batch-bar__actions">
                             <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="clear" title="Remove selected from unmatched list">Clear selected</button>
-                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="mark_experience" title="Catalog selected as Experience">Mark Experience</button>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="mark_experience" title="Catalog selected as Soft title">Mark Soft title</button>
                             <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="mark_emulator" title="Catalog selected as Emulator">Mark Emulator</button>
-                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="mark_tool" title="Catalog selected as Tool">Mark Tool</button>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="mark_tool" title="Catalog selected as Utility">Mark Utility</button>
                             <span class="unmatched-batch-bar__sep" aria-hidden="true"></span>
                             <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="merge" title="Duplicate: keep library game, clear row">Merge</button>
                             <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="keep" title="Duplicate: reclassify as Unmatched">Keep</button>
@@ -1310,7 +1360,8 @@
             fetch('/admin/clear_permission_errors', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRFUtils.getToken()
                 }
             });
 
@@ -1320,6 +1371,19 @@
             window.history.replaceState({}, '', newUrl);
         }
     });
+</script>
+
+<script src="{{ 'js/admin_manage_libs.js'|theme_asset }}"></script>
+<script>
+(function () {
+  ['deleteWarningModal', 'batchEditModal'].forEach(function (id) {
+    var modalEl = document.getElementById(id);
+    if (!modalEl) return;
+    if (modalEl.parentElement !== document.body) {
+      document.body.appendChild(modalEl);
+    }
+  });
+})();
 </script>
 
 {% endblock %}

@@ -34,6 +34,7 @@ disable-model-invocation: true
 3. Responsive ≤900px + desktop; theme-adaptive icons (`currentColor` / masks)
 4. Features already on by default; **OIDC stays opt-in** — do not invent flags
 5. Prefer update existing components/CSS over parallel “new design systems”
+6. **UI debt gate (mandatory):** Before starting and before closing Library / Filters / Scans / Unmatched / Themes / Emulators / Settings / Chat Tasks — read `docs/dev/ui-debt-log.md`. Update matching debt rows (`in_progress` / `done` / `deferred`) and **append a Change log row**. Do not close “fixed” if the human symptom row stays `open` without an explicit deferred reason.
 
 ## Paths
 

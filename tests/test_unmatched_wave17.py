@@ -269,3 +269,99 @@ def test_batch_ids_cap(client, app, admin):
     resp = client.post('/api/unmatched_folders/batch/clear', json={'ids': ids})
     assert resp.status_code == 400
     assert resp.get_json()['cap'] == 100
+
+
+def test_list_and_export_include_disk_meta_keys(client, app, db_session, admin, lib):
+    """UID-016 compare: size/mtime keys present (null-safe) on list + JSON export."""
+    identified = datetime(2024, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+    created = datetime(2023, 1, 15, 8, 30, 0, tzinfo=timezone.utc)
+    failed = datetime(2025, 3, 10, 14, 0, 0, tzinfo=timezone.utc)
+
+    game = Game(
+        uuid=str(uuid4()),
+        name='Sized Hit',
+        library_uuid=lib.uuid,
+        full_disk_path='/games/Sized Hit',
+        size=1048576,
+        igdb_id=900000 + (uuid4().int % 90000),
+        date_identified=identified,
+        date_created=created,
+        rom_region='USA',
+        rom_languages='en',
+    )
+    db_session.add(game)
+    db_session.flush()
+
+    dup = UnmatchedFolder(
+        id=str(uuid4()),
+        library_uuid=lib.uuid,
+        folder_path='/games/Sized Hit (USA)',
+        failed_time=failed,
+        content_type='Games',
+        status='Duplicate',
+        matched_game_uuid=game.uuid,
+        match_reason='title_vs_library_name',
+        match_score=0.96,
+    )
+    plain = UnmatchedFolder(
+        id=str(uuid4()),
+        library_uuid=lib.uuid,
+        folder_path='/games/No Size Yet',
+        failed_time=None,
+        content_type='Games',
+        status='Unmatched',
+    )
+    db_session.add_all([dup, plain])
+    db_session.commit()
+
+    _login(client, app, admin)
+
+    listed = client.get('/api/unmatched_folders')
+    assert listed.status_code == 200
+    rows = {r['id']: r for r in listed.get_json()}
+
+    folder_keys = (
+        'size_bytes', 'folder_size_bytes', 'folder_mtime', 'mtime', 'modified_at', 'failed_time',
+    )
+    game_keys = ('size_bytes', 'date_identified', 'date_created', 'folder_mtime', 'mtime')
+
+    for row_id in (dup.id, plain.id):
+        row = rows[row_id]
+        for key in folder_keys:
+            assert key in row, f'missing {key} on list row'
+        # UnmatchedFolder has no size column — always null
+        assert row['size_bytes'] is None
+        assert row['folder_size_bytes'] is None
+
+    assert rows[dup.id]['folder_mtime'] == failed.replace(tzinfo=None).isoformat()
+    assert rows[dup.id]['mtime'] == failed.replace(tzinfo=None).isoformat()
+    assert rows[dup.id]['modified_at'] == failed.replace(tzinfo=None).isoformat()
+    assert rows[dup.id]['failed_time'] == failed.replace(tzinfo=None).isoformat()
+    assert rows[plain.id]['folder_mtime'] is None
+    assert rows[plain.id]['failed_time'] is None
+
+    mg = rows[dup.id]['matched_game']
+    assert mg is not None
+    for key in game_keys:
+        assert key in mg, f'missing {key} on matched_game'
+    assert mg['size_bytes'] == 1048576
+    assert mg['date_identified'] == identified.replace(tzinfo=None).isoformat()
+    assert mg['date_created'] == created.replace(tzinfo=None).isoformat()
+    assert mg['folder_mtime'] == identified.replace(tzinfo=None).isoformat()
+    assert mg['mtime'] == identified.replace(tzinfo=None).isoformat()
+    # BE-DET region/lang intact
+    assert mg['rom_region'] == 'USA'
+    assert mg['rom_languages'] == 'en'
+    assert rows[plain.id]['matched_game'] is None
+    assert 'rom_region' in rows[dup.id]
+    assert 'rom_languages' in rows[dup.id]
+
+    exported = client.get('/api/unmatched_folders/export', query_string={'format': 'json'})
+    assert exported.status_code == 200
+    export_rows = {r['id']: r for r in exported.get_json()}
+    for key in folder_keys:
+        assert key in export_rows[dup.id]
+    assert export_rows[dup.id]['matched_game']['size_bytes'] == 1048576
+    assert export_rows[dup.id]['matched_game']['date_identified'] == identified.replace(tzinfo=None).isoformat()
+    assert 'rom_region' in export_rows[dup.id]
+    assert 'rom_languages' in export_rows[dup.id]

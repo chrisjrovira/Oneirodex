@@ -1,4 +1,5 @@
 ﻿import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { NewsPage } from './NewsPage'
 import * as announcementsApi from '../api/announcements'
 import * as freeGamesApi from '../api/freeGames'
@@ -39,7 +40,7 @@ test('lists announcement cards from API', async () => {
     ],
   })
 
-  render(<NewsPage />)
+  render(<NewsPage />, { wrapper: MemoryRouter })
 
   expect(screen.getByText('Loading…')).toBeInTheDocument()
   expect(await screen.findByText('Welcome')).toBeInTheDocument()
@@ -50,7 +51,7 @@ test('lists announcement cards from API', async () => {
 test('shows empty state when no announcements', async () => {
   announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
 
-  render(<NewsPage />)
+  render(<NewsPage />, { wrapper: MemoryRouter })
 
   expect(await screen.findByText('No announcements yet.')).toBeInTheDocument()
 })
@@ -68,7 +69,7 @@ test('keeps announcements when gaming news fails', async () => {
   })
   gamingNewsApi.fetchGamingNews.mockRejectedValue(new Error('rss down'))
 
-  render(<NewsPage />)
+  render(<NewsPage />, { wrapper: MemoryRouter })
 
   expect(await screen.findByText('Maintenance')).toBeInTheDocument()
   expect(screen.queryByText('Unable to load news.')).not.toBeInTheDocument()
@@ -96,7 +97,7 @@ test('section tabs filter free offers without a long scroll dump', async () => {
 
   const { default: userEvent } = await import('@testing-library/user-event')
   const user = userEvent.setup()
-  render(<NewsPage />)
+  render(<NewsPage />, { wrapper: MemoryRouter })
 
   expect(await screen.findByText('Free Space Adventure')).toBeInTheDocument()
   expect(screen.getByText('Industry headline')).toBeInTheDocument()
@@ -136,13 +137,50 @@ test('News layout smoke: hero strip and magazine densify', async () => {
     ],
   })
 
-  const { container } = render(<NewsPage />)
+  const { container } = render(<NewsPage />, { wrapper: MemoryRouter })
 
   expect(await screen.findByText('Household note')).toBeInTheDocument()
   expect(container.querySelector('.gt-news__hero')).toBeTruthy()
   expect(container.querySelector('.gt-news__hero-title')).toHaveTextContent('Household note')
   expect(screen.getByText('Second note')).toBeInTheDocument()
-  expect(container.querySelector('.gt-news__magazine')).toBeTruthy()
+  // UX-C14: headlines are image-forward cards now, not text-only rows.
+  expect(container.querySelector('.gt-news__cards')).toBeTruthy()
   expect(screen.getByText('Studio ships patch')).toBeInTheDocument()
   expect(screen.getByLabelText('News sections')).toBeInTheDocument()
+})
+
+test('headline cards show artwork when the feed supplies it', async () => {
+  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
+  // The first headline is promoted to the hero, so a card needs a second item.
+  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+    items: [
+      { title: 'Hero story', url: 'https://example.com/hero', source: 'Example' },
+      {
+        title: 'Studio ships patch',
+        url: 'https://example.com/a',
+        source: 'Example',
+        summary: 'Notes',
+        image_url: 'https://cdn.example.com/art.jpg',
+      },
+    ],
+  })
+  const { container } = render(<NewsPage />, { wrapper: MemoryRouter })
+  await screen.findByText('Studio ships patch')
+  const art = container.querySelector('img.gt-news__card-art')
+  expect(art).toBeTruthy()
+  expect(art).toHaveAttribute('src', 'https://cdn.example.com/art.jpg')
+})
+
+test('a feed with no artwork gets a placeholder, never a broken frame', async () => {
+  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
+  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+    items: [
+      { title: 'Hero story', url: 'https://example.com/hero', source: 'Example' },
+      { title: 'No art here', url: 'https://example.com/b', source: 'Example' },
+    ],
+  })
+  const { container } = render(<NewsPage />, { wrapper: MemoryRouter })
+  await screen.findByText('No art here')
+  expect(container.querySelector('.gt-news__card-art--empty')).toBeTruthy()
+  expect(container.querySelector('img.gt-news__card-art')).toBeNull()
 })

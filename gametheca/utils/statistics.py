@@ -80,5 +80,36 @@ def get_download_statistics():
         'download_trends': {
             'labels': [trend[0].strftime('%Y-%m-%d') for trend in download_trends],
             'data': [trend[1] for trend in download_trends]
-        }
+        },
+        # UX-C13: charts alone cannot be read for exact figures, so ship the
+        # numbers too — headline totals plus a table of the top titles.
+        'totals': _library_totals(),
+        'top_games_table': [
+            {'name': game[0], 'downloads': game[1]} for game in top_games
+        ],
+    }
+
+
+def _library_totals() -> dict:
+    """Headline counts for the statistics strip.
+
+    Each figure is counted independently so one failing aggregate cannot take
+    the whole page down with it.
+    """
+    from gametheca.models import Library
+
+    def _count(stmt):
+        try:
+            return int(db.session.execute(stmt).scalar() or 0)
+        except Exception:  # noqa: BLE001 — a stat is never worth a 500
+            return 0
+
+    total_size = _count(select(func.coalesce(func.sum(Game.size), 0)))
+    return {
+        'games': _count(select(func.count(Game.id))),
+        'libraries': _count(select(func.count(Library.uuid))),
+        'users': _count(select(func.count(User.id))),
+        'downloads': _count(select(func.count(DownloadRequest.id))),
+        'favorites': _count(select(func.count()).select_from(user_favorites)),
+        'library_bytes': total_size,
     }

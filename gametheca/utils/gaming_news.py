@@ -26,6 +26,49 @@ def _text(node: ET.Element | None) -> str:
     return node.text.strip()
 
 
+# Feeds advertise artwork in several places depending on generator. Checked in
+# rough order of reliability; the first https image wins.
+_MEDIA_NS = 'http://search.yahoo.com/mrss/'
+_IMAGE_EXT = ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif')
+
+
+def _item_image(node: ET.Element | None) -> str | None:
+    """Pull a headline image out of an RSS/Atom entry (UX-C14).
+
+    Only ``https`` is accepted: these URLs are rendered in the member app, and
+    an http image on an https page is blocked as mixed content anyway.
+    """
+    if node is None:
+        return None
+
+    candidates: list[str] = []
+
+    for tag in (f'{{{_MEDIA_NS}}}content', f'{{{_MEDIA_NS}}}thumbnail'):
+        for el in node.findall(tag):
+            url = (el.attrib.get('url') or '').strip()
+            if url:
+                candidates.append(url)
+
+    for el in node.findall('enclosure'):
+        url = (el.attrib.get('url') or '').strip()
+        mime = (el.attrib.get('type') or '').lower()
+        if url and (mime.startswith('image/') or url.lower().endswith(_IMAGE_EXT)):
+            candidates.append(url)
+
+    # Atom: <link rel="enclosure" type="image/..." href="...">
+    for el in node.findall('{http://www.w3.org/2005/Atom}link'):
+        if (el.attrib.get('rel') or '') == 'enclosure':
+            url = (el.attrib.get('href') or '').strip()
+            mime = (el.attrib.get('type') or '').lower()
+            if url and (mime.startswith('image/') or url.lower().endswith(_IMAGE_EXT)):
+                candidates.append(url)
+
+    for url in candidates:
+        if url.startswith('https://'):
+            return url[:500]
+    return None
+
+
 def _parse_feed(xml_bytes: bytes, source: str) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     try:
@@ -46,6 +89,7 @@ def _parse_feed(xml_bytes: bytes, source: str) -> list[dict[str, Any]]:
                 'summary': summary[:400],
                 'published_at': published,
                 'source': source,
+                'image_url': _item_image(item),
             })
 
     # Atom
@@ -70,6 +114,7 @@ def _parse_feed(xml_bytes: bytes, source: str) -> list[dict[str, Any]]:
                 'summary': summary[:400],
                 'published_at': published,
                 'source': source,
+                'image_url': _item_image(entry),
             })
 
     return items

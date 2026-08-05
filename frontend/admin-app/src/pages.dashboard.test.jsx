@@ -180,7 +180,11 @@ test('DashboardPage renders Action required and Warning / Info folds', async () 
   )
   const health = screen.getByLabelText('Health')
   expect(health).toHaveClass('gt-ops-status--bad')
-  expect(health.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Action required')
+  // GT-C1 (UID-013): headline is a verdict; the fold titles are the buckets.
+  // Each label must appear exactly once on the Dashboard.
+  expect(health.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Needs attention')
+  expect(screen.getAllByText('Action required')).toHaveLength(1)
+  expect(screen.getAllByText('Warning / Info')).toHaveLength(1)
   expect(screen.getAllByText('n/a').length).toBeGreaterThan(0)
 })
 
@@ -236,5 +240,6 @@ test('DashboardPage disk-only issues stay Warning / Info', async () => {
   expect(screen.getByText('Games disk 96% used')).toBeInTheDocument()
   const health = screen.getByLabelText('Health')
   expect(health).toHaveClass('gt-ops-status--warn')
-  expect(health.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Warning / Info')
+  expect(health.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Degraded')
+  expect(screen.getAllByText('Warning / Info')).toHaveLength(1)
 })

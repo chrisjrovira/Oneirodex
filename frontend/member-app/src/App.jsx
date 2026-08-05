@@ -1,6 +1,7 @@
 ﻿import { lazy, Suspense, useEffect, useState } from 'react'
 import { Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { CommandPalette } from './chrome/CommandPalette'
+import { ScrollJump } from './chrome/ScrollJump'
 import { applyTileSizeCssVars } from './chrome/TileSizeControl'
 import { TopNav } from './chrome/TopNav'
 import { ChatSlideOut } from './components/ChatSlideOut'
@@ -78,7 +79,7 @@ const SetCompletionPage = lazy(() =>
 
 function libraryInitialConfig(shellConfig) {
   return {
-    perPage: Number(shellConfig.perPage) || 20,
+    perPage: Number(shellConfig.perPage) || 50,
     defaultSort: shellConfig.defaultSort || 'name',
     defaultSortOrder: shellConfig.defaultSortOrder || 'asc',
     isAdmin: Boolean(shellConfig.isAdmin),
@@ -134,6 +135,7 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
       <main id="main-content" className="gt-main-content" tabIndex={-1}>
         <Outlet />
       </main>
+      <ScrollJump />
       {!hideDock ? (
         <>
           <ChatSlideOut canCreateRooms={canCreateRooms} viewer={chatViewer} />

@@ -19,8 +19,10 @@ function cleanFilters(filters) {
 test('normalizeItemKindToken accepts plurals and emu alias', () => {
   expect(normalizeItemKindToken('Games')).toBe('game')
   expect(normalizeItemKindToken('experiences')).toBe('experience')
+  expect(normalizeItemKindToken('Soft titles')).toBe('experience')
   expect(normalizeItemKindToken('emu')).toBe('emulator')
   expect(normalizeItemKindToken('TOOLS')).toBe('tool')
+  expect(normalizeItemKindToken('Utilities')).toBe('tool')
   expect(normalizeItemKindToken('nope')).toBeNull()
 })
 
@@ -57,7 +59,7 @@ test('toggleItemKindFilter sets, multi-selects, and clears item_kind', () => {
   expect(applied[3]).toEqual({ sort_by: 'name' })
 })
 
-test('ItemKindFilterChips toggles Games then Experiences → comma param', async () => {
+test('ItemKindFilterChips toggles Games then Soft titles → comma param', async () => {
   const user = userEvent.setup()
   const applied = []
   const filters = { sort_by: 'name' }
@@ -67,6 +69,12 @@ test('ItemKindFilterChips toggles Games then Experiences → comma param', async
     'experience',
     'emulator',
     'tool',
+  ])
+  expect(ITEM_KIND_FILTER_CHIPS.map((c) => c.label)).toEqual([
+    'Games',
+    'Soft titles',
+    'Emulators',
+    'Utilities',
   ])
 
   const { rerender } = render(
@@ -90,6 +98,6 @@ test('ItemKindFilterChips toggles Games then Experiences → comma param', async
   )
   expect(screen.getByRole('button', { name: 'Games' })).toHaveAttribute('aria-pressed', 'true')
 
-  await user.click(screen.getByRole('button', { name: 'Experiences' }))
+  await user.click(screen.getByRole('button', { name: 'Soft titles' }))
   expect(applied[1]).toEqual({ sort_by: 'name', item_kind: 'game,experience' })
 })

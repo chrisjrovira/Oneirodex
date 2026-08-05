@@ -22,8 +22,22 @@ def test_normalize_item_kind_aliases():
     assert normalize_item_kind('Emulator') == 'emulator'
     assert normalize_item_kind('utility') == 'tool'
     assert normalize_item_kind('software') == 'tool'
+    assert normalize_item_kind('soft title') == 'experience'
     assert normalize_item_kind(None) == 'game'
     assert normalize_item_kind('nope') == 'game'
+
+
+def test_item_kind_plain_language_labels():
+    from gametheca.utils.item_kind import ITEM_KIND_LABELS
+    from gametheca.utils.match_proposal import SUGGESTED_KIND_LABELS
+
+    assert ITEM_KIND_LABELS['experience'] == 'Soft title'
+    assert ITEM_KIND_LABELS['tool'] == 'Utility'
+    assert SUGGESTED_KIND_LABELS['experience'] == 'Soft title'
+    assert SUGGESTED_KIND_LABELS['tool'] == 'Utility'
+    # API tokens unchanged
+    assert normalize_item_kind('experience') == 'experience'
+    assert normalize_item_kind('tool') == 'tool'
 
 
 def test_steam_type_software_maps_to_tool_or_emulator():

@@ -8,7 +8,14 @@ from gametheca.utils.icon_themes import install_icon_themes
 from sqlalchemy import select
 
 # Default allowed file types
-DEFAULT_ALLOWED_FILE_TYPES = ['zip', 'rar', '7z', 'iso', 'nfo', 'nes', 'sfc', 'smc', 'sms', '32x', 'gen', 'gg', 'gba', 'gb', 'gbc', 'ndc', 'prg', 'dat', 'tap', 'z64', 'd64', 'dsk', 'img', 'bin', 'st', 'stx', 'j64', 'jag', 'lnx', 'adf', 'ngc', 'gz', 'm2v', 'ogg', 'fpt', 'fpl', 'vec', 'pce', 'a78', 'rom', 'nsp', 'xci', 'nsz', 'xcz']
+DEFAULT_ALLOWED_FILE_TYPES = [
+    'zip', 'rar', '7z', 'iso', 'nfo', 'nes', 'sfc', 'smc', 'sms', '32x',
+    'gen', 'gg', 'gba', 'gb', 'gbc', 'nds', 'ndc', 'prg', 'dat', 'tap', 'z64',
+    'n64', 'md', 'd64', 'dsk', 'img', 'bin', 'cue', 'chd', 'st', 'stx', 'j64',
+    'jag', 'lnx', 'adf', 'ngc', 'gcm', 'rvz', 'wbfs', 'wad', 'gz', 'm2v', 'ogg',
+    'fpt', 'fpl', 'vec', 'pce', 'a26', 'a52', 'a78', 'rom', 'pbp', 'cso',
+    'cia', '3ds', 'nsp', 'xci', 'nsz', 'xcz', 'gdi', 'cdi',
+]
 
 from gametheca.models import ReleaseGroup, GlobalSettings
 from gametheca.utils.event_logging import log_system_event

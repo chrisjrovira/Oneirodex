@@ -1,0 +1,148 @@
+/* PC cheat notes (FEAT-D2) — notes to follow, not a trainer to run. */
+
+.gt-pccheats {
+  margin: 0 0 1.25rem;
+}
+
+.gt-pccheats h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.gt-pccheats__stance {
+  margin: 0 0 0.7rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-pccheats__muted {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-pccheats__error {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--gt-danger, #ff6b6b);
+}
+
+.gt-pccheats__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.gt-pccheats__item {
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  background: color-mix(in srgb, var(--gt-surface, #141820) 90%, transparent);
+}
+
+.gt-pccheats__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.55rem;
+}
+
+.gt-pccheats__label {
+  font-size: 0.94rem;
+}
+
+.gt-pccheats__method {
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  font-size: 0.7rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-pccheats__flag {
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 18%, transparent);
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+}
+
+.gt-pccheats__payload {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+}
+
+.gt-pccheats__payload code {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 85%, transparent);
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.84rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.gt-pccheats__copy {
+  flex: 0 0 auto;
+}
+
+.gt-pccheats__notes {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-pccheats__remove {
+  align-self: flex-start;
+  margin-top: 0.45rem;
+  font-size: 0.78rem;
+}
+
+.gt-pccheats__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px dashed var(--gt-border, rgba(255, 255, 255, 0.16));
+}
+
+.gt-pccheats__form-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.gt-pccheats__form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  font-size: 0.78rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-pccheats__form input,
+.gt-pccheats__form select {
+  font: inherit;
+  font-size: 0.86rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 6px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.14));
+  background: var(--gt-surface-2, #1c2230);
+  color: var(--gt-text, #f2f4f8);
+}
+
+.gt-pccheats__form button {
+  align-self: flex-start;
+}

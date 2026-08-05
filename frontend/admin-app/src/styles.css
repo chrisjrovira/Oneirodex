@@ -287,14 +287,22 @@ body.admin-shell.modal-open > .modal-backdrop {
   font-size: 0.9rem;
 }
 
+/* auto-fit, not auto-fill: auto-fill keeps empty columns alive, so a row with
+   two cards left them narrow with dead space beside them. auto-fit collapses
+   the empty tracks and lets the real cards take the width. */
 .gt-admin-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
   gap: 0.5rem;
 }
 
+/* Flex column + stretch so a card fills its grid cell instead of leaving a gap
+   under the shorter card in a row, and its body can push actions to the base. */
 .gt-admin-card {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  height: 100%;
   padding: 0.7rem 0.8rem;
   border-radius: 8px;
   border: 1px solid var(--gt-border);
@@ -362,7 +370,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-admin-card-grid--integrations {
-  grid-template-columns: repeat(auto-fill, minmax(14.5rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(14.5rem, 1fr));
 }
 
 .gt-admin-inventory__group + .gt-admin-inventory__group {
@@ -1864,5 +1872,127 @@ body.admin-shell.modal-open > .modal-backdrop {
   .gt-toast--out {
     animation: none;
     transition: none;
+  }
+}
+
+/* --- Settings as grouped rows (UX-C9) ------------------------------------- */
+/* Cards gave every module the same visual weight and spread a short list over
+   a lot of empty space. Rows read like the scans page instead. */
+
+.gt-settings-group + .gt-settings-group {
+  margin-top: 0.75rem;
+}
+
+.gt-settings-list {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gt-settings-list li + li {
+  border-top: 1px solid var(--gt-border, rgba(255, 255, 255, 0.1));
+}
+
+.gt-settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.75rem;
+  padding: 0.5rem 0.4rem;
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gt-settings-row:hover,
+.gt-settings-row:focus-visible {
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 10%, transparent);
+}
+
+.gt-settings-row__title {
+  flex: 0 0 13rem;
+  font-weight: 650;
+}
+
+.gt-settings-row__blurb {
+  flex: 1 1 16rem;
+  min-width: 0;
+  font-size: 0.84rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+@media (max-width: 720px) {
+  .gt-settings-row__title {
+    flex-basis: 100%;
+  }
+}
+
+/* --- Integrations as dense rows (UX-C11) ---------------------------------- */
+/* Providers carry very different link counts; an even card grid left tall gaps
+   beside the short ones. Rows close that up and match Settings / Libraries. */
+
+.gt-provider-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.gt-provider-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  padding: 0.55rem 0.4rem;
+}
+
+.gt-provider-row + .gt-provider-row {
+  border-top: 1px solid var(--gt-border, rgba(255, 255, 255, 0.1));
+}
+
+.gt-provider-row__head {
+  flex: 1 1 20rem;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.6rem;
+}
+
+.gt-provider-row__title {
+  margin: 0;
+  flex: 0 0 auto;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.gt-provider-row__blurb {
+  margin: 0;
+  flex: 1 1 14rem;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-provider-row__links {
+  flex: 0 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.8rem;
+}
+
+.gt-provider-row__links li + li::before {
+  content: '·';
+  margin-right: 0.5rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+@media (max-width: 860px) {
+  .gt-provider-row__links {
+    flex-basis: 100%;
   }
 }

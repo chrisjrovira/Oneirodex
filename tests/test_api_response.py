@@ -1,0 +1,114 @@
+"""GT-B1 — API envelope contract.
+
+These assertions are the contract the SPA error component (PageStatus) relies
+on. The back-compat mirrors are tested deliberately: ~699 legacy call sites read
+`error` / `message` / `success`, and migration is incremental, so breaking those
+keys would break unmigrated pages silently.
+"""
+
+import json
+
+import pytest
+from flask import Flask
+
+from gametheca.utils.api_response import api_error, api_ok, ERROR_CODES
+
+
+@pytest.fixture()
+def app():
+    return Flask(__name__)
+
+
+def _body(app, rv):
+    response, status = rv
+    with app.app_context():
+        return json.loads(response.get_data(as_text=True)), status
+
+
+# ---------------------------------------------------------------------------
+# Errors
+# ---------------------------------------------------------------------------
+
+def test_api_error_shape(app):
+    with app.test_request_context():
+        body, status = _body(app, api_error('Admin required', code='forbidden'))
+
+    assert status == 403
+    assert body['ok'] is False
+    assert body['error'] == 'Admin required'
+    assert body['error_code'] == 'forbidden'
+
+
+def test_api_error_keeps_error_as_a_string(app):
+    """`error` must stay a plain string.
+
+    Unmigrated callers render `data.error` directly; making it an object would
+    put "[object Object]" on screen across the whole product.
+    """
+    with app.test_request_context():
+        body, _ = _body(app, api_error('Nope', code='not_found', detail={'field': 'uuid'}))
+
+    assert isinstance(body['error'], str)
+    assert body['detail'] == {'field': 'uuid'}
+
+
+def test_api_error_legacy_mirrors(app):
+    with app.test_request_context():
+        body, _ = _body(app, api_error('Boom', code='internal'))
+
+    assert body['message'] == 'Boom'
+    assert body['success'] is False
+
+
+def test_api_error_explicit_status_wins(app):
+    """Existing 403-vs-503 route contracts must not shift when migrated."""
+    with app.test_request_context():
+        body, status = _body(app, api_error('Disabled', code='forbidden', status=503))
+
+    assert status == 503
+    assert body['error_code'] == 'forbidden'
+
+
+def test_api_error_blank_message_falls_back(app):
+    with app.test_request_context():
+        body, _ = _body(app, api_error('   '))
+
+    assert body['error'] == 'Request failed'
+
+
+def test_api_error_unknown_code_defaults_to_400(app):
+    with app.test_request_context():
+        _, status = _body(app, api_error('Weird', code='not_a_real_code'))
+
+    assert status == 400
+
+
+# ---------------------------------------------------------------------------
+# Success
+# ---------------------------------------------------------------------------
+
+def test_api_ok_merges_payload_at_top_level(app):
+    """Payload keys stay where they are — migration must not move fields."""
+    with app.test_request_context():
+        body, status = _body(app, api_ok({'games': 12, 'libraries': 3}))
+
+    assert status == 200
+    assert body['ok'] is True
+    assert body['games'] == 12
+    assert body['libraries'] == 3
+    assert body['success'] is True
+
+
+def test_api_ok_payload_cannot_override_envelope(app):
+    with app.test_request_context():
+        body, _ = _body(app, api_ok({'ok': False, 'error': 'sneaky', 'error_code': 'x'}))
+
+    assert body['ok'] is True
+    assert 'error' not in body
+    assert 'error_code' not in body
+
+
+def test_error_codes_map_to_sane_statuses():
+    assert ERROR_CODES['forbidden'] == 403
+    assert ERROR_CODES['not_found'] == 404
+    assert ERROR_CODES['internal'] == 500

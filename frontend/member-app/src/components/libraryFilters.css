@@ -19,17 +19,47 @@
   box-sizing: border-box;
 }
 
-.library-filters__visibility {
-  flex: 0 0 auto;
-  min-height: 2.15rem;
-  font-size: 0.8rem;
-}
-
 .library-filters__body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.65rem;
   min-width: 0;
+}
+
+/* Desktop LHN collapse rail — slim arrow; grid column width drives tile reflow. */
+.library-filters-collapse {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.85rem;
+  height: 2.15rem;
+  margin: 0 0 0.35rem;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  background: var(--gt-surface-2, #1c2230);
+  color: var(--gt-text-muted, #c4ccd8);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.library-filters-collapse:hover {
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+  color: var(--gt-text, #f2f4f8);
+}
+
+.library-filters-collapse:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.library-filters-collapse__icon {
+  display: block;
 }
 
 .library-filters__signals {
@@ -63,7 +93,7 @@
   letter-spacing: 0.04em;
   line-height: 1;
   padding: 0.45rem 0.65rem;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
@@ -81,8 +111,9 @@
 }
 
 .library-layout {
+  /* auto first column = aside width drives reflow when collapsed (not opacity-only). */
   display: grid;
-  grid-template-columns: minmax(14rem, 17.5rem) minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
   width: 100%;
@@ -90,17 +121,82 @@
   box-sizing: border-box;
   padding: 0 0.75rem 1rem;
   overflow-x: clip;
+  /* Anchor for the collapsed panel's pull handle. */
+  position: relative;
 }
 
 .library-layout__filters {
   position: sticky;
   top: 3.25rem;
   z-index: 20;
+  width: 17.5rem;
+  max-width: 17.5rem;
+  min-width: 0;
   max-height: calc(100vh - 3.75rem);
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 0.15rem 0.1rem 0.5rem;
-  min-width: 0;
+  box-sizing: border-box;
+  transition:
+    width 0.22s ease,
+    max-width 0.22s ease,
+    padding 0.22s ease;
+}
+
+/* Room for the pinned pull handle once the panel itself is out of flow. */
+.library-layout.is-filters-collapsed {
+  gap: 0;
+  padding-left: 2rem;
+}
+
+/* Collapsed = the panel pulls out to the left and gives the grid its width
+   back. It used to shrink to a 2.25rem rail that still sat in the layout and
+   read as a card; now only a slim handle remains, built into the panel edge. */
+.library-layout.is-filters-collapsed .library-layout__filters {
+  width: 0;
+  max-width: 0;
+  padding: 0;
+  overflow: visible;
+  overflow-y: visible;
+}
+
+.library-layout.is-filters-collapsed .library-filters-stack {
+  /* Kept in the DOM for a11y id continuity; slid out rather than removed. */
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-110%);
+  width: 17.5rem;
+  max-width: 17.5rem;
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  transition:
+    transform 0.22s ease,
+    opacity 0.22s ease;
+}
+
+.library-filters-stack {
+  transform: translateX(0);
+  opacity: 1;
+  transition:
+    transform 0.22s ease,
+    opacity 0.22s ease;
+}
+
+/* The handle stays pinned at the left edge so there is always something to
+   pull the panel back in by. */
+.library-layout.is-filters-collapsed .library-filters-collapse {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 21;
+  width: 1.6rem;
+  margin: 0;
+  border-radius: 0 8px 8px 0;
+  border-left: none;
 }
 
 .library-layout__main {
@@ -112,6 +208,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-layout__filters {
+    transition: none;
+  }
 }
 
 .library-filters.container-filtersandsort {
@@ -190,6 +293,25 @@
     gap: 0.65rem;
   }
 
+  .library-layout.is-filters-collapsed {
+    gap: 0.65rem;
+  }
+
+  /* Mobile uses Filters drawer; hide desktop LHN collapse rail. */
+  .library-filters-collapse {
+    display: none;
+  }
+
+  .library-layout.is-filters-collapsed .library-filters-stack {
+    visibility: visible;
+    pointer-events: auto;
+    width: auto;
+    max-width: none;
+    height: auto;
+    overflow: visible;
+    opacity: 1;
+  }
+
   .library-filters-mobile-toggle {
     display: inline-flex;
     align-items: center;
@@ -226,12 +348,21 @@
     bottom: 0;
     z-index: 999;
     width: min(20rem, 88vw);
+    max-width: min(20rem, 88vw);
     max-height: 100vh;
     margin: 0;
     padding: 0.75rem 0.65rem 1rem;
     background: var(--gt-surface, #141820);
     border-right: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent);
     box-shadow: 12px 0 28px color-mix(in srgb, var(--gt-bg, #0b0d10) 70%, transparent);
+    overflow-y: auto;
+    transition: none;
+  }
+
+  .library-layout.is-filters-collapsed .library-layout__filters {
+    width: min(20rem, 88vw);
+    max-width: min(20rem, 88vw);
+    padding: 0.75rem 0.65rem 1rem;
     overflow-y: auto;
   }
 

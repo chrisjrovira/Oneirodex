@@ -19,9 +19,18 @@ export function na(value, suffix = '') {
   return suffix ? `${value}${suffix}` : String(value)
 }
 
+/**
+ * Banner headline — the overall verdict.
+ *
+ * GT-C1 (UID-013): these deliberately do NOT reuse the fold titles
+ * ("Action required" / "Warning / Info"). They used to, which meant the banner
+ * <strong> and the <h2> directly beneath it rendered the same words — the
+ * duplicate the human kept reporting on the Dashboard. The banner answers
+ * "how is the server?"; the folds answer "which bucket is this issue in?".
+ */
 export function severityLabel(severity) {
-  if (severity === 'bad') return 'Action required'
-  if (severity === 'warn') return 'Warning / Info'
+  if (severity === 'bad') return 'Needs attention'
+  if (severity === 'warn') return 'Degraded'
   return 'All systems healthy'
 }
 
@@ -122,6 +131,35 @@ export function OpsStatusBanner({ severity = 'good', asOf, items, ariaLabel = 'S
   )
 }
 
+/**
+ * Tone for a "higher is worse" metric — utilisation, latency, queue depth.
+ *
+ * Colour only where it means something (UX-C12): an unknown value returns 'na'
+ * rather than green, because "we could not read it" is not "healthy".
+ */
+export function usageTone(value, { warn = 85, bad = 95 } = {}) {
+  const n = Number(value)
+  if (value == null || !Number.isFinite(n)) return 'na'
+  if (n >= bad) return 'poor'
+  if (n >= warn) return 'fair'
+  return 'good'
+}
+
+/** Tone for a "higher is better" metric — free space, online companions. */
+export function healthTone(value, { warn = 50, bad = 20 } = {}) {
+  const n = Number(value)
+  if (value == null || !Number.isFinite(n)) return 'na'
+  if (n <= bad) return 'poor'
+  if (n <= warn) return 'fair'
+  return 'good'
+}
+
+/** Tone for a plain up/down signal. */
+export function booleanTone(ok) {
+  if (ok == null) return 'na'
+  return ok ? 'good' : 'poor'
+}
+
 export function MeterBar({ label, percent, detail }) {
   const pct = percent == null || !Number.isFinite(Number(percent)) ? null : Math.max(0, Math.min(100, Number(percent)))
   const tone =
@@ -157,6 +195,38 @@ export function MetricTile({ label, value, hint, tone }) {
       <div className="gt-ops-metric__label">{label}</div>
       <div className="gt-ops-metric__value">{value}</div>
       {hint ? <div className="gt-ops-metric__hint">{hint}</div> : null}
+    </div>
+  )
+}
+
+/**
+ * Reusable metric strip (GT-C2 / UID-014).
+ *
+ * Dashboard and Ops were the only two pages with colour-reactive metric
+ * chrome, because the strip markup lived inline in those two files. Every other
+ * admin page — Users, Support, Invites, Storage, Extensions — had no summary
+ * row at all, which is what "admin metrics not color-reactive like dashboard"
+ * was describing.
+ *
+ * Pass `items` as `{ id, label, value, hint, tone }`. Entries are skipped when
+ * `value` is undefined so a page can declare optional metrics without branching.
+ */
+export function MetricStrip({ items = [], label = 'Key metrics' }) {
+  const rows = (Array.isArray(items) ? items : []).filter(
+    (item) => item && item.value !== undefined,
+  )
+  if (!rows.length) return null
+  return (
+    <div className="gt-ops-strip" aria-label={label}>
+      {rows.map((item) => (
+        <MetricTile
+          key={item.id || item.label}
+          label={item.label}
+          value={item.value}
+          hint={item.hint}
+          tone={item.tone}
+        />
+      ))}
     </div>
   )
 }

@@ -67,7 +67,7 @@ def library():
         db.session.commit()
 
     # Start with user prefs or default
-    per_page = current_user.preferences.items_per_page if current_user.preferences else 20
+    per_page = current_user.preferences.items_per_page if current_user.preferences else 50
     sort_by = current_user.preferences.default_sort if current_user.preferences else 'name'
     sort_order = current_user.preferences.default_sort_order if current_user.preferences else 'asc'
 

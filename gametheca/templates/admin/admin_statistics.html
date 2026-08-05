@@ -10,6 +10,17 @@
         </div>
     </div>
 
+    {# UX-C13: headline numbers first. A chart shows shape; it cannot be read
+       for an exact figure, which is usually what the question actually is. #}
+    <div class="gt-stat-strip" id="statTotals" aria-label="Library totals">
+        <div class="gt-stat-tile"><span class="gt-stat-tile__label">Games</span><span class="gt-stat-tile__value" data-total="games">—</span></div>
+        <div class="gt-stat-tile"><span class="gt-stat-tile__label">Libraries</span><span class="gt-stat-tile__value" data-total="libraries">—</span></div>
+        <div class="gt-stat-tile"><span class="gt-stat-tile__label">Members</span><span class="gt-stat-tile__value" data-total="users">—</span></div>
+        <div class="gt-stat-tile"><span class="gt-stat-tile__label">Downloads</span><span class="gt-stat-tile__value" data-total="downloads">—</span></div>
+        <div class="gt-stat-tile"><span class="gt-stat-tile__label">Favourites</span><span class="gt-stat-tile__value" data-total="favorites">—</span></div>
+        <div class="gt-stat-tile"><span class="gt-stat-tile__label">Library size</span><span class="gt-stat-tile__value" data-total="library_bytes">—</span></div>
+    </div>
+
     <div class="gt-adminpage-panel">
         <div class="row">
             <div class="col-md-6">
@@ -47,6 +58,19 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    {# The same top-titles data as the chart, but readable as exact figures. #}
+    <div class="gt-adminpage-panel">
+        <h2 class="gt-adminpage-subtitle">Most downloaded titles</h2>
+        <table class="table gt-stat-table" id="topGamesTable">
+            <thead>
+                <tr><th scope="col">#</th><th scope="col">Title</th><th scope="col" class="text-end">Downloads</th></tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="3" class="text-muted">Loading…</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 

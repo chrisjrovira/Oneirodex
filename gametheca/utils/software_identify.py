@@ -421,6 +421,12 @@ def create_custom_kinded_game(
         game.steam_url = f'https://store.steampowered.com/app/{int(steam_app_id)}/'
     db.session.add(game)
     db.session.flush()
+    try:
+        from gametheca.utils.rom_language import apply_rom_language_fields
+
+        apply_rom_language_fields(game, full_disk_path or name)
+    except Exception:
+        pass
     if gog_id or gog_url:
         store_url = (gog_url or '').strip()
         if not store_url and gog_id:
@@ -510,9 +516,16 @@ def upsert_stage_d_custom_game(
                         url_type='gog',
                         url=store_url,
                     ))
+        try:
+            from gametheca.utils.rom_language import apply_rom_language_fields
+
+            apply_rom_language_fields(existing, full_disk_path or name)
+        except Exception:
+            pass
+        _hydrate_steam_content(existing, steam_app_id)
         return existing
 
-    return create_custom_kinded_game(
+    created = create_custom_kinded_game(
         name=name,
         full_disk_path=full_disk_path,
         library_uuid=library_uuid,
@@ -524,6 +537,25 @@ def upsert_stage_d_custom_game(
         cover=cover,
         size=size,
     )
+    _hydrate_steam_content(created, steam_app_id)
+    return created
+
+
+def _hydrate_steam_content(game, steam_app_id) -> None:
+    """Pull full store content (summary, genres, dev/publisher, release, modes).
+
+    The storesearch hit that identified the title carries no description and no
+    taxonomy, so without this a Stage D game lands with every box empty. Failures
+    are swallowed on purpose — a metadata miss must not undo an identification.
+    """
+    if not game or not steam_app_id:
+        return
+    try:
+        from gametheca.utils.steam_metadata import hydrate_game_from_steam
+
+        hydrate_game_from_steam(game, app_id=steam_app_id)
+    except Exception as exc:  # noqa: BLE001
+        print(f'Steam content hydrate skipped for {getattr(game, "name", "?")}: {exc}')
 
 
 def try_stage_d_store_identify(
@@ -592,6 +624,10 @@ _TGDB_PLATFORM_ALIASES: dict[str, tuple[str, ...]] = {
     'X360': ('xbox 360',),
     'PCWIN': ('pc', 'windows', 'microsoft windows'),
     'PCDOS': ('dos', 'ms-dos', 'pc'),
+    # BE-DET-8 — AES vs CD stay distinct (substring-safe matching in tgdb_platform_matches).
+    'NEOGEO': ('neo geo aes', 'aes'),
+    'NEOGEO_CD': ('neo geo cd', 'neocd'),
+    'ARCADE': ('arcade',),
 }
 
 
@@ -622,14 +658,42 @@ def _library_platform_needles(library_platform: str | None) -> list[str]:
     return out
 
 
+def _tgdb_token_is_neogeo_cd(token: str) -> bool:
+    """True when a normalized TGDB platform token denotes Neo Geo CD (not AES)."""
+    if not token:
+        return False
+    if 'neocd' in token:
+        return True
+    if 'cd' in token and 'neogeo' in token:
+        return True
+    return token in ('neogeocd', 'neocd')
+
+
+def _tgdb_token_is_neogeo_aes(token: str) -> bool:
+    """True when a normalized TGDB platform token denotes Neo Geo AES (not CD)."""
+    if not token or _tgdb_token_is_neogeo_cd(token):
+        return False
+    if 'aes' in token:
+        return True
+    if token in ('neogeo', 'neogeoaes'):
+        return True
+    # "Neo Geo" without CD — treat as AES cart family, never CD.
+    return 'neogeo' in token
+
+
 def tgdb_platform_matches(
     hit_platforms: list | None,
     library_platform: str | None,
 ) -> bool:
-    """True when any TGDB platform name corroborates the library leaf platform."""
-    needles = _library_platform_needles(library_platform)
-    if not needles:
+    """True when any TGDB platform name corroborates the library leaf platform.
+
+    BE-DET-8 hard guard: Neo Geo AES (``NEOGEO``) never matches Neo Geo CD
+    hits (and reverse) — substring ``neogeo`` ⊂ ``neogeocd`` must not leak.
+    """
+    key = (library_platform or '').strip()
+    if not key:
         return False
+
     names: list[str] = []
     for p in hit_platforms or []:
         if isinstance(p, str):
@@ -637,6 +701,23 @@ def tgdb_platform_matches(
         elif isinstance(p, dict):
             names.append(p.get('platform_name') or p.get('name') or '')
     if not names:
+        return False
+
+    # Dedicated AES ↔ CD gate (never cross-map).
+    if key in ('NEOGEO', 'NEOGEO_CD'):
+        for name in names:
+            token = _norm_platform_token(name)
+            if not token:
+                continue
+            if key == 'NEOGEO_CD':
+                if _tgdb_token_is_neogeo_cd(token):
+                    return True
+            elif _tgdb_token_is_neogeo_aes(token):
+                return True
+        return False
+
+    needles = _library_platform_needles(library_platform)
+    if not needles:
         return False
     for name in names:
         token = _norm_platform_token(name)

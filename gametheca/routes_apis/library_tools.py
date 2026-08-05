@@ -175,6 +175,12 @@ def rename_apply():
         if result.get('ok') and item.get('kind') == 'root_folder':
             game.full_disk_path = result['to_path']
             try:
+                from gametheca.utils.rom_language import apply_rom_language_fields
+
+                apply_rom_language_fields(game, result['to_path'])
+            except Exception:
+                pass
+            try:
                 db.session.commit()
             except Exception as exc:
                 db.session.rollback()
@@ -332,3 +338,104 @@ def library_doctor_apply_renames():
             filtered.append(row)
     results = doctor_apply_renames(filtered, _allowed_bases(), template=template)
     return jsonify({'status': 'ok', 'results': results})
+
+
+@apis_bp.route('/library_tools/backfill_steam_metadata', methods=['POST'])
+@login_required
+@admin_required
+def library_tools_backfill_steam_metadata():
+    """Repair games that were identified via Steam but landed without content.
+
+    Stage D used to persist only name/summary/cover, and the storesearch hit it
+    matched on carries no description at all — so existing rows can have a Steam
+    App ID and still show a blank summary with no genres or credits. This re-reads
+    ``appdetails`` for those rows and fills the gaps (never overwrites).
+
+    Body: ``library_uuid`` (optional scope), ``limit`` (default 100, max 500),
+    ``only_incomplete`` (default true — skip rows that already have summary+genres).
+    """
+    from gametheca.utils.steam_metadata import hydrate_game_from_steam
+
+    data = request.get_json(silent=True) or {}
+    limit = min(max(int(data.get('limit') or 100), 1), 500)
+    only_incomplete = bool(data.get('only_incomplete', True))
+
+    query = select(Game).filter(Game.steam_app_id.isnot(None))
+    if data.get('library_uuid'):
+        query = query.filter(Game.library_uuid == data['library_uuid'])
+
+    candidates = db.session.execute(query).scalars().all()
+
+    updated, skipped, errors = [], 0, []
+    for game in candidates:
+        if len(updated) >= limit:
+            break
+        if only_incomplete and (game.summary or '').strip() and (game.genres or []):
+            skipped += 1
+            continue
+        try:
+            report = hydrate_game_from_steam(game)
+        except Exception as exc:  # noqa: BLE001
+            errors.append({'uuid': game.uuid, 'name': game.name, 'error': str(exc)})
+            continue
+        changed = any(
+            bool(v) for v in report.values()
+        ) if report else False
+        if changed:
+            updated.append({
+                'uuid': game.uuid,
+                'name': game.name,
+                'filled': {k: v for k, v in report.items() if v},
+            })
+        else:
+            skipped += 1
+
+    if updated:
+        db.session.commit()
+
+    return jsonify({
+        'ok': True,
+        'scanned': len(candidates),
+        'updated': len(updated),
+        'skipped': skipped,
+        'errors': errors,
+        'games': updated[:50],
+    })
+
+
+@apis_bp.route('/library_tools/check_freshness', methods=['POST'])
+@login_required
+@admin_required
+def library_tools_check_freshness():
+    """Check version / updates / DLC across a library (FEAT-D1).
+
+    The same pass a scan runs when ``SCAN_CHECK_FRESHNESS`` is on, exposed so it
+    can be run against an already-scanned library without a re-scan.
+
+    Body: ``library_uuid`` (required), ``limit`` (default 50, max 500),
+    ``only_missing`` (default true — spend the budget on unknowns).
+    """
+    from gametheca.utils.freshness.service import check_library_freshness
+
+    data = request.get_json(silent=True) or {}
+    library_uuid = (data.get('library_uuid') or '').strip()
+    if not library_uuid:
+        return jsonify({'error': 'library_uuid is required'}), 400
+
+    library = db.session.execute(
+        select(Library).filter_by(uuid=library_uuid)
+    ).scalars().first()
+    if not library:
+        return jsonify({'error': 'Library not found'}), 404
+
+    try:
+        limit = min(max(int(data.get('limit') or 50), 1), 500)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'limit must be a number'}), 400
+
+    result = check_library_freshness(
+        library_uuid,
+        limit=limit,
+        only_missing=bool(data.get('only_missing', True)),
+    )
+    return jsonify({'ok': True, **result})

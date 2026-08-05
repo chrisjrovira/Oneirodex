@@ -270,6 +270,33 @@ def start_or_queue_scan(
         schedule=schedule,
         status='Running',
     )
+
+    # is_scan_busy() above is not atomic with this insert: a concurrent starter
+    # (second click, or the scheduler poll) can pass the same check and both go
+    # Running, silently defeating the queue policy. Re-check now that our row is
+    # visible and yield to the older job — same rollback the promote path does.
+    if not force:
+        other_busy = db.session.execute(
+            select(ScanJob.id).where(
+                ScanJob.status.in_(('Running', 'Stopping')),
+                ScanJob.id != job.id,
+            ).limit(1)
+        ).first()
+        if other_busy:
+            job.status = 'Queued'
+            try:
+                db.session.commit()
+            except SQLAlchemyError:
+                db.session.rollback()
+            else:
+                position = queue_position(job.id) or count_queued_jobs()
+                return {
+                    'status': 'queued',
+                    'job_id': job.id,
+                    'position': position,
+                    'message': f'{QUEUE_DEFAULT_MESSAGE} Position {position}.',
+                }
+
     try:
         from gametheca.utils.event_bus import publish_scan_event
         publish_scan_event(job.id, 'Running')

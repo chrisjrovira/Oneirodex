@@ -14,7 +14,7 @@ Concise local/NAS path using the repo `docker-compose.yml` (`gametheca-app` + `g
 cp .env.docker.example .env          # local/NAS
 # Unraid: prefer cp .env.unraid.example .env  (Compose Manager paths in that file)
 # Set SECRET_KEY (required — container refuses the placeholder)
-# Set DATA_FOLDER_GAMES = HOST games path (DATA_FOLDER_WAREZ deprecated alias)
+# Set DATA_FOLDER_GAMES = HOST games path
 # Set LIBRARY_HOST_PATH = HOST library/appdata path (default ./data/library)
 # Optional BIOS: EMULATOR_BIOS_HOST_PATH + uncomment bios bind in compose
 #   (appdata only — never games share; never commit firmware binaries)
@@ -30,7 +30,7 @@ Do **not** conflate games (scan root) with library/uploads. Compose header has a
 
 | Role | Host env | Container mount | Mode | Purpose |
 |---|---|---|---|---|
-| **Games** | `DATA_FOLDER_GAMES` (alias `DATA_FOLDER_WAREZ`) | `/storage` | **ro** | Scan root only — never uploads |
+| **Games** | `DATA_FOLDER_GAMES` | `/storage` | **ro** | Scan root only — never uploads |
 | **Library / uploads** | `LIBRARY_HOST_PATH` | `/app/gametheca/static/library` | **rw** | Covers, themes, uploads |
 | **Optional BIOS / firmware** | `EMULATOR_BIOS_HOST_PATH` (uncomment bind in compose) | `/app/gametheca/static/library/bios` | **rw** | Private host firmware under appdata — not games. Public stance remains Admin upload-only — [unraid-deploy.md § Local private BIOS](unraid-deploy.md#local-private-bios-mount-vs-public-upload) |
 | Optional WebRetro cores | `WEBRETRO_CORES_HOST_PATH` (uncomment in compose) | `/app/gametheca/static/vendor/webretro/cores` | rw | Operator WASM cores — [webretro-cores.md](webretro-cores.md) |

@@ -2,8 +2,12 @@
 
 **Audience:** Backend (scan / `game_name_parse` / `gamenames` / `match_scoring` / identify) · Ops/Docs (scan depth)  
 **Date:** 2026-07-31 · **Owner:** Game Master (rules) → Backend (**Done** A0–A14 · **Done** B15–B20 console ROM peel · **Done** W21-BE-3 easy-title scoring) → Ops (rescan after ship)  
-**Status:** Stage A0–A14 + C10–C11 **Done** in `parse_game_label` / `generate_goty_variants` / identify (code landed; uncommitted until human ships) · **QA 166 PASS** (parse/gamenames/scoring) · Stage **B15–B20** + **C12** article-reorder **Done** · **W21-BE-3 Done (uncommitted)** — remaster primary-head peel · sequel asymmetry cap · stylized compact variants · equivalent-title collapse (`tests/test_w21_be3_easy_title_igdb.py`) · default threshold **still 0.92** · next Ops = **documented** Library A PCWIN propose-only → full rescan `scan_depth=2` (live rescan waits human ship)  
+**Status:** Stage A0–A14 + C10–C11 **Done** in `parse_game_label` / `generate_goty_variants` / identify (code landed; uncommitted until human ships) · **QA 166 PASS** (parse/gamenames/scoring) · Stage **B15–B20** + **C12** article-reorder **Done** · **W21-BE-3 Done (uncommitted)** — remaster primary-head peel · sequel asymmetry cap · stylized compact variants · equivalent-title collapse (`tests/test_w21_be3_easy_title_igdb.py`) · **W22-match Done (uncommitted)** — console peel gate **N64+SNES+GBA** · **C14** punctuation-light · UPDATE-package `why_unmatched` · Kind labels Soft title/Utility · **QA PASS 138+10** · **BE-DET-1…9 Done (uncommitted)** — see checklist below · **BE-DET-8 QA PASS 141/141** (peel+Stage E) · be_det8 **14/14** · Arcade / Neo Geo AES set-folder peel · propose-first on large ARCADE · AES≠CD TGDB guard · **BE-DET-9 QA PASS 65/65** — fandom soft alias / series / remaster / regional EN↔JP / soft-title registry (`fandom_alias.py`) · propose-first soft paths · hard auto ≥**0.92** · fixture pack 50 soft · DoD met · live skipped · threshold **still 0.92** · **BE-DET-10 Done (uncommitted)** — image kind taxonomy (`image_kinds.py`: cover/screenshot/box/cart/disc/logo/hero/fanart) persisted on `Image.image_type`, wired through admin queue filter, `/api/game_images`, provider apply, and manual upload; classic Edit Images page gained an "Other artwork" section (list + kind-picker upload) and admin queue Type filter widened to all 8 kinds — closes the UI gap the taxonomy was persisting for but nothing surfaced · **QA PASS 10/10** (`tests/test_image_kinds.py`) · admin vitest regression **73/73** · Jinja/vanilla-JS template+JS has no automated harness, verified by static review · live skipped · Ops = DAT uploads + Arcade/AES + prior leaf rescans after ship  
 **Related:** [libraries-and-scans.md](../admin/libraries-and-scans.md) · [store-metadata-identify.md](store-metadata-identify.md) · design `docs/superpowers/specs/2026-07-22-game-recognition-and-rename-design.md`
+
+### Detection coverage program (peel gate widen)
+
+Game Master seat mandate covers **systems · regions · forms · art kinds · fandom**. Console ROM peel (B15–B20 + W22 + **BE-DET-1…8**) gates identify to **GB / GBC / GBA / NES / SNES / N64 / NDS / NGC / WII / PSX / PSP / SEGA_MD / SEGA_MS / SEGA_GG / SEGA_CD / SEGA_SATURN / SEGA_DC / ATARI_2600 / NEOGEO / NEOGEO_CD / ARCADE / SWITCH** — files-mode always; folders-mode when leaf basename or primary dump inside looks No-Intro/GoodTools (`looks_like_console_rom_dump_label`); **SWITCH** folders also gate on A1 scene/repack brackets or A10 unbracketed scene suffixes (title-dir **A1∪B16**); **ARCADE / NEOGEO (AES)** folders also gate on compact MAME/FBNeo set basenames (`mslug`, `sf2ce.zip`) — **NEOGEO_CD** stays dump/Redump only (never AES↔CD). Plain folder names still use `parse_game_label`. Threshold stays **0.92**. **BE-DET-4** persists peeled `rom_region` / `rom_languages` onto Game (and Unmatched list/export trail) on identify/scan/rematch/custom/DAT — tags for match honesty, not Class A catalogs. **BE-DET-5** groups multi-disc dump sets: peel `(Disc|Disk|CD N)` from the match title, keep one Game, attach siblings as `GameExtra(extra_kind='disc')`, filter cue+bin companions so the cue owns the set, persist `disc_index`/`disc_count`, and expose `is_multi_disc` / `discs[]` on browse/details (SPA disc chips UI later). **BE-DET-6** DAT unique-hash may open zip/7z/rar and hash inner primary dumps when the outer archive digest misses — unique DAT title identifies; ambiguous / overcrowded → skip (`DAT_HASH_INNER_ARCHIVE` default ON). **BE-DET-8** Arcade/AES set normalize + propose-first on large ARCADE trees / compact set names; TGDB AES≠CD hard guard. **BE-DET-9** fandom alias registry expands search variants and boosts proposal ranking for soft alias · series · remaster · regional EN↔JP · soft-title adjacency — soft paths stay **propose-first** (never invent catalog IDs from alias alone); hard auto-identify still requires score ≥**0.92**. Alias tables stay in code/tests only; public docs use capability language (no Class A brand catalogs). **BE-DET-10** locks the image kind taxonomy (cover/screenshot/box/cart/disc/logo/hero/fanart) end-to-end: persist, filter, provider apply, and manual upload/list surfaced in the classic Edit Images page. Detail stays with GM/Backend Tasks — this file tracks the public match surface only.
 
 ## Gap (evidence) — historical pre-A9; A9–A14 now shipped
 
@@ -24,7 +28,7 @@ Household PC tree `…/_pc/_a…_z` (Library A, **PCWIN**) still yields large **
 | Missing apostrophe | `Assassins Creed Rogue` | Covered (A8 inject) |
 | Trailing years | `Alone in the Dark 2024` / `… 2008` | Covered (C6 variant) |
 | Collections / remakes / packs | `Alan Wake Complete Collection`, DLC packs | Covered (C7) |
-| **Tools / non-games** | OpenVR Metrics, converters, editors | **Not a peel** — skip-dir / ignore · or `item_kind` Mark as Tool |
+| **Tools / non-games** | OpenVR Metrics, converters, editors | **Not a peel** — skip-dir / ignore · or `item_kind` Mark as Utility |
 | **Bare franchise heads** | `Final Fantasy`, `Battletoads`, `Keeper` | **Manual** — C11 propose-only; do not auto-pick a sequel |
 
 **Root cause (taxonomy, historical):** Identify (`game_core`) builds search variants from **`parse_game_label` only**. Spaced version tails, `Early Access`, and pack/collection strip that lived only in `clean_game_name` never reached IGDB until A0–A8 unified the path. Franchise colon heads required an apostrophe (`assassin's creed`) until A8 inject. **Post-A8 residue** (Incl Update, unbracketed scene/repack, date-stamps, Update/Build prose, edition/add-on, `Title VR v…`) is **shipped** as A9–A14 + C10/C11 (QA **166** PASS).
@@ -102,18 +106,19 @@ A9–A13 may run before A7 as long as Steam ID extract (A5) still sees a trailin
 
 ### Stage B15–B20 — Console ROM file-leaf peel (**Done** 2026-07-31)
 
-**Audience:** Backend (scan identify · `scan_mode=files` file-leaf) · Ops (console leaf libraries)  
-**Pilot:** **GB/GBC** libraries with `scan_mode=files` — helper works cross-platform; identify wires pilot gate via `should_use_console_rom_peel`.  
+**Audience:** Backend (scan identify · files + folders dump leaves) · Ops (console leaf libraries)  
+**Pilot / gate:** `CONSOLE_ROM_PEEL_PILOT_PLATFORMS` = **GB · GBC · GBA · NES · SNES · N64 · NDS · NGC · WII · PSX · PSP · SEGA_MD · SEGA_MS · SEGA_GG · SEGA_CD · SEGA_SATURN · SEGA_DC · ATARI_2600 · NEOGEO · NEOGEO_CD · ARCADE · SWITCH** with `scan_mode=files` (or file path when mode unset) — **BE-DET-1…3 + BE-DET-7 Done**. **BE-DET-2:** folders when leaf basename or primary dump inside looks No-Intro/GoodTools (`looks_like_console_rom_dump_label` via B16–B19 transform reasons); plain folder names stay on `parse_game_label`. **BE-DET-3:** P1 platforms + `ROM_EXT_RE` / AllowedFileType defaults for `.nds` `.gcm` `.rvz` `.wbfs` `.pbp` `.cso` `.nsp` `.xci` `.nsz` `.xcz` `.a26` `.cia` `.3ds` (+ prior cart/disc forms). **BE-DET-7:** gate += Saturn / Dreamcast / Neo Geo CD · Redump paren fixtures · SWITCH title-dir A1∪B16 · `.gdi`/`.cdi` · **QA PASS 140/140**. Enum aliases: PS1 → `PSX`; Genesis → `SEGA_MD`; GameCube → `NGC`; Neo Geo AES → `NEOGEO`; Dreamcast → `SEGA_DC`. Helper works cross-platform; identify wires gate via `should_use_console_rom_peel`. Threshold stays **0.92**.  
 **Entry point:** `parse_console_rom_label` in `gametheca/utils/rom_name_peel.py` (shared peel regex also powers DAT `normalize_set_title` via `normalize_rom_peel_core`).  
 **Hard rule:** Match-only — strip tags for IGDB search quality; **no** mass rename · **no** new HTTP routes.  
 **Naming conventions:** GoodTools / No-Intro bracket and parenthetical shapes are documented as **dump-set naming conventions** — not pirate-index brands. Alias token lists stay **in code only**.
 
-When identify selects console ROM peel (pilot: GB/GBC + files mode), `parse_console_rom_label` runs instead of `parse_game_label`. Returns `transforms[]` trail (W20-2 parity), `propose_only`, and `is_multicart`. Identify treats `propose_only` / multicart like C11 bare franchise — **propose/manual only**, no auto-import.
+When identify selects console ROM peel (gate: pilot platforms + files mode, or folders + dump-shaped leaf/primary dump), `parse_console_rom_label` runs instead of `parse_game_label`. Returns `transforms[]` trail (W20-2 parity), `propose_only`, and `is_multicart`. Identify treats `propose_only` / multicart like C11 bare franchise — **propose/manual only**, no auto-import.
 
 | # | Rule | Notes |
 |---|---|---|
-| **B15** | Strip known ROM/archive extensions | `.gb` `.gbc` `.gba` `.nes` `.sfc` `.z64` `.md` `.bin` `.zip` `.7z` … |
+| **B15** | Strip known ROM/archive extensions | `.gb` `.gbc` `.gba` `.nes` `.sfc` `.z64` `.nds` `.md` `.sms` `.gg` `.bin` `.iso` `.gcm` `.rvz` `.wbfs` `.pbp` `.cso` `.gdi` `.cdi` `.nsp` `.xci` `.a26` `.zip` `.7z` … |
 | **B16** | Strip GoodTools / dump **bracket** tags | `[!]` `[S]` `[b1]` … — iterative until stable |
+| **A1 / A10 (SWITCH only)** | Scene/repack brackets + unbracketed suffixes | BE-DET-7 title-dir peel — A1 before B16; A10 after remaining parens; aliases stay code-only |
 | **B17** | Strip No-Intro **region** and **language-list** parentheticals | `(USA)` `(Europe, Japan)` `(En,Fr,De)` … |
 | **B18** | Strip revision / hardware / status parentheticals | `(Rev A)` `(SGB Enhanced)` `(Proto)` `(Beta)` `(Unl)` `(Virtual Console)` … |
 | **B19** | Strip trailing metadata parentheticals | Year `(1995)` · publisher `(SNK)` · region shorthand `(Jp-US)` · leftover short `(…)` ≤40 chars |
@@ -123,15 +128,19 @@ When identify selects console ROM peel (pilot: GB/GBC + files mode), `parse_cons
 
 **Propose-only (no auto-import):** detected on **raw basename** before peel — multicart shapes (`N-in-1`, `Maxi N`, Action Replay / Game Genie, `[BIOS]`) · hack/translated bracket flags `[h]` `[T]` `[tr]` · status parens `(Proto)` `(Beta)` `(Demo)` `(Sample)` `(Unl)` `(Aftermarket)` `(Pirate)` `(Hacker)`. Identify sets `bare_franchise` path → proposal queue.
 
-**Stage C12 — article-reorder variants:** when cleaned name ends with `, The` / `, A` / `, An`, `generate_goty_variants` adds reordered search copy (e.g. `Legend of Zelda, The` → + `The Legend of Zelda`). Keep both forms; scorer gap required for auto-import.
+**Stage C12 — article-reorder variants:** when cleaned name ends with `, The` / `, A` / `, An`, **or** has a mid-title comma article before a hyphen subtitle (`Legend of Zelda, The - Ocarina of Time`), `generate_goty_variants` adds reordered search copy. Keep both forms; scorer gap required for auto-import.
+
+**Stage C14 — punctuation-light (W22):** when cleaned contains dotted acronym tokens (`S.W.A.R.M.` shape, ≥2 letter+period pairs), add a search variant that collapses periods in those tokens only (`SWARM`). Additive only — never replaces cleaned display primary. Hyphens / apostrophes / spaces kept.
+
+**UPDATE packaging note (W22-M5):** A9/A12 peel Incl Update / Update prose for search quality. Bare folder basenames `UPDATE` / `Updates` → **never** auto-import · `match_reason=update_package_folder` · `why_unmatched` plain-language note · `suggested_kind` null (not Soft title). Peeled packaging on real titles → optional `update_packaging_hint` on Unmatched.
 
 **Shared DAT peel:** `normalize_set_title` / `normalize_rom_peel_core` run B15–B19 (no B20 title-case) so reference-set hash keys and ownership registers share the same strip quality as identify.
 
 **DAT unique-hash identify (W21-BE-DAT):** After peel + IGDB miss (+ Stage D miss), console leaves may auto-identify via a **unique** uploaded reference-set CRC/MD5/SHA1 hit (`try_dat_hash_identify`) before Stage E TGDB propose — never title-only fuzzy from DAT names; multicart / ambiguous / no DAT stay Unmatched.
 
-#### Console ROM acceptance fixtures (B15–B20 + C12)
+#### Console ROM acceptance fixtures (B15–B20 + C12 + W22 N64/SNES/GBA)
 
-Backend unit tests: `tests/test_console_rom_peel.py` — GM AC table **16** rows + extras · transform trail continuity · C12 article reorder · propose-only flags · pilot gate · shared DAT normalize.
+Backend unit tests: `tests/test_console_rom_peel.py` — GM AC table **16** rows + extras · **W22 N64 N1–N10** · **SNES/GBA S*/G*** · transform trail continuity · C12/C14 · propose-only flags · peel gate · shared DAT normalize.
 
 | # | File basename (shape) | `cleaned_name` | Notes |
 |---|---|---|---|
@@ -148,7 +157,7 @@ Backend unit tests: `tests/test_console_rom_peel.py` — GM AC table **16** rows
 | 11 | `Some Hack (USA) [h].gb` | `Some Hack` | **propose_only** (hack flag) |
 | 12 | `Early Game (Proto) (USA) [!].gb` | `Early Game` | **propose_only** (proto) |
 
-Pilot gate: `should_use_console_rom_peel` → **true** for GB/GBC + `scan_mode=files` (or file path when scan_mode unset); **false** for PCWIN and folder-leaf scan.
+Peel gate (shipped **BE-DET-1…3 + BE-DET-7 + BE-DET-8** · **QA PASS 141/141** peel+Stage E · be_det8 **14/14**): `should_use_console_rom_peel` → **true** for **GB / GBC / GBA / NES / SNES / N64 / NDS / NGC / WII / PSX / PSP / SEGA_MD / SEGA_MS / SEGA_GG / SEGA_CD / SEGA_SATURN / SEGA_DC / ATARI_2600 / NEOGEO / NEOGEO_CD / ARCADE / SWITCH** + (`scan_mode=files` / file path when unset, **or** `scan_mode=folders` when leaf basename e.g. `Super Mario Bros. (USA)` or primary ROM dump inside looks dump-tagged; **SWITCH** folders also when A1/A10 scene tags; **ARCADE / NEOGEO AES** folders also when compact set basename); **false** for PCWIN and for plain folder names (those stay `parse_game_label`). Threshold **0.92**. **BE-DET-4 Done (uncommitted · QA PASS 118/118):** peeled region/lang tags persist as `rom_region` / `rom_languages` on identify/scan/rematch/custom/DAT; Unmatched list/export expose the same fields for triage honesty. **BE-DET-5 Done (uncommitted · QA PASS 119/119):** multi-disc dump sets peel `(Disc|Disk|CD N)` for match title, collapse to one Game + disc `GameExtra` rows, cue+bin companion filter, persist `disc_index`/`disc_count`, browse/details expose `is_multi_disc`/`discs[]` (SPA disc chips later). **BE-DET-6 Done (uncommitted · QA PASS 14/14):** DAT unique-hash may open zip/7z/rar and hash inner primary dumps when outer miss — unique title identifies; ambiguous skip (`DAT_HASH_INNER_ARCHIVE` default ON). **BE-DET-7 Done (uncommitted · QA PASS 140/140):** disc/late gate + Redump fixtures + SWITCH A1∪B16. **BE-DET-8 Done (uncommitted · QA PASS 141/141 · be_det8 14/14 · DoD met · live skipped):** Arcade/AES set-folder peel · propose-first large ARCADE · AES≠CD TGDB guard · threshold **0.92**. **Next:** **BE-DET-9** fandom alias. See [Detection coverage program](#detection-coverage-program-peel-gate-widen).
 
 ### Stage C — Ordered search variants
 
@@ -168,8 +177,9 @@ Given cleaned tokens from Stage A:
 | 9 | Hyphen ↔ space / GOTY | Existing `generate_goty_variants` | |
 | **10** | Edition peel (post-A13) | Keep full; add head without trailing Complete/Collector/Legendary when ≥2 head tokens | `Title Collector's Edition` → + `Title` |
 | **11** | Do **not** auto-variant bare franchise-only labels | Single-token or known ambiguous franchise heads with no subtitle → leave for Fix search / propose | `Final Fantasy`, `Battletoads`, `Keeper` |
-| **12** | Article reorder (console ROM peel) | When cleaned ends with `, The` / `, A` / `, An` → add reordered variant; keep original | `Legend of Zelda, The` → + `The Legend of Zelda` |
+| **12** | Article reorder (console ROM peel) | When cleaned ends with `, The` / `, A` / `, An`, or mid-title `, The - …` → add reordered variant; keep original | `Legend of Zelda, The` → + `The Legend of Zelda`; Ocarina / LTTP hyphen form |
 | **13** | Stylized compact (`Nx Word`) | When cleaned matches `^\d+x\s+…` → add glued search copy | `1000x Resist` → + `1000xResist` |
+| **14** | Punctuation-light dotted acronym | Collapse `X.`×≥2 tokens only; additive | `… S.W.A.R.M.` → + `… SWARM` |
 
 **Do not** make heuristic colon (row 5), pack peel (row 7), or edition peel (row 10) the sole auto-import path — require existing high-confidence score + gap.
 
@@ -320,9 +330,20 @@ Canonical target: **Baldur's Gate: Dark Alliance**. Must not auto-pick BG3 / BG1
 - [x] **`parse_console_rom_label`** — Stages B15–B20 + `transforms[]` trail (W20-2 parity)
 - [x] **Shared peel** — `normalize_rom_peel_core` / `normalize_set_title` (DAT keys)
 - [x] **Pilot wire** — GB/GBC + `scan_mode=files` in identify (`should_use_console_rom_peel`)
+- [x] **W22-match** — gate += N64 / SNES / GBA (files-mode)
+- [x] **BE-DET-1** — gate += NES / PSX / SEGA_MD (files-mode); fixtures in `tests/test_console_rom_peel.py`; threshold still **0.92** · **QA PASS 77/77** · DoD met · live skipped
+- [x] **BE-DET-2** — folders-mode when leaf/primary dump looks No-Intro/GoodTools (`looks_like_console_rom_dump_label`); plain folders → `parse_game_label`; PCWIN still false · threshold **0.92** · **QA PASS 77/77** · DoD met · live skipped
+- [x] **BE-DET-3** — P1 gate += NDS / NGC / WII / PSP / SEGA_MS / SEGA_GG / SEGA_CD / ATARI_2600 / NEOGEO / ARCADE / SWITCH · `ROM_EXT_RE` + AllowedFileType defaults for disc/handheld/Switch forms · fixtures · threshold **0.92** · **QA PASS 98/98** · DoD met · live skipped
+- [x] **BE-DET-4** — persist `rom_region` / `rom_languages` from peel/path on identify/scan/rematch/custom/DAT · Unmatched list/export expose fields · threshold **0.92** · **QA PASS 118/118** · DoD met · live skipped
+- [x] **BE-DET-5** — multi-disc grouping · `(Disc|Disk|CD N)` peel → one Game + `GameExtra(extra_kind='disc')` · cue+bin companion filter · `disc_index`/`disc_count` · browse/details `is_multi_disc`/`discs[]` · threshold **0.92** · **QA PASS 119/119** · DoD met · live skipped · SPA disc chips UI later
+- [x] **BE-DET-6** — DAT unique-hash inner archive (zip/7z/rar) when outer miss · unique inner → identify · ambiguous → skip · `DAT_HASH_INNER_ARCHIVE` default ON · threshold **0.92** · **QA PASS 14/14** (DET-6 + W21 DAT) · DoD met · live DAT upload = Ops
+- [x] **BE-DET-7** — disc/late gate += SEGA_DC / SEGA_SATURN / NEOGEO_CD · Redump paren fixtures · SWITCH title-dir A1∪B16 · `.gdi`/`.cdi` B15 + AllowedFileType defaults · threshold **0.92** · **QA PASS 140/140** (peel+multi-disc) · DoD met · live skipped
+- [x] **BE-DET-8** — Arcade / Neo Geo AES set normalize · folder-set peel (dump **or** MAME/FBNeo set basename) · propose-first on large ARCADE libs / compact set names · AES≠CD hard guard (TGDB + helper) · threshold **0.92** · fixtures in `tests/test_console_rom_peel.py` · **QA PASS 141/141** (peel+Stage E) · be_det8 **14/14** · DoD met · live skipped
+- [x] **BE-DET-9** — Fandom alias registry · soft alias / series / remaster / regional EN↔JP / soft-title in `fandom_alias.py` · propose-first soft paths · variants + score boost · hard auto ≥**0.92** · fixture pack 50 soft (`tests/test_be_det9_fandom_alias.py`) · **QA PASS 65/65** · DoD met · live skipped
+- [x] **BE-DET-10** — Image kind taxonomy `image_kinds.py` (cover/screenshot/box/cart/disc/logo/hero/fanart) persisted on `Image.image_type` · admin `image_queue_list` + `/api/game_images` + `artwork_apply.apply_cover_from_url` + `upload_image` all kind-aware · classic Edit Images "Other artwork" list + kind-picker upload (`game_edit_images.html`/`.js`) · admin React queue Type filter widened to all 8 kinds (`ImagesPage.jsx`) · **QA PASS 10/10** (`tests/test_image_kinds.py`) · admin vitest regression **73/73** · DoD met · live skipped
 - [x] **C12 article-reorder** — `generate_goty_variants` trailing `, The` / `, A` / `, An`
 - [x] **Propose-only** — multicart · hack `[h]`/`[T]`/`[tr]` · proto/beta/demo/sample/unl/aftermarket/pirate
-- [x] Unit fixtures — `tests/test_console_rom_peel.py` (**QA PASS 42/42**)
+- [x] Unit fixtures — `tests/test_console_rom_peel.py` (**QA PASS** · BE-DET-1…5 · **119/119** on BE-DET-5 slice)
 - [x] No mass rename; strip tags for matching only
 - [x] No new HTTP routes
 
@@ -339,12 +360,14 @@ Canonical target: **Baldur's Gate: Dark Alliance**. Must not auto-pick BG3 / BG1
 | Seat | File / area | Work |
 |---|---|---|
 | **@agent-backend** | `gametheca/utils/game_name_parse.py` | **Done** A0–A14 (Incl Update · unbracketed scene/repack · date-stamps · Update/Build prose · edition/add-on · VR re-pass · `bare_franchise`) |
-| **@agent-backend** | `gametheca/utils/gamenames.py` | **Done** Stage C + C10 edition peel + C11 bare-franchise + **C13** stylized compact (W21-BE-3) |
-| **@agent-backend** | `gametheca/utils/match_scoring.py` | **Done W21-BE-3** remaster primary-head · sequel asymmetry cap · equivalent-title collapse; threshold ≥0.92 |
-| **@agent-backend** | `gametheca/utils/game_core.py` (scan identify) | **Done** variant_base = `parse_game_label` (PC/folder) or `parse_console_rom_label` (GB/GBC files pilot); C11 + ROM propose-only |
-| **@agent-backend** | `gametheca/utils/rom_name_peel.py` | **Done** B15–B20 · shared DAT peel · pilot gate · propose-only / multicart detect |
+| **@agent-backend** | `gametheca/utils/gamenames.py` | **Done** Stage C + C10 edition peel + C11 bare-franchise + **C13** stylized compact (W21-BE-3) + **C14** punctuation-light (W22) + **BE-DET-9** fandom variant expand |
+| **@agent-backend** | `gametheca/utils/match_scoring.py` | **Done W21-BE-3** remaster primary-head · sequel asymmetry cap · equivalent-title collapse; **BE-DET-9** soft alias score boost; threshold ≥0.92 |
+| **@agent-backend** | `gametheca/utils/fandom_alias.py` | **Done BE-DET-9** soft alias · series · remaster · regional EN↔JP · soft-title adjacency · propose-first flags |
+| **@agent-backend** | `gametheca/utils/game_core.py` (scan identify) | **Done** variant_base = `parse_game_label` (PC/folder) or `parse_console_rom_label` (pilot platforms files + dump-shaped folders); C11 + ROM propose-only; W22 bare UPDATE package path; **BE-DET-9** fandom soft propose-first |
+| **@agent-backend** | `gametheca/utils/rom_name_peel.py` | **Done** B15–B20 · shared DAT peel · gate GB…SWITCH + Saturn/DC/Neo Geo CD (**BE-DET-1…3 + BE-DET-7** files · dump-shaped folders · SWITCH A1∪B16 · `.gdi`/`.cdi`) · **BE-DET-8** Arcade/AES set-folder peel + propose-first · AES≠CD · `ROM_EXT_RE` P1+disc forms · propose-only / multicart detect · **Next BE-DET-10** |
 | **@agent-backend** / **@agent-ops** | skip-dir / Admin `dir:` | PCWIN tool folders (OpenVR Metrics, converters, editors) — skip, do not match |
 | **@agent-qa** | `tests/test_utils_game_name_parse.py`, `tests/test_utils_gamenames.py` (+ scoring) | **Done** A0–A14 + C10/C11 · **QA 166 PASS** |
-| **@agent-qa** | `tests/test_console_rom_peel.py` | **QA PASS 42/42** (B15–B20 · C12 · pilot gate · propose-only · set_completion · rom_language) |
-| **@agent-docs** | this file + progress + canvas | **Done** B15–B20 section · canvas rewrite |
+| **@agent-qa** | `tests/test_console_rom_peel.py` | **QA PASS** (B15–B20 · C12/C14 · N64/SNES/GBA · peel gate · propose-only) |
+| **@agent-qa** | `tests/test_be_det9_fandom_alias.py` (+ W21-BE-3) | **QA PASS 65/65** — BE-DET-9 soft alias fixture pack · DoD met · live skipped |
+| **@agent-docs** | this file + progress + canvas | **Done** B15–B20 · **DOC-W22-M8** W22-match slice · **DOC-DET** detection coverage · **BE-DET-9** capability note (propose-first soft alias · no Class A lists) |
 | **@agent-ops** | Unraid rescan Library A PCWIN `scan_depth=2` | **Documented** — propose-only then full after human ship; prefer ship A9+ before second full rescan |

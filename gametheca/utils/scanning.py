@@ -1,4 +1,5 @@
 import os
+import json
 from datetime import datetime, timezone
 from flask import current_app, flash, has_request_context
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -200,15 +201,32 @@ def log_unmatched_folder(
         and suggested_candidate_name is None
         and stage_e_candidates is None
         and stage_e is None
-    ):
+    ) or match_reason is None:
         try:
-            from gametheca.utils.match_proposal import read_proposal_kind_hint
+            from gametheca.utils.match_proposal import (
+                read_proposal_kind_hint,
+                resolve_proposal_path,
+            )
 
-            hint = read_proposal_kind_hint(folder_path)
-            suggested_kind = hint.get('suggested_kind')
-            suggested_candidate_name = hint.get('suggested_candidate_name')
-            stage_e_candidates = hint.get('stage_e_candidates')
-            stage_e = hint.get('stage_e')
+            if (
+                suggested_kind is None
+                and suggested_candidate_name is None
+                and stage_e_candidates is None
+                and stage_e is None
+            ):
+                hint = read_proposal_kind_hint(folder_path)
+                suggested_kind = hint.get('suggested_kind')
+                suggested_candidate_name = hint.get('suggested_candidate_name')
+                stage_e_candidates = hint.get('stage_e_candidates')
+                stage_e = hint.get('stage_e')
+            if match_reason is None:
+                path = resolve_proposal_path(folder_path)
+                if path:
+                    with open(path, encoding='utf-8') as handle:
+                        data = json.load(handle)
+                    body = data.get('proposal') if isinstance(data, dict) else None
+                    if isinstance(body, dict):
+                        match_reason = (body.get('match_reason') or '').strip() or None
         except Exception:
             pass
 
@@ -256,6 +274,8 @@ def log_unmatched_folder(
                 existing_unmatched_folder.match_reason = match_reason
             if match_score is not None:
                 existing_unmatched_folder.match_score = match_score
+        elif match_reason and not existing_unmatched_folder.match_reason:
+            existing_unmatched_folder.match_reason = match_reason
         # Refresh kind / Stage E hint when a newer proposal exists
         if suggested_kind is not None:
             existing_unmatched_folder.suggested_kind = suggested_kind
@@ -267,6 +287,7 @@ def log_unmatched_folder(
             existing_unmatched_folder.stage_e = stage_e
         if (
             matched_status == 'Duplicate'
+            or match_reason
             or suggested_kind is not None
             or suggested_candidate_name is not None
             or stage_e_candidates is not None

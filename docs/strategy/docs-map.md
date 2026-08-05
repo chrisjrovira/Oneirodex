@@ -1,6 +1,6 @@
 # Documentation map (runbooks, SOPs, assets)
 
-**Date:** 2026-07-29 · **Product version:** 0.2.0 (in progress)  
+**Date:** 2026-08-01 · **Product version:** 0.2.0 (in progress)  
 **Purpose:** Inventory of docs, ops, and communications.  
 **Sync rule:** `.cursor/skills/docs-sync/` + `.cursor/rules/docs-sync.mdc` — update on every code change.
 
@@ -10,6 +10,9 @@
 
 **Feature roadmap mockups:**  
 `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\feature-roadmap-mockups.canvas.tsx`
+
+**Wave program presentation (W21–W25 + UI debt):**  
+`C:\Users\cephyrix_zyth\.cursor\projects\192-168-50-116-isos-gametheca\canvases\wave-program-presentation.canvas.tsx`
 
 ## Status legend
 
@@ -36,19 +39,21 @@
 | Cheats (Wave 3 stance · Wave 19 surface) | `docs/strategy/cheats.md` | Have — GM taxonomy: `.cht` canonical · `cheat_surface` RetroArch-only · easy-create · no Class A trainer brands · no scrapes |
 | UI rebuild plan | `docs/strategy/ui.md` | Have |
 | Product roadmap | `docs/strategy/roadmap.md` | Have |
-| Execution progress | `docs/strategy/progress.md` | Have |
+| Feedback roadmap W22–W25 | `docs/strategy/roadmap-w22-plus.md` | Have — Aug-01 human feedback; **W21** = first-scan (Done uncommitted, not renumbered); **W22 UI rem closed** (**W22-1 Done** UI+BE QA **13/13** · **W22-match Done** · **QA PASS 138+10** · **UID-001 QA PASS 31/31** · **UID-002 QA PASS 20/20** · **UID-005** Done · **UID-009 Done** · **QA PASS 11/11** · **UID-016 Done** · UI **32/32** · BE size/mtime **13/13** · **UID-004 Done** · **QA PASS 33/33** · next UI **W23**) · **BE-DET** In progress (**BE-DET-1…9** Done · **DET-8 QA PASS 141/141** · **DET-9 QA PASS 65/65** · **Next** **BE-DET-10**) |
+| Execution progress | `docs/strategy/progress.md` | Have — **W22-1 Done** (BE batch APIs + UI) · UI/BE QA **13/13** · **W22-match Done** · **QA PASS 138+10** · **UID-001 Done** · **QA PASS 31/31** · **UID-002 Done** · **QA PASS 20/20** · **UID-005 Done** · **UID-009 Done** · **QA PASS 11/11** · **UID-016 Done** · UI **32/32** · BE size/mtime **13/13** · **UID-004 Done** · **QA PASS 33/33** · **W22 UI rem closed** · **GM detection coverage brief Done** · **BE-DET-1…9 Done** · **DET-8 QA PASS 141/141** · **DET-9 QA PASS 65/65** · **Next** **BE-DET-10** · links W22+ + ui-debt-log |
 | Official v1 readiness (team review) | `docs/strategy/v1-readiness.md` | Have — gate 8 text-complete; Capture open |
 | PM miss backlog (pre-1.0) | `docs/strategy/pm-miss-backlog.md` | Have |
 | Admin hybrid inventory | `docs/strategy/admin-hybrid.md` | Have |
 | Upgrade notes (0.2 → 1.0) | `docs/strategy/upgrade-notes-1.0.md` | Have |
 | Game Master 1.0 domain sign-off | `docs/strategy/v1-gamemaster-signoff.md` | Have (gate 7) |
-| Folder → IGDB name-resolution rules | `docs/strategy/name-resolution.md` | Have — Stage A0–A14 **Done**; **W20-2 transform trail Done**; **B15–B20 console ROM peel Done** (`parse_console_rom_label` · GB/GBC files pilot · shared DAT peel · C12 article-reorder · propose-only · **QA PASS 42/42**); code uncommitted until human ships |
+| Folder → IGDB name-resolution rules | `docs/strategy/name-resolution.md` | Have — Stage A0–A14 **Done**; **W20-2 transform trail Done**; **B15–B20** console ROM peel · gate **GB…SWITCH + SEGA_SATURN/DC + NEOGEO_CD + ARCADE** files always + dump-shaped folders (**BE-DET-1…8 Done** uncommitted · **QA PASS 141/141** peel+Stage E · be_det8 **14/14** · peel+multi-disc **QA PASS 140/140** · `ROM_EXT_RE` P1+`.gdi`/`.cdi` · SWITCH A1∪B16 · Arcade/AES set peel · propose-first · AES≠CD · threshold **0.92**) · **BE-DET-9 Done** (fandom soft alias / series / remaster / EN↔JP / soft-title · propose-first · hard auto ≥**0.92** · **QA PASS 65/65** · fixture pack 50 soft · capability-only public docs) · **BE-DET-4 Done** (`rom_region` / `rom_languages` persist + Unmatched trail · **QA PASS 118/118**) · **BE-DET-5 Done** (multi-disc grouping · disc extras · cue+bin · `is_multi_disc`/`discs[]` · **QA PASS 119/119**) · **BE-DET-6 Done** (DAT unique-hash inner archive · **QA PASS 14/14**) · **C12** article-reorder · **C14** punctuation-light · UPDATE-package why note · Kind Soft title/Utility · **W22-match Done** (uncommitted · **QA PASS 138+10** · live rescan skipped) · **Next:** **BE-DET-10** image kinds |
 | Store metadata identify · ownership (Meta/Quest+) | `docs/strategy/store-metadata-identify.md` | Have — META-1 + **gaming software/emulator/tool** full `item_kind` loop (browse filter · mark_kind · badges · SPA Kind chips); unmatched `suggested_kind` denormalized (Wave 4) + legacy **backfill** + `why_unmatched` (Wave 5 Done); Steam software identify; **W20-3 enrich parity Done** (manual IGDB taxonomy upsert · Steam genres/modes); **W20-5a Stage D Done** (IGDB miss → Steam App ID / exact Steam / exact GOG custom before Unmatched · pytest 12/12); DRM register-only; no LibraryPlatform.QUEST |
 | Console / emulator library layout | `docs/strategy/console-gaming-libraries.md` | Have — per-leaf libs · skip-dir Done (W20-7 #4 · extended globs + repack regex + Admin `re:`/`dir:` · **QA PASS 56/56**) · no depth-3 walker |
 | Console / emulator tree → libraries | `docs/strategy/console-gaming-libraries.md` | Have — per-platform leaf libs; exclude emus/tools |
 | Docs map (this file) | `docs/strategy/docs-map.md` | Have |
 | Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) |
 | Competitive re-score template | `docs/strategy/competitor-rescore.md` | Create |
+| Cloud vs Unraid TCO ballpark | `docs/strategy/cloud-tco-ballpark.md` | Have — Finance first-pass **Done** 2026-08-01 · Unraid-first; detailed worksheet in private vault (gitignored) |
 
 ---
 
@@ -65,7 +70,7 @@
 | Social, chat & voice | End users | Have | [social-and-voice.md](../user/social-and-voice.md) — includes Friends companion |
 | FAQ | End users | Have | [faq.md](../user/faq.md) — aligned with HelpPage |
 | Troubleshooting | End users | Have | [troubleshooting.md](../user/troubleshooting.md) |
-| Game details / freshness badges | End users | Create | Include OUT / ~ |
+| Game details / freshness badges | End users | Create | Tile contract in [library-and-systems.md](../user/library-and-systems.md) (no OUT/~ /RELEASE; four-corner; UPDATE alone) — optional dedicated guide |
 | Playing ROMs in browser | End users | Update | Platform matrix |
 | Attract mode | End users | Update | Idle timeout, filters |
 | Wishlist / requests | End users | Create | |
@@ -89,8 +94,8 @@
 
 | Guide | Status | Notes |
 |---|---|---|
-| Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — scan queue/force · unmatched · Wave 18 scan job timing/filters (honest ETA null when stalled) · Scan Jobs UI localStorage filters · **Scanning filters** (name tag vs `dir:` skip · prefix globs · Reset Themes for scanjobs CSS/JS) · **W20-1 Propose leaf libraries** (Libraries `#propose-leaf` + Library tools · propose-only · Confirm → `/admin/library/add` + first scan) · **W20-1b Import CSV/JSON** (Libraries `#import-leaf` + Library tools Import tab · preview-only · same Confirm create · soft-degrade 404) · **W20-2** `transforms[]` Why expander · **W20-5a Stage D** IGDB-miss → Steam/GOG custom before Unmatched · **W20-4** Scan/match policy **Done** (UI + BE `GET|PUT /api/admin/scan-match/config`) |
-| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` 10 · Reset after Wave 2d · loading motifs on volume |
+| Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — **W22-1 Done** unified chrome (`/libraries` · `/scan_management`) · multi-select sticky **Scan**/**Edit**/**Delete** → `POST …/batch/{scan,edit,delete}` · **BE batch APIs Done** (`force` skips typed names; UI prefers batch / 404 soft-degrade) · Layout chips · `gt-toast-host` · scan queue/force · unmatched · **UID-005** top actions / Resolve pills / client sort · Wave 18 timing/filters · **Scanning filters** · **W20-1/1b** propose/import · **W20-2** trail · **W20-4** scan-match · **W20-5a** Stage D · post-deploy Reset Themes (`admin_manage_libs` for sticky Scan/Edit · `admin_manage_scanjobs`) |
+| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` 10 · Reset after Wave 2d · **W22-1** `admin_manage_libs` + `admin_manage_scanjobs` (+ **UID-005** · Soft title/Utility) · loading motifs on volume |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — feature defaults ON · OIDC opt-in · malware block-on-hit · ClamAV · native Arr indexers (add/bulk/presets) + Prowlarr/Jackett · **W20-4** Scan/match Settings **Done** (`/admin/scan_match` + `GET|PUT /api/admin/scan-match/config` · defaults 0.92/0.08/0.85/conservative) |
 | Discover sections (custom zones) | Have | [discover-sections.md](../admin/discover-sections.md) — manual pick / library / platform / genre zones, reorder + hide built-ins |
 | Support inbox | Have | [support-inbox.md](../admin/support-inbox.md) |
@@ -100,7 +105,7 @@
 | First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 10 |
 | Propose-only scan & proposals | Create | |
 | Library Doctor & rename templates | Create | |
-| Unmatched & false duplicates | Have | [libraries-and-scans.md#unmatched-folders](../admin/libraries-and-scans.md#unmatched-folders) — Wave 17: filters · batch · soft **Amend naming** · nested `matched_game` / **Dupe of** · **W20-2** `transforms[]` + **Name transform trail** expander (Dupe glance + scanjobs; soft-degrade) · Dupe glance · merge/keep/ignore · OpenPathModal · export · PC extras |
+| Unmatched & false duplicates | Have | [libraries-and-scans.md#unmatched-folders](../admin/libraries-and-scans.md#unmatched-folders) — Wave 17: filters · batch · soft **Amend naming** · nested `matched_game` / **Dupe of** · **UID-005** per-row top actions · Resolve equal pills · client sort Folder/Status/Library/Platform · Dupe glance parity · **W20-2** `transforms[]` + **Name transform trail** expander (Dupe glance + scanjobs; soft-degrade) · Dupe glance · merge/keep/ignore · OpenPathModal · export · PC extras |
 | Identify workbench | Have | W20-3 enrich parity — Manual Identify upserts IGDB taxonomy · Steam genres/modes — [store-metadata-identify.md](store-metadata-identify.md) · [libraries-and-scans.md](../admin/libraries-and-scans.md) |
 | Freshness bulk & inbox | Update | |
 | Image queue / turbo downloads | Have | [libraries-and-scans.md#image-queue](../admin/libraries-and-scans.md#image-queue) — thumbnails, group by game, retry failed |
@@ -149,7 +154,8 @@
 | Doc | Status |
 |---|---|
 | Issue assess / fix workflow | Have — [dev/issue-assess-agent.md](../dev/issue-assess-agent.md) |
-| Agent skills index | Have — [dev/agent-skills.md](../dev/agent-skills.md) — Jul 29 process refresh: sphere · seat router · wrong-seat refuse · ship helpers · lanes |
+| Agent skills index | Have — [dev/agent-skills.md](../dev/agent-skills.md) — seats **1–14** (Art · Creative · Platform · Finance · Hardware · A11y added 2026-08-01) · sphere · seat router · wrong-seat refuse · ship helpers · lanes |
+| UI debt log (recurring defects) | Have — [dev/ui-debt-log.md](../dev/ui-debt-log.md) — badge inventory · UID-001…015 · **UID-001**/**UID-002**/**UID-005**/**UID-009** done · UI Tasks must update |
 | Docs-sync skill | Have — `.cursor/skills/docs-sync/` |
 | Prompt-brief middleman | Have — `.cursor/skills/prompt-brief/` + rule |
 | UI tokens (Wave 0 / B+C) | Have — [dev/ui-wave0-tokens.md](../dev/ui-wave0-tokens.md) |
@@ -178,10 +184,10 @@ Also: Friends companion dock + `/social-companion` pop-out, Support report form,
 | Area | Action |
 |---|---|
 | README | Synced for 0.2.0 — **live PNG screenshots** (hero · Library · Systems) · Chat Capture **needed** · feature defaults ON · OIDC opt-in · ClamAV profile · Friends companion · no Discord |
-| [progress.md](progress.md) | Jul 31 — **Wave 21 code + QA Done** · pytest **69/69** · vitest **27/27** · SHIP-OK automated · live `:5006` BLOCKED (env) OK · Next: **Ops** schema restart / ship-harden / DATs / keys / backfill / Neo Geo / `:5006` → **human ship** **15–20 + W21** · smoking gun: `(digits)` ≠ Steam App IDs · Waves **4–14** @ c35a927b · uncommitted until ship · no Class A · **Canvas: synced** |
-| CHANGELOG | Unreleased catch-up for waves 14–18 + indexer / Features; bump when cutting 0.2.0 |
+| [progress.md](progress.md) | Aug 01 — **BE-DET-9 Done** fandom alias · **QA PASS 65/65** · fixture pack 50 soft · DoD met · live skipped · **BE-DET-8** Arcade/AES · **QA PASS 141/141** · **UID-016** BE disk-meta **QA PASS 13/13** (UI soft-read **32/32**) · **UID-004 Done** (**QA PASS 33/33**) · **W22 UI rem closed** · **BE-DET-1…8** preserved · **UID-009/001/002/005** QA PASS · **UI-W22-M7** · **W22-1** · **W22-match** · **QA PASS 138+10** · **Next** **BE-DET-10** image kinds · **W23** · [roadmap-w22-plus.md](roadmap-w22-plus.md) · [ui-debt-log.md](../dev/ui-debt-log.md) · **Reset Themes** `admin_manage_scanjobs` + `gt-chrome.css` + libs/badge · **Finance TCO Done** · **W21** preserved · W23–W25 Queued · seats 1–14 · `:5006` BLOCKED · smoking gun: `(digits)` ≠ Steam App IDs · no Class A · **Canvas: synced** |
+| CHANGELOG | Unreleased — BE-DET-9 fandom soft alias + BE-DET-8 Arcade/AES + UID-016/004 + waves 14–18 catch-up; bump when cutting 0.2.0 |
 | `.env.example` | Includes LiveKit + SUPPORT_GITHUB_* + malware scan |
-| In-app Help (`/help`) | Accordion Help · Chat slide-out · Preferences sectioned · Report Context/Logs collapsed · News tabs · Notifications dense · API token urlsafe/`-`/`_` + HTTP Copy · Ctrl/Cmd+K · Signals · Friends · no Discord |
+| In-app Help (`/help`) | Accordion Help · Kind Soft titles / Utilities · EXP/TOOL tooltips · Library Filters chevron-rail collapse · Tile badges four-corner / no OUT/~ /RELEASE · Jump top/bottom on scrollable pages · Chat slide-out · Preferences sectioned · Report Context/Logs collapsed · News tabs · Notifications dense · API token urlsafe/`-`/`_` + HTTP Copy · Ctrl/Cmd+K · Signals UPDATE · MISSING · NEW · LANG · Friends · no Discord |
 | Discord | Excised from product — do not reintroduce |
 
 ---
@@ -206,12 +212,13 @@ docs/
 
 ## 9. Immediate next documentation sprint
 
-1. Capture when `:5006` healthy (**Waves 4–14 on main · Waves 15–20 + W21 uncommitted**) — [CAPTURE.md](../assets/readme/CAPTURE.md) (README live PNGs + Wave 16 full-room Chat · **Wave 17 Unmatched** · **Wave 18** Scan jobs · **Wave 19** Edit Images / Cheats · W20 Identify chips + unmatched filters · **W21 Stage E chips** · theme refresh)  
+1. Capture when `:5006` healthy (**Waves 4–14 on main · Waves 15–21 Done uncommitted · W22-1 Done · UI-W22-M7 Done · UID-001/002/004/005/009/016 Done · QA PASS · W22 UI rem closed · W22-match Done · QA PASS 138+10 · BE-DET-1…9 Done · DET-8 QA PASS 141/141 · DET-9 QA PASS 65/65**) — [CAPTURE.md](../assets/readme/CAPTURE.md) (README live PNGs + Wave 16 full-room Chat · **Wave 17 Unmatched** · **Wave 18** Scan jobs · **Wave 19** Edit Images / Cheats · W20 Identify chips + unmatched filters · **W21 Stage E chips** · **W22 Library+Scans** merged tabs · Soft title/Utility kind · **Search name** · UID-005 top actions / Resolve pills / sort · **UID-016 Dupe side-by-side** · **Library Filters collapsed chevron rail** · **UID-001 Library badge four-corner chrome** · **UID-009 ScrollJump** · theme refresh)  
 2. ~~Human store logo assets~~ **Done** — theme-adaptive store marks (Ubisoft SVG; others PNG masks) — [library-and-systems.md](../user/library-and-systems.md)  
 3. Browser play platform matrix guide refresh (Wave 15c artistic rooms + firmware upload/`EMULATOR_BIOS_PATH`)  
 4. Remaining Create runbooks as incidents hit production  
 5. CHANGELOG bump when cutting 0.2.0 (include Waves 4–14 + Waves 15–21 polish)  
 6. Game details / freshness badges user guide (**Create**)  
-7. Human: **Reset Default Themes** (scanjobs + identify JS + `stageECandidates.js`) · schema restart (+ `mobygames_api_key` + `thegamesdb_api_key` + Stage E JSON columns) · set Moby/TGDB keys · upload DATs · **ship** Waves 15–20 + **W21** harden **before** any Stage D App-ID / `(digits)` rescan · Next: **Ops** bring `:5006` up · Neo Geo re-leaf — see [progress.md](progress.md)  
-
-8. ~~Favicon Class A scrub~~ **Done** (uncommitted; hard-refresh after ship) — see [progress.md](progress.md)
+7. Human: **Reset Default Themes** (`admin_manage_libs` + `admin_manage_scanjobs` + **UID-016** Dupe side-by-side Compare + **UID-004 Search name** + **UID-001** badge chrome in theme `components.css` / filter chips · Soft title/Utility + **UID-005** top actions / Resolve pills / sort + identify JS + `stageECandidates.js` + **UID-009** `gt-chrome.css`) · member SPA rebuild (ScrollJump + Library tiles) · schema restart (+ `mobygames_api_key` + `thegamesdb_api_key` + Stage E JSON columns) · set Moby/TGDB keys · upload DATs · **ship** Waves 15–20 + **W21** + **W22-match** + **UI-W22-M7** + **UID-001** + **UID-002** + **UID-004** + **UID-005** + **UID-009** + **UID-016** + **BE-DET-1…9** **before** any Stage D App-ID / `(digits)` rescan · GB…SWITCH + Saturn/DC/Neo Geo CD + Arcade/AES files-mode + dump-shaped folders-mode leaf rescans after ship · **Board:** **Next BE-DET-10** · **BE-DET-9 QA PASS 65/65** · **BE-DET-8 QA PASS 141/141** · **UID-004 QA PASS 33/33** · **W22 UI rem closed** · **W23** next UI — see [progress.md](progress.md) · [roadmap-w22-plus.md](roadmap-w22-plus.md)  
+8. ~~Favicon Class A scrub~~ **Done** (uncommitted; hard-refresh after ship) — see [progress.md](progress.md)  
+9. UI debt register + W22+ presentation kept current — [ui-debt-log.md](../dev/ui-debt-log.md) (UID-001/002/003/004/005/009/016 done · Capture W22 Library+Scans + Search name + Dupe sxs + collapsed Filters + ScrollJump when `:5006` up)  
+10. Capture slot **W22 Library+Scans** (merged tabs · multi-select · force-delete · Soft title/Utility kind · Search name · UID-005 actions/sort · UID-016 Dupe sxs · Library Filters collapsed rail · ScrollJump) when healthy — [CAPTURE.md](../assets/readme/CAPTURE.md)

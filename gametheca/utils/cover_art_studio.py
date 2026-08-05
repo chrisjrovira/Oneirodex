@@ -597,14 +597,24 @@ def _wrap_title(title: str, font: ImageFont.ImageFont, max_width: int) -> list[s
     return lines[:4]
 
 
-def _fit_title_font(headline: str, max_width: int, min_size: int, max_size: int) -> ImageFont.ImageFont:
-    """Pick the largest font that keeps the title readable at tile size."""
+def _fit_title_font(
+    headline: str,
+    max_width: int,
+    min_size: int,
+    max_size: int,
+    max_lines: int = 4,
+) -> ImageFont.ImageFont:
+    """Pick the largest font that keeps the title readable at tile size.
+
+    Allows 4 lines rather than 3: a long title forced into 3 lines shrinks the
+    type far below the legibility floor, which is worse than one extra line.
+    """
     size = max_size
     while size >= min_size:
         font = _load_font(size)
         lines = _wrap_title(headline, font, max_width)
         widest = max((font.getbbox(line)[2] - font.getbbox(line)[0]) for line in lines)
-        if widest <= max_width and len(lines) <= 3:
+        if widest <= max_width and len(lines) <= max_lines:
             return font
         size -= 1
     return _load_font(min_size)
@@ -622,9 +632,14 @@ def _draw_title_block(
     variant: str,
     is_wide: bool,
     is_square: bool,
+    title_scale: float = 1.0,
 ) -> None:
     """Readable title treatment — hero-sized type, not a tiny subtitle caption."""
-    min_title = 14 if min(width, height) >= 200 else 11
+    # Floor scales with the canvas. A flat 14px was ~2.7% of a 512px cover, which
+    # renders illegibly once the tile is scaled down; ~1/14 of the short edge
+    # keeps the title readable at browse size.
+    short_edge = min(width, height)
+    min_title = max(20, short_edge // 14) if short_edge >= 200 else max(12, short_edge // 12)
     if is_wide:
         max_title = max(min_title, height // 7)
         pad = max(16, width // 16)
@@ -638,11 +653,23 @@ def _draw_title_block(
         text_left = None
         y_anchor = 0.62
     else:
-        max_title = max(min_title, min(width, height) // 8)
+        # Portrait covers get the largest treatment — this is the shape the
+        # library grid actually renders, so it carries the legibility burden.
+        max_title = max(min_title, min(width, height) // 6)
         pad = max(10, min(width, height) // 12)
         max_text_w = width - pad * 2
         text_left = None
         y_anchor = 0.58
+
+    # Operator scaling, clamped: below ~0.6 the type drops under the legibility
+    # floor this function exists to defend, and above 2x it overruns the canvas.
+    try:
+        scale = min(max(float(title_scale or 1.0), 0.6), 2.0)
+    except (TypeError, ValueError):
+        scale = 1.0
+    if scale != 1.0:
+        min_title = max(10, int(min_title * scale))
+        max_title = max(min_title, int(max_title * scale))
 
     title_font = _fit_title_font(headline, max_text_w, min_title, max_title)
     try:
@@ -697,6 +724,9 @@ def render_cover_art(
     artistic: bool = True,
     motif: str | None = None,
     palette_override: SystemPalette | None = None,
+    headline_override: str | None = None,
+    subtitle_override: str | None = None,
+    title_scale: float = 1.0,
 ) -> Image.Image:
     """Render a branded placeholder/cover at the given size with per-system templates.
 
@@ -818,12 +848,21 @@ def render_cover_art(
         headline = title
         subtitle = system or ('Stock' if motif else 'GameTheca')
 
+    # FEAT-D4: the operator can override the derived text. An explicit empty
+    # subtitle means "no subtitle", which is different from "not supplied" —
+    # hence the `is not None` check rather than a truthiness test.
+    if headline_override is not None and str(headline_override).strip():
+        headline = str(headline_override).strip()
+    if subtitle_override is not None:
+        subtitle = str(subtitle_override).strip()
+
     _draw_title_block(
         draw,
         width,
         height,
         headline=headline,
         subtitle=subtitle,
+        title_scale=title_scale,
         accent=accent,
         secondary=secondary,
         variant=variant,

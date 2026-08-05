@@ -670,3 +670,156 @@
     min-height: 1.7rem;
   }
 }
+
+/* --- Spaces ("servers") rail — W23-SOCIAL-3 ------------------------------- */
+
+.gt-space-rail {
+  margin-top: 0.65rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+}
+
+.gt-space-rail__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gt-space-rail__space + .gt-space-rail__space {
+  margin-top: 0.3rem;
+}
+
+.gt-space-rail__space-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.3rem 0.35rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gt-text, #f2f4f8);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gt-space-rail__space-head:hover {
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 12%, transparent);
+}
+
+.gt-space-rail__chevron {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+.gt-space-rail__space-name {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gt-space-rail__tag {
+  padding: 0.05rem 0.3rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 22%, transparent);
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+}
+
+.gt-space-rail__body {
+  padding-left: 0.5rem;
+}
+
+.gt-space-rail__group {
+  margin: 0.3rem 0 0.1rem;
+  padding: 0 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-space-rail__channels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gt-space-rail__channel {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.26rem 0.4rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gt-text, #f2f4f8);
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gt-space-rail__channel:hover {
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 14%, transparent);
+}
+
+.gt-space-rail__channel.is-active {
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 26%, transparent);
+  font-weight: 650;
+}
+
+.gt-space-rail__hint,
+.gt-space-rail__error {
+  margin: 0.3rem 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-space-rail__error {
+  color: var(--gt-danger, #ff6b6b);
+}
+
+.gt-space-rail__join {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.35rem 0;
+  border-top: 1px dashed var(--gt-border, rgba(255, 255, 255, 0.12));
+}
+
+.gt-space-rail__join-label {
+  width: 100%;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-space-rail__join input {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+/* Voice honesty: the lobby is shared, a voice channel is not. */
+.gt-chat-voice__hint {
+  margin: 0.3rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+.gt-voice-lobby__room {
+  margin: 0.2rem 0;
+  font-size: 0.76rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}

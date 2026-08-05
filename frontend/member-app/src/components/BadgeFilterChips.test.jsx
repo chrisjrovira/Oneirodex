@@ -30,7 +30,7 @@ test('toggleBadgeFilter sets and clears param', () => {
   expect(applied[1]).toEqual({ sort_by: 'name' })
 })
 
-test('BadgeFilterChips omits VR and toggles UPDATE / LANG', async () => {
+test('BadgeFilterChips omits VR / OUT/~ / RELEASE and toggles UPDATE / LANG', async () => {
   const user = userEvent.setup()
   const applied = []
   const filters = { sort_by: 'name' }
@@ -44,11 +44,17 @@ test('BadgeFilterChips omits VR and toggles UPDATE / LANG', async () => {
   )
 
   expect(BADGE_FILTER_CHIPS.map((c) => c.param)).not.toContain('is_vr')
+  expect(BADGE_FILTER_CHIPS.map((c) => c.param)).not.toContain('freshness_behind')
+  expect(BADGE_FILTER_CHIPS.map((c) => c.param)).not.toContain('recent_release')
   expect(BADGE_FILTER_CHIPS.map((c) => c.param)).toContain('path_missing')
   expect(BADGE_FILTER_PARAMS).toContain('is_vr')
+  expect(BADGE_FILTER_PARAMS).toContain('freshness_behind')
+  expect(BADGE_FILTER_PARAMS).toContain('recent_release')
   expect(BADGE_FILTER_PARAMS).toContain('needs_translation')
   expect(BADGE_FILTER_PARAMS).toContain('path_missing')
   expect(screen.queryByRole('button', { name: 'VR' })).toBeNull()
+  expect(screen.queryByRole('button', { name: 'OUT/~' })).toBeNull()
+  expect(screen.queryByRole('button', { name: 'RELEASE' })).toBeNull()
   expect(screen.getByRole('button', { name: 'MISSING' })).toBeInTheDocument()
 
   await user.click(screen.getByRole('button', { name: 'UPDATE' }))

@@ -36,11 +36,71 @@ def _soft_name(value) -> str | None:
     return text or None
 
 
+def _iso_dt(value) -> str | None:
+    """Null-safe ISO-8601 for DateTime columns (UID-016 compare soft-reads)."""
+    if value is None:
+        return None
+    try:
+        return value.isoformat()
+    except Exception:
+        return None
+
+
+def _unmatched_disk_meta_fields(folder: UnmatchedFolder) -> dict:
+    """Size/mtime for unmatched folder rows — null when unknown (no disk I/O).
+
+    UnmatchedFolder has no size column; failed_time is the only cheap mtime signal.
+    Aliases match admin UI pickDiskSizeBytes / pickDiskDate soft-reads.
+    """
+    failed_iso = _iso_dt(getattr(folder, 'failed_time', None))
+    # No denormalized folder size on UnmatchedFolder — key present, value null.
+    size_bytes = None
+    return {
+        'size_bytes': size_bytes,
+        'folder_size_bytes': size_bytes,
+        'folder_mtime': failed_iso,
+        'mtime': failed_iso,
+        'modified_at': failed_iso,
+        'failed_time': failed_iso,
+    }
+
+
+def _game_disk_meta_fields(game: Game) -> dict:
+    """Size/date from existing Game columns for matched_game / duplicate candidates."""
+    raw_size = getattr(game, 'size', None)
+    size_bytes = int(raw_size) if raw_size is not None else None
+    date_identified = _iso_dt(getattr(game, 'date_identified', None))
+    date_created = _iso_dt(getattr(game, 'date_created', None))
+    # Prefer identify time for compare mtime; fall back to create.
+    mtime_iso = date_identified or date_created
+    return {
+        'size_bytes': size_bytes,
+        'date_identified': date_identified,
+        'date_created': date_created,
+        'folder_mtime': mtime_iso,
+        'mtime': mtime_iso,
+    }
+
+
 def _effective_search_name(folder: UnmatchedFolder) -> str | None:
     """Librarian soft search_name, else disk basename (never renames disk)."""
     return _soft_name(getattr(folder, 'search_name', None)) or (
         folder_basename(folder.folder_path) or None
     )
+
+
+def _rom_language_fields_from_path(path_or_name: str | None) -> dict:
+    """Parse dump region/lang from a folder/file path for Unmatched trail honesty."""
+    from gametheca.utils.rom_language import parse_rom_language_tags
+
+    label = folder_basename(path_or_name) if path_or_name else ''
+    if not label:
+        return {'rom_region': None, 'rom_languages': None}
+    parsed = parse_rom_language_tags(label)
+    return {
+        'rom_region': parsed.get('rom_region'),
+        'rom_languages': parsed.get('rom_languages'),
+    }
 
 
 def _suggested_kind_fields(folder: UnmatchedFolder) -> dict:
@@ -111,6 +171,7 @@ def _why_unmatched_fields(
         'unmatched_reason': summary,  # alias for UI
         # Peel trail for UI expanders; short match_reason codes stay for filters.
         'transforms': _label_transforms(folder),
+        **_rom_language_fields_from_path(getattr(folder, 'folder_path', None)),
     }
 
 
@@ -132,6 +193,11 @@ def _matched_game_payload(game: Game | None, cover_by_uuid: dict | None = None) 
         'path': game.full_disk_path,
         'cover_url': cover_url,
         'igdb_id': game.igdb_id,
+        'rom_region': getattr(game, 'rom_region', None),
+        'rom_languages': getattr(game, 'rom_languages', None),
+        'disc_index': getattr(game, 'disc_index', None),
+        'disc_count': getattr(game, 'disc_count', None),
+        **_game_disk_meta_fields(game),
     }
 
 
@@ -189,6 +255,7 @@ def _unmatched_list_row(
         'display_name': _soft_name(getattr(folder, 'display_name', None)),
         'matched_game': matched_game if include_matched else None,
     }
+    row.update(_unmatched_disk_meta_fields(folder))
     row.update(kind_fields)
     row.update(_why_unmatched_fields(folder, kind_fields))
     row.update(_stage_e_fields(folder))
@@ -234,6 +301,7 @@ def _duplicate_compare_payload(folder: UnmatchedFolder, matched_game: Game | Non
             'igdb_id': matched_game.igdb_id,
             'match_reason': match_reason,
             'match_score': match_score,
+            **_game_disk_meta_fields(matched_game),
         })
 
     folder_title = (
@@ -250,6 +318,7 @@ def _duplicate_compare_payload(folder: UnmatchedFolder, matched_game: Game | Non
         match_score=match_score,
         use_overrides=True,
     )
+    folder_disk = _unmatched_disk_meta_fields(folder)
     return {
         'id': folder.id,
         'folder_path': folder.folder_path,
@@ -261,6 +330,7 @@ def _duplicate_compare_payload(folder: UnmatchedFolder, matched_game: Game | Non
         'search_name': _soft_name(getattr(folder, 'search_name', None)),
         'display_name': _soft_name(getattr(folder, 'display_name', None)),
         'matched_game': _matched_game_payload(matched_game),
+        **folder_disk,
         **kind_fields,
         **why_fields,
         **_stage_e_fields(folder),
@@ -273,6 +343,7 @@ def _duplicate_compare_payload(folder: UnmatchedFolder, matched_game: Game | Non
                 'cover_url': None,
                 'path': folder.folder_path,
                 'igdb_id': None,
+                **folder_disk,
             },
             *[
                 {
@@ -1117,6 +1188,9 @@ def export_unmatched_folders():
         'status', 'library_uuid', 'library_name', 'platform_name',
         'matched_game_uuid', 'match_reason', 'match_score',
         'matched_game_name', 'matched_game_path', 'matched_game_cover_url', 'matched_game_igdb_id',
+        'matched_game_size_bytes', 'matched_game_date_identified', 'matched_game_date_created',
+        'size_bytes', 'folder_size_bytes', 'folder_mtime', 'mtime', 'modified_at', 'failed_time',
+        'rom_region', 'rom_languages',
         'suggested_kind', 'suggested_kind_label', 'suggested_candidate_name',
         'why_unmatched', 'unmatched_reason',
     ]
@@ -1128,6 +1202,9 @@ def export_unmatched_folders():
         flat['matched_game_path'] = mg.get('path')
         flat['matched_game_cover_url'] = mg.get('cover_url')
         flat['matched_game_igdb_id'] = mg.get('igdb_id')
+        flat['matched_game_size_bytes'] = mg.get('size_bytes')
+        flat['matched_game_date_identified'] = mg.get('date_identified')
+        flat['matched_game_date_created'] = mg.get('date_created')
         flat_rows.append(flat)
 
     writer = csv.DictWriter(buffer, fieldnames=fieldnames, extrasaction='ignore')
@@ -1404,3 +1481,89 @@ def refresh_all_libraries():
                 elif item.get('position'):
                     item['position'] = max(1, int(item['position']) - 1)
     return jsonify(payload), 200
+
+
+# UX-C5 — why an operator says a proposed match is wrong. A controlled list
+# keeps the feedback aggregatable; 'other' carries a free-text note so the
+# vocabulary can grow from real usage instead of guesswork.
+BAD_MATCH_REASONS = {
+    'wrong_game': 'Wrong game entirely',
+    'wrong_edition': 'Right game, wrong edition/version',
+    'wrong_platform': 'Right game, wrong platform',
+    'wrong_region': 'Right game, wrong region',
+    'is_dlc_or_update': 'This is DLC / an update, not the base game',
+    'is_not_a_game': 'Not a game (tool, emulator, extras)',
+    'duplicate_of_other': 'Duplicate of another entry',
+    'other': 'Other',
+}
+
+
+@apis_bp.route('/unmatched/bad_match_reasons', methods=['GET'])
+@login_required
+@librarian_required
+def unmatched_bad_match_reasons():
+    """Vocabulary for the Bad match picker, so the UI never hardcodes it."""
+    return jsonify({
+        'ok': True,
+        'reasons': [{'id': key, 'label': label} for key, label in BAD_MATCH_REASONS.items()],
+    })
+
+
+@apis_bp.route('/unmatched/<folder_id>/bad_match', methods=['POST'])
+@login_required
+@librarian_required
+def unmatched_flag_bad_match(folder_id: str):
+    """Record that a proposed match is wrong, with a reason.
+
+    Deliberately does **not** delete the row or touch the library: this is
+    feedback about the match, not a destructive triage action. Post with
+    ``{"reason": null}`` to clear a flag set by mistake.
+    """
+    row = db.session.get(UnmatchedFolder, folder_id)
+    if row is None:
+        return jsonify({'error': 'Folder not found'}), 404
+
+    data = request.get_json(silent=True) or {}
+    raw_reason = data.get('reason')
+
+    if raw_reason in (None, '', False):
+        row.bad_match_reason = None
+        row.bad_match_note = None
+        row.bad_match_at = None
+        row.bad_match_by_user_id = None
+        db.session.commit()
+        return jsonify({'ok': True, 'cleared': True})
+
+    reason = str(raw_reason).strip().lower()
+    if reason not in BAD_MATCH_REASONS:
+        return jsonify({
+            'error': f"reason must be one of: {', '.join(sorted(BAD_MATCH_REASONS))}",
+        }), 400
+
+    note = (data.get('note') or '').strip()[:500]
+    # 'other' without a note is not feedback, it is a shrug.
+    if reason == 'other' and not note:
+        return jsonify({'error': 'A note is required when the reason is "other"'}), 400
+
+    from datetime import datetime, timezone
+
+    row.bad_match_reason = reason
+    row.bad_match_note = note or None
+    row.bad_match_at = datetime.now(timezone.utc)
+    row.bad_match_by_user_id = getattr(current_user, 'id', None)
+    db.session.commit()
+
+    log_system_event(
+        f'Bad match flagged on {row.folder_path}: {reason}',
+        event_type='admin_action',
+        event_level='information',
+        audit_user=getattr(current_user, 'id', None),
+    )
+
+    return jsonify({
+        'ok': True,
+        'folder_id': folder_id,
+        'reason': reason,
+        'label': BAD_MATCH_REASONS[reason],
+        'note': row.bad_match_note,
+    })

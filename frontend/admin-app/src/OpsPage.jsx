@@ -16,6 +16,8 @@ import {
   libraryHealthTone,
   na,
   normalizeLibraryHealth,
+  booleanTone,
+  usageTone,
 } from './opsWidgets'
 import './ops.css'
 
@@ -166,7 +168,12 @@ export function OpsPage() {
       />
 
       <div className="gt-ops-strip" aria-label="Key metrics">
-        <MetricTile label="CPU" value={na(host?.cpu?.percent, '%')} hint={na(host?.cpu?.cores_logical, ' cores')} />
+        <MetricTile
+          label="CPU"
+          value={na(host?.cpu?.percent, '%')}
+          hint={na(host?.cpu?.cores_logical, ' cores')}
+          tone={usageTone(host?.cpu?.percent)}
+        />
         <MetricTile label="Load 1/5/15" value={formatLoadAvg(host?.load_avg)} hint="host" />
         <MetricTile
           label="Memory"
@@ -176,14 +183,28 @@ export function OpsPage() {
               ? `${formatBytes(host.memory.used)} / ${formatBytes(host.memory.total)}`
               : 'n/a'
           }
+          tone={usageTone(host?.memory?.percent)}
         />
         <MetricTile
           label="Process RSS"
           value={formatBytes(host?.process?.rss_bytes)}
           hint={host?.process?.pid != null ? `pid ${host.process.pid}` : 'n/a'}
         />
-        <MetricTile label="DB ping" value={host?.db_ping_ms != null ? `${host.db_ping_ms} ms` : 'n/a'} hint="SELECT 1" />
-        <MetricTile label="Readyz" value={formatReadyz(services?.readyz)} hint={na(services?.readyz?.http_status)} />
+        <MetricTile
+          label="DB ping"
+          value={host?.db_ping_ms != null ? `${host.db_ping_ms} ms` : 'n/a'}
+          hint="SELECT 1"
+          // Milliseconds, not a percentage — a healthy local DB answers in single digits.
+          tone={usageTone(host?.db_ping_ms, { warn: 50, bad: 250 })}
+        />
+        <MetricTile
+          label="Readyz"
+          value={formatReadyz(services?.readyz)}
+          hint={na(services?.readyz?.http_status)}
+          tone={booleanTone(
+            services?.readyz == null ? null : services?.readyz?.http_status === 200,
+          )}
+        />
         <MetricTile
           label="Companions"
           value={`${companions?.online ?? 0} / ${companions?.registered ?? 0}`}
@@ -193,6 +214,7 @@ export function OpsPage() {
           label="Games disk"
           value={na(host?.disk_games?.percent ?? host?.disk_base?.percent, '%')}
           hint="volume use"
+          tone={usageTone(host?.disk_games?.percent ?? host?.disk_base?.percent)}
         />
         <MetricTile
           label="Library watch"

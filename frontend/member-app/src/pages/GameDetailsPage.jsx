@@ -11,6 +11,8 @@ import { initiateGameDownload } from '../api/downloads'
 import { queueClientCommand } from '../api/clientCommands'
 import { BadgeStack } from '../components/BadgeStack'
 import { CheatsPanel } from '../components/CheatsPanel'
+import { PcCheatsPanel } from '../components/PcCheatsPanel'
+import { RelatedMediaStrip } from '../components/RelatedMediaStrip'
 import { ExternalStoreLinks } from '../components/ExternalStoreLinks'
 import { GameActionBar } from '../components/GameActionBar'
 import { OpenPathModal } from '../components/OpenPathModal'
@@ -71,9 +73,38 @@ export function GameDetailsPage() {
   const [videoIndex, setVideoIndex] = useState(null)
   const [adminMenuOpen, setAdminMenuOpen] = useState(false)
   const [summaryExpanded, setSummaryExpanded] = useState(false)
+  // Whether the summary is actually clipped by the 8-line clamp. Measured rather
+  // than guessed from character count: a character threshold disagrees with the
+  // clamp at both ends — short-but-wrapped text got no toggle, and long text that
+  // happened to fit still offered one.
+  const summaryRef = useRef(null)
+  const [summaryOverflows, setSummaryOverflows] = useState(false)
   const [pathModal, setPathModal] = useState(null)
   const [versionsLoading, setVersionsLoading] = useState(true)
   const adminMenuRef = useRef(null)
+
+  // Re-measure on mount, on summary change, and on resize — a summary that fits
+  // on a wide screen can clip on a narrow one.
+  useEffect(() => {
+    const node = summaryRef.current
+    if (!node) {
+      return undefined
+    }
+    if (summaryExpanded) {
+      // Expanded, nothing is clipped; keep the toggle so "Show less" survives.
+      return undefined
+    }
+    const measure = () => {
+      setSummaryOverflows(node.scrollHeight > node.clientHeight + 1)
+    }
+    measure()
+    if (typeof ResizeObserver === 'undefined') {
+      return undefined
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [summaryExpanded])
 
   useEffect(() => {
     if (!gameUuid) {
@@ -394,6 +425,18 @@ export function GameDetailsPage() {
             {game.freshness_status ? (
               <span className="chip gt-chip">Freshness: {game.freshness_status}</span>
             ) : null}
+            {/* Companion presence reads as status, so it belongs on the status
+                row rather than floating above the action buttons. */}
+            <span
+              className={`chip gt-chip${game.client_connected ? '' : ' gt-chip--muted'}`}
+              title={
+                game.client_connected
+                  ? 'Companion client is online'
+                  : 'Companion client offline — install/update/uninstall need it'
+              }
+            >
+              {game.client_connected ? 'Companion online' : 'Companion offline'}
+            </span>
             {game.hltb_main_story != null ? (
               <span className="chip gt-chip">HLTB main {Number(game.hltb_main_story).toFixed(1)}h</span>
             ) : null}
@@ -405,6 +448,7 @@ export function GameDetailsPage() {
             lifecycleState={game.lifecycle_state || 'not_downloaded'}
             clientConnected={Boolean(game.client_connected)}
             variant="full"
+            showPresence={false}
           />
           <div className="gt-details-page__quick">
             {playHref ? (
@@ -457,11 +501,14 @@ export function GameDetailsPage() {
               type="button"
               className="gt-btn"
               disabled={freshnessBusy}
+              title="Re-read the store listing for a newer version, updates, or DLC"
               onClick={() => {
                 void handleFreshnessCheck()
               }}
             >
-              {freshnessBusy ? 'Checking…' : 'Check stores'}
+              {/* "Check stores" read like a store-availability lookup; it actually
+                  re-reads the listing for updates/DLC. */}
+              {freshnessBusy ? 'Checking…' : 'Check updates & DLC'}
             </button>
           </div>
           {firmwareBlocked ? (
@@ -482,7 +529,7 @@ export function GameDetailsPage() {
           ) : null}
           {freshnessError ? (
             <p className="gt-details-page__muted" role="alert">
-              Store check failed: {String(freshnessError.message || freshnessError)}
+              Update check failed: {String(freshnessError.message || freshnessError)}
             </p>
           ) : null}
         </div>
@@ -493,11 +540,12 @@ export function GameDetailsPage() {
           <section className="gt-details-page__section gt-details-page__section--summary">
             <h2>Summary</h2>
             <p
+              ref={summaryRef}
               className={`gt-details-page__summary${summaryExpanded ? ' is-expanded' : ''}`}
             >
               {game.summary}
             </p>
-            {String(game.summary).length > 420 ? (
+            {summaryOverflows ? (
               <button
                 type="button"
                 className="gt-btn gt-details-page__summary-toggle"
@@ -921,6 +969,14 @@ export function GameDetailsPage() {
         />
       ) : null}
 
+      {/* FEAT-D2 — the PC counterpart. Self-gates on cheat_surface, so the two
+          panels can never both render for one title. */}
+      <PcCheatsPanel
+        gameUuid={game.uuid}
+        cheatSurface={game.cheat_surface}
+        canEdit={Boolean(game.can_edit)}
+      />
+
       <section className="gt-details-page__section" id="extras">
         <h2>Extras &amp; DLC</h2>
         {extrasModel.loading ? (
@@ -1011,6 +1067,11 @@ export function GameDetailsPage() {
           </ul>
         )}
       </section>
+
+      {/* Related media sits above screenshots and trailer by request — it is
+          context about the game, so it reads before the gallery. Renders
+          nothing when a title has none. */}
+      <RelatedMediaStrip gameUuid={game.uuid} />
 
       {game.screenshots?.length ? (
         <section className="gt-details-page__section">

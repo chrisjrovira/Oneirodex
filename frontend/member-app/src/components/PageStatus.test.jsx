@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
-import { PageStatus } from './PageStatus'
+import { PageStatus, resolveErrorMessage, resolveErrorDetail } from './PageStatus'
 
 vi.mock('./loadingMotifApi', () => ({
   useLoadingMotifId: () => 'orbit',
@@ -28,4 +29,58 @@ test('idle with children passes through', () => {
   )
   expect(screen.getByText('Ready content')).toBeInTheDocument()
   expect(screen.queryByRole('status')).not.toBeInTheDocument()
+})
+
+// --- GT-A2 error state -----------------------------------------------------
+
+test('error renders an assertive alert, not a polite status', () => {
+  render(<PageStatus error={{ error: 'Admin required' }} />)
+  expect(screen.getByRole('alert')).toBeInTheDocument()
+  expect(screen.getByText('Admin required')).toBeInTheDocument()
+  expect(screen.queryByRole('status')).not.toBeInTheDocument()
+})
+
+test('error outranks loading so a failed refresh stops spinning', () => {
+  render(<PageStatus loading error={{ error: 'Upstream down' }} />)
+  expect(screen.getByRole('alert')).toBeInTheDocument()
+  expect(screen.queryByText('Loading…')).not.toBeInTheDocument()
+})
+
+test('retry button fires onRetry', async () => {
+  const onRetry = vi.fn()
+  render(<PageStatus error={{ error: 'Timed out' }} onRetry={onRetry} />)
+  await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+  expect(onRetry).toHaveBeenCalledTimes(1)
+})
+
+test('no retry affordance when no handler is supplied', () => {
+  render(<PageStatus error={{ error: 'Timed out' }} />)
+  expect(screen.queryByRole('button')).not.toBeInTheDocument()
+})
+
+test('operator detail is shown separately from the headline', () => {
+  render(<PageStatus error={{ error: 'Game not found', status: 404, error_code: 'not_found' }} />)
+  expect(screen.getByText('Game not found')).toBeInTheDocument()
+  expect(screen.getByText('HTTP 404 · not_found')).toBeInTheDocument()
+})
+
+// --- envelope tolerance ----------------------------------------------------
+
+test('resolveErrorMessage accepts every shape still in the tree', () => {
+  expect(resolveErrorMessage('plain string')).toBe('plain string')
+  expect(resolveErrorMessage({ error: 'legacy error key' })).toBe('legacy error key')
+  expect(resolveErrorMessage({ message: 'legacy message key' })).toBe('legacy message key')
+  expect(resolveErrorMessage({ error: { message: 'nested' } })).toBe('nested')
+  expect(resolveErrorMessage(new Error('thrown'))).toBe('thrown')
+})
+
+test('resolveErrorMessage falls back rather than rendering an object', () => {
+  expect(resolveErrorMessage({})).toBe('Something went wrong.')
+  expect(resolveErrorMessage({ error: '   ' })).toBe('Something went wrong.')
+  expect(resolveErrorMessage(null)).toBe('Something went wrong.')
+})
+
+test('resolveErrorDetail is null when there is nothing operator-useful', () => {
+  expect(resolveErrorDetail({ error: 'x' })).toBeNull()
+  expect(resolveErrorDetail(new Error('x'))).toBeNull()
 })

@@ -35,6 +35,15 @@ settings fields, recognition/unmatched, newsletter, and other classic `/admin/*`
 templates. Operators may see React chrome wrapping a Jinja content region
 (`#admin-legacy-content`).
 
+**W22-1 (2026-08-01):** `/libraries` and `/scan_management` share one Jinja tab strip
+(**Libraries · Auto · Manual · Unmatched · Filters · Extensions · Image Queue**)
+with multi-select Scan/Edit/Delete and force-delete — still Jinja under React
+chrome; not a SPA migration. **BE** batch routes
+`POST /api/admin/libraries/batch/{scan,edit,delete}` (`force` skips typed names);
+UI prefers batch and soft-degrades on 404. Post-deploy: **Reset Themes** for
+`admin_manage_libs` + `admin_manage_scanjobs` —
+[libraries-and-scans.md](../admin/libraries-and-scans.md#batch-library-apis-w22-1--uid-003).
+
 Exact template inventory: `gametheca/templates/admin/` (~40+ files). Do not treat
 “still Jinja” as a regression in 1.0 release notes.
 

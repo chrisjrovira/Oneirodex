@@ -5,6 +5,9 @@
 **How do I jump around quickly?**  
 **Ctrl+K** (⌘K on Mac) or the top-nav **Search** hint opens the command palette — pages, Preferences, Help, Admin. On **Library**, Ctrl+K searches **library titles** first (Search library group); Navigate / More / Account stay listed.
 
+**How do I jump to the top or bottom of a long page?**  
+When the member page is scrollable, aurora glass **Jump to top** / **Jump to bottom** controls appear (bottom-left, clear of the Friends/Chat dock). They hide on short pages that don’t scroll.
+
 ## Sign-in & accounts
 
 **I can’t log in.**  
@@ -34,16 +37,19 @@ Game details lists installs with honest presence: a version marked **Missing on 
 Preferences → items per page: **20 / 50 / 100 / 200 / 250 / 300 / 400 / 500 / 1000**.
 
 **What are Signals chips?**  
-Inside Library Filters: UPDATE · OUT/~ · MISSING · NEW · RELEASE · LANG — same browse params as the badges; they persist with other filters. VR is a tile badge / More → VR, not a Signals chip. MISSING means files were removed from disk.
+Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params as the badges; they persist with other filters. VR is a tile badge / More → VR, not a Signals chip. MISSING means files were removed from disk. Tile badges sit in four corners only (occupied corners; rounded-square chrome). No OUT / ~ / RELEASE on tiles or Signals chips (UPDATE alone covers freshness-behind).
 
-**What are Kind chips?**  
-Inside Library Filters: Games · Experiences · Emulators · Tools — multi-select sets `item_kind` on browse (comma list). None selected = all kinds. Persist with other library filters.
+**Can I hide the Library Filters column?**  
+On desktop, the chevron collapses Filters to a slim rail so covers reclaim the width (saved in the browser). On phones/narrow tablets (≤900px), Filters still open as a drawer — collapse rail does not apply.
+
+**What are Kind chips?**
+Inside Library Filters: Games · Soft titles · Emulators · Utilities — multi-select sets `item_kind` on browse (comma list; API tokens stay `experience` / `tool`). None selected = all kinds. Persist with other library filters. Tile badges stay short (**EXP** / **TOOL**) with tooltips **Soft title** / **Utility**.
 
 **Can I favorite, set play status, wishlist, or re-check freshness on many Library titles at once?**  
 Yes via Library multi-select (checkbox / long-press / Shift+click · **Select page** for visible tiles): sticky Favorite / Unfavorite / **Add to wishlist** / **Play status** / Refresh freshness / **Refresh covers** (More; librarian+ · max 20) / Clear. Batch APIs: favorite set/clear (`POST /api/games/batch/favorite`, ≤100) · play status (`POST /api/games/batch/status`, ≤100; empty status clears) · wishlist queue (`POST /api/games/batch/wishlist`, ≤50; accounts that can request) · freshness re-probe (`POST /api/games/batch/freshness/check`, ≤50) · cover refresh (`POST /api/games/batch/refresh_images`, ≤20; 202 queued). Sticky **Refresh freshness** always re-probes the selection. Only titles you can see; partial-success toasts report updated/queued/skipped/failed. Admins still use library-wide `POST /api/admin/freshness/refresh`. No DRM download queues.
 
 **A folder didn’t show up after a scan?**  
-Librarians triage it under Admin → Scan management → Unmatched Folders (and Dupe glance). Each Unmatched row shows a **Why unmatched?** line (and a **Name transform trail** expander when Backend sends peel steps) so they can Identify as game or Mark as Experience/Emulator/Tool.
+Librarians triage it under Admin → Scan management → Unmatched Folders (and Dupe glance). Each Unmatched row shows a **Why unmatched?** line (and a **Name transform trail** expander when Backend sends peel steps) so they can Identify as game or Mark as Soft title / Emulator / Utility. Bare folders named **UPDATE** / **Updates** stay Unmatched with an update-package why note — they are **not** auto-marked Soft title.
 
 **Where are ES-DE / Pegasus export packs?**  
 On **Systems**, scroll to the secondary **Export packs** section (below the platform grid) — optional downloads of ES-DE `gamelist.xml` and Pegasus metadata for other frontends. Admins also find them under Integrations → Export packs. Paths stay portable (no NAS mount leaks). See [library-and-systems.md](library-and-systems.md).

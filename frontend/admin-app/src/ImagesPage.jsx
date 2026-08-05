@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ArtworkPicker } from './ArtworkPicker'
+import { DataTable } from './DataTable'
 import { deleteJson, getJson, postJson } from './adminApi'
 import { ART_STUDIO_SYSTEMS } from './platformSkins'
 
@@ -9,6 +10,18 @@ const BEST_AVAILABLE_POLICY = 'sgdb_then_igdb_then_generate'
 
 /** Store/service labels useful as covers/batch `service` filters (library-name match). */
 const SERVICE_SOURCE_IDS = new Set(['steam', 'gog', 'epic', 'itch', 'meta_quest'])
+
+/** Locked image kind taxonomy (BE-DET-10) — keep in sync with gametheca/utils/image_kinds.py. */
+const IMAGE_KIND_OPTIONS = [
+  { id: 'cover', label: 'Covers' },
+  { id: 'screenshot', label: 'Screenshots' },
+  { id: 'box', label: 'Box' },
+  { id: 'cart', label: 'Cart/disc label' },
+  { id: 'disc', label: 'Disc' },
+  { id: 'logo', label: 'Logo' },
+  { id: 'hero', label: 'Hero' },
+  { id: 'fanart', label: 'Fan art' },
+]
 
 function groupByGame(images) {
   const groups = new Map()
@@ -241,6 +254,37 @@ export function ImagesPage({ embedded = false }) {
     }
   }
 
+  // FEAT-D3 — generate art for the selected title. Off unless the operator
+  // enabled it and configured an endpoint; the 403/502 split tells them which.
+  const generateArtwork = async () => {
+    if (!gameUuid) {
+      setQueueError('Select a game first.')
+      return
+    }
+    setQueueBusy('generate')
+    setQueueError('')
+    setQueueMsg('')
+    try {
+      const result = await postJson('/admin/api/artwork/generate', {
+        game_uuid: gameUuid,
+        image_type: 'cover',
+      })
+      setQueueMsg(
+        `Generated cover for ${gameName || gameUuid}` +
+          (result.generated_by ? ` via ${result.generated_by}` : ''),
+      )
+      await loadQueue()
+      await loadMissing()
+    } catch (err) {
+      setQueueError(
+        `${err.message || String(err)} — set ENABLE_AI_ARTWORK and AI_ARTWORK_URL, ` +
+          'and start the artwork profile.',
+      )
+    } finally {
+      setQueueBusy('')
+    }
+  }
+
   const autoPick = async () => {
     setQueueBusy('autopick')
     setQueueError('')
@@ -445,8 +489,11 @@ export function ImagesPage({ embedded = false }) {
             Type
             <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
               <option value="all">All</option>
-              <option value="cover">Covers</option>
-              <option value="screenshot">Screenshots</option>
+              {IMAGE_KIND_OPTIONS.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.label}
+                </option>
+              ))}
             </select>
           </label>
           <label>
@@ -543,6 +590,19 @@ export function ImagesPage({ embedded = false }) {
           >
             {queueBusy === 'autopick' ? 'Auto-picking…' : 'Auto-pick best available'}
           </button>
+          <button
+            type="button"
+            className="gt-btn"
+            disabled={Boolean(queueBusy) || !gameUuid}
+            onClick={generateArtwork}
+            title={
+              gameUuid
+                ? 'POST /admin/api/artwork/generate — needs ENABLE_AI_ARTWORK + AI_ARTWORK_URL'
+                : 'Select a title above first'
+            }
+          >
+            {queueBusy === 'generate' ? 'Generating…' : 'Generate artwork'}
+          </button>
           <button type="button" className="gt-btn" disabled={Boolean(queueBusy)} onClick={loadQueue}>
             Refresh
           </button>
@@ -594,18 +654,82 @@ export function ImagesPage({ embedded = false }) {
             })}
           </div>
         ) : (
-          <ul className="gt-images-group__list">
-            {images.map((image) => (
-              <QueueRow
-                key={image.id}
-                image={image}
-                busy={queueBusy}
-                onDownload={downloadOne}
-                onDelete={removeOne}
-                showGame
-              />
-            ))}
-          </ul>
+          /* Flat mode is a real table (UX-C7): sortable + filterable like the
+             other admin pages, instead of an unsorted list you scroll. */
+          <DataTable
+            columns={[
+              {
+                key: 'thumb',
+                label: '',
+                sortable: false,
+                filterable: false,
+                render: (image) =>
+                  image.local_url ? (
+                    <img
+                      src={image.local_url}
+                      alt=""
+                      className="gt-images-row__thumb"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span
+                      className="gt-images-row__thumb gt-images-row__thumb--empty"
+                      aria-hidden="true"
+                    />
+                  ),
+              },
+              { key: 'game_name', label: 'Game' },
+              { key: 'image_type', label: 'Kind' },
+              {
+                key: 'status',
+                label: 'Status',
+                value: (image) =>
+                  image.status || (image.is_downloaded ? 'downloaded' : 'pending'),
+              },
+              {
+                key: 'failure',
+                label: 'Detail',
+                value: (image) =>
+                  queueFailureText(image) || (image.file_missing ? 'file missing' : ''),
+              },
+              {
+                key: 'actions',
+                label: '',
+                sortable: false,
+                filterable: false,
+                render: (image) => {
+                  const status =
+                    image.status || (image.is_downloaded ? 'downloaded' : 'pending')
+                  return (
+                    <span className="gt-images-row__actions">
+                      {status === 'pending' || status === 'failed' || image.file_missing ? (
+                        <button
+                          type="button"
+                          className="gt-btn gt-btn--ghost"
+                          disabled={Boolean(queueBusy)}
+                          onClick={() => downloadOne(image.id)}
+                        >
+                          {status === 'failed' || image.file_missing ? 'Retry' : 'Download'}
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="gt-btn gt-btn--ghost"
+                        disabled={Boolean(queueBusy)}
+                        onClick={() => removeOne(image.id)}
+                      >
+                        Delete
+                      </button>
+                    </span>
+                  )
+                },
+              },
+            ]}
+            rows={images}
+            getRowKey={(image) => image.id}
+            emptyMessage="No images match these filters."
+            dense
+          />
         )}
       </section>
 

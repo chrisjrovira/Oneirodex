@@ -10,6 +10,7 @@ import {
   importCsv,
   syncSteam,
 } from '../api/ownership'
+import { LoadingOverlay } from '../components/LoadingOverlay'
 import './OwnershipPage.css'
 
 const STORES = [
@@ -226,8 +227,12 @@ export function OwnershipPage({ shellConfig: _shellConfig } = {}) {
         from stores.
       </p>
 
+      {/* Floating, so the panel below does not jump when the fetch resolves.
+          delayMs=0 — this is the initial load, so the page would otherwise sit
+          blank with nothing explaining why. */}
+      <LoadingOverlay active={!summary} label="Loading ownership status…" delayMs={0} />
+
       <div className="gt-ownership__status" aria-live="polite">
-        {!summary ? <p>Loading ownership status…</p> : null}
 
         {summary && !enabled ? (
           <p className="gt-ownership__empty">

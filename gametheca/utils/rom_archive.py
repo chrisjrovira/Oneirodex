@@ -12,10 +12,12 @@ from pathlib import Path
 
 ROM_EXTENSIONS = frozenset({
     '.nes', '.smc', '.sfc', '.n64', '.z64', '.v64', '.gb', '.gbc', '.gba',
-    '.nds', '.iso', '.cue', '.bin', '.chd', '.pce', '.ngp', '.ngc',
+    '.nds', '.3ds', '.cia', '.iso', '.gcm', '.rvz', '.wbfs', '.wad',
+    '.cue', '.bin', '.chd', '.pce', '.ngp', '.ngc',
     '.ws', '.wsc', '.col', '.vec', '.a26', '.a52', '.a78', '.lnx', '.jag',
     '.md', '.smd', '.gen', '.sms', '.gg', '.32x', '.rom', '.fds',
-    '.pbp', '.img', '.raw', '.wav',
+    '.pbp', '.cso', '.img', '.raw', '.wav', '.gdi', '.cdi',
+    '.nsp', '.xci', '.nsz', '.xcz',
 })
 
 ARCHIVE_EXTENSIONS = frozenset({'.zip', '.7z', '.rar'})
@@ -51,8 +53,12 @@ PLATFORM_ROM_EXTENSIONS: dict[str, frozenset[str]] = {
     'GBC': frozenset({'.gbc', '.gb'}),
     'GBA': frozenset({'.gba'}),
     'NDS': frozenset({'.nds'}),
+    'N3DS': frozenset({'.3ds', '.cia'}),
     'VB': frozenset({'.vb', '.vboy'}),
+    'NGC': frozenset({'.iso', '.gcm', '.rvz', '.ciso', '.dol'}),
+    'WII': frozenset({'.iso', '.wbfs', '.rvz', '.wad', '.dol'}),
     'PSX': frozenset({'.cue', '.chd', '.iso', '.bin', '.pbp', '.img'}),
+    'PSP': frozenset({'.iso', '.cso', '.pbp', '.chd'}),
     'PCE': frozenset({'.pce', '.cue', '.chd'}),
     'SEGA_MD': frozenset({'.md', '.smd', '.gen', '.bin'}),
     'SEGA_MS': frozenset({'.sms'}),
@@ -60,6 +66,7 @@ PLATFORM_ROM_EXTENSIONS: dict[str, frozenset[str]] = {
     'SEGA_32X': frozenset({'.32x'}),
     'SEGA_CD': frozenset({'.cue', '.chd', '.iso', '.bin'}),
     'SEGA_SATURN': frozenset({'.cue', '.chd', '.iso', '.bin'}),
+    'SEGA_DC': frozenset({'.gdi', '.cdi', '.chd', '.cue', '.iso'}),
     'ATARI_2600': frozenset({'.a26', '.bin', '.rom'}),
     'ATARI_5200': frozenset({'.a52', '.bin'}),
     'ATARI_7800': frozenset({'.a78', '.bin'}),
@@ -69,7 +76,10 @@ PLATFORM_ROM_EXTENSIONS: dict[str, frozenset[str]] = {
     'NGP': frozenset({'.ngp', '.ngc'}),
     'COLECO': frozenset({'.col', '.rom', '.bin'}),
     'VECTREX': frozenset({'.vec', '.bin'}),
+    'NEOGEO': frozenset({'.zip', '.7z'}),
     'NEOGEO_CD': frozenset({'.cue', '.chd', '.iso'}),
+    'ARCADE': frozenset({'.zip', '.7z'}),
+    'SWITCH': frozenset({'.nsp', '.xci', '.nsz', '.xcz'}),
     'THREEDO': frozenset({'.cue', '.chd', '.iso'}),
 }
 
@@ -477,6 +487,86 @@ def path_supports_browser_extract(source_path: str | None) -> bool:
 
 def list_roms_in_zip(zip_path: str) -> list[str]:
     return [name for name, _ in _list_roms_with_sizes_in_zip(zip_path)]
+
+
+def path_is_supported_archive(path: str | Path | None) -> bool:
+    """True when path looks like a zip/7z/rar container (existence not required)."""
+    if not path:
+        return False
+    return Path(path).suffix.lower() in ARCHIVE_EXTENSIONS
+
+
+def list_roms_in_archive(archive_path: str) -> list[tuple[str, int]]:
+    """
+    List playable ROM members ``(name, size)`` inside zip/7z/rar.
+
+    Raises ``ArchiveRomError`` on corrupt / unsupported archives. Returns [] when
+    the archive opens but contains no ROM-like members.
+    """
+    path = os.path.abspath(archive_path)
+    if not os.path.isfile(path):
+        raise ArchiveRomError(
+            'Archive path not found',
+            status_code=404,
+            code='path_not_found',
+        )
+    ext = Path(path).suffix.lower()
+    if ext == '.zip':
+        return _list_roms_with_sizes_in_zip(path)
+    if ext == '.7z':
+        return _list_roms_in_7z(path)
+    if ext == '.rar':
+        return _list_roms_in_rar(path)
+    raise ArchiveRomError(
+        f'{ext or "unknown"} archives are not supported — use .zip, .7z, or .rar',
+        status_code=415,
+        code='unsupported_format',
+    )
+
+
+def _list_roms_in_rar(archive_path: str) -> list[tuple[str, int]]:
+    tools = find_archive_extractors()
+    has_cli = bool(tools.get('7z') or tools.get('7za') or tools.get('bsdtar') or tools.get('unrar'))
+    try:
+        import rarfile
+    except ImportError:
+        seven = tools.get('7z') or tools.get('7za')
+        if seven:
+            return _list_roms_via_7z(archive_path, seven)
+        if tools.get('bsdtar'):
+            return _list_roms_via_bsdtar(archive_path, tools['bsdtar'])
+        raise ArchiveRomError(
+            '.rar support requires rarfile plus an extractor tool (7z/bsdtar/unrar)',
+            status_code=415,
+            code='missing_extractor',
+            hint=_MISSING_EXTRACTOR_HINT,
+        )
+
+    configured = _configure_rarfile_tools(rarfile)
+    if not configured and not has_cli:
+        raise _missing_extractor_error(archive_kind='rar')
+
+    try:
+        with rarfile.RarFile(archive_path) as archive:
+            return [
+                (info.filename, int(getattr(info, 'file_size', 0) or 0))
+                for info in archive.infolist()
+                if not info.is_dir() and _is_rom_name(info.filename)
+            ]
+    except ArchiveRomError:
+        raise
+    except Exception:
+        seven = tools.get('7z') or tools.get('7za')
+        if seven:
+            return _list_roms_via_7z(archive_path, seven)
+        if tools.get('bsdtar'):
+            return _list_roms_via_bsdtar(archive_path, tools['bsdtar'])
+        raise ArchiveRomError(
+            'Failed to list rar archive members',
+            status_code=415,
+            code='extract_failed',
+            hint='Prefer re-packing as .zip, or verify the RAR is not password-protected.',
+        )
 
 
 def _list_roms_with_sizes_in_zip(zip_path: str) -> list[tuple[str, int]]:

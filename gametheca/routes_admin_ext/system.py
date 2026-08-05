@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify
+from flask import render_template, request, jsonify, session
 from flask_login import login_required, current_user
 from gametheca.utils.auth import admin_required
 from gametheca.models import SystemEvents, DiscoverySection, Game, Genre, Library, user_favorites
@@ -295,6 +295,84 @@ def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
         return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
 
+@admin2_bp.route('/admin/api/discovery_sections/<int:section_id>/schedule', methods=['PUT'])
+@login_required
+@admin_required
+def update_discovery_section_schedule(section_id: int) -> tuple[Dict[str, Any], int]:
+    """Set a shelf's storefront layout and its optional event window (W25-STORE-1).
+
+    Applies to **every** shelf, not just custom zones: running a seed shelf like
+    "Upcoming" as a limited-time feature is the whole point of the schedule.
+
+    Body: ``layout`` (shelf|hero|carousel), ``starts_at`` / ``ends_at``
+    (ISO 8601, or null to clear).
+    """
+    section = db.session.get(DiscoverySection, section_id)
+    if not section:
+        return jsonify({'success': False, 'error': 'Shelf not found'}), 404
+
+    data = request.get_json(silent=True) or {}
+
+    if 'layout' in data:
+        layout = str(data.get('layout') or 'shelf').strip().lower()
+        if layout not in ('shelf', 'hero', 'carousel'):
+            return jsonify({
+                'success': False,
+                'error': 'layout must be shelf, hero, or carousel',
+            }), 400
+        section.layout = layout
+
+    def _parse(key):
+        raw = data.get(key)
+        if raw in (None, ''):
+            return None, None
+        try:
+            return datetime.fromisoformat(str(raw).replace('Z', '+00:00')), None
+        except ValueError:
+            return None, f'{key} must be an ISO timestamp'
+
+    if 'starts_at' in data:
+        value, error = _parse('starts_at')
+        if error:
+            return jsonify({'success': False, 'error': error}), 400
+        section.starts_at = value
+    if 'ends_at' in data:
+        value, error = _parse('ends_at')
+        if error:
+            return jsonify({'success': False, 'error': error}), 400
+        section.ends_at = value
+
+    # A window that closes before it opens would silently hide the shelf forever.
+    if section.starts_at and section.ends_at and section.ends_at <= section.starts_at:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': 'ends_at must be after starts_at'}), 400
+
+    try:
+        db.session.commit()
+    except Exception as exc:  # noqa: BLE001
+        db.session.rollback()
+        log_system_event(
+            f'Failed to update shelf schedule {section_id}: {exc}',
+            event_type='admin_action',
+            event_level='error',
+            audit_user=current_user.id,
+        )
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+    return jsonify({
+        'success': True,
+        'section': {
+            'id': section.id,
+            'name': section.name,
+            'identifier': section.identifier,
+            'layout': section.layout,
+            'starts_at': section.starts_at.isoformat() if section.starts_at else None,
+            'ends_at': section.ends_at.isoformat() if section.ends_at else None,
+            'is_live': section.is_live(),
+        },
+    }), 200
+
+
 @admin2_bp.route('/admin/api/discovery_sections/<int:section_id>', methods=['DELETE'])
 @login_required
 @admin_required
@@ -513,3 +591,18 @@ def clear_system_logs() -> tuple[Dict[str, Any], int]:
             audit_user=current_user.id
         )
         return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+
+@admin2_bp.route('/admin/clear_permission_errors', methods=['POST'])
+@login_required
+@admin_required
+def clear_permission_errors() -> tuple[Dict[str, Any], int]:
+    """Drop the scan write-permission failure payload after its modal is shown.
+
+    Set by the scan path in ``utilities.py`` when a library path is not writable;
+    without this the flags persist for the rest of the session and the modal
+    re-opens on later visits.
+    """
+    for key in ('permission_check_failed', 'permission_errors', 'permission_check_path'):
+        session.pop(key, None)
+    return jsonify({'success': True}), 200

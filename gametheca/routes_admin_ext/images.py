@@ -17,6 +17,11 @@ from gametheca.utils.cover_selection import (
     resolve_policy,
     search_cover_candidates,
 )
+from gametheca.utils.image_kinds import (
+    IMAGE_KIND_ORDER,
+    image_kinds_error_message,
+    parse_image_kind,
+)
 from . import admin2_bp
 
 
@@ -41,11 +46,18 @@ def _image_status(img):
 @login_required
 @admin_required
 def image_queue_list():
-    """Get paginated list of images in queue."""
+    """Get paginated list of images in queue.
+
+    Query: status, type|kind (all | cover|screenshot|box|cart|disc|logo|hero|fanart).
+    """
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     status_filter = request.args.get('status', 'all')  # all, pending, downloaded, failed
-    type_filter = request.args.get('type', 'all')  # all, cover, screenshot
+    raw_kind = request.args.get('kind') or request.args.get('type') or 'all'
+    try:
+        type_filter = parse_image_kind(raw_kind, default=None, allow_all=True)
+    except ValueError:
+        return jsonify({'error': image_kinds_error_message()}), 400
 
     query = select(Image).join(Game)
 
@@ -85,6 +97,7 @@ def image_queue_list():
             'game_uuid': img.game_uuid,
             'game_name': img.game.name if img.game else 'Unknown',
             'image_type': img.image_type,
+            'kind': img.image_type,
             'download_url': img.download_url,
             'is_downloaded': img.is_downloaded,
             'status': _image_status(img),
@@ -99,6 +112,8 @@ def image_queue_list():
     return jsonify({
         'images': image_list,
         'image_save_path': path_status,
+        'allowed_kinds': list(IMAGE_KIND_ORDER),
+        'kind_filter': type_filter,
         'pagination': {
             'page': page,
             'pages': pagination.pages,
@@ -447,4 +462,265 @@ def artwork_auto_pick():
             f"failed={result.get('failed', 0)}"
         ),
         **result,
+    })
+
+
+@admin2_bp.route('/admin/api/artwork/generate', methods=['POST'])
+@login_required
+@admin_required
+def artwork_generate():
+    """Generate cover art for one game (FEAT-D3).
+
+    Off unless ``ENABLE_AI_ARTWORK`` is set and an endpoint is configured — a
+    disabled or unconfigured install gets a clear reason, not a stack trace.
+    Failure never disturbs the game's existing artwork.
+    """
+    from gametheca.utils.ai_artwork import (
+        ArtworkGenerationError,
+        ai_artwork_enabled,
+        generate_and_store_cover,
+    )
+
+    if not ai_artwork_enabled():
+        return jsonify({
+            'error': 'Generated artwork is off. Set ENABLE_AI_ARTWORK=true and AI_ARTWORK_URL.',
+        }), 403
+
+    data = request.get_json(silent=True) or {}
+    game_uuid = (data.get('game_uuid') or '').strip()
+    if not game_uuid:
+        return jsonify({'error': 'game_uuid is required'}), 400
+
+    try:
+        result = generate_and_store_cover(
+            game_uuid, image_type=data.get('image_type') or 'cover',
+        )
+    except LookupError:
+        return jsonify({'error': 'Game not found'}), 404
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    except ArtworkGenerationError as exc:
+        # 502: our config is fine, the generation endpoint is what failed.
+        return jsonify({'error': str(exc)}), 502
+
+    return jsonify({'ok': True, **result})
+
+
+@admin2_bp.route('/admin/api/theme/fonts', methods=['POST'])
+@login_required
+@admin_required
+def theme_font_upload():
+    """Upload a font for theming.
+
+    Untrusted input: extension allowlist, size cap, and a magic-byte check, so
+    a file served back to browsers is what it claims to be.
+    """
+    from gametheca.utils.theme_fonts import store_font_file
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'Choose a font file to upload.'}), 400
+    try:
+        stored = store_font_file(request.files['file'])
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    except OSError as exc:
+        return jsonify({'error': f'Could not write to the font folder: {exc}'}), 503
+    return jsonify({'ok': True, **stored}), 201
+
+
+@admin2_bp.route('/admin/api/theme/fonts/<path:filename>', methods=['DELETE'])
+@login_required
+@admin_required
+def theme_font_delete(filename: str):
+    """Remove an operator-uploaded font. Built-ins are refused."""
+    from gametheca.utils.theme_fonts import delete_font_file
+
+    try:
+        removed = delete_font_file(filename)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    if not removed:
+        return jsonify({'error': 'Font not found'}), 404
+    return jsonify({'ok': True, 'removed': filename})
+
+
+@admin2_bp.route('/admin/api/images/batch_upload', methods=['POST'])
+@login_required
+@admin_required
+def images_batch_upload():
+    """Upload several artwork files at once.
+
+    Each file is matched to a game by ``<game_uuid>`` or ``<game_uuid>_<kind>``
+    in its filename, so a folder of prepared art can be dropped in one go.
+    Per-file outcomes are reported individually — one bad file must not sink
+    the batch.
+    """
+    import os as _os
+    import uuid as _uuid
+
+    from werkzeug.utils import secure_filename
+
+    from gametheca.models import Game
+    from gametheca.utils.image_kinds import SINGULAR_IMAGE_KINDS, parse_image_kind
+
+    files = request.files.getlist('files') or request.files.getlist('file')
+    if not files:
+        return jsonify({'error': 'Choose one or more image files.'}), 400
+
+    default_kind = request.form.get('image_type') or request.form.get('kind') or 'cover'
+    explicit_uuid = (request.form.get('game_uuid') or '').strip()
+
+    allowed_ext = {'.jpg', '.jpeg', '.png', '.webp', '.gif'}
+    max_bytes = 10 * 1024 * 1024
+    save_dir = current_app.config['IMAGE_SAVE_PATH']
+    _os.makedirs(save_dir, exist_ok=True)
+
+    stored, errors = [], []
+    for item in files:
+        raw = getattr(item, 'filename', '') or ''
+        name = secure_filename(raw)
+        stem, ext = _os.path.splitext(name)
+        ext = ext.lower()
+        if ext not in allowed_ext:
+            errors.append({'file': raw, 'error': 'Unsupported image type'})
+            continue
+
+        item.stream.seek(0, _os.SEEK_END)
+        size = item.stream.tell()
+        item.stream.seek(0)
+        if size <= 0:
+            errors.append({'file': raw, 'error': 'Empty file'})
+            continue
+        if size > max_bytes:
+            errors.append({'file': raw, 'error': 'Larger than the 10MB limit'})
+            continue
+
+        # <uuid> or <uuid>_<kind> — fall back to the form-wide target.
+        parts = stem.split('_')
+        candidate_uuid = explicit_uuid or (parts[0] if parts else '')
+        kind_hint = parts[1] if (not explicit_uuid and len(parts) > 1) else default_kind
+        try:
+            kind = parse_image_kind(kind_hint, default=default_kind)
+        except ValueError:
+            kind = parse_image_kind(default_kind, default='cover')
+
+        game = db.session.execute(
+            select(Game).filter_by(uuid=candidate_uuid)
+        ).scalars().first()
+        if not game:
+            errors.append({'file': raw, 'error': 'No game matched this filename'})
+            continue
+
+        file_name = secure_filename(
+            f'{game.uuid}_{kind}_{_uuid.uuid4().hex[:8]}{ext}'
+        )
+        try:
+            item.save(_os.path.join(save_dir, file_name))
+        except OSError as exc:
+            errors.append({'file': raw, 'error': f'Could not write: {exc}'})
+            continue
+
+        if kind in SINGULAR_IMAGE_KINDS:
+            for row in db.session.execute(
+                select(Image).filter_by(game_uuid=game.uuid, image_type=kind)
+            ).scalars().all():
+                db.session.delete(row)
+
+        db.session.add(Image(
+            game_uuid=game.uuid,
+            image_type=kind,
+            url=file_name,
+            is_downloaded=True,
+        ))
+        stored.append({
+            'file': raw,
+            'game_uuid': game.uuid,
+            'game_name': game.name,
+            'kind': kind,
+            'filename': file_name,
+        })
+
+    if stored:
+        db.session.commit()
+
+    return jsonify({
+        'ok': True,
+        'stored': len(stored),
+        'failed': len(errors),
+        'images': stored,
+        'errors': errors,
+    })
+
+
+@admin2_bp.route('/admin/api/artwork/generate/batch', methods=['POST'])
+@login_required
+@admin_required
+def artwork_generate_batch():
+    """Fill missing covers with generated art (FEAT-D3).
+
+    Only touches titles that have **no cover at all** — generated art is a
+    better placeholder, never a replacement for a cover someone chose. Capped
+    per call because each title is a full generation (seconds to minutes), and
+    per-title failures are reported rather than aborting the run.
+    """
+    from gametheca.models import Game
+    from gametheca.utils.ai_artwork import (
+        ArtworkGenerationError,
+        ai_artwork_enabled,
+        generate_and_store_cover,
+    )
+
+    if not ai_artwork_enabled():
+        return jsonify({
+            'error': 'Generated artwork is off. Set ENABLE_AI_ARTWORK=true and AI_ARTWORK_URL.',
+        }), 403
+
+    data = request.get_json(silent=True) or {}
+    try:
+        limit = min(max(int(data.get('limit') or 10), 1), 50)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'limit must be a number'}), 400
+
+    query = select(Game)
+    if data.get('library_uuid'):
+        query = query.filter(Game.library_uuid == data['library_uuid'])
+
+    candidates = db.session.execute(query).scalars().all()
+
+    generated, skipped, errors = [], 0, []
+    for game in candidates:
+        if len(generated) >= limit:
+            break
+
+        has_cover = db.session.execute(
+            select(Image).filter_by(game_uuid=game.uuid, image_type='cover')
+        ).scalars().first()
+        if has_cover is not None:
+            # Includes previously generated covers — re-running must not churn.
+            skipped += 1
+            continue
+
+        try:
+            result = generate_and_store_cover(game.uuid, image_type='cover')
+        except ArtworkGenerationError as exc:
+            errors.append({'uuid': game.uuid, 'name': game.name, 'error': str(exc)})
+            continue
+        except Exception as exc:  # noqa: BLE001
+            errors.append({'uuid': game.uuid, 'name': game.name, 'error': str(exc)})
+            continue
+
+        generated.append({
+            'uuid': game.uuid,
+            'name': game.name,
+            'filename': result.get('filename'),
+        })
+
+    return jsonify({
+        'ok': True,
+        'considered': len(candidates),
+        'generated': len(generated),
+        'skipped': skipped,
+        'failed': len(errors),
+        'games': generated,
+        'errors': errors[:20],
     })

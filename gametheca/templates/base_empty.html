@@ -17,6 +17,9 @@
     <script src="{{ 'js/gt_modal_stack.js'|theme_asset }}"></script>
 
     <link rel="stylesheet" href="{{ 'css/gt-tokens.css'|theme_asset }}">
+    {# Member SPA hangs off base_empty — primitives must load before the built
+       member-app.css so component CSS can still win where it needs to. #}
+    <link rel="stylesheet" href="{{ 'css/gt-primitives.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/gt-chrome.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/base.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/modal-components.css'|theme_asset }}">

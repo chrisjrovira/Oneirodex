@@ -3,6 +3,8 @@
 from difflib import SequenceMatcher
 import re
 
+from gametheca.utils.fandom_alias import fandom_soft_score_boost
+
 DEFAULT_HIGH_THRESHOLD = 0.92
 DEFAULT_AMBIGUOUS_GAP = 0.08
 
@@ -98,6 +100,9 @@ def _pair_score(cleaned_name: str, candidate_name: str) -> float:
 
     score = float(SequenceMatcher(None, left, right).ratio())
     score = max(score, _primary_head_remaster_score(cleaned_name, candidate_name))
+    # BE-DET-9 — soft alias / regional / remaster registry boost for ranking.
+    # Identify must still force propose-only on soft hits (never invent IGDB ids).
+    score = max(score, fandom_soft_score_boost(cleaned_name, candidate_name))
     score = _sequel_asymmetry_cap(left, right, score)
     return float(score)
 

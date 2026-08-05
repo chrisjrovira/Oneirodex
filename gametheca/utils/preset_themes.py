@@ -24,7 +24,12 @@ import shutil
 from datetime import date
 
 # Bump when the generator's output format changes so existing presets rebuild.
-GENERATOR_VERSION = 10
+# 11 (GT-A1): gt-tokens gained radius / spacing / type / shadow / motion scales
+# and the tree gained gt-primitives.css. source_fingerprint() would catch the
+# file changes on its own, but the bump makes the token-layer break explicit for
+# operators reading theme.json markers, and forces a rebuild of any preset whose
+# folder was hand-edited.
+GENERATOR_VERSION = 11
 
 # Key written into each generated theme.json; also our ownership proof.
 PRESET_MARKER_KEY = 'gametheca_preset'

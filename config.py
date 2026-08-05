@@ -20,9 +20,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/gametheca')
 
     # Host path to on-disk game files (Compose mounts to /storage in the container)
-    DATA_FOLDER_GAMES = os.getenv('DATA_FOLDER_GAMES') or os.getenv('DATA_FOLDER_WAREZ', r'Z:\gamez')
-    # Deprecated alias — prefer DATA_FOLDER_GAMES in new .env files
-    DATA_FOLDER_WAREZ = DATA_FOLDER_GAMES
+    DATA_FOLDER_GAMES = os.getenv('DATA_FOLDER_GAMES', r'Z:\gamez')
 
     # OS-specific base folder paths
     if os.name == 'nt':  # Windows
@@ -73,6 +71,20 @@ class Config(object):
     # Ollama AI assist (suggestions on; silent rename stays off)
     ENABLE_AI_ASSIST = os.getenv('ENABLE_AI_ASSIST', 'true').lower() == 'true'
     ENABLE_AI_AUTO_APPLY = os.getenv('ENABLE_AI_AUTO_APPLY', 'false').lower() == 'true'
+
+    # Generated cover art (FEAT-D3). Off by default: this is the only feature
+    # that talks to an endpoint outside the process, so it stays opt-in and
+    # self-hosted-first. Engine speaks the A1111 API (AUTOMATIC1111 / SD.Next /
+    # Forge all implement it).
+    # FEAT-D1: check version / updates / DLC after a library scan. Opt-in —
+    # each check is store HTTP traffic, so a scan must not start doing it
+    # without being asked.
+    SCAN_CHECK_FRESHNESS = os.getenv('SCAN_CHECK_FRESHNESS', 'false').lower() == 'true'
+    SCAN_FRESHNESS_LIMIT = int(os.getenv('SCAN_FRESHNESS_LIMIT', '50'))
+
+    ENABLE_AI_ARTWORK = os.getenv('ENABLE_AI_ARTWORK', 'false').lower() == 'true'
+    AI_ARTWORK_URL = os.getenv('AI_ARTWORK_URL', '')
+    AI_ARTWORK_ENGINE = os.getenv('AI_ARTWORK_ENGINE', 'a1111')
     OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://127.0.0.1:11434')
     OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3.2')
 
@@ -96,6 +108,9 @@ class Config(object):
     ENABLE_PCDOS_BROWSER = os.getenv('ENABLE_PCDOS_BROWSER', 'true').lower() == 'true'
     ENABLE_MOD_TRACKING = os.getenv('ENABLE_MOD_TRACKING', 'true').lower() == 'true'
     ENABLE_ROM_PATCH_APPLY = os.getenv('ENABLE_ROM_PATCH_APPLY', 'true').lower() == 'true'
+    # DAT unique-hash: open zip/7z/rar and hash inner dump when outer archive hash misses.
+    # Default ON; set DAT_HASH_INNER_ARCHIVE=0 to skip (scan stays basename/outer-hash only).
+    DAT_HASH_INNER_ARCHIVE = os.getenv('DAT_HASH_INNER_ARCHIVE', 'true').lower() == 'true'
     FLIPS_PATH = os.getenv('FLIPS_PATH', '')
     ENABLE_PATCH_CATALOG = os.getenv('ENABLE_PATCH_CATALOG', 'true').lower() == 'true'
     PATCH_CATALOG_PATH = os.getenv('PATCH_CATALOG_PATH', '')

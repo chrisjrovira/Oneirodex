@@ -35,6 +35,18 @@ beforeEach(() => {
   postJson.mockResolvedValue({ changed_count: 1, kept_count: 0 })
 })
 
+test('DupeGlance sort buttons toggle Folder sort direction', async () => {
+  const user = userEvent.setup()
+  render(<DupeGlance onOpenPath={() => {}} />)
+  await waitFor(() => expect(screen.getByText('/games/Celeste')).toBeTruthy())
+  const folderSort = screen.getByRole('button', { name: 'Folder ↑' })
+  expect(folderSort.getAttribute('aria-pressed')).toBe('true')
+  await user.click(folderSort)
+  expect(screen.getByRole('button', { name: 'Folder ↓' })).toBeTruthy()
+  await user.click(screen.getByRole('button', { name: 'Status' }))
+  expect(screen.getByRole('button', { name: 'Status ↑' }).getAttribute('aria-pressed')).toBe('true')
+})
+
 test('DupeGlance lists duplicates, match reason, and open-path callback', async () => {
   const user = userEvent.setup()
   const onOpenPath = vi.fn()
@@ -123,7 +135,7 @@ test('DupeGlance shows honest error when mark_kind fails', async () => {
   render(<DupeGlance onOpenPath={() => {}} />)
   await screen.findByRole('heading', { name: 'Dupe glance' })
   await user.selectOptions(screen.getByLabelText(/status/i), 'Unmatched')
-  await user.click(await screen.findByRole('button', { name: 'Mark as Tool' }))
+  await user.click(await screen.findByRole('button', { name: 'Mark as Utility' }))
 
   expect(await screen.findByText(/Unmatched folder not found/i)).toBeInTheDocument()
 })
@@ -495,7 +507,7 @@ test('DupeGlance Backfill kind hints aborts when confirm is cancelled', async ()
   confirmSpy.mockRestore()
 })
 
-test('DupeGlance shows Dupe of matched_game hit on Duplicate rows', async () => {
+test('DupeGlance shows side-by-side compare for matched_game Duplicate rows', async () => {
   getJson.mockImplementation(async (url) => {
     if (String(url).includes('/duplicates')) {
       return {
@@ -529,16 +541,50 @@ test('DupeGlance shows Dupe of matched_game hit on Duplicate rows', async () => 
   })
 
   render(<DupeGlance onOpenPath={() => {}} />)
-  expect(await screen.findByText(/Dupe of:/i)).toBeInTheDocument()
+  expect(await screen.findByLabelText(/Duplicate side-by-side comparison/i)).toBeInTheDocument()
+  expect(screen.getByText('This folder')).toBeInTheDocument()
+  expect(screen.getByText('Library game')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Celeste' })).toHaveAttribute(
     'href',
     '/game_details/game-celeste',
   )
+  expect(screen.getByText('/games/Celeste')).toBeInTheDocument()
   expect(screen.getByText('/library/Celeste')).toBeInTheDocument()
+  // Size/Date honest empties until Backend enriches payload
+  const empties = screen.getAllByTitle('Not provided by API yet')
+  expect(empties.length).toBeGreaterThanOrEqual(4)
   expect(screen.getByTitle('Match confidence score')).toHaveTextContent('0.98')
   expect(screen.getByRole('button', { name: 'Merge' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Keep' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Ignore' })).toBeInTheDocument()
+})
+
+test('DupeGlance shows size and date when API provides them', async () => {
+  getJson.mockResolvedValue([
+    {
+      id: 1,
+      folder_path: '/games/Celeste',
+      status: 'Duplicate',
+      library_name: 'PC',
+      platform_name: 'PCWIN',
+      size_bytes: 2048,
+      folder_mtime: '2024-03-01T10:00:00Z',
+      matched_game: {
+        uuid: 'game-celeste',
+        name: 'Celeste',
+        path: '/library/Celeste',
+        size_bytes: 4096,
+        date_identified: '2023-12-15T09:00:00Z',
+        match_score: 0.99,
+      },
+    },
+  ])
+
+  render(<DupeGlance onOpenPath={() => {}} />)
+  expect(await screen.findByLabelText(/Duplicate side-by-side comparison/i)).toBeInTheDocument()
+  expect(screen.getByText('2 KB')).toBeInTheDocument()
+  expect(screen.getByText('4 KB')).toBeInTheDocument()
+  expect(screen.getAllByText(/2024|2023/).length).toBeGreaterThanOrEqual(2)
 })
 
 test('DupeGlance Merge posts fix action', async () => {
@@ -560,11 +606,37 @@ test('DupeGlance Merge posts fix action', async () => {
   postJson.mockResolvedValue({ ok: true, action: 'merge', folder_path: '/games/Celeste' })
 
   render(<DupeGlance onOpenPath={() => {}} />)
-  await screen.findByText(/Dupe of:/i)
+  await screen.findByLabelText(/Duplicate side-by-side comparison/i)
   await user.click(screen.getByRole('button', { name: 'Merge' }))
 
   await waitFor(() => {
     expect(postJson).toHaveBeenCalledWith('/api/unmatched_folders/1/fix', { action: 'merge' })
   })
   expect(await screen.findByText(/Merged · \/games\/Celeste/i)).toBeInTheDocument()
+})
+
+test('DupeGlance shows Search name when soft name differs from on-disk basename', async () => {
+  const user = userEvent.setup()
+  getJson.mockResolvedValue([
+    {
+      id: 42,
+      folder_path: '/games/Celeste_v1.4.0',
+      search_name: 'Celeste',
+      status: 'Unmatched',
+      library_name: 'PC',
+      platform_name: 'PCWIN',
+      library_uuid: 'lib-1',
+      platform_id: 6,
+    },
+  ])
+
+  render(<DupeGlance onOpenPath={() => {}} />)
+  await screen.findByRole('heading', { name: 'Dupe glance' })
+  await user.selectOptions(screen.getByLabelText(/status/i), 'Unmatched')
+  expect(await screen.findByText('Search name')).toBeInTheDocument()
+  expect(screen.getByText(/On disk: Celeste_v1\.4\.0/)).toBeInTheDocument()
+  expect(screen.queryByText('Amend naming')).toBeNull()
+  expect(screen.getByRole('link', { name: 'Fix search' }).getAttribute('title')).toMatch(
+    /uses Search name when set/i,
+  )
 })

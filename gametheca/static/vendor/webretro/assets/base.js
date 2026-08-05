@@ -27,7 +27,16 @@ var nulKeys = 'input_ai_service = "nul"\ninput_ai_service_axis = "nul"\ninput_ai
 // timing skew trades a little latency for far fewer underrun crackles/pops,
 // and explicit vsync keeps WASM frame pacing aligned to the browser's rAF
 // instead of free-running. See docs/user/browser-play.md for residual limits.
-var extraConfig = 'rgui_show_start_screen = "false"\nnotification_show_remap_load = "false"\nmenu_mouse_enable = "true"\nmenu_pointer_enable = "true"\naudio_latency = "96"\naudio_max_timing_skew = "0.15"\nvideo_vsync = "true"\n';
+// A/V timing. Audio is the master clock: with video_vsync alone the browser's
+// 60Hz rAF drives timing, but NTSC cores run at 60.098Hz (PAL at 50), so the
+// audio gets stretched to chase the display — audibly fast and pitch-shifted.
+//
+// audio_max_timing_skew was 0.15 (3x the usual 0.05). That much resampling
+// headroom is what turns a small refresh mismatch into obvious speed/pitch
+// drift. The correct knob for small continuous correction is
+// audio_rate_control_delta, which nudges the resampler by fractions of a
+// percent instead.
+var extraConfig = 'rgui_show_start_screen = "false"\nnotification_show_remap_load = "false"\nmenu_mouse_enable = "true"\nmenu_pointer_enable = "true"\naudio_latency = "96"\naudio_sync = "true"\naudio_rate_control = "true"\naudio_rate_control_delta = "0.005"\naudio_max_timing_skew = "0.05"\nvideo_vsync = "true"\n';
 var pdKeys = [8, 9, 13, 19, 27, 32, 33, 34, 35, 36, 42, 44, 45, 91, 92, 93, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135];
 var webretroVersion = 6.5;
 var maxConsoleLength = 10000;

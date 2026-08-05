@@ -57,6 +57,25 @@ def bob(db_session):
     return user
 
 
+@pytest.fixture
+def carol(db_session):
+    uid = str(uuid4())
+    user = User(
+        name=f'carol_{uid[:8]}',
+        email=f'carol_{uid[:8]}@example.com',
+        password_hash='hashed_password',
+        role='user',
+        user_id=uid,
+        avatarpath='newstyle/avatar_default.jpg',
+        invite_quota=5,
+        is_email_verified=True,
+    )
+    user.set_password('testpassword123')
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
 def _login(client, app, account):
     with client.session_transaction() as sess:
         sess['_user_id'] = str(account.id)
@@ -101,6 +120,21 @@ def test_dm_fanout_skips_muted(app, db_session, alice, bob):
         with patch('gametheca.utils.chat.notify_user') as notify:
             post_message(dm, alice, 'quiet please')
             notify.assert_not_called()
+
+
+def test_dm_mention_of_non_member_not_notified(app, db_session, alice, bob, carol):
+    """@mention of a user outside the DM must not leak the DM body to them.
+
+    Bob (a real DM member) still gets his legitimate kind='dm' notification —
+    only Carol, who isn't in this conversation, must never be notified.
+    """
+    with app.app_context():
+        dm = open_or_create_dm(alice, bob)
+        with patch('gametheca.utils.chat.notify_user') as notify:
+            post_message(dm, alice, f'hey @{carol.name} what do you think of this secret')
+            notified_user_ids = {call.args[0] for call in notify.call_args_list}
+            assert carol.id not in notified_user_ids
+            assert bob.id in notified_user_ids
 
 
 def test_mute_api_persists(client, app, db_session, alice):

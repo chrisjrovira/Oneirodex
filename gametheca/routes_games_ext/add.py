@@ -175,6 +175,13 @@ def add_game_manual():
         new_game.nfo_content = read_first_nfo_content(form.full_disk_path.data)
 
         try:
+            from gametheca.utils.rom_language import apply_rom_language_fields
+
+            apply_rom_language_fields(new_game, form.full_disk_path.data or form.name.data)
+        except Exception:
+            pass
+
+        try:
             db.session.add(new_game)
             
             # Handle unmatched folder deletion in same transaction for consistency
@@ -324,6 +331,12 @@ def link_existing_game():
         from gametheca.utils.library_health import mark_game_path_ok
 
         mark_game_path_ok(game)
+        try:
+            from gametheca.utils.rom_language import apply_rom_language_fields
+
+            apply_rom_language_fields(game, full_disk_path)
+        except Exception:
+            pass
 
         unmatched_folder = db.session.execute(
             select(UnmatchedFolder).filter_by(folder_path=full_disk_path)

@@ -89,11 +89,11 @@ function formatWhyUnmatched(folder) {
     const suggestedLabel =
         (folder.suggested_kind_label != null && String(folder.suggested_kind_label).trim()) ||
         (suggestedKind === 'experience'
-            ? 'Experience'
+            ? 'Soft title'
             : suggestedKind === 'emulator'
                 ? 'Emulator'
                 : suggestedKind === 'tool'
-                    ? 'Tool'
+                    ? 'Utility'
                     : suggestedKind === 'game'
                         ? 'Game'
                         : '');
@@ -231,9 +231,87 @@ function resolveUnmatchedSearchName(folder) {
 }
 
 /**
- * Normalize matched library hit for “Dupe of …” (list `matched_game` /
+ * Normalize matched library hit for side-by-side compare (list `matched_game` /
  * `duplicate_of`, flat matched_game_* fields, or /duplicates candidates).
+ * Soft-reads size/date when Backend adds them — never invents values.
  */
+function pickDiskSizeBytes(source) {
+    if (!source || typeof source !== 'object') return null;
+    const keys = ['size_bytes', 'folder_size_bytes', 'folder_size', 'size'];
+    for (let i = 0; i < keys.length; i += 1) {
+        const key = keys[i];
+        if (source[key] == null || source[key] === '') continue;
+        const n = Number(source[key]);
+        if (Number.isFinite(n) && n >= 0) return n;
+    }
+    return null;
+}
+
+function pickDiskDate(source) {
+    if (!source || typeof source !== 'object') return null;
+    const keys = [
+        'mtime',
+        'folder_mtime',
+        'modified_at',
+        'date_modified',
+        'failed_time',
+        'date_identified',
+        'date_created',
+    ];
+    for (let i = 0; i < keys.length; i += 1) {
+        const key = keys[i];
+        if (source[key] == null || source[key] === '') continue;
+        const raw = source[key];
+        if (typeof raw === 'number' && Number.isFinite(raw)) {
+            const ms = raw < 1e12 ? raw * 1000 : raw;
+            const d = new Date(ms);
+            if (!Number.isNaN(d.getTime())) return d.toISOString();
+            continue;
+        }
+        const text = String(raw).trim();
+        if (!text) continue;
+        const parsed = Date.parse(text);
+        if (!Number.isNaN(parsed)) return new Date(parsed).toISOString();
+        return text;
+    }
+    return null;
+}
+
+function formatByteSize(bytes) {
+    if (bytes == null || bytes === '') return null;
+    const n = Number(bytes);
+    if (!Number.isFinite(n) || n < 0) return null;
+    if (n < 1024) return `${Math.round(n)} B`;
+    const units = ['KB', 'MB', 'GB', 'TB'];
+    let value = n / 1024;
+    let unit = 0;
+    while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024;
+        unit += 1;
+    }
+    const rounded = value >= 10 || unit === 0 ? Math.round(value) : Math.round(value * 10) / 10;
+    return `${rounded} ${units[unit]}`;
+}
+
+function formatDiskDate(value) {
+    if (value == null || value === '') return null;
+    const text = String(value).trim();
+    if (!text) return null;
+    const parsed = Date.parse(text);
+    if (Number.isNaN(parsed)) return text;
+    try {
+        return new Intl.DateTimeFormat(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        }).format(new Date(parsed));
+    } catch (err) {
+        return new Date(parsed).toISOString();
+    }
+}
+
 function normalizeMatchedGame(folder) {
     if (!folder || typeof folder !== 'object') return null;
     const nested = folder.matched_game || folder.duplicate_of;
@@ -249,6 +327,8 @@ function normalizeMatchedGame(folder) {
             path: path || '',
             cover_url: cover || null,
             match_score: nested.match_score != null ? nested.match_score : folder.match_score,
+            size_bytes: pickDiskSizeBytes(nested),
+            mtime: pickDiskDate(nested),
         };
     }
     const flatName =
@@ -266,71 +346,160 @@ function normalizeMatchedGame(folder) {
         path: flatPath,
         cover_url: folder.matched_game_cover_url || null,
         match_score: folder.match_score,
+        size_bytes: pickDiskSizeBytes({
+            size_bytes: folder.matched_game_size_bytes,
+            size: folder.matched_game_size,
+            folder_size_bytes: folder.matched_game_folder_size_bytes,
+        }),
+        mtime: pickDiskDate({
+            mtime: folder.matched_game_mtime,
+            folder_mtime: folder.matched_game_folder_mtime,
+            modified_at: folder.matched_game_modified_at,
+            date_identified: folder.matched_game_date_identified,
+            date_created: folder.matched_game_date_created,
+        }),
     };
 }
 
-/** Compact “Dupe of …” HTML for base unmatched table (and status column). */
+function compareEmptyCell() {
+    return `<span class="unmatched-dupe-compare__empty" title="Not provided by API yet">—</span>`;
+}
+
+function compareFieldHtml(label, innerHtml) {
+    return `<div class="unmatched-dupe-compare__field"><dt>${escapeHtml(label)}</dt><dd>${innerHtml}</dd></div>`;
+}
+
+/**
+ * Side-by-side folder vs library hit for Duplicate trail (path · size · date).
+ * Soft-degrades when size/date omitted mid-rollout.
+ */
 function buildDupeOfHtml(folder) {
     const hit = normalizeMatchedGame(folder);
-    if (!hit) return '';
-    const score = formatMatchScore(hit.match_score != null ? hit.match_score : folder.match_score);
-    const scoreChip = score
-        ? `<span class="unmatched-why__score" title="Match confidence score">${escapeHtml(score)}</span>`
-        : '';
-    const thumb = hit.cover_url
-        ? `<img class="unmatched-dupe-of__thumb" src="${escapeHtml(hit.cover_url)}" alt="" width="28" height="36" loading="lazy">`
-        : `<span class="unmatched-dupe-of__thumb unmatched-dupe-of__thumb--empty" aria-hidden="true"></span>`;
-    const title = escapeHtml(hit.name);
-    const detailsHref = hit.uuid
-        ? `/game_details/${encodeURIComponent(hit.uuid)}`
-        : '';
-    const titleHtml = detailsHref
-        ? `<a class="unmatched-dupe-of__title" href="${detailsHref}" title="Open library game details">${title}</a>`
-        : `<span class="unmatched-dupe-of__title">${title}</span>`;
-    const pathHtml = hit.path
-        ? `<button type="button" class="unmatched-dupe-of__path reveal-path-btn" data-path="${escapeHtml(hit.path)}" title="Open library game path">${escapeHtml(hit.path)}</button>`
-        : '';
-    const uuidHtml = hit.uuid
-        ? `<span class="unmatched-dupe-of__uuid" title="Library game UUID">${escapeHtml(hit.uuid)}</span>`
-        : '';
+    const isDuplicate = folder && folder.status === 'Duplicate';
+    if (!hit && !isDuplicate) return '';
+
+    const folderName = escapeHtml(
+        resolveUnmatchedSearchName(folder) ||
+            unmatchedFolderBasename(folder.folder_path) ||
+            'Folder',
+    );
+    const folderPath = folder.folder_path ? String(folder.folder_path) : '';
+    const folderSize = formatByteSize(pickDiskSizeBytes(folder));
+    const folderDate = formatDiskDate(pickDiskDate(folder));
+    const folderPathHtml = folderPath
+        ? `<button type="button" class="unmatched-dupe-of__path reveal-path-btn" data-path="${escapeHtml(folderPath)}" title="Open unmatched folder path">${escapeHtml(folderPath)}</button>`
+        : compareEmptyCell();
+
+    let libraryInner = `<p class="unmatched-dupe-compare__missing">No library hit yet</p>`;
+    if (hit) {
+        const score = formatMatchScore(hit.match_score != null ? hit.match_score : folder.match_score);
+        const scoreChip = score
+            ? `<span class="unmatched-why__score" title="Match confidence score">${escapeHtml(score)}</span>`
+            : '';
+        const thumb = hit.cover_url
+            ? `<img class="unmatched-dupe-of__thumb" src="${escapeHtml(hit.cover_url)}" alt="" width="28" height="36" loading="lazy">`
+            : `<span class="unmatched-dupe-of__thumb unmatched-dupe-of__thumb--empty" aria-hidden="true"></span>`;
+        const title = escapeHtml(hit.name);
+        const detailsHref = hit.uuid
+            ? `/game_details/${encodeURIComponent(hit.uuid)}`
+            : '';
+        const titleHtml = detailsHref
+            ? `<a class="unmatched-dupe-of__title" href="${detailsHref}" title="Open library game details">${title}</a>`
+            : `<span class="unmatched-dupe-of__title">${title}</span>`;
+        const pathHtml = hit.path
+            ? `<button type="button" class="unmatched-dupe-of__path reveal-path-btn" data-path="${escapeHtml(hit.path)}" title="Open library game path">${escapeHtml(hit.path)}</button>`
+            : compareEmptyCell();
+        const sizeLabel = formatByteSize(hit.size_bytes);
+        const dateLabel = formatDiskDate(hit.mtime);
+        const uuidHtml = hit.uuid
+            ? compareFieldHtml(
+                'UUID',
+                `<span class="unmatched-dupe-of__uuid" title="Library game UUID">${escapeHtml(hit.uuid)}</span>`,
+            )
+            : '';
+        libraryInner = `
+          <div class="unmatched-dupe-compare__head">
+            ${thumb}
+            <div class="unmatched-dupe-compare__head-text">
+              <span class="unmatched-dupe-compare__role">Library game</span>
+              ${titleHtml}
+              ${scoreChip}
+            </div>
+          </div>
+          <dl class="unmatched-dupe-compare__fields">
+            ${compareFieldHtml('Path', pathHtml)}
+            ${compareFieldHtml('Size', sizeLabel ? escapeHtml(sizeLabel) : compareEmptyCell())}
+            ${compareFieldHtml('Date', dateLabel ? escapeHtml(dateLabel) : compareEmptyCell())}
+            ${uuidHtml}
+          </dl>`;
+    }
+
     return `
-      <div class="unmatched-dupe-of" data-dupe-uuid="${escapeHtml(hit.uuid || '')}">
-        <span class="unmatched-dupe-of__label">Dupe of:</span>
-        ${thumb}
-        <div class="unmatched-dupe-of__meta">
-          ${titleHtml}
-          ${scoreChip}
-          ${uuidHtml}
-          ${pathHtml}
+      <div class="unmatched-dupe-compare" data-dupe-uuid="${escapeHtml((hit && hit.uuid) || '')}" role="group" aria-label="Duplicate side-by-side comparison">
+        <div class="unmatched-dupe-compare__banner">
+          <span class="unmatched-dupe-of__label">Compare</span>
+          <span class="unmatched-dupe-compare__banner-text">Folder vs library game — path, size, and date when the API provides them</span>
+        </div>
+        <div class="unmatched-dupe-compare__grid">
+          <div class="unmatched-dupe-compare__side unmatched-dupe-compare__side--folder">
+            <div class="unmatched-dupe-compare__head">
+              <div class="unmatched-dupe-compare__head-text">
+                <span class="unmatched-dupe-compare__role">This folder</span>
+                <span class="unmatched-dupe-of__title">${folderName}</span>
+              </div>
+            </div>
+            <dl class="unmatched-dupe-compare__fields">
+              ${compareFieldHtml('Path', folderPathHtml)}
+              ${compareFieldHtml('Size', folderSize ? escapeHtml(folderSize) : compareEmptyCell())}
+              ${compareFieldHtml('Date', folderDate ? escapeHtml(folderDate) : compareEmptyCell())}
+            </dl>
+          </div>
+          <div class="unmatched-dupe-compare__side unmatched-dupe-compare__side--library${hit ? '' : ' unmatched-dupe-compare__side--empty'}">
+            ${libraryInner}
+          </div>
         </div>
       </div>`;
 }
 
-// Lightweight toast, independent from showSuccessNotification so it can be
-// used for both success and informational best-effort messages.
+/**
+ * Library-style upper-right toast (mirrors member/admin-app gt-toast-host).
+ * Exposes window.gtShowAdminToast for admin_manage_libs.js.
+ */
 function showToast(message, variant) {
-    const existing = document.querySelector('.success-notification');
-    if (existing) existing.remove();
-
-    const notification = document.createElement('div');
-    notification.className = 'success-notification';
-    if (variant === 'info') {
-        notification.style.background = 'color-mix(in srgb, var(--gt-info, var(--btn-info)) 95%, transparent)';
-    } else if (variant === 'error' || variant === 'danger') {
-        notification.style.background = 'color-mix(in srgb, var(--gt-danger, var(--btn-danger)) 95%, transparent)';
-        notification.style.color = 'var(--gt-text, #fff)';
-    } else if (variant === 'warning') {
-        notification.style.background = 'color-mix(in srgb, var(--gt-warning, #d4a017) 95%, transparent)';
+    if (!message) return;
+    let host = document.getElementById('gt-toast-host');
+    if (!host) {
+        host = document.createElement('div');
+        host.id = 'gt-toast-host';
+        host.className = 'gt-toast-host';
+        host.setAttribute('aria-live', 'polite');
+        document.body.appendChild(host);
     }
-    const glyph = variant === 'info' ? 'ℹ' : (variant === 'error' || variant === 'danger') ? '!' : '✓';
-    notification.innerHTML = `${glyph} <span>${escapeHtml(message)}</span>`;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.classList.add('show'), 10);
-    setTimeout(() => {
-        notification.classList.add('hide');
-        setTimeout(() => notification.remove(), 300);
+    const legacy = document.querySelector('.success-notification');
+    if (legacy) legacy.remove();
+
+    const toneRaw = String(variant || 'success');
+    const tone =
+        toneRaw === 'danger' || toneRaw === 'error'
+            ? 'error'
+            : toneRaw === 'warning' || toneRaw === 'warn'
+              ? 'warn'
+              : toneRaw === 'info'
+                ? 'info'
+                : 'success';
+    const el = document.createElement('div');
+    el.className = `gt-toast gt-toast--${tone}`;
+    el.textContent = String(message);
+    host.appendChild(el);
+    window.setTimeout(() => {
+        el.classList.add('gt-toast--out');
+        window.setTimeout(() => {
+            el.remove();
+            if (host && !host.childElementCount) host.remove();
+        }, 220);
     }, 3500);
 }
+window.gtShowAdminToast = showToast;
 
 /** Field map expected from Backend scan-start / refresh_all once queue/force ships. */
 const SCAN_QUEUE_POLICY = { QUEUE: 'queue', FORCE: 'force' };
@@ -832,6 +1001,15 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("Active tab determined:", activeTab, {urlActiveTab, storedActiveTab, metaActiveTab});
 
     switch (activeTab) {
+        case 'libraries':
+        case 'library':
+        case 'deleteLibrary': {
+            console.log("Activating libraries tab.");
+            const librariesTab = document.querySelector('#libraries-tab');
+            if (librariesTab) new bootstrap.Tab(librariesTab).show();
+            else new bootstrap.Tab(document.querySelector('#autoScan-tab')).show();
+            break;
+        }
         case 'manual':
             console.log("Activating manualScan tab.");
             new bootstrap.Tab(document.querySelector('#manualScan-tab')).show();
@@ -852,10 +1030,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("Activating imageQueue tab.");
             new bootstrap.Tab(document.querySelector('#imageQueue-tab')).show();
             break;
-        case 'deleteLibrary':
-            console.log("Activating deleteLibrary tab.");
-            new bootstrap.Tab(document.querySelector('#deleteLibrary-tab')).show();
-            break;
         default:
             console.log("Defaulting to activating autoScan tab.");
             new bootstrap.Tab(document.querySelector('#autoScan-tab')).show();
@@ -868,6 +1042,9 @@ document.addEventListener('DOMContentLoaded', function() {
             let activeTabValue = 'auto';
 
             switch(tabId) {
+                case 'librariesPanel':
+                    activeTabValue = 'libraries';
+                    break;
                 case 'manualScan':
                     activeTabValue = 'manual';
                     break;
@@ -1263,6 +1440,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentKindFilter = 'all';
     let currentLeafFilter = 'all';
     let currentTriageFilter = 'all';
+    let unmatchedSortKey = 'folder';
+    let unmatchedSortDir = 'asc';
     let unmatchedNameEndpointReady = null; // null=unknown, true/false after probe
 
     function fetchUnmatchedList() {
@@ -1361,26 +1540,26 @@ document.addEventListener('DOMContentLoaded', function() {
                         ? suggestedRaw
                         : '';
                     const suggestedLabel = suggestedKind === 'experience'
-                        ? 'Experience'
+                        ? 'Soft title'
                         : suggestedKind === 'emulator'
                             ? 'Emulator'
                             : suggestedKind === 'tool'
-                                ? 'Tool'
+                                ? 'Utility'
                                 : '';
                     const markKindOrder = suggestedKind
                         ? [suggestedKind, ...['experience', 'emulator', 'tool'].filter((k) => k !== suggestedKind)]
                         : ['experience', 'emulator', 'tool'];
                     const markKindButtons = canMarkKind ? markKindOrder.map((itemKind) => {
                         const label = itemKind === 'experience'
-                            ? 'Exp'
+                            ? 'Soft'
                             : itemKind === 'emulator'
                                 ? 'Emu'
-                                : 'Tool';
+                                : 'Util';
                         const fullLabel = itemKind === 'experience'
-                            ? 'Experience'
+                            ? 'Soft title'
                             : itemKind === 'emulator'
                                 ? 'Emulator'
-                                : 'Tool';
+                                : 'Utility';
                         const isSuggested = suggestedKind === itemKind;
                         const btnClass = isSuggested
                             ? 'btn btn-outline-success btn-sm mark-kind-btn is-suggested'
@@ -1420,8 +1599,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button type="button" class="btn btn-outline-light btn-sm unmatched-fix-btn" data-folder-id="${escapeHtml(String(folder.id))}" data-fix-action="keep" title="Reclassify as Unmatched for further review">Keep</button>
                         <button type="button" class="btn btn-outline-light btn-sm unmatched-fix-btn" data-folder-id="${escapeHtml(String(folder.id))}" data-fix-action="ignore" title="Ignore this duplicate folder">Ignore</button>`
                         : '';
-                    const actionsColumn = `
-                        <div class="unmatched-row-actions">
+                    const actionsBar = `
+                        <div class="unmatched-row-actions" role="toolbar" aria-label="Actions for ${escapedDisk}">
                         <button type="button" class="btn btn-outline-light btn-sm reveal-path-btn" data-path="${escapedPath}" title="Open path (companion / copy) — disk tidy this wave; no disk rename">Open path</button>
                         <form action="/add_game_manual" method="GET" class="unmatched-identify-form" style="display: inline;">
                             <input type="hidden" name="full_disk_path" value="${escapedPath}">
@@ -1429,7 +1608,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <input type="hidden" name="platform_name" value="${escapeHtml(folder.platform_name || '')}">
                             <input type="hidden" name="platform_id" value="${escapeHtml(folder.platform_id || '')}">
                             <input type="hidden" name="from_unmatched" value="true">
-                            <button type="submit" class="btn btn-outline-light btn-sm" title="Identify as game — Fix search uses amended search name when set">Fix search</button>
+                            <button type="submit" class="btn btn-outline-light btn-sm" title="Identify as game — Fix search uses Search name when set">Fix search</button>
                         </form>
                         ${markKindButtons}
                         ${dupeFixButtons}
@@ -1461,10 +1640,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     const leafBadgeClass = leafType === 'file-leaf'
                         ? 'unmatched-leaf-badge'
                         : 'unmatched-leaf-badge unmatched-leaf-badge--folder';
-                    const leafBadgeLabel = leafType === 'file-leaf' ? 'File leaf' : 'Folder leaf';
+                    const leafBadgeLabel = leafType === 'file-leaf' ? 'ROM files library' : 'Folder library';
                     const triageBadgesHtml = `
                         <div class="unmatched-triage-badges">
-                          <span class="${leafBadgeClass}" title="${leafType === 'file-leaf' ? 'ROM or archive file is the scan leaf' : 'Named folder is the scan leaf'}">${leafBadgeLabel}</span>
+                          <span class="${leafBadgeClass}" title="${leafType === 'file-leaf' ? 'ROM or archive files in this library' : 'Each game is its own named folder'}">${leafBadgeLabel}</span>
                           ${platformMismatch ? `<span class="unmatched-platform-mismatch" title="${escapeHtml(formatPlatformMismatchTitle(platformMismatch))}">Platform mismatch</span>` : ''}
                           ${garbage ? '<span class="unmatched-garbage-badge" title="Likely installer, redistributable, or temp scaffolding">Garbage</span>' : ''}
                         </div>`;
@@ -1487,6 +1666,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     row.setAttribute('data-folder-path', String(folder.folder_path || '').toLowerCase());
                     row.setAttribute('data-library-name', String(folder.library_name || '').toLowerCase());
                     row.setAttribute('data-platform-name', String(folder.platform_name || '').toLowerCase());
+                    row.setAttribute('data-sort-folder', String(searchName || diskBasename || folder.folder_path || '').toLowerCase());
+                    row.setAttribute('data-sort-status', String(folder.status || '').toLowerCase());
+                    row.setAttribute('data-sort-library', String(folder.library_name || '').toLowerCase());
+                    row.setAttribute('data-sort-platform', String(folder.platform_name || '').toLowerCase());
                     row.setAttribute('data-match-reason', matchReasonAttr);
                     row.setAttribute('data-suggested-kind', kindAttr);
                     row.setAttribute('data-leaf-type', leafType);
@@ -1499,11 +1682,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         </td>
                         <td class="col-path">
                           <div class="unmatched-folder-cell">
+                            ${actionsBar}
                             <div class="unmatched-amend">
-                              <label class="unmatched-amend__label" for="amend-${escapeHtml(String(folder.id))}">Amend naming</label>
+                              <label class="unmatched-amend__label" for="amend-${escapeHtml(String(folder.id))}">Search name</label>
                               <div class="unmatched-amend__row">
-                                <input type="text" id="amend-${escapeHtml(String(folder.id))}" class="unmatched-amend__input" value="${escapedSearchName}" data-folder-id="${escapeHtml(String(folder.id))}" data-original="${escapedSearchName}" spellcheck="false" title="Soft search_name for Identify (does not rename on disk)">
-                                <button type="button" class="btn btn-outline-light btn-sm unmatched-amend__save" data-folder-id="${escapeHtml(String(folder.id))}" title="Save amended search name">Save</button>
+                                <input type="text" id="amend-${escapeHtml(String(folder.id))}" class="unmatched-amend__input" value="${escapedSearchName}" data-folder-id="${escapeHtml(String(folder.id))}" data-original="${escapedSearchName}" spellcheck="false" title="Search name for Fix search / Identify — does not rename on disk">
+                                <button type="button" class="btn btn-outline-light btn-sm unmatched-amend__save" data-folder-id="${escapeHtml(String(folder.id))}" title="Save search name (does not rename on disk)">Save</button>
                               </div>
                               <div class="unmatched-amend__ondisk">On disk: ${escapedDisk}</div>
                             </div>
@@ -1514,7 +1698,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td class="col-status"><span class="status-${folder.status.toLowerCase()}" title="${folder.status === 'Duplicate' ? 'Another library game already uses this IGDB match and the folder title looks like the same game' : (folder.status === 'Unmatched' ? 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder)' : '')}">${folder.status === 'Duplicate' ? 'Duplicate (same title)' : folder.status}</span>${suggestedChip}${dupeOfHtml}${whyHtml}</td>
                         <td class="col-library">${escapeHtml(folder.library_name || '')}</td>
                         <td class="col-platform">${escapeHtml(folder.platform_name || '')}</td>
-                        <td class="col-actions">${actionsColumn}</td>
                     `;
                     unmatchedTableBody.appendChild(row);
 
@@ -1527,6 +1710,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 attachDeleteFolderFormListeners();
+                sortUnmatchedRows();
                 filterUnmatchedRows();
                 updateBatchBar();
                 updateSelectAllState();
@@ -1550,11 +1734,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const body = { item_kind: itemKind };
         if (name) body.name = name;
         const kindLabel = itemKind === 'experience'
-            ? 'Experience'
+            ? 'Soft title'
             : itemKind === 'emulator'
                 ? 'Emulator'
                 : itemKind === 'tool'
-                    ? 'Tool'
+                    ? 'Utility'
                     : itemKind;
         fetch(`/api/unmatched_folders/${encodeURIComponent(folderId)}/mark_kind`, {
             method: 'POST',
@@ -1698,13 +1882,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * Soft amend naming → Backend name endpoint when present.
+     * Soft Search name → Backend name endpoint when present.
      * Body: { search_name, display_name? }. Never renames on disk.
      */
     function saveAmendNaming(folderId, searchName, button, input) {
         if (!folderId) return;
         if (!searchName) {
-            showToast('Amend naming needs a search name', 'info');
+            showToast('Enter a search name', 'info');
             return;
         }
         if (button) {
@@ -1728,7 +1912,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const row = unmatchedTableBody.querySelector(`tr[data-folder-id="${CSS.escape(folderId)}"]`);
                 const markBtns = row ? row.querySelectorAll('.mark-kind-btn') : [];
                 markBtns.forEach((btn) => { btn.dataset.name = searchName; });
-                showToast('Amend naming kept for Fix search (server name endpoint not ready)', 'info');
+                showToast('Search name kept for Fix search (server not ready)', 'info');
                 if (button) {
                     button.disabled = false;
                     button.removeAttribute('aria-busy');
@@ -1763,14 +1947,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     const row = unmatchedTableBody.querySelector(`tr[data-folder-id="${CSS.escape(folderId)}"]`);
                     const markBtns = row ? row.querySelectorAll('.mark-kind-btn') : [];
                     markBtns.forEach((btn) => { btn.dataset.name = searchName; });
-                    showToast(`Amend naming saved · “${searchName}”`, 'success');
+                    showToast(`Search name saved · “${searchName}”`, 'success');
                     if (button) {
                         button.disabled = false;
                         button.removeAttribute('aria-busy');
                     }
                 })
                 .catch((err) => {
-                    showToast(err?.message || 'Could not save amend naming', 'info');
+                    showToast(err?.message || 'Could not save search name', 'info');
                     if (button) {
                         button.disabled = false;
                         button.removeAttribute('aria-busy');
@@ -1919,6 +2103,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
+    function updateUnmatchedSortIndicators() {
+        document.querySelectorAll('.unmatched-sort-btn').forEach((btn) => {
+            const key = btn.getAttribute('data-sort-key');
+            const ind = btn.querySelector('.unmatched-sort-btn__ind');
+            const active = key === unmatchedSortKey;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+            if (ind) {
+                ind.textContent = active ? (unmatchedSortDir === 'asc' ? '↑' : '↓') : '';
+            }
+        });
+    }
+
+    function sortUnmatchedRows() {
+        if (!unmatchedTableBody) return;
+        const attr = `data-sort-${unmatchedSortKey}`;
+        const rows = Array.from(unmatchedTableBody.querySelectorAll('tr'));
+        rows.sort((a, b) => {
+            const av = a.getAttribute(attr) || '';
+            const bv = b.getAttribute(attr) || '';
+            const cmp = av.localeCompare(bv, undefined, { sensitivity: 'base', numeric: true });
+            return unmatchedSortDir === 'asc' ? cmp : -cmp;
+        });
+        rows.forEach((row) => unmatchedTableBody.appendChild(row));
+        updateUnmatchedSortIndicators();
+    }
+
     function filterUnmatchedRows() {
         const unmatchedRows = document.querySelectorAll('#unmatchedFoldersTableBody tr');
         let visibleCount = 0;
@@ -1987,7 +2198,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentFilter !== 'all') parts.push(currentFilter);
         if (currentWhyFilter !== 'all') parts.push(`why:${currentWhyFilter}`);
         if (currentKindFilter !== 'all') parts.push(`kind:${currentKindFilter}`);
-        if (currentLeafFilter !== 'all') parts.push(`leaf:${currentLeafFilter}`);
+        if (currentLeafFilter !== 'all') {
+            parts.push(
+                currentLeafFilter === 'file-leaf'
+                    ? 'ROM files library'
+                    : currentLeafFilter === 'folder-leaf'
+                      ? 'Folder library'
+                      : `layout:${currentLeafFilter}`,
+            );
+        }
         if (currentTriageFilter !== 'all') parts.push(`triage:${currentTriageFilter}`);
         const filterText = parts.length ? ` (${parts.join(' · ')})` : '';
         const searchText = currentSearch ? ` matching "${currentSearch}"` : '';
@@ -2229,6 +2448,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateExportLinks();
             });
         });
+
+        document.querySelectorAll('.unmatched-sort-btn').forEach((btn) => {
+            btn.addEventListener('click', function() {
+                const key = this.getAttribute('data-sort-key') || 'folder';
+                if (unmatchedSortKey === key) {
+                    unmatchedSortDir = unmatchedSortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    unmatchedSortKey = key;
+                    unmatchedSortDir = 'asc';
+                }
+                sortUnmatchedRows();
+            });
+        });
+        updateUnmatchedSortIndicators();
 
         document.querySelectorAll('[data-why-filter]').forEach((btn) => {
             btn.addEventListener('click', function() {

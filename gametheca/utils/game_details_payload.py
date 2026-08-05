@@ -24,6 +24,7 @@ from gametheca.utils.lifecycle import web_lifecycle_fields
 from gametheca.utils.play_url import browse_play_fields, library_platform_key
 from gametheca.utils.rbac import normalize_role, role_at_least
 from gametheca.utils.rom_language import preferred_locale_matches
+from gametheca.utils.multi_disc import disc_browse_fields
 from gametheca.utils.secondary_scrapers import game_card_flags
 
 
@@ -121,7 +122,7 @@ def _youtube_embed_url(video_url: str) -> str | None:
 
 def _classify_extra_type(extra) -> str:
     kind = (getattr(extra, 'extra_kind', None) or '').strip().lower()
-    if kind in ('dlc', 'extra', 'manual', 'translation_patch'):
+    if kind in ('dlc', 'extra', 'manual', 'translation_patch', 'disc'):
         return kind
     name = os.path.basename(getattr(extra, 'file_path', None) or '').lower()
     if 'dlc' in name:
@@ -303,8 +304,11 @@ def build_game_details_payload(game, user) -> dict:
             'name': os.path.basename(extra.file_path or '') or extra.uuid[:8],
             'on_server': _extra_on_server(extra),
             'extra_kind': getattr(extra, 'extra_kind', None),
+            'disc_index': getattr(extra, 'disc_index', None),
             'download_url': f'/download_other/extra/{game.uuid}/{extra.uuid}',
         })
+
+    disc_fields = disc_browse_fields(game, extras=extras)
 
     role = normalize_role(getattr(user, 'role', None) if user is not None else None)
     is_admin = role == 'admin'
@@ -369,6 +373,10 @@ def build_game_details_payload(game, user) -> dict:
         'rom_region': rom_region,
         'rom_languages': getattr(game, 'rom_languages', None),
         'has_english': getattr(game, 'has_english', None),
+        'disc_index': disc_fields.get('disc_index'),
+        'disc_count': disc_fields.get('disc_count'),
+        'discs': disc_fields.get('discs') or [],
+        'is_multi_disc': disc_fields.get('is_multi_disc'),
         'preferred_game_locale': preferred_locale,
         'preferred_locale_matches': locale_matches,
         'needs_translation': needs_translation,

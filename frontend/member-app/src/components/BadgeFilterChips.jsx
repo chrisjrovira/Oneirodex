@@ -3,10 +3,8 @@
 /** Chips shown in the Library LHN panel. VR is tile badge-only — not a filter chip. */
 export const BADGE_FILTER_CHIPS = [
   { param: 'has_updates', label: 'UPDATE', title: 'Updates available' },
-  { param: 'freshness_behind', label: 'OUT/~', title: 'Behind store version' },
   { param: 'path_missing', label: 'MISSING', title: 'Removed from disk' },
   { param: 'new_import', label: 'NEW', title: 'Newly added to library' },
-  { param: 'recent_release', label: 'RELEASE', title: 'Recent release window' },
   {
     param: 'needs_translation',
     label: 'LANG',
@@ -14,9 +12,15 @@ export const BADGE_FILTER_CHIPS = [
   },
 ]
 
-/** URL/API badge params still recognized (includes legacy is_vr deep-links). */
+/**
+ * URL/API badge params still recognized (includes legacy deep-links).
+ * freshness_behind / recent_release stay parseable for old URLs but have no chip
+ * after OUT/~ / RELEASE retirement (2026-08-01).
+ */
 export const BADGE_FILTER_PARAMS = [
   'is_vr',
+  'freshness_behind',
+  'recent_release',
   ...BADGE_FILTER_CHIPS.map((chip) => chip.param),
 ]
 

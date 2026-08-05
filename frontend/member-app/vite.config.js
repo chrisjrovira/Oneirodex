@@ -45,5 +45,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/testSetup.js',
+    // userEvent interactions take ~9s on a network-mounted checkout; the 5s
+    // default fails them spuriously while they pass fine given room to run.
+    testTimeout: 30000,
   },
 })

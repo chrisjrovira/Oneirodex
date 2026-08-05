@@ -8,7 +8,7 @@
     width: 35px;
     height: 35px;
     background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 50%;
+    border-radius: 6px;
     border: 2px solid var(--color-black-pure);
     cursor: pointer;
     opacity: 0;
@@ -41,17 +41,18 @@
 }
 
 /* Status Button on Game Cards — right-side chrome stack (under hamburger + favorite) */
+/* Third in the top-right stack (see components.css for the shared vars). */
 .game-status-btn {
     position: absolute;
-    top: 78px;
+    top: calc(var(--gt-tile-stack-top, 10px) + 2 * var(--gt-tile-stride, 36px));
     bottom: auto;
     right: 10px;
-    width: 32px;
-    height: 32px;
-    background-color: rgba(0, 0, 0, 0.7);
+    width: var(--gt-tile-btn, 32px);
+    height: var(--gt-tile-btn, 32px);
+    background-color: var(--gt-tile-btn-bg, rgba(0, 0, 0, 0.7));
     backdrop-filter: blur(5px);
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    border: var(--gt-tile-btn-border, 1px solid rgba(255, 255, 255, 0.2));
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.2s ease;
@@ -65,12 +66,17 @@
     opacity: 1;
 }
 
+/* Badges clear the control stack — 3 buttons normally, 4 while selecting. */
 .game-card:has(.game-status-btn) > .popup-menu {
-    top: 116px;
+    top: calc(var(--gt-tile-stack-top, 10px) + 3 * var(--gt-tile-stride, 36px));
 }
 
 .game-card:has(.game-status-btn) .gt-badge-stack--top-right {
-    top: 118px;
+    top: calc(var(--gt-tile-stack-top, 10px) + 3 * var(--gt-tile-stride, 36px) + 2px);
+}
+
+.game-card:has(.gt-tile-select) .gt-badge-stack--top-right {
+    top: calc(var(--gt-tile-stack-top, 10px) + 4 * var(--gt-tile-stride, 36px) + 2px);
 }
 
 .game-status-btn:hover {
@@ -88,7 +94,7 @@
     opacity: 0.7;
 }
 
-/* Status Badge (Always Visible on Cards) */
+/* Status Badge (Always Visible on Cards) — session completion mark */
 .game-status-badge {
     position: absolute;
     bottom: 8px;
@@ -97,7 +103,7 @@
     height: 30px;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(5px);
-    border-radius: 50%;
+    border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.3);
     z-index: 10;
     display: flex;

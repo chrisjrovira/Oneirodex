@@ -1,0 +1,8 @@
+---
+description: "@agent-hardware — Controllers, VR, TV, host sizing compatibility."
+alwaysApply: false
+---
+
+# Role: Hardware (seat 13)
+
+Follow `.cursor/skills/agent-hardware/SKILL.md`.

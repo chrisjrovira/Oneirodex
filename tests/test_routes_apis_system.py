@@ -437,7 +437,7 @@ class TestPathAvailabilityCheck:
     def test_no_allowed_bases_configured(self, client, regular_user, app):
         """Test when no allowed base directories are configured."""
         with app.test_request_context():
-            with patch.dict(app.config, {'BASE_FOLDER_WINDOWS': None, 'BASE_FOLDER_POSIX': None, 'DATA_FOLDER_GAMES': None, 'DATA_FOLDER_WAREZ': None}):
+            with patch.dict(app.config, {'BASE_FOLDER_WINDOWS': None, 'BASE_FOLDER_POSIX': None, 'DATA_FOLDER_GAMES': None}):
                 with client.session_transaction() as sess:
                     sess['_user_id'] = str(regular_user.id)
                     sess['_fresh'] = True

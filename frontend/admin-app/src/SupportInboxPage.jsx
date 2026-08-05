@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { DataTable } from './DataTable'
 
 function csrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.content || ''
@@ -43,47 +44,45 @@ export function SupportInboxPage() {
     <div className="gt-adminpage">
       <h1>Support inbox</h1>
       <p>Teammate reports from the member app. GitHub Issues when SUPPORT_GITHUB_TOKEN is set.</p>
-      <table className="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Sev</th>
-            <th>Area</th>
-            <th>Title</th>
-            <th>Status</th>
-            <th>GitHub</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {tickets.map((t) => (
-            <tr key={t.id}>
-              <td>{t.id}</td>
-              <td>{t.severity}</td>
-              <td>{t.area}</td>
-              <td>{t.title}</td>
-              <td>{t.status}</td>
-              <td>
-                {t.github_issue_url ? (
-                  <a href={t.github_issue_url} target="_blank" rel="noopener noreferrer">
-                    #{t.github_issue_number}
-                  </a>
-                ) : (
-                  t.github_sync
-                )}
-              </td>
-              <td>
-                {t.status === 'open' ? (
-                  <button type="button" className="gt-btn" onClick={() => void resolve(t.id)}>
-                    Resolve
-                  </button>
-                ) : null}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {tickets.length === 0 ? <p>No tickets yet.</p> : null}
+      <DataTable
+        columns={[
+          { key: 'id', label: 'ID', align: 'right' },
+          { key: 'severity', label: 'Sev' },
+          { key: 'area', label: 'Area' },
+          { key: 'title', label: 'Title' },
+          { key: 'status', label: 'Status' },
+          {
+            key: 'github',
+            label: 'GitHub',
+            // Sorts on the issue number, not the rendered link markup.
+            value: (t) => t.github_issue_number ?? t.github_sync,
+            render: (t) =>
+              t.github_issue_url ? (
+                <a href={t.github_issue_url} target="_blank" rel="noopener noreferrer">
+                  #{t.github_issue_number}
+                </a>
+              ) : (
+                t.github_sync
+              ),
+          },
+          {
+            key: 'actions',
+            label: '',
+            sortable: false,
+            filterable: false,
+            render: (t) =>
+              t.status === 'open' ? (
+                <button type="button" className="gt-btn" onClick={() => void resolve(t.id)}>
+                  Resolve
+                </button>
+              ) : null,
+          },
+        ]}
+        rows={tickets}
+        getRowKey={(t) => t.id}
+        emptyMessage="No tickets yet."
+        dense
+      />
     </div>
   )
 }

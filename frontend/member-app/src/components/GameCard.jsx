@@ -5,6 +5,7 @@ import { safeHttpUrl } from '../utils/safeUrl'
 import { platformChipLabels } from '../utils/platformAbbrev'
 import { BadgeStack } from './BadgeStack'
 import { GameActionBar } from './GameActionBar'
+import { GamePreviewPopup } from './GamePreviewPopup'
 import { firmwareBlockMessage, isFirmwarePlayBlocked } from '../utils/playHonesty'
 
 const DEFAULT_COVER = DEFAULT_COVER_URL
@@ -58,6 +59,7 @@ export function GameCard({
   const longPressFired = useRef(false)
   const [isFavorite, setIsFavorite] = useState(Boolean(game.is_favorite))
   const [favoritePending, setFavoritePending] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const [status, setStatus] = useState(game.user_status || '')
   const [statusPending, setStatusPending] = useState(false)
   const [statusOpen, setStatusOpen] = useState(false)
@@ -255,6 +257,22 @@ export function GameCard({
           onClick={handleFavoriteClick}
         >
           <span aria-hidden="true">{isFavorite ? '♥' : '♡'}</span>
+        </button>
+
+        {/* Hover affordance — the tile itself opens details, so this is the one
+            way to look before committing. Keyboard users get it via focus. */}
+        <button
+          type="button"
+          className="gt-tile-preview-hint"
+          aria-label={`Preview ${game.name}`}
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            setPreviewOpen(true)
+          }}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          Preview
         </button>
 
         {menuOpen && (
@@ -496,6 +514,10 @@ export function GameCard({
           hasPlatformChip={!hidePlatformChip && Boolean(game.library_platform)}
         />
       </div>
+
+      {previewOpen ? (
+        <GamePreviewPopup game={game} onClose={() => setPreviewOpen(false)} />
+      ) : null}
     </div>
   )
 }

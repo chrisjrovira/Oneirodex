@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getJson, postJson } from './adminApi'
 import {
+  buildDupeCompare,
   folderBasename,
+  formatByteSize,
+  formatDiskDate,
   mergeDuplicateHits,
   normalizeMatchedGame,
   resolveSearchName,
@@ -35,15 +38,15 @@ const MATCH_REASON_LABELS = {
 }
 
 const MARK_KINDS = [
-  { kind: 'experience', label: 'Mark as Experience' },
+  { kind: 'experience', label: 'Mark as Soft title' },
   { kind: 'emulator', label: 'Mark as Emulator' },
-  { kind: 'tool', label: 'Mark as Tool' },
+  { kind: 'tool', label: 'Mark as Utility' },
 ]
 
 const SUGGESTED_KIND_LABELS = {
-  experience: 'Experience',
+  experience: 'Soft title',
   emulator: 'Emulator',
-  tool: 'Tool',
+  tool: 'Utility',
   game: 'Game',
 }
 
@@ -235,47 +238,143 @@ function markKindsOrdered(suggestedKind) {
   return [preferred, ...MARK_KINDS.filter((row) => row.kind !== suggestedKind)]
 }
 
-function DupeOfHit({ row, onOpenPath }) {
-  const hit = normalizeMatchedGame(row)
-  if (!hit) return null
-  const score = formatMatchScore(hit.match_score != null ? hit.match_score : row.match_score)
+const EMPTY_FIELD = '—'
+const EMPTY_FIELD_TITLE = 'Not provided by API yet'
+
+function CompareField({ label, value, emptyTitle = EMPTY_FIELD_TITLE, children }) {
+  const hasValue = value != null && String(value).trim() !== ''
   return (
-    <div className="gt-dupe-glance__dupe-of">
-      <span className="gt-dupe-glance__dupe-label">Dupe of:</span>
-      {hit.cover_url ? (
-        <img className="gt-dupe-glance__dupe-thumb" src={hit.cover_url} alt="" width={28} height={36} />
-      ) : (
-        <span className="gt-dupe-glance__dupe-thumb gt-dupe-glance__dupe-thumb--empty" aria-hidden="true" />
-      )}
-      <div className="gt-dupe-glance__dupe-meta">
-        {hit.uuid ? (
-          <a className="gt-dupe-glance__dupe-title" href={`/game_details/${encodeURIComponent(hit.uuid)}`}>
-            {hit.name}
-          </a>
+    <div className="gt-dupe-glance__compare-field">
+      <dt>{label}</dt>
+      <dd>
+        {children != null ? (
+          children
+        ) : hasValue ? (
+          <span>{value}</span>
         ) : (
-          <span className="gt-dupe-glance__dupe-title">{hit.name}</span>
-        )}
-        {score ? (
-          <span className="gt-dupe-glance__match-score" title="Match confidence score">
-            {score}
+          <span className="gt-dupe-glance__compare-empty" title={emptyTitle}>
+            {EMPTY_FIELD}
           </span>
+        )}
+      </dd>
+    </div>
+  )
+}
+
+function CompareSide({ side, why, onOpenPath, pathLabel }) {
+  if (!side) {
+    return (
+      <div className="gt-dupe-glance__compare-side gt-dupe-glance__compare-side--empty">
+        <p className="gt-dupe-glance__compare-missing">No library hit yet</p>
+      </div>
+    )
+  }
+  const sizeLabel = formatByteSize(side.size_bytes)
+  const dateLabel = formatDiskDate(side.mtime)
+  const score = formatMatchScore(side.match_score)
+  return (
+    <div className={`gt-dupe-glance__compare-side gt-dupe-glance__compare-side--${side.role}`}>
+      <div className="gt-dupe-glance__compare-head">
+        {side.cover_url ? (
+          <img
+            className="gt-dupe-glance__dupe-thumb"
+            src={side.cover_url}
+            alt=""
+            width={28}
+            height={36}
+          />
+        ) : side.role === 'library' ? (
+          <span
+            className="gt-dupe-glance__dupe-thumb gt-dupe-glance__dupe-thumb--empty"
+            aria-hidden="true"
+          />
         ) : null}
-        {hit.uuid ? <code className="gt-dupe-glance__dupe-uuid">{hit.uuid}</code> : null}
-        {hit.path ? (
-          <button
-            type="button"
-            className="gt-dupe-glance__dupe-path"
-            onClick={() =>
-              onOpenPath?.({
-                path: hit.path,
-                label: 'Library game path',
-                matchReason: formatWhyUnmatched(row) || undefined,
-              })
-            }
-          >
-            {hit.path}
-          </button>
+        <div className="gt-dupe-glance__compare-head-text">
+          <span className="gt-dupe-glance__compare-role">{side.label}</span>
+          {side.uuid ? (
+            <a
+              className="gt-dupe-glance__dupe-title"
+              href={`/game_details/${encodeURIComponent(side.uuid)}`}
+            >
+              {side.name}
+            </a>
+          ) : (
+            <span className="gt-dupe-glance__dupe-title">{side.name}</span>
+          )}
+          {score ? (
+            <span className="gt-dupe-glance__match-score" title="Match confidence score">
+              {score}
+            </span>
+          ) : null}
+        </div>
+      </div>
+      <dl className="gt-dupe-glance__compare-fields">
+        <CompareField label="Path">
+          {side.path ? (
+            <button
+              type="button"
+              className="gt-dupe-glance__dupe-path"
+              onClick={() =>
+                onOpenPath?.({
+                  path: side.path,
+                  label: pathLabel,
+                  matchReason: why || undefined,
+                })
+              }
+            >
+              {side.path}
+            </button>
+          ) : (
+            <span className="gt-dupe-glance__compare-empty" title={EMPTY_FIELD_TITLE}>
+              {EMPTY_FIELD}
+            </span>
+          )}
+        </CompareField>
+        <CompareField label="Size" value={sizeLabel} />
+        <CompareField label="Date" value={dateLabel} />
+        {side.uuid ? (
+          <CompareField label="UUID">
+            <code className="gt-dupe-glance__dupe-uuid">{side.uuid}</code>
+          </CompareField>
         ) : null}
+      </dl>
+    </div>
+  )
+}
+
+/**
+ * Side-by-side Duplicate trail: this folder vs library hit (path · size · date).
+ * Soft-degrades when size/date omitted by API.
+ */
+function DupeCompare({ row, onOpenPath }) {
+  const compare = buildDupeCompare(row)
+  if (!compare) return null
+  const why = formatWhyUnmatched(row)
+  return (
+    <div
+      className="gt-dupe-glance__compare"
+      role="group"
+      aria-label="Duplicate side-by-side comparison"
+    >
+      <div className="gt-dupe-glance__compare-banner">
+        <span className="gt-dupe-glance__dupe-label">Compare</span>
+        <span className="gt-dupe-glance__compare-banner-text">
+          Folder vs library game — path, size, and date when the API provides them
+        </span>
+      </div>
+      <div className="gt-dupe-glance__compare-grid">
+        <CompareSide
+          side={compare.folder}
+          why={why}
+          onOpenPath={onOpenPath}
+          pathLabel="Unmatched folder"
+        />
+        <CompareSide
+          side={compare.library}
+          why={why}
+          onOpenPath={onOpenPath}
+          pathLabel="Library game path"
+        />
       </div>
     </div>
   )
@@ -293,6 +392,8 @@ export function DupeGlance({ onOpenPath }) {
   const [busy, setBusy] = useState(false)
   const [busyFolderId, setBusyFolderId] = useState(null)
   const [statusFilter, setStatusFilter] = useState('Duplicate')
+  const [sortKey, setSortKey] = useState('folder')
+  const [sortDir, setSortDir] = useState('asc')
 
   function load() {
     setLoading(true)
@@ -330,16 +431,55 @@ export function DupeGlance({ onOpenPath }) {
     return rows.filter((row) => row.status === statusFilter)
   }, [rows, statusFilter])
 
+  const sortedVisible = useMemo(() => {
+    const list = [...visible]
+    const dir = sortDir === 'asc' ? 1 : -1
+    list.sort((a, b) => {
+      let av = ''
+      let bv = ''
+      switch (sortKey) {
+        case 'status':
+          av = String(a.status || '')
+          bv = String(b.status || '')
+          break
+        case 'library':
+          av = String(a.library_name || '')
+          bv = String(b.library_name || '')
+          break
+        case 'platform':
+          av = String(a.platform_name || '')
+          bv = String(b.platform_name || '')
+          break
+        case 'folder':
+        default:
+          av = String(resolveSearchName(a) || folderBasename(a.folder_path) || a.folder_path || '')
+          bv = String(resolveSearchName(b) || folderBasename(b.folder_path) || b.folder_path || '')
+          break
+      }
+      return av.localeCompare(bv, undefined, { sensitivity: 'base', numeric: true }) * dir
+    })
+    return list
+  }, [visible, sortKey, sortDir])
+
   const grouped = useMemo(() => {
     const map = new Map()
-    for (const row of visible) {
+    for (const row of sortedVisible) {
       const key = `${row.library_name || 'Library'}::${row.platform_name || ''}`
       const list = map.get(key) || []
       list.push(row)
       map.set(key, list)
     }
     return [...map.entries()]
-  }, [visible])
+  }, [sortedVisible])
+
+  function toggleSort(nextKey) {
+    if (sortKey === nextKey) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(nextKey)
+      setSortDir('asc')
+    }
+  }
 
   async function handleReclassify() {
     setBusy(true)
@@ -401,10 +541,10 @@ export function DupeGlance({ onOpenPath }) {
       })
       const kindLabel =
         itemKind === 'experience'
-          ? 'Experience'
+          ? 'Soft title'
           : itemKind === 'emulator'
             ? 'Emulator'
-            : 'Tool'
+            : 'Utility'
       setFixLog({
         ok: true,
         message: `Cataloged “${result.name || name || 'folder'}” as ${kindLabel} (no IGDB game match)`,
@@ -453,9 +593,9 @@ export function DupeGlance({ onOpenPath }) {
           <h2 id="gt-dupe-glance-title">Dupe glance</h2>
           <p className="gt-dupe-glance__lede">
             Compare unmatched / duplicate folders without leaving this page. Open path opens a popup
-            (clipboard / companion) — it does not jump to Auto Scan. Mark as Experience / Emulator /
-            Tool catalogs gaming software without a fake IGDB game match. Duplicate rows show the
-            library hit as Dupe of (same as Scan management base table).
+            (clipboard / companion) — it does not jump to Auto Scan. Mark as Soft title / Emulator /
+            Utility catalogs gaming software without a fake IGDB game match. Duplicate rows show a
+            side-by-side folder vs library compare (same fields as Scan management).
           </p>
         </div>
         <div className="gt-dupe-glance__toolbar">
@@ -471,6 +611,26 @@ export function DupeGlance({ onOpenPath }) {
               <option value="all">All</option>
             </select>
           </label>
+          <div className="gt-dupe-glance__sort" role="group" aria-label="Sort rows">
+            <span className="gt-dupe-glance__sort-label">Sort</span>
+            {[
+              ['folder', 'Folder'],
+              ['status', 'Status'],
+              ['library', 'Library'],
+              ['platform', 'Platform'],
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                className={`gt-btn gt-dupe-glance__sort-btn${sortKey === key ? ' is-active' : ''}`}
+                aria-pressed={sortKey === key}
+                onClick={() => toggleSort(key)}
+              >
+                {label}
+                {sortKey === key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+              </button>
+            ))}
+          </div>
           <button type="button" className="gt-btn" onClick={() => void load()} disabled={loading}>
             Refresh
           </button>
@@ -534,63 +694,7 @@ export function DupeGlance({ onOpenPath }) {
                 showStageE
               return (
                 <li key={row.id} className="gt-dupe-glance__row">
-                  <div className="gt-dupe-glance__meta">
-                    <div className="gt-dupe-glance__chips">
-                      <span className={`gt-dupe-glance__status status-${String(row.status || '').toLowerCase()}`}>
-                        {row.status === 'Duplicate' ? 'Duplicate (same title)' : row.status}
-                      </span>
-                      {suggestedKind ? (
-                        <span
-                          className="gt-dupe-glance__suggested"
-                          title="Suggested kind from scan proposal (software path)"
-                        >
-                          Suggested {SUGGESTED_KIND_LABELS[suggestedKind]}
-                        </span>
-                      ) : null}
-                    </div>
-                    {searchName && searchName !== diskName ? (
-                      <p className="gt-dupe-glance__amend">
-                        <span className="gt-dupe-glance__amend-label">Amend naming</span> {searchName}
-                        <span className="gt-dupe-glance__ondisk"> · On disk: {diskName}</span>
-                      </p>
-                    ) : diskName ? (
-                      <p className="gt-dupe-glance__ondisk">On disk: {diskName}</p>
-                    ) : null}
-                    <code title={row.folder_path}>{row.folder_path}</code>
-                    <DupeOfHit row={row} onOpenPath={onOpenPath} />
-                    {showWhyBlock ? (
-                      <div className="gt-dupe-glance__why">
-                        {why || (matchScore && row.status !== 'Duplicate') ? (
-                          <p className="gt-dupe-glance__reason">
-                            {showWhyUnmatchedLabel ? (
-                              <span className="gt-dupe-glance__why-label">Why unmatched? </span>
-                            ) : null}
-                            {matchScore && row.status !== 'Duplicate' ? (
-                              <span
-                                className="gt-dupe-glance__match-score"
-                                title="Match confidence score"
-                              >
-                                {matchScore}
-                              </span>
-                            ) : null}
-                            {why ? (
-                              <>
-                                {matchScore && row.status !== 'Duplicate' ? ' ' : null}
-                                {why}
-                              </>
-                            ) : null}
-                          </p>
-                        ) : showWhyUnmatchedLabel ? (
-                          <p className="gt-dupe-glance__reason">
-                            <span className="gt-dupe-glance__why-label">Why unmatched? </span>
-                          </p>
-                        ) : null}
-                        <TransformTrail transforms={transforms} />
-                        <StageECandidates row={row} />
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="gt-dupe-glance__actions">
+                  <div className="gt-dupe-glance__actions" role="toolbar" aria-label="Row actions">
                     <button
                       type="button"
                       className="gt-btn"
@@ -607,7 +711,7 @@ export function DupeGlance({ onOpenPath }) {
                     <a
                       className="gt-btn"
                       href={`/add_game_manual?full_disk_path=${encodeURIComponent(row.folder_path || '')}&library_uuid=${encodeURIComponent(row.library_uuid || '')}&platform_name=${encodeURIComponent(row.platform_name || '')}&platform_id=${encodeURIComponent(row.platform_id || '')}&from_unmatched=true`}
-                      title="Fix search — opens manual add / IGDB search (uses amended search_name when set)"
+                      title="Fix search — opens manual add / IGDB search (uses Search name when set)"
                     >
                       Fix search
                     </a>
@@ -659,6 +763,64 @@ export function DupeGlance({ onOpenPath }) {
                           Ignore
                         </button>
                       </>
+                    ) : null}
+                  </div>
+                  <div className="gt-dupe-glance__meta">
+                    <div className="gt-dupe-glance__chips">
+                      <span className={`gt-dupe-glance__status status-${String(row.status || '').toLowerCase()}`}>
+                        {row.status === 'Duplicate' ? 'Duplicate (same title)' : row.status}
+                      </span>
+                      {suggestedKind ? (
+                        <span
+                          className="gt-dupe-glance__suggested"
+                          title="Suggested kind from scan proposal (software path)"
+                        >
+                          Suggested {SUGGESTED_KIND_LABELS[suggestedKind]}
+                        </span>
+                      ) : null}
+                    </div>
+                    {searchName && searchName !== diskName ? (
+                      <p className="gt-dupe-glance__amend">
+                        <span className="gt-dupe-glance__amend-label">Search name</span> {searchName}
+                        <span className="gt-dupe-glance__ondisk"> · On disk: {diskName}</span>
+                      </p>
+                    ) : diskName ? (
+                      <p className="gt-dupe-glance__ondisk">On disk: {diskName}</p>
+                    ) : null}
+                    {buildDupeCompare(row) ? null : (
+                      <code title={row.folder_path}>{row.folder_path}</code>
+                    )}
+                    <DupeCompare row={row} onOpenPath={onOpenPath} />
+                    {showWhyBlock ? (
+                      <div className="gt-dupe-glance__why">
+                        {why || (matchScore && row.status !== 'Duplicate') ? (
+                          <p className="gt-dupe-glance__reason">
+                            {showWhyUnmatchedLabel ? (
+                              <span className="gt-dupe-glance__why-label">Why unmatched? </span>
+                            ) : null}
+                            {matchScore && row.status !== 'Duplicate' ? (
+                              <span
+                                className="gt-dupe-glance__match-score"
+                                title="Match confidence score"
+                              >
+                                {matchScore}
+                              </span>
+                            ) : null}
+                            {why ? (
+                              <>
+                                {matchScore && row.status !== 'Duplicate' ? ' ' : null}
+                                {why}
+                              </>
+                            ) : null}
+                          </p>
+                        ) : showWhyUnmatchedLabel ? (
+                          <p className="gt-dupe-glance__reason">
+                            <span className="gt-dupe-glance__why-label">Why unmatched? </span>
+                          </p>
+                        ) : null}
+                        <TransformTrail transforms={transforms} />
+                        <StageECandidates row={row} />
+                      </div>
                     ) : null}
                   </div>
                 </li>

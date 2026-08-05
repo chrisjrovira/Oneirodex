@@ -2,7 +2,7 @@
 
 Token-efficient workflows for maintainers and teammates. Skills live in `.cursor/skills/`. Always-apply rules in `.cursor/rules/`.
 
-**North star:** household **gaming sphere** — library · systems · ownership/metadata · play · social · admin/ops · BYO acquire.
+**Product mission:** GameTheca is the self-hosted **household gaming sphere** — already-owned PC/console libraries → shared honest catalog (library · systems · ownership/metadata · play · social · admin/ops · BYO acquire) on Unraid/Compose — not a DRM store client, Discord clone, or pirate marketplace. Full text + PM attainment checklist: `.cursor/skills/agent-pm/SKILL.md`.
 
 ## Auto (every task)
 
@@ -29,16 +29,24 @@ Attach with `@` (skills have `disable-model-invocation: true`). Matching rules: 
 | Seat | Skill | Owns |
 |---|---|---|
 | PM | **agent-pm** | Backlog, sequencing, Task briefs (no product code); this parent chat is the PM monitor |
-| 1 | **agent-uiux** | Member + admin SPA chrome, aurora theme |
+| 1 | **agent-uiux** | Member + admin SPA chrome, aurora theme · update [ui-debt-log.md](ui-debt-log.md) on Library/Scans/Themes/Chat Tasks |
 | 2 | **agent-backend** | Flask/ASGI/APIs/schema/runtime (+ Integrations / Acquire / Play / Social **lanes**) |
 | 3 | **agent-desktop** | Tauri companion (`clients/desktop`) |
 | 4 | **agent-qa** | Repro, smoke, DoD evidence |
 | 6 | **agent-docs** | Docs/changelog + **program canvas every turn** |
-| 7 | **agent-gamemaster** | Games/systems/formats/DAT/metadata |
+| 7 | **agent-gamemaster** | World gaming-sphere detection — systems · regions · forms · art kinds · fandom (+ DAT/metadata taxonomy) |
 | 8 | **agent-ops** | Unraid/Compose/volumes/probes/ops glance |
+| 9 | **agent-art** | Brand/logo, cover & theme art direction, loaders, screensaver creative |
+| 10 | **agent-creative** | Narrative, discovery zones, screensaver lore, brand voice |
+| 11 | **agent-platform** | Cutting-edge runtime/technique ADRs → Backend DoD |
+| 12 | **agent-finance** | Cloud vs Unraid TCO honesty |
+| 13 | **agent-hardware** | Controllers / VR / TV / host sizing |
+| 14 | **agent-a11y** | Accessibility audits + DoD for UI |
 | — | **agent-team** | Index · sphere map · seat router · lanes · human drive shortcuts · ship helpers |
 
 Typical wave: parent **PM** → optional GM/Ops consult → **Task** implementers parallel → Task **QA** → Task **Docs** (docs-sync + **Canvas: synced**). Parent does **not** land product code when seats exist (`pm-disperse.mdc`). Seats **refuse** wrong-seat work and hand off.
+
+**Feedback roadmap (W22–W25):** [../strategy/roadmap-w22-plus.md](../strategy/roadmap-w22-plus.md) · debt register [ui-debt-log.md](ui-debt-log.md) · **W21** = first-scan Done uncommitted (not renumbered).
 
 **Lanes (not full seats yet):** Integrations · Acquire · Play · Social · Security — named in Task titles; routed via Backend (+ consults). Promote when standing parallel load justifies a seat.
 

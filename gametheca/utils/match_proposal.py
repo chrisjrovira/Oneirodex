@@ -12,11 +12,12 @@ PROPOSAL_FILENAME = 'gametheca.proposal.json'
 LEGACY_PROPOSAL_FILENAME = 'gametheca.proposal.json'
 
 # Display labels for Unmatched list / export (derived; not stored).
+# Keep in sync with item_kind.ITEM_KIND_LABELS (W22-M6 plain language).
 SUGGESTED_KIND_LABELS = {
     'game': 'Game',
-    'experience': 'Experience',
+    'experience': 'Soft title',
     'emulator': 'Emulator',
-    'tool': 'Tool',
+    'tool': 'Utility',
 }
 
 # Deterministic one-liners for UI "Why unmatched?" (no DB / disk I/O).
@@ -25,6 +26,13 @@ MATCH_REASON_SUMMARIES = {
     'title_vs_folder': 'Folder title matches an existing library game folder',
     'title_vs_library_name': 'Folder title matches an existing library game name',
     'title_below_threshold': 'IGDB already used by a differently titled folder',
+    # W22-M5 — UPDATE packaging / bare update-package folders
+    'update_package_folder': (
+        'Folder name looks like an update or patch package, not a separate game title.'
+    ),
+    'update_packaging_hint': (
+        'Folder name carried update/patch packaging (peeled for search).'
+    ),
 }
 
 STATUS_SUMMARIES = {

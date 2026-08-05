@@ -218,6 +218,73 @@ class DatabaseManager:
             END IF;
         END $$;
 
+        -- BE-DET-10: singular artwork kinds (one primary per game; screenshots stay multi)
+        -- Dedupe any historical doubles before unique partial indexes land.
+        DELETE FROM images a
+        USING images b
+        WHERE a.id > b.id
+          AND a.game_uuid = b.game_uuid
+          AND a.image_type = b.image_type
+          AND a.image_type IN ('box', 'cart', 'disc', 'logo', 'hero', 'fanart');
+
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE c.relname = 'unique_game_box_image' AND n.nspname = 'public'
+            ) THEN
+                CREATE UNIQUE INDEX unique_game_box_image
+                ON images (game_uuid)
+                WHERE image_type = 'box';
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE c.relname = 'unique_game_cart_image' AND n.nspname = 'public'
+            ) THEN
+                CREATE UNIQUE INDEX unique_game_cart_image
+                ON images (game_uuid)
+                WHERE image_type = 'cart';
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE c.relname = 'unique_game_disc_image' AND n.nspname = 'public'
+            ) THEN
+                CREATE UNIQUE INDEX unique_game_disc_image
+                ON images (game_uuid)
+                WHERE image_type = 'disc';
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE c.relname = 'unique_game_logo_image' AND n.nspname = 'public'
+            ) THEN
+                CREATE UNIQUE INDEX unique_game_logo_image
+                ON images (game_uuid)
+                WHERE image_type = 'logo';
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE c.relname = 'unique_game_hero_image' AND n.nspname = 'public'
+            ) THEN
+                CREATE UNIQUE INDEX unique_game_hero_image
+                ON images (game_uuid)
+                WHERE image_type = 'hero';
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE c.relname = 'unique_game_fanart_image' AND n.nspname = 'public'
+            ) THEN
+                CREATE UNIQUE INDEX unique_game_fanart_image
+                ON images (game_uuid)
+                WHERE image_type = 'fanart';
+            END IF;
+        END $$;
+
         -- Rename columns in filters table from old release group terminology to scanning filter terminology
         DO $$
         BEGIN
@@ -922,10 +989,13 @@ class DatabaseManager:
         ALTER TABLE games ADD COLUMN IF NOT EXISTS rom_region VARCHAR(16);
         ALTER TABLE games ADD COLUMN IF NOT EXISTS rom_languages VARCHAR(64);
         ALTER TABLE games ADD COLUMN IF NOT EXISTS has_english BOOLEAN;
+        ALTER TABLE games ADD COLUMN IF NOT EXISTS disc_index INTEGER;
+        ALTER TABLE games ADD COLUMN IF NOT EXISTS disc_count INTEGER;
         ALTER TABLE game_extras ADD COLUMN IF NOT EXISTS extra_kind VARCHAR(32);
         ALTER TABLE game_extras ADD COLUMN IF NOT EXISTS patch_format VARCHAR(8);
         ALTER TABLE game_extras ADD COLUMN IF NOT EXISTS target_language VARCHAR(16);
         ALTER TABLE game_extras ADD COLUMN IF NOT EXISTS source_url VARCHAR(512);
+        ALTER TABLE game_extras ADD COLUMN IF NOT EXISTS disc_index INTEGER;
         ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS preferred_game_locale VARCHAR(16) DEFAULT 'en-US';
         CREATE INDEX IF NOT EXISTS ix_games_file_crc ON games(file_crc);
         CREATE INDEX IF NOT EXISTS ix_games_file_md5 ON games(file_md5);
@@ -972,6 +1042,243 @@ class DatabaseManager:
         CREATE INDEX IF NOT EXISTS ix_duplicate_fix_logs_matched_game ON duplicate_fix_logs(matched_game_uuid);
 
         ALTER TABLE chat_channels ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP;
+
+        -- W23-SOCIAL-1: spaces ("servers") holding text + voice channels.
+        CREATE TABLE IF NOT EXISTS chat_spaces (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(120) NOT NULL,
+            slug VARCHAR(64) UNIQUE,
+            description VARCHAR(500),
+            visibility VARCHAR(16) NOT NULL DEFAULT 'household',
+            is_child_safe BOOLEAN NOT NULL DEFAULT TRUE,
+            display_order INTEGER NOT NULL DEFAULT 0,
+            created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            archived_at TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS chat_space_members (
+            id SERIAL PRIMARY KEY,
+            space_id INTEGER NOT NULL REFERENCES chat_spaces(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            role VARCHAR(16) NOT NULL DEFAULT 'member',
+            muted BOOLEAN NOT NULL DEFAULT FALSE,
+            joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT uq_chat_space_member UNIQUE (space_id, user_id)
+        );
+        CREATE INDEX IF NOT EXISTS ix_chat_space_members_space_id ON chat_space_members(space_id);
+        CREATE INDEX IF NOT EXISTS ix_chat_space_members_user_id ON chat_space_members(user_id);
+
+        CREATE TABLE IF NOT EXISTS chat_space_invites (
+            id SERIAL PRIMARY KEY,
+            space_id INTEGER NOT NULL REFERENCES chat_spaces(id) ON DELETE CASCADE,
+            token VARCHAR(128) NOT NULL UNIQUE,
+            created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP,
+            max_uses INTEGER,
+            uses INTEGER NOT NULL DEFAULT 0,
+            revoked_at TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS ix_chat_space_invites_space_id ON chat_space_invites(space_id);
+        CREATE INDEX IF NOT EXISTS ix_chat_space_invites_token ON chat_space_invites(token);
+
+        ALTER TABLE chat_channels ADD COLUMN IF NOT EXISTS space_id INTEGER REFERENCES chat_spaces(id) ON DELETE CASCADE;
+        ALTER TABLE chat_channels ADD COLUMN IF NOT EXISTS display_order INTEGER NOT NULL DEFAULT 0;
+        CREATE INDEX IF NOT EXISTS ix_chat_channels_space_id ON chat_channels(space_id);
+
+        -- Adopt pre-space channels so nothing disappears on upgrade: one default
+        -- household space, then every space-less non-DM channel joins it.
+        -- created_at is set explicitly: when the table is created from the model
+        -- (db.create_all) the default is Python-side only, so a raw INSERT that
+        -- omits it hits a NOT NULL violation and the adoption silently no-ops.
+        INSERT INTO chat_spaces (name, slug, description, visibility, is_child_safe, display_order, created_at)
+        SELECT 'Household', 'household', 'Default space for household channels.', 'household', TRUE, 0, CURRENT_TIMESTAMP
+        WHERE NOT EXISTS (SELECT 1 FROM chat_spaces WHERE slug = 'household');
+
+        UPDATE chat_channels
+        SET space_id = (SELECT id FROM chat_spaces WHERE slug = 'household')
+        WHERE space_id IS NULL AND kind <> 'dm';
+
+        -- W25-STORE-1: shelves can run as scheduled events and pick a layout.
+        ALTER TABLE discovery_sections ADD COLUMN IF NOT EXISTS starts_at TIMESTAMP;
+        ALTER TABLE discovery_sections ADD COLUMN IF NOT EXISTS ends_at TIMESTAMP;
+        ALTER TABLE discovery_sections ADD COLUMN IF NOT EXISTS layout VARCHAR(20) NOT NULL DEFAULT 'shelf';
+
+
+        -- Console-gaming leaf systems (2026-08-03): real libraries contain these
+        -- and previously had nowhere to land. Idempotent per label.
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'libraryplatform') THEN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'AMIGA'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'AMIGA';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'SEGA_SG1000'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'SEGA_SG1000';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'SUPERGRAFX'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'SUPERGRAFX';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'PCE_CD'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'PCE_CD';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'NGPC'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'NGPC';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'SUPERVISION'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'SUPERVISION';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'GX4000'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'GX4000';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'ASTROCADE'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'ASTROCADE';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'ARCADIA'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'ARCADIA';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'CREATIVISION'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'CREATIVISION';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'ADVISION'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'ADVISION';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'STUDIO2'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'STUDIO2';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'ACTIONMAX'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'ACTIONMAX';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'DAPHNE'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'DAPHNE';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'PINBALL'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'PINBALL';
+                END IF;
+            END IF;
+        END
+        $$;
+
+        -- Related media attached to a game (adaptations, tie-ins, soundtracks).
+        -- Context on the game page, not a media tracker: nothing is progressed.
+        CREATE TABLE IF NOT EXISTS game_related_media (
+            id SERIAL PRIMARY KEY,
+            game_uuid VARCHAR(36) NOT NULL REFERENCES games(uuid) ON DELETE CASCADE,
+            media_kind VARCHAR(16) NOT NULL,
+            relation VARCHAR(20) NOT NULL DEFAULT 'tie_in',
+            title VARCHAR(240) NOT NULL,
+            creator VARCHAR(160),
+            year INTEGER,
+            summary VARCHAR(1000),
+            external_url VARCHAR(500),
+            cover_url VARCHAR(500),
+            display_order INTEGER NOT NULL DEFAULT 0,
+            created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS ix_game_related_media_game_uuid ON game_related_media(game_uuid);
+
+        -- FEAT-D2: operator-authored PC cheat notes (never writes game binaries).
+        CREATE TABLE IF NOT EXISTS pc_cheats (
+            id SERIAL PRIMARY KEY,
+            game_uuid VARCHAR(36) NOT NULL REFERENCES games(uuid) ON DELETE CASCADE,
+            method VARCHAR(16) NOT NULL DEFAULT 'note',
+            label VARCHAR(160) NOT NULL,
+            payload TEXT,
+            notes VARCHAR(1000),
+            single_player_only BOOLEAN NOT NULL DEFAULT TRUE,
+            created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS ix_pc_cheats_game_uuid ON pc_cheats(game_uuid);
+
+        -- FEAT-D3: label generated artwork so it is findable and replaceable.
+        ALTER TABLE images ADD COLUMN IF NOT EXISTS is_generated BOOLEAN NOT NULL DEFAULT FALSE;
+        ALTER TABLE images ADD COLUMN IF NOT EXISTS generated_by VARCHAR(32);
+
+        -- UX-C5: operator "bad match" feedback on unmatched/duplicate rows.
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS bad_match_reason VARCHAR(32);
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS bad_match_note VARCHAR(500);
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS bad_match_at TIMESTAMP;
+        ALTER TABLE unmatched_folders ADD COLUMN IF NOT EXISTS bad_match_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+
+        -- Library page size default 20 -> 50 (human 2026-08-03). Only rows still
+        -- sitting on the *old default* are moved; anyone who picked 100/200/etc
+        -- keeps their choice. A member who deliberately chose 20 can set it back
+        -- in Preferences.
+        UPDATE user_preferences SET items_per_page = 50 WHERE items_per_page = 20;
+        ALTER TABLE user_preferences ALTER COLUMN items_per_page SET DEFAULT 50;
+
+        -- Storefront shelves for installs that predate them. Derived shelves
+        -- hide themselves when empty, so seeding them visible is safe.
+        INSERT INTO discovery_sections (name, identifier, is_visible, display_order, section_type, layout)
+        SELECT 'Curated for you', 'curated_for_you', TRUE, 6, 'seed', 'shelf'
+        WHERE NOT EXISTS (SELECT 1 FROM discovery_sections WHERE identifier = 'curated_for_you');
+
+        INSERT INTO discovery_sections (name, identifier, is_visible, display_order, section_type, layout)
+        SELECT 'Upcoming', 'upcoming', TRUE, 7, 'seed', 'shelf'
+        WHERE NOT EXISTS (SELECT 1 FROM discovery_sections WHERE identifier = 'upcoming');
 
         """
         print("Upgrading database to the latest schema")

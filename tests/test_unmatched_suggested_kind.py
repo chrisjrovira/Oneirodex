@@ -132,7 +132,7 @@ def test_unmatched_list_with_suggestion(
     assert resp.status_code == 200
     match = next(r for r in resp.get_json() if r['id'] == folder.id)
     assert match['suggested_kind'] == 'tool'
-    assert match['suggested_kind_label'] == 'Tool'
+    assert match['suggested_kind_label'] == 'Utility'
     assert match['suggested_candidate_name'] == 'Save Editor Utility'
 
 
@@ -157,7 +157,7 @@ def test_unmatched_export_includes_suggested_kind(
     assert resp.status_code == 200
     match = next(r for r in resp.get_json() if r['id'] == folder.id)
     assert match['suggested_kind'] == 'experience'
-    assert match['suggested_kind_label'] == 'Experience'
+    assert match['suggested_kind_label'] == 'Soft title'
     assert match['suggested_candidate_name'] == 'VR Painter'
 
     csv_resp = client.get('/api/unmatched_folders/export?format=csv')
@@ -165,6 +165,41 @@ def test_unmatched_export_includes_suggested_kind(
     text = csv_resp.get_data(as_text=True)
     assert 'suggested_kind' in text
     assert 'experience' in text
+
+
+def test_unmatched_list_exposes_rom_region_lang_from_path(
+    client, admin_user, db_session, sample_library, sample_scan_job,
+):
+    """BE-DET-4 — Unmatched trail/export include peel-captured region/lang."""
+    folder = UnmatchedFolder(
+        library_uuid=sample_library.uuid,
+        scan_job_id=sample_scan_job.id,
+        folder_path=f'/test/roms/Game (Europe) (En,Fr,De).gb',
+        failed_time=datetime.now(timezone.utc),
+        content_type='Games',
+        status='Unmatched',
+    )
+    db_session.add(folder)
+    db_session.commit()
+
+    _login_admin(client, admin_user)
+    resp = client.get('/api/unmatched_folders')
+    assert resp.status_code == 200
+    match = next(r for r in resp.get_json() if r['id'] == folder.id)
+    assert match['rom_region'] == 'EUR'
+    assert match['rom_languages'] == 'en,fr,de'
+
+    export = client.get('/api/unmatched_folders/export?format=json')
+    assert export.status_code == 200
+    exp = next(r for r in export.get_json() if r['id'] == folder.id)
+    assert exp['rom_region'] == 'EUR'
+    assert exp['rom_languages'] == 'en,fr,de'
+
+    csv_resp = client.get('/api/unmatched_folders/export?format=csv')
+    assert csv_resp.status_code == 200
+    text = csv_resp.get_data(as_text=True)
+    assert 'rom_region' in text
+    assert 'EUR' in text
 
 
 def test_sync_unmatched_kind_hint_from_proposal(db_session, sample_library, sample_scan_job, tmp_path):
@@ -245,7 +280,7 @@ def test_unmatched_list_exposes_why_unmatched(
     assert match['why_unmatched'] == match['unmatched_reason']
     assert 'CoolTitle' in match['why_unmatched']
     assert 'differently titled' in match['why_unmatched']
-    assert 'suggested Tool: Save Editor' in match['why_unmatched']
+    assert 'suggested Utility: Save Editor' in match['why_unmatched']
 
 
 def test_backfill_suggested_kind_from_sidecar(

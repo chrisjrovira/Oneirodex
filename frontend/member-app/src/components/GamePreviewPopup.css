@@ -1,0 +1,129 @@
+/* Tile preview popup (UX-B3) — a look before committing to the full page. */
+
+.gt-preview__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+}
+
+.gt-preview {
+  position: relative;
+  width: min(100%, 42rem);
+  max-height: min(84vh, 34rem);
+  overflow-y: auto;
+  padding: 1.1rem 1.2rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 34%, transparent);
+  background: color-mix(in srgb, var(--gt-surface, #141820) 96%, transparent);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    0 0 18px 2px color-mix(in srgb, var(--gt-accent, #2fd67b) 18%, transparent);
+  color: var(--gt-text, #f2f4f8);
+}
+
+.gt-preview__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.6rem;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gt-text-muted, #9aa3b2);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gt-preview__close:hover,
+.gt-preview__close:focus-visible {
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 18%, transparent);
+  color: var(--gt-text, #f2f4f8);
+}
+
+.gt-preview__body {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.gt-preview__cover {
+  flex: 0 0 auto;
+  width: 9.5rem;
+  max-width: 34%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+}
+
+.gt-preview__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.gt-preview__title {
+  margin: 0 2rem 0.45rem 0;
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+.gt-preview__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.45rem;
+}
+
+.gt-preview__fact {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 80%, transparent);
+  font-size: 0.72rem;
+}
+
+.gt-preview__genres {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  color: var(--gt-text-muted, #9aa3b2);
+}
+
+/* Shortened on purpose — this previews the page, it does not replace it. */
+.gt-preview__summary {
+  margin: 0 0 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+}
+
+.gt-preview__summary--empty {
+  color: var(--gt-text-muted, #9aa3b2);
+  font-style: italic;
+}
+
+.gt-preview__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .gt-preview__body {
+    flex-direction: column;
+  }
+
+  .gt-preview__cover {
+    width: 7.5rem;
+    max-width: 45%;
+  }
+}

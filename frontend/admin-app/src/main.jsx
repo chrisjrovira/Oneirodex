@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { App } from './App'
+import { EmulatorFirmwarePanel } from './EmulatorFirmwarePanel'
 import { ImportLeafLibraries } from './ImportLeafLibraries'
 import { ProposeLeafLibraries } from './ProposeLeafLibraries'
 import './styles.css'
@@ -26,4 +27,12 @@ const importLeafMount = document.getElementById('import-leaf-mount')
 if (importLeafMount && !importLeafMount.dataset.reactMounted) {
   importLeafMount.dataset.reactMounted = '1'
   createRoot(importLeafMount).render(<ImportLeafLibraries />)
+}
+
+// Emulators page keeps its Jinja profile forms; firmware is the React island
+// (GT-B2 / UID-007) so the page did not have to be migrated wholesale.
+const firmwareMount = document.getElementById('emulator-firmware-mount')
+if (firmwareMount && !firmwareMount.dataset.reactMounted) {
+  firmwareMount.dataset.reactMounted = '1'
+  createRoot(firmwareMount).render(<EmulatorFirmwarePanel />)
 }

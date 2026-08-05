@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from flask import has_request_context, render_template, request
+from markupsafe import escape
 from sqlalchemy import func, select
 
 from gametheca import db
@@ -75,11 +76,12 @@ def maybe_email_social_notify(
             kind=kind,
         )
     except Exception:
-        snippet = (body or '')[:200]
+        # Title/body carry user-authored chat text — escape like the Jinja path does.
+        snippet = escape((body or '')[:200])
         html = (
-            f'<p><strong>{title}</strong></p>'
+            f'<p><strong>{escape(title)}</strong></p>'
             f'<p>{snippet}</p>'
-            f'<p><a href="{href}">Open in GameTheca</a></p>'
+            f'<p><a href="{escape(href)}">Open in GameTheca</a></p>'
         )
 
     subject = title[:180] or 'GameTheca notification'
