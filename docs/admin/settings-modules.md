@@ -55,6 +55,12 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - APIs: `GET/POST /api/arr/indexers`, `POST /api/arr/indexers/bulk`, `POST /api/arr/indexers/enable-presets`, `PUT|PATCH|DELETE /api/arr/indexers/<id>`.
 - Native indexer URLs use outbound SSRF checks (no LAN); hub URLs still respect `ALLOW_PRIVATE_LAN_URLS`.
 - Preset pack: `gametheca/data/indexer_presets.json` (no secrets; admin-only display names).
+- **Remote path mapping (`ARR_REMOTE_PATH_MAP`)** — set this whenever your download client runs in a **different container** than GameTheca, which is the normal Unraid/Compose layout. qBittorrent reports paths from *its* mounts (`/downloads/…`), GameTheca sees the same bytes somewhere else (`/storage/downloads/…`), and without a mapping the hardlink pipeline stats a path that does not exist here. The preview then says *"no source file found"* — true, but baffling when the file is plainly on disk.
+  - Format: `remote=>local` pairs joined by `|`. `=>` because Windows paths contain colons; `|` because paths can contain commas.
+  - Example: `ARR_REMOTE_PATH_MAP=/downloads=>/storage/downloads|/data/torrents=>/mnt/user/torrents`
+  - Longest remote prefix wins, so a specific mapping beats a general one. A prefix only matches at a path separator, so `/downloads` never matches `/downloads-old`.
+  - Leave empty when client and app share a filesystem view — unmapped paths pass through untouched.
+  - When no mapping is set and a lookup fails, the preview reason now names the path it tried and points at this setting instead of just saying "not found".
 - **Quality / release profiles (P1-12):** `GlobalSettings.quality_profiles` (multi-profile JSON). Admin → **Quality profiles** SPA at `/admin/quality_profiles` (`QualityProfilesPage`: list · set active · new · delete · edit · score probe; Jinja is an SPA shell). APIs: `GET/POST /api/quality-profiles`, `PUT /api/quality-profiles/active`, `GET/PUT/DELETE /api/quality-profiles/<id>`. Active profile scores Arr search and extends scan name-clean with blocked/excluded terms.
 
 ## AI

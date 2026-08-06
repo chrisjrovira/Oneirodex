@@ -97,6 +97,12 @@ class Config(object):
     ENABLE_HARDLINK_HELPERS = os.getenv('ENABLE_HARDLINK_HELPERS', 'true').lower() == 'true'
     ALLOW_HARDLINK_APPLY = os.getenv('ALLOW_HARDLINK_APPLY', 'false').lower() == 'true'
     ENABLE_ARR_HARDLINK_PIPELINE = os.getenv('ENABLE_ARR_HARDLINK_PIPELINE', 'true').lower() == 'true'
+    # Remote path mapping. The download client usually runs in its own
+    # container and reports paths from *its* mounts, which do not exist here.
+    # Format: "remote=>local" pairs joined by "|", e.g.
+    #   /downloads=>/storage/downloads|/data/torrents=>/mnt/user/torrents
+    # Empty (the default) means client and app share a filesystem view.
+    ARR_REMOTE_PATH_MAP = os.getenv('ARR_REMOTE_PATH_MAP', '')
 
     # Mobile / Quest-browser VR catalog
     ENABLE_VR_BROWSE = os.getenv('ENABLE_VR_BROWSE', 'true').lower() == 'true'

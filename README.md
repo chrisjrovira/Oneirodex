@@ -112,7 +112,7 @@ GameTheca is a **Flask + React** game library server you run at home (or on a NA
 <details>
 <summary>📷 Asset credits</summary>
 
-Live UI captures live in [`docs/assets/readme/`](docs/assets/readme/) (synced from [`docs/media/screenshots/`](docs/media/screenshots/) via [`scripts/capture_docs_media.py`](scripts/capture_docs_media.py)). The controller mark is the product SVG (`gametheca_mark.svg`). Docs re-runs capture on every commit/ship pass that touches member or admin UI.
+Live UI captures live in [`docs/assets/readme/`](docs/assets/readme/) (synced from [`docs/media/screenshots/`](docs/media/screenshots/) via [`scripts/capture_docs_media.py`](scripts/capture_docs_media.py)). The mark is the product SVG (`gametheca_mark.svg`) — game cases on a shelf, since *theca* means repository; PNG/ICO variants are rendered from the same geometry by [`scripts/render-brand-assets.py`](scripts/render-brand-assets.py). Docs re-runs capture on every commit/ship pass that touches member or admin UI.
 
 </details>
 
@@ -179,6 +179,7 @@ Force the setup wizard: `./startweb.sh --force-setup` (required when upgrading f
 | `ENABLE_MALWARE_SCAN` / `MALWARE_SCAN_BLOCK_ON_HIT` / `CLAMAV_*` | Malware scanner — heuristics on by default; blocks/skips adds on hit; optional `--profile clamav` |
 | `SUPPORT_GITHUB_TOKEN` / `SUPPORT_GITHUB_REPO` | Optional GitHub Issues sync for support tickets |
 | `ENABLE_ARR_MODULE` | *arr search / qBittorrent (on by default) |
+| `ARR_REMOTE_PATH_MAP` | Rewrite download-client paths when it runs in another container — `"/downloads=>/storage/downloads"`. Without it the hardlink pipeline finds nothing |
 | `ENABLE_AI_ASSIST` / `ENABLE_AI_AUTO_APPLY` | Ollama triage (on); silent rename stays off |
 | `ENABLE_VR_BROWSE` | `/vr` PWA catalog (on by default) |
 | `OIDC_ENABLED` | SSO — **off by default** (auth stays opt-in) |

@@ -79,6 +79,77 @@ def list_completed_torrents(*, limit: int = 50) -> list[dict[str, Any]]:
     return out
 
 
+def parse_remote_path_map(raw: str | None) -> list[tuple[str, str]]:
+    """Parse ``ARR_REMOTE_PATH_MAP`` into ordered (remote, local) prefix pairs.
+
+    Format: ``remote=>local`` pairs separated by ``|``, e.g.::
+
+        /downloads=>/storage/downloads|/data/torrents=>/mnt/user/torrents
+
+    ``=>`` rather than ``:`` because Windows paths contain colons, and ``|``
+    rather than ``,`` because paths may contain commas.
+
+    Sorted longest-remote-first so a more specific prefix wins over a shorter
+    one that also matches.
+    """
+    pairs: list[tuple[str, str]] = []
+    for chunk in (raw or '').split('|'):
+        chunk = chunk.strip()
+        if not chunk or '=>' not in chunk:
+            continue
+        remote, _, local = chunk.partition('=>')
+        remote, local = remote.strip(), local.strip()
+        if remote and local:
+            pairs.append((remote, local))
+    pairs.sort(key=lambda pair: len(pair[0]), reverse=True)
+    return pairs
+
+
+def _configured_path_map() -> list[tuple[str, str]]:
+    return parse_remote_path_map(current_app.config.get('ARR_REMOTE_PATH_MAP'))
+
+
+def _normalise(path: str) -> str:
+    """Compare with forward slashes and no trailing separator."""
+    return (path or '').replace('\\', '/').rstrip('/')
+
+
+def map_remote_path(path: str, mappings: list[tuple[str, str]] | None = None) -> str:
+    """Rewrite a download client's path into one this process can actually see.
+
+    The client and GameTheca usually run in different containers, so
+    qBittorrent reports something like ``/downloads/x`` while we have the same
+    bytes mounted at ``/storage/downloads/x``. Without this the pipeline stats a
+    path that does not exist here and reports "no source file found" — correct
+    but baffling, since the file is plainly there.
+
+    Returns ``path`` unchanged when nothing matches, which is the right
+    behaviour for the single-container case where no mapping is needed.
+    """
+    if not path:
+        return path
+    pairs = _configured_path_map() if mappings is None else mappings
+    if not pairs:
+        return path
+
+    candidate = _normalise(path)
+    for remote, local in pairs:
+        prefix = _normalise(remote)
+        # Strip the local side too — a trailing slash in config would otherwise
+        # survive into the joined result and mix separators.
+        target = local.rstrip('/\\') or local
+        if not prefix:
+            continue
+        # Prefix must end at a separator, so /downloads does not match
+        # /downloads-old.
+        if candidate == prefix:
+            return target
+        if candidate.startswith(prefix + '/'):
+            remainder = candidate[len(prefix):].lstrip('/')
+            return os.path.join(target, *remainder.split('/')) if remainder else target
+    return path
+
+
 def _pick_source_file(content_path: str) -> str | None:
     """If path is a file use it; if directory, pick the largest file (one level deep + walk)."""
     path = os.path.abspath(content_path or '')
@@ -127,14 +198,34 @@ def propose_hardlinks(
 
     items = torrents if torrents is not None else list_completed_torrents(limit=limit)
     proposals: list[dict[str, Any]] = []
+    path_map = _configured_path_map()
     for item in items:
-        source = _pick_source_file(item.get('content_path') or '')
+        raw_path = item.get('content_path') or ''
+        # Rewrite the client's view of the path into ours before touching disk.
+        local_path = map_remote_path(raw_path, path_map)
+        source = _pick_source_file(local_path)
         if not source:
+            reason = 'no source file found'
+            if raw_path and not path_map:
+                # The overwhelmingly common cause: client and app in separate
+                # containers with different mounts. Say so instead of leaving
+                # the operator to guess.
+                reason = (
+                    f'no source file found at {local_path!r} — if your download '
+                    'client runs in another container, set ARR_REMOTE_PATH_MAP '
+                    '(e.g. "/downloads=>/storage/downloads")'
+                )
+            elif local_path != raw_path:
+                reason = (
+                    f'no source file found at {local_path!r} (mapped from '
+                    f'{raw_path!r}) — check ARR_REMOTE_PATH_MAP'
+                )
             proposals.append({
                 **item,
                 'source': None,
                 'dest': None,
-                'preview': {'ok': False, 'would_succeed': False, 'reasons': ['no source file found']},
+                'mapped_path': local_path if local_path != raw_path else None,
+                'preview': {'ok': False, 'would_succeed': False, 'reasons': [reason]},
             })
             continue
         ok_s, err_s = is_safe_path(source, bases)
