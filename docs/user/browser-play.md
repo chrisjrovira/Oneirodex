@@ -42,6 +42,13 @@ Admin → emulator BIOS shows which required names are present. Missing BIOS sur
 
 ## Play shell (WebRetro room)
 
+**Scanlines (2026-08-06).** Each room now carries a scanline treatment matched
+to the hardware it evokes: strongest on a living-room CRT, present on an arcade
+monitor, faint on late disc-era sets, and **absent on handhelds** — an LCD panel
+never had scanlines, and drawing them there is what makes fake-CRT filters look
+like a gimmick. This is a CSS overlay, not a RetroArch shader: no shader presets
+are vendored, so there is nothing to configure and no performance cost.
+
 Browser play opens `webretro.html` with a per-system **artistic room** — multi-layer wallpaper, floor plane, ambient lamp, bezel material sheen, bar typography hierarchy (brand eyebrow + system label), and light motion (wall drift · lamp breathe · bezel specular) — not just an accent color. Pass `platform=` (or rely on `core=` mapping) so the skin applies immediately; the bar shows the system name as the hero label.
 
 - **← Library** on the play bar returns via `history.back()` when the referrer is same-origin, else falls back to `/library`.

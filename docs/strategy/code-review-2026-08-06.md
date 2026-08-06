@@ -140,10 +140,17 @@ Audit result, in product language:
   ship (`GET /api/export/esde`, `GET /api/export/pegasus`); per-core BIOS
   readiness is finer-grained than the flat "BIOS missing" others surface; and
   in-browser play remains a differentiator.
-* **Cheapest real gap:** CRT/scanline shaders and run-ahead. The vendored
-  WebRetro RetroArch already supports both through config keys we already
-  author (`extraConfig` in `static/vendor/webretro/assets/base.js` — where the
-  audio fix landed). Wiring, not a subsystem.
+* **Cheapest real gap — corrected 2026-08-06.** I claimed CRT shaders and
+  run-ahead were "wiring, not a subsystem" because RetroArch supports both via
+  config keys. Checking before building showed that was wrong: **no shader
+  files are vendored** under `static/vendor/webretro/`, so `video_shader` would
+  point at nothing, and run-ahead costs an extra core step per frame — on
+  single-threaded WASM, where heavy cores already stutter, it would make things
+  worse. Both are real work, not a config line.
+  What *was* one line: `play-skins.css` already draws a scanline overlay gated
+  on `--gt-play-scanline-opacity`, which defaults to `0` and was **never set by
+  anything** — the effect shipped invisible. Now wired per play room (strong on
+  a living-room CRT, none on handhelds, since an LCD never had scanlines).
 * **Largest visible gap:** an achievements system. Zero references in our
   codebase; needs account linking and a hardcore-mode stance, so a real slice.
 * **Also worth taking:** a disk-level Library Health report (byte-identical

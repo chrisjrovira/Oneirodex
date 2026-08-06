@@ -164,6 +164,53 @@
     return CORE_TO_PLATFORM[core] || '';
   }
 
+
+  // ---- Room ambience (FEAT-D5) ----------------------------------------
+  // The scanline overlay in play-skins.css (#webretro::after) is gated on
+  // --gt-play-scanline-opacity, which defaults to 0. Nothing ever set it, so
+  // the effect shipped invisible. This wires it to the room.
+  //
+  // Mirrors gametheca/utils/play_rooms.py (source of truth) and the member-app
+  // copy in chrome/playRooms.js. Duplicated rather than imported because this
+  // file is vendored, loads standalone in the player frame, and has no bundler.
+  // Regenerate from the Python map rather than hand-editing.
+  var ROOM_PLATFORMS = {
+    arcade_cabinet: 'ARCADE DAPHNE NEOGEO NEOGEO_CD PINBALL',
+    crt_living_room: 'ARCADIA ASTROCADE ATARI_2600 ATARI_5200 ATARI_7800 CHAF COLECO CREATIVISION GX4000 INTV N64 NES O2EM PCE SEGA_32X SEGA_MD SEGA_MS SEGA_SG1000 SNES STUDIO2 SUPERGRAFX VECTREX',
+    desk: 'AMIGA MAC PCDOS PCWIN VICE_X128 VICE_X64SC VICE_XPET VICE_XPLUS4 VICE_XVIC',
+    disc_era: 'JAGUAR NGC PCE_CD PCFX PS2 PS3 PSX SEGA_CD SEGA_DC SEGA_SATURN SWITCH THREEDO WII',
+    handheld: 'ADVISION GB GBA GBC LYNX N3DS NDS NGP NGPC PSP PSVITA SUPERVISION WS'
+  };
+
+  // Scanlines are a CRT artefact: strongest on a living-room tube, present on
+  // an arcade monitor, faint on late disc-era sets, and **absent on handhelds**
+  // because an LCD panel never had them. Getting that last one wrong is what
+  // makes fake-CRT filters look like a gimmick.
+  var SCANLINE_BY_ROOM = {
+    crt_living_room: 0.55,
+    arcade_cabinet: 0.4,
+    desk: 0.28,
+    disc_era: 0.16,
+    handheld: 0
+  };
+
+  var ROOM_BY_PLATFORM = (function () {
+    var out = {};
+    for (var room in ROOM_PLATFORMS) {
+      if (!Object.prototype.hasOwnProperty.call(ROOM_PLATFORMS, room)) continue;
+      var list = ROOM_PLATFORMS[room].split(' ');
+      for (var i = 0; i < list.length; i++) {
+        if (list[i]) out[list[i]] = room;
+      }
+    }
+    return out;
+  })();
+
+  function roomForPlatform(platformId) {
+    var key = String(platformId || '').trim().toUpperCase();
+    return ROOM_BY_PLATFORM[key] || 'crt_living_room';
+  }
+
   function applyPlaySkin(platformId, coreId) {
     var platform = resolvePlatform(platformId, coreId);
     var family = familyForPlatform(platform || 'pc');
@@ -183,6 +230,15 @@
     // Family accent is a fallback only — per-platform CSS owns the room look.
     root.style.setProperty('--gt-play-accent', meta.accent);
     root.style.setProperty('--gt-platform-accent', meta.accent);
+
+    var room = roomForPlatform(platform || 'pc');
+    var scanline = SCANLINE_BY_ROOM[room];
+    root.setAttribute('data-play-room', room);
+    body.setAttribute('data-play-room', room);
+    root.style.setProperty(
+      '--gt-play-scanline-opacity',
+      String(scanline === undefined ? 0 : scanline)
+    );
 
     var aspect = aspectForPlatform(platform || 'pc');
     var aspectCss = aspect[0] + ' / ' + aspect[1];
@@ -207,5 +263,7 @@
     PLATFORM_LABELS: PLATFORM_LABELS,
     CORE_TO_PLATFORM: CORE_TO_PLATFORM,
     ASPECT_RATIOS: ASPECT_RATIOS,
+    roomForPlatform: roomForPlatform,
+    SCANLINE_BY_ROOM: SCANLINE_BY_ROOM,
   };
 })(typeof window !== 'undefined' ? window : this);

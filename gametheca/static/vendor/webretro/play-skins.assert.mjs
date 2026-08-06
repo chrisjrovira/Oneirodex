@@ -59,4 +59,34 @@ assert(css.includes('Super Nintendo'), 'SNES room cue');
 assert(css.includes('PlayStation'), 'PSX room cue');
 assert(css.includes('GAME BOY'), 'GB room cue');
 
+// --- Room ambience / scanline wiring (FEAT-D5) ---
+// The overlay defaults to opacity 0 and used to ship that way forever because
+// nothing set the variable. These pin the wiring so it cannot silently revert.
+assert(css.includes('--gt-play-scanline-opacity'), 'scanline overlay var in CSS');
+assert(src.includes('SCANLINE_BY_ROOM'), 'scanline table present');
+assert(src.includes('--gt-play-scanline-opacity'), 'scanline var is actually set');
+
+assert(typeof skins.roomForPlatform === 'function', 'roomForPlatform exported');
+const roomCases = [
+  ['SNES', 'crt_living_room'],
+  ['SEGA_MD', 'crt_living_room'],
+  ['ARCADE', 'arcade_cabinet'],
+  ['NEOGEO', 'arcade_cabinet'],
+  ['GB', 'handheld'],
+  ['PSP', 'handheld'],
+  ['PSX', 'disc_era'],
+  ['SEGA_DC', 'disc_era'],
+  ['PCWIN', 'desk'],
+  ['VICE_X64SC', 'desk'],
+];
+for (const [platform, room] of roomCases) {
+  assert(skins.roomForPlatform(platform) === room, `${platform} room → ${room}`);
+}
+assert(skins.roomForPlatform('NOT_A_PLATFORM') === 'crt_living_room', 'unknown platform falls back');
+
+// Handhelds are LCD — scanlines there are the tell of a gimmick filter.
+assert(skins.SCANLINE_BY_ROOM.handheld === 0, 'handheld has no scanlines');
+assert(skins.SCANLINE_BY_ROOM.crt_living_room > skins.SCANLINE_BY_ROOM.disc_era,
+  'CRT living room is stronger than late disc-era sets');
+
 console.log('play-skins.assert: OK (' + cases.length + ' platforms + motion/aspect/html)');
