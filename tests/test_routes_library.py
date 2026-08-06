@@ -106,6 +106,13 @@ def test_user_preference(db_session, test_user):
 
 
 class TestLibraryBlueprint:
+    # NOTE (2026-08-06): `/library` serves the member SPA shell via
+    # render_member_spa(); it no longer calls get_games(). Filter plumbing moved
+    # to GET /api/browse and is covered by tests/test_routes_apis_browse.py and
+    # the test_browse_*.py files. These tests now assert what the route really
+    # does — auth, preference handling and redirect behaviour — instead of
+    # asserting call args on a function the route never reaches.
+
     """Test cases for the library blueprint."""
 
     @patch('gametheca.routes_library.get_global_settings')
@@ -178,22 +185,19 @@ class TestLibraryBlueprint:
         assert test_user.preferences is not None
 
     def test_library_route_uses_existing_preferences(self, client, test_user, test_user_preference, db_session):
-        """Test that library route uses existing user preferences."""
+        """Existing preferences are left intact when the shell renders."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
-        
-        with patch('gametheca.routes_library.get_games') as mock_get_games:
-            mock_get_games.return_value = ([], 0, 0, 1)
-            with patch('gametheca.routes_library.render_template') as mock_render:
-                mock_render.return_value = 'rendered template'
-                response = client.get('/library')
-        
+
+        response = client.get('/library')
+
         assert response.status_code == 200
-        # Verify get_games was called with user preferences
-        args, kwargs = mock_get_games.call_args
-        assert kwargs['sort_by'] == 'name'
-        assert kwargs['sort_order'] == 'desc'
+        db_session.refresh(test_user)
+        # The route must not clobber preferences it did not create.
+        assert test_user.preferences is not None
+        assert test_user.preferences.default_sort == test_user_preference.default_sort
+        assert test_user.preferences.default_sort_order == test_user_preference.default_sort_order
 
     def test_library_route_with_library_uuid_filter(self, client, test_user, test_library, db_session):
         """Test library route with library_uuid filter."""
@@ -201,15 +205,10 @@ class TestLibraryBlueprint:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_library.get_games') as mock_get_games:
-            mock_get_games.return_value = ([], 0, 0, 1)
-            with patch('gametheca.routes_library.render_template') as mock_render:
-                mock_render.return_value = 'rendered template'
-                response = client.get(f'/library?library_uuid={test_library.uuid}')
-        
+        response = client.get(f'/library?library_uuid={test_library.uuid}')
+
+        # A known library renders the shell; the SPA reads the filter from the URL.
         assert response.status_code == 200
-        args, kwargs = mock_get_games.call_args
-        assert kwargs['library_uuid'] == test_library.uuid
 
     def test_library_route_with_library_name_filter(self, client, test_user, test_library, db_session):
         """Test library route with library_name filter."""
@@ -217,15 +216,11 @@ class TestLibraryBlueprint:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_library.get_games') as mock_get_games:
-            mock_get_games.return_value = ([], 0, 0, 1)
-            with patch('gametheca.routes_library.render_template') as mock_render:
-                mock_render.return_value = 'rendered template'
-                response = client.get(f'/library?library_name={test_library.name}')
-        
+        response = client.get(f'/library?library_name={test_library.name}')
+
+        # A resolvable name renders rather than redirecting — the invalid-name
+        # case below is what must redirect.
         assert response.status_code == 200
-        args, kwargs = mock_get_games.call_args
-        assert kwargs['library_uuid'] == test_library.uuid
 
     def test_library_route_with_invalid_library_name(self, client, test_user, db_session):
         """Test library route with invalid library_name."""
@@ -253,23 +248,11 @@ class TestLibraryBlueprint:
             'per_page': '10'
         }
         
-        with patch('gametheca.routes_library.get_games') as mock_get_games:
-            mock_get_games.return_value = ([], 0, 0, 1)
-            with patch('gametheca.routes_library.render_template') as mock_render:
-                mock_render.return_value = 'rendered template'
-                
-                query_string = '&'.join([f'{k}={v}' for k, v in query_params.items()])
-                response = client.get(f'/library?{query_string}')
-        
+        query_string = '&'.join([f'{k}={v}' for k, v in query_params.items()])
+        response = client.get(f'/library?{query_string}')
+
+        # Extra query params the shell does not itself consume must not 500 it.
         assert response.status_code == 200
-        args, kwargs = mock_get_games.call_args
-        assert kwargs['genre'] == 'Action'
-        assert kwargs['rating'] == 80
-        assert kwargs['game_mode'] == 'Single player'
-        assert kwargs['player_perspective'] == 'Third person'
-        assert kwargs['theme'] == 'Science fiction'
-        assert kwargs['sort_by'] == 'rating'
-        assert kwargs['sort_order'] == 'desc'
 
 
 class TestGetGamesFunction:
@@ -278,7 +261,7 @@ class TestGetGamesFunction:
     def test_get_games_basic(self, app, db_session, test_game, test_library):
         """Test basic get_games functionality."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -293,7 +276,7 @@ class TestGetGamesFunction:
     def test_get_games_with_library_filter(self, app, db_session, test_game, test_library):
         """Test get_games with library filter."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -305,7 +288,7 @@ class TestGetGamesFunction:
     def test_get_games_with_library_name_filter(self, app, db_session, test_game, test_library):
         """Test get_games with library_name filter."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -317,7 +300,7 @@ class TestGetGamesFunction:
     def test_get_games_with_invalid_library_name(self, app, db_session):
         """Test get_games with invalid library_name returns empty result."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -336,7 +319,7 @@ class TestGetGamesFunction:
         db_session.commit()
         
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -348,7 +331,7 @@ class TestGetGamesFunction:
     def test_get_games_with_rating_filter(self, app, db_session, test_game):
         """Test get_games with rating filter."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -360,7 +343,7 @@ class TestGetGamesFunction:
     def test_get_games_sorting_by_name(self, app, db_session, test_game):
         """Test get_games sorting by name."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -372,7 +355,7 @@ class TestGetGamesFunction:
     def test_get_games_sorting_by_rating(self, app, db_session, test_game):
         """Test get_games sorting by rating."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -384,7 +367,7 @@ class TestGetGamesFunction:
     def test_get_games_sorting_by_date(self, app, db_session, test_game):
         """Test get_games sorting by first_release_date."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -396,7 +379,7 @@ class TestGetGamesFunction:
     def test_get_games_sorting_by_size(self, app, db_session, test_game):
         """Test get_games sorting by size."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -408,7 +391,7 @@ class TestGetGamesFunction:
     def test_get_games_sorting_by_date_identified(self, app, db_session, test_game):
         """Test get_games sorting by date_identified."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -420,7 +403,7 @@ class TestGetGamesFunction:
     def test_get_games_pagination(self, app, db_session, test_game):
         """Test get_games pagination."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -442,7 +425,7 @@ class TestGetGamesFunction:
         db_session.commit()
         
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -459,7 +442,7 @@ class TestGetGamesFunction:
         mock_format_size.return_value = "1.0 MB"
         
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
@@ -472,7 +455,7 @@ class TestGetGamesFunction:
     def test_get_games_unauthenticated_user(self, app, db_session, test_game):
         """Test get_games with unauthenticated user."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = False
                 mock_current_user.id = None
                 
@@ -488,7 +471,7 @@ class TestGetGamesFunction:
         db_session.commit()
         
         with app.app_context():
-            with patch('gametheca.routes_library.current_user') as mock_current_user:
+            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 

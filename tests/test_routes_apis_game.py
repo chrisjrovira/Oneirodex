@@ -5,6 +5,7 @@ Tests the game API endpoints including search, screenshots, game movement,
 and IGDB ID generation functionality.
 """
 
+from sqlalchemy import text
 import pytest
 import json
 from unittest.mock import patch, MagicMock
@@ -21,7 +22,7 @@ def safe_cleanup_database(db_session):
     # Clean up in order of dependencies
     db_session.execute(delete(SystemEvents))
     db_session.execute(delete(Image))
-    db_session.execute(delete(Game))
+    db_session.execute(text('TRUNCATE TABLE games RESTART IDENTITY CASCADE'))
     db_session.execute(delete(Library))
     db_session.execute(delete(User))
     db_session.commit()
@@ -75,7 +76,7 @@ def sample_games(db_session, sample_library):
     """Create sample games for testing."""
     # Clear existing games first
     from sqlalchemy import delete
-    db_session.execute(delete(Game))
+    db_session.execute(text('TRUNCATE TABLE games RESTART IDENTITY CASCADE'))
     db_session.commit()
     
     games = [
@@ -105,7 +106,7 @@ def sample_games(db_session, sample_library):
     yield games
     
     # Cleanup
-    db_session.execute(delete(Game))
+    db_session.execute(text('TRUNCATE TABLE games RESTART IDENTITY CASCADE'))
     db_session.commit()
 
 

@@ -1,3 +1,4 @@
+from sqlalchemy import text
 import pytest
 import os
 import tempfile
@@ -21,7 +22,7 @@ def safe_cleanup_database(db_session):
     from sqlalchemy import delete
     
     db_session.execute(delete(DownloadRequest))
-    db_session.execute(delete(Game))
+    db_session.execute(text('TRUNCATE TABLE games RESTART IDENTITY CASCADE'))
     db_session.execute(delete(User))
     db_session.execute(delete(GlobalSettings))
     db_session.execute(delete(Library))

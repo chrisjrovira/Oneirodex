@@ -77,7 +77,7 @@ class TestHandleDeleteUnmatchedOnly:
         
         with app.app_context():
             with app.test_request_context():
-                with patch('gametheca.utils.unmatched.current_user') as mock_current_user, \
+                with patch('gametheca.utils.unmatched.current_user', new_callable=MagicMock) as mock_current_user, \
                      patch('gametheca.utils.unmatched.request') as mock_request, \
                      patch('gametheca.utils.unmatched.session') as mock_session:
                     
@@ -131,7 +131,7 @@ class TestHandleDeleteUnmatchedOnly:
         
         with app.app_context():
             with app.test_request_context():
-                with patch('gametheca.utils.unmatched.current_user') as mock_current_user, \
+                with patch('gametheca.utils.unmatched.current_user', new_callable=MagicMock) as mock_current_user, \
                      patch('gametheca.utils.unmatched.request') as mock_request, \
                      patch('gametheca.utils.unmatched.session') as mock_session:
                     
@@ -169,7 +169,7 @@ class TestHandleDeleteUnmatchedOnly:
         
         with app.app_context():
             with app.test_request_context():
-                with patch('gametheca.utils.unmatched.current_user') as mock_current_user, \
+                with patch('gametheca.utils.unmatched.current_user', new_callable=MagicMock) as mock_current_user, \
                      patch('gametheca.utils.unmatched.request') as mock_request, \
                      patch('gametheca.utils.unmatched.session') as mock_session:
                     
@@ -208,7 +208,7 @@ class TestHandleDeleteUnmatchedOnly:
         
         with app.app_context():
             with app.test_request_context():
-                with patch('gametheca.utils.unmatched.current_user') as mock_current_user, \
+                with patch('gametheca.utils.unmatched.current_user', new_callable=MagicMock) as mock_current_user, \
                      patch('gametheca.utils.unmatched.request') as mock_request, \
                      patch('gametheca.utils.unmatched.session') as mock_session:
                     
@@ -249,7 +249,7 @@ class TestHandleDeleteUnmatched:
         with app.app_context():
             with app.test_request_context():
                 # Mock Flask-Login current_user and session within context
-                with patch('gametheca.utils.unmatched.current_user') as mock_current_user, \
+                with patch('gametheca.utils.unmatched.current_user', new_callable=MagicMock) as mock_current_user, \
                      patch('gametheca.utils.unmatched.request') as mock_request, \
                      patch('gametheca.utils.unmatched.session') as mock_session:
                     
@@ -292,7 +292,7 @@ class TestHandleDeleteUnmatched:
         with app.app_context():
             with app.test_request_context():
                 # Mock Flask-Login current_user and session within context
-                with patch('gametheca.utils.unmatched.current_user') as mock_current_user, \
+                with patch('gametheca.utils.unmatched.current_user', new_callable=MagicMock) as mock_current_user, \
                      patch('gametheca.utils.unmatched.request') as mock_request, \
                      patch('gametheca.utils.unmatched.session') as mock_session:
                     
@@ -336,7 +336,7 @@ class TestHandleDeleteUnmatched:
         with app.app_context():
             with app.test_request_context():
                 # Mock Flask-Login current_user and session within context
-                with patch('gametheca.utils.unmatched.current_user') as mock_current_user, \
+                with patch('gametheca.utils.unmatched.current_user', new_callable=MagicMock) as mock_current_user, \
                      patch('gametheca.utils.unmatched.request') as mock_request, \
                      patch('gametheca.utils.unmatched.session') as mock_session:
                     
@@ -377,7 +377,7 @@ class TestHandleDeleteUnmatched:
         with app.app_context():
             with app.test_request_context():
                 # Mock Flask-Login current_user and session within context
-                with patch('gametheca.utils.unmatched.current_user') as mock_current_user, \
+                with patch('gametheca.utils.unmatched.current_user', new_callable=MagicMock) as mock_current_user, \
                      patch('gametheca.utils.unmatched.request') as mock_request, \
                      patch('gametheca.utils.unmatched.session') as mock_session:
                     
@@ -428,7 +428,7 @@ class TestHandleDeleteUnmatched:
         with app.app_context():
             with app.test_request_context():
                 # Mock Flask-Login current_user and session within context
-                with patch('gametheca.utils.unmatched.current_user') as mock_current_user, \
+                with patch('gametheca.utils.unmatched.current_user', new_callable=MagicMock) as mock_current_user, \
                      patch('gametheca.utils.unmatched.request') as mock_request, \
                      patch('gametheca.utils.unmatched.session') as mock_session:
                     
@@ -465,7 +465,7 @@ class TestHandleDeleteUnmatched:
         with app.app_context():
             with app.test_request_context():
                 # Mock Flask-Login current_user and session within context
-                with patch('gametheca.utils.unmatched.current_user') as mock_current_user, \
+                with patch('gametheca.utils.unmatched.current_user', new_callable=MagicMock) as mock_current_user, \
                      patch('gametheca.utils.unmatched.request') as mock_request, \
                      patch('gametheca.utils.unmatched.session') as mock_session:
                     

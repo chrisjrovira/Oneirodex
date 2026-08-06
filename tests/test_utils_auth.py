@@ -234,7 +234,7 @@ class TestAdminRequired:
             return 'admin content'
         
         with app.app_context():
-            with patch('gametheca.utils.auth.current_user') as mock_user:
+            with patch('gametheca.utils.auth.current_user', new_callable=MagicMock) as mock_user:
                 mock_user.is_authenticated = False
                 
                 with patch('gametheca.utils.auth.flash') as mock_flash:
@@ -261,7 +261,7 @@ class TestAdminRequired:
             return 'admin content'
         
         with app.app_context():
-            with patch('gametheca.utils.auth.current_user') as mock_user:
+            with patch('gametheca.utils.auth.current_user', new_callable=MagicMock) as mock_user:
                 mock_user.is_authenticated = True
                 mock_user.role = 'user'  # Not admin
                 
@@ -289,7 +289,7 @@ class TestAdminRequired:
             return 'admin content'
         
         with app.app_context():
-            with patch('gametheca.utils.auth.current_user') as mock_user:
+            with patch('gametheca.utils.auth.current_user', new_callable=MagicMock) as mock_user:
                 mock_user.is_authenticated = True
                 mock_user.role = 'admin'  # Admin role
                 
@@ -318,7 +318,7 @@ class TestAdminRequired:
             return f'admin content: {arg1}, {arg2}, {kwarg1}'
         
         with app.app_context():
-            with patch('gametheca.utils.auth.current_user') as mock_user:
+            with patch('gametheca.utils.auth.current_user', new_callable=MagicMock) as mock_user:
                 mock_user.is_authenticated = True
                 mock_user.role = 'admin'
                 

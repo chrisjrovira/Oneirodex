@@ -8,7 +8,7 @@ Tests the admin-only games search endpoint used by the Identify page's
 import pytest
 from uuid import uuid4
 
-from sqlalchemy import delete
+from sqlalchemy import delete, text
 
 from gametheca.models import User, Game, Library, LibraryPlatform
 
@@ -59,7 +59,7 @@ def sample_library(db_session):
 
 @pytest.fixture
 def sample_games(db_session, sample_library):
-    db_session.execute(delete(Game))
+    db_session.execute(text('TRUNCATE TABLE games RESTART IDENTITY CASCADE'))
     db_session.commit()
 
     games = [
@@ -88,7 +88,7 @@ def sample_games(db_session, sample_library):
 
     yield games
 
-    db_session.execute(delete(Game))
+    db_session.execute(text('TRUNCATE TABLE games RESTART IDENTITY CASCADE'))
     db_session.commit()
 
 
@@ -155,7 +155,7 @@ class TestAdminGamesSearchAPI:
         assert response.get_json() == []
 
     def test_search_limits_results(self, client, admin_user, sample_library, db_session):
-        db_session.execute(delete(Game))
+        db_session.execute(text('TRUNCATE TABLE games RESTART IDENTITY CASCADE'))
         db_session.commit()
         for i in range(25):
             db_session.add(Game(
@@ -172,5 +172,5 @@ class TestAdminGamesSearchAPI:
         data = response.get_json()
         assert len(data) == 20
 
-        db_session.execute(delete(Game))
+        db_session.execute(text('TRUNCATE TABLE games RESTART IDENTITY CASCADE'))
         db_session.commit()

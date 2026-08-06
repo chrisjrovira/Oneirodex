@@ -1,3 +1,4 @@
+from sqlalchemy import text
 import pytest
 import os
 import tempfile
@@ -28,7 +29,7 @@ def safe_cleanup_database(db_session):
         # Clean up in order to respect foreign key constraints
         # First delete images, then games, then libraries
         db_session.execute(delete(Image))
-        db_session.execute(delete(Game))
+        db_session.execute(text('TRUNCATE TABLE games RESTART IDENTITY CASCADE'))
         db_session.execute(delete(Library))
         db_session.commit()
     except Exception:

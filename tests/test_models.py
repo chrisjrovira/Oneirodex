@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, func
+from sqlalchemy import select, func, text
 
 from gametheca import create_app, db
 from gametheca.models import (
@@ -84,7 +84,7 @@ def safe_cleanup_database(db_session):
             db_session.execute(delete(GameExtra))
             db_session.execute(delete(Image))
             db_session.execute(delete(GameURL))
-            db_session.execute(delete(Game))
+            db_session.execute(text('TRUNCATE TABLE games RESTART IDENTITY CASCADE'))
             db_session.execute(delete(User))
             db_session.execute(delete(Library))
             db_session.execute(delete(Genre))

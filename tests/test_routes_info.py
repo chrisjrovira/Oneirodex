@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -85,7 +85,7 @@ class TestAdminServerStatusRoute:
         assert response.status_code == 302
         assert '/login' in response.location
 
-    @patch('gametheca.routes_info.current_user')
+    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
     def test_admin_server_status_requires_admin_role(self, mock_current_user, client, regular_user):
         """Test that admin server status route requires admin role."""
         mock_current_user.is_authenticated = True
@@ -114,7 +114,7 @@ class TestAdminServerStatusRoute:
     @patch('gametheca.routes_info.get_formatted_system_uptime')
     @patch('gametheca.routes_info.get_formatted_app_uptime')
     @patch('gametheca.routes_info.format_bytes')
-    @patch('gametheca.routes_info.current_user')
+    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
     def test_admin_server_status_success(self, mock_current_user, mock_format_bytes,
                                        mock_app_uptime, mock_system_uptime, mock_database_info,
                                        mock_log_info, mock_active_users, mock_config_values, mock_system_info,
@@ -207,7 +207,7 @@ class TestAdminServerStatusRoute:
         assert mock_format_bytes.call_count >= 8  # Should be called for total, used, available, free for each usage dict
 
     @patch('gametheca.routes_info.check_server_settings')
-    @patch('gametheca.routes_info.current_user')
+    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
     def test_admin_server_status_invalid_settings(self, mock_current_user,
                                                  mock_check_server_settings,
                                                  client, admin_user):
@@ -226,7 +226,7 @@ class TestAdminServerStatusRoute:
 
     @patch('gametheca.routes_info.check_server_settings')
     @patch('gametheca.routes_info.get_cpu_usage')
-    @patch('gametheca.routes_info.current_user')
+    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
     def test_admin_server_status_exception_handling(self, mock_current_user,
                                                    mock_cpu_usage,
                                                    mock_check_server_settings,
@@ -261,7 +261,7 @@ class TestAdminServerStatusRoute:
     @patch('gametheca.routes_info.get_formatted_system_uptime')
     @patch('gametheca.routes_info.get_formatted_app_uptime')
     @patch('gametheca.routes_info.format_bytes')
-    @patch('gametheca.routes_info.current_user')
+    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
     def test_admin_server_status_with_none_usage_values(self, mock_current_user, mock_format_bytes,
                                                       mock_app_uptime, mock_system_uptime, mock_database_info,
                                                       mock_log_info, mock_active_users, mock_config_values, mock_system_info,
@@ -365,7 +365,7 @@ class TestErrorHandling:
     """Test error handling scenarios."""
 
     @patch('gametheca.routes_info.check_server_settings')
-    @patch('gametheca.routes_info.current_user')
+    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
     def test_server_settings_check_failure(self, mock_current_user,
                                           mock_check_server_settings,
                                           client, admin_user):
@@ -383,7 +383,7 @@ class TestErrorHandling:
 
     @patch('gametheca.routes_info.check_server_settings')
     @patch('gametheca.routes_info.get_system_info')
-    @patch('gametheca.routes_info.current_user')
+    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
     def test_system_info_exception(self, mock_current_user,
                                  mock_get_system_info,
                                  mock_check_server_settings,

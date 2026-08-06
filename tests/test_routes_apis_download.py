@@ -5,6 +5,7 @@ Tests the download API endpoints including authentication, authorization,
 deletion functionality, security, and error handling.
 """
 
+from sqlalchemy import text
 import pytest
 from unittest.mock import patch
 from uuid import uuid4
@@ -20,7 +21,7 @@ def safe_cleanup_database(db_session):
     # Clean up in order of dependencies
     db_session.execute(delete(DownloadRequest))
     db_session.execute(delete(SystemEvents))
-    db_session.execute(delete(Game))
+    db_session.execute(text('TRUNCATE TABLE games RESTART IDENTITY CASCADE'))
     db_session.execute(delete(User))
     db_session.execute(delete(Library))
     db_session.commit()
