@@ -81,18 +81,31 @@ It matters most for exactly this project's target deployment (Unraid + Docker).
 applied to `content_path` before any filesystem call, plus a "test mapping"
 button that reports whether the rewritten path exists.
 
-### 2.4 Test suite cannot gate CI — **unfixed, known**
+### 2.4 Test suite: **126 failed / 2,965 passed / 17 errors** (3,091 total, 42 min)
 
-The full run confirms the shared-state isolation defect: failures accumulate
-steadily through the run while the same tests pass in isolation (verified
-repeatedly this session — e.g. `test_cover_art_studio`'s two failures reproduce
-identically with all of today's changes stashed).
+**Correction.** I said repeatedly through this session that the failures were
+"one shared-state isolation problem, not product defects." That was wrong, and
+the full run plus targeted re-runs disprove it. There are at least **three**
+distinct causes, and the largest one is not isolation at all.
 
-This remains **one fixture problem, not N product bugs**, but until it is fixed
-the suite cannot be trusted as a gate — which is why every fix this session had
-to be verified with targeted runs instead.
+| Cause | Evidence | Test-only? |
+|---|---|---|
+| **Bulk `delete(Game)` bypasses ORM association cleanup** | 56 `ForeignKeyViolation` on `user_favorites_game_uuid_fkey`. Fixtures using `db_session.execute(delete(Game))` issue a Core-level DELETE, so `user_favorites` / `user_game_status` rows survive and the FK blocks. Fixtures using `TRUNCATE … CASCADE` are fine. | **Test-only** — `Game.favorited_by` / `Game.status_users` relationships mean ORM deletes (`remove_from_lib`) *do* clear the association rows |
+| **`SERVER_NAME` never configured** | `RuntimeError: Unable to build URLs outside an active request without 'SERVER_NAME'`. `config.py` never sets it; only `test_theme_asset.py` sets it locally. | **Test-only today.** In-request `url_for(_external=True)` derives the host from the request. Latent risk: any future background job that builds an external URL will raise — the email digest currently builds none. |
+| **App-context leaks** | `Working outside of application context` | Test-only |
 
----
+The decisive check: `tests/test_routes_library.py` fails **20 of 27 in complete
+isolation**, with the whole suite excluded. Isolation is therefore *not* the
+explanation for that file — it is the `SERVER_NAME` gap. My earlier claim held
+only for the handful of files I happened to sample.
+
+None of the three is a product defect, so the ~96% pass rate is not hiding
+broken features. But the suite still cannot gate CI, and the reason is three
+harness problems rather than one.
+
+**Fix order:** set `SERVER_NAME` in the test config (largest single share),
+then replace `delete(Game)` with `TRUNCATE … RESTART IDENTITY CASCADE` in the
+fixtures that use it, then chase the remaining context leaks.
 
 ## 3. Complexity hotspots
 

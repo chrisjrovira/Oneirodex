@@ -35,13 +35,15 @@ RAWG both miss stays bare even though we can already query five more sources.
 `missing_core_fields()` is true, with a per-source timeout and a cap. Sources
 needing a key skip themselves when unset.
 
-### A2. Test suite has one shared-state isolation defect
+### A2. Test suite has three harness defects (not one)
 
-Documented but never fixed. Tests pass individually and fail in bulk (e.g.
-`test_cover_art_studio` throws "Working outside of application context" only
-when run with the wider suite). It is **one** fixture problem, not ~47 bugs —
-proven by running against a fresh DB. Needs an autouse truncation fixture or
-per-test rollback in `conftest.py`. Until then the suite cannot gate CI honestly.
+**Superseded 2026-08-06** — see
+[code-review-2026-08-06.md](code-review-2026-08-06.md) §2.4. A full run
+(126 failed / 2,965 passed / 17 errors) plus isolated re-runs showed the
+"one shared-state isolation problem" reading was wrong: the largest share is
+an unset `SERVER_NAME`, then fixtures whose bulk `delete(Game)` bypasses ORM
+association cleanup, then genuine context leaks. None is a product defect,
+but the suite still cannot gate CI.
 
 ### A3. Local capture instance 500s mid-run
 
