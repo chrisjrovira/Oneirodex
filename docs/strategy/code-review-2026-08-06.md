@@ -74,7 +74,7 @@ and the pipeline **silently finds nothing**. There is no error; it just never
 imports.
 
 This is precisely what *arr apps call **remote path mapping**, and it is a
-listed ROMarr feature that was never given an adopt/decline decision (see §4).
+standard *arr capability that had never been given an adopt/decline decision (see §4).
 It matters most for exactly this project's target deployment (Unraid + Docker).
 
 **Fix:** a small ordered list of `(client_prefix → local_prefix)` rewrites
@@ -111,66 +111,45 @@ migration can half-apply and report success.
 
 ---
 
-## 4. Competitive coverage — 23 sources
+## 4. Peer review coverage
 
-Two batches were supplied, plus a third today. Every one now has a decision.
+Held in the private vault per **SCRUB-2** — peer catalogs and steal/ignore
+matrices do not ship in public git. See `docs/_private/` and
+[competitive.md](competitive.md).
 
-### 4a. The 14 library/tracker projects (scanned 2026-08-04)
+Audit result, in product language:
 
-12 had explicit adopt/decline calls. **Two did not**, found by auditing the doc
-against its own sections:
-
-* **ROMarr** — *no decision recorded at all*, despite being one of the three
-  repos supplied first. Its features: release scoring with reasons shown,
-  per-platform routing to different backends, **remote path mapping**, ROM Hub
-  plugin sources. Remote path mapping is §2.3 above — a real, live defect.
-* **vglist** — its Wikidata idea is covered by ranked gap #7 but the project is
-  never named, so it read as unreviewed.
-
-### 4b. The 9 emulation platforms (supplied 2026-08-06)
-
-RetroArch/Lakka · RetroPie · RetroDECK · Batocera · BizHawk · RomM · Recalbox ·
-RetroBat · EmuDeck. (BIOS packs explicitly out of scope per the human.)
-
-**Already covered — do not "adopt":**
-
-* **Frontend interop** — `GET /api/export/esde` and `GET /api/export/pegasus`
-  already emit ES-DE gamelists and Pegasus metadata. RomM's headline interop
-  feature is done.
-* **Per-core BIOS validation** with blocking-vs-optional honesty — better than
-  the flat "bios missing" these frontends show.
-* **In-browser play** — none of the nine plays in a browser; they are native
-  frontends or OS images.
-
-**Genuine gaps, ranked by cost-to-value:**
-
-1. **Shaders / CRT filters, and run-ahead** — the vendored WebRetro RetroArch
-   already supports both via config keys, and we already write that config
-   block (`extraConfig` in `static/vendor/webretro/assets/base.js` — the same
-   place the audio fix landed). Exposing a CRT/scanline preset and a run-ahead
-   frame count is **a wiring job, not a new subsystem**, and it pairs directly
-   with the play-rooms and theming work already shipped. *Highest value here.*
-2. **RetroAchievements** — zero references in the codebase. Every one of the
-   nine supports it; it is the single most visible feature we lack against
-   them. Needs an account link + hardcore-mode stance, so it is a real slice.
-3. **Netplay** — RetroArch supports it; we have voice but no shared session.
-   Larger, and NAT traversal is a genuine ops burden. Consider after 1.
-4. **Steam ROM Manager–style export** (EmuDeck) — add library entries to Steam.
-   Small, but only useful to Deck/desktop users.
-
-**Declined:** BizHawk's TAS surface (frame advance, Lua scripting, RAM
-watch/search) — accuracy-research tooling, not a household library feature.
-
----
+* Every product supplied across all batches now carries an explicit
+  adopt / decline / already-covered decision. Two had been reviewed but never
+  decided; both are closed, and one of them turned out to describe a **live
+  defect in our code** rather than a nice-to-have — §2.3 above.
+* **Already covered, do not rebuild:** ES-DE and Pegasus gamelist export both
+  ship (`GET /api/export/esde`, `GET /api/export/pegasus`); per-core BIOS
+  readiness is finer-grained than the flat "BIOS missing" others surface; and
+  in-browser play remains a differentiator.
+* **Cheapest real gap:** CRT/scanline shaders and run-ahead. The vendored
+  WebRetro RetroArch already supports both through config keys we already
+  author (`extraConfig` in `static/vendor/webretro/assets/base.js` — where the
+  audio fix landed). Wiring, not a subsystem.
+* **Largest visible gap:** an achievements system. Zero references in our
+  codebase; needs account linking and a hardcore-mode stance, so a real slice.
+* **Also worth taking:** a disk-level Library Health report (byte-identical
+  ROMs, loose files, missing paths) — `utils/rom_hash.py` already computes
+  crc32/md5/sha1, so this is a query over data we produce; a fifth completion
+  state ("Won't Play") that doubles as the negative recommender signal; and
+  mod profiles on top of existing mod tracking.
+* **Declined:** anything that patches game binaries (same rule that made PC
+  cheats notes-only), TAS/debugging surfaces, shipping OS images, becoming a
+  game-server control panel, and media-only tooling.
 
 ## 5. Recommended order
 
 1. **§2.1 toggles** — an hour, and it removes two lies from the admin UI
 2. **§2.3 remote path mapping** — the only *silent* failure in this report, and
    it breaks a headline feature on the target deployment
-3. **§4b.1 shaders + run-ahead** — cheapest visible win available right now
+3. **§4 shaders + run-ahead** — cheapest visible win available right now
 4. **§2.4 test isolation** — unblocks trusting the suite
-5. **§4b.2 RetroAchievements** — biggest competitive gap, but a real slice
+5. **§4 achievements** — biggest visible gap, but a real slice
 
 Unchanged from 2026-08-05 and still open: saved AND/OR filters (feeds Discover
 shelves for free), session tracking + heatmap, persistent "not interested".

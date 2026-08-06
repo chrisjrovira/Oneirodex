@@ -2,9 +2,9 @@
 
 Written after the W23/W25/W26 waves shipped and all docs/media were re-captured.
 Three lists: **broken or half-built things we own**, **subpar UX**, and
-**competitor features we do not have**. Ranked within each by cost-to-value.
+**peer-derived gaps**. Ranked within each by cost-to-value.
 
-Sources: [competitive-scan-2026-08-04.md](competitive-scan-2026-08-04.md) ·
+Sources: private competitive vault (`docs/_private/`, see [competitive.md](competitive.md)) ·
 [review-2026-08-03-findings.md](review-2026-08-03-findings.md) · direct code read.
 
 ---
@@ -75,57 +75,27 @@ but it means the play surface visibly ignores the user's theme.
 
 ---
 
-## C. Competitor features we do not have
+## C. Peer-derived gaps
 
-Ranked by fit against what already exists, not by how often they appear.
+Held in the private vault per **SCRUB-2** — competitive intel does not ship in
+public git. See `docs/_private/gap-review-2026-08-05-FULL.md` and
+[competitive.md](competitive.md).
 
-### C1. Nested AND/OR filter builder + saved filters — *best fit, do first*
-*(PlayDate, ZGameLib, gamelog)*
-Our filters are flat chips. Saved filters would immediately feed **Discover
-shelves**, which already accept a filter config — so one feature lands twice.
-This is the single highest-leverage item on the list.
+In product language, the ranked opportunities are:
 
-### C2. Session tracking + activity heatmap
-*(DrNefarius, ZGameLib, burakbehlull)*
-We record playtime totals but not **sessions**, so we cannot show a
-GitHub-style habit heatmap, per-session notes, or idle-pause. The companion
-already detects process start/stop — most of the hard part exists.
-
-### C3. Persistent "not interested"
-*(Floppy)*
-`curated_for_you` has no negative signal, so a bad recommendation returns
-forever. One table, one button, immediate quality win on a feature we just built.
-
-### C4. Taste picker / randomiser
-*(PlayDate "Pick 6", ZGameLib spin wheel)*
-Cheap on top of `build_curated_for_you`, which already derives affinity from
-favourites and genres. Good "I don't know what to play" surface.
-
-### C5. Apprise notifications
-*(Questarr, Floppy)*
-One dependency, 100+ providers, replaces all bespoke notifier work. Fits the
-existing BYO-sidecar pattern exactly.
-
-### C6. Wikidata + RAWG as fallback metadata sources
-*(5 projects)*
-Wikidata needs **no API key** and is openly licensed — ideal default for
-self-hosted. Directly reinforces **A1**.
-
-### C7. Copy-level physical detail
-*(RetroVault)*
-Condition, CIB, cost, valuation. A real gap for collectors and orthogonal to
-everything we have. Larger build; only worth it if collectors are a target user.
-
-### C8. Public list pages with RSS/JSON
-*(Floppy)*
-Share a curated list outside the household. Needs a careful auth story — this is
-the one item here that widens the attack surface.
-
-### C9. Deal / subscription detection
-*(Inderjit01)*
-IsThereAnyDeal / PlatPrices. Pairs naturally with the storefront work.
-
----
+1. **Nested AND/OR filter builder with saved filters** — our filters are flat
+   chips. Saved filters would also feed Discover shelves, which already accept a
+   filter config, so one build lands two features.
+2. **Session tracking + activity heatmap** — we record playtime totals but not
+   sessions, so no habit view and no per-session notes.
+3. **Persistent "not interested"** — the storefront has no negative signal, so a
+   bad recommendation returns forever.
+4. **Taste picker / randomiser** — cheap on top of `build_curated_for_you`.
+5. **Copy-level physical detail** — condition, CIB, cost for collectors.
+6. **Wikidata as a metadata source** — no API key, openly licensed; feeds the
+   multi-source cascade.
+7. **Public list pages with RSS/JSON** — needs a careful auth story.
+8. **Deal / subscription detection** — pairs with the storefront work.
 
 ## Suggested order
 
@@ -135,5 +105,5 @@ IsThereAnyDeal / PlatPrices. Pairs naturally with the storefront work.
 4. **C3 not-interested** + **C4 taste picker** — small, and they finish the storefront
 5. **C2 session tracking** — bigger, but the companion already has the signal
 
-Explicit non-goals unchanged: no media-tracker verticals (Floppy), no DRM store
+Explicit non-goals unchanged: no media-tracker verticals, no DRM store
 download queues, no scraping of third-party ROM databases.
