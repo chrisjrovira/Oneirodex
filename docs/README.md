@@ -31,6 +31,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Product / recent waves | [strategy/social-spaces-and-storefront.md](strategy/social-spaces-and-storefront.md) (W23/W25 design) · [strategy/roadmap-w26-ux-overhaul.md](strategy/roadmap-w26-ux-overhaul.md) (UX backlog + FEAT-D) · [strategy/review-2026-08-03-findings.md](strategy/review-2026-08-03-findings.md) · [strategy/competitive-scan-2026-08-04.md](strategy/competitive-scan-2026-08-04.md) |
 | Gap review (what's missing / half-done) | [strategy/gap-review-2026-08-05.md](strategy/gap-review-2026-08-05.md) |
 | Code review (defects + 23-source competitive audit) | [strategy/code-review-2026-08-06.md](strategy/code-review-2026-08-06.md) |
+| Competitive scan batch 4 (46 sources) | [strategy/competitive-scan-2026-08-06-batch4.md](strategy/competitive-scan-2026-08-06-batch4.md) — mods, file hygiene, game-server panels |
 | Docs inventory | [strategy/docs-map.md](strategy/docs-map.md) |
 | API | [openapi/openapi.json](openapi/openapi.json) |
 | How-to videos | [media/video/howto/](media/video/howto/README.md) — one worked example per section (members + admins) |
