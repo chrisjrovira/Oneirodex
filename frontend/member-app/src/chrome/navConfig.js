@@ -10,7 +10,7 @@ export function getPrimaryLinks() {
 }
 
 /** More menu targets match Flask routes from gametheca/templates/base.html url_for. */
-export function getMoreLinks({ showTrailers, showHelp, enableVr } = {}) {
+export function getMoreLinks({ showTrailers, showHelp, enableVr, enableActivity = true } = {}) {
   const links = [
     { id: 'collections', to: '/collections', label: 'Collections' },
     { id: 'news', to: '/news', label: 'News' },
@@ -18,7 +18,6 @@ export function getMoreLinks({ showTrailers, showHelp, enableVr } = {}) {
     { id: 'updates', to: '/updates', label: 'Updates' },
     { id: 'acquire', to: '/acquire', label: 'Acquire' },
     { id: 'playtime', to: '/playtime', label: 'Playtime' },
-    { id: 'activity', to: '/activity', label: 'Activity' },
     { id: 'friends', action: 'open-friends', label: 'Friends' },
     { id: 'chat', action: 'open-chat', label: 'Chat' },
     { id: 'notifications', to: '/notifications', label: 'Notifications' },
@@ -27,6 +26,11 @@ export function getMoreLinks({ showTrailers, showHelp, enableVr } = {}) {
     { id: 'ownership', to: '/ownership', label: 'Ownership' },
     { id: 'big-picture', to: '/big-picture', label: 'Big Picture' },
   ]
+  if (enableActivity) {
+    // Keep its original position in the list rather than appending.
+    const at = links.findIndex((l) => l.id === 'playtime')
+    links.splice(at + 1, 0, { id: 'activity', to: '/activity', label: 'Activity' })
+  }
   if (enableVr) links.push({ id: 'vr', to: '/vr', label: 'VR' })
   if (showTrailers) links.push({ id: 'trailers', to: '/trailers', label: 'Trailers' })
   if (showHelp) links.push({ id: 'help', to: '/help', label: 'Help' })

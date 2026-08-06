@@ -1,4 +1,17 @@
-"""Optional Ruffle play URL for Flash titles when ENABLE_RUFFLE is on."""
+"""Optional Ruffle play URL for Flash titles when ENABLE_RUFFLE is on.
+
+**Not wired to any surface (2026-08-06).** Nothing calls ``ruffle_play_url``:
+the Ruffle player is not vendored under ``static/vendor/ruffle/``, and
+``LibraryPlatform`` has no Flash entry, so there is nothing to play. The admin
+Features toggle was removed rather than left showing a switch that could not
+change anything.
+
+This module is kept because it is small, tested, and already encodes the honest
+behaviour — it returns ``None`` when the player file is absent rather than
+linking to a 404. To finish the feature you need three things: vendor Ruffle,
+add a Flash platform to the enum, and call this from the play surface. Until
+then, treat it as a stub.
+"""
 
 from __future__ import annotations
 

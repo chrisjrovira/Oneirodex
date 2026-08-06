@@ -63,6 +63,14 @@ def playtime_page():
 @member_bp.route('/activity')
 @login_required
 def activity_page():
+    # Gate the route, not just the nav link — hiding a menu entry while the URL
+    # still serves the page is the kind of half-toggle this flag was guilty of.
+    # Defaults on: the surface predates the flag.
+    enabled = str(current_app.config.get('ENABLE_ACTIVITY_FEED', 'true')).lower() in (
+        '1', 'true', 'yes', 'on',
+    )
+    if not enabled:
+        return redirect(url_for('library.library'))
     return render_member_spa(title='Activity')
 
 

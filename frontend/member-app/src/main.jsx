@@ -55,6 +55,9 @@ export function parseShellConfig(rootElement) {
     showTrailers: rootElement.dataset.showTrailers === 'true',
     showHelp: rootElement.dataset.showHelp === 'true',
     enableVr: rootElement.dataset.enableVr === 'true',
+    // Absent attribute means an older shell render — default on rather than
+    // hiding a surface that has always been there.
+    enableActivity: rootElement.dataset.enableActivity !== 'false',
     showPlayStatus: rootElement.dataset.showPlayStatus === 'true',
     username: rootElement.dataset.username || '',
     locale: rootElement.dataset.locale || 'en',

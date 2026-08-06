@@ -103,6 +103,11 @@ def create_app():
     def inject_feature_flags():
         return {
             'enable_vr_browse': bool(app.config.get('ENABLE_VR_BROWSE')),
+            # Default on: the Activity surface predates its toggle, so an
+            # unset flag must not silently hide a feature people already use.
+            'enable_activity_feed': bool(
+                app.config.get('ENABLE_ACTIVITY_FEED', True)
+            ),
         }
 
     @app.before_request

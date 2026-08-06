@@ -37,7 +37,6 @@ FEATURE_ENV_TOGGLES = (
     ('enable_ai_assist', 'ENABLE_AI_ASSIST', 'AI assist', 'Ollama suggestions (rename apply stays gated)', False),
     ('enable_livekit', 'ENABLE_LIVEKIT', 'LiveKit voice', 'Household voice rooms (needs LIVEKIT_* secrets)', False),
     ('enable_pcdos_browser', 'ENABLE_PCDOS_BROWSER', 'PC DOS browser play', 'Needs vendored dosbox WASM', False),
-    ('enable_ruffle', 'ENABLE_RUFFLE', 'Ruffle Flash play', 'Browser Flash via Ruffle', False),
     ('enable_rom_patch_apply', 'ENABLE_ROM_PATCH_APPLY', 'ROM patch apply', 'Companion Flips apply', False),
     ('enable_patch_catalog', 'ENABLE_PATCH_CATALOG', 'Patch catalog', 'Operator YAML/JSON guides', False),
     ('enable_rom_ai_translate', 'ENABLE_ROM_AI_TRANSLATE', 'ROM AI translate hints', 'RetroArch AI Service overlay', False),
