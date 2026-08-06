@@ -31,6 +31,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Product / recent waves | [strategy/social-spaces-and-storefront.md](strategy/social-spaces-and-storefront.md) (W23/W25 design) · [strategy/roadmap-w26-ux-overhaul.md](strategy/roadmap-w26-ux-overhaul.md) (UX backlog + FEAT-D) · [strategy/review-2026-08-03-findings.md](strategy/review-2026-08-03-findings.md) |
 | Gap review (what's missing / half-done) | [strategy/gap-review-2026-08-05.md](strategy/gap-review-2026-08-05.md) |
 | Code review (defects + inflight/missing) | [strategy/code-review-2026-08-06.md](strategy/code-review-2026-08-06.md) |
+| UI refresh plan (two-bar chrome) | [strategy/ui-refresh-2026-08-06.md](strategy/ui-refresh-2026-08-06.md) — Option B approved; UIR-1…6 |
 | Scope policy | [strategy/scope.md](strategy/scope.md) — unscheduled is not refused; decisions live in the private vault |
 | Docs inventory | [strategy/docs-map.md](strategy/docs-map.md) |
 | API | [openapi/openapi.json](openapi/openapi.json) |

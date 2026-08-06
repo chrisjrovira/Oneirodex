@@ -1,5 +1,10 @@
 # UI Rebuild Plan — Sleeker GameTheca
 
+> **Chrome superseded 2026-08-06** — the top-nav / page-header layout described
+> below is replaced by the two-bar chrome in
+> [ui-refresh-2026-08-06.md](ui-refresh-2026-08-06.md) (Option B). This file stays
+> as the record of how the current chrome was arrived at.
+
 **Date:** 2026-07-23 · **Updated:** 2026-07-29  
 **Drivers:** Mixed Jinja + React islands, admin page sprawl, modern self-hosted library UX bar + 10-foot frontend patterns (Playnite fullscreen import/export integrations remain Class D).
 
