@@ -246,7 +246,9 @@ def register():
 
     # Attempt to get the invite token from the query parameters
     invite_token_from_url = request.args.get('token')
-    print(f"Invite token from URL: {invite_token_from_url}")
+    # An invite token is a credential — logging it verbatim would let anyone
+    # with log access redeem the invite. Presence only.
+    print(f"Invite token present: {bool(invite_token_from_url)}")
     invite = None
     if invite_token_from_url:
         invite = db.session.execute(select(InviteToken).filter_by(token=invite_token_from_url, used=False)).scalar_one_or_none()

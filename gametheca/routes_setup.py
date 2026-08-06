@@ -36,8 +36,8 @@ def setup_submit():
 
     form = SetupForm()
     if form.validate_on_submit():
-        print(f"Form CSRF token: {form.csrf_token.data}")
-        print("Form validation succeeded")
+        # Never log the CSRF token — anything with log access could replay it.
+        print("Setup form validation succeeded")
         
         user = User(
             name=form.username.data,

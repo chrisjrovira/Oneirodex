@@ -82,3 +82,81 @@ Shape: `GameRelatedMedia` rows (kind = film · series · anime · book · comic 
 each with a title, year, relation (adaptation / tie-in / soundtrack / novelisation / documentary),
 optional external URL and cover. Surfaced as a **Related media** strip above screenshots and trailer,
 opening a popup per item.
+
+---
+
+## Batch 3 — emulation platforms & frontends (supplied 2026-08-06)
+
+Nine emulation distros / frontends. The human supplied these as a BIOS-pack
+table and said **"ignore the bios parts"** — so they are reviewed here as
+*products*, not as firmware sources. (Firmware stays operator-supplied per
+[emulator-bios.md](../runbooks/emulator-bios.md).)
+
+| Product | Category | What it does that we might want |
+|---|---|---|
+| **RetroArch / Lakka** | Reference libretro frontend / OS image | Shaders, run-ahead latency reduction, netplay, RetroAchievements, per-core overrides |
+| **RetroPie** | Pi distro | EmulationStation UX, per-system config, Skyscraper scraping |
+| **RetroDECK** | Steam Deck flatpak | ES-DE frontend, per-emulator presets, cloud sync |
+| **Batocera** | Read-only OS image | Netplay, bezels/decorations, gamepad autoconfig, Kodi |
+| **BizHawk** | Accuracy / TAS | Frame advance, Lua scripting, RAM watch/search, movie recording |
+| **RomM** | **Self-hosted ROM library — closest direct competitor** | Web UI, EmulatorJS play, ES-DE / Pegasus export, platform folders |
+| **Recalbox** | OS image | Similar to Batocera; strong first-run UX |
+| **RetroBat** | Windows bundle | ES + RetroArch packaging for Windows |
+| **EmuDeck** | Deck installer | Auto-configures emulators, Steam ROM Manager integration |
+
+### Already covered — do not re-adopt
+
+* **ES-DE and Pegasus export** — `GET /api/export/esde` · `GET /api/export/pegasus`
+  already ship. RomM's headline interop feature is done.
+* **Per-core BIOS validation** with blocking-vs-optional honesty — finer-grained
+  than the flat "BIOS missing" these frontends surface.
+* **In-browser play** — none of the nine plays in a browser tab; they are native
+  frontends or bootable images. This stays our differentiator.
+
+### Genuine gaps, ranked
+
+1. **Shaders / CRT filters + run-ahead** — the vendored WebRetro RetroArch
+   already supports both through config keys, and we already author that block
+   (`extraConfig` in `static/vendor/webretro/assets/base.js`, where the audio
+   fix landed). Exposing a CRT preset and a run-ahead frame count is wiring,
+   not a subsystem, and it pairs with play rooms + theming. **Best value.**
+2. **RetroAchievements** — zero references in our codebase; supported by all
+   nine. The most visible thing we lack against them. Needs account linking and
+   a hardcore-mode stance, so a real slice rather than a quick win.
+3. **Netplay** — RetroArch supports it and we already have voice; the missing
+   piece is a shared session. NAT traversal makes this the expensive one.
+4. **Steam ROM Manager–style export** (EmuDeck) — small, Deck/desktop only.
+
+### Declined
+
+* **BizHawk's TAS surface** — frame advance, Lua scripting, RAM watch/search,
+  movie recording. Accuracy-research tooling, not a household library feature.
+* **Shipping OS images** (Lakka, Batocera, Recalbox, RetroBat) — GameTheca is a
+  server, not a boot medium.
+
+---
+
+## Decisions backfilled 2026-08-06
+
+An audit of this document against its own sections found two entries with **no
+adopt/decline call**:
+
+* **ROMarr** — never decided, despite being one of the first three repos
+  supplied. Reviewed now:
+  * **Remote path mapping — ADOPT (defect).** We take qBittorrent's
+    `content_path` verbatim and stat it locally, so a split-container deploy
+    (the normal Unraid case) makes the hardlink pipeline silently import
+    nothing. See [code-review-2026-08-06.md](code-review-2026-08-06.md) §2.3.
+  * **Release scoring with reasons shown — PARTIAL.** We score matches and
+    expose `why_unmatched`; we do not show *why a score was what it was*.
+    Worth folding into the proposal UI later.
+  * **Per-platform routing to different backends — DEFER.** Real, but only
+    matters with several download backends configured.
+  * **ROM Hub plugin sources — DECLINE for now.** Overlaps our operator-supplied
+    firmware/cores stance; revisit only if a registry appears that does not
+    require us to host or endorse the content.
+* **vglist** — Wikidata is already ranked gap #7; naming it here so it no longer
+  reads as unreviewed. **ADOPT with the cascade** (no API key, openly licensed —
+  a good fit for the multi-source cascade shipped 2026-08-05).
+
+**Total reviewed across all three batches: 23 products.**
