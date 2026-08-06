@@ -130,22 +130,41 @@ def game_card_flags(game):
     }
 
 
-def enrich_game_metadata(game_name, igdb_data=None, rawg_api_key=None):
-    """
-    Sweeps Steam and RAWG APIs to fill in ANY missing fields in the game metadata.
-    """
-    metadata = igdb_data or {}
+def enrich_game_metadata(
+    game_name,
+    igdb_data=None,
+    rawg_api_key=None,
+    *,
+    library_platform=None,
+):
+    """Fill missing metadata fields by walking every source we have.
 
-    steam_data = fetch_steam_data(game_name)
-    if steam_data:
-        metadata = merge_metadata(metadata, steam_data)
+    Was Steam-then-RAWG-then-stop. It now delegates to
+    :mod:`gametheca.utils.metadata_cascade`, which continues through GOG, Epic,
+    itch, Giant Bomb, MobyGames and TheGamesDB until the core fields are filled
+    — and orders those by platform, since a console ROM is not on a PC
+    storefront.
 
-    if rawg_api_key or missing_core_fields(metadata):
+    Contract is unchanged for callers: returns the merged metadata dict, and
+    never overwrites a value already present in ``igdb_data``.
+    """
+    from gametheca.utils.metadata_cascade import cascade_metadata
+
+    metadata = dict(igdb_data or {})
+
+    # An explicit RAWG key means the operator wants RAWG consulted regardless of
+    # whether earlier sources already satisfied the core fields.
+    if rawg_api_key:
         rawg_data = fetch_rawg_data(game_name, rawg_api_key)
         if rawg_data:
             metadata = merge_metadata(metadata, rawg_data)
 
-    return metadata
+    merged, _trace = cascade_metadata(
+        game_name,
+        seed=metadata,
+        library_platform=library_platform,
+    )
+    return merged
 
 
 def missing_core_fields(data):

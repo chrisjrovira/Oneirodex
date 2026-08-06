@@ -352,15 +352,23 @@ def library_tools_backfill_steam_metadata():
     ``appdetails`` for those rows and fills the gaps (never overwrites).
 
     Body: ``library_uuid`` (optional scope), ``limit`` (default 100, max 500),
-    ``only_incomplete`` (default true — skip rows that already have summary+genres).
+    ``only_incomplete`` (default true — skip rows that already have summary+genres),
+    ``cascade`` (default true — see below).
+
+    With ``cascade`` on, rows **without** a Steam App ID are repairable too. That
+    matters because the Steam-only query could never reach a GOG-identified title
+    or a console ROM, which are exactly the rows most likely to be bare.
     """
     from gametheca.utils.steam_metadata import hydrate_game_from_steam
 
     data = request.get_json(silent=True) or {}
     limit = min(max(int(data.get('limit') or 100), 1), 500)
     only_incomplete = bool(data.get('only_incomplete', True))
+    use_cascade = bool(data.get('cascade', True))
 
-    query = select(Game).filter(Game.steam_app_id.isnot(None))
+    query = select(Game)
+    if not use_cascade:
+        query = query.filter(Game.steam_app_id.isnot(None))
     if data.get('library_uuid'):
         query = query.filter(Game.library_uuid == data['library_uuid'])
 
@@ -374,7 +382,19 @@ def library_tools_backfill_steam_metadata():
             skipped += 1
             continue
         try:
-            report = hydrate_game_from_steam(game)
+            if game.steam_app_id:
+                report = hydrate_game_from_steam(game)
+            else:
+                report = {}
+            if use_cascade and not ((game.summary or '').strip() and (game.genres or [])):
+                from gametheca.utils.metadata_cascade import hydrate_game_from_cascade
+
+                cascade_result = hydrate_game_from_cascade(game)
+                for key, value in (cascade_result.get('applied') or {}).items():
+                    # Union the two reports so the response says what actually
+                    # changed, regardless of which path filled it.
+                    if value and not report.get(key):
+                        report[key] = value
         except Exception as exc:  # noqa: BLE001
             errors.append({'uuid': game.uuid, 'name': game.name, 'error': str(exc)})
             continue

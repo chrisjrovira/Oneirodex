@@ -376,6 +376,12 @@ def resolve_stage_d_store_candidate(
         if len(exact) > 1:
             return None
 
+    # Deliberately stops here. TheGamesDB / MobyGames are *not* part of the
+    # Stage D auto-cascade — they run in Stage E as propose-only, because a
+    # catalogue title match has no store identity to corroborate it and the
+    # score gates for auto-import have not been proven. Adding them here would
+    # auto-create games from a single fuzzy-adjacent title match.
+    # See docs/strategy/store-metadata-identify.md ("Forbidden" rows).
     return None
 
 
@@ -545,17 +551,41 @@ def _hydrate_steam_content(game, steam_app_id) -> None:
     """Pull full store content (summary, genres, dev/publisher, release, modes).
 
     The storesearch hit that identified the title carries no description and no
-    taxonomy, so without this a Stage D game lands with every box empty. Failures
-    are swallowed on purpose — a metadata miss must not undo an identification.
-    """
-    if not game or not steam_app_id:
-        return
-    try:
-        from gametheca.utils.steam_metadata import hydrate_game_from_steam
+    taxonomy, so without this a Stage D game lands with every box empty.
 
-        hydrate_game_from_steam(game, app_id=steam_app_id)
+    A Steam App ID gets the direct ``appdetails`` path, which is the richest
+    source we have. Everything else — a GOG-identified title, or a console ROM
+    that never touched a PC store — falls through to the multi-source cascade,
+    which used to be skipped entirely: this function returned early without an
+    App ID, so those titles got no enrichment at all.
+
+    Failures are swallowed on purpose — a metadata miss must not undo an
+    identification.
+    """
+    if not game:
+        return
+
+    try:
+        if steam_app_id:
+            from gametheca.utils.steam_metadata import hydrate_game_from_steam
+
+            hydrate_game_from_steam(game, app_id=steam_app_id)
+            # Steam answered on the fields it covers; anything still empty is
+            # worth one more pass through the other sources.
+            from gametheca.utils.secondary_scrapers import missing_core_fields
+
+            if not missing_core_fields({
+                'summary': getattr(game, 'summary', None),
+                'genres': list(getattr(game, 'genres', []) or []),
+                'developer': getattr(game, 'developer_id', None),
+            }):
+                return
+
+        from gametheca.utils.metadata_cascade import hydrate_game_from_cascade
+
+        hydrate_game_from_cascade(game)
     except Exception as exc:  # noqa: BLE001
-        print(f'Steam content hydrate skipped for {getattr(game, "name", "?")}: {exc}')
+        print(f'Content hydrate skipped for {getattr(game, "name", "?")}: {exc}')
 
 
 def try_stage_d_store_identify(

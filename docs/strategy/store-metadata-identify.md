@@ -152,6 +152,15 @@ Export `unmatched_folders_all.json` PC trailing `(4–7)` folders (~71) peel via
 | **DAT hash short-circuit** | **Done (uncommitted, W21-BE-DAT + BE-DET-6)** — after Stage D miss on console leaves: hash ROM → unique DAT CRC/MD5/SHA1 across reference sets for that platform → custom-range Game with DAT title + honest summary provenance; when outer archive hash misses, optionally hash **inner** primary dump candidate(s) in zip/7z/rar (`DAT_HASH_INNER_ARCHIVE`, default ON) and identify only on exactly one unique title; ambiguous / missing DAT / unhashable / PC / C11 / `propose_only_scan` → leave Unmatched (Stage E may still propose TGDB) |
 | **Forbidden** | Fuzzy multi-hit auto-import · Moby/TGDB Game create · pirate scrapers · romhacking · DRM queues · Meta GraphQL / Epic/itch cascade |
 
+> **Enrichment vs identification (2026-08-05).** The propose-only rule above is
+> about *identification* — which product a folder is. **Metadata enrichment**
+> (summary, cover, genres, credits for an already-identified game) now runs a
+> full multi-source cascade; see
+> [Metadata cascade](#metadata-cascade--enrichment-after-identification) below.
+> The two are deliberately separate: the cascade never writes store ids, so
+> enrichment can consult Steam without a GOG-identified title quietly becoming
+> a Steam one.
+
 **Code:** `resolve_stage_e_catalog_hints` / `enrich_proposal_with_stage_e` in `software_identify.py` · DAT unique-hash auto via `lookup_unique_dat_hash_hit` / `try_dat_hash_identify` in `set_completion.py` (hooked from `retrieve_and_save_game` after Stage D, before Stage E; **BE-DET-6** inner archive digests via `hash_archive_inner_primary_dumps` in `rom_hash.py`) · `hint_fields_from_proposal` reads `stage_e_candidates`.
 
 **Proposal JSON:** `proposal.stage_e_candidates[]` (`source`, `id`, `name`, `url`, `cover_url`, `match_mode`, `propose_only: true`) · `proposal.stage_e` (`match_reason`, `skipped`, `propose_only`). **List/export (W21-BE-2b):** same fields denormalized onto `UnmatchedFolder` JSON columns — soft-omitted when absent.
@@ -239,3 +248,62 @@ UI (handoff): source chip on identify; show “IGDB miss — store hit” path; 
 - Live PSN / Xbox ownership sync  
 - Discord / webhooks  
 - Changing `/vr` product stance (Quest remains friend seat; SteamVR primary for PC VR owners)
+
+---
+
+## Metadata cascade — enrichment after identification
+
+**Status:** Done 2026-08-05. Closes the "use every scraper when one finds
+nothing" ask, which had only been half-landed (the Steam *mapping* bug was
+fixed; the *cascade* was not).
+
+### What was wrong
+
+`enrich_game_metadata` tried Steam, then RAWG, then stopped — and had no live
+callers. The path that actually ran during a scan was narrower still:
+`_hydrate_steam_content` returned immediately unless a Steam App ID was already
+known. So a title identified through **GOG**, or any console ROM, got **no
+enrichment at all** and landed with whatever the thin search hit carried: no
+summary, no genres, no developer. Meanwhile GOG, Epic, itch, Giant Bomb,
+MobyGames and TheGamesDB searches all existed — reachable from *manual* identify
+only.
+
+### How it works
+
+`gametheca/utils/metadata_cascade.py` walks sources until the core fields
+(`summary`, `genres`, `developer`) are filled, then stops.
+
+| Gate | Behavior |
+|---|---|
+| **Order (PC)** | Steam → GOG → Epic → itch → Giant Bomb → MobyGames → RAWG → TheGamesDB |
+| **Order (console / handheld / arcade)** | TheGamesDB → MobyGames → Giant Bomb → RAWG. PC storefronts are **skipped entirely** — a SNES ROM is not on Steam, so querying costs four round trips and can only produce a wrong answer |
+| **Match** | Casefold-**exact** title only. A fuzzy hit would attach another game's blurb to the row |
+| **Ambiguous** | Two exact hits on one source → skip that source; never pick one |
+| **Stop** | As soon as core fields are present — later sources are not queried |
+| **Cap** | `max_sources` (default 6) bounds outbound requests per title |
+| **Keys** | Key-gated sources already return `[]` when unset, so an unconfigured source is simply a miss |
+| **Failure** | Per-source exception isolation — one flaky store cannot abort enrichment or undo an import |
+| **Seed** | Values already present (IGDB, hand-entered) are **never** overwritten |
+| **Forbidden** | Writing store identity. `IDENTITY_FIELDS` (`steam_app_id`, `gog_id`, `mobygames_id`, `thegamesdb_id`, `name`) are stripped before apply — otherwise a GOG-identified game would acquire a Steam App ID and store URL just because the cascade asked Steam for a blurb |
+
+### Where it runs
+
+- **Scan** — `_hydrate_steam_content` in `software_identify.py`. A Steam App ID
+  still takes the direct `appdetails` path first (richest source); anything the
+  App ID did not fill, plus every non-Steam identification, falls through to the
+  cascade.
+- **Repair** — `POST /api/library_tools/backfill_steam_metadata` with
+  `cascade: true` (default). The old query filtered to `steam_app_id IS NOT
+  NULL`, so it could never reach the rows most likely to be bare.
+- **Legacy** — `enrich_game_metadata` now delegates to the cascade; its contract
+  (returns merged metadata, never overwrites the seed) is unchanged.
+
+### Trace
+
+Every walk returns a `CascadeTrace`: `queried`, `contributed`,
+`skipped_ambiguous`, `errored`, `stopped_early` — so scan logs can say which
+source actually answered instead of claiming a generic "enriched".
+
+**Tests:** `tests/test_metadata_cascade.py` (29, all sources monkeypatched — no
+live calls), plus Stage D/E regression `tests/test_w20_stage_d_store_cascade.py`
+which is what caught the identity-rewrite bug during development.

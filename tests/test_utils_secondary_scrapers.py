@@ -234,18 +234,39 @@ def test_enrich_game_with_steam_logs_vr_no_when_skipped(mock_fetch, mock_apply, 
 
 @patch('gametheca.utils.game_core.apply_enriched_metadata')
 @patch('gametheca.utils.game_core.fetch_steam_data')
-def test_enrich_game_with_steam_skips_when_already_vr(mock_fetch, mock_apply, capsys):
+def test_enrich_game_with_steam_still_enriches_an_already_vr_game(
+    mock_fetch, mock_apply, capsys,
+):
+    """Being flagged VR must not skip the rest of the enrichment pass.
+
+    This used to short-circuit on `already_vr` and return without fetching,
+    which also skipped the summary / genre / game-mode backfill — VR detection
+    is only one part of what this pass does. The flag stays true either way.
+    """
     from gametheca.utils.game_core import enrich_game_with_steam
+
+    mock_fetch.return_value = {
+        'is_vr': True,
+        'summary': 'Draw the bow.',
+        'genres': ['Sports'],
+        'player_perspectives': [],
+        'game_modes': [],
+        'developer': 'Studio',
+        'publisher': 'Studio',
+        'release_date': '1 Jan, 2020',
+        'cover_url': None,
+        'steam_app_id': 12345,
+    }
 
     game = SimpleNamespace(
         name='Archery Kings VR',
         player_perspectives=[SimpleNamespace(name=VR_PERSPECTIVE_NAME)],
+        genres=[],
     )
     result = enrich_game_with_steam(game)
+
     assert result['is_vr'] is True
-    assert result['reason'] == 'already_vr'
-    mock_fetch.assert_not_called()
-    mock_apply.assert_not_called()
+    mock_fetch.assert_called_once()
     assert 'Steam VR: yes' in capsys.readouterr().out
 
 
