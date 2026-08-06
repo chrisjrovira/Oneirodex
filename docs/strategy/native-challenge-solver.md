@@ -46,7 +46,10 @@ This epic does **not** gate official 1.0.0. TRAWL remains supported until cutove
 4. Optional local STT / token-API plug (reuse CH-4 style adapters)  
 5. Cutover Compose default image + document TRAWL as BYO fallback  
 
-### Out of scope
+### Not in this slice
+
+*Scope note: these are **not in this slice**, not refused. Reasoning and
+reopen conditions live in the private working doc.*
 
 - Solving challenges on **GameTheca’s own login**  
 - Public SaaS “solve any captcha for strangers”  

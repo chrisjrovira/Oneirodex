@@ -53,7 +53,10 @@ Operators also cannot generate on-brand placeholders (title text, system accent,
 - Store under `static/library/generated/` or per-game image dirs  
 - Batch generate for missing-cover slice: `POST /admin/api/art-studio/batch-generate`  
 
-### Out of scope
+### Not in this slice
+
+*Scope note: these are **not in this slice**, not refused. Reasoning and
+reopen conditions live in the private working doc.*
 
 - Member self-serve generator (admin/ops only)  
 - Scraping third-party art marketplaces / official console brand PNGs  

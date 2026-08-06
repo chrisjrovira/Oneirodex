@@ -55,7 +55,10 @@ GameTheca today calls connector URLs with plain `requests`. There is **no** chal
 4. **Token CAPTCHA APIs** (secondary): CapSolver / 2Captcha / Anti-Captcha style `createTask` for reCAPTCHA/hCaptcha when a page returns a sitekey and browser solve is overkill or fails  
 5. **Local STT** for audio reCAPTCHA (TRAWL’s free STT or operator Whisper) — ops note only  
 
-### Out of scope
+### Not in this slice
+
+*Scope note: these are **not in this slice**, not refused. Reasoning and
+reopen conditions live in the private working doc.*
 
 - Solving challenges on **GameTheca’s own login** (we rate-limit; we do not weaken our auth)  
 - Public SaaS “solve any captcha for strangers”  

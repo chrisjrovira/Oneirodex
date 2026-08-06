@@ -54,7 +54,10 @@ Big Picture / party / play sessions feel richer when room lights react (bias lig
 - Fire-and-forget async (never block play launch)  
 - Cover-derived palette optional (Pillow sample)  
 
-### Out of scope
+### Not in this slice
+
+*Scope note: these are **not in this slice**, not refused. Reasoning and
+reopen conditions live in the private working doc.*
 
 - Embedding Hyperion in GameTheca image  
 - Controlling arbitrary IoT without admin allowlist  

@@ -53,7 +53,7 @@ Plans only — **no implementation** until PM dispatches Backend/Ops. Shipped op
 - Wand-inspired single-player assist packs (`ENABLE_GAME_ASSISTS`) on companion + GameActionBar
 - Big Picture fullscreen shell; React admin dashboard / settings / scans hubs
 
-**Still out of scope:** torrent marketplace / magnet scrapers that bypass Torznab, DRM store download/install queues, multiplayer cheat injection.
+**Not scheduled yet:** first-party acquire marketplace, storefront install pipelines, and multiplayer cheat surfaces. None of these is refused — the reasoning and what would change it is in the private scope doc.
 
 ---
 

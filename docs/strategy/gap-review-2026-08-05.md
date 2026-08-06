@@ -107,5 +107,5 @@ In product language, the ranked opportunities are:
 4. **C3 not-interested** + **C4 taste picker** — small, and they finish the storefront
 5. **C2 session tracking** — bigger, but the companion already has the signal
 
-Explicit non-goals unchanged: no media-tracker verticals, no DRM store
-download queues, no scraping of third-party ROM databases.
+Scope calls (what is unscheduled and what would change it) live in the private
+working doc rather than as public non-goals — see `docs/_private/scope-decisions.md`.

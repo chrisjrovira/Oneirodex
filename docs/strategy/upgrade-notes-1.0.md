@@ -30,7 +30,7 @@ Release claims must match [v1-gamemaster-signoff.md](v1-gamemaster-signoff.md):
 
 - **Browser vs companion** — WebRetro Play only where cores are present; GC/Wii/Dreamcast/3DS/PS2/Vita stay companion-preferred (no fake in-browser Play).
 - **Deferred WASM** — PCE / Commodore / DOS browser paths unlock only when operator-vendored cores are on disk ([webretro-cores.md](../runbooks/webretro-cores.md)).
-- **No scrape** — no romhacking.net (or similar) scrape; DATs are operator-uploaded; PC stores are ownership register-only.
+- **Sources** — DAT uploads and PC store ownership sync are the shipped paths today. Automated fetching of DATs/firmware/patches is unscheduled rather than refused; see the private scope doc.
 
 ## Related
 

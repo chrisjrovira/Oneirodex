@@ -44,7 +44,10 @@ This epic does **not** gate official 1.0.0. LiveKit remains the shipped optional
 4. Screenshare + spectator parity with shipped Wave 16/17 behavior  
 5. Demote LiveKit Compose profile to BYO-only after cutover  
 
-### Out of scope
+### Not in this slice
+
+*Scope note: these are **not in this slice**, not refused. Reasoning and
+reopen conditions live in the private working doc.*
 
 - Public server discovery / federation as default  
 - Bots, inbound webhooks, Discord  

@@ -59,7 +59,10 @@ LAN URLs: `ALLOW_PRIVATE_LAN_URLS=true`. No Wolf/GOW in GameTheca image.
 | GOW-3 | Party invite includes remote-play PIN when host online | After GOW-1/2 |
 | GOW-4 | Compose profile docs for Wolf sidecar (operator-owned GPU) | Docs |
 
-## Non-goals
+## Not in this slice
+
+*Scope note: these are **not in this slice**, not refused. Reasoning and
+reopen conditions live in the private working doc.*
 
 - Replacing Moonlight with in-browser WebRTC game stream in 1.0  
 - Bundling Steam or game containers inside GameTheca  

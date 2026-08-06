@@ -208,9 +208,9 @@ Audit result, in product language:
   crc32/md5/sha1, so this is a query over data we produce; a fifth completion
   state ("Won't Play") that doubles as the negative recommender signal; and
   mod profiles on top of existing mod tracking.
-* **Declined:** anything that patches game binaries (same rule that made PC
-  cheats notes-only), TAS/debugging surfaces, shipping OS images, becoming a
-  game-server control panel, and media-only tooling.
+* **Unscheduled, not refused:** binary-patching surfaces, TAS/debugging tools,
+  OS images, a first-party game-server panel, and media-only tooling. Each has a
+  recorded reason and a "what would change it" in the private scope doc.
 
 ## 5. Recommended order
 

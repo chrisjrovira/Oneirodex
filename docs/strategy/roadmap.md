@@ -83,12 +83,21 @@ Become the best **self-hosted, multi-user, DRM-free game library & distribution 
 - [x] M8: Emulation profiles GA  
 - [x] M9: Store ownership sync (register-only; no DRM download path)
 
-## Explicit non-goals (12 months)
+## Current focus (12 months)
 
-- Epic/GOG/Amazon **DRM download / install** pipelines (ownership *registration* is allowed)
-- Embedded torrent/debrid marketplace (BYO connectors only)
-- Becoming a general anime/manga manager
-- Full commercial emulation-frontend clone
+What we are building toward, in order. This section deliberately says what is
+**in** rather than declaring anything permanently out — scope calls change, and
+a roadmap that forecloses is harder to revise than one that prioritises.
+
+- A game library that identifies what is actually on disk, better than anything else does
+- Household access: invites, parental ACL, spaces with text and voice
+- Play where it is convenient (browser) and where it is right (companion)
+- A storefront-feeling Discover that curates from on-box signals only
+
+Anything not listed is **unscheduled, not refused**. Where we have chosen not to
+build something yet, the reasoning and the conditions that would change it live
+in the private working doc (`docs/_private/scope-decisions.md`) rather than as a
+public "never".
 
 ## Dependency graph (simplified)
 

@@ -66,7 +66,10 @@ VR must work for **more than Meta Quest**. Household example: operator owns **PS
 
 ---
 
-## Non-goals
+## Not in this slice
+
+*Scope note: these are **not in this slice**, not refused. Reasoning and
+reopen conditions live in the private working doc.*
 
 - Official Meta Store / SteamVR store app listing for 1.0  
 - Shipping a native OpenXR GameTheca shell  

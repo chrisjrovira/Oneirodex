@@ -233,7 +233,7 @@ When PM scheduled this add list, Backend was done when:
 3. **Never** put any of the four in `WEBRETRO_BROWSER_KEYS` / browser Play paths; **never** map `NEOGEO` → `Emulator.NEOCD`.
 4. Seed / document AllowedFileType extensions from the hints table (ops can enable manually if seed is deferred); Arcade + Neo Geo AES default scan guidance remains **folders**.
 5. Tests: enum presence · play_mode matrix assertions · no browser CTA for the four · `NEOGEO` ≠ CD mapping.
-6. No scrape · no Discord · no DRM store queues · no commit of secrets.
+6. No commit of secrets. (Fetching sources, chat integrations and store queues are unscheduled, not refused — see the private scope doc.)
 
 ---
 
@@ -247,7 +247,7 @@ Ops can apply the family tables with **current** scan code (interim `OTHER` / de
 4. **Optional:** `files` mode recursive **opt-in** (or depth for files) for nested dump layouts — today files mode is flat-only; operators must point at the flat leaf.
 5. **Optional library tools:** “propose libraries from tree” that lists platform-looking leaves under a console root and suggests `LibraryPlatform` + mode — propose-only, never auto-create without admin confirm. **Shipped (code, W20-1):** `GET|POST /api/library_tools/propose_leaf_libraries` · Admin UI confirm/create on Libraries + Library tools · candidates `{ path, suggested_name, platform, scan_mode, scan_depth, reason }` · `auto_create: false` · family/emu rejected · nested `ROMs` preferred · layout→mode heuristics · AllowedFileType seed adds `nsp`/`xci`/`nsz`/`xcz` · tests `tests/test_propose_leaf_libraries.py` + admin Vitest.
 6. **Enum wave:** implement the **LOCKED enum add list** above (not a separate invent-as-you-go backlog).
-7. **Tests:** fixtures for “family root must not be scanned as games”; skip-pattern unit tests; enum play_mode honesty; no scrape / no Discord.
+7. **Tests:** fixtures for “family root must not be scanned as games”; skip-pattern unit tests; enum play_mode honesty.
 
 Priority lean: ops on per-leaf libs + skip-dir ≫ **LOCKED enum add** ≫ depth-3 ≫ auto-propose.
 

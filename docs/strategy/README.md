@@ -9,7 +9,8 @@ Read in this order:
 | # | Doc | Purpose |
 |---|---|---|
 | 1 | [competitive.md](competitive.md) | Private vault pointer (peer catalogs gitignored) |
-| 2 | [roadmap.md](roadmap.md) | North star, quarters, milestones, non-goals |
+| 2 | [roadmap.md](roadmap.md) | North star, quarters, milestones, current focus |
+| 2b | [scope.md](scope.md) | How scope is recorded — unscheduled ≠ refused |
 | 3 | [v1-readiness.md](v1-readiness.md) | Official 1.0.0 gate — keep-and-enhance + Ops |
 | 3b | [pm-miss-backlog.md](pm-miss-backlog.md) | Living pre-1.0 miss tickets (MISS-*) |
 | 4 | [features.md](features.md) | Implementation-ready feature plans (P0+) |
@@ -41,7 +42,7 @@ Member free-store claims: [../user/free-games.md](../user/free-games.md) (Wave 1
 
 - **In scope:** scan/recognition, freshness, ops health, API/tokens, playtime, collections, companion lifecycle, ownership sync (register-only), free-store claim feed (deeplink-only), household social, optional LiveKit, in-app support → GitHub
 - **Deploy default:** Unraid / home NAS first — see [cloud-tco-ballpark.md](cloud-tco-ballpark.md) (Finance · Unraid-first)
-- **Out of scope:** Discord bots/webhooks; bundled torrent/debrid marketplace; DRM store download/install queues; always-on paid LLM inside Flask
+- **Unscheduled (not refused):** first-party acquire marketplace, storefront install pipelines, hosted LLM calls. Scope reasoning lives in the private working doc, not here
 - **Optional:** feature-flagged *arr/debrid, LiveKit profile, OIDC, AI assist
 
 ## Related code

@@ -20,7 +20,7 @@
 | Mod registry per game | Name, version, source URL, enabled flag, load order |
 | Companion apply | Stage files under install dir (path-safe); Windows/Linux |
 | Browser note | WebRetro cannot load arbitrary PC mods — honesty badges |
-| Curse/Modrinth/Thunderstore | **BYO links only** — no scrape marketplace; operator pastes URLs |
+| Curse/Modrinth/Thunderstore | **BYO links today** — operator pastes URLs. A catalogue-backed install flow is unscheduled, not refused |
 | Extensions | Emulator cores, shader packs, cheat packs — tie to existing cheat/patch paths |
 
 ### Waves
@@ -62,7 +62,10 @@
 | SRV-3 | Docker control (start/stop) behind explicit flag | Post-1.0 OK |
 | SRV-4 | Party “Join server” deep link | Nice |
 
-### Non-goals
+### Not in this slice
+
+*Scope note: these are **not in this slice**, not refused. Reasoning and
+reopen conditions live in the private working doc.*
 
 - Multi-tenant public hosting  
 - Auto-billing  
