@@ -1,6 +1,6 @@
 # Documentation map (runbooks, SOPs, assets)
 
-**Date:** 2026-08-01 · **Product version:** 0.2.0 (in progress)  
+**Date:** 2026-08-01 · **Product version:** 1.0.0-beta  
 **Purpose:** Inventory of docs, ops, and communications.  
 **Sync rule:** `.cursor/skills/docs-sync/` + `.cursor/rules/docs-sync.mdc` — update on every code change.
 

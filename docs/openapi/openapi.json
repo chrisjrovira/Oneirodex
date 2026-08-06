@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "GameTheca API",
-    "version": "0.2.0",
+    "version": "1.0.0-beta",
     "description": "Self-hosted multi-user game library API. Authenticate with session cookies or Authorization: Bearer gt_<prefix>_<secret>."
   },
   "servers": [

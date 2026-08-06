@@ -33,7 +33,15 @@ First milestone release on the `feature/roadmap-q1-foundation` track (GameTheca 
 - Hardlink and AI apply remain feature-flagged and path-sandboxed
 - `SECRET_KEY` required; container refuses the placeholder
 
-## [Unreleased]
+## [1.0.0-beta] — 2026-08-06
+
+First beta of the 1.0 line. Everything previously tracked as *Unreleased* is
+part of this release; the version was also unified — `VERSION`, `app_version`,
+both SPA packages, the desktop client, the Compose image tag and the OpenAPI
+contract had drifted across `0.1.0` and `0.2.0` and now all read `1.0.0-beta`.
+
+> The desktop `tauri.conf.json` carries plain `1.0.0`: the Windows MSI installer
+> requires a three-part numeric version and rejects a prerelease suffix.
 
 ### Breaking
 
@@ -133,4 +141,5 @@ First milestone release on the `feature/roadmap-q1-foundation` track (GameTheca 
 - ClamAV daemon reachability for malware scan; LiveKit compose profile for voice; deferred WebRetro WASM (PCE/VICE/DOS)
 - Optional Compose `observability` profile (Prometheus/Grafana) — stub only; see [observability-profile.md](docs/runbooks/observability-profile.md)
 
+[1.0.0-beta]: https://github.com/chrisjrovira/gametheca/releases/tag/v1.0.0-beta
 [0.1.0]: https://github.com/chrisjrovira/gametheca/releases/tag/v0.1.0

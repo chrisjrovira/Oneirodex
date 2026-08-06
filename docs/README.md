@@ -1,6 +1,6 @@
 # GameTheca documentation
 
-**Product version:** 0.2.0 (in progress) — see root [CHANGELOG.md](../CHANGELOG.md) and [VERSION](../VERSION).
+**Product version:** 1.0.0-beta — see root [CHANGELOG.md](../CHANGELOG.md) and [VERSION](../VERSION).
 
 Hub for product, ops, and developer docs. Naming: **GameTheca** (package `gametheca/`, Docker `chrisjrovira/gametheca`).
 
@@ -57,7 +57,7 @@ docs/
 | Surface | Value |
 |---|---|
 | Product | GameTheca |
-| Version | 0.2.0 (in progress) |
+| Version | 1.0.0-beta |
 | GitHub | chrisjrovira/gametheca |
 | App / DB containers | gametheca-app · gametheca-db |
 | Optional voice | gametheca-livekit (`--profile livekit`) |

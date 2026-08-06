@@ -32,7 +32,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: gametheca:0.2.0
+    image: gametheca:1.0.0-beta
     container_name: gametheca-app
     restart: unless-stopped
     ports:

@@ -22,7 +22,7 @@ mail = Mail()
 cache = Cache(config={'CACHE_TYPE': 'SimpleCache'})
 csrf = CSRFProtect()
 app_start_time = datetime.now()
-app_version = '0.2.0'
+app_version = '1.0.0-beta'
 
 
 def create_app():
