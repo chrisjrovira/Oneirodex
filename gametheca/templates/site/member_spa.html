@@ -13,6 +13,8 @@
   data-show-help="{{ 'true' if show_help_button else 'false' }}"
   data-enable-vr="{{ 'true' if enable_vr_browse else 'false' }}"
   data-enable-activity="{{ 'true' if enable_activity_feed else 'false' }}"
+  {# UIR-1 two-bar chrome — opt-in until pages adopt it. #}
+  data-enable-new-chrome="{{ 'true' if enable_new_chrome else 'false' }}"
   data-show-play-status="{{ 'true' if show_play_status else 'false' }}"
   data-username="{{ current_user.name or '' }}"
   data-locale="{{ (prefs.locale if prefs and prefs.locale else 'en') }}"

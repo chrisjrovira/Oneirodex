@@ -88,6 +88,11 @@ class Config(object):
     OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://127.0.0.1:11434')
     OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3.2')
 
+    # UIR-1 two-bar chrome — opt-in preview while the pages migrate. Not an
+    # admin Features toggle on purpose: it is a build-out flag, and a switch in
+    # the admin UI that only half-changes the layout would be its own lie.
+    ENABLE_NEW_CHROME = os.getenv('ENABLE_NEW_CHROME', 'false').lower() == 'true'
+
     # Theme fonts. Empty FONT_PATH means the default under static/library/fonts,
     # which is what a Compose deploy wants (it already persists that volume).
     FONT_PATH = os.getenv('FONT_PATH', '')

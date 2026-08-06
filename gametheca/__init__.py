@@ -108,6 +108,9 @@ def create_app():
             'enable_activity_feed': bool(
                 app.config.get('ENABLE_ACTIVITY_FEED', True)
             ),
+            # UIR-1: two-bar chrome. Off by default until the pages adopt it,
+            # so this ships dark rather than half-applied.
+            'enable_new_chrome': bool(app.config.get('ENABLE_NEW_CHROME', False)),
         }
 
     @app.before_request

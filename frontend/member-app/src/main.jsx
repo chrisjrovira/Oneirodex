@@ -16,6 +16,9 @@ export function parseRootConfig(rootElement) {
     defaultSort: rootElement.dataset.defaultSort,
     defaultSortOrder: rootElement.dataset.defaultSortOrder,
     isAdmin: rootElement.dataset.isAdmin === 'true',
+    // UIR-1: two-bar chrome. Opt-in until the pages adopt it (UIR-2/3), so
+    // an unset attribute keeps the existing TopNav.
+    enableNewChrome: rootElement.dataset.enableNewChrome === 'true',
     showPlayStatus: rootElement.dataset.showPlayStatus === 'true',
     libraryCount: Number(rootElement.dataset.libraryCount),
     gamesCount: Number(rootElement.dataset.gamesCount),

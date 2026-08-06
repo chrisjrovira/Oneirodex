@@ -1,0 +1,300 @@
+/* Two-bar chrome (UIR-1) — shared by the member SPA and Jinja admin.
+ *
+ * Deliberately a NEW filename rather than an addition to gt-chrome.css.
+ * `theme_asset` serves a themed copy when one exists and falls back to
+ * `default` only when it does not. Every installed theme already ships its own
+ * gt-chrome.css, so adding there would leave anyone on aurora/ember/forest with
+ * unstyled bars until an admin ran "Reset Themes". No theme has gt-appbar.css,
+ * so the fallback fires for everyone and this works on first load.
+ *
+ * Bar one is identity and destination. Bar two is everything the current page
+ * can do. Nothing else sits above the content — page headers are retired
+ * (UIR-3); the section name lives in bar two's segmented control instead.
+ */
+
+/* ---------- bar one: identity + destination ---------- */
+
+.gt-appbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 3rem;
+  padding: 0 0.9rem;
+  background: var(--gt-surface, #141a24);
+  border-bottom: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  color: var(--gt-text, #f2f4f8);
+}
+
+.gt-appbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: inherit;
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+
+.gt-appbar__mark {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.gt-appbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.gt-appbar__link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--gt-text-muted, #b6becc);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.gt-appbar__link:hover {
+  background: color-mix(in srgb, var(--gt-text, #f2f4f8) 8%, transparent);
+  color: var(--gt-text, #f2f4f8);
+}
+
+/* Underline rather than a filled pill: the active *destination* should read
+   quieter than the active *view* in bar two, which is what people change. */
+.gt-appbar__link.is-active {
+  color: var(--gt-text, #f2f4f8);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--gt-accent, #2fd67b);
+}
+
+.gt-appbar__spacer {
+  margin-left: auto;
+}
+
+.gt-appbar__tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
+/* ---------- bar two: context ---------- */
+
+.gt-contextbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.6rem;
+  padding: 0.35rem 0.9rem;
+  background: var(--gt-surface, #141a24);
+  border-bottom: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.gt-contextbar__views {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.gt-contextbar__views::-webkit-scrollbar {
+  display: none;
+}
+
+.gt-contextbar__actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+}
+
+.gt-contextbar__count {
+  font-size: 0.75rem;
+  color: var(--gt-text-muted, #b6becc);
+  white-space: nowrap;
+}
+
+/* ---------- segmented control (sibling views) ---------- */
+
+.gt-seg {
+  display: inline-flex;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--gt-surface-2, #1c2230);
+}
+
+.gt-seg__item {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--gt-text-muted, #b6becc);
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.gt-seg__item + .gt-seg__item {
+  border-left: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+}
+
+.gt-seg__item:hover {
+  color: var(--gt-text, #f2f4f8);
+  background: color-mix(in srgb, var(--gt-text, #f2f4f8) 7%, transparent);
+}
+
+.gt-seg__item[aria-pressed='true'],
+.gt-seg__item.is-active {
+  background: var(--gt-accent, #2fd67b);
+  color: var(--gt-bg, #0b0d10);
+  font-weight: 600;
+}
+
+.gt-seg__item:focus-visible {
+  outline: 2px solid var(--gt-accent, #2fd67b);
+  outline-offset: -2px;
+}
+
+/* ---------- bar-two buttons ---------- */
+
+.gt-cbtn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 7px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  background: transparent;
+  color: var(--gt-text-muted, #b6becc);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
+}
+
+.gt-cbtn:hover {
+  color: var(--gt-text, #f2f4f8);
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+}
+
+.gt-cbtn:focus-visible {
+  outline: 2px solid var(--gt-accent, #2fd67b);
+  outline-offset: 1px;
+}
+
+.gt-cbtn--primary {
+  background: var(--gt-accent, #2fd67b);
+  border-color: var(--gt-accent, #2fd67b);
+  color: var(--gt-bg, #0b0d10);
+  font-weight: 600;
+}
+
+/* Active filters must stay visible from the collapsed state. Without this
+   badge a popover silently hides why the grid looks empty. */
+.gt-cbtn.is-on {
+  color: var(--gt-text, #f2f4f8);
+  border-color: var(--gt-accent, #2fd67b);
+}
+
+.gt-cbtn__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  background: var(--gt-accent, #2fd67b);
+  color: var(--gt-bg, #0b0d10);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+/* ---------- popover ---------- */
+
+.gt-pop {
+  position: relative;
+  display: inline-flex;
+}
+
+.gt-pop__panel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 60;
+  min-width: 18rem;
+  max-width: min(26rem, 90vw);
+  max-height: min(70vh, 34rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  background: var(--gt-surface-2, #1c2230);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.gt-pop__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.gt-pop__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gt-text, #f2f4f8);
+}
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 900px) {
+  .gt-appbar {
+    height: 2.85rem;
+    padding: 0 0.6rem;
+    gap: 0.6rem;
+  }
+
+  /* Primary destinations collapse to the hamburger already in TopNav; the
+     context bar is what matters on a phone, so it keeps its full width. */
+  .gt-appbar__nav {
+    display: none;
+  }
+
+  .gt-contextbar {
+    padding: 0.35rem 0.6rem;
+    gap: 0.45rem;
+  }
+
+  .gt-pop__panel {
+    position: fixed;
+    left: 0.6rem;
+    right: 0.6rem;
+    top: auto;
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-appbar__link,
+  .gt-seg__item,
+  .gt-cbtn {
+    transition: none;
+  }
+}
