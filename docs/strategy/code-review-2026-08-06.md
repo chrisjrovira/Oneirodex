@@ -81,7 +81,7 @@ It matters most for exactly this project's target deployment (Unraid + Docker).
 applied to `content_path` before any filesystem call, plus a "test mapping"
 button that reports whether the rewritten path exists.
 
-### 2.4 Test suite: **126 failed / 2,965 passed / 17 errors** (3,091 total, 42 min)
+### 2.4 Test suite: 143 broken → **114** after four harness fixes
 
 **Correction.** I said repeatedly through this session that the failures were
 "one shared-state isolation problem, not product defects." That was wrong, and
@@ -103,9 +103,30 @@ None of the three is a product defect, so the ~96% pass rate is not hiding
 broken features. But the suite still cannot gate CI, and the reason is three
 harness problems rather than one.
 
-**Fix order:** set `SERVER_NAME` in the test config (largest single share),
-then replace `delete(Game)` with `TRUNCATE … RESTART IDENTITY CASCADE` in the
-fixtures that use it, then chase the remaining context leaks.
+**Measured result (full runs, 3,108 tests each).**
+
+| | baseline | after |
+|---|---|---|
+| FAILED + ERROR entries | 143 | **114** |
+| passed | 2,965 | 2,994 |
+| collection/fixture **errors** | 17 | **0** |
+| `SERVER_NAME` failures | many | **0** |
+| AsyncMock coroutine failures | many | **0** |
+| `ForeignKeyViolation` | 56 | **2** |
+
+**29 fixed, 0 new breaks.** All four causes above are closed or nearly so.
+
+**What the remaining 114 actually are.** With those gone, the residual is
+dominated by exactly the thing my earlier claim over-applied: **cross-file
+state leakage**. `tests/test_routes_library.py` is the clearest case — it
+passes **27/27 in isolation** and still contributes 15 failures to the bulk
+run. Nothing is wrong with those tests or that code; a sibling file leaves
+config or DB rows dirty.
+
+So the original "isolation problem" reading was wrong as a description of
+*all* the failures, and is right as a description of *what is left*. Fixing it
+needs an autouse reset fixture in `conftest.py` — per-test config snapshot plus
+a truncation or rollback — rather than more per-file patching.
 
 ## 3. Complexity hotspots
 
