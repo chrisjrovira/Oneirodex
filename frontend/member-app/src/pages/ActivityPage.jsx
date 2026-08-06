@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageStatus } from '../components/PageStatus'
 import { VoiceLobby } from '../components/VoiceLobby'
+import '../styles/panelGrid.css'
 
 async function fetchActivity({ signal, friendsOnly } = {}) {
   const qs = friendsOnly ? '?friends_only=1' : ''
@@ -202,8 +203,8 @@ export function ActivityPage() {
   }
 
   return (
-    <div className="gt-more-page">
-      <div className="gt-page-header">
+    <div className="gt-more-page gt-panels">
+      <div className="gt-page-header gt-panels__full">
         <h1>Activity</h1>
       </div>
       <p className="gt-more-page__lede">

@@ -5,6 +5,7 @@ import { queueClientCommand } from '../api/clientCommands'
 import { addWantedUpdate, fetchStoreSearch, fetchUpdatesInbox } from '../api/updates'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { showToast } from '../utils/toast'
+import '../styles/panelGrid.css'
 
 const INBOX_POLL_MS = 50000
 const CALENDAR_TEASER_LIMIT = 5
@@ -185,8 +186,8 @@ export function UpdatesPage() {
   }
 
   return (
-    <div className="gt-more-page gt-updates">
-      <div className="gt-page-header gt-updates__header">
+    <div className="gt-more-page gt-updates gt-panels">
+      <div className="gt-page-header gt-updates__header gt-panels__full">
         <div>
           <h1>Updates</h1>
           <p className="gt-more-page__lede">

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createToken, listTokens, revokeToken } from '../api/tokens'
 import { copyText } from '../utils/copyText'
 import { showToast } from '../utils/toast'
+import '../styles/panelGrid.css'
 import './TokensPage.css'
 
 const PRESET_FALLBACK = {
@@ -142,8 +143,8 @@ export function TokensPage() {
   const presetMeta = presets[preset] || PRESET_FALLBACK[preset] || PRESET_FALLBACK.companion
 
   return (
-    <div className="gt-more-page gt-tokens">
-      <div className="gt-page-header">
+    <div className="gt-more-page gt-tokens gt-panels">
+      <div className="gt-page-header gt-panels__full">
         <h1>API tokens</h1>
       </div>
       <p className="gt-more-page__lede">

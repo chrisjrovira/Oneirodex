@@ -4,6 +4,7 @@ import { fetchAnnouncements } from '../api/announcements'
 import { claimFreeGameAssist, fetchFreeGames } from '../api/freeGames'
 import { fetchGamingNews } from '../api/gamingNews'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
+import '../styles/panelGrid.css'
 import './NewsPage.css'
 
 function formatEndsAt(value) {
@@ -153,8 +154,8 @@ export function NewsPage() {
   const freeRest = freeGames && featured?.kind === 'free' ? freeGames.slice(1) : freeGames || []
 
   return (
-    <div className="gt-more-page gt-news">
-      <div className="gt-page-header gt-news__header">
+    <div className="gt-more-page gt-news gt-panels">
+      <div className="gt-page-header gt-news__header gt-panels__full">
         <div>
           <h1>News</h1>
           <p className="gt-more-page__lede">
@@ -193,7 +194,7 @@ export function NewsPage() {
       {loading ? <p>Loading…</p> : null}
 
       {!error && !loading && featured && (activeTab === 'all' || activeTab === 'admins') ? (
-        <section className="gt-news__hero" aria-label="Featured">
+        <section className="gt-news__hero gt-panels__full" aria-label="Featured">
           <p className="gt-news__hero-kicker">
             {featured.kind === 'admin'
               ? 'From your admins'
@@ -374,7 +375,7 @@ export function NewsPage() {
       ) : null}
 
       {!error && headlines && showHeadlines ? (
-        <section className="gt-news__section" aria-labelledby="news-headlines-heading">
+        <section className="gt-news__section gt-panels__wide" aria-labelledby="news-headlines-heading">
           <div className="gt-news__section-head">
             <h2 id="news-headlines-heading">Gaming headlines</h2>
             <span className="gt-news__count">{headlines.length}</span>

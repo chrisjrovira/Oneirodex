@@ -497,3 +497,34 @@
 .gt-news__connect-hint:focus-visible {
   color: var(--gt-accent, #2fd67b);
 }
+
+/* Side-by-side panels (>=1120px): "From your admins" and "Free now" sit next to
+   each other instead of stacking, with headlines spanning beneath. Sections
+   already carry a bottom margin for the stacked case; the grid supplies its own
+   gap, so drop it to avoid a double gutter. */
+@media (min-width: 1120px) {
+  .gt-news.gt-panels .gt-news__section {
+    margin-bottom: 0;
+  }
+
+  /* Inside a half-width panel the offers read better as a single column than
+     as a cramped two-up. */
+  .gt-news.gt-panels .gt-news__free-strip {
+    grid-template-columns: 1fr;
+  }
+
+  /* Headlines get the full row back, so let them use it. The rail is a flex
+     column by default; switch it to a grid here rather than leaving a dead
+     grid-template-columns on a flex container. */
+  .gt-news.gt-panels .gt-panels__wide .gt-news__rail {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+    column-gap: 1.25rem;
+  }
+
+  /* Row separators read as a list in one column; in a grid they would draw
+     mid-row borders, so scope them back to the single-column case. */
+  .gt-news.gt-panels .gt-panels__wide .gt-news__rail-item {
+    border-bottom: none;
+  }
+}

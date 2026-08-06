@@ -1,0 +1,50 @@
+/* Shared side-by-side panel layout.
+ *
+ * The problem this solves: several member pages are a single column of
+ * full-width sections stacked vertically. On a 1080p+ screen that wastes most
+ * of the horizontal space and turns a page that holds maybe two screens of
+ * content into a long scroll.
+ *
+ * Usage: put `gt-panels` on the page root, and mark anything that should stay
+ * full width (page header, tabs, a hero) with `gt-panels__full`. Everything
+ * else flows into columns. Below the breakpoint it is a plain single column,
+ * so mobile is unchanged.
+ *
+ * `align-items: start` matters — without it every panel in a row stretches to
+ * the tallest one, which reintroduces the empty space this is meant to remove.
+ */
+
+@media (min-width: 1120px) {
+  .gt-panels {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 1.1rem 1.4rem;
+  }
+
+  .gt-panels__full {
+    grid-column: 1 / -1;
+  }
+
+  /* A panel that is genuinely wide (a horizontal strip, a wide table) can opt
+     back out rather than being squeezed into half a column. */
+  .gt-panels__wide {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Three columns once there is genuinely room, so ultrawide does not just get
+   two very fat columns. */
+@media (min-width: 1700px) {
+  .gt-panels--dense {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Panels own their own internal scroll only when explicitly asked. Capping
+   height by default would hide content on short pages. */
+.gt-panels__scroll {
+  max-height: min(62vh, 40rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
