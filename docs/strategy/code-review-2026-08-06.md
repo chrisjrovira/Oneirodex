@@ -94,14 +94,19 @@ distinct causes, and the largest one is not isolation at all.
 | **`SERVER_NAME` never configured** | `RuntimeError: Unable to build URLs outside an active request without 'SERVER_NAME'`. `config.py` never sets it; only `test_theme_asset.py` sets it locally. | **Test-only today.** In-request `url_for(_external=True)` derives the host from the request. Latent risk: any future background job that builds an external URL will raise — the email digest currently builds none. |
 | **App-context leaks** | `Working outside of application context` | Test-only |
 
-The decisive check: `tests/test_routes_library.py` fails **20 of 27 in complete
-isolation**, with the whole suite excluded. Isolation is therefore *not* the
-explanation for that file — it is the `SERVER_NAME` gap. My earlier claim held
-only for the handful of files I happened to sample.
+Plus a fourth, found while fixing the others and the largest of the set:
+`patch('...current_user')` returns an **AsyncMock**, because werkzeug's
+`LocalProxy` forwards `__await__` and mock auto-detects it as awaitable. Every
+attribute then yields a coroutine.
 
-None of the three is a product defect, so the ~96% pass rate is not hiding
-broken features. But the suite still cannot gate CI, and the reason is three
-harness problems rather than one.
+The check that broke my original claim: at the time,
+`tests/test_routes_library.py` failed **20 of 27 in complete isolation**, with
+the whole suite excluded — so isolation could not have been the explanation for
+that file. (After the fixes below it passes 27/27 alone; see the residual
+analysis.)
+
+None of the four is a product defect, so the ~96% pass rate is not hiding
+broken features. But the suite still cannot gate CI.
 
 **Measured result (full runs, 3,108 tests each).**
 
@@ -124,9 +129,33 @@ run. Nothing is wrong with those tests or that code; a sibling file leaves
 config or DB rows dirty.
 
 So the original "isolation problem" reading was wrong as a description of
-*all* the failures, and is right as a description of *what is left*. Fixing it
-needs an autouse reset fixture in `conftest.py` — per-test config snapshot plus
-a truncation or rollback — rather than more per-file patching.
+*all* the failures, and is right as a description of *what is left*.
+
+**An attempted fix, and what it ruled out.** The obvious next step looked like
+an autouse reset fixture in `conftest.py`. Two variants were built and measured
+against a three-file sample: delete the shared `GlobalSettings` row before and
+after each test, then the same but recreating it via
+`initialize_default_settings()` (deleting alone is *not* equivalent to
+defaulted — several endpoints read the row directly and report a missing row as
+"off").
+
+**Both were exactly neutral** — 2 failed / 21 passed, identical to the same
+sample with no fixture at all. The fixture was reverted rather than shipped:
+an autouse hook that costs a DELETE plus an init on all 3,108 tests and changes
+no outcome is worse than nothing.
+
+Two things this establishes for whoever picks it up:
+
+* `app` is already function-scoped, so **`app.config` is not the leak** — a
+  fresh app is built per test.
+* The shared `GlobalSettings` row is **not the leak either**, despite being the
+  obvious suspect and despite a real ordering-dependent failure
+  (`test_arr_status_disabled` → `test_arr_status_enabled_via_config`) that
+  pointed straight at it.
+
+The residual therefore needs actual diagnosis — bisecting which file poisons
+which, or per-test DB snapshotting — not another guessed reset. Worth doing
+deliberately rather than by another round of plausible-sounding hypotheses.
 
 ## 3. Complexity hotspots
 

@@ -39,7 +39,7 @@ needing a key skip themselves when unset.
 
 **Superseded 2026-08-06** — see
 [code-review-2026-08-06.md](code-review-2026-08-06.md) §2.4. A full run
-(126 failed / 2,965 passed / 17 errors) plus isolated re-runs showed the
+(since improved to 114 broken / 2,994 passed / 0 errors) plus isolated re-runs showed the
 "one shared-state isolation problem" reading was wrong: the largest share is
 an unset `SERVER_NAME`, then fixtures whose bulk `delete(Game)` bypasses ORM
 association cleanup, then genuine context leaks. None is a product defect,
