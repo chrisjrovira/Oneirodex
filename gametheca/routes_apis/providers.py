@@ -263,3 +263,44 @@ def theme_fonts_list():
             'licensed fonts in fonts_dir to have them offered here.'
         ),
     })
+
+
+@apis_bp.route('/theme/fonts.css', methods=['GET'])
+def theme_fonts_css():
+    """``@font-face`` rules plus the caller's chosen family.
+
+    Served as a stylesheet rather than injected inline so the browser caches it
+    and so a page can link it before first paint. Without this route the font
+    files are installed and the picker lists them, but nothing on any page ever
+    declares the families — the whole feature is inert.
+
+    Unauthenticated on purpose: it is public CSS for public font files, and the
+    login page should render in the household face too.
+    """
+    from flask import make_response, request
+
+    from gametheca.utils.theme_fonts import (
+        DEFAULT_FONT_ID,
+        font_face_css,
+        resolve_font,
+    )
+
+    chosen = request.args.get('font')
+    if not chosen and getattr(current_user, 'is_authenticated', False):
+        chosen = getattr(getattr(current_user, 'preferences', None), 'font', None)
+    entry = resolve_font(chosen or DEFAULT_FONT_ID)
+
+    css = (
+        f"{font_face_css()}\n\n"
+        ":root {\n"
+        f"  --gt-font-family: {entry['stack']};\n"
+        "}\n"
+        "body, .gt-shell, .gt-topnav, button, input, select, textarea {\n"
+        "  font-family: var(--gt-font-family);\n"
+        "}\n"
+    )
+    response = make_response(css)
+    response.headers['Content-Type'] = 'text/css; charset=utf-8'
+    # Short cache: a font upload or preference change should show up promptly.
+    response.headers['Cache-Control'] = 'public, max-age=60'
+    return response

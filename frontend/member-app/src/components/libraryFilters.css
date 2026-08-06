@@ -27,29 +27,40 @@
 }
 
 /* Desktop LHN collapse rail — slim arrow; grid column width drives tile reflow. */
+/* A slim tab fused to the filter panel's trailing edge, vertically centred —
+   not a button parked over the grid. Rounded on the outer edge only so it reads
+   as part of the panel rather than a floating control. */
 .library-filters-collapse {
   appearance: none;
+  position: absolute;
+  top: 50%;
+  right: -0.9rem;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
-  width: 1.85rem;
-  height: 2.15rem;
-  margin: 0 0 0.35rem;
+  width: 0.9rem;
+  height: 4.25rem;
+  margin: 0;
   padding: 0;
-  border-radius: 8px;
+  z-index: 2;
+  border-radius: 0 7px 7px 0;
   border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  border-left: none;
   background: var(--gt-surface-2, #1c2230);
   color: var(--gt-text-muted, #c4ccd8);
   cursor: pointer;
   transition:
     border-color 0.15s ease,
     background 0.15s ease,
-    color 0.15s ease;
+    color 0.15s ease,
+    width 0.15s ease;
 }
 
 .library-filters-collapse:hover {
+  width: 1.05rem;
   border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 12%, var(--gt-surface-2, #1c2230));
   color: var(--gt-text, #f2f4f8);
 }
 
@@ -60,6 +71,10 @@
 
 .library-filters-collapse__icon {
   display: block;
+  width: 12px;
+  height: 12px;
+  /* The tab is narrower than the glyph box; let it overhang rather than clip. */
+  margin-inline: -1px;
 }
 
 .library-filters__signals {
@@ -133,9 +148,10 @@
   max-width: 17.5rem;
   min-width: 0;
   max-height: calc(100vh - 3.75rem);
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  /* Visible, not auto: the edge tab hangs past this box, and a scroll container
+     here would both clip it and scroll it away from centre. The inner stack
+     owns scrolling instead. */
+  overflow: visible;
   padding: 0.15rem 0.1rem 0.5rem;
   box-sizing: border-box;
   transition:
@@ -144,10 +160,18 @@
     padding 0.22s ease;
 }
 
-/* Room for the pinned pull handle once the panel itself is out of flow. */
+/* Scrolling lives on the stack so the tab stays put at the panel's midpoint. */
+.library-layout__filters > .library-filters-stack {
+  max-height: calc(100vh - 4.25rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Just enough room for the edge tab once the panel itself has no width. */
 .library-layout.is-filters-collapsed {
   gap: 0;
-  padding-left: 2rem;
+  padding-left: 1.15rem;
 }
 
 /* Collapsed = the panel pulls out to the left and gives the grid its width
@@ -186,17 +210,11 @@
     opacity 0.22s ease;
 }
 
-/* The handle stays pinned at the left edge so there is always something to
-   pull the panel back in by. */
+/* Collapsed, the panel has no width, so the same edge tab now sits at the left
+   edge of the layout — still vertically centred, still the only thing showing. */
 .library-layout.is-filters-collapsed .library-filters-collapse {
-  position: absolute;
-  left: 0;
-  top: 0;
+  right: -0.9rem;
   z-index: 21;
-  width: 1.6rem;
-  margin: 0;
-  border-radius: 0 8px 8px 0;
-  border-left: none;
 }
 
 .library-layout__main {
@@ -295,11 +313,20 @@
 
   .library-layout.is-filters-collapsed {
     gap: 0.65rem;
+    /* No edge tab on mobile, so no gutter reserved for one. */
+    padding-left: 0.5rem;
   }
 
   /* Mobile uses Filters drawer; hide desktop LHN collapse rail. */
   .library-filters-collapse {
     display: none;
+  }
+
+  /* The drawer scrolls as one; don't cap the inner stack as the desktop
+     sticky panel does. */
+  .library-layout__filters > .library-filters-stack {
+    max-height: none;
+    overflow: visible;
   }
 
   .library-layout.is-filters-collapsed .library-filters-stack {

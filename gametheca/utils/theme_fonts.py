@@ -63,7 +63,11 @@ BUILT_IN_FONTS: dict[str, dict] = {
     'orbitron': {
         'label': 'Orbitron — 32-bit / disc era',
         'stack': '"Orbitron", "Arial Black", sans-serif',
-        'file': 'Orbitron-Bold.ttf',
+        # Orbitron ships upstream as a variable font only; there is no static
+        # Bold to fetch. `weight` makes the @font-face declare the axis range so
+        # the browser can synthesise Bold from it instead of pinning 400.
+        'file': 'Orbitron-Variable.ttf',
+        'weight': '400 900',
         'era': '32bit',
         'license': 'SIL Open Font License 1.1',
     },
@@ -114,9 +118,15 @@ def _operator_fonts() -> dict[str, dict]:
     found: dict[str, dict] = {}
     if not os.path.isdir(root):
         return found
+    # Skip by *filename*, not by derived id: a built-in's file stem does not
+    # match its registry key (PressStart2P-Regular.ttf -> 'press-start'), so an
+    # id-only check lists every installed built-in a second time as "(operator)".
+    builtin_files = {e['file'] for e in BUILT_IN_FONTS.values() if e.get('file')}
     for name in sorted(os.listdir(root)):
         stem, ext = os.path.splitext(name)
         if ext.lower() not in ('.ttf', '.otf', '.woff', '.woff2'):
+            continue
+        if name in builtin_files:
             continue
         key = stem.lower().replace(' ', '-').replace('_', '-')
         if key in BUILT_IN_FONTS:
@@ -177,10 +187,15 @@ def font_face_css() -> str:
                 'opentype' if file_name.endswith('.otf') else 'truetype'
             )
         )
+        # A variable face must declare its axis range, or the browser pins the
+        # default instance and bold requests fall back to synthetic smearing.
+        weight = entry.get('weight')
+        weight_rule = f"  font-weight: {weight};\n" if weight else ''
         blocks.append(
             f"@font-face {{\n"
             f"  font-family: '{family}';\n"
             f"  src: url('{url}') format('{fmt}');\n"
+            f"{weight_rule}"
             f"  font-display: swap;\n"
             f"}}"
         )

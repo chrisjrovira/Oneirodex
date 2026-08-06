@@ -268,6 +268,7 @@ class UserPreferencesForm(FlaskForm):
     default_sort_order = SelectField('Default Sort Order', choices=default_sort_order_choices)
     theme = SelectField('Theme', choices=[('default', 'Default (system)')])  # folder slug `default`
     icon_pack = SelectField('Icon pack', choices=[('outline', 'Outline')])
+    font = SelectField('Font', choices=[('system-ui', 'System UI (default)')])
     tile_size = StringField('Tile size %', default='50')
     preferred_game_locale = SelectField(
         'Preferred game language',
@@ -300,6 +301,18 @@ class UserPreferencesForm(FlaskForm):
             ] or [('outline', 'Outline')]
         except Exception:
             self.icon_pack.choices = [('outline', 'Outline')]
+        try:
+            from gametheca.utils.theme_fonts import available_fonts
+
+            # A face whose file is missing still appears (the picker stays
+            # stable) but says so, rather than silently falling back.
+            self.font.choices = [
+                (key, entry['label'] if entry.get('installed')
+                 else f"{entry['label']} — not installed")
+                for key, entry in available_fonts().items()
+            ] or [('system-ui', 'System UI (default)')]
+        except Exception:
+            self.font.choices = [('system-ui', 'System UI (default)')]
 
 
 class LibraryForm(FlaskForm):

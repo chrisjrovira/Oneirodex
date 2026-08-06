@@ -649,6 +649,10 @@ class DatabaseManager:
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS icon_pack VARCHAR(50) DEFAULT 'outline';
 
+        -- Theme font id (utils.theme_fonts). Orthogonal to theme + icon pack.
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS font VARCHAR(64) DEFAULT 'system-ui';
+
         CREATE TABLE IF NOT EXISTS emulator_saves (
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

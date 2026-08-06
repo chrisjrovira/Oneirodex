@@ -207,6 +207,7 @@ def settings_panel():
         current_user.preferences.default_sort_order = form.default_sort_order.data
         current_user.preferences.theme = form.theme.data or 'default'
         current_user.preferences.icon_pack = form.icon_pack.data or 'outline'
+        current_user.preferences.font = form.font.data or 'system-ui'
         current_user.preferences.tile_size = _normalize_tile_percent(form.tile_size.data)
         current_user.preferences.preferred_game_locale = (
             form.preferred_game_locale.data or 'en-US'
@@ -219,6 +220,7 @@ def settings_panel():
                 'success': True,
                 'message': 'Preferences updated successfully!',
                 'icon_pack': current_user.preferences.icon_pack or 'outline',
+                'font': current_user.preferences.font or 'system-ui',
                 'theme': current_user.preferences.theme or 'default',
             })
         except Exception as e:
@@ -233,6 +235,7 @@ def settings_panel():
             form.default_sort_order.data = prefs.default_sort_order or 'asc'
             form.theme.data = prefs.theme or 'default'
             form.icon_pack.data = getattr(prefs, 'icon_pack', None) or 'outline'
+            form.font.data = getattr(prefs, 'font', None) or 'system-ui'
             form.tile_size.data = _normalize_tile_percent(getattr(prefs, 'tile_size', None))
             form.preferred_game_locale.data = (
                 getattr(prefs, 'preferred_game_locale', None) or 'en-US'

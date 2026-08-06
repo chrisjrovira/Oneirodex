@@ -46,6 +46,9 @@
     <link rel="stylesheet" href="{{ 'css/games/library_browser.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/games/game_status.css'|theme_asset }}">
     {% if icon_pack_css %}<link rel="stylesheet" id="gt-icon-pack-css" href="{{ icon_pack_css }}">{% endif %}
+    {# Declares @font-face for every installed theme face and applies the
+       member's chosen family. Without it the font picker cannot do anything. #}
+    <link rel="stylesheet" id="gt-theme-fonts-css" href="{{ url_for('apis.theme_fonts_css') }}">
     
     <script src="{{ 'js/gt_loading_motifs.js'|theme_asset }}"></script>
     <script src="{{ 'js/preferences_modal.js'|theme_asset }}"></script>

@@ -81,6 +81,17 @@
                                 {% endfor %}
                             </div>
                         </div>
+                        <div class="gt-prefs-field gt-picker-field">
+                            {{ form.font.label(class="form-label") }}
+                            {{ form.font(class="form-select", id="fontSelect") }}
+                            {% for error in form.font.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            <p class="gt-prefs-hint" id="fontHint">
+                                Era faces are open-licence, not console manufacturers' typefaces.
+                                Anything marked <em>not installed</em> needs its file added by an admin.
+                            </p>
+                        </div>
                         <div class="gt-prefs-field">
                             {{ form.tile_size.label(class="form-label") }}
                             <div class="gt-prefs-range">

@@ -802,6 +802,9 @@ class UserPreference(db.Model):
     default_sort_order = db.Column(db.String(4), default='asc')
     theme = db.Column(db.String(50), default='default')
     icon_pack = db.Column(db.String(50), default='outline')
+    # Theme font id from utils.theme_fonts (orthogonal to theme and icon pack,
+    # exactly like icon_pack is).
+    font = db.Column(db.String(64), default='system-ui')
     locale = db.Column(db.String(10), default='en')
     preferred_game_locale = db.Column(db.String(16), default='en-US', nullable=False)
     tile_size = db.Column(db.String(8), default='50', nullable=False)

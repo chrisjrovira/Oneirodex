@@ -9,6 +9,7 @@ import {
 } from './api/batchActions'
 import { fetchBrowseGames } from './api/browse'
 import { applyPlatformSkin, clearPlatformSkin } from './chrome/platformSkins'
+import { SystemBackdrop } from './chrome/SystemBackdrop'
 import {
   BADGE_FILTER_PARAMS,
   badgeFiltersFromSearchParams,
@@ -627,6 +628,13 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     })
   }
 
+  // The label already rides along on the game rows, so the backdrop needs no
+  // extra fetch and no 70-entry name table to stay in step with the enum.
+  const selectedSystemLabel =
+    (result?.games ?? []).find(
+      (game) => game.library_platform === filters.library_platform,
+    )?.library_platform_label || filters.library_platform || ''
+
   const filterBar = (
     <div className="library-filters-stack">
       <FilterBar
@@ -640,6 +648,11 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   )
 
   return (
+    <>
+    <SystemBackdrop
+      platform={filters.library_platform}
+      label={selectedSystemLabel}
+    />
     <div
       className={`library-layout${filtersCollapsed ? ' is-filters-collapsed' : ''}`}
     >
@@ -667,16 +680,19 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
         className={`library-layout__filters${filtersOpen ? ' is-open' : ''}`}
         aria-label={t('Library filters')}
       >
+        {filterBar}
+        {/* Last child, and styled as a tab on the panel's own trailing edge —
+            it belongs to the filter section rather than floating over the grid. */}
         <LibraryFiltersCollapseToggle
           collapsed={filtersCollapsed}
           onToggle={toggleFiltersCollapsed}
           controlsId={filtersPanelId}
           t={t}
         />
-        {filterBar}
       </aside>
 
       <div className="library-layout__main">{content}</div>
     </div>
+    </>
   )
 }
