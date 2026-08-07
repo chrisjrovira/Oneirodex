@@ -9,9 +9,14 @@ Design notes
 ------------
 * One Playwright *context* per section, because Playwright records video per
   context — that is what gives us one file per topic instead of one long reel.
-* Every step is wrapped so a section that cannot run (feature off, no data)
-  **skips with a printed reason** rather than aborting the run or, worse,
-  recording a broken screen. Missing footage is honest; fake footage is not.
+* Optional steps (a feature that is off, a title with no screenshots) **skip
+  with a printed reason** rather than aborting the run. Missing footage is
+  honest; fake footage is not.
+* But a step the section is *about* is `required=True` and aborts it. Without
+  that, "find a game in your library" could record a clip where nobody finds a
+  game and still be counted among `recorded 10/10` — which is precisely what
+  happened when the chrome changed and the walkthrough silently skipped both
+  filters and opening a title.
 * Deliberate dwells: a video that snaps between screens faster than a reader
   can follow teaches nothing. `BEAT` is the base rhythm.
 
@@ -59,23 +64,51 @@ def beat(page, n: float = 1.0) -> None:
     page.wait_for_timeout(int(BEAT * n))
 
 
-def click_first(page, selectors: list[str], label: str) -> bool:
+class MissingAffordance(RuntimeError):
+    """A section could not do the thing the video exists to demonstrate."""
+
+
+def click_first(page, selectors: list[str], label: str, *, required: bool = False,
+                wait_ms: int = 8_000) -> bool:
     """Click the first selector that resolves. Returns False if none do.
 
     The UI has several equivalent affordances depending on viewport and role,
     so a section should not fail because one of them was renamed.
+
+    Two things this used to get wrong.
+
+    It checked visibility *immediately*. Under load the member SPA had not
+    finished rendering by then, so a control that exists perfectly well was
+    reported missing — that is how the library walkthrough came to skip both
+    "filters" and "a game tile". It now waits for the first selector to become
+    visible before giving up.
+
+    And a missed affordance was only ever printed. The recorder then wrote the
+    video and counted the section a success, so `recorded 10/10` could include
+    a "find a game in your library" clip in which nobody finds a game. Anything
+    a section is actually *about* passes ``required=True`` and raises instead.
     """
+    deadline = wait_ms
     for sel in selectors:
         try:
             loc = page.locator(sel).first
-            if loc.count() and loc.is_visible():
-                loc.scroll_into_view_if_needed(timeout=3_000)
-                beat(page, 0.4)
-                loc.click(timeout=5_000)
-                beat(page, 0.9)
-                return True
+            try:
+                loc.wait_for(state="visible", timeout=max(deadline, 1_000))
+            except Exception:  # noqa: BLE001
+                # Give the remaining selectors a short look rather than the
+                # full wait each — they are alternates, not a queue of retries.
+                deadline = 1_500
+                continue
+            loc.scroll_into_view_if_needed(timeout=3_000)
+            beat(page, 0.4)
+            loc.click(timeout=5_000)
+            beat(page, 0.9)
+            return True
         except Exception:  # noqa: BLE001
+            deadline = 1_500
             continue
+    if required:
+        raise MissingAffordance(f"{label} — the section cannot demonstrate its subject")
     print(f"    skip: no affordance for {label}")
     return False
 
@@ -109,7 +142,7 @@ def sec_library(page) -> None:
     # Filters: the thing most people reach for first.
     click_first(page, [
         'button:has-text("Filters")', '[aria-label*="ilter"]', '.gt-filterbar button',
-    ], "filters")
+    ], "filters", required=True)
     beat(page, 1.4)
 
     # Tile size — visibly changes the grid, so it reads well on video.
@@ -126,18 +159,19 @@ def sec_library(page) -> None:
             continue
 
     # Open the first real title.
+    # `.gt-game-card` never existed — the class is `game-card`. It matched
+    # nothing for as long as it has been here; the href selector is what has
+    # actually been doing the work.
     click_first(page, [
-        '.gt-game-card a', '[data-testid="game-card"] a',
-        'a[href*="/game_details/"]',
-    ], "a game tile")
+        'a[href*="/game_details/"]', '.game-card a', '[data-testid="game-card"] a',
+    ], "a game tile", required=True)
     beat(page, 2.2)
 
 
 def sec_game_details(page) -> None:
     """Read a game page: details, versions, related media, screenshots."""
     goto(page, "/library")
-    if not click_first(page, ['a[href*="/game_details/"]'], "a game tile"):
-        return
+    click_first(page, ['a[href*="/game_details/"]'], "a game tile", required=True)
     beat(page, 1.8)
 
     # Walk down the page the way a reader would.

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createRequest, deleteRequest, fetchRequests, resolveRequest } from '../api/wishlist'
+import { ContextBar, Popover } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import './WishlistPage.css'
 
@@ -11,6 +12,7 @@ const RESOLVE_ACTIONS = [
 
 export function WishlistPage({ shellConfig = {} } = {}) {
   const isLibrarian = Boolean(shellConfig.isLibrarian ?? shellConfig.isAdmin)
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [requests, setRequests] = useState(null)
   const [error, setError] = useState(null)
   const [reloadCount, setReloadCount] = useState(0)
@@ -99,40 +101,90 @@ export function WishlistPage({ shellConfig = {} } = {}) {
   }
 
   return (
+    <>
+    {useNewChrome ? (
+        <ContextBar
+          summary={requests ? `${requests.length} requests` : null}
+          actions={
+            <>
+              {isLibrarian ? (
+                <button
+                  type="button"
+                  className={`gt-cbtn${showAll ? ' is-on' : ''}`}
+                  aria-pressed={showAll}
+                  onClick={() => setShowAll((value) => !value)}
+                >
+                  Everyone’s requests
+                </button>
+              ) : null}
+              <Popover label="Request a title">
+              <form className="gt-wishlist__form" onSubmit={handleCreate}>
+                <label htmlFor="gt-wishlist-title">Title</label>
+                <input
+                  id="gt-wishlist-title"
+                  type="text"
+                  maxLength={255}
+                  required
+                  placeholder="Game title"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                />
+                <label htmlFor="gt-wishlist-notes">Notes</label>
+                <input
+                  id="gt-wishlist-notes"
+                  type="text"
+                  maxLength={400}
+                  placeholder="Optional details"
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                />
+                <button type="submit" disabled={submitting}>
+                  Request
+                </button>
+              </form>
+              </Popover>
+            </>
+          }
+        />
+      ) : null}
     <div className="gt-more-page gt-wishlist">
-      <div className="gt-page-header gt-wishlist__header">
-        <div>
-          <h1>Wishlist</h1>
-          <p className="gt-more-page__lede">Request titles you’d like added to the library.</p>
+      {useNewChrome ? null : (
+        <>
+        <div className="gt-page-header gt-wishlist__header">
+          <div>
+            <h1>Wishlist</h1>
+            <p className="gt-more-page__lede">Request titles you’d like added to the library.</p>
+          </div>
         </div>
-      </div>
 
-      <form className="gt-wishlist__form" onSubmit={handleCreate}>
-        <label htmlFor="gt-wishlist-title">Title</label>
-        <input
-          id="gt-wishlist-title"
-          type="text"
-          maxLength={255}
-          required
-          placeholder="Game title"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-        />
-        <label htmlFor="gt-wishlist-notes">Notes</label>
-        <input
-          id="gt-wishlist-notes"
-          type="text"
-          maxLength={400}
-          placeholder="Optional details"
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-        />
-        <button type="submit" disabled={submitting}>
-          Request
-        </button>
-      </form>
+        <form className="gt-wishlist__form" onSubmit={handleCreate}>
+          <label htmlFor="gt-wishlist-title">Title</label>
+          <input
+            id="gt-wishlist-title"
+            type="text"
+            maxLength={255}
+            required
+            placeholder="Game title"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
+          <label htmlFor="gt-wishlist-notes">Notes</label>
+          <input
+            id="gt-wishlist-notes"
+            type="text"
+            maxLength={400}
+            placeholder="Optional details"
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+          />
+          <button type="submit" disabled={submitting}>
+            Request
+          </button>
+        </form>
+        </>
+      )}
 
-      {isLibrarian ? (
+      {isLibrarian && !useNewChrome ? (
         <label className="gt-wishlist__toggle">
           <input
             type="checkbox"
@@ -219,5 +271,6 @@ export function WishlistPage({ shellConfig = {} } = {}) {
         </section>
       ) : null}
     </div>
+    </>
   )
 }

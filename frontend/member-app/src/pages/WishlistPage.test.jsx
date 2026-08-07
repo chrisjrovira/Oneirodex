@@ -167,3 +167,40 @@ test('surfaces a failed create request to the user', async () => {
     await screen.findByText('Wishlist requests are not available for this account'),
   ).toBeInTheDocument()
 })
+
+test('new chrome moves the request form and the librarian toggle into bar two', async () => {
+  const user = userEvent.setup()
+  global.fetch.mockReturnValue(jsonResponse({ requests: [] }))
+
+  render(<WishlistPage shellConfig={{ enableNewChrome: true, isLibrarian: true }} />)
+  await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull())
+
+  expect(screen.queryByRole('heading', { name: 'Wishlist' })).toBeNull()
+  // A permanently open request form above the list is furniture, not an action.
+  expect(screen.queryByPlaceholderText('Game title')).toBeNull()
+
+  await user.click(screen.getByRole('button', { name: /Request a title/ }))
+  expect(screen.getByPlaceholderText('Game title')).toBeInTheDocument()
+})
+
+test('the librarian scope toggle stays a real toggle after the move', async () => {
+  // It was a checkbox; as a bar-two button it must still report its state, or
+  // a librarian cannot tell whose requests they are looking at.
+  const user = userEvent.setup()
+  global.fetch.mockReturnValue(jsonResponse({ requests: [] }))
+
+  render(<WishlistPage shellConfig={{ enableNewChrome: true, isLibrarian: true }} />)
+  await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull())
+
+  const toggle = screen.getByRole('button', { name: /Everyone/ })
+  expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  await user.click(toggle)
+  expect(toggle).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('members never see the librarian scope toggle', async () => {
+  global.fetch.mockReturnValue(jsonResponse({ requests: [] }))
+  render(<WishlistPage shellConfig={{ enableNewChrome: true }} />)
+  await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull())
+  expect(screen.queryByRole('button', { name: /Everyone/ })).toBeNull()
+})
