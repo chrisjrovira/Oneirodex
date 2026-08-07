@@ -297,7 +297,7 @@ export function App({ shellConfig = {} }) {
           path="/activity"
           element={
             <LazyPage>
-              <ActivityPage />
+              <ActivityPage shellConfig={shellConfig} />
             </LazyPage>
           }
         />

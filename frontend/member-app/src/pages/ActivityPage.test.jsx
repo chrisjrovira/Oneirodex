@@ -70,3 +70,32 @@ test('activity page renders friends, feed chrome, and voice lobby', async () => 
   expect(screen.getByRole('heading', { name: 'Voice lobby' })).toBeInTheDocument()
   expect(screen.getByText(/nobody is playing right now/i)).toBeInTheDocument()
 })
+
+test('new chrome turns the friends-only checkbox into a view switch', async () => {
+  // "Friends only feed" narrows which activity you are looking at, which is a
+  // sibling view, not a page setting — so it belongs in the segmented control
+  // rather than as a stray checkbox under the heading.
+  const userEvent = (await import('@testing-library/user-event')).default
+  const user = userEvent.setup()
+
+  render(
+    <MemoryRouter>
+      <ActivityPage shellConfig={{ enableNewChrome: true }} />
+    </MemoryRouter>,
+  )
+  await waitFor(() => expect(fetch).toHaveBeenCalled())
+
+  expect(screen.queryByRole('heading', { name: 'Activity' })).toBeNull()
+  expect(screen.queryByLabelText(/Friends only feed/)).toBeNull()
+
+  const everyone = screen.getByRole('button', { name: 'Everyone' })
+  expect(everyone).toHaveAttribute('aria-pressed', 'true')
+
+  await user.click(screen.getByRole('button', { name: 'Friends only' }))
+  // The switch must actually re-query, or it is decoration.
+  await waitFor(() =>
+    expect(
+      fetch.mock.calls.some(([u]) => String(u).includes('friends_only=1')),
+    ).toBe(true),
+  )
+})

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ContextBar } from '../chrome/ContextBar'
 import { Link } from 'react-router-dom'
 import { PageStatus } from '../components/PageStatus'
 import { VoiceLobby } from '../components/VoiceLobby'
@@ -49,7 +50,13 @@ function presenceLabel(status) {
   return 'Offline'
 }
 
-export function ActivityPage() {
+const ACTIVITY_VIEWS = [
+  { id: 'all', label: 'Everyone' },
+  { id: 'friends', label: 'Friends only' },
+]
+
+export function ActivityPage({ shellConfig = {} } = {}) {
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [data, setData] = useState(null)
   const [social, setSocial] = useState(null)
   const [friends, setFriends] = useState([])
@@ -203,21 +210,34 @@ export function ActivityPage() {
   }
 
   return (
+    <>
+    {useNewChrome ? (
+        <ContextBar
+          views={ACTIVITY_VIEWS}
+          activeView={friendsOnly ? 'friends' : 'all'}
+          onSelectView={(id) => setFriendsOnly(id === 'friends')}
+        />
+      ) : null}
     <div className="gt-more-page gt-panels">
-      <div className="gt-page-header gt-panels__full">
-        <h1>Activity</h1>
-      </div>
-      <p className="gt-more-page__lede">
-        Friends, presence, and who’s playing — social hangout is on by default for the household.
-      </p>
-      <label className="gt-more-page__lede">
-        <input
-          type="checkbox"
-          checked={friendsOnly}
-          onChange={(event) => setFriendsOnly(event.target.checked)}
-        />{' '}
-        Friends only feed
-      </label>
+      {useNewChrome ? null : (
+        <>
+        <div className="gt-page-header gt-panels__full">
+          <h1>Activity</h1>
+        </div>
+        <p className="gt-more-page__lede">
+          Friends, presence, and who’s playing — social hangout is on by default for the household.
+        </p>
+        <label className="gt-more-page__lede">
+          <input
+            type="checkbox"
+            checked={friendsOnly}
+            onChange={(event) => setFriendsOnly(event.target.checked)}
+          />{' '}
+          Friends only feed
+        </label>
+        </>
+      )}
+
       {social?.community_chat_url ? (
         <p>
           <a
@@ -338,5 +358,6 @@ export function ActivityPage() {
         </>
       )}
     </div>
+    </>
   )
 }
