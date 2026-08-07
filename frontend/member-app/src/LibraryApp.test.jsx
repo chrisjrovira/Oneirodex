@@ -336,3 +336,77 @@ test('live title search sends name browse param after debounce', async () => {
 
   vi.unstubAllGlobals()
 })
+
+/* UIR-2 — the two-bar chrome. Kept behind shellConfig.enableNewChrome so the
+   old layout stays the default until every page has adopted it. */
+
+function renderNewChrome({ total = 3 } = {}) {
+  const fetchMock = vi.fn((url) => {
+    if (!String(url).startsWith('/browse_games?')) return jsonResponse([])
+    return jsonResponse({
+      games: [
+        { uuid: 'a', name: 'Game A', cover_url: '/static/x', is_favorite: false, has_local_override: false, is_vr: false, genres: [] },
+      ],
+      pages: 1,
+      current_page: 1,
+      total,
+    })
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  return renderLibrary(
+    <LibraryApp
+      initialConfig={{ perPage: 20, showPlayStatus: false, isAdmin: false, libraryCount: 1, gamesCount: total }}
+      shellConfig={{ enableNewChrome: true }}
+    />,
+  )
+}
+
+test('new chrome retires the filter rail and its collapse tab', async () => {
+  const { container } = renderNewChrome()
+  await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
+  // The whole point: no aside, so the grid owns the full width.
+  expect(container.querySelector('.library-layout__filters')).toBeNull()
+  expect(container.querySelector('.library-filters-collapse')).toBeNull()
+  expect(container.querySelector('.library-layout.is-chrome-v2')).not.toBeNull()
+})
+
+test('new chrome renders no page heading', async () => {
+  const { container } = renderNewChrome()
+  await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
+  expect(container.querySelector('h1')).toBeNull()
+})
+
+test('filters are still reachable, inside the popover', async () => {
+  const user = userEvent.setup()
+  renderNewChrome()
+  await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
+
+  // Closed by default — the grid is what you came for.
+  expect(screen.queryByLabelText(/Search by title/i)).toBeNull()
+  await user.click(screen.getByRole('button', { name: /Filters/ }))
+  await waitFor(() =>
+    expect(screen.getByRole('dialog', { name: /Filters/ })).toBeInTheDocument(),
+  )
+})
+
+test('kind is a segmented control, not duplicated in the panel', async () => {
+  const user = userEvent.setup()
+  renderNewChrome()
+  await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
+
+  // One "All" segment in the bar…
+  const seg = document.querySelector('.gt-seg')
+  expect(seg).not.toBeNull()
+  expect(seg.textContent).toMatch(/All/)
+
+  // …and the popover must not render a second Kind control for the same filter.
+  await user.click(screen.getByRole('button', { name: /Filters/ }))
+  const dialog = await screen.findByRole('dialog', { name: /Filters/ })
+  expect(dialog.textContent).not.toMatch(/^Kind$/m)
+})
+
+test('summary reports the total instead of a heading', async () => {
+  renderNewChrome({ total: 1284 })
+  await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
+  expect(screen.getByText(/1,284/)).toBeInTheDocument()
+})

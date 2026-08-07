@@ -14,7 +14,12 @@ import {
   BADGE_FILTER_PARAMS,
   badgeFiltersFromSearchParams,
 } from './components/BadgeFilterChips'
-import { itemKindFromSearchParams } from './components/ItemKindFilterChips'
+import {
+  ITEM_KIND_FILTER_CHIPS,
+  itemKindFromSearchParams,
+  parseItemKindFilter,
+} from './components/ItemKindFilterChips'
+import { ContextBar } from './chrome/ContextBar'
 import {
   cleanFilters,
   FilterBar,
@@ -635,6 +640,28 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
       (game) => game.library_platform === filters.library_platform,
     )?.library_platform_label || filters.library_platform || ''
 
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
+
+  // Kind becomes the segmented control. A URL may still carry several kinds —
+  // that keeps working, it just lights no segment, which is honest: the
+  // segmented control cannot represent "two of these at once".
+  const activeKinds = parseItemKindFilter(filters.item_kind)
+  const activeView = activeKinds.length === 1 ? activeKinds[0] : ''
+  const kindViews = [
+    { id: '', label: t('All') },
+    ...ITEM_KIND_FILTER_CHIPS.map((chip) => ({ id: chip.kind, label: t(chip.label) })),
+  ]
+
+  function selectKindView(kind) {
+    applyFilters(cleanFilters({ ...filters, item_kind: kind || '' }))
+  }
+
+  // Everything narrowing the grid that is *hidden* while the popover is shut.
+  // Kind is excluded because the segmented control shows it in the open.
+  const activeFilterCount = Object.entries(cleanFilters(filters)).filter(
+    ([key]) => key !== 'item_kind',
+  ).length
+
   const filterBar = (
     <div className="library-filters-stack">
       <FilterBar
@@ -646,6 +673,46 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
       />
     </div>
   )
+
+  if (useNewChrome) {
+    return (
+      <>
+        <SystemBackdrop
+          platform={filters.library_platform}
+          label={selectedSystemLabel}
+        />
+        <ContextBar
+          views={kindViews}
+          activeView={activeView}
+          onSelectView={selectKindView}
+          filterCount={activeFilterCount}
+          filters={
+            <div className="library-filters-stack">
+              <FilterBar
+                filters={filters}
+                onApply={applyFilters}
+                onLiveSearch={applyLiveSearch}
+                onClear={clearFilters}
+                t={t}
+                hideKind
+              />
+            </div>
+          }
+          summary={
+            typeof result?.total === 'number'
+              ? `${result.total.toLocaleString()} ${t('titles')}`
+              : null
+          }
+          t={t}
+        />
+        {/* No aside, no collapse rail, no page header — the grid gets the
+            whole width, which is the visible payoff of the refresh. */}
+        <div className="library-layout is-chrome-v2">
+          <div className="library-layout__main">{content}</div>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>

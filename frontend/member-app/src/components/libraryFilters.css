@@ -397,3 +397,27 @@
     display: block;
   }
 }
+
+/* UIR-2: two-bar chrome. The filter rail is gone — filtering lives in the
+   context bar's popover — so the grid takes the full width. This is the
+   visible payoff: six tiles per row where five fit before, same tile size. */
+.library-layout.is-chrome-v2 {
+  display: block;
+  grid-template-columns: none;
+  gap: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.library-layout.is-chrome-v2 .library-layout__main {
+  width: 100%;
+  min-width: 0;
+}
+
+/* The popover owns its own scrolling; the stack inside it must not add a
+   second one or the panel gets nested scrollbars. */
+.gt-pop__panel .library-filters-stack {
+  max-height: none;
+  overflow: visible;
+  gap: 0.6rem;
+}

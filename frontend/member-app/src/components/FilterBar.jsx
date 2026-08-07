@@ -126,6 +126,10 @@ export function FilterBar({
   onClear,
   onLiveSearch,
   t = (key) => key,
+  // UIR-2: the two-bar chrome promotes Kind to a segmented control in the
+  // context bar. Rendering it here as well would give one filter two controls,
+  // so the panel yields ownership rather than duplicating it.
+  hideKind = false,
 }) {
   const [draft, setDraft] = useState(filters)
   const [options, setOptions] = useState(EMPTY_OPTIONS)
@@ -319,6 +323,7 @@ export function FilterBar({
           </select>
         </label>
 
+        {hideKind ? null : (
         <fieldset className="library-filters__signals">
           <legend>{t('Kind')}</legend>
           <div className="gt-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
@@ -343,6 +348,7 @@ export function FilterBar({
             })}
           </div>
         </fieldset>
+        )}
         <fieldset className="library-filters__signals">
           <legend>{t('Signals')}</legend>
           <div className="gt-badge-filter-chips" role="group" aria-label={t('Badge filters')}>
