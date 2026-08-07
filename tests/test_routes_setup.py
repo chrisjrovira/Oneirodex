@@ -66,6 +66,27 @@ def global_settings(db_session):
     return settings
 
 
+@pytest.fixture(autouse=True)
+def _leave_the_wizard_closed(db_session):
+    """Put the setup wizard away after every test in this file.
+
+    These tests deliberately park GlobalSettings mid-wizard, and nothing was
+    clearing it. `check_setup_status` is a `before_request` hook, so a stranded
+    `setup_in_progress` redirects **every route in the suite** to the setup
+    step it thinks you are on — test_routes_games_ext_details went from 11
+    failures to 18 purely because this file ran first.
+
+    Marking setup complete rather than deleting the row: an empty
+    GlobalSettings with users present is a state the app never produces itself.
+    """
+    yield
+    settings = db_session.execute(select(GlobalSettings)).scalars().first()
+    if settings is not None:
+        settings.setup_in_progress = False
+        settings.setup_completed = True
+        db_session.commit()
+
+
 class TestSetupRoute:
     """Test the /setup GET route."""
     

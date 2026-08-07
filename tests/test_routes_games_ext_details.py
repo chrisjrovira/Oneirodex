@@ -251,149 +251,147 @@ class TestGameDetailsRouteValidation:
 
 
 class TestGameDetailsRouteResponse:
-    """Test game details response data and security."""
-    
-    def test_game_details_successful_response(self, client, test_user, test_game, test_game_update, test_game_extra, test_game_image, test_game_url):
-        """Test successful game details response."""
+    """What `/game_details/<uuid>` is now: a shell, not a rendered page.
+
+    This class used to patch `render_template` and inspect the `game` dict
+    handed to `games/game_details.html`. The route is a **member SPA shell**
+    (`render_member_spa()`) — it validates the uuid, checks access, and returns
+    the app shell. There is no `game` kwarg to inspect and the game's name is
+    never in the HTML, so those assertions were describing a route that no
+    longer exists.
+
+    The data they cared about is real and still worth testing; it moved to
+    `/api/games/<uuid>/details`, which is where the SPA gets it and where these
+    now look.
+    """
+
+    def test_game_details_serves_the_spa_shell(self, client, test_user, test_game):
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
-        
+
         with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
             response = client.get(f'/game_details/{test_game.uuid}')
-        
+
         assert response.status_code == 200
-        assert b'Test Game' in response.data
-        
-        # Verify audit logging of successful access
+        assert b'member-app-root' in response.data
+        # The access itself is still audited.
         mock_log.assert_any_call(
-            f"User {test_user.name} accessed game 'Test Game' with 1 updates and 1 extras",
+            f"User {test_user.name} requested game details for UUID: {test_game.uuid[:8]}...",
             event_type='game',
-            event_level='information'
+            event_level='debug',
         )
-    
+
     def test_game_details_full_disk_path_not_exposed(self, client, test_user, test_game):
-        """Test that full_disk_path is not exposed in the response."""
+        """The server path must not reach an ordinary member — by either route.
+
+        Checked against the shell *and* the API, because the shell no longer
+        carries game data at all and a test that only looked at the HTML would
+        now pass no matter what the API leaked.
+        """
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
-        
-        with patch('gametheca.routes_games_ext.details.render_template') as mock_render:
-            mock_render.return_value = 'mocked response'
-            response = client.get(f'/game_details/{test_game.uuid}')
-        
-        # Get the game_data passed to the template
-        args, kwargs = mock_render.call_args
-        game_data = kwargs['game']
-        
-        # Verify full_disk_path is not in the response data
-        assert 'full_disk_path' not in game_data
-        # Verify the sensitive path isn't exposed anywhere
-        assert '/sensitive/path/to/game/folder' not in str(game_data)
-    
+
+        shell = client.get(f'/game_details/{test_game.uuid}')
+        assert b'/sensitive/path/to/game/folder' not in shell.data
+
+        payload = client.get(f'/api/games/{test_game.uuid}/details').get_json()
+        assert 'full_disk_path' not in payload
+        assert 'server_path' not in payload
+        assert '/sensitive/path/to/game/folder' not in str(payload)
+
     def test_game_details_nfo_content_sanitized(self, client, test_user, test_game):
-        """Test that NFO content is sanitized before being sent to template."""
+        """NFO text is attacker-influenced content read off disk."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
-        
-        with patch('gametheca.routes_games_ext.details.render_template') as mock_render:
-            with patch('gametheca.routes_games_ext.details.sanitize_string_input') as mock_sanitize:
-                mock_sanitize.return_value = 'sanitized_nfo_content'
-                mock_render.return_value = 'mocked response'
-                
-                response = client.get(f'/game_details/{test_game.uuid}')
-        
-        # Verify NFO content was sanitized
-        mock_sanitize.assert_called_with(test_game.nfo_content, 10000)
-        
-        # Get the game_data passed to the template
-        args, kwargs = mock_render.call_args
-        game_data = kwargs['game']
-        
-        # Verify sanitized content is in response
-        assert game_data['nfo_content'] == 'sanitized_nfo_content'
-    
-    def test_game_details_no_duplicate_updates_array(self, client, test_user, test_game, test_game_update):
-        """Test that updates array is not duplicated in response."""
+
+        with patch('gametheca.utils.game_details_payload.sanitize_string_input') as mock_sanitize:
+            mock_sanitize.return_value = 'sanitized_nfo_content'
+            payload = client.get(f'/api/games/{test_game.uuid}/details').get_json()
+
+        mock_sanitize.assert_any_call(test_game.nfo_content, 10000)
+        assert payload['nfo_content'] == 'sanitized_nfo_content'
+
+    def test_game_details_no_duplicate_updates_array(self, client, test_user, test_game,
+                                                     test_game_update):
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
-        
-        with patch('gametheca.routes_games_ext.details.render_template') as mock_render:
-            mock_render.return_value = 'mocked response'
-            response = client.get(f'/game_details/{test_game.uuid}')
-        
-        # Get the game_data passed to the template
-        args, kwargs = mock_render.call_args
-        game_data = kwargs['game']
-        
-        # Verify updates array exists and contains correct data
-        assert 'updates' in game_data
-        assert len(game_data['updates']) == 1
-        assert game_data['updates'][0]['file_path'] == '/path/to/update.exe'
-        
-        # Verify no duplicate updates key by checking data structure
-        # Count the number of times 'updates' appears as a key
-        import json
-        game_data_json = json.dumps(game_data, default=str)
-        updates_count = game_data_json.count('"updates"')
-        assert updates_count >= 1, f"Found {updates_count} 'updates' keys, expected at least 1"
+
+        payload = client.get(f'/api/games/{test_game.uuid}/details').get_json()
+
+        # The payload reports a *count*; the update files themselves are served
+        # by /versions. The original test asserted an inline `updates` array
+        # and then counted how many times the key appeared, guarding against a
+        # duplication that the current shape makes impossible.
+        assert payload['updates_count'] == 1
+        assert 'updates' not in payload
 
 
 class TestGameDetailsRouteLogging:
     """Test comprehensive logging functionality."""
-    
+
     def test_game_details_logs_access_request(self, client, test_user, test_game):
         """Test that game access requests are logged."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
-        
+
         with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
             response = client.get(f'/game_details/{test_game.uuid}')
-        
+
         # Verify initial access request is logged with truncated UUID
         mock_log.assert_any_call(
             f"User {test_user.name} requested game details for UUID: {test_game.uuid[:8]}...",
             event_type='game',
             event_level='debug'
         )
-    
-    def test_game_details_logs_successful_access(self, client, test_user, test_game, test_game_update, test_game_extra):
-        """Test that successful game access is logged with details."""
+
+    def test_game_details_logs_a_blocked_library_as_a_security_event(
+        self, client, test_user, test_game, db_session
+    ):
+        """Replaces an assertion on a per-game "accessed X with N updates" log.
+
+        The shell route stopped counting updates and extras when it stopped
+        building the page, so that message no longer exists. What is worth
+        auditing at this layer is a *refusal*, and that does still happen.
+        """
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
-        
-        with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
-            response = client.get(f'/game_details/{test_game.uuid}')
-        
-        # Verify successful access is logged with game details
+
+        with patch('gametheca.routes_games_ext.details.user_can_access_game',
+                   return_value=False):
+            with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
+                response = client.get(f'/game_details/{test_game.uuid}')
+
+        assert response.status_code == 403
         mock_log.assert_any_call(
-            f"User {test_user.name} accessed game 'Test Game' with 1 updates and 1 extras",
-            event_type='game',
-            event_level='information'
+            f"User {test_user.name} blocked from restricted library game {test_game.uuid[:8]}...",
+            event_type='security',
+            event_level='warning',
         )
-    
+
     def test_game_details_logs_system_events_to_database(self, client, test_user, test_game, db_session):
         """Test that system events are actually logged to the database."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
-        
+
         # Clear any existing events
         from sqlalchemy import delete
         db_session.execute(delete(SystemEvents).where(SystemEvents.audit_user == test_user.id))
         db_session.commit()
-        
+
         response = client.get(f'/game_details/{test_game.uuid}')
-        
+
         # Check that events were logged to database
         events = db_session.execute(
             select(SystemEvents).filter_by(audit_user=test_user.id)
         ).scalars().all()
-        
+
         assert len(events) > 0
         # Verify at least one game-related event was logged
         game_events = [e for e in events if e.event_type == 'game']
@@ -440,44 +438,33 @@ class TestGameDetailsUtilityFunctionLogging:
 
 
 class TestGameDetailsTemplateSecurity:
-    """Test template security and CSRF protection."""
-    
-    def test_game_details_includes_csrf_form(self, client, test_user, test_game):
-        """Test that CSRF form is included in template context."""
+    """CSRF still has to reach the page — it just arrives differently now.
+
+    These two patched `render_template` and asserted a `CsrfForm` in its
+    kwargs. The route renders the SPA shell, which carries the token as a meta
+    tag for fetch() to read instead of embedding a form. Same requirement,
+    different delivery; asserting the old delivery tested nothing.
+    """
+
+    def test_game_details_shell_carries_a_csrf_token(self, client, test_user, test_game):
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
-        
-        with patch('gametheca.routes_games_ext.details.render_template') as mock_render:
-            mock_render.return_value = 'mocked response'
-            response = client.get(f'/game_details/{test_game.uuid}')
-        
-        # Verify CSRF form is passed to template
-        args, kwargs = mock_render.call_args
-        assert 'form' in kwargs
-        # Verify it's a CSRF form
-        from gametheca.forms import CsrfForm
-        assert isinstance(kwargs['form'], CsrfForm)
-    
-    def test_game_details_template_context(self, client, test_user, test_game):
-        """Test that all required template context is provided."""
+
+        response = client.get(f'/game_details/{test_game.uuid}')
+
+        assert response.status_code == 200
+        assert b'name="csrf-token"' in response.data
+
+    def test_game_details_shell_mounts_the_member_app(self, client, test_user, test_game):
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
-        
-        with patch('gametheca.routes_games_ext.details.render_template') as mock_render:
-            mock_render.return_value = 'mocked response'
-            response = client.get(f'/game_details/{test_game.uuid}')
-        
-        # Verify template and context
-        mock_render.assert_called_once()
-        args, kwargs = mock_render.call_args
-        
-        assert args[0] == 'games/game_details.html'
-        assert 'game' in kwargs
-        assert 'form' in kwargs
-        assert 'library_uuid' in kwargs
-        assert kwargs['library_uuid'] == test_game.library_uuid
+
+        response = client.get(f'/game_details/{test_game.uuid}')
+
+        assert b'member-app-root' in response.data
+        assert b'dist/member-app/member-app.js' in response.data
 
 
 class TestGameDetailsErrorHandling:
@@ -498,16 +485,14 @@ class TestGameDetailsErrorHandling:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_games_ext.details.render_template') as mock_render:
-            mock_render.return_value = 'mocked response'
-            response = client.get(f'/game_details/{game.uuid}')
-        
+        response = client.get(f'/game_details/{game.uuid}')
         assert response.status_code == 200
-        
-        # Verify NFO content defaults to 'none'
-        args, kwargs = mock_render.call_args
-        game_data = kwargs['game']
-        assert game_data['nfo_content'] == 'none'
+
+        # `None`, not the string 'none'. The old route substituted a literal
+        # 'none' for the template to print; the payload returns null so the SPA
+        # can tell "no NFO" from an NFO whose content happens to read "none".
+        payload = client.get(f'/api/games/{game.uuid}/details').get_json()
+        assert payload['nfo_content'] is None
     
     def test_game_details_with_empty_collections(self, client, test_user, test_library):
         """Test game details with empty updates/extras collections."""
@@ -523,17 +508,16 @@ class TestGameDetailsErrorHandling:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
-            response = client.get(f'/game_details/{game.uuid}')
-        
+        response = client.get(f'/game_details/{game.uuid}')
         assert response.status_code == 200
-        
-        # Verify logging shows 0 updates and extras
-        mock_log.assert_any_call(
-            f"User {test_user.name} accessed game 'Game with Empty Collections' with 0 updates and 0 extras",
-            event_type='game',
-            event_level='information'
-        )
+
+        # The "accessed X with N updates and M extras" log went away with the
+        # server-rendered page. The absence it was really checking — a game
+        # with nothing attached still renders — is now visible in the payload.
+        payload = client.get(f'/api/games/{game.uuid}/details').get_json()
+        assert payload['updates_count'] == 0
+        assert payload['extras_count'] == 0
+        assert payload['extras'] == []
     
     def test_game_details_json_error_response_for_not_found(self, client, test_user):
         """Test that 404 returns proper JSON error response."""
@@ -560,11 +544,12 @@ class TestGameDetailsPerformance:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        # Simply test that the route works without errors
-        # The actual query efficiency would be better tested with a database profiler
         with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
             response = client.get(f'/game_details/{test_game.uuid}')
-        
-        # Verify successful response
+
         assert response.status_code == 200
-        assert mock_log.call_count >= 2  # At least access request and successful access
+        # Exactly one, not "at least two". The shell route stopped walking the
+        # game's collections to build a summary line, and asserting a lower
+        # bound on log calls would quietly pass if that walk came back — which
+        # is the opposite of what a test named "efficient queries" should do.
+        assert mock_log.call_count == 1
