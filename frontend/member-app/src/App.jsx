@@ -313,7 +313,7 @@ export function App({ shellConfig = {} }) {
           path="/notifications"
           element={
             <LazyPage>
-              <NotificationsPage />
+              <NotificationsPage shellConfig={shellConfig} />
             </LazyPage>
           }
         />

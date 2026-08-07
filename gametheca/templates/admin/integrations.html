@@ -45,6 +45,26 @@
         {% endwith %}
 
         <!-- Nav tabs -->
+        {# UIR-7: bar two, with anchor ids preserved. integrations_tabs.js
+           restores the open tab from the URL fragment via getElementById, and
+           each pane's aria-labelledby points at these ids — dropping them would
+           leave the page with no pane open and dangling aria references. The
+           strip keeps its own id too, because that controller scopes its query
+           to `#integrationTabs`. #}
+        {% if enable_new_chrome %}
+        {% call chrome.contextbar(
+             views=[
+               ('email', 'Email', '#email', 'email-tab'),
+               ('igdb', 'IGDB', '#igdb', 'igdb-tab'),
+               ('community', 'Community chat', '#community', 'community-tab'),
+               ('artwork', 'Artwork', '#artwork', 'artwork-tab'),
+               ('oidc', 'OIDC / SSO', '#oidc', 'oidc-tab'),
+             ],
+             active=none,
+             data_toggle='tab',
+             views_id='integrationTabs') %}
+        {% endcall %}
+        {% else %}
         <ul class="integrations-nav-tabs nav nav-tabs" id="integrationTabs" role="tablist">
             <li class="integrations-nav-item nav-item" role="presentation">
                 <button class="integrations-nav-link nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab" aria-controls="email" aria-selected="false">
@@ -72,6 +92,7 @@
                 </button>
             </li>
         </ul>
+        {% endif %}
 
         <!-- Tab content -->
         <div class="integrations-tab-content tab-content" id="integrationTabContent">

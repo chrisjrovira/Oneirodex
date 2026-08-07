@@ -198,9 +198,22 @@ class TestConvertedTemplates:
         assert 'settings-shell-nav' not in shell
         assert 'settings-shell-layout' not in shell
 
-    def test_health_widget_ids_survive_on_the_dashboard(self):
+    def test_the_dashboard_is_a_react_shell_and_keeps_no_body(self):
+        """This replaces a check for `gt-health-*` ids in this template.
+
+        Those ids were real once. Wave 7 moved the dashboard body — library
+        health widget included — into admin-app's React `DashboardPage`/
+        `OpsPage`, leaving a five-line shell behind, so the old assertion had
+        been failing against a template that is *correct*: it was pinning the
+        pre-migration structure, and its failure said nothing about health
+        widgets, which are covered by `opsWidgets.test.jsx`.
+
+        What is worth pinning here is the shell contract itself. Putting markup
+        back into this template would render it underneath the React hub rather
+        than replacing it.
+        """
         dashboard = read_template('admin/admin_dashboard.html')
-        for required in ('id="gt-health-summary"', 'id="gt-health-worst"',
-                         'id="gt-health-library"', 'id="gt-health-refresh"',
-                         'id="gt-health-updated"', 'id="gt-library-health-widget"'):
-            assert required in dashboard, f"admin_dashboard.html lost {required}"
+        assert '{% block admin_render %}spa{% endblock %}' in dashboard
+        body = dashboard.split('{% block content %}', 1)[1].split('{% endblock %}', 1)[0]
+        markup = [line for line in body.splitlines() if line.strip() and '{#' not in line]
+        assert not markup, f'dashboard shell grew a body again: {markup}'

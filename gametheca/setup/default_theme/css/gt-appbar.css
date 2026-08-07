@@ -157,6 +157,10 @@
 }
 
 .gt-seg__item[aria-pressed='true'],
+/* Bootstrap's tab plugin owns `.active` and moves it on every switch. In-page
+   view strips therefore mark selection with that class and not `is-active`,
+   which nothing would ever move off the first segment. */
+.gt-seg__item.active,
 .gt-seg__item.is-active {
   background: var(--gt-accent, #2fd67b);
   color: var(--gt-bg, #0b0d10);

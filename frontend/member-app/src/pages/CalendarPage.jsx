@@ -1,10 +1,15 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { fetchCalendar } from '../api/calendar'
+import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import './CalendarPage.css'
 
 const AHEAD_OPTIONS = [30, 60, 90, 180]
 const BEHIND_OPTIONS = [0, 7, 14, 30, 90]
+// The window the page opens with. Bar two badges the popover only when the
+// window has been changed from these, so an untouched page shows no count.
+const DEFAULT_AHEAD = 60
+const DEFAULT_BEHIND = 14
 const VIEW_STORAGE_KEY = 'gt.calendar.view'
 const VIEWS = [
   { id: 'list', label: 'List' },
@@ -341,12 +346,13 @@ function AgendaView({ releases }) {
   )
 }
 
-export function CalendarPage() {
+export function CalendarPage({ shellConfig = {} }) {
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [payload, setPayload] = useState(null)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
-  const [daysAhead, setDaysAhead] = useState(60)
-  const [daysBehind, setDaysBehind] = useState(14)
+  const [daysAhead, setDaysAhead] = useState(DEFAULT_AHEAD)
+  const [daysBehind, setDaysBehind] = useState(DEFAULT_BEHIND)
   const [view, setView] = useState(() => readCalendarView())
   const now = new Date()
   const [focusYear, setFocusYear] = useState(now.getFullYear())
@@ -389,61 +395,105 @@ export function CalendarPage() {
     writeCalendarView(next)
   }
 
+  const windowIsDefault = daysAhead === DEFAULT_AHEAD && daysBehind === DEFAULT_BEHIND
+
   return (
     <div className="gt-more-page gt-calendar">
-      <div className="gt-page-header gt-calendar__header">
-        <div>
-          <h1>Release calendar</h1>
-          <p className="gt-more-page__lede">
-            Upcoming and recent releases from IGDB (metadata only).
-          </p>
-        </div>
-        <div className="gt-calendar__controls">
-          <div className="gt-calendar__views" role="group" aria-label="Calendar view">
-            {VIEWS.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                className={view === id ? 'is-active' : ''}
-                aria-pressed={view === id}
-                onClick={() => selectView(id)}
-              >
-                {label}
-              </button>
-            ))}
+      {useNewChrome ? (
+        <ContextBar
+          views={VIEWS}
+          activeView={view}
+          onSelectView={selectView}
+          summary={`${daysBehind} back / ${daysAhead} ahead`}
+          filters={
+            <div className="gt-calendar__window" role="group" aria-label="Calendar window">
+              <label>
+                Ahead
+                <select
+                  value={daysAhead}
+                  onChange={(e) => setDaysAhead(Number(e.target.value))}
+                  aria-label="Days ahead"
+                >
+                  {AHEAD_OPTIONS.map((n) => (
+                    <option key={n} value={n}>
+                      {n} days
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Behind
+                <select
+                  value={daysBehind}
+                  onChange={(e) => setDaysBehind(Number(e.target.value))}
+                  aria-label="Days behind"
+                >
+                  {BEHIND_OPTIONS.map((n) => (
+                    <option key={n} value={n}>
+                      {n} days
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          }
+          filterCount={windowIsDefault ? 0 : 1}
+        />
+      ) : (
+        <div className="gt-page-header gt-calendar__header">
+          <div>
+            <h1>Release calendar</h1>
+            <p className="gt-more-page__lede">
+              Upcoming and recent releases from IGDB (metadata only).
+            </p>
           </div>
-          <div className="gt-calendar__window" role="group" aria-label="Calendar window">
-            <label>
-              Ahead
-              <select
-                value={daysAhead}
-                onChange={(e) => setDaysAhead(Number(e.target.value))}
-                aria-label="Days ahead"
-              >
-                {AHEAD_OPTIONS.map((n) => (
-                  <option key={n} value={n}>
-                    {n} days
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Behind
-              <select
-                value={daysBehind}
-                onChange={(e) => setDaysBehind(Number(e.target.value))}
-                aria-label="Days behind"
-              >
-                {BEHIND_OPTIONS.map((n) => (
-                  <option key={n} value={n}>
-                    {n} days
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="gt-calendar__controls">
+            <div className="gt-calendar__views" role="group" aria-label="Calendar view">
+              {VIEWS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={view === id ? 'is-active' : ''}
+                  aria-pressed={view === id}
+                  onClick={() => selectView(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="gt-calendar__window" role="group" aria-label="Calendar window">
+              <label>
+                Ahead
+                <select
+                  value={daysAhead}
+                  onChange={(e) => setDaysAhead(Number(e.target.value))}
+                  aria-label="Days ahead"
+                >
+                  {AHEAD_OPTIONS.map((n) => (
+                    <option key={n} value={n}>
+                      {n} days
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Behind
+                <select
+                  value={daysBehind}
+                  onChange={(e) => setDaysBehind(Number(e.target.value))}
+                  aria-label="Days behind"
+                >
+                  {BEHIND_OPTIONS.map((n) => (
+                    <option key={n} value={n}>
+                      {n} days
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {error ? (
         <div role="alert">

@@ -27,14 +27,51 @@
    still render as the same segmented control.
 #}
 
-{% macro contextbar(views=None, active=None, summary=None, label='Views') %}
+{% macro contextbar(views=None, active=None, summary=None, label='Views', data_toggle=None, views_id=None) %}
+{#- `data_toggle` is for pages whose views are panes of the *same* document
+    (Bootstrap tabs). Pass 'tab' and give each view a `#panel` href: the segment
+    still renders as a link — middle-click and copy-link keep working — but the
+    switch stays client-side instead of becoming a full page load. Leave it
+    unset when the views are genuinely separate pages.
+
+    Two details are load-bearing, both verified against the vendored
+    bootstrap 5.3.2 bundle rather than assumed:
+
+      * The plugin binds via `closest('.list-group, .nav, [role="tablist"]')`
+        and does nothing at all when that misses — a `role="group"` strip would
+        render perfectly and switch nothing.
+      * `_getActiveElem()` looks for Bootstrap's own `active` class to know
+        which pane to hide. Marking the current segment only with our
+        `is-active` leaves it null, and the first click then shows the new pane
+        without hiding the old one.
+
+    So in tab mode the container is a tablist and selection is marked with
+    `active` *instead of* `is-active` — the plugin moves `active` on every
+    switch and never touches `is-active`, which would otherwise stay welded to
+    whichever segment happened to render first. `gt-appbar.css` styles both.
+
+    Outside tab mode nothing changes: these are ordinary links. -#}
 <div class="gt-contextbar">
   {% if views %}
   <div class="gt-contextbar__views">
-    <div class="gt-seg" role="group" aria-label="{{ label }}">
-      {% for view_id, view_label, view_href in views %}
-      <a class="gt-seg__item{% if view_id == active %} is-active{% endif %}"
+    <div class="gt-seg"
+         {% if views_id %}id="{{ views_id }}"{% endif %}
+         role="{{ 'tablist' if data_toggle else 'group' }}"
+         aria-label="{{ label }}">
+      {% for view in views %}
+      {%- set view_id = view[0] %}
+      {%- set view_label = view[1] %}
+      {%- set view_href = view[2] %}
+      {#- Optional 4th element: the anchor's own id. Only needed where existing
+          markup or JS already points at it — Integrations' panes carry
+          `aria-labelledby="email-tab"` and its controller resolves tabs with
+          getElementById. Dropping the id there would leave dangling aria
+          references and a page that opens with no pane shown at all. -#}
+      {%- set view_anchor_id = view[3] if view|length > 3 else none %}
+      <a class="gt-seg__item{% if view_id == active %}{{ ' active' if data_toggle else ' is-active' }}{% endif %}"
+         {% if view_anchor_id %}id="{{ view_anchor_id }}"{% endif %}
          href="{{ view_href }}"
+         {% if data_toggle %}data-bs-toggle="{{ data_toggle }}" role="tab"{% endif %}
          {% if view_id == active %}aria-current="page"{% endif %}>{{ view_label }}</a>
       {% endfor %}
     </div>

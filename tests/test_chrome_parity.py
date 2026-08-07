@@ -92,6 +92,97 @@ def test_the_chrome_stylesheet_stays_syncable_into_every_theme():
     assert [p.parent.parent.name for p in sources] == ['default_theme']
 
 
+SCANJOBS = ROOT / 'gametheca' / 'templates' / 'admin' / 'admin_manage_scanjobs.html'
+
+
+def test_in_page_views_stay_in_page():
+    """Libraries & scans is one document with seven panes, so its segments must
+    keep Bootstrap's client-side switch. Turning them into real navigations to
+    gain a prettier strip would trade a working feature for a cosmetic one."""
+    markup = _read(SCANJOBS)
+    assert "data_toggle='tab'" in markup, 'scan management views became page loads'
+    assert 'data_toggle' in _read(JINJA), 'the macro no longer supports in-page views'
+
+
+def test_in_page_views_satisfy_what_bootstrap_actually_binds_to():
+    """Both of these were checked against the vendored bootstrap 5.3.2 bundle.
+
+    The plugin binds via `closest('.list-group, .nav, [role="tablist"]')` and
+    silently does nothing when that misses, and `_getActiveElem()` keys off
+    Bootstrap's own `active` class to find the pane to hide. A segmented strip
+    that renders beautifully and switches nothing is the failure mode here, and
+    it produces no console error to point at.
+    """
+    macro = _read(JINJA)
+    assert "'tablist' if data_toggle else 'group'" in macro
+    # Selection is marked with Bootstrap's class in tab mode, not ours: the
+    # plugin moves `active` on every switch and never touches `is-active`,
+    # which would leave the highlight welded to the first segment while the
+    # panes changed underneath it. Confirmed in a browser, not assumed.
+    assert "{{ ' active' if data_toggle else ' is-active' }}" in macro
+    assert '.gt-seg__item.active' in _read(CSS), (
+        'the stylesheet no longer styles the class bootstrap actually sets'
+    )
+
+    bundle = ROOT / 'gametheca' / 'static' / 'vendor' / 'bootstrap' / '5.3.2' / 'js'
+    bundle = bundle / 'bootstrap.bundle.min.js'
+    if not bundle.is_file():
+        pytest.skip('bootstrap bundle not vendored in this checkout')
+    source = _read(bundle)
+    # If a future bump changes either contract, this test should fail loudly
+    # rather than let the strip quietly stop working.
+    assert '.list-group, .nav, [role="tablist"]' in source
+    assert 'Fs="active"' in source
+
+
+INTEGRATIONS = ROOT / 'gametheca' / 'templates' / 'admin' / 'integrations.html'
+INTEGRATIONS_JS = (
+    ROOT / 'gametheca' / 'setup' / 'default_theme' / 'js' / 'integrations_tabs.js'
+)
+
+
+def test_integrations_keeps_the_ids_its_controller_and_aria_depend_on():
+    """integrations_tabs.js restores the open tab from the URL fragment via
+    getElementById, and every pane's aria-labelledby points at a trigger id.
+    Rendering bar two without those ids opens the page with no pane at all —
+    silently, since a missing element is just a no-op there."""
+    markup = _read(INTEGRATIONS)
+    for anchor_id in ('email-tab', 'igdb-tab', 'community-tab', 'artwork-tab', 'oidc-tab'):
+        assert f"'{anchor_id}'" in markup, f'{anchor_id} no longer reaches the context bar'
+    assert "views_id='integrationTabs'" in markup, (
+        'the controller scopes its query to #integrationTabs'
+    )
+    assert 'view[3]' in _read(JINJA), 'the macro can no longer carry an anchor id'
+
+
+def test_the_integrations_controller_reads_either_strip():
+    """Old triggers are `<button data-bs-target>`, bar two's are `<a href>`.
+    A selector naming `button`, or a read of only `data-bs-target`, works for
+    exactly one of them — and the flag means both must work."""
+    js = _read(INTEGRATIONS_JS)
+    assert '#integrationTabs [data-bs-toggle="tab"]' in js
+    assert 'button[data-bs-toggle="tab"]' not in js
+    assert "getAttribute('data-bs-target') || triggerEl.getAttribute('href')" in js
+
+
+def test_lazy_loaded_panels_are_found_by_target_not_by_id():
+    """The image queue only fetches on `shown.bs.tab`. The old strip's anchor
+    carried id="imageQueue-tab"; bar two's segment does not, so an id lookup
+    would leave the panel permanently empty under the new chrome — with no
+    error anywhere to say why."""
+    markup = _read(SCANJOBS)
+    assert "getElementById('imageQueue-tab')" not in markup
+    assert '[data-bs-toggle="tab"][href="#imageQueue"]' in markup
+
+
+def test_both_admin_strips_survive_until_the_flag_is_permanent():
+    """The flag is still opt-in, so every converted page must render correctly
+    with it off too — otherwise turning it off is not actually a way back."""
+    markup = _read(SCANJOBS)
+    assert 'enable_new_chrome' in markup
+    assert 'admin_manage_scanjobs-nav-tabs' in markup, 'the fallback strip was deleted'
+
+
 def test_jinja_views_are_links_not_buttons():
     """In Jinja a view switch is a navigation. Rendering it as a <button> would
     break middle-click, open-in-new-tab and copy-link for no benefit."""

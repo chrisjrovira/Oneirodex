@@ -186,3 +186,24 @@ test('buildMonthCells indexes markers by date key', () => {
   expect(day15?.releases).toHaveLength(2)
   expect(day1?.releases).toHaveLength(1)
 })
+
+test('new chrome moves views to bar two and the window into a popover', async () => {
+  const user = userEvent.setup()
+  calendarApi.fetchCalendar.mockResolvedValue({ releases: [] })
+  render(<CalendarPage shellConfig={{ enableNewChrome: true }} />)
+  await screen.findByText('No releases in this window.')
+
+  expect(screen.queryByRole('heading', { name: 'Release calendar' })).toBeNull()
+  // The window is two selects worth of state that would otherwise be invisible
+  // once collapsed, so bar two states it in the open.
+  expect(screen.getByText('14 back / 60 ahead')).toBeInTheDocument()
+
+  const trigger = screen.getByRole('button', { name: /Filters/ })
+  expect(trigger).not.toHaveClass('is-on')
+
+  await user.click(trigger)
+  await user.selectOptions(screen.getByLabelText('Days ahead'), '180')
+
+  await waitFor(() => expect(screen.getByText('14 back / 180 ahead')).toBeInTheDocument())
+  expect(screen.getByRole('button', { name: /Filters/ })).toHaveClass('is-on')
+})

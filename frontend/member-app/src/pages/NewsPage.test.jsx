@@ -1,4 +1,5 @@
 ﻿import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { NewsPage } from './NewsPage'
 import * as announcementsApi from '../api/announcements'
@@ -183,4 +184,37 @@ test('a feed with no artwork gets a placeholder, never a broken frame', async ()
   await screen.findByText('No art here')
   expect(container.querySelector('.gt-news__card-art--empty')).toBeTruthy()
   expect(container.querySelector('img.gt-news__card-art')).toBeNull()
+})
+
+test('new chrome puts the sections in bar two with live counts', async () => {
+  const user = userEvent.setup()
+  announcementsApi.fetchAnnouncements.mockResolvedValue({
+    announcements: [
+      { id: 1, title: 'Welcome', body: 'Hi', created_at: '2026-07-01T12:00:00+00:00' },
+    ],
+  })
+  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+    items: [{ title: 'Studio ships patch', url: 'https://example.com/a', source: 'Example' }],
+  })
+
+  render(<NewsPage shellConfig={{ enableNewChrome: true }} />, { wrapper: MemoryRouter })
+  await screen.findByText('Welcome')
+
+  // The h1 is gone; the sections it sat above are now the switcher.
+  expect(screen.queryByRole('heading', { name: 'News' })).toBeNull()
+  const headlines = screen.getByRole('button', { name: /Headlines/ })
+  expect(headlines).toHaveTextContent('1')
+
+  await user.click(headlines)
+  expect(screen.getByText('Studio ships patch')).toBeInTheDocument()
+  expect(screen.queryByText('Welcome')).toBeNull()
+})
+
+test('section counts stay hidden until the feeds have actually answered', async () => {
+  // A "0" beside Free now would read as "there is nothing free" when the truth
+  // is that the request has not come back.
+  announcementsApi.fetchAnnouncements.mockReturnValue(new Promise(() => {}))
+  render(<NewsPage shellConfig={{ enableNewChrome: true }} />, { wrapper: MemoryRouter })
+
+  expect(screen.getByRole('button', { name: /Free now/ }).textContent).not.toMatch(/\d/)
 })

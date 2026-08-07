@@ -30,6 +30,7 @@
 {% endblock %}
 {% block content %}
 {% import 'partials/icons.html' as icons %}
+{% import 'partials/chrome.html' as chrome %}
 
 <meta name="active-tab" content="{{ active_tab }}">
 <meta name="selected-library-uuid" content="{{ selected_library_uuid }}">
@@ -37,6 +38,28 @@
 
 <div class="admin_manage_scanjobs-nav-panel mt-3">
     <div class="container-settings gt-adminpage gt-adminpage--xl">
+        {# UIR-7: the title block and the Bootstrap tab strip are what bar two
+           replaces. Views stay in-page (`data_toggle='tab'`) because these are
+           panes of one document — turning them into page loads to gain a
+           prettier strip would be a straight downgrade. Libraries links here
+           with the same seven labels, so landing on this page now shows the
+           same bar rather than the old strip. #}
+        {% if enable_new_chrome %}
+        {% call chrome.contextbar(
+             views=[
+               ('libraries', 'Libraries', '#librariesPanel'),
+               ('auto', 'Auto scan', '#autoScan'),
+               ('manual', 'Manual scan', '#manualScan'),
+               ('unmatched', 'Unmatched', '#unmatchedFolders'),
+               ('scan_filters', 'Filters', '#scanFilters'),
+               ('file_extensions', 'Extensions', '#fileExtensions'),
+               ('image_queue', 'Image queue', '#imageQueue'),
+             ],
+             active=active_tab or 'auto',
+             summary='%d libraries · %d games'|format(libraries|length, game_count or 0),
+             data_toggle='tab') %}
+        {% endcall %}
+        {% else %}
         <div class="gt-adminpage-header">
             <div>
                 <h1 class="gt-adminpage-title">Libraries &amp; scans</h1>
@@ -66,6 +89,7 @@
                 <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'image_queue' %}active{% endif %}" id="imageQueue-tab" data-bs-toggle="tab" href="#imageQueue">Image Queue</a>
             </li>
         </ul>
+        {% endif %}
 
         <!-- Tab panes -->
         <div class="admin_manage_scanjobs-tab-content tab-content">
@@ -930,7 +954,11 @@
     // Initialize image queue when tab is shown
     document.addEventListener('DOMContentLoaded', function() {
         // Load image queue only when the tab is active
-        const imageQueueTab = document.getElementById('imageQueue-tab');
+        // Selected by what it points at, not by its own id: bar two's segment
+        // targets the same panel but carries no `imageQueue-tab` id, and
+        // getElementById would silently stop lazy-loading the queue there.
+        const imageQueueTab =
+            document.querySelector('[data-bs-toggle="tab"][href="#imageQueue"]');
         if (imageQueueTab) {
             imageQueueTab.addEventListener('shown.bs.tab', function() {
                 loadImageQueue();

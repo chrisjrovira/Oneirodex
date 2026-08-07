@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ContextBar } from '../chrome/ContextBar'
 import './NotificationsPage.css'
 
 function csrfToken() {
@@ -30,7 +31,13 @@ function formatWhen(value) {
   }
 }
 
-export function NotificationsPage() {
+const NOTIFICATION_VIEWS = [
+  { id: 'all', label: 'All' },
+  { id: 'unread', label: 'Unread' },
+]
+
+export function NotificationsPage({ shellConfig = {} }) {
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [items, setItems] = useState([])
   const [unread, setUnread] = useState(0)
   const [prefs, setPrefs] = useState(null)
@@ -125,51 +132,65 @@ export function NotificationsPage() {
 
   return (
     <div className="gt-more-page gt-notifications">
-      <div className="gt-page-header gt-notifications__header">
-        <div>
-          <h1>Notifications</h1>
-          <p className="gt-more-page__lede gt-notifications__lede">
-            {unread > 0 ? (
-              <>
-                <span className="gt-notifications__badge" aria-hidden="true">
-                  {unread}
-                </span>
-                unread
-              </>
-            ) : (
-              'All caught up'
-            )}
-          </p>
-        </div>
-        <div className="gt-notifications__toolbar">
-          <div className="gt-notifications__filters" role="group" aria-label="Filter">
+      {useNewChrome ? (
+        <ContextBar
+          views={NOTIFICATION_VIEWS}
+          activeView={filter}
+          onSelectView={setFilter}
+          summary={unread > 0 ? `${unread} unread` : 'All caught up'}
+          actions={
             <button
               type="button"
-              className={filter === 'all' ? 'is-active' : ''}
-              aria-pressed={filter === 'all'}
-              onClick={() => setFilter('all')}
+              className="gt-cbtn"
+              disabled={busy || unread === 0}
+              onClick={() => void markAll()}
             >
-              All
+              Mark all read
             </button>
+          }
+        />
+      ) : (
+        <div className="gt-page-header gt-notifications__header">
+          <div>
+            <h1>Notifications</h1>
+            <p className="gt-more-page__lede gt-notifications__lede">
+              {unread > 0 ? (
+                <>
+                  <span className="gt-notifications__badge" aria-hidden="true">
+                    {unread}
+                  </span>
+                  unread
+                </>
+              ) : (
+                'All caught up'
+              )}
+            </p>
+          </div>
+          <div className="gt-notifications__toolbar">
+            <div className="gt-notifications__filters" role="group" aria-label="Filter">
+              {NOTIFICATION_VIEWS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={filter === id ? 'is-active' : ''}
+                  aria-pressed={filter === id}
+                  onClick={() => setFilter(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
-              className={filter === 'unread' ? 'is-active' : ''}
-              aria-pressed={filter === 'unread'}
-              onClick={() => setFilter('unread')}
+              className="gt-btn gt-btn--ghost"
+              disabled={busy || unread === 0}
+              onClick={() => void markAll()}
             >
-              Unread
+              Mark all read
             </button>
           </div>
-          <button
-            type="button"
-            className="gt-btn gt-btn--ghost"
-            disabled={busy || unread === 0}
-            onClick={() => void markAll()}
-          >
-            Mark all read
-          </button>
         </div>
-      </div>
+      )}
 
       {prefs ? (
         <details

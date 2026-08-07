@@ -14,13 +14,22 @@ $(document).ready(function() {
         '#igdb': 'igdb-tab'
     };
 
-    // Initialize Bootstrap tabs
-    const triggerTabList = [].slice.call(document.querySelectorAll('#integrationTabs button[data-bs-toggle="tab"]'));
+    // Element-agnostic: the old strip's triggers are <button data-bs-target>,
+    // bar two's are <a href> (UIR-7). Both carry data-bs-toggle="tab" and both
+    // live under #integrationTabs, so match on that and read whichever
+    // attribute names the pane.
+    function paneSelector(triggerEl) {
+        return triggerEl.getAttribute('data-bs-target') || triggerEl.getAttribute('href');
+    }
+
+    const triggerTabList = [].slice.call(
+        document.querySelectorAll('#integrationTabs [data-bs-toggle="tab"]')
+    );
 
     triggerTabList.forEach(function (triggerEl) {
         triggerEl.addEventListener('shown.bs.tab', function (event) {
             const activeTab = event.target;
-            const targetPaneId = activeTab.getAttribute('data-bs-target');
+            const targetPaneId = paneSelector(activeTab);
 
             console.log('Tab switched to:', targetPaneId);
 

@@ -72,6 +72,24 @@ test('renders dense inbox with unread marker and filter', async () => {
   expect(screen.queryByText('Welcome')).not.toBeInTheDocument()
 })
 
+test('new chrome moves the filter and mark-all into bar two, losing neither', async () => {
+  const user = userEvent.setup()
+  render(
+    <MemoryRouter>
+      <NotificationsPage shellConfig={{ enableNewChrome: true }} />
+    </MemoryRouter>,
+  )
+
+  await screen.findByText('Friend request')
+  // The heading and lede are gone; the unread count they carried is not.
+  expect(screen.queryByRole('heading', { name: 'Notifications' })).toBeNull()
+  expect(screen.getByText('1 unread')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Mark all read' })).toBeEnabled()
+
+  await user.click(screen.getByRole('button', { name: 'Unread' }))
+  expect(screen.queryByText('Welcome')).not.toBeInTheDocument()
+})
+
 test('keeps alert preferences collapsed by default', async () => {
   render(
     <MemoryRouter>

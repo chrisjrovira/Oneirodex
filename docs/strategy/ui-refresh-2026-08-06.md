@@ -90,6 +90,7 @@ Each lands independently and leaves the app shippable.
 | **UIR-4** | Bar two in Jinja admin | `partials/chrome.html`, `base_admin.html` | `/libraries` renders the same bar two as `/library`; parity pinned by tests |
 | **UIR-5** | Group the More menu (**revised**) | `navConfig.js`, `TopNav`, `CommandPalette` | Four labelled groups; no destination lost; `⌘K` still reaches everything |
 | **UIR-6** | Re-capture | `scripts/capture_docs_media.py`, how-to videos | Screenshots and videos show the new chrome |
+| **UIR-7** | Page actions into bar two, page by page | React: `NewsPage`, `NotificationsPage`, `CalendarPage`. Jinja: libraries & scans, library tools, integrations | The page's own tab strip is gone; its views are bar two's segments and its actions are bar two's actions |
 
 ## Risks worth naming
 
@@ -128,6 +129,72 @@ Each lands independently and leaves the app shippable.
   breadcrumbs — "Library" and "Library home" side by side — after bar two
   started naming the section. Each is now covered by a test, but capture is
   what surfaced them.
+
+## UIR-7 — moving page actions in
+
+UIR-3 hid page *identity* and left page *actions* where they were. Moving them
+is per-page work; this is how it goes, and where it has got to.
+
+**Start with the pages that had their own tab strip.** News, Notifications and
+Calendar each shipped a hand-rolled row of view buttons directly under the
+heading — which is bar two, built three times, in three different styles. Those
+convert cleanly and delete markup rather than shuffling it. Pages whose header
+holds a single button are a much weaker case and are not done yet.
+
+**Both renderings stay in one list.** Each converted page defines its views once
+(`NEWS_VIEWS`, `NOTIFICATION_VIEWS`, the existing `VIEWS`) and both the old
+header strip and bar two's segmented control map over it. The flag is still
+opt-in, so a page must render correctly both ways until it is not; a duplicated
+list would drift the moment a section is added.
+
+**What each page gained:**
+
+| Page | Views | Actions / state |
+|---|---|---|
+| News | All · Admins · Free now · Headlines, each with a live count | — |
+| Notifications | All · Unread | "Mark all read"; unread count moves from the lede into the summary slot |
+| Calendar | List · Month · Agenda | The two window selects become a Filters popover, badged only when the window differs from its default; the window itself is stated in the open, because two selects' worth of state must not vanish when collapsed |
+
+Counts are omitted while a feed is still loading. A "0" beside *Free now* reads
+as "there is nothing free" when the truth is that the request has not returned.
+
+### The Jinja half, and what nearly broke silently
+
+Three admin pages had the same shape and converted the same way: **libraries &
+scans**, **library tools**, **integrations**. All three keep their views as
+panes of one document, so the macro gained `data_toggle='tab'` — turning
+in-page tabs into full page loads to gain a prettier strip would be a straight
+downgrade.
+
+That is where the interesting part is. Bootstrap's tab plugin has three
+contracts, all checked against the vendored 5.3.2 bundle and then **verified in
+a browser**, because every failure here is silent — the strip renders perfectly
+and simply does nothing:
+
+1. It binds via `closest('.list-group, .nav, [role="tablist"]')` and no-ops
+   when that misses. A `role="group"` strip switches nothing.
+2. `_getActiveElem()` finds the pane to hide by looking for **its own**
+   `active` class. Mark selection with only our `is-active` and the first click
+   shows the new pane without hiding the old one.
+3. It moves `active` and never touches `is-active`. So in tab mode selection is
+   marked with `active` *instead of* `is-active`, and the stylesheet matches
+   both — otherwise the highlight stays welded to whichever segment rendered
+   first while the panes change underneath it.
+
+The browser probe is what caught (3): (1) and (2) were fixed from reading the
+bundle, the page then switched panes correctly, and the highlight still did not
+move.
+
+Two page-specific dependencies also had to survive:
+
+* **Image queue** lazy-loads on `shown.bs.tab` via `getElementById('imageQueue-tab')`.
+  Bar two's segment has no such id, so the lookup now goes by what it points
+  at — which works for both strips.
+* **Integrations** restores the open tab from the URL fragment by id, and every
+  pane's `aria-labelledby` names a trigger. So the macro takes an optional
+  anchor id per view (a 4th tuple element) and an id for the strip itself, and
+  its controller reads `data-bs-target` *or* `href` and no longer says
+  `button` in its selector.
 
 ## Not in this slice
 

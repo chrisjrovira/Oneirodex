@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { fetchAnnouncements } from '../api/announcements'
 import { claimFreeGameAssist, fetchFreeGames } from '../api/freeGames'
 import { fetchGamingNews } from '../api/gamingNews'
+import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import '../styles/panelGrid.css'
 import './NewsPage.css'
@@ -40,7 +41,17 @@ function tabFromHash() {
   return null
 }
 
-export function NewsPage() {
+// One list, two renderers: the old tab strip and bar two's segmented control
+// must never drift apart into different sets of sections.
+const NEWS_VIEWS = [
+  { id: 'all', label: 'All' },
+  { id: 'admins', label: 'Admins' },
+  { id: 'free', label: 'Free now' },
+  { id: 'headlines', label: 'Headlines' },
+]
+
+export function NewsPage({ shellConfig = {} }) {
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [announcements, setAnnouncements] = useState(null)
   const [freeGames, setFreeGames] = useState(null)
   const [headlines, setHeadlines] = useState(null)
@@ -153,34 +164,51 @@ export function NewsPage() {
     headlines && featured?.kind === 'headline' ? headlines.slice(1) : headlines || []
   const freeRest = freeGames && featured?.kind === 'free' ? freeGames.slice(1) : freeGames || []
 
+  // Counts ride on the segments themselves rather than a separate summary —
+  // "Free now 3" answers the question the tab was asking. Omitted while
+  // loading, so a section never reads as empty when it is simply unfetched.
+  const viewsWithCounts = useMemo(() => {
+    if (loading || error) return NEWS_VIEWS
+    const counts = {
+      admins: announcements?.length || 0,
+      free: freeGames?.length || 0,
+      headlines: headlines?.length || 0,
+    }
+    counts.all = counts.admins + counts.free + counts.headlines
+    return NEWS_VIEWS.map((view) => ({ ...view, count: counts[view.id] }))
+  }, [loading, error, announcements, freeGames, headlines])
+
   return (
     <div className="gt-more-page gt-news gt-panels">
-      <div className="gt-page-header gt-news__header gt-panels__full">
-        <div>
-          <h1>News</h1>
-          <p className="gt-more-page__lede">
-            Admin notes, free claims, and gaming headlines.
-          </p>
+      {useNewChrome ? (
+        <ContextBar
+          views={viewsWithCounts}
+          activeView={activeTab}
+          onSelectView={setActiveTab}
+        />
+      ) : (
+        <div className="gt-page-header gt-news__header gt-panels__full">
+          <div>
+            <h1>News</h1>
+            <p className="gt-more-page__lede">
+              Admin notes, free claims, and gaming headlines.
+            </p>
+          </div>
+          <nav className="gt-news__tabs" aria-label="News sections">
+            {NEWS_VIEWS.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                className={activeTab === id ? 'is-active' : ''}
+                aria-pressed={activeTab === id}
+                onClick={() => setActiveTab(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
         </div>
-        <nav className="gt-news__tabs" aria-label="News sections">
-          {[
-            ['all', 'All'],
-            ['admins', 'Admins'],
-            ['free', 'Free now'],
-            ['headlines', 'Headlines'],
-          ].map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              className={activeTab === id ? 'is-active' : ''}
-              aria-pressed={activeTab === id}
-              onClick={() => setActiveTab(id)}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      )}
 
       {error ? (
         <div role="alert">
