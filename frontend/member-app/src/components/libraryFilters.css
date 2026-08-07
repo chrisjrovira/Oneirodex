@@ -405,8 +405,10 @@
   display: block;
   grid-template-columns: none;
   gap: 0;
-  padding-left: 0;
-  padding-right: 0;
+  /* Keep a gutter. Zeroing it entirely ran the first tile off the left edge —
+     the reclaimed width comes from dropping the rail, not from the margin. */
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
 }
 
 .library-layout.is-chrome-v2 .library-layout__main {

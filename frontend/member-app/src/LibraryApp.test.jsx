@@ -410,3 +410,22 @@ test('summary reports the total instead of a heading', async () => {
   await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
   expect(screen.getByText(/1,284/)).toBeInTheDocument()
 })
+
+test('sort defaults do not inflate the filter badge', async () => {
+  // Start clean: LibraryApp restores filters from a cookie, and earlier tests
+  // in this file apply real filters, so without this the badge legitimately
+  // counts a leftover from a previous test rather than a sort default.
+  for (const c of document.cookie.split(';')) {
+    document.cookie = `${c.split('=')[0].trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+  }
+
+  // Caught by looking at the capture: an untouched library showed "Filters 2"
+  // because sort_by and sort_order always carry a value from preferences.
+  // A badge that counts things nobody set sends people hunting for a filter
+  // they never applied.
+  renderNewChrome()
+  await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
+  const trigger = screen.getByRole('button', { name: /Filters/ })
+  expect(trigger).not.toHaveClass('is-on')
+  expect(trigger.textContent).not.toMatch(/\d/)
+})

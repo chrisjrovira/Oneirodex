@@ -36,6 +36,18 @@ test('renders GameTheca wordmark and primary SPA links', () => {
   )
 })
 
+test('new chrome drops breadcrumbs from bar one but keeps the way out to admin', () => {
+  renderNav({ isAdmin: true, enableNewChrome: true })
+  const nav = screen.getByRole('navigation', { name: 'Primary' })
+  // Bar two already names the section; "Library" + "Library home" side by side
+  // was the duplication the two-bar split was supposed to remove.
+  expect(nav.querySelector('a.gt-topnav__context-link[href="/library"]')).toBeNull()
+  expect(nav.querySelector('a.gt-topnav__context-link[href="/discover"]')).toBeNull()
+  expect(nav.querySelector('a.gt-topnav__context-link[href="/admin/dashboard"]')).toHaveTextContent(
+    /^Admin$/i,
+  )
+})
+
 test('hides admin when not admin', () => {
   renderNav({ isAdmin: false })
   expect(screen.queryByRole('link', { name: /^admin$/i })).toBeNull()

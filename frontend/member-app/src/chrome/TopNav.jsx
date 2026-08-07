@@ -103,6 +103,7 @@ export function TopNav({
     // Was never destructured, so ENABLE_ACTIVITY_FEED hid the route while the
     // nav link stayed — a toggle that only half-worked.
     enableActivity = true,
+    enableNewChrome = false,
     username = '',
   } = shellConfig
 
@@ -118,7 +119,14 @@ export function TopNav({
 
   const primaryLinks = getPrimaryLinks()
   const moreGroups = getMoreGroups({ showTrailers, showHelp, enableVr, enableActivity })
-  const contextLinks = getContextLinks(pathname, { isAdmin })
+  // Bar two states which section you are in and what you can do there, so under
+  // the new chrome the breadcrumb strip says it a second time — "Library" and
+  // "Library home" ended up sitting next to each other. Admin is not a
+  // breadcrumb: it leaves the SPA entirely and bar two cannot carry it, so it
+  // survives the trim.
+  const contextLinks = getContextLinks(pathname, { isAdmin }).filter(
+    (link) => !enableNewChrome || link.external,
+  )
 
   function closeMenus() {
     setMoreOpen(false)

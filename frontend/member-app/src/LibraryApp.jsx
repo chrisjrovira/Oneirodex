@@ -657,9 +657,14 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   }
 
   // Everything narrowing the grid that is *hidden* while the popover is shut.
-  // Kind is excluded because the segmented control shows it in the open.
+  // Excluded: item_kind (the segmented control shows it in the open) and the
+  // sort keys, which always carry a value from user preferences and are not
+  // narrowing anything. Counting those showed "Filters 2" on an untouched
+  // library, which is worse than no badge — it sends people hunting for a
+  // filter they never set.
+  const NOT_A_FILTER = new Set(['item_kind', 'sort_by', 'sort_order'])
   const activeFilterCount = Object.entries(cleanFilters(filters)).filter(
-    ([key]) => key !== 'item_kind',
+    ([key]) => !NOT_A_FILTER.has(key),
   ).length
 
   const filterBar = (

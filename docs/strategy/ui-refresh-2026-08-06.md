@@ -109,12 +109,25 @@ Each lands independently and leaves the app shippable.
   is therefore duplicated in two idioms — a Jinja macro and a React component —
   which is the honest cost of a hybrid app. `tests/test_chrome_parity.py`
   pins it: every context-bar class must exist in the stylesheet *and* in both
-  renderers, every shell must link the CSS, and no preset theme may ship its
-  own copy (which would freeze that theme's chrome forever).
+  renderers, every shell must link the CSS, and `gt-appbar.css` must never join
+  `PRESET_MANAGED_FILES` — that list is the opt-out from theme sync, so a file
+  on it freezes at whatever it looked like the day a preset was installed.
+  (An earlier version of that last check asserted no installed theme held a
+  copy of the file at all. Wrong: `sync_preset_themes` **overwrites** drifted
+  copies on boot, so every preset holding one is the system working. The check
+  failed on any real install and was testing the generated tree instead of the
+  invariant.)
 * **Filters in a popover can hide state.** The count badge is not decoration —
   it is the only thing preventing "why is my library empty" support tickets.
 * **Capture must follow.** Every screenshot and all ten how-to videos show the
   current chrome. They are stale the moment UIR-2 lands.
+* **Looking at the captures is the point.** Three defects reached the
+  screenshot and none of them reached a test first: a "Filters 2" badge on an
+  untouched library (it was counting the sort keys, which narrow nothing), the
+  leftmost tile clipped by a padding I had zeroed, and bar one still carrying
+  breadcrumbs — "Library" and "Library home" side by side — after bar two
+  started naming the section. Each is now covered by a test, but capture is
+  what surfaced them.
 
 ## Not in this slice
 

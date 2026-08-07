@@ -67,18 +67,29 @@ def test_v2_marker_is_set_by_the_jinja_shells():
         assert 'enable_new_chrome' in markup, f'{shell} sets the marker unconditionally'
 
 
-def test_no_theme_ships_its_own_copy_of_the_chrome_stylesheet():
-    """gt-appbar.css relies on theme_asset falling back to `default`, which only
-    happens while no installed theme owns the file. If a preset ever ships one,
-    that theme silently freezes at whatever the CSS looked like that day."""
-    themes = ROOT / 'gametheca' / 'static' / 'library' / 'themes'
-    if not themes.is_dir():
-        pytest.skip('themes not installed in this checkout')
-    owned = [p for p in themes.glob('*/css/gt-appbar.css') if p.parent.parent.name != 'default']
-    assert not owned, (
-        'These themes ship their own gt-appbar.css and will not track changes: '
-        + ', '.join(p.parent.parent.name for p in owned)
+def test_the_chrome_stylesheet_stays_syncable_into_every_theme():
+    """Every theme must keep tracking edits to gt-appbar.css.
+
+    Two mechanisms carry it there: `theme_asset` falls back to `default` when a
+    theme has no copy, and `sync_preset_themes` overwrites any copy whose
+    content has drifted. Both work — *unless* the file is listed in
+    PRESET_MANAGED_FILES, which is the opt-out for files a preset legitimately
+    owns (its colours). gt-appbar.css there would freeze all nine presets at
+    whatever the CSS looked like the day they were installed.
+
+    Note this deliberately does not inspect static/library/themes: that tree is
+    generated at boot and every preset holding a synced copy is correct.
+    """
+    from gametheca.utils.preset_themes import PRESET_MANAGED_FILES
+
+    assert 'css/gt-appbar.css' not in PRESET_MANAGED_FILES, (
+        'gt-appbar.css is protected from theme sync — presets will not track '
+        'changes to the shared chrome'
     )
+    # And the only tracked source of it is the default theme, so there is one
+    # place to edit.
+    sources = sorted((ROOT / 'gametheca' / 'setup').glob('*/css/gt-appbar.css'))
+    assert [p.parent.parent.name for p in sources] == ['default_theme']
 
 
 def test_jinja_views_are_links_not_buttons():
