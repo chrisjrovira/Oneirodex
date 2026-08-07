@@ -1,4 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react'
+// Module scope, not inside the test — an in-test dynamic import charges
+// vitest's first resolve+transform of the module to that test's timeout.
+// I wrote this file the wrong way *after* fixing the same bug in
+// SpaceRail and ReportIssuePage, and the full suite caught it.
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { ActivityPage } from './ActivityPage'
 
@@ -75,7 +80,6 @@ test('new chrome turns the friends-only checkbox into a view switch', async () =
   // "Friends only feed" narrows which activity you are looking at, which is a
   // sibling view, not a page setting — so it belongs in the segmented control
   // rather than as a stray checkbox under the heading.
-  const userEvent = (await import('@testing-library/user-event')).default
   const user = userEvent.setup()
 
   render(
