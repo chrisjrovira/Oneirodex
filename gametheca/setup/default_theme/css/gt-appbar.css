@@ -298,3 +298,38 @@
     transition: none;
   }
 }
+
+/* ---------- UIR-3: page titles retire, their actions do not ----------
+ *
+ * The plan called this "strip gt-page-header from 22 files". Checking first
+ * showed that would have been wrong: **16 of 18** page headers also carry
+ * buttons, links or selects, so deleting the block would delete working
+ * controls, not just chrome.
+ *
+ * The header is really two things stacked — identity (h1 + lede) and actions.
+ * Only identity is redundant once bar two names the section, so only identity
+ * is hidden here. Actions stay exactly where they are until each page moves
+ * them into the context bar's actions slot, which is per-page work.
+ *
+ * `display: none` rather than visual hiding: a heading that is invisible but
+ * still announced is worse than no heading, because the section name is now
+ * genuinely in bar two.
+ */
+
+:root[data-chrome='v2'] .gt-page-header > h1,
+:root[data-chrome='v2'] .gt-page-header > div > h1,
+:root[data-chrome='v2'] .gt-page-header > .gt-more-page__lede,
+:root[data-chrome='v2'] .gt-page-header > div > .gt-more-page__lede {
+  display: none;
+}
+
+/* A header left holding only actions should not keep a heading's spacing. */
+:root[data-chrome='v2'] .gt-page-header {
+  margin-bottom: 0.5rem;
+  min-height: 0;
+}
+
+/* …and one left holding nothing at all should take no room whatsoever. */
+:root[data-chrome='v2'] .gt-page-header:not(:has(button)):not(:has(a)):not(:has(input)):not(:has(select)):not(:has(nav)) {
+  display: none;
+}

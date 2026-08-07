@@ -78,15 +78,23 @@ Each lands independently and leaves the app shippable.
 |---|---|---|---|
 | **UIR-1** | `AppBar` + `ContextBar` components and tokens | new `chrome/` components, `gt-tokens.css` | Both render in member SPA behind a flag; vitest covers segmented + popover |
 | **UIR-2** | Library adopts bar two; left rail retired | `LibraryApp`, `FilterBar`, `libraryFilters.css` | Grid full-width; all current filters reachable in the popover; existing filter tests pass |
-| **UIR-3** | Strip `gt-page-header` | 22 files | No page renders an `h1` lede block; section identity comes from bar two |
+| **UIR-3** | Retire page titles (**revised** — see below) | one CSS rule + a marker attribute | Titles and ledes gone under v2; header actions still on screen |
 | **UIR-4** | Bar two in Jinja admin | `base_admin.html`, shared CSS | `/libraries`, `/scan_management` show the same two bars as `/library` |
 | **UIR-5** | Nav consolidation | `navConfig.js`, `TopNav` | One overflow; `⌘K` still reaches everything |
 | **UIR-6** | Re-capture | `scripts/capture_docs_media.py`, how-to videos | Screenshots and videos show the new chrome |
 
 ## Risks worth naming
 
-* **UIR-3 is 22 files of mechanical edits.** Highest chance of a missed page
-  looking broken. Do it as one commit with a grep-proof, not incrementally.
+* **UIR-3 was mis-scoped and is now corrected.** The plan said "strip
+  `gt-page-header` from 22 files". Counting first showed **16 of 18** page
+  headers also carry buttons, links or selects, so deleting the block would
+  have removed working controls, not just chrome.
+  A page header is two things stacked: identity (`h1` + lede) and actions. Only
+  identity is redundant once bar two names the section, so **only identity is
+  hidden** — one rule scoped to `:root[data-chrome='v2']`, zero page edits, and
+  nothing to miss. Moving each page's actions into the context bar's actions
+  slot is genuinely per-page work and is **not** done: those actions still sit
+  where they were, just without a heading above them.
 * **Admin Jinja and React must not drift again.** If bar two is copied rather
   than shared, this whole exercise repeats in three months. UIR-4 is the slice
   that decides whether the refresh holds.

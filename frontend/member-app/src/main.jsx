@@ -76,6 +76,12 @@ export function parseShellConfig(rootElement) {
 
 const memberAppRoot = document.getElementById('member-app-root')
 if (memberAppRoot) {
+  // UIR-3: mark the document so shared CSS can retire page titles without every
+  // page needing an edit. On <html> rather than the SPA root so Jinja admin can
+  // set the same attribute server-side and get the identical treatment.
+  if (memberAppRoot.dataset.enableNewChrome === 'true') {
+    document.documentElement.dataset.chrome = 'v2'
+  }
   createRoot(memberAppRoot).render(
     <BrowserRouter>
       <App shellConfig={parseShellConfig(memberAppRoot)} />
