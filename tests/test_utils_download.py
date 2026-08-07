@@ -17,6 +17,30 @@ from gametheca.utils.download import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _temp_dir_counts_as_a_library_root(app):
+    """Tell the path guard where this module's fixtures live.
+
+    These tests build fake game folders with `tempfile.mkdtemp()`, and the
+    download path check is real: `is_safe_path` only accepts a path that
+    resolves under a configured library root, and the system temp directory is
+    not one. Seven tests were failing on "Access denied - path outside allowed
+    directories" — the guard doing exactly its job against fixtures that had
+    never said where they were.
+
+    So declare the temp directory as a root for the duration rather than
+    patching the check out. The sandbox is the feature being relied on
+    everywhere else in this file; a test that disables it proves nothing.
+    """
+    key = 'BASE_FOLDER_WINDOWS' if os.name == 'nt' else 'BASE_FOLDER_POSIX'
+    previous = app.config.get(key)
+    app.config[key] = tempfile.gettempdir()
+    try:
+        yield
+    finally:
+        app.config[key] = previous
+
+
 def safe_cleanup_database(db_session):
     """Safely clean up database records respecting foreign key constraints.""" 
     from sqlalchemy import delete
@@ -163,13 +187,20 @@ class TestZipGame:
     
     def test_zip_game_excludes_folders_case_variations(self, app, db_session, 
                                                      sample_download_request, sample_global_settings):
-        """Test that update/extras folders are excluded with different capitalizations."""
+        """Update/extras folders are excluded whatever their capitalization.
+
+        `os.makedirs` without `exist_ok` was the bug here: Windows filesystems
+        are case-insensitive, so creating `updates` and then `Updates` raises
+        FileExistsError and the test could never have passed on this platform
+        at all. `exist_ok=True` keeps the intent — the exclusion must not care
+        about case — on a filesystem that folds it and on one that does not.
+        """
         temp_dir = tempfile.mkdtemp()
         try:
             # Create folders with different capitalizations
             for folder_name in ['updates', 'Updates', 'UPDATES', 'extras', 'Extras', 'EXTRAS']:
                 folder_path = os.path.join(temp_dir, folder_name)
-                os.makedirs(folder_path)
+                os.makedirs(folder_path, exist_ok=True)
                 with open(os.path.join(folder_path, 'test.txt'), 'w') as f:
                     f.write('test content')
             
@@ -202,7 +233,10 @@ class TestZipGame:
     def test_zip_game_nonexistent_source(self, app, db_session, sample_download_request, 
                                        sample_global_settings):
         """Test handling of non-existent source path."""
-        # Set a non-existent path
+        # Outside every configured library root. The path guard answers before
+        # the existence check does — and deliberately says "access denied"
+        # rather than "not found", which would confirm to a caller whether an
+        # arbitrary path exists on the host.
         sample_download_request.game.full_disk_path = '/nonexistent/path'
         db_session.commit()
         
@@ -216,9 +250,30 @@ class TestZipGame:
         
         # Verify download request was marked as failed
         assert sample_download_request.status == 'failed'
+        assert 'Access denied' in sample_download_request.zip_file_path
+        assert 'nonexistent' not in sample_download_request.zip_file_path
+        assert sample_download_request.completion_time is not None
+
+    def test_zip_game_missing_source_inside_the_sandbox(self, app, db_session,
+                                                        sample_download_request,
+                                                        sample_global_settings):
+        """A path that is allowed but absent still has to fail cleanly.
+
+        Kept alongside the denial case above so the two outcomes stay distinct:
+        losing this one would leave "file not found" untested entirely, since
+        the guard now short-circuits every out-of-sandbox path.
+        """
+        missing = os.path.join(tempfile.gettempdir(), f'gt-missing-{uuid4().hex[:8]}')
+        sample_download_request.game.full_disk_path = missing
+        db_session.commit()
+
+        zip_game(sample_download_request.id, app, 'test_missing.zip')
+        db_session.refresh(sample_download_request)
+
+        assert sample_download_request.status == 'failed'
         assert 'Error: File Not Found' in sample_download_request.zip_file_path
         assert sample_download_request.completion_time is not None
-    
+
     def test_zip_game_source_is_file(self, app, db_session, sample_download_request, 
                                    sample_global_settings):
         """Test handling when source path is already a file."""
@@ -392,6 +447,7 @@ class TestZipFolder:
     
     def test_zip_folder_nonexistent_source(self, app, db_session, sample_download_request):
         """Test handling of non-existent source location."""
+        # Outside every library root — denied before existence is considered.
         nonexistent_path = '/nonexistent/folder'
         file_name = 'test_nonexistent'
         
@@ -403,7 +459,7 @@ class TestZipFolder:
         
         # Verify download request was marked as failed
         assert sample_download_request.status == 'failed'
-        assert 'Error: File Not Found' in sample_download_request.zip_file_path
+        assert 'Access denied' in sample_download_request.zip_file_path
         assert sample_download_request.completion_time is not None
     
 
