@@ -18,6 +18,7 @@ export function buildPaletteCommands(shellConfig = {}) {
     showTrailers = false,
     showHelp = false,
     enableVr = false,
+    enableActivity = true,
   } = shellConfig
 
   const seen = new Set()
@@ -50,7 +51,7 @@ export function buildPaletteCommands(shellConfig = {}) {
     })
   }
 
-  for (const link of getMoreLinks({ showTrailers, showHelp, enableVr })) {
+  for (const link of getMoreLinks({ showTrailers, showHelp, enableVr, enableActivity })) {
     push({
       id: link.id,
       label: link.label,

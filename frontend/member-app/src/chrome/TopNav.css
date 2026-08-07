@@ -460,3 +460,23 @@
     justify-content: space-between;
   }
 }
+
+/* UIR-5: the More menu is grouped rather than a flat seventeen-item list.
+   Headings are aria-hidden — the links are already reachable and announced,
+   and a screen reader gains nothing from four extra label stops. */
+.gt-topnav__dropdown-group + .gt-topnav__dropdown-group {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--gt-border, rgba(255, 255, 255, 0.1));
+}
+
+.gt-topnav__dropdown-heading {
+  margin: 0 0 0.15rem;
+  padding: 0 0.65rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted, #b6becc);
+  opacity: 0.75;
+}

@@ -37,6 +37,55 @@ export function getMoreLinks({ showTrailers, showHelp, enableVr, enableActivity 
   return links
 }
 
+/**
+ * The same destinations as `getMoreLinks`, grouped for display (UIR-5).
+ *
+ * A flat list of seventeen unlabelled links is the actual problem with the More
+ * menu — not that it exists. The refresh plan originally said to fold these
+ * into bar two and keep "one overflow, not two"; that was wrong. Bar two's
+ * segmented control holds *sibling views of the current section*, and these are
+ * destinations, not page actions. A seventeen-segment strip would be worse than
+ * what it replaced.
+ *
+ * The rule the two bars actually encode:
+ *
+ *   bar one  — where do I go        (this menu)
+ *   bar two  — what can I do here   (views, filters, page actions)
+ *
+ * Two overflows answering two different questions is correct. Two overflows
+ * answering the same one was the thing worth fixing.
+ *
+ * Groups are derived from `getMoreLinks` rather than duplicating it, so a link
+ * added there can never go missing here.
+ */
+export function getMoreGroups(options = {}) {
+  const byId = new Map(getMoreLinks(options).map((link) => [link.id, link]))
+  const groups = [
+    { id: 'library', label: 'Library', ids: ['collections', 'wishlist', 'updates', 'acquire', 'ownership', 'calendar'] },
+    { id: 'social', label: 'Social', ids: ['friends', 'chat', 'notifications', 'activity', 'news'] },
+    { id: 'play', label: 'Play', ids: ['big-picture', 'playtime', 'vr', 'trailers'] },
+    { id: 'support', label: 'Support', ids: ['report', 'help'] },
+  ]
+
+  const grouped = groups
+    .map((group) => ({
+      id: group.id,
+      label: group.label,
+      links: group.ids.map((id) => byId.get(id)).filter(Boolean),
+    }))
+    .filter((group) => group.links.length > 0)
+
+  // Anything not named above still has to appear somewhere: a link added to
+  // getMoreLinks without being grouped must not silently vanish from the menu.
+  const placed = new Set(grouped.flatMap((g) => g.links.map((l) => l.id)))
+  const rest = [...byId.values()].filter((link) => !placed.has(link.id))
+  if (rest.length > 0) {
+    grouped.push({ id: 'other', label: 'More', links: rest })
+  }
+
+  return grouped
+}
+
 const SECTION_HOME = {
   '/discover': { to: '/discover', label: 'Home' },
   '/library': { to: '/library', label: 'Library home' },

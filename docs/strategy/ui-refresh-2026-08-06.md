@@ -63,9 +63,17 @@ defaults rather than blocking:
    Calling that out plainly: it is the second rebuild of one component in a day.
    The edge-tab work is not wasted — it established the collapse behaviour and
    the scroll-container fix — but the panel itself goes.
-2. **"More" moves down.** The ~14 destinations become siblings in bar two's
-   segmented control, grouped by section. Bar one keeps ~5 primary destinations
-   plus account. **One overflow menu, not two.**
+2. **"More" stays in bar one, grouped — decision reversed.** The original call
+   was to fold those destinations into bar two and keep "one overflow, not
+   two". Implementing it showed why that is wrong: bar two's segmented control
+   holds *sibling views of the current section*, and these are **destinations,
+   not page actions**. A seventeen-segment strip would be worse than the flat
+   list it replaced.
+   The rule the two bars actually encode is cleaner than "one overflow":
+   **bar one answers "where do I go", bar two answers "what can I do here".**
+   Two overflows for two different questions is right; two overflows for the
+   same question was the thing worth fixing. So More keeps its place and gains
+   four labelled groups — Library, Social, Play, Support.
 3. **Shared markup before migration.** Bar one and bar two ship as a component
    pair rendered by *both* the React shells and `base_admin.html`. Days, not the
    weeks a full React port would take. The page bodies converge later.
@@ -80,7 +88,7 @@ Each lands independently and leaves the app shippable.
 | **UIR-2** | Library adopts bar two; left rail retired | `LibraryApp`, `FilterBar`, `libraryFilters.css` | Grid full-width; all current filters reachable in the popover; existing filter tests pass |
 | **UIR-3** | Retire page titles (**revised** — see below) | one CSS rule + a marker attribute | Titles and ledes gone under v2; header actions still on screen |
 | **UIR-4** | Bar two in Jinja admin | `partials/chrome.html`, `base_admin.html` | `/libraries` renders the same bar two as `/library`; parity pinned by tests |
-| **UIR-5** | Nav consolidation | `navConfig.js`, `TopNav` | One overflow; `⌘K` still reaches everything |
+| **UIR-5** | Group the More menu (**revised**) | `navConfig.js`, `TopNav`, `CommandPalette` | Four labelled groups; no destination lost; `⌘K` still reaches everything |
 | **UIR-6** | Re-capture | `scripts/capture_docs_media.py`, how-to videos | Screenshots and videos show the new chrome |
 
 ## Risks worth naming

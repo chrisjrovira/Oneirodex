@@ -1,7 +1,7 @@
 ﻿import { useEffect, useId, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { IconMenu, IconMore, IconUser, primaryIconById } from './icons'
-import { getContextLinks, getMoreLinks, getPrimaryLinks } from './navConfig'
+import { getContextLinks, getMoreGroups, getPrimaryLinks } from './navConfig'
 import { openPreferencesModal } from '../api/preferences'
 import { requestOpenChatPanel } from '../hooks/chatPanelApi'
 import { requestOpenSocialCompanion } from '../hooks/socialCompanionApi'
@@ -100,6 +100,9 @@ export function TopNav({
     showTrailers = false,
     showHelp = false,
     enableVr = false,
+    // Was never destructured, so ENABLE_ACTIVITY_FEED hid the route while the
+    // nav link stayed — a toggle that only half-worked.
+    enableActivity = true,
     username = '',
   } = shellConfig
 
@@ -114,7 +117,7 @@ export function TopNav({
   const paletteHint = commandPaletteHint()
 
   const primaryLinks = getPrimaryLinks()
-  const moreLinks = getMoreLinks({ showTrailers, showHelp, enableVr })
+  const moreGroups = getMoreGroups({ showTrailers, showHelp, enableVr, enableActivity })
   const contextLinks = getContextLinks(pathname, { isAdmin })
 
   function closeMenus() {
@@ -294,12 +297,19 @@ export function TopNav({
             </button>
             {moreOpen ? (
               <div className="gt-topnav__dropdown-panel" id={moreId} role="menu">
-                {moreLinks.map((link) => (
-                  <MoreMenuLink
-                    key={link.id}
-                    link={link}
-                    onNavigate={closeMobile}
-                  />
+                {moreGroups.map((group) => (
+                  <div key={group.id} className="gt-topnav__dropdown-group">
+                    <p className="gt-topnav__dropdown-heading" aria-hidden="true">
+                      {group.label}
+                    </p>
+                    {group.links.map((link) => (
+                      <MoreMenuLink
+                        key={link.id}
+                        link={link}
+                        onNavigate={closeMobile}
+                      />
+                    ))}
+                  </div>
                 ))}
               </div>
             ) : null}
