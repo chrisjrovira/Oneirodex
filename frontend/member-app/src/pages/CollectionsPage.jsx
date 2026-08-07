@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ContextBar, Popover } from '../chrome/ContextBar'
 import { createCollection, deleteCollection, fetchCollections } from '../api/collections'
 import './Collections.css'
 
@@ -11,7 +12,8 @@ function itemCountLabel(collection) {
   return count === 1 ? '1 game' : `${count} games`
 }
 
-export function CollectionsPage({ shellConfig: _shellConfig } = {}) {
+export function CollectionsPage({ shellConfig = {} } = {}) {
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [collections, setCollections] = useState(null)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
@@ -97,52 +99,103 @@ export function CollectionsPage({ shellConfig: _shellConfig } = {}) {
 
   return (
     <div className="gt-more-page gt-collections">
-      <div className="gt-page-header">
-        <h1>Collections</h1>
-      </div>
-      <p className="gt-more-page__lede">
-        Curated shelves you and others share across the library.
-      </p>
+      {useNewChrome ? (
+        <ContextBar
+          summary={collections ? `${collections.length} shelves` : null}
+          actions={
+            <Popover label="New collection">
+          <form className="gt-collections__form" onSubmit={handleCreate}>
+            <label className="gt-collections__field">
+              Name
+              <input
+                type="text"
+                maxLength={120}
+                required
+                placeholder="Cozy co-op nights"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
+            </label>
+            <label className="gt-collections__field">
+              Description
+              <input
+                type="text"
+                maxLength={400}
+                placeholder="Optional"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+            </label>
+            <label className="gt-collections__check">
+              <input
+                type="checkbox"
+                checked={isPublic}
+                onChange={(event) => setIsPublic(event.target.checked)}
+              />
+              Public
+            </label>
+            <button type="submit" disabled={creating}>
+              {creating ? 'Creating…' : 'Create'}
+            </button>
+            {createError ? (
+              <p className="gt-collections__error" role="alert">
+                {createError.message || 'Unable to create collection.'}
+              </p>
+            ) : null}
+          </form>
+            </Popover>
+          }
+        />
+      ) : (
+        <>
+        <div className="gt-page-header">
+          <h1>Collections</h1>
+        </div>
+        <p className="gt-more-page__lede">
+          Curated shelves you and others share across the library.
+        </p>
 
-      <form className="gt-collections__form" onSubmit={handleCreate}>
-        <label className="gt-collections__field">
-          Name
-          <input
-            type="text"
-            maxLength={120}
-            required
-            placeholder="Cozy co-op nights"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </label>
-        <label className="gt-collections__field">
-          Description
-          <input
-            type="text"
-            maxLength={400}
-            placeholder="Optional"
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-          />
-        </label>
-        <label className="gt-collections__check">
-          <input
-            type="checkbox"
-            checked={isPublic}
-            onChange={(event) => setIsPublic(event.target.checked)}
-          />
-          Public
-        </label>
-        <button type="submit" disabled={creating}>
-          {creating ? 'Creating…' : 'Create'}
-        </button>
-        {createError ? (
-          <p className="gt-collections__error" role="alert">
-            {createError.message || 'Unable to create collection.'}
-          </p>
-        ) : null}
-      </form>
+        <form className="gt-collections__form" onSubmit={handleCreate}>
+          <label className="gt-collections__field">
+            Name
+            <input
+              type="text"
+              maxLength={120}
+              required
+              placeholder="Cozy co-op nights"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          <label className="gt-collections__field">
+            Description
+            <input
+              type="text"
+              maxLength={400}
+              placeholder="Optional"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+            />
+          </label>
+          <label className="gt-collections__check">
+            <input
+              type="checkbox"
+              checked={isPublic}
+              onChange={(event) => setIsPublic(event.target.checked)}
+            />
+            Public
+          </label>
+          <button type="submit" disabled={creating}>
+            {creating ? 'Creating…' : 'Create'}
+          </button>
+          {createError ? (
+            <p className="gt-collections__error" role="alert">
+              {createError.message || 'Unable to create collection.'}
+            </p>
+          ) : null}
+        </form>
+        </>
+      )}
 
       {error ? (
         <div role="alert">
@@ -156,7 +209,11 @@ export function CollectionsPage({ shellConfig: _shellConfig } = {}) {
       {!error && !collections ? <p>Loading…</p> : null}
 
       {!error && collections && collections.length === 0 ? (
-        <p>No collections yet. Create your first shelf with the form above.</p>
+        <p>
+          {useNewChrome
+            ? 'No collections yet. Create your first shelf from New collection above.'
+            : 'No collections yet. Create your first shelf with the form above.'}
+        </p>
       ) : null}
 
       {!error && collections && collections.length > 0 ? (

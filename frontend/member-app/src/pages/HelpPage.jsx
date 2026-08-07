@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ContextBar } from '../chrome/ContextBar'
 import './HelpPage.css'
 
 const FAQ_SECTIONS = [
@@ -140,7 +141,8 @@ const FAQ_SECTIONS = [
   },
 ]
 
-export function HelpPage() {
+export function HelpPage({ shellConfig = {} }) {
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [openIds, setOpenIds] = useState(() => {
     const initial = new Set(['getting-started'])
     if (typeof window !== 'undefined') {
@@ -188,24 +190,45 @@ export function HelpPage() {
 
   return (
     <div className="gt-more-page gt-help">
-      <div className="gt-page-header">
-        <h1>Help</h1>
-      </div>
-      <p className="gt-more-page__lede">
-        Short answers for the member library. Expand a section when you need detail.
-      </p>
+      {useNewChrome ? (
+        <ContextBar
+          summary={`${openIds.size} of ${FAQ_SECTIONS.length} open`}
+          actions={
+            <>
+              <button type="button" className="gt-cbtn" onClick={expandAll}>
+                Expand all
+              </button>
+              <button type="button" className="gt-cbtn" onClick={collapseAll}>
+                Collapse all
+              </button>
+              <Link className="gt-cbtn" to="/report">
+                Report an issue
+              </Link>
+            </>
+          }
+        />
+      ) : (
+        <>
+          <div className="gt-page-header">
+            <h1>Help</h1>
+          </div>
+          <p className="gt-more-page__lede">
+            Short answers for the member library. Expand a section when you need detail.
+          </p>
 
-      <div className="gt-help__toolbar">
-        <button type="button" className="gt-btn gt-btn--ghost" onClick={expandAll}>
-          Expand all
-        </button>
-        <button type="button" className="gt-btn gt-btn--ghost" onClick={collapseAll}>
-          Collapse all
-        </button>
-        <Link className="gt-help__support-link" to="/report">
-          Report an issue
-        </Link>
-      </div>
+          <div className="gt-help__toolbar">
+            <button type="button" className="gt-btn gt-btn--ghost" onClick={expandAll}>
+              Expand all
+            </button>
+            <button type="button" className="gt-btn gt-btn--ghost" onClick={collapseAll}>
+              Collapse all
+            </button>
+            <Link className="gt-help__support-link" to="/report">
+              Report an issue
+            </Link>
+          </div>
+        </>
+      )}
 
       <div className="gt-help__toc" aria-label="Help topics">
         {FAQ_SECTIONS.map((section) => (

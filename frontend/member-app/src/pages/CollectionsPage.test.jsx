@@ -290,3 +290,35 @@ test('detail page searches and adds a picked game', async () => {
   expect(collectionsApi.addCollectionItem).toHaveBeenCalledWith('abc-123', 'game-9')
   expect(await screen.findByRole('link', { name: /Celeste/ })).toBeInTheDocument()
 })
+
+test('new chrome puts the create form behind one button', async () => {
+  // An always-visible three-field form above the list is the noise bar two
+  // exists to absorb; creating a shelf is an action, not page furniture.
+  const user = userEvent.setup()
+  collectionsApi.fetchCollections.mockResolvedValue({ collections: [] })
+
+  render(
+    <MemoryRouter>
+      <CollectionsPage shellConfig={{ enableNewChrome: true }} />
+    </MemoryRouter>,
+  )
+  await screen.findByText(/No collections yet/)
+
+  expect(screen.queryByRole('heading', { name: 'Collections' })).toBeNull()
+  expect(screen.queryByPlaceholderText('Cozy co-op nights')).toBeNull()
+
+  await user.click(screen.getByRole('button', { name: /New collection/ }))
+  expect(screen.getByPlaceholderText('Cozy co-op nights')).toBeInTheDocument()
+})
+
+test('the empty state points at the control that actually exists', async () => {
+  // It used to say "with the form above", which is wrong once the form is
+  // behind a button — and that sentence is the only guidance a new user gets.
+  collectionsApi.fetchCollections.mockResolvedValue({ collections: [] })
+  render(
+    <MemoryRouter>
+      <CollectionsPage shellConfig={{ enableNewChrome: true }} />
+    </MemoryRouter>,
+  )
+  expect(await screen.findByText(/from New collection above/)).toBeInTheDocument()
+})

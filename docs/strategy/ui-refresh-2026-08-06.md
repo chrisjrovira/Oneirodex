@@ -154,6 +154,8 @@ list would drift the moment a section is added.
 | News | All · Admins · Free now · Headlines, each with a live count | — |
 | Notifications | All · Unread | "Mark all read"; unread count moves from the lede into the summary slot |
 | Calendar | List · Month · Agenda | The two window selects become a Filters popover, badged only when the window differs from its default; the window itself is stated in the open, because two selects' worth of state must not vanish when collapsed |
+| Help | — | Expand all · Collapse all · Report an issue, with "*n* of *m* open" as the summary. Report an issue stays a link: turning it into a button would quietly kill middle-click and open-in-new-tab |
+| Collections | — | The create form moves behind a **New collection** popover. A permanently visible three-field form above the list is exactly the furniture bar two exists to absorb — and the empty state had to change with it, since "create your first shelf with the form above" stops being true |
 
 Counts are omitted while a feed is still loading. A "0" beside *Free now* reads
 as "there is nothing free" when the truth is that the request has not returned.
