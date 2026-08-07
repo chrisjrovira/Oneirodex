@@ -23,6 +23,20 @@
   }
 </style>
 
+{% if enable_new_chrome %}
+        {% call chrome.contextbar(
+             views=[
+               ('email', 'Email', '#email', 'email-tab'),
+               ('igdb', 'IGDB', '#igdb', 'igdb-tab'),
+               ('community', 'Community chat', '#community', 'community-tab'),
+               ('artwork', 'Artwork', '#artwork', 'artwork-tab'),
+               ('oidc', 'OIDC / SSO', '#oidc', 'oidc-tab'),
+             ],
+             active=none,
+             data_toggle='tab',
+             views_id='integrationTabs') %}
+        {% endcall %}
+{% endif %}
 <div class="container-settings mt-4 gt-adminpage gt-adminpage--xl">
     <div class="gt-adminpage-header">
         <div>
@@ -51,20 +65,7 @@
            leave the page with no pane open and dangling aria references. The
            strip keeps its own id too, because that controller scopes its query
            to `#integrationTabs`. #}
-        {% if enable_new_chrome %}
-        {% call chrome.contextbar(
-             views=[
-               ('email', 'Email', '#email', 'email-tab'),
-               ('igdb', 'IGDB', '#igdb', 'igdb-tab'),
-               ('community', 'Community chat', '#community', 'community-tab'),
-               ('artwork', 'Artwork', '#artwork', 'artwork-tab'),
-               ('oidc', 'OIDC / SSO', '#oidc', 'oidc-tab'),
-             ],
-             active=none,
-             data_toggle='tab',
-             views_id='integrationTabs') %}
-        {% endcall %}
-        {% else %}
+        {% if not enable_new_chrome %}
         <ul class="integrations-nav-tabs nav nav-tabs" id="integrationTabs" role="tablist">
             <li class="integrations-nav-item nav-item" role="presentation">
                 <button class="integrations-nav-link nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab" aria-controls="email" aria-selected="false">
@@ -92,8 +93,8 @@
                 </button>
             </li>
         </ul>
+        
         {% endif %}
-
         <!-- Tab content -->
         <div class="integrations-tab-content tab-content" id="integrationTabContent">
 

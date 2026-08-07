@@ -38,26 +38,30 @@
   }
 </style>
 
+{# Rendered unconditionally, unlike the other three: UIR-4 removed this
+   page's own header rather than branching, so there is no old-chrome
+   markup left to fall back to. Hoisted out of the card so the bar spans
+   the page like the member SPA's rather than sitting inset inside it. #}
+{# UIR-4: the title/lede block and the Bootstrap tab strip are exactly
+   what bar two replaces — sibling views on the left, actions on the
+   right. Same markup contract as the member SPA's ContextBar; the shared
+   gt-appbar.css is what makes them look identical. #}
+{% call chrome.contextbar(
+     views=[
+       ('libraries', 'Libraries', url_for('library.libraries')),
+       ('auto', 'Auto scan', url_for('main.scan_management', active_tab='auto')),
+       ('manual', 'Manual scan', url_for('main.scan_management', active_tab='manual')),
+       ('unmatched', 'Unmatched', url_for('main.scan_management', active_tab='unmatched')),
+       ('scan_filters', 'Filters', url_for('main.scan_management', active_tab='scan_filters')),
+       ('file_extensions', 'Extensions', url_for('main.scan_management', active_tab='file_extensions')),
+       ('image_queue', 'Image queue', url_for('main.scan_management', active_tab='image_queue')),
+     ],
+     active='libraries',
+     summary='%d libraries · %d games'|format(libraries|length, game_count or 0)) %}
+{% endcall %}
 <div class="admin_manage_libraries-library-container">
   <div class="container-settings gt-adminpage gt-adminpage--xl">
     <div class="card">
-      {# UIR-4: the title/lede block and the Bootstrap tab strip are exactly
-         what bar two replaces — sibling views on the left, actions on the
-         right. Same markup contract as the member SPA's ContextBar; the shared
-         gt-appbar.css is what makes them look identical. #}
-      {% call chrome.contextbar(
-           views=[
-             ('libraries', 'Libraries', url_for('library.libraries')),
-             ('auto', 'Auto scan', url_for('main.scan_management', active_tab='auto')),
-             ('manual', 'Manual scan', url_for('main.scan_management', active_tab='manual')),
-             ('unmatched', 'Unmatched', url_for('main.scan_management', active_tab='unmatched')),
-             ('scan_filters', 'Filters', url_for('main.scan_management', active_tab='scan_filters')),
-             ('file_extensions', 'Extensions', url_for('main.scan_management', active_tab='file_extensions')),
-             ('image_queue', 'Image queue', url_for('main.scan_management', active_tab='image_queue')),
-           ],
-           active='libraries',
-           summary='%d libraries · %d games'|format(libraries|length, game_count or 0)) %}
-      {% endcall %}
 
       {% include 'admin/partials/admin_libraries_panel.html' %}
     </div>

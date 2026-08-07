@@ -62,6 +62,29 @@ def page_is_healthy(page) -> tuple[bool, str]:
             return False, f"error page ({marker!r})"
     if len(body) < 40:
         return False, f"page nearly empty ({len(body)} chars)"
+
+    # A page can be perfectly healthy in text and still be worthless as a
+    # screenshot. The whole `themes/default` tree went missing once — every
+    # `theme_asset` URL 404'd, every page rendered as raw unstyled HTML, and
+    # this gate passed the lot because the *words* were all present. A set of
+    # unstyled screenshots then shipped reporting "exit 0, no skips".
+    #
+    # Counting rules rather than checking for the <link> catches it properly:
+    # a stylesheet that 404s still appears in document.styleSheets, just empty.
+    try:
+        themed_rules = page.evaluate(
+            """() => [...document.styleSheets]
+                 .filter(s => (s.href || '').includes('/library/themes/'))
+                 .reduce((n, s) => {
+                   try { return n + s.cssRules.length } catch { return n }
+                 }, 0)"""
+        )
+    except Exception:  # noqa: BLE001
+        themed_rules = None
+
+    if themed_rules == 0:
+        return False, "theme stylesheets loaded but empty — page is unstyled"
+
     return True, "ok"
 
 
