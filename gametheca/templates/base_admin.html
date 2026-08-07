@@ -1,6 +1,6 @@
 {% import 'partials/icons.html' as icons -%}
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ current_theme|default('default') }}" data-icon-pack="{{ current_icon_pack|default('outline') }}">
+<html lang="en" data-theme="{{ current_theme|default('default') }}" data-icon-pack="{{ current_icon_pack|default('outline') }}"{% if enable_new_chrome %} data-chrome="v2"{% endif %}>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">

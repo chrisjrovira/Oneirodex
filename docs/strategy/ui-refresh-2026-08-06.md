@@ -79,7 +79,7 @@ Each lands independently and leaves the app shippable.
 | **UIR-1** | `AppBar` + `ContextBar` components and tokens | new `chrome/` components, `gt-tokens.css` | Both render in member SPA behind a flag; vitest covers segmented + popover |
 | **UIR-2** | Library adopts bar two; left rail retired | `LibraryApp`, `FilterBar`, `libraryFilters.css` | Grid full-width; all current filters reachable in the popover; existing filter tests pass |
 | **UIR-3** | Retire page titles (**revised** — see below) | one CSS rule + a marker attribute | Titles and ledes gone under v2; header actions still on screen |
-| **UIR-4** | Bar two in Jinja admin | `base_admin.html`, shared CSS | `/libraries`, `/scan_management` show the same two bars as `/library` |
+| **UIR-4** | Bar two in Jinja admin | `partials/chrome.html`, `base_admin.html` | `/libraries` renders the same bar two as `/library`; parity pinned by tests |
 | **UIR-5** | Nav consolidation | `navConfig.js`, `TopNav` | One overflow; `⌘K` still reaches everything |
 | **UIR-6** | Re-capture | `scripts/capture_docs_media.py`, how-to videos | Screenshots and videos show the new chrome |
 
@@ -95,9 +95,14 @@ Each lands independently and leaves the app shippable.
   nothing to miss. Moving each page's actions into the context bar's actions
   slot is genuinely per-page work and is **not** done: those actions still sit
   where they were, just without a heading above them.
-* **Admin Jinja and React must not drift again.** If bar two is copied rather
-  than shared, this whole exercise repeats in three months. UIR-4 is the slice
-  that decides whether the refresh holds.
+* **Admin Jinja and React must not drift again.** The two SPA builds cannot
+  import from each other, so the shared artifact is the **stylesheet**: both
+  renderers emit the same class names against one `gt-appbar.css`. The markup
+  is therefore duplicated in two idioms — a Jinja macro and a React component —
+  which is the honest cost of a hybrid app. `tests/test_chrome_parity.py`
+  pins it: every context-bar class must exist in the stylesheet *and* in both
+  renderers, every shell must link the CSS, and no preset theme may ship its
+  own copy (which would freeze that theme's chrome forever).
 * **Filters in a popover can hide state.** The count badge is not decoration —
   it is the only thing preventing "why is my library empty" support tickets.
 * **Capture must follow.** Every screenshot and all ten how-to videos show the

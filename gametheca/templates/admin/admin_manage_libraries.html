@@ -1,6 +1,7 @@
 {% extends "base_admin.html" %}
 {% block content %}
 {% import 'partials/icons.html' as icons %}
+{% import 'partials/chrome.html' as chrome %}
 
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_scanjobs.css'|theme_asset }}">
@@ -40,36 +41,23 @@
 <div class="admin_manage_libraries-library-container">
   <div class="container-settings gt-adminpage gt-adminpage--xl">
     <div class="card">
-      <div class="gt-adminpage-header">
-        <div>
-          <h1 class="gt-adminpage-title">Libraries &amp; scans</h1>
-          <p class="gt-adminpage-lede">Manage libraries, run scans, and triage unmatched folders — one place.</p>
-        </div>
-      </div>
-
-      <ul class="admin_manage_scanjobs-nav-tabs nav nav-tabs gt-libraries-unified-tabs mb-3" role="tablist">
-        <li class="nav-item">
-          <a class="nav-link active" href="{{ url_for('library.libraries') }}" aria-current="page">Libraries</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('main.scan_management', active_tab='auto') }}">Auto Scan</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('main.scan_management', active_tab='manual') }}">Manual Scan</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('main.scan_management', active_tab='unmatched') }}">Unmatched Folders</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('main.scan_management', active_tab='scan_filters') }}">Scan Filters</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('main.scan_management', active_tab='file_extensions') }}">File Extensions</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('main.scan_management', active_tab='image_queue') }}">Image Queue</a>
-        </li>
-      </ul>
+      {# UIR-4: the title/lede block and the Bootstrap tab strip are exactly
+         what bar two replaces — sibling views on the left, actions on the
+         right. Same markup contract as the member SPA's ContextBar; the shared
+         gt-appbar.css is what makes them look identical. #}
+      {% call chrome.contextbar(
+           views=[
+             ('libraries', 'Libraries', url_for('library.libraries')),
+             ('auto', 'Auto scan', url_for('main.scan_management', active_tab='auto')),
+             ('manual', 'Manual scan', url_for('main.scan_management', active_tab='manual')),
+             ('unmatched', 'Unmatched', url_for('main.scan_management', active_tab='unmatched')),
+             ('scan_filters', 'Filters', url_for('main.scan_management', active_tab='scan_filters')),
+             ('file_extensions', 'Extensions', url_for('main.scan_management', active_tab='file_extensions')),
+             ('image_queue', 'Image queue', url_for('main.scan_management', active_tab='image_queue')),
+           ],
+           active='libraries',
+           summary='%d libraries · %d games'|format(libraries|length, game_count or 0)) %}
+      {% endcall %}
 
       {% include 'admin/partials/admin_libraries_panel.html' %}
     </div>

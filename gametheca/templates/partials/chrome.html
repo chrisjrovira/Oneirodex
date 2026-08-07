@@ -1,0 +1,49 @@
+{# Two-bar chrome for Jinja pages (UIR-4).
+
+   Admin's bar one is already React (admin-app). Bar two is rendered here so
+   Jinja admin pages get the *same* chrome as the member SPA without a
+   cross-app import — member-app and admin-app are separate Vite builds and
+   importing across them breaks the build.
+
+   The shared artifact is the stylesheet, not the markup: `gt-appbar.css` is
+   linked by base.html, base_empty.html and base_admin.html alike, and both
+   renderers emit the same class names. That is what actually governs
+   appearance. `tests/test_chrome_parity.py` asserts the two stay in step, so
+   a class rename in one cannot silently drift from the other.
+
+   Usage:
+
+     {% import 'partials/chrome.html' as chrome %}
+     {% call chrome.contextbar(
+          views=[('all', 'Libraries', url_for('library.libraries')),
+                 ('scans', 'Scans', url_for('main.scan_management'))],
+          active='all',
+          summary='12 libraries') %}
+       <a class="gt-cbtn gt-cbtn--primary" href="...">Add library</a>
+     {% endcall %}
+
+   Views are (id, label, href) triples: in Jinja these are links rather than
+   buttons, because a page swap is a navigation here, not local state. They
+   still render as the same segmented control.
+#}
+
+{% macro contextbar(views=None, active=None, summary=None, label='Views') %}
+<div class="gt-contextbar">
+  {% if views %}
+  <div class="gt-contextbar__views">
+    <div class="gt-seg" role="group" aria-label="{{ label }}">
+      {% for view_id, view_label, view_href in views %}
+      <a class="gt-seg__item{% if view_id == active %} is-active{% endif %}"
+         href="{{ view_href }}"
+         {% if view_id == active %}aria-current="page"{% endif %}>{{ view_label }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="gt-contextbar__actions">
+    {% if summary %}<span class="gt-contextbar__count">{{ summary }}</span>{% endif %}
+    {{ caller() if caller else '' }}
+  </div>
+</div>
+{% endmacro %}
