@@ -12,7 +12,7 @@ Active profile drives *arr search scoring and scan name-clean extras
 from __future__ import annotations
 
 from typing import Any
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import flag_modified
@@ -38,6 +38,17 @@ DEFAULT_PROFILE_NAME = 'Default'
 
 def _new_id() -> str:
     return str(uuid4())
+
+
+# Migrating the legacy flat format must land on the *same* id every time.
+#
+# It used to mint a random uuid per conversion, and `_load_store()` does not
+# persist the migration unless asked — so `save_quality_profile()` (load, read
+# active_id, then call update_quality_profile, which loads again) migrated
+# twice, got two different ids, and raised "profile not found" for the id it
+# had just been handed. Anyone upgrading from the flat format hit that on their
+# first edit.
+LEGACY_PROFILE_ID = str(uuid5(NAMESPACE_URL, 'gametheca:quality-profile:legacy'))
 
 
 def _normalize_str_list(value: Any) -> list[str]:
@@ -137,7 +148,10 @@ def _migrate_raw(raw: Any) -> dict[str, Any]:
         return {'version': 2, 'active_id': active_id, 'profiles': profiles}
 
     if _is_v1_flat(raw):
-        profile = _make_profile(fields=raw if isinstance(raw, dict) else None)
+        profile = _make_profile(
+            profile_id=LEGACY_PROFILE_ID,
+            fields=raw if isinstance(raw, dict) else None,
+        )
         return {'version': 2, 'active_id': profile['id'], 'profiles': [profile]}
 
     profile = _make_profile()

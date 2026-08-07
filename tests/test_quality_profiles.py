@@ -239,3 +239,39 @@ def test_quality_profiles_list_spa_contract(app, db_session, client, admin):
             active = profile
     assert active is not None
     assert body.get('id') == body['active_id']
+
+
+def test_migrating_the_legacy_format_is_idempotent(app, db_session):
+    """Two loads of the same legacy JSON must agree on the profile's id.
+
+    `_load_store()` does not persist the migration unless asked, and
+    `save_quality_profile()` loads the store, reads `active_id`, then calls
+    `update_quality_profile`, which loads it again. While the legacy branch
+    minted a random uuid per conversion those two loads disagreed, and the
+    second raised "profile not found" for the id the first had just produced —
+    so anyone upgrading from the flat format hit a 404 on their first edit.
+    """
+    from gametheca.utils.quality_profiles import _load_store, _migrate_raw
+
+    legacy = {
+        'preferred_groups': ['FITGIRL'],
+        'blocked_groups': ['DODI'],
+        'prefer_repack': True,
+    }
+
+    first = _migrate_raw(legacy)
+    second = _migrate_raw(legacy)
+    assert first['active_id'] == second['active_id']
+    assert [p['id'] for p in first['profiles']] == [p['id'] for p in second['profiles']]
+
+    settings = _ensure_settings(db_session)
+    settings.quality_profiles = legacy
+    flag_modified(settings, 'quality_profiles')
+    db_session.commit()
+    db_session.expire_all()
+
+    with app.app_context():
+        # The round trip that used to raise.
+        saved = save_quality_profile({'preferred_groups': ['GOG']})
+        assert saved['preferred_groups'] == ['GOG']
+        assert _load_store()['active_id'] == saved['id']

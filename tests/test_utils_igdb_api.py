@@ -80,14 +80,17 @@ class TestMakeIgdbApiRequest:
         
         assert result == {'data': 'test_response'}
         mock_get_token.assert_called_once_with('test_client_id', 'test_client_secret')
-        mock_requests_post.assert_called_once_with(
-            'https://api.igdb.com/v4/games',
-            headers={
-                'Client-ID': 'test_client_id',
-                'Authorization': 'Bearer test_token'
-            },
-            data='fields name;'
-        )
+        # The URL, headers and body are asserted exactly; the timeout is
+        # asserted as "present" so tuning it does not fail this, while removing
+        # it does. An un-timed-out IGDB call blocks a scan worker indefinitely.
+        args, kwargs = mock_requests_post.call_args
+        assert args == ('https://api.igdb.com/v4/games',)
+        assert kwargs['headers'] == {
+            'Client-ID': 'test_client_id',
+            'Authorization': 'Bearer test_token',
+        }
+        assert kwargs['data'] == 'fields name;'
+        assert kwargs.get('timeout')
 
     def test_missing_igdb_settings(self, db_session):
         """Test API request with missing IGDB settings."""
@@ -164,14 +167,14 @@ class TestGetAccessToken:
         token = get_access_token('client_id', 'client_secret')
         
         assert token == 'test_token_12345'
-        mock_requests_post.assert_called_once_with(
-            'https://id.twitch.tv/oauth2/token',
-            params={
-                'client_id': 'client_id',
-                'client_secret': 'client_secret',
-                'grant_type': 'client_credentials'
-            }
-        )
+        args, kwargs = mock_requests_post.call_args
+        assert args == ('https://id.twitch.tv/oauth2/token',)
+        assert kwargs['params'] == {
+            'client_id': 'client_id',
+            'client_secret': 'client_secret',
+            'grant_type': 'client_credentials',
+        }
+        assert kwargs.get('timeout')
 
     @patch('requests.post')
     def test_token_cache_avoids_second_request(self, mock_requests_post):

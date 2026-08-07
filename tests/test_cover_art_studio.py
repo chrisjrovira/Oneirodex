@@ -115,19 +115,23 @@ def test_safe_pack_dir_blocks_traversal(tmp_path):
             safe_pack_dir('bad/id')
 
 
-def test_safe_pack_file_only_known_names(tmp_path):
+def test_safe_pack_file_only_known_names(tmp_path, app):
+    """Needs an app context: these helpers resolve paths from
+    `current_app.root_path`, so patching `generated_root` alone is no longer
+    enough to keep them off Flask's globals."""
     pack = tmp_path / 'pack1'
     pack.mkdir()
     (pack / 'tile_400x600.webp').write_bytes(b'x')
-    with patch('gametheca.utils.cover_art_studio.generated_root', return_value=tmp_path):
-        path = safe_pack_file('pack1', 'tile_400x600.webp')
-        assert path.is_file()
-        with pytest.raises(ValueError):
-            safe_pack_file('pack1', '../../../etc/passwd')
+    with app.app_context():
+        with patch('gametheca.utils.cover_art_studio.generated_root', return_value=tmp_path):
+            path = safe_pack_file('pack1', 'tile_400x600.webp')
+            assert path.is_file()
+            with pytest.raises(ValueError):
+                safe_pack_file('pack1', '../../../etc/passwd')
 
 
-def test_save_pack_and_zip(tmp_path):
-    with patch('gametheca.utils.cover_art_studio.generated_root', return_value=tmp_path):
+def test_save_pack_and_zip(tmp_path, app):
+    with app.app_context(),          patch('gametheca.utils.cover_art_studio.generated_root', return_value=tmp_path):
         manifest = save_pack('Zip Test', system='GBA', pack_id='testpack01')
         assert manifest['pack_id'] == 'testpack01'
         assert (tmp_path / 'testpack01' / 'manifest.json').is_file()
