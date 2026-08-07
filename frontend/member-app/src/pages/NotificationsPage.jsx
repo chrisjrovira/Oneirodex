@@ -131,8 +131,8 @@ export function NotificationsPage({ shellConfig = {} }) {
   }
 
   return (
-    <div className="gt-more-page gt-notifications">
-      {useNewChrome ? (
+    <>
+    {useNewChrome ? (
         <ContextBar
           views={NOTIFICATION_VIEWS}
           activeView={filter}
@@ -149,7 +149,9 @@ export function NotificationsPage({ shellConfig = {} }) {
             </button>
           }
         />
-      ) : (
+      ) : null}
+    <div className="gt-more-page gt-notifications">
+      {useNewChrome ? null : (
         <div className="gt-page-header gt-notifications__header">
           <div>
             <h1>Notifications</h1>
@@ -271,5 +273,6 @@ export function NotificationsPage({ shellConfig = {} }) {
         )}
       </section>
     </div>
+    </>
   )
 }

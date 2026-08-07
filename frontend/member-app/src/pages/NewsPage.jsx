@@ -179,14 +179,16 @@ export function NewsPage({ shellConfig = {} }) {
   }, [loading, error, announcements, freeGames, headlines])
 
   return (
-    <div className="gt-more-page gt-news gt-panels">
-      {useNewChrome ? (
+    <>
+    {useNewChrome ? (
         <ContextBar
           views={viewsWithCounts}
           activeView={activeTab}
           onSelectView={setActiveTab}
         />
-      ) : (
+      ) : null}
+    <div className="gt-more-page gt-news gt-panels">
+      {useNewChrome ? null : (
         <div className="gt-page-header gt-news__header gt-panels__full">
           <div>
             <h1>News</h1>
@@ -458,5 +460,6 @@ export function NewsPage({ shellConfig = {} }) {
         </section>
       ) : null}
     </div>
+    </>
   )
 }

@@ -189,8 +189,8 @@ export function HelpPage({ shellConfig = {} }) {
   }
 
   return (
-    <div className="gt-more-page gt-help">
-      {useNewChrome ? (
+    <>
+    {useNewChrome ? (
         <ContextBar
           summary={`${openIds.size} of ${FAQ_SECTIONS.length} open`}
           actions={
@@ -207,7 +207,9 @@ export function HelpPage({ shellConfig = {} }) {
             </>
           }
         />
-      ) : (
+      ) : null}
+    <div className="gt-more-page gt-help">
+      {useNewChrome ? null : (
         <>
           <div className="gt-page-header">
             <h1>Help</h1>
@@ -281,5 +283,6 @@ export function HelpPage({ shellConfig = {} }) {
         </a>
       </p>
     </div>
+    </>
   )
 }

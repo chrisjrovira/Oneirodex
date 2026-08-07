@@ -398,8 +398,8 @@ export function CalendarPage({ shellConfig = {} }) {
   const windowIsDefault = daysAhead === DEFAULT_AHEAD && daysBehind === DEFAULT_BEHIND
 
   return (
-    <div className="gt-more-page gt-calendar">
-      {useNewChrome ? (
+    <>
+    {useNewChrome ? (
         <ContextBar
           views={VIEWS}
           activeView={view}
@@ -439,7 +439,9 @@ export function CalendarPage({ shellConfig = {} }) {
           }
           filterCount={windowIsDefault ? 0 : 1}
         />
-      ) : (
+      ) : null}
+    <div className="gt-more-page gt-calendar">
+      {useNewChrome ? null : (
         <div className="gt-page-header gt-calendar__header">
           <div>
             <h1>Release calendar</h1>
@@ -528,5 +530,6 @@ export function CalendarPage({ shellConfig = {} }) {
         </section>
       ) : null}
     </div>
+    </>
   )
 }

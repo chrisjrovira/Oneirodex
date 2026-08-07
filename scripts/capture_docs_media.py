@@ -94,6 +94,18 @@ def _goto(page, path: str, timeout: int = 20_000) -> bool:
     try:
         page.goto(url, wait_until="domcontentloaded", timeout=timeout)
         page.wait_for_timeout(800)
+        # domcontentloaded is when the SPA shell exists, not when its data has
+        # arrived — News was captured mid-fetch showing "Loading…". Wait for
+        # the placeholder to go if one is on screen; a page that never shows
+        # it (or resolves to an error state) just falls through on timeout
+        # rather than failing the capture.
+        try:
+            loading = page.get_by_text("Loading…", exact=False).first
+            if loading.count() and loading.is_visible():
+                loading.wait_for(state="detached", timeout=10_000)
+                page.wait_for_timeout(400)
+        except Exception:  # noqa: BLE001
+            pass
         print("ok", path, "->", page.url)
         return True
     except Exception as exc:  # noqa: BLE001
@@ -118,6 +130,11 @@ def capture_tour(page) -> list[str]:
         ("/systems", "systems-platforms", False, ("screenshot-systems.png",)),
         ("/chat", "chat-channels", False, ("screenshot-chat.png",)),
         ("/discover", "discover", False, ()),
+        # UIR-7 pages. These carried hand-rolled tab strips that bar two now
+        # replaces, and none of them had ever been captured — so the docs could
+        # not show the chrome change on the pages where it is most visible.
+        ("/news", "news-sections", False, ()),
+        ("/calendar", "release-calendar", False, ()),
         ("/admin/ops", "admin-ops-services", False, ()),
         ("/admin/features", "admin-features", True, ()),
         ("/admin/integrations", "admin-integrations", True, ()),
@@ -128,6 +145,20 @@ def capture_tour(page) -> list[str]:
         if not _goto(page, path):
             failures.append(f"{path} (navigation)")
             continue
+        # The chat slide-out is global and survives navigation, so once the
+        # /chat shot expands it every later page is captured underneath it —
+        # discover.png had been a blank page behind an open chat panel. Close
+        # it before every shot rather than only after chat: any page can leave
+        # it open, and a stale panel is never what the shot is meant to show.
+        if path != "/chat":
+            try:
+                closer = page.locator('button[aria-label="Close chat"]').first
+                if closer.count() and closer.is_visible():
+                    closer.click(timeout=5_000)
+                    page.wait_for_timeout(600)
+            except Exception as exc:  # noqa: BLE001
+                print("chat close:", exc)
+
         healthy, why = page_is_healthy(page)
         if not healthy:
             # Keep whatever is already on disk rather than replacing it with this.

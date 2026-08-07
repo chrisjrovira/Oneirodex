@@ -98,8 +98,8 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
   }
 
   return (
-    <div className="gt-more-page gt-collections">
-      {useNewChrome ? (
+    <>
+    {useNewChrome ? (
         <ContextBar
           summary={collections ? `${collections.length} shelves` : null}
           actions={
@@ -146,7 +146,9 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
             </Popover>
           }
         />
-      ) : (
+      ) : null}
+    <div className="gt-more-page gt-collections">
+      {useNewChrome ? null : (
         <>
         <div className="gt-page-header">
           <h1>Collections</h1>
@@ -252,5 +254,6 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
         </ul>
       ) : null}
     </div>
+    </>
   )
 }
