@@ -25,11 +25,14 @@ function renderPage() {
   )
 }
 
-function renderDetailPage(uuid = 'abc-123') {
+function renderDetailPage(uuid = 'abc-123', shellConfig = {}) {
   return render(
     <MemoryRouter initialEntries={[`/collections/${uuid}`]}>
       <Routes>
-        <Route path="/collections/:collectionUuid" element={<CollectionDetailPage />} />
+        <Route
+          path="/collections/:collectionUuid"
+          element={<CollectionDetailPage shellConfig={shellConfig} />}
+        />
       </Routes>
     </MemoryRouter>,
   )
@@ -321,4 +324,41 @@ test('the empty state points at the control that actually exists', async () => {
     </MemoryRouter>,
   )
   expect(await screen.findByText(/from New collection above/)).toBeInTheDocument()
+})
+
+test('new chrome still says which collection you are looking at', async () => {
+  // Regression: the v2 retirement rule matches `.gt-page-header > h1`, and on
+  // this page that h1 is the *collection's name*. Before the move, the page
+  // rendered under the new chrome with nothing identifying it at all.
+  collectionsApi.fetchCollection.mockResolvedValue({
+    id: 1,
+    uuid: 'abc-123',
+    name: 'Cozy co-op nights',
+    description: 'Couch games',
+    is_public: true,
+    is_system: false,
+    can_edit: true,
+    items: [],
+  })
+
+  renderDetailPage('abc-123', { enableNewChrome: true })
+
+  expect(await screen.findByText('Cozy co-op nights')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Delete collection' })).toBeInTheDocument()
+})
+
+test('a collection you cannot edit offers no delete button', async () => {
+  collectionsApi.fetchCollection.mockResolvedValue({
+    id: 2,
+    uuid: 'sys-1',
+    name: 'Recently added',
+    is_system: true,
+    can_edit: false,
+    items: [],
+  })
+
+  renderDetailPage('sys-1', { enableNewChrome: true })
+
+  expect(await screen.findByText('Recently added')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Delete collection' })).toBeNull()
 })

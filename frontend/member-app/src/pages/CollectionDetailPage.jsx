@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { ContextBar } from '../chrome/ContextBar'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   addCollectionItem,
@@ -22,7 +23,8 @@ function loadErrorMessage(error) {
   return 'Unable to load this collection.'
 }
 
-export function CollectionDetailPage({ shellConfig: _shellConfig } = {}) {
+export function CollectionDetailPage({ shellConfig = {} } = {}) {
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const { collectionUuid } = useParams()
   const navigate = useNavigate()
   const [collection, setCollection] = useState(null)
@@ -253,23 +255,49 @@ export function CollectionDetailPage({ shellConfig: _shellConfig } = {}) {
   const canEditMeta = Boolean(collection?.can_edit && !collection.is_system)
 
   return (
+    <>
+    {/* The heading here is the collection's *name*, not the page's. The v2
+          retirement rule matches `.gt-page-header > h1`, so under the new
+          chrome this page was rendering with nothing at all to say which
+          collection you were looking at. It moves to bar two's summary. */}
+      {useNewChrome ? (
+        <ContextBar
+          summary={collection?.name || 'Collection'}
+          actions={
+            canEditMeta ? (
+              <button
+                type="button"
+                className="gt-cbtn"
+                disabled={deleting}
+                onClick={handleDeleteCollection}
+              >
+                {deleting ? 'Deleting…' : 'Delete collection'}
+              </button>
+            ) : null
+          }
+        />
+      ) : null}
     <div className="gt-more-page gt-collection">
       <p className="gt-collection__crumb">
         <Link to="/collections">← Collections</Link>
       </p>
-      <div className="gt-page-header gt-collection__header">
-        <h1>{collection?.name || 'Collection'}</h1>
-        {canEditMeta ? (
-          <button
-            type="button"
-            className="gt-collections__delete"
-            disabled={deleting}
-            onClick={handleDeleteCollection}
-          >
-            {deleting ? 'Deleting…' : 'Delete collection'}
-          </button>
-        ) : null}
-      </div>
+      {useNewChrome ? null : (
+        <>
+        <div className="gt-page-header gt-collection__header">
+          <h1>{collection?.name || 'Collection'}</h1>
+          {canEditMeta ? (
+            <button
+              type="button"
+              className="gt-collections__delete"
+              disabled={deleting}
+              onClick={handleDeleteCollection}
+            >
+              {deleting ? 'Deleting…' : 'Delete collection'}
+            </button>
+          ) : null}
+        </div>
+        </>
+      )}
       {collection?.description && !canEditMeta ? (
         <p className="gt-more-page__lede">{collection.description}</p>
       ) : null}
@@ -425,5 +453,6 @@ export function CollectionDetailPage({ shellConfig: _shellConfig } = {}) {
         </details>
       ) : null}
     </div>
+    </>
   )
 }
