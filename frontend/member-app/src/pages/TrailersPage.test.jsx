@@ -137,3 +137,38 @@ test('applies selected filters when asking for another trailer', async () => {
     }),
   )
 })
+
+test('new chrome keeps the playing title as content, not as a page heading', async () => {
+  // The h1 here was never page identity — it names the trailer now playing and
+  // links to that game. Retiring it as a "page title" would delete real
+  // information, so it becomes bar two's summary and stays a link.
+  trailersApi.fetchRandomTrailer.mockResolvedValue({
+    has_videos: true,
+    game_uuid: 'game-uuid-1',
+    game_name: 'Doom',
+    video_url: 'https://www.youtube.com/embed/x',
+  })
+
+  render(<TrailersPage shellConfig={{ enableNewChrome: true }} />)
+
+  const link = await screen.findByRole('link', { name: 'Doom' })
+  expect(link).toHaveAttribute('href', '/game_details/game-uuid-1')
+  expect(screen.queryByRole('heading', { name: 'Doom' })).toBeNull()
+})
+
+test('new chrome keeps every playback action reachable', async () => {
+  const user = userEvent.setup()
+  trailersApi.fetchRandomTrailer.mockResolvedValue({
+    has_videos: true,
+    game_uuid: 'game-uuid-1',
+    game_name: 'Doom',
+    video_url: 'https://www.youtube.com/embed/x',
+  })
+
+  render(<TrailersPage shellConfig={{ enableNewChrome: true }} />)
+  await screen.findByRole('link', { name: 'Doom' })
+
+  await user.click(screen.getByRole('button', { name: 'Another one' }))
+  await waitFor(() => expect(trailersApi.fetchRandomTrailer).toHaveBeenCalledTimes(2))
+  expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument()
+})

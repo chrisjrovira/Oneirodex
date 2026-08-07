@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ContextBar } from '../chrome/ContextBar'
 import {
   fetchAttractModeSettings,
   fetchRandomTrailer,
@@ -370,7 +371,8 @@ function SettingsModal({ settings, onCancel, onSave }) {
   )
 }
 
-export function TrailersPage({ shellConfig: _shellConfig } = {}) {
+export function TrailersPage({ shellConfig = {} } = {}) {
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [attractMode] = useState(
     () => new URLSearchParams(window.location.search).has('attract_mode'),
   )
@@ -601,35 +603,71 @@ export function TrailersPage({ shellConfig: _shellConfig } = {}) {
   const videoId = trailer ? youTubeVideoId(trailer.video_url) : null
 
   return (
-    <div className="gt-more-page gt-trailers">
-      <div className="gt-page-header">
-        {trailer ? (
-          <a className="gt-trailers__title-link" href={`/game_details/${trailer.game_uuid}`}>
-            <h1>{trailer.game_name}</h1>
-          </a>
-        ) : (
-          <h1>Trailers</h1>
-        )}
-
-        <div className="gt-trailers__actions">
-          {attractMode ? (
+    <>
+    {useNewChrome ? (
+        <ContextBar
+          summary={
+            trailer ? (
+              <a className="gt-trailers__title-link" href={`/game_details/${trailer.game_uuid}`}>
+                {trailer.game_name}
+              </a>
+            ) : null
+          }
+          actions={
             <>
-              <button type="button" onClick={exitAttractMode}>
-                Exit Attract Mode
+              {attractMode ? (
+                <>
+                  <button type="button" className="gt-cbtn" onClick={exitAttractMode}>
+                    Exit Attract Mode
+                  </button>
+                  <button type="button" className="gt-cbtn" onClick={openBigPicture}>
+                    Big Picture
+                  </button>
+                </>
+              ) : null}
+              <button type="button" className="gt-cbtn" onClick={() => setSettingsOpen(true)}>
+                Settings
               </button>
-              <button type="button" onClick={openBigPicture}>
-                Big Picture
+              <button type="button" className="gt-cbtn" onClick={requestTrailer}>
+                Another one
               </button>
             </>
-          ) : null}
-          <button type="button" onClick={() => setSettingsOpen(true)}>
-            Settings
-          </button>
-          <button type="button" onClick={requestTrailer}>
-            Another one
-          </button>
+          }
+        />
+      ) : null}
+    <div className="gt-more-page gt-trailers">
+      {useNewChrome ? null : (
+        <>
+        <div className="gt-page-header">
+          {trailer ? (
+            <a className="gt-trailers__title-link" href={`/game_details/${trailer.game_uuid}`}>
+              <h1>{trailer.game_name}</h1>
+            </a>
+          ) : (
+            <h1>Trailers</h1>
+          )}
+
+          <div className="gt-trailers__actions">
+            {attractMode ? (
+              <>
+                <button type="button" onClick={exitAttractMode}>
+                  Exit Attract Mode
+                </button>
+                <button type="button" onClick={openBigPicture}>
+                  Big Picture
+                </button>
+              </>
+            ) : null}
+            <button type="button" onClick={() => setSettingsOpen(true)}>
+              Settings
+            </button>
+            <button type="button" onClick={requestTrailer}>
+              Another one
+            </button>
+          </div>
         </div>
-      </div>
+        </>
+      )}
 
       <div className="gt-trailers__filters">
         <button
@@ -707,5 +745,6 @@ export function TrailersPage({ shellConfig: _shellConfig } = {}) {
         />
       ) : null}
     </div>
+    </>
   )
 }
