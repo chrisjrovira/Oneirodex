@@ -48,13 +48,13 @@ export default defineConfig({
     // userEvent interactions take ~9s on a network-mounted checkout; the 5s
     // default fails them spuriously while they pass fine given room to run.
     //
-    // 30s was still not enough for the *whole* suite. A full run reports around
-    // 14,000s of cumulative jsdom environment setup against 1,150s of wall
-    // time, so a dozen workers are contending for one network mount and the
-    // slowest userEvent tests (SpaceRail voice selection, ReportIssuePage logs
-    // fold) crossed 30s — while passing in seconds on their own. That is
-    // contention, not a hang, and a flake that only appears in the full run is
-    // worse than a slow one: it teaches you to stop trusting the full run.
-    testTimeout: 90000,
+    // Two tests used to cross even this in a full run while passing in seconds
+    // alone. Raising the number to 90s did not fix them, which was the useful
+    // result: the cause was that those two files were the only ones importing
+    // user-event *inside a test body*, so vitest's first resolve+transform of
+    // that module ran against the test clock instead of during collection.
+    // They import it at module scope now, and this stays at 30s — a timeout
+    // generous enough to hide a real hang is not doing its job.
+    testTimeout: 30000,
   },
 })

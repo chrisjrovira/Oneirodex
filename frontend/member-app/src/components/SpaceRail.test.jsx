@@ -1,4 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react'
+// Imported at module scope on purpose. Loading user-event inside a test
+// body charges vitest's first resolve+transform of the module to that
+// test's timeout; at collection time it costs the same but is not on any
+// clock. On a saturated network mount that difference was the whole gap
+// between passing alone and timing out in a full run.
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { SpaceRail } from './SpaceRail'
 
@@ -49,7 +55,7 @@ test('marks invite-only spaces so membership is visible at a glance', async () =
 
 test('voice selection hands back the server-issued room, never a typed one', async () => {
   const onSelectVoiceChannel = vi.fn()
-  const user = (await import('@testing-library/user-event')).default.setup()
+  const user = userEvent.setup()
   render(<SpaceRail onSelectVoiceChannel={onSelectVoiceChannel} />)
 
   await user.click(await screen.findByRole('button', { name: /Lounge/i }))
@@ -62,7 +68,7 @@ test('voice selection hands back the server-issued room, never a typed one', asy
 
 test('text selection reports the channel to the parent', async () => {
   const onSelectTextChannel = vi.fn()
-  const user = (await import('@testing-library/user-event')).default.setup()
+  const user = userEvent.setup()
   render(<SpaceRail onSelectTextChannel={onSelectTextChannel} />)
 
   await user.click(await screen.findByRole('button', { name: /general/i }))
@@ -103,7 +109,7 @@ test('invite redemption posts the token and refreshes', async () => {
       return { ok: true, json: async () => SPACES }
     }),
   )
-  const user = (await import('@testing-library/user-event')).default.setup()
+  const user = userEvent.setup()
   render(<SpaceRail />)
 
   await screen.findByText('Household')

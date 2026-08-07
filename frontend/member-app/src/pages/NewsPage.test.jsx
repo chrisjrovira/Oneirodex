@@ -96,7 +96,6 @@ test('section tabs filter free offers without a long scroll dump', async () => {
     items: [{ url: 'https://example.test/h1', title: 'Industry headline', source: 'Wire' }],
   })
 
-  const { default: userEvent } = await import('@testing-library/user-event')
   const user = userEvent.setup()
   render(<NewsPage />, { wrapper: MemoryRouter })
 

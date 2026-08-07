@@ -158,6 +158,38 @@ list would drift the moment a section is added.
 Counts are omitted while a feed is still loading. A "0" beside *Free now* reads
 as "there is nothing free" when the truth is that the request has not returned.
 
+### Admin bar one is now the same bar, not a lookalike
+
+`AdminTopNav` was structurally the member `AppBar` — brand, destinations,
+actions — with its own class names and its own block in `styles.css`. That is
+why the two could never match however carefully each was styled: they were two
+implementations of one thing.
+
+Under v2 it emits the shared `gt-appbar` classes instead and takes its
+appearance from the `gt-appbar.css` both shells already link. Same trick as
+UIR-4: the stylesheet is the shared artifact, so this costs no cross-build
+import. The flag is read straight off `document.documentElement.dataset.chrome`
+rather than adding shell-config plumbing to admin-app — that attribute is
+already the single source of truth the CSS keys on.
+
+Its breadcrumb buttons (Dashboard, "… home") go the same way as the member
+ones, for the same reason: bar two names the section. Library and Log out stay,
+because both leave the admin app and nothing else offers them.
+
+### Admin's React pages were inheriting the marker and none of the effect
+
+`base_admin.html` has set `data-chrome="v2"` since UIR-4, so the admin SPA was
+already carrying the marker — but the retirement rule only matched
+`.gt-page-header`, which admin-app does not use. The result was the exact
+mismatch this refresh exists to end: member pages lost their headings while
+every admin `h1` stayed put.
+
+admin-app wraps each page in `.gt-admin-page` with the heading and lede as
+direct children, so two more selectors cover all eleven pages plus the shared
+`Page` component, with no JSX edits. It is also a simpler case than the member
+one: here the heading is a sibling of the page content rather than sharing a
+block with the page's controls, so hiding it cannot take a button with it.
+
 ### The Jinja half, and what nearly broke silently
 
 Three admin pages had the same shape and converted the same way: **libraries &

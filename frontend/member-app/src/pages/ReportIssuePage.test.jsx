@@ -1,4 +1,7 @@
 import { render, screen } from '@testing-library/react'
+// Module scope, not inside the test: see SpaceRail.test.jsx — an in-test
+// dynamic import puts the module's first transform inside the timeout.
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { expect, test } from 'vitest'
 import { ReportIssuePage } from './ReportIssuePage'
@@ -25,7 +28,6 @@ test('keeps logs and context collapsed by default', () => {
 })
 
 test('expands logs fold when opened', async () => {
-  const { default: userEvent } = await import('@testing-library/user-event')
   const user = userEvent.setup()
 
   render(

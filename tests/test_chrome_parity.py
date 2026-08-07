@@ -51,6 +51,16 @@ def test_both_renderers_emit_the_class(css_class):
     assert css_class in react, f'React ContextBar is missing {css_class}'
 
 
+def test_admin_react_pages_retire_their_titles_too():
+    """base_admin.html has always set the v2 marker, so the admin SPA inherited
+    it and none of the effect — member pages lost their headings while every
+    admin h1 stayed. "Library and admin should look the same" is the point of
+    the refresh, and that was the most visible way to fail it."""
+    css = _read(CSS)
+    assert ":root[data-chrome='v2'] .gt-admin-page > h1" in css
+    assert ":root[data-chrome='v2'] .gt-admin-page > .gt-admin-lede" in css
+
+
 def test_stylesheet_is_linked_by_every_shell():
     """A shell that forgets the link renders the bars unstyled."""
     for shell in ('base.html', 'base_empty.html', 'base_admin.html'):

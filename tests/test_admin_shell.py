@@ -22,8 +22,22 @@ def test_base_admin_exists_without_member_sidebar():
 def test_base_admin_loads_spa_assets():
     text = BASE_ADMIN.read_text(encoding='utf-8')
     assert 'admin-spa' in text
-    assert 'gametheca_mark.svg' in text
     assert 'csrf-token' in text
+
+
+def test_the_admin_brand_mark_is_rendered_by_the_spa():
+    """This used to assert `gametheca_mark.svg` appeared in base_admin.html.
+
+    The mark moved into `AdminTopNav` when admin bar one became React, so the
+    old assertion had been failing against a template that is correct — it was
+    pinning where the mark used to live rather than that it exists. Checked in
+    the SPA that base_admin loads, the guard still means something: the shell
+    would otherwise render an admin bar with no brand at all.
+    """
+    top_nav = (
+        ROOT / 'frontend' / 'admin-app' / 'src' / 'AdminTopNav.jsx'
+    ).read_text(encoding='utf-8')
+    assert 'gametheca_mark.svg' in top_nav
 
 
 def test_admin_dashboard_extends_base_admin():
