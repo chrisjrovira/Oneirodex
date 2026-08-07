@@ -583,7 +583,9 @@ def _hydrate_steam_content(game, steam_app_id) -> None:
 
         from gametheca.utils.metadata_cascade import hydrate_game_from_cascade
 
-        hydrate_game_from_cascade(game)
+        # With an App ID we already pulled Steam's own appdetails above, which
+        # is strictly richer than what the cascade's name search would return.
+        hydrate_game_from_cascade(game, skip=('steam',) if steam_app_id else ())
     except Exception as exc:  # noqa: BLE001
         print(f'Content hydrate skipped for {getattr(game, "name", "?")}: {exc}')
 

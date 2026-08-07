@@ -389,7 +389,13 @@ def library_tools_backfill_steam_metadata():
             if use_cascade and not ((game.summary or '').strip() and (game.genres or [])):
                 from gametheca.utils.metadata_cascade import hydrate_game_from_cascade
 
-                cascade_result = hydrate_game_from_cascade(game)
+                # A row that just went through hydrate_game_from_steam has had
+                # Steam's appdetails applied already; asking the cascade to
+                # search Steam by name again is a round trip per row, and a
+                # backfill can run over hundreds of them.
+                cascade_result = hydrate_game_from_cascade(
+                    game, skip=('steam',) if game.steam_app_id else ()
+                )
                 for key, value in (cascade_result.get('applied') or {}).items():
                     # Union the two reports so the response says what actually
                     # changed, regardless of which path filled it.

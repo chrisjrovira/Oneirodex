@@ -376,6 +376,85 @@ def enrich_game_with_steam(game, lookup_name=None):
     return result
 
 
+def _game_core_fields_missing(game):
+    """True while the fields a library page actually shows are still blank."""
+    if not (getattr(game, 'summary', None) or '').strip():
+        return True
+    if not (getattr(game, 'genres', None) or []):
+        return True
+    if getattr(game, 'developer_id', None) is None:
+        return True
+    return False
+
+
+def enrich_game_all_sources(game, lookup_name=None):
+    """Fill a newly identified game from every source, not just Steam.
+
+    ``enrich_game_with_steam`` was the whole of what a scanned title received,
+    and it answers for exactly one store. That is fine for a PC library and
+    useless everywhere else: a SNES ROM is not on Steam, so every console row
+    landed with ``no_steam_data`` — blank summary, no genres, no developer —
+    even though searches for TheGamesDB, MobyGames, Giant Bomb and RAWG already
+    existed. They were reachable from *manual* identify only.
+
+    So: Steam first, but only where a title could plausibly be on it, then
+    :func:`~gametheca.utils.metadata_cascade.hydrate_game_from_cascade` for the
+    rest. Steam is skipped in the cascade because the pass above already asked
+    it, and asks for more than the cascade does (VR perspectives, game modes).
+
+    The cascade runs inside a SAVEPOINT for the same reason the Steam pass does:
+    a metadata miss must never roll back the import that triggered it.
+
+    Returns the Steam result dict, plus a ``cascade`` key holding the walk's
+    trace (``None`` when the title was already complete).
+    """
+    from gametheca.utils.metadata_cascade import PC_PLATFORMS, hydrate_game_from_cascade
+
+    name = lookup_name or getattr(game, 'name', None)
+    platform = getattr(getattr(game, 'library', None), 'platform', None)
+    platform_name = getattr(platform, 'name', platform)
+    key = str(platform_name or '').strip().upper()
+
+    # No platform recorded means we cannot rule Steam out, so we still ask.
+    if not key or key in PC_PLATFORMS:
+        result = enrich_game_with_steam(game, lookup_name=name)
+    else:
+        result = {
+            'applied': False,
+            'is_vr': game_indicates_vr(game),
+            'perspectives_added': [],
+            'genres_added': [],
+            'game_modes_added': [],
+            'reason': 'platform_not_on_steam',
+        }
+        print(f"Steam enrichment for '{name}': skipped (platform_not_on_steam)")
+
+    result['cascade'] = None
+    if not _game_core_fields_missing(game):
+        return result
+
+    try:
+        with db.session.begin_nested():
+            outcome = hydrate_game_from_cascade(
+                game,
+                name=name,
+                library_platform=platform_name,
+                skip=('steam',),
+            )
+        result['cascade'] = outcome.get('trace')
+        trace = outcome.get('trace') or {}
+        contributed = ', '.join(trace.get('contributed') or []) or 'none'
+        print(
+            f"Cascade enrichment for '{name}': "
+            f"queried=[{', '.join(trace.get('queried') or []) or 'none'}]; "
+            f"contributed=[{contributed}]"
+        )
+    except Exception as cascade_err:  # noqa: BLE001
+        print(f"Cascade enrichment savepoint rollback for '{name}': {cascade_err}")
+
+    return result
+
+
 def attach_igdb_taxonomy_to_game(game, igdb_payload):
     """Attach IGDB genres/themes/modes/platforms/perspectives with create-missing upsert.
 
@@ -804,10 +883,10 @@ def queue_post_identify_enrichment(
                             return
 
                 try:
-                    enrich_game_with_steam(game, lookup_name=game.name)
+                    enrich_game_all_sources(game, lookup_name=game.name)
                     db.session.commit()
                 except Exception as steam_err:  # noqa: BLE001
-                    print(f"Deferred Steam enrichment failed for {game_uuid}: {steam_err}")
+                    print(f"Deferred metadata enrichment failed for {game_uuid}: {steam_err}")
                     try:
                         db.session.rollback()
                     except Exception:
@@ -1177,7 +1256,7 @@ def retrieve_and_save_game(
                         print("No involved companies found for game from local metadata.")
 
                 if not defer_enrichment:
-                    enrich_game_with_steam(new_game, lookup_name=new_game.name)
+                    enrich_game_all_sources(new_game, lookup_name=new_game.name)
 
                 if 'videos' in response_json[0]:
                     video_urls = [f"https://www.youtube.com/embed/{video['video_id']}" for video in response_json[0]['videos']]
@@ -1501,7 +1580,7 @@ def retrieve_and_save_game(
                     print(f"No involved companies found for {game_name}.")
 
             if not defer_enrichment:
-                enrich_game_with_steam(new_game, lookup_name=new_game.name)
+                enrich_game_all_sources(new_game, lookup_name=new_game.name)
 
             if 'videos' in selected_game:
                 video_urls = [f"https://www.youtube.com/embed/{video['video_id']}" for video in selected_game['videos']]

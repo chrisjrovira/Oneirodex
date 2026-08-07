@@ -288,15 +288,45 @@ only.
 
 ### Where it runs
 
-- **Scan** — `_hydrate_steam_content` in `software_identify.py`. A Steam App ID
-  still takes the direct `appdetails` path first (richest source); anything the
-  App ID did not fill, plus every non-Steam identification, falls through to the
-  cascade.
+- **IGDB scan / identify** — `enrich_game_all_sources` in `game_core.py`, used
+  by all three create paths (deferred post-identify enrichment, local-metadata
+  create, and IGDB search create). **This was the gap** — see below.
+- **Store / software identify** — `_hydrate_steam_content` in
+  `software_identify.py`. A Steam App ID still takes the direct `appdetails`
+  path first (richest source); anything the App ID did not fill, plus every
+  non-Steam identification, falls through to the cascade.
 - **Repair** — `POST /api/library_tools/backfill_steam_metadata` with
   `cascade: true` (default). The old query filtered to `steam_app_id IS NOT
   NULL`, so it could never reach the rows most likely to be bare.
 - **Legacy** — `enrich_game_metadata` now delegates to the cascade; its contract
-  (returns merged metadata, never overwrites the seed) is unchanged.
+  (returns merged metadata, never overwrites the seed) is unchanged. It still
+  has **no live callers** — it is kept as a stable public helper.
+
+### The scan path was still Steam-only (fixed 2026-08-06)
+
+The cascade landed wired into the *software* identify path and the repair
+endpoint. The ordinary IGDB scan — which is how nearly every title arrives —
+still called `enrich_game_with_steam` and stopped there. So the original
+complaint survived its own fix for every console library: Steam returned
+`no_steam_data` for a SNES ROM and nothing else was asked.
+
+`enrich_game_all_sources` closes it:
+
+| Gate | Behavior |
+|---|---|
+| **Steam pass** | Runs only when the library platform is PC-family or unknown. A cartridge is not on Steam; asking is a round trip that can only mislead |
+| **Why keep it at all** | It fetches more than the cascade does — VR player perspectives and game modes from Steam categories |
+| **Then** | Cascade, but only while `summary` / `genres` / `developer_id` are still empty |
+| **No double-ask** | The cascade is called with `skip=('steam',)`, new in this change. Skipped sources are removed *before* `max_sources` applies, so skipping does not silently shorten the walk |
+| **Isolation** | The cascade apply runs in a SAVEPOINT, same as the Steam pass — a metadata miss must never roll back the import that triggered it |
+| **Return** | The Steam result dict is returned unchanged plus a `cascade` key holding the trace (`None` when the title was already complete) |
+
+`skip` is also now passed by the two older callers, which had both hydrated
+Steam by App ID and then let the cascade search Steam again by name.
+
+**Tests:** `tests/test_scan_enrichment_cascade.py` — platform gating, the
+already-complete short circuit, the skip contract, failure isolation, and a
+source-level check that all three scan call sites use the wrapper.
 
 ### Trace
 

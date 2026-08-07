@@ -31,7 +31,7 @@ cascade does not special-case them — an unconfigured source is just a miss.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Callable, Collection
 
 from gametheca.utils.secondary_scrapers import (
     fetch_rawg_data,
@@ -175,12 +175,19 @@ def cascade_metadata(
     seed: dict | None = None,
     library_platform: str | None = None,
     max_sources: int = 6,
+    skip: Collection[str] = (),
 ) -> tuple[dict, CascadeTrace]:
     """Walk sources until the core fields are filled.
 
     ``seed`` is metadata already known (e.g. from IGDB); it is never overwritten.
     ``max_sources`` caps outbound requests so one unidentifiable title in a large
     scan cannot fan out into a dozen store calls.
+
+    ``skip`` names sources a caller has already asked itself. The scan path uses
+    it: it runs the Steam pass first (that pass does more than this one — VR
+    perspectives, game modes), so re-querying Steam here would be a second round
+    trip for an answer already in hand. Skipped sources are dropped before
+    ``max_sources`` is applied, so skipping does not shorten the walk.
 
     Returns ``(metadata, trace)``. Never raises: a source that fails is recorded
     and the walk continues, because a metadata miss must not undo an import.
@@ -196,7 +203,9 @@ def cascade_metadata(
         trace.stopped_early = True
         return metadata, trace
 
-    for spec in source_order(library_platform)[:max_sources]:
+    skipped = {s.strip().lower() for s in skip}
+    order = tuple(s for s in source_order(library_platform) if s.id not in skipped)
+    for spec in order[:max_sources]:
         trace.queried.append(spec.id)
         try:
             found: dict | None = None
@@ -238,6 +247,7 @@ def hydrate_game_from_cascade(
     library_platform: str | None = None,
     seed: dict | None = None,
     max_sources: int = 6,
+    skip: Collection[str] = (),
 ) -> dict:
     """Run the cascade for a Game row and apply what it finds.
 
@@ -262,6 +272,7 @@ def hydrate_game_from_cascade(
         seed=seed,
         library_platform=platform,
         max_sources=max_sources,
+        skip=skip,
     )
     if not metadata:
         return {'applied': {}, 'trace': trace.as_dict()}

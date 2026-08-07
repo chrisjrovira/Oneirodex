@@ -110,6 +110,29 @@ class TestWalkOrder:
         assert spy['calls'] == ['steam', 'gog']
 
 
+class TestSkip:
+    """The scan path runs its own Steam pass, so it asks the walk to leave it out."""
+
+    def test_a_skipped_source_is_never_queried(self, spy):
+        mc.cascade_metadata('Nothing', library_platform='PCWIN', skip=('steam',))
+        assert 'steam' not in spy['calls']
+        assert spy['calls'][0] == 'gog'
+
+    def test_skipping_does_not_shorten_the_walk(self, spy):
+        """Dropping a source must not cost a slot — otherwise skipping Steam
+        would silently mean one fewer source consulted overall."""
+        mc.cascade_metadata('Nothing', library_platform='PCWIN', skip=('steam',))
+        assert len(spy['calls']) == 6
+
+    def test_skip_is_case_insensitive(self, spy):
+        mc.cascade_metadata('Nothing', library_platform='PCWIN', skip=('Steam',))
+        assert 'steam' not in spy['calls']
+
+    def test_no_skip_is_the_default(self, spy):
+        mc.cascade_metadata('Nothing', library_platform='PCWIN')
+        assert spy['calls'][0] == 'steam'
+
+
 class TestPlatformAwareOrder:
     def test_console_never_queries_pc_storefronts(self, spy):
         """A SNES ROM is not on Steam; asking can only cost time or mislead."""
