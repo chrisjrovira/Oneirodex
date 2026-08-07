@@ -48,6 +48,31 @@ def regular_user(db_session):
 
 
 @pytest.fixture
+def librarian_user(db_session):
+    """A user who is allowed to move games between libraries.
+
+    `/api/move_game_to_library` is `@librarian_required`. The move tests were
+    written when it was open to any logged-in user and had been asserting 200s
+    against a role that now correctly gets 403 — so they were reporting a
+    security control as a failure.
+    """
+    user_uuid = str(uuid4())
+    user = User(
+        name=f'librarian_{user_uuid[:8]}',
+        email=f'librarian_{user_uuid[:8]}@example.com',
+        password_hash='hashed_password',
+        role='librarian',
+        user_id=user_uuid,
+        avatarpath='newstyle/avatar_default.jpg',
+        invite_quota=5,
+    )
+    user.set_password('librarianpassword123')
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+@pytest.fixture
 def sample_library(db_session):
     """Create a sample library for testing."""
     library = Library(
@@ -304,18 +329,22 @@ class TestGameScreenshotsAPI:
         assert len(data) == 0
     
     def test_screenshots_nonexistent_game(self, client, regular_user):
-        """Test screenshots endpoint for nonexistent game."""
+        """A game that does not exist is a 404, not an empty list.
+
+        This asserted `200 []` until the endpoint learned to distinguish the
+        two cases. An empty list for an unknown uuid is worse than it looks:
+        it reads identically to "this game has no screenshots", so a caller
+        cannot tell a typo'd uuid from a game with no art — and
+        `test_screenshots_no_screenshots` below is what actually covers that.
+        """
         with client.session_transaction() as sess:
             sess['_user_id'] = str(regular_user.id)
             sess['_fresh'] = True
-        
+
         fake_uuid = str(uuid4())
         response = client.get(f'/api/game_screenshots/{fake_uuid}')
-        assert response.status_code == 200
-        
-        data = response.get_json()
-        assert isinstance(data, list)
-        assert len(data) == 0
+        assert response.status_code == 404
+        assert response.get_json()['error'] == 'Game not found'
 
 
 class TestMoveGameToLibraryAPI:
@@ -325,11 +354,34 @@ class TestMoveGameToLibraryAPI:
         """Test that /api/move_game_to_library requires user login."""
         response = client.post('/api/move_game_to_library', json={})
         assert response.status_code == 302  # Redirect to login
-    
-    def test_move_game_success(self, client, regular_user, sample_games, target_library):
-        """Test successful game move operation."""
+
+    def test_move_game_refuses_an_ordinary_member(self, client, regular_user,
+                                                  sample_games, target_library):
+        """Moving a game between libraries is a librarian action.
+
+        Stated explicitly because it used to be tested only by accident: every
+        move test logged in as a regular user and asserted a 200, so the whole
+        group failed once the endpoint became `@librarian_required`. Being
+        logged in is not the same as being allowed, and that distinction now
+        has a test of its own rather than being the reason nine others fail.
+        """
         with client.session_transaction() as sess:
             sess['_user_id'] = str(regular_user.id)
+            sess['_fresh'] = True
+
+        response = client.post('/api/move_game_to_library', json={
+            'game_uuid': str(sample_games[0].uuid),
+            'target_library_uuid': str(target_library.uuid),
+        })
+
+        assert response.status_code == 403
+        assert 'librarian' in response.get_json()['error'].lower()
+
+    
+    def test_move_game_success(self, client, librarian_user, sample_games, target_library):
+        """Test successful game move operation."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(librarian_user.id)
             sess['_fresh'] = True
         
         game_uuid = str(sample_games[0].uuid)
@@ -346,10 +398,10 @@ class TestMoveGameToLibraryAPI:
         assert data['success'] is True
         assert 'moved to Target Library' in data['message']
     
-    def test_move_game_missing_parameters(self, client, regular_user):
+    def test_move_game_missing_parameters(self, client, librarian_user):
         """Test move game with missing parameters."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(regular_user.id)
+            sess['_user_id'] = str(librarian_user.id)
             sess['_fresh'] = True
         
         # Missing target_library_uuid
@@ -363,10 +415,10 @@ class TestMoveGameToLibraryAPI:
         assert data['success'] is False
         assert 'Missing required parameters' in data['message']
     
-    def test_move_game_invalid_json(self, client, regular_user):
+    def test_move_game_invalid_json(self, client, librarian_user):
         """Test move game with invalid JSON."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(regular_user.id)
+            sess['_user_id'] = str(librarian_user.id)
             sess['_fresh'] = True
         
         response = client.post('/api/move_game_to_library', 
@@ -378,10 +430,10 @@ class TestMoveGameToLibraryAPI:
         data = response.get_json()
         assert data['success'] is False
     
-    def test_move_game_nonexistent_game(self, client, regular_user, target_library):
+    def test_move_game_nonexistent_game(self, client, librarian_user, target_library):
         """Test move operation with nonexistent game."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(regular_user.id)
+            sess['_user_id'] = str(librarian_user.id)
             sess['_fresh'] = True
         
         fake_game_uuid = str(uuid4())
@@ -398,10 +450,10 @@ class TestMoveGameToLibraryAPI:
         assert data['success'] is False
         assert 'Game or target library not found' in data['message']
     
-    def test_move_game_nonexistent_library(self, client, regular_user, sample_games):
+    def test_move_game_nonexistent_library(self, client, librarian_user, sample_games):
         """Test move operation with nonexistent target library."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(regular_user.id)
+            sess['_user_id'] = str(librarian_user.id)
             sess['_fresh'] = True
         
         game_uuid = str(sample_games[0].uuid)
@@ -419,10 +471,10 @@ class TestMoveGameToLibraryAPI:
         assert 'Game or target library not found' in data['message']
     
     @patch('gametheca.routes_apis.game.log_system_event')
-    def test_move_game_logging(self, mock_log, client, regular_user, sample_games, target_library):
+    def test_move_game_logging(self, mock_log, client, librarian_user, sample_games, target_library):
         """Test that move operation is properly logged."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(regular_user.id)
+            sess['_user_id'] = str(librarian_user.id)
             sess['_fresh'] = True
         
         game_uuid = str(sample_games[0].uuid)
@@ -439,7 +491,7 @@ class TestMoveGameToLibraryAPI:
         mock_log.assert_called_once()
         log_call = mock_log.call_args[0][0]
         assert 'moved to library Target Library' in log_call
-        assert regular_user.name in log_call
+        assert librarian_user.name in log_call
 
 
 class TestGetNextCustomIGDBIdAPI:
@@ -539,10 +591,10 @@ class TestGameAPIResponseFormats:
         for url in data:
             assert isinstance(url, str)
     
-    def test_move_game_success_response_structure(self, client, regular_user, sample_games, target_library):
+    def test_move_game_success_response_structure(self, client, librarian_user, sample_games, target_library):
         """Test that move game success responses have correct structure."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(regular_user.id)
+            sess['_user_id'] = str(librarian_user.id)
             sess['_fresh'] = True
         
         response = client.post('/api/move_game_to_library', json={
@@ -561,10 +613,10 @@ class TestGameAPIResponseFormats:
         assert isinstance(data['message'], str)
         assert data['success'] is True
     
-    def test_move_game_error_response_structure(self, client, regular_user):
+    def test_move_game_error_response_structure(self, client, librarian_user):
         """Test that move game error responses have correct structure."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(regular_user.id)
+            sess['_user_id'] = str(librarian_user.id)
             sess['_fresh'] = True
         
         response = client.post('/api/move_game_to_library', json={
