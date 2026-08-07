@@ -70,14 +70,22 @@ is *not* what causes the failures: `test_routes_library.py` fails 15 times in
 the suite and passes 27/27 alone **even against the polluted database**. Row
 accumulation is real and worth fixing; it is not this.
 
-**"It is all one shared-state problem."** It is not. Classifying every affected
-file by running it alone splits the 113 cleanly into genuine defects and
-order-dependent ones — see the table below. Those need different fixes and
-should not be discussed as one number.
+**"It is all one shared-state problem."** It is not. Running every affected
+file alone against a **freshly truncated** database splits the 113 into 92 that
+reproduce from clean and 22 that need the rest of the suite. Those need
+different fixes and should not be discussed as one number.
+
+A third correction, on my own method: the first classification pass ran each
+file against whatever the previous run had left in the database, so "fails
+alone too" could have meant "fails against residue". `test_indexer_registry.py`
+looked genuine under that method and is not. Truncating between files is what
+makes the column mean anything.
 
 ## Classification
 
-See `docs/dev/test-harness-failures.md` for the per-file split.
+See [test-harness-failures.md](test-harness-failures.md) for the per-file split
+and for what the fixed clusters turned out to be — the short version is that
+the product moved and the tests did not, in every case examined so far.
 
 ## Still open
 
