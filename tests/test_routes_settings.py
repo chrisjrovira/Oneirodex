@@ -484,6 +484,14 @@ class TestSettingsPanel:
             mock_form.default_sort.data = 'rating'
             mock_form.default_sort_order.data = 'desc'
             mock_form.theme.data = 'dark'
+            # The route writes every preference it knows about. A field left
+            # unset on a MagicMock yields another MagicMock, which SQLAlchemy
+            # then tries to persist to a real column — that is the 500 these
+            # tests were reporting, not a bug in the route.
+            mock_form.icon_pack.data = 'outline'
+            mock_form.font.data = 'system-ui'
+            mock_form.tile_size.data = 50
+            mock_form.preferred_game_locale.data = 'en-US'
             mock_form_class.return_value = mock_form
             
             response = client.post('/settings_panel', data=form_data)
@@ -521,6 +529,10 @@ class TestSettingsPanel:
             mock_form.default_sort.data = 'date_identified'
             mock_form.default_sort_order.data = 'asc'
             mock_form.theme.data = 'light'
+            mock_form.icon_pack.data = 'outline'
+            mock_form.font.data = 'system-ui'
+            mock_form.tile_size.data = 50
+            mock_form.preferred_game_locale.data = 'en-US'
             mock_form_class.return_value = mock_form
             
             response = client.post('/settings_panel', data=form_data)
@@ -556,6 +568,10 @@ class TestSettingsPanel:
             mock_form.default_sort.data = 'name'
             mock_form.default_sort_order.data = 'asc'
             mock_form.theme.data = 'default'
+            mock_form.icon_pack.data = 'outline'
+            mock_form.font.data = 'system-ui'
+            mock_form.tile_size.data = 50
+            mock_form.preferred_game_locale.data = 'en-US'
             mock_form_class.return_value = mock_form
             
             response = client.post('/settings_panel', data=form_data)
@@ -593,6 +609,14 @@ class TestSettingsPanel:
             mock_form.default_sort.data = 'name'
             mock_form.default_sort_order.data = 'asc'
             mock_form.theme.data = 'dark'
+            # The route writes every preference it knows about. A field left
+            # unset on a MagicMock yields another MagicMock, which SQLAlchemy
+            # then tries to persist to a real column — that is the 500 these
+            # tests were reporting, not a bug in the route.
+            mock_form.icon_pack.data = 'outline'
+            mock_form.font.data = 'system-ui'
+            mock_form.tile_size.data = 50
+            mock_form.preferred_game_locale.data = 'en-US'
             mock_form_class.return_value = mock_form
             
             with patch('gametheca.routes_settings.db.session.commit', side_effect=Exception('Database error')):
