@@ -100,7 +100,11 @@ def test_collections_create_and_list(client, app, db_session, admin_user):
 
         page = client.get('/collections')
         assert page.status_code == 200
-        assert b'Collections' in page.data
+        # These hub pages are member SPA shells — the heading is rendered by
+        # React, not by Jinja, so asserting the word appears in the response
+        # body tests nothing about the page. What the server owes here is a
+        # mounted shell.
+        assert b'member-app-root' in page.data
 
 
 def test_announcements_admin_create_member_read(client, app, db_session, admin_user, member_user):
@@ -206,7 +210,8 @@ def test_playtime_profile_page_and_api(client, app, db_session, member_user, lib
 
         page = client.get('/playtime')
         assert page.status_code == 200
-        assert b'Playtime' in page.data
+        # SPA shell — see the note in test_collections_create_and_list.
+        assert b'member-app-root' in page.data
         assert b'member-app.js' in page.data
         assert b'member-app.css' in page.data
 
@@ -216,6 +221,10 @@ def test_big_picture_page(client, app, member_user):
     with client:
         page = client.get('/big-picture')
         assert page.status_code == 200
-        assert b'Big Picture' in page.data
+        # These hub pages are member SPA shells — the heading is rendered by
+        # React, not by Jinja, so asserting the word appears in the response
+        # body tests nothing about the page. What the server owes here is a
+        # mounted shell.
+        assert b'member-app-root' in page.data
         assert b'member-app.js' in page.data
         assert b'member-app.css' in page.data

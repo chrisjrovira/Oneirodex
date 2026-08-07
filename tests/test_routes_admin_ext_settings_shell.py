@@ -8,6 +8,8 @@ and that every section deep-links to an existing, registered route.
 import pytest
 from uuid import uuid4
 
+from flask import url_for
+
 from gametheca.models import User
 from gametheca.routes_admin_ext.settings import (
     SETTINGS_SHELL_SECTIONS, DEFAULT_SETTINGS_SHELL_SECTION
@@ -59,9 +61,39 @@ class TestSettingsShellSections:
 
     def test_lists_every_section_in_order(self):
         assert list(SETTINGS_SHELL_SECTIONS.keys()) == [
-            'server', 'attract', 'integrations', 'emulators', 'arr',
-            'quality', 'layouts', 'ai', 'storage', 'themes',
+            'server', 'scan_match', 'attract', 'integrations', 'emulators',
+            'reference_sets', 'arr', 'features', 'quality', 'layouts', 'ai',
+            'storage', 'themes', 'art_studio', 'remote_play',
         ]
+
+    def test_every_section_deep_link_is_reachable_from_the_react_hub(self, app):
+        """The server keeps this map for `?section=` shortcuts; the cards are
+        rendered by admin-app. Nothing makes the two agree, so a section added
+        on one side and not the other is a shortcut to a card nobody can see —
+        or a card whose shortcut 404s. This is the check that would notice."""
+        import re
+        from pathlib import Path
+
+        nav = Path('frontend/admin-app/src/navConfig.js').read_text(encoding='utf-8')
+        # `to:` for router cards, `href:` for full-page links and the
+        # integrations inventory — a section reachable from the top nav or an
+        # inventory entry is reachable, even without a settings card. Fragments
+        # are stripped: /admin/integrations#igdb still lands on integrations.
+        card_targets = {
+            target.split('#')[0]
+            for target in re.findall(r"(?:to|href|path):\s*'([^']+)'", nav)
+        }
+
+        missing = []
+        for key, section in SETTINGS_SHELL_SECTIONS.items():
+            with app.test_request_context():
+                url = url_for(section['endpoint'])
+            if url not in card_targets:
+                missing.append(f'{key} -> {url}')
+
+        assert not missing, (
+            'server sections with no card in admin-app: ' + ', '.join(missing)
+        )
 
     def test_default_section_is_a_real_section(self):
         assert DEFAULT_SETTINGS_SHELL_SECTION in SETTINGS_SHELL_SECTIONS
@@ -89,6 +121,16 @@ class TestSettingsShellSections:
 
 
 class TestSettingsShellRoute:
+    """The hub is an admin SPA shell.
+
+    These asserted card labels, blurbs, deep-link hrefs and inline SVG classes
+    in the response body. `/admin/settings` renders the admin-app shell and the
+    cards come from `navConfig.SETTINGS_GROUPS`, so none of that text is in the
+    HTML any more — the assertions described a page that had moved. The
+    `?section=` redirects, which are still server-side, are covered below and
+    unchanged.
+    """
+
     """Test GET /admin/settings (the hub page)."""
 
     def test_requires_login(self, client):
@@ -101,14 +143,13 @@ class TestSettingsShellRoute:
         response = client.get('/admin/settings')
         assert response.status_code == 302
 
-    def test_hub_lists_every_section(self, client, admin_user):
+    def test_hub_serves_the_admin_shell(self, client, admin_user):
         login(client, admin_user)
         response = client.get('/admin/settings')
         assert response.status_code == 200
         body = response.get_data(as_text=True)
-        for section in SETTINGS_SHELL_SECTIONS.values():
-            assert section['label'] in body
-            assert section['description'] in body
+        assert 'admin-app-root' in body
+        assert 'dist/admin-app/admin-app.js' in body
 
     def test_known_section_redirects_straight_to_the_page(self, client, admin_user):
         """?section= is a one-click shortcut, not a filter on the hub."""
@@ -118,20 +159,25 @@ class TestSettingsShellRoute:
         assert '/admin/attract_mode_settings' in response.location
 
     def test_unknown_section_shows_the_hub(self, client, admin_user):
+        """An unrecognised ?section= must not redirect anywhere."""
         login(client, admin_user)
         response = client.get('/admin/settings?section=bogus')
         assert response.status_code == 200
-        assert 'Scan threads, download batching' in response.get_data(as_text=True)
+        assert 'admin-app-root' in response.get_data(as_text=True)
 
-    def test_cards_deep_link_to_real_admin_urls(self, client, admin_user):
+    def test_section_shortcuts_land_on_real_pages(self, client, admin_user):
+        """Replaces an assertion that the hrefs appeared in the hub's HTML.
+
+        They are rendered by React now, so following each shortcut is both a
+        truer test and a stronger one: it proves the endpoint exists and
+        answers, not merely that a string was printed.
+        """
         login(client, admin_user)
-        response = client.get('/admin/settings')
-        assert response.status_code == 200
-        body = response.get_data(as_text=True)
-        assert '/admin/new_server_settings' in body
-        assert '/admin/attract_mode_settings' in body
-        assert '/admin/integrations' in body
-        assert '/admin/themes' in body
+        for section in ('server', 'attract', 'integrations', 'themes'):
+            response = client.get(f'/admin/settings?section={section}')
+            assert response.status_code == 302, section
+            followed = client.get(response.location)
+            assert followed.status_code in (200, 302), f'{section} -> {response.location}'
 
     def test_hub_costs_one_click_per_destination(self, client, admin_user):
         """No card may point back at the hub with a ?section= filter."""
@@ -140,12 +186,14 @@ class TestSettingsShellRoute:
         body = response.get_data(as_text=True)
         assert 'settings?section=' not in body
 
-    def test_hub_renders_inline_svg_icons(self, client, admin_user):
-        login(client, admin_user)
-        body = client.get('/admin/settings').get_data(as_text=True)
-        assert 'settings-shell-card-icon' in body
-        assert body.count('class="gt-icon') >= len(SETTINGS_SHELL_SECTIONS)
-        assert 'stroke="currentColor"' in body
+    def test_no_section_carries_a_font_awesome_icon(self):
+        """Replaces a check for inline SVG in the hub's HTML, which the React
+        shell no longer contains. The underlying rule — icons are semantic keys
+        the icon pack resolves, never Font Awesome classes — is still worth
+        holding, and holds on the data rather than the rendering."""
+        for key, section in SETTINGS_SHELL_SECTIONS.items():
+            assert not section['icon'].startswith('fa-'), key
+            assert ' ' not in section['icon'], f'{key} icon looks like a class list'
 
     def test_post_still_updates_settings(self, client, admin_user):
         """POST behavior for saving settings must be unchanged by the shell."""
