@@ -26,6 +26,46 @@ else:
 
 from gametheca import create_app, db
 
+
+def _install_lock_timeout():
+    """Make a blocked test connection fail fast and say so.
+
+    Postgres waits for a lock forever by default. Combined with the schema
+    setup below, that turned one leaked transaction into a silent, permanent
+    stall: no failing test, no timeout, no output — just a pytest process at
+    0% CPU that looked "slow" for hours.
+
+    A short `lock_timeout` converts that into an immediate, named error on the
+    statement that could not get its lock, which is a bug report instead of a
+    mystery. Applied only to test connections; production waits as before,
+    where blocking on a real lock is usually the correct behaviour.
+    """
+    from sqlalchemy import event
+    from sqlalchemy.engine import Engine
+
+    @event.listens_for(Engine, 'connect')
+    def _set_timeouts(dbapi_connection, _record):  # noqa: ANN001
+        # In autocommit, because `SET` in Postgres is transactional: run inside
+        # the implicit transaction and SQLAlchemy's first rollback (which
+        # happens whenever a connection returns to the pool) quietly undoes it,
+        # leaving exactly the silent hang this is meant to prevent.
+        try:
+            previous = dbapi_connection.autocommit
+            dbapi_connection.autocommit = True
+            try:
+                with dbapi_connection.cursor() as cur:
+                    cur.execute("SET SESSION lock_timeout = '15s'")
+                    cur.execute("SET SESSION idle_in_transaction_session_timeout = '60s'")
+            finally:
+                dbapi_connection.autocommit = previous
+        except Exception:  # noqa: BLE001
+            # Non-Postgres or a driver without autocommit — nothing to set.
+            pass
+
+
+_install_lock_timeout()
+
+
 @pytest.fixture(scope='function')
 def app():
     """Create and configure a test app using the test database."""
@@ -89,15 +129,39 @@ def app():
     
     yield app
 
+# The schema is built once for the whole run, not once per test.
+#
+# `db_session` used to call `db.create_all()` and the full incremental
+# migration on *every test*. The schema cannot change mid-run, so all of that
+# was repeated work — and not harmless repeated work: `add_column_if_not_exists`
+# issues a long series of `ALTER TABLE`s, each of which needs an ACCESS
+# EXCLUSIVE lock.
+#
+# That made the suite deadlock-prone in a way that produced no error at all. A
+# single connection left idle-in-transaction anywhere (one leaked
+# `DELETE FROM game_developer_association` was enough) blocks the next test's
+# ALTER, every later query queues behind that pending exclusive lock, and the
+# run simply stops — no failure, no timeout, no output. A full run was observed
+# wedged at 33% with the pytest process using zero CPU, three-way blocked:
+# idle-in-transaction → ALTER TABLE games → SELECT games.
+#
+# Session scope removes the per-test lock storm entirely. `_lock_timeout` below
+# makes the remaining risk legible instead of silent.
+_SCHEMA_READY = False
+
+
 @pytest.fixture(scope='function')
 def db_session(app):
-    """Create a database session for testing with simple cleanup."""
+    """Yield the session, building the schema once per run."""
+    global _SCHEMA_READY
     with app.app_context():
-        # Create all tables for tests
-        db.create_all()
-        # Apply incremental schema updates (new columns/tables on existing test DB)
-        from gametheca.updateschema import DatabaseManager
-        DatabaseManager().add_column_if_not_exists()
+        if not _SCHEMA_READY:
+            db.create_all()
+            # Incremental updates for a test DB that already exists from a
+            # previous run — idempotent, and now paid for once.
+            from gametheca.updateschema import DatabaseManager
+            DatabaseManager().add_column_if_not_exists()
+            _SCHEMA_READY = True
         yield db.session
         # Optionally drop all tables after test (commented out for performance)
         # db.drop_all()
