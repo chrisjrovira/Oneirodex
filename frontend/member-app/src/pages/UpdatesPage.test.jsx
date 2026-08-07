@@ -150,3 +150,22 @@ test('shows upcoming releases teaser with calendar link', async () => {
   expect(await screen.findByText('Soon Game')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: /Open calendar/i })).toHaveAttribute('href', '/calendar')
 })
+
+test('new chrome moves refresh and its status into bar two', async () => {
+  const user = userEvent.setup()
+  render(
+    <MemoryRouter>
+      <UpdatesPage shellConfig={{ enableNewChrome: true }} />
+    </MemoryRouter>,
+  )
+  await waitFor(() => expect(updatesApi.fetchUpdatesInbox).toHaveBeenCalled())
+
+  expect(screen.queryByRole('heading', { name: 'Updates' })).toBeNull()
+
+  // The refresh status is the only thing that says whether what you are
+  // looking at is current, so it has to survive the move — losing it would
+  // make a stale inbox indistinguishable from a fresh one.
+  const refresh = await screen.findByRole('button', { name: 'Refresh' })
+  await user.click(refresh)
+  await waitFor(() => expect(screen.getByText(/^Updated /)).toBeInTheDocument())
+})

@@ -1,6 +1,7 @@
 ﻿import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchCalendar } from '../api/calendar'
+import { ContextBar } from '../chrome/ContextBar'
 import { queueClientCommand } from '../api/clientCommands'
 import { addWantedUpdate, fetchStoreSearch, fetchUpdatesInbox } from '../api/updates'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
@@ -10,7 +11,8 @@ import '../styles/panelGrid.css'
 const INBOX_POLL_MS = 50000
 const CALENDAR_TEASER_LIMIT = 5
 
-export function UpdatesPage() {
+export function UpdatesPage({ shellConfig = {} } = {}) {
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [items, setItems] = useState(null)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
@@ -186,36 +188,62 @@ export function UpdatesPage() {
   }
 
   return (
+    <>
+    {useNewChrome ? (
+        <ContextBar
+          summary={
+            manualRefreshing
+              ? 'Refreshing…'
+              : lastUpdatedAt
+                ? `Updated ${lastUpdatedAt.toLocaleTimeString()}`
+                : null
+          }
+          actions={
+            <button
+              type="button"
+              className="gt-cbtn"
+              disabled={manualRefreshing || (!items && !error)}
+              onClick={() => void refreshInbox('manual')}
+            >
+              {manualRefreshing ? 'Refreshing…' : 'Refresh'}
+            </button>
+          }
+        />
+      ) : null}
     <div className="gt-more-page gt-updates gt-panels">
-      <div className="gt-page-header gt-updates__header gt-panels__full">
-        <div>
-          <h1>Updates</h1>
-          <p className="gt-more-page__lede">
-            Library titles that look behind store versions. Download local Update/DLC packs from your
-            library, or queue the companion to apply them. Store search is discovery-only (Steam / GOG
-            links).
-          </p>
+      {useNewChrome ? null : (
+        <>
+        <div className="gt-page-header gt-updates__header gt-panels__full">
+          <div>
+            <h1>Updates</h1>
+            <p className="gt-more-page__lede">
+              Library titles that look behind store versions. Download local Update/DLC packs from your
+              library, or queue the companion to apply them. Store search is discovery-only (Steam / GOG
+              links).
+            </p>
+          </div>
+          <div className="gt-updates__refresh">
+            {manualRefreshing ? (
+              <span className="gt-updates__refresh-status" role="status" aria-live="polite">
+                Refreshing…
+              </span>
+            ) : lastUpdatedAt ? (
+              <span className="gt-updates__refresh-status gt-updates__refresh-status--muted">
+                Updated {lastUpdatedAt.toLocaleTimeString()}
+              </span>
+            ) : null}
+            <button
+              type="button"
+              className="gt-btn"
+              disabled={manualRefreshing || (!items && !error)}
+              onClick={() => void refreshInbox('manual')}
+            >
+              {manualRefreshing ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
         </div>
-        <div className="gt-updates__refresh">
-          {manualRefreshing ? (
-            <span className="gt-updates__refresh-status" role="status" aria-live="polite">
-              Refreshing…
-            </span>
-          ) : lastUpdatedAt ? (
-            <span className="gt-updates__refresh-status gt-updates__refresh-status--muted">
-              Updated {lastUpdatedAt.toLocaleTimeString()}
-            </span>
-          ) : null}
-          <button
-            type="button"
-            className="gt-btn"
-            disabled={manualRefreshing || (!items && !error)}
-            onClick={() => void refreshInbox('manual')}
-          >
-            {manualRefreshing ? 'Refreshing…' : 'Refresh'}
-          </button>
-        </div>
-      </div>
+        </>
+      )}
 
       <section className="gt-updates__search">
         <div className="gt-updates__section-head">
@@ -416,5 +444,6 @@ export function UpdatesPage() {
         ) : null}
       </section>
     </div>
+    </>
   )
 }
