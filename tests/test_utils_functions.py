@@ -425,8 +425,13 @@ class TestDownloadImage:
         with patch('builtins.open', mock_open()) as mock_file:
             download_image('//example.com/image.jpg', '/path/to/save/image.jpg')
             
-            # Verify URL was corrected to HTTPS
-            mock_requests.get.assert_called_once_with('https://example.com/image.jpg')
+            # Verify URL was corrected to HTTPS. Asserting the URL positionally
+            # and the timeout separately: a timeout tweak should not fail this,
+            # but *dropping* the timeout should — an un-timed-out fetch of a
+            # remote image can hang a scan indefinitely.
+            args, kwargs = mock_requests.get.call_args
+            assert args[0] == 'https://example.com/image.jpg'
+            assert kwargs.get('timeout')
             
             # Verify file was written
             mock_file.assert_called_once_with('/path/to/save/image.jpg', 'wb')
@@ -445,7 +450,9 @@ class TestDownloadImage:
                 with patch('builtins.open', mock_open()):
                     # Test thumb URL transformation
                     download_image('https://example.com/t_thumb/image.jpg', '/path/image.jpg')
-                    mock_requests.get.assert_called_with('https://example.com/t_original/image.jpg')
+                    args, kwargs = mock_requests.get.call_args
+                    assert args[0] == 'https://example.com/t_original/image.jpg'
+                    assert kwargs.get('timeout')
     
     @patch('gametheca.utils.functions.requests')
     def test_download_image_http_error(self, mock_requests):
@@ -685,99 +692,78 @@ class TestLoadScanningFilterPatterns:
 
 
 class TestGetLibraryCount:
-    """Test cases for get_library_count function."""
-    
-    def test_get_library_count_with_libraries(self, db_session, app):
-        """Test get_library_count with sample libraries."""
-        # Mock sample libraries response
-        mock_libraries = [
-            MagicMock(uuid='lib1', name='Lib 1', image_url='url1'),
-            MagicMock(uuid='lib2', name='Lib 2', image_url=None),
-            MagicMock(uuid='lib3', name='Lib 3', image_url='url3')
-        ]
-        
-        with app.app_context():
-            with patch('gametheca.utils.functions.db.session.execute') as mock_execute:
-                with patch('gametheca.utils.functions.url_for', return_value='/static/default.jpg') as mock_url_for:
-                    mock_scalars = MagicMock()
-                    mock_scalars.all.return_value = mock_libraries
-                    mock_execute.return_value.scalars.return_value = mock_scalars
-                    
-                    count = get_library_count()
-                    assert count == 3
-    
-    def test_get_library_count_empty_db(self, db_session):
-        """Test get_library_count with no libraries."""
-        # Mock empty database response
-        with patch('gametheca.utils.functions.db.session.execute') as mock_execute:
-            mock_scalars = MagicMock()
-            mock_scalars.all.return_value = []
-            mock_execute.return_value.scalars.return_value = mock_scalars
-            
-            count = get_library_count()
-            assert count == 0
-    
-    def test_get_library_count_prints_result(self, db_session):
-        """Test get_library_count prints the count."""
-        # Mock sample libraries response
-        mock_libraries = [MagicMock(), MagicMock(), MagicMock()]
-        
-        with patch('gametheca.utils.functions.db.session.execute') as mock_execute:
-            mock_scalars = MagicMock()
-            mock_scalars.all.return_value = mock_libraries
-            mock_execute.return_value.scalars.return_value = mock_scalars
-            
-            with patch('builtins.print') as mock_print:
-                count = get_library_count()
-                mock_print.assert_called_with("Returning 3 libraries.")
+    """get_library_count / get_games_count against the real query.
+
+    These six tests used to mock `db.session.execute(...).scalars().all()` and
+    assert a `print("Returning N libraries.")`. Both implementations changed to
+    `select(func.count())` with no print, so the mocks no longer intercepted
+    anything real and the assertions pinned behaviour that had been removed —
+    they failed for the right reason and were only ever testing themselves.
+
+    Counting by delta rather than absolute value on purpose: the test database
+    is not reset between tests, so `assert count == 0` was never a statement
+    about the function, only about whatever had run before.
+    """
+
+    def test_counts_the_libraries_that_exist(self, db_session):
+        from gametheca.models import Library, LibraryPlatform
+
+        before = get_library_count()
+        db_session.add_all([
+            Library(name=f'CountLib {i}', platform=LibraryPlatform.PCWIN)
+            for i in range(3)
+        ])
+        db_session.commit()
+
+        assert get_library_count() == before + 3
+
+    def test_a_removed_library_stops_being_counted(self, db_session):
+        from gametheca.models import Library, LibraryPlatform
+
+        library = Library(name='CountLib solo', platform=LibraryPlatform.PCWIN)
+        db_session.add(library)
+        db_session.commit()
+
+        after_add = get_library_count()
+        db_session.delete(library)
+        db_session.commit()
+
+        assert get_library_count() == after_add - 1
+
+    def test_returns_a_plain_int(self, db_session):
+        """Callers put this straight into templates and JSON."""
+        count = get_library_count()
+        assert isinstance(count, int)
+        assert not isinstance(count, bool)
 
 
 class TestGetGamesCount:
-    """Test cases for get_games_count function."""
-    
-    def test_get_games_count_with_games(self, db_session):
-        """Test get_games_count with sample games."""
-        # Mock sample games response
-        mock_games = [
-            MagicMock(uuid='game1', name='Game 1'),
-            MagicMock(uuid='game2', name='Game 2'),
-            MagicMock(uuid='game3', name='Game 3'),
-            MagicMock(uuid='game4', name='Game 4'),
-            MagicMock(uuid='game5', name='Game 5')
-        ]
-        
-        with patch('gametheca.utils.functions.db.session.execute') as mock_execute:
-            mock_scalars = MagicMock()
-            mock_scalars.all.return_value = mock_games
-            mock_execute.return_value.scalars.return_value = mock_scalars
-            
-            count = get_games_count()
-            assert count == 5
-    
-    def test_get_games_count_empty_db(self, db_session):
-        """Test get_games_count with no games."""
-        # Mock empty database response  
-        with patch('gametheca.utils.functions.db.session.execute') as mock_execute:
-            mock_scalars = MagicMock()
-            mock_scalars.all.return_value = []
-            mock_execute.return_value.scalars.return_value = mock_scalars
-            
-            count = get_games_count()
-            assert count == 0
-    
-    def test_get_games_count_prints_result(self, db_session):
-        """Test get_games_count prints the count."""
-        # Mock sample games response
-        mock_games = [MagicMock() for _ in range(5)]
-        
-        with patch('gametheca.utils.functions.db.session.execute') as mock_execute:
-            mock_scalars = MagicMock()
-            mock_scalars.all.return_value = mock_games
-            mock_execute.return_value.scalars.return_value = mock_scalars
-            
-            with patch('builtins.print') as mock_print:
-                count = get_games_count()
-                mock_print.assert_called_with("Returning 5 games.")
+    """See TestGetLibraryCount for why these no longer mock the session."""
+
+    def test_counts_the_games_that_exist(self, db_session):
+        from uuid import uuid4
+
+        from gametheca.models import Game, Library, LibraryPlatform
+
+        library = Library(name=f'CountGames {uuid4().hex[:8]}',
+                          platform=LibraryPlatform.PCWIN)
+        db_session.add(library)
+        db_session.flush()
+
+        before = get_games_count()
+        db_session.add_all([
+            Game(name=f'Counted {i}', library_uuid=library.uuid,
+                 full_disk_path=f'/tmp/counted-{uuid4().hex[:8]}')
+            for i in range(5)
+        ])
+        db_session.commit()
+
+        assert get_games_count() == before + 5
+
+    def test_returns_a_plain_int(self, db_session):
+        count = get_games_count()
+        assert isinstance(count, int)
+        assert not isinstance(count, bool)
 
 
 class TestDeleteAssociationsForGame:
