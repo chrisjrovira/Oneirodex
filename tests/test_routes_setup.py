@@ -86,10 +86,20 @@ class TestSetupRoute:
         from gametheca.utils.setup import get_current_setup_step
         assert get_current_setup_step() == 1
     
-    def test_setup_get_redirects_if_user_exists(self, client, admin_user):
-        """Test GET /setup redirects to login if admin user already exists."""
+    def test_setup_get_redirects_if_user_exists(self, client, admin_user, db_session):
+        """Test GET /setup redirects to login if admin user already exists.
+
+        GlobalSettings has to be cleared explicitly. Without it this test
+        inherits whatever wizard state an earlier test left behind, and /setup
+        correctly *resumes* that wizard instead of redirecting to login — so
+        the failure was the route being right about a half-finished setup the
+        test never meant to create.
+        """
+        db_session.execute(delete(GlobalSettings))
+        db_session.commit()
+
         response = client.get('/setup')
-        
+
         assert response.status_code == 302
         assert '/login' in response.location
     
@@ -269,12 +279,12 @@ class TestSetupSmtpRoute:
             response = client.post('/setup/smtp', data=form_data)
             
             assert response.status_code == 302
-            assert '/setup/igdb' in response.location
+            assert '/setup/features' in response.location  # Features precedes IGDB now
             
             # Check database step was updated to 3
             assert get_current_setup_step() == 3
             
-            mock_flash.assert_called_with('SMTP setup skipped. Please configure your IGDB settings.', 'info')
+            mock_flash.assert_called_with('SMTP setup skipped. Choose which features to keep enabled.', 'info')
     
     @patch('gametheca.routes_setup.log_system_event')
     def test_setup_smtp_post_save_settings_success(self, mock_log, client, db_session, admin_user):
@@ -297,7 +307,7 @@ class TestSetupSmtpRoute:
             response = client.post('/setup/smtp', data=form_data)
             
             assert response.status_code == 302
-            assert '/setup/igdb' in response.location
+            assert '/setup/features' in response.location  # Features precedes IGDB now
             
             # Verify the route executed successfully by checking redirect location
             # The specific settings verification is subject to transaction rollback behavior
@@ -305,7 +315,7 @@ class TestSetupSmtpRoute:
             # Check database step was updated to 3
             assert get_current_setup_step() == 3
             
-            mock_flash.assert_called_with('SMTP settings saved successfully! Please configure your IGDB settings.', 'success')
+            mock_flash.assert_called_with('SMTP settings saved. Choose which features to keep enabled.', 'success')
             mock_log.assert_called_with("SMTP settings configured during setup", event_type='setup', event_level='information')
     
     
@@ -341,21 +351,21 @@ class TestSetupIgdbRoute:
         db_session.commit()
         
         from gametheca.utils.setup import set_setup_step
-        set_setup_step(2)  # Should be 3 for IGDB setup
+        set_setup_step(2)  # Should be 4 for IGDB setup
         
         with patch('gametheca.routes_setup.flash') as mock_flash:
             response = client.get('/setup/igdb')
             
             assert response.status_code == 302
             assert '/setup' in response.location
-            mock_flash.assert_called_with('Please complete the SMTP setup first.', 'warning')
+            mock_flash.assert_called_with('Please complete the previous setup steps first.', 'warning')
     
     @patch('gametheca.routes_setup.render_template')
     def test_setup_igdb_get_correct_step(self, mock_render, client, db_session, admin_user):
         """Test GET /setup/igdb renders template in correct step."""
         # Use existing admin_user fixture and set database to step 3
         from gametheca.utils.setup import set_setup_step
-        set_setup_step(3)
+        set_setup_step(4)  # IGDB is step 4 since the Features step landed
         
         mock_render.return_value = 'igdb setup template'
         response = client.get('/setup/igdb')
@@ -382,7 +392,7 @@ class TestSetupIgdbRoute:
         """Test successful IGDB setup completing the entire setup process."""
         # Use existing admin_user fixture and set database to step 3
         from gametheca.utils.setup import set_setup_step, get_current_setup_step, is_setup_required
-        set_setup_step(3)
+        set_setup_step(4)  # IGDB is step 4 since the Features step landed
         
         # Mock the form
         mock_form = MagicMock()
@@ -419,7 +429,7 @@ class TestSetupIgdbRoute:
         """Test database error during IGDB settings save."""
         # Use existing admin_user fixture and set database to step 3
         from gametheca.utils.setup import set_setup_step
-        set_setup_step(3)
+        set_setup_step(4)  # IGDB is step 4 since the Features step landed
         
         mock_form = MagicMock()
         mock_form.validate_on_submit.return_value = True
@@ -441,7 +451,7 @@ class TestSetupIgdbRoute:
         """Test form validation failure."""
         # Use existing admin_user fixture and set database to step 3
         from gametheca.utils.setup import set_setup_step
-        set_setup_step(3)
+        set_setup_step(4)  # IGDB is step 4 since the Features step landed
         
         mock_form = MagicMock()
         mock_form.validate_on_submit.return_value = False
@@ -497,12 +507,20 @@ class TestSetupWorkflow:
         form_data = {'skip_smtp': 'true'}
         response = client.post('/setup/smtp', data=form_data)
         assert response.status_code == 302
-        assert '/setup/igdb' in response.location
+        assert '/setup/features' in response.location  # Features precedes IGDB now
         
         # Check database setup step
         assert get_current_setup_step() == 3
-        
-        # Step 4: Complete IGDB setup
+
+        # Step 4: Choose features. The wizard gained this step between SMTP and
+        # IGDB; walking straight from SMTP to IGDB leaves it parked on Features,
+        # which is why the IGDB post below was redirecting to /setup.
+        response = client.post('/setup/features', data={'enable_game_updates': 'y'})
+        assert response.status_code == 302
+        assert '/setup/igdb' in response.location
+        assert get_current_setup_step() == 4
+
+        # Step 5: Complete IGDB setup
         with patch('gametheca.routes_setup.IGDBSetupForm') as mock_igdb_form_class:
             mock_igdb_form = MagicMock()
             mock_igdb_form.validate_on_submit.return_value = True
@@ -586,9 +604,15 @@ class TestSetupSessionHandling:
                 
         assert get_current_setup_step() == 2
         
-        # SMTP setup (skip) moves to step 3
+        # SMTP setup (skip) moves to step 3 — Features, not IGDB.
         response = client.post('/setup/smtp', data={'skip_smtp': 'true'})
         assert get_current_setup_step() == 3
+
+        # Features moves to step 4. This step is why the whole file was failing:
+        # it landed between SMTP and IGDB and nothing here walked through it, so
+        # every later assertion was made against a wizard stuck on Features.
+        response = client.post('/setup/features', data={'enable_game_updates': 'y'})
+        assert get_current_setup_step() == 4
         
         # IGDB completion clears setup_step (marks as completed)
         with patch('gametheca.routes_setup.IGDBSetupForm') as mock_form_class:
@@ -638,7 +662,7 @@ class TestSetupFormIntegration:
         """Test how IGDB setup handles real form validation errors."""
         # Use existing admin_user fixture and set database to step 3
         from gametheca.utils.setup import set_setup_step
-        set_setup_step(3)
+        set_setup_step(4)  # IGDB is step 4 since the Features step landed
         
         # Submit invalid IGDB data
         form_data = {
