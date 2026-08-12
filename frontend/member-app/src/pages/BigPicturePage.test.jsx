@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { BigPicturePage } from './BigPicturePage'
@@ -77,7 +77,13 @@ test('arrow keys move the selection and update the hero', async () => {
   renderPage(<BigPicturePage shellConfig={{}} />)
 
   const alphaTile = await screen.findByRole('option', { name: 'Alpha Game' })
-  expect(alphaTile).toHaveFocus()
+  // The tile existing and the tile holding focus are two different moments.
+  // Auto-focus happens in a passive `useEffect`, which React flushes after the
+  // commit that `findByRole` is already satisfied by, so asserting focus
+  // directly is a race — one this file lost only under a full run, where the
+  // gap is wide enough to catch. The keyboard assertions below need no such
+  // wait: `select()` focuses synchronously inside the event handler.
+  await waitFor(() => expect(alphaTile).toHaveFocus())
 
   await user.keyboard('{ArrowRight}')
 
