@@ -87,13 +87,39 @@ See [test-harness-failures.md](test-harness-failures.md) for the per-file split
 and for what the fixed clusters turned out to be — the short version is that
 the product moved and the tests did not, in every case examined so far.
 
+## Test runs mutate the dev install — found, 2026-08-12
+
+The suspected mechanism was app boot. It was not: `create_app()` never runs
+`InitManager`, so the `DEV_MODE` branch in `_setup_default_theme` that does
+`shutil.rmtree(themes/default)` is only reached by a real server start.
+
+It was a test. `/admin/themes/reset` resolves its target from
+`current_app.root_path` and really calls `shutil.rmtree` on it, and four tests
+in `test_routes_admin_ext_themes.py` drove that route against the installed
+package. `test_reset_default_themes_copy_failure` mocked `shutil.copytree` but
+**not** `shutil.rmtree`, so the removal happened for real and the mocked copy
+then failed before anything put the tree back.
+
+Three of the four never tested what they claimed. They patch `os.path.exists`;
+the route was moved to `pathlib`, so nothing was intercepted — `missing_source`
+and `unexpected_error` both sailed past the guard they meant to trip, ran a
+full real reset, and passed by matching the *success* log, because the
+assertion was only `mock_log.assert_called()`. Same shape as every other
+cluster in this campaign: the product moved and the tests did not.
+
+The fix is a `theme_sandbox` fixture that repoints `app.root_path` at
+`tmp_path`, so the reset runs for real against a throwaway tree. Assertions now
+match on the logged message rather than on the call count, which is what let a
+success masquerade as an error. The three `apply_theme` tests that wrote real
+directories into `static/library/themes` use the same sandbox.
+
+`themes/default` was still missing from this working copy when the cause was
+found — the nine presets were intact, `default` was not — and has been restored
+from `gametheca/setup/default_theme` (the tree is generated and gitignored, so
+a boot or Admin → Reset Default Themes rebuilds it).
+
 ## Still open
 
-* **Test runs mutate the dev install.** The pytest app boots against the test
-  *database* but writes to the same package *filesystem*. During one run the
-  generated `static/library/themes/default` tree disappeared, which left every
-  page in the running dev instance unstyled. The test app should not be able to
-  touch the installed theme tree.
 * **No isolation between tests.** Real isolation means wrapping each test in a
   rolled-back transaction. That is invasive here because route tests go through
   the Flask test client, which takes its own connection from the pool and so

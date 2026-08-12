@@ -10,8 +10,19 @@ from unittest.mock import patch, MagicMock, mock_open
 from gametheca.models import User
 from gametheca import db
 from gametheca.routes_admin_ext.themes import validate_theme_file, is_valid_theme_name
+from gametheca.utils.preset_themes import PRESET_SLUGS
 from uuid import uuid4
 from io import BytesIO
+
+
+def logged_messages(mock_log):
+    """Every message handed to log_system_event, joined for substring checks.
+
+    Asserting only that the mock was *called* cannot tell the success path from
+    the error path — both log — which is how several tests below used to pass
+    while exercising the branch they meant to avoid.
+    """
+    return '\n'.join(str(call.args[0]) for call in mock_log.call_args_list if call.args)
 
 
 @pytest.fixture
@@ -48,6 +59,63 @@ def regular_user(db_session):
     db_session.add(user)
     db_session.commit()
     return user
+
+
+@pytest.fixture
+def theme_sandbox(app, tmp_path, monkeypatch):
+    """Point the app's root at a throwaway tree before the theme routes run.
+
+    `/admin/themes/reset` resolves both the source and the target from
+    `current_app.root_path` and really calls `shutil.rmtree` on the target, so
+    any test that drives it against the installed package deletes the
+    developer's generated `static/library/themes/default` for real. The
+    copy-failure test mocked `copytree` but not `rmtree`, which removed that
+    tree and then failed before anything put it back — every page in a running
+    dev instance came back unstyled.
+
+    Redirecting `root_path` keeps the writes inside tmp_path, which also means
+    the reset can be exercised for real instead of being mocked into a shape
+    that no longer matches the route.
+    """
+    root = tmp_path / 'app_root'
+
+    source = root / 'setup' / 'default_theme'
+    (source / 'css').mkdir(parents=True)
+    (source / 'theme.json').write_text(
+        json.dumps({'name': 'Default Theme', 'author': 'GameTheca', 'version': '2.1.0'}),
+        encoding='utf-8',
+    )
+    # Same shape as the source tree in test_preset_themes.py: preset generation
+    # rewrites these variables, so a stand-in that omits them is not a stand-in.
+    (source / 'css' / 'base.css').write_text(
+        ':root {\n'
+        '    --bg-dark-40: rgba(18, 22, 28, 0.92);\n'
+        '    --bg-dark-30: rgba(12, 16, 22, 0.96);\n'
+        '    --btn-primary: #ff5a36;\n'
+        '    --btn-primary-hover: #e04520;\n'
+        '    --gt-accent: var(--btn-primary);\n'
+        '}\n',
+        encoding='utf-8',
+    )
+    (source / 'css' / 'gt-tokens.css').write_text(
+        ':root {\n'
+        '  --gt-bg: #0b0d10;\n'
+        '  --gt-surface: #141820;\n'
+        '  --gt-text: #f2f4f8;\n'
+        '  --gt-accent: #ff5a36;\n'
+        '  --gt-accent-contrast: #0b0d10;\n'
+        '}\n',
+        encoding='utf-8',
+    )
+
+    installed = root / 'static' / 'library' / 'themes' / 'default'
+    installed.mkdir(parents=True)
+    (installed / 'theme.json').write_text(
+        json.dumps({'name': 'Stale Default'}), encoding='utf-8'
+    )
+
+    monkeypatch.setattr(app, 'root_path', str(root))
+    return root
 
 
 @pytest.fixture
@@ -196,7 +264,7 @@ class TestValidationFunctions:
 class TestManageThemesRoute:
     """Tests for the manage_themes route."""
 
-    def test_manage_themes_requires_login(self, client):
+    def test_manage_themes_requires_login(self, client, configured_install):
         """Test that manage themes page requires login."""
         response = client.get('/admin/themes')
         assert response.status_code == 302
@@ -563,66 +631,104 @@ class TestResetDefaultThemesRoute:
         assert 'login' in response.location
 
     @patch('gametheca.routes_admin_ext.themes.log_system_event')
-    @patch('os.path.exists')
-    def test_reset_default_themes_missing_source(self, mock_exists, mock_log, client, admin_user):
-        """Test reset default themes when source directory is missing."""
+    def test_reset_default_themes_missing_source(self, mock_log, client, admin_user, theme_sandbox):
+        """No tracked source: bail out without disturbing what is installed.
+
+        Previously this patched `os.path.exists`, but the route resolves paths
+        with `pathlib`, so the guard it meant to trip was never reached and a
+        full reset ran against the real install instead.
+        """
+        shutil.rmtree(theme_sandbox / 'setup' / 'default_theme')
+        installed = theme_sandbox / 'static' / 'library' / 'themes' / 'default'
+
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
 
-        mock_exists.return_value = False
-
         response = client.post('/admin/themes/reset')
-        assert response.status_code == 302  # Redirect after error
-        mock_log.assert_called()
 
-    @patch('gametheca.routes_admin_ext.themes.log_system_event')
-    @patch('shutil.copytree')
-    @patch('shutil.rmtree')
-    @patch('pathlib.Path.exists')
-    @patch('pathlib.Path.mkdir')
-    def test_reset_default_themes_success(self, mock_mkdir, mock_exists, mock_rmtree, mock_copytree, mock_log, client, admin_user):
-        """Test successful reset of default themes."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        mock_exists.return_value = True
-
-        response = client.post('/admin/themes/reset')
-        assert response.status_code == 302  # Redirect after success
-        mock_copytree.assert_called_once()
-        mock_log.assert_called()
-
-    @patch('gametheca.routes_admin_ext.themes.log_system_event')
-    @patch('shutil.copytree')
-    @patch('pathlib.Path.exists')
-    def test_reset_default_themes_copy_failure(self, mock_exists, mock_copytree, mock_log, client, admin_user):
-        """Test reset default themes with failure during copying."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        mock_exists.return_value = True
-        mock_copytree.side_effect = Exception("Copy failed")
-
-        response = client.post('/admin/themes/reset')
         assert response.status_code == 302
-        mock_log.assert_called()
+        assert 'source directory not found' in logged_messages(mock_log)
+        # A reset that cannot proceed must leave the installed theme alone.
+        assert (installed / 'theme.json').is_file()
 
     @patch('gametheca.routes_admin_ext.themes.log_system_event')
-    @patch('os.path.exists')
-    def test_reset_default_themes_unexpected_error(self, mock_exists, mock_log, client, admin_user):
-        """Test reset default themes with unexpected error."""
+    def test_reset_default_themes_success(self, mock_log, client, admin_user, theme_sandbox):
+        """The stale install is replaced from source, presets included."""
+        themes_root = theme_sandbox / 'static' / 'library' / 'themes'
+
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
-        
-        mock_exists.side_effect = Exception("Unexpected error")
-        
+
         response = client.post('/admin/themes/reset')
-        assert response.status_code == 302  # Redirect after error
-        mock_log.assert_called()
+
+        assert response.status_code == 302
+        installed = json.loads((themes_root / 'default' / 'theme.json').read_text(encoding='utf-8'))
+        assert installed['name'] == 'Default Theme'
+        assert (themes_root / 'default' / 'css' / 'gt-tokens.css').is_file()
+        # The route installs the colour presets alongside the default.
+        for slug in PRESET_SLUGS:
+            assert (themes_root / slug / 'theme.json').is_file(), slug
+
+    @patch('gametheca.routes_admin_ext.themes.log_system_event')
+    @patch('shutil.rmtree', side_effect=PermissionError('theme folder in use'))
+    def test_reset_default_themes_remove_failure(
+        self, mock_rmtree, mock_log, client, admin_user, theme_sandbox
+    ):
+        """A target that will not delete stops the reset rather than half-doing it."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.post('/admin/themes/reset')
+
+        assert response.status_code == 302
+        assert 'Failed to remove existing default theme' in logged_messages(mock_log)
+
+    @patch('gametheca.routes_admin_ext.themes.log_system_event')
+    @patch('shutil.copytree', side_effect=Exception('Copy failed'))
+    def test_reset_default_themes_copy_failure(
+        self, mock_copytree, mock_log, client, admin_user, theme_sandbox
+    ):
+        """A failed copy is reported after the old tree has already gone.
+
+        This is the destructive one: it mocks `copytree` but deliberately not
+        `rmtree`, so the removal happens for real and nothing restores it. That
+        is the behaviour under test — the sandbox is what keeps it from landing
+        on the developer's install.
+        """
+        themes_root = theme_sandbox / 'static' / 'library' / 'themes'
+
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.post('/admin/themes/reset')
+
+        assert response.status_code == 302
+        assert 'Failed to copy default theme' in logged_messages(mock_log)
+        assert not (themes_root / 'default').exists()
+
+    @patch('gametheca.routes_admin_ext.themes.log_system_event')
+    @patch('pathlib.Path.mkdir', side_effect=OSError('no such device'))
+    def test_reset_default_themes_unexpected_error(
+        self, mock_mkdir, mock_log, client, admin_user, theme_sandbox
+    ):
+        """Anything unanticipated still redirects, with the error recorded.
+
+        The old version patched `os.path.exists` to raise; the route uses
+        `pathlib`, so nothing was intercepted and this passed by running a real
+        reset and matching the *success* log.
+        """
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.post('/admin/themes/reset')
+
+        assert response.status_code == 302
+        assert 'Error resetting default themes' in logged_messages(mock_log)
 
     def test_reset_default_themes_post_method_only(self, client, admin_user):
         """Test that reset default themes only accepts POST requests."""
@@ -735,92 +841,85 @@ class TestApplyThemeRoute:
         db_session.refresh(admin_user)
         assert admin_user.preferences.theme == 'ember'
 
-    def test_apply_theme_persists_explicit_icon_pack(self, client, admin_user, db_session, app):
+    def test_apply_theme_persists_explicit_icon_pack(
+        self, client, admin_user, db_session, app, theme_sandbox
+    ):
         """Explicit icon_pack in the body is stored on UserPreference like Preferences."""
-        real_themes = Path(app.root_path) / 'static' / 'library' / 'themes'
-        real_theme = real_themes / 'aurora_icon_test'
-        real_theme.mkdir(parents=True, exist_ok=True)
-        (real_theme / 'theme.json').write_text(
+        theme_dir = theme_sandbox / 'static' / 'library' / 'themes' / 'aurora_icon_test'
+        theme_dir.mkdir(parents=True, exist_ok=True)
+        (theme_dir / 'theme.json').write_text(
             json.dumps({'name': 'Aurora Icon Test', 'default_icon_pack': 'pixel'}),
             encoding='utf-8',
         )
-        try:
-            with client.session_transaction() as sess:
-                sess['_user_id'] = str(admin_user.id)
-                sess['_fresh'] = True
 
-            response = client.post(
-                '/admin/themes/apply',
-                json={'theme': 'aurora_icon_test', 'icon_pack': 'filled'},
-            )
-            assert response.status_code == 200
-            assert response.get_json() == {
-                'success': True,
-                'theme': 'aurora_icon_test',
-                'icon_pack': 'filled',
-            }
-            db_session.refresh(admin_user)
-            assert admin_user.preferences.theme == 'aurora_icon_test'
-            assert admin_user.preferences.icon_pack == 'filled'
-        finally:
-            shutil.rmtree(real_theme, ignore_errors=True)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.post(
+            '/admin/themes/apply',
+            json={'theme': 'aurora_icon_test', 'icon_pack': 'filled'},
+        )
+        assert response.status_code == 200
+        assert response.get_json() == {
+            'success': True,
+            'theme': 'aurora_icon_test',
+            'icon_pack': 'filled',
+        }
+        db_session.refresh(admin_user)
+        assert admin_user.preferences.theme == 'aurora_icon_test'
+        assert admin_user.preferences.icon_pack == 'filled'
 
     def test_apply_theme_falls_back_to_theme_json_default_icon_pack(
-        self, client, admin_user, db_session, app
+        self, client, admin_user, db_session, app, theme_sandbox
     ):
         """Omitting icon_pack uses theme.json default_icon_pack when present."""
-        real_themes = Path(app.root_path) / 'static' / 'library' / 'themes'
-        real_theme = real_themes / 'ember_icon_test'
-        real_theme.mkdir(parents=True, exist_ok=True)
-        (real_theme / 'theme.json').write_text(
+        theme_dir = theme_sandbox / 'static' / 'library' / 'themes' / 'ember_icon_test'
+        theme_dir.mkdir(parents=True, exist_ok=True)
+        (theme_dir / 'theme.json').write_text(
             json.dumps({'name': 'Ember Icon Test', 'default_icon_pack': 'filled'}),
             encoding='utf-8',
         )
-        try:
-            with client.session_transaction() as sess:
-                sess['_user_id'] = str(admin_user.id)
-                sess['_fresh'] = True
 
-            response = client.post(
-                '/admin/themes/apply',
-                json={'theme': 'ember_icon_test'},
-            )
-            assert response.status_code == 200
-            body = response.get_json()
-            assert body['success'] is True
-            assert body['theme'] == 'ember_icon_test'
-            assert body['icon_pack'] == 'filled'
-            db_session.refresh(admin_user)
-            assert admin_user.preferences.icon_pack == 'filled'
-        finally:
-            shutil.rmtree(real_theme, ignore_errors=True)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.post(
+            '/admin/themes/apply',
+            json={'theme': 'ember_icon_test'},
+        )
+        assert response.status_code == 200
+        body = response.get_json()
+        assert body['success'] is True
+        assert body['theme'] == 'ember_icon_test'
+        assert body['icon_pack'] == 'filled'
+        db_session.refresh(admin_user)
+        assert admin_user.preferences.icon_pack == 'filled'
 
     def test_apply_theme_null_icon_pack_uses_theme_json_default(
-        self, client, admin_user, db_session, app
+        self, client, admin_user, db_session, app, theme_sandbox
     ):
         """JSON null icon_pack still falls back to theme.json default_icon_pack."""
-        real_themes = Path(app.root_path) / 'static' / 'library' / 'themes'
-        real_theme = real_themes / 'violet_icon_test'
-        real_theme.mkdir(parents=True, exist_ok=True)
-        (real_theme / 'theme.json').write_text(
+        theme_dir = theme_sandbox / 'static' / 'library' / 'themes' / 'violet_icon_test'
+        theme_dir.mkdir(parents=True, exist_ok=True)
+        (theme_dir / 'theme.json').write_text(
             json.dumps({'name': 'Violet Icon Test', 'default_icon_pack': 'soft'}),
             encoding='utf-8',
         )
-        try:
-            with client.session_transaction() as sess:
-                sess['_user_id'] = str(admin_user.id)
-                sess['_fresh'] = True
 
-            response = client.post(
-                '/admin/themes/apply',
-                json={'theme': 'violet_icon_test', 'icon_pack': None},
-            )
-            assert response.status_code == 200
-            assert response.get_json()['icon_pack'] == 'soft'
-            db_session.refresh(admin_user)
-            assert admin_user.preferences.icon_pack == 'soft'
-        finally:
-            shutil.rmtree(real_theme, ignore_errors=True)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.post(
+            '/admin/themes/apply',
+            json={'theme': 'violet_icon_test', 'icon_pack': None},
+        )
+        assert response.status_code == 200
+        assert response.get_json()['icon_pack'] == 'soft'
+        db_session.refresh(admin_user)
+        assert admin_user.preferences.icon_pack == 'soft'
 
 
 class TestThemeRoutesIntegration:

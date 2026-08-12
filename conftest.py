@@ -170,3 +170,43 @@ def db_session(app):
 def client(app):
     """Create a test client for the Flask application."""
     return app.test_client()
+
+
+@pytest.fixture(scope='function')
+def configured_install(db_session):
+    """An install that is past the setup wizard.
+
+    `check_setup_status` is a `before_request` hook and `is_setup_required()`
+    means "no users exist", so on a freshly truncated database *any* anonymous
+    request is redirected to `/setup` — not to the login page. Every
+    `..._requires_login` test that asserts `'/login' in response.location`
+    therefore fails when its file runs alone, and passes in a full run only
+    because some earlier file happened to leave a user row behind.
+
+    Requesting this fixture states the precondition those tests were relying on
+    without declaring. Tests that drive the wizard itself must *not* use it —
+    they need the un-configured state this removes.
+    """
+    from uuid import uuid4
+    from sqlalchemy import select
+    from gametheca.models import User, GlobalSettings
+
+    if db_session.execute(select(User)).scalars().first() is None:
+        anchor = User(
+            user_id=str(uuid4()),
+            name=f'SetupAnchor_{str(uuid4())[:8]}',
+            email=f'anchor_{str(uuid4())[:8]}@test.com',
+            role='admin',
+            is_email_verified=True,
+        )
+        anchor.set_password('testpass123')
+        db_session.add(anchor)
+
+    settings = db_session.execute(select(GlobalSettings)).scalars().first()
+    if settings is None:
+        settings = GlobalSettings()
+        db_session.add(settings)
+    settings.setup_in_progress = False
+    settings.setup_completed = True
+    db_session.commit()
+    return settings
