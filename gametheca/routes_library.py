@@ -191,6 +191,18 @@ def get_games(page=1, per_page=20, sort_by='name', sort_order='asc', **filters):
         ).all()
         user_statuses = {row[0]: row[1] for row in status_results}
 
+    # Read the settings singleton once, and tolerantly.
+    #
+    # This was `select(GlobalSettings)).scalar_one_or_none()` *inside* the loop
+    # below: one full-table query per game, and an unfiltered one_or_none, which
+    # raises MultipleResultsFound the moment the table holds two rows. Every
+    # other settings read in the codebase takes the first row by id instead
+    # (see routes.py), and GlobalSettings is a singleton — so a second row
+    # should degrade to "use the first", not 500 the library page.
+    settings = db.session.execute(
+        select(GlobalSettings).order_by(GlobalSettings.id).limit(1)
+    ).scalars().first()
+
     game_data = []
     for game in games:
         cover_image = db.session.execute(select(Image).filter_by(game_uuid=game.uuid, image_type='cover')).scalars().first()
@@ -201,7 +213,6 @@ def get_games(page=1, per_page=20, sort_by='name', sort_order='asc', **filters):
 
         # Check if game has local metadata or images
         has_local_override = False
-        settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
         if settings:
             if (settings.use_local_metadata and has_local_metadata(game.full_disk_path, settings.local_metadata_filename or 'gametheca.json')) or \
                (settings.use_local_images and has_local_images(game.full_disk_path)):
