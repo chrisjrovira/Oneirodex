@@ -1305,6 +1305,9 @@ class DatabaseManager:
             # Clean up duplicate discovery sections
             self.cleanup_duplicate_discovery_sections()
 
+            # Collapse a duplicated settings singleton
+            self.cleanup_duplicate_global_settings()
+
             print("Database schema update completed successfully.")
         except Exception as e:
             print(f"An error occurred during schema update: {e}")
@@ -1343,6 +1346,34 @@ class DatabaseManager:
                 print("Discovery sections cleanup completed successfully.")
         except Exception as e:
             print(f"Warning: Discovery sections cleanup failed: {e}")
+            print("Application will continue...")
+
+    def cleanup_duplicate_global_settings(self):
+        """Collapse `global_settings` back to one row, keeping the lowest id.
+
+        Nothing at the database level enforces the singleton, and roughly
+        fifteen code paths create a row when they find none — so a race at
+        startup, or a restore that merged two dumps, can leave two. Readers
+        tolerate that now (utils/global_settings.py), but duplicates still mean
+        a write can land on the row nobody reads, which is the harder failure
+        to notice: settings that silently do not take effect.
+        """
+        cleanup_sql = """
+        DELETE FROM global_settings
+        WHERE id <> (SELECT MIN(id) FROM global_settings);
+        """
+
+        print("Checking for duplicate global settings rows...")
+        try:
+            with self.engine.begin() as connection:
+                result = connection.execute(text(cleanup_sql))
+                removed = result.rowcount or 0
+                if removed > 0:
+                    print(f"Removed {removed} duplicate global settings row(s).")
+                else:
+                    print("Global settings singleton is intact.")
+        except Exception as e:
+            print(f"Warning: Global settings cleanup failed: {e}")
             print("Application will continue...")
 
     def _parse_sql_statements(self, sql_text):

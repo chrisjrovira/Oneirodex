@@ -23,6 +23,7 @@ from sqlalchemy import func, select
 
 from gametheca import db
 from gametheca.models import Game, GameURL, GlobalSettings, StoreAccount, UserOwnedTitle
+from gametheca.utils.global_settings import global_settings_row
 
 # meta_quest = register-only ownership (CSV); never downloads DRM titles.
 VALID_STORES = frozenset({'steam', 'gog', 'epic', 'amazon', 'meta_quest'})
@@ -45,7 +46,7 @@ _NAME_MATCH_STORES = frozenset({'gog', 'epic', 'amazon', 'meta_quest'})
 
 
 def is_ownership_sync_enabled() -> bool:
-    settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    settings = global_settings_row()
     if settings is not None and settings.enable_store_ownership_sync is False:
         return False
     return True
@@ -56,7 +57,7 @@ def get_steam_web_api_key() -> str | None:
     key = (os.getenv('STEAM_WEB_API_KEY') or '').strip()
     if key:
         return key
-    settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    settings = global_settings_row()
     if settings and settings.steam_web_api_key:
         return settings.steam_web_api_key.strip()
     return None

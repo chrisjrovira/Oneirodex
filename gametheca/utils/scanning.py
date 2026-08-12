@@ -16,6 +16,7 @@ from gametheca.models import (
     GlobalSettings,
     ScanJob
 )
+from gametheca.utils.global_settings import global_settings_row
 from gametheca.utils.functions import read_first_nfo_content
 from gametheca.utils.igdb_api import make_igdb_api_request
 from gametheca.utils.event_logging import log_system_event
@@ -304,7 +305,7 @@ def log_unmatched_folder(
 def process_game_updates(game_name, full_disk_path, updates_folder, library_uuid, update_folder_name=None):
     # Use passed parameter or fallback to database query
     if update_folder_name is None:
-        settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+        settings = global_settings_row()
         if not settings or not settings.update_folder_name:
             print("No update folder configuration found in database")
             return
@@ -373,7 +374,7 @@ def process_game_extras(
 ):
     # Use passed parameter or fallback to database query
     if extras_folder_name is None:
-        settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+        settings = global_settings_row()
         if not settings or not settings.extras_folder_name:
             print("No extras folder configuration found in database")
             return

@@ -79,7 +79,7 @@ def path_library(db_session):
     elif not rows:
         db_session.add(GlobalSettings())
         db_session.commit()
-    settings = db_session.execute(select(GlobalSettings)).scalars().first()
+    settings = db_session.execute(select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
     if settings is not None:
         settings.admin_notify_new_games = True
         db_session.commit()

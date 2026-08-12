@@ -80,7 +80,7 @@ def _leave_the_wizard_closed(db_session):
     GlobalSettings with users present is a state the app never produces itself.
     """
     yield
-    settings = db_session.execute(select(GlobalSettings)).scalars().first()
+    settings = db_session.execute(select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
     if settings is not None:
         settings.setup_in_progress = False
         settings.setup_completed = True
@@ -571,7 +571,7 @@ class TestSetupWorkflow:
         assert admin_user.is_email_verified is True
         
         # Verify IGDB settings were saved
-        settings = db.session.execute(select(GlobalSettings)).scalars().first()
+        settings = db.session.execute(select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
         assert settings is not None
         assert settings.igdb_client_id == 'test_client_id_12345'
         assert settings.igdb_client_secret == 'test_client_secret_12345'

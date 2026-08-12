@@ -360,7 +360,7 @@ def test_browse_owned_false_without_match(client, app, db_session, lib, user):
 
 
 def _ensure_global_settings(db_session, **kwargs):
-    settings = db_session.execute(select(GlobalSettings)).scalars().first()
+    settings = db_session.execute(select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
     if not settings:
         settings = GlobalSettings()
         db_session.add(settings)

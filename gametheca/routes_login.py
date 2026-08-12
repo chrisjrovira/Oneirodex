@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from flask_login import current_user, login_required, login_user
 from gametheca import db
 from gametheca.models import User, InviteToken, GlobalSettings, Whitelist
+from gametheca.utils.global_settings import global_settings_row
 from gametheca.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, InviteForm, UserPasswordForm
 from gametheca.utils.auth import _authenticate_and_redirect
 from gametheca.utils.smtp import send_email, send_password_reset_email, send_invite_email
@@ -48,7 +49,7 @@ def get_serializer():
 
 def is_smtp_configured():
     """Check if SMTP settings are properly configured."""
-    settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    settings = global_settings_row()
     if not settings:
         return False
     return bool(settings.smtp_server and 
@@ -126,7 +127,7 @@ def login():
             record_failure(login_rate_key(ip, None))
             return redirect(url_for('login.login'))
 
-    settings_record = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    settings_record = global_settings_row()
     oidc_config = build_oidc_config(settings_record)
     return render_template(
         'login/login.html',
@@ -142,7 +143,7 @@ def oidc_start():
     if current_user.is_authenticated:
         return redirect(url_for('discover.discover'))
 
-    settings_record = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    settings_record = global_settings_row()
     config = build_oidc_config(settings_record)
     if not config:
         flash('Single sign-on is not enabled.', 'warning')
@@ -178,7 +179,7 @@ def oidc_callback():
     if current_user.is_authenticated:
         return redirect(url_for('discover.discover'))
 
-    settings_record = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    settings_record = global_settings_row()
     config = build_oidc_config(settings_record)
     if not config:
         flash('Single sign-on is not enabled.', 'warning')
@@ -423,7 +424,7 @@ def reset_password(token):
 @login_bp.route('/user/invites', methods=['GET', 'POST'])
 @login_required
 def invites():
-    settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    settings = global_settings_row()
     site_url = settings.site_url if settings else 'http://127.0.0.1'
     smtp_enabled = is_smtp_configured()
     if site_url == 'http://127.0.0.1'and current_user.role == 'admin':
@@ -443,7 +444,7 @@ def invites():
             db.session.add(invite_token)
             db.session.commit()
 
-            settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+            settings = global_settings_row()
             site_url = settings.site_url if settings else 'http://127.0.0.1'
             
             # Build the invite URL using the configured site URL

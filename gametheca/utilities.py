@@ -14,6 +14,7 @@ from gametheca.utils.functions import (
 from gametheca.models import (
     Game, Library, AllowedFileType, ScanJob, GlobalSettings, UnmatchedFolder
 )
+from gametheca.utils.global_settings import global_settings_row
 from gametheca import db
 from gametheca.utils.game_core import remove_from_lib
 from gametheca.utils.gamenames import get_game_names_from_folder, get_game_names_from_files
@@ -429,7 +430,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
                         if game_already_exists and force_hltb_refetch:
                             try:
                                 from gametheca.models import GlobalSettings
-                                settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+                                settings = global_settings_row()
                                 if settings and settings.enable_hltb_integration:
                                     from gametheca.utils.hltb import update_game_hltb_sync
                                     # Get the game UUID from database
@@ -1000,7 +1001,7 @@ def handle_manual_scan(manual_form):
 
         # Check write permissions if local metadata writing is enabled
         from gametheca.utils.local_metadata import check_library_write_permissions
-        settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+        settings = global_settings_row()
 
         if settings and settings.write_local_metadata:
             print(f"🔍 [PERMISSIONS] Checking write permissions for library path: {full_path}")

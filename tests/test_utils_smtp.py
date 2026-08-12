@@ -26,7 +26,7 @@ def valid_smtp_settings():
     def _create_settings(db_session, enabled=True):
         from sqlalchemy import select
         # Get existing settings or create new one
-        settings = db_session.execute(select(GlobalSettings)).scalars().first()
+        settings = db_session.execute(select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
         if not settings:
             settings = GlobalSettings()
             db_session.add(settings)
@@ -52,7 +52,7 @@ def invalid_smtp_settings():
     def _create_settings(db_session, **overrides):
         from sqlalchemy import select
         # Get existing settings or create new one
-        settings = db_session.execute(select(GlobalSettings)).scalars().first()
+        settings = db_session.execute(select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
         if not settings:
             settings = GlobalSettings()
             db_session.add(settings)

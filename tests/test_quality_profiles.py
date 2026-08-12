@@ -48,7 +48,7 @@ def _login(client, app, user):
 
 
 def _ensure_settings(db_session):
-    settings = db_session.execute(select(GlobalSettings).limit(1)).scalars().first()
+    settings = db_session.execute(select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
     if not settings:
         settings = GlobalSettings()
         db_session.add(settings)

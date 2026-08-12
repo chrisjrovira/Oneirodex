@@ -135,7 +135,7 @@ class TestIGDBSettingsRoute:
         assert 'updated successfully' in response_data['message']
         
         # Verify settings were created in database
-        settings = db.session.execute(db.select(GlobalSettings)).scalars().first()
+        settings = db.session.execute(db.select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
         assert settings is not None
         assert settings.igdb_client_id == 'new_client_id'
         assert settings.igdb_client_secret == 'new_client_secret'
@@ -184,7 +184,7 @@ class TestIGDBSettingsRoute:
         assert response_data['status'] == 'success'
         
         # Verify settings were saved
-        settings = db.session.execute(db.select(GlobalSettings)).scalars().first()
+        settings = db.session.execute(db.select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
         assert settings.igdb_client_id == 'only_client_id'
         assert settings.igdb_client_secret is None
     
@@ -429,6 +429,6 @@ class TestIGDBIntegration:
         assert response.status_code == 200
         
         # Verify settings are still in database
-        settings = db.session.execute(db.select(GlobalSettings)).scalars().first()
+        settings = db.session.execute(db.select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
         assert settings.igdb_client_id == 'persist_client_id'
         assert settings.igdb_client_secret == 'persist_client_secret'

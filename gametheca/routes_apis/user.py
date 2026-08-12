@@ -12,6 +12,7 @@ from gametheca.models import (
     user_game_status,
     get_status_info,
 )
+from gametheca.utils.global_settings import global_settings_row
 from gametheca.utils.browse_filters import apply_item_kind_filter, apply_name_filter
 from gametheca.utils.client_lifecycle import load_lifecycle_map
 from gametheca.utils.local_metadata import has_local_images, has_local_metadata
@@ -232,7 +233,7 @@ def favorites():
         ).scalars().all()
         covers_by_uuid = {row.game_uuid: row for row in cover_rows}
 
-    settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    settings = global_settings_row()
     lifecycle_map = load_lifecycle_map(current_user.id)
     game_data = []
     for game in games:

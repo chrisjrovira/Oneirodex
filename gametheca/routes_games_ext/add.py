@@ -3,6 +3,7 @@ from flask import render_template, redirect, url_for, flash, copy_current_reques
 from flask_login import login_required, current_user
 from gametheca.forms import AddGameForm
 from gametheca.models import Game, Library, UnmatchedFolder, Category, Developer, Publisher
+from gametheca.utils.global_settings import global_settings_row
 from gametheca.utils.functions import read_first_nfo_content, PLATFORM_IDS, load_scanning_filter_patterns
 from gametheca.utils.auth import admin_required
 from gametheca.utils.scanning import refresh_images_in_background
@@ -198,7 +199,7 @@ def add_game_manual():
             from gametheca.utils.local_metadata import write_local_metadata
             from gametheca.models import GlobalSettings
 
-            settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+            settings = global_settings_row()
             print(f"[LOCAL METADATA] Settings check - settings exists: {settings is not None}, write_local_metadata: {settings.write_local_metadata if settings else 'N/A'}")
 
             if settings and settings.write_local_metadata:

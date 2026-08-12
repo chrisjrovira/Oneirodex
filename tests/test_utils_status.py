@@ -277,7 +277,7 @@ class TestCheckServerSettings:
         """Test server settings check when feature is enabled."""
         # Get existing GlobalSettings (as per testing guide)
         from sqlalchemy import select
-        settings = db_session.execute(select(GlobalSettings)).scalars().first()
+        settings = db_session.execute(select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
         if not settings:
             settings = GlobalSettings()
             db_session.add(settings)
@@ -306,7 +306,7 @@ class TestCheckServerSettings:
         """Test server settings check when feature is disabled."""
         # Get existing GlobalSettings (as per testing guide)
         from sqlalchemy import select
-        settings = db_session.execute(select(GlobalSettings)).scalars().first()
+        settings = db_session.execute(select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
         if not settings:
             settings = GlobalSettings()
             db_session.add(settings)
@@ -347,7 +347,7 @@ class TestCheckServerSettings:
         """Test server settings check with null settings dictionary."""
         # Get or create GlobalSettings
         from sqlalchemy import select
-        settings = db_session.execute(select(GlobalSettings)).scalars().first()
+        settings = db_session.execute(select(GlobalSettings).order_by(GlobalSettings.id).limit(1)).scalars().first()
         if not settings:
             settings = GlobalSettings()
             db_session.add(settings)

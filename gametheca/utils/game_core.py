@@ -12,6 +12,7 @@ from gametheca.models import (
     PlayerPerspective, GameURL, ScanJob, Category, Status,
     game_developer_association
 )
+from gametheca.utils.global_settings import global_settings_row
 from gametheca.utils.functions import (
     read_first_nfo_content, delete_associations_for_game,
     website_category_to_string,
@@ -545,7 +546,7 @@ def create_game_instance(
     peel: dict | None = None,
 ):
     global settings
-    settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+    settings = global_settings_row()
     new_game = None  # Initialize new_game to None
     
     try:
@@ -787,7 +788,7 @@ def smart_process_images_for_game(
             from gametheca.models import GlobalSettings
             from gametheca.utils.cover_selection import image_save_path_status
 
-            settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+            settings = global_settings_row()
             
             # Store image URLs first (always) — cover must not be skipped when
             # IGDB returns an expanded object instead of a bare id.
@@ -904,7 +905,7 @@ def queue_post_identify_enrichment(
                     print(f"Deferred image processing failed for {game_uuid}: {img_err}")
 
                 if fetch_hltb:
-                    settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+                    settings = global_settings_row()
                     if settings and settings.enable_hltb_integration:
                         try:
                             from gametheca.utils.hltb import update_game_hltb_sync
@@ -1166,7 +1167,7 @@ def retrieve_and_save_game(
     # Load settings once if not provided
     # Settings can be either a dict (from threaded scan) or a SQLAlchemy object
     if settings is None:
-        settings_obj = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+        settings_obj = global_settings_row()
         # Convert to dict for consistent handling
         settings = {
             'use_local_metadata': settings_obj.use_local_metadata if settings_obj else False,
@@ -1631,7 +1632,7 @@ def retrieve_and_save_game(
 
                 # Fetch HowLongToBeat data if enabled (sync path only; deferred when scanning)
                 if not defer_enrichment:
-                    hltb_settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+                    hltb_settings = global_settings_row()
                     if fetch_hltb and hltb_settings and hltb_settings.enable_hltb_integration:
                         try:
                             from gametheca.utils.hltb import update_game_hltb_sync
@@ -2442,7 +2443,7 @@ def queue_missing_images_for_download(missing_images_list, app=None):
             print(f"📥 Successfully queued {queued_count} missing images for download")
             
             # Trigger immediate download if turbo mode is enabled
-            settings = db.session.execute(select(GlobalSettings)).scalar_one_or_none()
+            settings = global_settings_row()
             if settings and settings.use_turbo_image_downloads:
                 print("🚀 Turbo mode enabled - triggering immediate download")
                 # Run a small batch download to start processing immediately

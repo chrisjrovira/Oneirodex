@@ -1,4 +1,5 @@
 from gametheca import db
+from gametheca.utils.global_settings import global_settings_row
 from gametheca.models import GlobalSettings
 from sqlalchemy import select
 from gametheca import app_version
@@ -12,7 +13,7 @@ def get_loc(page):
 
 def get_global_settings():
     """Helper function to get global settings with defaults"""
-    settings_record = db.session.execute(select(GlobalSettings)).scalars().first()
+    settings_record = global_settings_row()
     default_settings = {
         'showSystemLogo': True,
         'showHelpButton': True,
