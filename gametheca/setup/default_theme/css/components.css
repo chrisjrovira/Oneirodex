@@ -735,15 +735,23 @@ a.gt-chip:focus {
 
 /* --- Tile hover preview (UX-B3) ------------------------------------------- */
 
-/* Slightly more lift than the base hover, plus a thin glow in the active
-   accent so the treatment follows whichever theme is applied. */
+/* Lift and glow in the active accent, so the treatment follows whichever theme
+   is applied.
+
+   Deliberately pronounced. The previous values — scale(1.045), a 1px ring and a
+   14px glow at 28% — were close enough to nothing that the tile under the
+   cursor was hard to pick out of a dense grid, which is the whole job of a
+   hover state. The card already sets z-index 6, so growing over its neighbours
+   is fine, and the 0.3s base transition is shortened here: a hover that takes a
+   third of a second to arrive reads as lag when you sweep across a grid. */
 .game-card:hover,
 .game-card:focus-within {
-    transform: translateY(-3px) scale(1.045);
+    transform: translateY(-6px) scale(1.08);
     box-shadow:
-        0 10px 26px var(--shadow-dark-strong),
-        0 0 0 1px color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent),
-        0 0 14px 2px color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent);
+        0 16px 34px var(--shadow-dark-strong),
+        0 0 0 2px color-mix(in srgb, var(--gt-accent, #2fd67b) 80%, transparent),
+        0 0 30px 6px color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+    transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
 .gt-tile-preview-hint {
