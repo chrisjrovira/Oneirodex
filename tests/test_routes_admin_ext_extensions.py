@@ -43,7 +43,7 @@ def regular_user(db_session):
 
 class TestExtensionsRoute:
     
-    def test_extensions_route_requires_login(self, client):
+    def test_extensions_route_requires_login(self, client, configured_install):
         response = client.get('/admin/extensions')
         assert response.status_code == 302
         assert 'login' in response.location
@@ -82,9 +82,15 @@ class TestExtensionsRoute:
         with client.application.app_context():
             response = client.get('/admin/extensions')
             assert response.status_code == 200
-            
-            response_data = response.get_data(as_text=True)
-            assert f'.t1{unique_suffix}' in response_data or 'allowed_types' in str(response.data)
+            # The page is an admin SPA shell now; the file types are never in
+            # this HTML. The React ExtensionsPage fetches them, so that is where
+            # "displays allowed types" has to be checked from the server side.
+            assert b'admin-app.js' in response.data
+
+            api = client.get('/api/file_types/allowed')
+            assert api.status_code == 200
+            values = {row['value'] for row in api.get_json()}
+            assert {f'.t1{unique_suffix}', f'.t2{unique_suffix}', f'.t3{unique_suffix}'} <= values
     
     def test_extensions_ordered_by_value_asc(self, client, admin_user):
         unique_suffix = str(int(time.time() * 1000))[-6:]

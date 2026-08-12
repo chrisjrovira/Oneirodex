@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
@@ -91,10 +92,24 @@ def test_arr_status_enabled_via_config(client, app, db_session, admin_user):
     _login(client, app, admin_user)
     with app.app_context():
         app.config['ENABLE_ARR_MODULE'] = True
-        resp = client.get('/api/arr/status')
-        assert resp.status_code == 200
-        assert resp.get_json()['enabled'] is True
-        assert resp.get_json()['status'] == 'scaffold'
+        # 'scaffold' was the placeholder from when the module was a stub. The
+        # endpoint reports readiness now: 'ready' once a connector is
+        # configured, 'enabled' while on but unconfigured, 'disabled' otherwise.
+        #
+        # Connectors are stated rather than inherited. Reading whatever the
+        # database happens to hold makes the answer depend on which other file
+        # ran first — with none configured it is 'enabled', and in a full run
+        # another file's indexer rows turn it into 'ready'.
+        with patch('gametheca.routes_arr.connector_status', return_value=[]):
+            resp = client.get('/api/arr/status')
+            assert resp.status_code == 200
+            assert resp.get_json()['enabled'] is True
+            assert resp.get_json()['status'] == 'enabled'
+
+        configured = [{'id': 'native_indexers', 'configured': True}]
+        with patch('gametheca.routes_arr.connector_status', return_value=configured):
+            body = client.get('/api/arr/status').get_json()
+            assert body['status'] == 'ready'
 
 
 def test_oidc_readiness_reports_missing(app, db_session, monkeypatch):

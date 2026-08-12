@@ -13,11 +13,27 @@ def _read(path: Path) -> str:
 
 
 def test_settings_shell_renders_module_status_badges():
+    """Wave 7 moved the hub body to React; the badges live there now.
+
+    They went missing in that move — the Jinja block was emptied and nothing
+    rendered `module_status`, while the route kept computing it. Asserting on
+    the SPA source is what keeps the badges from silently disappearing again,
+    the same way test_storage_page_surfaces_env_gates does for Storage.
+    """
     shell = _read(TEMPLATES / 'admin_settings_shell.html')
-    assert 'module_status' in shell
-    assert 'settings-shell-badge' in shell
-    assert 'settings-shell-badge--on' in shell
-    assert 'settings-shell-badge--off' in shell
+    assert 'spa' in shell
+
+    spa = _read(ROOT / 'frontend' / 'admin-app' / 'src' / 'pages.jsx')
+    assert '/api/settings/module-status' in spa
+    assert 'settings-shell-badge' in spa
+    assert 'settings-shell-badge--' in spa
+
+    nav = _read(ROOT / 'frontend' / 'admin-app' / 'src' / 'navConfig.js')
+    for key in ("statusKey: 'arr'", "statusKey: 'ai'", "statusKey: 'storage'"):
+        assert key in nav
+
+    api = _read(ROOT / 'gametheca' / 'routes_apis' / 'settings.py')
+    assert 'settings_hub_module_status' in api
 
 
 def test_settings_shell_css_defines_badge_tokens():

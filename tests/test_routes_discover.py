@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch, Mock
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from uuid import uuid4
 
 from flask import Flask
@@ -139,7 +140,7 @@ def test_images(db_session, test_games):
 class TestDiscoverRoute:
     """Test the discover route functionality."""
 
-    def test_discover_route_requires_login(self, client):
+    def test_discover_route_requires_login(self, client, configured_install):
         """Test that discover route requires authentication."""
         response = client.get('/discover')
         assert response.status_code == 302
@@ -246,33 +247,67 @@ class TestDiscoverSectionQueries:
             assert highest_rated[0].rating >= highest_rated[1].rating
 
 
+def _discover_game(**overrides):
+    """A game row shaped like the one `serialize_discover_game` reads.
+
+    Deliberately not a `Mock`. The serializer grew a play-URL step that reads
+    `full_disk_path` and hands it to `os.path.abspath`; a Mock invents that
+    attribute on demand, so the undeclared field arrived as a Mock object
+    instead of failing as a missing one. A namespace can only supply what the
+    test actually states.
+
+    `Mock(name=...)` was a second trap here: `name` is consumed by the Mock
+    constructor, so `game.name` was never the string these tests appeared to
+    set — it reached the cover-placeholder code as a Mock.
+    """
+    fields = {
+        'id': 1,
+        'uuid': 'discover-game',
+        'name': 'Discover Game',
+        'summary': 'Summary',
+        'url': None,
+        'size': 0,
+        'genres': [],
+        'first_release_date': None,
+        'date_identified': None,
+        'date_created': None,
+        'freshness_status': None,
+        'updates': [],
+        'full_disk_path': None,
+        'library': None,
+    }
+    fields.update(overrides)
+    return SimpleNamespace(**fields)
+
+
 class TestGameDetails:
     """Test game details functionality."""
 
     @patch('gametheca.routes_discover.game_card_flags')
     def test_discover_game_data_matches_shared_card_shape(
-        self, mock_game_card_flags
+        self, mock_game_card_flags, tmp_path
     ):
         from gametheca.routes_discover import serialize_discover_game
 
-        app = Flask(__name__)
+        # root_path decides where cover placeholders are rendered. Plain
+        # `Flask(__name__)` puts it at tests/, so a resolved title wrote a real
+        # JPEG into tests/static/library/generated/covers/ in the checkout.
+        app = Flask(__name__, root_path=str(tmp_path))
         mock_game_card_flags.return_value = {'is_vr': True}
-        game = Mock(
-            id=1,
-            uuid='discover-game',
-            name='Discover Game',
-            summary='Summary',
-            url='https://example.test/game',
-            size=1024,
-            genres=[],
-            first_release_date=None,
-        )
-        cover_image = Mock(url='cover.jpg')
+        game = _discover_game(url='https://example.test/game', size=1024)
 
-        with app.test_request_context():
+        # What this test is about is the card *shape* — that the serializer
+        # passes the resolver's answer through. Whether a local cover file is
+        # on disk is resolve_cover_url's own contract, covered in
+        # test_utils_cover_url.py, and depending on it here made the assertion
+        # a statement about the developer's filesystem.
+        with app.test_request_context(), patch(
+            'gametheca.routes_discover.resolve_game_cover_url',
+            return_value='/static/library/images/cover.jpg',
+        ):
             result = serialize_discover_game(
                 game,
-                cover_image,
+                SimpleNamespace(url='cover.jpg', download_url='', is_downloaded=True),
                 is_favorite=True,
                 has_local_override=True,
             )
@@ -284,26 +319,24 @@ class TestGameDetails:
         assert result['lifecycle_state'] == 'not_downloaded'
         assert result['client_connected'] is False
 
-    def test_discover_game_data_preserves_static_cover_url(self):
+    def test_discover_game_data_preserves_static_cover_url(self, tmp_path):
         from gametheca.routes_discover import serialize_discover_game
 
-        app = Flask(__name__)
-        game = Mock(
-            id=1,
-            uuid='discover-game',
-            name='Discover Game',
-            summary='Summary',
-            url=None,
-            size=0,
-            genres=[],
-            first_release_date=None,
-            player_perspectives=[],
-        )
+        # Same reason as above: cover resolution runs for real here, and its
+        # placeholder step writes to root_path.
+        app = Flask(__name__, root_path=str(tmp_path))
+        game = _discover_game()
 
+        # No patching here: an already-app-static cover URL passing through
+        # untouched is exactly the behaviour under test.
         with app.test_request_context():
             result = serialize_discover_game(
                 game,
-                Mock(url='/static/covers/discover.jpg'),
+                SimpleNamespace(
+                    url='/static/covers/discover.jpg',
+                    download_url='',
+                    is_downloaded=False,
+                ),
                 is_favorite=False,
                 has_local_override=False,
             )

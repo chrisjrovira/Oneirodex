@@ -174,7 +174,7 @@ def test_game_url(db_session, test_game):
 class TestGameDetailsRouteAuthentication:
     """Test authentication and access control for game details route."""
     
-    def test_game_details_requires_login(self, client, test_game):
+    def test_game_details_requires_login(self, client, test_game, configured_install):
         """Test that game details route requires authentication."""
         response = client.get(f'/game_details/{test_game.uuid}')
         assert response.status_code == 302  # Redirect to login

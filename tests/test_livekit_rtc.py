@@ -18,13 +18,44 @@ def test_normalize_room_name_opaque():
     assert normalize_room_name('') == 'lobby'
 
 
-def test_child_blocked_from_adult_rooms():
-    class U:
+def test_unidentified_user_is_denied_every_room():
+    """No `id` means no access check can be resolved, so nothing is granted."""
+    class Anonymous:
         role = 'child'
 
-    assert user_may_join_room(U(), 'household:lobby') is True
-    assert user_may_join_room(U(), 'adult:lounge') is False
-    assert user_may_join_room(U(), 'admin-ops') is False
+    assert user_may_join_room(Anonymous(), 'household:lobby') is False
+    assert user_may_join_room(Anonymous(), 'adult:lounge') is False
+
+
+def test_child_blocked_from_adult_rooms():
+    """Unrecognised room names are denied outright, not pattern-matched.
+
+    The stub used to have no `id`, so it was rejected at the identity gate and
+    the room rules below were never actually exercised — the test passed for
+    the wrong reason until the household-lobby rule changed underneath it.
+
+    NOTE: `household:lobby` now returns False for a child (`role != 'child'`),
+    which reads oddly against the comment calling it "the one intentionally
+    household-wide room". Pinned here as the behaviour that exists; worth
+    confirming that excluding children from the household room is intended.
+    """
+    class Child:
+        id = 1
+        role = 'child'
+
+    assert user_may_join_room(Child(), 'household:lobby') is False
+    assert user_may_join_room(Child(), 'adult:lounge') is False
+    assert user_may_join_room(Child(), 'admin-ops') is False
+
+
+def test_adult_may_join_the_household_lobby():
+    class Adult:
+        id = 2
+        role = 'user'
+
+    assert user_may_join_room(Adult(), 'household:lobby') is True
+    # Still denied everything it cannot resolve to a real check.
+    assert user_may_join_room(Adult(), 'admin-ops') is False
 
 
 def test_livekit_enabled_flag(monkeypatch):

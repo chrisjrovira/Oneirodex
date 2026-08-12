@@ -231,7 +231,7 @@ class TestHelperFunctions:
 class TestSystemLogsRoute:
     """Test the system_logs route."""
     
-    def test_system_logs_requires_login(self, client):
+    def test_system_logs_requires_login(self, client, configured_install):
         """Test that system logs page requires login."""
         response = client.get('/admin/system_logs')
         assert response.status_code == 302
@@ -425,7 +425,9 @@ class TestCustomDiscoveryZones:
             content_type='application/json',
         )
         assert response.status_code == 400
-        assert 'not found' in response.get_json()['error']
+        # Wording is the product's: "None of the provided game UUIDs were found".
+        # The old 'not found' substring predates it and matched nothing.
+        assert 'were found' in response.get_json()['error']
 
     def test_create_filter_zone_by_library(self, client, admin_user, db_session, test_libraries_for_zones):
         self._login(client, admin_user)

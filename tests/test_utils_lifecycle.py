@@ -78,8 +78,11 @@ def test_serialize_discover_game_includes_lifecycle_fields(app):
         player_perspectives=[],
     )
 
+    # `resolve_game_cover_url`, not `resolve_cover_url`: routes_discover imports
+    # the game-aware wrapper, and patching the name it does not hold raises
+    # AttributeError before the assertions below ever run.
     with app.app_context(), patch(
-        'gametheca.routes_discover.resolve_cover_url',
+        'gametheca.routes_discover.resolve_game_cover_url',
         return_value='/static/newstyle/default_cover.jpg',
     ):
         result = serialize_discover_game(

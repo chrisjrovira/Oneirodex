@@ -97,7 +97,10 @@ class TestDownloadsRoute:
         
         response = client.get('/downloads')
         assert response.status_code == 200
-        assert b'Test Game' in response.data or b'manage_downloads' in response.data
+        # `/downloads` is a member SPA shell (`render_member_spa()`) — the list
+        # is fetched by the app, so no game name is ever in this HTML. Asserting
+        # one meant asserting against a page the route stopped rendering.
+        assert b'member-app-root' in response.data
     
     def test_downloads_route_user_isolation(self, client, authenticated_user, admin_user, sample_download_request, db_session):
         """Test that users can only see their own downloads."""

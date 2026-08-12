@@ -225,7 +225,11 @@ def test_build_ops_summary_host_enrichment_none_when_unavailable():
     assert result['host']['process'] is None
     assert result['host']['db_ping_ms'] is None
     assert result['services']['readyz'] is None
-    assert result['issues']['overall'] == 'good'
+    # Not 'good'. `load_avg`/`process` really are optional enrichment and are
+    # ignored, but a missing db_ping is read as "database unreachable" and a
+    # missing readyz as "readiness unknown" — both feed derive_issues now, and
+    # calling that healthy would be the summary lying about a down database.
+    assert result['issues']['overall'] == 'bad'
 
 
 def test_scan_snapshot_counts_active_folder_failures():

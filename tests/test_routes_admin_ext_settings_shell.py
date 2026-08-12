@@ -133,7 +133,7 @@ class TestSettingsShellRoute:
 
     """Test GET /admin/settings (the hub page)."""
 
-    def test_requires_login(self, client):
+    def test_requires_login(self, client, configured_install):
         response = client.get('/admin/settings')
         assert response.status_code == 302
         assert 'login' in response.location

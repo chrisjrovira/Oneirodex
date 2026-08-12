@@ -150,7 +150,7 @@ class TestSettingsContextProcessor:
 class TestSettingsProfileEdit:
     """Test the settings_profile_edit route."""
     
-    def test_get_profile_edit_requires_login(self, client):
+    def test_get_profile_edit_requires_login(self, client, configured_install):
         """Test that GET request requires login."""
         response = client.get('/settings_profile_edit')
         assert response.status_code == 302

@@ -103,13 +103,13 @@ def sample_statistics_data():
 class TestStatisticsRoutes:
     """Test statistics routes in downloads extension."""
 
-    def test_statistics_page_unauthenticated(self, client):
+    def test_statistics_page_unauthenticated(self, client, configured_install):
         """Test unauthenticated access to statistics page."""
         response = client.get('/admin/statistics')
         assert response.status_code == 302  # Redirect to login
         assert '/login' in response.location
 
-    def test_statistics_data_unauthenticated(self, client):
+    def test_statistics_data_unauthenticated(self, client, configured_install):
         """Test unauthenticated access to statistics data endpoint."""
         response = client.get('/admin/statistics/data')
         assert response.status_code == 302  # Redirect to login
@@ -267,9 +267,23 @@ class TestStatisticsIntegration:
         assert len(data['users_with_invites']['labels']) > 0
         assert len(data['top_collectors']['labels']) > 0
         
-        # Verify data consistency
-        for section in data.values():
-            assert len(section['labels']) == len(section['data'])
+        # Verify data consistency across the chart sections.
+        #
+        # Not every value is a chart any more: UX-C13 added `totals` (a dict of
+        # headline counts) and `top_games_table` (a list of rows), so the old
+        # blanket loop indexed a list with 'labels' and raised TypeError.
+        chart_sections = {
+            name: section
+            for name, section in data.items()
+            if isinstance(section, dict) and 'labels' in section
+        }
+        assert chart_sections, 'expected at least one labels/data chart section'
+        for name, section in chart_sections.items():
+            assert len(section['labels']) == len(section['data']), name
+
+        # The non-chart additions have their own shapes worth pinning.
+        assert isinstance(data['totals'], dict)
+        assert all({'name', 'downloads'} <= set(row) for row in data['top_games_table'])
 
     @patch('gametheca.routes_downloads_ext.statistics.get_download_statistics')
     def test_statistics_error_handling(self, mock_stats, client, admin_user):

@@ -152,10 +152,14 @@ class TestGetDiskUsage:
             mock_disk_usage.assert_called_once_with('C:\\test\\windows\\path')
 
     @patch('gametheca.utils.system_stats.os.path.exists')
+    @patch('gametheca.utils.system_stats.os.name', 'posix')
     def test_get_disk_usage_path_not_exists(self, mock_exists):
         """Test disk usage when base path doesn't exist."""
         mock_exists.return_value = False
-        
+
+        # os.name is pinned like every sibling here. get_disk_usage picks
+        # BASE_FOLDER_WINDOWS when os.name == 'nt', so on Windows this stubbed
+        # only the branch that never ran and asserted a call that never happened.
         with patch('gametheca.utils.system_stats.Config') as mock_config:
             mock_config.BASE_FOLDER_POSIX = '/nonexistent/path'
             

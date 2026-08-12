@@ -141,7 +141,7 @@ def form_data(test_library, test_developer, test_publisher):
 class TestGameEditAuthentication:
     """Test authentication and access control for game edit route."""
     
-    def test_game_edit_requires_login(self, client, test_game):
+    def test_game_edit_requires_login(self, client, test_game, configured_install):
         """Test that game edit route requires authentication."""
         response = client.get(f'/game_edit/{test_game.uuid}')
         assert response.status_code == 302  # Redirect to login

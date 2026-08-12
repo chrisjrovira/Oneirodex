@@ -150,7 +150,7 @@ def test_game_with_unsafe_path(db_session, test_library):
 class TestPlayGameRoute:
     """Test the /play_game/<game_uuid> route."""
     
-    def test_play_game_requires_login(self, client, test_game_with_file):
+    def test_play_game_requires_login(self, client, test_game_with_file, configured_install):
         """Test that play_game requires login."""
         response = client.get(f'/play_game/{test_game_with_file.uuid}')
         assert response.status_code == 302  # Should redirect to login
@@ -164,8 +164,11 @@ class TestPlayGameRoute:
         
         response = client.get(f'/play_game/{test_game_with_file.uuid}', follow_redirects=True)
         assert response.status_code == 200
-        # Should contain flash message about functionality coming soon
-        assert b'Play game functionality coming soon!' in response.data
+        # The placeholder ("coming soon") is gone: play_game now redirects to
+        # WebRetro when the title is browser-playable, and otherwise says why
+        # and sends the user to details. This fixture is not playable, which is
+        # also what test_play_game_redirects_with_flash pins.
+        assert b'not playable in the browser' in response.data
     
     def test_play_game_redirects_with_flash(self, client, authenticated_user, test_game_with_file):
         """Test that play_game redirects with proper flash message."""
@@ -196,8 +199,9 @@ class TestPlayRomTestRoute:
         
         response = client.get('/playromtest', follow_redirects=True)
         assert response.status_code == 200
-        # Check for flash message
-        assert b'Play game functionality coming soon!' in response.data
+        # /playromtest is the legacy route; it now points people at the per-game
+        # Play button rather than promising a feature.
+        assert b'Use Play from a game details page for browser emulation.' in response.data
 
 
 class TestDownloadRomRoute:

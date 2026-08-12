@@ -197,7 +197,10 @@ class TestMainBlueprint:
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
         response = client.get('/browse_games')
-        game = response.get_json()['games'][0]
+        # Same reason as the lifecycle test below: index 0 is not necessarily
+        # this test's game once other tests in the file have added their own.
+        games = response.get_json()['games']
+        game = next(g for g in games if g['uuid'] == test_game.uuid)
         assert 'has_local_override' in game
         assert isinstance(game['has_local_override'], bool)
         assert 'is_vr' in game
@@ -215,7 +218,12 @@ class TestMainBlueprint:
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
         response = client.get('/browse_games')
-        game = response.get_json()['games'][0]
+        # Find this test's game rather than trusting index 0. /browse_games
+        # sorts by name, and earlier tests in this file leave their games in the
+        # database, so games[0] is whichever title happens to sort first — the
+        # assertion was reading a different row's lifecycle.
+        games = response.get_json()['games']
+        game = next(g for g in games if g['uuid'] == test_game.uuid)
         assert game['lifecycle_state'] == 'update_available'
         assert game['client_connected'] is False
 
@@ -570,20 +578,29 @@ class TestMainBlueprint:
     @patch('gametheca.routes.is_scan_job_running')
     @patch('gametheca.routes.PILImage.open')
     @patch('gametheca.routes.os.path.join')
-    def test_upload_image_success(self, mock_path_join, mock_pil_open, mock_is_scan_running, 
-                                 mock_current_user, client, app, db_session, admin_user, test_game):
+    def test_upload_image_success(self, mock_path_join, mock_pil_open, mock_is_scan_running,
+                                 mock_current_user, client, app, db_session, admin_user, test_game,
+                                 tmp_path):
         """Test successful image upload."""
         mock_current_user.is_authenticated = True
         mock_current_user.role = 'admin'
         mock_is_scan_running.return_value = False
-        
+
         # Mock PIL image
         mock_img = Mock()
         mock_img.width = 800
         mock_img.height = 600
         mock_pil_open.return_value = mock_img
-        
-        mock_path_join.return_value = '/tmp/test_image.jpg'
+
+        # A real directory the route can actually write into. The hardcoded
+        # '/tmp/test_image.jpg' could never pass on Windows — there is no /tmp —
+        # so the save raised FileNotFoundError before any assertion ran.
+        #
+        # Built by concatenation, not `tmp_path / name`: patching
+        # 'gametheca.routes.os.path.join' replaces os.path.join *globally*
+        # (gametheca.routes.os is the os module itself), and pathlib joins
+        # through it — so the operator would return the mock's own value here.
+        mock_path_join.return_value = str(tmp_path) + '/test_image.jpg'
         
         # Create test file
         test_file = FileStorage(

@@ -493,18 +493,20 @@ class TestUnmatchedFolders:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
         
-        # Mock the query to return None platform (simulating edge case)
+        # Substitute only the platform — the row itself stays real.
+        #
+        # This used to hand the route a bare `Mock()` with three attributes set.
+        # The serialized row has since grown match_reason, match_score,
+        # search_name, display_name, library_uuid and the disk-meta fields, all
+        # read with getattr; a Mock invents every one of them, so the response
+        # died in jsonify ("Object of type Mock is not JSON serializable")
+        # rather than exercising the None-platform branch this test is named for.
         with patch('gametheca.routes_apis.scan.db.session.execute') as mock_execute:
-            # Create a mock result that simulates None platform
-            mock_result_row = Mock()
-            mock_result_row.id = unmatched.id
-            mock_result_row.folder_path = unmatched.folder_path
-            mock_result_row.status = unmatched.status
-            library_name = sample_library.name
-            platform = None  # None platform to test edge case
-            
-            mock_execute.return_value.all.return_value = [(mock_result_row, library_name, platform)]
-            
+            platform = None  # the edge case under test
+            mock_execute.return_value.all.return_value = [
+                (unmatched, sample_library.name, platform)
+            ]
+
             response = client.get('/api/unmatched_folders')
             assert response.status_code == 200
             
