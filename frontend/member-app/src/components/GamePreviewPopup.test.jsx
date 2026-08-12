@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { expect, test, vi } from 'vitest'
-import { GamePreviewPopup } from './GamePreviewPopup'
+import { GamePreviewPopup, formatAdded, previewBadges } from './GamePreviewPopup'
 
 const GAME = {
   uuid: 'abc-123',
@@ -30,6 +30,48 @@ test('shows the shortened detail a member scans before opening the page', () => 
   expect(screen.getByText('PC Windows')).toBeInTheDocument()
   expect(screen.getByText('8.2 GB')).toBeInTheDocument()
   expect(screen.getByText(/Puzzle · Adventure/)).toBeInTheDocument()
+})
+
+test('surfaces the state that changes what you can do with the title', () => {
+  renderPopup({
+    game: {
+      ...GAME,
+      path_missing: true,
+      has_updates: true,
+      updates_count: 3,
+      owned: true,
+      is_vr: true,
+      is_multi_disc: true,
+      disc_count: 2,
+      date_identified: '2026-02-10T12:00:00Z',
+    },
+  })
+
+  expect(screen.getByText('Files missing on disk')).toBeInTheDocument()
+  expect(screen.getByText('3 updates')).toBeInTheDocument()
+  expect(screen.getByText('Owned')).toBeInTheDocument()
+  expect(screen.getByText('VR')).toBeInTheDocument()
+  expect(screen.getByText('2 discs')).toBeInTheDocument()
+  expect(screen.getByText(/Added/)).toBeInTheDocument()
+})
+
+test('a title with nothing notable about it gets no badges', () => {
+  expect(previewBadges(GAME)).toEqual([])
+})
+
+test('browser-playable and catalog-only are distinct, not both "no"', () => {
+  expect(previewBadges({ can_play_in_browser: true }).map((b) => b.id)).toContain('play')
+  expect(previewBadges({ play_blocker: 'catalog_only' }).map((b) => b.id)).toContain('catalog')
+})
+
+test('a missing-files title is warned about, not decorated', () => {
+  const [first] = previewBadges({ path_missing: true, owned: true })
+  expect(first.tone).toBe('warn')
+})
+
+test('formatAdded ignores values it cannot read rather than printing junk', () => {
+  expect(formatAdded(null)).toBeNull()
+  expect(formatAdded('not-a-date')).toBeNull()
 })
 
 test('links through to the real details route', () => {

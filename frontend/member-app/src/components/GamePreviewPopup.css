@@ -74,6 +74,49 @@
   line-height: 1.25;
 }
 
+/* State that changes what you can do with the title, above the neutral facts
+   so it is read first. Colour carries meaning here: `warn` means you cannot
+   play this right now. */
+.gt-preview__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.5rem;
+}
+
+.gt-preview__badge {
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+
+.gt-preview__badge--good {
+  color: var(--gt-success, #2fd67b);
+  border-color: color-mix(in srgb, var(--gt-success, #2fd67b) 45%, transparent);
+  background: color-mix(in srgb, var(--gt-success, #2fd67b) 12%, transparent);
+}
+
+.gt-preview__badge--info {
+  color: var(--gt-accent, #2fd67b);
+  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 12%, transparent);
+}
+
+.gt-preview__badge--warn {
+  color: var(--gt-danger, #f2777a);
+  border-color: color-mix(in srgb, var(--gt-danger, #f2777a) 50%, transparent);
+  background: color-mix(in srgb, var(--gt-danger, #f2777a) 14%, transparent);
+}
+
+.gt-preview__badge--muted {
+  color: var(--gt-text-muted, #9aa3b2);
+  border-color: var(--gt-border, rgba(255, 255, 255, 0.14));
+  background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 70%, transparent);
+}
+
 .gt-preview__facts {
   display: flex;
   flex-wrap: wrap;
