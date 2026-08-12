@@ -619,7 +619,10 @@ def upload_image(game_uuid):
     max_width, max_height = 1200, 1600
     if image_type == 'cover':
         if img.width > max_width or img.height > max_height:
-            img.thumbnail((max_width, max_height), PILImage.ANTIALIAS)
+            # LANCZOS, not ANTIALIAS: the latter was deprecated in Pillow 9.1
+            # and removed in 10, so this line raised AttributeError on every
+            # oversized cover upload. Same filter every other resize here uses.
+            img.thumbnail((max_width, max_height), PILImage.LANCZOS)
     file.seek(0) 
     # Efficient file size check
     if file.content_length > 3 * 1024 * 1024:  # 3MB in bytes
