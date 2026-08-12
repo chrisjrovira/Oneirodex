@@ -57,7 +57,14 @@ def test_quality_score_blocks_group(app, db_session):
     from sqlalchemy.orm.attributes import flag_modified
     from gametheca.utils.quality_profiles import save_quality_profile
 
-    settings = db_session.execute(select(GlobalSettings).limit(1)).scalars().first()
+    # Ordered by id, like the product's own `_settings_row()`. A bare `limit(1)`
+    # has no defined order in Postgres, so once the suite has left more than one
+    # GlobalSettings row around, the test can configure one row while
+    # quality_profiles reads another — which surfaced as a profile id that was
+    # active but absent from the store it was looked up in.
+    settings = db_session.execute(
+        select(GlobalSettings).order_by(GlobalSettings.id).limit(1)
+    ).scalars().first()
     if not settings:
         settings = GlobalSettings()
         db_session.add(settings)
@@ -88,7 +95,14 @@ def test_quality_score_blocks_group(app, db_session):
 def test_arr_status_disabled(client, app, admin, db_session):
     _login(client, app, admin)
     app.config['ENABLE_ARR_MODULE'] = False
-    settings = db_session.execute(select(GlobalSettings).limit(1)).scalars().first()
+    # Ordered by id, like the product's own `_settings_row()`. A bare `limit(1)`
+    # has no defined order in Postgres, so once the suite has left more than one
+    # GlobalSettings row around, the test can configure one row while
+    # quality_profiles reads another — which surfaced as a profile id that was
+    # active but absent from the store it was looked up in.
+    settings = db_session.execute(
+        select(GlobalSettings).order_by(GlobalSettings.id).limit(1)
+    ).scalars().first()
     if settings:
         settings.enable_arr_module = False
         db_session.commit()

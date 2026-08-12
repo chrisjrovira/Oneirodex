@@ -130,7 +130,11 @@ def test_browse_games_includes_path_status(client, db_session, path_user, path_l
     db_session.commit()
 
     _login(client, path_user)
-    response = client.get('/browse_games?per_page=50')
+    # Scoped to this test's library. /browse_games sorts by name and paginates,
+    # so with games left behind by other files the two titles below can simply
+    # fall off the first page — which showed up as a KeyError on a title the
+    # test had definitely just created.
+    response = client.get(f'/browse_games?per_page=50&library_uuid={path_library.uuid}')
     assert response.status_code == 200
     by_name = {g['name']: g for g in response.get_json()['games']}
     assert by_name['Path OK Title']['path_status'] == 'ok'

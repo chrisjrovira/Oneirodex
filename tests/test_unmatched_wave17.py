@@ -95,7 +95,13 @@ def test_list_filters_q_why_kind_library(client, app, db_session, admin, lib):
     assert all('Alpha Soft' in (r.get('folder_path') or '') or r.get('search_name') == 'Alpha Soft'
                for r in by_q.get_json() if r['id'] == keep.id)
 
-    by_why = client.get('/api/unmatched_folders', query_string={'why': 'title_below_threshold'})
+    # Scoped by library, like the suggested_kind query below. An exact-set
+    # assertion over every unmatched folder in the database picks up any row
+    # another file left behind with the same `why`.
+    by_why = client.get('/api/unmatched_folders', query_string={
+        'why': 'title_below_threshold',
+        'library_uuid': lib.uuid,
+    })
     assert by_why.status_code == 200
     assert {r['id'] for r in by_why.get_json()} == {keep.id}
 

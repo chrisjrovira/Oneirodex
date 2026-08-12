@@ -76,7 +76,14 @@ def _login(client, app, user):
 
 
 def _ensure_arr_settings(db_session, **extra):
-    settings = db_session.execute(select(GlobalSettings).limit(1)).scalars().first()
+    # Ordered by id, like the product's settings reads. A bare `limit(1)` has no
+    # defined order in Postgres, so with more than one GlobalSettings row around
+    # these helpers could write the indexer list to one row while the code under
+    # test read another — which is how indexers from an earlier test reappeared
+    # in a later test's assertions despite the wipe below.
+    settings = db_session.execute(
+        select(GlobalSettings).order_by(GlobalSettings.id).limit(1)
+    ).scalars().first()
     if not settings:
         settings = GlobalSettings()
         db_session.add(settings)

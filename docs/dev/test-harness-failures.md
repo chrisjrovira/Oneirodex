@@ -12,6 +12,7 @@ behind. Truncating between files is what makes the numbers mean anything.
 |---|---:|---:|
 | Failures reproducing from a clean DB | 92 | **0** |
 | Files affected | 32 | **0** |
+| Full run | 113 failed, 3071 passed | **0 failed, 3193 passed** |
 
 The 2026-08-07 per-file table is not reproduced here: it was stale as a work
 list within days. Four files that it recorded as failing once or twice failed
@@ -60,6 +61,36 @@ whole set. Seven failures were the product's:
 * **`/game_edit` had no scan-job guard**, though image upload/delete and game
   delete all refuse during a scan. Added, so an edit can no longer be silently
   overwritten by a scan writing the same rows.
+
+## The 23 that only failed inside a full run
+
+These were the group set aside on 2026-08-07 as "real order-dependence, worth
+fixing but a different job", and the job was expected to be transactional
+isolation. It was not. Every one had a specific cause, and an empty database per
+test would have concealed all of them rather than fixing any:
+
+* **15 — `get_games` read the settings singleton with an unfiltered
+  `select(GlobalSettings)).scalar_one_or_none()`, inside the per-game loop.**
+  Two rows in that table and every call raises `MultipleResultsFound`. Every
+  other settings read in the codebase already takes the first row by id. Now
+  hoisted out of the loop and tolerant, which also removes one full-table query
+  per game rendered.
+* **6 — `select(GlobalSettings).limit(1)` with no `order_by` in tests.**
+  Postgres guarantees no ordering, so with more than one row a test could write
+  its configuration to one row while the code under test read another.
+  `test_indexer_registry`'s helper wipes hub URLs so tests "do not inherit prior
+  Prowlarr/Jackett keys" — it was writing that wipe to a row nobody read.
+* **2 — assertions over every row in the database.** `browse_path_status`
+  fetched `/browse_games` unscoped, so games from other files pushed its titles
+  off the first page; `test_unmatched_wave17` asserted an exact id set across all
+  unmatched folders. Both are scoped to their own library now — which is what
+  the neighbouring query in that same test was already doing.
+
+`test_login_rate_limit.py` was also leaking: it set `ENABLE_LOGIN_RATE_LIMIT`
+and a 3-attempt window process-wide in `setup_function`, and the teardown reset
+only the limiter's own state, so every file after it ran with login rate
+limiting on. Saved and restored now. It was not causing any of the 23, which is
+worth saying — it was found while looking for a shared cause that did not exist.
 
 ## Two traps worth not re-deriving
 

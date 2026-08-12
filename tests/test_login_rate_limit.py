@@ -5,15 +5,34 @@ import os
 from gametheca.utils import login_rate_limit as lrl
 
 
+_ENV = {
+    'ENABLE_LOGIN_RATE_LIMIT': 'true',
+    'LOGIN_RATE_LIMIT_ATTEMPTS': '3',
+    'LOGIN_RATE_LIMIT_WINDOW_SECONDS': '60',
+}
+
+_saved: dict[str, str | None] = {}
+
+
 def setup_function():
+    # Saved and restored rather than just set. These are process-wide, and the
+    # teardown reset only the limiter's own state — so every file that ran after
+    # this one did so with login rate limiting switched on and a 3-attempt
+    # window, which is not what any of them meant to test.
     lrl.reset_for_tests()
-    os.environ['ENABLE_LOGIN_RATE_LIMIT'] = 'true'
-    os.environ['LOGIN_RATE_LIMIT_ATTEMPTS'] = '3'
-    os.environ['LOGIN_RATE_LIMIT_WINDOW_SECONDS'] = '60'
+    for key, value in _ENV.items():
+        _saved[key] = os.environ.get(key)
+        os.environ[key] = value
 
 
 def teardown_function():
     lrl.reset_for_tests()
+    for key, previous in _saved.items():
+        if previous is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = previous
+    _saved.clear()
 
 
 def test_not_limited_until_threshold():

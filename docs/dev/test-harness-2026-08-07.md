@@ -62,6 +62,12 @@ The 113 is not new. It matches the figure that had been carried in notes as
 "cross-file state leakage"; what was new is that the run could reach the end
 and report it.
 
+**2026-08-12: 3193 passed, 0 failed in 23:35.** See
+[test-harness-failures.md](test-harness-failures.md) for what the 113 turned out
+to be — the short version is 92 stale-or-defective from a clean database and 23
+that needed the rest of the suite, and that the second group did *not* need the
+transactional isolation this document proposed for it.
+
 ## Two wrong theories, recorded so they are not re-derived
 
 **"Rows accumulate in the test database."** They do — a run left 98 users, 89
@@ -120,9 +126,20 @@ a boot or Admin → Reset Default Themes rebuilds it).
 
 ## Still open
 
-* **No isolation between tests.** Real isolation means wrapping each test in a
-  rolled-back transaction. That is invasive here because route tests go through
-  the Flask test client, which takes its own connection from the pool and so
-  would not see the test's uncommitted data — the standard fix is to bind every
-  session to one connection, and it deserves its own verified change rather
-  than being tacked onto this one.
+* **No isolation between tests.** Rows still accumulate: nothing resets the test
+  database between files, and a run still ends with users, libraries and games
+  from every file that made them.
+
+  This was going to be fixed by wrapping each test in a rolled-back transaction,
+  binding every session to one connection so the Flask test client could see
+  uncommitted data. **That turned out to be the wrong tool for the 23 failures
+  it was proposed for**, and the change was not made. Each of the 23 had a
+  specific cause — an unfiltered `scalar_one_or_none()` on a singleton table,
+  `limit(1)` without `order_by`, and two assertions written against every row in
+  the database instead of the test's own. Transactions would have hidden all
+  four behind an empty database rather than fixing any of them, at the cost of a
+  change touching all 3,193 tests.
+
+  Accumulation is still worth removing on its own merits — it makes runs slower
+  and every unscoped assertion a latent failure. It is no longer blocking a
+  green suite, so it should be done deliberately rather than under pressure.
