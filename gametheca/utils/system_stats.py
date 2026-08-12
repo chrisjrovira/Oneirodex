@@ -69,10 +69,6 @@ def get_games_folder_usage():
         return None
 
 
-def get_warez_folder_usage():
-    """Deprecated alias for get_games_folder_usage."""
-    return get_games_folder_usage()
-
 def format_bytes(bytes_value):
     """Convert bytes to human readable format"""
     if bytes_value is None:

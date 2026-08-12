@@ -6,7 +6,6 @@ from gametheca.utils.system_stats import (
     get_memory_usage,
     get_disk_usage,
     get_games_folder_usage,
-    get_warez_folder_usage,
     format_bytes,
     get_process_count,
     get_open_files
@@ -245,12 +244,6 @@ class TestGetGamesFolderUsage:
             assert result is None
             mock_print.assert_called_once()
             assert 'Error getting games folder disk usage' in str(mock_print.call_args)
-
-    def test_get_warez_folder_usage_alias(self):
-        """Deprecated alias delegates to get_games_folder_usage."""
-        with patch('gametheca.utils.system_stats.get_games_folder_usage', return_value={'percent': 1}) as mock_get:
-            assert get_warez_folder_usage() == {'percent': 1}
-            mock_get.assert_called_once()
 
 
 class TestFormatBytes:
