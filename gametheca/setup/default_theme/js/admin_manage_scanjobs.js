@@ -1518,7 +1518,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const updateUnmatchedFolders = () => {
         showSpinner();
         const priorSelected = new Set(unmatchedSelectedIds);
-        return fetchUnmatchedList()
+        // Reasons are fetched once and then cached, so the picker is populated
+        // before the first row is built rather than appearing on a later redraw.
+        const reasonsReady = badMatchReasons.length
+            ? Promise.resolve()
+            : loadBadMatchReasons();
+        return reasonsReady
+            .then(() => fetchUnmatchedList())
             .then((data) => enrichUnmatchedWithDuplicates(data))
             .then((data) => {
                 unmatchedTableBody.innerHTML = '';
@@ -1612,6 +1618,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </form>
                         ${markKindButtons}
                         ${dupeFixButtons}
+                        ${badMatchControl(folder)}
                         <button
                             type="button"
                             onclick="window.toggleIgnoreStatus('${folder.id}', this)"
@@ -1724,6 +1731,93 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Copy path / reveal path — event delegation so re-rendered rows stay wired
+    // --- UX-C5: "this proposed match is wrong", with a reason ----------------
+    //
+    // Feedback, not triage: flagging never changes the row's status and never
+    // touches the library, which is what the endpoint already guarantees. The
+    // vocabulary is served rather than hardcoded so it can grow without a
+    // template change; if that fetch fails the picker is simply absent and the
+    // rest of the table still works.
+    let badMatchReasons = [];
+
+    function loadBadMatchReasons() {
+        return fetch('/api/unmatched/bad_match_reasons', { credentials: 'same-origin' })
+            .then((response) => (response.ok ? response.json() : null))
+            .then((data) => {
+                badMatchReasons = Array.isArray(data && data.reasons) ? data.reasons : [];
+            })
+            .catch(() => {
+                badMatchReasons = [];
+            });
+    }
+
+    function badMatchControl(folder) {
+        if (!badMatchReasons.length) return '';
+        const current = String(folder.bad_match_reason || '');
+        const options = ['<option value="">Not flagged</option>']
+            .concat(badMatchReasons.map((reason) => {
+                const id = escapeHtml(String(reason.id));
+                const selected = current === String(reason.id) ? ' selected' : '';
+                return `<option value="${id}"${selected}>${escapeHtml(String(reason.label))}</option>`;
+            }))
+            .join('');
+        const flagged = current ? ' is-flagged' : '';
+        return `
+            <label class="unmatched-badmatch${flagged}" title="Tell the matcher this proposal is wrong">
+                <span class="unmatched-badmatch__label">Bad match</span>
+                <select class="unmatched-badmatch__select" data-folder-id="${escapeHtml(String(folder.id))}" aria-label="Flag bad match for ${escapeHtml(String(folder.folder_path || folder.id))}">
+                    ${options}
+                </select>
+            </label>
+        `;
+    }
+
+    function submitBadMatch(folderId, reason, note, select) {
+        if (select) select.disabled = true;
+        const payload = { reason: reason || null };
+        if (note) payload.note = note;
+        return fetch(`/api/unmatched/${encodeURIComponent(folderId)}/bad_match`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify(payload),
+        })
+            .then((response) => response.json().catch(() => ({})).then((data) => {
+                if (!response.ok) throw new Error(data.error || 'Could not save that.');
+                return data;
+            }))
+            .catch((err) => {
+                window.alert(err.message || 'Could not save that.');
+            })
+            .finally(() => {
+                if (select) select.disabled = false;
+            });
+    }
+
+    document.addEventListener('change', (event) => {
+        const select = event.target.closest && event.target.closest('.unmatched-badmatch__select');
+        if (!select) return;
+        const folderId = select.getAttribute('data-folder-id');
+        const reason = select.value;
+        let note = null;
+        if (reason === 'other') {
+            // 'other' without a note is a shrug, and the API refuses it — so ask
+            // here rather than posting something known to fail.
+            note = window.prompt('What is wrong with this match?');
+            if (note == null || !note.trim()) {
+                select.value = '';
+                return;
+            }
+            note = note.trim();
+        }
+        const label = select.closest('.unmatched-badmatch');
+        if (label) label.classList.toggle('is-flagged', Boolean(reason));
+        void submitBadMatch(folderId, reason, note, select);
+    });
+
     // without re-escaping paths back into inline onclick strings (XSS-safe).
     function markUnmatchedKind(folderId, itemKind, name, button) {
         if (!folderId || !itemKind) return;

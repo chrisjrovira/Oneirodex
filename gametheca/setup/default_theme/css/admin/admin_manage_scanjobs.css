@@ -1689,6 +1689,44 @@ a.unmatched-dupe-of__title:hover {
     border-color: rgba(47, 214, 123, 0.55);
 }
 
+/* UX-C5 — "this proposed match is wrong", with a reason. Feedback only: it does
+   not change the row's status and does not touch the library. */
+.unmatched-badmatch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+
+.unmatched-badmatch__label {
+    font-size: 0.76rem;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    color: var(--gt-text-muted, #9aa3b2);
+    white-space: nowrap;
+}
+
+.unmatched-badmatch__select {
+    font-size: 0.78rem;
+    padding: 0.18rem 0.4rem;
+    border-radius: 6px;
+    color: var(--gt-text, #f2f4f8);
+    background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 80%, transparent);
+    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.16));
+    max-width: 14rem;
+}
+
+/* Warning-toned once flagged: the operator is saying the matcher got it wrong,
+   so it should not read like a healthy state chip. */
+.unmatched-badmatch.is-flagged .unmatched-badmatch__select {
+    border-color: color-mix(in srgb, var(--gt-warning, #f6c453) 60%, transparent);
+    background: color-mix(in srgb, var(--gt-warning, #f6c453) 16%, transparent);
+}
+
+.unmatched-badmatch.is-flagged .unmatched-badmatch__label {
+    color: var(--gt-warning, #f6c453);
+}
+
 .simple-unmatched-table th.col-library,
 .simple-unmatched-table td.col-library {
     width: 12%;
