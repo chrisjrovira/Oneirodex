@@ -19,6 +19,7 @@
   <a href="#-quick-start"><img src="https://img.shields.io/badge/port-5006-0b0d10?style=flat-square" alt="Port 5006" /></a>
   <a href="#-docker-compose"><img src="https://img.shields.io/badge/docker-compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose" /></a>
   <a href="docs/README.md"><img src="https://img.shields.io/badge/docs-index-555?style=flat-square" alt="Docs" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue?style=flat-square" alt="AGPL-3.0" /></a>
 </p>
 
 <p align="center">
@@ -313,7 +314,28 @@ Product version is tracked in [`VERSION`](VERSION). Desktop, member-app, and rel
 
 ## ⚖️ License / legal
 
-Use GameTheca only with software you are authorized to share. Unauthorized distribution of copyrighted material is not supported.
+GameTheca is licensed under the **[GNU Affero General Public License v3.0](LICENSE)**.
+
+In practice: you may run, study, modify and share it freely, and if you run a
+modified version **as a network service** you must offer those modifications to
+its users (AGPL §13). That last clause is the reason for AGPL over GPL here —
+this is a server people host for others.
+
+```
+Copyright (C) 2026 GameTheca contributors
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version. It is distributed WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Affero General Public License for more details.
+```
+
+**Content is separate from code.** The licence above covers GameTheca itself. It
+says nothing about the games, ROMs, BIOS or artwork you point it at — use
+GameTheca only with software you are authorized to share. Unauthorized
+distribution of copyrighted material is not supported.
 
 ---
 
