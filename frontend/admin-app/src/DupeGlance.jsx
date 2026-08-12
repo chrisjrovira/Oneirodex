@@ -394,6 +394,11 @@ export function DupeGlance({ onOpenPath }) {
   const [statusFilter, setStatusFilter] = useState('Duplicate')
   const [sortKey, setSortKey] = useState('folder')
   const [sortDir, setSortDir] = useState('asc')
+  // UX-C5: the vocabulary is served, never hardcoded here, so it can grow
+  // without a frontend release.
+  const [badMatchReasons, setBadMatchReasons] = useState([])
+  const [noteFor, setNoteFor] = useState(null)
+  const [noteText, setNoteText] = useState('')
 
   function load() {
     setLoading(true)
@@ -425,6 +430,46 @@ export function DupeGlance({ onOpenPath }) {
   useEffect(() => {
     void load()
   }, [])
+
+  useEffect(() => {
+    // Soft-degrade: without the vocabulary the rest of triage still works, so a
+    // failure here hides the picker rather than breaking the page.
+    getJson('/api/unmatched/bad_match_reasons')
+      .then((data) => setBadMatchReasons(Array.isArray(data?.reasons) ? data.reasons : []))
+      .catch(() => setBadMatchReasons([]))
+  }, [])
+
+  async function submitBadMatch(row, reason, note) {
+    setBusy(true)
+    setBusyFolderId(row.id)
+    setError(null)
+    try {
+      await postJson(`/api/unmatched/${row.id}/bad_match`, {
+        reason: reason || null,
+        ...(note ? { note } : {}),
+      })
+      setNoteFor(null)
+      setNoteText('')
+      await load()
+    } catch (err) {
+      setError(err)
+    } finally {
+      setBusy(false)
+      setBusyFolderId(null)
+    }
+  }
+
+  function handleBadMatchChange(row, reason) {
+    // 'other' is not feedback without a note — the API rejects it, so ask here
+    // rather than posting something we know will fail.
+    if (reason === 'other') {
+      setNoteFor(row.id)
+      setNoteText(row.bad_match_note || '')
+      return
+    }
+    setNoteFor(null)
+    void submitBadMatch(row, reason, null)
+  }
 
   const visible = useMemo(() => {
     if (statusFilter === 'all') return rows
@@ -764,6 +809,57 @@ export function DupeGlance({ onOpenPath }) {
                         </button>
                       </>
                     ) : null}
+                    {badMatchReasons.length ? (
+                      <label className="gt-dupe-glance__badmatch">
+                        <span className="gt-dupe-glance__badmatch-label">Bad match</span>
+                        <select
+                          className="gt-select"
+                          aria-label={`Flag bad match for ${row.folder_path || row.id}`}
+                          value={row.bad_match_reason || ''}
+                          disabled={busy}
+                          onChange={(event) => handleBadMatchChange(row, event.target.value)}
+                        >
+                          <option value="">Not flagged</option>
+                          {badMatchReasons.map((reason) => (
+                            <option key={reason.id} value={reason.id}>
+                              {reason.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : null}
+                    {noteFor === row.id ? (
+                      <span className="gt-dupe-glance__badmatch-note">
+                        <input
+                          type="text"
+                          className="gt-input"
+                          aria-label="Bad match note"
+                          placeholder="What is wrong with this match?"
+                          value={noteText}
+                          maxLength={500}
+                          onChange={(event) => setNoteText(event.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="gt-btn gt-btn--primary"
+                          disabled={busy || !noteText.trim()}
+                          onClick={() => void submitBadMatch(row, 'other', noteText.trim())}
+                        >
+                          Save note
+                        </button>
+                        <button
+                          type="button"
+                          className="gt-btn"
+                          disabled={busy}
+                          onClick={() => {
+                            setNoteFor(null)
+                            setNoteText('')
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </span>
+                    ) : null}
                   </div>
                   <div className="gt-dupe-glance__meta">
                     <div className="gt-dupe-glance__chips">
@@ -776,6 +872,16 @@ export function DupeGlance({ onOpenPath }) {
                           title="Suggested kind from scan proposal (software path)"
                         >
                           Suggested {SUGGESTED_KIND_LABELS[suggestedKind]}
+                        </span>
+                      ) : null}
+                      {row.bad_match_reason ? (
+                        <span
+                          className="gt-dupe-glance__badmatch-chip"
+                          title={row.bad_match_note || 'Flagged as a bad match'}
+                        >
+                          Bad match:{' '}
+                          {badMatchReasons.find((r) => r.id === row.bad_match_reason)?.label ||
+                            row.bad_match_reason}
                         </span>
                       ) : null}
                     </div>

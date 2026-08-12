@@ -136,6 +136,49 @@
   border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
 }
 
+/* UX-C5 — "this proposed match is wrong", with a reason. Feedback, not triage:
+   flagging changes nothing about the row's status or the library. */
+.gt-dupe-glance__badmatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.gt-dupe-glance__badmatch-label {
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--gt-text-muted, #9aa4b2);
+  white-space: nowrap;
+}
+
+.gt-dupe-glance__badmatch-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 22rem;
+  min-width: 14rem;
+}
+
+.gt-dupe-glance__badmatch-note .gt-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Warning-coloured rather than accent: this is the operator saying the matcher
+   got it wrong, and should not read like a healthy state chip. */
+.gt-dupe-glance__badmatch-chip {
+  width: fit-content;
+  font-size: 0.82rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  padding: 0.28rem 0.55rem;
+  border-radius: 6px;
+  color: var(--gt-text, #f2f4f8);
+  border: 1px solid color-mix(in srgb, var(--gt-warning, #f6c453) 55%, transparent);
+  background: color-mix(in srgb, var(--gt-warning, #f6c453) 14%, transparent);
+}
+
 .gt-dupe-glance__why {
   display: flex;
   flex-direction: column;

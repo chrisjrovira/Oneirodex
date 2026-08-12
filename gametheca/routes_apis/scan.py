@@ -254,6 +254,11 @@ def _unmatched_list_row(
         'search_name': _soft_name(getattr(folder, 'search_name', None)),
         'display_name': _soft_name(getattr(folder, 'display_name', None)),
         'matched_game': matched_game if include_matched else None,
+        # UX-C5 feedback state. Without these the triage UI cannot show that a
+        # row is already flagged, so an operator has no way to see their own
+        # earlier judgement — or to clear one set by mistake.
+        'bad_match_reason': getattr(folder, 'bad_match_reason', None),
+        'bad_match_note': getattr(folder, 'bad_match_note', None),
     }
     row.update(_unmatched_disk_meta_fields(folder))
     row.update(kind_fields)

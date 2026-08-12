@@ -35,6 +35,85 @@ beforeEach(() => {
   postJson.mockResolvedValue({ changed_count: 1, kept_count: 0 })
 })
 
+/** Rows plus the served bad-match vocabulary (UX-C5). */
+function mockWithBadMatch(rowOverrides = {}) {
+  const reasons = [
+    { id: 'wrong_game', label: 'Wrong game entirely' },
+    { id: 'duplicate_of_other', label: 'Duplicate of another entry' },
+    { id: 'other', label: 'Other' },
+  ]
+  getJson.mockImplementation(async (url) => {
+    if (String(url).includes('/api/unmatched/bad_match_reasons')) return { ok: true, reasons }
+    if (String(url).includes('/api/unmatched_folders')) {
+      return [
+        {
+          id: 1,
+          folder_path: '/games/Celeste',
+          status: 'Duplicate',
+          library_name: 'PC',
+          platform_name: 'PCWIN',
+          library_uuid: 'lib-1',
+          platform_id: 6,
+          match_reason: 'Same IGDB id as existing title',
+          ...rowOverrides,
+        },
+      ]
+    }
+    return []
+  })
+}
+
+test('flagging a bad match posts the reason', async () => {
+  const user = userEvent.setup()
+  mockWithBadMatch()
+  render(<DupeGlance onOpenPath={() => {}} />)
+  await screen.findByText('/games/Celeste')
+
+  const picker = await screen.findByLabelText('Flag bad match for /games/Celeste')
+  await user.selectOptions(picker, 'wrong_game')
+
+  await waitFor(() =>
+    expect(postJson).toHaveBeenCalledWith('/api/unmatched/1/bad_match', { reason: 'wrong_game' }),
+  )
+})
+
+test('"other" asks for a note before posting, because the API requires one', async () => {
+  const user = userEvent.setup()
+  mockWithBadMatch()
+  render(<DupeGlance onOpenPath={() => {}} />)
+  await screen.findByText('/games/Celeste')
+
+  await user.selectOptions(
+    await screen.findByLabelText('Flag bad match for /games/Celeste'),
+    'other',
+  )
+  // Nothing posted yet — a bare "other" is a shrug, and the API rejects it.
+  expect(postJson).not.toHaveBeenCalled()
+
+  await user.type(screen.getByLabelText('Bad match note'), 'Matched the soundtrack')
+  await user.click(screen.getByRole('button', { name: 'Save note' }))
+
+  await waitFor(() =>
+    expect(postJson).toHaveBeenCalledWith('/api/unmatched/1/bad_match', {
+      reason: 'other',
+      note: 'Matched the soundtrack',
+    }),
+  )
+})
+
+test('an existing flag is shown and can be cleared', async () => {
+  const user = userEvent.setup()
+  mockWithBadMatch({ bad_match_reason: 'wrong_game', bad_match_note: null })
+  render(<DupeGlance onOpenPath={() => {}} />)
+
+  expect(await screen.findByText(/Bad match: Wrong game entirely/)).toBeInTheDocument()
+
+  await user.selectOptions(screen.getByLabelText('Flag bad match for /games/Celeste'), '')
+  await waitFor(() =>
+    expect(postJson).toHaveBeenCalledWith('/api/unmatched/1/bad_match', { reason: null }),
+  )
+})
+
 test('DupeGlance sort buttons toggle Folder sort direction', async () => {
   const user = userEvent.setup()
   render(<DupeGlance onOpenPath={() => {}} />)
