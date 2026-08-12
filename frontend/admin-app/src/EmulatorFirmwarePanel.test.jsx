@@ -98,6 +98,34 @@ test('surfaces the backend rejection message on a failed upload', async () => {
   )
 })
 
+test('upload carries the CSRF token', async () => {
+  // Without it, CSRFProtect rejects the POST with 400 before the route sees the
+  // file, and firmware upload simply does not work. This is the regression that
+  // made it look broken.
+  document.head.innerHTML = '<meta name="csrf-token" content="test-csrf">'
+  mockGet()
+  render(<EmulatorFirmwarePanel />)
+  await screen.findByText('PlayStation')
+
+  const postFetch = vi.fn(async () => ({
+    ok: true,
+    status: 201,
+    json: async () => ({ ok: true, data: { name: 'scph5500.bin', size: 524288 } }),
+  }))
+  global.fetch = postFetch
+
+  const file = new File(['x'], 'scph5500.bin', { type: 'application/octet-stream' })
+  await userEvent.upload(screen.getByLabelText('Firmware file'), file)
+
+  await waitFor(() => {
+    const call = postFetch.mock.calls.find((c) => c[1]?.method === 'POST')
+    expect(call).toBeTruthy()
+    expect(call[1].headers['X-CSRFToken']).toBe('test-csrf')
+    expect(call[1].body.get('csrf_token')).toBe('test-csrf')
+    expect(call[1].body.get('file')).toBe(file)
+  })
+})
+
 test('read failure offers a retry rather than an empty page', async () => {
   global.fetch = vi.fn(async () => ({
     ok: false,

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { csrfToken } from './adminApi'
 import { MetricStrip } from './opsWidgets'
 
 /**
@@ -94,10 +95,17 @@ export function EmulatorFirmwarePanel() {
       try {
         const form = new FormData()
         form.append('file', file)
+        // CSRFProtect is app-wide, so an upload without a token is rejected
+        // with 400 before the route ever sees the file — which is what made
+        // firmware upload look broken. Sent both ways, as the other FormData
+        // upload in this app does: the header for CSRFProtect, and the field
+        // for any surface that reads it out of the form.
+        form.append('csrf_token', csrfToken())
         const response = await fetch(ENDPOINT, {
           method: 'POST',
           body: form,
           credentials: 'same-origin',
+          headers: { 'X-CSRFToken': csrfToken() },
         })
         if (!response.ok) {
           throw new Error(await readError(response, 'Upload failed.'))
