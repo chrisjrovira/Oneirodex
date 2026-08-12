@@ -424,9 +424,36 @@ export function LibrariesPage() {
   )
 }
 
+function ModuleBadge({ status }) {
+  if (!status) return null
+  const on = Boolean(status.on)
+  return (
+    <span
+      className={`settings-shell-badge settings-shell-badge--${on ? 'on' : 'off'}`}
+      data-testid="settings-module-badge"
+    >
+      {status.label || (on ? 'On' : 'Off')}
+      {status.detail ? ` · ${status.detail}` : ''}
+    </span>
+  )
+}
+
 export function SettingsPage() {
   // Grouped rows, not a card grid (UX-C9): cards forced every module to the
   // same visual weight and spread a short list over a lot of empty space.
+  //
+  // The on/off badges are the Jinja hub's, restored: the template rendered them
+  // from a `module_status` variable, and when the body moved to React the
+  // variable kept being computed with nothing left to read it.
+  const [moduleStatus, setModuleStatus] = useState(null)
+
+  useEffect(() => {
+    getJson('/api/settings/module-status')
+      .then((data) => setModuleStatus(data && typeof data === 'object' ? data : null))
+      // A failed badge fetch must not blank the hub — the links are the page.
+      .catch(() => setModuleStatus(null))
+  }, [])
+
   return (
     <Page title="Settings" lede="Server modules, matching policy, presentation, and extensions.">
       {SETTINGS_GROUPS.map((group) => (
@@ -436,7 +463,10 @@ export function SettingsPage() {
             {group.items.map((item) => (
               <li key={item.to}>
                 <a className="gt-settings-row" href={item.to}>
-                  <span className="gt-settings-row__title">{item.title}</span>
+                  <span className="gt-settings-row__title">
+                    {item.title}
+                    {item.statusKey ? <ModuleBadge status={moduleStatus?.[item.statusKey]} /> : null}
+                  </span>
                   <span className="gt-settings-row__blurb">{item.blurb}</span>
                 </a>
               </li>

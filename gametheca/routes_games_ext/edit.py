@@ -4,7 +4,7 @@ from gametheca.forms import AddGameForm
 from gametheca.models import Game, Library, Category, Developer, Publisher, Status
 from gametheca.utils.functions import read_first_nfo_content, get_folder_size_in_bytes_updates, format_size, PLATFORM_IDS
 from gametheca.utils.auth import admin_required
-from gametheca.utils.scanning import refresh_images_in_background
+from gametheca.utils.scanning import refresh_images_in_background, is_scan_job_running
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories, sanitize_path_for_logging
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.game_core import ensure_manual_identify_taxonomy
@@ -31,6 +31,14 @@ def game_edit(game_uuid):
     library_name = game.library.name
     current_app.logger.debug(f"game_edit1 Platform ID: {platform_id}, Platform Name: {platform_name} Library Name: {library_name}")
     if form.validate_on_submit():
+        # A scan rewrites the same rows this form is about to save, so an edit
+        # landing mid-scan can be silently overwritten (or overwrite the scan's
+        # own findings). Image upload/delete and game delete already refuse for
+        # this reason; game_edit is the mutation that was left unguarded.
+        if is_scan_job_running():
+            flash('Cannot edit the game while a scan job is running. Please try again later.', 'error')
+            return render_template('admin/admin_game_identify.html', form=form, library_name=library_name, game_uuid=game_uuid, action="edit")
+
         # Validate full_disk_path security
         allowed_bases = get_allowed_base_directories(current_app)
         if not allowed_bases:

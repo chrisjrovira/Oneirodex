@@ -25,7 +25,7 @@ export const SETTINGS_GROUPS = [
       },
       { to: '/admin/reference_sets', title: 'ROM reference sets', blurb: 'Upload No-Intro/Redump DATs for set completeness.' },
       { to: '/admin/quality_profiles', title: 'Quality profiles', blurb: 'Release quality rules.' },
-      { to: '/admin/storage', title: 'Storage', blurb: 'Same-volume hardlink preview/apply helpers.' },
+      { to: '/admin/storage', title: 'Storage', blurb: 'Same-volume hardlink preview/apply helpers.', statusKey: 'storage' },
     ],
   },
   {
@@ -34,7 +34,7 @@ export const SETTINGS_GROUPS = [
     items: [
       { to: '/admin/emulator_profiles', title: 'Emulators', blurb: 'WebRetro cores, BIOS, cloud saves.' },
       { to: '/admin/remote_play', title: 'Remote play', blurb: 'BYO Sunshine/Wolf Moonlight host — off by default.' },
-      { to: '/admin/arr', title: 'Arr module', blurb: 'BYO Prowlarr/Jackett + qBittorrent (no bundled indexers).' },
+      { to: '/admin/arr', title: 'Arr module', blurb: 'BYO Prowlarr/Jackett + qBittorrent (no bundled indexers).', statusKey: 'arr' },
     ],
   },
   {
@@ -51,7 +51,7 @@ export const SETTINGS_GROUPS = [
     id: 'extend',
     title: 'Extend',
     items: [
-      { to: '/admin/ai', title: 'AI assist', blurb: 'AI identification and helpers.' },
+      { to: '/admin/ai', title: 'AI assist', blurb: 'AI identification and helpers.', statusKey: 'ai' },
       { to: '/admin/plugins', title: 'Plugins', blurb: 'Connector / export / emu registry.' },
     ],
   },

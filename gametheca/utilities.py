@@ -234,6 +234,16 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
         try:
             db.session.commit()
         except SQLAlchemyError as e:
+            # Roll back before bailing. A failed flush leaves the session in a
+            # "needs rollback" state, so every later statement on it — the rest
+            # of the request included — raises PendingRollbackError instead of
+            # anything describing the real problem.
+            #
+            # This path is reachable in normal use: a library_uuid with no
+            # matching library trips scan_jobs_library_uuid_fkey, and the
+            # missing-library handling below never gets to run because the job
+            # it wants to mark Failed could not be inserted in the first place.
+            db.session.rollback()
             print(f"Database error when adding ScanJob: {str(e)}")
             return None  # cannot proceed without ScanJob
 

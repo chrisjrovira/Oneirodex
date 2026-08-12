@@ -305,7 +305,12 @@ def propose_leaf_libraries(
         base = os.path.basename(path.rstrip('\\/'))
         if is_family_parent_name(base):
             return
-        if should_skip_scan_dir(base, patterns):
+        # A recognised dump name is the thing this module exists to propose, so
+        # the scan-time skip list must not veto it. 'ROMs' is in
+        # DEFAULT_SKIP_DIR_GLOBS so that a library pointed too high does not
+        # treat it as a game folder — the opposite job from proposing it as a
+        # library of its own, which every dump-leaf branch below relies on.
+        if base.casefold() not in NESTED_DUMP_DIR_NAMES and should_skip_scan_dir(base, patterns):
             return
         seen.add(key)
         candidates.append(_candidate(path, platform=platform, reason=reason))
@@ -316,7 +321,15 @@ def propose_leaf_libraries(
         basename = os.path.basename(path.rstrip('\\/')) or path
 
         # Emulator / FE / tool install: never propose self; peek for nested dumps.
-        if depth > 0 and should_skip_scan_dir(basename, patterns):
+        # Dump names are exempt for the same reason as in `add`: otherwise a
+        # directory literally called ROMs is treated as an emu install and
+        # searched for a dump *inside* it, which makes the dump-leaf branch
+        # below unreachable for the most common dump name there is.
+        if (
+            depth > 0
+            and basename.casefold() not in NESTED_DUMP_DIR_NAMES
+            and should_skip_scan_dir(basename, patterns)
+        ):
             dump = _find_nested_dump_dir(path)
             if dump:
                 plat = _platform_for_leaf(dump, os.path.basename(dump))
