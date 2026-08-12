@@ -88,6 +88,37 @@ def cores_for(name: str) -> list[str]:
     return [core for core, names in BIOS_REQUIREMENTS.items() if name in names]
 
 
+def _choose_source(sources: list[str]) -> tuple[str, str]:
+    """Pick which copy to import, and describe why.
+
+    When several files share a firmware name and their contents differ, prefer
+    the one the most packs agree on rather than whichever the walk reached
+    first. Regional dumps and bad rips share filenames, and a consensus copy is
+    a better default than an arbitrary one — `firmware.bin` for the DS was 4-to-1
+    across three packs, where first-found could have gone either way depending
+    on directory order.
+
+    The disagreement is still reported. A silent pick is the thing to avoid.
+    """
+    if len(sources) == 1:
+        return sources[0], ''
+
+    by_digest: dict[str, list[str]] = {}
+    for path in sources:
+        by_digest.setdefault(_digest(path), []).append(path)
+
+    if len(by_digest) == 1:
+        return sources[0], f'  [{len(sources)} identical copies]'
+
+    # Most copies wins; ties fall back to the earliest path for stability.
+    best = max(by_digest.values(), key=lambda paths: (len(paths), -sources.index(paths[0])))
+    others = len(by_digest) - 1
+    return best[0], (
+        f'  [{len(sources)} candidates, {len(by_digest)} differ — '
+        f'using the {len(best)}-copy majority, {others} other version(s) ignored]'
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', required=True, help='Folder to search (searched recursively)')
@@ -116,18 +147,13 @@ def main() -> int:
         # Distinct contents under one name is worth saying out loud — regional
         # dumps and bad rips share filenames, and picking silently would make
         # the choice invisible.
-        digests = {_digest(p) for p in sources} if len(sources) > 1 else None
-        note = ''
-        if digests and len(digests) > 1:
-            note = f'  [{len(sources)} candidates differ — using the first]'
-        elif len(sources) > 1:
-            note = f'  [{len(sources)} identical copies]'
+        chosen, note = _choose_source(sources)
 
         if already and not args.overwrite:
             print(f'  = {name:<24} already present{note}')
             continue
-        print(f'  + {name:<24} {sources[0]}{note}')
-        to_copy.append((sources[0], os.path.join(args.dest, name)))
+        print(f'  + {name:<24} {chosen}{note}')
+        to_copy.append((chosen, os.path.join(args.dest, name)))
 
     missing = [n for n in sorted(wanted.values()) if n not in found and n.lower() not in present]
     if missing:
