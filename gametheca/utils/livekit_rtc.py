@@ -96,10 +96,32 @@ def user_may_join_room(user, room: str) -> bool:
         return bool(user_can_access_game(user, game))
 
     # The one intentionally household-wide room.
+    #
+    # Children were excluded outright, which read oddly against "household-wide"
+    # and gave households no way to include them. It is a setting now, defaulting
+    # to the exclusion that already shipped so no install changes behaviour on
+    # upgrade. Every other room stays exactly as strict as before.
     if lowered == HOUSEHOLD_LOBBY:
-        return role != 'child'
+        if role != 'child':
+            return True
+        return children_allowed_in_lobby()
 
     return False
+
+
+def children_allowed_in_lobby() -> bool:
+    """Household setting: may `child` accounts join the voice lobby?
+
+    Defaults to False, and stays False if the settings row cannot be read — a
+    parental control that fails open is not a parental control.
+    """
+    try:
+        from gametheca.utils.global_settings import global_settings_row
+
+        settings = global_settings_row()
+        return bool(getattr(settings, 'allow_children_in_household_lobby', False))
+    except Exception:  # noqa: BLE001 — no app/db context, or column not migrated yet
+        return False
 
 
 def _b64url(data: bytes) -> str:

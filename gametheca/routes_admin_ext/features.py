@@ -76,6 +76,11 @@ def features_settings_page():
         settings.enable_game_updates = request.form.get('db_enable_game_updates') == 'on'
         settings.enable_game_extras = request.form.get('db_enable_game_extras') == 'on'
         settings.attract_mode_enabled = request.form.get('db_attract_mode_enabled') == 'on'
+        # Parental control, so it is written like the rest but read fail-closed
+        # in livekit_rtc — an unchecked box means children stay out.
+        settings.allow_children_in_household_lobby = (
+            request.form.get('db_allow_children_in_household_lobby') == 'on'
+        )
         # Never enable OIDC from this page — auth stays opt-in on Integrations.
         db.session.commit()
         flash(

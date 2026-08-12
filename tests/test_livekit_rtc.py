@@ -27,25 +27,41 @@ def test_unidentified_user_is_denied_every_room():
     assert user_may_join_room(Anonymous(), 'adult:lounge') is False
 
 
+class Child:
+    id = 1
+    role = 'child'
+
+
 def test_child_blocked_from_adult_rooms():
     """Unrecognised room names are denied outright, not pattern-matched.
 
     The stub used to have no `id`, so it was rejected at the identity gate and
     the room rules below were never actually exercised — the test passed for
     the wrong reason until the household-lobby rule changed underneath it.
-
-    NOTE: `household:lobby` now returns False for a child (`role != 'child'`),
-    which reads oddly against the comment calling it "the one intentionally
-    household-wide room". Pinned here as the behaviour that exists; worth
-    confirming that excluding children from the household room is intended.
     """
-    class Child:
-        id = 1
-        role = 'child'
-
-    assert user_may_join_room(Child(), 'household:lobby') is False
     assert user_may_join_room(Child(), 'adult:lounge') is False
     assert user_may_join_room(Child(), 'admin-ops') is False
+
+
+def test_children_are_kept_out_of_the_lobby_by_default():
+    """Unchanged behaviour on upgrade: the setting defaults to off."""
+    with patch('gametheca.utils.livekit_rtc.children_allowed_in_lobby', return_value=False):
+        assert user_may_join_room(Child(), 'household:lobby') is False
+
+
+def test_a_household_can_let_children_into_the_lobby():
+    with patch('gametheca.utils.livekit_rtc.children_allowed_in_lobby', return_value=True):
+        assert user_may_join_room(Child(), 'household:lobby') is True
+        # Opting in only opens the lobby — nothing else loosens.
+        assert user_may_join_room(Child(), 'adult:lounge') is False
+        assert user_may_join_room(Child(), 'admin-ops') is False
+
+
+def test_children_allowed_in_lobby_fails_closed():
+    """No app context, or an unmigrated column, must not open the lobby."""
+    from gametheca.utils.livekit_rtc import children_allowed_in_lobby
+
+    assert children_allowed_in_lobby() is False
 
 
 def test_adult_may_join_the_household_lobby():

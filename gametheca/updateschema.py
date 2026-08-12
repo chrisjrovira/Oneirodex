@@ -579,6 +579,9 @@ class DatabaseManager:
         ADD COLUMN IF NOT EXISTS enable_emulator_save_sync BOOLEAN DEFAULT TRUE;
 
         ALTER TABLE global_settings
+        ADD COLUMN IF NOT EXISTS allow_children_in_household_lobby BOOLEAN DEFAULT FALSE;
+
+        ALTER TABLE global_settings
         ADD COLUMN IF NOT EXISTS arr_settings TEXT;
 
         ALTER TABLE global_settings

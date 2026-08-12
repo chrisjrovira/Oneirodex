@@ -943,6 +943,10 @@ class GlobalSettings(db.Model):
     arr_settings = db.Column(JSONEncodedDict, nullable=True)
     # Opt-in WebRetro / companion save-state sync
     enable_emulator_save_sync = db.Column(db.Boolean, default=True)
+    # Whether children may join the household voice lobby. Defaults to False,
+    # which is the behaviour that already shipped — households that want the
+    # lobby to be genuinely household-wide can turn it on.
+    allow_children_in_household_lobby = db.Column(db.Boolean, default=False)
     encrypt_emulator_saves = db.Column(db.Boolean, default=False)
     # GiantBomb metadata key (optional)
     giantbomb_api_key = db.Column(db.String(255), nullable=True)
