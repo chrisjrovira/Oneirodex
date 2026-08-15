@@ -187,6 +187,8 @@ Work since the 1.0.0-beta tag (2026-08-06).
   hand-rolled on purpose: the key/value detail panels, and the Services checklist, whose row order is
   the order you read it in
 - **Child access to the household voice lobby is now a household setting**, not a hardcoded stance
+- Chrome buttons and primitive buttons now agree on focus: one ring, one offset, and a fallback so a
+  theme missing the token loses the colour rather than the outline
 - **Licensed under AGPL-3.0**
 
 ### Fixed
@@ -208,6 +210,10 @@ Work since the 1.0.0-beta tag (2026-08-06).
 - Collection detail rendered with no name under the new chrome
 - The scan path used a single scraper source instead of finishing the cascade
 - Tile hover was effectively invisible
+- **Disabled chrome buttons looked and behaved like live ones.** `.gt-cbtn` had no disabled styling at
+  all, so "Mark all read" with nothing unread, refresh while refreshing, and delete mid-delete were
+  indistinguishable from working buttons — and still lit up on hover, so the one control that would not
+  respond was the one inviting the click
 - **Background workers shared the request's database session.** Six sites paired
   `@copy_current_request_context` with a raw `Thread`, which carries the request's session onto the new
   thread — including library deletion, which walks every game committing repeatedly. Replaced by

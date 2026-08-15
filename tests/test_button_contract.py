@@ -1,0 +1,99 @@
+"""One button contract across the chrome and the primitives (W27-C1).
+
+Admin and member both render `.gt-cbtn` — the small chrome button in the app
+bar, context bar and rail — while `.gt-btn` is the general primitive. They are
+allowed to differ in size and weight; they are not allowed to disagree about
+what a button *does*, and they did:
+
+* `.gt-cbtn` had no disabled state at all. Notifications disables "Mark all
+  read" when nothing is unread, Updates disables refresh while refreshing, and
+  Collection detail disables delete mid-delete — none of which looked any
+  different from a live button, and all of which still lit up on hover.
+* Ops had patched the gap locally for its reorder arrows, so the one place that
+  noticed fixed it for itself and nowhere else. That per-page divergence is the
+  thing this item is about.
+* The two used different focus treatments — different colour, different offset.
+
+These are source assertions over CSS. They cannot prove a button *looks* right;
+they pin the rules whose absence caused the defects above, which is the part
+that regressed silently. No database needed.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+THEME_CSS = ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css'
+
+APPBAR = THEME_CSS / 'gt-appbar.css'
+PRIMITIVES = THEME_CSS / 'gt-primitives.css'
+OPS = ROOT / 'frontend' / 'admin-app' / 'src' / 'ops.css'
+
+
+def _read(path: Path) -> str:
+    return path.read_text(encoding='utf-8')
+
+
+def _without_comments(css: str) -> str:
+    """Rules only — a comment explaining a moved rule is not the rule."""
+    return re.sub(r'/\*.*?\*/', '', css, flags=re.DOTALL)
+
+
+def _rule_block(css: str, selector: str) -> str:
+    """The declarations of the first rule whose selector list contains `selector`."""
+    body = _without_comments(css)
+    for match in re.finditer(r'([^{}]+)\{([^{}]*)\}', body):
+        selectors = match.group(1)
+        if selector in selectors:
+            return match.group(2)
+    raise AssertionError(f'no rule found for {selector}')
+
+
+def test_the_chrome_button_has_a_disabled_state():
+    """Its absence is why a disabled 'Mark all read' looked clickable."""
+    css = _without_comments(_read(APPBAR))
+    assert '.gt-cbtn:disabled' in css
+    assert ".gt-cbtn[aria-disabled='true']" in css
+
+    block = _rule_block(css, '.gt-cbtn:disabled')
+    assert 'cursor: default' in block
+    assert 'opacity' in block
+
+
+def test_the_chrome_button_does_not_react_to_hover_when_disabled():
+    """A control that lights up under the mouse and then refuses to act is
+    worse than one that never invited the click."""
+    css = _without_comments(_read(APPBAR))
+    hover = re.search(r'\.gt-cbtn:hover[^{]*\{', css)
+    assert hover, 'the hover rule vanished'
+    assert ':not(:disabled)' in hover.group(0)
+    assert ":not([aria-disabled='true'])" in hover.group(0)
+
+
+def test_both_button_families_share_one_focus_treatment():
+    """Two focus rings in one product is the inconsistency this item names.
+    Size and weight may differ between chrome and primitive buttons; which ring
+    a keyboard user sees may not."""
+    chrome = _rule_block(_read(APPBAR), '.gt-cbtn:focus-visible')
+    primitive = _rule_block(_read(PRIMITIVES), '.gt-btn:focus-visible')
+
+    for block in (chrome, primitive):
+        assert '--gt-focus-ring' in block
+        assert 'outline-offset: 2px' in block
+
+
+def test_the_focus_ring_survives_a_theme_without_the_token():
+    """An undefined custom property invalidates the whole declaration at
+    computed-value time, so a bare var() would remove the outline rather than
+    degrade it. That failure has already happened once in this codebase."""
+    for path, selector in ((APPBAR, '.gt-cbtn:focus-visible'), (PRIMITIVES, '.gt-btn:focus-visible')):
+        block = _rule_block(_read(path), selector)
+        assert re.search(r'var\(--gt-focus-ring,\s*[^)]+\)', block), path.name
+
+
+def test_ops_does_not_keep_its_own_copy_of_the_disabled_rule():
+    """It only ever had one because it was the first place a .gt-cbtn was
+    disabled. Leaving it would mean two definitions to keep in step."""
+    assert 'gt-cbtn:disabled' not in _without_comments(_read(OPS))

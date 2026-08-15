@@ -194,14 +194,33 @@
   transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
 }
 
-.gt-cbtn:hover {
+/* Hover is suppressed when the control cannot be used. Without the guard a
+   disabled button still lit up under the mouse, which says "click me" about
+   the one control that will not respond. */
+.gt-cbtn:hover:not(:disabled):not([aria-disabled='true']) {
   color: var(--gt-text);
   border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
 }
 
+/* Matches .gt-btn rather than inventing a second focus treatment: same ring
+   colour, same offset. `--gt-focus-ring` lifts the accent toward white so the
+   ring stays visible on the CRT/sharp packs, where a plain accent border reads
+   as decoration (W27-C1). */
 .gt-cbtn:focus-visible {
-  outline: 2px solid var(--gt-accent);
-  outline-offset: 1px;
+  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+  outline-offset: 2px;
+}
+
+/* The disabled state .gt-btn has always had. Its absence was not cosmetic:
+   Notifications disables "Mark all read" when nothing is unread, Updates
+   disables refresh while refreshing, and Collection detail disables delete
+   mid-delete — none of which looked any different from a live button. Ops had
+   patched this locally for its reorder arrows, which is the per-page divergence
+   this item is about. */
+.gt-cbtn:disabled,
+.gt-cbtn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .gt-cbtn--primary {

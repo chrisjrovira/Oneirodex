@@ -40,7 +40,12 @@ from datetime import date
 # templates load, and table-components.css gained the .gt-sort-btn rules it
 # builds. Same reasoning as 12 — a preset missing the script has tables whose
 # headers simply do not respond, which reads as the feature never shipping.
-GENERATOR_VERSION = 13
+# 14 (W27-C1 buttons): gt-appbar's .gt-cbtn gained a disabled state, a hover
+# guard and the same focus ring as .gt-btn, and both focus rules gained a
+# fallback so a theme without --gt-focus-ring loses the colour rather than the
+# outline. A preset still carrying the old copy shows disabled chrome buttons
+# as though they were live.
+GENERATOR_VERSION = 14
 
 # Key written into each generated theme.json; also our ownership proof.
 PRESET_MARKER_KEY = 'gametheca_preset'

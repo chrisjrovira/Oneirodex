@@ -94,6 +94,7 @@ jobs:
           tests/test_detail_layout_presets.py
           tests/test_theme_freshness.py
           tests/test_sortable_tables.py
+          tests/test_button_contract.py
 
   member-app-vitest:
     name: Member-app vitest

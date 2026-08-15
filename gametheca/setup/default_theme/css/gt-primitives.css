@@ -54,10 +54,15 @@
 
 /* Keyboard focus must stay visible on every theme, including CRT/sharp packs
    where the accent border alone can read as decoration. */
+/* Fallback deliberately: an undefined custom property makes the whole
+   declaration invalid at computed-value time, so a theme that shipped without
+   --gt-focus-ring would lose the focus outline entirely rather than fall back
+   to something. That failure has already happened once here, to .gt-btn's
+   border and fill on system-skinned pages. */
 .gt-btn:focus-visible,
 .gt-input:focus-visible,
 .gt-card:focus-visible {
-  outline: 2px solid var(--gt-focus-ring);
+  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
   outline-offset: 2px;
 }
 

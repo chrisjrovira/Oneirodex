@@ -388,10 +388,9 @@
   line-height: 1.6;
 }
 
-.gt-ops-panel__move .gt-cbtn:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
+/* The disabled rule that lived here moved to .gt-cbtn in gt-appbar.css, where
+   every other user of the class gets it too. This panel only had it because it
+   was the first place a .gt-cbtn was ever disabled. */
 
 @media (prefers-reduced-motion: reduce) {
   .gt-ops-panel__move {
