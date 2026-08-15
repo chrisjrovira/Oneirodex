@@ -1366,6 +1366,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     const row = document.createElement('tr');
+                    // Sort key for the Progress column (W27-C2). The cell renders a bar
+                    // and a "3/25 (12%)" caption, neither of which compares numerically
+                    // as text — gt_sortable_table.js reads this instead.
+                    row.setAttribute('data-job-id', job.id);
+                    row.setAttribute('data-sort-progress', String(percentage));
                     row.innerHTML = `
                         <td>${job.id.substring(0, 8)}</td>
                         <td>${escapeHtml(job.library_name || 'N/A')}</td>

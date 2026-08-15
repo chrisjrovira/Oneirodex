@@ -148,6 +148,13 @@ jobs:
       - name: Run vitest
         run: npm test -- --run
 
+      # tests/js holds standalone harnesses for classic theme JS, run under bare
+      # node against a hand-rolled micro-DOM. They were in no workflow, so they
+      # gated nothing — run here because this job already has Node set up.
+      - name: Run classic theme JS harnesses
+        working-directory: .
+        run: node tests/js/preferences_modal_delegation.test.mjs
+
   desktop-vitest:
     name: Desktop vitest
     runs-on: ubuntu-latest

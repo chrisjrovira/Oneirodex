@@ -402,3 +402,55 @@
 .table .status-completed {
     background: var(--gt-text-muted);
 }
+/* === SORTABLE HEADERS (UX-C8 · W27-C1) === */
+/*
+ * Paired with js/gt_sortable_table.js, which builds this markup inside any
+ * `<th data-sort-key>`. Lives here rather than beside one page's table so
+ * every classic table sorts and *looks* sorted the same way — the unmatched
+ * table's bespoke `.unmatched-sort-btn` is the drift this replaces.
+ */
+
+.gt-sort-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gt-space-2);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--gt-radius-xs);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+
+.gt-sort-btn:hover {
+    color: var(--gt-accent);
+}
+
+/* A visible ring rather than `outline: none`. The neighbouring
+ * `.unmatched-sort-btn` removes its outline on focus, which leaves a
+ * keyboard user with no idea which header they are on. */
+.gt-sort-btn:focus-visible {
+    color: var(--gt-accent);
+    outline: 2px solid var(--gt-accent);
+    outline-offset: 2px;
+}
+
+.gt-sort-btn.is-active {
+    color: var(--gt-accent);
+}
+
+.gt-sort-btn__ind {
+    font-size: var(--gt-font-xs);
+    min-width: 0.75rem;
+    opacity: 0.55;
+}
+
+/* The active direction is the one piece of state here, so it should not be
+ * the faintest thing in the header. */
+.gt-sort-btn.is-active .gt-sort-btn__ind {
+    opacity: 1;
+}

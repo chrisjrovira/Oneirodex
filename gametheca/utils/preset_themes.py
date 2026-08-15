@@ -36,7 +36,11 @@ from datetime import date
 # therefore needs on disk. source_fingerprint() would notice the file changes
 # anyway, but the bump makes the new required asset explicit for operators
 # reading theme.json markers.
-GENERATOR_VERSION = 12
+# 13 (UX-C8/W27-C2): the tree gained gt_sortable_table.js, which both base
+# templates load, and table-components.css gained the .gt-sort-btn rules it
+# builds. Same reasoning as 12 — a preset missing the script has tables whose
+# headers simply do not respond, which reads as the feature never shipping.
+GENERATOR_VERSION = 13
 
 # Key written into each generated theme.json; also our ownership proof.
 PRESET_MARKER_KEY = 'gametheca_preset'

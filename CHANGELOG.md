@@ -165,6 +165,10 @@ Work since the 1.0.0-beta tag (2026-08-06).
   majority copy when candidates disagree
 - **Ownership polling** (`gametheca/utils/ownership_poller.py`) and a `/styleguide` route
 - **CSS token lint** (`scripts/css-token-lint.mjs`) with a baseline — 2365 violations down to 1317
+- **Sortable classic tables** (`js/gt_sortable_table.js`) — the Jinja counterpart to the React
+  `DataTable`, so a table sorts the same way on both stacks instead of per page or not at all. Adopted
+  on **Active Scan Jobs**, which had no sorting at all. A page opts in with two attributes and the
+  module wires itself up, because a page that must remember to call something eventually will not
 - **Theme asset freshness check** (`gametheca/utils/theme_freshness.py`), surfaced as a **Theme assets**
   panel in the Ops console. Theme CSS only reaches `static/library/themes/` on a **Reset Themes**, and
   nothing reported the drift — the only symptom was "the fix didn't work". The panel hashes source

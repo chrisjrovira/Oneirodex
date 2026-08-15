@@ -322,21 +322,27 @@
                             </div>
                         </div>
                         <div class="jobs-table-wrapper">
-                            <table id="scanJobsTable" class="simple-jobs-table">
+                            {# W27-C2: sorting comes from js/gt_sortable_table.js, which builds the
+                               header buttons from data-sort-key. Actions has no key on purpose —
+                               a column of controls has no order worth asking for. Progress sorts
+                               on data-sort-progress below, because "10/25" and "9/25" compare the
+                               wrong way round as text. #}
+                            <table id="scanJobsTable" class="simple-jobs-table" data-gt-sortable>
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
-                                        <th>Library</th>
-                                        <th>Path</th>
-                                        <th>Status</th>
-                                        <th>Progress</th>
+                                        <th data-sort-key="id">ID</th>
+                                        <th data-sort-key="library">Library</th>
+                                        <th data-sort-key="path">Path</th>
+                                        <th data-sort-key="status">Status</th>
+                                        <th data-sort-key="progress">Progress</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="jobsTableBody">
                                     {% if jobs %}
                                         {% for job in jobs[:25] %}
-                                        <tr data-job-id="{{ job.id }}">
+                                        <tr data-job-id="{{ job.id }}"
+                                            data-sort-progress="{{ ((job.folders_success or 0) / job.total_folders * 100) | round(1) if job.total_folders else 0 }}">
                                             <td>{{ job.id }}</td>
                                             <td>{{ job.library.name if job.library else 'N/A' }}</td>
                                             <td>{{ job.scan_folder or 'N/A' }}</td>
