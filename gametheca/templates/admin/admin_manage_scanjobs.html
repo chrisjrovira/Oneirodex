@@ -548,32 +548,23 @@
                         </div>
                     </div>
                     <div class="unmatched-table-wrap">
-                    <table id="unmatchedTable" class="simple-unmatched-table" style="border-radius: 15px;">
+                    {# The sort buttons here used to be written out by hand and driven by a
+                       sorter local to this page (UID-005). Both are now js/gt_sortable_table.js,
+                       which builds the controls from data-sort-key and re-applies the order when
+                       the body is re-rendered. The row-level data-sort-* attributes it reads are
+                       the ones this page already emitted — that convention is why the shared
+                       module adopts the naming it does. #}
+                    <table id="unmatchedTable" class="simple-unmatched-table" style="border-radius: 15px;"
+                           data-gt-sortable data-gt-sort-default="folder" data-gt-sort-dir="asc">
                         <thead>
                             <tr>
                                 <th class="col-select">
                                     <input type="checkbox" id="unmatchedSelectAll" title="Select all visible rows" aria-label="Select all visible unmatched rows">
                                 </th>
-                                <th class="col-path" scope="col">
-                                    <button type="button" class="unmatched-sort-btn" data-sort-key="folder" aria-pressed="false">
-                                        Folder <span class="unmatched-sort-btn__ind" aria-hidden="true"></span>
-                                    </button>
-                                </th>
-                                <th class="col-status" scope="col">
-                                    <button type="button" class="unmatched-sort-btn" data-sort-key="status" aria-pressed="false">
-                                        Status <span class="unmatched-sort-btn__ind" aria-hidden="true"></span>
-                                    </button>
-                                </th>
-                                <th class="col-library" scope="col">
-                                    <button type="button" class="unmatched-sort-btn" data-sort-key="library" aria-pressed="false">
-                                        Library <span class="unmatched-sort-btn__ind" aria-hidden="true"></span>
-                                    </button>
-                                </th>
-                                <th class="col-platform" scope="col">
-                                    <button type="button" class="unmatched-sort-btn" data-sort-key="platform" aria-pressed="false">
-                                        Platform <span class="unmatched-sort-btn__ind" aria-hidden="true"></span>
-                                    </button>
-                                </th>
+                                <th class="col-path" scope="col" data-sort-key="folder">Folder</th>
+                                <th class="col-status" scope="col" data-sort-key="status">Status</th>
+                                <th class="col-library" scope="col" data-sort-key="library">Library</th>
+                                <th class="col-platform" scope="col" data-sort-key="platform">Platform</th>
                             </tr>
                         </thead>
                         <tbody id="unmatchedFoldersTableBody">

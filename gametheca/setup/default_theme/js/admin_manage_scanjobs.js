@@ -1449,8 +1449,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentKindFilter = 'all';
     let currentLeafFilter = 'all';
     let currentTriageFilter = 'all';
-    let unmatchedSortKey = 'folder';
-    let unmatchedSortDir = 'asc';
     let unmatchedNameEndpointReady = null; // null=unknown, true/false after probe
 
     function fetchUnmatchedList() {
@@ -1726,7 +1724,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 attachDeleteFolderFormListeners();
-                sortUnmatchedRows();
+                // No sort call: gt_sortable_table.js observes this tbody and
+                // re-applies the active order once these rows land.
                 filterUnmatchedRows();
                 updateBatchBar();
                 updateSelectAllState();
@@ -2206,32 +2205,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
-    function updateUnmatchedSortIndicators() {
-        document.querySelectorAll('.unmatched-sort-btn').forEach((btn) => {
-            const key = btn.getAttribute('data-sort-key');
-            const ind = btn.querySelector('.unmatched-sort-btn__ind');
-            const active = key === unmatchedSortKey;
-            btn.classList.toggle('is-active', active);
-            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-            if (ind) {
-                ind.textContent = active ? (unmatchedSortDir === 'asc' ? '↑' : '↓') : '';
-            }
-        });
-    }
-
-    function sortUnmatchedRows() {
-        if (!unmatchedTableBody) return;
-        const attr = `data-sort-${unmatchedSortKey}`;
-        const rows = Array.from(unmatchedTableBody.querySelectorAll('tr'));
-        rows.sort((a, b) => {
-            const av = a.getAttribute(attr) || '';
-            const bv = b.getAttribute(attr) || '';
-            const cmp = av.localeCompare(bv, undefined, { sensitivity: 'base', numeric: true });
-            return unmatchedSortDir === 'asc' ? cmp : -cmp;
-        });
-        rows.forEach((row) => unmatchedTableBody.appendChild(row));
-        updateUnmatchedSortIndicators();
-    }
+    // Sorting for this table moved to js/gt_sortable_table.js. The row-level
+    // data-sort-* attributes below are still what it reads; only the sorting,
+    // the header buttons and the indicator bookkeeping left this file.
 
     function filterUnmatchedRows() {
         const unmatchedRows = document.querySelectorAll('#unmatchedFoldersTableBody tr');
@@ -2551,20 +2527,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateExportLinks();
             });
         });
-
-        document.querySelectorAll('.unmatched-sort-btn').forEach((btn) => {
-            btn.addEventListener('click', function() {
-                const key = this.getAttribute('data-sort-key') || 'folder';
-                if (unmatchedSortKey === key) {
-                    unmatchedSortDir = unmatchedSortDir === 'asc' ? 'desc' : 'asc';
-                } else {
-                    unmatchedSortKey = key;
-                    unmatchedSortDir = 'asc';
-                }
-                sortUnmatchedRows();
-            });
-        });
-        updateUnmatchedSortIndicators();
 
         document.querySelectorAll('[data-why-filter]').forEach((btn) => {
             btn.addEventListener('click', function() {

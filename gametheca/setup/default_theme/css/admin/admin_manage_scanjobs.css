@@ -1804,36 +1804,10 @@ a.unmatched-dupe-of__title:hover {
     min-width: 6rem;
 }
 
-.unmatched-sort-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    font-weight: 700;
-    cursor: pointer;
-    text-align: left;
-}
-
-.unmatched-sort-btn:hover,
-.unmatched-sort-btn:focus-visible {
-    color: var(--gt-accent);
-    outline: none;
-}
-
-.unmatched-sort-btn.is-active {
-    color: var(--gt-accent);
-}
-
-.unmatched-sort-btn__ind {
-    font-size: 0.75rem;
-    min-width: 0.75rem;
-    opacity: 0.9;
-}
+/* .unmatched-sort-btn retired: this table's headers are now built by
+   js/gt_sortable_table.js and styled by .gt-sort-btn in table-components.css,
+   alongside every other classic table. Installed themes keep the dead rules
+   until a Reset Themes regenerates them. */
 
 .unmatched-folder-path {
     display: block;

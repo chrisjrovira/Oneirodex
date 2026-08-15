@@ -11,6 +11,11 @@
  *     <table data-gt-sortable>
  *       <thead><tr><th data-sort-key="id">ID</th> …
  *
+ * A table that should arrive already sorted declares it, rather than leaving a
+ * page script to re-sort after every render:
+ *
+ *     <table data-gt-sortable data-gt-sort-default="folder" data-gt-sort-dir="asc">
+ *
  * A `<th>` without `data-sort-key` stays inert, which is what the checkbox and
  * Actions columns want. The header button is built here rather than written
  * into each template, because per-page markup is precisely how this behaviour
@@ -97,6 +102,17 @@
         var state = null;   // { key, dir }
         var observer = null;
         var seq = 0;
+
+        // Declared starting order, the counterpart to DataTable's `initialSort`.
+        // A table that arrives in a meaningful order should say so in its own
+        // markup rather than relying on a page script to sort it after render.
+        var defaultKey = table.getAttribute('data-gt-sort-default');
+        if (defaultKey) {
+            state = {
+                key: defaultKey,
+                dir: table.getAttribute('data-gt-sort-dir') === 'desc' ? 'desc' : 'asc',
+            };
+        }
 
         function stampNewRows() {
             var rows = tbody.querySelectorAll('tr');
@@ -240,6 +256,11 @@
             });
             observer.observe(tbody, { childList: true });
         }
+
+        // After the observer exists, so the initial pass suspends it like any
+        // other. Rows arriving later are handled by the observer itself.
+        if (state) apply();
+        else updateIndicators();
 
         var api = {
             table: table,

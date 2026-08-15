@@ -93,6 +93,7 @@ jobs:
           tests/test_template_icons.py
           tests/test_detail_layout_presets.py
           tests/test_theme_freshness.py
+          tests/test_sortable_tables.py
 
   member-app-vitest:
     name: Member-app vitest

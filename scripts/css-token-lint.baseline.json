@@ -223,7 +223,7 @@
   },
   "gametheca/setup/default_theme/css/admin/admin_manage_scanjobs.css": {
     "no-raw-radius": 40,
-    "no-raw-font-size": 76,
+    "no-raw-font-size": 75,
     "no-raw-color": 8
   },
   "gametheca/setup/default_theme/css/admin/admin_manage_themes.css": {

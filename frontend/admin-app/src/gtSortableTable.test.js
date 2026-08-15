@@ -142,6 +142,49 @@ describe('three-state toggle', () => {
   })
 })
 
+describe('declared default order', () => {
+  const withDefault = (dir) => `
+    <table id="t" data-gt-sortable data-gt-sort-default="library"${
+      dir ? ` data-gt-sort-dir="${dir}"` : ''
+    }>
+      ${HEAD}
+      <tbody id="tb">${ROW('Nintendo', 1) + ROW('Arcade', 2)}</tbody>
+    </table>`
+
+  it('sorts on load without the page asking', () => {
+    document.body.innerHTML = withDefault()
+    loadScript()
+
+    expect(libraries()).toEqual(['Arcade', 'Nintendo'])
+    expect(document.querySelectorAll('#t thead th')[0].getAttribute('aria-sort')).toBe('ascending')
+  })
+
+  it('honours a declared descending direction', () => {
+    document.body.innerHTML = withDefault('desc')
+    loadScript()
+
+    expect(libraries()).toEqual(['Nintendo', 'Arcade'])
+  })
+
+  it('re-applies the default after the body is re-rendered', async () => {
+    // The unmatched table re-fetches and rebuilds its rows. It used to call its
+    // own sorter afterwards; now nothing does, so the observer has to.
+    document.body.innerHTML = withDefault()
+    loadScript()
+
+    const body = document.getElementById('tb')
+    body.innerHTML = ''
+    ;['Zed', 'Beta'].forEach((name) => {
+      const tr = document.createElement('tr')
+      tr.innerHTML = `<td>${name}</td><td>1</td><td>—</td>`
+      body.appendChild(tr)
+    })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(libraries()).toEqual(['Beta', 'Zed'])
+  })
+})
+
 describe('compare rules — parity with DataTable.jsx', () => {
   it('sorts progress numerically, not as text', () => {
     // The whole reason the Progress column carries a data-sort key: as text,

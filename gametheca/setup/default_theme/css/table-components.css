@@ -406,8 +406,8 @@
 /*
  * Paired with js/gt_sortable_table.js, which builds this markup inside any
  * `<th data-sort-key>`. Lives here rather than beside one page's table so
- * every classic table sorts and *looks* sorted the same way — the unmatched
- * table's bespoke `.unmatched-sort-btn` is the drift this replaces.
+ * every classic table sorts and *looks* sorted the same way. It replaced the
+ * unmatched table's bespoke `.unmatched-sort-btn`, which was the drift.
  */
 
 .gt-sort-btn {
@@ -430,9 +430,9 @@
     color: var(--gt-accent);
 }
 
-/* A visible ring rather than `outline: none`. The neighbouring
- * `.unmatched-sort-btn` removes its outline on focus, which leaves a
- * keyboard user with no idea which header they are on. */
+/* A visible ring rather than `outline: none`. The retired
+ * `.unmatched-sort-btn` cleared its outline on focus, which left a keyboard
+ * user with no idea which header they were on — not a behaviour to inherit. */
 .gt-sort-btn:focus-visible {
     color: var(--gt-accent);
     outline: 2px solid var(--gt-accent);
