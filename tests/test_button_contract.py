@@ -97,3 +97,61 @@ def test_ops_does_not_keep_its_own_copy_of_the_disabled_rule():
     """It only ever had one because it was the first place a .gt-cbtn was
     disabled. Leaving it would mean two definitions to keep in step."""
     assert 'gt-cbtn:disabled' not in _without_comments(_read(OPS))
+
+
+# --------------------------------------------------------------------------
+# Focus visibility
+# --------------------------------------------------------------------------
+
+# Controls that removed their focus outline and put nothing back, so they were
+# invisible to a keyboard. Each is pinned by name rather than by a blanket scan:
+# `outline: none` is legitimate when a real replacement follows, and roughly a
+# dozen inputs here do exactly that with a box-shadow ring. A blanket rule would
+# either fail on those or be watered down until it caught nothing.
+REPAIRED = [
+    (THEME_CSS / 'admin' / 'admin_manage_igdb_settings.css', '.toggle-password'),
+    (THEME_CSS / 'form-components.css', '.toggle-password'),
+    (THEME_CSS / 'admin' / 'admin-shell.css', '.admin-topbar-link'),
+    (THEME_CSS / 'admin' / 'admin_manage_themes.css', '.gt-themes-link'),
+    (THEME_CSS / 'admin' / 'admin_manage_scanjobs.css', '.scan-jobs-filter-chip'),
+    (THEME_CSS / 'settings' / 'gt-account.css', '.gt-account-nav a'),
+    (THEME_CSS / 'gt-loading-motifs.css', '.gt-loading-motif--preview'),
+]
+
+
+def _focus_blocks(css: str, selector: str) -> list[str]:
+    """Every :focus-visible rule matching this selector, not just the first.
+
+    These controls deliberately keep two: the shared block with :hover for the
+    tint, and a dedicated one for the ring. Reading only the first finds the
+    tint and concludes there is no outline — which is what the first version of
+    this test did.
+    """
+    pattern = re.compile(re.escape(selector) + r':focus-visible[^{},]*(?:,[^{]*)?\{([^}]*)\}')
+    return [m.group(1) for m in pattern.finditer(_without_comments(css))]
+
+
+def test_repaired_controls_have_a_focus_ring():
+    """Each of these either killed the outline outright or shared one rule with
+    :hover, so the focused control looked exactly like the hovered one."""
+    for path, selector in REPAIRED:
+        blocks = _focus_blocks(_read(path), selector)
+        assert blocks, f'{path.name}: no :focus-visible rule for {selector}'
+
+        outlines = [b for b in blocks if 'outline:' in b]
+        assert outlines, f'{path.name}: {selector} sets no outline on focus'
+        for block in outlines:
+            assert 'outline: none' not in block, (
+                f'{path.name}: {selector} still clears its outline'
+            )
+
+
+def test_repaired_controls_use_the_shared_ring():
+    """One ring across the product, and the fallback for the same reason as
+    .gt-btn: a bare var() would remove the outline on a theme missing the token
+    rather than degrade it."""
+    for path, selector in REPAIRED:
+        blocks = _focus_blocks(_read(path), selector)
+        assert any(
+            re.search(r'var\(--gt-focus-ring,\s*[^)]+\)', b) for b in blocks
+        ), f'{path.name}: {selector} does not use the shared ring'

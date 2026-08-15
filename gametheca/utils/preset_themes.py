@@ -45,7 +45,12 @@ from datetime import date
 # fallback so a theme without --gt-focus-ring loses the colour rather than the
 # outline. A preset still carrying the old copy shows disabled chrome buttons
 # as though they were live.
-GENERATOR_VERSION = 14
+# 15 (W28-5 focus visibility): seven controls across gt-loading-motifs,
+# form-components, settings/gt-account, admin-shell, admin_manage_themes,
+# admin_manage_igdb_settings and admin_manage_scanjobs gained a real
+# :focus-visible ring. A preset still carrying the old copies has controls a
+# keyboard user cannot locate.
+GENERATOR_VERSION = 15
 
 # Key written into each generated theme.json; also our ownership proof.
 PRESET_MARKER_KEY = 'gametheca_preset'

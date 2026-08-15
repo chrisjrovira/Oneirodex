@@ -99,7 +99,14 @@ body.admin-shell .text-muted,
 .admin-topbar-link:focus-visible {
   color: var(--gt-text);
   background: color-mix(in srgb, var(--gt-text) 8%, transparent);
-  outline: none;
+}
+
+/* Focus keeps the ring rather than reusing hover as its only signal. A tint
+   that a mouse also produces does not tell a keyboard user where they are —
+   which link is focused and which is merely under the pointer look identical. */
+.admin-topbar-link:focus-visible {
+  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+  outline-offset: 2px;
 }
 
 .admin-topbar-link.is-active {

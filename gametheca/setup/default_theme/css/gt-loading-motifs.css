@@ -239,7 +239,14 @@
 .gt-loading-motif--preview:focus-visible {
   border-color: var(--gt-accent);
   background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
-  outline: none;
+}
+
+/* These specimens animate on hover *or* focus, so the motion was the only thing
+   telling a keyboard user which one they were on — and it is suppressed under
+   prefers-reduced-motion, leaving nothing at all. */
+.gt-loading-motif--preview:focus-visible {
+  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+  outline-offset: 2px;
 }
 
 .gt-loading-motif--preview:hover *,

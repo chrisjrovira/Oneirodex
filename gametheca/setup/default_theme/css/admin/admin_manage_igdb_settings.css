@@ -183,9 +183,15 @@
     color: var(--gt-text);
 }
 
-.toggle-password:focus {
-    outline: none;
+/* This removed the outline and put nothing in its place, so the show/hide
+   password control was completely invisible to a keyboard once focused — on a
+   field where you cannot see what you typed either. Same ring as .gt-btn and
+   .gt-cbtn; the mouse-only case keeps its bare :hover above. */
+.toggle-password:focus-visible {
+    outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+    outline-offset: 2px;
 }
+
 .card {
     width: 70%;
     margin: 0 auto;

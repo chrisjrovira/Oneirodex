@@ -344,8 +344,13 @@ input[type="checkbox"] {
     color: var(--color-dark-333);
 }
 
-.toggle-password:focus {
-    outline: none;
+/* Second copy of the same rule that was in admin_manage_igdb_settings.css —
+   outline removed, nothing put back, so the show/hide password control was
+   invisible to a keyboard on a field whose contents are hidden too. Both now
+   carry the shared ring. */
+.toggle-password:focus-visible {
+    outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+    outline-offset: 2px;
 }
 
 .input-glass {

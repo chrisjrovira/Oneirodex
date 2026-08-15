@@ -674,7 +674,14 @@
 .scan-jobs-filter-chip:hover,
 .scan-jobs-filter-chip:focus-visible {
     border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
-    outline: none;
+}
+
+/* A 45%-accent border was the only focus signal here, and the same one hover
+   produces — the neighbouring resolve-bar pills already split focus out like
+   this, which is the pattern this follows. */
+.scan-jobs-filter-chip:focus-visible {
+    outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+    outline-offset: 2px;
 }
 
 .scan-jobs-filter-chip.is-active {

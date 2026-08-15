@@ -210,6 +210,11 @@ Work since the 1.0.0-beta tag (2026-08-06).
 - Collection detail rendered with no name under the new chrome
 - The scan path used a single scraper source instead of finishing the cascade
 - Tile hover was effectively invisible
+- **Seven controls had no visible keyboard focus.** The show/hide password toggle removed its focus
+  outline and put nothing back — on a field whose contents are hidden too — and five others (admin top
+  bar links, theme links, scan filter chips, account nav, loading-motif specimens) shared one rule with
+  `:hover`, so a focused control and a hovered one looked identical. Account nav was the worst: that
+  same styling is its "current page" state, so focus and "you are already here" were the same picture
 - **Disabled chrome buttons looked and behaved like live ones.** `.gt-cbtn` had no disabled styling at
   all, so "Mark all read" with nothing unread, refresh while refreshing, and delete mid-delete were
   indistinguishable from working buttons — and still lit up on hover, so the one control that would not

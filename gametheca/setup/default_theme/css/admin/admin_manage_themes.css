@@ -60,7 +60,12 @@
 .gt-themes-link:focus-visible {
     color: var(--gt-accent);
     border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
-    outline: none;
+}
+
+/* See admin-shell.css: hover styling alone is not a focus indicator. */
+.gt-themes-link:focus-visible {
+    outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+    outline-offset: 2px;
 }
 
 /* ---- section blocks ---- */

@@ -50,7 +50,14 @@
     color: var(--gt-accent);
     border-color: color-mix(in srgb, var(--gt-accent) 35%, transparent);
     background: color-mix(in srgb, var(--gt-accent) 10%, transparent);
-    outline: none;
+}
+
+/* Worse here than elsewhere: this treatment is also the [aria-current] style,
+   so without a ring the focused link and the page you are already on were the
+   same picture. */
+.gt-account-nav a:focus-visible {
+    outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+    outline-offset: 2px;
 }
 
 .gt-account-header {
