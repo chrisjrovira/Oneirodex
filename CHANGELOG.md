@@ -145,7 +145,7 @@ contract had drifted across `0.1.0` and `0.2.0` and now all read `1.0.0-beta`.
 
 ## [Unreleased]
 
-Work since the 1.0.0-beta tag (2026-08-06). Parts of this section are not yet committed.
+Work since the 1.0.0-beta tag (2026-08-06).
 
 ### Added
 
@@ -165,6 +165,11 @@ Work since the 1.0.0-beta tag (2026-08-06). Parts of this section are not yet co
   majority copy when candidates disagree
 - **Ownership polling** (`gametheca/utils/ownership_poller.py`) and a `/styleguide` route
 - **CSS token lint** (`scripts/css-token-lint.mjs`) with a baseline — 2365 violations down to 1317
+- **Theme asset freshness check** (`gametheca/utils/theme_freshness.py`), surfaced as a **Theme assets**
+  panel in the Ops console. Theme CSS only reaches `static/library/themes/` on a **Reset Themes**, and
+  nothing reported the drift — the only symptom was "the fix didn't work". The panel hashes source
+  against deployed and distinguishes *behind* from *never deployed*, since those are different problems
+  wearing the same number. It never copies anything; the fix stays an operator decision
 
 ### Changed
 
@@ -190,6 +195,15 @@ Work since the 1.0.0-beta tag (2026-08-06). Parts of this section are not yet co
 - Collection detail rendered with no name under the new chrome
 - The scan path used a single scraper source instead of finishing the cascade
 - Tile hover was effectively invisible
+- **Background workers shared the request's database session.** Six sites paired
+  `@copy_current_request_context` with a raw `Thread`, which carries the request's session onto the new
+  thread — including library deletion, which walks every game committing repeatedly. Replaced by
+  `run_in_background()` ([gametheca/utils/background.py](gametheca/utils/background.py)), which runs the
+  worker in its own `app_context` and so its own session, and logs failures against a named task instead
+  of a bare traceback. None of these workers ever wanted a request context; the decorator was handing
+  them one they did not use, and the shared session came along with it. Two sites also passed ORM objects
+  or read attributes from the thread — those now snapshot ids and re-fetch. A leaked deletion worker was
+  the cause of the flaky test suite, and it was masking a pagination bug that is now fixed too
 
 ### Removed
 
