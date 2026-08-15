@@ -96,15 +96,18 @@ def sample_game(db_session, sample_library):
 
 
 @pytest.fixture
-def sample_global_settings(db_session):
-    """Create sample global settings for testing."""
-    settings = GlobalSettings(
-        update_folder_name='updates',
-        extras_folder_name='extras'
-    )
-    db_session.add(settings)
+def sample_global_settings(db_session, global_settings):
+    """Sample settings for testing.
+
+    Sets the fields on the existing singleton instead of inserting a second row:
+    `global_settings` holds at most one, enforced by the
+    `global_settings_singleton` unique index, so the old `add()` raised a
+    `UniqueViolation` as soon as anything had already created it.
+    """
+    global_settings.update_folder_name = 'updates'
+    global_settings.extras_folder_name = 'extras'
     db_session.commit()
-    return settings
+    return global_settings
 
 
 @pytest.fixture

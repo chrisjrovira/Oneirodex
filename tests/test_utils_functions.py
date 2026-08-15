@@ -89,15 +89,16 @@ def sample_release_groups(db_session):
 
 
 @pytest.fixture
-def sample_global_settings(db_session):
-    """Create sample global settings for testing."""
-    settings = GlobalSettings(
-        update_folder_name='Updates',
-        extras_folder_name='Extras'
-    )
-    db_session.add(settings)
+def sample_global_settings(db_session, global_settings):
+    """Sample settings for testing.
+
+    Updates the singleton rather than inserting a second row — see the identical
+    fixture in test_utils_download.py.
+    """
+    global_settings.update_folder_name = 'Updates'
+    global_settings.extras_folder_name = 'Extras'
     db_session.commit()
-    return settings
+    return global_settings
 
 
 class TestFormatSize:

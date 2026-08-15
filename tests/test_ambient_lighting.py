@@ -71,13 +71,8 @@ def test_ha_client_turn_on_lights_and_scene():
     assert scene_call[0][0] == 'http://ha:8123/api/services/scene/turn_on'
 
 
-def test_save_ambient_config_validates_urls(app, db_session, monkeypatch):
+def test_save_ambient_config_validates_urls(app, db_session, global_settings, monkeypatch):
     monkeypatch.setitem(app.config, 'ALLOW_PRIVATE_LAN_URLS', True)
-    from gametheca.models import GlobalSettings
-
-    row = GlobalSettings()
-    db_session.add(row)
-    db_session.commit()
     with app.app_context():
         saved = save_ambient_config({
             'enabled': True,

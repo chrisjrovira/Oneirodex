@@ -30,11 +30,25 @@ def test_edit_library_seeds_scan_depth_only_on_get():
     assert chunk.count('form.scan_depth.data') == 1
 
 
-def test_base_html_collapses_member_sidebar_on_admin_paths():
+def test_base_html_collapses_member_nav_on_admin_paths():
     """Admin Jinja pages keep the member LHN for recovery nav, but start collapsed
-    so it no longer competes with page chrome (handoff Wave 2 deferred #1)."""
+    so it no longer competes with page chrome (handoff Wave 2 deferred #1).
+
+    The guard, not the element: this used to assert the collapse sat on
+    ``class="sidebar…"``. GT-B2 retired the legacy ``#sidebar`` for the rail and
+    moved the collapsed state onto the ``#content`` shell, so the assertion
+    failed against a template that was correct — it pinned where the behaviour
+    used to live rather than that it still happens. Checked on the shell, it
+    still means something: admin pages would otherwise open with the member nav
+    expanded over the admin chrome.
+    """
     base = (ROOT / 'gametheca' / 'templates' / 'base.html').read_text(encoding='utf-8')
     assert "request.path.startswith('/admin')" in base
     assert 'admin_chrome' in base
-    assert 'class="sidebar{% if admin_chrome %} collapsed{% endif %}"' in base
-    assert '{% if admin_chrome %} collapsed{% endif %}' in base
+
+    content_tag = next(
+        (line for line in base.splitlines() if 'id="content"' in line),
+        None,
+    )
+    assert content_tag, 'the #content shell the collapse applies to is gone'
+    assert '{% if admin_chrome %} collapsed{% endif %}' in content_tag

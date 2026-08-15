@@ -47,11 +47,10 @@ def test_remote_play_disabled_by_default(client, app, db_session, monkeypatch):
     assert data['configured'] is False
 
 
-def test_member_status_when_configured(client, app, db_session, monkeypatch):
+def test_member_status_when_configured(client, app, db_session, global_settings, monkeypatch):
     monkeypatch.setitem(app.config, 'ENABLE_REMOTE_PLAY', True)
     monkeypatch.setitem(app.config, 'ALLOW_PRIVATE_LAN_URLS', True)
-    row = GlobalSettings(enable_remote_play=True)
-    db_session.add(row)
+    global_settings.enable_remote_play = True
     db_session.commit()
     with app.app_context():
         from gametheca.utils.remote_play import save_remote_play_config
@@ -76,12 +75,9 @@ def test_member_status_when_configured(client, app, db_session, monkeypatch):
     assert '192.168.1.50' in (data.get('copy_hint') or '')
 
 
-def test_admin_put_config(client, app, db_session, monkeypatch):
+def test_admin_put_config(client, app, db_session, global_settings, monkeypatch):
     monkeypatch.setitem(app.config, 'ENABLE_REMOTE_PLAY', False)
     monkeypatch.setitem(app.config, 'ALLOW_PRIVATE_LAN_URLS', True)
-    row = GlobalSettings()
-    db_session.add(row)
-    db_session.commit()
     _login(client, db_session, role='admin')
     resp = client.put(
         '/api/admin/remote-play/config',
@@ -100,10 +96,11 @@ def test_admin_put_config(client, app, db_session, monkeypatch):
     assert data['moonlight_host'] == '10.0.0.5'
 
 
-def test_save_validates_lan_url(app, db_session, monkeypatch):
+def test_save_validates_lan_url(app, db_session, global_settings, monkeypatch):
     monkeypatch.setitem(app.config, 'ALLOW_PRIVATE_LAN_URLS', False)
-    row = GlobalSettings(enable_remote_play=True)
-    db_session.add(row)
+    # An UPDATE on the existing singleton, not a second INSERT — the value is
+    # what this test needs, a fresh row is not.
+    global_settings.enable_remote_play = True
     db_session.commit()
     with app.app_context():
         from gametheca.utils.remote_play import save_remote_play_config

@@ -210,3 +210,38 @@ def configured_install(db_session):
     settings.setup_completed = True
     db_session.commit()
     return settings
+
+
+@pytest.fixture(scope='function')
+def global_settings(db_session):
+    """The `GlobalSettings` row, created only if one does not already exist.
+
+    `global_settings` holds at most one row, enforced in the database by the
+    `global_settings_singleton` unique index on a constant expression. Several
+    tests used to open with a bare::
+
+        row = GlobalSettings()
+        db_session.add(row)
+        db_session.commit()
+
+    which is an unconditional INSERT into a one-row table. That works only while
+    nothing else has made the row, so those tests failed with a `UniqueViolation`
+    on `Key ((true))=(t) already exists` — including when run alone, because the
+    row exists before they start.
+
+    Requesting this fixture states what they actually need: *the* settings row,
+    whoever created it. Mutate the returned object and commit for tests that need
+    particular values on it — that is an UPDATE, which the constraint permits.
+
+    Mirrors `ensure_global_settings()` in `gametheca/utils/module_status.py`,
+    which is what production code uses for the same reason.
+    """
+    from sqlalchemy import select
+    from gametheca.models import GlobalSettings
+
+    row = db_session.execute(select(GlobalSettings)).scalars().first()
+    if row is None:
+        row = GlobalSettings()
+        db_session.add(row)
+        db_session.commit()
+    return row

@@ -204,13 +204,8 @@ def test_challenge_solver_status_api(client, app, db_session, monkeypatch):
     assert data['max_tier'] == 5
 
 
-def test_save_challenge_config_validates_url(app, db_session, monkeypatch):
+def test_save_challenge_config_validates_url(app, db_session, global_settings, monkeypatch):
     monkeypatch.setitem(app.config, 'ALLOW_PRIVATE_LAN_URLS', True)
-    from gametheca.models import GlobalSettings
-
-    row = GlobalSettings()
-    db_session.add(row)
-    db_session.commit()
     with app.app_context():
         from gametheca.utils.challenge_solver import save_challenge_config
 

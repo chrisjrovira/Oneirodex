@@ -352,7 +352,7 @@ class TestHandleManualScanCore:
 class TestUtilitiesWithRealDatabase:
     """Test utilities with actual database integration (faster, focused tests)."""
     
-    def test_scan_job_creation_with_real_db(self, app, db_session):
+    def test_scan_job_creation_with_real_db(self, app, db_session, global_settings):
         """Test that scan job is created properly when library exists."""
         # Create test library
         library = Library(
@@ -363,12 +363,13 @@ class TestUtilitiesWithRealDatabase:
         db_session.add(library)
         
         # Create required settings
-        settings = GlobalSettings(
-            update_folder_name='updates',
-            extras_folder_name='extras', 
-            scan_thread_count=1
-        )
-        db_session.add(settings)
+        # Settings is a one-row table, so this sets values on the existing row
+        # rather than adding another — the same shape as the AllowedFileType
+        # check just below, which was already written this way.
+        settings = global_settings
+        settings.update_folder_name = 'updates'
+        settings.extras_folder_name = 'extras'
+        settings.scan_thread_count = 1
         
         # Create allowed file type to prevent empty list error (check if exists first)
         existing_file_type = db_session.query(AllowedFileType).filter_by(value='exe').first()
@@ -401,7 +402,7 @@ class TestUtilitiesWithRealDatabase:
 class TestAdvancedScanScenarios:
     """Test advanced scanning scenarios with deep database integration."""
     
-    def test_existing_job_restart_workflow(self, app, db_session):
+    def test_existing_job_restart_workflow(self, app, db_session, global_settings):
         """Test restarting an existing scan job with proper state management."""
         # Setup test environment
         library = Library(
@@ -411,12 +412,13 @@ class TestAdvancedScanScenarios:
         )
         db_session.add(library)
         
-        settings = GlobalSettings(
-            update_folder_name='updates',
-            extras_folder_name='extras', 
-            scan_thread_count=1
-        )
-        db_session.add(settings)
+        # Settings is a one-row table, so this sets values on the existing row
+        # rather than adding another — the same shape as the AllowedFileType
+        # check just below, which was already written this way.
+        settings = global_settings
+        settings.update_folder_name = 'updates'
+        settings.extras_folder_name = 'extras'
+        settings.scan_thread_count = 1
         
         # Add required file types
         if not db_session.execute(select(AllowedFileType).filter_by(value='exe')).scalars().first():
@@ -469,7 +471,7 @@ class TestAdvancedScanScenarios:
                     assert all_jobs[0].folders == {"/restart/path": True}
                     assert all_jobs[0].content_type == 'Games'
 
-    def test_remove_missing_games_functionality(self, app, db_session):
+    def test_remove_missing_games_functionality(self, app, db_session, global_settings):
         """Test the remove missing games feature with database state verification."""
         # Setup test environment
         library = Library(
@@ -479,12 +481,13 @@ class TestAdvancedScanScenarios:
         )
         db_session.add(library)
         
-        settings = GlobalSettings(
-            update_folder_name='updates',
-            extras_folder_name='extras', 
-            scan_thread_count=1
-        )
-        db_session.add(settings)
+        # Settings is a one-row table, so this sets values on the existing row
+        # rather than adding another — the same shape as the AllowedFileType
+        # check just below, which was already written this way.
+        settings = global_settings
+        settings.update_folder_name = 'updates'
+        settings.extras_folder_name = 'extras'
+        settings.scan_thread_count = 1
         
         if not db_session.execute(select(AllowedFileType).filter_by(value='exe')).scalars().first():
             db_session.add(AllowedFileType(value='exe'))
@@ -578,7 +581,7 @@ class TestAdvancedScanScenarios:
                                         assert scan_job.removed_count == 2
                                         assert scan_job.status == 'Completed'
 
-    def test_database_error_handling_during_scan(self, app, db_session):
+    def test_database_error_handling_during_scan(self, app, db_session, global_settings):
         """Test how scan handles database errors gracefully."""
         # Setup test environment
         library = Library(
@@ -588,12 +591,13 @@ class TestAdvancedScanScenarios:
         )
         db_session.add(library)
         
-        settings = GlobalSettings(
-            update_folder_name='updates',
-            extras_folder_name='extras', 
-            scan_thread_count=1
-        )
-        db_session.add(settings)
+        # Settings is a one-row table, so this sets values on the existing row
+        # rather than adding another — the same shape as the AllowedFileType
+        # check just below, which was already written this way.
+        settings = global_settings
+        settings.update_folder_name = 'updates'
+        settings.extras_folder_name = 'extras'
+        settings.scan_thread_count = 1
         
         if not db_session.execute(select(AllowedFileType).filter_by(value='exe')).scalars().first():
             db_session.add(AllowedFileType(value='exe'))
