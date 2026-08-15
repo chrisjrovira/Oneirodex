@@ -211,8 +211,11 @@
                  data-game-uuid="{{ game.uuid }}" data-gt-section="updates">
                 <div class="game-freshness-header">
                     <h3>Updates &amp; DLC</h3>
+                    {# "Check stores" read like a store-availability lookup; it actually re-reads
+                       the listing for updates and DLC. Renamed on the React details page when this
+                       was first reported and missed here, which is why the two pages disagreed. #}
                     <button type="button" class="btn btn-sm btn-primary" id="freshness-check-btn">
-                        Check stores
+                        Check updates &amp; DLC
                     </button>
                 </div>
                 <p class="game-freshness-hint">
