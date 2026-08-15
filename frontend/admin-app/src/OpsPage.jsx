@@ -78,6 +78,52 @@ const DETAIL_PANELS = {
 const DETAIL_PANEL_IDS = Object.keys(DETAIL_PANELS)
 
 /**
+ * Ops panel tables (UX-C8 · W27-C1).
+ *
+ * These were hand-rolled `gt-ops-table` blocks, so they were the surfaces that
+ * disagreed with every other admin table. They take `toolbar={false}`: the row
+ * sets here are short and capped, and a filter box over them is the "more
+ * chrome than content" problem — but the header, sorting and empty state are
+ * now the shared ones.
+ */
+const COMPANION_KIND_COLUMNS = [
+  { key: 'kind', label: 'Kind' },
+  { key: 'online', label: 'Online', align: 'right' },
+  { key: 'registered', label: 'Registered', align: 'right' },
+]
+
+const SCAN_JOB_COLUMNS = [
+  {
+    key: 'id',
+    label: 'Job',
+    render: (job) => <code>#{job.id_short || job.id}</code>,
+    value: (job) => job.id_short || job.id,
+  },
+  { key: 'library', label: 'Library', render: (job) => job.library || '—' },
+  { key: 'status', label: 'Status' },
+  {
+    key: 'progress',
+    label: 'Progress',
+    render: (job) => formatScanJobCounters(job),
+    // Sorts on folders done rather than the rendered "3/25 (12%)", which would
+    // compare as text and put 10 before 9.
+    value: (job) => Number(job.folders_success ?? 0) + Number(job.folders_failed ?? 0),
+  },
+  {
+    key: 'current_processing',
+    label: 'Current',
+    render: (job) => (
+      <span className="gt-ops-table__muted">{job.current_processing || '—'}</span>
+    ),
+  },
+]
+
+const RECENT_ERROR_COLUMNS = [
+  { key: 'event_type', label: 'Type', render: (event) => <code>{event.event_type}</code> },
+  { key: 'text', label: 'Message' },
+]
+
+/**
  * A key/value block in the Ops console.
  *
  * The System, Database and Logs panels were three copies of the same fifteen
@@ -418,6 +464,12 @@ export function OpsPage() {
           )}
         </section>
 
+        {/* Deliberately a plain table, not a DataTable (UX-C8). These rows are
+            a fixed diagnostic checklist — readyz, LiveKit, malware, queues,
+            library watch — read top to bottom in a known order, with any game
+            servers appended. Sorting them alphabetically would break the order
+            an operator scans, and each row's cells are bespoke rather than one
+            shape repeated, which is what the shared table is for. */}
         <section className="gt-ops-panel gt-ops-panel--services">
           <h2>Services</h2>
           {!services ? (
@@ -507,24 +559,12 @@ export function OpsPage() {
               {kindRows.length === 0 ? (
                 <p className="gt-admin-lede">No registered companions by kind.</p>
               ) : (
-                <table className="gt-ops-table">
-                  <thead>
-                    <tr>
-                      <th>Kind</th>
-                      <th>Online</th>
-                      <th>Registered</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {kindRows.map((row) => (
-                      <tr key={row.kind}>
-                        <td>{row.kind}</td>
-                        <td>{row.online}</td>
-                        <td>{row.registered}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <DataTable
+                  columns={COMPANION_KIND_COLUMNS}
+                  rows={kindRows}
+                  getRowKey={(row) => row.kind}
+                  toolbar={false}
+                />
               )}
             </>
           )}
@@ -572,30 +612,12 @@ export function OpsPage() {
                 {scans.active_count ?? 0} active
                 {scans.queued_count != null ? <> · {scans.queued_count} queued</> : null}
               </p>
-              <table className="gt-ops-table">
-              <thead>
-                <tr>
-                  <th>Job</th>
-                  <th>Library</th>
-                  <th>Status</th>
-                  <th>Progress</th>
-                  <th>Current</th>
-                </tr>
-              </thead>
-              <tbody>
-                {scans.jobs.map((job) => (
-                  <tr key={job.id}>
-                    <td>
-                      <code>#{job.id_short || job.id}</code>
-                    </td>
-                    <td>{job.library || '—'}</td>
-                    <td>{job.status}</td>
-                    <td>{formatScanJobCounters(job)}</td>
-                    <td className="gt-ops-table__muted">{job.current_processing || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              <DataTable
+                columns={SCAN_JOB_COLUMNS}
+                rows={scans.jobs}
+                getRowKey={(job) => job.id}
+                toolbar={false}
+              />
             </>
           )}
         </section>
@@ -605,24 +627,12 @@ export function OpsPage() {
           {(snapshot?.recent_errors || []).length === 0 ? (
             <p className="gt-admin-lede">{snapshot?.recent_errors_error || 'No recent errors.'}</p>
           ) : (
-            <table className="gt-ops-table">
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Message</th>
-                </tr>
-              </thead>
-              <tbody>
-                {snapshot.recent_errors.slice(0, 8).map((event) => (
-                  <tr key={event.id}>
-                    <td>
-                      <code>{event.event_type}</code>
-                    </td>
-                    <td>{event.text}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataTable
+              columns={RECENT_ERROR_COLUMNS}
+              rows={snapshot.recent_errors.slice(0, 8)}
+              getRowKey={(event) => event.id}
+              toolbar={false}
+            />
           )}
         </section>
       </div>

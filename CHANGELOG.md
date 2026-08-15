@@ -171,6 +171,7 @@ Work since the 1.0.0-beta tag (2026-08-06).
   private implementation. A page opts in with two attributes and the module wires itself up, because
   a page that must remember to call something eventually will not. A table that should arrive already
   ordered declares it in markup (`data-gt-sort-default`) rather than being re-sorted after each render
+
 - **Theme asset freshness check** (`gametheca/utils/theme_freshness.py`), surfaced as a **Theme assets**
   panel in the Ops console. Theme CSS only reaches `static/library/themes/` on a **Reset Themes**, and
   nothing reported the drift — the only symptom was "the fix didn't work". The panel hashes source
@@ -179,6 +180,12 @@ Work since the 1.0.0-beta tag (2026-08-06).
 
 ### Changed
 
+- **Ops console and dashboard tables now sort.** Five hand-rolled panel tables moved onto the shared
+  `DataTable`, which gained a `toolbar={false}` mode — these panels hold three or four rows, and a
+  filter box above them was the reason hand-rolling them looked reasonable. They already shared the
+  styling, so they had the look of the other admin tables and none of the behaviour. Two stay
+  hand-rolled on purpose: the key/value detail panels, and the Services checklist, whose row order is
+  the order you read it in
 - **Child access to the household voice lobby is now a household setting**, not a hardcoded stance
 - **Licensed under AGPL-3.0**
 

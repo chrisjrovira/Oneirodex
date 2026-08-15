@@ -122,3 +122,36 @@ test('does not mutate the caller rows array', () => {
   fireEvent.click(screen.getByRole('button', { name: /Name/ }))
   expect(rows).toEqual(snapshot)
 })
+
+test('toolbar={false} drops the filter and count but keeps sorting', () => {
+  // Ops panels carry three or four rows. A filter box over them is chrome in
+  // front of the content, and hand-rolling the table to avoid it is exactly
+  // how those panels came to disagree with every other table.
+  renderTable({ toolbar: false })
+
+  expect(screen.queryByLabelText('Filter table rows')).toBeNull()
+  expect(screen.queryByText(/^3 rows$/)).toBeNull()
+
+  fireEvent.click(screen.getByRole('button', { name: /Name/ }))
+  expect(bodyNames()).toEqual(['Astro', 'Mario', 'Zelda'])
+})
+
+test('the toolbar is there unless asked otherwise', () => {
+  renderTable()
+  expect(screen.getByLabelText('Filter table rows')).toBeTruthy()
+})
+
+test('toolbar={false} still reports an empty table', () => {
+  // The empty state is the half of the toolbar that must not go: a panel with
+  // no rows and no message reads as a panel that failed to load.
+  render(
+    <DataTable
+      columns={COLUMNS}
+      rows={[]}
+      getRowKey={(r) => r.id}
+      toolbar={false}
+      emptyMessage="No companions registered."
+    />,
+  )
+  expect(screen.getByText('No companions registered.')).toBeTruthy()
+})

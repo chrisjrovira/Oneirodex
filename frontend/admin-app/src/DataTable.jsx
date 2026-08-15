@@ -12,6 +12,12 @@ import './DataTable.css'
  *   - `value(row)` supplies the sort/filter key when the cell renders markup;
  *     without it we fall back to `row[key]`, so a column that renders a badge
  *     still sorts on the underlying value rather than on "[object Object]".
+ *
+ * `toolbar={false}` drops the filter box and row count, keeping the shared
+ * header, sorting and empty state. Ops panels are the case it exists for: a
+ * filter box above three rows of companion kinds is more chrome than content,
+ * and without this the only way to avoid it was to hand-roll the table — which
+ * is how these panels came to disagree with every other table in the first place.
  */
 export function DataTable({
   columns,
@@ -21,6 +27,7 @@ export function DataTable({
   initialSort = null,
   dense = false,
   caption,
+  toolbar = true,
 }) {
   const [sort, setSort] = useState(initialSort) // { key, dir: 'asc' | 'desc' }
   const [query, setQuery] = useState('')
@@ -90,23 +97,25 @@ export function DataTable({
 
   return (
     <div className={`gt-table-wrap${dense ? ' gt-table-wrap--dense' : ''}`}>
-      <div className="gt-table-toolbar">
-        <label className="gt-table-filter">
-          <span className="gt-table-filter__label">Filter</span>
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Type to filter…"
-            aria-label="Filter table rows"
-          />
-        </label>
-        <span className="gt-table-count" aria-live="polite">
-          {query.trim() && filtered.length !== rows.length
-            ? `${filtered.length} of ${rows.length}`
-            : `${rows.length} row${rows.length === 1 ? '' : 's'}`}
-        </span>
-      </div>
+      {toolbar ? (
+        <div className="gt-table-toolbar">
+          <label className="gt-table-filter">
+            <span className="gt-table-filter__label">Filter</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Type to filter…"
+              aria-label="Filter table rows"
+            />
+          </label>
+          <span className="gt-table-count" aria-live="polite">
+            {query.trim() && filtered.length !== rows.length
+              ? `${filtered.length} of ${rows.length}`
+              : `${rows.length} row${rows.length === 1 ? '' : 's'}`}
+          </span>
+        </div>
+      ) : null}
 
       <div className="gt-table-scroll">
         <table className="gt-table">

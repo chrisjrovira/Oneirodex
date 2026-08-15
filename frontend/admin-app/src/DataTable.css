@@ -54,10 +54,13 @@
  * paddings, two header weights, and only this one had a sticky header or a row
  * hover. That is why tables looked subtly different from page to page.
  *
- * The legacy classes are kept as selectors rather than renamed in markup,
- * because several of them are compact dashboard glances of three or four rows —
- * those want the shared *look* without DataTable's filter toolbar sitting above
- * them, which would be more chrome than content. Layout modifiers like
+ * The legacy classes were kept as selectors so compact dashboard glances could
+ * borrow the look without DataTable's filter toolbar above three rows. That
+ * gave them the styling but not the sorting or the shared empty state, so
+ * `toolbar={false}` now exists and those panels render a real DataTable; the
+ * aliases remain for the two tables that stay hand-rolled on purpose — the
+ * key/value `DetailPanel`, which has no header row, and the Services checklist,
+ * whose row order is meaningful. Layout modifiers like
  * `.gt-ops-table--services` still live next to their own page. */
 .gt-table,
 .gt-ops-table,

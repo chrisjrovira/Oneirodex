@@ -46,6 +46,24 @@ async function getJson(url) {
   return response.json()
 }
 
+/**
+ * Dashboard glance tables (UX-C8 · W27-C1). Hand-rolled `gt-ops-table` blocks
+ * until now, which is why the dashboard's tables did not match the rest of
+ * admin. `toolbar={false}` for the same reason as the Ops panels: these row
+ * sets are capped at a handful, and a filter box over four errors is chrome
+ * standing in front of the thing you came to read.
+ */
+const DASHBOARD_COMPANION_COLUMNS = [
+  { key: 'kind', label: 'Kind' },
+  { key: 'online', label: 'Online', align: 'right' },
+  { key: 'registered', label: 'Registered', align: 'right' },
+]
+
+const DASHBOARD_ERROR_COLUMNS = [
+  { key: 'event_type', label: 'Type', render: (event) => <code>{event.event_type}</code> },
+  { key: 'text', label: 'Message' },
+]
+
 function Page({ title, lede, children }) {
   return (
     <div className="gt-admin-page">
@@ -257,48 +275,24 @@ export function DashboardPage() {
                 : 'n/a'}
             </p>
           ) : (
-            <table className="gt-ops-table">
-              <thead>
-                <tr>
-                  <th>Kind</th>
-                  <th>Online</th>
-                  <th>Registered</th>
-                </tr>
-              </thead>
-              <tbody>
-                {kindRows.map((row) => (
-                  <tr key={row.kind}>
-                    <td>{row.kind}</td>
-                    <td>{row.online}</td>
-                    <td>{row.registered}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataTable
+              columns={DASHBOARD_COMPANION_COLUMNS}
+              rows={kindRows}
+              getRowKey={(row) => row.kind}
+              toolbar={false}
+            />
           )}
         </section>
 
         {(summary?.recent_errors || []).length > 0 ? (
           <section className="gt-ops-panel gt-ops-panel--wide">
             <h2>Recent errors</h2>
-            <table className="gt-ops-table">
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Message</th>
-                </tr>
-              </thead>
-              <tbody>
-                {summary.recent_errors.slice(0, 4).map((event) => (
-                  <tr key={event.id}>
-                    <td>
-                      <code>{event.event_type}</code>
-                    </td>
-                    <td>{event.text}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataTable
+              columns={DASHBOARD_ERROR_COLUMNS}
+              rows={summary.recent_errors.slice(0, 4)}
+              getRowKey={(event) => event.id}
+              toolbar={false}
+            />
           </section>
         ) : null}
       </div>
