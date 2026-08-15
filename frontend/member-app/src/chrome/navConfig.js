@@ -140,3 +140,33 @@ export function getContextLinks(pathname, { isAdmin = false } = {}) {
 
   return links
 }
+
+/**
+ * Human title for a pathname (GT-B5).
+ *
+ * The top bar names the page now, so each page's own `<h1>` title card is a
+ * second answer to a question already answered above it. Derived from the same
+ * link tables the rail renders, so a destination cannot end up with a title in
+ * the nav and a different one on the page.
+ *
+ * @param {string} pathname
+ * @param {object} [options] same feature gates as getMoreLinks
+ * @returns {string} '' when nothing matches — the bar then shows no title
+ *   rather than guessing one from the URL.
+ */
+export function getPageTitle(pathname, options = {}) {
+  const path = (pathname || '/').replace(/\/+$/, '') || '/'
+  const all = [...getPrimaryLinks(), ...getMoreLinks(options)]
+
+  // Exact first: /collections must not lose to a prefix match on /collection.
+  const exact = all.find((link) => link.to === path)
+  if (exact) return exact.label
+
+  const prefixed = all
+    .filter((link) => link.to && path.startsWith(`${link.to}/`))
+    .sort((a, b) => b.to.length - a.to.length)[0]
+  if (prefixed) return prefixed.label
+
+  if (path.startsWith('/game_details')) return 'Game'
+  return ''
+}

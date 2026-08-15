@@ -40,7 +40,13 @@ describe('ScrollJump', () => {
   let scrollToSpy
 
   beforeEach(() => {
-    scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    // The component scrolls its *host*, not the window (GT-B3). With no shell
+    // in the tree the host is documentElement, which jsdom does not give a
+    // scrollTo, so it has to be installed rather than spied.
+    document.documentElement.scrollTo = () => {}
+    scrollToSpy = vi
+      .spyOn(document.documentElement, 'scrollTo')
+      .mockImplementation(() => {})
     stubScrollMetrics({ scrollHeight: 400, clientHeight: 800, scrollY: 0 })
   })
 
@@ -89,7 +95,7 @@ describe('ScrollJump', () => {
     expect(screen.getByRole('button', { name: /jump to bottom/i })).toBeEnabled()
   })
 
-  test('jump buttons call window.scrollTo', async () => {
+  test('jump buttons scroll the host element', async () => {
     const user = userEvent.setup()
     stubScrollMetrics({
       scrollHeight: 2400,
@@ -111,5 +117,36 @@ describe('ScrollJump', () => {
     expect(scrollToSpy).toHaveBeenCalledWith(
       expect.objectContaining({ top: 1600, left: 0 }),
     )
+  })
+
+  test('scrolls .gt-shell__main when the app shell is present', async () => {
+    // The regression this exists for: the shell is viewport-locked and
+    // .gt-shell__main is the only scroll container, so reading window.scrollY
+    // reported "nothing to scroll" and the control rendered *nothing at all*.
+    // It looked deleted rather than broken, which is why it survived a full
+    // suite run unnoticed.
+    const main = document.createElement('div')
+    main.className = 'gt-shell__main'
+    Object.defineProperty(main, 'scrollHeight', { configurable: true, get: () => 2400 })
+    Object.defineProperty(main, 'clientHeight', { configurable: true, get: () => 800 })
+    main.scrollTop = 600
+    main.scrollTo = vi.fn()
+    document.body.appendChild(main)
+
+    const user = userEvent.setup()
+    render(<ScrollJump />)
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'))
+    })
+
+    // Visible at all — the failure mode was rendering nothing.
+    const top = screen.getByRole('button', { name: /jump to top/i })
+    await user.click(top)
+    expect(main.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }))
+
+    await user.click(screen.getByRole('button', { name: /jump to bottom/i }))
+    expect(main.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 1600 }))
+
+    main.remove()
   })
 })

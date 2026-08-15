@@ -48,6 +48,23 @@
     --gt-adminpage-max: 1600px;
 }
 
+/* The page shell owns the width, not Bootstrap (W27-D7).
+ *
+ * Several tab panes still carry Bootstrap's `.container`, which applies its own
+ * stepped max-widths — 1320px at xxl. Inside a `--xl` page that is 1600px wide,
+ * those panes rendered visibly narrower than their siblings: on Libraries &
+ * scans, four of the seven tabs were inset while the other three were not, so
+ * the card appeared to change width as you moved between tabs.
+ *
+ * Neutralised here rather than by editing each template's class list: the shell
+ * is the thing that should decide page width, and a new pane copied from an
+ * existing one would otherwise reintroduce it. Bootstrap's gutter padding is
+ * left alone — only the cap is wrong, not the spacing. */
+.gt-adminpage .container {
+    max-width: none;
+    width: 100%;
+}
+
 /* ---------------------------------------------------------------- header */
 
 .gt-adminpage-header {
@@ -716,9 +733,9 @@
     position: relative;
     width: 100%;
     height: 1.5rem;
-    background: color-mix(in srgb, var(--gt-bg, #000) 55%, var(--gt-surface, #1a1a1a));
-    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-    border-radius: var(--gt-adminpage-radius-sm, 8px);
+    background: color-mix(in srgb, var(--gt-bg) 55%, var(--gt-surface));
+    border: 1px solid var(--gt-border);
+    border-radius: var(--gt-adminpage-radius-sm);
     overflow: hidden;
 }
 
@@ -726,8 +743,8 @@
     height: 100%;
     background: linear-gradient(
         90deg,
-        color-mix(in srgb, var(--gt-accent, var(--gt-success, #2fd67b)) 45%, var(--gt-bg, #000)),
-        color-mix(in srgb, var(--gt-accent, var(--gt-success, #2fd67b)) 65%, var(--gt-bg, #000))
+        color-mix(in srgb, var(--gt-accent) 45%, var(--gt-bg)),
+        color-mix(in srgb, var(--gt-accent) 65%, var(--gt-bg))
     );
     transition: width 0.35s ease;
     border-radius: inherit;
@@ -741,8 +758,8 @@
     justify-content: center;
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--gt-text, #fff);
-    text-shadow: 0 0 3px var(--gt-bg, #000);
+    color: var(--gt-text);
+    text-shadow: 0 0 3px var(--gt-bg);
     pointer-events: none;
 }
 
@@ -787,8 +804,8 @@
     gap: 0.15rem;
     padding: 0.6rem 0.75rem;
     border-radius: 10px;
-    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-    background: var(--gt-surface, #141820);
+    border: 1px solid var(--gt-border);
+    background: var(--gt-surface);
 }
 
 .gt-stat-tile__label {
@@ -796,14 +813,14 @@
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--gt-text-muted, #9aa3b2);
+    color: var(--gt-text-muted);
 }
 
 .gt-stat-tile__value {
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1.1;
-    color: var(--gt-accent, #2fd67b);
+    color: var(--gt-accent);
 }
 
 .gt-stat-table {

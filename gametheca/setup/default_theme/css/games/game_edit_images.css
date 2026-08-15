@@ -1,12 +1,12 @@
 /* Edit Images — GameTheca aurora shell (source theme; Reset Themes to refresh copies) */
 
 .gt-edit-images {
-  --gt-edit-accent: var(--gt-accent, #2fd67b);
-  --gt-edit-text: var(--gt-text, #f2f4f8);
-  --gt-edit-muted: var(--gt-text-muted, rgba(242, 244, 248, 0.72));
-  --gt-edit-surface: var(--gt-surface, #141820);
-  --gt-edit-surface-2: var(--gt-surface-2, #1c2230);
-  --gt-edit-border: var(--gt-border, rgba(255, 255, 255, 0.14));
+  --gt-edit-accent: var(--gt-accent);
+  --gt-edit-text: var(--gt-text);
+  --gt-edit-muted: var(--gt-text-muted);
+  --gt-edit-surface: var(--gt-surface);
+  --gt-edit-surface-2: var(--gt-surface-2);
+  --gt-edit-border: var(--gt-border);
   max-width: min(100%, 72rem);
   margin: 0 auto;
   padding: 1rem 1.25rem 2.5rem;
@@ -162,7 +162,7 @@
 .gt-edit-images .btn-primary {
   background: var(--gt-edit-accent);
   border-color: var(--gt-edit-accent);
-  color: var(--gt-accent-contrast, #0b0d10);
+  color: var(--gt-accent-contrast);
 }
 
 .gt-edit-images .btn-secondary {

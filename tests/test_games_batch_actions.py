@@ -582,15 +582,16 @@ def test_batch_refresh_images_queues_happy_path(
 
     started = []
 
-    class FakeThread:
-        def __init__(self, target=None, daemon=None):
-            self.target = target
-            self.daemon = daemon
+    # The route hands work to run_in_background now, which owns the thread and
+    # the worker's session (utils/background.py). Intercepting there keeps this
+    # test about *what gets queued* without starting real threads.
+    def fake_run_in_background(app, func, *args, name=None, **kwargs):
+        started.append((func, args))
+        return None
 
-        def start(self):
-            started.append(self.target)
-
-    monkeypatch.setattr('gametheca.routes_apis.game.Thread', FakeThread)
+    monkeypatch.setattr(
+        'gametheca.routes_apis.game.run_in_background', fake_run_in_background
+    )
     monkeypatch.setattr(
         'gametheca.routes_apis.game.refresh_images_in_background',
         lambda game_uuid: None,
@@ -614,7 +615,12 @@ def test_batch_refresh_images_queues_happy_path(
     assert body['skipped'] == [
         {'uuid': no_igdb.uuid, 'reason': 'no_igdb_id', 'name': 'Refresh No IGDB'},
     ]
+    # One worker, for the game that has an igdb_id. Asserting the argument as
+    # well as the count: the response says what it *intends* to queue, this
+    # says what was actually handed to the worker.
     assert len(started) == 1
+    queued_func, queued_args = started[0]
+    assert queued_args == (with_igdb.uuid,)
 
 
 def test_batch_refresh_images_skips_not_found_and_forbidden(
@@ -635,15 +641,8 @@ def test_batch_refresh_images_skips_not_found_and_forbidden(
 
     monkeypatch.setattr('gametheca.routes_apis.game.user_can_access_game', fake_acl)
     monkeypatch.setattr(
-        'gametheca.routes_apis.game.Thread',
-        type(
-            'FakeThread',
-            (),
-            {
-                '__init__': lambda self, target=None, daemon=None: None,
-                'start': lambda self: None,
-            },
-        ),
+        'gametheca.routes_apis.game.run_in_background',
+        lambda app, func, *args, name=None, **kwargs: None,
     )
 
     missing = str(uuid4())

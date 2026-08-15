@@ -2,8 +2,8 @@
   margin-top: 1.25rem;
   padding: 1rem;
   border-radius: 12px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: color-mix(in srgb, var(--gt-surface, #141820) 88%, transparent);
+  border: 1px solid var(--gt-border);
+  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
 }
 
 .gt-dupe-glance__header {
@@ -24,7 +24,7 @@
   margin: 0;
   max-width: 42rem;
   font-size: 0.9rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__toolbar {
@@ -38,9 +38,9 @@
   min-height: 2.2rem;
   margin-left: 0.35rem;
   border-radius: 8px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: var(--gt-surface-2, #1c2230);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
+  color: var(--gt-text);
   font: inherit;
 }
 
@@ -52,7 +52,7 @@
 }
 
 .gt-dupe-glance__log.is-ok {
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 16%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 16%, transparent);
 }
 
 .gt-dupe-glance__log.is-error {
@@ -61,7 +61,7 @@
 
 .gt-dupe-glance__empty {
   margin: 0;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__group h3 {
@@ -86,8 +86,8 @@
   align-items: stretch;
   padding: 0.8rem 0.9rem;
   border-radius: 10px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.1));
-  background: var(--gt-surface-2, #1c2230);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
 }
 
 .gt-dupe-glance__meta {
@@ -117,7 +117,7 @@
   letter-spacing: 0.03em;
   padding: 0.28rem 0.55rem;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 14%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
 }
 
 .gt-dupe-glance__suggested {
@@ -127,13 +127,13 @@
   letter-spacing: 0.03em;
   padding: 0.28rem 0.55rem;
   border-radius: 6px;
-  color: var(--gt-text, #f2f4f8);
-  border: 1px dashed color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 8%, transparent);
+  color: var(--gt-text);
+  border: 1px dashed color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 8%, transparent);
 }
 
 .gt-dupe-glance__actions .gt-btn.is-suggested {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
 }
 
 /* UX-C5 — "this proposed match is wrong", with a reason. Feedback, not triage:
@@ -148,7 +148,7 @@
   font-size: 0.8rem;
   font-weight: 650;
   letter-spacing: 0.02em;
-  color: var(--gt-text-muted, #9aa4b2);
+  color: var(--gt-text-muted);
   white-space: nowrap;
 }
 
@@ -174,9 +174,9 @@
   letter-spacing: 0.03em;
   padding: 0.28rem 0.55rem;
   border-radius: 6px;
-  color: var(--gt-text, #f2f4f8);
-  border: 1px solid color-mix(in srgb, var(--gt-warning, #f6c453) 55%, transparent);
-  background: color-mix(in srgb, var(--gt-warning, #f6c453) 14%, transparent);
+  color: var(--gt-text);
+  border: 1px solid color-mix(in srgb, var(--gt-warning) 55%, transparent);
+  background: color-mix(in srgb, var(--gt-warning) 14%, transparent);
 }
 
 .gt-dupe-glance__why {
@@ -189,25 +189,25 @@
 .gt-dupe-glance__reason {
   margin: 0;
   font-size: 0.82rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
   line-height: 1.35;
 }
 
 .gt-dupe-glance__why-label {
   font-weight: 650;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-dupe-glance__transforms {
   margin: 0;
   font-size: 0.86rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__transforms-summary {
   cursor: pointer;
   font-weight: 600;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
   list-style: none;
 }
 
@@ -218,7 +218,7 @@
 .gt-dupe-glance__transforms-summary::before {
   content: '▸ ';
   display: inline-block;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__transforms[open] > .gt-dupe-glance__transforms-summary::before {
@@ -229,8 +229,8 @@
   margin: 0.35rem 0 0;
   padding: 0.45rem 0.62rem 0.35rem 1.15rem;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 90%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #141820) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 55%, transparent);
   display: flex;
   flex-direction: column;
   gap: 0.42rem;
@@ -246,7 +246,7 @@
   margin-right: 0.35rem;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-dupe-glance__transform-pair code {
@@ -258,7 +258,7 @@
   display: inline-block;
   margin-left: 0.35rem;
   font-size: 0.82rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__transform-reason::before {
@@ -279,21 +279,21 @@
   letter-spacing: 0.03em;
   padding: 0.28rem 0.55rem;
   border-radius: 6px;
-  color: var(--gt-text, #f2f4f8);
-  border: 1px dashed color-mix(in srgb, var(--gt-info, #5eb8ff) 50%, transparent);
-  background: color-mix(in srgb, var(--gt-info, #5eb8ff) 10%, transparent);
+  color: var(--gt-text);
+  border: 1px dashed color-mix(in srgb, var(--gt-info) 50%, transparent);
+  background: color-mix(in srgb, var(--gt-info) 10%, transparent);
 }
 
 .gt-dupe-glance__stage-e-details {
   margin: 0;
   font-size: 0.86rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__stage-e-summary {
   cursor: pointer;
   font-weight: 600;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
   list-style: none;
 }
 
@@ -304,7 +304,7 @@
 .gt-dupe-glance__stage-e-summary::before {
   content: '▸ ';
   display: inline-block;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__stage-e-details[open] > .gt-dupe-glance__stage-e-summary::before {
@@ -314,7 +314,7 @@
 .gt-dupe-glance__stage-e-note {
   margin: 0.3rem 0 0;
   font-size: 0.82rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__stage-e-list {
@@ -322,8 +322,8 @@
   margin: 0.35rem 0 0;
   padding: 0.45rem 0.62rem;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 90%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #141820) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 55%, transparent);
   display: flex;
   flex-direction: column;
   gap: 0.42rem;
@@ -340,11 +340,11 @@
 .gt-dupe-glance__stage-e-source {
   font-weight: 650;
   font-size: 0.82rem;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-dupe-glance__stage-e-name {
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
   word-break: break-word;
 }
 
@@ -355,7 +355,7 @@ a.gt-dupe-glance__stage-e-name {
 
 .gt-dupe-glance__stage-e-mode {
   font-size: 0.78rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__stage-e-mode::before {
@@ -365,7 +365,7 @@ a.gt-dupe-glance__stage-e-name {
 .gt-dupe-glance__stage-e-meta {
   margin: 0;
   font-size: 0.82rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__match-score {
@@ -377,9 +377,9 @@ a.gt-dupe-glance__stage-e-name {
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
-  color: var(--gt-text, #f2f4f8);
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #141820) 70%, transparent);
+  color: var(--gt-text);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 70%, transparent);
 }
 
 .gt-dupe-glance__actions {
@@ -392,8 +392,8 @@ a.gt-dupe-glance__stage-e-name {
   margin: 0;
   padding: 0.4rem 0.45rem;
   border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.16)) 90%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #1a2030) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 55%, transparent);
 }
 
 .gt-dupe-glance__sort {
@@ -406,13 +406,13 @@ a.gt-dupe-glance__stage-e-name {
 .gt-dupe-glance__sort-label {
   font-size: 0.78rem;
   font-weight: 650;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
   margin-right: 0.15rem;
 }
 
 .gt-dupe-glance__sort-btn.is-active {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
-  color: var(--gt-accent, #2fd67b);
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  color: var(--gt-accent);
 }
 
 .gt-dupe-glance__dupe-of {
@@ -446,7 +446,7 @@ a.gt-dupe-glance__stage-e-name {
 
 .gt-dupe-glance__compare-banner-text {
   font-size: 0.85rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__compare-grid {
@@ -471,8 +471,8 @@ a.gt-dupe-glance__stage-e-name {
   gap: 0.52rem;
   padding: 0.6rem 0.7rem;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 90%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #141820) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 55%, transparent);
 }
 
 .gt-dupe-glance__compare-side--empty {
@@ -484,7 +484,7 @@ a.gt-dupe-glance__stage-e-name {
 .gt-dupe-glance__compare-missing {
   margin: 0;
   font-size: 0.78rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__compare-head {
@@ -506,7 +506,7 @@ a.gt-dupe-glance__stage-e-name {
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__compare-fields {
@@ -524,7 +524,7 @@ a.gt-dupe-glance__stage-e-name {
   gap: 0.4rem 0.6rem;
   align-items: start;
   padding-bottom: 0.32rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.1)) 55%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
 }
 
 .gt-dupe-glance__compare-field:last-child {
@@ -536,7 +536,7 @@ a.gt-dupe-glance__stage-e-name {
   margin: 0;
   font-size: 0.82rem;
   font-weight: 650;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
   padding-top: 0.1rem;
 }
 
@@ -544,12 +544,12 @@ a.gt-dupe-glance__stage-e-name {
   margin: 0;
   min-width: 0;
   font-size: 0.84rem;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
   word-break: break-word;
 }
 
 .gt-dupe-glance__compare-empty {
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -559,7 +559,7 @@ a.gt-dupe-glance__stage-e-name {
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
   padding-top: 0.15rem;
 }
 
@@ -568,7 +568,7 @@ a.gt-dupe-glance__stage-e-name {
   height: 36px;
   object-fit: cover;
   border-radius: 3px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--gt-border);
   flex: 0 0 auto;
   background: rgba(0, 0, 0, 0.25);
 }
@@ -595,20 +595,20 @@ a.gt-dupe-glance__stage-e-name {
 .gt-dupe-glance__dupe-title {
   font-size: 0.85rem;
   font-weight: 650;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
   text-decoration: none;
   word-break: break-word;
 }
 
 a.gt-dupe-glance__dupe-title:hover {
   text-decoration: underline;
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
 }
 
 .gt-dupe-glance__dupe-uuid {
   font-size: 0.86rem;
   word-break: break-all;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-dupe-glance__dupe-path {
@@ -619,7 +619,7 @@ a.gt-dupe-glance__dupe-title:hover {
   margin: 0;
   border: 0;
   background: transparent;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
   font: inherit;
   font-size: 0.82rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -628,14 +628,14 @@ a.gt-dupe-glance__dupe-title:hover {
 }
 
 .gt-dupe-glance__dupe-path:hover {
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
   text-decoration: underline;
 }
 
 .gt-dupe-glance__amend {
   margin: 0;
   font-size: 0.82rem;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-dupe-glance__amend-label {
@@ -646,5 +646,5 @@ a.gt-dupe-glance__dupe-title:hover {
 .gt-dupe-glance__ondisk {
   margin: 0;
   font-size: 0.84rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }

@@ -1,6 +1,11 @@
 {% extends "base_admin.html" %}
 {% block content %}
 {% import 'partials/icons.html' as icons %}
+{# chrome.contextbar is called below under enable_new_chrome. The import was
+   missing, which nothing noticed while the flag defaulted off — flipping it on
+   turned /admin/integrations into a 500 ('chrome' is undefined). The other
+   three templates that call this macro import it exactly this way. #}
+{% import 'partials/chrome.html' as chrome %}
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 

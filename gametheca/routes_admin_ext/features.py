@@ -12,6 +12,10 @@ from gametheca import db
 from gametheca.forms import CsrfProtectForm
 from gametheca.models import GlobalSettings
 from gametheca.utils.auth import admin_required
+from gametheca.utils.global_settings import (
+    global_settings_row,
+    global_settings_row_or_create,
+)
 from gametheca.utils.malware_scan import module_status as malware_module_status
 from gametheca.utils.ambient_lighting import ambient_lighting_status, get_ambient_config
 from gametheca.utils.challenge_solver import challenge_solver_status, get_challenge_config
@@ -63,10 +67,11 @@ def _env_bool(key: str, default: bool = True) -> bool:
 def features_settings_page():
     """Toggle product modules. OIDC/auth is under Integrations — stays off by default."""
     form = CsrfProtectForm()
-    settings = db.session.execute(select(GlobalSettings).limit(1)).scalars().first()
+    settings = global_settings_row()
     if settings is None:
-        settings = GlobalSettings()
-        db.session.add(settings)
+        # Kept conditional so a plain GET does not commit on every page view;
+        # the row only needs persisting the once, when it did not exist.
+        settings = global_settings_row_or_create()
         db.session.commit()
 
     if request.method == 'POST' and form.validate_on_submit():

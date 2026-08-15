@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "notes": "Curated Torznab/Newznab-compatible preset templates for admin Acquire. No API keys. Operators must set a working base URL and API key before search. Display names are admin-only (scrub carve-out).",
+  "presets": [
+    {
+      "id": "nyaa",
+      "name": "Nyaa",
+      "protocol": "torznab",
+      "url": "https://indexer.example.invalid/torznab/nyaa",
+      "notes": "Operator must set URL to a Torznab-compatible endpoint for this indexer (e.g. Jackett/Prowlarr card URL exposed over HTTPS). API key required before search."
+    },
+    {
+      "id": "eztv",
+      "name": "EZTV",
+      "protocol": "torznab",
+      "url": "https://indexer.example.invalid/torznab/eztv",
+      "notes": "Operator must set URL. Public TV-oriented indexer via Torznab wrapper."
+    },
+    {
+      "id": "yts",
+      "name": "YTS",
+      "protocol": "torznab",
+      "url": "https://indexer.example.invalid/torznab/yts",
+      "notes": "Operator must set URL to a Torznab-compatible YTS endpoint."
+    },
+    {
+      "id": "1337x",
+      "name": "1337x",
+      "protocol": "torznab",
+      "url": "https://indexer.example.invalid/torznab/1337x",
+      "notes": "Operator must set URL. Common public tracker Torznab card."
+    },
+    {
+      "id": "limetorrents",
+      "name": "LimeTorrents",
+      "protocol": "torznab",
+      "url": "https://indexer.example.invalid/torznab/limetorrents",
+      "notes": "Operator must set URL to a Torznab-compatible endpoint."
+    },
+    {
+      "id": "torrentgalaxy",
+      "name": "TorrentGalaxy",
+      "protocol": "torznab",
+      "url": "https://indexer.example.invalid/torznab/torrentgalaxy",
+      "notes": "Operator must set URL. API key required before search."
+    },
+    {
+      "id": "bitsearch",
+      "name": "BitSearch",
+      "protocol": "torznab",
+      "url": "https://indexer.example.invalid/torznab/bitsearch",
+      "notes": "Operator must set URL to a Torznab-compatible BitSearch endpoint."
+    },
+    {
+      "id": "internetarchive",
+      "name": "Internet Archive",
+      "protocol": "torznab",
+      "url": "https://indexer.example.invalid/torznab/internetarchive",
+      "notes": "Operator must set URL. Prefer Torznab wrappers that target archive.org collections you are licensed to fetch."
+    },
+    {
+      "id": "linuxtracker",
+      "name": "LinuxTracker",
+      "protocol": "torznab",
+      "url": "https://indexer.example.invalid/torznab/linuxtracker",
+      "notes": "Operator must set URL. Linux ISO / FOSS-oriented Torznab card."
+    },
+    {
+      "id": "newznab_generic",
+      "name": "Newznab (Usenet)",
+      "protocol": "newznab",
+      "url": "https://indexer.example.invalid/newznab/api",
+      "notes": "Operator must set URL to their Newznab-compatible Usenet indexer API base and paste the API key."
+    },
+    {
+      "id": "dogmatix",
+      "name": "Dogmatix (Newznab)",
+      "protocol": "newznab",
+      "url": "https://indexer.example.invalid/newznab/dogmatix",
+      "notes": "Operator must set URL and API key for this Newznab-compatible provider."
+    },
+    {
+      "id": "nzbfinder",
+      "name": "NZBFinder (Newznab)",
+      "protocol": "newznab",
+      "url": "https://indexer.example.invalid/newznab/nzbfinder",
+      "notes": "Operator must set URL and API key. Placeholder base — replace with live Newznab API root."
+    }
+  ]
+}

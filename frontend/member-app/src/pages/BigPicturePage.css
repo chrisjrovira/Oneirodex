@@ -7,7 +7,7 @@
   margin: 0;
   padding: 1.5rem 1.5rem 3rem;
   overflow: auto;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
   background: #0b0d12;
 }
 
@@ -28,7 +28,7 @@
 .gt-bp__hint {
   margin: 0;
   font-size: 1rem;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
 }
 
 .gt-bp__header-actions {
@@ -41,9 +41,9 @@
 .gt-bp__exit {
   padding: 0.65rem 1.25rem;
   border-radius: 10px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: var(--gt-surface, #141820);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface);
+  color: var(--gt-text);
   font-size: 1.05rem;
   text-decoration: none;
   white-space: nowrap;
@@ -66,8 +66,8 @@
   padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
   border-radius: 12px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: var(--gt-surface, #141820);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface);
   font-size: 1.15rem;
 }
 
@@ -82,8 +82,8 @@
   padding: 1.75rem;
   margin-bottom: 2rem;
   border-radius: 16px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: var(--gt-surface, #141820);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface);
 }
 
 .gt-bp__hero-art {
@@ -92,7 +92,7 @@
   aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: 12px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--gt-border);
 }
 
 .gt-bp__hero-body {
@@ -110,7 +110,7 @@
   font-size: 1rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
 }
 
 .gt-bp__hero-summary {
@@ -118,7 +118,7 @@
   max-width: 70ch;
   font-size: 1.2rem;
   line-height: 1.55;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
 }
 
 .gt-bp__hero-actions {
@@ -133,9 +133,9 @@
   align-items: center;
   padding: 0.7rem 1.5rem;
   border-radius: 10px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: var(--gt-surface-2, #1c2230);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
+  color: var(--gt-text);
   font: inherit;
   font-size: 1.1rem;
   text-decoration: none;
@@ -170,7 +170,7 @@
   border: 2px solid transparent;
   border-radius: 14px;
   background: transparent;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
   text-align: left;
   text-decoration: none;
   scroll-snap-align: center;
@@ -184,14 +184,14 @@
   aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: 12px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: var(--gt-surface, #141820);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface);
 }
 
 .gt-bp__tile-label {
   font-size: 1.15rem;
   line-height: 1.3;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -204,7 +204,7 @@
 
 .gt-bp__tile--focused,
 .gt-bp__tile:focus-visible {
-  outline: 4px solid var(--gt-focus-ring, #ff8f75);
+  outline: 4px solid var(--gt-focus-ring);
   outline-offset: 6px;
 }
 
@@ -216,7 +216,7 @@
 
 .gt-bp__tile--focused .gt-bp__tile-label,
 .gt-bp__tile:focus-visible .gt-bp__tile-label {
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-bp__tile-badges {
@@ -233,9 +233,9 @@
 .gt-bp__badge {
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: var(--gt-surface, #141820);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface);
+  color: var(--gt-text);
   font-size: 0.85rem;
   letter-spacing: 0.04em;
 }
@@ -244,7 +244,7 @@
   margin: 0;
   padding: 2rem 0;
   font-size: 1.25rem;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

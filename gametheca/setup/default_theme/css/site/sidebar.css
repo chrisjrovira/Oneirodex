@@ -8,11 +8,11 @@
     display: inline-block;
     vertical-align: -0.15em;
     flex-shrink: 0;
-    stroke-width: var(--gt-icon-stroke, 2);
-    stroke-linecap: var(--gt-icon-linecap, round);
-    stroke-linejoin: var(--gt-icon-linejoin, round);
-    fill: var(--gt-icon-fill, none);
-    fill-opacity: var(--gt-icon-fill-opacity, 1);
+    stroke-width: var(--gt-icon-stroke);
+    stroke-linecap: var(--gt-icon-linecap);
+    stroke-linejoin: var(--gt-icon-linejoin);
+    fill: var(--gt-icon-fill);
+    fill-opacity: var(--gt-icon-fill-opacity);
 }
 
 .sidebar {

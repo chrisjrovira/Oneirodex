@@ -1,0 +1,80 @@
+# Local UI-review stack — not a deployment target.
+#
+# Why this exists rather than `docker compose up`:
+#   This checkout lives on a network share (Z: -> \\192.168.50.116\...). Docker
+#   Desktop resolves host bind mounts through /run/desktop/mnt/host, which is
+#   read-only for UNC paths, so every `./path:/container` mount in the main
+#   compose file fails with:
+#
+#     error while creating mount source path ... read-only file system
+#
+#   That kills the db before it starts. The main file is correct for a normal
+#   local checkout; it simply cannot bind-mount from here.
+#
+# What changes:
+#   * every host bind mount becomes a named volume
+#   * Postgres uses its default pg_hba instead of the mounted one (the mount
+#     existed to force a Compose-friendly HBA; the stock image config already
+#     accepts bridge-network connections without SSL, so nothing is lost here)
+#   * no games volume — this is for reviewing chrome and page layout, not
+#     library content
+#
+# Usage:
+#   docker compose -f docker-compose.review.yml up -d --build
+#   docker compose -f docker-compose.review.yml down -v
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gametheca:review
+    container_name: gametheca-review-app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5006:5006"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/gametheca
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=gametheca
+      - SECRET_KEY=review-only-not-a-production-secret
+      - DATA_FOLDER_GAMES=/storage
+      - UPLOAD_FOLDER=/app/gametheca/static/library
+      # Regenerates preset themes on boot, which this review needs: gt-shell.css
+      # and gt-density.css are new files and only reach a theme folder on sync.
+      - DEV_MODE=true
+    volumes:
+      - review_storage:/storage
+      - review_library:/app/gametheca/static/library
+
+  db:
+    image: postgres:17.6
+    container_name: gametheca-review-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=gametheca
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      # Published so local pytest still has a database while this stack is up.
+      # Without it, replacing the main db container silently breaks every test
+      # that needs Postgres — which looked like 14 code failures, not a missing
+      # port mapping.
+      - "5432:5432"
+    volumes:
+      - review_db:/var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gametheca"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  review_db:
+  review_library:
+  review_storage:

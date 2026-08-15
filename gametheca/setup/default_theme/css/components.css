@@ -25,10 +25,37 @@
     max-height: none;
 }
 
-.game-card:hover {
-    transform: translateY(-2px) scale(1.03);
+/* Hover lift, scaled relative to how big the tiles already are (W27).
+ *
+ * It was a flat `scale(1.03)` — three percent, which reads as nothing, which is
+ * why hover "does not expand it really". A flat large scale is wrong too: at
+ * 100% tile size a 2x tile would cover half the screen.
+ *
+ * `--gt-tile-hover-scale` is set alongside the tile-size vars in tileSize.js
+ * and interpolates 1.6 (small tiles, where there is room and detail is scarce)
+ * down to 1.06 (large tiles, where a nudge is all that is wanted). The fallback
+ * keeps a sensible lift if the var never arrives — classic Jinja pages do not
+ * run the SPA's tile-size code. */
+.game-card:hover,
+.game-card:focus-within {
+    transform: translateY(-2px) scale(var(--gt-tile-hover-scale, 1.15));
     z-index: 6;
     box-shadow: 0 8px 20px var(--shadow-dark-strong);
+}
+
+/* Menu open beats hover: the pointer has to leave the tile to reach the menu,
+   and losing the raise at that moment is what let the next tile paint over it.
+   Higher than the hover value so a hovered neighbour cannot cover an open
+   menu either. */
+.game-card[data-overlay-open='true'] {
+    z-index: 20;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .game-card:hover,
+    .game-card:focus-within {
+        transform: none;
+    }
 }
 
 .game-cover {
@@ -291,7 +318,7 @@
    variants add their own offsets in game_status.css so the stack stays honest
    about how many buttons are actually above it. */
 .gt-badge-stack--top-right {
-    top: calc(var(--gt-tile-stack-top, 10px) + 2 * var(--gt-tile-stride, 36px) + 2px);
+    top: calc(var(--gt-tile-stack-top) + 2 * var(--gt-tile-stride) + 2px);
     right: 8px;
     left: auto;
     bottom: auto;
@@ -352,15 +379,45 @@
     justify-content: center;
     gap: 0.75rem;
     padding: 1.25rem;
-    color: var(--gt-accent, #2fd67b);
+    color: var(--gt-accent);
+}
+
+/* Blocking variant (W27-D6).
+ *
+ * Browse used to spin a small icon beside the button, which reads as a stuck
+ * button rather than as work in progress — and it shifted the row it sat in.
+ * The blocking overlay darkens the page instead, so the motif is the only
+ * thing to look at and the layout underneath cannot move.
+ *
+ * `inset: 0` with position:fixed rather than width/height:100% — the latter
+ * measures the containing block, which is wrong the moment an ancestor is
+ * itself positioned. */
+.gt-loading-overlay--blocking {
+    position: fixed;
+    inset: 0;
+    z-index: 1080; /* above Bootstrap modals (1055) — this blocks everything */
+    flex-direction: column;
+    background: color-mix(in srgb, var(--gt-bg) 72%, transparent);
+    backdrop-filter: blur(3px);
+}
+
+.gt-loading-overlay--blocking .gt-loading-overlay__label {
+    color: var(--gt-text);
+    font-size: var(--gt-font-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gt-loading-overlay--blocking {
+        backdrop-filter: none;
+    }
 }
 
 .spinner-overlay .spinner-container {
-    background: var(--gt-surface, #141820);
-    color: var(--gt-text, #f2f4f8);
-    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    background: var(--gt-surface);
+    color: var(--gt-text);
+    border: 1px solid var(--gt-border);
     border-radius: 12px;
-    box-shadow: 0 12px 40px color-mix(in srgb, var(--gt-bg, #0b0d10) 55%, transparent);
+    box-shadow: 0 12px 40px color-mix(in srgb, var(--gt-bg) 55%, transparent);
 }
 
 .spinner-overlay .gt-spinner,
@@ -369,7 +426,7 @@
 .spinner-overlay .gt-loading-motif,
 .loading-spinner .gt-loading-motif,
 .gt-loading-overlay .gt-loading-motif {
-    color: var(--gt-accent, #2fd67b);
+    color: var(--gt-accent);
 }
 
 .loading-spinner {
@@ -380,7 +437,7 @@
 }
 
 .spinner-overlay .progress-text {
-    color: var(--gt-text-muted, #c4ccd8);
+    color: var(--gt-text-muted);
     margin-top: 0.75rem;
 }
 
@@ -486,9 +543,9 @@
 }
 
 .gt-action-bar__btn--primary {
-    background: var(--gt-accent, var(--btn-primary));
+    background: var(--gt-accent);
     border-color: transparent;
-    color: var(--gt-accent-contrast, #0b0d10);
+    color: var(--gt-accent-contrast);
 }
 
 .gt-action-bar__btn--danger {
@@ -506,15 +563,15 @@
     font-size: 0.72rem;
     font-weight: 600;
     letter-spacing: 0.02em;
-    color: var(--gt-text-muted, #9aa3b2);
+    color: var(--gt-text-muted);
     padding: 0.2rem 0.45rem;
     border-radius: 999px;
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .gt-action-bar__presence.is-online {
-    color: var(--gt-accent, #2fd67b);
-    border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+    color: var(--gt-accent);
+    border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
 }
 
 .gt-action-bar__status {
@@ -612,9 +669,9 @@ a.gt-chip {
     letter-spacing: 0.03em;
     line-height: 1.2;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.14)) 85%, transparent);
-    background-color: var(--chip-bg-dark, color-mix(in srgb, var(--gt-surface-2, #1c2230) 88%, transparent));
-    color: var(--text-white, var(--gt-text-muted, #c4ccd8));
+    border: 1px solid color-mix(in srgb, var(--gt-border) 85%, transparent);
+    background-color: var(--chip-bg-dark, color-mix(in srgb, var(--gt-surface-2) 88%, transparent));
+    color: var(--text-white, var(--gt-text-muted));
     white-space: nowrap;
     text-decoration: none;
     vertical-align: middle;
@@ -631,7 +688,7 @@ a.gt-chip:hover,
 a.gt-chip:active,
 a.gt-chip:focus {
     text-decoration: none;
-    color: var(--text-white, var(--gt-text-muted, #c4ccd8));
+    color: var(--text-white, var(--gt-text-muted));
 }
 
 .file-size-chip {
@@ -749,8 +806,8 @@ a.gt-chip:focus {
     transform: translateY(-6px) scale(1.08);
     box-shadow:
         0 16px 34px var(--shadow-dark-strong),
-        0 0 0 2px color-mix(in srgb, var(--gt-accent, #2fd67b) 80%, transparent),
-        0 0 30px 6px color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+        0 0 0 2px color-mix(in srgb, var(--gt-accent) 80%, transparent),
+        0 0 30px 6px color-mix(in srgb, var(--gt-accent) 45%, transparent);
     transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
@@ -762,7 +819,7 @@ a.gt-chip:focus {
     z-index: 17;
     padding: 0.22rem 0.7rem;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
     background: rgba(0, 0, 0, 0.72);
     backdrop-filter: blur(5px);
     color: var(--text-white, #f2f4f8);

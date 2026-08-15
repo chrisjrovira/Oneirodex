@@ -1,0 +1,127 @@
+"""Coverage guards for the design-system styleguide page (GT-A6).
+
+The styleguide is the visual contract for the primitives: it renders the GT
+button family and the bridged Bootstrap family side by side so a divergence is
+visible instead of arriving as a bug report. That only works if it stays
+complete, so these tests assert two things a stylesheet edit can quietly break:
+
+  * every ``.gt-btn`` modifier defined in gt-primitives.css is rendered here
+  * every token scale the page advertises actually exists in gt-tokens.css
+
+Both read the real theme source rather than a fixture list, so adding a variant
+without showing it fails rather than silently shipping an unrepresented one.
+"""
+
+import re
+from pathlib import Path
+from uuid import uuid4
+
+import pytest
+
+from gametheca.models import User
+
+
+THEME_CSS = Path(__file__).resolve().parent.parent / 'gametheca' / 'setup' / 'default_theme' / 'css'
+
+
+@pytest.fixture
+def admin_user(db_session):
+    unique_id = str(uuid4())[:8]
+    admin = User(
+        user_id=str(uuid4()),
+        name=f'TestAdmin_{unique_id}',
+        email=f'admin_{unique_id}@test.com',
+        role='admin',
+        is_email_verified=True,
+    )
+    admin.set_password('testpass123')
+    db_session.add(admin)
+    db_session.commit()
+    return admin
+
+
+@pytest.fixture
+def regular_user(db_session):
+    unique_id = str(uuid4())[:8]
+    user = User(
+        user_id=str(uuid4()),
+        name=f'TestUser_{unique_id}',
+        email=f'user_{unique_id}@test.com',
+        role='user',
+        is_email_verified=True,
+    )
+    user.set_password('testpass123')
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+def _login(client, user):
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(user.id)
+        sess['_fresh'] = True
+
+
+class TestStyleguideAccess:
+    def test_requires_login(self, client):
+        response = client.get('/dev/styleguide')
+        assert response.status_code == 302
+        assert 'login' in response.location
+
+    def test_requires_admin(self, client, regular_user):
+        _login(client, regular_user)
+        response = client.get('/dev/styleguide')
+        assert response.status_code == 302
+        assert 'login' in response.location
+
+    def test_renders_for_admin(self, client, admin_user):
+        _login(client, admin_user)
+        response = client.get('/dev/styleguide')
+        assert response.status_code == 200
+
+
+class TestStyleguideCoverage:
+    def test_renders_every_gt_button_modifier(self, client, admin_user):
+        """A variant added to the primitives must be shown on the styleguide.
+
+        Otherwise the page keeps passing while no longer being a full contract,
+        which is how `--ghost` came to be redefined in three page stylesheets
+        without anyone noticing it had no canonical home.
+        """
+        primitives = (THEME_CSS / 'gt-primitives.css').read_text(encoding='utf-8')
+        modifiers = set(re.findall(r'\.gt-btn--([a-z0-9-]+)', primitives))
+        assert modifiers, 'expected gt-primitives.css to define .gt-btn modifiers'
+
+        _login(client, admin_user)
+        html = client.get('/dev/styleguide').get_data(as_text=True)
+
+        missing = sorted(m for m in modifiers if f'gt-btn--{m}' not in html)
+        assert missing == [], f'styleguide does not render .gt-btn--{{{",".join(missing)}}}'
+
+    def test_advertised_token_scales_exist(self, client, admin_user):
+        """Every --gt-* token the page references must be defined.
+
+        The page builds its scales from Jinja loops, so a step removed from
+        gt-tokens.css shows up here as an empty swatch rather than an error.
+        """
+        tokens = (THEME_CSS / 'gt-tokens.css').read_text(encoding='utf-8')
+        defined = set(re.findall(r'^\s*(--gt-[a-zA-Z0-9-]+)\s*:', tokens, re.MULTILINE))
+
+        _login(client, admin_user)
+        html = client.get('/dev/styleguide').get_data(as_text=True)
+
+        referenced = set(re.findall(r'var\((--gt-(?:font|radius|space)-[a-z0-9]+)\)', html))
+        assert referenced, 'expected the styleguide to reference the token scales'
+
+        missing = sorted(referenced - defined)
+        assert missing == [], f'styleguide references undefined tokens: {missing}'
+
+    def test_shows_both_button_families(self, client, admin_user):
+        """The side-by-side comparison is the reason the page exists."""
+        _login(client, admin_user)
+        html = client.get('/dev/styleguide').get_data(as_text=True)
+
+        assert 'data-sg-family="gt"' in html
+        assert 'data-sg-family="bootstrap"' in html
+        assert 'btn btn-primary' in html
+        assert 'gt-btn gt-btn--primary' in html

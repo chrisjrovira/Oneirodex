@@ -88,10 +88,19 @@ class Config(object):
     OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://127.0.0.1:11434')
     OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3.2')
 
-    # UIR-1 two-bar chrome — opt-in preview while the pages migrate. Not an
-    # admin Features toggle on purpose: it is a build-out flag, and a switch in
-    # the admin UI that only half-changes the layout would be its own lie.
-    ENABLE_NEW_CHROME = os.getenv('ENABLE_NEW_CHROME', 'false').lower() == 'true'
+    # UIR-1 two-bar chrome. Default flipped to **true** (W27-A3): the migration
+    # this flag was waiting on is finished. All eleven member pages carry the
+    # branch, and the shell stopped being optional when TopNav.jsx was deleted
+    # and SideRail/TopBar became the only chrome App.jsx renders.
+    #
+    # Left off, the flag produced the exact half-migrated layout it existed to
+    # prevent — the new bar naming the page, and every page still drawing its
+    # own title card underneath it.
+    #
+    # Still not an admin Features toggle, for the original reason: it is a
+    # build-out flag, and a switch in the admin UI that only half-changes the
+    # layout would be its own lie.
+    ENABLE_NEW_CHROME = os.getenv('ENABLE_NEW_CHROME', 'true').lower() == 'true'
 
     # Theme fonts. Empty FONT_PATH means the default under static/library/fonts,
     # which is what a Compose deploy wants (it already persists that volume).

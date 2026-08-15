@@ -73,6 +73,58 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         notes='Primary game metadata',
     )
 
+    # --- Cascade sources (GT-B26) ---
+    #
+    # metadata_cascade already walks eight sources — Steam, GOG, Epic, itch.io,
+    # Giant Bomb, MobyGames, RAWG and TheGamesDB — but only four of them were
+    # listed here. So the Integrations page said GameTheca scraped IGDB and
+    # three databases while it was in fact querying five more, and an operator
+    # had no way to see or reason about them.
+    #
+    # These are keyless public endpoints: there is no credential to configure,
+    # so `configured=True` states "usable right now", not "you set this up".
+    # Reporting them as unconfigured would read as broken.
+    add(
+        id='steam',
+        name='Steam',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=True,
+        notes='PC storefront metadata — normalised into the IGDB field shape',
+    )
+    add(
+        id='gog',
+        name='GOG',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=True,
+        notes='PC storefront search — DRM-free catalogue',
+    )
+    add(
+        id='epic',
+        name='Epic Games Store',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=True,
+        notes='PC storefront search',
+    )
+    add(
+        id='itch',
+        name='itch.io',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=True,
+        notes='Indie storefront search',
+    )
+    add(
+        id='rawg',
+        name='RAWG',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=True,
+        notes='Catalogue database backstop for PC and console',
+    )
+
     sgdb_key = ''
     try:
         from gametheca.utils.providers import get_steamgriddb_api_key

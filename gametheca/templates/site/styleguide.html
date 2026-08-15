@@ -1,0 +1,321 @@
+{# Visual contract for the GT design system (GT-A6).
+
+   Renders every primitive in every variant and state, with the GT family and
+   the Bootstrap family side by side. The pairs are the payload: a row where the
+   two columns no longer match is a bridge regression, and it is visible at a
+   glance rather than after a bug report.
+
+   Deliberately uses no page-specific CSS beyond layout scaffolding. If a
+   primitive looks wrong here it is wrong in the primitive, not in this page. #}
+{% extends "base_empty.html" %}
+
+{% block title %}Styleguide · GameTheca{% endblock %}
+
+{% block content %}
+<style>
+  /* Layout scaffolding only — never component styling. */
+  .sg { max-width: 1100px; margin: 0 auto; padding: var(--gt-space-6) var(--gt-space-5); color: var(--gt-text); }
+  .sg h1 { font-family: var(--font-display); font-size: var(--gt-font-2xl); margin: 0 0 var(--gt-space-3); }
+  .sg h2 {
+    font-size: var(--gt-label-size); font-weight: var(--gt-label-weight);
+    letter-spacing: var(--gt-label-tracking); text-transform: uppercase;
+    color: var(--gt-text-muted); margin: var(--gt-space-6) 0 var(--gt-space-3);
+    border-bottom: 1px solid var(--gt-border); padding-bottom: var(--gt-space-2);
+  }
+  .sg__lede { color: var(--gt-text-muted); font-size: var(--gt-font-md); max-width: 60ch; margin: 0 0 var(--gt-space-5); }
+  .sg__pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gt-space-5); align-items: start; }
+  @media (max-width: 760px) { .sg__pair { grid-template-columns: 1fr; } }
+  .sg__col > h3 {
+    font-size: var(--gt-font-xs); font-weight: var(--gt-label-weight);
+    letter-spacing: var(--gt-label-tracking); text-transform: uppercase;
+    color: var(--gt-text-muted); margin: 0 0 var(--gt-space-3);
+  }
+  .sg__row { display: flex; flex-wrap: wrap; gap: var(--gt-space-3); align-items: center; margin-bottom: var(--gt-space-3); }
+  .sg__swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--gt-space-3); }
+  .sg__swatch { border: 1px solid var(--gt-border); border-radius: var(--gt-radius-md); overflow: hidden; }
+  .sg__swatch i { display: block; height: 42px; }
+  .sg__swatch span { display: block; padding: var(--gt-space-2) var(--gt-space-3); font-size: var(--gt-font-xs); color: var(--gt-text-muted); }
+  .sg__scale { display: flex; flex-direction: column; gap: var(--gt-space-2); }
+  .sg__scale > div { display: flex; align-items: baseline; gap: var(--gt-space-4); }
+  .sg__scale code { font-size: var(--gt-font-xs); color: var(--gt-text-muted); min-width: 12ch; }
+  .sg__radii { display: flex; flex-wrap: wrap; gap: var(--gt-space-4); }
+  .sg__radii figure { margin: 0; text-align: center; }
+  .sg__radii i { display: block; width: 62px; height: 62px; background: var(--gt-surface-2); border: 1px solid var(--gt-border); }
+  .sg__radii figcaption { font-size: var(--gt-font-xs); color: var(--gt-text-muted); margin-top: var(--gt-space-2); }
+  .sg__tile { display: block; aspect-ratio: 3 / 4; background: var(--gt-surface-2); border-radius: var(--gt-tile-radius); }
+  /* A framed miniature of the real shell: same grid, same classes, bounded
+     height so it reads as a specimen rather than a second page chrome. */
+  .sg__chrome {
+    display: grid;
+    grid-template-columns: var(--gt-rail-w) minmax(0, 1fr);
+    grid-template-rows: var(--gt-topbar-h) 1fr;
+    grid-template-areas: 'rail topbar' 'rail main';
+    height: 340px;
+    border: 1px solid var(--gt-border);
+    border-radius: var(--gt-radius-lg);
+    overflow: hidden;
+  }
+  .sg__chrome-main { grid-area: main; padding: var(--gt-gutter); color: var(--gt-text-muted); font-size: var(--gt-font-md); }
+</style>
+
+<div class="sg">
+  <h1>Styleguide</h1>
+  <p class="sg__lede">
+    Every primitive, in the theme you have selected. The two columns below render
+    the GT family and the Bootstrap family with the same intent — they should be
+    indistinguishable. A row where they diverge is a regression in
+    <code>gt-bootstrap-bridge.css</code>.
+  </p>
+
+  <h2>Density</h2>
+  <p class="sg__lede">
+    One token set, two densities (GT-B1). Browse surfaces run comfortable;
+    admin runs compact. Only layout tokens change — the type, radius and
+    spacing scales are shared, so compact is a second spacing of one design
+    language rather than a second language.
+  </p>
+  <div class="sg__pair">
+    <div class="sg__col" data-density="comfortable">
+      <h3>Comfortable</h3>
+      <div class="gt-card">
+        <div class="sg__row">
+          <button type="button" class="gt-btn gt-btn--primary">Play</button>
+          <button type="button" class="gt-btn gt-btn--ghost">Details</button>
+          <input class="gt-input" type="text" placeholder="Filter" aria-label="Filter">
+        </div>
+        <div class="gt-tile-grid">
+          {% for n in range(4) %}<i class="sg__tile"></i>{% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="sg__col" data-density="compact">
+      <h3>Compact</h3>
+      <div class="gt-card">
+        <div class="sg__row">
+          <button type="button" class="gt-btn gt-btn--primary">Play</button>
+          <button type="button" class="gt-btn gt-btn--ghost">Details</button>
+          <input class="gt-input" type="text" placeholder="Filter" aria-label="Filter">
+        </div>
+        <div class="gt-tile-grid">
+          {% for n in range(4) %}<i class="sg__tile"></i>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Chrome</h2>
+  <p class="sg__lede">
+    The rail replaced a five-slot top bar plus an eighteen-item overflow
+    (GT-B2). Rendered here at real size — this markup is the same
+    <code>gt-shell.css</code> the member and admin shells use.
+  </p>
+  <div class="sg__chrome" data-rail="expanded">
+    <div class="gt-rail">
+      <span class="gt-rail__brand"><span class="gt-rail__brand-text">GameTheca</span></span>
+      <nav class="gt-rail__nav" aria-label="Specimen">
+        <ul class="gt-rail__group gt-rail__list">
+          {% for item in ['Discover', 'Library', 'Systems', 'Downloads'] %}
+            <li>
+              <a class="gt-rail__link{% if loop.first %} is-active{% endif %}" href="#sg-anchor">
+                <span class="gt-rail__label">{{ item }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+        <ul class="gt-rail__group gt-rail__list">
+          <li class="gt-rail__group-label">Social</li>
+          {% for item in ['Chat', 'Friends'] %}
+            <li>
+              <a class="gt-rail__link" href="#sg-anchor">
+                <span class="gt-rail__label">{{ item }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+    </div>
+    <header class="gt-topbar">
+      <span class="gt-topbar__section">Library</span>
+      <div class="gt-topbar__spacer"></div>
+      <div class="gt-topbar__actions">
+        <button type="button" class="gt-topbar__search">
+          <span class="gt-topbar__search-label">Search</span><kbd>Ctrl+K</kbd>
+        </button>
+      </div>
+    </header>
+    <div class="sg__chrome-main">Content area</div>
+  </div>
+
+  <h2>Buttons</h2>
+  <div class="sg__pair">
+    <div class="sg__col" data-sg-family="gt">
+      <h3>.gt-btn</h3>
+      <div class="sg__row">
+        <button type="button" class="gt-btn gt-btn--primary">Primary</button>
+        <button type="button" class="gt-btn gt-btn--secondary">Secondary</button>
+        <button type="button" class="gt-btn gt-btn--ghost">Ghost</button>
+        <button type="button" class="gt-btn gt-btn--danger">Danger</button>
+      </div>
+      <div class="sg__row">
+        <button type="button" class="gt-btn">Default</button>
+        <button type="button" class="gt-btn gt-btn--quiet">Quiet</button>
+        <button type="button" class="gt-btn gt-btn--sm">Small</button>
+        <button type="button" class="gt-btn gt-btn--pill">Pill</button>
+      </div>
+      <div class="sg__row">
+        <button type="button" class="gt-btn" disabled>Disabled</button>
+        <button type="button" class="gt-btn gt-btn--primary" disabled>Disabled primary</button>
+        <a class="gt-btn gt-btn--ghost" href="#sg-anchor">Link as button</a>
+      </div>
+    </div>
+
+    <div class="sg__col" data-sg-family="bootstrap">
+      <h3>.btn (bridged)</h3>
+      <div class="sg__row">
+        <button type="button" class="btn btn-primary">Primary</button>
+        <button type="button" class="btn btn-secondary">Secondary</button>
+        <button type="button" class="btn btn-outline-secondary">Ghost</button>
+        <button type="button" class="btn btn-danger">Danger</button>
+      </div>
+      <div class="sg__row">
+        <button type="button" class="btn">Default</button>
+        <button type="button" class="btn btn-light">Light</button>
+        <button type="button" class="btn btn-sm btn-secondary">Small</button>
+        <button type="button" class="btn btn-lg btn-secondary">Large</button>
+      </div>
+      <div class="sg__row">
+        <button type="button" class="btn btn-secondary" disabled>Disabled</button>
+        <button type="button" class="btn btn-primary" disabled>Disabled primary</button>
+        <a class="btn btn-outline-primary" href="#sg-anchor">Link as button</a>
+      </div>
+    </div>
+  </div>
+
+  <h2>Semantic buttons</h2>
+  <p class="sg__lede">
+    These four keep their meaning in every preset — <code>preset_tokens()</code>
+    deliberately excludes them, so a failure reads as red whichever theme is on.
+  </p>
+  <div class="sg__row">
+    <button type="button" class="btn btn-success">Success</button>
+    <button type="button" class="btn btn-warning">Warning</button>
+    <button type="button" class="btn btn-danger">Danger</button>
+    <button type="button" class="btn btn-info">Info</button>
+    <button type="button" class="btn btn-outline-danger">Outline danger</button>
+  </div>
+
+  <h2>Inputs</h2>
+  <div class="sg__pair">
+    <div class="sg__col" data-sg-family="gt">
+      <h3>.gt-input</h3>
+      <div class="sg__row">
+        <input class="gt-input" type="text" placeholder="Text input" aria-label="Text input">
+        <select class="gt-select" aria-label="Select"><option>Select</option><option>Other</option></select>
+      </div>
+      <div class="sg__row">
+        <textarea class="gt-textarea" rows="2" placeholder="Textarea" aria-label="Textarea"></textarea>
+      </div>
+      <div class="sg__row">
+        <input class="gt-input" type="text" value="Disabled" disabled aria-label="Disabled input">
+      </div>
+    </div>
+    <div class="sg__col" data-sg-family="bootstrap">
+      <h3>.form-control (bridged)</h3>
+      <div class="sg__row">
+        <input class="form-control" type="text" placeholder="Text input" aria-label="Text input">
+        <select class="form-select" aria-label="Select"><option>Select</option><option>Other</option></select>
+      </div>
+      <div class="sg__row">
+        <textarea class="form-control" rows="2" placeholder="Textarea" aria-label="Textarea"></textarea>
+      </div>
+      <div class="sg__row">
+        <input class="form-control" type="text" value="Disabled" disabled aria-label="Disabled input">
+      </div>
+    </div>
+  </div>
+
+  <h2>Cards &amp; blocks</h2>
+  <div class="sg__pair">
+    <div class="sg__col">
+      <div class="gt-card">
+        <div class="gt-section-head">
+          <span class="gt-section-head__title">Section head</span>
+          <span class="gt-section-head__count">12</span>
+        </div>
+        <p style="margin: var(--gt-space-3) 0 0; color: var(--gt-text-muted); font-size: var(--gt-font-md);">
+          .gt-card with a .gt-section-head.
+        </p>
+      </div>
+    </div>
+    <div class="sg__col">
+      <div class="card">
+        <div class="card-body">
+          <span class="badge">Badge</span>
+          <p style="margin: var(--gt-space-3) 0 0; color: var(--gt-text-muted); font-size: var(--gt-font-md);">
+            Bootstrap .card, bridged.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Status blocks</h2>
+  <div class="sg__row" style="align-items: stretch;">
+    <div class="gt-empty" style="flex: 1;">Nothing here yet.</div>
+    <div class="gt-error" style="flex: 1;">
+      <span class="gt-error__message">Something failed.</span>
+      <span class="gt-error__detail">HTTP 502 from the metadata provider.</span>
+    </div>
+  </div>
+
+  <h2>Colour tokens</h2>
+  <div class="sg__swatches">
+    {% for name in [
+      'gt-bg', 'gt-surface', 'gt-surface-2', 'gt-text', 'gt-text-muted',
+      'gt-accent', 'gt-accent-2', 'gt-accent-contrast', 'gt-border',
+      'gt-success', 'gt-danger', 'gt-warning', 'gt-info'
+    ] %}
+      <div class="sg__swatch">
+        <i style="background: var(--{{ name }});"></i>
+        <span>--{{ name }}</span>
+      </div>
+    {% endfor %}
+  </div>
+
+  <h2>Type scale</h2>
+  <div class="sg__scale">
+    {% for step in ['xs', 'sm', 'md', 'base', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl'] %}
+      <div>
+        <code>--gt-font-{{ step }}</code>
+        <span style="font-size: var(--gt-font-{{ step }});">Grid of games</span>
+      </div>
+    {% endfor %}
+  </div>
+
+  <h2>Radius scale</h2>
+  <div class="sg__radii">
+    {% for step in ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', 'pill', 'circle'] %}
+      <figure>
+        <i style="border-radius: var(--gt-radius-{{ step }});"></i>
+        <figcaption>{{ step }}</figcaption>
+      </figure>
+    {% endfor %}
+  </div>
+
+  <h2>Spacing scale</h2>
+  <div class="sg__scale">
+    {% for step in [1, 2, 3, 4, 5, 6] %}
+      <div>
+        <code>--gt-space-{{ step }}</code>
+        <i style="display: block; height: 12px; width: calc(var(--gt-space-{{ step }}) * 8); background: var(--gt-accent);"></i>
+      </div>
+    {% endfor %}
+  </div>
+
+  <p id="sg-anchor" class="sg__lede" style="margin-top: var(--gt-space-6);">
+    Theme: <code>{{ current_theme|default('default') }}</code> ·
+    icon pack: <code>{{ current_icon_pack|default('outline') }}</code>.
+    Switch presets in Admin → Themes and reload to check another one.
+  </p>
+</div>
+{% endblock %}

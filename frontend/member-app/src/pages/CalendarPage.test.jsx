@@ -175,6 +175,30 @@ test('month view renders release markers from mock data', async () => {
   expect(within(panel).getByText('Same Day Sequel')).toBeInTheDocument()
 })
 
+test('month view survives an empty window and explains why', async () => {
+  // The regression: MonthView read `payload?.empty_reason`, which is a local of
+  // CalendarPage and unbound inside MonthView — optional chaining does not
+  // guard an undeclared identifier, so this threw ReferenceError and took the
+  // whole page down. It fires on the first render, because with no releases
+  // nothing auto-selects a day and the empty branch is what renders.
+  const user = userEvent.setup()
+  calendarApi.fetchCalendar.mockResolvedValue({
+    count: 0,
+    releases: [],
+    empty_reason: 'not_configured',
+  })
+
+  render(<CalendarPage />)
+  await screen.findByText(/IGDB is not set up/i)
+
+  await user.click(screen.getByRole('button', { name: 'Month' }))
+
+  // Rendered at all — and carrying the reason rather than the generic line,
+  // which is the whole point of threading empty_reason through.
+  expect(screen.getByRole('heading', { level: 3 })).toBeInTheDocument()
+  expect(screen.getAllByText(/IGDB is not set up/i).length).toBeGreaterThan(0)
+})
+
 test('buildMonthCells indexes markers by date key', () => {
   const byDate = new Map([
     ['2026-08-15', [{ name: 'A' }, { name: 'B' }]],

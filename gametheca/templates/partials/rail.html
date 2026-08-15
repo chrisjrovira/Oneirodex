@@ -1,0 +1,146 @@
+{# Left navigation rail for server-rendered pages (GT-B2).
+
+   The Jinja half of the product had its own left sidebar while the member SPA
+   had two top bars — the same split that made buttons and colours diverge, in
+   layout form. This partial emits the *same* .gt-rail markup and classes as the
+   React SideRail, so all three surfaces (member SPA, admin SPA, Jinja) get one
+   rail from one stylesheet (gt-shell.css) rather than three implementations.
+
+   The destination list mirrors the old .sidebar-menu exactly, including its
+   feature gates, so this is a chrome change and not a quiet IA change. Grouping
+   follows the React rail's getMoreGroups so both read the same.
+
+   Account actions live in the footer here rather than in a top bar, because
+   base.html pages have no account menu of their own — the SPA's TopBar is not
+   on these pages. #}
+
+{# Container, not the landmark: the brand links to a destination, so inside
+   <nav> it was announced as a navigation item. The nav wraps the links only. #}
+<div class="gt-rail">
+  <a class="gt-rail__brand" href="{{ url_for('discover.discover') if show_discovery else url_for('library.library') }}">
+    <img class="gt-rail__mark" src="{{ url_for('static', filename='newstyle/gametheca_mark.svg') }}"
+         alt="" width="22" height="22">
+    <span class="gt-rail__brand-text">GameTheca</span>
+  </a>
+
+  <nav class="gt-rail__nav" aria-label="Primary">
+    {% if current_user.is_authenticated %}
+      <ul class="gt-rail__group gt-rail__list">
+        {% if show_discovery %}
+          <li><a class="gt-rail__link" href="{{ url_for('discover.discover') }}">
+            <span class="gt-rail__icon">{{ icons.icon('discover') }}</span>
+            <span class="gt-rail__label">{{ _('Discover') }}</span></a></li>
+        {% endif %}
+        <li><a class="gt-rail__link" href="{{ url_for('library.library') }}">
+          <span class="gt-rail__icon">{{ icons.icon('library') }}</span>
+          <span class="gt-rail__label">{{ _('Library') }}</span></a></li>
+        <li><a class="gt-rail__link" href="{{ url_for('download.downloads') }}">
+          <span class="gt-rail__icon">{{ icons.icon('download') }}</span>
+          <span class="gt-rail__label">{{ _('Download') }}</span></a></li>
+        {% if show_favorites %}
+          <li><a class="gt-rail__link" href="{{ url_for('site.favorites') }}">
+            <span class="gt-rail__icon">{{ icons.icon('favorites') }}</span>
+            <span class="gt-rail__label">{{ _('Favorites') }}</span></a></li>
+        {% endif %}
+      </ul>
+
+      <ul class="gt-rail__group gt-rail__list">
+        <li class="gt-rail__group-label" aria-hidden="true">{{ _('Library') }}</li>
+        <li><a class="gt-rail__link" href="{{ url_for('member.collections_page') }}">
+          <span class="gt-rail__icon">{{ icons.icon('collections') }}</span>
+          <span class="gt-rail__label">Collections</span></a></li>
+        <li><a class="gt-rail__link" href="{{ url_for('member.wishlist_page') }}">
+          <span class="gt-rail__icon">{{ icons.icon('wishlist') }}</span>
+          <span class="gt-rail__label">{{ _('Wishlist') }}</span></a></li>
+        <li><a class="gt-rail__link" href="{{ url_for('member.updates_page') }}">
+          <span class="gt-rail__icon">{{ icons.icon('updates') }}</span>
+          <span class="gt-rail__label">Updates</span></a></li>
+        <li><a class="gt-rail__link" href="{{ url_for('member.ownership_page') }}">
+          <span class="gt-rail__icon">{{ icons.icon('ownership') }}</span>
+          <span class="gt-rail__label">{{ _('Ownership') }}</span></a></li>
+        <li><a class="gt-rail__link" href="{{ url_for('member.calendar_page') }}">
+          <span class="gt-rail__icon">{{ icons.icon('calendar') }}</span>
+          <span class="gt-rail__label">{{ _('Release calendar') }}</span></a></li>
+      </ul>
+
+      <ul class="gt-rail__group gt-rail__list">
+        <li class="gt-rail__group-label" aria-hidden="true">Social</li>
+        <li><a class="gt-rail__link" href="{{ url_for('member.announcements_page') }}">
+          <span class="gt-rail__icon">{{ icons.icon('news') }}</span>
+          <span class="gt-rail__label">News</span></a></li>
+      </ul>
+
+      <ul class="gt-rail__group gt-rail__list">
+        <li class="gt-rail__group-label" aria-hidden="true">Play</li>
+        <li><a class="gt-rail__link" href="{{ url_for('member.big_picture_page') }}">
+          <span class="gt-rail__icon">{{ icons.icon('big-picture') }}</span>
+          <span class="gt-rail__label">{{ _('Big Picture') }}</span></a></li>
+        <li><a class="gt-rail__link" href="{{ url_for('member.playtime_page') }}">
+          <span class="gt-rail__icon">{{ icons.icon('playtime') }}</span>
+          <span class="gt-rail__label">{{ _('Playtime') }}</span></a></li>
+        {% if enable_vr_browse %}
+          <li><a class="gt-rail__link" href="{{ url_for('member.vr_browse_page') }}">
+            <span class="gt-rail__icon">{{ icons.icon('vr') }}</span>
+            <span class="gt-rail__label">VR</span></a></li>
+        {% endif %}
+        {% if show_trailers %}
+          <li><a class="gt-rail__link" href="{{ url_for('site.random_trailers') }}">
+            <span class="gt-rail__icon">{{ icons.icon('trailers') }}</span>
+            <span class="gt-rail__label">Trailers</span></a></li>
+        {% endif %}
+      </ul>
+
+      {% if show_help_button or current_user.role == 'admin' %}
+        <ul class="gt-rail__group gt-rail__list">
+          <li class="gt-rail__group-label" aria-hidden="true">Support</li>
+          {% if show_help_button %}
+            <li><a class="gt-rail__link" href="{{ url_for('site.helpfaq') }}">
+              <span class="gt-rail__icon">{{ icons.icon('help') }}</span>
+              <span class="gt-rail__label">Help</span></a></li>
+          {% endif %}
+          {% if current_user.role == 'admin' %}
+            <li><a class="gt-rail__link" href="/admin/dashboard">
+              <span class="gt-rail__icon">{{ icons.icon('settings') }}</span>
+              <span class="gt-rail__label">{{ _('Settings') }}</span></a></li>
+          {% endif %}
+        </ul>
+      {% endif %}
+    {% else %}
+      <ul class="gt-rail__group gt-rail__list">
+        <li><a class="gt-rail__link" href="{{ url_for('login.login') }}">
+          <span class="gt-rail__icon">{{ icons.icon('login') }}</span>
+          <span class="gt-rail__label">Login</span></a></li>
+        <li><a class="gt-rail__link" href="{{ url_for('login.register') }}">
+          <span class="gt-rail__icon">{{ icons.icon('user-plus') }}</span>
+          <span class="gt-rail__label">Register</span></a></li>
+      </ul>
+    {% endif %}
+  </nav>
+
+  {% if current_user.is_authenticated %}
+    <div class="gt-rail__footer">
+      {# Kept as a details/summary rather than the old JS-driven menu: the
+         behaviour is identical, needs no script, and survives the sidebar
+         toggle handler being retired with the old markup. #}
+      <details class="gt-rail__account">
+        <summary class="gt-rail__link">
+          <span class="gt-rail__icon">
+            <img src="{{ url_for('static', filename=current_user.avatarpath) }}" alt=""
+                 class="gt-rail__avatar">
+          </span>
+          <span class="gt-rail__label">{{ current_user.name | capitalize }}</span>
+        </summary>
+        <ul class="gt-rail__list">
+          <li><a class="gt-rail__link gt-rail__link--sub" href="{{ url_for('settings.settings_profile_view') }}">Profile</a></li>
+          <li><a class="gt-rail__link gt-rail__link--sub" href="{{ url_for('login.invites') }}">Invites</a></li>
+          <li><a class="gt-rail__link gt-rail__link--sub" href="#" data-bs-toggle="modal" data-bs-target="#preferencesModal">Preferences</a></li>
+          <li><a class="gt-rail__link gt-rail__link--sub" href="{{ url_for('settings.account_pw') }}">Change Password</a></li>
+          <li><a class="gt-rail__link gt-rail__link--sub" href="{{ url_for('site.logout') }}">Logout</a></li>
+        </ul>
+      </details>
+      {% if show_version %}
+        <span class="gt-rail__group-label">v{{ app_version }}</span>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

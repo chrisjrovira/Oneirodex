@@ -10,6 +10,26 @@ if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {}
 }
 
+/**
+ * jsdom does not implement window.matchMedia; the rail (GT-B2) uses it to tell
+ * the mobile drawer from the desktop collapse. useRailState guards for its
+ * absence, but without a stub every test would silently take the desktop branch
+ * — including any test that means to assert drawer behaviour. Defaults to
+ * desktop (non-matching) and is overridable per test.
+ */
+if (typeof window !== 'undefined' && !window.matchMedia) {
+  window.matchMedia = (query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  })
+}
+
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = class {
     observe() {}

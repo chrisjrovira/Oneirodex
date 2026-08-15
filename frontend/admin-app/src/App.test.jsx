@@ -123,20 +123,19 @@ test('integrations hub shows grouped cards', async () => {
     expect(screen.getByRole('heading', { name: 'OIDC' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'LiveKit' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Acquire / Arr' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Export packs' })).toBeInTheDocument()
+    // "Export packs" left Integrations with GT-B8 — it writes a file for another
+    // emulator frontend to read, which is emulation, not a service we talk to.
+    expect(screen.queryByRole('heading', { name: 'Export packs' })).toBeNull()
     expect(screen.getByRole('heading', { name: 'Support' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'IGDB settings' })).toHaveAttribute(
       'href',
       '/admin/igdb_settings',
     )
-    expect(screen.getByRole('link', { name: 'Download ES-DE gamelist.xml' })).toHaveAttribute(
-      'href',
-      '/api/export/esde',
-    )
-    expect(screen.getByRole('link', { name: 'Download Pegasus metadata' })).toHaveAttribute(
-      'href',
-      '/api/export/pegasus?platform=Library',
-    )
+    // The two raw /api/export links went with the card (GT-B8): they were
+    // downloads sitting in a list of destinations, under names that meant
+    // nothing unless you already ran those launchers.
+    expect(screen.queryByRole('link', { name: /ES-DE/i })).toBeNull()
+    expect(screen.queryByRole('link', { name: /Pegasus/i })).toBeNull()
     expect(await screen.findByRole('heading', { name: 'Provider inventory' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Artwork' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Metadata' })).toBeInTheDocument()
@@ -153,6 +152,9 @@ test('integrations hub shows grouped cards', async () => {
   }
 })
 
+// Still valid after the chrome change (GT-B2): the assertions are about what is
+// offered, not where. The nav landmark is now the rail rather than bar one, and
+// it keeps the same "Admin" accessible name, so these read unchanged.
 test('renders admin brand and primary nav', () => {
   render(
     <MemoryRouter initialEntries={['/admin/dashboard']}>
@@ -203,10 +205,9 @@ test('users route shows React roster', async () => {
     )
     expect(await screen.findByText('Ada')).toBeInTheDocument()
     expect(screen.getByText('ada@example.com')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Classic user editor/i })).toHaveAttribute(
-      'href',
-      '/admin/manage_users',
-    )
+    // The classic editor is gone (GT-B18) — two editors for the same rows meant
+    // two behaviours to keep in step. The React roster is the only one now.
+    expect(screen.queryByRole('link', { name: /Classic user editor/i })).toBeNull()
   } finally {
     global.fetch = originalFetch
   }

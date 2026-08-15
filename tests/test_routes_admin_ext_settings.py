@@ -223,11 +223,12 @@ class TestBuildCurrentSettings:
 
     def test_build_current_settings_missing_fields(self, db_session):
         """Test building settings with missing database fields."""
-        # Create settings record with minimal data
+        # Not persisted: build_current_settings is a pure transformation of the
+        # record it is handed, so this needs an object and not a row. Inserting
+        # it also violated the global_settings singleton index, since the
+        # fixtures for this module already keep a row.
         settings_record = GlobalSettings(settings={'showVersion': False})
-        db_session.add(settings_record)
-        db_session.commit()
-        
+
         settings = build_current_settings(settings_record)
         
         # Should fill in defaults for missing fields

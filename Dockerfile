@@ -2,6 +2,13 @@ FROM node:22-alpine AS frontend-build
 
 WORKDIR /build
 
+# Both SPAs import ../../shared/useRailState (GT-B2). It deliberately lives
+# outside either app so the rail hook is not duplicated, which means it is not
+# picked up by the per-app `COPY frontend/<app>/ .` steps below and has to be
+# staged separately — same reason the admin stage stages theme JS further down.
+# Copied once here because member-app and admin-app both resolve it.
+COPY frontend/shared/ frontend/shared/
+
 COPY frontend/member-app/package*.json frontend/member-app/
 WORKDIR /build/frontend/member-app
 RUN npm ci

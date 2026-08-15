@@ -22,6 +22,7 @@ from gametheca.utils.game_versions import (
 from gametheca.utils.library_acl import user_can_access_game
 from gametheca.utils.rbac import librarian_required
 from gametheca.utils.security import get_allowed_base_directories, is_safe_path
+from gametheca.utils.global_settings import global_settings_row
 
 from . import apis_bp
 
@@ -40,7 +41,7 @@ def _resolve_zip_file_path(game: Game, file_location: str) -> str:
     if os.path.normpath(file_location) != os.path.normpath(game.full_disk_path):
         return file_location
 
-    settings = db.session.execute(select(GlobalSettings)).scalars().first()
+    settings = global_settings_row()
     files_in_directory = []
     for entry in os.listdir(file_location):
         full_path = os.path.join(file_location, entry)

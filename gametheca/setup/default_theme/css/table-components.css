@@ -97,7 +97,7 @@
     border-radius: var(--border-radius-round);
     object-fit: cover;
     border: 2px solid var(--border-light-strong);
-    box-shadow: 0 2px 4px color-mix(in srgb, var(--gt-bg, #000) 10%, transparent);
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--gt-bg) 10%, transparent);
 }
 
 /* Table Badges */
@@ -337,7 +337,7 @@
     background: linear-gradient(
         90deg,
         transparent,
-        color-mix(in srgb, var(--gt-text, #fff) 10%, transparent),
+        color-mix(in srgb, var(--gt-text) 10%, transparent),
         transparent
     );
     animation: tableShimmer 1.5s infinite;
@@ -387,18 +387,18 @@
 }
 
 .table .status-running {
-    background: var(--gt-success, var(--status-running));
+    background: var(--gt-success);
     animation: pulse 1.5s infinite;
 }
 
 .table .status-stopped {
-    background: var(--gt-danger, var(--status-stopped));
+    background: var(--gt-danger);
 }
 
 .table .status-pending {
-    background: var(--gt-warning, var(--status-pending));
+    background: var(--gt-warning);
 }
 
 .table .status-completed {
-    background: var(--gt-text-muted, var(--status-completed));
+    background: var(--gt-text-muted);
 }

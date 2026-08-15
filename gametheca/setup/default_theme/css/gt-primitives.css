@@ -86,6 +86,41 @@
   color: var(--gt-danger);
 }
 
+/* Secondary — a filled, non-committal action. Lived only in member-app's
+   glass.css, so Jinja and admin pages had no equivalent and reached for
+   Bootstrap's .btn-secondary instead. */
+.gt-btn--secondary {
+  border-color: var(--gt-border);
+  background: var(--gt-surface-2);
+  color: var(--gt-text);
+}
+
+.gt-btn--secondary:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  color: var(--gt-accent);
+}
+
+/* Ghost — transparent with a hairline border, for dense rows of tertiary
+   actions.
+
+   This is the variant that proved the cost of having no canonical home: it was
+   copy-pasted into HelpPage.css, NewsPage.css and NotificationsPage.css as
+   three near-identical blocks (one had picked up a stray text-decoration). With
+   cssCodeSplit on, which copy won depended on which route chunks the user had
+   already loaded — so the same button could change appearance based on
+   navigation history. */
+.gt-btn--ghost {
+  border-color: color-mix(in srgb, var(--gt-border) 85%, transparent);
+  background: transparent;
+  color: var(--gt-text);
+}
+
+.gt-btn--ghost:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  color: var(--gt-accent);
+}
+
+/* Retained because admin chrome selectors still name it. Prefer --ghost. */
 .gt-btn--quiet {
   border-color: transparent;
 }

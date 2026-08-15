@@ -24,6 +24,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Operators / break-glass | [runbooks/container-wont-start.md](runbooks/container-wont-start.md) |
 | Operators / release scrub (SCRUB-7) | [runbooks/scrub-shipped-bundles.md](runbooks/scrub-shipped-bundles.md) · [strategy/external-facing-scrub.md](strategy/external-facing-scrub.md) |
 | Maintainers / disk hygiene | [runbooks/workspace-disk-hygiene.md](runbooks/workspace-disk-hygiene.md) — safe cache deletes vs WebRetro / `.git` |
+| Maintainers / desktop installers | [runbooks/local-installers.md](runbooks/local-installers.md) — build Windows · macOS · Linux bundles without GitHub Actions; a `.dmg` still needs a Mac |
 | Admins | [admin/libraries-and-scans.md](admin/libraries-and-scans.md) · [settings-modules.md](admin/settings-modules.md) · [discover-sections.md](admin/discover-sections.md) (storefront shelves · layouts · timed events) · [theme-fonts-and-images.md](admin/theme-fonts-and-images.md) (fonts · batch artwork) · [ops-summary.md](admin/ops-summary.md) · [support-inbox.md](admin/support-inbox.md) · [troubleshooting.md](admin/troubleshooting.md) · [themes-reset.md](admin/themes-reset.md) |
 | Support triage (maintainers) | [dev/issue-assess-agent.md](dev/issue-assess-agent.md) · [dev/agent-skills.md](dev/agent-skills.md) · [dev/ui-debt-log.md](dev/ui-debt-log.md) |
 | OIDC / Authentik SSO | [runbooks/oidc-sso.md](runbooks/oidc-sso.md), [runbooks/oidc-authentik-unraid.md](runbooks/oidc-authentik-unraid.md) |

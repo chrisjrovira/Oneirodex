@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getJson, postJson } from './adminApi'
+import { MetricStrip } from './opsWidgets'
 
 const EMPTY_STATUS = {
   helpers_enabled: false,
@@ -97,6 +98,47 @@ export function StoragePage() {
         <code>ALLOW_HARDLINK_APPLY=true</code>. Docker read-only games mounts fail writability
         checks — preview still explains why.
       </p>
+
+      {/* UID-014. This page's metrics are readiness states, not counts, so the
+          strip answers "can I actually do anything here" before the banners
+          explain why not.
+
+          Gated on `!statusError` as well as `statusLoaded`: statusLoaded is set
+          in a `finally`, so it becomes true on a failed read too, with `status`
+          reset to EMPTY_STATUS. Gating on it alone rendered "Games mount:
+          Missing" in alarm red for a status we simply could not fetch — the
+          same rule the Ops tiles follow (`na`, never a confident colour, for a
+          value we could not read), broken in the alarming direction. The banner
+          below already says the API is unavailable; the strip stays out of the
+          way rather than contradicting it. */}
+      {statusLoaded && !statusError ? (
+        <MetricStrip
+          label="Storage readiness"
+          items={[
+            {
+              id: 'helpers',
+              label: 'Helpers',
+              value: helpersOn ? 'On' : 'Off',
+              hint: 'hardlink preview',
+              tone: helpersOn ? 'good' : 'warning',
+            },
+            {
+              id: 'apply',
+              label: 'Apply',
+              value: allowApply ? 'Allowed' : 'Preview only',
+              hint: 'ALLOW_HARDLINK_APPLY',
+              tone: allowApply ? 'good' : 'info',
+            },
+            {
+              id: 'games',
+              label: 'Games mount',
+              value: !status.games_exists ? 'Missing' : gamesRo ? 'Read-only' : 'Writable',
+              hint: 'destination volume',
+              tone: !status.games_exists ? 'action' : gamesRo ? 'warning' : 'good',
+            },
+          ]}
+        />
+      ) : null}
 
       {!statusLoaded ? (
         <p className="gt-admin-lede" role="status">

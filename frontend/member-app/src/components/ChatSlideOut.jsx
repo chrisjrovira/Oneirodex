@@ -3,6 +3,7 @@ import { ChatPanel } from './ChatPanel'
 import {
   CLOSE_CHAT_EVENT,
   OPEN_CHAT_EVENT,
+  openChatPopoutWindow,
   readChatPanelOpen,
   requestCloseChatPanel,
   requestOpenChatPanel,
@@ -133,6 +134,17 @@ export function ChatSlideOut({
                   onClick={() => setExpanded((v) => !v)}
                 >
                   {expanded ? 'Compact' : 'Expand'}
+                </button>
+                {/* Pop out (GT-B17 · UID-010). Friends has had this since the
+                    social wave; chat never did, so a conversation meant keeping
+                    a panel over the library. */}
+                <button
+                  type="button"
+                  className="gt-chat-slide__expand"
+                  title="Open chat in its own window"
+                  onClick={() => openChatPopoutWindow(channelId)}
+                >
+                  Pop out
                 </button>
                 <button
                   type="button"

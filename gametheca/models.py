@@ -820,7 +820,47 @@ class UserPreference(db.Model):
     email_digest_daily = db.Column(db.Boolean, default=False, nullable=False)
     email_digest_last_sent_at = db.Column(db.DateTime, nullable=True)
 
+    # Per-member game-details layout. NULL means "follow the install default"
+    # rather than "empty layout" — the two are different, and a member who has
+    # never touched this should keep tracking whatever the admin sets rather
+    # than being frozen at whatever it happened to be on their first visit.
+    detail_layout = db.Column(JSONEncodedDict, nullable=True)
+
     user = db.relationship('User', back_populates='preferences')
+
+
+class DetailLayoutPreset(db.Model):
+    """A member's saved, named game-details arrangement.
+
+    The layout editor could already produce exactly one arrangement, stored on
+    GlobalSettings and therefore shared by everyone. Naming them makes the
+    obvious use case possible — a dense layout at a desk, a sparse one on a
+    couch display — and per-user ownership means one member re-arranging their
+    details page no longer changes it for the whole household.
+    """
+
+    __tablename__ = 'detail_layout_presets'
+    __table_args__ = (
+        # Names are how a member picks one, so they have to be unique per
+        # member — two "Couch" presets would make the picker a coin toss.
+        db.UniqueConstraint('user_id', 'name', name='uq_detail_preset_user_name'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    name = db.Column(db.String(64), nullable=False)
+    layout = db.Column(JSONEncodedDict, nullable=False)
+    created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = db.relationship('User', backref='detail_layout_presets')
+
+    def __repr__(self):
+        return f"<DetailLayoutPreset {self.user_id}:{self.name}>"
 
 
 class EmulatorSave(db.Model):
@@ -875,6 +915,22 @@ class EmulatorSave(db.Model):
 
 class GlobalSettings(db.Model):
     __tablename__ = 'global_settings'
+
+    # This table holds exactly one row, and until now that was true only by
+    # convention — roughly two dozen code paths create a row when they find
+    # none, so a race on first boot or a restore that merged two dumps could
+    # leave several. Duplicates are the quiet kind of broken: a write lands on
+    # the row nobody reads and the setting simply does not take effect.
+    #
+    # A unique index on a constant is how "at most one row" is expressed, since
+    # the constraint is on the table's cardinality rather than on any column.
+    # Declared here so create_all() emits it for fresh installs and tests;
+    # existing databases get the same index from
+    # cleanup_duplicate_global_settings in updateschema.py, which must collapse
+    # duplicates first.
+    __table_args__ = (
+        db.Index('global_settings_singleton', db.text('(true)'), unique=True),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     settings = db.Column(JSONEncodedDict)  # Store all settings in a single JSON-encoded column

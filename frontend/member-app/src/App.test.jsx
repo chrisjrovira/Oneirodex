@@ -6,7 +6,9 @@ vi.mock('./LibraryApp', () => ({ LibraryApp: () => <div>LibraryPage</div> }))
 vi.mock('./DiscoverApp', () => ({ DiscoverApp: () => <div>DiscoverPage</div> }))
 vi.mock('./FavoritesApp', () => ({ FavoritesApp: () => <div>FavoritesPage</div> }))
 vi.mock('./pages/DownloadsPage', () => ({ DownloadsPage: () => <div>DownloadsPage</div> }))
-vi.mock('./chrome/TopNav', () => ({ TopNav: () => <nav>TopNav</nav> }))
+// Chrome is stubbed so route assertions are not coupled to the rail's contents.
+vi.mock('./chrome/SideRail', () => ({ SideRail: () => <nav>SideRail</nav> }))
+vi.mock('./chrome/TopBar', () => ({ TopBar: () => <header>TopBar</header> }))
 vi.mock('./chrome/CommandPalette', () => ({
   CommandPalette: () => null,
   buildPaletteCommands: () => [],

@@ -7,6 +7,7 @@ from sqlalchemy import select
 from . import admin2_bp
 from gametheca.utils.auth import admin_required
 from gametheca.utils.hltb import update_game_hltb_sync, get_games_without_hltb, get_hltb_stats
+from gametheca.utils.global_settings import global_settings_row
 import logging
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ def refresh_game_hltb(game_uuid):
     """Refresh HLTB data for a single game."""
     try:
         # Check if HLTB integration is enabled
-        settings = db.session.execute(select(GlobalSettings)).scalars().first()
+        settings = global_settings_row()
         if not settings or not settings.enable_hltb_integration:
             return jsonify({
                 'success': False,
@@ -95,7 +96,7 @@ def bulk_refresh_hltb():
     """Bulk refresh HLTB data for games without it."""
     try:
         # Check if HLTB integration is enabled
-        settings = db.session.execute(select(GlobalSettings)).scalars().first()
+        settings = global_settings_row()
         if not settings or not settings.enable_hltb_integration:
             return jsonify({
                 'success': False,

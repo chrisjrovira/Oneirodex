@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func, select
 from gametheca.models import User, SystemEvents, GlobalSettings
 from gametheca import db
+from gametheca.utils.global_settings import global_settings_row
 from config import Config
 from urllib.parse import urlparse
 
@@ -101,7 +102,7 @@ def get_database_info():
 
 def check_server_settings():
     """Check if server settings are properly configured."""
-    settings_record = db.session.execute(select(GlobalSettings)).scalars().first()
+    settings_record = global_settings_row()
     if not settings_record or not settings_record.settings:
         return False, "Server settings not configured."
     

@@ -154,14 +154,32 @@ function ReleaseTitle({ item }) {
   return <strong>{item.name || 'Untitled'}</strong>
 }
 
+/**
+ * Why the calendar is empty, in words (W27).
+ *
+ * The API returns HTTP 200 with an empty list whether IGDB is unconfigured,
+ * the call failed, or nothing genuinely releases in the window — so the page
+ * showed the same blank panel for all three and left you to guess. It now
+ * carries `empty_reason`, and this turns it into something actionable.
+ */
+export function calendarEmptyMessage(reason) {
+  if (reason === 'not_configured') {
+    return 'No release data — IGDB is not set up. Add IGDB credentials under Admin → Integrations to fill this calendar.'
+  }
+  if (reason === 'unavailable') {
+    return 'Could not reach IGDB just now. The calendar will fill in once it responds.'
+  }
+  return 'No releases in this window.'
+}
+
 function ReleaseMeta({ item }) {
   if (!item.window) return null
   return <span className="gt-calendar__meta">{item.window}</span>
 }
 
-function ListView({ releases }) {
+function ListView({ releases, emptyReason }) {
   if (releases.length === 0) {
-    return <p className="gt-calendar__empty">No releases in this window.</p>
+    return <p className="gt-calendar__empty">{calendarEmptyMessage(emptyReason)}</p>
   }
   return (
     <ul className="gt-calendar__list">
@@ -183,7 +201,7 @@ function ListView({ releases }) {
   )
 }
 
-function MonthView({ releases, focusYear, focusMonth, onFocusChange }) {
+function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason }) {
   const byDate = useMemo(() => indexByDate(releases), [releases])
   const cells = useMemo(
     () => buildMonthCells(focusYear, focusMonth, byDate),
@@ -301,7 +319,7 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange }) {
         ) : (
           <p className="gt-calendar__empty">
             {releases.length === 0
-              ? 'No releases in this window.'
+              ? calendarEmptyMessage(emptyReason)
               : 'Select a day with a marker to see titles.'}
           </p>
         )}
@@ -514,10 +532,13 @@ export function CalendarPage({ shellConfig = {} }) {
             <h2 id="calendar-releases-heading">Releases</h2>
             <span className="gt-calendar__count">{payload.count ?? releases.length}</span>
           </div>
-          {view === 'list' ? <ListView releases={releases} /> : null}
+          {view === 'list' ? (
+            <ListView releases={releases} emptyReason={payload?.empty_reason} />
+          ) : null}
           {view === 'month' ? (
             <MonthView
               releases={releases}
+              emptyReason={payload?.empty_reason}
               focusYear={focusYear}
               focusMonth={focusMonth}
               onFocusChange={(y, m) => {

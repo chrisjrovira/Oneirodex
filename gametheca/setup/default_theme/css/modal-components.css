@@ -117,7 +117,7 @@
 
 .modal-close:hover,
 .close-button:hover {
-    color: var(--gt-danger, var(--btn-danger));
+    color: var(--gt-danger);
     background: var(--bg-light-overlay);
     transform: scale(1.1);
 }
@@ -173,7 +173,7 @@
 }
 
 .delete-game-modal .modal-content h2 {
-    color: var(--gt-danger, var(--btn-danger));
+    color: var(--gt-danger);
     text-shadow: var(--shadow-text);
     margin: 0 0 var(--spacing-md) 0;
     font-size: var(--font-size-xl);
@@ -223,7 +223,7 @@
     background: linear-gradient(
         45deg,
         var(--btn-danger-hover),
-        color-mix(in srgb, var(--btn-danger-hover) 85%, var(--gt-bg, #000))
+        color-mix(in srgb, var(--btn-danger-hover) 85%, var(--gt-bg))
     );
     transform: translateY(-1px);
     box-shadow: var(--shadow-button-hover);
@@ -281,16 +281,16 @@
 
 /* Preferences modal — sectioned aurora (Bootstrap modal behavior kept) */
 .gt-prefs-modal .gt-prefs-modal__panel {
-    background: var(--gt-surface, #141820);
-    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    background: var(--gt-surface);
+    border: 1px solid var(--gt-border);
     border-radius: 10px;
-    color: var(--gt-text, #f2f4f8);
-    box-shadow: 0 16px 40px color-mix(in srgb, var(--gt-bg, #0b0d10) 50%, transparent);
+    color: var(--gt-text);
+    box-shadow: 0 16px 40px color-mix(in srgb, var(--gt-bg) 50%, transparent);
     overflow: hidden;
 }
 
 .gt-prefs-modal .gt-prefs-modal__header {
-    border-bottom: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    border-bottom: 1px solid var(--gt-border);
     background: transparent;
     padding: 0.75rem 1rem;
 }
@@ -299,7 +299,7 @@
     margin: 0;
     font-size: 1rem;
     font-weight: 700;
-    color: var(--gt-text, #f2f4f8);
+    color: var(--gt-text);
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -316,7 +316,7 @@
 
 .gt-prefs-modal .gt-prefs-section {
     padding: 0.75rem 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 70%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
 }
 
 .gt-prefs-modal .gt-prefs-section:last-child {
@@ -330,14 +330,14 @@
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--gt-text-muted, #9aa3b2);
+    color: var(--gt-text-muted);
 }
 
 .gt-prefs-modal .gt-prefs-section__hint {
     margin: 0 0 0.55rem;
     font-size: 0.8rem;
     line-height: 1.35;
-    color: var(--gt-text-muted, #9aa3b2);
+    color: var(--gt-text-muted);
 }
 
 .gt-prefs-modal .gt-prefs-section__grid {
@@ -363,11 +363,11 @@
 .gt-prefs-modal .gt-prefs-range__value {
     min-width: 2.75rem;
     font-size: 0.82rem;
-    color: var(--gt-text-muted, #9aa3b2);
+    color: var(--gt-text-muted);
 }
 
 .gt-prefs-modal .gt-prefs-modal__body .form-label {
-    color: var(--gt-text, #f2f4f8);
+    color: var(--gt-text);
     font-weight: 500;
     font-size: 0.88rem;
     margin-bottom: 0.3rem;
@@ -375,42 +375,42 @@
 
 .gt-prefs-modal .gt-prefs-modal__body .form-control,
 .gt-prefs-modal .gt-prefs-modal__body .form-select {
-    background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 90%, transparent);
-    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-    color: var(--gt-text, #f2f4f8);
+    background: color-mix(in srgb, var(--gt-surface-2) 90%, transparent);
+    border: 1px solid var(--gt-border);
+    color: var(--gt-text);
     border-radius: 6px;
 }
 
 .gt-prefs-modal .gt-prefs-modal__body .form-control:focus,
 .gt-prefs-modal .gt-prefs-modal__body .form-select:focus {
-    border-color: var(--gt-accent, #2fd67b);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent);
+    border-color: var(--gt-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--gt-accent) 28%, transparent);
 }
 
 .gt-prefs-modal .gt-prefs-modal__body .form-text,
 .gt-prefs-modal .gt-prefs-modal__body .text-muted {
-    color: var(--gt-text-muted, #9aa3b2) !important;
+    color: var(--gt-text-muted) !important;
 }
 
 .gt-prefs-modal .gt-prefs-modal__footer {
-    border-top: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    border-top: 1px solid var(--gt-border);
     background: transparent;
     gap: 0.5rem;
     padding: 0.7rem 1rem;
 }
 
 .gt-prefs-modal .gt-prefs-modal__footer .btn-primary {
-    background: var(--gt-accent, #2fd67b);
-    border-color: var(--gt-accent, #2fd67b);
-    color: var(--gt-accent-contrast, #0b0d10);
+    background: var(--gt-accent);
+    border-color: var(--gt-accent);
+    color: var(--gt-accent-contrast);
     font-weight: 600;
     border-radius: 6px;
 }
 
 .gt-prefs-modal .gt-prefs-modal__footer .btn-secondary {
     background: transparent;
-    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-    color: var(--gt-text, #f2f4f8);
+    border: 1px solid var(--gt-border);
+    color: var(--gt-text);
     font-weight: 600;
     border-radius: 6px;
 }

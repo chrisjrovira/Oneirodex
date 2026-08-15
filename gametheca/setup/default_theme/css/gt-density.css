@@ -1,0 +1,260 @@
+/* Density layer (GT-B1)
+ * ---------------------------------------------------------------------------
+ * One token set, two densities: media-forward for browsing, compact for admin.
+ *
+ * The problem this solves
+ *   Discover and Library want big art, air and few items per screen. A user
+ *   table or a scan-job list wants the opposite — as many rows as will fit.
+ *   Previously each surface hardcoded its own padding to get there, which is a
+ *   large part of why no two pages shared a rhythm.
+ *
+ * What varies, and what deliberately does not
+ *   Only *layout* tokens are density-dependent: gutters, control heights, row
+ *   padding, tile sizing. The primitive scales (--gt-space-*, --gt-font-*,
+ *   --gt-radius-*) stay fixed across densities on purpose — if the type scale
+ *   moved too, "compact" would become a second design language rather than a
+ *   second spacing of the same one, and every component would need testing
+ *   twice. Components should reference the semantic tokens below, not raw steps.
+ *
+ * Why its own file rather than gt-tokens.css
+ *   gt-tokens.css is preset-managed: preset_themes rewrites named variables in
+ *   it with a first-match regex. A scoped [data-density] block there would risk
+ *   a preset value landing inside the wrong block. This file is not managed, so
+ *   presets never touch it.
+ *
+ * Usage
+ *   Default is comfortable. Opt a subtree into compact with data-density:
+ *     <body data-density="compact">          whole surface (admin)
+ *     <section data-density="compact">       one region (a table inside browse)
+ *   The attribute cascades, so nesting works and a compact region inside a
+ *   comfortable page needs no other change.
+ */
+
+:root,
+[data-density='comfortable'] {
+  /* Page frame */
+  --gt-gutter: 1.5rem;
+  --gt-stack: 1.25rem;
+  --gt-section-gap: 2rem;
+
+  /* Controls — one height for every button, input and select on a row, so
+     mixed rows line up without per-component nudging. */
+  --gt-control-h: 2.25rem;
+  --gt-control-pad-x: var(--gt-space-4);
+
+  /* Lists and tables */
+  --gt-row-pad-y: var(--gt-space-4);
+  --gt-row-pad-x: var(--gt-space-5);
+
+  /* Cards and panels */
+  --gt-card-pad: var(--gt-space-5);
+  --gt-card-gap: var(--gt-space-4);
+
+  /* Cover-art grids. The tile floor is what makes browse feel cinematic —
+     larger tiles, fewer of them, art doing the work. */
+  --gt-tile-min: 200px;
+  --gt-tile-gap: var(--gt-space-5);
+  --gt-tile-radius: var(--gt-radius-lg);
+
+  /* Chrome */
+  --gt-topbar-h: 3.25rem;
+  --gt-rail-w: 13.5rem;
+  --gt-rail-w-collapsed: 3.25rem;
+  --gt-rail-item-h: 2.2rem;
+}
+
+[data-density='compact'] {
+  --gt-gutter: 0.85rem;
+  --gt-stack: 0.65rem;
+  --gt-section-gap: 1.1rem;
+
+  --gt-control-h: 1.85rem;
+  --gt-control-pad-x: var(--gt-space-3);
+
+  --gt-row-pad-y: var(--gt-space-2);
+  --gt-row-pad-x: var(--gt-space-3);
+
+  --gt-card-pad: var(--gt-space-4);
+  --gt-card-gap: var(--gt-space-3);
+
+  --gt-tile-min: 132px;
+  --gt-tile-gap: var(--gt-space-3);
+  --gt-tile-radius: var(--gt-radius-md);
+
+  --gt-topbar-h: 2.6rem;
+  --gt-rail-w: 12rem;
+  --gt-rail-w-collapsed: 3rem;
+  --gt-rail-item-h: 1.8rem;
+}
+
+/* Touch targets win over density below the tablet breakpoint. A 1.85rem control
+   is ~30px, under the 44px floor a finger needs, so compact stops applying to
+   controls on small screens even where the attribute is set. Density is a
+   information-density preference, never an accessibility regression. */
+@media (max-width: 900px) {
+  [data-density='compact'] {
+    --gt-control-h: 2.4rem;
+    --gt-row-pad-y: var(--gt-space-3);
+    --gt-rail-item-h: 2.4rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Density-aware primitives.
+
+   These override the fixed metrics in gt-primitives.css / gt-bootstrap-bridge
+   so a button inside a compact region shrinks with it, without either file
+   needing to know densities exist.
+   -------------------------------------------------------------------------- */
+
+.gt-btn,
+.btn {
+  min-height: var(--gt-control-h);
+  padding-inline: var(--gt-control-pad-x);
+}
+
+.gt-input,
+.gt-select,
+.form-control,
+.form-select {
+  min-height: var(--gt-control-h);
+}
+
+.gt-card,
+.card {
+  padding: var(--gt-card-pad);
+}
+
+/* Cover grids read from the tile tokens rather than their own media queries. */
+.gt-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min), 1fr));
+  gap: var(--gt-tile-gap);
+}
+
+/* --------------------------------------------------------------------------
+   Card surface (GT-B10)
+
+   Every panel-ish thing in the product had picked its own fill: the scan tab
+   and the image queue came out mid-grey, Add Library came out near-black, and
+   admin panels sat somewhere between. That is why pages that do the same job
+   look like they belong to different apps.
+
+   One rule, one token. Cards are the *page* colour with a border, not a lighter
+   slab floating on it — the border does the separating, so nested panels do not
+   stack into progressively paler boxes. Override --gt-card-bg in a theme preset
+   to change all of them at once.
+   -------------------------------------------------------------------------- */
+
+:root,
+[data-density='comfortable'],
+[data-density='compact'] {
+  --gt-card-bg: var(--gt-bg);
+  --gt-card-border: var(--gt-border);
+}
+
+.gt-card,
+.card,
+.gt-admin-card,
+.gt-admin-panel,
+.gt-adminpage,
+.gt-adminpage-panel,
+.gt-ops-panel,
+.container-settings,
+.glass-panel {
+  background: var(--gt-card-bg);
+  border: 1px solid var(--gt-card-border);
+  border-radius: var(--gt-radius-lg);
+  box-shadow: none;
+}
+
+/* A panel inside a panel gets separation from a hairline, never a second fill —
+   two nested translucent surfaces was where the grey stacking came from. */
+.gt-card .gt-card,
+.gt-admin-panel .gt-admin-panel,
+.gt-adminpage .gt-adminpage-panel,
+.gt-ops-panel .gt-ops-panel {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--gt-card-border) 70%, transparent);
+}
+
+/* Headers sit on the card, not on their own tinted strip. */
+.card-header,
+.gt-adminpage-header,
+.gt-adminpage-panel-header {
+  background: transparent;
+  border-bottom: 1px solid var(--gt-card-border);
+}
+
+/* --------------------------------------------------------------------------
+   Segmented button group (GT-B10)
+
+   One control with rounded ends and hairline dividers, rather than a row of
+   separate pills. Divider comes from a border on the adjacent item, so labels
+   cannot overlap the seam the way the unmatched-folders bar did — that overlap
+   was a negative margin trying to fake the join.
+   -------------------------------------------------------------------------- */
+
+.gt-segbar {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--gt-card-border);
+  border-radius: var(--gt-radius-pill);
+  overflow: hidden;
+  /* Stops a long group forcing horizontal page scroll on narrow admin tables. */
+  max-width: 100%;
+}
+
+.gt-segbar > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gt-space-2);
+  min-height: var(--gt-control-h);
+  padding-inline: var(--gt-space-5);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--gt-text-muted);
+  font: inherit;
+  font-size: var(--gt-font-md);
+  /* No wrapping and no shrinking below the label: the overlap being fixed here
+     was text being squeezed past its own button edge. */
+  white-space: nowrap;
+  flex: 0 0 auto;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.gt-segbar > * + * {
+  border-left: 1px solid var(--gt-card-border);
+}
+
+.gt-segbar > *:hover:not(:disabled) {
+  color: var(--gt-text);
+  background: color-mix(in srgb, var(--gt-text) 7%, transparent);
+}
+
+.gt-segbar > .is-active,
+.gt-segbar > [aria-pressed='true'],
+.gt-segbar > [aria-current='page'] {
+  background: color-mix(in srgb, var(--gt-accent) 16%, transparent);
+  color: var(--gt-accent);
+}
+
+.gt-segbar > *:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Scrolls rather than wraps — a wrapped pill group breaks its own rounded ends. */
+@media (max-width: 900px) {
+  .gt-segbar {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .gt-segbar::-webkit-scrollbar {
+    display: none;
+  }
+}

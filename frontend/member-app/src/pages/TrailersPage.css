@@ -1,5 +1,5 @@
 .gt-trailers {
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-trailers__title-link {
@@ -23,7 +23,7 @@
 .gt-trailers__modal-actions button {
   padding: 0.4rem 0.75rem;
   background: transparent;
-  border: 1px solid var(--gt-border, #2a3140);
+  border: 1px solid var(--gt-border);
   border-radius: 4px;
   color: inherit;
   font: inherit;
@@ -54,10 +54,10 @@
 
 .gt-trailers__badge {
   padding: 0.15rem 0.5rem;
-  background: var(--gt-surface, #141820);
-  border: 1px solid var(--gt-border, #2a3140);
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
   border-radius: 999px;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   font-size: 0.8rem;
 }
 
@@ -67,8 +67,8 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
   padding: 1rem;
-  background: var(--gt-surface, #141820);
-  border: 1px solid var(--gt-border, #2a3140);
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
   border-radius: 6px;
 }
 
@@ -82,8 +82,8 @@
 .gt-trailers__filter-item input,
 .gt-trailers__modal input[type='number'] {
   padding: 0.4rem 0.6rem;
-  background: var(--gt-surface, #141820);
-  border: 1px solid var(--gt-border, #2a3140);
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
   border-radius: 4px;
   color: inherit;
   font: inherit;
@@ -91,7 +91,7 @@
 
 .gt-trailers__filter-item small,
 .gt-trailers__modal small {
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
 }
 
 .gt-trailers__filter-error {
@@ -107,20 +107,45 @@
   gap: 0.4rem;
 }
 
+/* The card holds the frame *and* its caption (W27-F1), so the 16:9 ratio moved
+   from the card to the iframe. Left on the card, the caption either overflowed
+   a fixed-height box or ate into the picture. */
 .gt-trailers__video {
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  background: var(--gt-surface, #141820);
-  border: 1px solid var(--gt-border, #2a3140);
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
   border-radius: 6px;
   overflow: hidden;
 }
 
 .gt-trailers__video iframe {
+  display: block;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
   border: 0;
+}
+
+.gt-trailers__caption {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--gt-border);
+  font-size: var(--gt-font-base);
+  font-weight: 600;
+}
+
+.gt-trailers__caption a {
+  color: var(--gt-text);
+  text-decoration: none;
+}
+
+.gt-trailers__caption a:hover,
+.gt-trailers__caption a:focus-visible {
+  color: var(--gt-accent);
+  text-decoration: underline;
 }
 
 .gt-trailers__empty a {
@@ -143,10 +168,10 @@
   gap: 0.5rem;
   width: min(28rem, 90vw);
   padding: 1.25rem;
-  background: var(--gt-surface, #141820);
-  border: 1px solid var(--gt-border, #2a3140);
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
   border-radius: 8px;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-trailers__modal h2 {

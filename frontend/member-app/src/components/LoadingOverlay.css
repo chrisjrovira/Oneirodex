@@ -5,23 +5,53 @@
 
 .gt-loading-overlay {
   position: fixed;
-  right: 1rem;
-  bottom: 8.5rem; /* clear of the Friends dock and the Chat launcher */
+  right: var(--gt-gutter);
+  /* Was 8.5rem to clear the Friends dock, which the rail replaced (GT-B2).
+     Sitting that high with nothing under it read as a floating orphan. */
+  bottom: var(--gt-gutter);
   z-index: 70;
   pointer-events: none;
 }
 
-/* Long, page-owning work can dim the page; routine requests must not. */
+/* Long, page-owning work takes the content pane and blurs what is behind it;
+   routine requests must not (GT-B9).
+ *
+ * `absolute`, not `fixed`, and anchored to .gt-shell: the rail and top bar stay
+ * sharp and usable while the page you are waiting on is clearly busy. Blurring
+ * the navigation as well would make the whole app look frozen.
+ *
+ * 2px of blur was not enough to read as deliberate — it looked like a rendering
+ * fault rather than a state. */
 .gt-loading-overlay--blocking {
-  inset: 0;
+  position: absolute;
+  grid-area: main;
+  inset: var(--gt-topbar-h) 0 0 var(--gt-rail-w);
   right: auto;
   bottom: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(2px);
+  background: color-mix(in srgb, var(--gt-bg) 55%, transparent);
+  backdrop-filter: blur(7px);
   pointer-events: auto;
+}
+
+[data-rail='collapsed'] .gt-loading-overlay--blocking {
+  inset: var(--gt-topbar-h) 0 0 var(--gt-rail-w-collapsed);
+}
+
+@media (max-width: 900px) {
+  .gt-loading-overlay--blocking,
+  [data-rail='collapsed'] .gt-loading-overlay--blocking {
+    inset: var(--gt-topbar-h) 0 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-loading-overlay--blocking {
+    backdrop-filter: none;
+    background: color-mix(in srgb, var(--gt-bg) 80%, transparent);
+  }
 }
 
 .gt-loading-overlay__card {
@@ -30,11 +60,11 @@
   gap: 0.55rem;
   padding: 0.5rem 0.85rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 38%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #141820) 94%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 38%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 94%, transparent);
   backdrop-filter: blur(8px);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
   font-size: 0.82rem;
   font-weight: 600;
 }

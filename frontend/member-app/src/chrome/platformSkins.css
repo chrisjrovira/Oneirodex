@@ -4,10 +4,28 @@
   --gt-platform-accent: var(--gt-accent);
 }
 
-[data-platform-family] .gt-btn,
+/* Tint the shared .gt-btn toward the platform accent while browsing one system.
+ *
+ * This used to hand `.gt-btn` a `--gt-btn-accent` custom property that only
+ * glass.css read. That indirection was the bug: the variable was set *only*
+ * here, so on every non-system page it was undefined and glass.css's border /
+ * background declarations were invalid at computed-value time. Applying the
+ * tint directly means the button is fully styled by gt-primitives.css
+ * everywhere, and this is a genuine override rather than a required input. */
+[data-platform-family] .gt-btn:not(.gt-btn--primary):not(.gt-btn--danger) {
+  border-color: color-mix(in srgb, var(--gt-platform-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--gt-platform-accent) 18%, var(--gt-glass-bg));
+}
+
+[data-platform-family] .gt-btn:not(.gt-btn--primary):not(.gt-btn--danger):hover,
+[data-platform-family] .gt-btn:not(.gt-btn--primary):not(.gt-btn--danger):focus-visible {
+  border-color: var(--gt-platform-accent);
+  background: color-mix(in srgb, var(--gt-platform-accent) 28%, var(--gt-glass-bg));
+}
+
 [data-platform-family] .gt-topnav__link.is-active,
 [data-platform-family] .gt-systems-tile {
-  --gt-btn-accent: var(--gt-platform-accent, var(--gt-accent));
+  --gt-btn-accent: var(--gt-platform-accent);
 }
 
 [data-platform-family] .gt-topnav {

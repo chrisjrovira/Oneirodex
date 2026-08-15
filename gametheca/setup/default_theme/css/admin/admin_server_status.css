@@ -6,7 +6,7 @@
     gap: 0.75rem 1.25rem;
     align-items: center;
     font-size: 0.9rem;
-    color: var(--gt-text-muted, color-mix(in srgb, var(--gt-text, #fff) 70%, transparent));
+    color: var(--gt-text-muted);
 }
 
 .gt-server-status .info-block {
@@ -20,7 +20,7 @@
 
 .gt-server-status .info-block h3,
 .gt-server-status .info-block h4 {
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
 }
 
 .gt-server-status .info-block h4 {
@@ -31,29 +31,29 @@
 .gt-meter.is-warn .gt-meter__fill {
     background: linear-gradient(
         90deg,
-        color-mix(in srgb, var(--gt-warning, #e6a23c) 50%, var(--gt-bg, #000)),
-        color-mix(in srgb, var(--gt-warning, #e6a23c) 65%, var(--gt-bg, #000))
+        color-mix(in srgb, var(--gt-warning) 50%, var(--gt-bg)),
+        color-mix(in srgb, var(--gt-warning) 65%, var(--gt-bg))
     );
 }
 
 .gt-meter.is-danger .gt-meter__fill {
     background: linear-gradient(
         90deg,
-        color-mix(in srgb, var(--gt-danger, #e74c3c) 50%, var(--gt-bg, #000)),
-        color-mix(in srgb, var(--gt-danger, #e74c3c) 65%, var(--gt-bg, #000))
+        color-mix(in srgb, var(--gt-danger) 50%, var(--gt-bg)),
+        color-mix(in srgb, var(--gt-danger) 65%, var(--gt-bg))
     );
 }
 
 .cpu-details {
-    background: color-mix(in srgb, var(--gt-text, #fff) 5%, transparent);
+    background: color-mix(in srgb, var(--gt-text) 5%, transparent);
     padding: 0.65rem 0.85rem;
-    border-radius: var(--gt-adminpage-radius-sm, 8px);
+    border-radius: var(--gt-adminpage-radius-sm);
     margin-top: 0.65rem;
 }
 
 .cpu-details p {
     margin: 0.25rem 0;
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
     font-size: 0.9rem;
 }
 
@@ -67,15 +67,15 @@
 }
 
 .status-good {
-    background-color: var(--gt-success, var(--btn-success));
+    background-color: var(--gt-success);
 }
 
 .status-warning {
-    background-color: var(--gt-warning, var(--btn-warning));
+    background-color: var(--gt-warning);
 }
 
 .status-error {
-    background-color: var(--gt-danger, var(--btn-danger));
+    background-color: var(--gt-danger);
 }
 
 .chart-container {
@@ -113,6 +113,6 @@ canvas#gamesDiskChart {
     text-align: center;
 }
 
-.text-success { color: var(--gt-success, var(--btn-success)) !important; }
-.text-danger { color: var(--gt-danger, var(--btn-danger)) !important; }
+.text-success { color: var(--gt-success) !important; }
+.text-danger { color: var(--gt-danger) !important; }
 .text-end { text-align: right !important; }

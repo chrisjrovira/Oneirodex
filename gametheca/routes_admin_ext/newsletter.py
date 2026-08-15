@@ -8,12 +8,13 @@ from sqlalchemy import select
 from gametheca.forms import NewsletterForm
 from . import admin2_bp
 from gametheca.utils.auth import admin_required
+from gametheca.utils.global_settings import global_settings_row
 
 @admin2_bp.route('/admin/newsletter', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def newsletter():
-    settings_record = db.session.execute(select(GlobalSettings)).scalars().first()
+    settings_record = global_settings_row()
     # Check if SMTP is configured and enabled
     if not settings_record or not settings_record.smtp_enabled:
         flash('SMTP is not configured or enabled. Please configure SMTP settings first.', 'warning')

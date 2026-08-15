@@ -35,6 +35,17 @@ export const SETTINGS_GROUPS = [
       { to: '/admin/emulator_profiles', title: 'Emulators', blurb: 'WebRetro cores, BIOS, cloud saves.' },
       { to: '/admin/remote_play', title: 'Remote play', blurb: 'BYO Sunshine/Wolf Moonlight host — off by default.' },
       { to: '/admin/arr', title: 'Arr module', blurb: 'BYO Prowlarr/Jackett + qBittorrent (no bundled indexers).', statusKey: 'arr' },
+      {
+        // Was an "Export packs" card in Integrations, labelled with the bare
+        // tool names (GT-B8). "ES-DE export" and "Pegasus" mean nothing unless
+        // you already run those launchers, and Integrations is for services
+        // GameTheca talks *to* — this writes a file for another emulator
+        // frontend to read, which is emulation, not an integration.
+        to: '/admin/plugins',
+        title: 'Export to emulator frontends',
+        blurb:
+          'Write your library as a game list that ES-DE or Pegasus can read, so those launchers show your games. Export only — nothing on disk is changed.',
+      },
     ],
   },
   {
@@ -76,13 +87,16 @@ export const INTEGRATION_CARDS = [
     id: 'artwork',
     title: 'Artwork & secondary metadata',
     blurb: 'SteamGridDB covers, Giant Bomb, HowLongToBeat, Meta/Quest — not IGDB-only.',
-    href: '/admin/integrations#steamgriddb',
+    href: '/admin/integrations#artwork',
     links: [
-      { href: '/admin/integrations#steamgriddb', label: 'SteamGridDB art' },
-      { href: '/admin/integrations#giantbomb', label: 'Giant Bomb' },
-      { href: '/admin/integrations#hltb', label: 'HowLongToBeat' },
-      { href: '/admin/integrations#meta_quest', label: 'Meta / Quest ownership' },
-      { href: '/admin/art_studio#images', label: 'Art studio picker' },
+      { href: '/admin/integrations#artwork', label: 'SteamGridDB art' },
+      { href: '/admin/integrations#artwork', label: 'Giant Bomb' },
+      { href: '/admin/integrations#artwork', label: 'HowLongToBeat' },
+      { href: '/admin/integrations#ownership', label: 'Meta / Quest ownership' },
+      // Fragment dropped: admin_art_studio.html carries no ids at all, so
+      // `#images` was another anchor that silently landed at the top of the
+      // page. The page itself is the destination.
+      { href: '/admin/art_studio', label: 'Art studio picker' },
     ],
   },
   {
@@ -92,7 +106,7 @@ export const INTEGRATION_CARDS = [
     href: '/admin/smtp_settings',
     links: [
       { href: '/admin/smtp_settings', label: 'SMTP settings' },
-      { href: '/admin/integrations#email', label: 'Integrations · Email tab' },
+      { href: '/admin/integrations#smtp', label: 'Integrations · Email tab' },
     ],
   },
   {
@@ -129,7 +143,7 @@ export const INTEGRATION_CARDS = [
     href: '/admin/arr',
     links: [
       { href: '/admin/arr', label: 'Arr module' },
-      { href: '/admin/integrations#indexers', label: 'Integrations · Indexers' },
+      { href: '/admin/integrations#acquire', label: 'Integrations · Indexers' },
     ],
   },
   {
@@ -139,7 +153,7 @@ export const INTEGRATION_CARDS = [
     href: '/admin/integrations#ownership',
     links: [
       { href: '/admin/integrations#ownership', label: 'Ownership tab' },
-      { href: '/admin/integrations#meta_quest', label: 'Meta / Quest' },
+      { href: '/admin/integrations#ownership', label: 'Meta / Quest' },
     ],
   },
   {
@@ -153,18 +167,6 @@ export const INTEGRATION_CARDS = [
     ],
   },
   {
-    id: 'exports',
-    title: 'Export packs',
-    blurb:
-      'ES-DE gamelist.xml and Pegasus metadata for external frontends. Portable paths only — no NAS mount leaks.',
-    href: '/admin/plugins',
-    links: [
-      { href: '/api/export/esde', label: 'Download ES-DE gamelist.xml' },
-      { href: '/api/export/pegasus?platform=Library', label: 'Download Pegasus metadata' },
-      { href: '/admin/plugins', label: 'Plugins registry' },
-    ],
-  },
-  {
     id: 'support',
     title: 'Support',
     blurb: 'Member issue inbox and optional GitHub sync.',
@@ -172,6 +174,78 @@ export const INTEGRATION_CARDS = [
     links: [{ href: '/admin/support', label: 'Support inbox' }],
   },
 ]
+
+/**
+ * Links that are *actions on a page*, not destinations (GT-B7).
+ *
+ * The rail lists a section's hub links when that section is active. Several of
+ * these are not places — "Add one library", the two "Add many" anchors — they
+ * are things you do once you are on the Libraries page. Listing them as
+ * destinations made the rail long enough to break its own rhythm, and put verbs
+ * in a column of nouns.
+ *
+ * They stay in HUB_LINKS because the pages still render them; the rail filters
+ * them out with railDestinations().
+ */
+export const PAGE_ACTION_HREFS = new Set([
+  '/admin/library/add',
+  '/libraries#propose-leaf',
+  '/libraries#import-leaf',
+])
+
+/**
+ * Which top-level section a pathname belongs to (W27-A5).
+ *
+ * The rail used to decide this by comparing the pathname against each nav
+ * item's own `path`, which meant a section only stayed selected while you were
+ * on its landing page. Several pages listed *in* a section's rail links live
+ * under a different prefix — `/admin/extensions`, `/admin/art_studio` and
+ * `/admin/edit_filters` are all Libraries links — so clicking one deselected
+ * Libraries, collapsed its sub-links, and left you with no way back except
+ * navigating to Libraries & scans again.
+ *
+ * Derived from HUB_LINKS rather than a second hand-written table: a page listed
+ * in a section's rail links *is* part of that section, by definition. A new
+ * link cannot forget to register itself here.
+ *
+ * @param {string} pathname
+ * @returns {string|null} an ADMIN_NAV id, or null when nothing owns the path
+ */
+export function resolveNavSection(pathname) {
+  // Fragment and query stripped from the input as well as the href: a router
+  // pathname will not carry either, but callers pass raw hrefs too and a
+  // section that depended on which of the two forms it was handed would be a
+  // subtle way to reintroduce exactly this bug.
+  const path = (pathname || '/').split('#')[0].split('?')[0].replace(/\/+$/, '') || '/'
+
+  const owns = (href) => {
+    // Fragments and query strings are the same page for ownership purposes.
+    const base = (href || '').split('#')[0].split('?')[0].replace(/\/+$/, '')
+    if (!base || base === '/') return false
+    return path === base || path.startsWith(`${base}/`)
+  }
+
+  // Hub links first — they are the more specific statement of membership.
+  for (const [sectionId, links] of Object.entries(HUB_LINKS)) {
+    if (links.some((link) => owns(link.href))) return sectionId
+  }
+
+  for (const item of ADMIN_NAV) {
+    if (owns(item.path)) return item.id
+  }
+
+  return null
+}
+
+/**
+ * A section's hub links, minus the page actions — what the rail should show.
+ * @param {string} sectionId
+ */
+export function railDestinations(sectionId) {
+  return (HUB_LINKS[sectionId] || []).filter(
+    (link) => !PAGE_ACTION_HREFS.has(link.href),
+  )
+}
 
 export const HUB_LINKS = {
   // One hub for the merged page (UX-C2): library management and scan jobs are
@@ -189,11 +263,13 @@ export const HUB_LINKS = {
     { href: '/admin/edit_filters', label: 'Release filters' },
     { href: '/admin/extensions', label: 'Extensions' },
     { href: '/admin/art_studio#images', label: 'Art & images' },
-    { href: '/admin/image_queue', label: 'Image queue (classic)' },
+    // Points at the inline tab, not a standalone page (W27-C5 · C6). The rail
+    // linking to the classic page is why the queue appeared unchanged — the
+    // inline version existed and nothing routed to it.
+    { href: '/scan_management?active_tab=image_queue', label: 'Image queue' },
   ],
   users: [
     { href: '/admin/users', label: 'Users' },
-    { href: '/admin/manage_users', label: 'Classic editor' },
     { href: '/admin/invites', label: 'Invites' },
     { href: '/admin/whitelist', label: 'Whitelist' },
     { href: '/admin/support', label: 'Support inbox' },
@@ -205,21 +281,25 @@ export const HUB_LINKS = {
     { href: '/admin/integrations#oidc', label: 'OIDC / SSO' },
     { href: '/admin/features', label: 'LiveKit (Features)' },
     { href: '/admin/support', label: 'Support inbox' },
-    { href: '/admin/integrations#steamgriddb', label: 'SteamGridDB art' },
-    { href: '/admin/integrations#giantbomb', label: 'Giant Bomb' },
-    { href: '/admin/integrations#hltb', label: 'HowLongToBeat' },
-    { href: '/admin/integrations#meta_quest', label: 'Meta / Quest' },
+    { href: '/admin/integrations#artwork', label: 'SteamGridDB art' },
+    { href: '/admin/integrations#artwork', label: 'Giant Bomb' },
+    { href: '/admin/integrations#artwork', label: 'HowLongToBeat' },
+    { href: '/admin/integrations#ownership', label: 'Meta / Quest' },
     { href: '/admin/integrations#ownership', label: 'Ownership registers' },
     { href: '/admin/integrations#community', label: 'Community chat' },
     { href: '/admin/arr', label: 'Acquire / Arr' },
-    { href: '/api/export/esde', label: 'ES-DE export' },
-    { href: '/api/export/pegasus?platform=Library', label: 'Pegasus export' },
+    // ES-DE / Pegasus exports left Integrations with GT-B8 — they write a file
+    // for another emulator frontend to read, so they live under Play &
+    // emulation. Two raw /api/export links in a nav list were also downloads
+    // masquerading as destinations.
   ],
   system: [
     // Server status is no longer its own section (UX-C1) — its signals live on
     // the dashboard, so the standalone page is not offered as a destination.
+    // "Server info" retired (W27-D1) — Ops is the one pane. It showed the same
+    // host facts from a second template, and its System / Database / Logs /
+    // Configuration panels all render on Ops now.
     { href: '/admin/ops', label: 'Ops glance' },
-    { href: '/admin/new_server_info', label: 'Server info' },
     { href: '/admin/server_logs', label: 'Server logs' },
     { href: '/admin/statistics', label: 'Statistics' },
     { href: '/admin/manage-downloads', label: 'Downloads admin' },

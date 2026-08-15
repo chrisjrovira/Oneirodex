@@ -1,61 +1,119 @@
 /**
- * Animated loading motifs — ids match Backend catalogue
- * (ring | orbit | pulse | blocks | scan | arcade).
+ * Loading motifs — consoles and controllers from the systems GameTheca supports
+ * (GT-B23 · UID-008).
+ *
+ * The previous set was six abstract shapes: ring, orbit, pulse, blocks, scan,
+ * arcade. They were animated, but the motion was a slow opacity/rotation drift
+ * that read as a slideshow of stills at the sizes these render — and abstract
+ * shapes say nothing about what the product is. Replaced outright rather than
+ * re-timed.
+ *
+ * Each motif is a recognisable piece of hardware with motion that reads at a
+ * glance and repeats under a second: a d-pad pressing around its axis, a disc
+ * spinning under a tracking head, a stick tilting, a handheld's scanline with a
+ * power LED. Everything is `currentColor` so the icon-pack and platform-accent
+ * tokens restyle them for free.
+ *
+ * Ids are new; normalizeLoadingMotifId falls back for any stale value still
+ * stored in settings, so a saved preference cannot blank the indicator.
  */
 import './LoadingMotif.css'
+import { SYSTEM_MOTIFS } from './systemMotifCatalogue'
+import { SystemMotifArt } from './systemMotifArt'
 
-export const LOADING_MOTIF_IDS = ['ring', 'orbit', 'pulse', 'blocks', 'scan', 'arcade']
+/** id -> catalogue row, for the 72 per-system motifs (GT-B24). */
+const SYSTEM_BY_ID = new Map(SYSTEM_MOTIFS.map((row) => [row.id, row]))
+
+export const LOADING_MOTIF_IDS = ['dpad', 'disc', 'stick', 'handheld', 'cart', 'crt']
+
+/** Retired abstract set → nearest replacement, so stored settings keep working. */
+const LEGACY_MOTIF_ALIASES = {
+  // 'arcade' is deliberately absent: it is now a real system id (the Arcade
+  // platform), and the per-system lookup shadows this map. That is the better
+  // outcome — someone who picked "arcade" gets a cabinet, not a d-pad — but it
+  // means the alias would never fire, so listing it here would be a lie.
+
+  ring: 'disc',
+  orbit: 'disc',
+  pulse: 'crt',
+  blocks: 'cart',
+  scan: 'crt',
+}
+
 
 const MARKUP = {
-  ring: (
+  // NES / SNES era — the d-pad presses around its axis.
+  dpad: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <circle className="gt-loading-motif__ring" cx="24" cy="24" r="16" />
+      <rect className="gt-loading-motif__pad" x="18" y="8" width="12" height="32" rx="2" />
+      <rect className="gt-loading-motif__pad" x="8" y="18" width="32" height="12" rx="2" />
+      <circle className="gt-loading-motif__dpad-press" cx="24" cy="13" r="3" />
+      <circle className="gt-loading-motif__dpad-press gt-loading-motif__dpad-press--r" cx="35" cy="24" r="3" />
+      <circle className="gt-loading-motif__dpad-press gt-loading-motif__dpad-press--d" cx="24" cy="35" r="3" />
+      <circle className="gt-loading-motif__dpad-press gt-loading-motif__dpad-press--l" cx="13" cy="24" r="3" />
     </svg>
   ),
-  orbit: (
+  // Disc era — platter spins, tracking head sweeps.
+  disc: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <circle className="gt-loading-motif__disc" cx="24" cy="24" r="14" />
-      <circle className="gt-loading-motif__hub" cx="24" cy="24" r="3.5" />
-      <g className="gt-loading-motif__sat">
-        <circle cx="24" cy="8" r="3" />
+      <g className="gt-loading-motif__platter">
+        <circle className="gt-loading-motif__disc-edge" cx="24" cy="24" r="15" />
+        <path className="gt-loading-motif__disc-glint" d="M24 9a15 15 0 0 1 13 7.5" />
       </g>
-      <g className="gt-loading-motif__sat gt-loading-motif__sat--b">
-        <circle cx="38" cy="28" r="2.25" />
+      <circle className="gt-loading-motif__disc-hub" cx="24" cy="24" r="4" />
+      <rect className="gt-loading-motif__head" x="23" y="30" width="2" height="12" rx="1" />
+    </svg>
+  ),
+  // Modern pad — analog stick tilts around its gate.
+  stick: (
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <circle className="gt-loading-motif__gate" cx="24" cy="24" r="15" />
+      <g className="gt-loading-motif__stick">
+        <circle className="gt-loading-motif__stick-cap" cx="24" cy="24" r="7" />
       </g>
     </svg>
   ),
-  pulse: (
+  // Handheld — screen refreshes under a pulsing power LED.
+  handheld: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <circle className="gt-loading-motif__pulse" cx="24" cy="24" r="16" />
-      <circle className="gt-loading-motif__pulse gt-loading-motif__pulse--b" cx="24" cy="24" r="10" />
-      <circle className="gt-loading-motif__core" cx="24" cy="24" r="4" />
+      <rect className="gt-loading-motif__shell" x="12" y="6" width="24" height="36" rx="3" />
+      <rect className="gt-loading-motif__screen" x="16" y="11" width="16" height="13" rx="1" />
+      <rect className="gt-loading-motif__scanline" x="16" y="12" width="16" height="2" />
+      <circle className="gt-loading-motif__led" cx="16.5" cy="28.5" r="1.5" />
+      <rect className="gt-loading-motif__pad" x="17" y="32" width="7" height="2.2" rx="1" />
+      <rect className="gt-loading-motif__pad" x="19.4" y="29.6" width="2.2" height="7" rx="1" />
     </svg>
   ),
-  blocks: (
+  // Cartridge slotting home.
+  cart: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <rect className="gt-loading-motif__block" x="6" y="22" width="8" height="8" rx="1" />
-      <rect className="gt-loading-motif__block" x="16" y="22" width="8" height="8" rx="1" />
-      <rect className="gt-loading-motif__block" x="26" y="22" width="8" height="8" rx="1" />
-      <rect className="gt-loading-motif__block" x="36" y="22" width="6" height="8" rx="1" />
+      <path className="gt-loading-motif__slot" d="M11 30h26v10H11z" />
+      <g className="gt-loading-motif__cart">
+        <rect className="gt-loading-motif__cart-body" x="15" y="8" width="18" height="20" rx="2" />
+        <rect className="gt-loading-motif__cart-label" x="18" y="11" width="12" height="7" rx="1" />
+        <path className="gt-loading-motif__cart-pins" d="M18 25h12" />
+      </g>
     </svg>
   ),
-  scan: (
+  // CRT — the set the whole library grew up on.
+  crt: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <rect className="gt-loading-motif__frame" x="8" y="10" width="32" height="28" rx="2" />
-      <rect className="gt-loading-motif__beam" x="10" y="12" width="28" height="3" rx="1" />
-    </svg>
-  ),
-  arcade: (
-    <svg viewBox="0 0 48 48" aria-hidden="true">
-      <path className="gt-loading-motif__slot" d="M14 34h20M16 34v-8h16v8" />
-      <ellipse className="gt-loading-motif__coin" cx="24" cy="14" rx="7" ry="7" />
+      <rect className="gt-loading-motif__tube" x="7" y="10" width="34" height="24" rx="4" />
+      <rect className="gt-loading-motif__raster" x="10" y="13" width="28" height="4" />
+      <path className="gt-loading-motif__stand" d="M19 34v4h10v-4M15 38h18" />
     </svg>
   ),
 }
 
 export function normalizeLoadingMotifId(id) {
   const text = String(id || '').trim().toLowerCase()
-  return LOADING_MOTIF_IDS.includes(text) ? text : null
+  if (LOADING_MOTIF_IDS.includes(text)) return text
+  // Per-system ids (nes, psx, dreamcast, …) are equally valid picks.
+  if (SYSTEM_BY_ID.has(text)) return text
+  // A saved preference naming a retired abstract motif maps to its nearest
+  // replacement rather than returning null — otherwise every member who had
+  // ever picked one would silently fall back to the default.
+  return LEGACY_MOTIF_ALIASES[text] || null
 }
 
 export function pickLoadingMotifId(settings, sessionPick) {
@@ -88,7 +146,9 @@ export function LoadingMotif({
   className = '',
   title = 'Loading',
 }) {
-  const id = normalizeLoadingMotifId(motifId) || 'ring'
+  // 'ring' was the old default and no longer exists in MARKUP — leaving it
+  // here would render an empty span for any unrecognised id.
+  const id = normalizeLoadingMotifId(motifId) || 'dpad'
   const sizeClass = size === 'sm'
     ? 'gt-loading-motif--sm'
     : size === 'lg'
@@ -101,7 +161,14 @@ export function LoadingMotif({
       role="img"
       aria-label={title}
     >
-      {MARKUP[id] || MARKUP.ring}
+      {SYSTEM_BY_ID.has(id) ? (
+        <SystemMotifArt
+          archetype={SYSTEM_BY_ID.get(id).archetype}
+          variant={SYSTEM_BY_ID.get(id).variant}
+        />
+      ) : (
+        MARKUP[id] || MARKUP.dpad
+      )}
     </span>
   )
 }

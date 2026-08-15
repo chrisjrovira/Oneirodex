@@ -38,7 +38,7 @@
 .admin-container.gt-adminpage,
 .settings-container.gt-adminpage,
 .container-settings.gt-adminpage {
-    max-width: var(--gt-adminpage-max, 1600px);
+    max-width: var(--gt-adminpage-max);
 }
 
 .container-settings {
@@ -117,7 +117,7 @@
     color: var(--text-white);
     font-size: 2.5em;
     font-weight: bold;
-    text-shadow: 0 0 10px color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 50%, transparent);
+    text-shadow: 0 0 10px color-mix(in srgb, var(--gt-accent) 50%, transparent);
 }
 
 .admin-section h3 {
@@ -166,18 +166,18 @@
     text-align: center;
     font-size: 24px;
     line-height: 60px;
-    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 20%, transparent);
-    color: var(--gt-text, var(--text-white));
-    border: 1px solid color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 45%, transparent);
+    background: color-mix(in srgb, var(--gt-accent) 20%, transparent);
+    color: var(--gt-text);
+    border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
     transition: all var(--transition-normal);
     cursor: pointer;
 }
 
 .btn-circle:hover {
     transform: translateY(-3px);
-    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 40%, transparent);
-    box-shadow: 0 0 20px color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 30%, transparent);
-    color: var(--gt-text, var(--text-white));
+    background: color-mix(in srgb, var(--gt-accent) 40%, transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--gt-accent) 30%, transparent);
+    color: var(--gt-text);
 }
 
 .button-label {
@@ -210,32 +210,32 @@
 .btn-admin-primary {
     background: linear-gradient(
         45deg,
-        var(--gt-accent, var(--btn-primary)),
-        color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 88%, var(--gt-bg, #000))
+        var(--gt-accent),
+        color-mix(in srgb, var(--gt-accent) 88%, var(--gt-bg))
     );
-    border-color: var(--gt-accent, var(--btn-primary));
-    color: var(--gt-accent-contrast, var(--text-white));
+    border-color: var(--gt-accent);
+    color: var(--gt-accent-contrast);
 }
 
 .btn-admin-primary:hover {
     background: linear-gradient(
         45deg,
-        color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 88%, var(--gt-bg, #000)),
-        var(--gt-accent, var(--btn-primary))
+        color-mix(in srgb, var(--gt-accent) 88%, var(--gt-bg)),
+        var(--gt-accent)
     );
 }
 
 .btn-admin-danger {
     background: linear-gradient(45deg, var(--btn-danger), var(--btn-danger-hover));
     border-color: var(--btn-danger);
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
 }
 
 .btn-admin-danger:hover {
     background: linear-gradient(
         45deg,
         var(--btn-danger-hover),
-        color-mix(in srgb, var(--btn-danger-hover) 85%, var(--gt-bg, #000))
+        color-mix(in srgb, var(--btn-danger-hover) 85%, var(--gt-bg))
     );
 }
 
@@ -244,14 +244,14 @@
 .progress-text {
     font-size: 14px;
     margin-bottom: var(--spacing-sm);
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
     font-weight: 500;
 }
 
 .progress-bar {
     width: 100%;
     height: 20px;
-    background-color: var(--gt-bg, var(--bg-dark-primary));
+    background-color: var(--gt-bg);
     border-radius: var(--border-radius-md);
     overflow: hidden;
     margin-top: var(--spacing-sm);
@@ -264,8 +264,8 @@
     height: 100%;
     background: linear-gradient(
         90deg,
-        color-mix(in srgb, var(--gt-success, var(--btn-success)) 50%, var(--gt-bg, #000)),
-        color-mix(in srgb, var(--gt-success, var(--btn-success)) 62%, var(--gt-bg, #000))
+        color-mix(in srgb, var(--gt-success) 50%, var(--gt-bg)),
+        color-mix(in srgb, var(--gt-success) 62%, var(--gt-bg))
     );
     width: 0%;
     transition: width var(--transition-normal);
@@ -279,8 +279,8 @@
     transform: translate(-50%, -50%);
     font-size: 12px;
     font-weight: bold;
-    color: var(--gt-text, var(--text-white));
-    text-shadow: 0 0 3px var(--gt-bg, #000);
+    color: var(--gt-text);
+    text-shadow: 0 0 3px var(--gt-bg);
 }
 
 .progress {
@@ -310,27 +310,27 @@
 }
 
 .status-running {
-    background: var(--gt-success, var(--status-running));
+    background: var(--gt-success);
     animation: pulse 1.5s infinite;
 }
 
 .status-stopped {
-    background: var(--gt-danger, var(--status-stopped));
+    background: var(--gt-danger);
 }
 
 .status-pending {
-    background: var(--gt-warning, var(--status-pending));
+    background: var(--gt-warning);
 }
 
 .status-completed {
-    background: var(--gt-text-muted, var(--status-completed));
+    background: var(--gt-text-muted);
 }
 
 .status-value {
-    color: var(--gt-info, var(--text-white));
+    color: var(--gt-info);
     font-weight: bold;
-    background-color: color-mix(in srgb, var(--gt-info, var(--btn-info)) 15%, transparent);
-    border: 2px solid var(--gt-info, var(--btn-info));
+    background-color: color-mix(in srgb, var(--gt-info) 15%, transparent);
+    border: 2px solid var(--gt-info);
     padding: var(--spacing-2) var(--spacing-xs);
     border-radius: var(--border-radius-sm);
 }
@@ -354,29 +354,29 @@
 .admin-alert-success,
 .alert-success {
     background: var(--alert-success-bg);
-    border-left-color: var(--gt-success, var(--btn-success));
-    color: var(--gt-success, var(--btn-success));
+    border-left-color: var(--gt-success);
+    color: var(--gt-success);
 }
 
 .admin-alert-warning,
 .alert-warning {
     background: var(--alert-warning-bg);
-    border-left-color: var(--gt-warning, var(--btn-warning));
-    color: var(--gt-warning, var(--btn-warning));
+    border-left-color: var(--gt-warning);
+    color: var(--gt-warning);
 }
 
 .admin-alert-danger,
 .alert-danger {
     background: var(--alert-danger-bg);
-    border-left-color: var(--gt-danger, var(--btn-danger));
-    color: var(--gt-danger, var(--btn-danger));
+    border-left-color: var(--gt-danger);
+    color: var(--gt-danger);
 }
 
 .admin-alert-info,
 .alert-info {
     background: var(--alert-info-bg);
-    border-left-color: var(--gt-info, var(--btn-info));
-    color: var(--gt-info, var(--btn-info));
+    border-left-color: var(--gt-info);
+    color: var(--gt-info);
 }
 
 .alert {
@@ -570,7 +570,7 @@
     padding: 0.3em 0.6em;
     margin-left: var(--spacing-md);
     background-color: var(--btn-info);
-    border: 1px solid color-mix(in srgb, var(--gt-info, var(--btn-info)) 80%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gt-info) 80%, transparent);
 }
 
 .smtp-settings-container h2 .btn-info:hover {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { DataTable } from './DataTable'
 import { DupeGlance } from './DupeGlance'
 import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_GROUPS } from './navConfig'
 import { OpenPathModal } from './OpenPathModal'
@@ -9,9 +10,11 @@ import { ScanConflictModal } from './ScanConflictModal'
 import {
   hasActiveScan,
   isScanQueuedStatus,
+  isScanRunning,
   normalizeScanJobsList,
 } from './scanQueuePolicy'
 import { useLibraryRefreshAll } from './useLibraryRefreshAll'
+import { showToast } from './utils/toast'
 import {
   MeterBar,
   MetricTile,
@@ -53,17 +56,17 @@ function Page({ title, lede, children }) {
   )
 }
 
-function LinkRow({ links }) {
-  return (
-    <div className="gt-admin-actions-row">
-      {links.map((link) => (
-        <a key={link.href} className="gt-btn" href={link.href}>
-          {link.label}
-        </a>
-      ))}
-    </div>
-  )
-}
+/* LinkRow removed (GT-B7).
+ *
+ * It rendered a section's HUB_LINKS as a row of buttons on the page. The rail
+ * now lists exactly those destinations whenever the section is active, so the
+ * row was a duplicate nav that also made every admin page open with a wall of
+ * buttons before its actual content.
+ *
+ * Note this is *not* the same as `.gt-admin-actions-row` generally — that class
+ * is still used for real page actions (save, apply, submit) across ArtStudio,
+ * QualityProfiles, Users and others, and those must stay.
+ */
 
 export function DashboardPage() {
   const [summary, setSummary] = useState(null)
@@ -301,15 +304,10 @@ export function DashboardPage() {
       </div>
 
       <div className="gt-admin-dashboard-footer">
-        <LinkRow
-          links={[
-            { href: '/admin/ops', label: 'Ops console' },
-            { href: '/scan_management', label: 'Scans' },
-            { href: '/libraries', label: 'Libraries' },
-            { href: '/admin/settings', label: 'Settings' },
-            { href: '/admin/support', label: 'Support inbox' },
-          ]}
-        />
+        {/* The footer's five destination buttons are gone (GT-B7) — Ops, Scans,
+            Libraries, Settings and Support are all rail entries, and repeating
+            them under the dashboard was the duplicate nav. The refresh status
+            stays: it is about *this* page, not about where to go next. */}
         <div className="gt-ops-refresh gt-ops-refresh--footer">
           {manualRefreshing ? (
             <span className="gt-ops-refresh__status" role="status" aria-live="polite">
@@ -354,7 +352,6 @@ export function LibrariesPage() {
   return (
     <Page title="Libraries & scans" lede="Manage library folders and platforms. Classic Jinja surfaces share the same Libraries / Auto / Manual / Unmatched tabs.">
       {error ? <div role="alert">Unable to load libraries.</div> : null}
-      <LinkRow links={HUB_LINKS.libraries} />
       <p className="gt-admin-lede">
         Prefer the unified classic page:{' '}
         <a href="/scan_management?active_tab=libraries">Libraries &amp; scans</a>
@@ -385,27 +382,26 @@ export function LibrariesPage() {
         </div>
         {!rows ? (
           <p>Loading…</p>
-        ) : rows.length === 0 ? (
-          <p>No libraries yet. Add one to start scanning.</p>
         ) : (
-          <table className="gt-admin-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>UUID</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((lib) => (
-                <tr key={lib.uuid}>
-                  <td>{lib.name}</td>
-                  <td>
-                    <code>{lib.uuid}</code>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          // Loading and empty are different states, so only the first stays a
+          // bare paragraph: DataTable owns "no rows" itself, and routing it
+          // through emptyMessage keeps the toolbar and frame in place instead
+          // of collapsing the table to a sentence.
+          <DataTable
+            rows={rows}
+            getRowKey={(lib) => lib.uuid}
+            emptyMessage="No libraries yet. Add one to start scanning."
+            initialSort={{ key: 'name', dir: 'asc' }}
+            dense
+            columns={[
+              { key: 'name', label: 'Name' },
+              {
+                key: 'uuid',
+                label: 'UUID',
+                render: (lib) => <code>{lib.uuid}</code>,
+              },
+            ]}
+          />
         )}
       </div>
       <div id="propose-leaf">
@@ -478,10 +474,9 @@ export function SettingsPage() {
   )
 }
 
-export function HubPage({ title, lede, links }) {
+export function HubPage({ title, lede }) {
   return (
     <Page title={title} lede={lede}>
-      <LinkRow links={links} />
       <div className="gt-admin-panel">
         <p>
           This admin surface runs in the React shell. Use the actions above for the full workflow.
@@ -572,7 +567,18 @@ export function IntegrationsPage() {
           dense treatment as Settings / Libraries. */}
       <div className="gt-admin-panel gt-provider-list">
         {INTEGRATION_CARDS.map((card) => (
-          <section key={card.id} className="gt-provider-row" aria-labelledby={`int-${card.id}`}>
+          // id={card.id} is the anchor the nav actually links to. Every
+          // `/admin/integrations#<id>` link in navConfig was dead because the
+          // only id on the page was the heading's `int-<id>`, which nothing
+          // links to — so all nine deep links landed at the top of the page
+          // and looked like they did nothing (W27-A8). The heading keeps its
+          // prefixed id for aria-labelledby, which needs to stay unique.
+          <section
+            key={card.id}
+            id={card.id}
+            className="gt-provider-row"
+            aria-labelledby={`int-${card.id}`}
+          >
             <div className="gt-provider-row__head">
               <h2 id={`int-${card.id}`} className="gt-provider-row__title">
                 <a href={card.href}>{card.title}</a>
@@ -667,9 +673,17 @@ export function ThemesPage() {
         },
         body: '{}',
       })
-      setMessage(response.ok ? 'Default themes reset. Hard-refresh the browser.' : 'Reset failed.')
+      // Reset Themes is the action operators are told to run after every theme
+      // CSS change, and it gave no feedback outside a small inline line.
+      const ok = response.ok
+      setMessage(ok ? 'Default themes reset. Hard-refresh the browser.' : 'Reset failed.')
+      showToast(
+        ok ? 'Default themes reset — hard-refresh to pick them up.' : 'Theme reset failed.',
+        ok ? 'success' : 'error',
+      )
     } catch {
       setMessage('Reset failed.')
+      showToast('Theme reset failed.', 'error')
     } finally {
       setBusy(false)
     }
@@ -758,28 +772,25 @@ export function PluginsPage() {
         {!plugins ? (
           <p>Loading…</p>
         ) : (
-          <table className="gt-admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {plugins.map((plugin) => (
-                <tr key={plugin.id}>
-                  <td>
-                    <code>{plugin.id}</code>
-                  </td>
-                  <td>{plugin.name}</td>
-                  <td>{plugin.category}</td>
-                  <td>{plugin.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          // Category and status are exactly what someone comes here to group
+          // by, so this is the table that most wanted sorting and had none.
+          <DataTable
+            rows={plugins}
+            getRowKey={(plugin) => plugin.id}
+            emptyMessage="No plugins registered."
+            initialSort={{ key: 'category', dir: 'asc' }}
+            dense
+            columns={[
+              {
+                key: 'id',
+                label: 'ID',
+                render: (plugin) => <code>{plugin.id}</code>,
+              },
+              { key: 'name', label: 'Name' },
+              { key: 'category', label: 'Category' },
+              { key: 'status', label: 'Status' },
+            ]}
+          />
         )}
       </div>
     </Page>
@@ -822,7 +833,8 @@ export function ScansPage() {
   }, [])
 
   const jobs = normalizeScanJobsList(status)
-  const running = hasActiveScan(jobs) || Boolean(status && !Array.isArray(status) && (status.running || status.is_running))
+  // A bare `running` flag with no jobs behind it is a phantom scan (GT-B13).
+  const running = isScanRunning(status)
   const queuedJobs = jobs.filter((job) => isScanQueuedStatus(job?.status))
   const recentJobs = jobs.slice(0, 12)
   const progress = status?.progress ?? status?.percent ?? null
@@ -831,7 +843,6 @@ export function ScansPage() {
 
   return (
     <Page title="Libraries & scans" lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja Libraries & scans) or Refresh all here.">
-      <LinkRow links={HUB_LINKS.libraries} />
       {error ? <div role="alert">Unable to load scan status.</div> : null}
       <div className="gt-admin-panel">
         <div className="gt-admin-panel__toolbar" style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -866,37 +877,49 @@ export function ScansPage() {
               {progress != null ? <> · progress {String(progress)}</> : null}
             </p>
             {message ? <p className="gt-admin-lede">{message}</p> : null}
-            {recentJobs.length > 0 ? (
-              <table className="gt-admin-table">
-                <thead>
-                  <tr>
-                    <th>Job</th>
-                    <th>Library</th>
-                    <th>Status</th>
-                    <th>Path</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentJobs.map((job) => (
-                    <tr key={job.id}>
-                      <td>
-                        <code>{String(job.id).slice(0, 8)}</code>
-                      </td>
-                      <td>{job.library_name || job.library || '—'}</td>
-                      <td>
-                        {job.status}
-                        {job.queue_position != null && isScanQueuedStatus(job.status)
-                          ? ` (#${job.queue_position})`
-                          : ''}
-                      </td>
-                      <td>{job.scan_folder || '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p className="gt-admin-lede">No scan jobs yet.</p>
-            )}
+            {/* Scan jobs sort and filter like every other table now (W27-C2).
+                Each column declares `value` where what it renders is not what
+                it should sort on: Job renders a truncated code element, and
+                Status renders a queue position alongside the word — sorting on
+                the rendered markup would order by the wrong thing entirely. */}
+            <DataTable
+              rows={recentJobs}
+              getRowKey={(job) => job.id}
+              emptyMessage="No scan jobs yet."
+              initialSort={{ key: 'status', dir: 'asc' }}
+              dense
+              columns={[
+                {
+                  key: 'id',
+                  label: 'Job',
+                  value: (job) => String(job.id),
+                  render: (job) => <code>{String(job.id).slice(0, 8)}</code>,
+                },
+                {
+                  key: 'library',
+                  label: 'Library',
+                  value: (job) => job.library_name || job.library || '',
+                  render: (job) => job.library_name || job.library || '—',
+                },
+                {
+                  key: 'status',
+                  label: 'Status',
+                  value: (job) => job.status,
+                  render: (job) =>
+                    `${job.status}${
+                      job.queue_position != null && isScanQueuedStatus(job.status)
+                        ? ` (#${job.queue_position})`
+                        : ''
+                    }`,
+                },
+                {
+                  key: 'scan_folder',
+                  label: 'Path',
+                  value: (job) => job.scan_folder || '',
+                  render: (job) => job.scan_folder || '—',
+                },
+              ]}
+            />
             {updatedAt ? (
               <p className="gt-admin-lede">Live status · last refresh {updatedAt.toLocaleTimeString()}</p>
             ) : null}
@@ -947,10 +970,13 @@ export function resolveAdminPage(pathname) {
   if (pathname === '/admin/help') return 'help'
   // Scans live under the merged "Libraries & scans" nav item (UX-C2), so these
   // paths must highlight 'libraries' — 'scans' is no longer a top-nav id.
-  if (pathname.startsWith('/scan_management') || pathname.includes('image_queue') || pathname.includes('game_identify') || pathname.includes('game_edit')) {
+  // 'image_queue' dropped from this list with the standalone page (W27-C6) —
+  // it is a tab of /scan_management now, which the prefix below already covers,
+  // and it only ever appears as a query parameter rather than in the pathname.
+  if (pathname.startsWith('/scan_management') || pathname.includes('game_identify') || pathname.includes('game_edit')) {
     return 'libraries'
   }
-  if (pathname.startsWith('/admin/users') || pathname.includes('manage_users') || pathname.includes('manage_invites') || pathname.includes('whitelist')) {
+  if (pathname.startsWith('/admin/users') || pathname.includes('manage_invites') || pathname.includes('whitelist')) {
     return 'users'
   }
   if (
@@ -967,8 +993,9 @@ export function resolveAdminPage(pathname) {
     pathname.includes('/admin/ops') ||
     pathname.includes('server_') ||
     pathname.includes('statistics') ||
-    pathname.includes('manage-downloads') ||
-    pathname.includes('new_server_info')
+    pathname.includes('manage-downloads')
+    // 'new_server_info' dropped with the page (W27-D1) — resolving a path that
+    // no longer routes anywhere is how a stale id outlives its page.
   ) {
     return 'system'
   }

@@ -70,6 +70,8 @@ jobs:
 
       - name: Run core pytest subset
         # Core gate only — full suite is still local/release.
+        # Keep this list bare: `run: >` is a folded scalar, so a `#` line here
+        # becomes an argument to pytest rather than a comment.
         run: >
           python -m pytest -q
           tests/test_health_probes.py
@@ -78,6 +80,19 @@ jobs:
           tests/test_routes_ops.py
           tests/test_security_suite.py
           tests/test_rbac_unit.py
+          tests/test_routes_styleguide.py
+          tests/test_templates_rail_chrome.py
+          tests/test_setup_no_redirect_loop.py
+          tests/test_integrations_inventory_sources.py
+          tests/test_cascade_default_behaviour.py
+          tests/test_ownership_poller.py
+          tests/test_emulator_bios_discovery.py
+          tests/test_cover_art_variety.py
+          tests/test_global_settings_singleton.py
+          tests/test_routes_info.py
+          tests/test_template_icons.py
+          tests/test_detail_layout_presets.py
+          tests/test_theme_freshness.py
 
   member-app-vitest:
     name: Member-app vitest
@@ -103,6 +118,34 @@ jobs:
 
       - name: Run vitest
         # package.json "test" is "vitest"; --run exits non-interactively in CI.
+        run: npm test -- --run
+
+  admin-app-vitest:
+    name: Admin-app vitest
+    # Added with GT-A7: the admin ⌘K palette's index is derived from navConfig,
+    # and adminCommands.test.js is what catches a destination silently dropping
+    # out of it. Those tests are worth nothing unless they gate a PR.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend/admin-app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/admin-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run vitest
         run: npm test -- --run
 
   desktop-vitest:

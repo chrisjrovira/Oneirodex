@@ -3,6 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
 import { PageStatus, resolveErrorMessage, resolveErrorDetail } from './PageStatus'
 
+// Deliberately a *retired* id. GT-B23 replaced the six abstract motifs with
+// console hardware, and 'orbit' is one of the ids that went — LoadingMotif maps
+// it forward via LEGACY_MOTIF_ALIASES so a member who picked it years ago still
+// gets a spinner instead of nothing. Mocking a live id would test less.
 vi.mock('./loadingMotifApi', () => ({
   useLoadingMotifId: () => 'orbit',
 }))
@@ -12,7 +16,10 @@ test('loading state sets aria-busy and shows loading message', () => {
   const status = screen.getByRole('status')
   expect(status).toHaveAttribute('aria-busy', 'true')
   expect(screen.getByText('Loading Discover…')).toBeInTheDocument()
-  expect(screen.getByRole('img', { name: 'Loading Discover…' })).toHaveAttribute('data-motif', 'orbit')
+  // 'disc', not 'orbit': the retired id resolves forward rather than rendering
+  // a motif that no longer exists. This assertion used to expect the stored
+  // value and was left behind when the catalogue changed.
+  expect(screen.getByRole('img', { name: 'Loading Discover…' })).toHaveAttribute('data-motif', 'disc')
 })
 
 test('emptyMessage renders polite empty status', () => {

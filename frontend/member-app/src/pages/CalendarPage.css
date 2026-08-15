@@ -23,7 +23,7 @@
 .gt-calendar__views {
   display: inline-flex;
   flex-wrap: wrap;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -32,21 +32,21 @@
   padding: 0.35rem 0.7rem;
   border: none;
   background: transparent;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
   font: inherit;
   font-size: 0.85rem;
   cursor: pointer;
 }
 
 .gt-calendar__views button + button {
-  border-left: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
 }
 
 .gt-calendar__views button.is-active,
 .gt-calendar__views button:hover,
 .gt-calendar__views button:focus-visible {
-  color: var(--gt-accent, #2fd67b);
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 12%, transparent);
+  color: var(--gt-accent);
+  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
   outline: none;
 }
 
@@ -65,16 +65,16 @@
   font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-calendar__window select {
   min-width: 6.5rem;
   padding: 0.35rem 0.5rem;
   border-radius: 6px;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 85%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #141820) 90%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 85%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 90%, transparent);
+  color: var(--gt-text);
   font: inherit;
   font-size: 0.85rem;
   font-weight: 400;
@@ -92,7 +92,7 @@
   gap: 0.5rem;
   margin: 0 0 0.55rem;
   padding-bottom: 0.35rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 75%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
 }
 
 .gt-calendar__section-head h2 {
@@ -101,18 +101,18 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-calendar__count {
   font-size: 0.75rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
   opacity: 0.85;
 }
 
 .gt-calendar__empty {
   margin: 0;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
   font-size: 0.9rem;
 }
 
@@ -131,14 +131,14 @@
   gap: 0.65rem 0.85rem;
   align-items: baseline;
   padding: 0.55rem 0.1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 65%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 65%, transparent);
   background: transparent;
   border-radius: 0;
 }
 
 .gt-calendar__row time {
   font-size: 0.8rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
   white-space: nowrap;
 }
 
@@ -157,7 +157,7 @@
 
 .gt-calendar__title-link:hover strong,
 .gt-calendar__title-link:focus-visible strong {
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
   outline: none;
 }
 
@@ -165,7 +165,7 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 /* —— Month grid —— */
@@ -187,16 +187,16 @@
   font-size: 1.05rem;
   font-weight: 650;
   letter-spacing: 0.01em;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-calendar__nav-btn {
   width: 2rem;
   height: 2rem;
   border-radius: 6px;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 85%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #141820) 88%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 85%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
+  color: var(--gt-text);
   font: inherit;
   font-size: 1.15rem;
   line-height: 1;
@@ -205,8 +205,8 @@
 
 .gt-calendar__nav-btn:hover,
 .gt-calendar__nav-btn:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
-  color: var(--gt-accent, #2fd67b);
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  color: var(--gt-accent);
   outline: none;
 }
 
@@ -230,7 +230,7 @@
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-calendar__day {
@@ -245,7 +245,7 @@
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
   font: inherit;
   cursor: pointer;
 }
@@ -256,18 +256,18 @@
 }
 
 .gt-calendar__day.has-releases {
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 8%, transparent);
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 22%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--gt-accent) 22%, transparent);
 }
 
 .gt-calendar__day.is-selected {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 16%, transparent);
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 16%, transparent);
 }
 
 .gt-calendar__day:not(.is-out):hover,
 .gt-calendar__day:not(.is-out):focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 40%, transparent);
+  border-color: color-mix(in srgb, var(--gt-accent) 40%, transparent);
   outline: none;
 }
 
@@ -289,12 +289,12 @@
   width: 0.35rem;
   height: 0.35rem;
   border-radius: 50%;
-  background: var(--gt-accent, #2fd67b);
+  background: var(--gt-accent);
 }
 
 .gt-calendar__day-panel {
   padding-top: 0.35rem;
-  border-top: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 70%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
 }
 
 .gt-calendar__day-panel-title {
@@ -303,7 +303,7 @@
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-calendar__day-list {
@@ -321,7 +321,7 @@
   align-items: baseline;
   gap: 0.35rem 0.65rem;
   padding: 0.45rem 0.1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 55%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
 }
 
 /* —— Agenda (by week) —— */
@@ -339,12 +339,12 @@
 .gt-calendar__agenda-label {
   margin: 0 0 0.4rem;
   padding-bottom: 0.3rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-accent) 28%, transparent);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
 }
 
 .gt-calendar__agenda-list {
@@ -359,7 +359,7 @@
   gap: 0.65rem 0.85rem;
   align-items: baseline;
   padding: 0.5rem 0.1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 55%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
   position: relative;
   padding-left: 0.85rem;
 }
@@ -372,12 +372,12 @@
   width: 0.35rem;
   height: 0.35rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 70%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 70%, transparent);
 }
 
 .gt-calendar__agenda-row time {
   font-size: 0.8rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
   white-space: nowrap;
 }
 

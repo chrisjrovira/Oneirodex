@@ -30,16 +30,16 @@
 .gt-tokens__field input {
   font: inherit;
   padding: 0.45rem 0.65rem;
-  border: 1px solid color-mix(in srgb, var(--gt-border, #666) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
   border-radius: 6px;
-  background: color-mix(in srgb, var(--gt-surface, #1a1a1a) 92%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
   color: var(--gt-text);
 }
 
 .gt-tokens__presets {
   margin: 0;
   padding: 0.65rem 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--gt-border, #666) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
   border-radius: 8px;
 }
 
@@ -77,9 +77,9 @@
 
 .gt-tokens__secret {
   padding: 0.85rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #4a9) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--gt-accent, #4a9) 8%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 8%, transparent);
 }
 
 .gt-tokens__warning {
@@ -111,9 +111,9 @@
   padding: 0.55rem 0.65rem;
   margin: 0 0 0.35rem;
   overflow-x: auto;
-  border: 1px solid color-mix(in srgb, var(--gt-border, #666) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
   border-radius: 6px;
-  background: color-mix(in srgb, var(--gt-surface, #111) 95%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 95%, transparent);
   color: var(--gt-text);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.85rem;
@@ -123,7 +123,7 @@
 }
 
 .gt-tokens__secret-value:focus {
-  outline: 2px solid color-mix(in srgb, var(--gt-accent, #4a9) 65%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--gt-accent) 65%, transparent);
   outline-offset: 2px;
 }
 
@@ -161,7 +161,7 @@
   justify-content: space-between;
   gap: 0.65rem;
   padding: 0.7rem 0.8rem;
-  border: 1px solid color-mix(in srgb, var(--gt-border, #666) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 50%, transparent);
   border-radius: 8px;
 }
 

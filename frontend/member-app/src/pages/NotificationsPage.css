@@ -23,8 +23,8 @@
   height: 1.35rem;
   padding: 0 0.35rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 22%, transparent);
-  color: var(--gt-accent, #2fd67b);
+  background: color-mix(in srgb, var(--gt-accent) 22%, transparent);
+  color: var(--gt-accent);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -38,7 +38,7 @@
 
 .gt-notifications__filters {
   display: inline-flex;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -47,27 +47,27 @@
   padding: 0.35rem 0.65rem;
   border: none;
   background: transparent;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
   font: inherit;
   font-size: 0.85rem;
   cursor: pointer;
 }
 
 .gt-notifications__filters button + button {
-  border-left: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
 }
 
 .gt-notifications__filters button.is-active,
 .gt-notifications__filters button:hover,
 .gt-notifications__filters button:focus-visible {
-  color: var(--gt-accent, #2fd67b);
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 12%, transparent);
+  color: var(--gt-accent);
+  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
   outline: none;
 }
 
 .gt-notifications__prefs {
   margin: 0.85rem 0 1rem;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
   border-radius: 6px;
 }
 
@@ -86,7 +86,7 @@
 .gt-notifications__prefs summary::after {
   content: '+';
   float: right;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-notifications__prefs[open] summary::after {
@@ -119,7 +119,7 @@
 .gt-notifications__pref-kind {
   display: block;
   font-size: 0.75rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -128,7 +128,7 @@
   margin: 0;
   padding: 0 0.75rem 0.65rem;
   font-size: 0.8rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-notifications__section-title {
@@ -137,7 +137,7 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-notifications__list {
@@ -146,7 +146,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  border-top: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 75%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
 }
 
 .gt-notifications__item {
@@ -156,11 +156,11 @@
   justify-content: space-between;
   gap: 0.55rem 1rem;
   padding: 0.65rem 0.15rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 65%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 65%, transparent);
 }
 
 .gt-notifications__item.is-unread {
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 5%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 5%, transparent);
   margin: 0 -0.35rem;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
@@ -186,28 +186,28 @@
 .gt-notifications__item-head time {
   margin-left: auto;
   font-size: 0.78rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-notifications__dot {
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 50%;
-  background: var(--gt-accent, #2fd67b);
+  background: var(--gt-accent);
   flex-shrink: 0;
   align-self: center;
 }
 
 .gt-notifications__dot.is-read {
   background: transparent;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
 }
 
 .gt-notifications__body {
   margin: 0.25rem 0 0 0.95rem;
   font-size: 0.88rem;
   line-height: 1.4;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-notifications__item-actions {
@@ -221,7 +221,7 @@
 .gt-notifications__item-actions button {
   font: inherit;
   font-size: 0.82rem;
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
   background: transparent;
   border: none;
   padding: 0.2rem 0;
@@ -242,25 +242,5 @@
   outline: none;
 }
 
-.gt-btn--ghost {
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 85%, transparent);
-  color: var(--gt-text, #f2f4f8);
-  border-radius: 6px;
-  padding: 0.35rem 0.65rem;
-  font: inherit;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.gt-btn--ghost:hover:not(:disabled),
-.gt-btn--ghost:focus-visible:not(:disabled) {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
-  color: var(--gt-accent, #2fd67b);
-  outline: none;
-}
-
-.gt-btn--ghost:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
+/* .gt-btn--ghost moved to gt-primitives.css (GT-A4), including its disabled
+   state — the base .gt-btn there already carries :disabled styling. */

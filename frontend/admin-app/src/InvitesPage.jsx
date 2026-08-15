@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { DataTable } from './DataTable'
+import { MetricStrip } from './opsWidgets'
 
 const COLUMNS = [
   { key: 'name', label: 'Name' },
@@ -22,6 +23,12 @@ export function InvitesPage() {
   const [users, setUsers] = useState([])
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  // Summed with Number() and a zero default: the API omits the field for
+  // users who have never had a quota, and `undefined` would poison the total
+  // into NaN rather than simply not adding to it.
+  const unusedTotal = users.reduce((n, u) => n + (Number(u.unused_invites) || 0), 0)
+  const quotaTotal = users.reduce((n, u) => n + (Number(u.invite_quota) || 0), 0)
 
   useEffect(() => {
     getJson('/admin/api/invites')
@@ -55,6 +62,24 @@ export function InvitesPage() {
           Support inbox
         </a>
       </div>
+      {/* UID-014. "Unused tokens" is the number that decides whether anyone
+          can actually invite someone, so it carries the tone: zero across the
+          household means invites are effectively closed, which the table alone
+          does not say out loud. */}
+      <MetricStrip
+        label="Invites"
+        items={[
+          { id: 'members', label: 'Members', value: users.length, hint: 'with a quota', tone: 'info' },
+          {
+            id: 'unused',
+            label: 'Unused tokens',
+            value: unusedTotal,
+            hint: 'invites available now',
+            tone: unusedTotal === 0 ? 'warning' : 'good',
+          },
+          { id: 'quota', label: 'Total quota', value: quotaTotal, hint: 'allocated', tone: 'info' },
+        ]}
+      />
       <DataTable
         columns={COLUMNS}
         rows={users}

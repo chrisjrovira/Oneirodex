@@ -1,3 +1,13 @@
+/* Retained after TopNav.jsx was removed (GT-B2).
+ *
+ * The rail and the slim top bar replaced that component, but TopBar.jsx still
+ * uses this file's dropdown rules — .gt-topnav__dropdown, __dropdown-panel and
+ * __username are the account menu, which survived the chrome change unaltered.
+ * The rest of this file styles markup nothing renders any more and should be
+ * pruned as pages are touched; it is left in place rather than deleted wholesale
+ * so a mid-migration page that still emits the old classes does not lose its
+ * styling silently.
+ */
 .gt-topnav {
   position: sticky;
   top: 0;
@@ -7,9 +17,9 @@
   gap: 0.5rem;
   min-height: 2.75rem;
   padding: 0.35rem 0.85rem;
-  background: var(--gt-glass-bg, color-mix(in srgb, var(--gt-surface) 96%, transparent));
-  border-bottom: 1px solid var(--gt-glass-border, color-mix(in srgb, var(--gt-accent) 28%, transparent));
-  backdrop-filter: blur(var(--gt-glass-blur, 12px));
+  background: var(--gt-glass-bg);
+  border-bottom: 1px solid var(--gt-glass-border);
+  backdrop-filter: blur(var(--gt-glass-blur));
   color: var(--gt-text);
   font-family: var(--font-ui);
 }
@@ -28,8 +38,8 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-  background: var(--gt-surface, #141820);
-  color: var(--gt-accent, #2fd67b);
+  background: var(--gt-surface);
+  color: var(--gt-accent);
   font: inherit;
   font-weight: 600;
   text-decoration: none;
@@ -44,8 +54,8 @@
   clip: auto;
   overflow: visible;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
-  outline: 2px solid var(--gt-accent, #2fd67b);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  outline: 2px solid var(--gt-accent);
   outline-offset: 2px;
 }
 
@@ -54,7 +64,7 @@
 }
 
 .gt-main-content:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--gt-accent) 55%, transparent);
   outline-offset: 2px;
 }
 
@@ -187,7 +197,7 @@
   align-items: center;
   padding: 0.2rem 0.45rem;
   font-size: 0.8rem;
-  color: var(--gt-text-muted, color-mix(in srgb, var(--gt-text) 70%, transparent));
+  color: var(--gt-text-muted);
   text-decoration: none;
   border-radius: 6px;
   border: 1px solid transparent;
@@ -273,7 +283,7 @@
   background: transparent;
   border: 1px solid color-mix(in srgb, var(--gt-accent) 28%, transparent);
   border-radius: 8px;
-  color: var(--gt-text-muted, color-mix(in srgb, var(--gt-text) 70%, transparent));
+  color: var(--gt-text-muted);
   font: inherit;
   font-size: 0.8rem;
   cursor: pointer;
@@ -467,7 +477,7 @@
 .gt-topnav__dropdown-group + .gt-topnav__dropdown-group {
   margin-top: 0.35rem;
   padding-top: 0.35rem;
-  border-top: 1px solid var(--gt-border, rgba(255, 255, 255, 0.1));
+  border-top: 1px solid var(--gt-border);
 }
 
 .gt-topnav__dropdown-heading {
@@ -477,6 +487,31 @@
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   opacity: 0.75;
+}
+
+/* Palette hint inside the account menu (GT-B16) — the bar's search button was
+   removed, and this keeps the shortcut discoverable without costing bar width. */
+.gt-topnav__palette-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gt-space-3);
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.gt-topnav__palette-hint kbd {
+  padding: 0 var(--gt-space-1);
+  border: 1px solid var(--gt-border);
+  border-radius: var(--gt-radius-xs);
+  font-family: inherit;
+  font-size: var(--gt-font-xs);
+  color: var(--gt-text-muted);
 }

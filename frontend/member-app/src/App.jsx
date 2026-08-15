@@ -2,10 +2,15 @@
 import { Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { CommandPalette } from './chrome/CommandPalette'
 import { ScrollJump } from './chrome/ScrollJump'
+import { LoadingOverlay } from './components/LoadingOverlay'
+import { SideRail } from './chrome/SideRail'
 import { applyTileSizeCssVars } from './chrome/TileSizeControl'
-import { TopNav } from './chrome/TopNav'
+import { TopBar } from './chrome/TopBar'
+import { useRailState } from '../../shared/useRailState'
 import { ChatSlideOut } from './components/ChatSlideOut'
 import { SocialCompanionDock } from './components/SocialCompanionDock'
+import { isPopoutWindow, requestOpenChatPanel } from './hooks/chatPanelApi'
+import { requestOpenSocialCompanion } from './hooks/socialCompanionApi'
 import { useLibraryScanToasts } from './hooks/useLibraryScanToasts'
 import { DiscoverApp } from './DiscoverApp'
 import { FavoritesApp } from './FavoritesApp'
@@ -92,8 +97,21 @@ function libraryInitialConfig(shellConfig) {
   }
 }
 
+/**
+ * Route fallback that holds the layout (GT-B9).
+ *
+ * This used to be a single line of text. Navigating to any lazy route therefore
+ * collapsed the whole content pane to one line and expanded it again a frame
+ * later — the "page vanishes for a split second" flash, and the reason text
+ * appears to jump on every navigation. The height reservation is the fix; the
+ * overlay is just so the wait is legible.
+ */
 function RouteFallback() {
-  return <p className="gt-more-page__lede">Loading…</p>
+  return (
+    <div className="gt-route-fallback" role="status" aria-live="polite">
+      <LoadingOverlay active blocking delayMs={120} label="Loading…" />
+    </div>
+  )
 }
 
 function LazyPage({ children }) {
@@ -103,6 +121,7 @@ function LazyPage({ children }) {
 function Layout({ shellConfig, tileSize, onTileSizeChange }) {
   const location = useLocation()
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const { railState, drawerOpen, toggle: toggleRail, closeDrawer } = useRailState()
   const hideDock = location.pathname.startsWith('/social-companion')
   const detailsMatch = location.pathname.match(/^\/game_details\/([^/]+)/)
   const dockGameUuid = detailsMatch?.[1] || ''
@@ -116,33 +135,82 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
     isAdmin: Boolean(shellConfig.isAdmin),
     role: shellConfig.role || 'user',
   }
+  // Pop-out windows render the route alone (GT-B17): no rail, no top bar, no
+  // dock. They are small by definition, and the chrome is navigation for a
+  // session that already has a main window.
+  if (isPopoutWindow()) {
+    return (
+      <main id="main-content" className="gt-popout-main" tabIndex={-1}>
+        <Outlet />
+      </main>
+    )
+  }
+
   return (
-    <>
+    <div className="gt-shell" data-rail={railState}>
       <a className="gt-skip-link" href="#main-content">
         Skip to main content
       </a>
-      <TopNav
+      <SideRail
+        shellConfig={shellConfig}
+        railState={railState}
+        onCloseDrawer={closeDrawer}
+        onNavigate={(link) => {
+          // Chat and Friends are panels, not routes, but they are destinations
+          // to the member so the rail lists them alongside the routed ones.
+          if (link.action === 'open-chat') requestOpenChatPanel()
+          if (link.action === 'open-friends') requestOpenSocialCompanion()
+        }}
+        footer={<ScrollJump />}
+      />
+      {drawerOpen ? (
+        <button
+          type="button"
+          className="gt-rail__scrim"
+          aria-label="Close navigation"
+          onClick={closeDrawer}
+        />
+      ) : null}
+      <TopBar
         shellConfig={shellConfig}
         tileSize={tileSize}
         onTileSizeChange={onTileSizeChange}
         onOpenCommandPalette={() => setPaletteOpen(true)}
+        onToggleRail={toggleRail}
+        railState={railState}
       />
       <CommandPalette
         shellConfig={shellConfig}
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
       />
-      <main id="main-content" className="gt-main-content" tabIndex={-1}>
+      <main id="main-content" className="gt-shell__main" tabIndex={-1}>
         <Outlet />
       </main>
-      <ScrollJump />
       {!hideDock ? (
         <>
-          <ChatSlideOut canCreateRooms={canCreateRooms} viewer={chatViewer} />
-          <SocialCompanionDock mode="dock" gameUuid={dockGameUuid} />
+          {/* Both mount without their own launchers (W27-A2): the rail carries
+              Chat and Friends now, so a floating button in the bottom-right is
+              a second control for a destination already listed — and it sat on
+              top of the content while it was there.
+
+              The dock has to be mounted even though nothing here renders it
+              visibly: it is what listens for OPEN_SOCIAL_EVENT. Without it the
+              rail's Friends entry dispatched the event into an empty room and
+              did nothing at all (W27-A7). */}
+          <ChatSlideOut
+            canCreateRooms={canCreateRooms}
+            viewer={chatViewer}
+            hideLauncher
+          />
+          {/* gameUuid still rides along: only the launcher moved to the rail.
+              Without it the dock's game-scoped half — "Invite to play", "Share
+              this game" — is inert on the one page it exists for, because both
+              bail out on an empty uuid. */}
+          <SocialCompanionDock hideLauncher gameUuid={dockGameUuid} />
         </>
       ) : null}
-    </>
+    </div>
   )
 }
 

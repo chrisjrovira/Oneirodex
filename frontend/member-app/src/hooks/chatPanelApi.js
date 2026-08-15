@@ -161,3 +161,40 @@ export async function uploadChatAttachment(channelId, file, { csrf = '' } = {}) 
   const attachment = data.attachment || data.file || data
   return { ok: true, status: response.status, attachment }
 }
+
+/**
+ * Pop chat out into its own window (GT-B17 · UID-010).
+ *
+ * Friends has had this since the social wave (`openSocialPopoutWindow`); chat
+ * never did, so talking to someone meant keeping the slide-out over the library
+ * — you could chat or browse, not both. That is the whole complaint: chat was
+ * modal in practice even though it looked like a panel.
+ *
+ * `?popout=1` renders the route without the rail and top bar. A 380px window
+ * showing a 13.5rem navigation rail would leave almost nothing for the
+ * conversation.
+ */
+export function openChatPopoutWindow(channelId) {
+  const params = new URLSearchParams({ popout: '1' })
+  if (channelId != null) params.set('channel', String(channelId))
+  const features =
+    'width=420,height=760,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
+  const win = window.open(`/chat?${params.toString()}`, 'gt-chat-popout', features)
+  if (win) {
+    try {
+      win.focus()
+    } catch {
+      // Focus can throw under popup blockers; the window still opened.
+    }
+  }
+  // Closing the in-page panel is the point — two copies of the same
+  // conversation side by side is worse than either alone.
+  requestCloseChatPanel()
+  return win
+}
+
+/** True when the current document is a chrome-less pop-out host. */
+export function isPopoutWindow() {
+  if (typeof window === 'undefined') return false
+  return new URLSearchParams(window.location.search).get('popout') === '1'
+}

@@ -9,11 +9,11 @@
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    background: var(--gt-surface, #141820);
-    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    background: var(--gt-surface);
+    border: 1px solid var(--gt-border);
     border-radius: 14px;
-    box-shadow: 0 16px 48px color-mix(in srgb, var(--gt-bg, #0b0d10) 55%, transparent);
-    color: var(--gt-text, #f2f4f8);
+    box-shadow: 0 16px 48px color-mix(in srgb, var(--gt-bg) 55%, transparent);
+    color: var(--gt-text);
 }
 
 .gt-setup__brand {
@@ -36,14 +36,14 @@
     font-size: clamp(1.25rem, 2.5vw, 1.5rem);
     font-weight: 700;
     letter-spacing: -0.02em;
-    color: var(--gt-text, #f2f4f8);
+    color: var(--gt-text);
     line-height: 1.25;
 }
 
 .gt-setup__lede,
 .setup-info {
     margin: 0;
-    color: var(--gt-text-muted, #c4ccd8);
+    color: var(--gt-text-muted);
     text-align: center;
     font-size: 0.95rem;
     line-height: 1.45;
@@ -70,7 +70,7 @@
 
 .gt-setup label,
 .gt-setup .form-group > label {
-    color: var(--gt-text, #f2f4f8);
+    color: var(--gt-text);
     font-size: 0.92rem;
     font-weight: 500;
 }
@@ -87,9 +87,9 @@
     height: 2.5rem;
     padding: 0.5rem 0.75rem;
     border-radius: 8px;
-    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-    background: var(--gt-surface-2, #1c2230);
-    color: var(--gt-text, #f2f4f8);
+    border: 1px solid var(--gt-border);
+    background: var(--gt-surface-2);
+    color: var(--gt-text);
     box-shadow: none;
 }
 
@@ -98,25 +98,25 @@
 .gt-setup input:focus,
 .gt-setup .form-control:focus {
     outline: none;
-    border-color: var(--gt-accent, #2fd67b);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gt-accent, #2fd67b) 30%, transparent);
+    border-color: var(--gt-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gt-accent) 30%, transparent);
 }
 
 .gt-setup .gt-setup__field::placeholder {
-    color: color-mix(in srgb, var(--gt-text-muted, #c4ccd8) 75%, var(--gt-surface-2, #1c2230));
+    color: color-mix(in srgb, var(--gt-text-muted) 75%, var(--gt-surface-2));
 }
 
 .gt-setup fieldset {
     margin: 0;
     padding: 0.85rem 1rem;
-    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    border: 1px solid var(--gt-border);
     border-radius: 10px;
-    background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 70%, transparent);
+    background: color-mix(in srgb, var(--gt-surface-2) 70%, transparent);
 }
 
 .gt-setup legend {
     padding: 0 0.35rem;
-    color: var(--gt-accent, #2fd67b);
+    color: var(--gt-accent);
     font-size: 0.85rem;
     font-weight: 600;
 }
@@ -127,13 +127,13 @@
     gap: 0.5rem;
     margin: 0.35rem 0;
     font-weight: 400;
-    color: var(--gt-text, #f2f4f8);
+    color: var(--gt-text);
 }
 
 .gt-setup fieldset input[type="checkbox"] {
     width: 1rem;
     height: 1rem;
-    accent-color: var(--gt-accent, #2fd67b);
+    accent-color: var(--gt-accent);
 }
 
 .gt-setup .btn-primary,
@@ -142,20 +142,20 @@
     margin-top: 0.35rem;
     border: 1px solid transparent;
     border-radius: 8px;
-    background: var(--gt-accent, #2fd67b);
-    color: var(--gt-accent-contrast, #0b0d10);
+    background: var(--gt-accent);
+    color: var(--gt-accent-contrast);
     font-weight: 600;
     padding: 0.65rem 1rem;
 }
 
 .gt-setup .btn-primary:hover,
 .gt-setup .btn-primary:focus-visible {
-    background: color-mix(in srgb, var(--gt-accent, #2fd67b) 88%, white);
-    color: var(--gt-accent-contrast, #0b0d10);
+    background: color-mix(in srgb, var(--gt-accent) 88%, white);
+    color: var(--gt-accent-contrast);
 }
 
 .gt-setup .btn-primary:focus-visible {
-    outline: 2px solid var(--gt-focus-ring, var(--gt-accent, #2fd67b));
+    outline: 2px solid var(--gt-focus-ring);
     outline-offset: 2px;
 }
 
@@ -169,27 +169,27 @@
     width: 100%;
     margin-top: 0;
     border-radius: 8px;
-    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-    background: var(--gt-surface-2, #1c2230);
-    color: var(--gt-text, #f2f4f8);
+    border: 1px solid var(--gt-border);
+    background: var(--gt-surface-2);
+    color: var(--gt-text);
     font-weight: 600;
     padding: 0.65rem 1rem;
 }
 
 .gt-setup .btn-secondary:hover,
 .gt-setup .btn-secondary:focus-visible {
-    border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
-    color: var(--gt-accent, #2fd67b);
+    border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+    color: var(--gt-accent);
 }
 
 .gt-setup .btn-secondary:focus-visible {
-    outline: 2px solid var(--gt-focus-ring, var(--gt-accent, #2fd67b));
+    outline: 2px solid var(--gt-focus-ring);
     outline-offset: 2px;
 }
 
 .gt-setup .error,
 .gt-setup .error-message {
-    color: var(--gt-danger, #ff6b6b);
+    color: var(--gt-danger);
     font-size: 0.875rem;
     margin-top: 0.15rem;
     display: block;
@@ -202,21 +202,21 @@
 }
 
 .gt-setup .alert-success {
-    background-color: color-mix(in srgb, var(--gt-success, #4ade80) 18%, transparent);
-    border: 1px solid var(--gt-success, #4ade80);
-    color: var(--gt-text, #f2f4f8);
+    background-color: color-mix(in srgb, var(--gt-success) 18%, transparent);
+    border: 1px solid var(--gt-success);
+    color: var(--gt-text);
 }
 
 .gt-setup .alert-error {
-    background-color: color-mix(in srgb, var(--gt-danger, #ff6b6b) 18%, transparent);
-    border: 1px solid var(--gt-danger, #ff6b6b);
-    color: var(--gt-text, #f2f4f8);
+    background-color: color-mix(in srgb, var(--gt-danger) 18%, transparent);
+    border: 1px solid var(--gt-danger);
+    color: var(--gt-text);
 }
 
 .gt-setup .alert-warning {
-    background-color: color-mix(in srgb, var(--gt-warning, #ffc94a) 18%, transparent);
-    border: 1px solid var(--gt-warning, #ffc94a);
-    color: var(--gt-text, #f2f4f8);
+    background-color: color-mix(in srgb, var(--gt-warning) 18%, transparent);
+    border: 1px solid var(--gt-warning);
+    color: var(--gt-text);
 }
 
 /* Setup mode shell — sidebar hidden */
@@ -230,13 +230,13 @@
     min-height: 100vh;
     padding: 1.25rem;
     background:
-        radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--gt-accent, #2fd67b) 16%, transparent), transparent 55%),
-        var(--gt-bg, #0b0d10);
+        radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--gt-accent) 16%, transparent), transparent 55%),
+        var(--gt-bg);
 }
 
 .setup-mode-content .container-flash-messages {
     width: 100%;
-    max-width: var(--gt-setup-max, 28rem);
+    max-width: var(--gt-setup-max);
     margin: 0 auto 1rem auto;
     position: relative;
     z-index: 10;
@@ -245,7 +245,7 @@
 .setup-mode-content .container-login,
 .setup-mode-content .gt-setup {
     width: 100%;
-    max-width: var(--gt-setup-max, 28rem);
+    max-width: var(--gt-setup-max);
     margin: 0 auto;
 }
 
@@ -260,11 +260,11 @@
 .container-login .gt-setup.content-login,
 .content-login.gt-setup {
     /* Prefer gt-setup; neutralize old content-login chrome */
-    background: var(--gt-surface, #141820);
+    background: var(--gt-surface);
     backdrop-filter: none;
     padding: clamp(1.25rem, 4vw, 2rem);
     border-radius: 14px;
-    border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+    border: 1px solid var(--gt-border);
 }
 
 @media (prefers-reduced-motion: reduce) {

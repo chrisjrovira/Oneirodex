@@ -54,6 +54,9 @@
   --gt-radius-lg: 10px;
   --gt-radius-xl: 12px;
   --gt-radius-2xl: 16px;
+  /* 3xl exists so the legacy --border-radius-xl (20px) has a home on this scale
+     rather than staying a parallel value. See the alias block in base.css. */
+  --gt-radius-3xl: 20px;
   --gt-radius-pill: 999px;
   --gt-radius-circle: 50%;
 
@@ -77,7 +80,20 @@
   --gt-font-md: 0.88rem;
   --gt-font-base: 1rem;
   --gt-font-lg: 1.15rem;
-  --gt-font-xl: 1.4rem;
+  /* Display sizes (GT-A2). The scale used to stop at 1.4rem, so anything
+     heading-sized had to reach for the older --font-size-* ladder — which is how
+     two type scales stayed alive next to each other.
+
+     --gt-font-xl moved 1.4rem -> 1.25rem when these were added. That is safe
+     because xl, lg and base had zero call sites between them at the time, and it
+     buys an exact landing for every legacy step: see the alias block in
+     base.css, where only --font-size-md shifts at all. */
+  --gt-font-xl: 1.25rem;
+  --gt-font-2xl: 1.5rem;
+  --gt-font-3xl: 1.8rem;
+  --gt-font-4xl: 2rem;
+  --gt-font-5xl: 2.5rem;
+  --gt-font-6xl: 3rem;
   --gt-line-tight: 1.25;
   --gt-line-base: 1.45;
   /* Uppercase micro-labels (section heads, status chips) share one treatment */

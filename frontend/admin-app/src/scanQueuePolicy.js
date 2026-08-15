@@ -27,10 +27,15 @@ export const SCAN_START_STATUS = Object.freeze({
   REJECTED: 'rejected',
 })
 
-/** Active statuses that block a silent second start (needs Queue vs Force). */
+/** Active statuses that block a silent second start (needs Queue vs Force).
+ *
+ * Case-insensitive (GT-B13). This compared against 'Running'/'Stopping'
+ * exactly while its sibling isScanQueuedStatus lowercased first, so the two
+ * disagreed about the same payload whenever the backend cased a status
+ * differently — a lowercase 'running' job counted as neither busy nor queued. */
 export function isScanBusyStatus(status) {
-  const s = String(status || '')
-  return s === 'Running' || s === 'Stopping'
+  const s = String(status || '').toLowerCase()
+  return s === 'running' || s === 'stopping'
 }
 
 export function isScanQueuedStatus(status) {
@@ -164,3 +169,25 @@ export const SCAN_CONFLICT_COPY = Object.freeze({
     'May spike CPU and disk I/O on Unraid/NAS while two scans share the same storage. Prefer Queue unless you know the host can take the load.',
   cancelLabel: 'Cancel',
 })
+
+
+/**
+ * Is a scan actually in progress? (GT-B13)
+ *
+ * The payload's `running` / `is_running` flag alone was enough to report an
+ * active scan, so a stale or defaulted flag showed "Scanning…" on installs that
+ * had never run one — no libraries, no jobs, no history. A flag claiming work
+ * with an empty job list is describing nothing, so it needs a job to corroborate
+ * it; a job with a busy status stands on its own.
+ *
+ * @param {object|Array} payload /api/scan_jobs_status or ops summary scans
+ */
+export function isScanRunning(payload) {
+  const jobs = normalizeScanJobsList(payload)
+  if (jobs.some((job) => isScanBusyStatus(job?.status))) return true
+
+  const flagged = Boolean(
+    payload && !Array.isArray(payload) && (payload.running || payload.is_running),
+  )
+  return flagged && jobs.length > 0
+}

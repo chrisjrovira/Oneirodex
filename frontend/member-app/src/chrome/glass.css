@@ -1,53 +1,16 @@
 /* Style B glass launcher primitives */
 
-.gt-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.9rem;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-btn-accent, var(--gt-accent)) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-btn-accent, var(--gt-accent)) 18%, var(--gt-glass-bg, transparent));
-  color: var(--gt-text);
-  font: inherit;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
-}
+/* .gt-btn and its --primary / --secondary variants used to be redefined here
+   (GT-A4). They now live in the theme's gt-primitives.css, which base_empty.html
+   loads before this bundle, so every surface — Jinja, member SPA, admin SPA —
+   gets one button.
 
-.gt-btn:hover,
-.gt-btn:focus-visible {
-  border-color: var(--gt-btn-accent, var(--gt-accent));
-  background: color-mix(in srgb, var(--gt-btn-accent, var(--gt-accent)) 28%, var(--gt-glass-bg, transparent));
-  outline: none;
-}
-
-.gt-btn--primary {
-  border-color: transparent;
-  background: var(--gt-accent, #2fd67b);
-  color: var(--gt-accent-contrast, #0b0d10);
-}
-
-.gt-btn--primary:hover,
-.gt-btn--primary:focus-visible {
-  border-color: transparent;
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 88%, white);
-  color: var(--gt-accent-contrast, #0b0d10);
-}
-
-.gt-btn--secondary {
-  border-color: var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: var(--gt-surface-2, #1c2230);
-  color: var(--gt-text);
-}
-
-.gt-btn--secondary:hover,
-.gt-btn--secondary:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
-  color: var(--gt-accent, #2fd67b);
-}
+   Removing the copy also fixed a latent bug. The base rule here built its border
+   and background out of `var(--gt-btn-accent)`, which platformSkins.css only
+   defines under `[data-platform-family]`. Anywhere else — Library, Downloads,
+   Collections — that var was undefined, so both declarations were invalid at
+   computed-value time and the button silently lost its border and fill. It only
+   looked correct on system-skinned pages. */
 
 .gt-glass-panel {
   background: var(--gt-glass-bg);
@@ -137,8 +100,8 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--gt-accent-contrast, #0b0d10);
-  background: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent-contrast);
+  background: var(--gt-accent);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
@@ -158,8 +121,8 @@
   opacity: 0.55;
   filter: grayscale(0.35);
   pointer-events: auto;
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 35%, #555);
-  color: color-mix(in srgb, var(--gt-accent-contrast, #0b0d10) 70%, #fff);
+  background: color-mix(in srgb, var(--gt-accent) 35%, #555);
+  color: color-mix(in srgb, var(--gt-accent-contrast) 70%, #fff);
 }
 
 .game-card .gt-tile-play--disabled:hover,
@@ -204,9 +167,9 @@
   gap: 0.5rem;
   padding: 0.7rem 0.6rem 0.7rem 0.95rem;
   border-radius: 10px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: var(--gt-surface, #141820);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface);
+  color: var(--gt-text);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
   font-size: 0.92rem;
   line-height: 1.35;
@@ -227,7 +190,7 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
   font-size: 1.05rem;
   line-height: 1;
   cursor: pointer;
@@ -235,20 +198,20 @@
 
 .gt-toast__close:hover,
 .gt-toast__close:focus-visible {
-  background: color-mix(in srgb, var(--gt-text, #f2f4f8) 14%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  background: color-mix(in srgb, var(--gt-text) 14%, transparent);
+  color: var(--gt-text);
 }
 
 .gt-toast--success {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
 }
 
 .gt-toast--error {
-  border-color: color-mix(in srgb, var(--gt-danger, #ff6b6b) 65%, transparent);
+  border-color: color-mix(in srgb, var(--gt-danger) 65%, transparent);
 }
 
 .gt-toast--warn {
-  border-color: color-mix(in srgb, var(--gt-warning, #ffc94a) 65%, transparent);
+  border-color: color-mix(in srgb, var(--gt-warning) 65%, transparent);
 }
 
 .gt-toast--out {
@@ -290,9 +253,9 @@ a.gt-chip {
   padding: 0.2rem 0.65rem;
   margin: 0;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.14)) 85%, transparent);
-  background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 88%, transparent);
-  color: var(--gt-text-muted, #c4ccd8);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 85%, transparent);
+  background: color-mix(in srgb, var(--gt-surface-2) 88%, transparent);
+  color: var(--gt-text-muted);
   font: inherit;
   font-size: 0.72rem;
   font-weight: 650;
@@ -314,14 +277,14 @@ a.gt-chip:hover,
 a.gt-chip:active,
 a.gt-chip:focus {
   text-decoration: none;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 a.chip:hover,
 a.chip:focus-visible,
 a.gt-chip:hover,
 a.gt-chip:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  color: var(--gt-text);
   text-decoration: none;
 }

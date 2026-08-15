@@ -1,6 +1,9 @@
+// Toasts on every mutation (GT-B25). Outcomes were reported inline only,
+// which is easy to miss when the triggering control has scrolled away.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { csrfToken } from './adminApi'
 import { MetricStrip } from './opsWidgets'
+import { showToast } from './utils/toast'
 
 /**
  * Firmware / BIOS management for WebRetro cores (GT-B2 · UID-007).
@@ -111,10 +114,12 @@ export function EmulatorFirmwarePanel() {
           throw new Error(await readError(response, 'Upload failed.'))
         }
         setNotice(`${file.name} added to the firmware volume.`)
+        showToast(`${file.name} added to the firmware volume.`, 'success')
         if (inputRef.current) inputRef.current.value = ''
         await load()
       } catch (err) {
         setError(err.message || 'Upload failed.')
+        showToast(err.message || 'Firmware upload failed.', 'error')
       } finally {
         setUploading(false)
       }
@@ -211,11 +216,27 @@ export function EmulatorFirmwarePanel() {
               {cores.map((core) => (
                 <li key={core.core} className="gt-list__row">
                   <strong>{coreLabel(core.core)}</strong>{' '}
-                  <span>{core.ready ? 'ready' : 'missing system files'}</span>
+                  <span>
+                    {core.ready
+                      ? 'ready'
+                      : core.misplaced?.length
+                        ? 'files found, but in a subfolder'
+                        : 'missing system files'}
+                  </span>
                   <p className="gt-error__detail">
                     Accepts: {(core.required || []).join(', ')}
                     {core.present?.length ? ` · present: ${core.present.join(', ')}` : ''}
                   </p>
+                  {/* "Missing" and "present but in the wrong place" are different
+                      problems with different fixes — download it, versus move it
+                      up one level. Reporting both as missing is what made a full
+                      firmware volume look empty (UID-007). */}
+                  {core.misplaced?.length ? (
+                    <p className="gt-error__detail">
+                      Move to the firmware root to load:{' '}
+                      {core.misplaced.map((f) => `${f.subdir}/${f.name}`).join(', ')}
+                    </p>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -224,13 +245,20 @@ export function EmulatorFirmwarePanel() {
           <h3 className="gt-section-head__title">Files on volume</h3>
           {files.length === 0 ? (
             <p className="gt-empty">
-              No firmware uploaded yet. Cores that need it will stay unavailable for browser play.
+              No firmware found on the volume. Cores that need it will stay
+              unavailable for browser play. Files in subfolders are listed here
+              too — if you copied a set in and see nothing, check the path the
+              volume is actually mounted at.
             </p>
           ) : (
             <ul className="gt-list">
               {files.map((file) => (
-                <li key={file.name} className="gt-list__row">
-                  <code>{file.name}</code> <span>{formatBytes(file.size)}</span>
+                <li key={`${file.subdir}/${file.name}`} className="gt-list__row">
+                  <code>{file.subdir ? `${file.subdir}/${file.name}` : file.name}</code>{' '}
+                  <span>{formatBytes(file.size)}</span>
+                  {file.loadable === false ? (
+                    <span className="gt-badge gt-badge--warn">subfolder</span>
+                  ) : null}
                 </li>
               ))}
             </ul>

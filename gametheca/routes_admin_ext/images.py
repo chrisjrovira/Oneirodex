@@ -25,12 +25,16 @@ from gametheca.utils.image_kinds import (
 from . import admin2_bp
 
 
-@admin2_bp.route('/admin/image_queue')
-@login_required
-@admin_required
-def image_queue():
-    """Display the image queue management interface."""
-    return render_template('admin/admin_manage_image_queue.html')
+# /admin/image_queue retired (W27-C6).
+#
+# The queue is a tab of the scan management page — `#imageQueue`, reachable as
+# /scan_management?active_tab=image_queue — so this standalone page was a third
+# rendering of the same rows, and the one the rail happened to link to. That is
+# why the queue "still looked exactly the same": the inline version had been
+# built, and nothing pointed at it.
+#
+# The /admin/api/image_queue_list endpoint below stays — it is what both the
+# inline tab and the React images page read.
 
 
 def _image_status(img):

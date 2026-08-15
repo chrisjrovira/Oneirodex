@@ -63,8 +63,46 @@ def get_steam_web_api_key() -> str | None:
     return None
 
 
+#: How each store's register can be kept current.
+#:
+#: 'live'     — we can re-read ownership from the store on a schedule.
+#: 'snapshot' — the register only changes when someone imports a file. What was
+#:              imported is correct as of that import and drifts from then on.
+#:
+#: Stated here because the product was quietly implying otherwise: linking a GOG
+#: or Epic account looked identical to linking Steam, produced a one-time list,
+#: and then never refreshed — with nothing anywhere saying so. A register that
+#: silently goes stale is worse than one you know is a snapshot, because you
+#: trust it.
+#:
+#: Moving a store to 'live' means implementing its sync *and* enrolling it in
+#: ownership_poller._live_sync_handlers(); this map is what the UI reads, so a
+#: store promoted here without a working sync would start lying again.
+STORE_SYNC_MODE: dict[str, str] = {
+    'steam': 'live',
+    'gog': 'snapshot',
+    'epic': 'snapshot',
+    'amazon': 'snapshot',
+    'playnite': 'snapshot',
+}
+
+
+def store_sync_mode(store: str) -> str:
+    """Snapshot unless we know otherwise — the safe direction to be wrong in."""
+    return STORE_SYNC_MODE.get((store or '').lower(), 'snapshot')
+
+
 def get_gog_api_token() -> str | None:
-    """Optional GOG API token — live sync not implemented in this slice."""
+    """Optional GOG API token — live sync not implemented in this slice.
+
+    Reading the token is not the missing piece. GOG has no documented ownership
+    API; the community route is a session token lifted from a browser login,
+    which is undocumented, breaks without warning and is a poor thing to ask a
+    household to maintain. Epic is worse — ownership is only reachable through
+    the launcher's auth flow. Both need a decision about whether to depend on
+    an unofficial surface before either is worth building, so the register stays
+    honest about being a snapshot rather than guessing.
+    """
     return (os.getenv('GOG_API_TOKEN') or '').strip() or None
 
 
@@ -433,11 +471,25 @@ def get_ownership_summary(user_id: int) -> dict:
             )
         ).scalar() or 0
         account = account_by_store.get(store)
+        # Newest row wins: a register is only as current as its most recent
+        # entry, and that is what someone means by "when did this last update".
+        last_seen = db.session.execute(
+            select(func.max(UserOwnedTitle.last_synced_at)).filter_by(
+                user_id=user_id, store=store,
+            )
+        ).scalar()
+
+        mode = store_sync_mode(store)
         stores[store] = {
             'connected': account is not None,
             'external_account_id': account.external_account_id if account else None,
             'owned_count': owned_count,
             'matched_count': matched_count,
+            # The UI needs to be able to say "snapshot from 3 weeks ago" rather
+            # than presenting a stale list as though it were current.
+            'sync_mode': mode,
+            'live_sync': mode == 'live',
+            'last_synced_at': last_seen.isoformat() if last_seen else None,
         }
 
     return {

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from './App'
@@ -76,7 +76,12 @@ test('StoragePage shows helpers-off and apply-off banners from status', async ()
     render(<StoragePage />)
     expect(await screen.findByRole('heading', { name: 'Storage / hardlinks' })).toBeInTheDocument()
     expect(await screen.findByText(/Hardlink helpers are/i)).toBeInTheDocument()
-    expect(screen.getByText(/off/i)).toBeInTheDocument()
+    // Scoped to the readiness strip (UID-014). A bare /off/i now matches both
+    // the banner and the strip's Helpers tile, and an ambiguous query that
+    // passed only while the page had one "off" on it was never asserting
+    // anything specific.
+    const strip = screen.getByLabelText('Storage readiness')
+    expect(within(strip).getByText('Off')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled()
   } finally {
@@ -145,6 +150,27 @@ test('App route /admin/storage mounts Storage UI', async () => {
     )
     expect(await screen.findByRole('heading', { name: 'Storage / hardlinks' })).toBeInTheDocument()
     expect(screen.getByLabelText('Source file')).toBeInTheDocument()
+  } finally {
+    global.fetch = originalFetch
+  }
+})
+
+test('StoragePage hides the readiness strip when status could not be read', async () => {
+  // statusLoaded is set in a `finally`, so it is true after a failure too, with
+  // `status` reset to EMPTY_STATUS. Gating the strip on it alone rendered
+  // "Games mount: Missing" in alarm red for a reading that never arrived —
+  // a confident answer to a question we could not ask.
+  const originalFetch = global.fetch
+  global.fetch = mockFetch([
+    ['/api/storage/status', async () => ({ ok: false, status: 503, json: async () => ({}) })],
+  ])
+  try {
+    render(<StoragePage />)
+
+    expect(await screen.findByRole('heading', { name: 'Storage / hardlinks' })).toBeInTheDocument()
+    // The banner explains the failure; the strip must not also assert findings.
+    expect(await screen.findByText(/Status API unavailable/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText('Storage readiness')).toBeNull()
   } finally {
     global.fetch = originalFetch
   }

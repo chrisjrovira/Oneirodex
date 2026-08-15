@@ -1,40 +1,62 @@
+/* Tile size control (GT-B16).
+ *
+ * Was an accent-tinted box 8.5rem wide with a bold accent read-out, sitting in
+ * the top bar next to everything else that mattered. It drew more attention
+ * than the library it was sizing, and the tint made it read as an active state.
+ *
+ * Now a quiet inline slider that only colours up on hover/focus. The percentage
+ * read-out is gone: the grid in front of you is the read-out, and a number
+ * nobody types into does not need permanent space.
+ *
+ * `.gt-page-header` used to live in this file too and was one of two competing
+ * definitions of it. Page titles moved to the top bar (GT-B5), so the block was
+ * deleted rather than reconciled.
+ */
+
 .gt-tile-size {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  min-width: 8.5rem;
-  padding: 0.2rem 0.55rem;
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--gt-accent) 8%, transparent);
+  gap: var(--gt-space-2);
+  /* Narrow by default; the slider itself is the affordance. */
+  min-width: 0;
+  height: var(--gt-control-h);
+  padding-inline: var(--gt-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--gt-radius-sm);
+  background: transparent;
+  color: var(--gt-text-muted);
+  transition:
+    border-color var(--gt-motion-fast) var(--gt-motion-ease),
+    color var(--gt-motion-fast) var(--gt-motion-ease);
 }
 
+.gt-tile-size:hover,
+.gt-tile-size:focus-within {
+  border-color: var(--gt-border);
+  color: var(--gt-text);
+}
+
+/* Kept in the accessibility tree — the slider needs a name — but it no longer
+   occupies a fixed 2.4rem of the bar. */
 .gt-tile-size__label {
-  min-width: 2.4rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--gt-accent);
-  text-align: right;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .gt-tile-size__slider {
-  flex: 1;
+  width: 5.5rem;
   accent-color: var(--gt-accent);
   cursor: pointer;
 }
 
-.gt-page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 0 0 0.75rem;
-  padding: 0 0.25rem;
-}
-
-.gt-page-header h1 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  color: var(--gt-text);
+/* Below the tablet breakpoint the bar is tight and tile size is a desktop
+   refinement — the grid already reflows on its own. */
+@media (max-width: 900px) {
+  .gt-tile-size {
+    display: none;
+  }
 }

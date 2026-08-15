@@ -19,6 +19,11 @@
     {# After tokens, before Bootstrap-shaped admin CSS, so admin pages and the
        member SPA share one button/input/card language. #}
     <link rel="stylesheet" href="{{ 'css/gt-primitives.css'|theme_asset }}">
+    {# Repoints Bootstrap's --bs-btn-* onto the GT scales. Must stay after
+       bootstrap.min.css above. #}
+    <link rel="stylesheet" href="{{ 'css/gt-bootstrap-bridge.css'|theme_asset }}">
+    <link rel="stylesheet" href="{{ 'css/gt-density.css'|theme_asset }}">
+    <link rel="stylesheet" href="{{ 'css/gt-shell.css'|theme_asset }}">
     {# Two-bar chrome shared with the member SPA (UIR-1/UIR-4) — one look. #}
     <link rel="stylesheet" href="{{ 'css/gt-appbar.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/base.css'|theme_asset }}">

@@ -88,9 +88,9 @@ export function UsersPage() {
       ) : null}
 
       <div className="gt-admin-actions-row">
-        <a className="gt-btn" href="/admin/manage_users">
-          Classic user editor
-        </a>
+        {/* Classic user editor removed (GT-B18). Two editors for the same
+            rows meant two places to look and two behaviours to keep in step;
+            the React roster is the one that gets maintained. */}
         <a className="gt-btn" href="/admin/invites">
           Invites
         </a>

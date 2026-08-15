@@ -20,6 +20,9 @@ TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / 'gametheca' / 'templates'
 # zero literal Font Awesome class strings (see test_no_font_awesome_left_in_converted_templates).
 CONVERTED_TEMPLATES = [
     'base.html',
+    # The rail carries every destination icon base.html used to render inline,
+    # so it inherits base.html's coverage rather than going unguarded (GT-B2).
+    'partials/rail.html',
     'admin/admin_settings_shell.html',
     'admin/admin_dashboard.html',
     'admin/admin_manage_library_create.html',
@@ -30,7 +33,8 @@ CONVERTED_TEMPLATES = [
     'admin/detail_layout.html',
     'admin/integrations.html',
     'admin/attract_mode_settings.html',
-    'admin/admin_manage_users.html',
+    # 'admin/admin_manage_users.html' retired with the classic editor (W27-D1);
+    # the React roster at /admin/users is the only user editor now.
     'admin/emulator_profiles.html',
     'admin/admin_manage_downloads.html',
     'admin/admin_manage_whitelist.html',
@@ -44,7 +48,7 @@ CONVERTED_TEMPLATES = [
     'admin/storage.html',
     'admin/admin_manage_libraries.html',
     'admin/admin_manage_extensions.html',
-    'admin/new_server_info.html',
+    # 'admin/new_server_info.html' retired with the page (W27-D1).
     'admin/admin_discovery_sections.html',
     'games/game_details.html',
     'login/user_invites.html',
@@ -111,7 +115,7 @@ class TestIconMacro:
         assert 'width="28"' in icon('cogs', size=28)
 
     def test_extra_class_is_appended_not_replaced(self, icon):
-        assert 'class="gt-icon user-expand-icon"' in icon('chevron-up', extra_class='user-expand-icon')
+        assert 'class="gt-icon collapse-icon"' in icon('chevron-up', extra_class='collapse-icon')
 
     def test_unknown_name_degrades_to_a_dot(self, icon):
         svg = icon('definitely-not-an-icon')
@@ -179,19 +183,42 @@ class TestConvertedTemplates:
     def test_base_html_does_not_hardcode_icon_colour(self):
         assert 'color: white' not in read_template('base.html')
 
-    def test_sidebar_ids_the_inline_js_depends_on_survive(self):
+    def test_shell_ids_the_inline_js_depends_on_survive(self):
+        """This replaces a check for the #sidebar-era ids.
+
+        GT-B2 retired the left sidebar: the shell grid reads `data-rail` off
+        `#gt-shell` and the toggle moved into the topbar partial, so the old
+        assertion pinned markup that is *gone on purpose*. The contract worth
+        keeping is that base.html's inline JS still finds what it queries — and
+        those hooks now span two files.
+        """
         base = read_template('base.html')
-        for required in ('id="sidebar"', 'id="content"', 'id="toggleSidebar"',
-                         'id="userAccountIcon"', 'id="userAccountMenu"',
-                         'id="preferencesModalContainer"'):
+        for required in ('id="gt-shell"', 'id="content"', 'id="preferencesModalContainer"'):
             assert required in base, f"base.html lost {required}, which its inline JS queries"
 
-    def test_sidebar_hook_classes_survive_the_icon_swap(self, icon):
-        """These moved onto SVG elements, so check the rendered class attribute."""
+        assert 'id="gt-rail-toggle"' in read_template('partials/topbar.html'), (
+            "the rail toggle lost its id, which base.html's inline JS queries"
+        )
+
+    def test_no_js_left_behind_for_the_retired_account_menu(self):
+        """The account menu is a <details> in the rail (see gt-shell.css).
+
+        Open/close and click-outside are the browser's now, so a *lookup* of any
+        of these means dead code came back: they resolve to null against
+        everything the templates render. Matched as DOM calls rather than bare
+        names so the comment explaining the retirement does not trip this.
+        """
         base = read_template('base.html')
-        for hook in ('user-expand-icon', 'icon-chevron'):
-            assert f"extra_class='{hook}'" in base, f"base.html no longer emits .{hook}"
-            assert f'class="gt-icon {hook}"' in icon('chevron-up', extra_class=hook)
+        for retired in ('userAccountIcon', 'userAccountMenu', 'toggleSidebar',
+                        '.user-expand-icon'):
+            lookup = re.compile(
+                r"""(?:getElementById|querySelector(?:All)?)\(\s*['"]%s['"]"""
+                % re.escape(retired)
+            )
+            assert not lookup.search(base), (
+                f"base.html queries {retired}, retired with the sidebar in GT-B2"
+            )
+        assert '<details class="gt-rail__account">' in read_template('partials/rail.html')
 
     def test_settings_shell_has_no_second_vertical_nav(self):
         shell = read_template('admin/admin_settings_shell.html')

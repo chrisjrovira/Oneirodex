@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import {
   batchAddToWishlist,
@@ -23,9 +24,6 @@ import { ContextBar } from './chrome/ContextBar'
 import {
   cleanFilters,
   FilterBar,
-  LibraryFiltersCollapseToggle,
-  readFiltersVisible,
-  writeFiltersVisible,
 } from './components/FilterBar'
 import './components/libraryFilters.css'
 import { GameGrid } from './components/GameGrid'
@@ -103,12 +101,16 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     shellConfig.isLibrarian || shellConfig.isAdmin || initialConfig.isAdmin,
   )
   const filtersPanelId = useId()
+  // The rail is rendered by the shell, not by this tree, so the slot only
+  // exists after mount. Resolving it in state (rather than a ref read during
+  // render) makes the first paint correct instead of one frame late.
+  const [railSlot, setRailSlot] = useState(null)
+  useEffect(() => {
+    setRailSlot(document.getElementById('gt-rail-slot'))
+  }, [])
   const [searchParams, setSearchParams] = useSearchParams()
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(initialConfig.perPage)
-  const [filtersOpen, setFiltersOpen] = useState(false)
-  /** Desktop LHN: false = full panel, true = slim arrow rail (grid reclaims width). */
-  const [filtersCollapsed, setFiltersCollapsed] = useState(() => !readFiltersVisible())
   const defaultFilters = {
     sort_by: initialConfig.defaultSort,
     sort_order: initialConfig.defaultSortOrder,
@@ -200,16 +202,6 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   }, [filters, page, perPage, retryCount])
 
   useEffect(() => {
-    function onResize() {
-      if (window.matchMedia('(min-width: 901px)').matches) {
-        setFiltersOpen(false)
-      }
-    }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
-
-  useEffect(() => {
     function onKeyDown(event) {
       if (event.key !== 'Escape') {
         return
@@ -219,13 +211,10 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
         selectionAnchorRef.current = null
         return
       }
-      if (filtersOpen) {
-        setFiltersOpen(false)
-      }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [filtersOpen, selectedIds.size])
+  }, [selectedIds.size])
 
   const clearSelection = () => {
     setSelectedIds(new Set())
@@ -256,7 +245,6 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     writeLibraryFilters(nextFilters)
     setPage(1)
     setFilters(nextFilters)
-    setFiltersOpen(false)
     clearSelection()
   }
 
@@ -272,7 +260,6 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     writeLibraryFilters(defaultFilters)
     setPage(1)
     setFilters(defaultFilters)
-    setFiltersOpen(false)
     clearSelection()
     if (searchParamsHaveLibraryFilters(searchParams)) {
       setSearchParams({}, { replace: true })
@@ -625,14 +612,6 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     )
   }
 
-  const toggleFiltersCollapsed = () => {
-    setFiltersCollapsed((current) => {
-      const next = !current
-      writeFiltersVisible(!next)
-      return next
-    })
-  }
-
   // The label already rides along on the game rows, so the backdrop needs no
   // extra fetch and no 70-entry name table to stay in step with the enum.
   const selectedSystemLabel =
@@ -725,43 +704,27 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
       platform={filters.library_platform}
       label={selectedSystemLabel}
     />
-    <div
-      className={`library-layout${filtersCollapsed ? ' is-filters-collapsed' : ''}`}
-    >
-      <button
-        type="button"
-        className="library-filters-mobile-toggle"
-        aria-expanded={filtersOpen}
-        aria-controls={filtersPanelId}
-        onClick={() => setFiltersOpen((open) => !open)}
-      >
-        {filtersOpen ? t('Close filters') : t('Filters')}
-      </button>
+    <div className="library-layout">
+      {/* Filters render into the rail (GT-B4) — see #gt-rail-slot in SideRail.
+          They used to be a 17.5rem sticky aside sitting immediately right of
+          the rail: two left-hand panels, which is what read as broken, plus a
+          collapse tab that clipped itself against the top of the column.
 
-      {filtersOpen ? (
-        <button
-          type="button"
-          className="library-filters-backdrop"
-          aria-label={t('Close filters')}
-          onClick={() => setFiltersOpen(false)}
-        />
-      ) : null}
-
-      <aside
-        id={filtersPanelId}
-        className={`library-layout__filters${filtersOpen ? ' is-open' : ''}`}
-        aria-label={t('Library filters')}
-      >
-        {filterBar}
-        {/* Last child, and styled as a tab on the panel's own trailing edge —
-            it belongs to the filter section rather than floating over the grid. */}
-        <LibraryFiltersCollapseToggle
-          collapsed={filtersCollapsed}
-          onToggle={toggleFiltersCollapsed}
-          controlsId={filtersPanelId}
-          t={t}
-        />
-      </aside>
+          A portal rather than props or lifted state: every filter handler stays
+          here, only the markup moves, and the shell never has to know what a
+          filter is. When the rail is absent (Big Picture, tests) it falls back
+          to rendering in place rather than vanishing. */}
+      {railSlot ? (
+        createPortal(filterBar, railSlot)
+      ) : (
+        <aside
+          id={filtersPanelId}
+          className="library-layout__filters"
+          aria-label={t('Library filters')}
+        >
+          {filterBar}
+        </aside>
+      )}
 
       <div className="library-layout__main">{content}</div>
     </div>

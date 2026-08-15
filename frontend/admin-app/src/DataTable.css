@@ -26,7 +26,7 @@
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-table-filter input {
@@ -36,7 +36,7 @@
 
 .gt-table-count {
   font-size: 0.78rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 /* Wide tables scroll inside their own box rather than pushing the page sideways. */
@@ -44,10 +44,24 @@
   width: 100%;
   overflow-x: auto;
   border-radius: 8px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--gt-border);
 }
 
-.gt-table {
+/* One table look for the whole admin, not three (W27-C1).
+ *
+ * `.gt-ops-table` and `.gt-admin-table` were near-copies of these rules that
+ * had each drifted: three different font sizes (0.86 / 0.85 / 0.92rem), three
+ * paddings, two header weights, and only this one had a sticky header or a row
+ * hover. That is why tables looked subtly different from page to page.
+ *
+ * The legacy classes are kept as selectors rather than renamed in markup,
+ * because several of them are compact dashboard glances of three or four rows —
+ * those want the shared *look* without DataTable's filter toolbar sitting above
+ * them, which would be more chrome than content. Layout modifiers like
+ * `.gt-ops-table--services` still live next to their own page. */
+.gt-table,
+.gt-ops-table,
+.gt-admin-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.86rem;
@@ -57,15 +71,19 @@
   padding: 0.4rem 0.6rem;
   text-align: left;
   font-size: 0.78rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-table th,
-.gt-table td {
+.gt-table td,
+.gt-ops-table th,
+.gt-ops-table td,
+.gt-admin-table th,
+.gt-admin-table td {
   padding: 0.5rem 0.65rem;
   text-align: left;
   vertical-align: top;
-  border-bottom: 1px solid var(--gt-border, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--gt-border);
 }
 
 .gt-table-wrap--dense .gt-table th,
@@ -73,25 +91,31 @@
   padding: 0.32rem 0.5rem;
 }
 
-.gt-table thead th {
+.gt-table thead th,
+.gt-ops-table thead th,
+.gt-admin-table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: var(--gt-surface-2, #1c2230);
+  background: var(--gt-surface-2);
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
   white-space: nowrap;
 }
 
-.gt-table tbody tr:last-child td {
+.gt-table tbody tr:last-child td,
+.gt-ops-table tbody tr:last-child td,
+.gt-admin-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.gt-table tbody tr:hover {
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 8%, transparent);
+.gt-table tbody tr:hover,
+.gt-ops-table tbody tr:hover,
+.gt-admin-table tbody tr:hover {
+  background: color-mix(in srgb, var(--gt-accent) 8%, transparent);
 }
 
 .gt-table td.is-right,
@@ -120,7 +144,7 @@
 
 .gt-table__sort:hover,
 .gt-table__sort:focus-visible {
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-table__sort-mark {
@@ -130,11 +154,11 @@
 
 .gt-table__sort.is-active .gt-table__sort-mark {
   opacity: 1;
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
 }
 
 .gt-table__empty {
   padding: 1rem 0.65rem;
   text-align: center;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }

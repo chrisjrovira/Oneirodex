@@ -21,6 +21,7 @@ the first", never to a 500.
 from __future__ import annotations
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from gametheca import db
 from gametheca.models import GlobalSettings
@@ -37,12 +38,31 @@ def global_settings_row_or_create() -> GlobalSettings:
     """The settings singleton, creating it when absent.
 
     Flushes rather than commits so the caller keeps control of the transaction.
+
+    The insert runs inside a SAVEPOINT because the table now carries a
+    single-row unique index (see cleanup_duplicate_global_settings in
+    updateschema.py). That turns the old failure mode inside out: two workers
+    racing on first boot used to *both* succeed and leave a duplicate, where a
+    later write could land on the row nobody reads and silently not take
+    effect. Now the loser gets an IntegrityError, which is recoverable — the
+    winner's row is the answer we wanted anyway. The savepoint is what keeps
+    that collision from poisoning the caller's surrounding transaction.
     """
     row = global_settings_row()
-    if row is None:
-        row = GlobalSettings()
-        db.session.add(row)
-        db.session.flush()
+    if row is not None:
+        return row
+
+    try:
+        with db.session.begin_nested():
+            row = GlobalSettings()
+            db.session.add(row)
+    except IntegrityError:
+        row = global_settings_row()
+        if row is None:
+            # Not the race — the insert was rejected for some other reason, and
+            # swallowing that would hand back None to callers annotated as
+            # returning a row.
+            raise
     return row
 
 

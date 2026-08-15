@@ -15,6 +15,7 @@ from gametheca import db
 from gametheca.models import Game, GlobalSettings, Library, User, UserNotification, UserPreference
 from gametheca.utils.rbac import role_at_least
 from gametheca.utils.smtp import send_email_quiet
+from gametheca.utils.global_settings import global_settings_row
 
 _SOCIAL_EMAIL_KINDS = frozenset({'mention', 'dm'})
 
@@ -251,7 +252,7 @@ def notify_staff(
 
 
 def admin_alerts_enabled(flag: str) -> bool:
-    settings = db.session.execute(select(GlobalSettings)).scalars().first()
+    settings = global_settings_row()
     if settings is None:
         return True
     return bool(getattr(settings, flag, True))

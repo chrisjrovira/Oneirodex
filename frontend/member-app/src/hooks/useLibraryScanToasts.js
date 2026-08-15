@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import {
-  libraryGamesAddedToastMessage,
+  groupLibraryScanToasts,
+  groupedToastMessage,
   markLibraryScanToastSeen,
   pickUnseenLibraryScanToasts,
 } from '../utils/libraryScanNotify'
@@ -36,11 +37,13 @@ export function useLibraryScanToasts({ enabled = true, intervalMs = POLL_MS } = 
           : Array.isArray(data)
             ? data
             : []
-        const toToast = pickUnseenLibraryScanToasts(rows)
-        for (const row of toToast) {
-          const id = row.id ?? row.uuid ?? row.created_at ?? row.title
-          showToast(libraryGamesAddedToastMessage(row), 'success')
-          markLibraryScanToastSeen(id)
+        // One toast per library, not per increment (GT-B11). Every row in a
+        // group is marked seen so the batch cannot re-toast on the next poll.
+        for (const group of groupLibraryScanToasts(pickUnseenLibraryScanToasts(rows))) {
+          showToast(groupedToastMessage(group), 'success')
+          for (const row of group.rows) {
+            markLibraryScanToastSeen(row.id ?? row.uuid ?? row.created_at ?? row.title)
+          }
         }
       } catch {
         // Soft-fail — Backend event may not be wired yet.

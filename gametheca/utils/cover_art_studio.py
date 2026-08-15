@@ -282,6 +282,120 @@ def _paint_artistic_backdrop(
             )
 
 
+#: Composition archetypes, all drawn from console/arcade hardware (GT-B28).
+#:
+#: The generator used to run one fixed sequence for every cover — gradient,
+#: bands, orbs, bezel, centred initials — so only the palette changed between
+#: titles and every image read as the same picture in a different colour. The
+#: variety has to be *structural*: where the title sits, what furniture is on
+#: the canvas, whether there is a frame at all.
+ART_DIRECTIONS = ('cartridge', 'marquee', 'crt', 'pixel', 'boxart', 'neon')
+
+
+def pick_art_direction(seed: int) -> str:
+    """Stable per title, so a cover does not change when it is regenerated."""
+    return ART_DIRECTIONS[seed % len(ART_DIRECTIONS)]
+
+
+def _paint_art_direction(
+    img: 'Image.Image',
+    *,
+    direction: str,
+    accent: tuple[int, int, int],
+    secondary: tuple[int, int, int],
+    top: tuple[int, int, int],
+    bottom: tuple[int, int, int],
+    seed: int,
+) -> None:
+    """Draw the direction's gaming furniture.
+
+    Each one owns a different region of the canvas, which is what stops the
+    results converging: a cartridge label sits high, a marquee spans the top
+    edge, a boxart banner claims the bottom third.
+    """
+    width, height = img.size
+    draw = ImageDraw.Draw(img)
+    unit = max(2, min(width, height) // 64)
+
+    if direction == 'cartridge':
+        # Label plate inset from a cartridge shoulder — title lands on the plate.
+        shoulder = int(width * 0.12)
+        plate = [shoulder, int(height * 0.16), width - shoulder, int(height * 0.52)]
+        draw.rectangle(plate, fill=_mix_rgb(top, secondary, 0.35))
+        draw.rectangle(plate, outline=accent, width=unit)
+        for i in range(3):
+            y = int(height * 0.60) + i * unit * 3
+            draw.rectangle(
+                [shoulder + unit * 2, y, width - shoulder - unit * 2, y + unit],
+                fill=_mix_rgb(accent, bottom, 0.45 + i * 0.12),
+            )
+
+    elif direction == 'marquee':
+        # Arcade marquee band across the top, lamps under it.
+        band = int(height * 0.22)
+        draw.rectangle([0, 0, width, band], fill=_mix_rgb(accent, top, 0.25))
+        draw.rectangle([0, band, width, band + unit], fill=secondary)
+        lamps = 6 + (seed % 5)
+        for i in range(lamps):
+            cx = int(width * (i + 0.5) / lamps)
+            r = unit
+            draw.ellipse(
+                [cx - r, band + unit * 3 - r, cx + r, band + unit * 3 + r],
+                fill=_mix_rgb(secondary, top, 0.2),
+            )
+
+    elif direction == 'crt':
+        # Rounded tube vignette — corners darkened toward the shell.
+        inset = int(min(width, height) * 0.06)
+        draw.rounded_rectangle(
+            [inset, inset, width - inset, height - inset],
+            radius=int(min(width, height) * 0.09),
+            outline=_mix_rgb(bottom, accent, 0.3),
+            width=unit * 3,
+        )
+        for step in range(inset):
+            t = step / max(inset - 1, 1)
+            shade = _mix_rgb(bottom, top, 0.15 + t * 0.5)
+            draw.rectangle([step, step, width - step, height - step], outline=shade)
+
+    elif direction == 'pixel':
+        # Chunky mosaic across the lower half — reads as sprite work at a glance.
+        cell = max(6, min(width, height) // 18)
+        for gx in range(0, width, cell):
+            for gy in range(int(height * 0.45), height, cell):
+                bit = (seed >> ((gx // cell + gy // cell) % 24)) & 0x3
+                if bit == 0:
+                    continue
+                tone = _mix_rgb(accent if bit == 1 else secondary, bottom, 0.35 + bit * 0.12)
+                draw.rectangle([gx, gy, gx + cell - 1, gy + cell - 1], fill=tone)
+
+    elif direction == 'boxart':
+        # Publisher banner bottom, spine stripe left — classic retail box.
+        banner = int(height * 0.68)
+        draw.rectangle([0, banner, width, height], fill=_mix_rgb(bottom, secondary, 0.4))
+        draw.rectangle([0, banner, width, banner + unit], fill=accent)
+        spine = int(width * 0.07)
+        draw.rectangle([0, 0, spine, height], fill=_mix_rgb(accent, bottom, 0.55))
+
+    elif direction == 'neon':
+        # Synthwave horizon: perspective grid below a sun disc.
+        horizon = int(height * 0.62)
+        draw.ellipse(
+            [int(width * 0.28), horizon - int(height * 0.30),
+             int(width * 0.72), horizon + int(height * 0.06)],
+            fill=_mix_rgb(accent, top, 0.3),
+        )
+        draw.rectangle([0, horizon, width, height], fill=_mix_rgb(bottom, secondary, 0.55))
+        lines = 8
+        for i in range(1, lines + 1):
+            y = horizon + int((height - horizon) * (i / lines) ** 1.8)
+            draw.line([(0, y), (width, y)], fill=_mix_rgb(accent, bottom, 0.5), width=1)
+        for i in range(-6, 7):
+            x = width // 2 + i * (width // 8)
+            draw.line([(width // 2, horizon), (x, height)],
+                      fill=_mix_rgb(secondary, bottom, 0.55), width=1)
+
+
 def _draw_bezel_frame(
     draw: ImageDraw.ImageDraw,
     width: int,
@@ -804,6 +918,19 @@ def render_cover_art(
             seed=seed,
             variant=variant if not is_wide else ('hero' if variant == 'hero' else 'wide'),
         )
+        # Gaming composition, chosen by title seed (GT-B28). This is what makes
+        # two covers structurally different rather than the same picture in a
+        # different palette.
+        direction = pick_art_direction(seed)
+        _paint_art_direction(
+            img,
+            direction=direction,
+            accent=accent,
+            secondary=secondary,
+            top=top,
+            bottom=bottom,
+            seed=seed,
+        )
         draw = ImageDraw.Draw(img)
         if motif:
             _draw_stock_geometry(
@@ -832,16 +959,23 @@ def render_cover_art(
             else 'square' if is_square
             else 'tile'
         )
-        _draw_bezel_frame(
-            draw,
-            width,
-            height,
-            accent,
-            secondary,
-            variant=frame_variant,
-            seed=seed,
-        )
-        _maybe_scanlines(img, glyph if not motif else 'cart', seed)
+        # A bezel on every cover was half of why they all looked alike. The
+        # directions that already own their edges — a CRT tube, a retail box
+        # spine, an arcade marquee — draw their own frame, so adding another
+        # only doubles it.
+        if direction not in ('crt', 'boxart', 'marquee'):
+            _draw_bezel_frame(
+                draw,
+                width,
+                height,
+                accent,
+                secondary,
+                variant=frame_variant,
+                seed=seed,
+            )
+        # Scanlines belong to tube-era directions, not to flat or pixel ones.
+        if direction in ('crt', 'marquee', 'neon'):
+            _maybe_scanlines(img, glyph if not motif else 'cart', seed)
         draw = ImageDraw.Draw(img)
     else:
         accent_h = max(4, height // 64)

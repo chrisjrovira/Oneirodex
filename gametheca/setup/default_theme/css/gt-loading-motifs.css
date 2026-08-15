@@ -12,7 +12,7 @@
   justify-content: center;
   width: var(--gt-loading-size);
   height: var(--gt-loading-size);
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
   flex-shrink: 0;
 }
 
@@ -31,151 +31,227 @@
 }
 
 /* ---- ring (default / soft console ring) ---- */
-.gt-loading-motif[data-motif="ring"] .gt-loading-motif__ring {
+/* Console + controller motifs (GT-B23).
+ *
+ * Motion rules for this set:
+ *   - one full cycle under ~1.2s, so it reads as motion rather than drift
+ *   - transform/opacity only, so each stays on the compositor
+ *   - currentColor throughout; platform accent and icon packs restyle for free
+ *
+ * The retired abstract set animated mostly by slow opacity, which at 18-28px
+ * was indistinguishable from a still image — the reported "not true
+ * animations".
+ */
+
+.gt-loading-motif svg {
+  width: 100%;
+  height: 100%;
   fill: none;
   stroke: currentColor;
-  stroke-width: 3;
+  stroke-width: 2;
   stroke-linecap: round;
-  stroke-dasharray: 40 60;
-  transform-origin: center;
-  animation: gt-loading-spin 0.85s linear infinite;
+  stroke-linejoin: round;
 }
 
-/* ---- orbit (disc + satellites — console-disc-ish) ---- */
-.gt-loading-motif[data-motif="orbit"] .gt-loading-motif__disc {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  opacity: 0.45;
+/* ---------- d-pad: presses travel clockwise ---------- */
+
+.gt-loading-motif__pad {
+  opacity: 0.55;
 }
 
-.gt-loading-motif[data-motif="orbit"] .gt-loading-motif__hub {
+.gt-loading-motif__dpad-press {
   fill: currentColor;
+  stroke: none;
+  opacity: 0;
+  animation: gt-motif-press 1s steps(1, end) infinite;
 }
 
-.gt-loading-motif[data-motif="orbit"] .gt-loading-motif__sat {
-  fill: currentColor;
+.gt-loading-motif__dpad-press--r { animation-delay: 0.25s; }
+.gt-loading-motif__dpad-press--d { animation-delay: 0.5s; }
+.gt-loading-motif__dpad-press--l { animation-delay: 0.75s; }
+
+@keyframes gt-motif-press {
+  0%, 25% { opacity: 1; }
+  26%, 100% { opacity: 0; }
+}
+
+/* ---------- disc: platter spins, head sweeps ---------- */
+
+.gt-loading-motif__platter {
   transform-origin: 24px 24px;
-  animation: gt-loading-spin 1.1s linear infinite;
+  animation: gt-motif-spin 1.1s linear infinite;
 }
 
-.gt-loading-motif[data-motif="orbit"] .gt-loading-motif__sat--b {
-  animation-duration: 1.6s;
-  animation-direction: reverse;
-  opacity: 0.7;
-}
+.gt-loading-motif__disc-edge { opacity: 0.5; }
+.gt-loading-motif__disc-glint { stroke-width: 2.5; }
 
-/* ---- pulse (concentric breathe) ---- */
-.gt-loading-motif[data-motif="pulse"] .gt-loading-motif__pulse {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  transform-origin: center;
-  animation: gt-loading-pulse 1.4s ease-in-out infinite;
-}
-
-.gt-loading-motif[data-motif="pulse"] .gt-loading-motif__pulse--b {
-  animation-delay: 0.35s;
-  opacity: 0.55;
-}
-
-.gt-loading-motif[data-motif="pulse"] .gt-loading-motif__core {
+.gt-loading-motif__disc-hub {
   fill: currentColor;
-  animation: gt-loading-pulse-core 1.4s ease-in-out infinite;
+  stroke: none;
+  opacity: 0.85;
 }
 
-/* ---- blocks (8-bit cartridge cascade) ---- */
-.gt-loading-motif[data-motif="blocks"] .gt-loading-motif__block {
+.gt-loading-motif__head {
   fill: currentColor;
-  animation: gt-loading-blocks 0.9s ease-in-out infinite;
+  stroke: none;
+  transform-origin: 24px 41px;
+  animation: gt-motif-head 1.6s ease-in-out infinite;
 }
 
-.gt-loading-motif[data-motif="blocks"] .gt-loading-motif__block:nth-child(2) {
-  animation-delay: 0.12s;
-}
-
-.gt-loading-motif[data-motif="blocks"] .gt-loading-motif__block:nth-child(3) {
-  animation-delay: 0.24s;
-}
-
-.gt-loading-motif[data-motif="blocks"] .gt-loading-motif__block:nth-child(4) {
-  animation-delay: 0.36s;
-}
-
-/* ---- scan (CRT horizontal sweep) ---- */
-.gt-loading-motif[data-motif="scan"] .gt-loading-motif__frame {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  opacity: 0.55;
-}
-
-.gt-loading-motif[data-motif="scan"] .gt-loading-motif__beam {
-  fill: currentColor;
-  animation: gt-loading-scan 1.15s ease-in-out infinite;
-}
-
-/* ---- arcade (coin drop bounce) ---- */
-.gt-loading-motif[data-motif="arcade"] .gt-loading-motif__slot {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.5;
-  stroke-linecap: square;
-}
-
-.gt-loading-motif[data-motif="arcade"] .gt-loading-motif__coin {
-  fill: currentColor;
-  transform-origin: 24px 14px;
-  animation: gt-loading-coin 1.05s ease-in-out infinite;
-}
-
-@keyframes gt-loading-spin {
+@keyframes gt-motif-spin {
   to { transform: rotate(360deg); }
 }
 
-@keyframes gt-loading-pulse {
-  0%, 100% { transform: scale(0.72); opacity: 0.35; }
-  50% { transform: scale(1); opacity: 1; }
+@keyframes gt-motif-head {
+  0%, 100% { transform: rotate(-18deg); }
+  50% { transform: rotate(18deg); }
 }
 
-@keyframes gt-loading-pulse-core {
-  0%, 100% { transform: scale(0.85); opacity: 0.7; }
-  50% { transform: scale(1.05); opacity: 1; }
+/* ---------- stick: tilts around its gate ---------- */
+
+.gt-loading-motif__gate { opacity: 0.4; }
+
+.gt-loading-motif__stick {
+  transform-origin: 24px 24px;
+  animation: gt-motif-tilt 1.2s ease-in-out infinite;
 }
 
-@keyframes gt-loading-blocks {
-  0%, 100% { transform: translateY(0); opacity: 0.45; }
-  40% { transform: translateY(-6px); opacity: 1; }
+.gt-loading-motif__stick-cap {
+  fill: currentColor;
+  fill-opacity: 0.22;
 }
 
-@keyframes gt-loading-scan {
-  0% { transform: translateY(0); opacity: 0.35; }
-  50% { transform: translateY(18px); opacity: 1; }
-  100% { transform: translateY(0); opacity: 0.35; }
+@keyframes gt-motif-tilt {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(5px, -3px); }
+  50%  { transform: translate(0, 5px); }
+  75%  { transform: translate(-5px, -3px); }
+  100% { transform: translate(0, 0); }
 }
 
-@keyframes gt-loading-coin {
-  0%, 100% { transform: translateY(0) scale(1); }
-  35% { transform: translateY(14px) scale(0.92); }
-  55% { transform: translateY(10px) scale(1.05); }
-  70% { transform: translateY(14px) scale(0.95); }
+/* ---------- handheld: scanline refresh + power LED ---------- */
+
+.gt-loading-motif__shell { opacity: 0.55; }
+.gt-loading-motif__screen { opacity: 0.75; }
+
+.gt-loading-motif__scanline {
+  fill: currentColor;
+  stroke: none;
+  opacity: 0.7;
+  animation: gt-motif-scan 1.1s linear infinite;
 }
 
+.gt-loading-motif__led {
+  fill: currentColor;
+  stroke: none;
+  animation: gt-motif-led 1.1s ease-in-out infinite;
+}
+
+@keyframes gt-motif-scan {
+  0%   { transform: translateY(0); opacity: 0.15; }
+  50%  { opacity: 0.8; }
+  100% { transform: translateY(11px); opacity: 0.15; }
+}
+
+@keyframes gt-motif-led {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+/* ---------- cartridge: slots home, lifts, repeats ---------- */
+
+.gt-loading-motif__slot {
+  opacity: 0.5;
+}
+
+.gt-loading-motif__cart {
+  animation: gt-motif-insert 1.4s ease-in-out infinite;
+}
+
+.gt-loading-motif__cart-body { opacity: 0.9; }
+
+.gt-loading-motif__cart-label {
+  fill: currentColor;
+  fill-opacity: 0.25;
+}
+
+.gt-loading-motif__cart-pins {
+  opacity: 0.6;
+}
+
+@keyframes gt-motif-insert {
+  0%, 15%   { transform: translateY(-5px); }
+  55%, 75%  { transform: translateY(2px); }
+  100%      { transform: translateY(-5px); }
+}
+
+/* ---------- CRT: raster sweeps the tube ---------- */
+
+.gt-loading-motif__tube { opacity: 0.6; }
+.gt-loading-motif__stand { opacity: 0.6; }
+
+.gt-loading-motif__raster {
+  fill: currentColor;
+  stroke: none;
+  opacity: 0.55;
+  animation: gt-motif-raster 1.2s linear infinite;
+}
+
+@keyframes gt-motif-raster {
+  0%   { transform: translateY(0); opacity: 0.15; }
+  45%  { opacity: 0.7; }
+  100% { transform: translateY(17px); opacity: 0.15; }
+}
+
+/* Motion-safe: hold a legible frame rather than freezing mid-transform. */
 @media (prefers-reduced-motion: reduce) {
-  .gt-loading-motif [class*="gt-loading-motif__"] {
+  .gt-loading-motif * {
     animation: none !important;
+    transform: none !important;
+    opacity: 1;
   }
+}
 
-  .gt-loading-motif[data-motif="ring"] .gt-loading-motif__ring {
-    stroke-dasharray: none;
-    opacity: 0.85;
-  }
+/* ---- Picker preview (W27-E2) ----
+ *
+ * In a chooser the motifs are specimens, not progress: a grid of a dozen things
+ * all looping at once is noise, and it makes the page look busy rather than
+ * showing you the difference between them. Held still, and animated on hover or
+ * keyboard focus so you can inspect one at a time.
+ *
+ * `animation-play-state` rather than `animation: none` — the latter resets each
+ * motif to its unstyled first frame, which for the disc and cartridge is the
+ * part-way-through pose, not the shape you want to recognise.
+ */
+.gt-loading-motif--preview {
+  padding: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  border-radius: var(--gt-radius-sm, 8px);
+  background: color-mix(in srgb, var(--gt-accent) 6%, transparent);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
 
-  .gt-loading-motif[data-motif="pulse"] .gt-loading-motif__pulse,
-  .gt-loading-motif[data-motif="pulse"] .gt-loading-motif__core,
-  .gt-loading-motif[data-motif="blocks"] .gt-loading-motif__block,
-  .gt-loading-motif[data-motif="scan"] .gt-loading-motif__beam,
-  .gt-loading-motif[data-motif="arcade"] .gt-loading-motif__coin {
-    opacity: 0.85;
+.gt-loading-motif--preview * {
+  animation-play-state: paused;
+}
+
+.gt-loading-motif--preview:hover,
+.gt-loading-motif--preview:focus-visible {
+  border-color: var(--gt-accent);
+  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
+  outline: none;
+}
+
+.gt-loading-motif--preview:hover *,
+.gt-loading-motif--preview:focus-visible * {
+  animation-play-state: running;
+}
+
+/* Reduced motion already disables the animations outright above; keep the
+   border feedback so hover still reads as interactive. */
+@media (prefers-reduced-motion: reduce) {
+  .gt-loading-motif--preview:hover *,
+  .gt-loading-motif--preview:focus-visible * {
+    animation: none !important;
   }
 }

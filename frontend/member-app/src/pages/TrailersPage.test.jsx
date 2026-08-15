@@ -172,3 +172,39 @@ test('new chrome keeps every playback action reachable', async () => {
   await waitFor(() => expect(trailersApi.fetchRandomTrailer).toHaveBeenCalledTimes(2))
   expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument()
 })
+
+test('trailers shows exactly one Filters control under the new chrome', async () => {
+  // The page's own toggle used to be suppressed with `hidden`, which did
+  // nothing: `.gt-trailers__filters` sets `display: flex`, and an author rule
+  // beats the UA stylesheet's `[hidden]`. Both the page toggle and the context
+  // bar's popover rendered — the duplication W27-F1 set out to remove.
+  //
+  // Counted by role rather than by class, because the defect was about what a
+  // member can see and click, not which element carries which attribute.
+  trailersApi.fetchRandomTrailer.mockResolvedValue({
+    has_videos: true,
+    game_uuid: 'game-uuid-1',
+    game_name: 'Doom',
+    video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0',
+  })
+
+  render(<TrailersPage shellConfig={{ enableNewChrome: true }} />)
+
+  await screen.findByRole('button', { name: /^filters$/i })
+  expect(screen.getAllByRole('button', { name: /^filters$/i })).toHaveLength(1)
+})
+
+test('trailers keeps its own Filters toggle on the old chrome', async () => {
+  // The other half of the contract: suppressing the page control must depend on
+  // the new bar actually being there to own it.
+  trailersApi.fetchRandomTrailer.mockResolvedValue({
+    has_videos: true,
+    game_uuid: 'game-uuid-1',
+    game_name: 'Doom',
+    video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0',
+  })
+
+  render(<TrailersPage shellConfig={{ enableNewChrome: false }} />)
+
+  expect(await screen.findByRole('button', { name: /^filters$/i })).toBeInTheDocument()
+})

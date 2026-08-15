@@ -16,7 +16,7 @@ quote them when re-prioritising.
 | **UX-A3** | **Show more** appears even when the text is short — only render when content actually overflows | **Done** — gated on `length > 420` while the CSS clamps at 8 lines, so the two disagreed in both directions. Now measures real overflow (`scrollHeight` vs `clientHeight`) with a `ResizeObserver`, so text that fits wide but clips narrow behaves correctly |
 | **UX-A4** | **Ownership link is broken** | **Not reproduced — needs your retest.** Route `/ownership`, blueprint, page and all 12 `/api/ownership/*` endpoints exist, match the client, and are **committed in HEAD**. Points to deployment lag rather than a code defect. If it still 404s after redeploy I need the server log line |
 | **UX-A5** | Library page size defaults to **20**, should be **50** | **Done** — model default, both server fallbacks and both SPA fallbacks; migration moves rows still on the *old default* 20 → 50 (deliberate 100/200 choices untouched) |
-| **UX-A6** | Remove every **sharewarez** mention and leftover code | **Done** — the earlier "0 hits" claim was wrong: `get_warez_folder_usage()` survived in `utils/system_stats.py` as a deprecated alias with no caller but its own test, both now removed. Re-audited 2026-08-12: shipped `static/dist` bundles, templates and tracked filenames are clean; every remaining match is deliberate (scrub-policy wording, the `warez` term in the `related_media` link blocklist, and the `DATA_FOLDER_WAREZ` migration note). `.env.bak-warez-rename` is untracked, so it was never published. **SCRUB-5 is closed too**: `git ls-remote` shows origin carrying only `main` and two `cursor/*` branches, none of which reaches the `Initial commit: SharewareZ rewrite` tree — the `feature/*` branches that once did are already gone from GitHub. An earlier note in this file (and commit `005a9ef9`) claimed they were still public; that was read off **stale local remote-tracking refs**, since `git fetch` does not prune deleted branches by default. No history rewrite and no force-push are needed. Verify with `git fetch --prune` before trusting `git branch -r` |
+| **UX-A6** | Remove every **sharewarez** mention and leftover code | **Done** — the earlier "0 hits" claim was wrong: `get_warez_folder_usage()` survived in `utils/system_stats.py` as a deprecated alias with no caller but its own test, both now removed. Re-audited 2026-08-12: shipped `static/dist` bundles, templates and tracked filenames are clean; every remaining match is deliberate (scrub-policy wording, the `warez` term in the `related_media` link blocklist, and the `DATA_FOLDER_WAREZ` migration note). `.env.bak-warez-rename` is untracked, so it was never published. **SCRUB-5 is closed too**: `git ls-remote` shows origin carrying only `main` and two `cursor/*` branches, none of which reaches the `Initial commit: SharewareZ rewrite` tree — the `feature/*` branches that once did are already gone from GitHub. An earlier note in this file (and commit `005a9ef9`) claimed they were still public; that was read off **stale local remote-tracking refs**, since `git fetch` does not prune deleted branches by default. No history rewrite and no force-push are needed. Verify with `git fetch --prune` before trusting `git branch -r`. **Re-audited again 2026-08-13** across installers, Compose, `Dockerfile`, `config.py` and both clients — still clean, and `DATA_FOLDER_WAREZ` appears nowhere outside its migration note. That sweep did turn up **one unrelated tracked artefact**: `clients/desktop/' + $log + '`, a captured vitest log committed in `3771cb3b` under a filename where a PowerShell `' + $log + '` never interpolated. Not brand-related, but it was junk in the tree — removed |
 | **UX-A7** | **Check stores** is a misleading name — it checks updates/DLC; rename accordingly | **Done** — now "Check updates & DLC" + tooltip; failure text follows |
 | **UX-A8** | **Companion offline** belongs on the size/status/freshness row | **Done** — chip on the status row; `GameActionBar` gains `showPresence` so details opts out instead of showing the same fact twice |
 
@@ -24,21 +24,37 @@ quote them when re-prioritising.
 
 | ID | Item | Status |
 |---|---|---|
-| **EMU-1** | Emulated games run badly — audio glitchy and slightly fast | **Global fix applied — needs real-hardware verification** |
+| **EMU-1** | Emulated games run badly — audio glitchy and slightly fast | **Root cause corrected 2026-08-13 — fix applied, needs verification on a >60Hz display** |
 
-**Root cause (global):** `webretro/assets/base.js` shipped `audio_max_timing_skew = "0.15"` — three times
-the usual `0.05` — with `video_vsync = "true"` and **no `audio_sync`**. So the browser's 60Hz rAF drove
-timing while NTSC cores run at 60.098Hz (PAL 50Hz), and the resampler was allowed ±15% to chase it.
-That combination is exactly "fast and pitch-shifted with glitches".
+> **The first root cause below was wrong.** It is kept because the change it produced was correct and
+> still ships — but it treated a symptom. Read the 2026-08-13 entry as current.
 
-**Applied:** `audio_sync = "true"` (audio becomes the master clock) · `audio_rate_control = "true"` +
-`audio_rate_control_delta = "0.005"` (the correct small-correction knob) · `audio_max_timing_skew`
-back to `0.05` · `audio_latency` left at 96ms, which is deliberately generous for browser audio.
+**Actual root cause (found 2026-08-13):** nothing measured the **display refresh rate**. RetroArch
+defaults `video_refresh_rate` to 60, and with `video_vsync = "true"` the web build paces to rAF — so on
+a 120/144/165Hz monitor the core ran **2–2.75× too fast**, with audio rate-control chasing a gap it
+could never close. That is the reported "runs fast, sound is terrible", and it is a **clock a whole
+multiple out** — no resampler setting can correct it.
 
-**Not yet done — per-system tuning.** Deliberately held: per-core option keys must match each core
-exactly, and a wrong key **silently does nothing**, so guessing would produce fake fixes. Needs one
-pass with real playback per brand (NES · SNES · Genesis · GB/GBA · PS1 · N64), reporting whether
-audio is still fast, still glitchy, or clean, before touching individual cores.
+**Applied:** `measureRefreshHz()` samples 32 frames and takes the **median**, with a hidden-tab guard
+(a backgrounded tab throttles rAF and would otherwise measure a fictional rate). The measured value is
+written as `video_refresh_rate` — [base.js:63](../../gametheca/static/vendor/webretro/assets/base.js:63).
+
+**Superseded first pass (2026-08-03) — still shipping, still correct.** `base.js` had
+`audio_max_timing_skew = "0.15"`, three times the usual `0.05`, with `video_vsync = "true"` and **no
+`audio_sync`**, so the resampler was allowed ±15% to chase the 60Hz-vs-60.098Hz NTSC gap (PAL 50Hz).
+Now: `audio_sync = "true"` (audio is the master clock) · `audio_rate_control = "true"` +
+`audio_rate_control_delta = "0.005"` · `audio_max_timing_skew` back to `0.05` · `audio_latency` left at
+96ms, deliberately generous for browser audio. This was a genuine misconfiguration and worth fixing —
+it just was not what made emulation run fast, which is why the symptom survived it.
+
+**Open — needs live verification.** The refresh fix is unverified on real hardware: it cannot be
+confirmed on a 60Hz panel, because that is precisely the case where the old hardcoded default was
+already correct. Needs one pass on a >60Hz display.
+
+**Open — per-system tuning.** Deliberately held: per-core option keys must match each core exactly, and
+a wrong key **silently does nothing**, so guessing would produce fake fixes. Needs one pass with real
+playback per brand (NES · SNES · Genesis · GB/GBA · PS1 · N64) — but only **after** the refresh-rate fix
+is confirmed, since a mis-clocked player would otherwise be blamed on the cores.
 
 ## B. Layout / chrome rework (medium)
 
@@ -60,7 +76,7 @@ audio is still fast, still glitchy, or clean, before touching individual cores.
 | **UX-C2** | Libraries + scans are one page now: combine the two main-menu buttons; all tabs follow the library colour scheme — **nav done**: one **Libraries & scans** item; hub lists merged. Also fixed the knock-on — `resolveActiveNav` still returned `'scans'`, an id no longer in `ADMIN_NAV`, so scan pages would have highlighted nothing |
 | **UX-C3** | **Library tools** must be far more approachable — **Done**: tabs renamed from internal tool names to tasks (*Library Doctor* → **Tidy folder names**, *Proposals* → **Review suggested fixes**, *Freshness* → **Check for updates**). The doctor's three buttons now read as an explicit 1-2-3 with the destructive step named "Rename on disk" and stated as irreversible; fields gained plain labels and examples. **Element ids untouched** — the page JS binds to all 11, verified |
 | **UX-C4** | Add **more than one library at a time** — **already existed; it was undiscoverable.** `ProposeLeafLibraries` (scan a root → multi-select → confirm) and `ImportLeafLibraries` (CSV/JSON → multi-select → confirm) both create in bulk via `confirmCreateSelected`. They were named for their mechanism, so neither read as "add several at once" and the single-library form looked like the only route. Relabelled to **Add one library** / **Add many — scan a folder** / **Add many — import CSV/JSON**. No new backend |
-| **UX-C5** | Unmatched: add **Bad match** with selectable reasons (+ Other) — **backend done**, UI pending. `bad_match_reason` / `note` / `at` / `by_user_id` on `UnmatchedFolder`, kept separate from `match_reason` (the matcher explaining itself) so a human contradicting it stays distinguishable. `GET /api/unmatched/bad_match_reasons` serves the vocabulary so the UI never hardcodes it; `POST …/bad_match` records or clears. **Non-destructive on purpose** — feedback about a match must not double as a triage delete. `other` requires a note |
+| **UX-C5** | Unmatched: add **Bad match** with selectable reasons (+ Other) — **Done 2026-08-13.** UI landed in `49b73b37` (React `DupeGlance`) and `6760328a` (the classic unmatched table too, so the two surfaces do not disagree about whether feedback is possible). Backend as below: `bad_match_reason` / `note` / `at` / `by_user_id` on `UnmatchedFolder`, kept separate from `match_reason` (the matcher explaining itself) so a human contradicting it stays distinguishable. `GET /api/unmatched/bad_match_reasons` serves the vocabulary so the UI never hardcodes it; `POST …/bad_match` records or clears. **Non-destructive on purpose** — feedback about a match must not double as a triage delete. `other` requires a note |
 | **UX-C6** | Unmatched table is cramped; **dupes** are too small to read — **readability done**: 17 rules sat at ~0.7rem (≈11px); floor lifted to 0.78rem with the tier hierarchy preserved. *(A first sed pass cascaded `0.68→0.78→0.86` and inverted two tiers — caught and remapped from the original values.)* **Density done:** paddings and gaps raised in one non-cascading pass; compare label column 3.25rem→4.25rem because field names were **wrapping**, which is what actually made it read as cramped; hairline separators between compare fields so the two sides read value-by-value; stacked breakpoint moved 720px→900px, where each side had shrunk to ~330px and the rows wrapped into mush |
 | **UX-C7** | **Image queue** UI redone to match the other pages — **Done (flat mode)**: now a real sortable/filterable `DataTable` with thumbnail, game, kind, status, failure detail and row actions. Grouped-by-game keeps its thumbnail cards, which suit images better than a table |
 | **UX-C8** | **Every table** filterable and sortable, across the whole UI — **shared `DataTable` built + 3 pages migrated** (Invites · Support inbox · Users); remaining hand-rolled tables in `OpsPage`, `pages.jsx`, `ProposeLeafLibraries`, `ImportLeafLibraries` still to move. Sort asc→desc→clear, numeric-aware, absent values last in both directions, `value()` hook so a cell that renders markup still sorts on its real value, never mutates the caller's array, sticky header, own horizontal scroll |
@@ -79,7 +95,7 @@ audio is still fast, still glitchy, or clean, before touching individual cores.
 | **FEAT-D2** | **PC cheat system** for installed games | **Backend done — QA 10/10.** `PcCheat` model + `/api/games/<uuid>/pc_cheats` GET/POST/DELETE. The `pc_wand` surface already existed and reported correctly; it was simply never backed by anything. **Notes, not a trainer** — methods are console command · config edit · save-file field · launch flag · note, so no path writes a binary or injects into a process; a test asserts the vocabulary contains no inject/patch/trainer verbs. `.cht` stays RetroArch-only and the two surfaces refuse each other's platforms. `single_player_only` defaults **true**. Delete requires the matching game, so a cheat id alone cannot delete across games. **Member panel done — QA 7/7:** `PcCheatsPanel` self-gates on `cheat_surface === 'pc_wand'`, so it and the RetroArch panel can never both render for one title; copy-to-clipboard on payloads, single-player flag, honest empty and error states, and the notes-not-a-trainer stance stated in the panel. **Authoring done:** librarians get an add form and per-row remove; the method picker is populated from the API response so it cannot drift from what the backend accepts |
 | **FEAT-D3** | **AI artwork** for titles/systems with missing or poor art | **Adapter built** — `ai_artwork.py`: `ArtworkGenerator` interface, `A1111Generator` (covers AUTOMATIC1111 / SD.Next / Forge), `ComfyUIGenerator` stubbed with an **honest error** rather than a blind workflow guess. `ENABLE_AI_ARTWORK` off by default · `AI_ARTWORK_URL` / `AI_ARTWORK_ENGINE`. `build_prompt` is the single payload composer, and tests pin that paths/identity cannot appear in it. **Persist + trigger + profile done:** `Image.is_generated` / `generated_by` label the output; `generate_and_store_cover` replaces only a previous *generated* row so a librarian's curated cover is never overwritten; `POST /admin/api/artwork/generate` (403 when disabled, 502 when the endpoint fails — config vs upstream distinguished); optional `artwork` Compose profile running SD.Next. **QA 24/24.** **Admin trigger done:** *Generate artwork* on the Images page, disabled until a title is selected, and a failure names the missing config rather than just erroring. **Batch done:** `POST /admin/api/artwork/generate/batch` fills **only titles with no cover at all** — generated art is a better placeholder, never a replacement for a cover someone chose — capped per call since each title is seconds-to-minutes, per-title failures reported not aborted, and re-running skips rather than churns |
 | **FEAT-D4** | Art studio: generated **text is tiny and illegible**; make it **editable** | **Done — QA 11/11.** *Legibility:* the floor was a flat **14px** (~2.7% of a 512px cover, unreadable once tiled) and `_fit_title_font` shrank hard to force ≤3 lines, so long titles collapsed to it. Floor now scales with the canvas (**36px** at 512×768), ceiling 64→85, 4 lines allowed — a 50-char title renders at 82px instead of bottoming out. *Editable:* `headline_override` · `subtitle_override` · `title_scale` on `render_cover_art` and the preview API. A blank headline falls back to the title, an **empty subtitle means none** (distinct from "not supplied"), and scale is clamped 0.6–2.0 so an override cannot defeat the legibility floor |
-| **FEAT-D5** | **Emulator pages** redesigned around the *feel* of the system — room/arcade visuals | **Room model done — QA 11/11.** Existing platform skins group by **brand**, which is right for library chrome but wrong here: a Mega Drive and a SNES shared a living room, a Neo Geo cabinet did not. `play_rooms.py` groups by **setting** — living-room CRT · arcade cabinet · handheld · disc era · desk — each carrying palette, ambience and its era font from the font registry. Surfaced on the play payload as `play_room` + ready-to-apply CSS vars; unmapped platforms get a plausible default rather than breaking the page. A test asserts no room imitates manufacturer trade dress. **Visual layer landed on Systems:** `playRooms.js` mirrors the backend map (kept static, not fetched — it is needed at first paint and a round-trip for a background colour would flash unstyled); each system tile carries `data-room` + scoped `--gt-room-*` vars, with CRT scanlines, an arcade marquee glow and desk phosphor as light ambience that never fights the text. **Remaining:** the in-player surface is vendored WebRetro, so theming it means touching vendor code — deliberately not done |
+| **FEAT-D5** | **Emulator pages** redesigned around the *feel* of the system — room/arcade visuals | **Room model done — QA 11/11.** Existing platform skins group by **brand**, which is right for library chrome but wrong here: a Mega Drive and a SNES shared a living room, a Neo Geo cabinet did not. `play_rooms.py` groups by **setting** — living-room CRT · arcade cabinet · handheld · disc era · desk — each carrying palette, ambience and its era font from the font registry. Surfaced on the play payload as `play_room` + ready-to-apply CSS vars; unmapped platforms get a plausible default rather than breaking the page. A test asserts no room imitates manufacturer trade dress. **Visual layer landed on Systems:** `playRooms.js` mirrors the backend map (kept static, not fetched — it is needed at first paint and a round-trip for a background colour would flash unstyled); each system tile carries `data-room` + scoped `--gt-room-*` vars, with CRT scanlines, an arcade marquee glow and desk phosphor as light ambience that never fights the text. **Remaining:** the in-player surface is vendored WebRetro, so theming it means touching vendor code — deliberately not done. **Re-scoped 2026-08-13** — this is now the *Emulator player chrome* item (volume · power · reset · pause, per-system UI), tracked as **UID-007** in [ui-debt-log.md](../dev/ui-debt-log.md), with **Provenance-Emu/Provenance** as the reference for per-system look and in-game control overlay (desktop proportions, not handheld). The BIOS half of UID-007 is **closed**: `list_bios_files` was a flat `os.listdir` that skipped directories, so per-system firmware sets (`bios/psx/`, `bios/saturn/`) made a populated volume read as empty — nested files are now found, and *present but misplaced* is reported distinctly from *absent*, since libretro cores read the system root |
 | **FEAT-D6** | **Free game claiming** seamless when a store account is linked; deeplink only as fallback | Ownership/account linking dependency |
 
 ---
@@ -88,6 +104,42 @@ audio is still fast, still glitchy, or clean, before touching individual cores.
 
 **A** first (fast, visible, low risk), then **B**, then **C** page-by-page, with **D** slices
 scheduled individually — each D item is comparable in size to a whole prior wave.
+
+---
+
+## Open set — reconciled 2026-08-13
+
+This file went two days without absorbing the shipped work, so a reader could have taken closed items
+as open and, worse, taken EMU-1's superseded root cause as current. Reconciled against
+[ui-debt-log.md](../dev/ui-debt-log.md), which stayed current throughout.
+
+**The four big rocks** (each its own slice):
+
+| Item | Where it is tracked |
+|---|---|
+| **Emulator player chrome** — volume · power · reset · pause, per-system UI | UID-007 · FEAT-D5 above (clock fix done; chrome open) |
+| **Libraries & Scans overhaul** — auto-scan / library-maker unification, library tools incorporated | extends UX-C2 · UX-C3 |
+| **Card layout redesign** — surfaces are unified, individual layouts untouched | extends UX-B5 |
+| **GOG / Epic live sync** | genuinely unimplemented API work, **not** a config gap — the distinction matters, since FEAT-D6 free-game claiming depends on it. **Still unbuilt as of 2026-08-14, deliberately: neither store has a documented ownership API.** GOG's community route is a session token lifted from a browser login — undocumented, breaks without warning, and a poor thing to ask a household to maintain. Epic's is reachable only through the launcher's auth flow. Both need a decision about depending on an unofficial surface before either is worth writing; guessing at endpoints would ship code that looks finished and is not. **The dishonesty around it was fixed instead:** linking GOG or Epic looked identical to linking Steam, produced a one-time list, then never refreshed with nothing saying so. `STORE_SYNC_MODE` now states per store whether a register is `live` or a `snapshot`; the ownership summary carries `sync_mode` / `live_sync` / `last_synced_at` so the UI can say "snapshot from three weeks ago"; and the poller **refuses to start** if a store is advertised live without a working handler. Unknown stores default to `snapshot` — the safe direction to be wrong in |
+
+**Smaller, still open** — these are easy to lose behind the big rocks, which is exactly what the
+grouping at the top of this file was meant to prevent:
+
+| Item | State |
+|---|---|
+| **UID-008a** / UX-B6 | `LoadingOverlay` + 6 animated motifs exist, but ~47 classic Jinja pages still render `.gt-spinner` — the motifs shipped SPA-only |
+| **UX-C8** | `DataTable` migration incomplete — `OpsPage`, `pages.jsx`, `ProposeLeafLibraries`, `ImportLeafLibraries` still hand-rolled |
+| **UID-014** | `MetricStrip` extracted and adopted on Users + firmware; Support · Invites · Storage · Extensions still to go |
+| **UX-B7** | Admin-side toast adoption, and gating game announcements on library-add **completion** (needs the backend signal) |
+| **UID-006** | Presets can diverge on geometry now that the scales exist; the art seat still has to author the packs |
+| **UX-B4** | Game details dead space — row sizes to the summary, but later sections still do not flow up beside the rail |
+
+**Awaiting your verification, not our work** — both are blocked on a real machine, so they will sit
+here indefinitely unless explicitly retested:
+
+* **EMU-1** — the refresh-rate fix cannot be confirmed on a 60Hz panel. Needs a >60Hz display.
+* **UX-A4** — ownership link not reproduced; needs a retest after redeploy, with the server log line if
+  it still 404s.
 
 ## Stance reversals — decided 2026-08-03
 

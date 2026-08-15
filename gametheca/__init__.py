@@ -108,9 +108,21 @@ def create_app():
             'enable_activity_feed': bool(
                 app.config.get('ENABLE_ACTIVITY_FEED', True)
             ),
-            # UIR-1: two-bar chrome. Off by default until the pages adopt it,
-            # so this ships dark rather than half-applied.
-            'enable_new_chrome': bool(app.config.get('ENABLE_NEW_CHROME', False)),
+            # UIR-1: two-bar chrome. Default flipped **on** (W27-A3).
+            #
+            # The old comment said "off until the pages adopt it, so this ships
+            # dark rather than half-applied". The pages did adopt it — all
+            # eleven carry the branch — and the shell stopped being optional
+            # when TopNav.jsx was deleted and SideRail/TopBar became the only
+            # chrome App.jsx renders. So an unset flag produced exactly the
+            # half-applied state it was meant to prevent, just the other way
+            # round: the new shell naming the page in bar one, with every page
+            # still rendering its own title card underneath.
+            #
+            # Operators can still set ENABLE_NEW_CHROME=false to get the old
+            # page headers back, but there is no longer an old shell to pair
+            # them with, so that is a stopgap rather than a supported look.
+            'enable_new_chrome': bool(app.config.get('ENABLE_NEW_CHROME', True)),
         }
 
     @app.before_request
@@ -210,6 +222,13 @@ def create_app():
                 start_free_games_scheduler(app)
             except Exception as exc:
                 print(f"[FREE GAMES] Could not start: {exc}")
+            try:
+                # Linked store accounts synced once at link time and then went
+                # stale (GT-B27) — the live call existed, nothing re-ran it.
+                from gametheca.utils.ownership_poller import start_ownership_scheduler
+                start_ownership_scheduler(app)
+            except Exception as exc:
+                print(f"[OWNERSHIP] Could not start: {exc}")
             try:
                 from gametheca.utils.email_digest_scheduler import start_email_digest_scheduler
                 start_email_digest_scheduler(app)

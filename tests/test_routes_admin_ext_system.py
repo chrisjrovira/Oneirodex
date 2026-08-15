@@ -346,8 +346,15 @@ class TestSystemLogsRoute:
 class TestDiscoverySectionsRoute:
     """Test the discovery_sections route."""
     
-    def test_discovery_sections_requires_login(self, client):
-        """Test that discovery sections page requires login."""
+    def test_discovery_sections_requires_login(self, client, configured_install):
+        """Test that discovery sections page requires login.
+
+        `configured_install` states the precondition this was relying on
+        without declaring — same as test_system_logs_requires_login above.
+        With no users in the table `is_setup_required()` is true and the
+        before_request hook sends anonymous requests to /setup, not /login, so
+        this passed only when some earlier test happened to leave a user behind.
+        """
         response = client.get('/admin/discovery_sections')
         assert response.status_code == 302
         assert 'login' in response.location
@@ -498,8 +505,8 @@ class TestCustomDiscoveryZones:
 class TestUpdateSectionOrderAPI:
     """Test the update_section_order API endpoint."""
     
-    def test_update_section_order_requires_login(self, client):
-        """Test that API requires login."""
+    def test_update_section_order_requires_login(self, client, configured_install):
+        """Test that API requires login (see the note on discovery_sections)."""
         data = {'sections': [{'id': 1, 'order': 1}]}
         response = client.post('/admin/api/discovery_sections/order', 
                              json=data, content_type='application/json')
@@ -668,8 +675,8 @@ class TestUpdateSectionOrderAPI:
 class TestUpdateSectionVisibilityAPI:
     """Test the update_section_visibility API endpoint."""
     
-    def test_update_section_visibility_requires_login(self, client):
-        """Test that API requires login."""
+    def test_update_section_visibility_requires_login(self, client, configured_install):
+        """Test that API requires login (see the note on discovery_sections)."""
         data = {'section_id': 1, 'is_visible': True}
         response = client.post('/admin/api/discovery_sections/visibility', 
                              json=data, content_type='application/json')
@@ -848,8 +855,8 @@ class TestSystemIntegration:
 class TestClearSystemLogsAPI:
     """Test the clear_system_logs API endpoint."""
     
-    def test_clear_logs_requires_login(self, client):
-        """Test that API requires login."""
+    def test_clear_logs_requires_login(self, client, configured_install):
+        """Test that API requires login (see the note on discovery_sections)."""
         response = client.delete('/admin/api/system_logs/clear')
         assert response.status_code == 302
         assert 'login' in response.location

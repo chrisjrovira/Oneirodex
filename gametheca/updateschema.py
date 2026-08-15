@@ -652,6 +652,26 @@ class DatabaseManager:
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS icon_pack VARCHAR(50) DEFAULT 'outline';
 
+        -- Per-member game-details layout. Nullable on purpose: NULL means
+        -- "follow the install default", which is not the same as an empty
+        -- layout, and a member who has never touched it should keep tracking
+        -- whatever the admin sets.
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS detail_layout TEXT;
+
+        -- Named arrangements, owned by the member who saved them.
+        CREATE TABLE IF NOT EXISTS detail_layout_presets (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            name VARCHAR(64) NOT NULL,
+            layout TEXT NOT NULL,
+            created TIMESTAMP DEFAULT NOW(),
+            CONSTRAINT uq_detail_preset_user_name UNIQUE (user_id, name)
+        );
+
+        CREATE INDEX IF NOT EXISTS ix_detail_layout_presets_user_id
+        ON detail_layout_presets (user_id);
+
         -- Theme font id (utils.theme_fonts). Orthogonal to theme + icon pack.
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS font VARCHAR(64) DEFAULT 'system-ui';
@@ -1366,6 +1386,19 @@ class DatabaseManager:
         WHERE id <> (SELECT MIN(id) FROM global_settings);
         """
 
+        # Collapsing on every boot only ever treated the symptom: between two
+        # boots any of the ~23 "create one if you find none" paths could add
+        # another, and the window that matters (concurrent first-boot workers,
+        # before any row exists) is exactly when several of them run at once.
+        #
+        # A unique index on a constant expression is how Postgres expresses
+        # "at most one row in this table" — there is no natural column to make
+        # unique, because the constraint is on the table's cardinality itself.
+        constraint_sql = """
+        CREATE UNIQUE INDEX IF NOT EXISTS global_settings_singleton
+        ON global_settings ((true));
+        """
+
         print("Checking for duplicate global settings rows...")
         try:
             with self.engine.begin() as connection:
@@ -1375,6 +1408,10 @@ class DatabaseManager:
                     print(f"Removed {removed} duplicate global settings row(s).")
                 else:
                     print("Global settings singleton is intact.")
+                # Must follow the DELETE: the index cannot be built while
+                # duplicates are still present.
+                connection.execute(text(constraint_sql))
+                print("Global settings singleton constraint is in place.")
         except Exception as e:
             print(f"Warning: Global settings cleanup failed: {e}")
             print("Application will continue...")

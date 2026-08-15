@@ -142,12 +142,17 @@ def test_game_extra(db_session, test_game):
 
 @pytest.fixture
 def global_settings(db_session):
-    """Create global settings."""
-    settings = GlobalSettings(
-        update_folder_name='Updates',
-        extras_folder_name='Extras'
-    )
-    db_session.add(settings)
+    """Configure global settings.
+
+    Configures the singleton rather than inserting a row: global_settings now
+    carries a single-row index, so adding one here failed outright whenever a
+    row already existed.
+    """
+    from gametheca.utils.global_settings import global_settings_row_or_create
+
+    settings = global_settings_row_or_create()
+    settings.update_folder_name = 'Updates'
+    settings.extras_folder_name = 'Extras'
     db_session.commit()
     return settings
 

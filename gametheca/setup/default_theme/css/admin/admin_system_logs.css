@@ -5,42 +5,42 @@
     border-spacing: 0;
     width: 100%;
     margin-bottom: 1rem;
-    background: var(--gt-surface, var(--table-bg));
-    color: var(--gt-text, var(--text-white));
+    background: var(--gt-surface);
+    color: var(--gt-text);
 }
 
 /* Row styling for different event levels */
 .log-level-information {
-    background-color: color-mix(in srgb, var(--gt-info, var(--btn-info)) 8%, transparent) !important;
+    background-color: color-mix(in srgb, var(--gt-info) 8%, transparent) !important;
 }
 
 .log-level-warning {
-    background-color: color-mix(in srgb, var(--gt-warning, var(--btn-warning)) 8%, transparent) !important;
+    background-color: color-mix(in srgb, var(--gt-warning) 8%, transparent) !important;
 }
 
 .log-level-error {
-    background-color: color-mix(in srgb, var(--gt-danger, var(--btn-danger)) 8%, transparent) !important;
+    background-color: color-mix(in srgb, var(--gt-danger) 8%, transparent) !important;
 }
 
 /* Text colors for different event levels */
 .log-level-information td:nth-child(3) {
-    color: var(--gt-info, var(--btn-info));
+    color: var(--gt-info);
     font-weight: 500;
 }
 
 .log-level-warning td:nth-child(3) {
-    color: var(--gt-warning, var(--btn-warning));
+    color: var(--gt-warning);
     font-weight: 500;
 }
 
 .log-level-error td:nth-child(3) {
-    color: var(--gt-danger, var(--btn-danger));
+    color: var(--gt-danger);
     font-weight: 500;
 }
 
 /* Hover effects */
 .table tbody tr:hover {
-    background-color: color-mix(in srgb, var(--gt-text, #fff) 8%, transparent) !important;
+    background-color: color-mix(in srgb, var(--gt-text) 8%, transparent) !important;
     transition: background-color 0.2s ease-in-out;
 }
 
@@ -59,43 +59,43 @@
 }
 
 .page-link {
-    background: var(--gt-surface, var(--table-bg-40-alt));
-    color: var(--gt-text, var(--text-white));
-    border: 1px solid var(--gt-border, var(--border-light));
+    background: var(--gt-surface);
+    color: var(--gt-text);
+    border: 1px solid var(--gt-border);
 }
 
 .page-link:hover {
-    background: var(--gt-surface-2, var(--table-hover-bg));
-    color: var(--gt-text, var(--text-white));
+    background: var(--gt-surface-2);
+    color: var(--gt-text);
 }
 
 .page-item.active .page-link {
-    background-color: var(--gt-accent, var(--btn-primary));
-    border-color: var(--gt-accent, var(--btn-primary));
-    color: var(--gt-accent-contrast, var(--text-white));
+    background-color: var(--gt-accent);
+    border-color: var(--gt-accent);
+    color: var(--gt-accent-contrast);
 }
 
 /* Back to Dashboard button styling */
 .btn-secondary {
-    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 20%, transparent);
-    color: var(--gt-text, var(--text-white));
-    border: 1px solid color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 40%, transparent);
+    background: color-mix(in srgb, var(--gt-accent) 20%, transparent);
+    color: var(--gt-text);
+    border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
     transition: all 0.3s ease;
 }
 
 .btn-secondary:hover {
-    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 40%, transparent);
+    background: color-mix(in srgb, var(--gt-accent) 40%, transparent);
     transform: translateY(-2px);
-    box-shadow: 0 0 20px color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 30%, transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--gt-accent) 30%, transparent);
 }
 
 /* Table header styling */
 .table thead th {
-    background: color-mix(in srgb, var(--gt-bg, #000) 20%, transparent);
-    border-bottom: 2px solid var(--gt-border, var(--border-light));
+    background: color-mix(in srgb, var(--gt-bg) 20%, transparent);
+    border-bottom: 2px solid var(--gt-border);
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.875rem;
     padding: 1rem;
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
 }

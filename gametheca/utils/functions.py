@@ -13,6 +13,7 @@ from gametheca.models import GlobalSettings
 from flask import url_for, current_app
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories
 from gametheca.utils.quality_profiles import active_exclude_terms_for_scan
+from gametheca.utils.global_settings import global_settings_row
 
 # Default cap for recursive size walks (NAS/Unraid trees can take minutes otherwise).
 _DEFAULT_FOLDER_SIZE_TIMEOUT_SEC = 60
@@ -206,7 +207,7 @@ def get_folder_size_in_bytes_updates(folder_path, timeout=_DEFAULT_FOLDER_SIZE_T
             print(f"Error: No read permission for path: {folder_path}")
             return 0
 
-        settings = db.session.execute(select(GlobalSettings)).scalars().first()
+        settings = global_settings_row()
         excluded = _excluded_size_folder_names(settings)
         timeout_sec = max(1, int(timeout or _DEFAULT_FOLDER_SIZE_TIMEOUT_SEC))
         deadline = time.monotonic() + timeout_sec

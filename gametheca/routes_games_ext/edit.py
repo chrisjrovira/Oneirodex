@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, copy_current_request_context, request, abort, current_app
+from flask import render_template, redirect, url_for, flash, request, abort, current_app
 from flask_login import login_required, current_user
 from gametheca.forms import AddGameForm
 from gametheca.models import Game, Library, Category, Developer, Publisher, Status
@@ -9,7 +9,7 @@ from gametheca.utils.security import is_safe_path, get_allowed_base_directories,
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.game_core import ensure_manual_identify_taxonomy
 from gametheca import db
-from threading import Thread
+from gametheca.utils.background import run_in_background
 from datetime import datetime, timezone
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy import select
@@ -286,11 +286,15 @@ def game_edit(game_uuid):
             if igdb_id_changed:
                 # Single flash message that will show progress spinner via JavaScript
                 flash('Game updated, downloading images', 'image-refresh')
-                @copy_current_request_context
-                def refresh_images_in_thread():
-                    refresh_images_in_background(game_uuid)
-                thread = Thread(target=refresh_images_in_thread, daemon=True)
-                thread.start()
+                # Own app context, own session (utils/background.py). `game_uuid`
+                # is already a plain string from the route, so nothing loaded in
+                # this request crosses into the worker.
+                run_in_background(
+                    current_app._get_current_object(),
+                    refresh_images_in_background,
+                    game_uuid,
+                    name=f'gametheca-refresh-images-{str(game_uuid)[:8]}',
+                )
                 current_app.logger.info(f"Refresh images thread started for game UUID: {game_uuid}")
                 # Store game_uuid in session so JavaScript can track progress
                 from flask import session

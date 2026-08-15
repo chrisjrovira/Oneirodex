@@ -12,6 +12,10 @@ import './TileSizeControl.css'
 
 const PREF_SAVE_DEBOUNCE_MS = 320
 
+/** Shorter than the save debounce: the transition should return as soon as the
+ *  drag stops, not wait for the round-trip that persists it. */
+const TILE_RESIZE_SETTLE_MS = 120
+
 export function applyTileSizeCssVars(sizeOrPercent) {
   const isNarrow =
     typeof window !== 'undefined' &&
@@ -33,6 +37,7 @@ export function TileSizeControl({
 }) {
   const percent = normalizeTilePercent(value)
   const saveTimerRef = useRef(0)
+  const resizeTimerRef = useRef(0)
 
   async function persist(normalized) {
     try {
@@ -46,6 +51,24 @@ export function TileSizeControl({
 
   function handleChange(nextPercent) {
     const normalized = normalizeTilePercent(nextPercent)
+
+    // Suppress the tile-size transition while the slider is moving (W27-B2).
+    //
+    // `html` transitions --gt-tile-min over 0.22s, which is right for a
+    // discrete change (restoring a saved preference) and wrong during a drag:
+    // the rendered size chases the slider a fifth of a second behind, and every
+    // grid reflow threshold is crossed mid-animation. Two things animating the
+    // same value — the transition and the user's finger — is what reads as the
+    // tiles jumping rather than tracking.
+    //
+    // The class is cleared shortly after input stops, so the transition is back
+    // in place before any programmatic change needs it.
+    document.documentElement.classList.add('is-tile-resizing')
+    window.clearTimeout(resizeTimerRef.current)
+    resizeTimerRef.current = window.setTimeout(() => {
+      document.documentElement.classList.remove('is-tile-resizing')
+    }, TILE_RESIZE_SETTLE_MS)
+
     applyTileSizeCssVars(normalized)
     onChange?.(String(normalized))
 

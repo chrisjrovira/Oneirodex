@@ -15,9 +15,9 @@
   min-height: 2.6rem;
   padding: 0.45rem 0.85rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 40%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #141820) 88%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
+  color: var(--gt-text);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -27,7 +27,7 @@
 
 .gt-chat-slide__launcher:hover,
 .gt-chat-slide__launcher:focus-visible {
-  border-color: var(--gt-accent, #2fd67b);
+  border-color: var(--gt-accent);
   outline: none;
 }
 
@@ -74,7 +74,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.65rem 0.85rem 0.45rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
   flex-shrink: 0;
 }
 
@@ -88,7 +88,7 @@
 .gt-chat-slide__sub {
   margin: 0.1rem 0 0;
   font-size: 0.75rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-chat-slide__header-actions {
@@ -125,7 +125,7 @@
 .gt-chat-slide__expand:focus-visible,
 .gt-chat-slide__close:hover,
 .gt-chat-slide__close:focus-visible {
-  border-color: var(--gt-accent, #2fd67b);
+  border-color: var(--gt-accent);
   outline: none;
 }
 

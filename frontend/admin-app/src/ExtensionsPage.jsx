@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { deleteJson, getJson, postJson } from './adminApi'
+import { MetricStrip } from './opsWidgets'
 import { showToast } from './utils/toast'
 
 /** Capability-language hint groups for scan recognition (no Class A brands). */
@@ -119,6 +120,17 @@ export function ExtensionsPage() {
     return items.filter((i) => i.value.includes(q))
   }, [items, filter])
 
+  // Counted from the full list, not `grouped` — that one is derived from the
+  // search filter, and a summary strip that shrinks as you type would be
+  // describing the search rather than the configuration.
+  const totals = useMemo(() => {
+    const counts = { archives: 0, disc: 0, cart: 0, other: 0 }
+    for (const item of items) {
+      counts[groupForValue(item.value)] += 1
+    }
+    return counts
+  }, [items])
+
   const grouped = useMemo(() => {
     const buckets = {
       archives: [],
@@ -230,6 +242,25 @@ export function ExtensionsPage() {
         as games when scanning folders — add archives, disc images, or cartridge dumps your libraries
         actually contain.
       </p>
+
+      {/* UID-014. An empty extension list is the state worth shouting about:
+          scans would recognise nothing at all, and the page otherwise reports
+          that as a quiet "0" in a table. */}
+      <MetricStrip
+        label="Extensions"
+        items={[
+          {
+            id: 'total',
+            label: 'Extensions',
+            value: items.length,
+            hint: 'recognised on scan',
+            tone: items.length === 0 ? 'action' : 'good',
+          },
+          { id: 'archives', label: 'Archives', value: totals.archives, tone: 'info' },
+          { id: 'disc', label: 'Disc images', value: totals.disc, tone: 'info' },
+          { id: 'cart', label: 'Cartridge', value: totals.cart, tone: 'info' },
+        ]}
+      />
 
       {error ? (
         <div className="gt-admin-banner gt-admin-banner--warn" role="status">

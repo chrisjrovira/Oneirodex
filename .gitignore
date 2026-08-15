@@ -111,7 +111,14 @@ gametheca/static/library/zips/
 gametheca/static/library/themes/
 
 # Docker library host path (default mount point for persistent library data)
-data/
+#
+# Root-anchored deliberately. As a bare `data/` this matched a directory of that
+# name at ANY depth, which silently swallowed `gametheca/data/` — package data
+# that is read at runtime and has to ship: the generated per-system loading
+# motifs and the Arr indexer presets. Both existed only on the machine that
+# generated them, so the features worked in dev and were missing in every built
+# image. Keep the leading slash.
+/data/
 
 # OS
 .DS_Store

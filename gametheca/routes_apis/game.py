@@ -1,8 +1,7 @@
 # /gametheca/routes_apis/game.py
 from datetime import datetime, timezone
-from threading import Thread
 
-from flask import copy_current_request_context, jsonify, request, url_for
+from flask import current_app, jsonify, request, url_for
 from flask_login import login_required, current_user
 from gametheca import db
 from gametheca.models import (
@@ -18,6 +17,7 @@ from gametheca.models import (
     user_favorites,
     user_game_status,
 )
+from gametheca.utils.background import run_in_background
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.game_core import get_game_by_uuid
 from gametheca.utils.game_details_payload import build_game_details_payload
@@ -653,11 +653,16 @@ def games_batch_refresh_images():
             skipped.append({'uuid': uid, 'reason': 'no_igdb_id', 'name': game.name})
             continue
         try:
-            @copy_current_request_context
-            def _run(game_uuid=uid):
-                refresh_images_in_background(game_uuid)
-
-            Thread(target=_run, daemon=True).start()
+            # One worker per game, each with its own app context and session
+            # (utils/background.py). Sharing the request's session here was the
+            # worst of the six sites: a batch queues up to
+            # BATCH_REFRESH_IMAGES_MAX threads onto one Session at once.
+            run_in_background(
+                current_app._get_current_object(),
+                refresh_images_in_background,
+                uid,
+                name=f'gametheca-refresh-images-{str(uid)[:8]}',
+            )
             queued.append({'uuid': uid, 'name': game.name, 'status': 'queued'})
         except Exception as exc:
             errors.append({'uuid': uid, 'name': getattr(game, 'name', None), 'error': str(exc)})

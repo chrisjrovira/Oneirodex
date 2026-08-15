@@ -9,8 +9,11 @@ from flask_login import login_required, current_user
 from sqlalchemy import select
 
 from gametheca import db, cache
-from gametheca.models import GlobalSettings
 from gametheca.utils.auth import admin_required
+from gametheca.utils.global_settings import (
+    global_settings_row,
+    global_settings_row_or_create,
+)
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.igdb_api import make_igdb_api_request
 from gametheca.utils.providers import get_steamgriddb_api_key, mask_api_key
@@ -272,12 +275,20 @@ def validate_settings_data(settings_data):
 
 
 def get_or_create_settings_record():
-    """Get existing settings record or create a new one."""
-    settings_record = db.session.execute(select(GlobalSettings)).scalars().first()
-    if not settings_record:
-        settings_record = GlobalSettings(settings={})
-        db.session.add(settings_record)
-        db.session.flush()  # Ensure record has an ID
+    """Get existing settings record or create a new one.
+
+    Creates through the shared helper rather than adding a row by hand: the
+    table now carries the single-row unique index, so a first-boot race here no
+    longer yields a harmless duplicate — it raises IntegrityError, which this
+    function did not handle and which would 500 the save and poison the
+    caller's transaction. global_settings_row_or_create() wraps the insert in a
+    SAVEPOINT and hands back the winner's row.
+    """
+    settings_record = global_settings_row_or_create()
+    if settings_record.settings is None:
+        # Callers index into `.settings` — a fresh row must start as a dict, not
+        # NULL, which is what the direct GlobalSettings(settings={}) gave it.
+        settings_record.settings = {}
     return settings_record
 
 
@@ -401,7 +412,7 @@ def new_server_settings():
         return update_settings()
     else:
         try:
-            settings_record = db.session.execute(select(GlobalSettings)).scalars().first()
+            settings_record = global_settings_row()
             current_settings = build_current_settings(settings_record)
             return render_template('admin/new_server_settings.html', current_settings=current_settings)
         except Exception as e:
@@ -416,7 +427,7 @@ def integrations():
     """Handle integrations page with tabbed email, IGDB, community, artwork, and OIDC settings."""
     try:
         # Get global settings for all integrations
-        settings_record = db.session.execute(select(GlobalSettings)).scalars().first()
+        settings_record = global_settings_row()
 
         # Build current settings for JavaScript consumption
         current_settings = build_current_settings(settings_record)
@@ -455,11 +466,7 @@ def integrations_igdb_save():
     """Handle IGDB settings save from integrations page."""
     try:
         data = request.json
-        settings = db.session.execute(select(GlobalSettings)).scalars().first()
-
-        if not settings:
-            settings = GlobalSettings()
-            db.session.add(settings)
+        settings = global_settings_row_or_create()
 
         # Validate input
         client_id = data.get('igdb_client_id', '').strip()
@@ -492,7 +499,7 @@ def integrations_igdb_test():
     """Handle IGDB settings test from integrations page."""
     try:
         logging.info("Testing IGDB connection from integrations page...")
-        settings = db.session.execute(select(GlobalSettings)).scalars().first()
+        settings = global_settings_row()
 
         if not settings or not settings.igdb_client_id or not settings.igdb_client_secret:
             return jsonify({
@@ -578,10 +585,7 @@ def community_chat_settings():
     """Persist BYO Stoat/Matrix community deep-link (no Discord)."""
     from gametheca.utils.security import validate_community_chat_url
 
-    settings = db.session.execute(select(GlobalSettings)).scalars().first()
-    if settings is None:
-        settings = GlobalSettings()
-        db.session.add(settings)
+    settings = global_settings_row_or_create()
 
     raw_url = (request.form.get('community_chat_url') or '').strip()
     label = (request.form.get('community_chat_label') or 'Open community').strip()[:120]

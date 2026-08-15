@@ -1,7 +1,7 @@
 /* Identify workbench — densified under .gt-adminpage / --gt-* tokens */
 
 .gt-identify .gt-identify__meta {
-    margin-bottom: var(--gt-adminpage-gap, 1.25rem);
+    margin-bottom: var(--gt-adminpage-gap);
 }
 
 .gt-identify .game-edit-library-labels {
@@ -10,14 +10,14 @@
     gap: 0.75rem 1.5rem;
     margin: 0;
     font-size: 0.95rem;
-    color: var(--gt-text-muted, #c4ccd8);
+    color: var(--gt-text-muted);
 }
 
 .gt-identify #library_display,
 .gt-identify #platform_display {
     font-size: 0.95rem;
     font-weight: 600;
-    color: var(--gt-text, #f2f4f8);
+    color: var(--gt-text);
     text-shadow: none;
 }
 
@@ -36,7 +36,7 @@
 .gt-identify .game_edit-form-group-publisher {
     background: color-mix(in srgb, var(--gt-text) 4%, var(--gt-surface));
     padding: 0.85rem 1rem;
-    border-radius: var(--gt-adminpage-radius-sm, 8px);
+    border-radius: var(--gt-adminpage-radius-sm);
     margin-bottom: 0.85rem;
     border: 1px solid var(--gt-border);
 }
@@ -60,7 +60,7 @@
     background: var(--gt-surface-2);
     border: 1px solid var(--gt-border);
     color: var(--gt-text);
-    border-radius: var(--gt-adminpage-radius-sm, 8px);
+    border-radius: var(--gt-adminpage-radius-sm);
 }
 
 .gt-identify .form-control:focus {
@@ -73,7 +73,7 @@
 .gt-identify #search-results,
 .gt-identify .existing-game-results {
     background: color-mix(in srgb, var(--gt-text) 3%, var(--gt-surface));
-    border-radius: var(--gt-adminpage-radius-sm, 8px);
+    border-radius: var(--gt-adminpage-radius-sm);
     padding: 0.5rem;
     margin-top: 0.65rem;
     border: 1px solid var(--gt-border);
@@ -113,7 +113,7 @@
     margin-top: 0.85rem;
     background: color-mix(in srgb, var(--gt-text) 3%, var(--gt-surface));
     padding: 0.85rem;
-    border-radius: var(--gt-adminpage-radius-sm, 8px);
+    border-radius: var(--gt-adminpage-radius-sm);
     border: 1px solid var(--gt-border);
 }
 
@@ -161,7 +161,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: color-mix(in srgb, var(--gt-bg, #0b0d10) 72%, transparent);
+    background: color-mix(in srgb, var(--gt-bg) 72%, transparent);
 }
 
 .spinner-container {

@@ -15,16 +15,40 @@ html {
   transition: --gt-tile-min 0.22s ease, --gt-tile-gap 0.22s ease;
 }
 
+/* Set by TileSizeControl while the slider is moving (W27-B2). During a drag the
+   user's input *is* the animation; easing on top of it makes the tiles lag the
+   handle and cross grid reflow thresholds mid-transition, which is the jump.
+   The gap transition on the grids themselves is suppressed for the same reason. */
+html.is-tile-resizing,
+html.is-tile-resizing .game-library-container[data-library-grid]:not([data-library-virtual]),
+html.is-tile-resizing .game-library-row {
+  transition: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     transition: none;
   }
 }
 
+/* auto-fill, deliberately — do NOT change this to auto-fit.
+ *
+ * It was briefly auto-fit for W27-B1, on the theory that empty tracks were
+ * stopping tiles filling the width. That was wrong twice over. The tracks are
+ * already `1fr`, so auto-fill spreads them across the full container anyway;
+ * and collapsing the empty tracks means any row holding fewer items than fit —
+ * the last row of a page, a short filtered result, a partially filled
+ * virtualiser row — stretches its tiles across the whole width. That produced
+ * single covers rendered several thousand pixels wide, reported with
+ * screenshots.
+ *
+ * auto-fill keeps the empty tracks so a lone tile stays tile-sized. If the grid
+ * genuinely fails to fill the viewport, look at the container's width (rail
+ * offset, gutters, max-width) rather than at the track-repeat mode. */
 .game-library-container[data-library-grid]:not([data-library-virtual]) {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min, 180px), 1fr));
-  gap: var(--gt-tile-gap, 10px);
+  grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min), 1fr));
+  gap: var(--gt-tile-gap);
   align-items: start;
   transition: gap 0.22s ease;
 }
@@ -35,8 +59,8 @@ html {
 
 .game-library-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min, 180px), 1fr));
-  gap: var(--gt-tile-gap, 10px);
+  grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min), 1fr));
+  gap: var(--gt-tile-gap);
   align-items: start;
   box-sizing: border-box;
   transition: gap 0.22s ease;

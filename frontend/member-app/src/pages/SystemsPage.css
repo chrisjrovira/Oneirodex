@@ -11,70 +11,76 @@
   color: var(--gt-text-muted);
 }
 
+/* Systems browser (GT-B20).
+ *
+ * Was a dense grid of 11.5rem x 4.25rem rows — a phone-sized list rendered on a
+ * desktop, which is what read as cramped. Reworked toward the Provenance
+ * systems view (large per-system identity, art doing the work) but *scaled to
+ * the viewport* rather than reproducing a handheld layout: fewer, larger cards
+ * with the console mark as the hero and the counts as supporting detail.
+ *
+ * Sizes come from the density tokens, so admin/compact surfaces still get a
+ * tight version of the same card rather than a second design.
+ */
 .gt-systems-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(13rem, 18vw, 19rem), 1fr));
+  gap: var(--gt-tile-gap);
 }
 
 .gt-systems-tile {
+  /* Column, not row: the mark gets to be big, which is the whole point of the
+     reference. A horizontal row caps the mark at the line height. */
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-height: 4.25rem;
-  padding: 0.75rem 0.85rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gt-space-3);
+  min-height: 9.5rem;
+  padding: var(--gt-card-pad);
   text-decoration: none;
   color: var(--gt-text);
-  background: var(--gt-glass-bg, rgba(20, 24, 32, 0.72));
-  border: 1px solid var(--gt-glass-border, rgba(255, 255, 255, 0.14));
-  border-radius: 10px;
-  backdrop-filter: blur(var(--gt-glass-blur, 12px));
-  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.gt-systems-tile__main {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1 1 auto;
-  min-width: 0;
-  text-decoration: none;
-  color: inherit;
-}
-
-.gt-systems-tile__set-link {
-  flex-shrink: 0;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: var(--gt-accent, #2fd67b);
-  border: 1px solid currentColor;
-  border-radius: 6px;
-  padding: 0.2rem 0.4rem;
+  background: var(--gt-card-bg);
+  border: 1px solid var(--gt-card-border);
+  border-radius: var(--gt-tile-radius);
+  /* No backdrop blur: these sit on the page, not over content, and blurring
+     nothing costs a compositing layer per card. */
+  transition:
+    border-color var(--gt-motion-fast) var(--gt-motion-ease),
+    background-color var(--gt-motion-fast) var(--gt-motion-ease);
 }
 
 .gt-systems-tile:hover,
 .gt-systems-tile:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-platform-accent, var(--gt-accent)) 55%, transparent);
-  outline: none;
+  border-color: color-mix(in srgb, var(--gt-platform-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--gt-platform-accent) 8%, var(--gt-card-bg));
+}
+
+.gt-systems-tile__main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gt-space-3);
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
 }
 
 .gt-systems-tile__mark {
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 8px;
+  /* The hero. Roughly 2.5x the old 2.35rem so the console reads at a glance
+     across the grid, which is what the reference gets right. */
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--gt-radius-lg);
   color: var(--gt-accent-contrast);
-  background: var(--gt-platform-accent, var(--gt-accent));
+  background: var(--gt-platform-accent);
 }
 
 .gt-systems-tile__mark svg {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 2.4rem;
+  height: 2.4rem;
 }
 
 .gt-systems-group[data-family='nintendo'] .gt-systems-tile__mark {
@@ -112,9 +118,11 @@
 }
 
 .gt-systems-tile__name {
-  font-size: 0.92rem;
+  /* Scales with the card — the system name is the label for a hero mark now,
+     not a row title. */
+  font-size: var(--gt-font-lg);
   font-weight: 600;
-  line-height: 1.25;
+  line-height: var(--gt-line-tight);
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -123,12 +131,12 @@
 }
 
 .gt-systems-tile__count {
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--gt-space-2);
 }
 
 .gt-systems-tile__mode {
@@ -143,7 +151,7 @@
 }
 
 .gt-systems-tile__mode--browser {
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
 }
 
 .gt-systems-tile__mode--companion {
@@ -159,7 +167,7 @@
   display: block;
   margin-top: 0.2rem;
   font-size: 0.72rem;
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
 }
 
 .gt-systems-tile__completion a {
@@ -183,9 +191,9 @@
   font-size: 0.65rem;
   line-height: 1.2;
   text-decoration: none;
-  color: var(--gt-text, #e8e8e8);
-  background: color-mix(in srgb, var(--gt-surface, #1a1a1a) 80%, transparent);
-  border: 1px solid color-mix(in srgb, var(--gt-border, #444) 70%, transparent);
+  color: var(--gt-text);
+  background: color-mix(in srgb, var(--gt-surface) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
 }
 
 .gt-systems-tile__region-pct {
@@ -193,8 +201,8 @@
 }
 
 .gt-systems-tile__region--high {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 70%, transparent);
-  color: var(--gt-accent, #2fd67b);
+  border-color: color-mix(in srgb, var(--gt-accent) 70%, transparent);
+  color: var(--gt-accent);
 }
 
 .gt-systems-tile__region--mid {
@@ -214,7 +222,7 @@
 .gt-systems-exports {
   margin-top: 2rem;
   padding-top: 1.25rem;
-  border-top: 1px solid color-mix(in srgb, var(--gt-glass-border, rgba(255, 255, 255, 0.14)) 80%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--gt-glass-border) 80%, transparent);
 }
 
 .gt-systems-exports__lede {
@@ -249,7 +257,7 @@
       color-mix(in srgb, var(--gt-room-glow, #ffb765) 14%, transparent),
       transparent 58%
     ),
-    color-mix(in srgb, var(--gt-room-backdrop, #1a1410) 78%, var(--gt-surface, #141820));
+    color-mix(in srgb, var(--gt-room-backdrop, #1a1410) 78%, var(--gt-surface));
 }
 
 .gt-systems-tile[data-room]:hover,
@@ -261,7 +269,7 @@
 }
 
 .gt-systems-tile[data-room] .gt-systems-tile__name {
-  color: color-mix(in srgb, var(--gt-room-accent, #e8c07d) 85%, var(--gt-text, #f2f4f8));
+  color: color-mix(in srgb, var(--gt-room-accent, #e8c07d) 85%, var(--gt-text));
 }
 
 /* Ambience: a light suggestion of the setting, never enough to fight the text. */

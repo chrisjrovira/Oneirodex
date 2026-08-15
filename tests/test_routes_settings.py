@@ -646,3 +646,34 @@ class TestSettingsPanel:
             assert response_data['success'] is False
             assert response_data['message'] == 'Form validation failed'
             assert 'errors' in response_data
+
+class TestFontPickerIsReachable:
+    """Changing the font must be findable, not merely implemented (W27-E3).
+
+    Reported as "I don't see how to change fonts". Every piece exists — a
+    `font` column on UserPreference, a registry in utils/theme_fonts, a
+    SelectField whose choices come from available_fonts(), and the markup in
+    modal_preferences.html. The question is whether the panel a member actually
+    opens renders any of it, which nothing asserted.
+    """
+
+    def test_settings_panel_renders_the_font_select(self, client, test_user):
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(test_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/settings_panel')
+
+        assert response.status_code == 200
+        body = response.get_data(as_text=True)
+        assert 'fontSelect' in body, (
+            'the font picker is missing from the preferences panel — the '
+            'feature is unreachable even though the form field exists'
+        )
+
+    def test_font_choices_include_more_than_the_default(self, app):
+        """A picker offering one option is indistinguishable from no picker."""
+        from gametheca.utils.theme_fonts import available_fonts
+
+        with app.app_context():
+            assert len(available_fonts()) > 1

@@ -20,9 +20,9 @@
   gap: 1rem;
   height: 3rem;
   padding: 0 0.9rem;
-  background: var(--gt-surface, #141a24);
-  border-bottom: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  color: var(--gt-text, #f2f4f8);
+  background: var(--gt-surface);
+  border-bottom: 1px solid var(--gt-border);
+  color: var(--gt-text);
 }
 
 .gt-appbar__brand {
@@ -56,23 +56,23 @@
   padding: 0.35rem 0.6rem;
   border-radius: 6px;
   font-size: 0.85rem;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   text-decoration: none;
   white-space: nowrap;
   transition: background 0.14s ease, color 0.14s ease;
 }
 
 .gt-appbar__link:hover {
-  background: color-mix(in srgb, var(--gt-text, #f2f4f8) 8%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  background: color-mix(in srgb, var(--gt-text) 8%, transparent);
+  color: var(--gt-text);
 }
 
 /* Underline rather than a filled pill: the active *destination* should read
    quieter than the active *view* in bar two, which is what people change. */
 .gt-appbar__link.is-active {
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
   font-weight: 600;
-  box-shadow: inset 0 -2px 0 var(--gt-accent, #2fd67b);
+  box-shadow: inset 0 -2px 0 var(--gt-accent);
 }
 
 .gt-appbar__spacer {
@@ -88,17 +88,21 @@
 
 /* ---------- bar two: context ---------- */
 
+/* Page controls, living inside the top bar (one-bar layout).
+ *
+ * This used to be a full-width sticky row of its own with its own surface and
+ * bottom border — which is exactly why it read as "a toolbar on the page"
+ * rather than as chrome. Now it portals into `#gt-topbar-slot`, so it must
+ * carry no background, no border and no stickiness of its own: the bar it sits
+ * in already provides all three, and repeating them drew a box inside a box.
+ *
+ * The in-place fallback (Big Picture, pop-out hosts, tests) keeps working
+ * because a bare flex row is a reasonable rendering anywhere. */
 .gt-contextbar {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  min-height: 2.6rem;
-  padding: 0.35rem 0.9rem;
-  background: var(--gt-surface, #141a24);
-  border-bottom: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  position: sticky;
-  top: 0;
-  z-index: 30;
+  min-width: 0;
 }
 
 .gt-contextbar__views {
@@ -121,7 +125,7 @@
 
 .gt-contextbar__count {
   font-size: 0.75rem;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   white-space: nowrap;
 }
 
@@ -129,17 +133,17 @@
 
 .gt-seg {
   display: inline-flex;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--gt-border);
   border-radius: 7px;
   overflow: hidden;
-  background: var(--gt-surface-2, #1c2230);
+  background: var(--gt-surface-2);
 }
 
 .gt-seg__item {
   appearance: none;
   border: 0;
   background: transparent;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   font-size: 0.8rem;
   padding: 0.35rem 0.75rem;
   cursor: pointer;
@@ -148,12 +152,12 @@
 }
 
 .gt-seg__item + .gt-seg__item {
-  border-left: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  border-left: 1px solid var(--gt-border);
 }
 
 .gt-seg__item:hover {
-  color: var(--gt-text, #f2f4f8);
-  background: color-mix(in srgb, var(--gt-text, #f2f4f8) 7%, transparent);
+  color: var(--gt-text);
+  background: color-mix(in srgb, var(--gt-text) 7%, transparent);
 }
 
 .gt-seg__item[aria-pressed='true'],
@@ -162,13 +166,13 @@
    which nothing would ever move off the first segment. */
 .gt-seg__item.active,
 .gt-seg__item.is-active {
-  background: var(--gt-accent, #2fd67b);
-  color: var(--gt-bg, #0b0d10);
+  background: var(--gt-accent);
+  color: var(--gt-bg);
   font-weight: 600;
 }
 
 .gt-seg__item:focus-visible {
-  outline: 2px solid var(--gt-accent, #2fd67b);
+  outline: 2px solid var(--gt-accent);
   outline-offset: -2px;
 }
 
@@ -182,36 +186,36 @@
   font-size: 0.78rem;
   padding: 0.35rem 0.6rem;
   border-radius: 7px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--gt-border);
   background: transparent;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   cursor: pointer;
   white-space: nowrap;
   transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
 }
 
 .gt-cbtn:hover {
-  color: var(--gt-text, #f2f4f8);
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 45%, transparent);
+  color: var(--gt-text);
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
 }
 
 .gt-cbtn:focus-visible {
-  outline: 2px solid var(--gt-accent, #2fd67b);
+  outline: 2px solid var(--gt-accent);
   outline-offset: 1px;
 }
 
 .gt-cbtn--primary {
-  background: var(--gt-accent, #2fd67b);
-  border-color: var(--gt-accent, #2fd67b);
-  color: var(--gt-bg, #0b0d10);
+  background: var(--gt-accent);
+  border-color: var(--gt-accent);
+  color: var(--gt-bg);
   font-weight: 600;
 }
 
 /* Active filters must stay visible from the collapsed state. Without this
    badge a popover silently hides why the grid looks empty. */
 .gt-cbtn.is-on {
-  color: var(--gt-text, #f2f4f8);
-  border-color: var(--gt-accent, #2fd67b);
+  color: var(--gt-text);
+  border-color: var(--gt-accent);
 }
 
 .gt-cbtn__count {
@@ -222,8 +226,8 @@
   height: 1.05rem;
   padding: 0 0.28rem;
   border-radius: 999px;
-  background: var(--gt-accent, #2fd67b);
-  color: var(--gt-bg, #0b0d10);
+  background: var(--gt-accent);
+  color: var(--gt-bg);
   font-size: 0.68rem;
   font-weight: 700;
 }
@@ -247,8 +251,8 @@
   overscroll-behavior: contain;
   padding: 0.75rem;
   border-radius: 10px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: var(--gt-surface-2, #1c2230);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
@@ -263,7 +267,7 @@
 .gt-pop__title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 /* ---------- mobile ---------- */

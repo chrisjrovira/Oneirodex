@@ -1,4 +1,17 @@
-:root {
+/* Standalone defaults only — the theme must win (GT-A3).
+ *
+ * base_admin.html loads the active theme's gt-tokens.css and *then* this
+ * bundle. As a plain `:root` block these had equal specificity and came later,
+ * so they overrode the theme: every admin page rendered in the default green
+ * regardless of the preset the user picked, while the member app followed the
+ * theme correctly. That is the single largest reason admin and member looked
+ * like two different products.
+ *
+ * `:where()` has zero specificity, so a theme's `:root` now always wins no
+ * matter the load order, while `npm run dev` against this app alone still has
+ * a full token set to render with. Do not turn this back into a bare `:root`.
+ */
+:where(:root) {
   --gt-bg: #0b0d10;
   --gt-surface: #141820;
   --gt-surface-2: #1c2230;
@@ -172,26 +185,10 @@ body.admin-shell.modal-open > .modal-backdrop {
   background: color-mix(in srgb, var(--gt-text) 6%, transparent);
 }
 
-.gt-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
-  color: var(--gt-text);
-  text-decoration: none;
-  font: inherit;
-  font-size: 0.88rem;
-  cursor: pointer;
-}
-
-.gt-btn:hover {
-  border-color: color-mix(in srgb, var(--gt-accent) 40%, transparent);
-  color: var(--gt-accent);
-}
+/* .gt-btn came from gt-primitives.css all along; this file defined it twice
+   (GT-A4) — here, and again further down with a different fill and weight. The
+   later block silently won, so this one was dead code that still read as
+   authoritative. Both are gone; base_admin.html loads the primitive. */
 
 .gt-admin-metric {
   margin: 0.15rem 0;
@@ -416,37 +413,9 @@ body.admin-shell.modal-open > .modal-backdrop {
   color: var(--gt-text-muted);
 }
 
-.gt-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.85rem;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-accent) 18%, transparent);
-  color: var(--gt-text);
-  font: inherit;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.gt-btn:hover {
-  border-color: var(--gt-accent);
-}
-
-.gt-admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.92rem;
-}
-
-.gt-admin-table th,
-.gt-admin-table td {
-  text-align: left;
-  padding: 0.55rem 0.65rem;
-  border-bottom: 1px solid var(--gt-border);
-}
+/* Base table rules moved to DataTable.css (W27-C1). This copy had drifted to
+ * 0.92rem — noticeably larger than every other table in the admin — with its
+ * own padding and no header treatment at all. */
 
 .gt-admin-panel {
   padding: 1rem;
@@ -1302,14 +1271,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   border-color: color-mix(in srgb, var(--gt-accent) 80%, #2fd67b);
 }
 
-.gt-btn--ghost {
-  background: transparent;
-  border-color: var(--gt-border);
-}
-
-.gt-btn--ghost:hover {
-  border-color: var(--gt-accent);
-}
+/* .gt-btn--ghost moved to gt-primitives.css (GT-A4). */
 
 .gt-mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -1426,8 +1388,8 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-chip {
   appearance: none;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 35%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #1a2332) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
   color: inherit;
   border-radius: 999px;
   padding: 0.2rem 0.7rem;
@@ -1437,12 +1399,12 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-chip.is-active {
-  border-color: var(--gt-accent, #2fd67b);
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 22%, transparent);
+  border-color: var(--gt-accent);
+  background: color-mix(in srgb, var(--gt-accent) 22%, transparent);
 }
 
 .gt-chip:focus-visible {
-  outline: 2px solid var(--gt-accent, #2fd67b);
+  outline: 2px solid var(--gt-accent);
   outline-offset: 2px;
 }
 
@@ -1749,8 +1711,8 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.25rem;
   padding: 0.2rem 0.35rem 0.2rem 0.55rem;
   border-radius: 6px;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, var(--gt-border));
-  background: color-mix(in srgb, var(--gt-surface, #1a2332) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 28%, var(--gt-border));
+  background: color-mix(in srgb, var(--gt-surface) 82%, transparent);
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 0.82rem;
   line-height: 1.2;
@@ -1770,7 +1732,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-ext-chip--suggest:hover:not(:disabled),
 .gt-ext-chip--suggest:focus-visible {
   opacity: 1;
-  border-color: var(--gt-accent, #2fd67b);
+  border-color: var(--gt-accent);
   outline: none;
 }
 
@@ -1789,7 +1751,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   align-items: center;
   justify-content: center;
   min-width: 1.1rem;
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
   font-weight: 700;
 }
 
@@ -1809,7 +1771,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-ext-chip__remove:hover:not(:disabled),
 .gt-ext-chip__remove:focus-visible {
   color: var(--gt-text);
-  background: color-mix(in srgb, var(--gt-danger, #e85d5d) 22%, transparent);
+  background: color-mix(in srgb, var(--gt-danger) 22%, transparent);
   outline: none;
 }
 
@@ -1829,9 +1791,9 @@ body.admin-shell.modal-open > .modal-backdrop {
   pointer-events: auto;
   padding: 0.7rem 0.95rem;
   border-radius: 10px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
-  background: var(--gt-surface, #141820);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface);
+  color: var(--gt-text);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
   font-size: 0.92rem;
   line-height: 1.35;
@@ -1839,11 +1801,11 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-toast--success {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
 }
 
 .gt-toast--error {
-  border-color: color-mix(in srgb, var(--gt-danger, #ff6b6b) 65%, transparent);
+  border-color: color-mix(in srgb, var(--gt-danger) 65%, transparent);
 }
 
 .gt-toast--warn {
@@ -1892,7 +1854,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-settings-list li + li {
-  border-top: 1px solid var(--gt-border, rgba(255, 255, 255, 0.1));
+  border-top: 1px solid var(--gt-border);
 }
 
 .gt-settings-row {
@@ -1908,7 +1870,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-settings-row:hover,
 .gt-settings-row:focus-visible {
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 10%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 10%, transparent);
 }
 
 .gt-settings-row__title {
@@ -1920,7 +1882,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   flex: 1 1 16rem;
   min-width: 0;
   font-size: 0.84rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 @media (max-width: 720px) {
@@ -1947,7 +1909,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-provider-row + .gt-provider-row {
-  border-top: 1px solid var(--gt-border, rgba(255, 255, 255, 0.1));
+  border-top: 1px solid var(--gt-border);
 }
 
 .gt-provider-row__head {
@@ -1971,7 +1933,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   flex: 1 1 14rem;
   min-width: 0;
   font-size: 0.82rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-provider-row__links {
@@ -1988,7 +1950,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-provider-row__links li + li::before {
   content: '·';
   margin-right: 0.5rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 @media (max-width: 860px) {

@@ -126,7 +126,7 @@
 }
 
 .theme-apply-status.is-error {
-    color: var(--gt-danger, #ff6b6b);
+    color: var(--gt-danger);
     font-weight: 600;
 }
 
@@ -218,6 +218,15 @@
     gap: 0.55rem;
     min-height: 2.75rem;
     color: var(--gt-accent);
+}
+
+/* Caption under the specimen row (W27-E2). Takes the full row so it reads as a
+   note about the set rather than as another item in it. */
+.gt-themes-loading__note {
+    flex-basis: 100%;
+    margin: 0.15rem 0 0;
+    font-size: var(--gt-font-xs, 0.78rem);
+    color: var(--gt-text-muted);
 }
 
 .gt-themes-loading__actions {

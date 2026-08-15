@@ -31,6 +31,11 @@
     {# Primitives sit directly after tokens: they consume the scales and must be
        overridable by base.css and page CSS below. #}
     <link rel="stylesheet" href="{{ 'css/gt-primitives.css'|theme_asset }}">
+    {# Repoints Bootstrap's --bs-btn-* onto the GT scales. Must stay after
+       bootstrap.min.css above. #}
+    <link rel="stylesheet" href="{{ 'css/gt-bootstrap-bridge.css'|theme_asset }}">
+    <link rel="stylesheet" href="{{ 'css/gt-density.css'|theme_asset }}">
+    <link rel="stylesheet" href="{{ 'css/gt-shell.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/gt-chrome.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/gt-appbar.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/base.css'|theme_asset }}">
@@ -78,93 +83,21 @@
   or request.path.startswith('/user/invites')
 %}
 {% set hide_lhn = auth_shell or account_shell %}
+{# Auth/settings/setup keep the plain full-width body: they have no rail, and
+   a one-column grid would only add a wrapper for nothing. #}
 {% if not is_setup_mode and not hide_lhn %}
-<div id="sidebar" class="sidebar{% if admin_chrome %} collapsed{% endif %}">
-{% if current_user.is_authenticated %}
-    <div class="useraccount-minimenu-container">
-        <!-- User Account Icon at the Bottom Left -->
-        <div id="userAccountIcon" class="user-account-icon">
-            <img src="{{ url_for('static', filename=current_user.avatarpath) }}" alt="User Avatar" class="user-avatar"> <!-- Use the user's avatar if available -->
-            <span class="user-name">{{ current_user.name | capitalize }}</span>
-
-            {{ icons.icon('chevron-up', extra_class='user-expand-icon') }}
-        </div>
-
-        <!-- Expandable User Account Menu -->
-        <div id="userAccountMenu" class="user-account-menu hide">
-            <a href="{{ url_for('settings.settings_profile_view') }}" class="account-menu-option">{{ icons.icon('user') }} Profile</a>
-            <a href="{{ url_for('login.invites') }}" class="account-menu-option">{{ icons.icon('envelope') }} Invites</a>
-            <a href="#" class="account-menu-option" data-bs-toggle="modal" data-bs-target="#preferencesModal">{{ icons.icon('gear') }} Preferences</a>
-            <a href="{{ url_for('settings.account_pw') }}" class="account-menu-option">{{ icons.icon('key') }} Change Password</a>
-            <a href="{{ url_for('site.logout') }}" class="account-menu-option">{{ icons.icon('logout') }} Logout</a>
-        </div>
-    </div>
-    {% endif %}
-    <a href="/discover">
-        {% if show_logo %}
-            <div class="menu-logo-image">
-                <!-- Your CSS will apply here, displaying the logo -->
-            </div>
-        {% endif %}
-    </a>
-    
-    {% if show_version %}
-        <div class="version-display">
-            v{{ app_version }}
-        </div>
-    {% endif %}
-    
-    <div class="sidebar-header">
-        <button id="toggleSidebar" class="toggle-sidebar" aria-label="{{ _('Toggle navigation') }}">
-            {{ icons.icon('chevron-right', size=22, extra_class='icon-chevron') }}
-        </button>
-    </div>
-    <div class="sidebar-menu">
-        {% if current_user.is_authenticated %}
-            {% if show_discovery %}
-                <a href="{{ url_for('discover.discover') }}" class="sidebar-link">{{ icons.icon('discover') }}<span class="link-text">{{ _('Discover') }}</span></a>
-            {% endif %}
-            <a href="{{ url_for('library.library') }}" class="sidebar-link">{{ icons.icon('library') }}<span class="link-text">{{ _('Library') }}</span></a>
-            <a href="{{ url_for('download.downloads') }}" class="sidebar-link">{{ icons.icon('download') }}<span class="link-text">{{ _('Download') }}</span></a>
-            {% if show_favorites %}
-                <a href="{{ url_for('site.favorites') }}" class="sidebar-link">{{ icons.icon('favorites') }}<span class="link-text">{{ _('Favorites') }}</span></a>
-            {% endif %}
-            <a href="{{ url_for('member.collections_page') }}" class="sidebar-link">{{ icons.icon('collections') }}<span class="link-text">Collections</span></a>
-            <a href="{{ url_for('member.announcements_page') }}" class="sidebar-link">{{ icons.icon('news') }}<span class="link-text">News</span></a>
-            <a href="{{ url_for('member.wishlist_page') }}" class="sidebar-link">{{ icons.icon('wishlist') }}<span class="link-text">{{ _('Wishlist') }}</span></a>
-            <a href="{{ url_for('member.updates_page') }}" class="sidebar-link">{{ icons.icon('updates') }}<span class="link-text">Updates</span></a>
-            <a href="{{ url_for('member.playtime_page') }}" class="sidebar-link">{{ icons.icon('playtime') }}<span class="link-text">{{ _('Playtime') }}</span></a>
-            <a href="{{ url_for('member.calendar_page') }}" class="sidebar-link">{{ icons.icon('calendar') }}<span class="link-text">{{ _('Release calendar') }}</span></a>
-            <a href="{{ url_for('member.ownership_page') }}" class="sidebar-link">{{ icons.icon('ownership') }}<span class="link-text">{{ _('Ownership') }}</span></a>
-            <a href="{{ url_for('member.big_picture_page') }}" class="sidebar-link">{{ icons.icon('big-picture') }}<span class="link-text">{{ _('Big Picture') }}</span></a>
-            {% if enable_vr_browse %}
-            <a href="{{ url_for('member.vr_browse_page') }}" class="sidebar-link">{{ icons.icon('vr') }}<span class="link-text">VR</span></a>
-            {% endif %}
-            {% if show_trailers %}
-                <a href="{{ url_for('site.random_trailers') }}" class="sidebar-link">{{ icons.icon('trailers') }}<span class="link-text">Trailers</span></a>
-            {% endif %}
-
-            {% if current_user.role == 'admin' %}
-                <a href="/admin/dashboard" class="sidebar-link">{{ icons.icon('settings') }}<span class="link-text">{{ _('Settings') }}</span></a>
-            {% endif %}
-
-            {% if show_help_button %}
-                <a href="{{ url_for('site.helpfaq') }}" class="sidebar-link">{{ icons.icon('help') }}<span class="link-text">Help</span></a>
-            {% endif %}
-            
-        {% else %}
-            <a href="{{ url_for('login.login') }}" class="sidebar-link">{{ icons.icon('login') }}<span class="link-text">Login</span></a>
-            <a href="{{ url_for('login.register') }}" class="sidebar-link">{{ icons.icon('user-plus') }}<span class="link-text">Register</span></a>
-        {% endif %}
-        {% include 'games/library_filters.html' %}
-    </div>
-    
-</div>
+<div class="gt-shell" data-rail="expanded" id="gt-shell">
+{# Legacy #sidebar retired (GT-B2) — these partials emit the same markup and
+   classes as the React SideRail / TopBar, so Jinja pages, the member SPA and the
+   admin SPA all render one chrome from gt-shell.css. #}
+{% include 'partials/rail.html' %}
+{% include 'partials/topbar.html' %}
 {% endif %}
 <div id="content" class="{% if is_setup_mode or auth_shell %}setup-mode-content{% elif hide_lhn %} no-sidebar{% endif %}{% if admin_chrome %} collapsed{% endif %}">
     {% include 'partials/flash_messages.html' %}
     {% block content %}{% endblock %}
 </div>
+{% if not is_setup_mode and not hide_lhn %}</div>{% endif %}
 
 
 <!-- Add this near the end of base.html -->
@@ -189,58 +122,46 @@
         closeAllSubmenus();
     
         // Toggle sidebar
-        const toggleSidebar = document.getElementById("toggleSidebar");
-        if (toggleSidebar) {
-            toggleSidebar.addEventListener("click", function() {
-                console.log("Sidebar toggle clicked.");
-                document.getElementById("sidebar").classList.toggle("collapsed");
-                document.getElementById("content").classList.toggle("collapsed");
+        // Rail toggle (GT-B2). Replaces the #sidebar/#content .collapsed pair:
+        // the shell grid reads data-rail, and the same attribute drives the
+        // mobile drawer, so one control covers both like the React shells.
+        const railToggle = document.getElementById("gt-rail-toggle");
+        const shell = document.getElementById("gt-shell");
+        if (railToggle && shell) {
+            const RAIL_KEY = "gt-rail-state";
+            const mobile = () => window.matchMedia("(max-width: 900px)").matches;
+
+            // Match the React hook's persisted preference so collapsing on a
+            // Jinja page and collapsing in the SPA are the same setting.
+            try {
+                if (localStorage.getItem(RAIL_KEY) === "collapsed" && !mobile()) {
+                    shell.dataset.rail = "collapsed";
+                    railToggle.setAttribute("aria-expanded", "false");
+                }
+            } catch (e) { /* storage disabled — rail just will not remember */ }
+
+            railToggle.addEventListener("click", function() {
+                if (mobile()) {
+                    const open = shell.dataset.rail === "open";
+                    shell.dataset.rail = open ? "expanded" : "open";
+                    railToggle.setAttribute("aria-expanded", String(!open));
+                    return;
+                }
+                const collapsed = shell.dataset.rail === "collapsed";
+                shell.dataset.rail = collapsed ? "expanded" : "collapsed";
+                railToggle.setAttribute("aria-expanded", String(collapsed));
+                try {
+                    localStorage.setItem(RAIL_KEY, collapsed ? "expanded" : "collapsed");
+                } catch (e) { /* not fatal */ }
                 closeAllSubmenus();
             });
         }
     
-        // User account icon click event
-        const userAccountIcon = document.getElementById('userAccountIcon');
-        if (userAccountIcon) {
-            userAccountIcon.addEventListener('click', function() {
-                console.log("User account icon clicked.");
-
-                var menu = document.getElementById('userAccountMenu');
-                var icon = document.querySelector('.user-expand-icon');
-            
-                if (menu.classList.contains('hide')) {
-                    console.log("Menu is hidden, showing now.");
-                    menu.classList.remove('hide');
-                    menu.classList.add('show');
-                    icon.style.transform = 'rotate(180deg)';
-                } else {
-                    console.log("Menu is shown, hiding now.");
-                    menu.classList.remove('show');
-                    menu.classList.add('hide');
-                    icon.style.transform = 'rotate(0deg)';
-                }
-            });
-        }
-
-        document.addEventListener('click', function(event) {
-            const userAccountIcon = document.getElementById('userAccountIcon');
-            const userAccountMenu = document.getElementById('userAccountMenu');
-            const userExpandIcon = document.querySelector('.user-expand-icon');
-            
-            if (userAccountIcon && userAccountMenu && userExpandIcon) {
-                var isClickInsideIcon = userAccountIcon.contains(event.target);
-                var isClickInsideMenu = userAccountMenu.contains(event.target);
-
-                if (!isClickInsideIcon && !isClickInsideMenu) {
-                    // If the click is outside the userAccountIcon and userAccountMenu, close the menu
-                    userAccountMenu.classList.add('hide');
-                    userAccountMenu.classList.remove('show');
-                    userExpandIcon.style.transform = 'rotate(0deg)';
-                }
-            }
-        });
-        
-
+        // The account menu used to be #userAccountIcon / #userAccountMenu here,
+        // toggled by hand and rotated via .user-expand-icon. GT-B2 retired that
+        // markup with the sidebar: partials/rail.html renders the menu as a
+        // <details>, so open/close and click-outside are the browser's job and
+        // there is nothing left for this file to wire up.
 
         // Handling click events on sidebar links with submenu
         document.querySelectorAll('.sidebar-link.has-submenu').forEach(item => {

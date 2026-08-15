@@ -18,8 +18,8 @@
   gap: 0.65rem;
   padding: 0.75rem;
   border-radius: 14px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.14));
-  background: var(--gt-surface, #141820);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
@@ -39,7 +39,7 @@
 .gt-lightbox__title {
   margin: 0;
   font-size: 0.95rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
   font-weight: 600;
 }
 
@@ -47,9 +47,9 @@
   min-height: 2.2rem;
   padding: 0.35rem 0.75rem;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 40%, transparent);
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 14%, transparent);
-  color: var(--gt-accent, #2fd67b);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
+  color: var(--gt-accent);
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
@@ -59,16 +59,16 @@
 .gt-lightbox__fs-error {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-lightbox__close {
   width: 2.2rem;
   height: 2.2rem;
   border-radius: 999px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.14));
-  background: var(--gt-surface-2, #1c2230);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
+  color: var(--gt-text);
   font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
@@ -109,9 +109,9 @@
   width: 2.4rem;
   height: 2.4rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 40%, transparent);
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 14%, transparent);
-  color: var(--gt-accent, #2fd67b);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
+  color: var(--gt-accent);
   font-size: 1.5rem;
   cursor: pointer;
 }
@@ -135,7 +135,7 @@
     top: 50%;
     transform: translateY(-50%);
     z-index: 1;
-    background: color-mix(in srgb, var(--gt-surface, #141820) 82%, transparent);
+    background: color-mix(in srgb, var(--gt-surface) 82%, transparent);
   }
 
   .gt-lightbox__nav:first-of-type {

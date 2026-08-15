@@ -1,6 +1,10 @@
 # gametheca/utils/setup.py
 from gametheca import db
-from gametheca.models import User, GlobalSettings
+from gametheca.models import User
+from gametheca.utils.global_settings import (
+    global_settings_row,
+    global_settings_row_or_create,
+)
 from sqlalchemy import select
 from datetime import datetime, timezone
 
@@ -9,11 +13,25 @@ def is_setup_required():
     return not db.session.execute(select(User)).scalars().first()
 
 def get_or_create_global_settings():
-    """Get existing global settings or create a new instance"""
-    settings = db.session.execute(select(GlobalSettings)).scalars().first()
+    """Get existing global settings or create a new instance.
+
+    Reads via global_settings_row() so this module agrees with every other
+    reader about *which* row is the singleton. The bare `.first()` it used had
+    no ORDER BY, and the table is only a singleton by convention — with more
+    than one row present Postgres is free to return a different one per query,
+    so this could hand back a row that a caller had just configured a moment
+    earlier and see none of its values.
+
+    Creates through global_settings_row_or_create() for the same reason
+    get_or_create_settings_record does: the singleton unique index turns a
+    concurrent first-boot insert into an IntegrityError, and the helper's
+    SAVEPOINT is what makes that recoverable instead of a 500. The commit stays
+    here — callers of *this* function expect a persisted row — while the
+    helper's flush is what stage_setup_step relies on.
+    """
+    settings = global_settings_row()
     if not settings:
-        settings = GlobalSettings()
-        db.session.add(settings)
+        settings = global_settings_row_or_create()
         db.session.commit()
     return settings
 
@@ -74,10 +92,16 @@ def get_setup_redirect_url():
     """Get the appropriate setup URL for the current step"""
     if is_setup_required():
         return '/setup'
-    
+
     current_step = get_current_setup_step()
     if current_step == 1:
-        return '/setup'
+        # A user exists but the wizard still thinks it is on step 1 — the state
+        # the old non-atomic setup_submit could strand an install in. Returning
+        # '/setup' here is what made it a loop, because /setup redirects back to
+        # this function. Step 1 *is* "create the admin account", and that is
+        # provably done, so advance instead of bouncing.
+        set_setup_step(2)
+        return '/setup/smtp'
     elif current_step == 2:
         return '/setup/smtp'
     elif current_step == 3:
@@ -86,3 +110,28 @@ def get_setup_redirect_url():
         return '/setup/igdb'
     else:
         return '/setup'  # Default fallback
+
+def stage_setup_step(step):
+    """Set the setup step on the current session WITHOUT committing.
+
+    set_setup_step() commits, which is wrong when the caller is mid-transaction:
+    the admin account and its step advance have to succeed or fail together, or
+    a failure between them strands the install on step 1 with a user present —
+    a state get_setup_redirect_url() turns into an endless /setup redirect.
+
+    Callers own the commit. Note this must not call
+    get_or_create_global_settings(): on a fresh install there is no settings row
+    (is_setup_required short-circuits before anything would create one), so that
+    helper would commit the caller's pending admin user alongside a settings row
+    still holding the column default of step 1 — reopening the very window this
+    function exists to close.
+
+    global_settings_row_or_create() is the canonical create-without-commit read:
+    it flushes, so the row is usable immediately but still rolls back with the
+    caller's transaction.
+    """
+    settings = global_settings_row_or_create()
+    settings.setup_in_progress = True
+    settings.setup_current_step = step
+    settings.setup_completed = False
+    settings.last_updated = datetime.now(timezone.utc)

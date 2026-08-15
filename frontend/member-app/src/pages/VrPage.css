@@ -1,9 +1,9 @@
 .gt-vr {
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-vr__status {
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
 }
 
 .gt-vr__error-detail {
@@ -21,8 +21,8 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.75rem;
-  background: var(--gt-surface, #141820);
-  border: 1px solid var(--gt-border, #2a3140);
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
   border-radius: 8px;
   color: inherit;
   font: inherit;
@@ -53,14 +53,14 @@
   align-items: center;
   gap: 0.75rem;
   margin-top: 1rem;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
 }
 
 .gt-vr__pager button,
 .gt-vr__back {
   padding: 0.6rem 1rem;
   background: transparent;
-  border: 1px solid var(--gt-border, #2a3140);
+  border: 1px solid var(--gt-border);
   border-radius: 4px;
   color: inherit;
   font: inherit;
@@ -81,8 +81,8 @@
 .gt-vr__detail {
   margin-top: 1.25rem;
   padding: 1rem;
-  background: var(--gt-surface, #141820);
-  border: 1px solid var(--gt-border, #2a3140);
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
   border-radius: 8px;
 }
 
@@ -92,5 +92,5 @@
 }
 
 .gt-vr__meta {
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
 }

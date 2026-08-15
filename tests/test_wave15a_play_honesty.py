@@ -118,7 +118,12 @@ def test_browse_play_fields_firmware_present(monkeypatch):
     )
     monkeypatch.setattr(
         'gametheca.utils.emulator_bios.list_bios_files',
-        lambda: [{'name': 'scph5501.bin', 'size': 512 * 1024}],
+        lambda: [{
+            'name': 'scph5501.bin',
+            'size': 512 * 1024,
+            'subdir': '',
+            'loadable': True,
+        }],
     )
 
     fields = browse_play_fields(game)
@@ -126,6 +131,42 @@ def test_browse_play_fields_firmware_present(monkeypatch):
     assert fields['firmware_missing'] is False
     assert fields['bios']['ready'] is True
     assert 'scph5501.bin' in fields['bios']['present']
+
+
+def test_browse_play_fields_firmware_in_subfolder_still_blocks(monkeypatch):
+    """A BIOS one directory down is present on disk and still will not load.
+
+    list_bios_files() walks subdirectories, so the file is *found* — but
+    libretro cores read the firmware root only. Counting it as present hands
+    the member an enabled Play button for a core that then fails to boot,
+    which is worse than the honest block.
+    """
+    library = SimpleNamespace(platform=SimpleNamespace(name='PSX'))
+    game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
+
+    monkeypatch.setattr(
+        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        lambda _p: {'emulators': ['mednafen_psx_hw'], 'preferred': 'mednafen_psx_hw'},
+    )
+    monkeypatch.setattr(
+        'gametheca.utils.play_url.core_is_browser_playable',
+        lambda c: c == 'mednafen_psx_hw',
+    )
+    monkeypatch.setattr(
+        'gametheca.utils.emulator_bios.list_bios_files',
+        lambda: [{
+            'name': 'scph5501.bin',
+            'size': 512 * 1024,
+            'subdir': 'psx',
+            'loadable': False,
+        }],
+    )
+
+    fields = browse_play_fields(game)
+    assert fields['bios_required'] is True
+    assert fields['firmware_missing'] is True
+    assert fields['bios']['ready'] is False
+    assert 'scph5501.bin' in fields['bios']['missing']
 
 
 def test_browse_play_fields_no_bios_for_nes(monkeypatch):

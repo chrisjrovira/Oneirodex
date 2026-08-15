@@ -31,7 +31,7 @@ body {
 /* Section headings and circle buttons now hold inline SVG (.gt-icon) rather
    than a Font Awesome <i>; the accent token keeps them theme-driven. */
 .admin-section h3 .gt-icon {
-    color: var(--gt-accent, var(--btn-primary));
+    color: var(--gt-accent);
 }
 
 .admin-buttons {

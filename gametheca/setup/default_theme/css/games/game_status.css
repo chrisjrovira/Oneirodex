@@ -44,15 +44,15 @@
 /* Third in the top-right stack (see components.css for the shared vars). */
 .game-status-btn {
     position: absolute;
-    top: calc(var(--gt-tile-stack-top, 10px) + 2 * var(--gt-tile-stride, 36px));
+    top: calc(var(--gt-tile-stack-top) + 2 * var(--gt-tile-stride));
     bottom: auto;
     right: 10px;
-    width: var(--gt-tile-btn, 32px);
-    height: var(--gt-tile-btn, 32px);
-    background-color: var(--gt-tile-btn-bg, rgba(0, 0, 0, 0.7));
+    width: var(--gt-tile-btn);
+    height: var(--gt-tile-btn);
+    background-color: var(--gt-tile-btn-bg);
     backdrop-filter: blur(5px);
     border-radius: 6px;
-    border: var(--gt-tile-btn-border, 1px solid rgba(255, 255, 255, 0.2));
+    border: var(--gt-tile-btn-border);
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.2s ease;
@@ -68,15 +68,15 @@
 
 /* Badges clear the control stack — 3 buttons normally, 4 while selecting. */
 .game-card:has(.game-status-btn) > .popup-menu {
-    top: calc(var(--gt-tile-stack-top, 10px) + 3 * var(--gt-tile-stride, 36px));
+    top: calc(var(--gt-tile-stack-top) + 3 * var(--gt-tile-stride));
 }
 
 .game-card:has(.game-status-btn) .gt-badge-stack--top-right {
-    top: calc(var(--gt-tile-stack-top, 10px) + 3 * var(--gt-tile-stride, 36px) + 2px);
+    top: calc(var(--gt-tile-stack-top) + 3 * var(--gt-tile-stride) + 2px);
 }
 
 .game-card:has(.gt-tile-select) .gt-badge-stack--top-right {
-    top: calc(var(--gt-tile-stack-top, 10px) + 4 * var(--gt-tile-stride, 36px) + 2px);
+    top: calc(var(--gt-tile-stack-top) + 4 * var(--gt-tile-stride) + 2px);
 }
 
 .game-status-btn:hover {

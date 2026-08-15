@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+
+/** Slot in the top bar that page controls render into. */
+export const TOPBAR_SLOT_ID = 'gt-topbar-slot'
 
 /**
  * Bar two — everything the current page can do (UIR-1, Option B).
@@ -125,7 +129,16 @@ export function ContextBar({
   overflow = null,
   t = (key) => key,
 }) {
-  return (
+  const [slot, setSlot] = useState(null)
+
+  // Find the top bar's slot after mount, not during render: TopBar and the
+  // routed page mount in the same commit, so the node does not exist while this
+  // component is first rendering.
+  useEffect(() => {
+    setSlot(document.getElementById(TOPBAR_SLOT_ID))
+  }, [])
+
+  const content = (
     <div className="gt-contextbar">
       <SegmentedViews
         views={views}
@@ -151,4 +164,20 @@ export function ContextBar({
       </div>
     </div>
   )
+
+  // One bar, not two.
+  //
+  // This rendered as its own row under the top bar, which read as "a toolbar on
+  // the page" rather than as chrome — the thing the two-bar layout was supposed
+  // to stop. A page's controls belong beside the page's name, so the content
+  // portals into a slot in the top bar instead.
+  //
+  // Portalled rather than lifted into TopBar via props: every page already
+  // feeds this component, so moving the render target moves all of them at
+  // once, and each page keeps owning its own handlers. Same pattern the library
+  // filters already use with #gt-rail-slot.
+  //
+  // Falls back to rendering in place when there is no top bar — Big Picture,
+  // the pop-out chat host, and tests — rather than vanishing.
+  return slot ? createPortal(content, slot) : content
 }

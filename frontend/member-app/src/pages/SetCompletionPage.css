@@ -15,16 +15,16 @@
 }
 
 .gt-set-completion-region select {
-  background: var(--gt-glass-bg, rgba(20, 24, 32, 0.72));
+  background: var(--gt-glass-bg);
   color: var(--gt-text);
-  border: 1px solid var(--gt-glass-border, rgba(255, 255, 255, 0.14));
+  border: 1px solid var(--gt-glass-border);
   border-radius: 6px;
   padding: 0.25rem 0.4rem;
 }
 
 .gt-set-completion-msg {
   font-size: 0.9rem;
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
 }
 
 .gt-set-completion-missing {
@@ -43,8 +43,8 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.55rem 0.7rem;
-  background: var(--gt-glass-bg, rgba(20, 24, 32, 0.72));
-  border: 1px solid var(--gt-glass-border, rgba(255, 255, 255, 0.14));
+  background: var(--gt-glass-bg);
+  border: 1px solid var(--gt-glass-border);
   border-radius: 8px;
 }
 

@@ -17,8 +17,8 @@
   gap: 0.75rem;
   padding: 1rem 1.1rem 1.15rem;
   border-radius: 14px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.14));
-  background: var(--gt-surface, #141820);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
@@ -38,9 +38,9 @@
   width: 2.2rem;
   height: 2.2rem;
   border-radius: 999px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.14));
-  background: var(--gt-surface-2, #1c2230);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
+  color: var(--gt-text);
   font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
@@ -49,21 +49,21 @@
 .gt-open-path__reason {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }
 
 .gt-open-path__path {
   margin: 0;
   padding: 0.75rem 0.85rem;
   border-radius: 8px;
-  background: var(--gt-surface-2, #1c2230);
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.1));
+  background: var(--gt-surface-2);
+  border: 1px solid var(--gt-border);
   word-break: break-all;
 }
 
 .gt-open-path__path code {
   font-size: 0.85rem;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-open-path__actions {
@@ -75,5 +75,5 @@
 .gt-open-path__status {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--gt-text-muted, #c4ccd8);
+  color: var(--gt-text-muted);
 }

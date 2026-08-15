@@ -1,6 +1,10 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required
 from gametheca.utils.auth import admin_required
+from gametheca.utils.global_settings import (
+    global_settings_row,
+    global_settings_row_or_create,
+)
 from gametheca.utils.processors import get_global_settings
 from gametheca.models import GlobalSettings
 from gametheca import db
@@ -21,12 +25,10 @@ def inject_settings():
 @login_required
 @admin_required
 def smtp_settings():
-    settings = db.session.execute(select(GlobalSettings)).scalars().first()
+    settings = global_settings_row()
     if request.method == 'POST':
         data = request.json
-        if not settings:
-            settings = GlobalSettings()
-            db.session.add(settings)
+        settings = global_settings_row_or_create()
         
         # Validate required fields when SMTP is enabled
         if data.get('smtp_enabled'):
@@ -71,7 +73,7 @@ def smtp_settings():
 @login_required
 @admin_required
 def smtp_test():
-    settings = db.session.execute(select(GlobalSettings)).scalars().first()
+    settings = global_settings_row()
     if not settings:
         return jsonify({
             'success': False,

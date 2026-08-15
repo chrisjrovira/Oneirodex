@@ -1,5 +1,8 @@
+// Toasts on every mutation (GT-B25).
 import { useEffect, useState } from 'react'
 import { DataTable } from './DataTable'
+import { MetricStrip } from './opsWidgets'
+import { showToast } from './utils/toast'
 
 function csrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.content || ''
@@ -8,6 +11,11 @@ function csrfToken() {
 export function SupportInboxPage() {
   const [tickets, setTickets] = useState([])
   const [error, setError] = useState(null)
+
+  // Derived rather than stored: a second piece of state would be one more thing
+  // to keep in step with the list it counts.
+  const openCount = tickets.filter((t) => t.status === 'open').length
+  const syncedCount = tickets.filter((t) => t.github_issue_number).length
 
   function load() {
     return fetch('/api/support/tickets', { credentials: 'same-origin' })
@@ -24,11 +32,21 @@ export function SupportInboxPage() {
   }, [])
 
   async function resolve(id) {
-    await fetch(`/api/support/tickets/${id}/resolve`, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'X-CSRFToken': csrfToken() },
-    })
+    // Resolving used to give no feedback at all — the row simply vanished on
+    // reload, which is indistinguishable from the click not registering.
+    try {
+      const response = await fetch(`/api/support/tickets/${id}/resolve`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'X-CSRFToken': csrfToken() },
+      })
+      if (!response.ok) {
+        throw new Error(`resolve failed (${response.status})`)
+      }
+      showToast('Ticket resolved.', 'success')
+    } catch (err) {
+      showToast(err.message || 'Could not resolve the ticket.', 'error')
+    }
     await load()
   }
 
@@ -44,6 +62,36 @@ export function SupportInboxPage() {
     <div className="gt-adminpage">
       <h1>Support inbox</h1>
       <p>Teammate reports from the member app. GitHub Issues when SUPPORT_GITHUB_TOKEN is set.</p>
+      {/* UID-014 — the strip exists so every admin page answers "how bad is it"
+          before you read the table. Open is the number that decides whether
+          this page needs you, so it carries the tone; the totals are context
+          and stay neutral. */}
+      <MetricStrip
+        label="Support"
+        items={[
+          {
+            id: 'open',
+            label: 'Open',
+            value: openCount,
+            hint: 'awaiting a reply',
+            tone: openCount === 0 ? 'good' : openCount >= 10 ? 'action' : 'warning',
+          },
+          {
+            id: 'resolved',
+            label: 'Resolved',
+            value: tickets.length - openCount,
+            hint: 'closed tickets',
+            tone: 'info',
+          },
+          {
+            id: 'synced',
+            label: 'On GitHub',
+            value: syncedCount,
+            hint: 'mirrored as issues',
+            tone: 'info',
+          },
+        ]}
+      />
       <DataTable
         columns={[
           { key: 'id', label: 'ID', align: 'right' },

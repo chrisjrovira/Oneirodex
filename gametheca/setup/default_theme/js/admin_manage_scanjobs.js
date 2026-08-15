@@ -691,7 +691,11 @@ function updateAutoScanStatusIcon(jobs) {
         }
     }
     if (motifHost && window.GtLoadingMotifs) {
-        window.GtLoadingMotifs.mount(motifHost, { size: 'sm', forceId: 'scan' });
+        // forceId dropped: 'scan' was one of the six abstract motifs GT-B23
+        // retired, so normalizeId() rejected it and the force silently fell
+        // through to the member's own pick anyway. Asking for the member's
+        // motif explicitly is what was actually happening.
+        window.GtLoadingMotifs.mount(motifHost, { size: 'sm' });
     } else if (motifHost && !motifHost.querySelector('.gt-spinner, .gt-loading-motif')) {
         motifHost.innerHTML = '<span class="gt-spinner gt-spinner--sm" aria-hidden="true"></span>';
     }
@@ -2925,16 +2929,32 @@ function setupFolderBrowse(browseButtonId, folderContentsId, spinnerId, upButton
 
 function fetchFolders(path, folderContentsId, spinnerId, upButtonId, inputFieldId, currentPathVar) {
     console.log("Fetching folders for path:", path);
+    // Blocking overlay, not an icon beside the button (W27-D6). A small spinner
+    // to the right of Browse read as a stuck button rather than as work, and it
+    // shifted the row it sat in. The inline spinner stays as the fallback for
+    // the case where the motif helper did not load, because losing the busy
+    // signal entirely is worse than showing it in the old place.
     var $spinner = $(spinnerId);
-    $spinner.css('display', 'inline-flex').show();
-    if (window.GtLoadingMotifs && $spinner[0]) {
-        window.GtLoadingMotifs.mount($spinner[0], { size: 'lg' });
+    var usedOverlay = false;
+    if (window.GtLoadingMotifs && window.GtLoadingMotifs.showBlocking) {
+        window.GtLoadingMotifs.showBlocking('Reading folders…');
+        usedOverlay = true;
+    } else {
+        $spinner.css('display', 'inline-flex').show();
+    }
+
+    function clearBusy() {
+        if (usedOverlay) {
+            window.GtLoadingMotifs.hideBlocking();
+        } else {
+            $spinner.hide();
+        }
     }
     $.ajax({
         url: '/api/browse_folders_ss',
         data: { path: path },
         success: function(data) {
-            $spinner.hide();
+            clearBusy();
             $(folderContentsId).empty();
             
             // Check if we're using the new response format or the old one
@@ -2991,7 +3011,9 @@ function fetchFolders(path, folderContentsId, spinnerId, upButtonId, inputFieldI
             }
         },
         error: function(error) {
-            $spinner.hide();
+            // Must clear on the failure path too, or a browse that 500s leaves
+            // the page darkened with no way back.
+            clearBusy();
             console.error("Error fetching folders:", error);
         }
     });

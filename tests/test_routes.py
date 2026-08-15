@@ -196,9 +196,15 @@ class TestMainBlueprint:
         mock_current_user.id = test_user.id
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
-        response = client.get('/browse_games')
-        # Same reason as the lifecycle test below: index 0 is not necessarily
-        # this test's game once other tests in the file have added their own.
+        # Scoped to this test's own library. `test_library` mints a fresh one
+        # per test, so the response contains exactly this test's game whatever
+        # else is in the table.
+        #
+        # Searching an unscoped /browse_games was only ever half a fix: it
+        # stopped trusting index 0, but the route pages at 20 sorted by name and
+        # nothing here deletes its games, so once enough have accumulated this
+        # game is not on page one at all and `next()` raises StopIteration.
+        response = client.get(f'/browse_games?library_uuid={test_game.library_uuid}')
         games = response.get_json()['games']
         game = next(g for g in games if g['uuid'] == test_game.uuid)
         assert 'has_local_override' in game
@@ -217,11 +223,10 @@ class TestMainBlueprint:
         db_session.commit()
         with client.session_transaction() as sess:
             sess['_user_id'] = str(test_user.id)
-        response = client.get('/browse_games')
-        # Find this test's game rather than trusting index 0. /browse_games
-        # sorts by name, and earlier tests in this file leave their games in the
-        # database, so games[0] is whichever title happens to sort first — the
-        # assertion was reading a different row's lifecycle.
+        # Scoped by library for the same reason as the test above: every
+        # `test_game` is named 'Test Game' and none are cleaned up, so an
+        # unscoped request eventually pages this row off the first 20.
+        response = client.get(f'/browse_games?library_uuid={test_game.library_uuid}')
         games = response.get_json()['games']
         game = next(g for g in games if g['uuid'] == test_game.uuid)
         assert game['lifecycle_state'] == 'update_available'
@@ -509,11 +514,15 @@ class TestMainBlueprint:
         assert test_scan_job.status == 'Completed'
 
     @patch('flask_login.current_user')
-    @patch('gametheca.routes.Thread')
-    @patch('gametheca.routes.copy_current_request_context')
-    def test_restart_scan_job(self, mock_copy_context, mock_thread, mock_current_user, 
+    @patch('gametheca.routes.run_in_background')
+    def test_restart_scan_job(self, mock_background, mock_current_user,
                              client, app, db_session, admin_user, test_scan_job):
-        """Test restarting a scan job."""
+        """Test restarting a scan job.
+
+        The worker is intercepted at run_in_background, which owns the thread
+        and the worker's own session now. The route's job is the state reset
+        below; actually running a scan is not what this test is about.
+        """
         mock_current_user.is_authenticated = True
         mock_current_user.role = 'admin'
         
@@ -863,10 +872,9 @@ class TestMainBlueprint:
         assert data['status'] == 'success'
 
     @patch('flask_login.current_user')
-    @patch('gametheca.routes.Thread')
-    @patch('gametheca.routes.copy_current_request_context')
+    @patch('gametheca.routes.run_in_background')
     @patch('gametheca.routes.get_game_name_by_uuid')
-    def test_refresh_game_images(self, mock_get_name, mock_copy_context, mock_thread, 
+    def test_refresh_game_images(self, mock_get_name, mock_background,
                                 mock_current_user, client, app, db_session, admin_user, test_game):
         """Test refreshing game images."""
         mock_current_user.is_authenticated = True
@@ -881,22 +889,31 @@ class TestMainBlueprint:
         assert response.status_code == 302  # Redirect
 
     @patch('flask_login.current_user')
+    @patch('gametheca.routes.run_in_background')
     @patch('gametheca.routes.get_game_name_by_uuid')
-    def test_refresh_game_images_ajax(self, mock_get_name, mock_current_user, 
+    def test_refresh_game_images_ajax(self, mock_get_name, mock_background, mock_current_user,
                                      client, app, db_session, admin_user, test_game):
-        """Test refreshing game images via AJAX."""
+        """Test refreshing game images via AJAX.
+
+        The worker is patched for the same reason the non-AJAX test above
+        patches it, and this was the one of the pair that did not: it calls out
+        to IGDB and writes images on a daemon thread that outlives the test.
+        Left real, it does that work while later tests run. This test is about
+        the AJAX response shape, which the route produces before the worker
+        does anything.
+        """
         mock_current_user.is_authenticated = True
         mock_current_user.role = 'admin'
         mock_current_user.name = admin_user.name
         mock_get_name.return_value = 'Test Game'
-        
+
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
-        
+
         response = client.post(f'/refresh_game_images/{test_game.uuid}',
                               headers={'X-Requested-With': 'XMLHttpRequest'})
         assert response.status_code == 200
-        
+
         data = json.loads(response.data)
         assert 'message' in data
 
@@ -1126,26 +1143,50 @@ class TestMainBlueprint:
         assert data['success'] == False
 
     @patch('flask_login.current_user')
-    def test_delete_full_library(self, mock_current_user, 
+    def test_delete_full_library(self, mock_current_user,
                                 client, app, db_session, admin_user, test_library, test_game):
-        """Test deleting a full library."""
+        """Test deleting a full library.
+
+        The background worker is patched out — the same way
+        test_library_batch_ops.py patches it — because letting it start is what
+        made the whole suite flaky.
+
+        `delete_library_background` spawns a daemon thread under
+        `@copy_current_request_context`, so it shares this request's
+        SQLAlchemy session and outlives the test (it sleeps 0.5s before doing
+        anything). Unpatched, that thread was still deleting this fixture's
+        library, games and scan jobs while *later* test files ran, against a
+        Session two threads then held at once. The symptoms were spread across
+        unrelated files and looked like anything but this: rows vanishing
+        mid-test, ObjectDeletedError refreshing a live User, and a stray
+        "Background deletion of library: Test Library ..." printed in the
+        middle of someone else's progress line.
+
+        Nothing is lost by patching: the assertions below are about the
+        *route's* contract — it accepts the job and hands back an id — which is
+        all this test ever checked. The worker itself has never been covered
+        here, as the note that used to sit at the bottom of this test admitted.
+        """
         mock_current_user.is_authenticated = True
         mock_current_user.role = 'admin'
         mock_current_user.name = admin_user.name
-        
+
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
-        
-        response = client.post(f'/delete_full_library/{test_library.uuid}')
+
+        with patch('gametheca.routes.delete_library_background') as mock_bg:
+            mock_bg.return_value = None
+            response = client.post(f'/delete_full_library/{test_library.uuid}')
+
         assert response.status_code == 200  # JSON response
-        
-        # Check JSON response
+
+        # The route still resolves and authorises the library before handing
+        # off, so a patched worker does not weaken what this asserts.
         json_data = response.get_json()
         assert json_data['status'] == 'started'
         assert 'job_id' in json_data
-        
-        # Note: Library deletion now happens in background, so immediate check is not reliable
-        # The actual deletion would be tested in integration tests or by polling the progress endpoint
+        mock_bg.assert_called_once()
+        assert mock_bg.call_args.args[0] == test_library.uuid
 
     @patch('flask_login.current_user')
     def test_delete_full_library_not_found(self, mock_current_user, client, app, db_session, admin_user):

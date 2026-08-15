@@ -9,9 +9,9 @@
   min-height: 2.6rem;
   padding: 0.45rem 0.85rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 40%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #141820) 88%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
+  color: var(--gt-text);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -32,7 +32,7 @@
   height: 1.25rem;
   padding: 0 0.3rem;
   border-radius: 999px;
-  background: var(--gt-accent, #2fd67b);
+  background: var(--gt-accent);
   color: #0b0d10;
   font-size: 0.7rem;
   font-weight: 800;
@@ -79,9 +79,9 @@
 .gt-social-companion-page {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at 20% 0%, color-mix(in srgb, var(--gt-accent, #2fd67b) 18%, transparent), transparent 50%),
-    var(--gt-bg, #0b0d10);
-  color: var(--gt-text, #f2f4f8);
+    radial-gradient(ellipse at 20% 0%, color-mix(in srgb, var(--gt-accent) 18%, transparent), transparent 50%),
+    var(--gt-bg);
+  color: var(--gt-text);
 }
 
 .gt-social-dock__header {
@@ -99,7 +99,7 @@
 .gt-social-dock__sub {
   margin: 0.15rem 0 0;
   font-size: 0.78rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-social-dock__header-actions {
@@ -135,7 +135,7 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-social-dock__list,
@@ -175,7 +175,7 @@
 
 .gt-social-dock__dot--online,
 .gt-social-dock__dot--in-game {
-  background: var(--gt-accent, #2fd67b);
+  background: var(--gt-accent);
 }
 
 .gt-social-dock__dot--away {
@@ -198,7 +198,7 @@
 
 .gt-social-dock__presence {
   font-size: 0.75rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -228,13 +228,13 @@
 
 .gt-social-dock__mini:hover,
 .gt-social-dock__mini:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 55%, transparent);
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
 }
 
 .gt-social-dock__empty {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-social-dock__add {
@@ -267,7 +267,7 @@
 .gt-social-dock__footer-link {
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
   background: none;
   border: 0;
   padding: 0;
@@ -278,7 +278,7 @@
 .gt-social-dock__toast {
   flex: 1 1 100%;
   font-size: 0.75rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-social-dock__now a {

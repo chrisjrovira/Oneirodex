@@ -1,11 +1,9 @@
 # gametheca/routes.py
 import uuid, json, os, shutil
 from pathlib import Path
-from threading import Thread
 from flask import (
     render_template, flash, redirect, url_for, request, Blueprint,
-    jsonify, session, abort, current_app, Response,
-    copy_current_request_context
+    jsonify, session, abort, current_app, Response
 )
 from flask_login import current_user, login_required
 from sqlalchemy.exc import SQLAlchemyError
@@ -42,6 +40,7 @@ from gametheca.utils.functions import (
 from gametheca.utils.local_metadata import has_local_metadata, has_local_images
 from gametheca.utilities import handle_auto_scan, handle_manual_scan, scan_and_add_games
 from gametheca.utils.auth import admin_required
+from gametheca.utils.background import run_in_background
 from gametheca.utils.gamenames import get_game_names_from_folder, get_game_name_by_uuid
 from gametheca.utils.image_kinds import (
     IMAGE_KIND_ORDER,
@@ -520,32 +519,45 @@ def restart_scan_job(job_id):
     except Exception:
         pass
 
-    # Start scan using the existing job
-    @copy_current_request_context
-    def start_scan():
+    # Start scan using the existing job.
+    #
+    # Nothing but the job id crosses into the thread. `job` belongs to this
+    # request's session, and the worker gets its own — see utils/background.py.
+    # Every field is read from the row the worker re-fetches, so it also cannot
+    # act on values that changed between the click and the thread starting.
+    scan_job_id = job.id
+
+    def _run_restarted_scan():
+        existing = db.session.get(ScanJob, scan_job_id)
+        if not existing:
+            return
+
         base_dir = current_app.config.get('BASE_FOLDER_WINDOWS') if os.name == 'nt' else current_app.config.get('BASE_FOLDER_POSIX')
-        full_path = os.path.join(base_dir, job.scan_folder)
-        
+        full_path = os.path.join(base_dir, existing.scan_folder)
+
         if not os.path.exists(full_path) or not os.access(full_path, os.R_OK):
-            job.status = 'Failed'
-            job.error_message = f"Cannot access folder: {full_path}"
+            existing.status = 'Failed'
+            existing.error_message = f"Cannot access folder: {full_path}"
             db.session.commit()
             return
 
-        scan_mode = 'files' if job.setting_filefolder else 'folders'
-        download_missing_images = getattr(job, 'setting_download_missing_images', False)
+        scan_mode = 'files' if existing.setting_filefolder else 'folders'
+        download_missing_images = getattr(existing, 'setting_download_missing_images', False)
         scan_and_add_games(
             full_path,
             scan_mode=scan_mode,
-            library_uuid=job.library_uuid,
-            remove_missing=job.setting_remove,
-            existing_job=job,
+            library_uuid=existing.library_uuid,
+            remove_missing=existing.setting_remove,
+            existing_job=existing,
             download_missing_images=download_missing_images,
-            force_updates_extras_scan=getattr(job, 'setting_force_updates_extras', False)
+            force_updates_extras_scan=getattr(existing, 'setting_force_updates_extras', False)
         )
 
-    thread = Thread(target=start_scan, daemon=True)
-    thread.start()
+    run_in_background(
+        current_app._get_current_object(),
+        _run_restarted_scan,
+        name=f'gametheca-restart-scan-{str(scan_job_id)[:8]}',
+    )
     return redirect(url_for('main.scan_management'))
 
 
@@ -837,12 +849,15 @@ def refresh_game_images(game_uuid):
     game_name = get_game_name_by_uuid(game_uuid)
     print(f"Route: /refresh_game_images - {current_user.name} - {current_user.role} method: {request.method} UUID: {game_uuid} Name: {game_name}")
 
-    @copy_current_request_context
-    def refresh_images_in_thread():
-        refresh_images_in_background(game_uuid)
-
-    thread = Thread(target=refresh_images_in_thread, daemon=True)
-    thread.start()
+    # Own app context, own session (utils/background.py). The uuid is a plain
+    # string and `refresh_images_in_background` already guards its flash calls
+    # with has_request_context(), so nothing here wanted the request anyway.
+    run_in_background(
+        current_app._get_current_object(),
+        refresh_images_in_background,
+        game_uuid,
+        name=f'gametheca-refresh-images-{str(game_uuid)[:8]}',
+    )
     print(f"Refresh images thread started for game UUID: {game_uuid} and Name: {game_name}.")
 
     # Check if the request is an AJAX request
@@ -1051,8 +1066,14 @@ def delete_library_progress(job_id):
     return response
 
 def delete_library_background(library_uuid, job_id):
-    """Background task for deleting a library with progress updates"""
-    @copy_current_request_context
+    """Background task for deleting a library with progress updates.
+
+    Runs in its own application context, and therefore its own session. It used
+    to run in a copy of the caller's request context, sharing the request's
+    session while deleting every game in the library — the longest-running and
+    most destructive of the workers that did that. Only the two ids cross into
+    the thread; the library is re-fetched below.
+    """
     def delete_task():
         import time
         try:
@@ -1181,8 +1202,11 @@ def delete_library_background(library_uuid, job_id):
             }
     
     # Start the background task
-    thread = Thread(target=delete_task, daemon=True)
-    thread.start()
+    return run_in_background(
+        current_app._get_current_object(),
+        delete_task,
+        name=f'gametheca-delete-library-{str(library_uuid)[:8]}',
+    )
 
 @bp.route('/delete_full_library/<library_uuid>', methods=['POST'])
 @login_required

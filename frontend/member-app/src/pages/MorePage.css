@@ -84,7 +84,7 @@
   padding: 0.55rem 0.1rem;
   background: transparent;
   border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 65%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 65%, transparent);
   border-radius: 0;
   color: var(--gt-text);
 }
@@ -151,7 +151,7 @@
   gap: 0.5rem;
   margin: 0 0 0.55rem;
   padding-bottom: 0.35rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 75%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
 }
 
 .gt-updates__section-head h2,
@@ -161,7 +161,7 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-updates__header {
@@ -185,11 +185,11 @@
 
 .gt-updates__refresh-status {
   font-size: 0.82rem;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-updates__refresh-status--muted {
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-updates__inbox > h2,
@@ -199,13 +199,13 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-updates__calendar {
   margin: 1.35rem 0 0;
   padding-top: 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 75%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
 }
 
 .gt-updates__calendar-head {
@@ -223,7 +223,7 @@
 
 .gt-updates__calendar-link {
   font-size: 0.85rem;
-  color: var(--gt-accent, #2fd67b);
+  color: var(--gt-accent);
   text-decoration: none;
 }
 
@@ -236,7 +236,7 @@
 .gt-updates__calendar-empty {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
 }
 
 .gt-updates__calendar-list {
@@ -253,13 +253,13 @@
   grid-template-columns: 6.5rem minmax(0, 1fr);
   gap: 0.55rem 0.75rem;
   padding: 0.45rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 60%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 60%, transparent);
   background: transparent;
   font-size: 0.9rem;
 }
 
 .gt-updates__calendar-list time {
-  color: var(--gt-text-muted, #9aa3b2);
+  color: var(--gt-text-muted);
   font-size: 0.8rem;
   white-space: nowrap;
 }
@@ -285,7 +285,7 @@
   padding: 0.4rem 0.55rem;
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #141820) 90%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 90%, transparent);
   color: inherit;
   font: inherit;
 }

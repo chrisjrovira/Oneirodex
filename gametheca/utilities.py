@@ -147,7 +147,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
     """Core scan worker. Returns ScanJob id when known."""
     scan_job_entry = None
     # Cache settings once at the start of scan
-    settings_obj = db.session.execute(select(GlobalSettings)).scalars().first()
+    settings_obj = global_settings_row()
     update_folder_name = settings_obj.update_folder_name if settings_obj else 'updates'
     extras_folder_name = settings_obj.extras_folder_name if settings_obj else 'extras'
     enable_game_updates = settings_obj.enable_game_updates if settings_obj else False

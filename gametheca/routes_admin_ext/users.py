@@ -123,22 +123,13 @@ def users_spa():
     return render_template('admin/admin_users.html')
 
 
-@admin2_bp.route('/admin/manage_users', methods=['GET'])
-@login_required
-@admin_required
-def manage_users():
-    users = db.session.execute(select(User)).scalars().all()
-    libraries = db.session.execute(select(Library).order_by(Library.name.asc())).scalars().all()
-    genres = db.session.execute(select(Genre).order_by(Genre.name.asc())).scalars().all()
-    themes = db.session.execute(select(Theme).order_by(Theme.name.asc())).scalars().all()
-    return render_template(
-        'admin/admin_manage_users.html',
-        users=users,
-        libraries=libraries,
-        genres=genres,
-        themes=themes,
-    )
-
+# /admin/manage_users retired (GT-B18).
+#
+# Two editors for the same user rows meant two places to look and two
+# behaviours to keep in step — the React roster at /admin/users is the one that
+# is maintained, and it has had multi-select and the metric strip since GT-C2.
+# The template and its CSS/JS are removed with it; the invites page now points
+# at the roster.
 
 @admin2_bp.route('/admin/api/users', methods=['GET'])
 @login_required

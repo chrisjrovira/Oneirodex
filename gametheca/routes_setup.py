@@ -2,8 +2,18 @@ from flask import Blueprint, render_template, flash, redirect, url_for, request
 from gametheca import db
 from sqlalchemy import select
 from gametheca.forms import SetupForm, IGDBSetupForm
+from gametheca.utils.global_settings import (
+    global_settings_row,
+    global_settings_row_or_create,
+)
 from gametheca.models import User, GlobalSettings
-from gametheca.utils.setup import is_setup_required, set_setup_step, mark_setup_complete, get_current_setup_step
+from gametheca.utils.setup import (
+    is_setup_required,
+    set_setup_step,
+    stage_setup_step as _stage_setup_step,
+    mark_setup_complete,
+    get_current_setup_step,
+)
 from uuid import uuid4
 from datetime import datetime, timezone
 from gametheca.utils.event_logging import log_system_event
@@ -51,9 +61,18 @@ def setup_submit():
         user.set_password(form.password.data)
         
         try:
+            # The admin row and the step advance must land in ONE transaction.
+            #
+            # These used to be two commits: user first, then set_setup_step(2).
+            # Anything failing in that window — a crash, a restart, a dropped
+            # connection — left "a user exists" and "still on step 1", and that
+            # state is an unrecoverable redirect loop: the before_request hook
+            # sends every request to get_setup_redirect_url(), which returns
+            # /setup for step 1, and /setup redirects straight back to it. The
+            # install is unreachable with no way out through the UI.
             db.session.add(user)
+            _stage_setup_step(2)  # same session, no intermediate commit
             db.session.commit()
-            set_setup_step(2)  # Move to SMTP setup
             log_system_event("Admin account created during setup", event_type='setup', event_level='information')
             flash('Admin account created successfully! Please configure your SMTP settings.', 'success')
             return redirect(url_for('setup.setup_smtp'))
@@ -86,10 +105,7 @@ def setup_smtp():
             flash('SMTP setup skipped. Choose which features to keep enabled.', 'info')
             return redirect(url_for('setup.setup_features'))
 
-        settings = db.session.execute(select(GlobalSettings)).scalars().first()
-        if not settings:
-            settings = GlobalSettings()
-            db.session.add(settings)
+        settings = global_settings_row_or_create()
 
         settings.smtp_server = request.form.get('smtp_server')
         settings.smtp_port = int(request.form.get('smtp_port', 587))
@@ -132,10 +148,7 @@ def setup_features():
     }
 
     if request.method == 'POST':
-        settings = db.session.execute(select(GlobalSettings)).scalars().first()
-        if not settings:
-            settings = GlobalSettings()
-            db.session.add(settings)
+        settings = global_settings_row_or_create()
         settings.enable_game_updates = 'enable_game_updates' in request.form
         settings.enable_game_extras = 'enable_game_extras' in request.form
         settings.attract_mode_enabled = 'attract_mode_enabled' in request.form
@@ -171,10 +184,7 @@ def setup_igdb():
 
     form = IGDBSetupForm()
     if form.validate_on_submit():
-        settings = db.session.execute(select(GlobalSettings)).scalars().first()
-        if not settings:
-            settings = GlobalSettings()
-            db.session.add(settings)
+        settings = global_settings_row_or_create()
         
         settings.igdb_client_id = form.igdb_client_id.data
         settings.igdb_client_secret = form.igdb_client_secret.data

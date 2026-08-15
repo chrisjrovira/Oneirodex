@@ -271,9 +271,14 @@ class TestIGDBTestRoute:
     
     def test_test_igdb_incomplete_settings(self, client, admin_user):
         """Test IGDB test with incomplete settings."""
-        # Create settings with only client_id, missing client_secret
-        settings = GlobalSettings(igdb_client_id='test_id')
-        db.session.add(settings)
+        # Configure the singleton rather than inserting a second row — the
+        # secret is cleared explicitly because the row may carry one from an
+        # earlier test, and "incomplete" is the whole point here.
+        from gametheca.utils.global_settings import global_settings_row_or_create
+
+        settings = global_settings_row_or_create()
+        settings.igdb_client_id = 'test_id'
+        settings.igdb_client_secret = None
         db.session.commit()
         
         with client.session_transaction() as sess:

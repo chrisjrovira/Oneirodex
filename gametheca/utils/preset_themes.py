@@ -29,7 +29,14 @@ from datetime import date
 # file changes on its own, but the bump makes the token-layer break explicit for
 # operators reading theme.json markers, and forces a rebuild of any preset whose
 # folder was hand-edited.
-GENERATOR_VERSION = 11
+# 12 (GT-A2/A4/A5): gt-tokens gained the upper type steps and --gt-radius-3xl
+# that base.css's legacy scales now alias onto; gt-primitives gained the
+# canonical --secondary / --ghost button variants; and the tree gained
+# gt-bootstrap-bridge.css, which the base templates link and every preset
+# therefore needs on disk. source_fingerprint() would notice the file changes
+# anyway, but the bump makes the new required asset explicit for operators
+# reading theme.json markers.
+GENERATOR_VERSION = 12
 
 # Key written into each generated theme.json; also our ownership proof.
 PRESET_MARKER_KEY = 'gametheca_preset'

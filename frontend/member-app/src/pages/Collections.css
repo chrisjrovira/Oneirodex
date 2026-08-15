@@ -5,10 +5,10 @@
   gap: 12px;
   margin: 0 0 20px;
   padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--gt-border, #2a3140) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--gt-surface, #141820) 96%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
+  color: var(--gt-text);
 }
 
 .gt-collections__field {
@@ -16,16 +16,16 @@
   flex-direction: column;
   gap: 4px;
   font-size: 0.85rem;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
 }
 
 .gt-collections__field input[type='text'] {
   min-width: 220px;
   padding: 7px 10px;
-  border: 1px solid var(--gt-border, #2a3140);
+  border: 1px solid var(--gt-border);
   border-radius: 6px;
-  background: color-mix(in srgb, var(--gt-surface, #141820) 70%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  background: color-mix(in srgb, var(--gt-surface) 70%, transparent);
+  color: var(--gt-text);
 }
 
 .gt-collections__check {
@@ -33,7 +33,7 @@
   align-items: center;
   gap: 6px;
   font-size: 0.85rem;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
 }
 
 .gt-collections__list {
@@ -57,10 +57,10 @@
   gap: 6px;
   height: 100%;
   padding: 14px 16px;
-  border: 1px solid var(--gt-border, #2a3140);
+  border: 1px solid var(--gt-border);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--gt-surface, #141820) 96%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
+  color: var(--gt-text);
   text-decoration: none;
 }
 
@@ -71,12 +71,12 @@
 }
 
 .gt-collections__card-desc {
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   font-size: 0.9rem;
 }
 
 .gt-collections__meta {
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -88,7 +88,7 @@
 }
 
 .gt-collection__crumb a {
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   text-decoration: none;
 }
 
@@ -128,10 +128,10 @@
 
 .gt-collections__reorder {
   padding: 6px 10px;
-  border: 1px solid var(--gt-border, #2a3140);
+  border: 1px solid var(--gt-border);
   border-radius: 6px;
   background: transparent;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   font-size: 0.8rem;
   cursor: pointer;
 }
@@ -153,10 +153,10 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 14px;
-  border: 1px solid var(--gt-border, #2a3140);
+  border: 1px solid var(--gt-border);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--gt-surface, #141820) 96%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
+  color: var(--gt-text);
   text-decoration: none;
 }
 
@@ -169,10 +169,10 @@
 .gt-collections__delete,
 .gt-collections__remove {
   padding: 6px 10px;
-  border: 1px solid color-mix(in srgb, var(--gt-danger, #ff5c7a) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-danger) 45%, transparent);
   border-radius: 6px;
   background: transparent;
-  color: var(--gt-danger, #ff5c7a);
+  color: var(--gt-danger);
   font-size: 0.8rem;
   cursor: pointer;
 }
@@ -185,13 +185,13 @@
 
 .gt-collection__add {
   margin: 20px 0 0;
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   font-size: 0.9rem;
 }
 
 .gt-collection__add summary {
   cursor: pointer;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-collection__picker {
@@ -208,10 +208,10 @@
   justify-content: space-between;
   gap: 12px;
   padding: 8px 12px;
-  border: 1px solid var(--gt-border, #2a3140);
+  border: 1px solid var(--gt-border);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--gt-surface, #141820) 96%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
+  color: var(--gt-text);
   text-align: left;
   cursor: pointer;
 }

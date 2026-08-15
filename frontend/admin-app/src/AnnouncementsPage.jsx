@@ -1,4 +1,7 @@
+// Toasts on every mutation (GT-B25). Outcomes were reported inline only,
+// which is easy to miss when the triggering control has scrolled away.
 import { useEffect, useState } from 'react'
+import { showToast } from './utils/toast'
 
 async function postJson(url, body) {
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content || ''
@@ -69,8 +72,10 @@ export function AnnouncementsPage() {
       setBody('')
       setPublishNow(true)
       setTick((n) => n + 1)
+      showToast(publishNow ? 'Announcement published.' : 'Announcement saved as draft.', 'success')
     } catch (err) {
       setError(err)
+      showToast(err.message || 'Could not save the announcement.', 'error')
     } finally {
       setSaving(false)
     }

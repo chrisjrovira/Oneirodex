@@ -3,16 +3,35 @@ import './ScrollJump.css'
 
 const EDGE_PX = 48
 
-function readScrollMetrics() {
-  const root = document.documentElement
-  const scrollingEl = document.scrollingElement || root
-  const scrollTop = window.scrollY || scrollingEl.scrollTop || 0
-  const viewport = window.innerHeight || root.clientHeight || 0
-  const scrollHeight = Math.max(
-    scrollingEl.scrollHeight || 0,
-    root.scrollHeight || 0,
-    document.body?.scrollHeight || 0,
+/**
+ * The element that actually scrolls (GT-B3).
+ *
+ * The shell is viewport-locked and `.gt-shell__main` is the only scroll
+ * container, so the window never scrolls. This component read window.scrollY,
+ * which meant it silently decided the page was not scrollable and rendered
+ * nothing at all — a control that looked removed rather than broken.
+ *
+ * Falls back to the document for surfaces outside the shell (Big Picture, the
+ * standalone companion window), which still scroll natively.
+ */
+export function getScrollHost() {
+  if (typeof document === 'undefined') return null
+  return (
+    document.querySelector('.gt-shell__main') ||
+    document.querySelector('.gt-admin-main') ||
+    document.scrollingElement ||
+    document.documentElement
   )
+}
+
+function readScrollMetrics() {
+  const host = getScrollHost()
+  if (!host) return { scrollable: false, atTop: true, atBottom: true, maxScroll: 0 }
+
+  const usesWindow = host === document.scrollingElement || host === document.documentElement
+  const scrollTop = usesWindow ? window.scrollY || host.scrollTop || 0 : host.scrollTop
+  const viewport = usesWindow ? window.innerHeight || host.clientHeight : host.clientHeight
+  const scrollHeight = host.scrollHeight || 0
   const maxScroll = Math.max(0, scrollHeight - viewport)
   return {
     scrollable: maxScroll > EDGE_PX,
@@ -73,8 +92,8 @@ function IconChevronDown(props) {
 }
 
 /**
- * Fixed jump-to-top / jump-to-bottom controls for long window-scrolled surfaces
- * (library grid virtualizer, favorites, etc.). Hidden when the page is not scrollable.
+ * Jump-to-top / jump-to-bottom for the scrolling content pane. Hidden entirely
+ * when there is nothing to scroll, so it never sits over content for no reason.
  */
 export function ScrollJump({
   t = (key) => key,
@@ -101,6 +120,10 @@ export function ScrollJump({
     }
 
     commit()
+    // Listen on the host, not the window: a scroll inside .gt-shell__main never
+    // reaches window, so the buttons would not update as you moved.
+    const host = getScrollHost()
+    host?.addEventListener('scroll', schedule, { passive: true })
     window.addEventListener('scroll', schedule, { passive: true })
     window.addEventListener('resize', schedule)
 
@@ -125,6 +148,7 @@ export function ScrollJump({
 
     return () => {
       if (raf) cancelAnimationFrame(raf)
+      host?.removeEventListener('scroll', schedule)
       window.removeEventListener('scroll', schedule)
       window.removeEventListener('resize', schedule)
       resizeObserver?.disconnect()
@@ -139,12 +163,12 @@ export function ScrollJump({
   const behavior = prefersReducedMotion() ? 'auto' : 'smooth'
 
   const jumpTop = () => {
-    window.scrollTo({ top: 0, left: 0, behavior })
+    getScrollHost()?.scrollTo({ top: 0, left: 0, behavior })
   }
 
   const jumpBottom = () => {
     const next = readScrollMetrics()
-    window.scrollTo({ top: next.maxScroll, left: 0, behavior })
+    getScrollHost()?.scrollTo({ top: next.maxScroll, left: 0, behavior })
   }
 
   return (

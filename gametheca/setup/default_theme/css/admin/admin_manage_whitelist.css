@@ -4,7 +4,7 @@
     max-width: 300px;
     border-radius: 15px;
     transition: transform 0.3s ease;
-    box-shadow: 0 8px 32px color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
+    box-shadow: 0 8px 32px color-mix(in srgb, var(--gt-bg) 30%, transparent);
     transform: rotate(-3deg);
 }
 
@@ -25,26 +25,26 @@
 }
 
 .table {
-    background: var(--gt-surface, var(--table-bg));
-    color: var(--gt-text, var(--text-white));
+    background: var(--gt-surface);
+    color: var(--gt-text);
     border-radius: 8px;
     overflow: hidden;
 }
 
 .table thead th {
-    background: color-mix(in srgb, var(--gt-bg, #000) 20%, transparent);
-    color: var(--gt-text, var(--text-white));
-    border-bottom: 2px solid var(--gt-border, var(--border-light));
+    background: color-mix(in srgb, var(--gt-bg) 20%, transparent);
+    color: var(--gt-text);
+    border-bottom: 2px solid var(--gt-border);
     font-weight: 500;
     padding: 12px;
 }
 
 .table tbody tr {
-    border-bottom: 1px solid var(--gt-border, var(--border-light));
+    border-bottom: 1px solid var(--gt-border);
 }
 
 .table tbody tr:hover {
-    background: color-mix(in srgb, var(--gt-text, #fff) 5%, transparent);
+    background: color-mix(in srgb, var(--gt-text) 5%, transparent);
 }
 
 /* Form styling */
@@ -58,7 +58,7 @@
 }
 
 .input-group {
-    background: var(--gt-surface, var(--table-bg-40-alt));
+    background: var(--gt-surface);
     border-radius: 8px;
     overflow: hidden;
 }
@@ -79,7 +79,7 @@
 }
 
 .form-group label {
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
     font-weight: 500;
 }
 
@@ -92,7 +92,7 @@
 
 
 .last-tested {
-    color: var(--gt-text-muted, var(--text-muted));
+    color: var(--gt-text-muted);
     font-size: 0.9rem;
     margin-top: 1rem;
 }

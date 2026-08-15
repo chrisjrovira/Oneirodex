@@ -13,7 +13,7 @@ function isAbortError(error) {
   return error?.name === 'AbortError'
 }
 
-export function OpsApp({ pollMs = 15000, enableServerStatus = false }) {
+export function OpsApp({ pollMs = 15000 }) {
   const [snapshot, setSnapshot] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -86,7 +86,7 @@ export function OpsApp({ pollMs = 15000, enableServerStatus = false }) {
         </>
       )}
 
-      <DeepLinks enableServerStatus={enableServerStatus} />
+      <DeepLinks />
     </main>
   )
 }

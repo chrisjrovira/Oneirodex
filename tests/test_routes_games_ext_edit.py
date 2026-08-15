@@ -561,7 +561,9 @@ class TestGameEditSuccessScenarios:
         # Verify image refresh logic exists
         assert 'igdb_id_changed' in source
         assert 'refresh_images_in_background' in source
-        assert 'Thread' in source
+        # `run_in_background`, not a bare Thread: the worker owns its app
+        # context and session instead of borrowing this request's.
+        assert 'run_in_background' in source
     
     def test_creating_new_developer(self, client, admin_user, test_game, form_data):
         """Test creating a new developer during game update."""

@@ -92,33 +92,31 @@ def sample_game(db_session, sample_library):
     return game
 
 
-class TestImageQueueRoute:
-    """Tests for the image_queue template rendering route."""
-    
-    def test_image_queue_requires_login(self, client):
-        """Test that image_queue route requires authentication."""
-        response = client.get('/admin/image_queue')
-        assert response.status_code == 302  # Redirect to login
+class TestImageQueueRouteRetired:
+    """The standalone /admin/image_queue page is gone (W27-C6).
 
-    def test_image_queue_requires_admin(self, client, regular_user):
-        """Test that image_queue route requires admin privileges."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(regular_user.id)
-            sess['_fresh'] = True
-        
-        response = client.get('/admin/image_queue')
-        assert response.status_code == 302  # Redirected by admin_required
+    The queue is a tab of scan management, so the separate page was a third
+    rendering of the same rows — and the one the rail linked to, which is why
+    the queue appeared not to have changed. Asserted rather than assumed: a
+    retired page that still answers is a second copy of the truth.
+    """
 
-    def test_image_queue_renders_template_for_admin(self, client, admin_user):
-        """Test that image_queue route renders template for admin user."""
+    def test_standalone_page_is_gone(self, client, admin_user):
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
-        
-        response = client.get('/admin/image_queue')
-        assert response.status_code == 200
-        assert b'admin_manage_image_queue.html' in response.data or b'Image Queue' in response.data
 
+        response = client.get('/admin/image_queue')
+        assert response.status_code == 404
+
+    def test_the_api_the_inline_tab_reads_still_exists(self, client, admin_user):
+        """Retiring the page must not take the queue's data source with it."""
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/admin/api/image_queue_list')
+        assert response.status_code == 200
 
 
 class TestImageQueueListAPI:

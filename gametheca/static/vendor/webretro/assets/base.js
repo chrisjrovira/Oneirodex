@@ -28,15 +28,111 @@ var nulKeys = 'input_ai_service = "nul"\ninput_ai_service_axis = "nul"\ninput_ai
 // and explicit vsync keeps WASM frame pacing aligned to the browser's rAF
 // instead of free-running. See docs/user/browser-play.md for residual limits.
 // A/V timing. Audio is the master clock: with video_vsync alone the browser's
-// 60Hz rAF drives timing, but NTSC cores run at 60.098Hz (PAL at 50), so the
-// audio gets stretched to chase the display — audibly fast and pitch-shifted.
+// rAF drives timing, but NTSC cores run at 60.098Hz (PAL at 50), so the audio
+// gets stretched to chase the display.
 //
-// audio_max_timing_skew was 0.15 (3x the usual 0.05). That much resampling
-// headroom is what turns a small refresh mismatch into obvious speed/pitch
-// drift. The correct knob for small continuous correction is
-// audio_rate_control_delta, which nudges the resampler by fractions of a
-// percent instead.
-var extraConfig = 'rgui_show_start_screen = "false"\nnotification_show_remap_load = "false"\nmenu_mouse_enable = "true"\nmenu_pointer_enable = "true"\naudio_latency = "96"\naudio_sync = "true"\naudio_rate_control = "true"\naudio_rate_control_delta = "0.005"\naudio_max_timing_skew = "0.05"\nvideo_vsync = "true"\n';
+// audio_max_timing_skew is 0.15, NOT the RetroArch default of 0.05 — restored
+// after the 0.05 "correction" made the reported glitching worse.
+//
+// The history matters, because 0.15 looks like a mistake and is not:
+//
+//   2026-07-29  0.15 added deliberately, in response to reported audio
+//               problems. It fixed them.
+//   2026-08-05  changed to 0.05 on the reasoning that 0.15 was "3x the usual"
+//               — reading a browser-specific value as a typo.
+//   2026-08-14  glitching reported again, on a 60Hz display where the
+//               refresh-rate work below cannot be the cause.
+//
+// 0.05 is the right ceiling for desktop RetroArch, which owns its own frame
+// loop. A WASM build in a browser tab does not: garbage collection, layout,
+// network and tab throttling all stall the main thread for longer than that
+// budget allows. When the resampler hits the cap it cannot absorb the stall, so
+// the buffer under-runs and you hear a click. More headroom is what a jittery
+// host needs, and audio_rate_control_delta (0.005) still keeps the *steady*
+// correction down at fractions of a percent — the cap only matters during a
+// stall.
+//
+// Do not "fix" this back to 0.05 without measuring on a real browser first.
+// Base config, minus the one value that cannot be known before the page runs.
+var extraConfigBase = 'rgui_show_start_screen = "false"\nnotification_show_remap_load = "false"\nmenu_mouse_enable = "true"\nmenu_pointer_enable = "true"\naudio_latency = "96"\naudio_sync = "true"\naudio_rate_control = "true"\naudio_rate_control_delta = "0.005"\naudio_max_timing_skew = "0.15"\nvideo_vsync = "true"\n';
+
+/** Measured display refresh in Hz; null until sampled. */
+var measuredRefreshHz = null;
+
+/**
+ * Measure the display's real refresh rate (GT-B19).
+ *
+ * This is the missing piece behind "runs fast, sound is terrible". RetroArch
+ * defaults `video_refresh_rate` to 60 and, with `video_vsync` on, the web build
+ * paces frames to requestAnimationFrame. On a 60Hz panel those agree. On a
+ * 120/144/165Hz gaming monitor rAF fires at the panel rate while RetroArch
+ * still believes a frame is 1/60s — so the core advances 2x-2.75x too fast and
+ * `audio_rate_control` burns its entire budget chasing a gap it cannot close.
+ * That is heard as fast, pitch-shifted, crackling audio.
+ *
+ * The earlier pass tuned the resampler (skew 0.15 -> 0.05, small delta). Those
+ * values are right and are kept — but they treat the symptom: no amount of
+ * resampling headroom fixes a clock that is a whole multiple out.
+ *
+ * Median rather than mean: one long frame during startup would drag a mean far
+ * enough to pick the wrong rate.
+ */
+function measureRefreshHz(callback) {
+	var samples = [];
+	var last = 0;
+	var frames = 0;
+
+	function tick(now) {
+		if (last) samples.push(now - last);
+		last = now;
+		frames += 1;
+		if (frames < 32) {
+			requestAnimationFrame(tick);
+			return;
+		}
+		samples.sort(function (a, b) { return a - b; });
+		var median = samples[Math.floor(samples.length / 2)];
+		var hz = (median > 0) ? (1000 / median) : 60;
+		// A hidden/throttled tab reports ~1Hz; recording that would make the
+		// core crawl instead of run fast. Fall back to 60 outside sane bounds.
+		callback((hz >= 24 && hz <= 400) ? hz : 60);
+	}
+
+	requestAnimationFrame(tick);
+}
+
+/**
+ * Lines added at runtime, after the base config string is already defined.
+ *
+ * This exists because the refresh-rate work broke a setting without touching
+ * it: the two cfg writers moved from the `extraConfig` variable to
+ * buildExtraConfig(), which composes from extraConfigBase — so
+ * donePreparingBundle's `extraConfig += menu_minimal_assets` was still being
+ * appended to a variable nothing read any more, and the line silently stopped
+ * reaching retroarch.cfg. Runtime additions append here and are composed in
+ * below, so a late append cannot be lost the same way again.
+ */
+var extraConfigExtras = '';
+
+/** Config text for this display. Built per write so a late measurement lands. */
+function buildExtraConfig() {
+	var refresh = (measuredRefreshHz == null)
+		? ''
+		: 'video_refresh_rate = "' + measuredRefreshHz.toFixed(3) + '"\n';
+	return extraConfigBase + refresh + extraConfigExtras;
+}
+
+measureRefreshHz(function (hz) {
+	measuredRefreshHz = hz;
+	log("Display refresh measured: " + hz.toFixed(2) + "Hz");
+	// Re-apply if the core already booted, so a late measurement corrects the
+	// clock instead of waiting for a reload.
+	try {
+		if (typeof mainCompleted !== "undefined" && mainCompleted) tryApplyConfig();
+	} catch (e) {
+		// Pre-boot — the next config write picks it up.
+	}
+});
 var pdKeys = [8, 9, 13, 19, 27, 32, 33, 34, 35, 36, 42, 44, 45, 91, 92, 93, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135];
 var webretroVersion = 6.5;
 var maxConsoleLength = 10000;
@@ -1000,7 +1096,7 @@ keybindTable.onclick = function(e) {
 
 function tryApplyConfig() {
 	if (mainCompleted) {
-		FS.writeFile("/home/web_user/retroarch/userdata/retroarch.cfg", nulKeys + configObjToStr(savedKeybindsObj) + extraConfig);
+		FS.writeFile("/home/web_user/retroarch/userdata/retroarch.cfg", nulKeys + configObjToStr(savedKeybindsObj) + buildExtraConfig());
 		Module._cmd_reload_config();
 	}
 }
@@ -1492,7 +1588,7 @@ function prepareBundle() {
 
 function donePreparingBundle(tooktime) {
 	loadingBar.style.display = "none";
-	extraConfig += 'menu_minimal_assets = "true"\n';
+	extraConfigExtras += 'menu_minimal_assets = "true"\n';
 	bundleReady = true;
 	removeStatus("Getting assets");
 	log("Finished bundle fetch in " + (tooktime / 1000).toFixed(1) + " seconds, " + bundleErrors + " errors");
@@ -1905,7 +2001,7 @@ function initFromData(data) {
 			}
 			
 			// config
-			safeWriteFile("/home/web_user/retroarch/userdata/retroarch.cfg", nulKeys + configObjToStr(savedKeybindsObj) + extraConfig);
+			safeWriteFile("/home/web_user/retroarch/userdata/retroarch.cfg", nulKeys + configObjToStr(savedKeybindsObj) + buildExtraConfig());
 			
 			// get the core options
 			var coreOptionsString = "";

@@ -1,0 +1,728 @@
+/* App shell: left rail + slim top bar (GT-B2)
+ * ---------------------------------------------------------------------------
+ * Replaces the two-bar top chrome from UIR-1.
+ *
+ * Why the topology changed
+ *   Bar one held five primary destinations. The member app has twenty-three, so
+ *   eighteen lived behind a "More" menu, and admin had roughly sixty in seven
+ *   slots. That is a hard ceiling of horizontal space, not a styling problem —
+ *   no amount of restyling a horizontal bar makes room for a twenty-third item,
+ *   which is why the ⌘K palette had quietly become the real way to navigate.
+ *
+ *   A vertical rail scrolls. Every destination can be present and grouped, the
+ *   overflow menu disappears, and the same structure holds admin's sixty. It is
+ *   also what every comparable library app converges on, so it costs users no
+ *   new concept.
+ *
+ * What the top bar is for now
+ *   Not identity, not destinations — the rail owns both. Bar one is reduced to
+ *   what belongs to the *current page*: search, the view switcher, page
+ *   actions. This is the UIR-1 "bar two" idea, now the only bar.
+ *
+ * Shared surface
+ *   Loaded by base.html / base_admin.html / base_empty.html, so the member SPA,
+ *   the admin SPA and legacy Jinja pages all render identical chrome from this
+ *   one file (the UIR-4 pattern). New filename rather than an edit to
+ *   gt-chrome.css so `theme_asset` falls back to default for themes that have
+ *   not been regenerated yet.
+ */
+
+/* --------------------------------------------------------------------------
+   Shell grid
+   -------------------------------------------------------------------------- */
+
+.gt-shell {
+  display: grid;
+  grid-template-columns: var(--gt-rail-w) minmax(0, 1fr);
+  grid-template-rows: var(--gt-topbar-h) minmax(0, 1fr);
+  grid-template-areas:
+    'rail topbar'
+    'rail main';
+  /* Viewport-locked, not page-height. As `min-height` the whole grid grew with
+     the content, so the rail scrolled off the top and ran out into empty space
+     below the last nav item. An app shell pins its chrome and scrolls only the
+     content pane — see .gt-shell__main. */
+  height: 100dvh;
+  overflow: hidden;
+  /* Positioning context for chrome that floats over the content pane
+     (ScrollJump), so it anchors to the locked shell rather than the page. */
+  position: relative;
+  background: var(--gt-bg);
+  color: var(--gt-text);
+}
+
+/* Collapsed is a width change only — the rail keeps its items, so no
+   destination becomes unreachable by collapsing. */
+.gt-shell[data-rail='collapsed'] {
+  grid-template-columns: var(--gt-rail-w-collapsed) minmax(0, 1fr);
+}
+
+/* The member SPA mounts three levels deep — body > #content.member-spa-content
+   > #member-app-root > .gt-shell — and those wrappers were sized for a chrome
+   that scrolled with the page. A full-height rail needs them to contribute no
+   padding, margin or width cap, or it sits in an inset box with a stripe of
+   page background down its left. Scoped with :has so only containers that
+   actually hold the shell are affected. */
+:where(#content, #member-app-root):has(.gt-shell) {
+  padding: 0;
+  margin: 0;
+  max-width: none;
+}
+
+.gt-shell__main,
+/* Jinja pages keep #content as their body wrapper; it becomes the main area
+   rather than being renamed, so no page template has to change. */
+.gt-shell > #content {
+  grid-area: main;
+  min-width: 0;
+  /* The only scroll container in the shell. Chrome stays put; content moves. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--gt-stack) var(--gt-gutter) var(--gt-section-gap);
+}
+
+/* sidebar.css still ships `#content { margin-left: 180px }` for the retired
+   layout, and base.html still loads it. Inside the shell the grid owns
+   placement, so that offset has to go or every Jinja page sits 180px right of
+   its column. */
+.gt-shell > #content,
+.gt-shell > #content.collapsed,
+.gt-shell > #content.no-sidebar {
+  margin-left: 0;
+}
+
+/* Admin variant: the grid host is <body>.
+ *
+ * base_admin.html renders React chrome into #admin-app-root and Jinja page
+ * content into a *sibling* #admin-legacy-content, so no React element can wrap
+ * both. Rather than restructure the template (and break the legacy/spa render
+ * modes that depend on that split), the body becomes the grid and the two
+ * wrapper divs are flattened with `display: contents` so the rail, top bar and
+ * content land in the grid areas directly.
+ *
+ * React sets the class and data-rail on <body> — see AdminShellFrame.
+ */
+body.gt-shell-host {
+  display: grid;
+  grid-template-columns: var(--gt-rail-w) minmax(0, 1fr);
+  grid-template-rows: var(--gt-topbar-h) minmax(0, 1fr);
+  grid-template-areas:
+    'rail topbar'
+    'rail main';
+  /* Same viewport lock as .gt-shell — admin's grid host is the body, so it
+     needs the rule too or the rail scrolls away on long tables. */
+  height: 100dvh;
+  overflow: hidden;
+  margin: 0;
+}
+
+body.gt-shell-host[data-rail='collapsed'] {
+  grid-template-columns: var(--gt-rail-w-collapsed) minmax(0, 1fr);
+}
+
+body.gt-shell-host > #admin-app-root,
+body.gt-shell-host .gt-admin-shell {
+  display: contents;
+}
+
+body.gt-shell-host > #admin-legacy-content,
+body.gt-shell-host .gt-admin-main {
+  grid-area: main;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--gt-stack) var(--gt-gutter) var(--gt-section-gap);
+}
+
+/* An empty legacy container still claims the grid area under `spa` render mode
+   and would push the React main out of it. */
+body.gt-shell-host > #admin-legacy-content:empty {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  body.gt-shell-host,
+  body.gt-shell-host[data-rail='collapsed'] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'topbar'
+      'main';
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Rail
+   -------------------------------------------------------------------------- */
+
+.gt-rail {
+  grid-area: rail;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: color-mix(in srgb, var(--gt-surface) 92%, var(--gt-bg));
+  border-right: 1px solid var(--gt-border);
+  overflow: hidden;
+}
+
+.gt-rail__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-3);
+  height: var(--gt-topbar-h);
+  padding-inline: var(--gt-space-4);
+  flex: 0 0 auto;
+  color: var(--gt-text);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: var(--gt-font-lg);
+  white-space: nowrap;
+}
+
+.gt-rail__mark {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: 0 0 auto;
+}
+
+/* Role badge under the product name — admin chrome identifies the product and
+   then says which half of it you are in. */
+.gt-rail__brand-role {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: var(--gt-label-size);
+  font-weight: var(--gt-label-weight);
+  letter-spacing: var(--gt-label-tracking);
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
+  line-height: 1;
+}
+
+/* The scroll container is the nav, not the rail, so brand and footer stay
+   pinned while twenty-three destinations scroll between them. */
+.gt-rail__nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--gt-space-2) var(--gt-space-2) var(--gt-space-4);
+}
+
+/* Groups are <ul>s so the rail is a list of lists to assistive tech, which is
+   what it actually is. The reset lives here rather than in each shell. */
+.gt-rail__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gt-rail__group {
+  margin-top: var(--gt-space-4);
+}
+
+.gt-rail__group:first-child {
+  margin-top: 0;
+}
+
+.gt-rail__group-label {
+  padding: var(--gt-space-2) var(--gt-space-3);
+  font-size: var(--gt-label-size);
+  font-weight: var(--gt-label-weight);
+  letter-spacing: var(--gt-label-tracking);
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
+  white-space: nowrap;
+}
+
+.gt-rail__link {
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-3);
+  /* Full width and left-aligned so a <button> lays out like an <a>. */
+  width: 100%;
+  min-height: var(--gt-rail-item-h);
+  padding: 0 var(--gt-space-3);
+  border-radius: var(--gt-radius-sm);
+  color: var(--gt-text-muted);
+  text-decoration: none;
+  font-size: var(--gt-font-md);
+  white-space: nowrap;
+  /* Chat and Friends open panels rather than routing, so they are <button>
+     elements in a list of <a> elements. Without these four resets they took the
+     UA button defaults — grey fill, a border, centred text, shrink-to-fit width
+     — and read as controls dropped into the nav rather than destinations in it.
+     Reset here rather than on a modifier class so any future action item in the
+     rail is right by default. */
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--gt-motion-fast) var(--gt-motion-ease),
+    color var(--gt-motion-fast) var(--gt-motion-ease),
+    box-shadow var(--gt-motion-fast) var(--gt-motion-ease);
+}
+
+.gt-rail__link:hover {
+  color: var(--gt-text);
+  background: color-mix(in srgb, var(--gt-text) 7%, transparent);
+}
+
+.gt-rail__link:focus-visible {
+  outline: 2px solid var(--gt-focus-ring);
+  outline-offset: -2px;
+}
+
+/* Active marker: accent edges on BOTH sides rather than a filled pill. A single
+   left edge reads as a stray artifact against the rail's own right border; a
+   matching right edge closes the row so the selection looks deliberate. */
+.gt-rail__link.is-active {
+  color: var(--gt-text);
+  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
+  box-shadow:
+    inset 2px 0 0 var(--gt-accent),
+    inset -2px 0 0 var(--gt-accent);
+}
+
+.gt-rail__icon {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gt-rail__label {
+  /* nowrap is what makes the ellipsis work at all (W27-A4). Without it
+     text-overflow has nothing to do — the text simply wraps instead — so
+     "Libraries & scans" took two lines and every rail row it appeared beside
+     grew to match. One line per destination, truncated if it must be. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gt-rail__count {
+  margin-left: auto;
+  font-size: var(--gt-font-xs);
+  color: var(--gt-text-muted);
+}
+
+/* Sub-links: the admin rail expands the active section's hub links beneath it.
+   Indented from the icon column rather than given their own, so the hierarchy
+   reads without a second level of iconography to invent. */
+.gt-rail__sublist {
+  margin-bottom: var(--gt-space-2);
+}
+
+.gt-rail__link--sub {
+  padding-left: var(--gt-space-6);
+  min-height: calc(var(--gt-rail-item-h) - 0.2rem);
+  font-size: var(--gt-font-sm);
+}
+
+.gt-rail__link--sub.is-active {
+  /* No inset bar here — the parent section already carries one, and two edges
+     stacked in a 12rem column reads as a rendering fault rather than depth. */
+  box-shadow: none;
+  color: var(--gt-accent);
+  background: transparent;
+}
+
+.gt-rail__footer {
+  flex: 0 0 auto;
+  /* Matches the nav's own horizontal padding so footer controls line up with
+     the rail links above them rather than sitting on their own inset. */
+  padding: var(--gt-space-2) var(--gt-space-3);
+  border-top: 1px solid var(--gt-border);
+}
+
+/* A control group in the footer aligns left, like every rail row. Centring it
+   made the pair float in the middle of a column of left-aligned items. */
+.gt-rail__footer--controls {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Account menu as a <details> on Jinja pages: same behaviour as the old
+   JS-driven dropdown with no script to keep alive, and it survived retiring the
+   sidebar toggle handler that used to own it. */
+.gt-rail__account > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.gt-rail__account > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gt-rail__avatar {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: var(--gt-radius-circle);
+  object-fit: cover;
+}
+
+/* ---------- collapsed ---------- */
+
+[data-rail='collapsed'] .gt-rail__label,
+[data-rail='collapsed'] .gt-rail__count,
+[data-rail='collapsed'] .gt-rail__group-label,
+[data-rail='collapsed'] .gt-rail__brand-text {
+  /* Not display:none — the accessible name must survive collapsing, or the rail
+     becomes a column of unlabelled icons to a screen reader. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[data-rail='collapsed'] .gt-rail__link,
+[data-rail='collapsed'] .gt-rail__brand {
+  justify-content: center;
+  padding-inline: 0;
+  gap: 0;
+}
+
+/* Sub-links are section detail; at icon width there is nothing to indent from
+   and they collapse into an unreadable stack. */
+[data-rail='collapsed'] .gt-rail__sublist,
+[data-rail='collapsed'] .gt-rail__footer {
+  display: none;
+}
+
+/* A collapsed group still needs separating from the one above it, but its
+   heading is gone — a rule stands in for the label. */
+[data-rail='collapsed'] .gt-rail__group {
+  margin-top: var(--gt-space-3);
+  padding-top: var(--gt-space-3);
+  border-top: 1px solid var(--gt-border);
+}
+
+[data-rail='collapsed'] .gt-rail__group:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Top bar — page scope only
+   -------------------------------------------------------------------------- */
+
+.gt-topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-3);
+  min-width: 0;
+  padding-inline: var(--gt-gutter);
+  background: color-mix(in srgb, var(--gt-surface) 88%, var(--gt-bg));
+  border-bottom: 1px solid var(--gt-border);
+}
+
+.gt-topbar__rail-toggle {
+  flex: 0 0 auto;
+}
+
+.gt-topbar__views {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.gt-topbar__views::-webkit-scrollbar {
+  display: none;
+}
+
+/* The section name, as an eyebrow rather than a heading.
+   The rail already marks which section is active; this is a confirmation for
+   someone arriving by deep link or with the rail collapsed, not a page title. */
+.gt-topbar__section {
+  font-size: var(--gt-label-size);
+  font-weight: var(--gt-label-weight);
+  letter-spacing: var(--gt-label-tracking);
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
+  white-space: nowrap;
+}
+
+.gt-topbar__spacer {
+  flex: 1 1 auto;
+}
+
+.gt-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-2);
+  flex: 0 0 auto;
+}
+
+/* A search field that looks like a field invites typing; the palette is the
+   real target, so this is a button wearing a field's clothes. */
+.gt-topbar__search {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gt-space-3);
+  min-height: var(--gt-control-h);
+  min-width: 12rem;
+  padding-inline: var(--gt-control-pad-x);
+  border: 1px solid var(--gt-border);
+  border-radius: var(--gt-radius-sm);
+  background: var(--gt-bg);
+  color: var(--gt-text-muted);
+  font: inherit;
+  font-size: var(--gt-font-md);
+  cursor: pointer;
+  text-align: left;
+}
+
+.gt-topbar__search:hover {
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  color: var(--gt-text);
+}
+
+.gt-topbar__search kbd {
+  margin-left: auto;
+  padding: 0 var(--gt-space-1);
+  border: 1px solid var(--gt-border);
+  border-radius: var(--gt-radius-xs);
+  font-family: inherit;
+  font-size: var(--gt-font-xs);
+}
+
+/* --------------------------------------------------------------------------
+   Mobile: the rail becomes an overlay drawer
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .gt-shell,
+  .gt-shell[data-rail='collapsed'] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'topbar'
+      'main';
+  }
+
+  .gt-rail {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1070;
+    width: min(var(--gt-rail-w), 80vw);
+    transform: translateX(-100%);
+    transition: transform var(--gt-motion-base) var(--gt-motion-ease);
+    box-shadow: var(--gt-shadow-lg);
+  }
+
+  [data-rail='open'] .gt-rail {
+    transform: translateX(0);
+  }
+
+  /* Collapsed is meaningless on mobile — the drawer is either open or gone —
+     so labels come back regardless of the desktop collapsed state. */
+  [data-rail='collapsed'] .gt-rail__label,
+  [data-rail='collapsed'] .gt-rail__group-label,
+  [data-rail='collapsed'] .gt-rail__brand-text {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+  }
+
+  [data-rail='collapsed'] .gt-rail__link {
+    justify-content: flex-start;
+    padding-inline: var(--gt-space-3);
+  }
+
+  .gt-rail__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1069;
+    background: color-mix(in srgb, var(--gt-bg) 70%, transparent);
+  }
+
+  .gt-topbar__search {
+    min-width: 0;
+  }
+
+  .gt-topbar__search-label,
+  .gt-topbar__search kbd {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-rail {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Skip link — the rail puts ~23 links before main content, so bypassing them
+   matters more here than it did with a five-item bar.
+   -------------------------------------------------------------------------- */
+
+.gt-skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 1090;
+}
+
+.gt-skip-link:focus {
+  left: var(--gt-space-3);
+  top: var(--gt-space-3);
+  padding: var(--gt-space-3) var(--gt-space-4);
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-accent);
+  border-radius: var(--gt-radius-sm);
+  color: var(--gt-text);
+}
+
+/* --------------------------------------------------------------------------
+   Section slot (GT-B4)
+
+   Where the active destination's own controls render — currently the library
+   filters, which were previously a second 17.5rem aside sitting immediately
+   right of the rail. Two left-hand panels next to each other was the single
+   worst thing about the new chrome; folding one into the other returns the
+   width to the grid and puts filters under the destination they filter.
+   -------------------------------------------------------------------------- */
+
+.gt-rail__slot:empty {
+  display: none;
+}
+
+.gt-rail__slot {
+  padding: var(--gt-space-2) var(--gt-space-1) var(--gt-space-3);
+  border-bottom: 1px solid var(--gt-border);
+  margin-bottom: var(--gt-space-2);
+}
+
+/* Toggled by clicking Library while already on Library (W27-A6). The slot is
+   hidden rather than its contents, so the portal that fills it keeps working
+   and the filter state survives being hidden — reopening returns you to the
+   filters you had, not a reset form. */
+.gt-rail__slot.is-hidden {
+  display: none;
+}
+
+/* The filter form was built for a 17.5rem aside; inside the rail it has to give
+   up its own width, background and border rather than draw a panel within a
+   panel. */
+.gt-rail__slot .library-filters,
+.gt-rail__slot .container-filtersandsort {
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Collapsed shows icons only, and a filter form has no icon form. Hiding it
+   keeps collapsing predictable: the rail is destinations, nothing else. */
+[data-rail='collapsed'] .gt-rail__slot {
+  display: none;
+}
+
+
+/* --------------------------------------------------------------------------
+   Scrollbars (GT-B6)
+
+   The default UA scrollbar is a wide light-grey slab that ignores the theme and
+   was the most obviously un-styled thing on screen. Both engines are covered:
+   `scrollbar-*` for Firefox, `::-webkit-scrollbar` for Chromium.
+
+   It also has to narrow with the rail — a 10px bar in a 3.25rem icon column is
+   a fifth of the width.
+   -------------------------------------------------------------------------- */
+
+.gt-rail__nav,
+.gt-shell__main,
+body.gt-shell-host > #admin-legacy-content,
+body.gt-shell-host .gt-admin-main {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--gt-text) 22%, transparent) transparent;
+}
+
+.gt-rail__nav::-webkit-scrollbar,
+.gt-shell__main::-webkit-scrollbar,
+body.gt-shell-host > #admin-legacy-content::-webkit-scrollbar,
+body.gt-shell-host .gt-admin-main::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.gt-rail__nav::-webkit-scrollbar-track,
+.gt-shell__main::-webkit-scrollbar-track,
+body.gt-shell-host > #admin-legacy-content::-webkit-scrollbar-track,
+body.gt-shell-host .gt-admin-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gt-rail__nav::-webkit-scrollbar-thumb,
+.gt-shell__main::-webkit-scrollbar-thumb,
+body.gt-shell-host > #admin-legacy-content::-webkit-scrollbar-thumb,
+body.gt-shell-host .gt-admin-main::-webkit-scrollbar-thumb {
+  border-radius: var(--gt-radius-pill);
+  background: color-mix(in srgb, var(--gt-text) 20%, transparent);
+  /* Inset via a transparent border so the thumb never touches the content. */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.gt-rail__nav::-webkit-scrollbar-thumb:hover,
+.gt-shell__main::-webkit-scrollbar-thumb:hover,
+body.gt-shell-host > #admin-legacy-content::-webkit-scrollbar-thumb:hover,
+body.gt-shell-host .gt-admin-main::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  background-clip: padding-box;
+}
+
+/* Collapsed: a hairline, since there is no room for anything more. */
+[data-rail='collapsed'] .gt-rail__nav {
+  scrollbar-width: none;
+}
+
+[data-rail='collapsed'] .gt-rail__nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+[data-rail='collapsed'] .gt-rail__nav::-webkit-scrollbar-thumb {
+  border-width: 1px;
+}
+
+/* --------------------------------------------------------------------------
+   Route transitions (GT-B9)
+
+   A lazy route's Suspense fallback replaces the whole page for a frame or two.
+   Reserving the height stops the content pane collapsing and springing back,
+   which is what made navigation look like the page had broken.
+   -------------------------------------------------------------------------- */
+
+.gt-route-fallback {
+  min-height: 60vh;
+}
+
+/* Refreshing in place: the grid stays mounted and keeps its box, so pagination
+   and filters do not jump. Only the content dims. */
+.library-grid-loading {
+  opacity: 0.45;
+  transition: opacity var(--gt-motion-base) var(--gt-motion-ease);
+  /* Pointer events off while stale, or a click lands on a card that is about
+     to be replaced by a different game. */
+  pointer-events: none;
+}
+
+/* Pop-out host (GT-B17) — the route with no chrome around it. */
+.gt-popout-main {
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--gt-space-3);
+  background: var(--gt-bg);
+  color: var(--gt-text);
+}

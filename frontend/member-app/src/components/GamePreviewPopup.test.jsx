@@ -112,9 +112,36 @@ test('clicking the scrim closes it but clicking the panel does not', () => {
 
 test('clicking the scrim itself dismisses', () => {
   const onClose = vi.fn()
-  const { container } = renderPopup({ onClose })
-  fireEvent.click(container.querySelector('.gt-preview__scrim'))
+  renderPopup({ onClose })
+
+  // Queried from the document, not from `container`: the scrim is portalled to
+  // <body> so `position: fixed` is measured against the viewport rather than
+  // against a transformed tile ancestor. Rendered in place it dimmed only the
+  // tile's row.
+  fireEvent.click(document.querySelector('.gt-preview__scrim'))
   expect(onClose).toHaveBeenCalled()
+})
+
+test('the scrim is portalled out of the card, not rendered inside it', () => {
+  // The defect this guards: `position: fixed` is relative to the nearest
+  // transformed/contained ancestor, and tiles have both. Left in the card the
+  // overlay could never cover the page, no matter what its CSS said.
+  const { container } = renderPopup({})
+
+  expect(container.querySelector('.gt-preview__scrim')).toBeNull()
+  expect(document.querySelector('.gt-preview__scrim')).not.toBeNull()
+})
+
+test('opening a second preview closes the first', () => {
+  // Every GameCard owns a popup, so without a singleton rule two could be open
+  // at once — two scrims, two dialogs, both claiming aria-modal.
+  const firstClose = vi.fn()
+  renderPopup({ onClose: firstClose })
+  expect(firstClose).not.toHaveBeenCalled()
+
+  renderPopup({ onClose: vi.fn() })
+
+  expect(firstClose).toHaveBeenCalled()
 })
 
 test('renders nothing without a game', () => {

@@ -19,8 +19,8 @@
   padding: 0.3rem 0.7rem 0.3rem 0.5rem;
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--gt-store-color, #2fd67b) 50%, transparent);
-  background: color-mix(in srgb, var(--gt-store-color, #2fd67b) 14%, var(--gt-surface, #141820));
-  color: var(--gt-text, #f2f4f8);
+  background: color-mix(in srgb, var(--gt-store-color, #2fd67b) 14%, var(--gt-surface));
+  color: var(--gt-text);
   text-decoration: none;
   font-size: 0.78rem;
   font-weight: 600;
@@ -30,7 +30,7 @@
 .gt-store-link:hover,
 .gt-store-link:focus-visible {
   border-color: var(--gt-store-color, #2fd67b);
-  background: color-mix(in srgb, var(--gt-store-color, #2fd67b) 22%, var(--gt-surface, #141820));
+  background: color-mix(in srgb, var(--gt-store-color, #2fd67b) 22%, var(--gt-surface));
   outline: none;
 }
 
@@ -45,7 +45,7 @@
 .gt-store-link__icon--mask {
   display: inline-block;
   background-color: currentColor;
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
   -webkit-mask-image: var(--gt-store-mask);
   mask-image: var(--gt-store-mask);
   -webkit-mask-size: contain;
@@ -61,7 +61,7 @@
 .gt-store-link--twitter .gt-store-link__icon,
 .gt-store-link--apple .gt-store-link__icon,
 .gt-store-link--ubisoft .gt-store-link__icon {
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .gt-store-link__label {

@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+
+import { DataTable } from './DataTable'
 import {
   confirmCreateSelected,
   fetchProposeLeafLibraries,
@@ -210,46 +212,58 @@ export function ProposeLeafLibraries({
             </button>
           </div>
 
-          <div className="gt-propose-leaf__table-wrap">
-            <table className="gt-admin-table gt-propose-leaf__table">
-              <thead>
-                <tr>
-                  <th scope="col">Select</th>
-                  <th scope="col">Suggested name</th>
-                  <th scope="col">Platform</th>
-                  <th scope="col">Mode</th>
-                  <th scope="col">Depth</th>
-                  <th scope="col">Path</th>
-                  <th scope="col">Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {candidates.map((row) => (
-                  <tr key={row.id}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${row.suggested_name}`}
-                        checked={selected.has(row.id)}
-                        onChange={() => toggleOne(row.id)}
-                        disabled={confirming}
-                      />
-                    </td>
-                    <td>{row.suggested_name}</td>
-                    <td>
-                      <code>{row.platform}</code>
-                    </td>
-                    <td>{row.scan_mode}</td>
-                    <td>{row.scan_depth}</td>
-                    <td>
-                      <code className="gt-propose-leaf__path">{row.path}</code>
-                    </td>
-                    <td className="gt-propose-leaf__reason">{row.reason || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Sorting and filtering a scan result is the point of this screen —
+              a root scan can propose dozens of folders and "show me the SNES
+              ones" was previously a manual read (W27-C1).
+
+              Selection is safe under both: it is held outside the table and
+              keyed by row id, so re-ordering or filtering never moves a tick to
+              a different row. The Select column opts out of sorting and
+              filtering, since neither means anything for a checkbox. */}
+          <DataTable
+            rows={candidates}
+            getRowKey={(row) => row.id}
+            emptyMessage="No candidate folders."
+            initialSort={{ key: 'suggested_name', dir: 'asc' }}
+            dense
+            columns={[
+              {
+                key: 'select',
+                label: 'Select',
+                sortable: false,
+                filterable: false,
+                render: (row) => (
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${row.suggested_name}`}
+                    checked={selected.has(row.id)}
+                    onChange={() => toggleOne(row.id)}
+                    disabled={confirming}
+                  />
+                ),
+              },
+              { key: 'suggested_name', label: 'Suggested name' },
+              {
+                key: 'platform',
+                label: 'Platform',
+                render: (row) => <code>{row.platform}</code>,
+              },
+              { key: 'scan_mode', label: 'Mode' },
+              { key: 'scan_depth', label: 'Depth' },
+              {
+                key: 'path',
+                label: 'Path',
+                render: (row) => (
+                  <code className="gt-propose-leaf__path">{row.path}</code>
+                ),
+              },
+              {
+                key: 'reason',
+                label: 'Reason',
+                render: (row) => row.reason || '—',
+              },
+            ]}
+          />
         </div>
       ) : null}
 

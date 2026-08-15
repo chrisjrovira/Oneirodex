@@ -143,5 +143,60 @@ contract had drifted across `0.1.0` and `0.2.0` and now all read `1.0.0-beta`.
 - ClamAV daemon reachability for malware scan; LiveKit compose profile for voice; deferred WebRetro WASM (PCE/VICE/DOS)
 - Optional Compose `observability` profile (Prometheus/Grafana) — stub only; see [observability-profile.md](docs/runbooks/observability-profile.md)
 
+## [Unreleased]
+
+Work since the 1.0.0-beta tag (2026-08-06). Parts of this section are not yet committed.
+
+### Added
+
+- **Two-bar chrome** — side rail + top bar (`SideRail`, `TopBar`, and the `partials/rail.html` ·
+  `partials/topbar.html` Jinja equivalents) so React and classic pages present one shell. Page views
+  moved into bar two across both stacks; admin adopted the same bar one and its pages retired their
+  now-duplicated titles
+- **Chat pop-out** — `openChatPopoutWindow()` plus a `?popout=1` chrome-less host, matching the pattern
+  the Friends dock has used since the social wave. Chat no longer blocks library interaction
+- **Bad-match feedback** — operators can say a proposed match is wrong, on both the React `DupeGlance`
+  and the classic unmatched table, so the two surfaces do not disagree about whether feedback exists
+- **Game preview popup** — hover surfaces the state that actually decides whether a title can be played
+- **Local installer builds** — `scripts/build-installers.sh` + [local-installers.md](docs/runbooks/local-installers.md);
+  desktop installers no longer require GitHub Actions. Per-host limits are stated rather than implied —
+  a `.dmg` genuinely needs a Mac
+- **BIOS import** from an operator-supplied local collection (`scripts/import_bios.py`), preferring the
+  majority copy when candidates disagree
+- **Ownership polling** (`gametheca/utils/ownership_poller.py`) and a `/styleguide` route
+- **CSS token lint** (`scripts/css-token-lint.mjs`) with a baseline — 2365 violations down to 1317
+
+### Changed
+
+- **Child access to the household voice lobby is now a household setting**, not a hardcoded stance
+- **Licensed under AGPL-3.0**
+
+### Fixed
+
+- **Emulated games ran far too fast with broken audio.** Nothing measured the display refresh rate:
+  RetroArch defaults `video_refresh_rate` to 60 and `video_vsync` paces to rAF, so a 120/144/165Hz
+  monitor ran the core **2–2.75× too fast**. `measureRefreshHz()` now samples 32 frames (median, with a
+  hidden-tab guard) and writes the real rate. **Unverified on hardware — needs a >60Hz display**, since
+  a 60Hz panel is exactly the case the old default already got right
+- **Firmware you added did not appear.** `list_bios_files` was a flat `os.listdir` that skipped
+  directories, so per-system sets (`bios/psx/`, `bios/saturn/`) left a populated volume reading as
+  empty. Nested files are found, and *present but misplaced* is now reported distinctly from *absent* —
+  libretro cores read the system root, so the two need different fixes
+- **A duplicated settings row would have locked everyone out of login**
+- **Firmware upload never sent a CSRF token**
+- Oversized cover uploads crashed on Pillow 10+
+- Upgrading from the legacy quality-profile format 404'd on first edit
+- A completed setup recorded itself as parked on Features
+- Collection detail rendered with no name under the new chrome
+- The scan path used a single scraper source instead of finishing the cascade
+- Tile hover was effectively invisible
+
+### Removed
+
+- **The classic `/admin/manage_users` editor**, at every layer — rail entry, page link, route resolver,
+  Flask route, template, CSS and JS. The React roster at `/admin/users` is the only user editor; the
+  invites page now points there. **A bookmark to the old path will 404.**
+- The last SharewareZ-era leftover in code (`get_warez_folder_usage()`)
+
 [1.0.0-beta]: https://github.com/chrisjrovira/gametheca/releases/tag/v1.0.0-beta
 [0.1.0]: https://github.com/chrisjrovira/gametheca/releases/tag/v0.1.0

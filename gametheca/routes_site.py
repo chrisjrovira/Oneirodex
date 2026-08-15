@@ -34,6 +34,27 @@ def inject_settings():
     """Context processor to inject global settings into templates"""
     return get_global_settings()
 
+@site_bp.route('/dev/styleguide')
+@login_required
+@admin_required
+def styleguide():
+    """Every UI primitive, in every variant and state, on one page (GT-A6).
+
+    This is the visual contract for the design system. Two vocabularies were
+    live at once — 314 `.gt-btn` call sites in the member SPA against 254
+    Bootstrap `.btn` call sites in the Jinja pages — and nothing rendered them
+    side by side, so nobody could see they had drifted apart. Rendering both
+    families next to each other is the point: gt-bootstrap-bridge.css claims
+    they now look identical, and this page is where that claim is checkable.
+
+    Admin-gated rather than debug-gated on purpose. Whether the active theme
+    styles every primitive correctly is a question operators need to answer on
+    their own install, with their own preset selected — not something only
+    reachable in a dev checkout.
+    """
+    return render_template('site/styleguide.html')
+
+
 @site_bp.route('/restricted')
 @login_required
 def restricted():

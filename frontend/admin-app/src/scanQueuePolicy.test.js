@@ -6,6 +6,7 @@ import {
   hasActiveScan,
   isAlreadyRunningReject,
   isScanBusyStatus,
+  isScanRunning,
   isScanQueuedStatus,
   normalizeScanJobsList,
   isScanCoalesced,
@@ -117,5 +118,33 @@ describe('scanQueuePolicy', () => {
   test('conflict copy stays honest about Unraid/NAS load', () => {
     expect(SCAN_CONFLICT_COPY.forceWarning).toMatch(/Unraid\/NAS/)
     expect(SCAN_CONFLICT_COPY.queueHint).toMatch(/safer/)
+  })
+})
+
+describe('isScanRunning (GT-B13)', () => {
+  test('is false on an install that has never scanned', () => {
+    // The reported bug: "Scanning…" on a fresh install with no libraries.
+    expect(isScanRunning({ jobs: [], running: true })).toBe(false)
+    expect(isScanRunning({ jobs: [] })).toBe(false)
+    expect(isScanRunning([])).toBe(false)
+    expect(isScanRunning(null)).toBe(false)
+  })
+
+  test('trusts a busy job on its own', () => {
+    expect(isScanRunning({ jobs: [{ status: 'Running' }] })).toBe(true)
+    expect(isScanRunning([{ status: 'Stopping' }])).toBe(true)
+  })
+
+  test('accepts the payload flag once a job corroborates it', () => {
+    expect(isScanRunning({ jobs: [{ status: 'Completed' }], running: true })).toBe(true)
+  })
+
+  test('matches busy status regardless of case', () => {
+    // isScanQueuedStatus lowercased and this did not, so the two disagreed
+    // about the same payload.
+    expect(isScanBusyStatus('running')).toBe(true)
+    expect(isScanBusyStatus('RUNNING')).toBe(true)
+    expect(isScanBusyStatus('Running')).toBe(true)
+    expect(isScanBusyStatus('completed')).toBe(false)
   })
 })

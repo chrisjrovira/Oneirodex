@@ -8,6 +8,10 @@ from sqlalchemy import select, func
 from datetime import datetime, timezone
 from . import admin2_bp
 from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.global_settings import (
+    global_settings_row,
+    global_settings_row_or_create,
+)
 from gametheca.utils.auth import admin_required
 import json
 import logging
@@ -41,9 +45,7 @@ def attract_mode_settings_page():
     """Admin page for configuring attract mode settings"""
     try:
         # Get current global settings
-        global_settings = db.session.execute(
-            select(GlobalSettings)
-        ).scalar_one_or_none()
+        global_settings = global_settings_row()
 
         # Prepare settings data
         settings_data = {
@@ -128,13 +130,7 @@ def save_attract_mode_settings():
             return jsonify({'success': False, 'message': 'Validation failed', 'errors': errors}), 400
 
         # Get or create global settings
-        global_settings = db.session.execute(
-            select(GlobalSettings)
-        ).scalar_one_or_none()
-
-        if not global_settings:
-            global_settings = GlobalSettings()
-            db.session.add(global_settings)
+        global_settings = global_settings_row_or_create()
 
         # Update settings
         global_settings.attract_mode_enabled = data.get('enabled', False)
@@ -181,9 +177,7 @@ def get_attract_mode_settings():
     """
     try:
         # Get global settings
-        global_settings = db.session.execute(
-            select(GlobalSettings)
-        ).scalar_one_or_none()
+        global_settings = global_settings_row()
 
         if not global_settings or not global_settings.attract_mode_enabled:
             return jsonify({

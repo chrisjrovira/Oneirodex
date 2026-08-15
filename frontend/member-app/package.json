@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "vitest"
+    "test": "vitest",
+    "lint:css": "node ../../scripts/css-token-lint.mjs",
+    "lint:css:update": "node ../../scripts/css-token-lint.mjs --update"
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.14.8",

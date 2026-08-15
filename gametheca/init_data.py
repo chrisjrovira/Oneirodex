@@ -17,52 +17,53 @@ DEFAULT_ALLOWED_FILE_TYPES = [
     'cia', '3ds', 'nsp', 'xci', 'nsz', 'xcz', 'gdi', 'cdi',
 ]
 
-from gametheca.models import ReleaseGroup, GlobalSettings
+from gametheca.models import ReleaseGroup
 from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.global_settings import (
+    global_settings_row,
+    global_settings_row_or_create,
+)
+
+DEFAULT_GLOBAL_SETTINGS = {
+    'showSystemLogo': True,
+    'showHelpButton': True,
+    'allowUsersToInviteOthers': True,
+    'enableWebLinksOnDetailsPage': True,
+    'enableServerStatusFeature': True,
+    'enableNewsletterFeature': True,
+    'showVersion': True,
+}
+
 
 def initialize_default_settings():
     """Initialize default global settings if they don't exist."""
     print("Initializing default global settings...")
-    settings_record = db.session.execute(select(GlobalSettings)).scalars().first()
-    if not settings_record:
-        try:
-            default_settings = {
-                'showSystemLogo': True,
-                'showHelpButton': True,
-                'allowUsersToInviteOthers': True,
-                'enableWebLinksOnDetailsPage': True,
-                'enableServerStatusFeature': True,
-                'enableNewsletterFeature': True,
-                'showVersion': True
-            }
-            settings_record = GlobalSettings(settings=default_settings)
-            db.session.add(settings_record)
-            db.session.commit()
-            print("Created default global settings")
-        except Exception as e:
-            print(f"Error creating default settings: {e}")
-            db.session.rollback()
-    else:
-        # Settings exist, update only if settings field is empty
+    try:
+        # Fetch-or-create through the shared helper: this runs at boot, which is
+        # exactly when several workers start at once and race for the first row.
+        # The singleton unique index makes that collision an IntegrityError now,
+        # and the helper's SAVEPOINT turns it back into "read the winner's row"
+        # instead of leaving this worker with nothing.
+        existed = global_settings_row() is not None
+        settings_record = global_settings_row_or_create()
+
         if not settings_record.settings:
-            try:
-                default_settings = {
-                    'showSystemLogo': True,
-                    'showHelpButton': True,
-                    'allowUsersToInviteOthers': True,
-                    'enableWebLinksOnDetailsPage': True,
-                    'enableServerStatusFeature': True,
-                    'enableNewsletterFeature': True,
-                    'showVersion': True
-                }
-                settings_record.settings = default_settings
-                db.session.commit()
-                print("Updated existing global settings with default values")
-            except Exception as e:
-                print(f"Error updating default settings: {e}")
-                db.session.rollback()
+            # Covers both the row we just made and a pre-existing one whose
+            # settings blob is empty. A populated blob is never overwritten.
+            settings_record.settings = dict(DEFAULT_GLOBAL_SETTINGS)
+            db.session.commit()
+            print(
+                "Updated existing global settings with default values"
+                if existed
+                else "Created default global settings"
+            )
         else:
+            # Nothing to persist: reaching here means a populated row already
+            # existed, so the helper read rather than created.
             print("Global settings already exist with values, preserving them")
+    except Exception as e:
+        print(f"Error initializing default settings: {e}")
+        db.session.rollback()
 
 def initialize_library_folders():
     """Initialize the required folders and theme files for the application."""

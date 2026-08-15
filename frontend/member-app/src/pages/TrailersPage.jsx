@@ -131,7 +131,7 @@ function labelsFor(options, ids) {
  * is unavailable, then binds a YT.Player to that same frame for the auto-advance
  * behaviour the Jinja page relied on.
  */
-function TrailerPlayer({ videoId, skipFirst, settingsRef, onAdvance }) {
+function TrailerPlayer({ videoId, skipFirst, settingsRef, onAdvance, title, gameUuid }) {
   const frameRef = useRef(null)
   const advanceRef = useRef(onAdvance)
   const [src] = useState(() => buildEmbedSrc(videoId, skipFirst))
@@ -212,11 +212,22 @@ function TrailerPlayer({ videoId, skipFirst, settingsRef, onAdvance }) {
     <div className="gt-trailers__video">
       <iframe
         ref={frameRef}
-        title="Game trailer"
+        title={title ? `Trailer — ${title}` : 'Game trailer'}
         src={src}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
       />
+      {/* Caption belongs to the video, not the page (W27-F1). It sits under the
+          frame rather than over it so it never covers the picture, and it is a
+          link because "what am I watching" and "take me to it" are the same
+          question. */}
+      {title ? (
+        <p className="gt-trailers__caption">
+          <a className="gt-trailers__title-link" href={`/game_details/${gameUuid}`}>
+            {title}
+          </a>
+        </p>
+      ) : null}
     </div>
   )
 }
@@ -605,14 +616,23 @@ export function TrailersPage({ shellConfig = {} } = {}) {
   return (
     <>
     {useNewChrome ? (
+        /* Title moved out of the bar and onto the player card (W27-F1) — the
+           name belongs to the video you are watching, not to the page. Filters
+           join Settings and "Another one" here for the same reason they are
+           grouped on Calendar: one Filters popover per page, in the same place
+           on every page. */
         <ContextBar
-          summary={
-            trailer ? (
-              <a className="gt-trailers__title-link" href={`/game_details/${trailer.game_uuid}`}>
-                {trailer.game_name}
-              </a>
-            ) : null
+          filters={
+            <FilterPanel
+              options={options}
+              optionsError={optionsError}
+              filters={filters}
+              onChange={handleFilterChange}
+              onClear={handleClear}
+              onApply={handleApply}
+            />
           }
+          filterCount={activeFilterBadges.length}
           actions={
             <>
               {attractMode ? (
@@ -669,37 +689,47 @@ export function TrailersPage({ shellConfig = {} } = {}) {
         </>
       )}
 
-      <div className="gt-trailers__filters">
-        <button
-          type="button"
-          className="gt-trailers__filter-toggle"
-          aria-expanded={panelOpen}
-          onClick={() => setPanelOpen((open) => !open)}
-        >
-          Filters
-        </button>
+      {/* Not rendered under the new chrome (W27-F1): the bar owns the one
+          Filters popover, and a second toggle on the page was the duplication
+          the two-bar layout exists to remove.
 
-        {!panelOpen && activeFilterBadges.length > 0 ? (
-          <div className="gt-trailers__badges">
-            {activeFilterBadges.map((badge, index) => (
-              <span key={`${index}-${badge}`} className="gt-trailers__badge">
-                {badge}
-              </span>
-            ))}
-          </div>
-        ) : null}
+          Conditional render rather than the `hidden` attribute, which did
+          nothing here: `.gt-trailers__filters` sets `display: flex`, and an
+          author rule always beats the UA stylesheet's `[hidden]`. Both controls
+          were showing. */}
+      {useNewChrome ? null : (
+        <div className="gt-trailers__filters">
+          <button
+            type="button"
+            className="gt-trailers__filter-toggle"
+            aria-expanded={panelOpen}
+            onClick={() => setPanelOpen((open) => !open)}
+          >
+            Filters
+          </button>
 
-        {panelOpen ? (
-          <FilterPanel
-            options={options}
-            optionsError={optionsError}
-            filters={filters}
-            onChange={handleFilterChange}
-            onClear={handleClear}
-            onApply={handleApply}
-          />
-        ) : null}
-      </div>
+          {!panelOpen && activeFilterBadges.length > 0 ? (
+            <div className="gt-trailers__badges">
+              {activeFilterBadges.map((badge, index) => (
+                <span key={`${index}-${badge}`} className="gt-trailers__badge">
+                  {badge}
+                </span>
+              ))}
+            </div>
+          ) : null}
+
+          {panelOpen ? (
+            <FilterPanel
+              options={options}
+              optionsError={optionsError}
+              filters={filters}
+              onChange={handleFilterChange}
+              onClear={handleClear}
+              onApply={handleApply}
+            />
+          ) : null}
+        </div>
+      )}
 
       {loading ? <p>Loading random trailer…</p> : null}
 
@@ -734,6 +764,8 @@ export function TrailersPage({ shellConfig = {} } = {}) {
           skipFirst={settings.skipFirst}
           settingsRef={settingsRef}
           onAdvance={requestTrailer}
+          title={useNewChrome ? trailer.game_name : null}
+          gameUuid={trailer.game_uuid}
         />
       ) : null}
 

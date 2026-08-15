@@ -208,6 +208,14 @@ export function GameCard({
       <span className="visually-hidden">{game.name}</span>
       <div
         className="game-card"
+        // Raises the card above its neighbours while a menu is open.
+        //
+        // The stacking used to come from `:hover` alone, so the moment the
+        // pointer left the tile — which it must, to reach the menu that opens
+        // below it — the card dropped back to auto and the next tile in DOM
+        // order painted over the menu. On touch there is no hover at all, so
+        // the menu was always underneath.
+        data-overlay-open={menuOpen || statusOpen ? 'true' : undefined}
         data-name={game.name}
         data-genres={(game.genres || []).join(', ')}
       >

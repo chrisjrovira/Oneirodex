@@ -16,7 +16,7 @@
     align-items: center;
     gap: var(--spacing-sm);
     margin: 0;
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
     font-size: 2em;
     font-weight: bold;
     text-shadow: 0 0 10px var(--primary-brand-50);
@@ -24,7 +24,7 @@
 
 .settings-shell-intro {
     margin: 0 0 var(--spacing-lg);
-    color: var(--gt-text-muted, var(--text-light));
+    color: var(--gt-text-muted);
 }
 
 .settings-shell-cards {
@@ -43,7 +43,7 @@
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-glass);
     padding: var(--spacing-lg);
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
     text-decoration: none;
     transition: transform var(--transition-fast),
                 background var(--transition-fast),
@@ -57,12 +57,12 @@
     background: var(--primary-brand-20);
     border-color: var(--primary-brand-30);
     box-shadow: 0 0 20px var(--primary-brand-30);
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
     text-decoration: none;
 }
 
 .settings-shell-card:focus-visible {
-    outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+    outline: 2px solid var(--gt-focus-ring);
     outline-offset: 2px;
 }
 
@@ -76,7 +76,7 @@
 
 .settings-shell-card-icon {
     display: inline-flex;
-    color: var(--gt-accent, var(--btn-primary));
+    color: var(--gt-accent);
 }
 
 .settings-shell-badge {
@@ -91,15 +91,15 @@
 }
 
 .settings-shell-badge--on {
-    color: var(--gt-success, #3dd68c);
-    background: color-mix(in srgb, var(--gt-success, #3dd68c) 16%, transparent);
-    border-color: color-mix(in srgb, var(--gt-success, #3dd68c) 40%, transparent);
+    color: var(--gt-success);
+    background: color-mix(in srgb, var(--gt-success) 16%, transparent);
+    border-color: color-mix(in srgb, var(--gt-success) 40%, transparent);
 }
 
 .settings-shell-badge--off {
-    color: var(--gt-text-muted, var(--text-light));
-    background: color-mix(in srgb, var(--gt-text-muted, var(--text-light)) 12%, transparent);
-    border-color: color-mix(in srgb, var(--gt-text-muted, var(--text-light)) 28%, transparent);
+    color: var(--gt-text-muted);
+    background: color-mix(in srgb, var(--gt-text-muted) 12%, transparent);
+    border-color: color-mix(in srgb, var(--gt-text-muted) 28%, transparent);
 }
 
 .settings-shell-card h2 {
@@ -111,7 +111,7 @@
 .settings-shell-card p {
     margin: 0;
     font-size: var(--font-size-sm);
-    color: var(--gt-text-muted, var(--text-light));
+    color: var(--gt-text-muted);
 }
 
 .settings-shell-card-go {
@@ -122,7 +122,7 @@
     padding-top: var(--spacing-sm);
     font-size: var(--font-size-sm);
     font-weight: 600;
-    color: var(--gt-accent, var(--btn-primary));
+    color: var(--gt-accent);
 }
 
 .settings-shell-card-go .gt-icon {

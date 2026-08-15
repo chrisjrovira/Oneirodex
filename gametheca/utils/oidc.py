@@ -12,6 +12,7 @@ from urllib.parse import urljoin
 from sqlalchemy import func, select
 
 from gametheca.utils.rbac import VALID_ROLES, normalize_role
+from gametheca.utils.global_settings import global_settings_row
 
 try:
     from authlib.integrations.flask_client import OAuth
@@ -105,7 +106,7 @@ def is_oidc_enabled(settings_record=None) -> bool:
         from gametheca import db
         from gametheca.models import GlobalSettings
 
-        settings_record = db.session.execute(select(GlobalSettings)).scalars().first()
+        settings_record = global_settings_row()
     if not settings_record:
         return False
     return bool(getattr(settings_record, 'oidc_enabled', False))
@@ -181,7 +182,7 @@ def build_oidc_config(settings_record=None) -> OidcConfig | None:
         from gametheca import db
         from gametheca.models import GlobalSettings
 
-        settings_record = db.session.execute(select(GlobalSettings)).scalars().first()
+        settings_record = global_settings_row()
 
     if not is_oidc_enabled(settings_record):
         return None

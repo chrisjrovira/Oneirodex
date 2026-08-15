@@ -426,3 +426,85 @@ test('OpsPage manual Refresh shows status; poll does not wipe content', async ()
     expect(screen.getByText(/9\.9 ms/)).toBeInTheDocument()
   })
 })
+
+/**
+ * Reordering the Ops detail panels (task #6).
+ *
+ * Buttons rather than drag handles, and the DOM is rewritten rather than the
+ * panels being given a CSS `order`: visual order that disagrees with tab order
+ * is a worse bug than the one being fixed. Asserting on heading *sequence* is
+ * what catches that — a CSS-only reorder would leave this test passing while
+ * the page lied to anyone tabbing through it.
+ */
+function mockOpsWithSystemDetail() {
+  return vi.fn(async (url) => {
+    const href = String(url)
+    if (href.includes('/admin/api/ops/summary')) {
+      return { ok: true, status: 200, json: async () => mockOpsSummary() }
+    }
+    if (href.includes('/admin/api/ops/system')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          system: { OS: 'Linux' },
+          database: { Engine: 'PostgreSQL' },
+          logs: { count: 3 },
+          config: { DEBUG: 'false' },
+        }),
+      }
+    }
+    if (href.includes('/admin/api/ops/logs')) {
+      return { ok: true, status: 200, json: async () => ({ events: [] }) }
+    }
+    throw new Error(`unexpected fetch ${url}`)
+  })
+}
+
+function clearStoredOrder() {
+  // localStorage is not provided in this vitest environment, which is itself
+  // worth knowing: useWidgetOrder has to degrade to the declared order rather
+  // than throwing, and these tests exercise exactly that path.
+  try {
+    window.localStorage?.removeItem('gt-widget-order:ops-detail')
+  } catch {
+    // nothing stored to clear
+  }
+}
+
+function detailHeadings() {
+  return screen
+    .getAllByRole('heading', { level: 2 })
+    .map((h) => h.textContent)
+    .filter((text) => ['System', 'Database', 'Logs', 'Configuration'].includes(text))
+}
+
+test('OpsPage detail panels can be reordered from the keyboard', async () => {
+  const user = userEvent.setup()
+  clearStoredOrder()
+  global.fetch = mockOpsWithSystemDetail()
+
+  render(<OpsPage />)
+
+  expect(await screen.findByRole('heading', { name: 'System', level: 2 })).toBeInTheDocument()
+  expect(detailHeadings()).toEqual(['System', 'Database', 'Logs', 'Configuration'])
+
+  await user.click(screen.getByRole('button', { name: 'Move Database earlier' }))
+
+  expect(detailHeadings()).toEqual(['Database', 'System', 'Logs', 'Configuration'])
+})
+
+test('OpsPage disables the move that would fall off the end', async () => {
+  clearStoredOrder()
+  global.fetch = mockOpsWithSystemDetail()
+
+  render(<OpsPage />)
+
+  await screen.findByRole('heading', { name: 'System', level: 2 })
+
+  // Disabled rather than hidden, so the control group keeps its width and the
+  // buttons stay where the hand expects them as a panel moves.
+  expect(screen.getByRole('button', { name: 'Move System earlier' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Move Configuration later' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Move System later' })).toBeEnabled()
+})

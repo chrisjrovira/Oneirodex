@@ -12,6 +12,7 @@ from gametheca import db
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.library_acl import user_can_access_game
 from gametheca.utils.functions import get_path_size
+from gametheca.utils.global_settings import global_settings_row
 from . import download_bp
 
 @download_bp.route('/download_game/<game_uuid>', methods=['GET'])
@@ -55,7 +56,7 @@ def download_game(game_uuid):
     try:
         # Determine how to handle the game for instant streaming download
         if os.path.isdir(game.full_disk_path):
-            settings = db.session.execute(select(GlobalSettings)).scalars().first()
+            settings = global_settings_row()
             files_in_directory = []
             for f in os.listdir(game.full_disk_path):
                 full_path = os.path.join(game.full_disk_path, f)

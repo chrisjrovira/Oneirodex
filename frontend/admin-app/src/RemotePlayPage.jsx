@@ -1,4 +1,9 @@
+// Toasts on every mutation (GT-B25). These pages reported outcomes with an
+// inline message only, which is easy to miss when the control that triggered
+// it has scrolled away — and invisible when the save happens from the bottom
+// of a long form.
 import { useEffect, useState } from 'react'
+import { showToast } from './utils/toast'
 
 const EMPTY = {
   enabled: false,
@@ -72,9 +77,11 @@ export function RemotePlayPage() {
       const data = await response.json().catch(() => ({}))
       if (!response.ok) {
         setMessage(data.error || 'Save failed.')
+        showToast(data.error || 'Remote play save failed.', 'error')
         return
       }
       setMessage('Remote play settings saved.')
+      showToast('Remote play settings saved.', 'success')
     } catch {
       setMessage('Save failed.')
     } finally {

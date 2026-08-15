@@ -20,5 +20,12 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/testSetup.js',
+    // Matches member-app, and for the same reason: on a network-mounted
+    // checkout module resolve+transform is charged to the test clock, so a
+    // pure-logic test can cross the 5s default with no bug behind it —
+    // DupeGlance's normalizeTransforms case failed at 10.7s that way while
+    // passing alone. Raised now rather than later because this suite just
+    // became a CI gate, and a flaky gate is worse than no gate.
+    testTimeout: 30000,
   },
 })

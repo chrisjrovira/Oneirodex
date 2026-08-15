@@ -234,7 +234,22 @@ def browse_play_fields(game) -> dict[str, Any]:
         required = list(BIOS_REQUIREMENTS.get(core) or [])
         bios_required = bool(required)
         if required:
-            present = {row['name'].lower() for row in list_bios_files()}
+            # Only files the core can actually load count as present.
+            # list_bios_files() walks subdirectories now, and libretro reads the
+            # system root only — counting a nested file would hand the member an
+            # enabled Play button for a core that then fails to boot, which is
+            # worse than the honest block.
+            present = {
+                row['name'].lower()
+                for row in list_bios_files()
+                # Default True: a row without the flag is a flat root-level
+                # listing, which is what every row was before subdirectories
+                # were walked. Reading it as a hard key would turn a shape
+                # mismatch into a KeyError that the broad `except` below
+                # swallows — silently disabling the BIOS check altogether,
+                # which is the failure this block is meant to prevent.
+                if row.get('loadable', True)
+            }
             found = [name for name in required if name.lower() in present]
             firmware_missing = len(found) == 0
             if firmware_missing:

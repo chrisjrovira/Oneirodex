@@ -6,6 +6,7 @@ import threading
 from datetime import datetime, timezone
 from gametheca import db
 from gametheca.models import GlobalSettings, Game
+from gametheca.utils.global_settings import global_settings_row
 from sqlalchemy import select, create_engine
 from sqlalchemy.orm import sessionmaker
 from config import Config
@@ -57,7 +58,7 @@ def get_rate_limiter():
     if _rate_limiter is None:
         # Get delay from settings - use direct session to avoid app context issues
         try:
-            settings = db.session.execute(select(GlobalSettings)).scalars().first()
+            settings = global_settings_row()
             delay = settings.hltb_rate_limit_delay if settings else 2.0
         except:
             # Fallback to direct engine connection

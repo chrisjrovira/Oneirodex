@@ -400,3 +400,81 @@ class TestErrorHandling:
             response = client.get('/admin/server_status_page')
             
         assert response.status_code == 302
+
+class TestOpsLogsApi:
+    """Recent system events served to the Ops console (W27-D2).
+
+    Reading the log used to mean leaving Ops for a separate page — the same
+    "hold two screens side by side" problem that the Server info page had, and
+    the reason it was retired. These pin the contract the console depends on.
+    """
+
+    def test_requires_login(self, client):
+        response = client.get('/admin/api/ops/logs')
+
+        assert response.status_code == 302
+        assert '/login' in response.location
+
+    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
+    def test_requires_admin_role(self, mock_current_user, client, regular_user):
+        mock_current_user.is_authenticated = True
+        mock_current_user.role = 'user'
+        mock_current_user.id = regular_user.id
+
+        with patch('flask_login.utils._get_user', return_value=regular_user):
+            response = client.get('/admin/api/ops/logs')
+
+            assert response.status_code in [302, 403]
+
+    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
+    def test_returns_events_with_the_shape_the_console_renders(
+        self, mock_current_user, client, admin_user
+    ):
+        mock_current_user.is_authenticated = True
+        mock_current_user.role = 'admin'
+        mock_current_user.id = admin_user.id
+
+        with patch('flask_login.utils._get_user', return_value=admin_user):
+            response = client.get('/admin/api/ops/logs')
+
+            assert response.status_code == 200
+            events = response.get_json()['events']
+            assert isinstance(events, list)
+
+            if events:
+                # Every key the Ops columns read. A silently renamed field would
+                # render a table of blanks rather than an error.
+                assert set(events[0]) >= {
+                    'id', 'timestamp', 'level', 'type', 'text', 'user',
+                }
+
+    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
+    def test_limit_is_clamped(self, mock_current_user, client, admin_user):
+        """An unbounded limit would ask the console to render the whole table."""
+        mock_current_user.is_authenticated = True
+        mock_current_user.role = 'admin'
+        mock_current_user.id = admin_user.id
+
+        with patch('flask_login.utils._get_user', return_value=admin_user):
+            response = client.get('/admin/api/ops/logs?limit=99999')
+
+            assert response.status_code == 200
+            assert len(response.get_json()['events']) <= 200
+
+    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
+    def test_retired_server_info_page_is_gone(
+        self, mock_current_user, client, admin_user
+    ):
+        """/admin/new_server_info was folded into Ops (W27-D1).
+
+        Asserted here rather than trusted: a retired page that still answers is
+        a second copy of the truth, which is what the merge was for.
+        """
+        mock_current_user.is_authenticated = True
+        mock_current_user.role = 'admin'
+        mock_current_user.id = admin_user.id
+
+        with patch('flask_login.utils._get_user', return_value=admin_user):
+            response = client.get('/admin/new_server_info')
+
+            assert response.status_code == 404

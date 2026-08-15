@@ -6,6 +6,9 @@ admin auth. Assets/CSS for each id live in themes / SPA (UI owns visuals).
 
 from __future__ import annotations
 
+import json
+import pathlib
+
 from typing import Any
 
 from sqlalchemy import select
@@ -18,46 +21,105 @@ DEFAULT_LOADING_ICON_MODE = 'rotate'
 DEFAULT_LOADING_ICON_ID = None
 
 # Builtin catalogue ids — SPA/theme maps each id to a spinner treatment.
+# Builtin catalogue ids — SPA/theme maps each id to a spinner treatment.
+#
+# GT-B23: the abstract set (ring/orbit/pulse/blocks/scan/arcade) is retired for
+# consoles and controllers. The ids are the contract shared with
+# LoadingMotif.jsx and gt_loading_motifs.js — all three must list the same six,
+# or a member's saved pick resolves to nothing.
 BUILTIN_LOADING_ICONS: list[dict[str, Any]] = [
     {
-        'id': 'ring',
-        'name': 'Ring',
-        'description': 'Default CSS ring (gt-spinner).',
+        'id': 'dpad',
+        'name': 'D-pad',
+        'description': 'Directional pad, presses travelling clockwise.',
     },
     {
-        'id': 'orbit',
-        'name': 'Orbit',
-        'description': 'Orbiting dots around a center mark.',
+        'id': 'disc',
+        'name': 'Disc',
+        'description': 'Spinning disc under a sweeping tracking head.',
     },
     {
-        'id': 'pulse',
-        'name': 'Pulse',
-        'description': 'Soft pulse / breathe loader.',
+        'id': 'stick',
+        'name': 'Analog stick',
+        'description': 'Thumbstick rolling around its gate.',
     },
     {
-        'id': 'blocks',
-        'name': 'Blocks',
-        'description': 'Chunky block cascade — retro-friendly.',
+        'id': 'handheld',
+        'name': 'Handheld',
+        'description': 'Handheld screen refreshing with a pulsing power LED.',
     },
     {
-        'id': 'scan',
-        'name': 'Scan',
-        'description': 'Horizontal scan sweep for library ops.',
+        'id': 'cart',
+        'name': 'Cartridge',
+        'description': 'Cartridge slotting home and lifting again.',
     },
     {
-        'id': 'arcade',
-        'name': 'Arcade',
-        'description': 'Coin-slot style bounce.',
+        'id': 'crt',
+        'name': 'CRT',
+        'description': 'Raster line sweeping a CRT tube.',
     },
 ]
 
+# Retired ids → nearest replacement. A stored preference naming an old motif
+# must still resolve, or every member who picked one loses their choice.
+LEGACY_LOADING_ICON_ALIASES: dict[str, str] = {
+    'ring': 'disc',
+    'orbit': 'disc',
+    'pulse': 'crt',
+    'blocks': 'cart',
+    'scan': 'crt',
+    # 'arcade' is deliberately absent — it is a real system id now (the Arcade
+    # platform), and the per-system catalogue shadows this map. Someone who
+    # picked "arcade" gets a cabinet rather than a d-pad, which is the better
+    # result; listing it here would describe a mapping that never fires.
+}
+
+
+# Per-system motifs, generated from LibraryPlatform by
+# scripts/gen_loading_motifs.py (GT-B24). Loaded lazily so an absent/corrupt
+# file degrades to the six base motifs instead of failing app start — a missing
+# decoration must never take the server down.
+_SYSTEM_MOTIF_PATH = (
+    pathlib.Path(__file__).resolve().parent.parent / 'data' / 'loading_motifs.json'
+)
+_system_motifs_cache: list[dict[str, Any]] | None = None
+
+
+def system_loading_icons() -> list[dict[str, Any]]:
+    global _system_motifs_cache
+    if _system_motifs_cache is None:
+        try:
+            payload = json.loads(_SYSTEM_MOTIF_PATH.read_text(encoding='utf-8'))
+            _system_motifs_cache = [
+                {
+                    'id': row['id'],
+                    'name': row['name'],
+                    'family': row['family'],
+                    'description': f"{row['name']} — animated {row['archetype']}.",
+                }
+                for row in payload.get('motifs', [])
+            ]
+        except Exception:
+            _system_motifs_cache = []
+    return _system_motifs_cache
+
+
+def all_loading_icons() -> list[dict[str, Any]]:
+    """Base motifs + one per system.
+
+    Both sets are pickable. The base six are hardware archetypes with no system
+    attached (a generic d-pad, a disc); the rest name an actual platform.
+    """
+    base = [dict(row, family='Classic') for row in BUILTIN_LOADING_ICONS]
+    return base + [dict(row) for row in system_loading_icons()]
+
 
 def catalogue_ids() -> frozenset[str]:
-    return frozenset(row['id'] for row in BUILTIN_LOADING_ICONS)
+    return frozenset(row['id'] for row in all_loading_icons())
 
 
 def list_loading_icons() -> list[dict[str, Any]]:
-    return [dict(row) for row in BUILTIN_LOADING_ICONS]
+    return all_loading_icons()
 
 
 def _settings_row() -> GlobalSettings | None:
@@ -84,12 +146,17 @@ def normalize_mode(raw: Any) -> str:
 
 def normalize_icon_id(raw: Any, *, allow_null: bool = True) -> str | None:
     if raw is None:
-        return None if allow_null else 'ring'
+        return None if allow_null else 'dpad'
     text = str(raw).strip()
     if not text:
-        return None if allow_null else 'ring'
+        return None if allow_null else 'dpad'
     if len(text) > 64:
         raise ValueError('loading_icon_id must be at most 64 characters')
+    # Map a retired id before validating (GT-B23). Without this, any member who
+    # had ever picked one of the old abstract motifs would hit a ValueError on
+    # read — the stored value is theirs, and a catalogue change is not their
+    # problem to fix.
+    text = LEGACY_LOADING_ICON_ALIASES.get(text.lower(), text)
     if text not in catalogue_ids():
         raise ValueError(
             f'Unknown loading_icon_id {text!r}; choose one of: '

@@ -3,10 +3,20 @@
 from __future__ import annotations
 
 from flask import jsonify, request
-from flask_login import login_required
+from flask_login import current_user, login_required
 
 from gametheca.utils.auth import admin_required
-from gametheca.utils.detail_layouts import get_detail_layout, save_detail_layout
+from gametheca.utils.detail_layouts import (
+    clear_user_detail_layout,
+    delete_layout_preset,
+    get_detail_layout,
+    get_user_detail_layout,
+    list_layout_presets,
+    save_detail_layout,
+    save_layout_preset,
+    save_user_detail_layout,
+    user_has_detail_override,
+)
 
 from . import apis_bp
 
@@ -27,3 +37,78 @@ def layouts_detail_put():
     except ValueError as exc:
         return jsonify({'error': str(exc)}), 400
     return jsonify(saved)
+
+
+# --- Per-member layout + named presets ----------------------------------
+#
+# The layout above is the *install* default and stays admin-only. Everything
+# below belongs to whoever is signed in: one member arranging their own details
+# page must not change it for the household, which is what the single shared
+# layout meant before.
+
+
+@apis_bp.route('/layouts/detail/mine', methods=['GET'])
+@login_required
+def layouts_detail_mine_get():
+    """This member's effective layout — theirs if set, the install's if not."""
+    return jsonify({
+        'layout': get_user_detail_layout(current_user.id),
+        # Whether it is actually *theirs* changes what the editor should offer
+        # ("Reset to default" only means something if an override exists), and
+        # the layout alone cannot answer that: a member's arrangement may be
+        # identical to the install's by coincidence.
+        'is_override': user_has_detail_override(current_user.id),
+    })
+
+
+@apis_bp.route('/layouts/detail/mine', methods=['PUT'])
+@login_required
+def layouts_detail_mine_put():
+    data = request.get_json(silent=True) or {}
+    try:
+        saved = save_user_detail_layout(current_user.id, data)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify({'layout': saved, 'is_override': True})
+
+
+@apis_bp.route('/layouts/detail/mine', methods=['DELETE'])
+@login_required
+def layouts_detail_mine_delete():
+    """Stop overriding and follow the install default again."""
+    return jsonify({
+        'layout': clear_user_detail_layout(current_user.id),
+        'is_override': False,
+    })
+
+
+@apis_bp.route('/layouts/detail/presets', methods=['GET'])
+@login_required
+def layouts_detail_presets_get():
+    return jsonify({'presets': list_layout_presets(current_user.id)})
+
+
+@apis_bp.route('/layouts/detail/presets', methods=['POST'])
+@login_required
+def layouts_detail_presets_post():
+    data = request.get_json(silent=True) or {}
+    try:
+        saved = save_layout_preset(
+            current_user.id,
+            data.get('name'),
+            data.get('layout'),
+        )
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify(saved), 201
+
+
+@apis_bp.route('/layouts/detail/presets/<int:preset_id>', methods=['DELETE'])
+@login_required
+def layouts_detail_presets_delete(preset_id: int):
+    # 404 rather than 403 for someone else's preset: confirming a preset exists
+    # but belongs to another member is a fact this endpoint has no reason to
+    # disclose.
+    if not delete_layout_preset(current_user.id, preset_id):
+        return jsonify({'error': 'Preset not found'}), 404
+    return jsonify({'deleted': preset_id})

@@ -1,6 +1,10 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import './GamePreviewPopup.css'
+
+/** Fired when a preview opens, so any other open preview closes itself. */
+const PREVIEW_OPENED = 'gt-preview-opened'
 
 /**
  * Shortened game detail shown before committing to the full page (UX-B3).
@@ -72,6 +76,33 @@ export function GamePreviewPopup({ game, onClose }) {
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  // One preview at a time.
+  //
+  // Every GameCard owns its own popup, so opening a second while a first was up
+  // stacked them — two scrims, two dialogs, and `aria-modal` on both. Announcing
+  // the open and having every other instance stand down keeps the singleton
+  // rule without lifting preview state into the grid, which would make every
+  // tile re-render when any one of them was previewed.
+  useEffect(() => {
+    const token = {}
+    const onOther = (event) => {
+      if (event.detail !== token) onClose?.()
+    }
+    window.addEventListener(PREVIEW_OPENED, onOther)
+    window.dispatchEvent(new CustomEvent(PREVIEW_OPENED, { detail: token }))
+    return () => window.removeEventListener(PREVIEW_OPENED, onOther)
+  }, [onClose])
+
+  // The page behind a modal must not scroll — otherwise the wheel moves the
+  // grid under a dialog that is meant to have taken over.
+  useEffect(() => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [])
+
   if (!game) {
     return null
   }
@@ -89,7 +120,15 @@ export function GamePreviewPopup({ game, onClose }) {
   const genres = Array.isArray(game.genres) ? game.genres.slice(0, 6) : []
   const badges = previewBadges(game)
 
-  return (
+  // Portalled to <body>, not left inside the card.
+  //
+  // `position: fixed` is relative to the viewport *unless* an ancestor has a
+  // transform, filter or containment — and the tiles do, for the hover effect
+  // and the virtualiser. Rendered in place, the scrim was therefore positioning
+  // against the tile's row, which is why it dimmed one strip of the page
+  // instead of the page. A portal puts it outside every one of those ancestors,
+  // so `fixed` means fixed.
+  return createPortal(
     <div
       className="gt-preview__scrim"
       role="presentation"
@@ -167,6 +206,7 @@ export function GamePreviewPopup({ game, onClose }) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

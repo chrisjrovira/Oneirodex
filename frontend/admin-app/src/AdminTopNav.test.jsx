@@ -1,66 +1,148 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
+
+import { AdminSideRail } from './AdminSideRail'
 import { AdminTopNav } from './AdminTopNav'
+import { ADMIN_NAV, HUB_LINKS } from './navConfig'
 
-afterEach(() => {
-  delete document.documentElement.dataset.chrome
-})
+/**
+ * Rewritten for the rail chrome (GT-B2).
+ *
+ * The previous version of this file asserted the two-bar structure: a brand
+ * block, seven section links and a breadcrumb strip, all in bar one. Those
+ * assertions were correct for UIR-1 and are wrong now by design — brand and
+ * destinations moved to the rail, and the top bar was reduced to page scope.
+ *
+ * The claims worth carrying over are behavioural, not structural: the ways out
+ * of admin still exist, the active section is still marked, and nothing is
+ * offered twice. They are asserted here against whichever component now owns
+ * them.
+ */
 
-function renderNav({ newChrome = false, at = '/admin/ops' } = {}) {
-  if (newChrome) document.documentElement.dataset.chrome = 'v2'
+function renderTopBar({ at = '/admin/ops', onToggleRail = () => {}, railState } = {}) {
   return render(
     <MemoryRouter initialEntries={[at]}>
-      <AdminTopNav />
+      <AdminTopNav onToggleRail={onToggleRail} railState={railState} />
     </MemoryRouter>,
   )
 }
 
-test('old chrome keeps admin bar one exactly as it was', () => {
-  const { container } = renderNav()
-  expect(container.querySelector('.gt-admin-topbar')).toBeTruthy()
+function renderRail({ at = '/admin/ops', railState = 'expanded' } = {}) {
+  return render(
+    <MemoryRouter initialEntries={[at]}>
+      <AdminSideRail railState={railState} />
+    </MemoryRouter>,
+  )
+}
+
+test('the rail toggle reports whether the rail is showing', () => {
+  // The rail has three states and this one button drives all of them. Testing
+  // `=== 'open'` — the mobile drawer state — left aria-expanded permanently
+  // false on desktop, so a screen reader was told the rail was collapsed while
+  // it sat there expanded with its labels showing. Shown is 'open' or
+  // 'expanded'; 'collapsed' is the only state that is not.
+  for (const [railState, expected] of [
+    ['expanded', 'true'],
+    ['open', 'true'],
+    ['collapsed', 'false'],
+  ]) {
+    const { unmount } = renderTopBar({ railState })
+    expect(screen.getByRole('button', { name: 'Toggle navigation' })).toHaveAttribute(
+      'aria-expanded',
+      expected,
+    )
+    unmount()
+  }
+})
+
+test('top bar is page scope only — no brand, no destinations', () => {
+  const { container } = renderTopBar()
+
+  expect(container.querySelector('.gt-topbar')).toBeTruthy()
+  // The retired two-bar markup must not come back.
   expect(container.querySelector('.gt-appbar')).toBeNull()
-  // Breadcrumb buttons are part of the old bar and must not disappear with it.
-  // Scoped to the actions region: ADMIN_NAV also has a Dashboard *destination*,
-  // and matching on the name alone conflates the two.
-  const actions = container.querySelector('.gt-admin-actions')
-  expect(actions.querySelector('a[href="/admin/dashboard"]')).toBeTruthy()
-  // Not asserting the section-home link here: at /admin/ops it is the section
-  // home, and the old bar already suppresses a link to the page you are on.
-})
-
-test('new chrome emits the same classes the member bar one uses', () => {
-  // Admin and member bar one were structurally identical with different class
-  // names — which is why no amount of styling could make them match. The
-  // shared stylesheet is what makes them the same bar (UIR-4).
-  const { container } = renderNav({ newChrome: true })
-  expect(container.querySelector('.gt-appbar')).toBeTruthy()
-  expect(container.querySelector('.gt-appbar__brand')).toBeTruthy()
-  expect(container.querySelector('.gt-appbar__nav')).toBeTruthy()
   expect(container.querySelector('.gt-admin-topbar')).toBeNull()
+  expect(container.querySelector('.gt-admin-brand')).toBeNull()
+
+  // None of the seven section destinations may appear in the bar — that
+  // duplication is exactly what moving them to the rail removed.
+  for (const link of ADMIN_NAV) {
+    expect(container.querySelector(`a[href="${link.path}"]`)).toBeNull()
+  }
 })
 
-test('new chrome drops admin breadcrumbs but keeps the ways out', () => {
-  // Same call as the member bar: bar two names the section, so repeating it
-  // here is duplication. Library and Log out leave the admin app entirely and
-  // nothing else offers them.
+test('top bar exposes the rail toggle and wires it up', async () => {
+  const onToggleRail = vi.fn()
+  renderTopBar({ onToggleRail })
+
+  const toggle = screen.getByRole('button', { name: /toggle navigation/i })
+  toggle.click()
+
+  expect(onToggleRail).toHaveBeenCalledTimes(1)
+})
+
+test('rail lists every admin section', () => {
+  const { container } = renderRail()
+
+  for (const link of ADMIN_NAV) {
+    expect(container.querySelector(`a[href="${link.path}"]`)).toBeTruthy()
+  }
+})
+
+test('rail marks the active section', () => {
+  const { container } = renderRail({ at: '/admin/ops' })
+
+  const active = container.querySelector('.gt-rail__link.is-active')
+  expect(active).toBeTruthy()
+  expect(active.getAttribute('href')).toBe('/admin/ops')
+})
+
+test('rail expands only the active section, not all sixty destinations', () => {
+  const { container } = renderRail({ at: '/admin/ops' })
+
+  // System's hub links are present because System is the active section…
+  for (const child of HUB_LINKS.system) {
+    expect(container.querySelector(`a[href="${child.href}"]`)).toBeTruthy()
+  }
+
+  // …while an inactive section's are not. Listing all of them permanently
+  // would trade the overflow menu for a wall of text.
   //
-  // Only the *breadcrumb* copies go. Dashboard is still a destination in
-  // ADMIN_NAV and must stay there — the point is that bar one stops saying it
-  // twice, not that it stops offering it.
-  const { container } = renderNav({ newChrome: true, at: '/admin/ops' })
-  const actions = container.querySelector('.gt-appbar__tools')
-  expect(actions.querySelector('a[href="/admin/dashboard"]')).toBeNull()
-  expect(actions.querySelector('a[href="/admin/ops"]')).toBeNull()
+  // Two exclusions, both real rather than convenient: a link shared with the
+  // active section is legitimately shown, and a hub link that is *also* an
+  // ADMIN_NAV section path (Content's hub lists /admin/discovery_sections,
+  // which is Content's own destination) appears as a section link regardless.
+  const sectionPaths = new Set(ADMIN_NAV.map((l) => l.path.split('?')[0]))
+  const contentOnly = HUB_LINKS.content.filter(
+    (c) =>
+      !HUB_LINKS.system.some((s) => s.href === c.href) &&
+      !sectionPaths.has(c.href.split('?')[0]),
+  )
+
+  expect(contentOnly.length).toBeGreaterThan(0)
+  for (const child of contentOnly) {
+    expect(container.querySelector(`a[href="${child.href}"]`)).toBeNull()
+  }
+})
+
+test('the ways out of admin survive, and live in exactly one place', () => {
+  const rail = renderRail()
   expect(screen.getByRole('link', { name: 'Library' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Log out' })).toBeInTheDocument()
-  // …and the destination survives in the nav.
-  const nav = container.querySelector('.gt-appbar__nav')
-  expect(nav.querySelector('a[href="/admin/dashboard"]')).toBeTruthy()
+  rail.unmount()
+
+  // They were briefly in both the rail and the bar during the migration.
+  const { container } = renderTopBar()
+  expect(container.querySelector('a[href="/library"]')).toBeNull()
+  expect(container.querySelector('a[href="/logout"]')).toBeNull()
 })
 
-test('the active destination is marked with the shared active class', () => {
-  const { container } = renderNav({ newChrome: true })
-  const active = container.querySelector('.gt-appbar__link.is-active')
-  expect(active).toBeTruthy()
+test('collapsed rail keeps accessible names and drops sub-links', () => {
+  const { container } = renderRail({ at: '/admin/ops', railState: 'collapsed' })
+
+  // Labels stay in the DOM — the stylesheet hides them visually — or the rail
+  // becomes a column of unlabelled icons to a screen reader.
+  expect(screen.getByRole('link', { name: 'System' })).toBeInTheDocument()
+  expect(container.querySelector('.gt-rail__sublist')).toBeNull()
 })

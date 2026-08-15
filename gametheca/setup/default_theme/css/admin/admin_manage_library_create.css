@@ -1,35 +1,35 @@
 /* Glassmorphic Image Editor Modal Styles */
 .glass-panel-modal {
-    background: var(--gt-surface, var(--bg-dark-40));
+    background: var(--gt-surface);
     backdrop-filter: blur(15px);
     border: 1px solid var(--border-light);
     border-radius: var(--border-radius-lg);
-    box-shadow: 0 8px 32px color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
+    box-shadow: 0 8px 32px color-mix(in srgb, var(--gt-bg) 30%, transparent);
 }
 
 .glass-panel-modal-header {
     background: var(--bg-light-overlay);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--gt-border, var(--border-light));
+    border-bottom: 1px solid var(--gt-border);
     border-radius: 15px 15px 0 0;
     padding: 1rem 1.5rem;
 }
 
 .glass-panel-modal-header .modal-title {
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
     font-weight: 600;
-    text-shadow: 0 2px 4px color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
+    text-shadow: 0 2px 4px color-mix(in srgb, var(--gt-bg) 30%, transparent);
 }
 
 .glass-panel-modal-body {
     padding: 2rem;
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
 }
 
 .glass-panel-modal-footer {
-    background: color-mix(in srgb, var(--gt-text, #fff) 5%, transparent);
+    background: color-mix(in srgb, var(--gt-text) 5%, transparent);
     backdrop-filter: blur(10px);
-    border-top: 1px solid var(--gt-border, var(--border-light));
+    border-top: 1px solid var(--gt-border);
     border-radius: 0 0 15px 15px;
     padding: 1rem 1.5rem;
 }
@@ -49,7 +49,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: color-mix(in srgb, var(--gt-bg, #000) 30%, transparent);
+    background: color-mix(in srgb, var(--gt-bg) 30%, transparent);
     border-radius: 10px;
     border: 2px dashed var(--border-light-strong);
     overflow: hidden;
@@ -58,30 +58,30 @@
 /* Cropper.js styling adjustments for glassmorphism */
 .cropper-container {
     border-radius: 10px;
-    background: color-mix(in srgb, var(--gt-bg, #000) 50%, transparent);
+    background: color-mix(in srgb, var(--gt-bg) 50%, transparent);
 }
 
 .cropper-view-box {
     border-radius: 8px;
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--gt-text, #fff) 50%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--gt-text) 50%, transparent);
 }
 
 .cropper-face {
-    background-color: color-mix(in srgb, var(--gt-text, #fff) 10%, transparent);
+    background-color: color-mix(in srgb, var(--gt-text) 10%, transparent);
 }
 
 .cropper-line {
-    background-color: color-mix(in srgb, var(--gt-text, #fff) 60%, transparent);
+    background-color: color-mix(in srgb, var(--gt-text) 60%, transparent);
 }
 
 .cropper-point {
-    background-color: color-mix(in srgb, var(--gt-text, #fff) 80%, transparent);
+    background-color: color-mix(in srgb, var(--gt-text) 80%, transparent);
     border-radius: 50%;
     opacity: 0.8;
 }
 
 .cropper-point:hover {
-    background-color: var(--gt-text, #fff);
+    background-color: var(--gt-text);
     opacity: 1;
 }
 
@@ -91,18 +91,18 @@
     backdrop-filter: blur(10px);
     border: 1px solid var(--border-light-strong);
     border-radius: 8px;
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
     padding: 0.5rem 1rem;
     transition: all 0.3s ease;
     font-weight: 500;
 }
 
 .image-editor-controls .btn:hover {
-    background: color-mix(in srgb, var(--gt-text, #fff) 20%, transparent);
+    background: color-mix(in srgb, var(--gt-text) 20%, transparent);
     border-color: var(--border-light-30);
-    color: var(--gt-text, var(--text-white));
+    color: var(--gt-text);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--gt-bg, #000) 20%, transparent);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--gt-bg) 20%, transparent);
 }
 
 .image-editor-controls .btn:active {
@@ -127,15 +127,15 @@
 }
 
 .glass-panel-modal-footer .btn-primary {
-    background: var(--gt-accent, var(--btn-primary));
-    border-color: var(--gt-accent, var(--btn-primary));
-    color: var(--gt-accent-contrast, var(--text-white));
+    background: var(--gt-accent);
+    border-color: var(--gt-accent);
+    color: var(--gt-accent-contrast);
     backdrop-filter: blur(10px);
 }
 
 .glass-panel-modal-footer .btn-primary:hover {
-    background: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 88%, var(--gt-bg, #000));
-    border-color: color-mix(in srgb, var(--gt-accent, var(--btn-primary)) 88%, var(--gt-bg, #000));
+    background: color-mix(in srgb, var(--gt-accent) 88%, var(--gt-bg));
+    border-color: color-mix(in srgb, var(--gt-accent) 88%, var(--gt-bg));
     transform: translateY(-1px);
 }
 

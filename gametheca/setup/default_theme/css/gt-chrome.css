@@ -1,42 +1,42 @@
 ﻿/* SPA chrome: solid surfaces + readable GT text (AA on --gt-surface). */
 .member-spa-content {
-  color: var(--gt-text, #f2f4f8);
-  background: var(--gt-bg, #0b0d10);
+  color: var(--gt-text);
+  background: var(--gt-bg);
 }
 
 .member-spa-content .gt-topnav,
 .member-spa-content .gt-topnav__dropdown-panel,
 .member-spa-content .gt-topnav__nav.is-open {
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 .member-spa-content .gt-topnav__username,
 .member-spa-content .gt-text-muted {
-  color: var(--gt-text-muted, #b6becc);
+  color: var(--gt-text-muted);
   opacity: 1;
 }
 
 /* Prefer opaque chrome over washed glass in the member SPA shell. */
 .member-spa-content .gt-topnav {
-  background: color-mix(in srgb, var(--gt-surface, #141820) 96%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
   backdrop-filter: blur(4px);
 }
 
 .member-spa-content .gt-topnav__dropdown-panel {
-  background: var(--gt-surface-2, #1c2230);
+  background: var(--gt-surface-2);
 }
 
 .member-spa-content .glass-panel,
 .member-spa-content .discovery-panel {
-  background: color-mix(in srgb, var(--gt-surface, #141820) 92%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
   backdrop-filter: blur(4px);
-  border-color: var(--gt-border, rgba(255, 255, 255, 0.12));
-  color: var(--gt-text, #f2f4f8);
+  border-color: var(--gt-border);
+  color: var(--gt-text);
 }
 
 .member-spa-content .game-card-container,
 .member-spa-content .game-library-container {
-  color: var(--gt-text, #f2f4f8);
+  color: var(--gt-text);
 }
 
 /* UID-009: jump top/bottom chrome (SPA also bundles ScrollJump.css). */
@@ -50,9 +50,9 @@
   gap: 0.35rem;
   padding: 0.3rem;
   border-radius: 10px;
-  border: 1px solid var(--gt-glass-border, rgba(255, 255, 255, 0.14));
-  background: color-mix(in srgb, var(--gt-surface, #141820) 90%, transparent);
-  backdrop-filter: blur(var(--gt-glass-blur, 12px));
+  border: 1px solid var(--gt-glass-border);
+  background: color-mix(in srgb, var(--gt-surface) 90%, transparent);
+  backdrop-filter: blur(var(--gt-glass-blur));
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
 }
 
@@ -64,9 +64,9 @@
   height: 2.35rem;
   padding: 0;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-accent, #2fd67b) 35%, transparent);
-  background: color-mix(in srgb, var(--gt-accent, #2fd67b) 10%, transparent);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 10%, transparent);
+  color: var(--gt-text);
   cursor: pointer;
 }
 

@@ -242,7 +242,13 @@
                     </div>
                 </form>
                 {% else %}
-                <div class="no-libraries-card">
+                {# Welcome state overlays the panel (GT-B22).
+                   It used to render as a card *above* a section that had
+                   nothing usable in it, so the page read as "here is a message,
+                   and also here is a scan UI you cannot use". Covering the
+                   section states the one fact that matters: there is nothing to
+                   scan until a library exists. #}
+                <div class="no-libraries-card no-libraries-card--overlay">
                     <div class="no-libraries-content">
                         {{ icons.icon('book', size=32) }}
                         <h4>Welcome to Scan Management</h4>
@@ -254,6 +260,10 @@
                     </div>
                 </div>
                 {% endif %}
+                {# No libraries means no jobs are possible — showing an empty
+                   "active scan jobs" table on a fresh install was the reported
+                   phantom (GT-B13/B22). #}
+                {% if libraries|length > 0 %}
                 <!-- Scan Jobs Management Card -->
                 <div class="scan-jobs-card">
                     <div class="card-header">
@@ -349,6 +359,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
             </div>
 
             <!-- Manual Scan Tab -->

@@ -33,15 +33,22 @@ def release_calendar():
     limit = max(1, min(limit, 100))
 
     generated_at = datetime.now(timezone.utc).isoformat()
+    # Per-request status dict, not module state: two members loading the
+    # calendar at once must not be able to read each other's failure reason.
+    status: dict = {}
     try:
         items = fetch_release_calendar(
             days_ahead=days_ahead,
             days_behind=days_behind,
             limit=limit,
+            status=status,
         )
     except Exception:
         # Belt-and-suspenders: never 500 the hub for IGDB blips.
         items = []
+        reason = 'unavailable'
+    else:
+        reason = status.get('reason')
 
     return jsonify({
         'days_ahead': days_ahead,
@@ -51,4 +58,9 @@ def release_calendar():
         'releases': items,
         'generated_at': generated_at,
         'source': 'igdb',
+        # Still HTTP 200 with an empty list — the hub must not 500 for an IGDB
+        # blip — but the page can now tell "nothing releases in this window"
+        # from "IGDB is not set up", instead of rendering the same blank panel
+        # for both and leaving the operator to guess.
+        'empty_reason': reason if not items else None,
     })

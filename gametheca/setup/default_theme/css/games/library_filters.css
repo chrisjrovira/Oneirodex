@@ -8,7 +8,7 @@
 
 .game-library-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min, 180px), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min), 1fr));
 
     position: relative;
     
@@ -33,9 +33,9 @@
 
 .gt-badge-filter-chip {
     appearance: none;
-    border: 1px solid color-mix(in srgb, var(--gt-border, var(--text-color, #ddd)) 28%, transparent);
-    background: color-mix(in srgb, var(--gt-surface-2, var(--panel-bg, #1a1a1e)) 88%, transparent);
-    color: var(--gt-text-muted, var(--text-color, #e8e8ec));
+    border: 1px solid color-mix(in srgb, var(--gt-border) 28%, transparent);
+    background: color-mix(in srgb, var(--gt-surface-2) 88%, transparent);
+    color: var(--gt-text-muted);
     font: inherit;
     font-size: 0.72rem;
     font-weight: 650;
@@ -47,14 +47,14 @@
 }
 
 .gt-badge-filter-chip:hover {
-    border-color: color-mix(in srgb, var(--gt-accent, var(--accent-color, #2fd67b)) 55%, transparent);
+    border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
 }
 
 .gt-badge-filter-chip.is-active,
 .gt-badge-filter-chip[aria-pressed="true"] {
-    background: color-mix(in srgb, var(--gt-accent, var(--accent-color, #2fd67b)) 22%, transparent);
-    border-color: color-mix(in srgb, var(--gt-accent, var(--accent-color, #2fd67b)) 55%, transparent);
-    color: var(--gt-accent, var(--accent-color, #2fd67b));
+    background: color-mix(in srgb, var(--gt-accent) 22%, transparent);
+    border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+    color: var(--gt-accent);
 }
 
 .library-filters {

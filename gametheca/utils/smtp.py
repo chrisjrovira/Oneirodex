@@ -5,10 +5,11 @@ from gametheca import db
 from gametheca.models import GlobalSettings
 from sqlalchemy import select
 from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.global_settings import global_settings_row
 
 def get_smtp_settings():
     """Get SMTP settings from database."""
-    settings = db.session.execute(select(GlobalSettings)).scalars().first()
+    settings = global_settings_row()
     
     if settings and settings.smtp_enabled:
         return {

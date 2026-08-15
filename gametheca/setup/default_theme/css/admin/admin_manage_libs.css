@@ -22,15 +22,15 @@
   gap: 0.5rem;
   padding: 0.65rem 0.85rem;
   border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--gt-border, var(--border-light-30, #444)) 80%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, var(--bg-light-overlay, #1a1a1a)) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--gt-bg, #000) 35%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--gt-bg) 35%, transparent);
 }
 
 .gt-libraries-batch-bar__count {
   font-size: 0.85rem;
-  color: var(--gt-text-muted, #aaa);
+  color: var(--gt-text-muted);
   margin-right: 0.25rem;
 }
 
@@ -49,7 +49,7 @@
   display: none;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--gt-bg, #000) 55%, transparent);
+  background: color-mix(in srgb, var(--gt-bg) 55%, transparent);
   z-index: 1070;
 }
 
@@ -57,8 +57,8 @@
   text-align: center;
   padding: 1.25rem 1.5rem;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--gt-surface, #222) 95%, transparent);
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.12));
+  background: color-mix(in srgb, var(--gt-surface) 95%, transparent);
+  border: 1px solid var(--gt-border);
   min-width: 240px;
 }
 
@@ -67,21 +67,21 @@
   height: 8px;
   margin-top: 0.75rem;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--gt-bg, #000) 40%, transparent);
+  background: color-mix(in srgb, var(--gt-bg) 40%, transparent);
   overflow: hidden;
 }
 
 #deleteSpinner .progress-fill {
   height: 100%;
   width: 0;
-  background: var(--gt-accent, #2fd67b);
+  background: var(--gt-accent);
   transition: width 0.2s ease;
 }
 
 #deleteSpinner .progress-counter {
   margin-top: 0.35rem;
   font-size: 0.8rem;
-  color: var(--gt-text-muted, #aaa);
+  color: var(--gt-text-muted);
 }
 
 /* Aurora toast host (shared with scanjobs showToast via gtShowAdminToast) */
@@ -101,29 +101,29 @@
   pointer-events: auto;
   padding: 0.7rem 0.95rem;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-border, #555) 70%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #1e1e1e) 94%, transparent);
-  color: var(--gt-text, #f2f2f2);
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--gt-bg, #000) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 94%, transparent);
+  color: var(--gt-text);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--gt-bg) 40%, transparent);
   backdrop-filter: blur(10px);
   font-size: 0.9rem;
   animation: gt-toast-in 0.18s ease-out;
 }
 
 .gt-toast--success {
-  border-color: color-mix(in srgb, var(--gt-success, #2fd67b) 55%, transparent);
+  border-color: color-mix(in srgb, var(--gt-success) 55%, transparent);
 }
 
 .gt-toast--info {
-  border-color: color-mix(in srgb, var(--gt-info, #4aa3ff) 55%, transparent);
+  border-color: color-mix(in srgb, var(--gt-info) 55%, transparent);
 }
 
 .gt-toast--error {
-  border-color: color-mix(in srgb, var(--gt-danger, #e35) 55%, transparent);
+  border-color: color-mix(in srgb, var(--gt-danger) 55%, transparent);
 }
 
 .gt-toast--warn {
-  border-color: color-mix(in srgb, var(--gt-warning, #d4a017) 55%, transparent);
+  border-color: color-mix(in srgb, var(--gt-warning) 55%, transparent);
 }
 
 .gt-toast--out {

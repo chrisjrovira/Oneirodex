@@ -1,5 +1,5 @@
 import os
-from flask import render_template, redirect, url_for, flash, copy_current_request_context, session, request, current_app
+from flask import render_template, redirect, url_for, flash, session, request, current_app
 from flask_login import login_required, current_user
 from gametheca.forms import AddGameForm
 from gametheca.models import Game, Library, UnmatchedFolder, Category, Developer, Publisher
@@ -15,7 +15,7 @@ from gametheca.utils.gamenames import clean_game_name
 from gametheca.utils.game_name_parse import parse_game_label
 from gametheca.utils.item_kind import normalize_item_kind
 from gametheca import db
-from threading import Thread
+from gametheca.utils.background import run_in_background
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 
@@ -234,14 +234,20 @@ def add_game_manual():
                 event_type='game',
                 event_level='information'
             )
-            # Trigger image refresh after adding the game
-            @copy_current_request_context
-            def refresh_images_in_thread():
-                refresh_images_in_background(new_game.uuid)
-
-            # Start the background process for refreshing images
-            thread = Thread(target=refresh_images_in_thread, daemon=True)
-            thread.start()
+            # Trigger image refresh after adding the game.
+            #
+            # The uuid is read here, not in the worker: `new_game` belongs to
+            # this request's session, and the worker has its own
+            # (utils/background.py). The old closure called `new_game.uuid`
+            # from the thread, which is an ORM attribute load on a session
+            # another thread was still using.
+            new_game_uuid = new_game.uuid
+            run_in_background(
+                current_app._get_current_object(),
+                refresh_images_in_background,
+                new_game_uuid,
+                name=f'gametheca-refresh-images-{str(new_game_uuid)[:8]}',
+            )
             log_system_event(
                 f"Image refresh background task started for game '{game_name}' (UUID: {new_game.uuid})",
                 event_type='task',

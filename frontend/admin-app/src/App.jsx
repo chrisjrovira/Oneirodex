@@ -1,5 +1,8 @@
 import { Route, Routes, useLocation } from 'react-router-dom'
+import { useRailState } from '../../shared/useRailState'
+import { AdminSideRail } from './AdminSideRail'
 import { AdminTopNav } from './AdminTopNav'
+import { useAdminShellFrame } from './useAdminShellFrame'
 import { AnnouncementsPage } from './AnnouncementsPage'
 import { SupportInboxPage } from './SupportInboxPage'
 import { InvitesPage } from './InvitesPage'
@@ -12,7 +15,7 @@ import { QualityProfilesPage } from './QualityProfilesPage'
 import { StoragePage } from './StoragePage'
 import { ScanMatchSettingsPage } from './ScanMatchSettingsPage'
 import { ExtensionsPage } from './ExtensionsPage'
-import { HUB_LINKS, SETTINGS_CARDS } from './navConfig'
+import { SETTINGS_CARDS } from './navConfig'
 import './ops.css'
 import {
   DashboardPage,
@@ -85,10 +88,6 @@ function SettingsSectionPage() {
     <HubPage
       title={card?.title || 'Settings module'}
       lede={card?.blurb || 'Server module settings.'}
-      links={[
-        { href: '/admin/settings', label: 'Back to settings hub' },
-        ...(card ? [{ href: card.to, label: 'Reload' }] : []),
-      ]}
     />
   )
 }
@@ -137,7 +136,6 @@ function RoutedAdminPage() {
         <HubPage
           title="Content"
           lede="Discovery shelves, newsletter, announcements, and attract mode."
-          links={HUB_LINKS.content}
         />
       )
     case 'announcements':
@@ -152,12 +150,7 @@ function RoutedAdminPage() {
       return (
         <HubPage
           title="Admin"
-          lede="React admin shell — pick a section from the top bar."
-          links={[
-            { href: '/admin/dashboard', label: 'Dashboard' },
-            { href: '/admin/settings', label: 'Settings' },
-            { href: '/admin/help', label: 'Help' },
-          ]}
+          lede="Pick a section from the rail on the left."
         />
       )
   }
@@ -165,10 +158,22 @@ function RoutedAdminPage() {
 
 export function App() {
   const legacy = resolveRenderMode() === 'legacy'
+  const { railState, drawerOpen, toggle: toggleRail, closeDrawer } = useRailState()
+
+  useAdminShellFrame(railState)
 
   return (
     <div className="gt-admin-shell">
-      <AdminTopNav />
+      <AdminSideRail railState={railState} onCloseDrawer={closeDrawer} />
+      {drawerOpen ? (
+        <button
+          type="button"
+          className="gt-rail__scrim"
+          aria-label="Close navigation"
+          onClick={closeDrawer}
+        />
+      ) : null}
+      <AdminTopNav onToggleRail={toggleRail} railState={railState} />
       {!legacy ? (
         <main className="gt-admin-main">
           <Routes>

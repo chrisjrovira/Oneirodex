@@ -8,17 +8,19 @@ from datetime import datetime, timezone
 from . import admin2_bp
 from gametheca.utils.igdb_api import make_igdb_api_request
 from gametheca.utils.auth import admin_required
+from gametheca.utils.global_settings import (
+    global_settings_row,
+    global_settings_row_or_create,
+)
 
 @admin2_bp.route('/admin/igdb_settings', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def igdb_settings():
-    settings = db.session.execute(select(GlobalSettings)).scalars().first()
+    settings = global_settings_row()
     if request.method == 'POST':
         data = request.json
-        if not settings:
-            settings = GlobalSettings()
-            db.session.add(settings)
+        settings = global_settings_row_or_create()
         
         settings.igdb_client_id = data.get('igdb_client_id')
         settings.igdb_client_secret = data.get('igdb_client_secret')
@@ -37,7 +39,7 @@ def igdb_settings():
 @admin_required
 def test_igdb():
     print("Testing IGDB connection...")
-    settings = db.session.execute(select(GlobalSettings)).scalars().first()
+    settings = global_settings_row()
     if not settings or not settings.igdb_client_id or not settings.igdb_client_secret:
         return jsonify({'status': 'error', 'message': 'IGDB settings not configured'}), 400
 

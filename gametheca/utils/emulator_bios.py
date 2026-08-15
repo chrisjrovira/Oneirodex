@@ -52,10 +52,19 @@ def bios_status_for_platforms() -> list[dict[str, Any]]:
 
     Answers the operator question directly — "which of my systems can actually
     play?" — instead of making them map libretro core ids to consoles by hand.
+
+    Readiness is judged on *loadable* files only, the same rule
+    bios_status_for_cores follows. Both views read one list, so counting a
+    nested file here would have this panel call a system ready while the core
+    panel called the same file misplaced.
     """
     from gametheca.platform import LibraryPlatform, platform_emulator_mapping
 
-    present = {row['name'].lower() for row in list_bios_files()}
+    files = list_bios_files()
+    present = {row['name'].lower() for row in files if row['loadable']}
+    nested = {
+        row['name'].lower(): row['subdir'] for row in files if not row['loadable']
+    }
     rows: list[dict[str, Any]] = []
     for platform, cores in platform_emulator_mapping.items():
         core_ids = [c.value for c in cores]
@@ -68,6 +77,13 @@ def bios_status_for_platforms() -> list[dict[str, Any]]:
             continue
         missing = sorted(n for n in needed if n.lower() not in present)
         found = sorted(n for n in needed if n.lower() in present)
+        # Named separately so the panel can say "move these" rather than
+        # "missing" for a file the operator can plainly see on disk.
+        misplaced = [
+            {'name': name, 'subdir': nested[name.lower()]}
+            for name in sorted(needed)
+            if name.lower() in nested and name.lower() not in present
+        ]
         hard = any(core in BIOS_HARD_REQUIRED_CORES for core in core_ids)
         rows.append({
             'platform': platform.name,
@@ -76,6 +92,7 @@ def bios_status_for_platforms() -> list[dict[str, Any]]:
             'required': sorted(needed),
             'present': found,
             'missing': missing,
+            'misplaced': misplaced,
             # Any one accepted file is usually enough (region variants).
             'ready': bool(found),
             'blocking': bool(missing) and not found and hard,
@@ -92,20 +109,41 @@ def bios_root() -> str:
 
 
 def list_bios_files() -> list[dict[str, Any]]:
+    """Every BIOS file under the firmware volume, including subdirectories.
+
+    This used to be a flat ``os.listdir`` that skipped directories, so a
+    firmware set organised the way they almost always ship — ``bios/psx/``,
+    ``bios/saturn/`` — was invisible. The operator saw "no BIOS loaded" having
+    just copied a hundred files in, with nothing explaining why.
+
+    Subdirectories are walked so those files are *found*, but each row carries
+    ``subdir`` because being found is not the same as being usable: libretro
+    cores look for firmware in the system root only. A file one level down is
+    present on disk and still will not load, and the UI has to be able to say
+    so rather than silently listing it as ready.
+    """
     if has_request_context() and hasattr(g, '_bios_files_cache'):
         return g._bios_files_cache
 
     root = bios_root()
     os.makedirs(root, exist_ok=True)
     rows = []
-    for name in sorted(os.listdir(root)):
-        path = os.path.join(root, name)
-        if not os.path.isfile(path):
-            continue
-        rows.append({
-            'name': name,
-            'size': os.path.getsize(path),
-        })
+    for dirpath, _dirs, files in os.walk(root):
+        rel = os.path.relpath(dirpath, root)
+        subdir = '' if rel == '.' else rel.replace(os.sep, '/')
+        for name in sorted(files):
+            path = os.path.join(dirpath, name)
+            if not os.path.isfile(path):
+                continue
+            rows.append({
+                'name': name,
+                'size': os.path.getsize(path),
+                'subdir': subdir,
+                # Cores read the system root; anything nested needs moving.
+                'loadable': subdir == '',
+            })
+
+    rows.sort(key=lambda row: (row['subdir'], row['name'].lower()))
 
     if has_request_context():
         g._bios_files_cache = rows
@@ -113,15 +151,34 @@ def list_bios_files() -> list[dict[str, Any]]:
 
 
 def bios_status_for_cores() -> list[dict[str, Any]]:
-    present = {row['name'].lower() for row in list_bios_files()}
+    """Per-core readiness, distinguishing "absent" from "present but misplaced".
+
+    Those are different problems with different fixes — download it, versus move
+    it up a directory — and reporting both as "missing" is what made a populated
+    firmware volume look empty.
+    """
+    files = list_bios_files()
+    loadable = {row['name'].lower() for row in files if row['loadable']}
+    misplaced = {
+        row['name'].lower(): row['subdir'] for row in files if not row['loadable']
+    }
+
     status = []
     for core, required in BIOS_REQUIREMENTS.items():
-        found = [name for name in required if name.lower() in present]
+        found = [name for name in required if name.lower() in loadable]
+        nested = [
+            {'name': name, 'subdir': misplaced[name.lower()]}
+            for name in required
+            if name.lower() in misplaced and name.lower() not in loadable
+        ]
         status.append({
             'core': core,
             'required': required,
             'present': found,
             'ready': len(found) > 0,
+            # Named separately so the UI can say "move these" rather than
+            # "missing" for a file the operator can plainly see on disk.
+            'misplaced': nested,
         })
     return status
 

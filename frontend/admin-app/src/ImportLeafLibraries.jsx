@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+
+import { DataTable } from './DataTable'
 import {
   confirmCreateSelected,
   fetchImportLeafLibrariesPreview,
@@ -276,36 +278,41 @@ export function ImportLeafLibraries({
           <h3 id="gt-import-leaf-errors-title" className="gt-admin-panel-title">
             Row errors ({rowErrors.length})
           </h3>
-          <div className="gt-propose-leaf__table-wrap">
-            <table className="gt-admin-table gt-propose-leaf__table">
-              <thead>
-                <tr>
-                  <th scope="col">Index</th>
-                  <th scope="col">Code</th>
-                  <th scope="col">Path</th>
-                  <th scope="col">Message</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rowErrors.map((row) => (
-                  <tr key={row.id}>
-                    <td>{row.index == null ? '—' : row.index}</td>
-                    <td>
-                      <code>{row.code || '—'}</code>
-                    </td>
-                    <td>
-                      {row.path ? (
-                        <code className="gt-propose-leaf__path">{row.path}</code>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="gt-propose-leaf__reason">{row.message}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Grouping errors by code is how you tell "one malformed column" from
+              "this file is wrong throughout", so this one earns sorting too.
+              Index sorts numerically because DataTable compares numbers as
+              numbers — as strings, row 10 would sort before row 2. */}
+          <DataTable
+            rows={rowErrors}
+            getRowKey={(row) => row.id}
+            emptyMessage="No row errors."
+            initialSort={{ key: 'index', dir: 'asc' }}
+            dense
+            columns={[
+              {
+                key: 'index',
+                label: 'Index',
+                value: (row) => (row.index == null ? null : Number(row.index)),
+                render: (row) => (row.index == null ? '—' : row.index),
+              },
+              {
+                key: 'code',
+                label: 'Code',
+                render: (row) => <code>{row.code || '—'}</code>,
+              },
+              {
+                key: 'path',
+                label: 'Path',
+                render: (row) =>
+                  row.path ? (
+                    <code className="gt-propose-leaf__path">{row.path}</code>
+                  ) : (
+                    '—'
+                  ),
+              },
+              { key: 'message', label: 'Message' },
+            ]}
+          />
         </div>
       ) : null}
 
@@ -331,46 +338,54 @@ export function ImportLeafLibraries({
             </button>
           </div>
 
-          <div className="gt-propose-leaf__table-wrap">
-            <table className="gt-admin-table gt-propose-leaf__table">
-              <thead>
-                <tr>
-                  <th scope="col">Select</th>
-                  <th scope="col">Suggested name</th>
-                  <th scope="col">Platform</th>
-                  <th scope="col">Mode</th>
-                  <th scope="col">Depth</th>
-                  <th scope="col">Path</th>
-                  <th scope="col">Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {candidates.map((row) => (
-                  <tr key={row.id}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${row.suggested_name}`}
-                        checked={selected.has(row.id)}
-                        onChange={() => toggleOne(row.id)}
-                        disabled={confirming}
-                      />
-                    </td>
-                    <td>{row.suggested_name}</td>
-                    <td>
-                      <code>{row.platform}</code>
-                    </td>
-                    <td>{row.scan_mode}</td>
-                    <td>{row.scan_depth}</td>
-                    <td>
-                      <code className="gt-propose-leaf__path">{row.path}</code>
-                    </td>
-                    <td className="gt-propose-leaf__reason">{row.reason || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Same grid as ProposeLeafLibraries — an import can carry a hundred
+              rows from a CSV, so sorting and filtering matter more here, not
+              less. Selection lives outside the table and is keyed by row id, so
+              re-ordering cannot move a tick onto a different row. */}
+          <DataTable
+            rows={candidates}
+            getRowKey={(row) => row.id}
+            emptyMessage="No candidate rows in this file."
+            initialSort={{ key: 'suggested_name', dir: 'asc' }}
+            dense
+            columns={[
+              {
+                key: 'select',
+                label: 'Select',
+                sortable: false,
+                filterable: false,
+                render: (row) => (
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${row.suggested_name}`}
+                    checked={selected.has(row.id)}
+                    onChange={() => toggleOne(row.id)}
+                    disabled={confirming}
+                  />
+                ),
+              },
+              { key: 'suggested_name', label: 'Suggested name' },
+              {
+                key: 'platform',
+                label: 'Platform',
+                render: (row) => <code>{row.platform}</code>,
+              },
+              { key: 'scan_mode', label: 'Mode' },
+              { key: 'scan_depth', label: 'Depth' },
+              {
+                key: 'path',
+                label: 'Path',
+                render: (row) => (
+                  <code className="gt-propose-leaf__path">{row.path}</code>
+                ),
+              },
+              {
+                key: 'reason',
+                label: 'Reason',
+                render: (row) => row.reason || '—',
+              },
+            ]}
+          />
         </div>
       ) : null}
 

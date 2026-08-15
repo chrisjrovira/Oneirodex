@@ -36,7 +36,7 @@
 | Wave 17 unmatched polish (BE) | **Done (uncommitted — QA pytest 5/5 PASS)** — list filters · nested `matched_game` · soft amend + batch clear/mark_kind/fix/amend — post-deploy: schema restart for soft-name columns — [libraries-and-scans.md](../admin/libraries-and-scans.md#unmatched-folders) |
 | Wave 17 unmatched polish (UI) | **Done (uncommitted — QA vitest 20/20 PASS)** — filters toolbar · sticky batch bar · **Amend naming** · **Dupe of …** on base Unmatched table — Reset Themes after scanjobs CSS/JS — [libraries-and-scans.md](../admin/libraries-and-scans.md#unmatched-folders) · [themes-reset.md](../admin/themes-reset.md) |
 | Wave 17 unmatched polish (QA) | **Done (PASS · DoD met)** — pytest Wave17 **5/5** · regression **17/17** · admin vitest **20/20** · soft note: filter isolation brittle on dirty shared `gamethecatest` (not product FAIL) |
-| Admin SPA invites + users bodies | Shipped — `/admin/invites` · `/admin/users` React roster · classic `/admin/manage_users` |
+| Admin SPA invites + users bodies | Shipped — `/admin/invites` · `/admin/users` React roster. **2026-08-13:** the classic `/admin/manage_users` editor is **retired at every layer** (rail entry, page link, route resolver, Flask route, template, CSS, JS); invites now points at the React roster. A bookmark to the old path 404s |
 | BIOS / N64 play hints | Shipped — `browse_play_fields` bios + n64_note |
 | Wave 18 free games | **Shipped** — News Free now · notify · deeplink + connected sync assist — [free-games.md](../user/free-games.md) |
 | Wave 19 emulation coverage | **Shipped (19a–g)** — companion honesty + Systems badges — [emulation-coverage.md](emulation-coverage.md) |

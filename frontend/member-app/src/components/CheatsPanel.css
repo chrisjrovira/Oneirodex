@@ -21,7 +21,7 @@
 }
 
 .gt-cheats-panel__status[role='alert'] {
-  color: color-mix(in srgb, #f07178 80%, var(--gt-text, #e8f5ee));
+  color: color-mix(in srgb, #f07178 80%, var(--gt-text));
 }
 
 .gt-cheats-panel__list {
@@ -41,8 +41,8 @@
   justify-content: space-between;
   padding: 0.55rem 0.65rem;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-border, rgba(255, 255, 255, 0.12)) 80%, transparent);
-  background: color-mix(in srgb, var(--gt-surface-2, #1c2230) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+  background: color-mix(in srgb, var(--gt-surface-2) 70%, transparent);
 }
 
 .gt-cheats-panel__row-meta {
@@ -71,8 +71,8 @@
   gap: 0.65rem;
   padding: 0.75rem 0.85rem;
   border-radius: 10px;
-  border: 1px dashed color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent);
-  background: color-mix(in srgb, var(--gt-surface, #141820) 88%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--gt-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
 }
 
 .gt-cheats-panel__form h3,
@@ -102,16 +102,16 @@
   min-height: 2.1rem;
   padding: 0.4rem 0.55rem;
   border-radius: 7px;
-  border: 1px solid var(--gt-border, rgba(255, 255, 255, 0.14));
-  background: var(--gt-surface-2, #1c2230);
-  color: var(--gt-text, #f2f4f8);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
+  color: var(--gt-text);
   font: inherit;
 }
 
 .gt-cheats-panel__field input:focus-visible,
 .gt-cheats-panel__field select:focus-visible,
 .gt-cheats-panel__code-row input:focus-visible {
-  outline: 2px solid var(--gt-accent, #2fd67b);
+  outline: 2px solid var(--gt-accent);
   outline-offset: 1px;
 }
 

@@ -4,10 +4,10 @@
   margin: var(--gt-space-1) 0;
   padding: var(--gt-space-4) var(--gt-space-5);
   border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-glass-border, color-mix(in srgb, var(--gt-accent, #2fd67b) 28%, transparent));
-  background: var(--gt-glass-bg, color-mix(in srgb, var(--gt-surface, #141820) 88%, transparent));
-  backdrop-filter: blur(var(--gt-glass-blur, 12px));
-  color: var(--gt-text-muted, color-mix(in srgb, var(--gt-text, #e8f5ee) 72%, transparent));
+  border: 1px solid var(--gt-glass-border);
+  background: var(--gt-glass-bg);
+  backdrop-filter: blur(var(--gt-glass-blur));
+  color: var(--gt-text-muted);
 }
 
 .gt-page-status__message {
@@ -21,8 +21,8 @@
   display: flex;
   align-items: center;
   gap: var(--gt-space-4);
-  border-color: color-mix(in srgb, var(--gt-accent, #2fd67b) 36%, transparent);
-  color: var(--gt-accent, #2fd67b);
+  border-color: color-mix(in srgb, var(--gt-accent) 36%, transparent);
+  color: var(--gt-accent);
 }
 
 .gt-page-status--empty {

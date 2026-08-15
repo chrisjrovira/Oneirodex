@@ -1,4 +1,4 @@
-const base = {
+export const base = {
   className: 'gt-icon',
   fill: 'none',
   stroke: 'currentColor',
