@@ -4,6 +4,21 @@
 
 **Answer: no.** This file is the evidence.
 
+> **Update, same day — closed since this was written.** The root cause of "my fixes never land" was
+> found and fixed: static responses carried `public, max-age=3600` with **no validator**, and theme
+> files are rewritten in place at a fixed URL, so a completed Reset Themes stayed invisible for up to
+> an hour. That single defect explains a large share of the "still broken" reports below, including
+> tile hover, which needed no code change at all.
+>
+> Also closed: the two theme pickers merged to one · fonts and firmware install with the server ·
+> the tile menu that rendered under the row beneath it · grid dead space and the displaced pagination
+> bar · off-theme tile controls · the boxed, unaligned rail scroll pair · News ordering with admin
+> notes conditional · Help as one segmented control and panelled like the admin guide · **editable
+> art-studio text (UID-011's second half)** · and a **ratchet for UID-018**, whose baseline had grown
+> from 699 to 1194 while being recorded as "incremental".
+>
+> Still true: everything under *Blocked on you*, and every item needing art direction.
+
 ## Method, and its limits
 
 Read all **150 human turns across 8 transcripts** (~65 MB) in

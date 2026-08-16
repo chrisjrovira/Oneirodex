@@ -149,6 +149,16 @@ Work since the 1.0.0-beta tag (2026-08-06).
 
 ### Added
 
+- **Fonts and firmware install with the server.** Both were scripts nobody ran: the picker offered
+  five faces and shipped none, and a populated local BIOS folder still read as empty. Fonts install
+  in the background and never block startup (`FETCH_FONTS_ON_BOOT`); firmware imports from
+  `BIOS_IMPORT_SOURCE` and never overwrites
+- **Editable cover text in the Art Studio** — headline, subtitle and a title-size slider. The
+  renderer always accepted these and only the preview forwarded them; Generate now matches what the
+  preview showed
+- **API envelope ratchet** (`scripts/api_envelope_lint.py`) — the shared response envelope landed
+  with two files migrated and the problem then grew from ~699 call sites to 1194. Existing sites are
+  recorded; a file may never exceed its count
 - **Two-bar chrome** — side rail + top bar (`SideRail`, `TopBar`, and the `partials/rail.html` ·
   `partials/topbar.html` Jinja equivalents) so React and classic pages present one shell. Page views
   moved into bar two across both stacks; admin adopted the same bar one and its pages retired their
