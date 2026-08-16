@@ -55,9 +55,19 @@ chat pop-out · Steam metadata mapping · scan freshness (updates/DLC) · admin 
 
 ### Never built
 
+> **Caveat on this section, added 2026-08-16.** These rows were derived from the registers plus
+> targeted greps. That method produced at least one false negative: `FEAT-D2` was marked "not built"
+> because the model and route prefix existed but I did not look for the component — which was there,
+> mounted, and tested. Two register entries turned out stale the same way (`UX-B7`'s admin toast
+> adoption, and the giant-tiles root cause, both already done).
+>
+> So treat every row below as *probably* open rather than confirmed open, and check for a UI component
+> before building one. The pattern in this codebase is repeatedly **backend present, frontend missing**
+> — which means the reverse mistake, assuming absence from a partial search, is easy to make.
+
 | Your request | State |
 |---|---|
-| "we need a cheat system like wand or pcchests for pc games that are installed" | `FEAT-D2`. Reopened by you on 08-03 after being deferred. **Not built.** Model `PcCheat` exists; no surface |
+| ~~"we need a cheat system like wand or pcchests for pc games that are installed"~~ | `FEAT-D2` — **built, and this row was wrong.** Corrected 2026-08-16: `PcCheat`, full CRUD at `/games/<uuid>/pc_cheats` (librarian-gated writes), and `PcCheatsPanel` mounted on game details behind `cheat_surface === 'pc_wand'`, with seven tests including the stance line and the empty state. I checked for the model and the route prefix and stopped there, which is the same half-look that produces the stale register entries this file complains about |
 | "gaming services we link to need to **sync** to the service like steam does not just a upload that wont stay up to date" | GOG/Epic live sync. **Not built, deliberately** — neither store has a documented ownership API. The honesty layer (`STORE_SYNC_MODE`) shipped instead, so the UI admits a snapshot is stale |
 | "claiming free games should be seemless when an account is attached" | `FEAT-D6`. Depends on the above. **Not built** |
 | "emulators pages need to be redesigned and have the look feel, visuals of the system being played and what a users room, arcade would look like" | `UID-007`. Player chrome (volume/power/reset/pause), per-system UI. **Not built.** You named Provenance-Emu as the target |
