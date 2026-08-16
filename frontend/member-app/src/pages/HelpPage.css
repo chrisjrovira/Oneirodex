@@ -1,5 +1,13 @@
 /* Help — scannable accordion, not a FAQ wall */
 
+/* Mirrors --gt-adminpage-radius so the member panels match the admin guide
+   exactly rather than approximately. On the page root, not on .gt-help__toc:
+   the toc is a *sibling* of the sections, so a definition there never reaches
+   them and the fallback would be doing all the work. */
+.gt-help {
+  --gt-help-panel-radius: 14px;
+}
+
 .gt-help__toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -18,7 +26,13 @@
 .gt-help__support-link:hover,
 .gt-help__support-link:focus-visible {
   text-decoration: underline;
-  outline: none;
+}
+
+/* An underline is also the hover treatment, so it tells a keyboard user
+   nothing about where they are. */
+.gt-help__support-link:focus-visible {
+  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+  outline-offset: 2px;
 }
 
 /* Quick navigation: one strip with rounded ends, flush to the rail.
@@ -37,7 +51,7 @@
   max-width: 100%;
   overflow-x: auto;
   margin: 0 0 1rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
 }
 
 @media (min-width: 900px) {
@@ -80,7 +94,7 @@
   padding: clamp(1rem, 2.2vw, 1.75rem);
   background: var(--gt-surface);
   border: 1px solid var(--gt-border);
-  border-radius: 14px;
+  border-radius: var(--gt-help-panel-radius, 14px);
   color: var(--gt-text);
 }
 
@@ -107,7 +121,12 @@
 .gt-help__section h2 button:hover,
 .gt-help__section h2 button:focus-visible {
   color: var(--gt-accent);
-  outline: none;
+}
+
+/* Same reason: the accent colour is the hover state too. */
+.gt-help__section h2 button:focus-visible {
+  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+  outline-offset: -2px;
 }
 
 .gt-help__section-copy {

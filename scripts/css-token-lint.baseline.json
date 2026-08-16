@@ -129,8 +129,8 @@
     "no-raw-font-size": 7
   },
   "frontend/member-app/src/pages/HelpPage.css": {
-    "no-raw-font-size": 4,
-    "no-raw-radius": 2
+    "no-raw-font-size": 3,
+    "no-raw-radius": 1
   },
   "frontend/member-app/src/pages/MorePage.css": {
     "no-raw-font-size": 11,
