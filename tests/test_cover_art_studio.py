@@ -317,3 +317,49 @@ def test_art_studio_generate_apply_game(client, db_session, admin_user, app, tmp
     ).scalars().first()
     assert row is not None
     assert row.is_downloaded is True
+
+
+def test_generated_pack_honours_the_text_overrides(tmp_path, app):
+    """Generate must render what the preview showed.
+
+    The renderer has accepted `headline_override` / `subtitle_override` /
+    `title_scale` since the artwork wave, and only the *preview* route passed
+    them through — so exposing the controls without threading them into
+    save_pack would have produced a preview that lied about its own output.
+    """
+    with app.app_context(), patch(
+        'gametheca.utils.cover_art_studio.generated_root', return_value=tmp_path
+    ):
+        plain = save_pack('Override Test', system='SNES', pack_id='ovr_plain')
+        scaled = save_pack(
+            'Override Test', system='SNES', pack_id='ovr_scaled',
+            headline_override='CUSTOM',
+            title_scale=1.8,
+        )
+
+    assert plain['files'] == scaled['files']
+
+    name = plain['files'][0]
+    plain_bytes = (tmp_path / 'ovr_plain' / name).read_bytes()
+    scaled_bytes = (tmp_path / 'ovr_scaled' / name).read_bytes()
+    assert plain_bytes != scaled_bytes, 'overrides did not reach the rendered pack'
+
+
+def test_generate_route_forwards_the_overrides(client, db_session, admin_user):
+    """The route is the half that was missing; pin the forwarding itself so a
+    future refactor cannot quietly drop it and leave the UI writing defaults."""
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(admin_user.id)
+        sess['_fresh'] = True
+
+    with patch('gametheca.routes_admin_ext.art_studio.save_pack') as fake:
+        fake.return_value = {'pack_id': 'p1', 'files': [], 'title': 'T', 'system': '', 'format': 'webp'}
+        client.post(
+            '/admin/api/art-studio/generate',
+            json={'title': 'T', 'headline': 'BIG', 'subtitle': '', 'title_scale': 1.5},
+        )
+
+    kwargs = fake.call_args.kwargs
+    assert kwargs['headline_override'] == 'BIG'
+    assert kwargs['subtitle_override'] == ''
+    assert kwargs['title_scale'] == 1.5

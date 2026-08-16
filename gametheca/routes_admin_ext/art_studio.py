@@ -112,8 +112,21 @@ def art_studio_generate():
     fmt = (data.get('format') or 'webp').lower()
     if fmt not in ('webp', 'png'):
         fmt = 'webp'
+    # Same overrides the preview accepts. Without them Generate would render the
+    # derived text while the preview above it showed the operator's, so the
+    # preview would be lying about its own output.
     try:
-        manifest = save_pack(title, system=system, fmt=fmt)
+        pack_title_scale = float(data.get('title_scale') or 1.0)
+    except (TypeError, ValueError):
+        pack_title_scale = 1.0
+
+    try:
+        manifest = save_pack(
+            title, system=system, fmt=fmt,
+            headline_override=data.get('headline'),
+            subtitle_override=data.get('subtitle'),
+            title_scale=pack_title_scale,
+        )
         preview = pack_preview_url(manifest['pack_id'], 'tile_400x600.webp')
         log_system_event(f"Art studio generated pack {manifest['pack_id']} for {title!r}")
         return jsonify({**manifest, 'preview_url': preview}), 201

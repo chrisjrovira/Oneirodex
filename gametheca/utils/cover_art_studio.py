@@ -1182,15 +1182,29 @@ def generate_size_matrix(
     *,
     system: str | None = None,
     fmt: str = 'webp',
+    headline_override: str | None = None,
+    subtitle_override: str | None = None,
+    title_scale: float = 1.0,
 ) -> dict[str, bytes]:
-    """Generate all UI sizes for one title."""
+    """Generate all UI sizes for one title.
+
+    Takes the same text overrides as :func:`render_cover_art`. Without them the
+    preview could show operator-set text and the generated pack would quietly
+    render the derived text instead — a preview that lies about its output is
+    worse than no preview.
+    """
     fmt = (fmt or 'webp').lower()
     if fmt not in ('webp', 'png'):
         fmt = 'webp'
     out: dict[str, bytes] = {}
     for prefix, w, h in SIZE_MATRIX:
         variant = prefix
-        img = render_cover_art(w, h, title=title, system=system, variant=variant)
+        img = render_cover_art(
+            w, h, title=title, system=system, variant=variant,
+            headline_override=headline_override,
+            subtitle_override=subtitle_override,
+            title_scale=title_scale,
+        )
         name = _filename_for(prefix, w, h, fmt)
         out[name] = _image_to_bytes(img, fmt)
     return out
@@ -1254,11 +1268,19 @@ def save_pack(
     fmt: str = 'webp',
     pack_id: str | None = None,
     package_root: str | Path | None = None,
+    headline_override: str | None = None,
+    subtitle_override: str | None = None,
+    title_scale: float = 1.0,
 ) -> dict[str, Any]:
     pack_id = pack_id or uuid.uuid4().hex[:12]
     pack_dir = safe_pack_dir(pack_id, package_root)
     pack_dir.mkdir(parents=True, exist_ok=True)
-    files = generate_size_matrix(title, system=system, fmt=fmt)
+    files = generate_size_matrix(
+        title, system=system, fmt=fmt,
+        headline_override=headline_override,
+        subtitle_override=subtitle_override,
+        title_scale=title_scale,
+    )
     written: list[str] = []
     for name, data in files.items():
         dest = pack_dir / name

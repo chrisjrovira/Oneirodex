@@ -60,6 +60,15 @@ export function ArtStudioPage() {
   const [fallbackBust, setFallbackBust] = useState(() => Date.now())
   const [batchOpen, setBatchOpen] = useState(false)
   const [previewArtistic, setPreviewArtistic] = useState(true)
+  /* FEAT-D4 overrides. The API has accepted `headline`, `subtitle` and
+     `title_scale` since the artwork wave and nothing ever sent them, so
+     "the text is still tiny and not legible, it should be editable in the art
+     studio" (UID-011) was a frontend gap rather than missing capability.
+     Empty headline means "derive it from the title", which is what the route
+     already does with an absent key. */
+  const [headline, setHeadline] = useState('')
+  const [subtitle, setSubtitle] = useState('')
+  const [titleScale, setTitleScale] = useState(1)
   const previewReqId = useRef(0)
 
   const skin = useMemo(() => skinForPlatform(system), [system])
@@ -110,6 +119,12 @@ export function ArtStudioPage() {
             system: systemForApi,
             width: size.width,
             height: size.height,
+            // Absent keys keep the derived text, so only send what was set.
+            // An explicit empty subtitle means "no subtitle" to the renderer,
+            // which is a different instruction from leaving it out.
+            ...(headline.trim() ? { headline: headline.trim() } : {}),
+            ...(subtitle !== '' ? { subtitle } : {}),
+            ...(titleScale !== 1 ? { title_scale: titleScale } : {}),
           })
           if (reqId !== previewReqId.current) return
           next[size.key] = data.preview
@@ -134,7 +149,7 @@ export function ArtStudioPage() {
         }
       }
     },
-    [title, systemForApi],
+    [title, systemForApi, headline, subtitle, titleScale],
   )
 
   const runPreview = useCallback(async () => {
@@ -171,6 +186,11 @@ export function ArtStudioPage() {
         title: title.trim(),
         system: systemForApi,
         format: 'webp',
+        // Must match the preview payload exactly, or Generate writes something
+        // other than what was on screen when it was clicked.
+        ...(headline.trim() ? { headline: headline.trim() } : {}),
+        ...(subtitle !== '' ? { subtitle } : {}),
+        ...(titleScale !== 1 ? { title_scale: titleScale } : {}),
       })
       setPackId(data.pack_id)
       setPreviewUrl(data.preview_url)
@@ -183,7 +203,7 @@ export function ArtStudioPage() {
     } finally {
       setBusy('')
     }
-  }, [title, systemForApi])
+  }, [title, systemForApi, headline, subtitle, titleScale])
 
   const applyToGame = useCallback(async () => {
     if (!packId || !gameUuid.trim()) {
@@ -578,6 +598,59 @@ export function ArtStudioPage() {
                   ))}
                 </select>
               </label>
+
+              {/* FEAT-D4 text overrides (UID-011). The renderer has always
+                  accepted these; there was simply no way to reach them, so the
+                  only answer to "the text is too small" was to change a default
+                  for every cover at once. */}
+              <fieldset className="gt-art-studio__text">
+                <legend className="gt-art-studio__label">Cover text</legend>
+
+                <label>
+                  <span className="gt-art-studio__label">Headline</span>
+                  <input
+                    type="text"
+                    value={headline}
+                    onChange={(e) => setHeadline(e.target.value)}
+                    placeholder="Derived from the title"
+                    maxLength={120}
+                    autoComplete="off"
+                  />
+                </label>
+
+                <label>
+                  <span className="gt-art-studio__label">Subtitle</span>
+                  <input
+                    type="text"
+                    value={subtitle}
+                    onChange={(e) => setSubtitle(e.target.value)}
+                    placeholder="Derived from the title"
+                    maxLength={120}
+                    autoComplete="off"
+                  />
+                </label>
+
+                <label>
+                  <span className="gt-art-studio__label">
+                    Title size — {titleScale.toFixed(2)}×
+                  </span>
+                  <input
+                    type="range"
+                    min="0.6"
+                    max="2"
+                    step="0.05"
+                    value={titleScale}
+                    onChange={(e) => setTitleScale(Number(e.target.value))}
+                    aria-describedby="gt-art-scale-hint"
+                  />
+                </label>
+                <p id="gt-art-scale-hint" className="gt-art-studio__hint">
+                  Clamped 0.6×–2× by the renderer, which also refuses to overflow the
+                  canvas — the slider asks for a size, it does not override the fit.
+                  Leave the fields empty to keep the text derived from the title; an
+                  empty subtitle is kept as “no subtitle”.
+                </p>
+              </fieldset>
 
               <fieldset className="gt-art-studio__variants">
                 <legend className="gt-art-studio__label">Preview size</legend>
