@@ -167,8 +167,15 @@ def authenticate_user(client, user):
 class TestDownloadGameRoute:
     """Test cases for download_game route."""
     
-    def test_download_game_requires_login(self, client, test_game):
-        """Test that download_game requires authentication."""
+    def test_download_game_requires_login(self, client, test_game, configured_install):
+        """Test that download_game requires authentication.
+
+        `configured_install` states the precondition this was relying on without
+        declaring: `check_setup_status` redirects *any* anonymous request to
+        `/setup` while no user exists, so on a freshly truncated database this
+        asserted `/login` and got `/setup`. It passed in a full run only because
+        an earlier file happened to leave a user row behind.
+        """
         response = client.get(f'/download_game/{test_game.uuid}')
         assert response.status_code == 302  # Redirect to login
         assert '/login' in response.location

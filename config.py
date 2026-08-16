@@ -106,6 +106,16 @@ class Config(object):
     # which is what a Compose deploy wants (it already persists that volume).
     FONT_PATH = os.getenv('FONT_PATH', '')
     FONT_MAX_BYTES = int(os.getenv('FONT_MAX_BYTES', str(8 * 1024 * 1024)))
+    # Install the built-in OFL faces on first boot rather than leaving them to a
+    # script nobody knows to run — the picker offered five fonts and shipped
+    # none. Runs in the background and never blocks or fails startup. Turn off
+    # for air-gapped installs and use scripts/fetch-fonts.py --out instead.
+    FETCH_FONTS_ON_BOOT = os.getenv('FETCH_FONTS_ON_BOOT', 'true').lower() == 'true'
+
+    # Point at a local firmware collection to have it imported on boot. Existing
+    # files are never replaced, so this tops up what is missing and is safe to
+    # leave set. Unset means no import.
+    BIOS_IMPORT_SOURCE = os.getenv('BIOS_IMPORT_SOURCE', '') or None
 
     # Hardlink helpers on; filesystem apply remains a safety lock
     ENABLE_HARDLINK_HELPERS = os.getenv('ENABLE_HARDLINK_HELPERS', 'true').lower() == 'true'

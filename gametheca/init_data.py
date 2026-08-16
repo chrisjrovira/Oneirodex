@@ -122,6 +122,105 @@ def initialize_library_folders():
         print(f"Error installing icon packs: {e}")
         log_system_event(f"Error installing icon packs: {e}", event_type='startup', event_level='warning', audit_user='system')
 
+    # Fonts and firmware, so an install arrives with both rather than needing
+    # two scripts run by hand. Both are best-effort and never block boot.
+    os.makedirs(os.path.join(library_path, 'fonts'), exist_ok=True)
+    initialize_theme_fonts()
+    initialize_emulator_bios()
+
+
+def initialize_theme_fonts():
+    """Install the built-in OFL faces the font picker offers.
+
+    The picker has always listed these and reported `installed: False` for any
+    whose file was absent — honest, but it meant a fresh install offered five
+    fonts and shipped none of them, and the fix was a script nobody knew to run.
+
+    Deliberately best-effort and off the boot path: the files come from
+    google/fonts over the network, and a slow or firewalled host must not be a
+    slow or failed startup. `FETCH_FONTS_ON_BOOT=false` turns it off for
+    air-gapped installs, which should use `scripts/fetch-fonts.py --out` against
+    a local mirror instead.
+    """
+    from flask import current_app
+
+    if not current_app.config.get('FETCH_FONTS_ON_BOOT', True):
+        return
+
+    from gametheca.utils.theme_fonts import BUILT_IN_FONTS, fonts_dir
+
+    root = fonts_dir()
+    os.makedirs(root, exist_ok=True)
+    missing = [
+        entry['file'] for entry in BUILT_IN_FONTS.values()
+        if entry.get('file') and not os.path.isfile(os.path.join(root, entry['file']))
+    ]
+    if not missing:
+        return
+
+    def _fetch():
+        try:
+            from gametheca.utils.font_install import install_builtin_fonts
+
+            written = install_builtin_fonts(root)
+            if written:
+                log_system_event(
+                    f"Installed {written} theme font(s) on first boot",
+                    event_type='startup', event_level='info', audit_user='system',
+                )
+        except Exception as exc:
+            # A missing font degrades to the next family in the CSS stack, so
+            # this is cosmetic — it must never take the server down with it.
+            log_system_event(
+                f"Theme fonts not installed ({exc}); run scripts/fetch-fonts.py",
+                event_type='startup', event_level='warning', audit_user='system',
+            )
+
+    from gametheca.utils.background import run_in_background
+
+    run_in_background(current_app._get_current_object(), _fetch, name='font-install')
+    print(f"Fetching {len(missing)} theme font(s) in the background")
+
+
+def initialize_emulator_bios():
+    """Import firmware from an operator-supplied folder, if one is configured.
+
+    `scripts/import_bios.py` already knew how to do this; nothing called it, so
+    a local collection sat on disk while the Emulators page reported no firmware
+    — reported as "bios we push for my local repo dont show as loaded".
+
+    Set `BIOS_IMPORT_SOURCE` to that folder. Existing files are never
+    overwritten, so this is safe to re-run on every boot: it tops up what is
+    missing and leaves anything already installed alone.
+    """
+    from flask import current_app
+
+    source = current_app.config.get('BIOS_IMPORT_SOURCE') or os.environ.get('BIOS_IMPORT_SOURCE')
+    if not source:
+        return
+    if not os.path.isdir(source):
+        log_system_event(
+            f"BIOS_IMPORT_SOURCE is set but not a folder: {source}",
+            event_type='startup', event_level='warning', audit_user='system',
+        )
+        return
+
+    try:
+        from gametheca.utils.bios_install import import_bios_from
+
+        copied = import_bios_from(source)
+        if copied:
+            log_system_event(
+                f"Imported {copied} firmware file(s) from {source}",
+                event_type='startup', event_level='info', audit_user='system',
+            )
+            print(f"Imported {copied} firmware file(s)")
+    except Exception as exc:
+        log_system_event(
+            f"Firmware import from {source} failed: {exc}",
+            event_type='startup', event_level='warning', audit_user='system',
+        )
+
 
 def insert_default_scanning_filters():
     """Initialize default scanning filters in the database."""
