@@ -61,7 +61,6 @@
   "gametheca/routes_apis/vr.py": 5,
   "gametheca/routes_apis/wanted.py": 6,
   "gametheca/routes_apis/wave8_11.py": 3,
-  "gametheca/routes_apis/wishlist.py": 10,
   "gametheca/routes_downloads_ext/play.py": 1,
   "gametheca/routes_downloads_ext/serve.py": 1,
   "gametheca/routes_downloads_ext/user.py": 3,

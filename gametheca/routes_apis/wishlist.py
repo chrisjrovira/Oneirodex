@@ -3,6 +3,8 @@
 from datetime import datetime, timezone
 
 from flask import jsonify, request
+
+from gametheca.utils.api_response import api_error, api_ok
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -38,11 +40,14 @@ def list_requests():
 @login_required
 def create_request():
     if not can_request_games(current_user):
-        return jsonify({'error': 'Wishlist requests are not available for this account'}), 403
+        return api_error(
+            'Wishlist requests are not available for this account',
+            code='forbidden',
+        )
     data = request.get_json(silent=True) or {}
     title = (data.get('title') or '').strip()
     if not title:
-        return jsonify({'error': 'title required'}), 400
+        return api_error('A title is required', code='bad_request')
     existing = db.session.execute(
         select(GameRequest).filter_by(user_id=current_user.id, title=title, status='pending')
     ).scalars().first()
@@ -70,34 +75,37 @@ def cancel_request(request_id: int):
     """Owner may cancel their own pending request."""
     row = db.session.get(GameRequest, request_id)
     if not row:
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Request not found', code='not_found')
     if row.user_id != current_user.id and not is_librarian(current_user):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('That request belongs to someone else', code='forbidden')
     if row.status != 'pending' and not is_librarian(current_user):
-        return jsonify({'error': 'Only pending requests can be cancelled'}), 400
+        return api_error(
+            'Only pending requests can be cancelled',
+            code='bad_request',
+        )
     db.session.delete(row)
     db.session.commit()
-    return jsonify({'ok': True, 'id': request_id}), 200
+    return api_ok({'id': request_id})
 
 
 @apis_bp.route('/requests/<int:request_id>', methods=['PATCH'])
 @login_required
 def resolve_request(request_id: int):
     if not is_librarian(current_user):
-        return jsonify({'error': 'Librarian or admin required'}), 403
+        return api_error('Librarian or admin required', code='forbidden')
     row = db.session.get(GameRequest, request_id)
     if not row:
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Request not found', code='not_found')
     data = request.get_json(silent=True) or {}
     status = (data.get('status') or '').strip()
     if status not in VALID_RESOLVE_STATUSES:
-        return jsonify({'error': 'invalid status'}), 400
+        return api_error('That status is not one this request can move to', code='bad_request')
 
     linked = (data.get('linked_game_uuid') or '').strip() or None
     if linked:
         game = db.session.execute(select(Game).filter_by(uuid=linked)).scalars().first()
         if not game:
-            return jsonify({'error': 'linked_game_uuid not found'}), 404
+            return api_error('linked_game_uuid does not match a game', code='not_found')
         row.linked_game_uuid = linked
         if status == 'pending':
             status = 'fulfilled'
