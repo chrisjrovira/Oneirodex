@@ -24,12 +24,15 @@ Read in this order:
 | 4f | [gow-remote-play.md](gow-remote-play.md) | Moonlight / Wolf remote play — GOW-1/2 **shipped** |
 | 4g | [game-servers-mods.md](game-servers-mods.md) | Mods + household game servers — **MOD-1/2 · SRV-1/2 APIs shipped** |
 | 4h | [ambient-lighting.md](ambient-lighting.md) | Hyperion.ng / Home Assistant — LIGHT-1/2 **shipped** |
-| 4i | [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md) | Jul 27 PM agent briefs + locked priority order |
+| 4i | [archive/pm-dispatch-2026-07-27.md](archive/pm-dispatch-2026-07-27.md) | Jul 27 PM agent briefs + locked priority order — **archived** |
 | 4j | [name-resolution.md](name-resolution.md) | Folder → IGDB search variants · letter-bucket `scan_depth=2` |
 | 4k | [console-gaming-libraries.md](console-gaming-libraries.md) | `_console-gaming` → one library per platform leaf · exclude emus |
 | 5 | [ui.md](ui.md) | UI rebuild waves, BadgeStack, GameActionBar |
-| 6 | [progress.md](progress.md) | What shipped / what's next — Immediate **BE-DET-6** DAT inner archive · **W22 rem** (**BE-DET-5** multi-disc **QA PASS 119/119** · **BE-DET-4** region/lang **QA PASS 118/118** · **BE-DET-1…3** peel **QA PASS** 77/77 · 77/77 · 98/98 · match peel **QA PASS 138+10**) |
-| 6b | [roadmap-w22-plus.md](roadmap-w22-plus.md) | Feedback waves **W22–W25** (W21 = first-scan Done uncommitted) |
+| 6 | [progress.md](progress.md) | What shipped / what's next — Waves **4–28** all on `main` as of 2026-08-16 |
+| 6b | [roadmap-w22-plus.md](roadmap-w22-plus.md) | Feedback waves **W22–W25** |
+| 6c | [carryover-w28.md](carryover-w28.md) | **W26–W28 open set** — the index over W26 · W27 · ui-debt-log |
+| 6d | [request-reconciliation-2026-08-15.md](request-reconciliation-2026-08-15.md) | Every ask across past conversations, checked against the registers |
+| 6e | [archive/README.md](archive/README.md) | Dated point-in-time reports kept for provenance — not current guidance |
 | 7 | [social-av.md](social-av.md) | Household social + LiveKit waves |
 | 8 | [emulation-coverage.md](emulation-coverage.md) | Wave 19 — systems below PS5 / Series |
 | 9 | [security.md](security.md) | Security suite |

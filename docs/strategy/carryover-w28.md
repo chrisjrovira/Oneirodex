@@ -1,6 +1,8 @@
 # W28 carryover — what five sessions left behind
 
-**Written:** 2026-08-14 · **Branch:** `w28-carryover` (off `w27-ux-feedback` @ `5509c84a`)
+**Written:** 2026-08-14 · **Updated:** 2026-08-16 — the whole line landed on `main` (`6acf7e1c`) and
+the branch cleanup this file recommended was carried out. Items marked *Update 2026-08-16* below have
+moved since; everything else still stands.
 
 **Why this exists.** Work through W26/W27 ran across five separate agent sessions and six branches.
 Each session ended with its own recap in its own transcript, and two of them ended mid-verification.
@@ -25,21 +27,33 @@ message describes only the chrome wave and three review fixes.
 
 ### Branch disposition
 
-| Branch | State | Action |
-|---|---|---|
-| `w27-ux-feedback` | 1 commit ahead of `main`; the superset | base of this branch |
-| `test-harness-clean-db-failures` | fully merged; `git diff main...` is empty | deletable |
-| `cursor/feedback-fix-waves` | fully merged; diff empty | deletable |
-| `cursor/readme-live-screenshots` | fully merged; diff empty | deletable |
-| `claude/great-mclaren-7e8309` | **zero commits** — that session edited the main repo, not its worktree, and said so | worktree removable |
-| `feature/wave2-admin-fixes` | **unrelated history** — own root, predates `chore: replace repository with clean 0.2.0 tree` | left in place, see below |
+| Branch | State | Action | Done |
+|---|---|---|---|
+| `w28-carryover` | 22 commits ahead of `main`; the superset | fast-forward onto `main` | **2026-08-16** — `main` = `6acf7e1c`, pushed. Branch kept |
+| `w27-ux-feedback` | 1 commit ahead of `main`; base of `w28-carryover` | absorbed into `main` | kept 2026-08-16 — safe to delete whenever |
+| `claude/dazzling-sammet-b1bb36` | identical SHA to `w27-ux-feedback`; its own worktree | absorbed | **deleted 2026-08-16** (worktree removed) |
+| `test-harness-clean-db-failures` | fully merged; `git diff main...` is empty | deletable | **deleted 2026-08-16** |
+| `cursor/feedback-fix-waves` | fully merged; diff empty | deletable | **deleted 2026-08-16** |
+| `cursor/readme-live-screenshots` | fully merged; diff empty | deletable | **deleted 2026-08-16** |
+| `claude/great-mclaren-7e8309` | **zero commits** — that session edited the main repo, not its worktree, and said so | worktree removable | **deleted 2026-08-16** |
+| `feature/wave2-admin-fixes` | **unrelated history** — own root, predates `chore: replace repository with clean 0.2.0 tree` | left in place, see below | **kept** — only copy of the pre-rewrite line |
 
-**On `feature/wave2-admin-fixes`:** it shares no merge base with `main`. Its 58 commits are the
-pre-0.2.0 line that the clean-tree replacement superseded. Exactly two files exist there and nowhere
-in `main` — `gametheca/static/newstyle/searching.gif` and `searching_small.gif`, referenced only by
-that branch's copy of `admin_manage_scanjobs.html`. Nothing in the current tree wants them. Decision
-2026-08-14: **leave the branch alone**, do not restore the assets, record it here so the call is
-visible instead of implied by a deletion.
+**On `feature/wave2-admin-fixes`:** it shares no merge base with `main` — its root is
+`32f6dcd4 Initial commit: SharewareZ rewrite` (2026-07-23), four days before
+`17b3e856 chore: replace repository with clean 0.2.0 tree`. Its 58 commits are the pre-0.2.0 line that
+the clean-tree replacement superseded. Decision 2026-08-14: **leave the branch alone**, do not restore
+its orphaned assets, record it here so the call is visible instead of implied by a deletion. Re-affirmed
+2026-08-16 during the branch cleanup — it is the only copy of that history, so it is the one branch not
+deleted.
+
+Re-verified 2026-08-16: **nine** files exist there and nowhere in `main`, not the two recorded on
+2026-08-14. The count grew because the tree kept retiring things, not because anything was missed —
+`chrome/TopNav.jsx` and its test went in GT-B2, `templates/settings/settings_panel.html` and
+`admin_manage_users.html`/`.js` in the theme-picker merge (`97c64e26`), alongside
+`admin_manage_image_queue.html`, `new_server_info.html` and the two `searching*.gif` spinners. Every
+one is a deliberate removal with no live reference in the current tree — checked by grep, not assumed.
+Feature coverage on `main` is a superset by every probe tried (emulators, household, cheats,
+translation, NZBGet, icon packs).
 
 ---
 
@@ -97,8 +111,17 @@ discovery had been invisible in the browser since the moment it was written.
 
 The consequence: a large batch of "still broken" reports from 2026-08-13/14 cannot be trusted either
 way. They may be real defects or they may be stale-CSS artifacts. **Run Admin → Themes → Reset Default
-Themes, hard-refresh, then re-report.** Until that happens, every item in that batch is unverifiable,
-and picking any of them up means possibly chasing a fix that already shipped.
+Themes, then re-report.** Until that happens, every item in that batch is unverifiable, and picking any
+of them up means possibly chasing a fix that already shipped.
+
+> **Update 2026-08-16 — the second half of this had a root cause, and it is fixed (`97c64e26`).** Drift
+> was only one layer of it. Even a correctly deployed asset stayed invisible: `asgi.py` served every
+> static file `public, max-age=3600` with **no validator**, and Reset Themes rewrites theme files *in
+> place behind an identical URL*, so the browser had no reason to re-fetch for up to an hour. That is
+> why "hard-refresh" had become the standing workaround. Theme URLs now carry an mtime+size version and
+> `/static/library/themes/` serves `no-cache`. **The re-report step above no longer needs a hard
+> refresh** — a Reset Themes plus a normal reload is now sufficient and trustworthy. At least one item
+> in that batch (tile hover enlarge) was confirmed to be purely this, needing no code change at all.
 
 The `Theme assets` Ops panel now reports drift so this cannot hide again — it distinguishes *drifted*
 from *never deployed*, and never copies anything itself.

@@ -5,17 +5,24 @@ GameTheca Game Path Update Script
 This script helps update game paths in the database after extracting archives or reorganizing files.
 It preserves all metadata (favorites, ratings, downloads, etc.) while fixing broken paths.
 
-Usage:
-    python update_game_paths.py                    # Interactive mode
-    python update_game_paths.py --dry-run          # Preview changes without applying
-    python update_game_paths.py --auto             # Auto-fix obvious matches
-    python update_game_paths.py --library "PC"     # Filter by library name
+Usage (from the repo root):
+    python scripts/update_game_paths.py                    # Interactive mode
+    python scripts/update_game_paths.py --dry-run          # Preview changes without applying
+    python scripts/update_game_paths.py --auto             # Auto-fix obvious matches
+    python scripts/update_game_paths.py --library "PC"     # Filter by library name
 """
 
 import os
 import sys
 import argparse
 from difflib import SequenceMatcher
+
+# Reads `config` and `gametheca.models` from the repo root, so the root has to
+# be importable however the script is invoked — not only from the root itself.
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from config import Config

@@ -17,7 +17,12 @@ Do these **before** and **after** every Unraid `git pull` / image rebuild. Agent
 1. Confirm readiness: `curl -f http://<unraid-ip>:5006/readyz`
 2. Admin → Themes → **Reset Default Themes** (library volume theme CSS/JS lag the image) — [themes-reset.md](../admin/themes-reset.md)
 3. Confirm the image rebuilt **`frontend/member-app` dist** (`member-app.css` / `.js` in View Source). Reset Themes alone does **not** refresh the SPA bundle
-4. Hard-refresh the browser; smoke Discover/Library + Admin Ops glance
+4. Reload the browser normally; smoke Discover/Library + Admin Ops glance
+
+> Step 4 used to read "hard-refresh". It no longer needs to: theme URLs are versioned by mtime+size
+> and `/static/library/themes/` serves `no-cache`, so a reset is visible on an ordinary reload. If a
+> hard refresh still changes what you see, that is a defect to report rather than a step to keep —
+> [themes-reset.md](../admin/themes-reset.md).
 
 ### After Stage A0–A8 lands on origin
 
@@ -269,7 +274,7 @@ Full matrix: [themes-reset.md](../admin/themes-reset.md).
 1. First-boot logs show theme tokens OK (or Reset Default Themes after `GENERATOR_VERSION` 9)
 2. Discover/Library: View Source includes **`member-app.css`** and `member-app.js`
 3. Admin pages: View Source includes **`admin-app.css`** and `admin-app.js` (React admin SPA)
-4. Default accent reads **green `#2fd67b`** (not teal/orange); Ocean/Forest still recolour — hard refresh
+4. Default accent reads **green `#2fd67b`** (not teal/orange); Ocean/Forest still recolour on a normal reload
 5. Top nav only on member pages (Discover, Library, **Systems**, Downloads, Favorites, More)
 6. **Systems** (`/systems`): family groups load; click a console → library filtered with platform skin
 7. Preferences swatch grid responds; page reloads after save; tile size changes grid density

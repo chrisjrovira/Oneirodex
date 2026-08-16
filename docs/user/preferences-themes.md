@@ -8,7 +8,7 @@ From the member SPA **Account** drawer (under TopNav) → **Preferences**, or Ct
 
 ## Color theme presets
 
-- Pick a preset from the **swatch grid** (modal Preferences and full `/settings_panel`) — the underlying `<select>` is visually hidden (still keyboard/screen-reader reachable) for a slimmer picker.
+- Pick a preset from the **swatch grid** in Preferences — the underlying `<select>` is visually hidden (still keyboard/screen-reader reachable) for a slimmer picker. Preferences is the only theme picker; if you are an admin, the Themes admin page handles installing and resetting themes, not choosing one.
 - **Default (system)** is the built-in theme id `default` (saved explicitly — not `None`).
 - Default brand accent is green **`#2fd67b`** (Style B+C glass); other presets (Aurora, Ember, Violet, Forest, Ocean, Rose, Mono, Sunset, Ice — **9** packs) recolour accent, surfaces, glass/CRT, typography, and paired icon geometry (`GENERATOR_VERSION` 10).
 - Picking a colour swatch also selects that preset’s paired icon pack (still changeable before Save).
@@ -56,7 +56,7 @@ From the member SPA **Account** drawer (under TopNav) → **Preferences**, or Ct
 
 ## Tips
 
-- Hard-refresh (Ctrl+F5) after a theme or icon-pack apply if CSS was just redeployed.
+- A theme or icon-pack change takes effect on a normal reload. Hard-refreshing used to be necessary and no longer is — if it makes a difference for you, that is worth reporting rather than repeating.
 - Admin theme install is separate from your personal preset — see [themes-reset.md](../admin/themes-reset.md).
 - If account/prefs chrome looks stale after deploy (`gt-account.css` / `modal-components` on the library volume), ask an admin for **Reset Default Themes**.
 - Icon packs install on app boot; they are not wiped by Reset Default Themes.

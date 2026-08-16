@@ -25,7 +25,7 @@ pass. Two items need a human/product decision before they can be closed.
 | 9 | Hardening | Notifications | Email **fallback** paths (used only when Jinja render fails) interpolated user-authored chat title/body into HTML unescaped, unlike the escaped primary path. | `escape()` in `notifications.py` + `email_digest.py`. |
 
 Also fixed alongside: BE-DET-10's UI gap (classic Edit Images ignored 6 of 8 image kinds; admin queue Type filter
-offered only 2 of 8) — see [progress.md](progress.md).
+offered only 2 of 8) — see [progress.md](../progress.md).
 
 ## Test-suite repairs (test bugs, not product bugs)
 
@@ -144,7 +144,7 @@ after the redeploy, since an unknown share are the same env artifact.
 ## Human decisions — **both answered 2026-08-03, now being built**
 
 Both open items below were resolved the same day. LiveKit gets a **real membership/invite model**, and voice
-**is** scoped to its channel — see [social-spaces-and-storefront.md](social-spaces-and-storefront.md). The room
+**is** scoped to its channel — see [social-spaces-and-storefront.md](../social-spaces-and-storefront.md). The room
 resolver now default-denies unrecognised room names, which closes item 1 at the enforcement layer; item 2 closes
 when the UI stops mounting the global lobby (**W23-SOCIAL-3**).
 

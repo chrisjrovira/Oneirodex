@@ -3,7 +3,7 @@
 **Date:** 2026-07-27  
 **Status:** TC-1 protocol **shipped**. TC-2 thin shell **buildable** (`npm run tauri:build:thin` → unsigned EXE; connect + Open library / Friends only).  
 **Audience:** PM · Desktop · Backend · UI/UX · Docs  
-**Related:** [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](../user/thin-client.md) · [v1-readiness.md](v1-readiness.md) · [features.md](features.md) · [social-av.md](social-av.md) · [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md)
+**Related:** [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](../user/thin-client.md) · [v1-readiness.md](v1-readiness.md) · [features.md](features.md) · [social-av.md](social-av.md) · [pm-dispatch-2026-07-27.md](archive/pm-dispatch-2026-07-27.md)
 
 ---
 

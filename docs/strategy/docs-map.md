@@ -1,6 +1,6 @@
 # Documentation map (runbooks, SOPs, assets)
 
-**Date:** 2026-08-01 · **Product version:** 1.0.0-beta  
+**Date:** 2026-08-16 · **Product version:** 1.0.0-beta  
 **Purpose:** Inventory of docs, ops, and communications.  
 **Sync rule:** `.cursor/skills/docs-sync/` + `.cursor/rules/docs-sync.mdc` — update on every code change.
 
@@ -19,6 +19,7 @@
 - **Have** — exists in repo today (may need refresh)  
 - **Update** — exists but stale / incomplete  
 - **Create** — net-new  
+- **Archived** — dated point-in-time report, kept for provenance in [archive/](archive/README.md), not maintained  
 
 ---
 
@@ -85,7 +86,14 @@
 | GOW / remote play | Strategy | Have | [gow-remote-play.md](gow-remote-play.md) — **GOW-1/2 in 1.0 (in flight)** |
 | Mods + game servers | Strategy | Have | [game-servers-mods.md](game-servers-mods.md) — **MOD-1/2 · SRV-1/2 APIs shipped** |
 | Ambient lighting | Strategy | Have | [ambient-lighting.md](ambient-lighting.md) — **LIGHT-1/2 in 1.0 (in flight)** |
-| PM dispatch (agents) | Strategy | Have | [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md) — Jul 27 PM locks |
+| PM dispatch (agents) | Strategy | **Archived** | [archive/pm-dispatch-2026-07-27.md](archive/pm-dispatch-2026-07-27.md) — Jul 27 PM locks |
+| GitHub surface scrub (SCRUB-6b) | Strategy | **Archived** | [archive/github-scrub-2026-07-27.md](archive/github-scrub-2026-07-27.md) — 0 Class A hits; policy stays in [external-facing-scrub.md](external-facing-scrub.md) |
+| Full-program review | Strategy | **Archived** | [archive/review-2026-08-03-findings.md](archive/review-2026-08-03-findings.md) — 9 defects, all fixed |
+| Gap review | Strategy | **Archived** | [archive/gap-review-2026-08-05.md](archive/gap-review-2026-08-05.md) — missing / half-done after W23–W26 |
+| Code review | Strategy | **Archived** | [archive/code-review-2026-08-06.md](archive/code-review-2026-08-06.md) — static passes + full pytest |
+| Strategy archive index | Strategy | Have | [archive/README.md](archive/README.md) — what "archived" means and when a file moves there |
+| W28 carryover ledger | Strategy | Have | [carryover-w28.md](carryover-w28.md) — index over W26/W27/ui-debt-log and the open set |
+| Request reconciliation | Strategy | Have — living | [request-reconciliation-2026-08-15.md](request-reconciliation-2026-08-15.md) — every ask checked against the registers |
 | Big Picture / controller | End users | Update | Link from getting-started / social |
 
 ---

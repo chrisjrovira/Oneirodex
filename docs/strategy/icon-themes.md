@@ -68,7 +68,7 @@ Rotate = random motif per browser session; lock = one id for everyone.
 
 - DB: `UserPreference.icon_pack` (default `outline`) — per-user; no GlobalSettings household icon-pack field
 - UI: Preferences modal — Icon pack chips next to Theme swatches
-- Admin apply: `POST /admin/themes/apply` body `{ theme, icon_pack? }` — persists `UserPreference.theme` + `icon_pack` (omitted/`null` → `theme.json` `default_icon_pack` when set). Response includes `icon_pack`. **Residual:** confirm apply path still honors `icon_pack` end-to-end if a gap reappears (do not claim closed without verify).
+- Apply: **Preferences only** — the one place a theme and pack are chosen, for admins too. `POST /admin/themes/apply` and the admin swatch grid were **retired 2026-08-16** as a duplicate write to the same `UserPreference` fields; see [themes-reset.md § Apply a theme](../admin/themes-reset.md#apply-a-theme). Pack fallback is unchanged: omitted/`null` → `theme.json` `default_icon_pack` when set.
 - Shell: `<html data-icon-pack="…">` + `<link id="gt-icon-pack-css">`
 - API: `GET /api/icon-packs`
 

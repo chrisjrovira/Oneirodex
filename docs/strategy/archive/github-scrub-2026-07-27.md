@@ -23,4 +23,4 @@
 
 **SCRUB-6b: complete** for current GitHub Issues/PR search (clean).
 
-Linked from [external-facing-scrub.md](external-facing-scrub.md).
+Linked from [external-facing-scrub.md](../external-facing-scrub.md).

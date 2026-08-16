@@ -66,7 +66,7 @@ Open path uses **OpenPathModal** → companion `open_path` (or clipboard fallbac
 ## Themes & icons
 
 **Theme vs icon pack?**  
-Color theme = palette/chrome (Wave 2d: glass/CRT/type + paired default pack). Icon pack = glyph style (outline, filled, …) — still overridable. Independent after save — [preferences-themes.md](preferences-themes.md). Preferences is sectioned (Library · Look & density · Game language) without heavy cards; full `/settings_panel` also uses the theme **swatch grid** (not name-only).
+Color theme = palette/chrome (Wave 2d: glass/CRT/type + paired default pack). Icon pack = glyph style (outline, filled, …) — still overridable. Independent after save — [preferences-themes.md](preferences-themes.md). Preferences is sectioned (Library · Look & density · Game language) without heavy cards and uses the theme **swatch grid** (not name-only). **Preferences is the only place a theme is chosen** — admins included; the separate admin picker was retired in favour of one surface that cannot disagree with itself.
 
 **Loading spinners look wrong / stuck on ring?**  
 Household mode is Admin → Themes → **Loading icons** (rotate catalogue or lock one). Motif CSS needs **Reset Default Themes** after Wave 2d deploy — [themes-reset.md](../admin/themes-reset.md).

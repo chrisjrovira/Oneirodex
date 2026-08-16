@@ -6,7 +6,7 @@ Themes live on the **library volume** (`/app/gametheca/static/library/themes/...
 
 - Accent **`#2fd67b`** (green glass Style B+C).
 - Glass tokens: `--gt-glass-bg`, `--gt-glass-border`, `--gt-glass-blur`.
-- Admin → Themes is a dense `gt-adminpage` surface (active swatches · install/reset · **installed themes as a list**) — no separate “Back to Dashboard” stack; use the React top bar.
+- Admin → Themes is a dense `gt-adminpage` surface (upload · reset · **installed themes as a list** · loading icons) — no separate “Back to Dashboard” stack; use the React top bar. Choosing a theme happens in Preferences, not here — see [Apply a theme](#apply-a-theme).
 - Member SPA also needs built **`member-app.css`** in dist — theme reset does not replace a missing SPA bundle.
 
 ## When to Reset Default Themes
@@ -16,7 +16,17 @@ After any deploy that changes tokens, admin CSS, or preset fingerprints:
 1. Free Unraid host disk if ~99% full — [unraid-deploy.md § Deploy gates](../runbooks/unraid-deploy.md#deploy-gates-operator-checklist)
 2. `docker compose build --no-cache && docker compose up -d` (image must rebuild **`frontend/member-app` dist**)
 3. Admin → Themes → **Reset Default Themes**
-4. Hard-refresh the browser; confirm accent green, admin pages styled, and View Source includes **`member-app.css` / `member-app.js`**
+4. Reload normally; confirm accent green, admin pages styled, and View Source includes **`member-app.css` / `member-app.js`**
+
+> **A reset is visible immediately as of 2026-08-16 — a hard refresh is no longer part of the
+> procedure.** It used to be, and the reason was a caching bug rather than anything about themes:
+> every static file was served `public, max-age=3600` with **no validator**, while Reset Themes
+> rewrites `themes/<theme>/…` in place behind an identical URL. Nothing about the request changed, so
+> the browser answered from cache for up to an hour and a completed reset looked like it had failed.
+> `theme_asset` now versions each URL by the file's mtime and size, and `/static/library/themes/` is
+> served `no-cache` so even an unversioned reference revalidates. **If you are following older notes
+> that say "hard-refresh or it won't take", that step is obsolete** — if a reset still looks
+> unapplied, the cause is now genuinely elsewhere (most often a missing SPA rebuild, below).
 
 Or delete `themes/default` (and stale presets) under the library volume and restart so boot sync can reinstall.
 
@@ -44,11 +54,21 @@ If a fresh Unraid pull looks half-applied (new play-skins room art shows but adm
 
 ## Apply a theme
 
-- Members: preferences swatch grid (colour + paired icon pack on save).
-- Admins: Manage Themes / Active Theme picker; `POST /admin/themes/apply` accepts `theme` plus optional `icon_pack`, persists both on the calling admin’s `UserPreference` (same fields Preferences uses — **no** GlobalSettings household icon-pack field).
-- When `icon_pack` is omitted/null/empty, apply falls back to the theme’s `theme.json` `default_icon_pack` when present; otherwise leaves the existing preference pack unchanged (new rows still default to `outline`).
-- Response: `{ success, theme, icon_pack }`.
-- **Done (uncommitted):** admin apply persists `icon_pack` on the calling admin’s `UserPreference` (`routes_admin_ext/themes.py`). Ship smoke still recommended after Reset Themes.
+**Preferences is the only theme picker.** Everyone — admins included — chooses a theme in
+**Preferences**, which sets colour theme, icon pack, font and tile size together.
+
+> **Changed 2026-08-16.** The Admin → Themes page used to carry its own swatch grid writing the same
+> `current_user.preferences.theme` that Preferences writes, so the two surfaces could disagree about
+> what was selected with nothing to say which had won. The grid, its fetch and **`POST /admin/themes/apply`**
+> are retired at every layer; a script or bookmark calling that endpoint will 404. Preferences builds
+> its list from `get_installed_themes()`, so it already covers uploaded packs as well as presets.
+
+Admin → Themes keeps the operator-only actions: **upload**, **Reset Default Themes**, **delete**, and
+the Loading-icons controls below. It links to Preferences for the actual choice.
+
+Icon-pack fallback is unchanged: when a theme is selected and no pack is named, the theme's
+`theme.json` `default_icon_pack` applies when present; otherwise the existing preference pack stands
+(new rows still default to `outline`).
 
 Never edit `gametheca/static/library/themes/` in git — it is runtime output. Change `gametheca/setup/default_theme/` and bump generator version when output format changes.
 

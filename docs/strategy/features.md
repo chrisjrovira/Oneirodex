@@ -40,7 +40,7 @@ Plans only — **no implementation** until PM dispatches Backend/Ops. Shipped op
 
 **Post-1.0 follow-on (not a 1.0 gate):** native GameTheca-owned solver — [native-challenge-solver.md](native-challenge-solver.md) (NCS-1…5). TRAWL remains the supported 1.0 path.
 
-**Also see PM packet:** [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md) (art studio · GOW · mods/servers · lighting).
+**Also see PM packet:** [pm-dispatch-2026-07-27.md](archive/pm-dispatch-2026-07-27.md) (art studio · GOW · mods/servers · lighting).
 
 ---
 

@@ -55,7 +55,7 @@
 | **SCRUB-3** | ~~P0~~ | Docs | External docs/skills Class C wording | **Done** |
 | **SCRUB-4** | ~~P1~~ | Docs | Superpowers specs sanitized | **Done** |
 | **SCRUB-5** | P2 | Human | History rewrite | **Deferred** — fix-forward only (no `filter-repo` unless reopened) |
-| **SCRUB-6** | P1 | Docs + Human | GitHub surface | **Done** — PR/Issue templates + [github-scrub-2026-07-27.md](github-scrub-2026-07-27.md) (0 Class A hits) |
+| **SCRUB-6** | P1 | Docs + Human | GitHub surface | **Done** — PR/Issue templates + [github-scrub-2026-07-27.md](archive/github-scrub-2026-07-27.md) (0 Class A hits) |
 | **SCRUB-7** | P0 | QA + UI | Shipped UI clean | **Done** for source; rebuild `static/dist` on next image — see [scrub-shipped-bundles.md](../runbooks/scrub-shipped-bundles.md) |
 | **SCRUB-8** | P1 | Backend | Comments + WAREZ→GAMES | **Done** — `DATA_FOLDER_GAMES` + deprecated alias |
 | **SCRUB-9** | P1 | Docs / PM | Prevention | **Done** — gitignore, cursor rule, docs-sync, banned-tokens in `_private` |

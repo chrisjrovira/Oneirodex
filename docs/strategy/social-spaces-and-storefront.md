@@ -3,7 +3,7 @@
 **Date:** 2026-08-03 · **Owner:** GM (rules) → Backend → UI · **Status:** decisions **LOCKED**, build in progress
 
 Two directions from human feedback on 2026-08-03, plus the fix for the voice-ACL gap found in
-[review-2026-08-03-findings.md](review-2026-08-03-findings.md).
+[review-2026-08-03-findings.md](archive/review-2026-08-03-findings.md).
 
 > **"Discord-like" means the UX pattern only.** The long-standing stance holds unchanged: first-party native
 > social, **no Discord product**, no webhooks, no bots, no bridging. Spaces/channels are our own model that happens

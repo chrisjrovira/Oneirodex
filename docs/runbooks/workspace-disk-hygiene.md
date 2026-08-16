@@ -28,6 +28,15 @@ A full clone can balloon past **1 GB** from regenerable caches while the **shipp
 | `**/__pycache__/`, `*.py[cod]`, `.pytest_cache/`, `.ruff_cache/`, `.mypy_cache/` | small | next pytest / import |
 | Host `gametheca/static/dist/` | if present | Docker build or local `npm run build` in each frontend app |
 | Vitest/Vite caches under `node_modules/.vite/` | tiny | next `npm test` / `vite` |
+| A literal `%TEMP%/` directory at the repo root | varies | nothing — it is scratch, see below |
+
+**A folder literally named `%TEMP%`.** If you see one at the repo root, it is an artifact, not a
+mistake anyone made twice: a script written for `cmd.exe` was run under bash or Git Bash, where
+`%TEMP%` is not expanded and becomes a directory name. It is gitignored, so it never reaches a commit,
+but it accumulates whatever the script meant to put in the system temp directory. Safe to delete
+outright. One was removed on 2026-08-16 holding 188 files (~1.3 MB) of July scratch. When writing a
+script that both shells may run, use `$TMPDIR`/`mktemp` or a path under the scratch directory rather
+than a Windows environment-variable literal.
 
 PowerShell one-shot (caches only — does **not** touch webretro or `.git`):
 

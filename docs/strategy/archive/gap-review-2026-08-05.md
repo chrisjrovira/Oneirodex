@@ -4,7 +4,7 @@ Written after the W23/W25/W26 waves shipped and all docs/media were re-captured.
 Three lists: **broken or half-built things we own**, **subpar UX**, and
 **peer-derived gaps**. Ranked within each by cost-to-value.
 
-Sources: private competitive vault (`docs/_private/`, see [competitive.md](competitive.md)) ·
+Sources: private competitive vault (`docs/_private/`, see [competitive.md](../competitive.md)) ·
 [review-2026-08-03-findings.md](review-2026-08-03-findings.md) · direct code read.
 
 ---
@@ -81,7 +81,7 @@ but it means the play surface visibly ignores the user's theme.
 
 Held in the private vault per **SCRUB-2** — competitive intel does not ship in
 public git. See `docs/_private/gap-review-2026-08-05-FULL.md` and
-[competitive.md](competitive.md).
+[competitive.md](../competitive.md).
 
 In product language, the ranked opportunities are:
 

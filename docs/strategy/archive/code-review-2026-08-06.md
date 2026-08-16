@@ -178,7 +178,7 @@ migration can half-apply and report success.
 
 Held in the private vault per **SCRUB-2** — peer catalogs and steal/ignore
 matrices do not ship in public git. See `docs/_private/` and
-[competitive.md](competitive.md).
+[competitive.md](../competitive.md).
 
 Audit result, in product language:
 

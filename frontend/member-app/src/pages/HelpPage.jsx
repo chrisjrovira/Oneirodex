@@ -44,7 +44,7 @@ const FAQ_SECTIONS = [
       'Tile badges use four corners only (occupied corners; no empty reserved slots) with rounded-square chrome. Signals: VR, UPDATE, MISSING, NEW, LANG (vs Preferences → Preferred game language). No OUT/~ / RELEASE on tiles.',
       'Inside a system, accents follow that family; global search keeps default glass.',
       'Export packs (bottom of Systems): ES-DE gamelist.xml and Pegasus metadata for other frontends — optional; paths stay portable.',
-      'Change themes in Preferences; hard-refresh after apply so volume CSS loads.',
+      'Change themes in Preferences — it sets colour theme, icon pack, font and tile size together, and is the only place a theme is chosen. The change is visible on a normal reload; no hard refresh.',
     ],
   },
   {

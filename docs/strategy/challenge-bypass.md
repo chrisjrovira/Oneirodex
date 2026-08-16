@@ -202,4 +202,4 @@ Admin → Features / Integrations: enable + URL + max tier + **Test** (health + 
 
 ## Open product decisions
 
-**Closed Jul 27** — see Locked decisions above + [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md).
+**Closed Jul 27** — see Locked decisions above + [pm-dispatch-2026-07-27.md](archive/pm-dispatch-2026-07-27.md).

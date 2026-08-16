@@ -13,17 +13,17 @@
 | Compose profile | **`challenge`** |
 | Ship before 1.0 | **CH-1…CH-5 yes** |
 | Max tier | Default **5**; admin may **increase** |
-| Guide | [challenge-bypass.md](challenge-bypass.md) |
+| Guide | [challenge-bypass.md](../challenge-bypass.md) |
 
 ## New guides (this packet)
 
 | Guide | Path |
 |---|---|
-| Challenge / captcha | [challenge-bypass.md](challenge-bypass.md) |
-| Cover art studio | [cover-art-studio.md](cover-art-studio.md) |
-| GOW / remote play | [gow-remote-play.md](gow-remote-play.md) |
-| Mods + game servers | [game-servers-mods.md](game-servers-mods.md) |
-| Ambient lighting | [ambient-lighting.md](ambient-lighting.md) |
+| Challenge / captcha | [challenge-bypass.md](../challenge-bypass.md) |
+| Cover art studio | [cover-art-studio.md](../cover-art-studio.md) |
+| GOW / remote play | [gow-remote-play.md](../gow-remote-play.md) |
+| Mods + game servers | [game-servers-mods.md](../game-servers-mods.md) |
+| Ambient lighting | [ambient-lighting.md](../ambient-lighting.md) |
 
 ## Priority order (1.0 — everything; no 1.1 track)
 

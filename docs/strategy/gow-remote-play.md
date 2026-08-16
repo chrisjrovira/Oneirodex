@@ -4,7 +4,7 @@
 **Status:** Research + feature guide — **in 1.0 scope** (GOW-1/GOW-2; no 1.1 track)  
 **Audience:** PM · Backend · Ops · Desktop · Docs  
 **Upstream:** [Games on Whales](https://games-on-whales.github.io/) · [Wolf](https://github.com/games-on-whales/wolf) (Moonlight streaming) · Sunshine as simpler single-user alternative  
-**Related:** [thin-client.md](thin-client.md) · desktop companion · LiveKit social · [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md)
+**Related:** [thin-client.md](thin-client.md) · desktop companion · LiveKit social · [pm-dispatch-2026-07-27.md](archive/pm-dispatch-2026-07-27.md)
 
 ---
 

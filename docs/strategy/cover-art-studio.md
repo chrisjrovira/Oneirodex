@@ -3,7 +3,7 @@
 **Date:** 2026-07-27  
 **Status:** **ART-1…ART-3 shipped** (Jul 27) · **ART-5 shipped** · **ART-6 backend shipped** (stock/platform catalog + generate + library/fallback apply; UI picker parallel) — ART-4 ops quota deferred  
 **Audience:** UI/UX · Backend · Ops · Docs  
-**Related:** `gametheca/utils/cover_url.py` · `gametheca/utils/cover_art_stock.py` · icon themes · Themes admin · [v1-readiness.md](v1-readiness.md) · [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md)
+**Related:** `gametheca/utils/cover_url.py` · `gametheca/utils/cover_art_stock.py` · icon themes · Themes admin · [v1-readiness.md](v1-readiness.md) · [pm-dispatch-2026-07-27.md](archive/pm-dispatch-2026-07-27.md)
 
 ---
 

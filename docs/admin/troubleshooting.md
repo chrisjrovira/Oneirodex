@@ -72,8 +72,18 @@ Expected if `SUPPORT_GITHUB_TOKEN` unset (`github_sync=skipped`). Ticket + admin
 
 ## Libraries / admin UI
 
+> **"Hard-refresh" in the rows below is no longer the fix for stale theme CSS.** Until 2026-08-16 a
+> completed **Reset Themes** could stay invisible for up to an hour — static files were served
+> `public, max-age=3600` with no validator, and a reset rewrites theme files *in place at the same
+> URL*, so the browser had no reason to re-fetch. Theme URLs are versioned by mtime+size now and
+> `/static/library/themes/` serves `no-cache`, so a reset takes effect on a normal reload. Treat a
+> hard refresh as a diagnostic, not a step: **if it changes anything, that is a bug worth reporting**,
+> not the expected workflow. The rebuild/Reset-Themes halves of these rows still apply —
+> [themes-reset.md](themes-reset.md).
+
 | Symptom | Check |
 |---|---|
+| A theme change or Reset Themes "didn't take" | First confirm it is not the old cache bug — it should not be. Then check the two genuine causes: the **image rebuild** did not include a fresh `frontend/member-app` dist (Reset Themes does not refresh the SPA bundle), or **Reset Themes** was skipped so the library volume still holds old copies. [themes-reset.md](themes-reset.md) has the full asset-by-asset table. |
 | Delete library Confirm/Cancel unclickable | Theme CSS under `static/library/themes/` can pin `.modal` under `.modal-backdrop`. Current Libraries page ships **inline** stacking CSS + moves the modal to `document.body` (works after **app rebuild/restart** without Reset Themes). Also run **Admin → Themes → Reset Themes** so library theme CSS/JS match the image. Hard-refresh Admin → Libraries. |
 | Any Bootstrap admin modal unclickable (Filters, Extensions, Scans Add Filter, Discovery Zones, Users, Downloads, SMTP help) | Same stacking trap: glass/`backdrop-filter` parents. Admin + member shells load `js/gt_modal_stack.js` which hoists every `.modal.fade` to `document.body` (also on `show.bs.modal`). Rebuild/restart app; hard-refresh; optional Reset Themes. |
 

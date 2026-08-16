@@ -1,8 +1,20 @@
 # Roadmap execution progress
 
-**Branch:** `main` (Waves **4–14** on origin · Waves **15–21** Done uncommitted · feedback roadmap **W22–W25** in progress)  
-**Release:** **0.2.0** (in progress — Waves **4–14** on `origin/main` · **W21** first-scan fallback Done uncommitted · **W22-1** Done · **UI-W22-M7** Done · **QA PASS** · **UID-001** Done · **QA PASS 31/31** · **UID-002** Done · **QA PASS 20/20** · **UID-005** Done · **QA PASS** · **UID-009** Done · **QA PASS 11/11** · **UID-016** Done · UI **QA PASS 32/32** · BE size/mtime **QA PASS 13/13** · **UID-004** Done · **QA PASS 33/33** · **W22** UI rem closed · **W22-match** Done · **QA PASS 138+10** · **BE-DET-1…10** Done uncommitted · **DET-9 QA PASS 65/65** · **DET-10 QA PASS 10/10** · peel **QA PASS 141/141**)  
-**Updated:** 2026-08-03 (**BE-DET-10** image kinds · **QA PASS 10/10** · admin vitest **73/73** · DoD met · live skipped) — **BE-DET-10 Done (uncommitted)** taxonomy persist/queue/apply + classic Edit Images "Other artwork" section (box/cart/disc/logo/hero/fanart list + kind-picker upload) + admin queue Type filter widened to all 8 kinds — closes the UI gap the taxonomy was persisting for but nothing surfaced · **Next:** **W23** · human ship · Ops: DAT uploads + Arcade/AES + prior leaf rescans + Reset Themes `admin_manage_scanjobs` — [roadmap-w22-plus.md](roadmap-w22-plus.md) · [name-resolution.md](name-resolution.md) · **no** Discord · **no Class A** · **Canvas: synced**
+**Branch:** `main` — everything through **W28** is committed and pushed. There is no
+"Done uncommitted" work outstanding; the phrase appears further down this file only in
+historical wave rows and should be read as *shipped* there.  
+**Release:** **1.0.0-beta** — see the root [CHANGELOG.md](../../CHANGELOG.md) for what has landed
+since the tag. Waves **4–28** are all on `origin/main`.  
+**Updated:** 2026-08-16 — the W26/W27/W28 line (22 commits) fast-forwarded onto `main`. Repo
+housekeeping in the same pass: five merged branches and one dead worktree deleted, dated
+point-in-time reports moved to [archive/](archive/README.md), stray root scripts moved into
+`scripts/`. **Next:** the open set in [carryover-w28.md](carryover-w28.md), which is the index over
+[W26](roadmap-w26-ux-overhaul.md) · [W27](roadmap-w27-ux-feedback.md) · [ui-debt-log.md](../dev/ui-debt-log.md).
+Standing constraints unchanged: **no** Discord · **no Class A** intel in public docs.
+
+> **Reading this file.** The header is current; the wave tables below are a running log kept in
+> the order things happened, so a row states what was true when it was written. Where a row and the
+> CHANGELOG disagree about status, the CHANGELOG wins.
 
 ## Locked for 0.2.0 (product decisions)
 
@@ -89,7 +101,7 @@
 | Companion/thin token connect polish (Jul 30) | **Done (uncommitted)** — **UI:** TokensPage copy purity **15/15** · **BE:** failed Bearer → scrubbed WARNING `api_token_auth_failed reason=… prefix=…` (**never** the secret) · `POST /api/tokens` `secret` purity · pytest **5/5** · **Desktop:** paste normalize keeps hyphens · clear shape/401/network/keyring · thin Validate token · claimed **23/23** · user docs: [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](thin-client.md) · [troubleshooting.md](../user/troubleshooting.md) · [faq.md](../user/faq.md) (hyphens/`_` in secret normal) · rolls into ship gate **15–19** + this polish |
 | Wave 2c Settings/Help/Report (+ News/Notify) (Jul 29) | **Shipped (code, uncommitted)** — **UI:** Preferences sectioned (no heavy cards) · Help accordion · Report Context/Logs collapsed · Notifications dense unread inbox · News tabs + truncated cards · **Backend:** optional symptom/logs · compact tickets (`has_logs`, `body_preview`, `empty`) · news/notify honest empty 200s · **Ops:** Reset Themes if `gt-account.css` / `modal-components` lag on volume — [preferences-themes.md](../user/preferences-themes.md) · [faq.md](../user/faq.md) · [support-inbox.md](../admin/support-inbox.md) · [themes-reset.md](../admin/themes-reset.md) |
 | Wave 2d themes + loading motifs (Jul 29) | **Done (uncommitted, QA PASS)** — **UI/Backend:** all 9 colour presets distinct (glass/CRT/typography/icon geometry) · `GENERATOR_VERSION` **10** · paired default icon packs · loading motifs catalogue (`ring`/`orbit`/`pulse`/`blocks`/`scan`/`arcade`) · admin rotate/lock via `GET /api/loading-icon` + `PUT /api/admin/loading-icon/config` · SPA `LoadingMotif`/`PageStatus` · **QA:** 42 theme pytest · 8 loading-icon · 8 vitest · **Ops after ship:** rebuild + **Admin → Themes → Reset Default Themes** (scanjobs JS · components.css · v10) — [icon-themes.md](icon-themes.md) · [themes-reset.md](../admin/themes-reset.md) · [preferences-themes.md](../user/preferences-themes.md) · [settings-modules.md](../admin/settings-modules.md#loading-icons-admin-lock--rotate) |
-| Theme apply `icon_pack` (Jul 29 residual) | **Done (uncommitted)** — `POST /admin/themes/apply` accepts optional `icon_pack`, persists on admin `UserPreference`; omitted → theme `default_icon_pack` or leave existing — [themes-reset.md](../admin/themes-reset.md#apply-a-theme) · [preferences-themes.md](../user/preferences-themes.md) |
+| Theme apply `icon_pack` (Jul 29 residual) | **Superseded 2026-08-16** — the endpoint this row tracked, `POST /admin/themes/apply`, is retired along with the admin swatch grid. It was a second write to the same `UserPreference` fields Preferences already writes, so the two surfaces could disagree with nothing to say which won. Preferences is the only picker; pack fallback behaviour is unchanged — [themes-reset.md](../admin/themes-reset.md#apply-a-theme) · [preferences-themes.md](../user/preferences-themes.md) |
 | Scan queue + force parallel (Jul 29 residual) | **Done (uncommitted)** — default when busy: enqueue `ScanJob.status=Queued` (FIFO) · admin `force_parallel` / `queue_policy=force` starts alongside with NAS/CPU risk note · conflict modal Queue (default) / Force run now on Auto + **Manual busy** (idle Manual = List Games) · refresh_all same policy · Ops shows Queued — [libraries-and-scans.md](../admin/libraries-and-scans.md#run-a-scan) |
 | Scan queue drain P0 (Jul 30) | **Done (uncommitted, Backend)** — root cause: jobs left Running/Stopping (early exit / crash / stale Stopping) blocked FIFO promote · worker safety-net Failed+drain · coalesce same-library Queued · scheduler/Ops/`scan_jobs_status` safety promote + stale reclaim · pytest `test_scan_queue` **12/12** — [libraries-and-scans.md](../admin/libraries-and-scans.md#run-a-scan) |
 | Wave 18 scan timing + Scan UI + details cover ⋮ (Jul 30) | **Done (uncommitted — QA PASS)** — **BE:** `elapsed_seconds` / honest `eta_seconds` (**null** when Queued / zero progress / total unknown / **stalled**) / `stalled` / labels on `GET /api/scan_jobs_status` + Ops `scans.jobs[]` · filters `status=` · `library_uuid=` · `q=`/`name=` · pytest **12/12** · **UI:** Scan management timing columns + status/library/path filters (**localStorage**) · Game details admin **⋮** on **cover tile** (Library parity; Edit Details / Edit Images / Open path) — GameDetails vitest **9/9** · rolls into ship gate **15–19** — [libraries-and-scans.md](../admin/libraries-and-scans.md#run-a-scan) · [library-and-systems.md](../user/library-and-systems.md) · [ops-summary.md](../admin/ops-summary.md#scans-key) |
@@ -163,7 +175,7 @@
 
 ## Still thin / next (board order — Jul 27 PM locks)
 
-Priority for **1.0.0** — **no 1.1 track** (see [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md)):
+Priority for **1.0.0** — **no 1.1 track** (see [pm-dispatch-2026-07-27.md](archive/pm-dispatch-2026-07-27.md)):
 
 1. ~~**CH-1 → CH-5**~~ — challenge bypass **shipped** · profile **`challenge`** · max tier **5** — [challenge-bypass.md](challenge-bypass.md) (CH-6 MITM runbook thin)  
 2. ~~**ART-1 → ART-3**~~ · ~~**ART-5**~~ — cover art studio + system templates **shipped (shipping)** — [cover-art-studio.md](cover-art-studio.md)  
@@ -174,7 +186,7 @@ Priority for **1.0.0** — **no 1.1 track** (see [pm-dispatch-2026-07-27.md](pm-
 6b. **Android APK** — [android-apk-vr.md](android-apk-vr.md) · **Headset/VR** relocked SteamVR/PSVR2-first — [headset-vr.md](headset-vr.md) · **Controllers** — [controller-input.md](controller-input.md) (PAD-DOCS/HELP queued)  
 7. ~~**Desktop MOD-3**~~ — companion mod pack apply **shipped** — [desktop-companion.md](../user/desktop-companion.md) · GOW-2 copy-host stub **deferred** (no GOW API yet)  
 8. **Official 1.0.0** — [v1-readiness.md](v1-readiness.md) · [pm-miss-backlog.md](pm-miss-backlog.md) agent MISS-* **closed** · remaining **human:** Authentik/Hub/Unraid  
-9. **SCRUB** — [external-facing-scrub.md](external-facing-scrub.md) · SCRUB-1…4,6–9 done; **SCRUB-6b GitHub Issues/PR search clean** ([github-scrub-2026-07-27.md](github-scrub-2026-07-27.md)); SCRUB-5 history rewrite deferred  
+9. **SCRUB** — [external-facing-scrub.md](external-facing-scrub.md) · SCRUB-1…4,6–9 done; **SCRUB-6b GitHub Issues/PR search clean** ([github-scrub-2026-07-27.md](archive/github-scrub-2026-07-27.md)); SCRUB-5 history rewrite deferred  
 10. Optional: Admin Integrations **forms** still Jinja (hub cards done MISS-UI-3) — [admin-hybrid.md](admin-hybrid.md)  
 11. **1.0 capacity (non-gating):** Alembic · live Prometheus · api-client SPA ([ADR 0002](../adr/0002-defer-api-client-spa.md))  
 12. Operator-owned: deferred WASM · Authentik · Unraid · Capture  
@@ -231,7 +243,7 @@ Many-leaf console libs remain **LOCKED** (no mega-lib). Product slices Done unco
 | **W21-QA** | W21 smoke slice | QA | **Done (PASS · DoD met · SHIP-OK automated)** — pytest **69/69** · admin vitest **27/27** · live `:5006` **BLOCKED (env) OK** |
 | **W21-GM-AC** | First-scan cascade acceptance criteria | GM | **Done** — private vault only · public docs use capability language · no Class A links |
 
-**Full-program review 2026-08-03:** every wave reviewed · **9 real defects found and fixed** (1 security-high: DM `@mention` leak to non-members · MISSING chip filter never wired server-side · Refresh-freshness never re-probed · scan-queue TOCTOU race · missing `clear_permission_errors` route · 2 dead admin links · `formatBytes` null · email fallback escaping) · 4 test bugs repaired (stale `data-corner` queries · a time-bomb NEW-badge date that expired today) · **2 items need a product decision** (LiveKit room ACL · per-thread Voice scoping) · first full pytest run on record: **2791 pass / 128 fail**, of which **81 are test-infra or local-Python-3.14 artifacts, not product** (app ships 3.12) — [review-2026-08-03-findings.md](review-2026-08-03-findings.md)
+**Full-program review 2026-08-03:** every wave reviewed · **9 real defects found and fixed** (1 security-high: DM `@mention` leak to non-members · MISSING chip filter never wired server-side · Refresh-freshness never re-probed · scan-queue TOCTOU race · missing `clear_permission_errors` route · 2 dead admin links · `formatBytes` null · email fallback escaping) · 4 test bugs repaired (stale `data-corner` queries · a time-bomb NEW-badge date that expired today) · **2 items need a product decision** (LiveKit room ACL · per-thread Voice scoping) · first full pytest run on record: **2791 pass / 128 fail**, of which **81 are test-infra or local-Python-3.14 artifacts, not product** (app ships 3.12) — [review-2026-08-03-findings.md](archive/review-2026-08-03-findings.md)
 
 **Immediate board next (ordered):** (1) **W23** Themes-as-systems (W22 UI rem closed — UID-004 + UID-016 UI+BE Done) — [roadmap-w22-plus.md](roadmap-w22-plus.md) · (2) **Human ship** Waves **15–20 + W21 + W22-match + UI-W22-M7 + UID-* + BE-DET-1…10** (Done uncommitted · **BE-DET-9 QA PASS 65/65** · **BE-DET-10 QA PASS 10/10 + admin vitest 73/73** · **BE-DET-8 QA PASS 141/141**) · (3) **Ops** schema restart · Reset Themes `admin_manage_scanjobs` · DAT uploads · Arcade/AES + prior leaf rescans after ship · **Blocked:** `:5006` often down · no Class A · no Discord · **Canvas: synced**
 
@@ -264,6 +276,20 @@ Human 2026-08-01 feedback. **W21** stays first-scan fallback (above) — not ren
 **Finance (cross-wave):** TCO sketch **Done** 2026-08-01 — Unraid-first reinforced · public [cloud-tco-ballpark.md](cloud-tco-ballpark.md) · detailed worksheet in private vault only.
 
 **Process:** one slice → QA → docs-sync → next. UI Tasks must update the debt log.
+
+### W26–W28 — UX overhaul, feedback wave, carryover (2026-08-12 → 2026-08-16)
+
+All on `main` as of 2026-08-16. The per-item registers stay authoritative — this table is the
+index, and [carryover-w28.md](carryover-w28.md) is the index over the open set.
+
+| Wave | Shipped | Register |
+|---|---|---|
+| **W26** | Two-bar chrome (`SideRail` + `TopBar`, and the Jinja `partials/rail.html` · `partials/topbar.html` equivalents) so React and classic pages present one shell; page views moved into bar two on both stacks; admin adopted the same bar one | [roadmap-w26-ux-overhaul.md](roadmap-w26-ux-overhaul.md) |
+| **W27** | Ops console pulse · play-honesty (the preview shows the state that actually decides whether a title can be played) · chat pop-out · bad-match feedback on both the React and classic unmatched surfaces · theme-asset freshness panel | [roadmap-w27-ux-feedback.md](roadmap-w27-ux-feedback.md) |
+| **W28** | Sorting reaches the classic tables (`gt_sortable_table.js`) and the Ops/dashboard panels adopt `DataTable` · a11y focus rings on nine controls · disabled chrome states · **the static-cache fix that made theme resets visible** · library tile menu/spacing/theming/scroll-pair repairs · fonts + firmware install with the server · editable Art Studio cover text · library-filled notification · API envelope ratchet **875 → 849** across wishlist, support, wanted list and patch catalog | [carryover-w28.md](carryover-w28.md) · [ui-debt-log.md](../dev/ui-debt-log.md) |
+
+**Ratchets after the wave:** API envelope baseline **849**; CSS token baseline **1303** (down from 2365
+when the lint landed). Both are counted per file — see [CLAUDE.md](../../CLAUDE.md).
 
 ### Jul 27 agent-team wave
 

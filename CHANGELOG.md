@@ -199,10 +199,72 @@ Work since the 1.0.0-beta tag (2026-08-06).
 - **Child access to the household voice lobby is now a household setting**, not a hardcoded stance
 - Chrome buttons and primitive buttons now agree on focus: one ring, one offset, and a fallback so a
   theme missing the token loses the colour rather than the outline
+- **Four more surfaces answer through the shared response envelope** — wishlist, support tickets,
+  wanted list and the patch catalog, taking the ratchet baseline from **875 to 849**. The wire contract
+  is unchanged (`api_ok` / `api_error` still mirror `error`, `message` and `success`, and every HTTP
+  status is the same), but the messages stop being developer strings: "Forbidden" becomes "That request
+  belongs to someone else", "Not found" becomes "Ticket not found". These are member-facing failures, so
+  they are exactly the ones the SPA's shared error component has to render
+- **Theme selection lives in Preferences only.** The admin Themes page carried its own swatch grid
+  writing the same `current_user.preferences.theme` that Preferences writes, so two surfaces could
+  disagree about what was selected with nothing to say which had won. Preferences is the keeper — it
+  builds its list from `get_installed_themes()`, so it already covers uploaded packs as well as presets,
+  and font, icon pack and tile size live there too. The Themes page keeps upload, reset and delete, and
+  now links to Preferences rather than silently dropping the affordance
+- **The News page leads with admin notes**, full width, and only when there are any. Headlines dropped
+  their full-row span so News and Free sit side by side beneath the notes instead of Free sharing a row
+  with an often-empty panel
+- **Help quick-navigation is one segmented strip** on the shared `.gt-seg` the context bar and admin tab
+  strips already use, instead of a third set of individually bordered pills wrapping into ragged rows.
+  Help sections became panels matching the admin guide they were meant to resemble
 - **Licensed under AGPL-3.0**
 
 ### Fixed
 
+- **A completed theme reset stayed invisible for up to an hour** — the reason a run of CSS fixes looked
+  like they never landed. `asgi.py` served every static file with `public, max-age=3600` and **no
+  validator** (no ETag, no `Last-Modified`), while Reset Themes rewrites
+  `static/library/themes/<theme>/…` *in place* behind an identical URL. Nothing about the request
+  changed, so the browser cache answered for the full hour and only a hard refresh appeared to fix it.
+  Both halves are closed: `theme_asset` appends a version derived from the file's mtime and size so
+  replaced bytes produce a new URL (memoised, since a page links a few dozen of these and the tree can
+  sit on a network path — Reset Themes clears the memo, which is what makes a reset visible), and the
+  static handler serves `/static/library/themes/` with `no-cache` so even an unversioned reference
+  revalidates. Hashed SPA bundles, images and fonts are content-addressed and keep the hour
+- **One scan announced itself several times.** New-game alerts coalesce into a five-second window, so
+  any pause longer than that — a slow scrape, a large file, a rate-limited provider — flushed the digest
+  mid-scan and announced a library that was still filling, producing a run of "N games added" alerts with
+  different Ns. Scan completion was the signal that was missing: `flush_library_add_digest()` is now
+  called when the job is marked Completed, cancelling the pending timer and emitting once with the
+  finished count. Safe when nothing is pending, and wrapped so a notification failure can never fail a
+  completed scan
+- **Tile menus rendered underneath the tiles below them.** Virtual rows are absolutely positioned *and
+  transformed*, and a transform creates a stacking context — which trapped `.game-card`'s `z-index: 20`
+  inside its own row, so the next row painted over the open menu. That is why raising the card read as a
+  correct fix and did nothing, and why it only ever happened in the library grid. The row is the level
+  the menu lives at, so the row is what gets raised, scoped to `:has(overlay-open)` so rows never
+  otherwise reorder
+- **Dead space above and below library tiles, with pagination pushed far down.**
+  `estimateGridRowHeight()` returned the bare cover height; the plain grid gets its row spacing from
+  `gap` for free, but virtual rows are absolutely positioned, so that number *is* the spacing. Rows
+  stacked flush and `getTotalSize()` ran short by one gap per row. The estimate now includes the gap and
+  the row carries it as padding, so the measured height agrees
+- **Top-right tile buttons were hard to see and ignored the theme** — flat `rgba(0,0,0,.7)` on a white
+  hairline with a fixed white glyph, which vanished over light cover art. Repointed at `--gt-surface` /
+  `--gt-border` / `--gt-text`, and the menu offset now derives from the same stride as the button stack
+  instead of a magic `82px`, so hiding or adding a control moves the menu with it
+- **The scroll pair floated in a box instead of aligning to the rail.** `chrome/ScrollJump.css` had
+  already been rewritten to sit in the rail footer, but a duplicate in `gt-chrome.css` won on
+  specificity and kept the old fixed-position bordered design. The duplicate is gone. The selection bar
+  and filter panel also docked at a literal `3.25rem` — the comfortable-density top bar height — so they
+  detached and floated over the tiles on compact; both read `--gt-topbar-h` now
+- **The Help quick-nav chips and section headers had no focus indicator**, clearing their outline and
+  leaning on a treatment hover already produces, so a keyboard user could not tell focus from hover. Same
+  visible ring as everywhere else now; the panel radius became a declared token rather than a raw `14px`
+- **An empty News announcements panel held a column permanently.** `announcements` is an array, so
+  `announcements &&` was true when empty and rendered a heading, a zero count and "No announcements yet."
+  The empty state survives on the Admins tab, where the section *is* the page and silence would read as a
+  failed load rather than an empty one
 - **Emulated games ran far too fast with broken audio.** Nothing measured the display refresh rate:
   RetroArch defaults `video_refresh_rate` to 60 and `video_vsync` paces to rAF, so a 120/144/165Hz
   monitor ran the core **2–2.75× too fast**. `measureRefreshHz()` now samples 32 frames (median, with a
@@ -244,6 +306,12 @@ Work since the 1.0.0-beta tag (2026-08-06).
 - **The classic `/admin/manage_users` editor**, at every layer — rail entry, page link, route resolver,
   Flask route, template, CSS and JS. The React roster at `/admin/users` is the only user editor; the
   invites page now points there. **A bookmark to the old path will 404.**
+- **The admin theme picker and `POST /admin/themes/apply`** — grid, fetch and handler. Theme choice is
+  Preferences' job; see *Changed*. The 16 tests that covered the route are rewritten as retirement
+  guards rather than deleted, on the principle the files already had: "gone" is a contract worth
+  asserting
+- `templates/settings/settings_panel.html` — `/settings_panel` renders `modal_preferences.html`, so the
+  file was rendered by nothing while holding a third copy of the theme picker, element ids and all
 - The last SharewareZ-era leftover in code (`get_warez_folder_usage()`)
 
 [1.0.0-beta]: https://github.com/chrisjrovira/gametheca/releases/tag/v1.0.0-beta

@@ -4,7 +4,7 @@
 **Status:** Feature guide — **opt-in; in 1.0 scope** (LIGHT-1/LIGHT-2; no 1.1 track)  
 **Audience:** Backend · Ops · UI · Docs  
 **Upstream:** [hyperion.ng](https://github.com/hyperion-project/hyperion.ng) · [JSON API](https://api.hyperion-project.org/) · [HA Hyperion integration](https://www.home-assistant.io/integrations/hyperion/)  
-**Related:** Big Picture · LiveKit party · Activity presence · [pm-dispatch-2026-07-27.md](pm-dispatch-2026-07-27.md)
+**Related:** Big Picture · LiveKit party · Activity presence · [pm-dispatch-2026-07-27.md](archive/pm-dispatch-2026-07-27.md)
 
 ---
 
