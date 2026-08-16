@@ -312,9 +312,6 @@
     "no-raw-font-size": 7,
     "no-raw-radius": 5
   },
-  "gametheca/setup/default_theme/css/gt-chrome.css": {
-    "no-raw-radius": 2
-  },
   "gametheca/setup/default_theme/css/modal-components.css": {
     "no-raw-font-size": 7,
     "no-raw-radius": 4

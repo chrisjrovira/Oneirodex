@@ -142,12 +142,15 @@
 
 .library-layout__filters {
   position: sticky;
-  top: 3.25rem;
+  /* Same fix as the selection bar: the literal was the comfortable-density top
+     bar height, so on compact density the panel docked in the wrong place and
+     its max-height was measured against the wrong offset too. */
+  top: var(--gt-topbar-h, 3.25rem);
   z-index: 20;
   width: 17.5rem;
   max-width: 17.5rem;
   min-width: 0;
-  max-height: calc(100vh - 3.75rem);
+  max-height: calc(100vh - var(--gt-topbar-h, 3.25rem) - 0.5rem);
   /* Visible, not auto: the edge tab hangs past this box, and a scroll container
      here would both clip it and scroll it away from centre. The inner stack
      owns scrolling instead. */

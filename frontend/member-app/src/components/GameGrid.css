@@ -64,6 +64,29 @@ html.is-tile-resizing .game-library-row {
   align-items: start;
   box-sizing: border-box;
   transition: gap 0.22s ease;
+  /* Carries the vertical gap itself. A one-row grid's `gap` only separates
+     columns, and these rows are absolutely positioned, so without this the
+     virtualised grid stacked its rows flush while the plain grid spaced
+     them — and the measured height disagreed with estimateGridRowHeight(),
+     which is what left dead space under the last row. */
+  padding-bottom: var(--gt-tile-gap);
+}
+
+/* Raise the whole row while a tile in it has a menu open.
+ *
+ * Virtual rows are positioned with `position: absolute` **and a transform**,
+ * and a transform creates a stacking context. That traps `.game-card`'s
+ * `z-index: 20` inside its own row: the next row is a later sibling at the same
+ * level, so it paints over everything in the row above — including an open
+ * menu. This is why the tile menu "lays under the tiles below" only in the
+ * library grid and never on a page that renders the same card without the
+ * virtualiser, and why raising the card alone read as a correct fix that did
+ * nothing.
+ *
+ * Raising the row is the level the problem actually lives at. Scoped to
+ * overlay-open so rows never otherwise reorder against each other. */
+.game-library-container[data-library-virtual] .game-library-row:has(.game-card[data-overlay-open='true']) {
+  z-index: 30;
 }
 
 @media (prefers-reduced-motion: reduce) {

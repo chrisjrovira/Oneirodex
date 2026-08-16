@@ -1,6 +1,12 @@
 .gt-library-selection {
   position: sticky;
-  top: 3.25rem;
+  /* Docks to the real top bar rather than a copy of its height. The literal
+     3.25rem was the comfortable-density value; the density layer also ships a
+     compact 2.6rem, so on compact this bar detached from the bar above it and
+     floated over the tiles — which is the "covers the tiles" report. Reading the
+     variable means it stays attached at any density, and follows if the shell
+     height is ever retuned. */
+  top: var(--gt-topbar-h, 3.25rem);
   z-index: 25;
   display: flex;
   flex-wrap: wrap;

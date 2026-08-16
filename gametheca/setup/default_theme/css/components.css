@@ -117,12 +117,24 @@
    out of alignment when a button is added or hidden. */
 .game-card {
     --gt-tile-btn: 32px;
-    --gt-tile-gap: 4px;
+    /* Named --gt-tile-btn-gap, not --gt-tile-gap: the grid uses that name for
+       the space *between tiles* and sets it from tileSize.js. Reusing it here
+       shadowed the grid's value inside every card — harmless only because the
+       grid reads it on the row rather than the card, which is a coincidence
+       rather than a design. */
+    --gt-tile-btn-gap: 4px;
     --gt-tile-stack-top: 10px;
-    --gt-tile-stride: calc(var(--gt-tile-btn) + var(--gt-tile-gap));
-    --gt-tile-btn-bg: rgba(0, 0, 0, 0.7);
-    --gt-tile-btn-bg-hover: rgba(0, 0, 0, 0.9);
-    --gt-tile-btn-border: 1px solid rgba(255, 255, 255, 0.2);
+    --gt-tile-stride: calc(var(--gt-tile-btn) + var(--gt-tile-btn-gap));
+
+    /* Themed, not hardcoded. These were rgba(0,0,0,.7) on a rgba(255,255,255,.2)
+       hairline — flat values that ignored the theme entirely and left a
+       near-invisible control over light cover art. Same fix as the auto-scan
+       cards (W27-D5): point the variables at the theme so every pack gets a
+       control it can actually see, rather than tuning one value per complaint. */
+    --gt-tile-btn-bg: color-mix(in srgb, var(--gt-surface) 88%, transparent);
+    --gt-tile-btn-bg-hover: var(--gt-surface);
+    --gt-tile-btn-border: 1px solid var(--gt-border);
+    --gt-tile-btn-fg: var(--gt-text);
 }
 
 /* Popup Menu Button — first in the top-right stack */
@@ -143,16 +155,18 @@
     padding: 0;
     border: var(--gt-tile-btn-border);
     cursor: pointer;
+    color: var(--gt-tile-btn-fg);
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
 .button-glass-hamburger:hover {
     background-color: var(--gt-tile-btn-bg-hover);
+    border-color: var(--gt-accent);
 }
 
 .button-glass-hamburger i {
-    color: var(--text-white);
+    color: var(--gt-tile-btn-fg);
 }
 
 .game-card:hover .button-glass-hamburger,
@@ -183,12 +197,13 @@
 }
 
 .favorite-btn i {
-    color: var(--text-white);
+    color: var(--gt-tile-btn-fg);
     transition: color 0.3s ease;
 }
 
 .favorite-btn:hover {
     background-color: var(--gt-tile-btn-bg-hover);
+    border-color: var(--gt-accent);
 }
 
 .game-card:hover .favorite-btn,
@@ -206,9 +221,11 @@
     opacity: 0.7;
 }
 
-/* Tile action menu anchors under the hamburger + favorite stack */
+/* Anchors under the hamburger + favourite pair. Derived from the stack vars
+   rather than a magic 82px, so hiding or adding a control moves the menu with
+   it — the same rule the comment on the stack already claimed. */
 .game-card > .popup-menu {
-    top: 82px;
+    top: calc(var(--gt-tile-stack-top) + (2 * var(--gt-tile-stride)));
     right: 8px;
     left: auto;
 }
