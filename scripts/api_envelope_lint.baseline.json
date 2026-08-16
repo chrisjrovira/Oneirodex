@@ -53,7 +53,6 @@
   "gametheca/routes_apis/scan_match.py": 2,
   "gametheca/routes_apis/social.py": 13,
   "gametheca/routes_apis/storage.py": 8,
-  "gametheca/routes_apis/support.py": 6,
   "gametheca/routes_apis/system.py": 23,
   "gametheca/routes_apis/tokens.py": 9,
   "gametheca/routes_apis/updates.py": 2,

@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from flask import current_app, jsonify, request
+
+from gametheca.utils.api_response import api_error, api_ok
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -36,7 +38,7 @@ def support_ticket_create():
     # Symptom/body optional for redesigned Report UI (title alone is enough).
     body = (data.get('body') or data.get('symptom') or '').strip()[:_BODY_MAX]
     if not title:
-        return jsonify({'error': 'title required'}), 400
+        return api_error('A title is required', code='bad_request')
     area = (data.get('area') or 'other').strip().lower()
     if area not in VALID_AREAS:
         area = 'other'
@@ -90,7 +92,7 @@ def support_ticket_create():
     except Exception:
         pass
 
-    return jsonify({'ok': True, 'ticket': ticket.to_dict()}), 201
+    return api_ok({'ticket': ticket.to_dict()}, status=201)
 
 
 @apis_bp.route('/support/tickets', methods=['GET'])
@@ -114,10 +116,10 @@ def support_tickets_list():
 def support_ticket_detail(ticket_id: int):
     ticket = db.session.get(SupportTicket, ticket_id)
     if not ticket:
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Ticket not found', code='not_found')
     role = normalize_role(getattr(current_user, 'role', None))
     if role != 'admin' and ticket.user_id != current_user.id:
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('That ticket belongs to someone else', code='forbidden')
     return jsonify({'ticket': ticket.to_dict()})
 
 
@@ -127,9 +129,9 @@ def support_ticket_detail(ticket_id: int):
 def support_ticket_resolve(ticket_id: int):
     ticket = db.session.get(SupportTicket, ticket_id)
     if not ticket:
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Ticket not found', code='not_found')
     ticket.status = 'resolved'
     ticket.resolved_at = datetime.now(timezone.utc)
     ticket.resolved_by_user_id = current_user.id
     db.session.commit()
-    return jsonify({'ok': True, 'ticket': ticket.to_dict()})
+    return api_ok({'ticket': ticket.to_dict()})
