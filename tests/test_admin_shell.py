@@ -7,6 +7,8 @@ ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES = ROOT / 'gametheca' / 'templates'
 ADMIN_TEMPLATES = TEMPLATES / 'admin'
 BASE_ADMIN = TEMPLATES / 'base_admin.html'
+ADMIN_APP_SRC = ROOT / 'frontend' / 'admin-app' / 'src'
+BRAND_MARK = 'gametheca_mark.svg'
 
 
 def test_base_admin_exists_without_member_sidebar():
@@ -25,19 +27,36 @@ def test_base_admin_loads_spa_assets():
     assert 'csrf-token' in text
 
 
-def test_the_admin_brand_mark_is_rendered_by_the_spa():
-    """This used to assert `gametheca_mark.svg` appeared in base_admin.html.
+def test_the_admin_brand_mark_is_rendered_by_exactly_one_chrome_component():
+    """The mark has now moved twice, and each move broke this guard.
 
-    The mark moved into `AdminTopNav` when admin bar one became React, so the
-    old assertion had been failing against a template that is correct — it was
-    pinning where the mark used to live rather than that it exists. Checked in
-    the SPA that base_admin loads, the guard still means something: the shell
-    would otherwise render an admin bar with no brand at all.
+    It first asserted against base_admin.html, was repointed at `AdminTopNav`
+    when admin bar one became React, then broke again when GT-B2 moved the
+    brand to `AdminSideRail` — repeating it in the top bar was the duplication
+    that made admin feel like two navs. Naming the file is what keeps breaking:
+    each rewrite re-pinned a location, and the location is the part that
+    changes. What the guard actually protects is that admin chrome renders the
+    brand exactly once — never zero (a shell with no brand at all) and never
+    twice (the GT-B2 duplication coming back). So count instead of naming, and
+    a future move of the mark between chrome components stays green on its own.
     """
-    top_nav = (
-        ROOT / 'frontend' / 'admin-app' / 'src' / 'AdminTopNav.jsx'
-    ).read_text(encoding='utf-8')
-    assert 'gametheca_mark.svg' in top_nav
+    sources = sorted(
+        path
+        for pattern in ('*.jsx', '*.js')
+        for path in ADMIN_APP_SRC.rglob(pattern)
+        if not path.name.endswith(('.test.jsx', '.test.js'))
+    )
+    rendering = [
+        path.relative_to(ADMIN_APP_SRC).as_posix()
+        for path in sources
+        if BRAND_MARK in path.read_text(encoding='utf-8')
+    ]
+    assert len(rendering) == 1, (
+        f'expected exactly one admin chrome component to render {BRAND_MARK}, '
+        f'found {len(rendering)}: {rendering}'
+    )
+    # A reference alone is hollow if the asset it points at is gone.
+    assert (ROOT / 'gametheca' / 'static' / 'newstyle' / BRAND_MARK).is_file()
 
 
 def test_admin_dashboard_extends_base_admin():
