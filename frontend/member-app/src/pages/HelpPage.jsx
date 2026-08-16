@@ -232,13 +232,20 @@ export function HelpPage({ shellConfig = {} }) {
         </>
       )}
 
-      <div className="gt-help__toc" aria-label="Help topics">
+      {/* One control, not a scatter of pills. These were separate bordered
+          chips that wrapped into two or three ragged rows; as a single
+          segmented strip with rounded ends they read as one thing, and the
+          strip is docked to the content's left edge so it continues the rail
+          rather than floating in the page. `gt-seg` is the shared segmented
+          control the context bar and the admin tab strips already use, so this
+          is the same button in the same place as everywhere else. */}
+      <nav className="gt-seg gt-help__toc" aria-label="Help topics">
         {FAQ_SECTIONS.map((section) => (
-          <a key={section.id} href={`#${section.id}`} className="gt-help__toc-chip">
+          <a key={section.id} href={`#${section.id}`} className="gt-seg__item gt-help__toc-chip">
             {section.title}
           </a>
         ))}
-      </div>
+      </nav>
 
       <div className="gt-help__sections">
         {FAQ_SECTIONS.map((section) => {

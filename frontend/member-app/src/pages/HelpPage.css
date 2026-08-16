@@ -21,44 +21,67 @@
   outline: none;
 }
 
+/* Quick navigation: one strip with rounded ends, flush to the rail.
+ *
+ * These were individually bordered pills that wrapped into two or three ragged
+ * rows. Built on the shared `.gt-seg` now, so the divider lines, hover and
+ * selected states are the ones used by the context bar and the admin tab strips
+ * rather than a third set invented here.
+ *
+ * The negative left margin pulls the strip to the content pane's edge so it
+ * continues the rail instead of starting inside the page gutter — "attach to
+ * the top lhn like it extends from it". It only applies where the rail is
+ * actually beside the content; on narrow viewports the rail is a drawer and
+ * there is nothing to attach to. */
 .gt-help__toc {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+  max-width: 100%;
+  overflow-x: auto;
   margin: 0 0 1rem;
+  border-radius: 999px;
+}
+
+@media (min-width: 900px) {
+  .gt-help__toc {
+    margin-left: calc(-1 * var(--gt-gutter, 0.75rem));
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: 0;
+  }
 }
 
 .gt-help__toc-chip {
-  padding: 0.28rem 0.55rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  background: transparent;
-  color: var(--gt-text-muted);
-  font-size: 0.78rem;
-  font-weight: 600;
   text-decoration: none;
+  font-weight: 600;
 }
 
-.gt-help__toc-chip:hover,
+/* A visible ring, not `outline: none`. The chips previously cleared their
+   outline and leaned on a border-colour change that the segmented control does
+   not have, which left keyboard users with no focus indicator at all. */
 .gt-help__toc-chip:focus-visible {
-  color: var(--gt-accent);
-  border-color: color-mix(in srgb, var(--gt-accent) 40%, transparent);
-  outline: none;
+  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+  outline-offset: -2px;
 }
 
+/* Panelled, like the admin guide.
+ *
+ * Member help was a flat list of hairline-separated rows while the admin guide
+ * used bordered surfaces with real padding — the same content presented two
+ * different ways, which is the "should align like admin help" report. These are
+ * the admin panel's own values (14px radius, the clamped pad, 1.25rem gap) so
+ * the two genuinely match rather than approximately. */
 .gt-help__sections {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  border-top: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
+  gap: 1.25rem;
+  border-top: none;
 }
 
 .gt-help__section {
-  padding: 0;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
+  padding: clamp(1rem, 2.2vw, 1.75rem);
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
+  border-radius: 14px;
+  color: var(--gt-text);
 }
 
 .gt-help__section h2 {

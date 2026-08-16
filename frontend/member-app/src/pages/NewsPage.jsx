@@ -283,8 +283,15 @@ export function NewsPage({ shellConfig = {} }) {
         </section>
       ) : null}
 
-      {!error && announcements && showAdmins ? (
-        <section className="gt-news__section" aria-labelledby="news-admins-heading">
+      {/* Admin notes lead, full width, and only when there are any.
+          `announcements` is an array, so the old `announcements &&` was true
+          even when empty and rendered a heading, a zero count and "No
+          announcements yet." — a permanent empty panel taking a column from the
+          two sections that always have something in them. On the Admins tab the
+          empty state still shows, because there the section *is* the page and
+          silence would read as a failed load. */}
+      {!error && announcements && showAdmins && (announcements.length > 0 || activeTab === 'admins') ? (
+        <section className="gt-news__section gt-panels__full" aria-labelledby="news-admins-heading">
           <div className="gt-news__section-head">
             <h2 id="news-admins-heading">From your admins</h2>
             <span className="gt-news__count">{announcements.length}</span>
@@ -404,8 +411,12 @@ export function NewsPage({ shellConfig = {} }) {
         </section>
       ) : null}
 
+      {/* Headlines take a column rather than the full row, so News and Free sit
+          side by side under the admin notes. Spanning the row was what pushed
+          Free up beside admins and left the page reading as one long scroll on
+          the tab that shows everything. */}
       {!error && headlines && showHeadlines ? (
-        <section className="gt-news__section gt-panels__wide" aria-labelledby="news-headlines-heading">
+        <section className="gt-news__section gt-news__headlines" aria-labelledby="news-headlines-heading">
           <div className="gt-news__section-head">
             <h2 id="news-headlines-heading">Gaming headlines</h2>
             <span className="gt-news__count">{headlines.length}</span>

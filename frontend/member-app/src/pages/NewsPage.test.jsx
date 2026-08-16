@@ -49,10 +49,29 @@ test('lists announcement cards from API', async () => {
   expect(screen.getByText((_, el) => el?.tagName === 'TIME' && el.getAttribute('dateTime') === '2026-07-01T12:00:00+00:00')).toBeInTheDocument()
 })
 
-test('shows empty state when no announcements', async () => {
+test('the admin section stays off the combined view when there is nothing in it', async () => {
+  // `announcements` is an array, so the old `announcements &&` was true when
+  // empty and rendered a heading, a zero count and "No announcements yet." —
+  // a permanent empty panel holding a column beside the two sections that
+  // always have content.
   announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
 
   render(<NewsPage />, { wrapper: MemoryRouter })
+
+  expect(await screen.findByRole('heading', { name: 'Free now' })).toBeInTheDocument()
+  expect(screen.queryByText('No announcements yet.')).not.toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'From your admins' })).not.toBeInTheDocument()
+})
+
+test('the admin tab still says so when there are no announcements', async () => {
+  // On its own tab the section *is* the page, so silence would read as a
+  // failed load rather than an empty one.
+  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
+
+  render(<NewsPage />, { wrapper: MemoryRouter })
+
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole('button', { name: /Admins/ }))
 
   expect(await screen.findByText('No announcements yet.')).toBeInTheDocument()
 })

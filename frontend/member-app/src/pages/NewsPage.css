@@ -496,10 +496,8 @@
     grid-template-columns: 1fr;
   }
 
-  /* Headlines get the full row back, so let them use it. The rail is a flex
-     column by default; switch it to a grid here rather than leaving a dead
-     grid-template-columns on a flex container. */
-  .gt-news.gt-panels .gt-panels__wide .gt-news__rail {
+  /* Admin notes span the row above, so their rail can use the width. */
+  .gt-news.gt-panels .gt-panels__full .gt-news__rail {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
     column-gap: 1.25rem;
@@ -507,7 +505,13 @@
 
   /* Row separators read as a list in one column; in a grid they would draw
      mid-row borders, so scope them back to the single-column case. */
-  .gt-news.gt-panels .gt-panels__wide .gt-news__rail-item {
+  .gt-news.gt-panels .gt-panels__full .gt-news__rail-item {
     border-bottom: none;
+  }
+
+  /* Headlines share the row with Free, so their cards stay a single column
+     inside that half rather than trying to be a gallery in a narrow box. */
+  .gt-news.gt-panels .gt-news__headlines .gt-news__cards {
+    grid-template-columns: 1fr;
   }
 }
