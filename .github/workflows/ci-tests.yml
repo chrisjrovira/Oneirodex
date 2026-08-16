@@ -95,6 +95,14 @@ jobs:
           tests/test_theme_freshness.py
           tests/test_sortable_tables.py
           tests/test_button_contract.py
+          tests/test_api_envelope_lint.py
+
+      # UID-018 ratchet. The envelope helper landed with two files migrated and
+      # the problem then grew from ~699 call sites to 1194 — new routes reached
+      # for the old shapes faster than old ones were converted. Same model as
+      # css-token-lint, which took CSS violations from 2365 to 1305.
+      - name: Run API envelope lint
+        run: python scripts/api_envelope_lint.py
 
   member-app-vitest:
     name: Member-app vitest
