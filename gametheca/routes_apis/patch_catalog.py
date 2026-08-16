@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from flask import current_app, jsonify, request
+
+from gametheca.utils.api_response import api_error, api_ok
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -69,7 +71,7 @@ def patch_catalog_search():
                 platform = getattr(game.library.platform, 'name', None)
 
     if not query:
-        return jsonify({'error': 'Query parameter q (or game_uuid) is required'}), 400
+        return api_error('Query parameter q (or game_uuid) is required', code='bad_request')
 
     try:
         limit = min(int(request.args.get('limit') or 20), 50)
@@ -107,9 +109,9 @@ def patch_catalog_attach():
     game_uuid = (data.get('game_uuid') or '').strip()
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('You do not have access to that game', code='forbidden')
 
     try:
         result = attach_patch_guide(
@@ -120,5 +122,5 @@ def patch_catalog_attach():
             patch_format=(data.get('patch_format') or None),
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     return jsonify(result), 201

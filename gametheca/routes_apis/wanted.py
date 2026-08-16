@@ -1,6 +1,8 @@
 """Wanted update/DLC queue APIs."""
 
 from flask import jsonify, request
+
+from gametheca.utils.api_response import api_error, api_ok
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -25,9 +27,9 @@ def updates_wanted_add():
     game_uuid = (data.get('game_uuid') or '').strip()
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('You do not have access to that game', code='forbidden')
     try:
         item = add_wanted(
             current_user.id,
@@ -38,8 +40,8 @@ def updates_wanted_add():
             store_id=data.get('store_id'),
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'ok': True, 'item': item}), 201
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'item': item}, status=201)
 
 
 @apis_bp.route('/updates/wanted/fulfill', methods=['POST'])
@@ -49,6 +51,6 @@ def updates_wanted_fulfill():
     data = request.get_json(silent=True) or {}
     game_uuid = (data.get('game_uuid') or '').strip()
     if not game_uuid:
-        return jsonify({'error': 'game_uuid required'}), 400
+        return api_error('game_uuid is required', code='bad_request')
     count = mark_fulfilled(current_user.id, game_uuid, kind=data.get('kind'))
-    return jsonify({'ok': True, 'updated': count})
+    return api_ok({'updated': count})
