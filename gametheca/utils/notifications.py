@@ -385,6 +385,33 @@ def schedule_library_add_digest(
         timer.start()
 
 
+def flush_library_add_digest(library_uuid: str, app=None) -> None:
+    """Emit a library's pending digest now, because its scan has finished.
+
+    The debounce alone was never the whole answer to "only show games when a
+    library has been fully added" (UX-B7). It coalesces alerts into a five-second
+    window, so a scan that pauses longer than that — a slow scrape, a large file,
+    a rate-limited provider — flushes mid-run and announces a library that is
+    still filling. The member sees "12 games added", then "30 games added", for
+    one library.
+
+    Scan completion is the signal that was missing. Calling this at the end of a
+    scan cancels the pending timer and emits once, so the count is the finished
+    count. Safe to call when nothing is pending, and safe to call for a library
+    whose digest already fired.
+    """
+    if not library_uuid:
+        return
+    with _library_add_lock:
+        timer = _library_add_timers.pop(library_uuid, None)
+    if timer is not None:
+        try:
+            timer.cancel()
+        except Exception:
+            pass
+    _flush_library_add_digest(library_uuid, app)
+
+
 def _reset_library_add_digests_for_tests() -> None:
     """Test helper — cancel pending digest timers."""
     with _library_add_lock:

@@ -269,3 +269,62 @@ def test_notify_admins_new_game_schedules_digest(app, db_session, admin_staff, p
         and game.uuid in ((r.payload or {}).get('game_uuids') or [])
     ]
     assert matching, f'expected digest for {path_library.uuid}; got {[r.payload for r in rows]}'
+
+
+def test_scan_completion_flush_cancels_the_pending_timer(app, db_session, admin_staff, path_library):
+    """A finished scan emits the digest once, with the finished count.
+
+    The five-second debounce alone never satisfied "only show games when a
+    library has been fully added" (UX-B7): any pause longer than the window —
+    a slow scrape, a large file, a rate-limited provider — flushes mid-scan and
+    announces a library that is still filling, so one scan produces several
+    "N games added" alerts with different Ns. Scan completion is the signal that
+    was missing.
+    """
+    from gametheca.utils.notifications import (
+        _library_add_timers,
+        flush_library_add_digest,
+    )
+
+    admin, librarian = admin_staff
+    game = Game(
+        uuid=str(uuid4()),
+        name='Flush On Complete',
+        library_uuid=path_library.uuid,
+        full_disk_path=f'/test/flush/{uuid4().hex}',
+        path_status=PATH_STATUS_OK,
+    )
+    db_session.add(game)
+    db_session.commit()
+
+    with app.app_context():
+        # A long debounce stands in for "the scan is still running".
+        schedule_library_add_digest(
+            library_uuid=path_library.uuid,
+            library_name=path_library.name,
+            game_uuid=game.uuid,
+            game_name=game.name,
+            debounce_seconds=600,
+            app=app,
+        )
+        assert path_library.uuid in _library_add_timers, 'nothing was pending to flush'
+
+        flush_library_add_digest(path_library.uuid, app)
+
+        # The timer is gone, so it cannot fire a second alert ten minutes later.
+        assert path_library.uuid not in _library_add_timers
+
+    rows = db_session.execute(select(UserNotification)).scalars().all()
+    staff_ids = {admin.id, librarian.id}
+    digests = [r for r in rows if r.kind == 'library_added' and r.user_id in staff_ids]
+    assert digests, 'completion did not emit the digest'
+    assert digests[0].payload.get('count') == 1
+
+
+def test_flushing_an_idle_library_is_harmless(app, db_session, path_library):
+    """Called at the end of every scan, including ones that added nothing."""
+    from gametheca.utils.notifications import flush_library_add_digest
+
+    with app.app_context():
+        flush_library_add_digest(path_library.uuid, app)
+        flush_library_add_digest('', app)
