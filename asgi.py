@@ -267,10 +267,20 @@ class LazyASGIApp:
             await self._send_error(send, 404, "Not Found")
             return
 
+        # Theme files are rewritten in place by Reset Themes while every
+        # template keeps pointing at the same path, so an hour of blind caching
+        # meant a completed reset stayed invisible until a hard refresh.
+        # `theme_asset` now versions those URLs, and this is the second half:
+        # even an unversioned reference revalidates instead of being assumed
+        # fresh. Everything else — hashed SPA bundles, images, fonts — is
+        # content-addressed or genuinely static, and keeps the hour.
+        is_mutable_theme_asset = '/static/library/themes/' in path.replace('\\', '/')
+        cache_control = b"no-cache" if is_mutable_theme_asset else b"public, max-age=3600"
+
         headers = [
             (b"content-type", content_type.encode("ascii", "ignore")),
             (b"content-length", str(size).encode()),
-            (b"cache-control", b"public, max-age=3600"),
+            (b"cache-control", cache_control),
         ]
 
         await send({

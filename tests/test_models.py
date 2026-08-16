@@ -590,25 +590,26 @@ class TestDownloadRequestModel:
 class TestGlobalSettingsModel:
     """Test the GlobalSettings model."""
     
-    def test_create_global_settings(self, db_session):
-        """Test creating global settings."""
+    def test_create_global_settings(self, db_session, global_settings):
+        """Test the fields of the global settings row.
+
+        Takes the singleton rather than inserting one: `global_settings` is a
+        one-row table guarded by the `global_settings_singleton` unique index,
+        so a second INSERT is rejected as soon as anything else has made the row.
+        """
         settings_data = {
             'site_name': 'GameTheca',
             'max_downloads': 5
         }
-        
-        global_settings = GlobalSettings(
-            settings=settings_data,
-            smtp_enabled=True,
-            # Set the setup-related fields to avoid database column errors
-            setup_in_progress=False,
-            setup_current_step=1,
-            setup_completed=False
-        )
-        
-        db_session.add(global_settings)
+
+        global_settings.settings = settings_data
+        global_settings.smtp_enabled = True
+        global_settings.setup_in_progress = False
+        global_settings.setup_current_step = 1
+        global_settings.setup_completed = False
+
         db_session.flush()
-        
+
         assert global_settings.id is not None
         assert global_settings.settings == settings_data
         assert global_settings.smtp_enabled is True

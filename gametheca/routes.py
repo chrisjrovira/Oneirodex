@@ -1299,6 +1299,43 @@ def verify_file(full_path):
     else:
         return False
 
+# Version tokens for theme asset URLs, keyed by resolved filesystem path.
+#
+# Theme files are *mutable at the same URL*: Reset Themes rewrites
+# static/library/themes/<theme>/… in place while every template still points at
+# the identical path. Static responses carry `max-age=3600`, so a browser served
+# the old stylesheet keeps it for an hour — which is why a reset appeared to do
+# nothing and why "hard-refresh" was the standing workaround. Appending a token
+# that changes with the file makes the URL new, so the cache is bypassed
+# correctly rather than being asked not to cache.
+#
+# Memoised because a page links a few dozen of these and this can sit on a
+# network path where stat() is not free. `clear_theme_asset_versions()` empties
+# it, and Reset Themes calls it — that is what makes the reset visible.
+_THEME_ASSET_VERSIONS: dict[str, str] = {}
+
+
+def clear_theme_asset_versions():
+    """Drop memoised asset versions. Call after anything that rewrites themes."""
+    _THEME_ASSET_VERSIONS.clear()
+
+
+def _theme_asset_version(fs_path: Path) -> str:
+    key = str(fs_path)
+    cached = _THEME_ASSET_VERSIONS.get(key)
+    if cached is not None:
+        return cached
+    try:
+        stat = fs_path.stat()
+        token = f'{int(stat.st_mtime)}-{stat.st_size}'
+    except OSError:
+        # Missing file still gets a URL — the 404 is the honest answer, and a
+        # made-up version would only hide which asset is absent.
+        token = '0'
+    _THEME_ASSET_VERSIONS[key] = token
+    return token
+
+
 @bp.app_template_filter('theme_asset')
 def theme_asset_filter(path):
     """Convert a relative theme path to the correct themed URL with fallback to default"""
@@ -1311,9 +1348,19 @@ def theme_asset_filter(path):
         current_theme = 'default'
 
     # Resolve against the app package root — not process CWD (Docker/uvicorn).
-    themed = Path(current_app.root_path) / 'static' / 'library' / 'themes' / current_theme / path
+    root = Path(current_app.root_path) / 'static' / 'library' / 'themes'
+    themed = root / current_theme / path
     if themed.is_file():
-        return url_for('static', filename=f'library/themes/{current_theme}/{path}')
+        return url_for(
+            'static',
+            filename=f'library/themes/{current_theme}/{path}',
+            v=_theme_asset_version(themed),
+        )
 
     # Fallback to default theme
-    return url_for('static', filename=f'library/themes/default/{path}')
+    fallback = root / 'default' / path
+    return url_for(
+        'static',
+        filename=f'library/themes/default/{path}',
+        v=_theme_asset_version(fallback),
+    )

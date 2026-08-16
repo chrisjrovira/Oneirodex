@@ -7,6 +7,7 @@ from gametheca.forms import ThemeUploadForm
 from gametheca.utils.themes import ThemeManager
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.preset_themes import install_preset_themes
+from gametheca.routes import clear_theme_asset_versions
 from gametheca.utils.icon_themes import get_icon_pack
 import json
 import os
@@ -345,6 +346,11 @@ def reset_default_themes():
                 str(default_theme_source),
                 force=True,
             )
+            # The files on disk are new; the URLs pointing at them are not until
+            # this runs. Without it the reset succeeds server-side and the
+            # browser keeps serving the previous stylesheet for up to an hour,
+            # which is precisely how a working reset came to look broken.
+            clear_theme_asset_versions()
             log_system_event(
                 f"Default theme reset; installed {presets} preset theme(s)",
                 event_type='themes',
@@ -368,66 +374,10 @@ def reset_default_themes():
     return redirect(url_for('admin2.manage_themes'))
 
 
-@admin2_bp.route('/admin/themes/apply', methods=['POST'])
-@login_required
-@admin_required
-def apply_theme():
-    """Set the calling user's theme preference to an installed theme.
 
-    Accepts JSON ``{"theme": "<slug>", "icon_pack": "<id>?"}`` or the same
-    fields as form data. When ``icon_pack`` is omitted/null/empty, falls back to
-    the applied theme's ``theme.json`` ``default_icon_pack`` when present —
-    same pairing Preferences uses. Persists on ``UserPreference`` (per-user;
-    there is no separate GlobalSettings household icon-pack field). CSRF is
-    enforced app-wide by CSRFProtect, so callers must send the token exactly as
-    the other admin POST endpoints require.
-
-    Returns:
-        Response: JSON describing the applied theme and icon pack, or an error.
-    """
-    payload = request.get_json(silent=True) or {}
-    theme = payload.get('theme') or request.form.get('theme') or ''
-    theme = theme.strip() if isinstance(theme, str) else ''
-
-    if not theme:
-        return jsonify({'success': False, 'error': 'No theme specified'}), 400
-
-    is_valid_name, name_error = is_valid_theme_name(theme)
-    if not is_valid_name:
-        return jsonify({'success': False, 'error': name_error}), 400
-
-    themes_root = Path(current_app.root_path) / 'static' / 'library' / 'themes'
-    if theme != 'default' and not (themes_root / theme / 'theme.json').is_file():
-        return jsonify({'success': False, 'error': f"Theme '{theme}' is not installed"}), 404
-
-    icon_pack = resolve_apply_icon_pack(payload, request.form, themes_root, theme)
-
-    try:
-        preferences = current_user.preferences
-        if preferences is None:
-            preferences = UserPreference(user_id=current_user.id, theme=theme)
-            if icon_pack:
-                preferences.icon_pack = icon_pack
-            db.session.add(preferences)
-        else:
-            preferences.theme = theme
-            if icon_pack:
-                preferences.icon_pack = icon_pack
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        log_system_event(
-            f"Failed to apply theme '{theme}': {e}",
-            event_type='themes',
-            event_level='error'
-        )
-        return jsonify({'success': False, 'error': 'Failed to apply theme'}), 500
-
-    applied_pack = getattr(preferences, 'icon_pack', None) or 'outline'
-    log_system_event(
-        f"Theme '{theme}' applied by admin (icon_pack={applied_pack})",
-        event_type='themes',
-        event_level='information',
-        audit_user=current_user.id
-    )
-    return jsonify({'success': True, 'theme': theme, 'icon_pack': applied_pack}), 200
+# POST /admin/themes/apply is retired (W28). It set the calling admin's own
+# theme preference — the same write Preferences performs, from a second swatch
+# grid on this page, so the two surfaces could disagree about what was selected.
+# Preferences builds its choices from get_installed_themes(), so it already
+# covers uploaded packs as well as presets and nothing was lost by removing this.
+# The grid and its fetch() went with it; this page keeps upload, reset and delete.

@@ -742,184 +742,20 @@ class TestResetDefaultThemesRoute:
 
 
 class TestApplyThemeRoute:
-    """Tests for the apply_theme route."""
+    """Retired (W28).
 
-    def test_apply_theme_requires_login(self, client):
-        """Test that applying a theme requires login."""
-        response = client.post('/admin/themes/apply', json={'theme': 'default'})
-        assert response.status_code == 302
-        assert 'login' in response.location
+    POST /admin/themes/apply set the calling admin's own preferences.theme —
+    the same write Preferences performs — from a second swatch grid on the
+    admin Themes page, so two surfaces could disagree about what was selected.
+    Nothing was lost removing it: Preferences builds its choices from
+    get_installed_themes(), so it already covers uploaded packs too.
 
-    def test_apply_theme_requires_admin(self, client, regular_user):
-        """Test that applying a theme requires admin role."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(regular_user.id)
-            sess['_fresh'] = True
+    The retirement itself is pinned in tests/test_theme_apply_registration.py.
+    """
 
-        response = client.post('/admin/themes/apply', json={'theme': 'default'})
-        assert response.status_code == 302
-        assert 'login' in response.location
-
-    def test_apply_theme_post_method_only(self, client, admin_user):
-        """Test that applying a theme only accepts POST requests."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        response = client.get('/admin/themes/apply')
-        assert response.status_code == 405
-
-    def test_apply_theme_requires_a_theme_name(self, client, admin_user):
-        """Test that an empty payload is rejected."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        response = client.post('/admin/themes/apply', json={})
-        assert response.status_code == 400
-        assert response.get_json()['success'] is False
-
-    def test_apply_theme_rejects_path_traversal(self, client, admin_user):
-        """Test that a traversal attempt never reaches the filesystem check."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        response = client.post('/admin/themes/apply', json={'theme': '../../etc'})
-        assert response.status_code == 400
-
-    def test_apply_theme_rejects_unknown_theme(self, client, admin_user):
-        """Test that a theme that is not installed is rejected."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        response = client.post('/admin/themes/apply', json={'theme': 'not_installed_theme'})
-        assert response.status_code == 404
-
-    def test_apply_theme_creates_preferences_when_missing(self, client, admin_user, db_session):
-        """Test that applying a theme works for a user with no preferences row."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        response = client.post('/admin/themes/apply', json={'theme': 'default'})
-
-        assert response.status_code == 200
-        body = response.get_json()
-        assert body['success'] is True
-        assert body['theme'] == 'default'
-        assert body['icon_pack'] == 'outline'
-        db_session.refresh(admin_user)
-        assert admin_user.preferences is not None
-        assert admin_user.preferences.theme == 'default'
-
-    @patch('gametheca.routes_admin_ext.themes.Path')
-    def test_apply_theme_updates_existing_preference(self, mock_path, client, admin_user, db_session):
-        """Test that an installed preset replaces the previous preference."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        client.post('/admin/themes/apply', json={'theme': 'default'})
-        response = client.post('/admin/themes/apply', json={'theme': 'aurora'})
-
-        assert response.status_code == 200
-        db_session.refresh(admin_user)
-        assert admin_user.preferences.theme == 'aurora'
-
-    @patch('gametheca.routes_admin_ext.themes.Path')
-    def test_apply_theme_accepts_form_data(self, mock_path, client, admin_user, db_session):
-        """Test that the endpoint also accepts a plain form post."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        response = client.post('/admin/themes/apply', data={'theme': 'ember'})
-
-        assert response.status_code == 200
-        db_session.refresh(admin_user)
-        assert admin_user.preferences.theme == 'ember'
-
-    def test_apply_theme_persists_explicit_icon_pack(
-        self, client, admin_user, db_session, app, theme_sandbox
-    ):
-        """Explicit icon_pack in the body is stored on UserPreference like Preferences."""
-        theme_dir = theme_sandbox / 'static' / 'library' / 'themes' / 'aurora_icon_test'
-        theme_dir.mkdir(parents=True, exist_ok=True)
-        (theme_dir / 'theme.json').write_text(
-            json.dumps({'name': 'Aurora Icon Test', 'default_icon_pack': 'pixel'}),
-            encoding='utf-8',
-        )
-
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        response = client.post(
-            '/admin/themes/apply',
-            json={'theme': 'aurora_icon_test', 'icon_pack': 'filled'},
-        )
-        assert response.status_code == 200
-        assert response.get_json() == {
-            'success': True,
-            'theme': 'aurora_icon_test',
-            'icon_pack': 'filled',
-        }
-        db_session.refresh(admin_user)
-        assert admin_user.preferences.theme == 'aurora_icon_test'
-        assert admin_user.preferences.icon_pack == 'filled'
-
-    def test_apply_theme_falls_back_to_theme_json_default_icon_pack(
-        self, client, admin_user, db_session, app, theme_sandbox
-    ):
-        """Omitting icon_pack uses theme.json default_icon_pack when present."""
-        theme_dir = theme_sandbox / 'static' / 'library' / 'themes' / 'ember_icon_test'
-        theme_dir.mkdir(parents=True, exist_ok=True)
-        (theme_dir / 'theme.json').write_text(
-            json.dumps({'name': 'Ember Icon Test', 'default_icon_pack': 'filled'}),
-            encoding='utf-8',
-        )
-
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        response = client.post(
-            '/admin/themes/apply',
-            json={'theme': 'ember_icon_test'},
-        )
-        assert response.status_code == 200
-        body = response.get_json()
-        assert body['success'] is True
-        assert body['theme'] == 'ember_icon_test'
-        assert body['icon_pack'] == 'filled'
-        db_session.refresh(admin_user)
-        assert admin_user.preferences.icon_pack == 'filled'
-
-    def test_apply_theme_null_icon_pack_uses_theme_json_default(
-        self, client, admin_user, db_session, app, theme_sandbox
-    ):
-        """JSON null icon_pack still falls back to theme.json default_icon_pack."""
-        theme_dir = theme_sandbox / 'static' / 'library' / 'themes' / 'violet_icon_test'
-        theme_dir.mkdir(parents=True, exist_ok=True)
-        (theme_dir / 'theme.json').write_text(
-            json.dumps({'name': 'Violet Icon Test', 'default_icon_pack': 'soft'}),
-            encoding='utf-8',
-        )
-
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-
-        response = client.post(
-            '/admin/themes/apply',
-            json={'theme': 'violet_icon_test', 'icon_pack': None},
-        )
-        assert response.status_code == 200
-        assert response.get_json()['icon_pack'] == 'soft'
-        db_session.refresh(admin_user)
-        assert admin_user.preferences.icon_pack == 'soft'
+    def test_the_route_is_gone(self, app):
+        endpoints = {r.endpoint for r in app.url_map.iter_rules()}
+        assert 'admin2.apply_theme' not in endpoints
 
 
 class TestThemeRoutesIntegration:
@@ -932,7 +768,7 @@ class TestThemeRoutesIntegration:
             assert url_for('admin2.theme_readme') == '/admin/themes/readme'
             assert url_for('admin2.delete_theme', theme_name='test') == '/admin/themes/delete/test'
             assert url_for('admin2.reset_default_themes') == '/admin/themes/reset'
-            assert url_for('admin2.apply_theme') == '/admin/themes/apply'
+            # admin2.apply_theme is deliberately absent — see TestApplyThemeRoute.
 
     def test_theme_routes_require_authentication(self, client):
         """Test that all theme routes require authentication."""

@@ -81,10 +81,13 @@ def test_preferences_modal_renders_selectable_swatches():
     assert "form.theme.data == value" in html
 
 
-def test_admin_manage_themes_offers_an_apply_control():
+def test_admin_manage_themes_sends_you_to_preferences_to_choose():
+    """This page used to carry its own swatch grid writing `preferences.theme`,
+    duplicating Preferences and giving two answers to "which theme is selected".
+    Retired — but the page must still say where choosing happens, or the
+    affordance is simply missing rather than moved."""
     html = read(TEMPLATES / 'admin' / 'admin_manage_themes.html')
 
-    assert "url_for('admin2.apply_theme')" in html
-    assert 'id="adminThemeGrid"' in html
-    # CSRF must travel the way the neighbouring admin POSTs send it.
-    assert 'CSRFUtils.getHeaders' in html
+    assert 'adminThemeGrid' not in html
+    assert 'apply_theme' not in html
+    assert 'settings.settings_panel' in html
