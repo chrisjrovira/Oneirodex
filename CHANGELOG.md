@@ -297,6 +297,11 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **Admin artwork answers through the envelope** — `routes_admin_ext/images.py` **37 → 0**, baseline
+  **558 → 521**. Two handlers passed `str(e)` from a bare `except Exception` to the browser; those now
+  log and answer with a sentence. The unwritable-`IMAGE_SAVE_PATH` refusals keep every field they
+  carried — `image_save_path`, the zeroed counters, the `errors` list — because the Images page renders
+  them to explain *why* nothing downloaded, and a refusal that drops them would just look broken
 - **Library tools answer through the envelope** — `library_tools.py` **32 → 0**, baseline
   **590 → 558**. This was the `{'status': 'ok'}` family, the third of the five competing shapes and the
   one that needed checking rather than converting: `status` is a real field name as well as an envelope

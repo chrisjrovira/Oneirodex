@@ -4,7 +4,6 @@
   "gametheca/routes_admin_ext/attract_mode.py": 7,
   "gametheca/routes_admin_ext/hltb.py": 11,
   "gametheca/routes_admin_ext/igdb.py": 6,
-  "gametheca/routes_admin_ext/images.py": 37,
   "gametheca/routes_admin_ext/libraries.py": 3,
   "gametheca/routes_admin_ext/settings.py": 16,
   "gametheca/routes_admin_ext/whitelist.py": 3,
