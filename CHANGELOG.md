@@ -297,6 +297,13 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **Library tools answer through the envelope** — `library_tools.py` **32 → 0**, baseline
+  **590 → 558**. This was the `{'status': 'ok'}` family, the third of the five competing shapes and the
+  one that needed checking rather than converting: `status` is a real field name as well as an envelope
+  marker. Here all 27 were the marker (`'ok'` or `'error'` and nothing else), and the admin clients read
+  `response.status` and `data.message || data.error` rather than the body's `status`, so dropping it is
+  safe. `routes.py` keeps its own — the same key there carries genuine scan-job state (`starting`,
+  `deleting_games`, `completed`), which is data
 - **Admin discovery sections and zones answer through the envelope** — `routes_admin_ext/system.py`
   **40 → 0**, baseline **630 → 590**. Another single-family file: all 40 sites used `{success, error}`,
   which `api_error` still mirrors, so the admin SPA is unaffected. The seven `Internal server error`

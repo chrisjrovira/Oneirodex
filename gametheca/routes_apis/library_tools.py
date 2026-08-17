@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request, current_app
 from flask_login import login_required
 from sqlalchemy import select
@@ -49,19 +50,18 @@ def propose_leaf_libraries_api():
     )
     root = str(root).strip()
     if not root:
-        return jsonify({'status': 'error', 'message': 'root path required'}), 400
+        return api_error('root path required', code='bad_request')
 
     safe, err = is_safe_path(root, _allowed_bases())
     if not safe:
-        return jsonify({'status': 'error', 'message': err or 'Unsafe path'}), 403
+        return api_error(err or 'Unsafe path', code='forbidden')
 
     if not os.path.isdir(root):
-        return jsonify({'status': 'error', 'message': 'root is not a directory'}), 400
+        return api_error('root is not a directory', code='bad_request')
 
     candidates = propose_leaf_libraries(root)
-    return jsonify({
-        'status': 'ok',
-        'root': os.path.normpath(root),
+    return api_ok({
+                'root': os.path.normpath(root),
         'candidates': candidates,
         'count': len(candidates),
         'auto_create': False,
@@ -93,11 +93,11 @@ def import_leaf_libraries_preview_api():
         try:
             text = raw.decode('utf-8-sig')
         except UnicodeDecodeError:
-            return jsonify({
-                'status': 'error',
-                'message': 'File must be UTF-8 text',
-                'auto_create': False,
-            }), 400
+            return api_error(
+                'File must be UTF-8 text',
+                code='bad_request',
+                auto_create=False,
+            )
         if filename.endswith('.csv') or (request.form.get('format') or '').lower() == 'csv':
             result = preview_from_csv(text, allowed_bases=bases)
         else:
@@ -111,11 +111,11 @@ def import_leaf_libraries_preview_api():
         if csv_text:
             result = preview_from_csv(csv_text, allowed_bases=bases)
             return jsonify(result)
-        return jsonify({
-            'status': 'error',
-            'message': 'JSON body or file upload required',
-            'auto_create': False,
-        }), 400
+        return api_error(
+            'JSON body or file upload required',
+            code='bad_request',
+            auto_create=False,
+        )
 
     result = preview_from_json(data, allowed_bases=bases)
     return jsonify(result)
@@ -136,12 +136,12 @@ def rename_preview():
 
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalar_one_or_none() if game_uuid else None
     if not game:
-        return jsonify({'status': 'error', 'message': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
 
     root = game.full_disk_path
     safe, err = is_safe_path(root, _allowed_bases())
     if not safe:
-        return jsonify({'status': 'error', 'message': err or 'Unsafe path'}), 403
+        return api_error(err or 'Unsafe path', code='forbidden')
 
     plan = build_rename_plan(
         root,
@@ -152,7 +152,7 @@ def rename_preview():
         rename_top_level_media=rename_media,
         move_letter_bucket=move_bucket,
     )
-    return jsonify({'status': 'ok', 'plan': plan, 'game_uuid': game.uuid})
+    return api_ok({'plan': plan, 'game_uuid': game.uuid})
 
 
 @apis_bp.route('/library_tools/rename/apply', methods=['POST'])
@@ -163,11 +163,11 @@ def rename_apply():
     game_uuid = data.get('game_uuid')
     plan = data.get('plan') or []
     if not isinstance(plan, list) or not plan:
-        return jsonify({'status': 'error', 'message': 'No rename operations selected'}), 400
+        return api_error('No rename operations selected', code='bad_request')
 
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalar_one_or_none() if game_uuid else None
     if not game:
-        return jsonify({'status': 'error', 'message': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
 
     results = apply_rename_plan(plan, _allowed_bases())
     # Update DB path if root folder rename succeeded
@@ -184,13 +184,13 @@ def rename_apply():
                 db.session.commit()
             except Exception as exc:
                 db.session.rollback()
-                return jsonify({
-                    'status': 'error',
-                    'message': f'Disk renamed but DB update failed: {exc}',
-                    'results': results,
-                }), 500
+                return api_error(
+                    f'Disk renamed but DB update failed: {exc}',
+                    code='internal',
+                    results=results,
+                )
 
-    return jsonify({'status': 'ok', 'results': results, 'full_disk_path': game.full_disk_path})
+    return api_ok({'results': results, 'full_disk_path': game.full_disk_path})
 
 
 @apis_bp.route('/library_tools/proposals', methods=['GET'])
@@ -218,7 +218,7 @@ def list_proposals():
                     'library_uuid': library.uuid,
                     'library_name': library.name,
                 })
-    return jsonify({'status': 'ok', 'proposals': found})
+    return api_ok({'proposals': found})
 
 
 @apis_bp.route('/library_tools/proposals/approve', methods=['POST'])
@@ -233,17 +233,16 @@ def approve_proposal():
     path = data.get('path')
     igdb_id = data.get('igdb_id')
     if not path or not igdb_id:
-        return jsonify({'status': 'error', 'message': 'path and igdb_id required'}), 400
+        return api_error('path and igdb_id required', code='bad_request')
     safe, err = is_safe_path(path, _allowed_bases())
     if not safe:
-        return jsonify({'status': 'error', 'message': err or 'Unsafe path'}), 403
+        return api_error(err or 'Unsafe path', code='forbidden')
     try:
         remove_proposal_files(path)
     except OSError as exc:
-        return jsonify({'status': 'error', 'message': str(exc)}), 500
-    return jsonify({
-        'status': 'ok',
-        'message': 'Proposal cleared. Complete import via Add Game / Identify with this IGDB ID.',
+        return api_error(str(exc), code='internal')
+    return api_ok({
+                'message': 'Proposal cleared. Complete import via Add Game / Identify with this IGDB ID.',
         'path': path,
         'igdb_id': igdb_id,
         'identify_hint': f"/add_game_manual?full_disk_path={path}&igdb_id={igdb_id}",
@@ -257,7 +256,7 @@ def scan_roots_for_proposals():
     data = request.get_json(silent=True) or {}
     roots = data.get('roots') or []
     if not isinstance(roots, list):
-        return jsonify({'status': 'error', 'message': 'roots must be a list'}), 400
+        return api_error('roots must be a list', code='bad_request')
 
     found = []
     for root in roots:
@@ -277,7 +276,7 @@ def scan_roots_for_proposals():
                 'path': folder,
                 'proposal': (payload or {}).get('proposal'),
             })
-    return jsonify({'status': 'ok', 'proposals': found})
+    return api_ok({'proposals': found})
 
 
 @apis_bp.route('/library_tools/doctor/dry_run', methods=['POST'])
@@ -289,7 +288,7 @@ def library_doctor_dry_run():
     template = data.get('template') or '{title}'
     limit = data.get('limit')
     if not isinstance(roots, list) or not roots:
-        return jsonify({'status': 'error', 'message': 'roots required'}), 400
+        return api_error('roots required', code='bad_request')
 
     safe_roots = []
     for root in roots:
@@ -297,10 +296,10 @@ def library_doctor_dry_run():
         if ok:
             safe_roots.append(root)
     if not safe_roots:
-        return jsonify({'status': 'error', 'message': 'No safe roots'}), 403
+        return api_error('No safe roots', code='forbidden')
 
     rows = doctor_dry_run(safe_roots, template=template, limit=limit)
-    return jsonify({'status': 'ok', 'rows': rows, 'count': len(rows)})
+    return api_ok({'rows': rows, 'count': len(rows)})
 
 
 @apis_bp.route('/library_tools/doctor/write_proposals', methods=['POST'])
@@ -310,7 +309,7 @@ def library_doctor_write_proposals():
     data = request.get_json(silent=True) or {}
     rows = data.get('rows') or []
     if not isinstance(rows, list):
-        return jsonify({'status': 'error', 'message': 'rows must be a list'}), 400
+        return api_error('rows must be a list', code='bad_request')
     # Only allow writing under safe bases
     filtered = []
     for row in rows:
@@ -318,7 +317,7 @@ def library_doctor_write_proposals():
         if path and is_safe_path(path, _allowed_bases())[0]:
             filtered.append(row)
     results = doctor_write_proposals(filtered)
-    return jsonify({'status': 'ok', 'results': results})
+    return api_ok({'results': results})
 
 
 @apis_bp.route('/library_tools/doctor/apply_renames', methods=['POST'])
@@ -330,14 +329,14 @@ def library_doctor_apply_renames():
     rows = data.get('rows') or []
     template = data.get('template') or '{title}'
     if not isinstance(rows, list) or not rows:
-        return jsonify({'status': 'error', 'message': 'rows required'}), 400
+        return api_error('rows required', code='bad_request')
     filtered = []
     for row in rows:
         path = row.get('path')
         if path and is_safe_path(path, _allowed_bases())[0]:
             filtered.append(row)
     results = doctor_apply_renames(filtered, _allowed_bases(), template=template)
-    return jsonify({'status': 'ok', 'results': results})
+    return api_ok({'results': results})
 
 
 @apis_bp.route('/library_tools/backfill_steam_metadata', methods=['POST'])
@@ -419,8 +418,7 @@ def library_tools_backfill_steam_metadata():
     if updated:
         db.session.commit()
 
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'scanned': len(candidates),
         'updated': len(updated),
         'skipped': skipped,
@@ -446,22 +444,22 @@ def library_tools_check_freshness():
     data = request.get_json(silent=True) or {}
     library_uuid = (data.get('library_uuid') or '').strip()
     if not library_uuid:
-        return jsonify({'error': 'library_uuid is required'}), 400
+        return api_error('library_uuid is required', code='bad_request')
 
     library = db.session.execute(
         select(Library).filter_by(uuid=library_uuid)
     ).scalars().first()
     if not library:
-        return jsonify({'error': 'Library not found'}), 404
+        return api_error('Library not found', code='not_found')
 
     try:
         limit = min(max(int(data.get('limit') or 50), 1), 500)
     except (TypeError, ValueError):
-        return jsonify({'error': 'limit must be a number'}), 400
+        return api_error('limit must be a number', code='bad_request')
 
     result = check_library_freshness(
         library_uuid,
         limit=limit,
         only_missing=bool(data.get('only_missing', True)),
     )
-    return jsonify({'ok': True, **result})
+    return api_ok(result)
