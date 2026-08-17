@@ -1,4 +1,5 @@
 # /gametheca/routes_admin_ext/users.py
+from gametheca.utils.api_response import api_error, api_ok
 from flask import render_template, request, jsonify
 from flask_login import login_required, current_user
 from gametheca.models import Library, User, Genre, Theme
@@ -116,6 +117,21 @@ def check_admin_protection(user_id, new_role=None, new_state=None):
     
     return True, ""
 
+def _first_refusal(*checks):
+    """First failing validator's refusal, or ``None`` when all pass.
+
+    Thirteen call sites repeated `valid, error = check()` followed by the same
+    400. Takes callables rather than results so evaluation still short-circuits
+    — `check_username_unique` queries the database, and should not run when the
+    username has already been rejected.
+    """
+    for check in checks:
+        valid, error = check()
+        if not valid:
+            return api_error(error, code='bad_request')
+    return None
+
+
 @admin2_bp.route('/admin/users', methods=['GET'])
 @login_required
 @admin_required
@@ -160,7 +176,7 @@ def manage_user_api(user_id):
     if request.method == 'PUT' and user_id == 0:  # Special case for new user creation
         data = request.json
         if not data:
-            return jsonify({'success': False, 'message': 'No data provided'}), 400
+            return api_error('No data provided', code='bad_request')
         
         # Validate required fields
         username = data.get('username', '').strip()
@@ -172,40 +188,32 @@ def manage_user_api(user_id):
         about = data.get('about', '')
         
         # Input validation
-        valid, error = validate_username(username)
-        if not valid:
-            return jsonify({'success': False, 'message': error}), 400
-            
-        valid, error = validate_email(email)
-        if not valid:
-            return jsonify({'success': False, 'message': error}), 400
-            
-        valid, error = validate_role(role)
-        if not valid:
-            return jsonify({'success': False, 'message': error}), 400
-            
-        valid, error = validate_about(about)
-        if not valid:
-            return jsonify({'success': False, 'message': error}), 400
+        refusal = _first_refusal(
+            lambda: validate_username(username),
+            lambda: validate_email(email),
+            lambda: validate_role(role),
+            lambda: validate_about(about),
+        )
+        if refusal is not None:
+            return refusal
         
         if not password:
-            return jsonify({'success': False, 'message': 'Password is required'}), 400
+            return api_error('Password is required', code='bad_request')
         
         # Type validation
         if not isinstance(state, bool):
-            return jsonify({'success': False, 'message': 'State must be true or false'}), 400
+            return api_error('State must be true or false', code='bad_request')
             
         if not isinstance(is_email_verified, bool):
-            return jsonify({'success': False, 'message': 'Email verification status must be true or false'}), 400
+            return api_error('Email verification status must be true or false', code='bad_request')
         
         # Uniqueness checks
-        valid, error = check_username_unique(username)
-        if not valid:
-            return jsonify({'success': False, 'message': error}), 400
-            
-        valid, error = check_email_unique(email)
-        if not valid:
-            return jsonify({'success': False, 'message': error}), 400
+        refusal = _first_refusal(
+            lambda: check_username_unique(username),
+            lambda: check_email_unique(email),
+        )
+        if refusal is not None:
+            return refusal
         
         try:
             new_user = User(
@@ -221,19 +229,19 @@ def manage_user_api(user_id):
             db.session.add(new_user)
             db.session.commit()
             log_system_event(f"Admin {current_user.name} created new user: {username} (email: {email}, role: {role})", event_type='audit', event_level='information')
-            return jsonify({'success': True})
+            return api_ok()
         except IntegrityError as e:
             db.session.rollback()
             log_system_event(f"Admin {current_user.name} failed to create user {username}: Database integrity error", event_type='audit', event_level='error')
-            return jsonify({'success': False, 'message': 'Username or email already exists'}), 400
+            return api_error('Username or email already exists', code='bad_request')
         except Exception as e:
             db.session.rollback()
             log_system_event(f"Admin {current_user.name} failed to create user {username}: {str(e)}", event_type='audit', event_level='error')
-            return jsonify({'success': False, 'message': 'Failed to create user'}), 500
+            return api_error('Failed to create user', code='internal')
 
     user = db.session.get(User, user_id)
     if not user:
-        return jsonify({'success': False, 'message': 'User not found'}), 404
+        return api_error('User not found', code='not_found')
     
     if request.method == 'GET':
         content_filters = get_user_content_filters(user.id)
@@ -251,17 +259,17 @@ def manage_user_api(user_id):
     elif request.method == 'PUT':
         # Enhanced permission checks
         if user_id == 1 and current_user.id != 1:
-            return jsonify({'success': False, 'message': 'Cannot modify primary admin account'}), 403
+            return api_error('Cannot modify primary admin account', code='forbidden')
         
         # Prevent users from modifying their own role
         if current_user.id == user_id:
             data = request.json or {}
             if data.get('role') and data['role'] != user.role:
-                return jsonify({'success': False, 'message': 'Cannot modify your own role'}), 403
+                return api_error('Cannot modify your own role', code='forbidden')
         
         data = request.json
         if not data:
-            return jsonify({'success': False, 'message': 'No data provided'}), 400
+            return api_error('No data provided', code='bad_request')
         
         # Track changes for audit logging
         changes = []
@@ -273,11 +281,11 @@ def manage_user_api(user_id):
             if new_email != user.email.lower():
                 valid, error = validate_email(new_email)
                 if not valid:
-                    return jsonify({'success': False, 'message': error}), 400
+                    return api_error(error, code='bad_request')
                     
                 valid, error = check_email_unique(new_email, exclude_user_id=user_id)
                 if not valid:
-                    return jsonify({'success': False, 'message': error}), 400
+                    return api_error(error, code='bad_request')
                 
                 changes.append(f"email from '{user.email}' to '{new_email}'")
                 user.email = new_email
@@ -288,12 +296,12 @@ def manage_user_api(user_id):
             if new_role != user.role:
                 valid, error = validate_role(new_role)
                 if not valid:
-                    return jsonify({'success': False, 'message': error}), 400
+                    return api_error(error, code='bad_request')
                 
                 # Check admin protection before role change
                 valid, error = check_admin_protection(user_id, new_role=new_role)
                 if not valid:
-                    return jsonify({'success': False, 'message': error}), 403
+                    return api_error(error, code='forbidden')
                 
                 changes.append(f"role from '{user.role}' to '{new_role}'")
                 user.role = new_role
@@ -302,13 +310,13 @@ def manage_user_api(user_id):
         if 'state' in data:
             new_state = data['state']
             if not isinstance(new_state, bool):
-                return jsonify({'success': False, 'message': 'State must be true or false'}), 400
+                return api_error('State must be true or false', code='bad_request')
             
             if new_state != user.state:
                 # Check admin protection before state change
                 valid, error = check_admin_protection(user_id, new_state=new_state)
                 if not valid:
-                    return jsonify({'success': False, 'message': error}), 403
+                    return api_error(error, code='forbidden')
                 
                 status = "active" if new_state else "inactive"
                 changes.append(f"state to {status}")
@@ -318,7 +326,7 @@ def manage_user_api(user_id):
         if 'is_email_verified' in data:
             new_verification = data['is_email_verified']
             if not isinstance(new_verification, bool):
-                return jsonify({'success': False, 'message': 'Email verification status must be true or false'}), 400
+                return api_error('Email verification status must be true or false', code='bad_request')
             
             if new_verification != user.is_email_verified:
                 status = "verified" if new_verification else "unverified"
@@ -330,7 +338,7 @@ def manage_user_api(user_id):
             new_about = data['about']
             valid, error = validate_about(new_about)
             if not valid:
-                return jsonify({'success': False, 'message': error}), 400
+                return api_error(error, code='bad_request')
             
             if new_about != user.about:
                 changes.append("about field")
@@ -340,7 +348,7 @@ def manage_user_api(user_id):
         if data.get('password'):
             password = data['password']
             if not isinstance(password, str) or not password.strip():
-                return jsonify({'success': False, 'message': 'Invalid password provided'}), 400
+                return api_error('Invalid password provided', code='bad_request')
             user.set_password(password)
             changes.append("password")
 
@@ -348,7 +356,7 @@ def manage_user_api(user_id):
         if 'allowed_library_uuids' in data:
             uuids = data.get('allowed_library_uuids') or []
             if not isinstance(uuids, list):
-                return jsonify({'success': False, 'message': 'allowed_library_uuids must be a list'}), 400
+                return api_error('allowed_library_uuids must be a list', code='bad_request')
             set_user_library_allowlist(user.id, [str(u) for u in uuids])
             changes.append('library allow-list')
 
@@ -356,9 +364,9 @@ def manage_user_api(user_id):
             denied_genres = data.get('denied_genres')
             denied_themes = data.get('denied_themes')
             if denied_genres is not None and not isinstance(denied_genres, list):
-                return jsonify({'success': False, 'message': 'denied_genres must be a list'}), 400
+                return api_error('denied_genres must be a list', code='bad_request')
             if denied_themes is not None and not isinstance(denied_themes, list):
-                return jsonify({'success': False, 'message': 'denied_themes must be a list'}), 400
+                return api_error('denied_themes must be a list', code='bad_request')
             existing = get_user_content_filters(user.id)
             set_user_content_filters(
                 user.id,
@@ -375,25 +383,25 @@ def manage_user_api(user_id):
                 changes_str = ", ".join(changes)
                 log_system_event(f"Admin {current_user.name} modified user {user.name}: {changes_str}", event_type='audit', event_level='information')
             
-            return jsonify({'success': True})
+            return api_ok()
         except IntegrityError as e:
             db.session.rollback()
             log_system_event(f"Admin {current_user.name} failed to modify user {user.name}: Database integrity error", event_type='audit', event_level='error')
-            return jsonify({'success': False, 'message': 'Email address already in use'}), 400
+            return api_error('Email address already in use', code='bad_request')
         except Exception as e:
             db.session.rollback()
             log_system_event(f"Admin {current_user.name} failed to modify user {user.name}: {str(e)}", event_type='audit', event_level='error')
-            return jsonify({'success': False, 'message': 'Failed to update user'}), 500
+            return api_error('Failed to update user', code='internal')
     
     elif request.method == 'DELETE':
         # Enhanced admin protection
         if user_id == 1:
-            return jsonify({'success': False, 'message': 'Cannot delete primary admin account'}), 403
+            return api_error('Cannot delete primary admin account', code='forbidden')
         
         # Prevent deleting the last active admin
         valid, error = check_admin_protection(user_id)
         if not valid:
-            return jsonify({'success': False, 'message': error}), 403
+            return api_error(error, code='forbidden')
         
         # Store user info for logging before deletion
         user_info = f"{user.name} (email: {user.email}, role: {user.role})"
@@ -402,8 +410,8 @@ def manage_user_api(user_id):
             db.session.delete(user)
             db.session.commit()
             log_system_event(f"Admin {current_user.name} deleted user: {user_info}", event_type='audit', event_level='warning')
-            return jsonify({'success': True})
+            return api_ok()
         except Exception as e:
             db.session.rollback()
             log_system_event(f"Admin {current_user.name} failed to delete user {user_info}: {str(e)}", event_type='audit', event_level='error')
-            return jsonify({'success': False, 'message': 'Failed to delete user'}), 500
+            return api_error('Failed to delete user', code='internal')

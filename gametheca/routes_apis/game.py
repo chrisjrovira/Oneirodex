@@ -17,6 +17,7 @@ from gametheca.models import (
     user_favorites,
     user_game_status,
 )
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.background import run_in_background
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.game_core import get_game_by_uuid
@@ -40,6 +41,22 @@ BATCH_WISHLIST_MAX = 50
 BATCH_REFRESH_IMAGES_MAX = 20
 FRESHNESS_STALE_SECONDS = 86400
 BATCH_STATUS_VALUES = frozenset({'unplayed', 'unfinished', 'beaten', 'completed', ''})
+
+
+def _refuse_inaccessible_game(game):
+    """Refusal for a game the caller may not see, or ``None`` when they may.
+
+    Five handlers spelled these four lines out, and they had already drifted:
+    `game_details_api` answered 'Access denied' where the other four answered
+    'Forbidden', for the identical check. Takes an already-loaded game because
+    the call sites disagree on how to load it — one goes through
+    `get_game_by_uuid` for its logging, the rest use a plain select.
+    """
+    if not game:
+        return api_error('Game not found', code='not_found')
+    if not user_can_access_game(current_user, game):
+        return api_error('You do not have access to that game', code='forbidden')
+    return None
 
 
 def _normalize_batch_uuids(raw, *, max_size: int) -> tuple[list[str] | None, dict | None, int]:
@@ -74,7 +91,7 @@ def search():
     if query:
         # Sanitize input - limit length and escape special characters
         if len(query) > 100:  # Reasonable search term length limit
-            return jsonify({'error': 'Search term too long'}), 400
+            return api_error('Search term too long', code='bad_request')
 
         # Build query with name search
         search_term = f'%{query}%'
@@ -130,19 +147,14 @@ def games_batch_favorite():
     if err is not None:
         return jsonify(err), status
     if 'favorite' not in data:
-        return jsonify({
-            'ok': False,
-            'error': 'favorite boolean required',
-            'updated': [],
-            'skipped': [],
-            'errors': [],
-            'limit': BATCH_FAVORITE_MAX,
-        }), 400
+        return api_error(
+            'favorite boolean required', code='bad_request',
+            updated=[], skipped=[], errors=[], limit=BATCH_FAVORITE_MAX,
+        )
     favorite = bool(data.get('favorite'))
 
     if not uuids:
-        return jsonify({
-            'ok': True,
+        return api_ok({
             'updated': [],
             'skipped': [],
             'errors': [],
@@ -197,15 +209,16 @@ def games_batch_favorite():
         db.session.commit()
     except Exception as exc:
         db.session.rollback()
-        return jsonify({
-            'ok': False,
-            'error': str(exc),
-            'updated': [],
-            'skipped': skipped,
-            'errors': errors,
-            'limit': BATCH_FAVORITE_MAX,
-        }), 500
+        current_app.logger.warning('batch commit failed: %s', exc)
+        return api_error(
+            'Could not save the change', code='internal',
+            updated=[], skipped=skipped, errors=errors, limit=BATCH_FAVORITE_MAX,
+        )
 
+    # Deliberately not api_ok: `ok` here answers "did every item succeed",
+    # not "did the request succeed". The SPA reads `data.ok !== false`
+    # (api/batchActions.js) to flag a partial batch, and api_ok would stamp it
+    # True and hide the failures. Recorded in the envelope baseline on purpose.
     return jsonify({
         'ok': len(errors) == 0,
         'updated': updated,
@@ -236,44 +249,31 @@ def games_batch_status():
     if err is not None:
         return jsonify(err), status_code
     if 'status' not in data:
-        return jsonify({
-            'ok': False,
-            'error': 'status required',
-            'updated': [],
-            'skipped': [],
-            'errors': [],
-            'limit': BATCH_STATUS_MAX,
-        }), 400
+        return api_error(
+            'status required', code='bad_request',
+            updated=[], skipped=[], errors=[], limit=BATCH_STATUS_MAX,
+        )
     status = data.get('status')
     if status is None:
         status = ''
     if not isinstance(status, str):
-        return jsonify({
-            'ok': False,
-            'error': 'status must be a string',
-            'updated': [],
-            'skipped': [],
-            'errors': [],
-            'limit': BATCH_STATUS_MAX,
-        }), 400
+        return api_error(
+            'status must be a string', code='bad_request',
+            updated=[], skipped=[], errors=[], limit=BATCH_STATUS_MAX,
+        )
     status = status.strip()
     if status not in BATCH_STATUS_VALUES:
-        return jsonify({
-            'ok': False,
-            'error': 'Invalid status value',
-            'updated': [],
-            'skipped': [],
-            'errors': [],
-            'limit': BATCH_STATUS_MAX,
-        }), 400
+        return api_error(
+            'Invalid status value', code='bad_request',
+            updated=[], skipped=[], errors=[], limit=BATCH_STATUS_MAX,
+        )
 
     clear = status == ''
     status_out = None if clear else status
     status_info = get_status_info(status_out)
 
     if not uuids:
-        return jsonify({
-            'ok': True,
+        return api_ok({
             'updated': [],
             'skipped': [],
             'errors': [],
@@ -359,16 +359,17 @@ def games_batch_status():
         db.session.commit()
     except Exception as exc:
         db.session.rollback()
-        return jsonify({
-            'ok': False,
-            'error': str(exc),
-            'updated': [],
-            'skipped': skipped,
-            'errors': errors,
-            'limit': BATCH_STATUS_MAX,
-            'status': status_out,
-        }), 500
+        current_app.logger.warning('batch status commit failed: %s', exc)
+        return api_error(
+            'Could not save the play status', code='internal',
+            updated=[], skipped=skipped, errors=errors,
+            limit=BATCH_STATUS_MAX, status=status_out,
+        )
 
+    # Deliberately not api_ok: `ok` here answers "did every item succeed",
+    # not "did the request succeed". The SPA reads `data.ok !== false`
+    # (api/batchActions.js) to flag a partial batch, and api_ok would stamp it
+    # True and hide the failures. Recorded in the envelope baseline on purpose.
     return jsonify({
         'ok': len(errors) == 0,
         'updated': updated,
@@ -398,14 +399,17 @@ def games_batch_wishlist():
     Canonical path: ``POST /api/games/batch/wishlist`` (not ``/api/requests/batch``).
     """
     if not can_request_games(current_user):
-        return jsonify({
-            'ok': False,
-            'error': 'Wishlist requests are not available for this account',
-            'updated': [],
-            'skipped': [],
-            'errors': [],
-            'limit': BATCH_WISHLIST_MAX,
-        }), 403
+        # Same refusal as `POST /api/requests` (routes_apis/wishlist.py), so it
+        # has to read the same on the wire — a member hitting this from Library
+        # multi-select and from a game page is being told one thing.
+        return api_error(
+            'Wishlist requests are not available for this account',
+            code='forbidden',
+            updated=[],
+            skipped=[],
+            errors=[],
+            limit=BATCH_WISHLIST_MAX,
+        )
 
     data = request.get_json(silent=True) or {}
     uuids, err, status_code = _normalize_batch_uuids(data.get('uuids'), max_size=BATCH_WISHLIST_MAX)
@@ -413,8 +417,7 @@ def games_batch_wishlist():
         return jsonify(err), status_code
 
     if not uuids:
-        return jsonify({
-            'ok': True,
+        return api_ok({
             'updated': [],
             'skipped': [],
             'errors': [],
@@ -478,14 +481,11 @@ def games_batch_wishlist():
         db.session.commit()
     except Exception as exc:
         db.session.rollback()
-        return jsonify({
-            'ok': False,
-            'error': str(exc),
-            'updated': [],
-            'skipped': skipped,
-            'errors': errors,
-            'limit': BATCH_WISHLIST_MAX,
-        }), 500
+        current_app.logger.warning('batch commit failed: %s', exc)
+        return api_error(
+            'Could not save the change', code='internal',
+            updated=[], skipped=skipped, errors=errors, limit=BATCH_WISHLIST_MAX,
+        )
 
     if updated:
         try:
@@ -497,6 +497,10 @@ def games_batch_wishlist():
         except Exception:
             pass
 
+    # Deliberately not api_ok: `ok` here answers "did every item succeed",
+    # not "did the request succeed". The SPA reads `data.ok !== false`
+    # (api/batchActions.js) to flag a partial batch, and api_ok would stamp it
+    # True and hide the failures. Recorded in the envelope baseline on purpose.
     return jsonify({
         'ok': len(errors) == 0,
         'updated': updated,
@@ -530,8 +534,7 @@ def games_batch_freshness_check():
     only_stale = bool(data.get('only_stale', True))
 
     if not uuids:
-        return jsonify({
-            'ok': True,
+        return api_ok({
             'updated': [],
             'skipped': [],
             'errors': [],
@@ -582,15 +585,16 @@ def games_batch_freshness_check():
         db.session.commit()
     except Exception as exc:
         db.session.rollback()
-        return jsonify({
-            'ok': False,
-            'error': str(exc),
-            'updated': [],
-            'skipped': skipped,
-            'errors': errors,
-            'limit': BATCH_FRESHNESS_MAX,
-        }), 500
+        current_app.logger.warning('batch commit failed: %s', exc)
+        return api_error(
+            'Could not save the change', code='internal',
+            updated=[], skipped=skipped, errors=errors, limit=BATCH_FRESHNESS_MAX,
+        )
 
+    # Deliberately not api_ok: `ok` here answers "did every item succeed",
+    # not "did the request succeed". The SPA reads `data.ok !== false`
+    # (api/batchActions.js) to flag a partial batch, and api_ok would stamp it
+    # True and hide the failures. Recorded in the envelope baseline on purpose.
     return jsonify({
         'ok': len(errors) == 0,
         'updated': updated,
@@ -623,8 +627,7 @@ def games_batch_refresh_images():
         return jsonify(err), status
 
     if not uuids:
-        return jsonify({
-            'ok': True,
+        return api_ok({
             'queued': [],
             'skipped': [],
             'errors': [],
@@ -667,6 +670,10 @@ def games_batch_refresh_images():
         except Exception as exc:
             errors.append({'uuid': uid, 'name': getattr(game, 'name', None), 'error': str(exc)})
 
+    # Deliberately not api_ok: `ok` here answers "did every item succeed",
+    # not "did the request succeed". The SPA reads `data.ok !== false`
+    # (api/batchActions.js) to flag a partial batch, and api_ok would stamp it
+    # True and hide the failures. Recorded in the envelope baseline on purpose.
     return jsonify({
         'ok': len(errors) == 0,
         'queued': queued,
@@ -683,10 +690,9 @@ def games_batch_refresh_images():
 def game_details_api(game_uuid):
     """Full game details JSON for the member SPA details page."""
     game = get_game_by_uuid(game_uuid)
-    if not game:
-        return jsonify({'error': 'Game not found'}), 404
-    if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Access denied'}), 403
+    refusal = _refuse_inaccessible_game(game)
+    if refusal is not None:
+        return refusal
     return jsonify(build_game_details_payload(game, current_user))
 
 
@@ -694,10 +700,9 @@ def game_details_api(game_uuid):
 @login_required
 def game_screenshots(game_uuid):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
-    if not game:
-        return jsonify({'error': 'Game not found'}), 404
-    if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+    refusal = _refuse_inaccessible_game(game)
+    if refusal is not None:
+        return refusal
     screenshots = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, image_type='screenshot')).scalars().all()
     screenshot_urls = [url_for('static', filename=f'library/images/{screenshot.url}') for screenshot in screenshots]
     return jsonify(screenshot_urls)
@@ -708,16 +713,15 @@ def game_screenshots(game_uuid):
 def game_images(game_uuid):
     """List persisted images for a game; optional kind/type filter (BE-DET-10)."""
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
-    if not game:
-        return jsonify({'error': 'Game not found'}), 404
-    if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+    refusal = _refuse_inaccessible_game(game)
+    if refusal is not None:
+        return refusal
 
     raw_kind = request.args.get('kind') or request.args.get('type') or request.args.get('image_type') or 'all'
     try:
         kind_filter = parse_image_kind(raw_kind, default=None, allow_all=True)
     except ValueError:
-        return jsonify({'error': image_kinds_error_message()}), 400
+        return api_error(image_kinds_error_message(), code='bad_request')
 
     query = select(Image).filter_by(game_uuid=game_uuid)
     if kind_filter != 'all':
@@ -761,24 +765,19 @@ def move_game_to_library():
         target_library_uuid = data.get('target_library_uuid')
         
         if not game_uuid or not target_library_uuid:
-            return jsonify({
-                'success': False,
-                'message': 'Missing required parameters'
-            }), 400
+            return api_error('game_uuid and target_library_uuid are required',
+                             code='bad_request')
             
         game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
         target_library = db.session.execute(select(Library).filter_by(uuid=target_library_uuid)).scalars().first()
         
         if not game or not target_library:
-            return jsonify({
-                'success': False,
-                'message': 'Game or target library not found'
-            }), 404
+            return api_error('Game or target library not found', code='not_found')
 
         if not user_can_access_game(current_user, game):
-            return jsonify({'success': False, 'message': 'Forbidden'}), 403
+            return api_error('You do not have access to that game', code='forbidden')
         if not user_can_access_library(current_user, target_library):
-            return jsonify({'success': False, 'message': 'Forbidden'}), 403
+            return api_error('You do not have access to that library', code='forbidden')
             
         # Update the game's library
         game.library_uuid = target_library_uuid
@@ -786,10 +785,11 @@ def move_game_to_library():
         
         log_system_event(f"Game {game.name} moved to library {target_library.name} by user {current_user.name}", event_type='game', event_level='information')
         
-        return jsonify({'success': True, 'message': f'Game moved to {target_library.name}'})
+        return api_ok({'message': f'Game moved to {target_library.name}'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        current_app.logger.warning('move_game_to_library failed: %s', e)
+        return api_error('Could not move the game', code='internal')
 
 @apis_bp.route('/get_next_custom_igdb_id', methods=['GET'])
 @login_required
@@ -806,8 +806,8 @@ def get_next_custom_igdb_id():
         next_id = base_custom_id if highest_custom_id is None else highest_custom_id + 1
         return jsonify({'next_id': next_id})
     except Exception as e:
-        print(f"Error getting next custom IGDB ID: {e}")
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.warning('next custom IGDB id failed: %s', e)
+        return api_error('Could not work out the next custom IGDB id', code='internal')
 
 
 @apis_bp.route('/games/<game_uuid>/freshness', methods=['GET'])
@@ -817,10 +817,9 @@ def game_freshness_get(game_uuid):
     from gametheca.utils.freshness import freshness_public_view
 
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
-    if not game:
-        return jsonify({'error': 'Game not found'}), 404
-    if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+    refusal = _refuse_inaccessible_game(game)
+    if refusal is not None:
+        return refusal
     return jsonify(freshness_public_view(game))
 
 
@@ -833,10 +832,9 @@ def game_freshness_check(game_uuid):
     game = db.session.execute(
         select(Game).filter_by(uuid=game_uuid)
     ).scalars().first()
-    if not game:
-        return jsonify({'error': 'Game not found'}), 404
-    if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+    refusal = _refuse_inaccessible_game(game)
+    if refusal is not None:
+        return refusal
 
     try:
         # Eager-load relationships used by local/update hints
@@ -852,7 +850,8 @@ def game_freshness_check(game_uuid):
         return jsonify(result)
     except Exception as exc:
         db.session.rollback()
-        return jsonify({'error': str(exc)}), 500
+        current_app.logger.warning('freshness check failed: %s', exc)
+        return api_error('Freshness check failed', code='internal')
 
 
 @apis_bp.route('/admin/freshness/refresh', methods=['POST'])
@@ -869,7 +868,7 @@ def admin_freshness_refresh():
     from gametheca.utils.freshness import check_and_store_freshness
 
     if not current_user.is_authenticated or current_user.role != 'admin':
-        return jsonify({'error': 'Admin required'}), 403
+        return api_error('Admin required', code='forbidden')
 
     data = request.get_json(silent=True) or {}
     entire = bool(data.get('entire_library') or data.get('all'))
@@ -913,7 +912,8 @@ def admin_freshness_refresh():
         db.session.commit()
     except Exception as exc:
         db.session.rollback()
-        return jsonify({'error': str(exc)}), 500
+        current_app.logger.warning('freshness check failed: %s', exc)
+        return api_error('Freshness check failed', code='internal')
 
     return jsonify({
         'updated': updated,

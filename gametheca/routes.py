@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from PIL import Image as PILImage
 from itsdangerous import URLSafeTimedSerializer
 
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.forms import (
     ScanFolderForm, CsrfProtectForm,
     AutoScanForm, UpdateUnmatchedFolderForm,
@@ -708,12 +709,15 @@ def delete_image():
         response_data = {'message': 'Image deleted successfully'}
         if is_cover:
             response_data['default_cover'] = url_for('static', filename='newstyle/default_cover.jpg')
-            
-        return jsonify(response_data)
+
+        return api_ok(response_data)
     except Exception as e:
         # Log the error for debugging purposes
         print(f"Error deleting image: {str(e)}")
-        return jsonify({'error': 'An unexpected error occurred while deleting the image'}), 500
+        return api_error(
+            'An unexpected error occurred while deleting the image',
+            code='internal',
+        )
 
 
 @bp.route('/delete_scan_job/<job_id>', methods=['POST'])
@@ -772,20 +776,24 @@ def update_unmatched_folder_status():
         folder.status = 'Unmatched' if folder.status == 'Ignore' else 'Ignore'
         try:
             db.session.commit()
+            # `status` stays in the payload: the envelope migration is additive,
+            # and an existing caller (plus test_routes.py) reads it.
             response_data = {
                 'status': 'success',
                 'new_status': folder.status,
                 'message': f'Folder status updated to {folder.status}'
             }
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify(response_data)
+                return api_ok(response_data)
             flash(response_data['message'], 'success')
         except SQLAlchemyError as e:
-            error_msg = f'Error updating folder status: {str(e)}'
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({'status': 'error', 'message': error_msg}), 500
+            # The raw SQLAlchemy text stays in the log. Handing it to the browser
+            # leaks schema and connection detail for no operator benefit.
+            current_app.logger.warning('Folder status update failed: %s', e)
             db.session.rollback()
-            flash(error_msg, 'error')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return api_error('Could not update the folder status', code='internal')
+            flash('Error updating folder status.', 'error')
     else:
         flash('Folder not found.', 'error')
 

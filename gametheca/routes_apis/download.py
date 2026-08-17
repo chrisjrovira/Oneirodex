@@ -4,6 +4,8 @@ import re
 from typing import Tuple
 
 from flask import current_app, jsonify, request
+
+from gametheca.utils.api_response import api_error, api_ok
 from flask_login import current_user, login_required
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
@@ -166,7 +168,7 @@ def api_cleanup_orphan_versions(game_uuid: str) -> Tuple[dict, int]:
             event_type='game',
             event_level='information',
         )
-        return jsonify(result), 200
+        return api_ok(result)
     except Exception as exc:
         db.session.rollback()
         log_system_event(
@@ -174,7 +176,7 @@ def api_cleanup_orphan_versions(game_uuid: str) -> Tuple[dict, int]:
             event_type='game',
             event_level='error',
         )
-        return jsonify({'ok': False, 'error': 'Failed to clean orphan versions'}), 500
+        return api_error('Failed to clean orphan versions', code='internal')
 
 
 @apis_bp.route('/downloads/games/<game_uuid>', methods=['POST'])
