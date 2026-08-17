@@ -63,6 +63,66 @@ def test_data_responses_are_not_violations(tmp_path, snippet):
     assert _count(tmp_path, f'def v():\n    return {snippet}\n') == 0
 
 
+def test_an_envelope_built_into_a_local_name_is_caught(tmp_path):
+    """`body = {...}` then `jsonify(body)` is the same response as writing the
+    dict inline, and used to count as zero."""
+    source = (
+        'def v():\n'
+        "    body = {'ok': False, 'error': 'nope'}\n"
+        '    return jsonify(body), 400\n'
+    )
+    assert _count(tmp_path, source) == 1
+
+
+def test_an_envelope_returned_by_a_helper_is_caught(tmp_path):
+    """The `patch_catalog` shape: a helper hand-rolls the envelope and the route
+    passes it straight to jsonify. Invisible to a dict-literal-only detector,
+    which is how that file was recorded as migrated while still doing this."""
+    source = (
+        'def build():\n'
+        "    return {'ok': True, 'extras': 1}\n"
+        '\n'
+        'def v():\n'
+        '    result = build()\n'
+        '    return jsonify(result), 201\n'
+    )
+    assert _count(tmp_path, source) == 1
+
+
+def test_a_helper_returning_plain_data_is_not_a_violation(tmp_path):
+    """Resolution must not turn every helper-backed response into noise."""
+    source = (
+        'def build():\n'
+        "    return {'items': [], 'total': 0}\n"
+        '\n'
+        'def v():\n'
+        '    return jsonify(build())\n'
+    )
+    assert _count(tmp_path, source) == 0
+
+
+def test_attribute_calls_are_deliberately_not_resolved(tmp_path):
+    """`obj.to_dict()` cannot be tied to one definition — the tree has many —
+    and its `status` is usually a real field (a scan's state), not an envelope.
+    Guessing here would produce false positives, and a lint that cries wolf gets
+    `--update`-ed away, which is the one outcome that breaks the ratchet."""
+    source = (
+        'def v(job):\n'
+        '    return jsonify(job.to_dict())\n'
+    )
+    assert _count(tmp_path, source) == 0
+
+
+def test_an_indirect_envelope_counts_once_not_twice(tmp_path):
+    """The direct and indirect passes must not both claim the same call site."""
+    source = (
+        'def v():\n'
+        "    body = {'ok': False, 'error': 'x', 'message': 'y'}\n"
+        '    return jsonify(body), 400\n'
+    )
+    assert _count(tmp_path, source) == 1
+
+
 def test_one_call_with_several_legacy_keys_counts_once():
     """Counting keys rather than call sites would make a single conversion look
     like several, and the baseline would drift against real progress."""
