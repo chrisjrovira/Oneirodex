@@ -119,6 +119,27 @@ def _legacy_keys_in_call(node: ast.Call) -> set[str]:
     return found
 
 
+def find_discarded_envelopes(tree: ast.Module) -> list[tuple[int, str]]:
+    """``api_ok(...)`` / ``api_error(...)`` whose return value is thrown away.
+
+    Never legitimate: both build a response and return it, so a call in
+    statement position means the handler computed a refusal and then carried on
+    with the input it was refusing. This is not baselined — it is always a bug.
+
+    Found the hard way. A migration regex consumed the `return` on eleven
+    guards in one file; exactly one of them had a test covering that path, so
+    the suite reported a single failure for eleven broken validators.
+    """
+    found: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Expr) or not isinstance(node.value, ast.Call):
+            continue
+        name = getattr(node.value.func, 'id', None) or getattr(node.value.func, 'attr', None)
+        if name in ('api_ok', 'api_error'):
+            found.append((node.lineno, name))
+    return found
+
+
 def _dict_legacy_keys(node: ast.AST) -> set[str]:
     """Top-level legacy keys in a dict *literal*."""
     if not isinstance(node, ast.Dict):
@@ -306,6 +327,19 @@ def main() -> int:
     details: dict[str, list[tuple[int, str]]] = {}
     counts = scan(details)
     total = sum(counts.values())
+
+    # Hard failure, never baselined: a built-then-discarded envelope means the
+    # handler refused the request and then went on to honour it anyway.
+    discarded: list[str] = []
+    for _, (rel, tree) in sorted(_load_modules().items()):
+        for line, name in find_discarded_envelopes(tree):
+            discarded.append(f'  {rel}:{line}  {name}(...) result is discarded')
+    if discarded:
+        print('api-envelope-lint: envelope built but not returned\n')
+        print('\n'.join(discarded))
+        print('\nBoth helpers build a response *and* return it. A call in statement\n'
+              'position means the guard is computed and then ignored.')
+        return 1
 
     if args.list:
         for file in sorted(details):

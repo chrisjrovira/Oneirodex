@@ -137,6 +137,33 @@ def test_one_call_with_several_legacy_keys_counts_once():
         assert lint.count_violations(target) == 1
 
 
+def test_a_discarded_envelope_is_caught(tmp_path):
+    """`api_error(...)` without a `return` means the handler built a refusal and
+    then honoured the request anyway. Never legitimate, so never baselined."""
+    import ast
+
+    source = (
+        'def v(data):\n'
+        '    if not data:\n'
+        "        api_error('data required', code='bad_request')\n"
+        '    return api_ok({})\n'
+    )
+    found = lint.find_discarded_envelopes(ast.parse(source))
+    assert [name for _, name in found] == ['api_error']
+
+
+def test_a_returned_envelope_is_not_flagged(tmp_path):
+    import ast
+
+    source = (
+        'def v(data):\n'
+        '    if not data:\n'
+        "        return api_error('data required', code='bad_request')\n"
+        '    return api_ok({})\n'
+    )
+    assert lint.find_discarded_envelopes(ast.parse(source)) == []
+
+
 def test_the_helper_itself_is_exempt():
     """It defines the envelope, including the compatibility keys that keep old
     callers working — flagging it would mean the fix trips its own rule."""

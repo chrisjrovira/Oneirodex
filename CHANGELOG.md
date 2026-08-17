@@ -297,6 +297,17 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **Scan management answers through the envelope** — `scan.py` **43 → 7**, baseline **521 → 485**.
+  Seven stay and are annotated where they sit: `status` there is the **scan-queue contract**, not the
+  legacy marker — `scanQueuePolicy.js` documents it as `'queued' | 'started' | 'rejected'` and
+  `admin_manage_scanjobs.js` branches on `status === 'rejected'`. The per-item `ok` inside each
+  `results` list is untouched for the same reason: it answers "did this folder succeed", not "did the
+  request succeed"
+- **The envelope lint now rejects a response that is built and thrown away.** `api_ok`/`api_error`
+  both build a response *and* return it, so a call in statement position means a handler computed a
+  refusal and then honoured the request anyway. Not baselined — it is never legitimate. Found the hard
+  way: a migration regex ate the `return` on eleven guards in one file, and exactly one of the eleven
+  had a test covering that path, so the suite reported a single failure for eleven broken validators
 - **Admin artwork answers through the envelope** — `routes_admin_ext/images.py` **37 → 0**, baseline
   **558 → 521**. Two handlers passed `str(e)` from a bare `except Exception` to the browser; those now
   log and answer with a sentence. The unwritable-`IMAGE_SAVE_PATH` refusals keep every field they

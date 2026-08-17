@@ -40,7 +40,7 @@
   "gametheca/routes_apis/related_media.py": 12,
   "gametheca/routes_apis/remote_play.py": 3,
   "gametheca/routes_apis/rtc.py": 5,
-  "gametheca/routes_apis/scan.py": 43,
+  "gametheca/routes_apis/scan.py": 7,
   "gametheca/routes_apis/scan_match.py": 2,
   "gametheca/routes_apis/social.py": 13,
   "gametheca/routes_apis/storage.py": 9,
