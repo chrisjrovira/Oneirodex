@@ -297,6 +297,14 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **Metadata providers answer through the envelope, and an upstream failure is now nameable** —
+  `providers.py` **29 → 0**, baseline **659 → 630**. Five search endpoints refused a missing `q` in
+  their own words and four spelled out the same "not configured" 503; both are one helper now, with
+  `provider` still riding along as an envelope extra because the admin UI uses it to link to that
+  integration's card. **`bad_gateway` (502) joins `ERROR_CODES`** — fifteen route sites across five
+  files already returned a bare 502 with nothing to branch on, and "the provider answered badly" is a
+  different operator action from "we broke" (`internal`) and from "the integration is switched off"
+  (`unavailable`)
 - **The admin user editor answers through the envelope** — `routes_admin_ext/users.py` **36 → 0**,
   baseline **695 → 659**. This file used the *other* legacy shape throughout — `{success, message}` at
   all 36 sites — which is exactly the case the envelope was designed to absorb without breaking

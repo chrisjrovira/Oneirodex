@@ -118,3 +118,12 @@ def test_error_codes_map_to_sane_statuses():
     assert ERROR_CODES['forbidden'] == 403
     assert ERROR_CODES['not_found'] == 404
     assert ERROR_CODES['internal'] == 500
+
+
+def test_upstream_failure_is_distinguishable_from_our_own():
+    """`bad_gateway` exists so an operator can tell "the provider answered
+    badly" from "we broke" and from "the integration is switched off" — three
+    different next actions. Fifteen route sites returned a bare 502 before."""
+    assert ERROR_CODES['bad_gateway'] == 502
+    assert ERROR_CODES['internal'] == 500
+    assert ERROR_CODES['unavailable'] == 503

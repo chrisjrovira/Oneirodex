@@ -1,5 +1,6 @@
 """Artwork provider API routes (search + apply cover — no game downloads)."""
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import login_required
 from sqlalchemy import select
@@ -20,6 +21,20 @@ from gametheca.utils.providers.giantbomb import pcgamingwiki_enrichment
 from . import apis_bp
 
 
+def _refuse_no_query():
+    """Five search endpoints answer a missing `q` this way."""
+    return api_error('Query parameter q is required', code='bad_request')
+
+
+def _refuse_not_configured(provider_id: str, message: str):
+    """503 for an integration that is switched off or missing credentials.
+
+    Four endpoints spelled this out. `provider` rides along as an envelope extra
+    because the admin UI uses it to link straight to that integration's card.
+    """
+    return api_error(message, code='unavailable', provider=provider_id)
+
+
 @apis_bp.route('/providers', methods=['GET'])
 @login_required
 @admin_required
@@ -35,7 +50,7 @@ def steamgriddb_search():
     """Search SteamGridDB artwork by game title (cover/logo/hero)."""
     query = (request.args.get('q') or request.args.get('query') or '').strip()
     if not query:
-        return jsonify({'error': 'Query parameter q is required'}), 400
+        return _refuse_no_query()
 
     try:
         limit = min(int(request.args.get('limit') or 20), 50)
@@ -47,21 +62,18 @@ def steamgriddb_search():
         default='cover',
     )
     if art_kind not in STEAMGRIDDB_SEARCH_KINDS:
-        return jsonify({'error': 'image_type must be cover, logo, or hero'}), 400
+        return api_error('image_type must be cover, logo, or hero', code='bad_request')
 
     provider = get_provider('steamgriddb')
     if not provider.is_enabled():
-        return jsonify({
-            'error': 'SteamGridDB is not configured. Set STEAMGRIDDB_API_KEY.',
-            'provider': provider.id,
-        }), 503
+        return _refuse_not_configured(provider.id, 'SteamGridDB is not configured. Set STEAMGRIDDB_API_KEY.')
 
     try:
         results = provider.search_artwork(query, limit=limit, art_kind=art_kind)
     except ProviderDisabledError as exc:
-        return jsonify({'error': exc.message, 'provider': exc.provider_id}), 503
+        return api_error(exc.message, code='unavailable', provider=exc.provider_id)
     except RuntimeError as exc:
-        return jsonify({'error': str(exc), 'provider': provider.id}), 502
+        return api_error(str(exc), code='bad_gateway', provider=provider.id)
 
     return jsonify({
         'provider': provider.id,
@@ -78,7 +90,7 @@ def igdb_cover_search():
     """Search IGDB covers by game title (existing IGDB credentials)."""
     query = (request.args.get('q') or request.args.get('query') or '').strip()
     if not query:
-        return jsonify({'error': 'Query parameter q is required'}), 400
+        return _refuse_no_query()
 
     try:
         limit = min(int(request.args.get('limit') or 20), 50)
@@ -87,17 +99,14 @@ def igdb_cover_search():
 
     provider = get_provider('igdb')
     if not provider.is_enabled():
-        return jsonify({
-            'error': 'IGDB is not configured. Set IGDB client ID/secret in Integrations.',
-            'provider': provider.id,
-        }), 503
+        return _refuse_not_configured(provider.id, 'IGDB is not configured. Set IGDB client ID/secret in Integrations.')
 
     try:
         results = provider.search_covers(query, limit=limit)
     except ProviderDisabledError as exc:
-        return jsonify({'error': exc.message, 'provider': exc.provider_id}), 503
+        return api_error(exc.message, code='unavailable', provider=exc.provider_id)
     except RuntimeError as exc:
-        return jsonify({'error': str(exc), 'provider': provider.id}), 502
+        return api_error(str(exc), code='bad_gateway', provider=provider.id)
 
     return jsonify({
         'provider': provider.id,
@@ -113,7 +122,7 @@ def steamgriddb_apply_artwork(game_uuid):
     """Download artwork URL and persist as a locked image kind (cover/box/…/fanart)."""
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found', 'game_uuid': game_uuid}), 404
+        return api_error('Game not found', code='not_found', game_uuid=game_uuid)
 
     data = request.get_json(silent=True) or {}
     image_url = (data.get('url') or '').strip()
@@ -124,12 +133,12 @@ def steamgriddb_apply_artwork(game_uuid):
             default='cover',
         )
     except ValueError:
-        return jsonify({'error': image_kinds_error_message()}), 400
+        return api_error(image_kinds_error_message(), code='bad_request')
     if provider_id not in ('steamgriddb', 'igdb'):
-        return jsonify({'error': 'provider must be steamgriddb or igdb'}), 400
+        return api_error('provider must be steamgriddb or igdb', code='bad_request')
     if provider_id == 'igdb' and image_type != 'cover':
         # IGDB apply URL path remains cover-only (screenshots use identify pipeline).
-        return jsonify({'error': 'IGDB only supports image_type=cover'}), 400
+        return api_error('IGDB only supports image_type=cover', code='bad_request')
 
     try:
         result = apply_cover_from_url(
@@ -139,16 +148,16 @@ def steamgriddb_apply_artwork(game_uuid):
             image_type=image_type,
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc), 'game_uuid': game_uuid}), 400
+        return api_error(str(exc), code='bad_request', game_uuid=game_uuid)
     except LookupError as exc:
-        return jsonify({'error': str(exc), 'game_uuid': game_uuid}), 404
+        return api_error(str(exc), code='not_found', game_uuid=game_uuid)
     except ProviderDisabledError as exc:
-        return jsonify({'error': exc.message, 'provider': exc.provider_id}), 503
+        return api_error(exc.message, code='unavailable', provider=exc.provider_id)
     except RuntimeError as exc:
-        return jsonify({'error': str(exc), 'game_uuid': game_uuid}), 503
+        return api_error(str(exc), code='unavailable', game_uuid=game_uuid)
     except Exception as exc:
         db.session.rollback()
-        return jsonify({'error': f'Failed to apply artwork: {exc}', 'game_uuid': game_uuid}), 502
+        return api_error(f'Failed to apply artwork: {exc}', code='bad_gateway', game_uuid=game_uuid)
 
     return jsonify(result), 200
 
@@ -160,7 +169,7 @@ def giantbomb_search():
     """Search GiantBomb covers by game title."""
     query = (request.args.get('q') or request.args.get('query') or '').strip()
     if not query:
-        return jsonify({'error': 'Query parameter q is required'}), 400
+        return _refuse_no_query()
     try:
         limit = min(int(request.args.get('limit') or 20), 50)
     except (TypeError, ValueError):
@@ -168,16 +177,13 @@ def giantbomb_search():
 
     provider = get_provider('giantbomb')
     if not provider.is_enabled():
-        return jsonify({
-            'error': 'GiantBomb is not configured. Set GIANTBOMB_API_KEY.',
-            'provider': provider.id,
-        }), 503
+        return _refuse_not_configured(provider.id, 'GiantBomb is not configured. Set GIANTBOMB_API_KEY.')
     try:
         results = provider.search_covers(query, limit=limit)
     except ProviderDisabledError as exc:
-        return jsonify({'error': exc.message, 'provider': exc.provider_id}), 503
+        return api_error(exc.message, code='unavailable', provider=exc.provider_id)
     except RuntimeError as exc:
-        return jsonify({'error': str(exc), 'provider': provider.id}), 502
+        return api_error(str(exc), code='bad_gateway', provider=provider.id)
 
     return jsonify({
         'provider': provider.id,
@@ -192,11 +198,11 @@ def pcgamingwiki_search():
     """Find PCGamingWiki pages for a game title (links only)."""
     query = (request.args.get('q') or request.args.get('query') or '').strip()
     if not query:
-        return jsonify({'error': 'Query parameter q is required'}), 400
+        return _refuse_no_query()
     try:
         return jsonify(pcgamingwiki_enrichment(query))
     except RuntimeError as exc:
-        return jsonify({'error': str(exc), 'provider': 'pcgamingwiki'}), 502
+        return api_error(str(exc), code='bad_gateway', provider='pcgamingwiki')
 
 
 @apis_bp.route('/providers/meta_quest/search', methods=['GET'])
@@ -206,7 +212,7 @@ def meta_quest_cover_search():
     """Search Meta/Quest covers via IGDB platform filter (artwork only)."""
     query = (request.args.get('q') or request.args.get('query') or '').strip()
     if not query:
-        return jsonify({'error': 'Query parameter q is required'}), 400
+        return _refuse_no_query()
     try:
         limit = min(int(request.args.get('limit') or 20), 50)
     except (TypeError, ValueError):
@@ -214,17 +220,18 @@ def meta_quest_cover_search():
 
     provider = get_provider('meta_quest')
     if not provider.is_enabled():
-        return jsonify({
-            'error': 'Meta/Quest search requires IGDB credentials.',
-            'provider': provider.id,
-            'hint': provider.config_hint(),
-        }), 503
+        return api_error(
+            'Meta/Quest search requires IGDB credentials.',
+            code='unavailable',
+            provider=provider.id,
+            hint=provider.config_hint(),
+        )
     try:
         results = provider.search_covers(query, limit=limit)
     except ProviderDisabledError as exc:
-        return jsonify({'error': exc.message, 'provider': exc.provider_id}), 503
+        return api_error(exc.message, code='unavailable', provider=exc.provider_id)
     except RuntimeError as exc:
-        return jsonify({'error': str(exc), 'provider': provider.id}), 502
+        return api_error(str(exc), code='bad_gateway', provider=provider.id)
 
     return jsonify({
         'provider': provider.id,
@@ -249,8 +256,7 @@ def theme_fonts_list():
     )
 
     catalogue = available_fonts()
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'fonts': [
             {'id': key, **{k: v for k, v in entry.items() if k != 'file'}}
             for key, entry in sorted(catalogue.items())

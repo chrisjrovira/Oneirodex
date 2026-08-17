@@ -63,6 +63,12 @@ ERROR_CODES = {
     'unprocessable': 422,
     'rate_limited': 429,
     'internal': 500,
+    # An upstream the server depends on answered badly — IGDB, SteamGridDB,
+    # GiantBomb, an *arr instance. Distinct from `internal` (our bug) and from
+    # `unavailable` (the integration is switched off), which is a difference the
+    # operator acts on: retry, versus go and configure something. Fifteen route
+    # sites already returned a bare 502 with no code to branch on.
+    'bad_gateway': 502,
     'unavailable': 503,
 }
 

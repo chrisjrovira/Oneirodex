@@ -38,7 +38,6 @@
   "gametheca/routes_apis/oidc_status.py": 1,
   "gametheca/routes_apis/ownership.py": 15,
   "gametheca/routes_apis/playtime.py": 7,
-  "gametheca/routes_apis/providers.py": 29,
   "gametheca/routes_apis/quality_stats.py": 12,
   "gametheca/routes_apis/reference_sets.py": 12,
   "gametheca/routes_apis/related_media.py": 12,
