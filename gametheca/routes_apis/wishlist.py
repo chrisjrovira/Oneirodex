@@ -18,6 +18,10 @@ from . import apis_bp
 
 VALID_RESOLVE_STATUSES = frozenset({'approved', 'rejected', 'fulfilled', 'pending'})
 
+# Matches `GameRequest.title` (String(255)). The duplicate lookup and the insert
+# must agree on it — see `create_request`.
+_TITLE_MAX = 255
+
 
 @apis_bp.route('/requests', methods=['GET'])
 @login_required
@@ -45,7 +49,10 @@ def create_request():
             code='forbidden',
         )
     data = request.get_json(silent=True) or {}
-    title = (data.get('title') or '').strip()
+    # Truncate before the duplicate lookup, not at insert time: the row stores
+    # `title[:255]`, so searching on the full string never matched a stored long
+    # title and every resubmit opened another pending row.
+    title = (data.get('title') or '').strip()[:_TITLE_MAX]
     if not title:
         return api_error('A title is required', code='bad_request')
     existing = db.session.execute(
@@ -55,7 +62,7 @@ def create_request():
         return jsonify(existing.to_dict())
     row = GameRequest(
         user_id=current_user.id,
-        title=title[:255],
+        title=title,
         notes=(data.get('notes') or '')[:4000] or None,
         status='pending',
     )
@@ -111,8 +118,15 @@ def resolve_request(request_id: int):
             status = 'fulfilled'
 
     row.status = status
-    row.resolved_at = datetime.now(timezone.utc)
-    row.resolved_by_user_id = current_user.id
+    if status == 'pending':
+        # Reopening. `pending` is a valid target, so the resolution stamps have
+        # to come off with the status — otherwise the row reads as both pending
+        # and resolved, and anything keyed on `resolved_at` counts it as closed.
+        row.resolved_at = None
+        row.resolved_by_user_id = None
+    else:
+        row.resolved_at = datetime.now(timezone.utc)
+        row.resolved_by_user_id = current_user.id
     if data.get('notes') is not None:
         # Librarian resolution note appended into notes field (lightweight)
         note = (data.get('notes') or '').strip()

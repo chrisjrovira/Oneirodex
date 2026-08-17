@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { csrfHeaders } from './adminApi'
 import { DataTable } from './DataTable'
 import { DupeGlance } from './DupeGlance'
 import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_GROUPS } from './navConfig'
@@ -657,22 +658,21 @@ export function ThemesPage() {
     setBusy(true)
     setMessage('')
     try {
-      const csrf = document.querySelector('meta[name="csrf-token"]')?.content || ''
       const response = await fetch('/admin/themes/reset', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrf,
-        },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: '{}',
       })
       // Reset Themes is the action operators are told to run after every theme
       // CSS change, and it gave no feedback outside a small inline line.
       const ok = response.ok
-      setMessage(ok ? 'Default themes reset. Hard-refresh the browser.' : 'Reset failed.')
+      // No hard-refresh step: `theme_asset` versions each URL by mtime+size and
+      // a reset clears the memo, so replaced bytes come back on a normal reload.
+      // See docs/admin/themes-reset.md.
+      setMessage(ok ? 'Default themes reset. Reload to see them.' : 'Reset failed.')
       showToast(
-        ok ? 'Default themes reset — hard-refresh to pick them up.' : 'Theme reset failed.',
+        ok ? 'Default themes reset — reload to pick them up.' : 'Theme reset failed.',
         ok ? 'success' : 'error',
       )
     } catch {

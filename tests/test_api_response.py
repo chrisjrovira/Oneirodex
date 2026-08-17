@@ -97,6 +97,10 @@ def test_api_ok_merges_payload_at_top_level(app):
     assert body['games'] == 12
     assert body['libraries'] == 3
     assert body['success'] is True
+    # `error` and `error_code` are on *every* response, not just failures, so a
+    # client reading them does not get `undefined` on the way through.
+    assert body['error'] is None
+    assert body['error_code'] is None
 
 
 def test_api_ok_payload_cannot_override_envelope(app):
@@ -104,8 +108,10 @@ def test_api_ok_payload_cannot_override_envelope(app):
         body, _ = _body(app, api_ok({'ok': False, 'error': 'sneaky', 'error_code': 'x'}))
 
     assert body['ok'] is True
-    assert 'error' not in body
-    assert 'error_code' not in body
+    # Neutralised rather than absent: the caller's values are still discarded,
+    # which is what this pins, but the keys stay present per the contract above.
+    assert body['error'] is None
+    assert body['error_code'] is None
 
 
 def test_error_codes_map_to_sane_statuses():
