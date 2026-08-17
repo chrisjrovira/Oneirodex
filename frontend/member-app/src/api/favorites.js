@@ -1,3 +1,5 @@
+import { errorFromResponse } from './envelopeError'
+
 export async function fetchFavoriteGames(params = {}, { signal } = {}) {
   const qs = new URLSearchParams(
     Object.entries(params).filter(
@@ -11,7 +13,7 @@ export async function fetchFavoriteGames(params = {}, { signal } = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`favorites ${response.status}`)
+    throw await errorFromResponse(response, 'favorites')
   }
 
   return response.json()

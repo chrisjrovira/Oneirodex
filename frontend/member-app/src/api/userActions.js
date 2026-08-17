@@ -1,27 +1,5 @@
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-
-  return document.getElementById('csrf_token')?.textContent || null
-}
-
-function csrfHeaders(additionalHeaders = {}) {
-  if (window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(additionalHeaders)
-  }
-
-  return {
-    'X-CSRFToken': getCsrfToken(),
-    ...additionalHeaders,
-  }
-}
+import { csrfHeaders } from './csrf'
+import { errorFromResponse } from './envelopeError'
 
 async function postJson(url, body) {
   const response = await fetch(url, {
@@ -31,7 +9,7 @@ async function postJson(url, body) {
   })
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.statusText || response.status}`)
+    throw await errorFromResponse(response, 'Request failed:')
   }
 
   return response.json()

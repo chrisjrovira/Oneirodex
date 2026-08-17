@@ -1,15 +1,4 @@
-async function readError(response, label) {
-  let message = ''
-  try {
-    const data = await response.json()
-    if (typeof data?.error === 'string') {
-      message = data.error
-    }
-  } catch {
-    message = ''
-  }
-  return new Error(message || `${label} ${response.status}`)
-}
+import { errorFromResponse } from './envelopeError'
 
 export async function fetchVrCatalog({ signal, page = 1, perPage = 48 } = {}) {
   const params = new URLSearchParams({
@@ -22,7 +11,7 @@ export async function fetchVrCatalog({ signal, page = 1, perPage = 48 } = {}) {
   })
 
   if (!response.ok) {
-    throw await readError(response, 'vr/catalog')
+    throw await errorFromResponse(response, 'vr/catalog')
   }
 
   return response.json()
@@ -35,7 +24,7 @@ export async function fetchVrGame(gameUuid, { signal } = {}) {
   })
 
   if (!response.ok) {
-    throw await readError(response, 'vr/games')
+    throw await errorFromResponse(response, 'vr/games')
   }
 
   return response.json()

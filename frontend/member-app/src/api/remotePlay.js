@@ -3,13 +3,15 @@
  * @param {{ signal?: AbortSignal }} [options]
  * @returns {Promise<object>}
  */
+import { errorFromResponse } from './envelopeError'
+
 export async function fetchRemotePlayStatus(options = {}) {
   const response = await fetch('/api/remote-play/status', {
     credentials: 'same-origin',
     signal: options.signal,
   })
   if (!response.ok) {
-    throw new Error(`Remote play status failed (${response.status})`)
+    throw await errorFromResponse(response, 'Remote play status failed')
   }
   return response.json()
 }

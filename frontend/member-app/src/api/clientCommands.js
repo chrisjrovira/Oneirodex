@@ -1,28 +1,5 @@
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-
-  return document.getElementById('csrf_token')?.textContent || ''
-}
-
-function csrfHeaders(additionalHeaders = {}) {
-  if (window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(additionalHeaders)
-  }
-
-  return {
-    'X-CSRFToken': getCsrfToken(),
-    ...additionalHeaders,
-  }
-}
-
+import { csrfHeaders } from './csrf'
+import { errorFromResponse } from './envelopeError'
 /**
  * Queue Install / Update / Uninstall / Apply patch / Open path for the desktop companion.
  * @param {string} gameUuid
@@ -50,12 +27,8 @@ export async function queueClientCommand(gameUuid, action, options = {}) {
     body: JSON.stringify(body),
   })
 
-  const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const error = new Error(data?.error || `client/commands ${response.status}`)
-    error.status = response.status
-    error.data = data
-    throw error
+    throw await errorFromResponse(response, 'client/commands')
   }
-  return data
+  return response.json().catch(() => ({}))
 }

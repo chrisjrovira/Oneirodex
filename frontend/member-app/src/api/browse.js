@@ -1,3 +1,5 @@
+import { errorFromResponse } from './envelopeError'
+
 export async function fetchBrowseGames(params, { signal } = {}) {
   const qs = new URLSearchParams(
     Object.entries(params).filter(([, value]) =>
@@ -9,7 +11,7 @@ export async function fetchBrowseGames(params, { signal } = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`browse_games ${response.status}`)
+    throw await errorFromResponse(response, 'browse_games')
   }
 
   return response.json()
