@@ -297,6 +297,11 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **Admin discovery sections and zones answer through the envelope** — `routes_admin_ext/system.py`
+  **40 → 0**, baseline **630 → 590**. Another single-family file: all 40 sites used `{success, error}`,
+  which `api_error` still mirrors, so the admin SPA is unaffected. The seven `Internal server error`
+  handlers were already doing the right thing — logging the exception and returning a generic sentence —
+  so they only changed shape
 - **Metadata providers answer through the envelope, and an upstream failure is now nameable** —
   `providers.py` **29 → 0**, baseline **659 → 630**. Five search endpoints refused a missing `q` in
   their own words and four spelled out the same "not configured" 503; both are one helper now, with

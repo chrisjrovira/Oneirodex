@@ -7,7 +7,6 @@
   "gametheca/routes_admin_ext/images.py": 37,
   "gametheca/routes_admin_ext/libraries.py": 3,
   "gametheca/routes_admin_ext/settings.py": 16,
-  "gametheca/routes_admin_ext/system.py": 40,
   "gametheca/routes_admin_ext/whitelist.py": 3,
   "gametheca/routes_apis/acquire.py": 19,
   "gametheca/routes_apis/admin_search.py": 1,
