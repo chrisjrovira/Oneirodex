@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import io
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, render_template, request, send_file
 from flask_login import login_required
 from sqlalchemy import select
@@ -51,7 +52,7 @@ def art_studio_preview():
     data = _json_body()
     title = (data.get('title') or '').strip()
     if not title:
-        return jsonify({'error': 'title is required'}), 400
+        return api_error('title is required', code='bad_request')
     system = (data.get('system') or '').strip() or None
     width = int(data.get('width') or 400)
     height = int(data.get('height') or 600)
@@ -107,7 +108,7 @@ def art_studio_generate():
     data = _json_body()
     title = (data.get('title') or '').strip()
     if not title:
-        return jsonify({'error': 'title is required'}), 400
+        return api_error('title is required', code='bad_request')
     system = (data.get('system') or '').strip() or None
     fmt = (data.get('format') or 'webp').lower()
     if fmt not in ('webp', 'png'):
@@ -131,11 +132,11 @@ def art_studio_generate():
         log_system_event(f"Art studio generated pack {manifest['pack_id']} for {title!r}")
         return jsonify({**manifest, 'preview_url': preview}), 201
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except PermissionError as exc:
-        return jsonify({'error': f'Permission denied writing generated art pack: {exc}'}), 500
+        return api_error(f'Permission denied writing generated art pack: {exc}', code='internal')
     except OSError as exc:
-        return jsonify({'error': f'Failed to write generated art pack to disk: {exc}'}), 500
+        return api_error(f'Failed to write generated art pack to disk: {exc}', code='internal')
 
 
 @admin2_bp.route('/admin/api/art-studio/download/<pack_id>', methods=['GET'])
@@ -146,13 +147,13 @@ def art_studio_download(pack_id: str):
         safe_pack_dir(pack_id)
         payload = build_zip_bytes(pack_id)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except FileNotFoundError:
-        return jsonify({'error': 'Pack not found'}), 404
+        return api_error('Pack not found', code='not_found')
     except PermissionError as exc:
-        return jsonify({'error': f'Permission denied reading art pack: {exc}'}), 500
+        return api_error(f'Permission denied reading art pack: {exc}', code='internal')
     except OSError as exc:
-        return jsonify({'error': f'Failed to read art pack from disk: {exc}'}), 500
+        return api_error(f'Failed to read art pack from disk: {exc}', code='internal')
     return send_file(
         io.BytesIO(payload),
         mimetype='application/zip',
@@ -170,7 +171,7 @@ def art_studio_stock_catalog():
         items = list_stock_catalog()
         return jsonify({'items': items, 'count': len(items)})
     except Exception as exc:  # noqa: BLE001
-        return jsonify({'error': f'Failed to list stock catalog: {exc}'}), 500
+        return api_error(f'Failed to list stock catalog: {exc}', code='internal')
 
 
 @admin2_bp.route('/admin/api/art-studio/stock/generate', methods=['POST'])
@@ -194,11 +195,11 @@ def art_studio_stock_generate():
         log_system_event(f"Art studio stock generate count={result['count']}")
         return jsonify(result), 201
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except PermissionError as exc:
-        return jsonify({'error': f'Permission denied writing stock packs: {exc}'}), 500
+        return api_error(f'Permission denied writing stock packs: {exc}', code='internal')
     except OSError as exc:
-        return jsonify({'error': f'Failed to write stock packs: {exc}'}), 500
+        return api_error(f'Failed to write stock packs: {exc}', code='internal')
 
 
 @admin2_bp.route('/admin/api/art-studio/apply', methods=['POST'])
@@ -208,7 +209,7 @@ def art_studio_apply():
     data = _json_body()
     pack_id = (data.get('pack_id') or data.get('id') or '').strip()
     if not pack_id:
-        return jsonify({'error': 'pack_id is required'}), 400
+        return api_error('pack_id is required', code='bad_request')
     mode = (data.get('mode') or 'game').strip().lower()
     try:
         if mode == 'fallback':
@@ -218,27 +219,27 @@ def art_studio_apply():
         if mode == 'library':
             library_uuid = (data.get('library_uuid') or '').strip()
             if not library_uuid:
-                return jsonify({'error': 'library_uuid is required for library mode'}), 400
+                return api_error('library_uuid is required for library mode', code='bad_request')
             result = apply_pack_to_library(pack_id, library_uuid)
             log_system_event(f"Art studio applied pack {pack_id} to library {library_uuid}")
             return jsonify({'mode': 'library', **result})
         game_uuid = (data.get('game_uuid') or '').strip()
         if not game_uuid:
-            return jsonify({'error': 'game_uuid is required for game mode'}), 400
+            return api_error('game_uuid is required for game mode', code='bad_request')
         filename = (data.get('filename') or '').strip() or None
         result = apply_pack_to_game(pack_id, game_uuid, filename=filename)
         log_system_event(f"Art studio applied pack {pack_id} to game {game_uuid}")
         return jsonify({'mode': 'game', **result})
     except LookupError as exc:
-        return jsonify({'error': str(exc)}), 404
+        return api_error(str(exc), code='not_found')
     except (ValueError, FileNotFoundError) as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except PermissionError as exc:
-        return jsonify({'error': f'Permission denied writing cover art: {exc}'}), 500
+        return api_error(f'Permission denied writing cover art: {exc}', code='internal')
     except OSError as exc:
-        return jsonify({'error': f'Failed to write cover art to disk: {exc}'}), 500
+        return api_error(f'Failed to write cover art to disk: {exc}', code='internal')
     except Exception as exc:  # noqa: BLE001 - surface DB/commit failures as JSON, not an HTML 500 page
-        return jsonify({'error': f'Unexpected error applying pack: {exc}'}), 500
+        return api_error(f'Unexpected error applying pack: {exc}', code='internal')
 
 
 @admin2_bp.route('/admin/api/art-studio/batch-generate', methods=['POST'])

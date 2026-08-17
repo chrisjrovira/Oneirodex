@@ -2,6 +2,7 @@
 import os
 import re
 from pathlib import Path
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request, current_app, abort
 from flask_login import login_required
 from gametheca import db
@@ -67,7 +68,7 @@ def validate_json_input(required_fields=None):
 def manage_file_types(type_category):
     # Validate type category
     if type_category not in ['allowed', 'ignored']:
-        return jsonify({'error': 'Invalid type category'}), 400
+        return api_error('Invalid type category', code='bad_request')
 
     ModelClass = AllowedFileType if type_category == 'allowed' else IgnoredFileType
 
@@ -79,12 +80,12 @@ def manage_file_types(type_category):
         elif request.method == 'POST':
             data, error = validate_json_input(['value'])
             if error:
-                return jsonify({'error': error}), 400
+                return api_error(error, code='bad_request')
             
             # Validate and sanitize the file type value
             sanitized_value = validate_file_type_value(data['value'])
             if not sanitized_value:
-                return jsonify({'error': 'Invalid file type format'}), 400
+                return api_error('Invalid file type format', code='bad_request')
             
             new_type = ModelClass(value=sanitized_value)
             try:
@@ -93,27 +94,27 @@ def manage_file_types(type_category):
                 return jsonify({'id': new_type.id, 'value': new_type.value}), 201
             except IntegrityError:
                 db.session.rollback()
-                return jsonify({'error': 'File type already exists'}), 409
+                return api_error('File type already exists', code='conflict')
 
         elif request.method == 'PUT':
             data, error = validate_json_input(['id', 'value'])
             if error:
-                return jsonify({'error': error}), 400
+                return api_error(error, code='bad_request')
             
             # Validate ID is numeric
             try:
                 file_type_id = int(data['id'])
             except (ValueError, TypeError):
-                return jsonify({'error': 'Invalid ID format'}), 400
+                return api_error('Invalid ID format', code='bad_request')
             
             # Validate and sanitize the file type value
             sanitized_value = validate_file_type_value(data['value'])
             if not sanitized_value:
-                return jsonify({'error': 'Invalid file type format'}), 400
+                return api_error('Invalid file type format', code='bad_request')
             
             file_type = db.session.get(ModelClass, file_type_id)
             if not file_type:
-                return jsonify({'error': 'File type not found'}), 404
+                return api_error('File type not found', code='not_found')
                 
             file_type.value = sanitized_value
             try:
@@ -121,31 +122,31 @@ def manage_file_types(type_category):
                 return jsonify({'id': file_type.id, 'value': file_type.value})
             except IntegrityError:
                 db.session.rollback()
-                return jsonify({'error': 'File type already exists'}), 409
+                return api_error('File type already exists', code='conflict')
 
         elif request.method == 'DELETE':
             data, error = validate_json_input(['id'])
             if error:
-                return jsonify({'error': error}), 400
+                return api_error(error, code='bad_request')
             
             # Validate ID is numeric
             try:
                 file_type_id = int(data['id'])
             except (ValueError, TypeError):
-                return jsonify({'error': 'Invalid ID format'}), 400
+                return api_error('Invalid ID format', code='bad_request')
             
             file_type = db.session.get(ModelClass, file_type_id)
             if not file_type:
-                return jsonify({'error': 'File type not found'}), 404
+                return api_error('File type not found', code='not_found')
                 
             db.session.delete(file_type)
             db.session.commit()
-            return jsonify({'success': True})
+            return api_ok()
             
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error managing file types: {e}")
-        return jsonify({'error': 'An error occurred while processing your request'}), 500
+        return api_error('An error occurred while processing your request', code='internal')
     
 @apis_bp.route('/check_path_availability', methods=['GET'])
 @login_required
@@ -154,18 +155,18 @@ def check_path_availability():
     full_disk_path = request.args.get('full_disk_path', '').strip()
     
     if not full_disk_path:
-        return jsonify({'available': False, 'error': 'Path parameter required'}), 400
+        return api_error('Path parameter required', code='bad_request', available=False)
     
     # Get allowed base directories from config
     allowed_bases = get_allowed_base_directories(current_app)
     if not allowed_bases:
         current_app.logger.error("No allowed base directories configured")
-        return jsonify({'available': False, 'error': 'Service configuration error'}), 500
+        return api_error('Service configuration error', code='internal', available=False)
     
     # Use secure path validation
     is_safe, error_message = is_safe_path(full_disk_path, allowed_bases)
     if not is_safe:
-        return jsonify({'available': False, 'error': error_message}), 403
+        return api_error(error_message, code='forbidden', available=False)
     
     try:
         # Only check existence if path is validated as safe
@@ -177,7 +178,7 @@ def check_path_availability():
         
     except (OSError, ValueError) as e:
         current_app.logger.warning(f"Path existence check failed for validated path: {e}")
-        return jsonify({'available': False, 'error': 'Unable to check path'}), 500
+        return api_error('Unable to check path', code='internal', available=False)
 
 @apis_bp.route('/emulators', methods=['GET'])
 @apis_bp.route('/emulators/<platform>', methods=['GET'])
@@ -193,13 +194,13 @@ def get_emulators(platform=None):
         if platform:
             # Validate platform parameter to prevent enumeration attacks
             if not isinstance(platform, str) or len(platform) > 50:
-                return jsonify({'error': 'Invalid platform parameter'}), 400
+                return api_error('Invalid platform parameter', code='bad_request')
             
             try:
                 return jsonify(resolve_emulators_for_platform(platform))
             except KeyError:
                 # Don't reveal valid platform names in error message
-                return jsonify({'error': 'Platform not supported'}), 404
+                return api_error('Platform not supported', code='not_found')
         else:
             emulators = [e.value for e in Emulator]
             return jsonify({
@@ -209,7 +210,7 @@ def get_emulators(platform=None):
         
     except Exception as e:
         current_app.logger.error(f"Error retrieving emulators: {e}")
-        return jsonify({'error': 'Unable to retrieve emulators'}), 500
+        return api_error('Unable to retrieve emulators', code='internal')
 
 
 @apis_bp.route('/emulator-profiles', methods=['GET'])
@@ -241,11 +242,11 @@ def emulator_profiles_save():
         # Allow flat map body
         profiles = {k: v for k, v in data.items() if k != 'profiles'}
     if not isinstance(profiles, dict):
-        return jsonify({'error': 'profiles object required'}), 400
+        return api_error('profiles object required', code='bad_request')
     try:
         saved = set_emulator_profiles(profiles)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     catalog = {
         p.name: [e.value for e in platform_emulator_mapping.get(p, [])]
         for p in LibraryPlatform

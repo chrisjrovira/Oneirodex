@@ -297,6 +297,14 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **Three more surfaces answer through the envelope** — system settings **23 → 0**, cover art studio
+  **21 → 0**, downloads **20 → 2**; baseline **460 → 398**. Downloads had the same three-guard opening
+  (malformed uuid, missing game, no access) in three handlers, now one `_downloadable_game()`. Its two
+  remaining sites are annotated: the download request's own `status` is data, and the missing-file
+  refusal carries `code: 'path_missing'`, which `api/downloads.js` reads and which **`api_error` cannot
+  carry — `code` is its own parameter for the error_code**. That is the second key, after `status`, the
+  helper's signature blocks. Deleting a download request now answers with `error` as well as `message`,
+  so the member finally sees "Download request not found" rather than a status code
 - **The legacy `routes.py` answers through the envelope where it safely can** — **38 → 13**, baseline
   **485 → 460**. Four more handlers were passing `str(e)` to the browser; those log and answer with a
   sentence, including the three that stay on `jsonify`, because fixing a leak never required migrating
