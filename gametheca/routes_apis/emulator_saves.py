@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from io import BytesIO
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request, send_file
 from flask_login import current_user, login_required
 from sqlalchemy import select
@@ -27,9 +28,9 @@ from . import apis_bp
 def list_game_saves(game_uuid):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
 
     return jsonify({
         'enabled': save_sync_enabled(),
@@ -42,17 +43,17 @@ def list_game_saves(game_uuid):
 @login_required
 def upload_game_save(game_uuid):
     if not save_sync_enabled():
-        return jsonify({'error': 'Emulator save sync is disabled'}), 403
+        return api_error('Emulator save sync is disabled', code='forbidden')
 
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
 
     upload = request.files.get('file') or request.files.get('save')
     if not upload:
-        return jsonify({'error': 'multipart file field "file" is required'}), 400
+        return api_error('multipart file field "file" is required', code='bad_request')
     slot = (request.form.get('slot') or request.args.get('slot') or 'slot1').strip()
 
     try:
@@ -63,9 +64,9 @@ def upload_game_save(game_uuid):
             file_storage=upload,
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except RuntimeError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
 
     return jsonify(row.to_dict()), 201
 
@@ -75,20 +76,20 @@ def upload_game_save(game_uuid):
 def download_game_save(game_uuid, slot_name):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
 
     rows = list_saves(current_user.id, game_uuid)
     row = next((item for item in rows if item.slot_name == slot_name), None)
     if not row:
-        return jsonify({'error': 'Save not found'}), 404
+        return api_error('Save not found', code='not_found')
     try:
         payload = read_save_bytes(row)
     except FileNotFoundError:
-        return jsonify({'error': 'Save not found'}), 404
+        return api_error('Save not found', code='not_found')
     except Exception as exc:
-        return jsonify({'error': f'Failed to read save: {exc}'}), 500
+        return api_error(f'Failed to read save: {exc}', code='internal')
 
     return send_file(
         BytesIO(payload),
@@ -103,9 +104,9 @@ def download_game_save(game_uuid, slot_name):
 def delete_game_save(game_uuid, slot_name):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     if not delete_save(current_user.id, game_uuid, slot_name):
-        return jsonify({'error': 'Save not found'}), 404
-    return jsonify({'status': 'deleted', 'slot_name': slot_name})
+        return api_error('Save not found', code='not_found')
+    return api_ok({'status': 'deleted', 'slot_name': slot_name})

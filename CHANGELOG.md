@@ -297,6 +297,10 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **Acquire, companion client and emulator saves answer through the envelope** — **19 / 19 / 17 → 0**,
+  baseline **398 → 343**. All three were single-shape files, so the conversion was mechanical; the two
+  keys that needed a decision both stay as payload data — the acquire readiness `message`, and the
+  delete-save `status: 'deleted'`, which is an outcome rather than an envelope marker
 - **Three more surfaces answer through the envelope** — system settings **23 → 0**, cover art studio
   **21 → 0**, downloads **20 → 2**; baseline **460 → 398**. Downloads had the same three-guard opening
   (malformed uuid, missing game, no access) in three handlers, now one `_downloadable_game()`. Its two

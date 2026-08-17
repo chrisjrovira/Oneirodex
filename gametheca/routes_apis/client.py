@@ -2,6 +2,7 @@
 
 import uuid
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import g, jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import select
@@ -90,22 +91,21 @@ def client_lifecycle_get():
 def client_lifecycle_post():
     # Sec-B: Bearer-only — CSRF-exempt endpoint must not accept session cookie alone.
     if not _has_companion_token():
-        return jsonify({'error': 'Companion API token required'}), 403
+        return api_error('Companion API token required', code='forbidden')
     # Companion tokens typically carry write:download; library write also accepted.
     if not (
         user_has_scope('write:download')
         or user_has_scope('write:library')
     ):
-        return jsonify({'error': 'Missing scope: write:download or write:library'}), 403
+        return api_error('Missing scope: write:download or write:library', code='forbidden')
     data = request.get_json(silent=True) or {}
     records = data.get('records')
     if not isinstance(records, list):
-        return jsonify({'error': 'records must be a list'}), 400
+        return api_error('records must be a list', code='bad_request')
     replace = bool(data.get('replace'))
     mapping = save_lifecycle_records(current_user.id, records, replace=replace)
-    return jsonify({
-        'ok': True,
-        'count': len(mapping),
+    return api_ok({
+                'count': len(mapping),
         'records': [{'game_uuid': uuid, 'state': state} for uuid, state in mapping.items()],
     })
 
@@ -127,9 +127,9 @@ def client_commands_post():
         if game_uuid:
             game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
             if not game:
-                return jsonify({'error': 'Game not found'}), 404
+                return api_error('Game not found', code='not_found')
             if not user_can_access_game(current_user, game):
-                return jsonify({'error': 'Forbidden'}), 403
+                return api_error('Forbidden', code='forbidden')
         try:
             command = enqueue_client_command(
                 current_user.id,
@@ -139,14 +139,14 @@ def client_commands_post():
                 select=None if select is None else bool(select),
             )
         except ValueError as exc:
-            return jsonify({'error': str(exc)}), 400
-        return jsonify({'ok': True, 'command': command}), 201
+            return api_error(str(exc), code='bad_request')
+        return api_ok({'command': command}, status=201)
 
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
 
     if kind in ('update', 'extra') and version_uuid:
         Model = GameUpdate if kind == 'update' else GameExtra
@@ -154,10 +154,10 @@ def client_commands_post():
             select(Model).filter_by(game_uuid=game.uuid, uuid=version_uuid)
         ).scalars().first()
         if not pack:
-            return jsonify({'error': 'Version not found for game'}), 404
+            return api_error('Version not found for game', code='not_found')
         if action == 'apply_patch':
             if getattr(pack, 'extra_kind', None) != 'translation_patch':
-                return jsonify({'error': 'Version is not a translation patch'}), 400
+                return api_error('Version is not a translation patch', code='bad_request')
 
     try:
         command = enqueue_client_command(
@@ -168,8 +168,8 @@ def client_commands_post():
             version_uuid=version_uuid,
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'ok': True, 'command': command}), 201
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'command': command}, status=201)
 
 
 @apis_bp.route('/client/commands', methods=['GET'])
@@ -178,7 +178,7 @@ def client_commands_post():
 def client_commands_get():
     """Explicit poll for pending commands (companion may also use heartbeat)."""
     if not _has_companion_token():
-        return jsonify({'error': 'Companion API token required'}), 403
+        return api_error('Companion API token required', code='forbidden')
     device_kind = normalize_device_kind(request.args.get('device_kind'))
     if not should_deliver_install_commands(device_kind, api_token=_api_token()):
         return jsonify({'commands': []})
@@ -191,19 +191,19 @@ def client_commands_get():
 @login_required
 def client_commands_ack():
     if not _has_companion_token():
-        return jsonify({'error': 'Companion API token required'}), 403
+        return api_error('Companion API token required', code='forbidden')
     data = request.get_json(silent=True) or {}
     ids = data.get('ids') if isinstance(data.get('ids'), list) else []
     removed = ack_client_commands(current_user.id, [str(i) for i in ids])
-    return jsonify({'ok': True, 'removed': removed})
+    return api_ok({'removed': removed})
 
 
 @apis_bp.route('/client/commands/nack', methods=['POST'])
 @login_required
 def client_commands_nack():
     if not _has_companion_token():
-        return jsonify({'error': 'Companion API token required'}), 403
+        return api_error('Companion API token required', code='forbidden')
     data = request.get_json(silent=True) or {}
     ids = data.get('ids') if isinstance(data.get('ids'), list) else []
     released = nack_client_commands(current_user.id, [str(i) for i in ids])
-    return jsonify({'ok': True, 'released': released})
+    return api_ok({'released': released})
