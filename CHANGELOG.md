@@ -297,6 +297,18 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **The legacy `routes.py` answers through the envelope where it safely can** — **38 → 13**, baseline
+  **485 → 460**. Four more handlers were passing `str(e)` to the browser; those log and answer with a
+  sentence, including the three that stay on `jsonify`, because fixing a leak never required migrating
+  the shape. The thirteen that remain are the `status` state machine `admin_manage_libs.js` drives —
+  it branches on `'error'`, `'success'`, `'started'`, `'connected'`, `'completed'` and `'not_found'`,
+  and four tests assert on it. There is also a structural reason they cannot move: **`api_error`'s own
+  signature takes `status` as the HTTP code**, so it cannot carry a legacy `status` key at all.
+  `api_ok` can, through its payload dict, which is why the success half of that family did migrate
+- **The envelope lint also rejects a double-wrapped response.** `return api_ok({...}), 200` nests the
+  `(body, status)` tuple the helper already built, and Flask rejects it — while compiling cleanly and
+  carrying no legacy key, so neither the interpreter nor the call-site count notices. Caught twice
+  while converting multi-line literals, where the closing `}), 200` survives the rewrite
 - **Scan management answers through the envelope** — `scan.py` **43 → 7**, baseline **521 → 485**.
   Seven stay and are annotated where they sit: `status` there is the **scan-queue contract**, not the
   legacy marker — `scanQueuePolicy.js` documents it as `'queued' | 'started' | 'rejected'` and

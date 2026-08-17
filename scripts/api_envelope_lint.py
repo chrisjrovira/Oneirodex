@@ -119,6 +119,30 @@ def _legacy_keys_in_call(node: ast.Call) -> set[str]:
     return found
 
 
+def find_double_wrapped_envelopes(tree: ast.Module) -> list[tuple[int, str]]:
+    """``return api_ok(...), 200`` — a status literal after a helper call.
+
+    Both helpers already return ``(response, status)``, so a trailing literal
+    nests the tuple and Flask rejects the response. Like the discarded case this
+    is never legitimate, and neither the compiler nor the envelope count sees
+    it: the call is well-formed and carries no legacy key.
+
+    Also caught the hard way, twice, converting multi-line dict literals where
+    the closing ``}), 200`` survives the rewrite.
+    """
+    found: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Return) or not isinstance(node.value, ast.Tuple):
+            continue
+        parts = node.value.elts
+        if len(parts) != 2 or not isinstance(parts[0], ast.Call):
+            continue
+        name = getattr(parts[0].func, 'id', None) or getattr(parts[0].func, 'attr', None)
+        if name in ('api_ok', 'api_error') and isinstance(parts[1], ast.Constant):
+            found.append((node.lineno, name))
+    return found
+
+
 def find_discarded_envelopes(tree: ast.Module) -> list[tuple[int, str]]:
     """``api_ok(...)`` / ``api_error(...)`` whose return value is thrown away.
 
@@ -330,15 +354,18 @@ def main() -> int:
 
     # Hard failure, never baselined: a built-then-discarded envelope means the
     # handler refused the request and then went on to honour it anyway.
-    discarded: list[str] = []
+    misuse: list[str] = []
     for _, (rel, tree) in sorted(_load_modules().items()):
         for line, name in find_discarded_envelopes(tree):
-            discarded.append(f'  {rel}:{line}  {name}(...) result is discarded')
-    if discarded:
-        print('api-envelope-lint: envelope built but not returned\n')
-        print('\n'.join(discarded))
-        print('\nBoth helpers build a response *and* return it. A call in statement\n'
-              'position means the guard is computed and then ignored.')
+            misuse.append(f'  {rel}:{line}  {name}(...) result is discarded - missing `return`?')
+        for line, name in find_double_wrapped_envelopes(tree):
+            misuse.append(f'  {rel}:{line}  {name}(...), <status> - the tuple is already built')
+    if misuse:
+        print('api-envelope-lint: envelope helper misused\n')
+        print('\n'.join(misuse))
+        print('\nBoth helpers build a response *and* return it, as `(body, status)`.\n'
+              'Discarding that, or appending a second status to it, is always a bug —\n'
+              'and neither the compiler nor the call-site count will tell you.')
         return 1
 
     if args.list:

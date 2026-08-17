@@ -164,6 +164,18 @@ def test_a_returned_envelope_is_not_flagged(tmp_path):
     assert lint.find_discarded_envelopes(ast.parse(source)) == []
 
 
+def test_a_double_wrapped_envelope_is_caught():
+    """`return api_ok({...}), 200` nests the tuple the helper already built, and
+    Flask rejects it. Compiles fine and carries no legacy key, so neither the
+    interpreter nor the call-site count notices."""
+    import ast
+
+    bad = 'def v():\n    return api_ok({}), 200\n'
+    good = 'def v():\n    return api_ok({}, status=201)\n'
+    assert [n for _, n in lint.find_double_wrapped_envelopes(ast.parse(bad))] == ['api_ok']
+    assert lint.find_double_wrapped_envelopes(ast.parse(good)) == []
+
+
 def test_the_helper_itself_is_exempt():
     """It defines the envelope, including the compatibility keys that keep old
     callers working — flagging it would mean the fix trips its own rule."""
