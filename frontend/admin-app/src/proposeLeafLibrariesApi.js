@@ -1,6 +1,6 @@
 /** Propose / import leaf libraries API helpers (preview-only; never auto-create). */
 
-import { csrfToken, getJson, postJsonResult } from './adminApi'
+import { csrfHeaders, csrfToken, getJson, postJsonResult } from './adminApi'
 
 export const PROPOSE_LEAF_URL = '/api/library_tools/propose_leaf_libraries'
 export const IMPORT_LEAF_PREVIEW_URL = '/api/library_tools/import_leaf_libraries/preview'
@@ -111,10 +111,7 @@ export async function fetchProposeLeafLibraries(root) {
   const response = await fetch(PROPOSE_LEAF_URL, {
     method: 'POST',
     credentials: 'same-origin',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': csrfToken(),
-    },
+    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ root: trimmed }),
   })
 
@@ -184,7 +181,7 @@ export async function fetchImportLeafLibrariesPreview(opts) {
     response = await fetch(IMPORT_LEAF_PREVIEW_URL, {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'X-CSRFToken': csrfToken() },
+      headers: csrfHeaders(),
       body: form,
     })
   } else if (mode === 'csv') {
@@ -197,7 +194,7 @@ export async function fetchImportLeafLibrariesPreview(opts) {
     response = await fetch(IMPORT_LEAF_PREVIEW_URL, {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'X-CSRFToken': csrfToken() },
+      headers: csrfHeaders(),
       body: form,
     })
   } else {
@@ -214,10 +211,7 @@ export async function fetchImportLeafLibrariesPreview(opts) {
     response = await fetch(IMPORT_LEAF_PREVIEW_URL, {
       method: 'POST',
       credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken(),
-      },
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(body),
     })
   }

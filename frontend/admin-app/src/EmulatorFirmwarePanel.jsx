@@ -1,7 +1,7 @@
 // Toasts on every mutation (GT-B25). Outcomes were reported inline only,
 // which is easy to miss when the triggering control has scrolled away.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { csrfToken } from './adminApi'
+import { csrfHeaders, csrfToken } from './adminApi'
 import { MetricStrip } from './opsWidgets'
 import { showToast } from './utils/toast'
 
@@ -108,7 +108,7 @@ export function EmulatorFirmwarePanel() {
           method: 'POST',
           body: form,
           credentials: 'same-origin',
-          headers: { 'X-CSRFToken': csrfToken() },
+          headers: csrfHeaders(),
         })
         if (!response.ok) {
           throw new Error(await readError(response, 'Upload failed.'))
