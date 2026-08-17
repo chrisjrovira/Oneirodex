@@ -1,11 +1,14 @@
-﻿export async function fetchUpdatesInbox({ signal, limit = 100 } = {}) {
+import { csrfHeaders } from './csrf'
+import { errorFromResponse } from './envelopeError'
+
+export async function fetchUpdatesInbox({ signal, limit = 100 } = {}) {
   const response = await fetch(`/api/updates/inbox?limit=${limit}`, {
     signal,
     credentials: 'same-origin',
   })
 
   if (!response.ok) {
-    throw new Error(`updates/inbox ${response.status}`)
+    throw await errorFromResponse(response, 'updates/inbox')
   }
 
   return response.json()
@@ -23,35 +26,23 @@ export async function fetchStoreSearch({ q, source = 'all', limit = 8, signal } 
   })
 
   if (!response.ok) {
-    throw new Error(`updates/store_search ${response.status}`)
+    throw await errorFromResponse(response, 'updates/store_search')
   }
 
   return response.json()
-}
-
-function csrfToken() {
-  return (
-    document.querySelector('meta[name="csrf-token"]')?.content ||
-    document.querySelector('input[name="csrf_token"]')?.value ||
-    ''
-  )
 }
 
 export async function addWantedUpdate(payload) {
   const response = await fetch('/api/updates/wanted', {
     method: 'POST',
     credentials: 'same-origin',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': csrfToken(),
-    },
+    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(payload),
   })
-  const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(data.error || `wanted ${response.status}`)
+    throw await errorFromResponse(response, 'wanted')
   }
-  return data
+  return response.json().catch(() => ({}))
 }
 
 export async function fetchAcquireStatus({ signal } = {}) {
@@ -60,7 +51,7 @@ export async function fetchAcquireStatus({ signal } = {}) {
     credentials: 'same-origin',
   })
   if (!response.ok) {
-    throw new Error(`acquire/status ${response.status}`)
+    throw await errorFromResponse(response, 'acquire/status')
   }
   return response.json()
 }
@@ -71,7 +62,7 @@ export async function searchAcquire(q, { signal } = {}) {
     credentials: 'same-origin',
   })
   if (!response.ok) {
-    throw new Error(`acquire/search ${response.status}`)
+    throw await errorFromResponse(response, 'acquire/search')
   }
   return response.json()
 }

@@ -1,5 +1,8 @@
 /** Game library RetroArch `.cht` cheats — list / create / upload / delete. */
 
+import { csrfHeaders } from './csrf'
+import { errorFromBody } from './envelopeError'
+
 /** Capability-language dialect hints (API values match Backend CHEAT_DIALECTS). */
 export const CHEAT_DIALECTS = Object.freeze([
   { value: 'raw', label: 'Raw' },
@@ -7,25 +10,6 @@ export const CHEAT_DIALECTS = Object.freeze([
   { value: 'action_replay', label: 'AR-style' },
   { value: 'gameshark', label: 'GS-style' },
 ])
-
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-  return ''
-}
-
-function csrfHeaders(extra = {}) {
-  if (typeof window !== 'undefined' && window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(extra)
-  }
-  return { 'X-CSRFToken': getCsrfToken(), ...extra }
-}
 
 function cheatsUrl(gameUuid, filename) {
   const base = `/api/games/${encodeURIComponent(gameUuid)}/cheats`
@@ -35,11 +19,12 @@ function cheatsUrl(gameUuid, filename) {
   return `${base}/${encodeURIComponent(filename)}`
 }
 
-function raiseApiError(data, fallback) {
-  const error = new Error(data?.error || fallback)
-  error.status = data?.status
+function raiseApiError(data, fallback, status) {
+  // `code` is cheats-specific (the panel branches on it); everything else is
+  // the shared shape. Status comes from the response now — it used to be read
+  // out of the body, which left it undefined whenever the body omitted it.
+  const error = errorFromBody(data, status ?? data?.status, fallback)
   error.code = data?.code
-  error.data = data
   return error
 }
 
@@ -53,7 +38,7 @@ export async function listCheats(gameUuid, { signal } = {}) {
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw raiseApiError({ ...data, status: response.status }, `cheats list ${response.status}`)
+    throw raiseApiError({ ...data, status: response.status }, 'cheats list', response.status)
   }
   return {
     game_uuid: data.game_uuid || gameUuid,
@@ -87,7 +72,8 @@ export async function createCheat(gameUuid, { name, codes, dialect } = {}) {
       (response.status === 400 && /^file required$/i.test(message))
     const error = raiseApiError(
       { ...data, status: response.status, code: createMissing ? 'create_unavailable' : data.code },
-      data.error || `cheat create ${response.status}`,
+      'cheat create',
+      response.status,
     )
     if (createMissing) {
       error.code = 'create_unavailable'
@@ -111,7 +97,7 @@ export async function uploadCheat(gameUuid, file) {
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw raiseApiError({ ...data, status: response.status }, data.error || `cheat upload ${response.status}`)
+    throw raiseApiError({ ...data, status: response.status }, 'cheat upload', response.status)
   }
   return data
 }
@@ -124,7 +110,7 @@ export async function deleteCheat(gameUuid, filename) {
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw raiseApiError({ ...data, status: response.status }, data.error || `cheat delete ${response.status}`)
+    throw raiseApiError({ ...data, status: response.status }, 'cheat delete', response.status)
   }
   return data
 }

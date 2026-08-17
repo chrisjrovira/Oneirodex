@@ -1,3 +1,6 @@
+import { csrfHeaders } from './csrf'
+import { errorFromResponse } from './envelopeError'
+
 export async function fetchFreeGames({ signal, store } = {}) {
   const params = new URLSearchParams({ limit: '40' })
   if (store) {
@@ -9,29 +12,21 @@ export async function fetchFreeGames({ signal, store } = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`free games ${response.status}`)
+    throw await errorFromResponse(response, 'free games')
   }
 
   return response.json()
-}
-
-function csrfToken() {
-  return document.querySelector('meta[name="csrf-token"]')?.content || ''
 }
 
 export async function claimFreeGameAssist(offerId) {
   const response = await fetch(`/api/news/free-games/${offerId}/claim-assist`, {
     method: 'POST',
     credentials: 'same-origin',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': csrfToken(),
-    },
+    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
     body: '{}',
   })
-  const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(data.error || `claim assist ${response.status}`)
+    throw await errorFromResponse(response, 'claim assist')
   }
-  return data
+  return response.json().catch(() => ({}))
 }

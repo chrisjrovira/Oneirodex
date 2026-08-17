@@ -1,15 +1,15 @@
+import { csrfHeaders } from './csrf'
+import { errorFromResponse } from './envelopeError'
+
 export async function fetchGameDetails(gameUuid, { signal } = {}) {
   const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/details`, {
     signal,
     credentials: 'same-origin',
   })
-  const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const error = new Error(data.error || `game details ${response.status}`)
-    error.status = response.status
-    throw error
+    throw await errorFromResponse(response, 'game details')
   }
-  return data
+  return response.json().catch(() => ({}))
 }
 
 export async function fetchGameVersions(gameUuid, { signal } = {}) {
@@ -18,17 +18,9 @@ export async function fetchGameVersions(gameUuid, { signal } = {}) {
     credentials: 'same-origin',
   })
   if (!response.ok) {
-    throw new Error(`game versions ${response.status}`)
+    throw await errorFromResponse(response, 'game versions')
   }
   return response.json()
-}
-
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-  return ''
 }
 
 export async function checkGameFreshness(gameUuid) {
@@ -37,18 +29,14 @@ export async function checkGameFreshness(gameUuid) {
     {
       method: 'POST',
       credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCsrfToken(),
-      },
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: '{}',
     },
   )
-  const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(data.error || `freshness check ${response.status}`)
+    throw await errorFromResponse(response, 'freshness check')
   }
-  return data
+  return response.json().catch(() => ({}))
 }
 
 /**
@@ -62,18 +50,12 @@ export async function cleanupOrphanVersions(gameUuid) {
     {
       method: 'POST',
       credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCsrfToken(),
-      },
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: '{}',
     },
   )
-  const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const error = new Error(data.error || `cleanup orphans ${response.status}`)
-    error.status = response.status
-    throw error
+    throw await errorFromResponse(response, 'cleanup orphans')
   }
-  return data
+  return response.json().catch(() => ({}))
 }

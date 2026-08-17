@@ -1,32 +1,5 @@
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-
-  return document.getElementById('csrf_token')?.textContent || ''
-}
-
-function csrfHeaders(additionalHeaders = {}) {
-  if (window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(additionalHeaders)
-  }
-
-  return {
-    'X-CSRFToken': getCsrfToken(),
-    ...additionalHeaders,
-  }
-}
-
-async function readError(response, label) {
-  const data = await response.json().catch(() => ({}))
-  return new Error(data?.error || `${label} ${response.status}`)
-}
+import { csrfHeaders } from './csrf'
+import { errorFromResponse } from './envelopeError'
 
 /**
  * @returns {Promise<{
@@ -41,7 +14,7 @@ export async function listTokens({ signal } = {}) {
     signal,
   })
   if (!response.ok) {
-    throw await readError(response, 'List tokens')
+    throw await errorFromResponse(response, 'List tokens')
   }
   return response.json()
 }
@@ -87,7 +60,7 @@ export async function createToken(body) {
     body: JSON.stringify(body),
   })
   if (!response.ok) {
-    throw await readError(response, 'Create token')
+    throw await errorFromResponse(response, 'Create token')
   }
   const data = await response.json()
   const secret = extractOneTimeSecret(data)
@@ -105,7 +78,7 @@ export async function revokeToken(tokenId) {
     headers: csrfHeaders(),
   })
   if (!response.ok) {
-    throw await readError(response, 'Revoke token')
+    throw await errorFromResponse(response, 'Revoke token')
   }
   return response.json()
 }

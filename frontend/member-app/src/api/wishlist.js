@@ -1,39 +1,5 @@
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-
-  return document.getElementById('csrf_token')?.textContent || ''
-}
-
-function csrfHeaders(additionalHeaders = {}) {
-  if (window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(additionalHeaders)
-  }
-
-  return {
-    'X-CSRFToken': getCsrfToken(),
-    ...additionalHeaders,
-  }
-}
-
-async function errorFrom(response, fallback) {
-  try {
-    const data = await response.json()
-    if (data?.error) {
-      return new Error(data.error)
-    }
-  } catch {
-    // Response had no JSON body; fall through to the generic message.
-  }
-  return new Error(fallback)
-}
+import { csrfHeaders } from './csrf'
+import { errorFromResponse } from './envelopeError'
 
 export async function fetchRequests({ all = false, signal } = {}) {
   const response = await fetch(all ? '/api/requests?all=1' : '/api/requests', {
@@ -42,7 +8,7 @@ export async function fetchRequests({ all = false, signal } = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`requests ${response.status}`)
+    throw await errorFromResponse(response, 'requests')
   }
 
   return response.json()
@@ -57,7 +23,7 @@ export async function createRequest({ title, notes } = {}) {
   })
 
   if (!response.ok) {
-    throw await errorFrom(response, `create request ${response.status}`)
+    throw await errorFromResponse(response, 'create request')
   }
 
   return response.json()
@@ -71,7 +37,7 @@ export async function deleteRequest(id) {
   })
 
   if (!response.ok) {
-    throw await errorFrom(response, `delete request ${response.status}`)
+    throw await errorFromResponse(response, 'delete request')
   }
 
   return response.json()
@@ -94,7 +60,7 @@ export async function resolveRequest(id, { status, notes, linkedGameUuid } = {})
   })
 
   if (!response.ok) {
-    throw await errorFrom(response, `resolve request ${response.status}`)
+    throw await errorFromResponse(response, 'resolve request')
   }
 
   return response.json()
