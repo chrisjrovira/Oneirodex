@@ -804,6 +804,11 @@ def update_unmatched_folder_status():
 @admin_required
 def clear_unmatched_entry(folder_id):
     """Clear a single unmatched folder entry from the database."""
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     try:
         folder = db.session.get(UnmatchedFolder, folder_id) or abort(404)
         db.session.delete(folder)
@@ -824,6 +829,11 @@ def clear_unmatched_entry(folder_id):
 @admin_required
 def toggle_ignore_status(folder_id):
     """Toggle the ignore status of an unmatched folder."""
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     try:
         folder = db.session.get(UnmatchedFolder, folder_id) or abort(404)
         # Toggle between 'Ignore' and the original status (likely 'Unmatched' or 'Duplicate')
@@ -885,6 +895,11 @@ def refresh_game_images(game_uuid):
 @admin_required
 def check_image_refresh_progress(game_uuid):
     """Check the progress of an image refresh operation."""
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     progress_data = cache.get(f'image_refresh_progress_{game_uuid}')
 
     if progress_data is None:
@@ -918,6 +933,11 @@ def delete_game_route(game_uuid):
 @login_required
 @admin_required
 def delete_folder():
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     data = request.get_json()
     folder_path = data.get('folder_path') if data else None
 
@@ -1226,6 +1246,11 @@ def delete_library_background(library_uuid, job_id):
 @login_required
 @admin_required
 def delete_full_library(library_uuid=None):
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     print(f"Route: /delete_full_library - {current_user.name} - {current_user.role} method: {request.method} UUID: {library_uuid}")
     
     if not library_uuid:
@@ -1300,6 +1325,11 @@ def delete_full_library(library_uuid=None):
 @admin_required
 def check_deletion_progress(job_id):
     """Simple progress check endpoint as fallback for SSE"""
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     if job_id in deletion_progress:
         return jsonify(deletion_progress[job_id])
     else:
