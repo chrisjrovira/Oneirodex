@@ -1,4 +1,5 @@
 # /gametheca/routes_apis/igdb.py
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import login_required
 from gametheca.utils.igdb_api import make_igdb_api_request, get_cover_thumbnail_url
@@ -13,7 +14,7 @@ def get_company_role():
     # Validate input
     if not game_igdb_id or not company_id or not game_igdb_id.isdigit() or not company_id.isdigit():
         print("Invalid input: Both game_igdb_id and company_id must be provided and numeric.")
-        return jsonify({'error': 'Invalid input. Both game_igdb_id and company_id must be provided and numeric.'}), 400
+        return api_error('Invalid input. Both game_igdb_id and company_id must be provided and numeric.', code='bad_request')
     try:
         print(f"Requested company role for Game IGDB ID: {game_igdb_id} and Company ID: {company_id}")
         
@@ -25,7 +26,7 @@ def get_company_role():
         
         if not response_json or 'error' in response_json:
             print(f"No data found or error in response: {response_json}")
-            return jsonify({'error': 'No data found or error in response.'}), 404
+            return api_error('No data found or error in response.', code='not_found')
 
         for company_data in response_json:
             company_info = company_data.get('company')
@@ -47,11 +48,11 @@ def get_company_role():
                 'company_name': company_name,
                 'role': role
             }), 200
-        return jsonify({'error': 'Company with given ID not found in the specified game.'}), 404
+        return api_error('Company with given ID not found in the specified game.', code='not_found')
 
     except Exception as e:
         print(f"Error processing request: {e}")
-        return jsonify({'error': 'An error occurred processing your request.'}), 500
+        return api_error('An error occurred processing your request.', code='internal')
 
 
 @apis_bp.route('/get_cover_thumbnail', methods=['GET'])
@@ -59,12 +60,12 @@ def get_company_role():
 def get_cover_thumbnail():
     igdb_id = request.args.get('igdb_id', default=None, type=str)
     if igdb_id is None or not igdb_id.isdigit():
-        return jsonify({'error': 'Invalid input. The ID must be numeric.'}), 400
+        return api_error('Invalid input. The ID must be numeric.', code='bad_request')
     cover_url = get_cover_thumbnail_url(int(igdb_id))
     if cover_url:
         return jsonify({'cover_url': cover_url}), 200
     else:
-        return jsonify({'error': 'Cover URL could not be retrieved.'}), 404
+        return api_error('Cover URL could not be retrieved.', code='not_found')
 
 
 @apis_bp.route('/search_igdb_by_id')
@@ -72,7 +73,7 @@ def get_cover_thumbnail():
 def search_igdb_by_id():
     igdb_id = request.args.get('igdb_id')
     if not igdb_id:
-        return jsonify({"error": "IGDB ID is required"}), 400
+        return api_error("IGDB ID is required", code='bad_request')
     endpoint_url = "https://api.igdb.com/v4/games"
     # Use the same field format as working scanning code
     query_params = f"""
@@ -84,13 +85,13 @@ def search_igdb_by_id():
     """
     response = make_igdb_api_request(endpoint_url, query_params)
     if "error" in response:
-        return jsonify({"error": response["error"]}), 500
+        return api_error(response["error"], code='internal')
 
     if response:
         game_data = response[0] if response else {}
         return jsonify(game_data)
     else:
-        return jsonify({"error": "Game not found"}), 404
+        return api_error("Game not found", code='not_found')
 
 
 @apis_bp.route('/search_igdb_by_name')
@@ -120,15 +121,15 @@ def search_igdb_by_name():
         if 'error' not in results:
             return jsonify({'results': results})
         else:
-            return jsonify({'error': results['error']})
-    return jsonify({'error': 'No game name provided'})
+            return api_error(results['error'], code='bad_gateway')
+    return api_error('No game name provided', code='bad_request')
 
 @apis_bp.route('/check_igdb_id')
 @login_required
 def check_igdb_id():
     igdb_id = request.args.get('igdb_id', type=int)
     if igdb_id is None:
-        return jsonify({'message': 'Invalid request', 'available': False}), 400
+        return api_error('Invalid request', code='bad_request', available=False)
 
     game_exists = check_existing_game_by_igdb_id(igdb_id) is not None
     return jsonify({'available': not game_exists})

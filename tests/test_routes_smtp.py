@@ -471,7 +471,9 @@ class TestSmtpSettings:
             assert response.status_code == 500
             response_data = json.loads(response.data)
             assert response_data['status'] == 'error'
-            assert response_data['message'] == 'Database error'
+            # The exception text used to be handed to the browser; a DB error
+            # can carry connection and schema detail. It goes to the log now.
+            assert response_data['message'] == 'Could not save SMTP settings'
     
     def test_post_defaults_smtp_use_tls_true(self, client, admin_user, db_session):
         """Test POST request defaults smtp_use_tls to True."""

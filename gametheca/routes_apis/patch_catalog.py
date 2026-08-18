@@ -30,6 +30,19 @@ def _catalog_module_enabled() -> bool:
     )
 
 
+def _module_disabled_response(**extra):
+    """The 403 both catalog routes answer with when the module is switched off.
+
+    Carried in one place so the two copies cannot drift again — they already had,
+    and both were missed when the rest of the file moved onto the envelope.
+    """
+    return api_error(
+        'Patch catalog is disabled. Set ENABLE_PATCH_CATALOG=true.',
+        code='forbidden',
+        **extra,
+    )
+
+
 @apis_bp.route('/patch-catalog/providers', methods=['GET'])
 @login_required
 @admin_required
@@ -48,12 +61,7 @@ def patch_catalog_providers():
 @admin_required
 def patch_catalog_search():
     if not _catalog_module_enabled():
-        return jsonify(
-            {
-                'error': 'Patch catalog is disabled. Set ENABLE_PATCH_CATALOG=true.',
-                'hits': [],
-            }
-        ), 403
+        return _module_disabled_response(hits=[])
 
     query = (request.args.get('q') or request.args.get('query') or '').strip()
     game_uuid = (request.args.get('game_uuid') or '').strip()
@@ -101,9 +109,7 @@ def patch_catalog_search():
 @admin_required
 def patch_catalog_attach():
     if not _catalog_module_enabled():
-        return jsonify(
-            {'error': 'Patch catalog is disabled. Set ENABLE_PATCH_CATALOG=true.'}
-        ), 403
+        return _module_disabled_response()
 
     data = request.get_json(silent=True) or {}
     game_uuid = (data.get('game_uuid') or '').strip()
@@ -123,4 +129,7 @@ def patch_catalog_attach():
         )
     except ValueError as exc:
         return api_error(str(exc), code='bad_request')
-    return jsonify(result), 201
+    # `result` carries its own `ok: True`; api_ok drops it and re-stamps the
+    # envelope so this success reads like every other one. The lint cannot see
+    # a `jsonify(<name>)`, so nothing else would have caught the divergence.
+    return api_ok(result, status=201)

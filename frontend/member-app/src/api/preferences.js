@@ -8,19 +8,8 @@
  * a successful save — keep that contract if you add SPA-side theme saves here.
  */
 
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-
-  return document.getElementById('csrf_token')?.textContent || ''
-}
+import { csrfHeaders, getCsrfToken } from './csrf'
+import { errorFromResponse } from './envelopeError'
 
 export async function savePreferences(partial) {
   const csrf = getCsrfToken()
@@ -37,15 +26,14 @@ export async function savePreferences(partial) {
   const res = await fetch('/settings_panel', {
     method: 'POST',
     credentials: 'same-origin',
-    headers: {
-      'X-CSRFToken': csrf,
-      'X-Requested-With': 'XMLHttpRequest',
-    },
+    // `csrf` above is still read directly: this endpoint also wants the token
+    // as a form field, which headers cannot supply.
+    headers: csrfHeaders({ 'X-Requested-With': 'XMLHttpRequest' }),
     body,
   })
 
   if (!res.ok) {
-    throw new Error('prefs save failed')
+    throw await errorFromResponse(res, 'preferences save failed')
   }
 
   return res.json().catch(() => ({}))
@@ -76,6 +64,8 @@ export async function openPreferencesModal() {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
   })
   if (!res.ok) {
+    // Not errorFromResponse: /settings_panel renders HTML, so there is no
+    // envelope to read and a parse attempt would only cost a round trip.
     throw new Error('preferences load failed')
   }
 

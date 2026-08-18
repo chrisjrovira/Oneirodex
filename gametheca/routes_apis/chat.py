@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from flask import jsonify, request
+
+from gametheca.utils.api_response import api_error, api_ok
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -51,6 +53,32 @@ def _message_payload(msg: ChatMessage, *, author_name: str | None = None) -> dic
     )
 
 
+def _refuse_not_found():
+    """The opaque 404 every chat lookup answers with.
+
+    Deliberately not a 403: telling someone a channel exists but is not theirs
+    confirms it exists. Ten call sites shared this wording for that reason, so
+    it is stated once here rather than ten times.
+    """
+    return api_error('Not found', code='not_found')
+
+
+def _visible_channel(channel_id: int):
+    """Load a channel the caller may see, or the refusal. ``(ch, refusal)``."""
+    ch = db.session.get(ChatChannel, channel_id)
+    if not ch or not user_can_access_channel(current_user, ch):
+        return None, _refuse_not_found()
+    return ch, None
+
+
+def _active_channel(channel_id: int):
+    """Load a channel that is not archived, or the refusal. ``(ch, refusal)``."""
+    ch = db.session.get(ChatChannel, channel_id)
+    if not ch or ch.archived_at is not None:
+        return None, _refuse_not_found()
+    return ch, None
+
+
 @apis_bp.route('/chat/channels', methods=['GET'])
 @login_required
 def chat_channels_list():
@@ -71,43 +99,43 @@ def chat_channels_create():
             is_child_safe=bool(data.get('is_child_safe', True)),
         )
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     payload = ch.to_dict()
     payload['muted'] = False
     payload['unread'] = 0
-    return jsonify({'ok': True, 'channel': payload, 'room': payload}), 201
+    return api_ok({'channel': payload, 'room': payload}, status=201)
 
 
 @apis_bp.route('/chat/channels/<int:channel_id>/archive', methods=['POST'])
 @login_required
 def chat_channel_archive(channel_id: int):
-    ch = db.session.get(ChatChannel, channel_id)
-    if not ch or ch.archived_at is not None:
-        return jsonify({'error': 'Not found'}), 404
+    ch, refusal = _active_channel(channel_id)
+    if refusal is not None:
+        return refusal
     try:
         archive_channel(current_user, ch)
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'ok': True, 'channel_id': ch.id, 'archived': True})
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'channel_id': ch.id, 'archived': True})
 
 
 @apis_bp.route('/chat/channels/<int:channel_id>/leave', methods=['POST'])
 @login_required
 def chat_channel_leave(channel_id: int):
-    ch = db.session.get(ChatChannel, channel_id)
-    if not ch or ch.archived_at is not None:
-        return jsonify({'error': 'Not found'}), 404
+    ch, refusal = _active_channel(channel_id)
+    if refusal is not None:
+        return refusal
     try:
         leave_channel(current_user, ch)
     except PermissionError:
-        return jsonify({'error': 'Not found'}), 404
+        return _refuse_not_found()
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'ok': True, 'channel_id': ch.id, 'left': True})
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'channel_id': ch.id, 'left': True})
 
 
 @apis_bp.route('/chat/dm', methods=['POST'])
@@ -125,36 +153,36 @@ def chat_open_dm():
             select(User).where(User.name == str(data['username']).strip()),
         ).scalars().first()
     if not other or not other.state:
-        return jsonify({'error': 'User not found'}), 404
+        return api_error('User not found', code='not_found')
     try:
         ch = open_or_create_dm(current_user, other)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'ok': True, 'channel': ch.to_dict()})
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'channel': ch.to_dict()})
 
 
 @apis_bp.route('/chat/channels/<int:channel_id>/mute', methods=['POST'])
 @login_required
 def chat_channel_mute(channel_id: int):
-    ch = db.session.get(ChatChannel, channel_id)
-    if not ch or not user_can_access_channel(current_user, ch):
-        return jsonify({'error': 'Not found'}), 404
+    ch, refusal = _visible_channel(channel_id)
+    if refusal is not None:
+        return refusal
     data = request.get_json(silent=True) or {}
     if 'muted' not in data:
-        return jsonify({'error': 'muted is required'}), 400
+        return api_error('muted is required', code='bad_request')
     try:
         muted = set_channel_muted(current_user, ch, bool(data.get('muted')))
     except PermissionError:
-        return jsonify({'error': 'Not found'}), 404
-    return jsonify({'ok': True, 'channel_id': ch.id, 'muted': muted})
+        return _refuse_not_found()
+    return api_ok({'channel_id': ch.id, 'muted': muted})
 
 
 @apis_bp.route('/chat/channels/<int:channel_id>/messages', methods=['GET'])
 @login_required
 def chat_messages_list(channel_id: int):
-    ch = db.session.get(ChatChannel, channel_id)
-    if not ch or not user_can_access_channel(current_user, ch):
-        return jsonify({'error': 'Not found'}), 404
+    ch, refusal = _visible_channel(channel_id)
+    if refusal is not None:
+        return refusal
     limit = min(100, max(1, int(request.args.get('limit') or 50)))
     before = request.args.get('before')
     since = request.args.get('since')
@@ -176,33 +204,32 @@ def chat_messages_list(channel_id: int):
 @login_required
 def chat_attachment_upload(channel_id: int):
     """Upload a pending chat attachment (multipart). Bind via attachment_ids on send."""
-    ch = db.session.get(ChatChannel, channel_id)
-    if not ch or not user_can_access_channel(current_user, ch):
-        return jsonify({'error': 'Not found'}), 404
+    ch, refusal = _visible_channel(channel_id)
+    if refusal is not None:
+        return refusal
     ensure_channel_membership(ch, current_user)
     file = request.files.get('file') or request.files.get('attachment')
     try:
         row = upload_attachment(channel=ch, user=current_user, file=file)
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({
-        'ok': True,
+        return api_error(str(exc), code='bad_request')
+    return api_ok({
         'attachment': row.to_dict(),
         'limits': {
             'max_bytes': MAX_ATTACHMENT_BYTES,
             'max_per_message': MAX_ATTACHMENTS_PER_MESSAGE,
         },
-    }), 201
+    }, status=201)
 
 
 @apis_bp.route('/chat/channels/<int:channel_id>/messages', methods=['POST'])
 @login_required
 def chat_messages_post(channel_id: int):
-    ch = db.session.get(ChatChannel, channel_id)
-    if not ch or not user_can_access_channel(current_user, ch):
-        return jsonify({'error': 'Not found'}), 404
+    ch, refusal = _visible_channel(channel_id)
+    if refusal is not None:
+        return refusal
     data = request.get_json(silent=True) or {}
     parent_raw = data.get('parent_message_id')
     parent_id = None
@@ -210,14 +237,14 @@ def chat_messages_post(channel_id: int):
         try:
             parent_id = int(parent_raw)
         except (TypeError, ValueError):
-            return jsonify({'error': 'Invalid parent_message_id'}), 400
+            return api_error('Invalid parent_message_id', code='bad_request')
     raw_ids = data.get('attachment_ids') or []
     if raw_ids and not isinstance(raw_ids, list):
-        return jsonify({'error': 'attachment_ids must be a list'}), 400
+        return api_error('attachment_ids must be a list', code='bad_request')
     try:
         attachment_ids = [int(x) for x in raw_ids] if raw_ids else []
     except (TypeError, ValueError):
-        return jsonify({'error': 'Invalid attachment_ids'}), 400
+        return api_error('Invalid attachment_ids', code='bad_request')
     try:
         msg = post_message(
             ch,
@@ -228,12 +255,11 @@ def chat_messages_post(channel_id: int):
         )
     except (ValueError, PermissionError) as exc:
         db.session.rollback()
-        code = 403 if isinstance(exc, PermissionError) else 400
-        return jsonify({'error': str(exc)}), code
-    return jsonify({
-        'ok': True,
+        code = 'forbidden' if isinstance(exc, PermissionError) else 'bad_request'
+        return api_error(str(exc), code=code)
+    return api_ok({
         'message': _message_payload(msg, author_name=current_user.name),
-    }), 201
+    }, status=201)
 
 
 @apis_bp.route('/chat/messages/<int:message_id>/reactions', methods=['POST'])
@@ -241,15 +267,15 @@ def chat_messages_post(channel_id: int):
 def chat_message_reaction_toggle(message_id: int):
     msg = db.session.get(ChatMessage, message_id)
     if not msg:
-        return jsonify({'error': 'Not found'}), 404
+        return _refuse_not_found()
     data = request.get_json(silent=True) or {}
     try:
         result = toggle_reaction(msg, current_user, data.get('emoji') or '')
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'ok': True, **result})
+        return api_error(str(exc), code='bad_request')
+    return api_ok({**result})
 
 
 @apis_bp.route('/chat/emoji', methods=['GET'])
@@ -278,8 +304,8 @@ def chat_emoji_upload():
             uploader=current_user,
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'ok': True, 'emoji': row.to_dict()}), 201
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'emoji': row.to_dict()}, status=201)
 
 
 @apis_bp.route('/chat/emoji/<slug>', methods=['DELETE'])
@@ -287,8 +313,8 @@ def chat_emoji_upload():
 @admin_required
 def chat_emoji_delete(slug: str):
     if not delete_custom_emoji(slug):
-        return jsonify({'error': 'Not found'}), 404
-    return jsonify({'ok': True})
+        return _refuse_not_found()
+    return api_ok()
 
 
 @apis_bp.route('/chat/search', methods=['GET'])
@@ -299,5 +325,5 @@ def chat_search():
     try:
         results = search_messages(current_user, q, limit=limit)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     return jsonify({'results': results, 'q': q})

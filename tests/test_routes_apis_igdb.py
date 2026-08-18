@@ -508,10 +508,15 @@ class TestSearchIgdbByName:
             sess['_fresh'] = True
         
         response = client.get('/api/search_igdb_by_name')
-        assert response.status_code == 200
-        
+        # Was 200 with an error body — a client branching on status saw success
+        # for a missing required parameter. The only consumer
+        # (admin_game_identify.js) never checked status, so nothing relied on it.
+        assert response.status_code == 400
+
         data = response.get_json()
         assert data['error'] == 'No game name provided'
+        assert data['error_code'] == 'bad_request'
+        assert data['ok'] is False
     
     @patch('gametheca.routes_apis.igdb.make_igdb_api_request')
     def test_search_igdb_by_name_successful(self, mock_api_request, client, admin_user, mock_game_data):
@@ -588,10 +593,14 @@ class TestSearchIgdbByName:
             sess['_fresh'] = True
         
         response = client.get('/api/search_igdb_by_name?name=Test Game')
-        assert response.status_code == 200
-        
+        # Was 200 with an error body. An IGDB failure is an upstream fault, so
+        # it answers 502 now — `bad_gateway` distinguishes "the provider broke"
+        # from "we broke" (`internal`) and "it is switched off" (`unavailable`).
+        assert response.status_code == 502
+
         data = response.get_json()
         assert data['error'] == 'Search failed'
+        assert data['error_code'] == 'bad_gateway'
 
 
 class TestCheckIgdbId:

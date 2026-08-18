@@ -1,32 +1,6 @@
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
+import { csrfHeaders, getCsrfToken } from './csrf'
+import { errorFromResponse } from './envelopeError'
 
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-
-  return document.getElementById('csrf_token')?.textContent || ''
-}
-
-function csrfHeaders(additionalHeaders = {}) {
-  if (window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(additionalHeaders)
-  }
-
-  return {
-    'X-CSRFToken': getCsrfToken(),
-    ...additionalHeaders,
-  }
-}
-
-async function readError(response, label) {
-  const data = await response.json().catch(() => ({}))
-  return new Error(data?.error || `${label} ${response.status}`)
-}
 
 async function mutate(url, label, { method = 'POST', json, body } = {}) {
   const headers = json === undefined
@@ -42,7 +16,7 @@ async function mutate(url, label, { method = 'POST', json, body } = {}) {
   })
 
   if (!response.ok) {
-    throw await readError(response, label)
+    throw await errorFromResponse(response, label)
   }
 
   return response.json()
@@ -55,7 +29,7 @@ export async function fetchOwnership({ signal } = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`ownership ${response.status}`)
+    throw await errorFromResponse(response, 'ownership')
   }
 
   return response.json()

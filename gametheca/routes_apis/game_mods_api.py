@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import select
@@ -24,11 +25,11 @@ from . import apis_bp
 
 
 def _mods_disabled():
-    return jsonify({'enabled': False, 'error': 'ENABLE_MOD_TRACKING is off'}), 403
+    return api_error('ENABLE_MOD_TRACKING is off', code='forbidden', enabled=False)
 
 
 def _forbidden(message: str = 'Forbidden'):
-    return jsonify({'error': message}), 403
+    return api_error(message, code='forbidden')
 
 
 def _require_librarian():
@@ -45,7 +46,7 @@ def _game_or_404(game_uuid: str) -> Game | None:
 
 def _require_game_read(game: Game | None):
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
         return _forbidden()
     return None
@@ -98,8 +99,8 @@ def post_game_mod(game_uuid: str):
     try:
         created = create_mod(game_uuid, data)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'ok': True, 'mod': created}), 201
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'mod': created}, status=201)
 
 
 @apis_bp.route('/games/<game_uuid>/mods/<mod_id>', methods=['PUT', 'PATCH'])
@@ -118,10 +119,10 @@ def patch_game_mod(game_uuid: str, mod_id: str):
     try:
         updated = update_mod(game_uuid, mod_id, data)
     except LookupError:
-        return jsonify({'error': 'Mod not found'}), 404
+        return api_error('Mod not found', code='not_found')
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'ok': True, 'mod': updated})
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'mod': updated})
 
 
 @apis_bp.route('/games/<game_uuid>/mods/<mod_id>', methods=['DELETE'])
@@ -137,8 +138,8 @@ def delete_game_mod(game_uuid: str, mod_id: str):
     if read_denied:
         return read_denied
     if not delete_mod(game_uuid, mod_id):
-        return jsonify({'error': 'Mod not found'}), 404
-    return jsonify({'ok': True, 'id': mod_id})
+        return api_error('Mod not found', code='not_found')
+    return api_ok({'id': mod_id})
 
 
 @apis_bp.route('/games/<game_uuid>/mods', methods=['PUT'])
@@ -156,4 +157,4 @@ def put_game_mods_bulk(game_uuid: str):
         return read_denied
     data = request.get_json(silent=True) or {}
     mods = data.get('mods') if isinstance(data.get('mods'), list) else []
-    return jsonify({'ok': True, **save_mods(game_uuid, mods)})
+    return api_ok({**save_mods(game_uuid, mods)})

@@ -1,34 +1,20 @@
-﻿function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
+import { csrfHeaders, getCsrfToken } from './csrf'
+import { errorFromResponse } from './envelopeError'
+
+/**
+ * Download failures carry an operator `hint` (e.g. "files were removed from
+ * disk") that is a better sentence for a member than the generic `error`, so it
+ * is promoted to the headline. Everything else — status, error_code, data —
+ * comes from the shared helper rather than being rebuilt here.
+ */
+async function raiseDownloadError(response, fallback) {
+  const error = await errorFromResponse(response, fallback)
+  const hint = error.data?.hint
+  if (typeof hint === 'string' && hint.trim()) {
+    error.message = hint
   }
-
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-
-  return document.getElementById('csrf_token')?.textContent || ''
-}
-
-function csrfHeaders(additionalHeaders = {}) {
-  if (window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(additionalHeaders)
-  }
-
-  return {
-    'X-CSRFToken': getCsrfToken(),
-    ...additionalHeaders,
-  }
-}
-
-function raiseDownloadError(data, status, fallback) {
-  const error = new Error(data?.hint || data?.error || fallback)
-  error.status = status
-  error.code = data?.code
-  error.hint = data?.hint
-  error.data = data
+  error.code = error.data?.code
+  error.hint = hint
   return error
 }
 
@@ -54,11 +40,10 @@ export async function initiateGameDownload(gameUuid, { kind = 'base', versionUui
     body: JSON.stringify(body),
   })
 
-  const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw raiseDownloadError(data, response.status, `download ${response.status}`)
+    throw await raiseDownloadError(response, 'download')
   }
-  return data
+  return response.json().catch(() => ({}))
 }
 
 export async function fetchMyDownloads({ signal } = {}) {
@@ -68,7 +53,7 @@ export async function fetchMyDownloads({ signal } = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`my_downloads ${response.status}`)
+    throw await errorFromResponse(response, 'my_downloads')
   }
 
   return response.json()
@@ -81,7 +66,7 @@ export async function checkStatus(id, { signal } = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`check_download_status ${response.status}`)
+    throw await errorFromResponse(response, 'check_download_status')
   }
 
   return response.json()
@@ -102,7 +87,7 @@ export async function deleteDownload(id) {
   })
 
   if (!response.ok && response.status !== 302) {
-    throw new Error(`delete_download ${response.status}`)
+    throw await errorFromResponse(response, 'delete_download')
   }
 
   return true

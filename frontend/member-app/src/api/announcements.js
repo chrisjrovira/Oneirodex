@@ -1,11 +1,13 @@
-﻿export async function fetchAnnouncements({ signal } = {}) {
+﻿import { errorFromResponse } from './envelopeError'
+
+export async function fetchAnnouncements({ signal } = {}) {
   const response = await fetch('/api/announcements', {
     signal,
     credentials: 'same-origin',
   })
 
   if (!response.ok) {
-    throw new Error(`announcements ${response.status}`)
+    throw await errorFromResponse(response, 'announcements')
   }
 
   return response.json()

@@ -194,7 +194,15 @@ class TestPartyRoomAcl:
             library = Library(name='Party Lib', platform=LibraryPlatform.PCWIN, display_order=1)
             db.session.add(library)
             db.session.flush()
-            game = Game(library_uuid=library.uuid, name='Party Game', igdb_id=515151)
+            # `igdb_id` is unique and `db_session` never rolls back (conftest
+            # leaves the schema and its rows in place for speed), so a hardcoded
+            # value passes once and then fails every later run against the same
+            # database. Same idiom as test_library_health_pulse.
+            game = Game(
+                library_uuid=library.uuid,
+                name='Party Game',
+                igdb_id=515151 + (uuid4().int % 100000),
+            )
             db.session.add(game)
             db.session.commit()
 

@@ -37,7 +37,11 @@ export function resolveErrorMessage(error, fallback = 'Something went wrong.') {
 
 /** Operator-facing detail line — status code / stable error code, never the headline. */
 export function resolveErrorDetail(error) {
-  if (!error || typeof error !== 'object' || error instanceof Error) return null
+  // Errors are included on purpose: the fetch wrappers throw Error objects that
+  // carry `status` / `error_code` off the GT-B1 envelope, and bailing on
+  // `instanceof Error` dropped exactly the fields this line exists to show. A
+  // plain Error from a network failure has neither, so it still yields null.
+  if (!error || typeof error !== 'object') return null
   const parts = []
   if (error.status != null) parts.push(`HTTP ${error.status}`)
   if (typeof error.error_code === 'string' && error.error_code) parts.push(error.error_code)

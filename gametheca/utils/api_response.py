@@ -63,6 +63,12 @@ ERROR_CODES = {
     'unprocessable': 422,
     'rate_limited': 429,
     'internal': 500,
+    # An upstream the server depends on answered badly — IGDB, SteamGridDB,
+    # GiantBomb, an *arr instance. Distinct from `internal` (our bug) and from
+    # `unavailable` (the integration is switched off), which is a difference the
+    # operator acts on: retry, versus go and configure something. Fifteen route
+    # sites already returned a bare 502 with no code to branch on.
+    'bad_gateway': 502,
     'unavailable': 503,
 }
 
@@ -87,6 +93,12 @@ def api_ok(payload: Mapping[str, Any] | None = None, *, status: int = 200, **ext
         body.pop(reserved, None)
 
     body['ok'] = True
+    # Present and null rather than absent. The documented contract is that
+    # `error` and `error_code` are on *every* response — a client doing
+    # `if (data.error)` or reading `data.error_code` should see the same keys
+    # whichever way the call went, not `undefined` on the success path.
+    body['error'] = None
+    body['error_code'] = None
     # Legacy mirror: pre-GT-B1 clients branch on `success`.
     body.setdefault('success', True)
     return jsonify(body), status

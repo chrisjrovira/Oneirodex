@@ -1,3 +1,4 @@
+from gametheca.utils.api_response import api_error, api_ok
 from flask import render_template, request, jsonify, session
 from flask_login import login_required, current_user
 from gametheca.utils.auth import admin_required
@@ -174,9 +175,9 @@ def create_discovery_section() -> tuple[Dict[str, Any], int]:
         data = request.get_json() or {}
         name = str(data.get('name') or '').strip()
         if not name:
-            return jsonify({'success': False, 'error': 'Zone name is required'}), 400
+            return api_error('Zone name is required', code='bad_request')
         if len(name) > 50:
-            return jsonify({'success': False, 'error': 'Zone name must be 50 characters or fewer'}), 400
+            return api_error('Zone name must be 50 characters or fewer', code='bad_request')
 
         config, error = validate_zone_config(
             data.get('mode'),
@@ -185,7 +186,7 @@ def create_discovery_section() -> tuple[Dict[str, Any], int]:
             filter_value=data.get('filter_value'),
         )
         if error:
-            return jsonify({'success': False, 'error': error}), 400
+            return api_error(error, code='bad_request')
 
         max_order = db.session.execute(select(func.max(DiscoverySection.display_order))).scalar() or 0
         identifier = f"custom_{uuid.uuid4().hex[:12]}"
@@ -208,9 +209,8 @@ def create_discovery_section() -> tuple[Dict[str, Any], int]:
             audit_user=current_user.id,
         )
 
-        return jsonify({
-            'success': True,
-            'section': {
+        return api_ok({
+                        'section': {
                 'id': section.id,
                 'name': section.name,
                 'identifier': section.identifier,
@@ -219,7 +219,7 @@ def create_discovery_section() -> tuple[Dict[str, Any], int]:
                 'description': describe_zone_config(section.config),
                 'count': count_custom_zone_games(section.config),
             },
-        }), 201
+        }, status=201)
 
     except Exception as e:
         db.session.rollback()
@@ -229,7 +229,7 @@ def create_discovery_section() -> tuple[Dict[str, Any], int]:
             event_level='error',
             audit_user=current_user.id,
         )
-        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+        return api_error('Internal server error', code='internal')
 
 
 @admin2_bp.route('/admin/api/discovery_sections/<int:section_id>', methods=['PUT'])
@@ -240,16 +240,16 @@ def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
     try:
         section = db.session.get(DiscoverySection, section_id)
         if not section:
-            return jsonify({'success': False, 'error': 'Zone not found'}), 404
+            return api_error('Zone not found', code='not_found')
         if section.section_type != 'custom':
-            return jsonify({'success': False, 'error': 'Only custom zones can be edited'}), 400
+            return api_error('Only custom zones can be edited', code='bad_request')
 
         data = request.get_json() or {}
         name = str(data.get('name') or '').strip()
         if not name:
-            return jsonify({'success': False, 'error': 'Zone name is required'}), 400
+            return api_error('Zone name is required', code='bad_request')
         if len(name) > 50:
-            return jsonify({'success': False, 'error': 'Zone name must be 50 characters or fewer'}), 400
+            return api_error('Zone name must be 50 characters or fewer', code='bad_request')
 
         config, error = validate_zone_config(
             data.get('mode'),
@@ -258,7 +258,7 @@ def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
             filter_value=data.get('filter_value'),
         )
         if error:
-            return jsonify({'success': False, 'error': error}), 400
+            return api_error(error, code='bad_request')
 
         section.name = name
         section.config = config
@@ -271,9 +271,8 @@ def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
             audit_user=current_user.id,
         )
 
-        return jsonify({
-            'success': True,
-            'section': {
+        return api_ok({
+                        'section': {
                 'id': section.id,
                 'name': section.name,
                 'identifier': section.identifier,
@@ -282,7 +281,7 @@ def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
                 'description': describe_zone_config(section.config),
                 'count': count_custom_zone_games(section.config),
             },
-        }), 200
+        })
 
     except Exception as e:
         db.session.rollback()
@@ -292,7 +291,7 @@ def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
             event_level='error',
             audit_user=current_user.id,
         )
-        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+        return api_error('Internal server error', code='internal')
 
 
 @admin2_bp.route('/admin/api/discovery_sections/<int:section_id>/schedule', methods=['PUT'])
@@ -309,17 +308,17 @@ def update_discovery_section_schedule(section_id: int) -> tuple[Dict[str, Any], 
     """
     section = db.session.get(DiscoverySection, section_id)
     if not section:
-        return jsonify({'success': False, 'error': 'Shelf not found'}), 404
+        return api_error('Shelf not found', code='not_found')
 
     data = request.get_json(silent=True) or {}
 
     if 'layout' in data:
         layout = str(data.get('layout') or 'shelf').strip().lower()
         if layout not in ('shelf', 'hero', 'carousel'):
-            return jsonify({
-                'success': False,
-                'error': 'layout must be shelf, hero, or carousel',
-            }), 400
+            return api_error(
+                'layout must be shelf, hero, or carousel',
+                code='bad_request',
+            )
         section.layout = layout
 
     def _parse(key):
@@ -334,18 +333,18 @@ def update_discovery_section_schedule(section_id: int) -> tuple[Dict[str, Any], 
     if 'starts_at' in data:
         value, error = _parse('starts_at')
         if error:
-            return jsonify({'success': False, 'error': error}), 400
+            return api_error(error, code='bad_request')
         section.starts_at = value
     if 'ends_at' in data:
         value, error = _parse('ends_at')
         if error:
-            return jsonify({'success': False, 'error': error}), 400
+            return api_error(error, code='bad_request')
         section.ends_at = value
 
     # A window that closes before it opens would silently hide the shelf forever.
     if section.starts_at and section.ends_at and section.ends_at <= section.starts_at:
         db.session.rollback()
-        return jsonify({'success': False, 'error': 'ends_at must be after starts_at'}), 400
+        return api_error('ends_at must be after starts_at', code='bad_request')
 
     try:
         db.session.commit()
@@ -357,11 +356,10 @@ def update_discovery_section_schedule(section_id: int) -> tuple[Dict[str, Any], 
             event_level='error',
             audit_user=current_user.id,
         )
-        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+        return api_error('Internal server error', code='internal')
 
-    return jsonify({
-        'success': True,
-        'section': {
+    return api_ok({
+                'section': {
             'id': section.id,
             'name': section.name,
             'identifier': section.identifier,
@@ -370,7 +368,7 @@ def update_discovery_section_schedule(section_id: int) -> tuple[Dict[str, Any], 
             'ends_at': section.ends_at.isoformat() if section.ends_at else None,
             'is_live': section.is_live(),
         },
-    }), 200
+    })
 
 
 @admin2_bp.route('/admin/api/discovery_sections/<int:section_id>', methods=['DELETE'])
@@ -381,9 +379,9 @@ def delete_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
     try:
         section = db.session.get(DiscoverySection, section_id)
         if not section:
-            return jsonify({'success': False, 'error': 'Zone not found'}), 404
+            return api_error('Zone not found', code='not_found')
         if section.section_type != 'custom':
-            return jsonify({'success': False, 'error': 'Only custom zones can be deleted'}), 400
+            return api_error('Only custom zones can be deleted', code='bad_request')
 
         name = section.name
         db.session.delete(section)
@@ -396,7 +394,7 @@ def delete_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
             audit_user=current_user.id,
         )
 
-        return jsonify({'success': True, 'message': f"Zone '{name}' deleted"}), 200
+        return api_ok({'message': f"Zone '{name}' deleted"})
 
     except Exception as e:
         db.session.rollback()
@@ -406,7 +404,7 @@ def delete_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
             event_level='error',
             audit_user=current_user.id,
         )
-        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+        return api_error('Internal server error', code='internal')
 
 @admin2_bp.route('/admin/api/discovery_sections/order', methods=['POST'])
 @login_required
@@ -430,29 +428,29 @@ def update_section_order() -> tuple[Dict[str, Any], int]:
         # Validate request data
         is_valid, error_msg = validate_json_request(data, ['sections'])
         if not is_valid:
-            return jsonify({'success': False, 'error': error_msg}), 400
+            return api_error(error_msg, code='bad_request')
         
         if not isinstance(data['sections'], list):
-            return jsonify({'success': False, 'error': 'sections must be an array'}), 400
+            return api_error('sections must be an array', code='bad_request')
         
         updated_sections = []
         for section_data in data['sections']:
             # Validate each section data
             if not isinstance(section_data, dict) or 'id' not in section_data or 'order' not in section_data:
-                return jsonify({'success': False, 'error': 'Invalid section data format'}), 400
+                return api_error('Invalid section data format', code='bad_request')
             
             try:
                 section_id = int(section_data['id'])
                 order = int(section_data['order'])
             except (ValueError, TypeError):
-                return jsonify({'success': False, 'error': 'Section ID and order must be integers'}), 400
+                return api_error('Section ID and order must be integers', code='bad_request')
             
             if order < 0:
-                return jsonify({'success': False, 'error': 'Display order must be non-negative'}), 400
+                return api_error('Display order must be non-negative', code='bad_request')
             
             section = db.session.get(DiscoverySection, section_id)
             if not section:
-                return jsonify({'success': False, 'error': f'Section with ID {section_id} not found'}), 404
+                return api_error(f'Section with ID {section_id} not found', code='not_found')
             
             section.display_order = order
             updated_sections.append(section.name)
@@ -467,11 +465,10 @@ def update_section_order() -> tuple[Dict[str, Any], int]:
             audit_user=current_user.id
         )
         
-        return jsonify({
-            'success': True, 
-            'message': f'Updated order for {len(updated_sections)} sections',
+        return api_ok({
+                        'message': f'Updated order for {len(updated_sections)} sections',
             'updated_sections': updated_sections
-        }), 200
+        })
         
     except Exception as e:
         db.session.rollback()
@@ -481,7 +478,7 @@ def update_section_order() -> tuple[Dict[str, Any], int]:
             event_level='error',
             audit_user=current_user.id
         )
-        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+        return api_error('Internal server error', code='internal')
 
 @admin2_bp.route('/admin/api/discovery_sections/visibility', methods=['POST'])
 @login_required
@@ -502,21 +499,21 @@ def update_section_visibility() -> tuple[Dict[str, Any], int]:
         # Validate request data
         is_valid, error_msg = validate_json_request(data, ['section_id', 'is_visible'])
         if not is_valid:
-            return jsonify({'success': False, 'error': error_msg}), 400
+            return api_error(error_msg, code='bad_request')
         
         # Validate section_id
         try:
             section_id = int(data['section_id'])
         except (ValueError, TypeError):
-            return jsonify({'success': False, 'error': 'section_id must be an integer'}), 400
+            return api_error('section_id must be an integer', code='bad_request')
         
         # Validate is_visible
         if not isinstance(data['is_visible'], bool):
-            return jsonify({'success': False, 'error': 'is_visible must be a boolean'}), 400
+            return api_error('is_visible must be a boolean', code='bad_request')
         
         section = db.session.get(DiscoverySection, section_id)
         if not section:
-            return jsonify({'success': False, 'error': f'Section with ID {section_id} not found'}), 404
+            return api_error(f'Section with ID {section_id} not found', code='not_found')
         
         old_visibility = section.is_visible
         section.is_visible = data['is_visible']
@@ -532,13 +529,12 @@ def update_section_visibility() -> tuple[Dict[str, Any], int]:
             audit_user=current_user.id
         )
         
-        return jsonify({
-            'success': True,
-            'message': f"Section '{section.name}' is now {'visible' if data['is_visible'] else 'hidden'}",
+        return api_ok({
+                        'message': f"Section '{section.name}' is now {'visible' if data['is_visible'] else 'hidden'}",
             'section_name': section.name,
             'old_visibility': old_visibility,
             'new_visibility': data['is_visible']
-        }), 200
+        })
         
     except Exception as e:
         db.session.rollback()
@@ -548,7 +544,7 @@ def update_section_visibility() -> tuple[Dict[str, Any], int]:
             event_level='error',
             audit_user=current_user.id
         )
-        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+        return api_error('Internal server error', code='internal')
 
 @admin2_bp.route('/admin/api/system_logs/clear', methods=['DELETE'])
 @login_required
@@ -576,11 +572,10 @@ def clear_system_logs() -> tuple[Dict[str, Any], int]:
             audit_user=current_user.id
         )
         
-        return jsonify({
-            'success': True,
-            'message': f'Successfully cleared {logs_count} system logs',
+        return api_ok({
+                        'message': f'Successfully cleared {logs_count} system logs',
             'deleted_count': logs_count
-        }), 200
+        })
         
     except Exception as e:
         db.session.rollback()
@@ -590,7 +585,7 @@ def clear_system_logs() -> tuple[Dict[str, Any], int]:
             event_level='error',
             audit_user=current_user.id
         )
-        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+        return api_error('Internal server error', code='internal')
 
 
 @admin2_bp.route('/admin/clear_permission_errors', methods=['POST'])
@@ -605,4 +600,4 @@ def clear_permission_errors() -> tuple[Dict[str, Any], int]:
     """
     for key in ('permission_check_failed', 'permission_errors', 'permission_check_path'):
         session.pop(key, None)
-    return jsonify({'success': True}), 200
+    return api_ok()

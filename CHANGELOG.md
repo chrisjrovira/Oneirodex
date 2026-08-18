@@ -221,6 +221,247 @@ Work since the 1.0.0-beta tag (2026-08-06).
 
 ### Fixed
 
+- **A long wishlist title made a new row on every resubmit.** `POST /api/requests` looked for an
+  existing pending row using the full title but stored `title[:255]`, so anything past the column width
+  could never match itself and the duplicate guard silently did nothing. Truncation now happens once,
+  before the lookup, so the query and the insert compare the same string
+- **Reopening a wishlist request left it stamped as resolved.** `pending` is a valid target for
+  `PATCH /api/requests/<id>`, but the handler set `resolved_at` and `resolved_by_user_id` for every
+  status, so a reopened row read as pending *and* closed and anything counting by `resolved_at` counted
+  it as done. Reopening now clears both stamps
+- **Reset Default Themes still told operators to hard-refresh** — the one instruction the cache fix
+  above made obsolete, on the very page that runs the reset, contradicting both the runbook and member
+  Help. It now says to reload
+- **The same wishlist refusal read two different ways.** A child account blocked from requesting games
+  got the GT-B1 envelope from a game page and a hand-rolled `{ok: false, …}` with no `error_code` from
+  Library multi-select, because `POST /api/games/batch/wishlist` was never migrated alongside
+  `POST /api/requests`. Both `can_request_games` denials answer through `api_error` now
+- **The patch catalog's disabled-module 403 skipped the envelope**, so one endpoint reported failure in
+  two shapes depending on which guard tripped; the same 403 was also copy-pasted into both routes and
+  had already drifted. It is one helper now, and `POST /api/patch-catalog/attach` returns its success
+  through `api_ok` rather than passing a helper's hand-rolled `ok` straight to `jsonify`. Baseline
+  **849 → 846**
+- **The envelope ratchet was counting an optimistic number**, which matters more than any single route
+  because every migration wave steers by it. It only inspected `jsonify({...})` **dict literals**, so an
+  envelope assembled anywhere else was invisible — which is how `patch_catalog.py` was recorded as
+  migrated (6 → 2) with its main success path still hand-rolling `ok`, and how `wishlist.py` left the
+  baseline altogether with three such returns in it. It now also resolves `body = {…}` → `jsonify(body)`
+  and `jsonify(helper())` for bare functions defined in the file or imported absolutely from inside
+  `gametheca/`. Attribute calls like `obj.to_dict()` are deliberately left alone: they cannot be tied to
+  one definition, and their `status` is usually a real field rather than an envelope — a lint that cries
+  wolf gets `--update`-ed away, which is the one outcome that breaks a ratchet. **The recorded count
+  went 846 → 856, and the rise is the point**: those ten call sites were always there, and four of them
+  sit in files that had looked clean. `--list` prints every site with the reason it counted
+- **Four surfaces the blind spot had been hiding now answer through the envelope** — image delete and
+  unmatched-folder toggle in `routes.py`, orphan version cleanup, and free-game claim assist — together
+  with the sibling failure branches in the same handlers, so no handler answers in two shapes. Baseline
+  **856 → 847**. Six of the ten stay recorded on purpose, because the legacy key there is *data, not an
+  envelope*, and "migrating" them would corrupt a response: `preview_hardlink()` returns
+  `ok: would_succeed`, so `api_ok` would overwrite a real "no, this would not work" with `True`;
+  `ollama_status()` reports `error` as the reason Ollama is unreachable on an otherwise fine 200, and
+  `api_ok` strips that key outright; `/healthz` returning `{status: 'ok'}` is the liveness contract three
+  runbooks `curl -f` against. **The ratchet's job is to stop growth, not to dictate migration** — a
+  tolerated entry is sometimes the permanent right answer
+- **The SPA was showing members developer strings instead of the sentences the backend sends.** Every
+  one of the 25 `api/` wrappers hand-rolled its own failure path, and they had drifted into two broken
+  tiers. The worse one never read the body at all — `throw new Error(\`announcements ${status}\`)` — and
+  since `PageStatus` renders an Error's message as the headline, a household member hitting a 403 was
+  shown **"announcements 500"** rather than "Free games are switched off". The milder one read `error`
+  but dropped `error_code` and `status`, which is exactly what the detail line renders. Both are
+  invisible in review because each file reads fine alone; only the set is wrong. One
+  `errorFromResponse()` now serves all of them, 28 call sites across 22 modules, and
+  `envelopeContract.test.js` asserts the set rather than naming files — a new wrapper is free to appear,
+  it just has to use the helper. Two failure paths are exempt with reasons: `/settings_panel` renders
+  HTML, and `discover.js` guards a content-type after an *ok* response. The first version of the guard
+  only looked for a `new Error()` directly after `if (!response.ok)`, which missed the same flattening
+  one level down inside a helper — `tokens.js` had a tidy-looking `readError()` doing exactly it, and
+  five more sat in `batchActions.js`. What identifies the bug is reaching for `data.error` to build an
+  Error, wherever that happens, so that is what the guard matches now: **ten further sites across six
+  modules**. Wrappers that need the parsed body on the success path use `errorFromBody()`, because a
+  Response body can only be read once and calling the response-reading variant after that would quietly
+  yield the developer string again
+- **Six api wrappers could send an empty CSRF token, and the 403 said nothing about why.** Fifteen
+  modules each carried their own token lookup, in **nine variants** that differed in exactly the place
+  that matters — how many sources they try. Nine walked `meta → input → #csrf_token`, three stopped at
+  the input, and two read only the meta tag, so on any page rendering the field rather than the meta tag
+  those two sent `''` and the request failed with nothing to diagnose. One `csrf.js` now holds the
+  **superset** chain, so consolidating widened every narrow copy and narrowed none, and six modules that
+  had been bypassing `window.CSRFUtils` (its own fallbacks, plus a script-element source and a cache)
+  now go through it like the rest. The contract test rejects a local redefinition or a hand-built
+  `X-CSRFToken` header — it caught two stragglers on its first run
+- **Collections answers entirely through the envelope** — the first whole file taken to zero rather than
+  a route at a time, **26 → 0**, baseline **847 → 821**. Five of its handlers opened with the same six
+  lines (look the collection up, 404 if absent, 403 if the caller may not edit it), so those became one
+  `_editable_collection()` and the refusal wording can no longer drift between them. The messages stop
+  being developer strings — "Not found" becomes "Collection not found", "Forbidden" becomes "That
+  collection belongs to someone else" on a write and "That collection is private" on a read, which are
+  different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
+  greps for are kept verbatim
+- **Storage, API tokens and attract mode answer through the envelope** — baseline **175 → 151**.
+  Two more `str(e)` values stop reaching the browser — both were already being logged, so nothing is
+  lost by not also shipping them. `storage.py` keeps one site, now annotated: `preview_hardlink()`
+  returns `ok: would_succeed`, the answer to *"would this hardlink work"* rather than *"did the request
+  work"*, and `api_ok` stamps `ok=True` — which would turn every "no" into a "yes"
+- **HLTB, game mods, game servers and the SMTP test answer through the envelope** — baseline
+  **209 → 175**. `hltb.py` no longer imports `jsonify` at all. One more raw `str(e)` — a database
+  exception, which can carry connection and schema detail — stops reaching the browser on SMTP save.
+  **The SMTP *connection test* deliberately keeps answering 200 with `success: false`**: the request
+  itself succeeded and only the thing it tested failed, `admin_manage_smtp_settings.js` branches on
+  `data.success`, and the test says so in a comment. The SMTP *settings* save keeps its `status` for
+  the same script
+- **IGDB, quality stats, reference sets and related media answer through the envelope** — 12 each → 0,
+  baseline **257 → 209**. Two IGDB endpoints were **answering HTTP 200 with an error body**, so a
+  client branching on status saw a missing parameter or an upstream failure as success. They answer
+  400 and 502 now; the only consumer (`admin_game_identify.js`) never checked status, so nothing
+  relied on the old codes — but two tests pinned them, and both are updated with the reason rather
+  than silently relaxed
+- **Libraries, ownership and social answer through the envelope** — 15 / 15 / 13 → 6 / 0 / 0,
+  baseline **294 → 257**. The friend-request path needed care rather than conversion: it builds one
+  anti-enumeration response and returns it from two places, so an unknown username is indistinguishable
+  from a real one. `api_ok` already returns `(body, status)`, so the `, 200` at each return site had to
+  go with it — and the lint's double-wrap guard would not have caught that form, because the value
+  arrives through a variable rather than a literal call. `test_social_friends_enum.py` still passes.
+  `library.py` keeps six on purpose, now annotated: three batch refusals carry the scan-queue
+  `status: 'rejected'`, one `ok` is computed (`started > 0`, meaning "did any delete start"), and
+  `admin_manage_libs.js` reads `data.status === 'success'` off another
+- **AI assist, the user API and admin settings answer through the envelope** — 17 / 17 / 16 → 1 / 0 / 0,
+  baseline **343 → 294**. `user.py`'s play-status responses keep their `status` key: there it is the
+  game's own state (`beaten`, `unplayed`), not an envelope marker, and the same is true of AI config's
+  `status: 'saved'`. `settings.py`'s `status: 'error'` **was** the marker and is gone — checked first
+  that its only caller, the integrations template, reads `response.ok` and `data.message`, both of which
+  `api_error` still provides. The one site left in `ai_assist.py` is annotated: `ollama_status()` reports
+  `error` as *why* Ollama is unreachable on an otherwise fine 200, and `api_ok` pops `error`, so
+  wrapping it would delete the field the endpoint exists to return
+- **Acquire, companion client and emulator saves answer through the envelope** — **19 / 19 / 17 → 0**,
+  baseline **398 → 343**. All three were single-shape files, so the conversion was mechanical; the two
+  keys that needed a decision both stay as payload data — the acquire readiness `message`, and the
+  delete-save `status: 'deleted'`, which is an outcome rather than an envelope marker
+- **Three more surfaces answer through the envelope** — system settings **23 → 0**, cover art studio
+  **21 → 0**, downloads **20 → 2**; baseline **460 → 398**. Downloads had the same three-guard opening
+  (malformed uuid, missing game, no access) in three handlers, now one `_downloadable_game()`. Its two
+  remaining sites are annotated: the download request's own `status` is data, and the missing-file
+  refusal carries `code: 'path_missing'`, which `api/downloads.js` reads and which **`api_error` cannot
+  carry — `code` is its own parameter for the error_code**. That is the second key, after `status`, the
+  helper's signature blocks. Deleting a download request now answers with `error` as well as `message`,
+  so the member finally sees "Download request not found" rather than a status code
+- **The legacy `routes.py` answers through the envelope where it safely can** — **38 → 13**, baseline
+  **485 → 460**. Four more handlers were passing `str(e)` to the browser; those log and answer with a
+  sentence, including the three that stay on `jsonify`, because fixing a leak never required migrating
+  the shape. The thirteen that remain are the `status` state machine `admin_manage_libs.js` drives —
+  it branches on `'error'`, `'success'`, `'started'`, `'connected'`, `'completed'` and `'not_found'`,
+  and four tests assert on it. There is also a structural reason they cannot move: **`api_error`'s own
+  signature takes `status` as the HTTP code**, so it cannot carry a legacy `status` key at all.
+  `api_ok` can, through its payload dict, which is why the success half of that family did migrate
+- **The envelope lint also rejects a double-wrapped response.** `return api_ok({...}), 200` nests the
+  `(body, status)` tuple the helper already built, and Flask rejects it — while compiling cleanly and
+  carrying no legacy key, so neither the interpreter nor the call-site count notices. Caught twice
+  while converting multi-line literals, where the closing `}), 200` survives the rewrite
+- **Scan management answers through the envelope** — `scan.py` **43 → 7**, baseline **521 → 485**.
+  Seven stay and are annotated where they sit: `status` there is the **scan-queue contract**, not the
+  legacy marker — `scanQueuePolicy.js` documents it as `'queued' | 'started' | 'rejected'` and
+  `admin_manage_scanjobs.js` branches on `status === 'rejected'`. The per-item `ok` inside each
+  `results` list is untouched for the same reason: it answers "did this folder succeed", not "did the
+  request succeed"
+- **The envelope lint now rejects a response that is built and thrown away.** `api_ok`/`api_error`
+  both build a response *and* return it, so a call in statement position means a handler computed a
+  refusal and then honoured the request anyway. Not baselined — it is never legitimate. Found the hard
+  way: a migration regex ate the `return` on eleven guards in one file, and exactly one of the eleven
+  had a test covering that path, so the suite reported a single failure for eleven broken validators
+- **Admin artwork answers through the envelope** — `routes_admin_ext/images.py` **37 → 0**, baseline
+  **558 → 521**. Two handlers passed `str(e)` from a bare `except Exception` to the browser; those now
+  log and answer with a sentence. The unwritable-`IMAGE_SAVE_PATH` refusals keep every field they
+  carried — `image_save_path`, the zeroed counters, the `errors` list — because the Images page renders
+  them to explain *why* nothing downloaded, and a refusal that drops them would just look broken
+- **Library tools answer through the envelope** — `library_tools.py` **32 → 0**, baseline
+  **590 → 558**. This was the `{'status': 'ok'}` family, the third of the five competing shapes and the
+  one that needed checking rather than converting: `status` is a real field name as well as an envelope
+  marker. Here all 27 were the marker (`'ok'` or `'error'` and nothing else), and the admin clients read
+  `response.status` and `data.message || data.error` rather than the body's `status`, so dropping it is
+  safe. `routes.py` keeps its own — the same key there carries genuine scan-job state (`starting`,
+  `deleting_games`, `completed`), which is data
+- **Admin discovery sections and zones answer through the envelope** — `routes_admin_ext/system.py`
+  **40 → 0**, baseline **630 → 590**. Another single-family file: all 40 sites used `{success, error}`,
+  which `api_error` still mirrors, so the admin SPA is unaffected. The seven `Internal server error`
+  handlers were already doing the right thing — logging the exception and returning a generic sentence —
+  so they only changed shape
+- **Metadata providers answer through the envelope, and an upstream failure is now nameable** —
+  `providers.py` **29 → 0**, baseline **659 → 630**. Five search endpoints refused a missing `q` in
+  their own words and four spelled out the same "not configured" 503; both are one helper now, with
+  `provider` still riding along as an envelope extra because the admin UI uses it to link to that
+  integration's card. **`bad_gateway` (502) joins `ERROR_CODES`** — fifteen route sites across five
+  files already returned a bare 502 with nothing to branch on, and "the provider answered badly" is a
+  different operator action from "we broke" (`internal`) and from "the integration is switched off"
+  (`unavailable`)
+- **The admin user editor answers through the envelope** — `routes_admin_ext/users.py` **36 → 0**,
+  baseline **695 → 659**. This file used the *other* legacy shape throughout — `{success, message}` at
+  all 36 sites — which is exactly the case the envelope was designed to absorb without breaking
+  anything: `api_error` still mirrors `message` and `success`, so the admin SPA reading them is
+  unaffected. Six validator refusals in a row became one lazy `_first_refusal()` that takes callables
+  rather than results, so `check_username_unique` still does not hit the database when the username was
+  already rejected. The refusals inside conditional branches stay written out — one of those pairs mixes
+  a 400 with a 403, and folding it into a single-code helper would have hidden that
+- **Chat answers entirely through the envelope** — `chat.py` **38 → 0**, baseline **733 → 695**. Ten
+  handlers answered a bare `'Not found'`, across four different causes; they are one
+  `_refuse_not_found()` now, with the reason for the opacity stated once instead of being folklore —
+  a 403 would confirm that a channel someone cannot see exists. Channel lookups collapse into
+  `_visible_channel()` / `_active_channel()`. The `str(exc)` passthroughs are kept: unlike the raw
+  system exceptions in `game.py`, the chat helpers raise `PermissionError`/`ValueError` carrying a
+  sentence written for the member
+- **A test could only pass once against the shared test database.**
+  `test_chat_spaces_voice_acl.py` committed a game with a hardcoded unique `igdb_id`, and `conftest`'s
+  `db_session` deliberately never rolls back — `drop_all` is commented out for speed, so rows survive
+  the run. The first run left the row behind and every later run died on a `UniqueViolation` that looks
+  nothing like its cause. Now derives the id the way `test_library_health_pulse` already did
+- **Chat spaces answers entirely through the envelope** — `chat_spaces_api.py` **28 → 0**, baseline
+  **761 → 733**, and `jsonify` is no longer imported there at all. Seven handlers opened with the same
+  "space not found" 404, one of which also rejected an archived space; `_refuse_missing_space()` carries
+  both so the two wordings cannot drift. The deliberate white lie stays: a child account asking for a
+  voice channel that is not child-safe still gets "Voice channel not found" rather than a 403, because
+  the refusal should not confirm the channel exists
+- **The game API answers through the envelope** — `routes_apis/game.py` **41 → 6**, baseline
+  **796 → 761**. Five handlers shared the "load the game, 404, check access, 403" opening and had
+  already drifted — the details endpoint said "Access denied" where the other four said "Forbidden",
+  for the identical check — so that is one `_refuse_inaccessible_game()` now. **Four handlers were
+  handing raw exception text to the browser** (`str(e)` from a failed commit, a library move, an IGDB
+  id lookup), which can carry filesystem paths; those go to the log and the browser gets a sentence.
+  The six that stay are recorded on purpose and annotated in place: five batch endpoints answer
+  `ok: len(errors) == 0`, which means *"did every item succeed"* rather than *"did the request
+  succeed"* — the SPA reads `data.ok !== false` to flag a partial batch, so routing those through
+  `api_ok` would stamp them `True` and hide the failures
+- **Cheats answers entirely through the envelope** — `emulator_cheats.py` **25 → 0**, baseline
+  **821 → 796**. Five handlers shared the same four-line "load the game, 404, check access, 403"
+  opening, now one `_accessible_game()`. The `cheat_surface` key both refusals carry — the one the
+  Cheats and PC-cheats panels mount on — rides through as an envelope extra, so the surface-mismatch
+  responses keep telling the client which panel belongs there
+- **Moving the tile-size slider and navigating away left two timers running.** Neither was ever
+  cleared: the transition-suppression class lives on `<html>` rather than on anything React unmounts, so
+  leaving the library mid-drag stripped the tile-size transition for the rest of the session, and the
+  debounced preference save fired from an unmounted component. The class comes off on unmount and the
+  owed save is **flushed rather than dropped**, so the drag that was just made still persists
+- **The admin SPA had the same duplication, one layer thinner.** `adminApi.js` was already the shared
+  fetch module, but `SupportInboxPage` kept its own `csrfToken()`, `AnnouncementsPage` kept a whole
+  private `postJson` / `getJson` pair — missing the 401→`/login` redirect every other admin call has —
+  and **eleven** sites built the `X-CSRFToken` header by hand, three of them inside `adminApi.js`
+  itself. All of it now goes through `csrfHeaders()`. The four error paths in that module also threw a
+  bare `Error(message)`, so a page could show the sentence but could not tell a 403 from a 500;
+  `adminError()` keeps `status` and `error_code` on the Error. Unlike the member app, the narrow
+  meta-tag-only token lookup was **not** an active bug here — `base_admin.html` always renders the meta
+  tag — so widening it is consistency rather than a fix. `ops-glance` was already clean
+- **The CSS token ratchet could not be run locally on Windows.** `cssTokenLint.test.js` died with
+  `SyntaxError: Invalid or unexpected token` before collecting a single test, because `.gitattributes`
+  said only `* text=auto` — so a Windows checkout got `scripts/css-token-lint.mjs` with CRLF, and Vite's
+  transform rejects a CRLF `.mjs` (sibling `.js` files are fine; it is specific to the extension). CI
+  checks out LF and never saw it, so the gate was working *there* while a local `npm test` was red for a
+  reason unrelated to whatever you had changed — the surest way to teach people to ignore a failing
+  suite. `*.mjs text eol=lf` pins it and the four `.mjs` files are re-materialised
+- **The unmatched-folder AJAX path never rolled back its failed transaction** — `db.session.rollback()`
+  sat after the `return`, so only the non-AJAX branch reached it — and it handed the raw SQLAlchemy
+  error text to the browser. The rollback now runs before either branch returns, and the exception
+  detail goes to the log while the browser gets a sentence
+- **Success responses were missing the `error` and `error_code` keys the envelope promises.** `api_ok`
+  stripped them and never put them back, so a client reading `data.error_code` got `undefined` on the
+  way through and a real token on the way out. They are present and `null` on success now, which is what
+  the contract said all along
 - **A completed theme reset stayed invisible for up to an hour** — the reason a run of CSS fixes looked
   like they never landed. `asgi.py` served every static file with `public, max-age=3600` and **no
   validator** (no ETag, no `Last-Modified`), while Reset Themes rewrites

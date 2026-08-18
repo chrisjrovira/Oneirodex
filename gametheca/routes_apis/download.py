@@ -4,6 +4,8 @@ import re
 from typing import Tuple
 
 from flask import current_app, jsonify, request
+
+from gametheca.utils.api_response import api_error, api_ok
 from flask_login import current_user, login_required
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
@@ -111,19 +113,29 @@ def _create_or_get_download_request(
     return new_request
 
 
+def _downloadable_game(game_uuid: str):
+    """Load a game the caller may download, or the response that refuses it.
+
+    Three handlers opened with the same three guards — malformed uuid, missing
+    game, no access. Returns ``(game, None)`` or ``(None, response)``.
+    """
+    if not _UUID_RE.match(game_uuid):
+        return None, api_error('Invalid game UUID', code='bad_request')
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game:
+        return None, api_error('Game not found', code='not_found')
+    if not user_can_access_game(current_user, game):
+        return None, api_error('Access denied', code='forbidden')
+    return game, None
+
+
 @apis_bp.route('/games/<game_uuid>/versions', methods=['GET'])
 @login_required
 @require_api_scope('read:library')
 def api_list_game_versions(game_uuid: str) -> Tuple[dict, int]:
-    if not _UUID_RE.match(game_uuid):
-        return jsonify({'error': 'Invalid game UUID'}), 400
-
-    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
-    if not game:
-        return jsonify({'error': 'Game not found'}), 404
-
-    if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Access denied'}), 403
+    game, refusal = _downloadable_game(game_uuid)
+    if refusal is not None:
+        return refusal
 
     versions = list_game_versions(game)
     # Do not expose raw disk paths to clients
@@ -148,15 +160,9 @@ def api_list_game_versions(game_uuid: str) -> Tuple[dict, int]:
 @librarian_required
 def api_cleanup_orphan_versions(game_uuid: str) -> Tuple[dict, int]:
     """Delete GameUpdate/GameExtra rows for this game whose files are gone."""
-    if not _UUID_RE.match(game_uuid):
-        return jsonify({'error': 'Invalid game UUID'}), 400
-
-    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
-    if not game:
-        return jsonify({'error': 'Game not found'}), 404
-
-    if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Access denied'}), 403
+    game, refusal = _downloadable_game(game_uuid)
+    if refusal is not None:
+        return refusal
 
     try:
         result = cleanup_orphan_versions(game)
@@ -166,7 +172,7 @@ def api_cleanup_orphan_versions(game_uuid: str) -> Tuple[dict, int]:
             event_type='game',
             event_level='information',
         )
-        return jsonify(result), 200
+        return api_ok(result)
     except Exception as exc:
         db.session.rollback()
         log_system_event(
@@ -174,7 +180,7 @@ def api_cleanup_orphan_versions(game_uuid: str) -> Tuple[dict, int]:
             event_type='game',
             event_level='error',
         )
-        return jsonify({'ok': False, 'error': 'Failed to clean orphan versions'}), 500
+        return api_error('Failed to clean orphan versions', code='internal')
 
 
 @apis_bp.route('/downloads/games/<game_uuid>', methods=['POST'])
@@ -182,15 +188,9 @@ def api_cleanup_orphan_versions(game_uuid: str) -> Tuple[dict, int]:
 @require_api_scope('write:download')
 def api_initiate_game_download(game_uuid: str) -> Tuple[dict, int]:
     """Create or reuse a download request for companion clients."""
-    if not _UUID_RE.match(game_uuid):
-        return jsonify({'error': 'Invalid game UUID'}), 400
-
-    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
-    if not game:
-        return jsonify({'error': 'Game not found'}), 404
-
-    if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Access denied'}), 403
+    game, refusal = _downloadable_game(game_uuid)
+    if refusal is not None:
+        return refusal
 
     payload = request.get_json(silent=True) or {}
     kind = (payload.get('kind') or request.args.get('kind') or 'base').strip().lower()
@@ -208,9 +208,9 @@ def api_initiate_game_download(game_uuid: str) -> Tuple[dict, int]:
             version_uuid=version_uuid,
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except LookupError as exc:
-        return jsonify({'error': str(exc)}), 404
+        return api_error(str(exc), code='not_found')
 
     # Refuse downloads when the version path is gone (Wave 14b residual / 15a).
     if (
@@ -218,6 +218,9 @@ def api_initiate_game_download(game_uuid: str) -> Tuple[dict, int]:
         or not str(file_location).strip()
         or not (os.path.isfile(file_location) or os.path.isdir(file_location))
     ):
+        # Deliberately not api_error: this carries `code: 'path_missing'`, which
+        # api/downloads.js reads off the body, and api_error's own signature
+        # takes `code` for the error_code. Baselined on purpose.
         return jsonify({
             'error': 'Version file is missing on disk',
             'code': 'path_missing',
@@ -231,11 +234,11 @@ def api_initiate_game_download(game_uuid: str) -> Tuple[dict, int]:
 
     allowed_bases = get_allowed_base_directories(current_app)
     if not allowed_bases:
-        return jsonify({'error': 'Server configuration error'}), 500
+        return api_error('Server configuration error', code='internal')
 
     is_safe, _error_message = is_safe_path(file_location, allowed_bases)
     if not is_safe:
-        return jsonify({'error': 'Access denied'}), 403
+        return api_error('Access denied', code='forbidden')
 
     zip_file_path = _resolve_zip_file_path(game, file_location if kind == 'base' else zip_hint)
 
@@ -245,6 +248,8 @@ def api_initiate_game_download(game_uuid: str) -> Tuple[dict, int]:
             file_location=file_location,
             zip_file_path=zip_file_path,
         )
+        # `status` here is the download request's own state, not an envelope
+        # marker — data, so it stays.
         return jsonify(
             {
                 'download_id': download_request.id,
@@ -261,7 +266,7 @@ def api_initiate_game_download(game_uuid: str) -> Tuple[dict, int]:
             event_type='game',
             event_level='error',
         )
-        return jsonify({'error': 'Failed to create download request'}), 500
+        return api_error('Failed to create download request', code='internal')
 
 
 def _download_file_name(download_request: DownloadRequest):
@@ -306,18 +311,12 @@ def api_delete_download_request(request_id: int) -> Tuple[dict, int]:
     """Delete a download request."""
     if request_id <= 0:
         log_system_event('download_api', f'Invalid request ID: {request_id}', 'warning')
-        return jsonify({
-            'status': 'error',
-            'message': 'Invalid request ID'
-        }), 400
+        return api_error('Invalid request ID', code='bad_request')
 
     try:
         download_request = db.session.get(DownloadRequest, request_id)
         if not download_request:
-            return jsonify({
-                'status': 'error',
-                'message': 'Download request not found'
-            }), 404
+            return api_error('Download request not found', code='not_found')
 
         log_system_event(
             'download_api',
@@ -330,10 +329,7 @@ def api_delete_download_request(request_id: int) -> Tuple[dict, int]:
 
         log_system_event('download_api', f'Successfully deleted download request {request_id}', 'info')
 
-        return jsonify({
-            'status': 'success',
-            'message': 'Download request deleted successfully'
-        }), 200
+        return api_ok({'message': 'Download request deleted successfully'})
 
     except Exception as e:
         db.session.rollback()
@@ -342,7 +338,5 @@ def api_delete_download_request(request_id: int) -> Tuple[dict, int]:
             f'Error deleting download request {request_id}: {str(e)}',
             'error'
         )
-        return jsonify({
-            'status': 'error',
-            'message': f'Error deleting download request: {str(e)}'
-        }), 500
+        current_app.logger.warning('delete download request failed: %s', e)
+        return api_error('Could not delete the download request', code='internal')

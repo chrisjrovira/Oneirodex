@@ -2,11 +2,8 @@
 import { useEffect, useState } from 'react'
 import { DataTable } from './DataTable'
 import { MetricStrip } from './opsWidgets'
+import { csrfHeaders } from './adminApi'
 import { showToast } from './utils/toast'
-
-function csrfToken() {
-  return document.querySelector('meta[name="csrf-token"]')?.content || ''
-}
 
 export function SupportInboxPage() {
   const [tickets, setTickets] = useState([])
@@ -38,7 +35,7 @@ export function SupportInboxPage() {
       const response = await fetch(`/api/support/tickets/${id}/resolve`, {
         method: 'POST',
         credentials: 'same-origin',
-        headers: { 'X-CSRFToken': csrfToken() },
+        headers: csrfHeaders(),
       })
       if (!response.ok) {
         throw new Error(`resolve failed (${response.status})`)

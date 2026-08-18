@@ -1,3 +1,5 @@
+import { errorFromResponse } from './envelopeError'
+
 export async function fetchDiscoverSections({ signal } = {}) {
   const response = await fetch('/api/discover/sections', {
     credentials: 'same-origin',
@@ -5,7 +7,7 @@ export async function fetchDiscoverSections({ signal } = {}) {
     headers: { Accept: 'application/json' },
   })
   if (!response.ok) {
-    throw new Error(`discover sections failed (${response.status})`)
+    throw await errorFromResponse(response, 'discover sections')
   }
   const contentType = response.headers.get('content-type') || ''
   if (!contentType.includes('application/json')) {

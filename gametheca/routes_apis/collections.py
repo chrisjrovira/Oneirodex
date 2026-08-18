@@ -1,6 +1,8 @@
 """Collections and announcements APIs."""
 
 from flask import jsonify, request
+
+from gametheca.utils.api_response import api_error, api_ok
 from flask_login import current_user, login_required
 from sqlalchemy import func, select
 
@@ -66,7 +68,7 @@ def create_collection():
     data = request.get_json(silent=True) or {}
     name = (data.get('name') or '').strip()
     if not name:
-        return jsonify({'error': 'name required'}), 400
+        return api_error('A name is required', code='bad_request')
     collection = GameCollection(
         name=name[:120],
         description=(data.get('description') or '')[:4000] or None,
@@ -77,6 +79,25 @@ def create_collection():
     db.session.add(collection)
     db.session.commit()
     return jsonify(_collection_payload(collection, item_count=0)), 201
+
+
+def _editable_collection(collection_uuid: str):
+    """Load a collection for a write, or the response that refuses the write.
+
+    Five handlers opened with this identical pair of guards — look up by uuid,
+    404 if absent, 403 if the caller may not edit it. Returns
+    ``(collection, None)`` on success and ``(None, response)`` otherwise, so a
+    handler starts with two lines instead of six and the refusal wording cannot
+    drift between them.
+    """
+    collection = db.session.execute(
+        select(GameCollection).filter_by(uuid=collection_uuid)
+    ).scalars().first()
+    if not collection:
+        return None, api_error('Collection not found', code='not_found')
+    if not _can_edit_collection(collection):
+        return None, api_error('That collection belongs to someone else', code='forbidden')
+    return collection, None
 
 
 def _is_collection_owner_or_admin(collection: GameCollection) -> bool:
@@ -105,30 +126,26 @@ def get_collection(collection_uuid: str):
         select(GameCollection).filter_by(uuid=collection_uuid)
     ).scalars().first()
     if not collection:
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Collection not found', code='not_found')
     if not collection.is_public and not _is_collection_owner_or_admin(collection):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('That collection is private', code='forbidden')
     return jsonify(_filtered_collection_payload(collection))
 
 
 @apis_bp.route('/collections/<collection_uuid>', methods=['PATCH'])
 @login_required
 def update_collection(collection_uuid: str):
-    collection = db.session.execute(
-        select(GameCollection).filter_by(uuid=collection_uuid)
-    ).scalars().first()
-    if not collection:
-        return jsonify({'error': 'Not found'}), 404
-    if not _can_edit_collection(collection):
-        return jsonify({'error': 'Forbidden'}), 403
+    collection, refusal = _editable_collection(collection_uuid)
+    if refusal is not None:
+        return refusal
     if collection.is_system:
-        return jsonify({'error': 'System collections cannot be edited'}), 400
+        return api_error('System collections cannot be edited', code='bad_request')
 
     data = request.get_json(silent=True) or {}
     if 'name' in data:
         name = (data.get('name') or '').strip()
         if not name:
-            return jsonify({'error': 'name required'}), 400
+            return api_error('A name is required', code='bad_request')
         collection.name = name[:120]
     if 'description' in data:
         raw = data.get('description')
@@ -146,38 +163,30 @@ def update_collection(collection_uuid: str):
 @apis_bp.route('/collections/<collection_uuid>', methods=['DELETE'])
 @login_required
 def delete_collection(collection_uuid: str):
-    collection = db.session.execute(
-        select(GameCollection).filter_by(uuid=collection_uuid)
-    ).scalars().first()
-    if not collection:
-        return jsonify({'error': 'Not found'}), 404
-    if not _can_edit_collection(collection):
-        return jsonify({'error': 'Forbidden'}), 403
+    collection, refusal = _editable_collection(collection_uuid)
+    if refusal is not None:
+        return refusal
     if collection.is_system:
-        return jsonify({'error': 'System collections cannot be deleted'}), 400
+        return api_error('System collections cannot be deleted', code='bad_request')
     uuid = collection.uuid
     db.session.delete(collection)
     db.session.commit()
-    return jsonify({'ok': True, 'uuid': uuid})
+    return api_ok({'uuid': uuid})
 
 
 @apis_bp.route('/collections/<collection_uuid>/items', methods=['POST'])
 @login_required
 def add_collection_item(collection_uuid: str):
-    collection = db.session.execute(
-        select(GameCollection).filter_by(uuid=collection_uuid)
-    ).scalars().first()
-    if not collection:
-        return jsonify({'error': 'Not found'}), 404
-    if not _can_edit_collection(collection):
-        return jsonify({'error': 'Forbidden'}), 403
+    collection, refusal = _editable_collection(collection_uuid)
+    if refusal is not None:
+        return refusal
     data = request.get_json(silent=True) or {}
     game_uuid = (data.get('game_uuid') or '').strip()
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Game not accessible'}), 403
+        return api_error('You do not have access to that game', code='forbidden')
     existing = db.session.execute(
         select(GameCollectionItem).filter_by(collection_id=collection.id, game_uuid=game_uuid)
     ).scalars().first()
@@ -193,13 +202,9 @@ def add_collection_item(collection_uuid: str):
 @apis_bp.route('/collections/<collection_uuid>/items/<game_uuid>', methods=['DELETE'])
 @login_required
 def remove_collection_item(collection_uuid: str, game_uuid: str):
-    collection = db.session.execute(
-        select(GameCollection).filter_by(uuid=collection_uuid)
-    ).scalars().first()
-    if not collection:
-        return jsonify({'error': 'Not found'}), 404
-    if not _can_edit_collection(collection):
-        return jsonify({'error': 'Forbidden'}), 403
+    collection, refusal = _editable_collection(collection_uuid)
+    if refusal is not None:
+        return refusal
     item = db.session.execute(
         select(GameCollectionItem).filter_by(
             collection_id=collection.id,
@@ -207,33 +212,29 @@ def remove_collection_item(collection_uuid: str, game_uuid: str):
         )
     ).scalars().first()
     if not item:
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('That game is not in the collection', code='not_found')
     db.session.delete(item)
     db.session.commit()
-    return jsonify({'ok': True, 'game_uuid': game_uuid})
+    return api_ok({'game_uuid': game_uuid})
 
 
 @apis_bp.route('/collections/<collection_uuid>/items/order', methods=['PUT'])
 @login_required
 def reorder_collection_items(collection_uuid: str):
-    collection = db.session.execute(
-        select(GameCollection).filter_by(uuid=collection_uuid)
-    ).scalars().first()
-    if not collection:
-        return jsonify({'error': 'Not found'}), 404
-    if not _can_edit_collection(collection):
-        return jsonify({'error': 'Forbidden'}), 403
+    collection, refusal = _editable_collection(collection_uuid)
+    if refusal is not None:
+        return refusal
 
     data = request.get_json(silent=True) or {}
     game_uuids = data.get('game_uuids')
     if not isinstance(game_uuids, list):
-        return jsonify({'error': 'game_uuids required'}), 400
+        return api_error('game_uuids must be a list', code='bad_request')
     normalized = [str(uuid).strip() for uuid in game_uuids if uuid is not None]
     if len(normalized) != len(set(normalized)):
-        return jsonify({'error': 'game_uuids must list each collection item exactly once'}), 400
+        return api_error('game_uuids must list each collection item exactly once', code='bad_request')
     current_uuids = {item.game_uuid for item in collection.items}
     if set(normalized) != current_uuids:
-        return jsonify({'error': 'game_uuids must list each collection item exactly once'}), 400
+        return api_error('game_uuids must list each collection item exactly once', code='bad_request')
 
     by_uuid = {item.game_uuid: item for item in collection.items}
     for position, game_uuid in enumerate(normalized):
@@ -262,12 +263,12 @@ def list_announcements():
 @login_required
 def create_announcement():
     if current_user.role != 'admin':
-        return jsonify({'error': 'Admin required'}), 403
+        return api_error('Admin required', code='forbidden')
     data = request.get_json(silent=True) or {}
     title = (data.get('title') or '').strip()
     body = (data.get('body') or '').strip()
     if not title or not body:
-        return jsonify({'error': 'title and body required'}), 400
+        return api_error('A title and body are required', code='bad_request')
     row = Announcement(
         title=title[:200],
         body=body[:20000],
@@ -352,14 +353,20 @@ def free_games_claim_assist(offer_id: int):
     from gametheca.utils.free_games import claim_assist_for_user
 
     if not bool(current_app.config.get('ENABLE_FREE_GAMES', True)):
-        return jsonify({'error': 'Free games disabled'}), 403
+        return api_error('Free games are switched off', code='forbidden')
 
     offer = db.session.execute(
         select(FreeGameOffer).where(FreeGameOffer.id == offer_id)
     ).scalars().first()
     if offer is None:
-        return jsonify({'error': 'Offer not found'}), 404
+        return api_error('Offer not found', code='not_found')
 
     result = claim_assist_for_user(current_user.id, offer)
-    status = 200 if result.get('ok') else 400
-    return jsonify(result), status
+    if not result.get('ok'):
+        # The helper's failure shape is `{ok: False, error: <sentence>}` and
+        # carries nothing else, so nothing is lost re-reporting it as a 400.
+        return api_error(
+            result.get('error') or 'Ownership assist is not available',
+            code='bad_request',
+        )
+    return api_ok(result)

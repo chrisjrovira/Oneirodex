@@ -2,6 +2,7 @@
 import os
 from datetime import datetime, timezone
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import render_template, request, jsonify, current_app, url_for
 from flask_login import login_required
 from sqlalchemy import select
@@ -61,7 +62,7 @@ def image_queue_list():
     try:
         type_filter = parse_image_kind(raw_kind, default=None, allow_all=True)
     except ValueError:
-        return jsonify({'error': image_kinds_error_message()}), 400
+        return api_error(image_kinds_error_message(), code='bad_request')
 
     query = select(Image).join(Game)
 
@@ -139,14 +140,15 @@ def download_images():
     if not path_status.get('writable') and (
         'image_ids' in data or data.get('retry_failed') or 'batch_size' in data
     ):
-        return jsonify({
-            'success': False,
-            'message': path_status.get('error') or 'IMAGE_SAVE_PATH is not writable',
-            'image_save_path': path_status,
-            'downloaded': 0,
-            'failed': 0,
-            'errors': [{'error': path_status.get('error') or 'IMAGE_SAVE_PATH is not writable'}],
-        }), 503
+        writable = path_status.get('error') or 'IMAGE_SAVE_PATH is not writable'
+        return api_error(
+            writable,
+            code='unavailable',
+            image_save_path=path_status,
+            downloaded=0,
+            failed=0,
+            errors=[{'error': writable}],
+        )
 
     try:
         if 'image_ids' in data or data.get('retry_failed'):
@@ -198,8 +200,7 @@ def download_images():
             message = f'Downloaded {downloaded} images'
             if failed:
                 message += f', {failed} failed'
-            return jsonify({
-                'success': True,
+            return api_ok({
                 'downloaded': downloaded,
                 'failed': failed,
                 'errors': errors,
@@ -213,21 +214,21 @@ def download_images():
             downloaded = download_pending_images(
                 batch_size=batch_size, delay_between_downloads=0.1, app=current_app
             )
-            return jsonify({
-                'success': True,
+            return api_ok({
                 'downloaded': downloaded,
                 'message': f'Downloaded {downloaded} images',
                 'image_save_path': path_status,
             })
 
-        return jsonify({'success': False, 'message': 'No valid parameters provided'}), 400
+        return api_error('No valid parameters provided', code='bad_request')
 
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': str(e),
-            'image_save_path': path_status,
-        }), 500
+        current_app.logger.warning('image download failed: %s', e)
+        return api_error(
+            'Could not download the images',
+            code='internal',
+            image_save_path=path_status,
+        )
 
 
 @admin2_bp.route('/admin/api/delete_image/<int:image_id>', methods=['DELETE'])
@@ -238,7 +239,7 @@ def delete_image(image_id):
     try:
         image = db.session.get(Image, image_id)
         if not image:
-            return jsonify({'success': False, 'message': 'Image not found'}), 404
+            return api_error('Image not found', code='not_found')
 
         if image.is_downloaded and image.url:
             file_path = os.path.join(current_app.config['IMAGE_SAVE_PATH'], image.url)
@@ -248,10 +249,11 @@ def delete_image(image_id):
         db.session.delete(image)
         db.session.commit()
 
-        return jsonify({'success': True, 'message': 'Image deleted successfully'})
+        return api_ok({'message': 'Image deleted successfully'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        current_app.logger.warning('image download failed: %s', e)
+        return api_error('Could not download the images', code='internal')
 
 
 def _parse_providers_arg(raw) -> list[str] | None:
@@ -276,10 +278,10 @@ def covers_search_single():
     if game_uuid and not query:
         game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
         if not game:
-            return jsonify({'error': 'Game not found', 'game_uuid': game_uuid}), 404
+            return api_error('Game not found', code='not_found', game_uuid=game_uuid)
         query = game.name or ''
     if not query:
-        return jsonify({'error': 'query or game_uuid is required'}), 400
+        return api_error('query or game_uuid is required', code='bad_request')
 
     providers = _parse_providers_arg(data.get('providers'))
     try:
@@ -307,16 +309,17 @@ def covers_apply_single():
     image_url = (data.get('url') or '').strip()
     provider_id = (data.get('provider') or 'steamgriddb').strip().lower() or 'steamgriddb'
     if not game_uuid:
-        return jsonify({'error': 'game_uuid is required'}), 400
+        return api_error('game_uuid is required', code='bad_request')
     if not image_url:
-        return jsonify({'error': 'url is required'}), 400
+        return api_error('url is required', code='bad_request')
 
     path_status = image_save_path_status()
     if not path_status.get('writable'):
-        return jsonify({
-            'error': path_status.get('error') or 'IMAGE_SAVE_PATH is not writable',
-            'image_save_path': path_status,
-        }), 503
+        return api_error(
+            path_status.get('error') or 'IMAGE_SAVE_PATH is not writable',
+            code='unavailable',
+            image_save_path=path_status,
+        )
 
     try:
         result = apply_cover_from_url(
@@ -326,12 +329,12 @@ def covers_apply_single():
             image_type='cover',
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc), 'game_uuid': game_uuid}), 400
+        return api_error(str(exc), code='bad_request', game_uuid=game_uuid)
     except LookupError as exc:
-        return jsonify({'error': str(exc), 'game_uuid': game_uuid}), 404
+        return api_error(str(exc), code='not_found', game_uuid=game_uuid)
     except Exception as exc:  # noqa: BLE001
         db.session.rollback()
-        return jsonify({'error': str(exc), 'game_uuid': game_uuid}), 502
+        return api_error(str(exc), code='bad_gateway', game_uuid=game_uuid)
 
     return jsonify({**result, 'image_save_path': path_status})
 
@@ -439,15 +442,15 @@ def artwork_auto_pick():
 
     path_status = image_save_path_status()
     if not path_status.get('writable'):
-        return jsonify({
-            'success': False,
-            'applied': 0,
-            'failed': 0,
-            'results': [],
-            'policy': list(resolve_policy(policy)),
-            'error': path_status.get('error') or 'IMAGE_SAVE_PATH is not writable',
-            'image_save_path': path_status,
-        }), 503
+        return api_error(
+            path_status.get('error') or 'IMAGE_SAVE_PATH is not writable',
+            code='unavailable',
+            applied=0,
+            failed=0,
+            results=[],
+            policy=list(resolve_policy(policy)),
+            image_save_path=path_status,
+        )
 
     result = batch_apply_covers(
         game_uuids=game_uuids,
@@ -459,8 +462,7 @@ def artwork_auto_pick():
         policy=policy,
         generate_fn=_cover_generate_fn,
     )
-    return jsonify({
-        'success': True,
+    return api_ok({
         'message': (
             f"Auto-pick finished: applied={result.get('applied', 0)} "
             f"failed={result.get('failed', 0)}"
@@ -486,28 +488,29 @@ def artwork_generate():
     )
 
     if not ai_artwork_enabled():
-        return jsonify({
-            'error': 'Generated artwork is off. Set ENABLE_AI_ARTWORK=true and AI_ARTWORK_URL.',
-        }), 403
+        return api_error(
+            'Generated artwork is off. Set ENABLE_AI_ARTWORK=true and AI_ARTWORK_URL.',
+            code='forbidden',
+        )
 
     data = request.get_json(silent=True) or {}
     game_uuid = (data.get('game_uuid') or '').strip()
     if not game_uuid:
-        return jsonify({'error': 'game_uuid is required'}), 400
+        return api_error('game_uuid is required', code='bad_request')
 
     try:
         result = generate_and_store_cover(
             game_uuid, image_type=data.get('image_type') or 'cover',
         )
     except LookupError:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except ArtworkGenerationError as exc:
         # 502: our config is fine, the generation endpoint is what failed.
-        return jsonify({'error': str(exc)}), 502
+        return api_error(str(exc), code='bad_gateway')
 
-    return jsonify({'ok': True, **result})
+    return api_ok(result)
 
 
 @admin2_bp.route('/admin/api/theme/fonts', methods=['POST'])
@@ -522,14 +525,14 @@ def theme_font_upload():
     from gametheca.utils.theme_fonts import store_font_file
 
     if 'file' not in request.files:
-        return jsonify({'error': 'Choose a font file to upload.'}), 400
+        return api_error('Choose a font file to upload.', code='bad_request')
     try:
         stored = store_font_file(request.files['file'])
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except OSError as exc:
-        return jsonify({'error': f'Could not write to the font folder: {exc}'}), 503
-    return jsonify({'ok': True, **stored}), 201
+        return api_error(f'Could not write to the font folder: {exc}', code='unavailable')
+    return api_ok(stored, status=201)
 
 
 @admin2_bp.route('/admin/api/theme/fonts/<path:filename>', methods=['DELETE'])
@@ -542,10 +545,10 @@ def theme_font_delete(filename: str):
     try:
         removed = delete_font_file(filename)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     if not removed:
-        return jsonify({'error': 'Font not found'}), 404
-    return jsonify({'ok': True, 'removed': filename})
+        return api_error('Font not found', code='not_found')
+    return api_ok({'removed': filename})
 
 
 @admin2_bp.route('/admin/api/images/batch_upload', methods=['POST'])
@@ -569,7 +572,7 @@ def images_batch_upload():
 
     files = request.files.getlist('files') or request.files.getlist('file')
     if not files:
-        return jsonify({'error': 'Choose one or more image files.'}), 400
+        return api_error('Choose one or more image files.', code='bad_request')
 
     default_kind = request.form.get('image_type') or request.form.get('kind') or 'cover'
     explicit_uuid = (request.form.get('game_uuid') or '').strip()
@@ -647,8 +650,7 @@ def images_batch_upload():
     if stored:
         db.session.commit()
 
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'stored': len(stored),
         'failed': len(errors),
         'images': stored,
@@ -675,15 +677,16 @@ def artwork_generate_batch():
     )
 
     if not ai_artwork_enabled():
-        return jsonify({
-            'error': 'Generated artwork is off. Set ENABLE_AI_ARTWORK=true and AI_ARTWORK_URL.',
-        }), 403
+        return api_error(
+            'Generated artwork is off. Set ENABLE_AI_ARTWORK=true and AI_ARTWORK_URL.',
+            code='forbidden',
+        )
 
     data = request.get_json(silent=True) or {}
     try:
         limit = min(max(int(data.get('limit') or 10), 1), 50)
     except (TypeError, ValueError):
-        return jsonify({'error': 'limit must be a number'}), 400
+        return api_error('limit must be a number', code='bad_request')
 
     query = select(Game)
     if data.get('library_uuid'):
@@ -719,8 +722,7 @@ def artwork_generate_batch():
             'filename': result.get('filename'),
         })
 
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'considered': len(candidates),
         'generated': len(generated),
         'skipped': skipped,

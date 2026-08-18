@@ -1,5 +1,6 @@
 """Register-only store ownership sync APIs (never downloads from stores)."""
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
@@ -23,7 +24,7 @@ from . import apis_bp
 
 
 def _feature_disabled_response():
-    return jsonify({'error': 'Store ownership sync is disabled by administrator'}), 403
+    return api_error('Store ownership sync is disabled by administrator', code='forbidden')
 
 
 def _read_csv_payload() -> str:
@@ -50,11 +51,11 @@ def connect_steam():
     data = request.get_json(silent=True) or {}
     steam_id = (data.get('steam_id') or '').strip()
     if not steam_id:
-        return jsonify({'error': 'steam_id required'}), 400
+        return api_error('steam_id required', code='bad_request')
     try:
         account = connect_steam_account(current_user.id, steam_id)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     return jsonify({
         'account': account.to_dict(),
         'summary': get_ownership_summary(current_user.id),
@@ -78,11 +79,11 @@ def sync_steam():
     try:
         result = sync_steam_owned_games(current_user.id)
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except Exception as exc:
-        return jsonify({'error': f'Steam sync failed: {exc}'}), 502
+        return api_error(f'Steam sync failed: {exc}', code='bad_gateway')
     return jsonify({
         **result,
         'summary': get_ownership_summary(current_user.id),
@@ -96,11 +97,11 @@ def import_steam_csv_route():
         return _feature_disabled_response()
     csv_text = _read_csv_payload()
     if not csv_text.strip():
-        return jsonify({'error': 'csv content required'}), 400
+        return api_error('csv content required', code='bad_request')
     try:
         result = import_steam_csv(current_user.id, csv_text)
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     return jsonify({
         **result,
         'summary': get_ownership_summary(current_user.id),
@@ -138,11 +139,11 @@ def import_gog_csv_route():
         return _feature_disabled_response()
     csv_text = _read_csv_payload()
     if not csv_text.strip():
-        return jsonify({'error': 'csv content required'}), 400
+        return api_error('csv content required', code='bad_request')
     try:
         result = import_gog_csv(current_user.id, csv_text)
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     return jsonify({
         **result,
         'summary': get_ownership_summary(current_user.id),
@@ -182,11 +183,11 @@ def import_epic_csv_route():
         return _feature_disabled_response()
     csv_text = _read_csv_payload()
     if not csv_text.strip():
-        return jsonify({'error': 'csv content required'}), 400
+        return api_error('csv content required', code='bad_request')
     try:
         result = import_epic_csv(current_user.id, csv_text)
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     return jsonify({
         **result,
         'summary': get_ownership_summary(current_user.id),
@@ -201,13 +202,13 @@ def import_meta_quest_csv_route():
         return _feature_disabled_response()
     csv_text = _read_csv_payload()
     if not csv_text.strip():
-        return jsonify({'error': 'csv content required'}), 400
+        return api_error('csv content required', code='bad_request')
     try:
         result = import_meta_quest_csv(current_user.id, csv_text)
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     return jsonify({
         **result,
         'summary': get_ownership_summary(current_user.id),

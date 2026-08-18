@@ -5,5 +5,13 @@
 Dockerfile text eol=lf
 *.dockerfile text eol=lf
 
+# ESM modules must stay LF. Vite's transform rejects a CRLF `.mjs` with
+# "SyntaxError: Invalid or unexpected token" at the importing line, which on a
+# Windows checkout (where `text=auto` below hands out CRLF) breaks
+# `cssTokenLint.test.js` and takes the CSS token ratchet's local gate with it.
+# CI checks out LF and never saw it. Sibling `.js` files are unaffected — this
+# is specific to how the `.mjs` extension is handled.
+*.mjs text eol=lf
+
 # Prevent CRLF issues on Windows
 * text=auto

@@ -1,37 +1,8 @@
 // Toasts on every mutation (GT-B25). Outcomes were reported inline only,
 // which is easy to miss when the triggering control has scrolled away.
 import { useEffect, useState } from 'react'
+import { getJson, postJson } from './adminApi'
 import { showToast } from './utils/toast'
-
-async function postJson(url, body) {
-  const csrf = document.querySelector('meta[name="csrf-token"]')?.content || ''
-  const response = await fetch(url, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': csrf,
-    },
-    body: JSON.stringify(body),
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw new Error(data.error || `${url} ${response.status}`)
-  }
-  return data
-}
-
-async function getJson(url) {
-  const response = await fetch(url, { credentials: 'same-origin' })
-  if (response.status === 401) {
-    window.location.href = '/login'
-    throw new Error('Unauthorized')
-  }
-  if (!response.ok) {
-    throw new Error(`${url} ${response.status}`)
-  }
-  return response.json()
-}
 
 export function AnnouncementsPage() {
   const [rows, setRows] = useState(null)

@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { preferencesFromShell, savePreferences } from '../api/preferences'
 import {
   clampTileVarsForNarrowViewport,
@@ -38,6 +38,7 @@ export function TileSizeControl({
   const percent = normalizeTilePercent(value)
   const saveTimerRef = useRef(0)
   const resizeTimerRef = useRef(0)
+  const pendingSaveRef = useRef(null)
 
   async function persist(normalized) {
     try {
@@ -48,6 +49,32 @@ export function TileSizeControl({
       // Preference persistence is best-effort; CSS vars already applied.
     }
   }
+
+  // Kept current so the unmount cleanup below uses the latest `shellConfig`
+  // rather than whatever the first render closed over.
+  const persistRef = useRef(persist)
+  useEffect(() => {
+    persistRef.current = persist
+  })
+
+  useEffect(() => () => {
+    // Both timers outlive the component, and both do damage unattended.
+    //
+    // `is-tile-resizing` lives on <html>, not on anything React unmounts, so
+    // clearing the timer without removing the class would leave the library
+    // permanently without its tile-size transition. Remove it here.
+    window.clearTimeout(resizeTimerRef.current)
+    document.documentElement.classList.remove('is-tile-resizing')
+
+    // The save is debounced, so unmounting mid-drag (navigating away straight
+    // after moving the slider) still owes one. Dropping it loses the change the
+    // user just made; flushing is safe because `persist` never sets state.
+    window.clearTimeout(saveTimerRef.current)
+    if (pendingSaveRef.current !== null) {
+      void persistRef.current(pendingSaveRef.current)
+      pendingSaveRef.current = null
+    }
+  }, [])
 
   function handleChange(nextPercent) {
     const normalized = normalizeTilePercent(nextPercent)
@@ -72,11 +99,14 @@ export function TileSizeControl({
     applyTileSizeCssVars(normalized)
     onChange?.(String(normalized))
 
+    // Persist a clean whole percent — the fractional value only matters
+    // for the smooth in-flight drag feel, not for the saved preference.
+    pendingSaveRef.current = Math.round(normalized)
     window.clearTimeout(saveTimerRef.current)
     saveTimerRef.current = window.setTimeout(() => {
-      // Persist a clean whole percent — the fractional value only matters
-      // for the smooth in-flight drag feel, not for the saved preference.
-      void persist(Math.round(normalized))
+      const owed = pendingSaveRef.current
+      pendingSaveRef.current = null
+      void persist(owed)
     }, PREF_SAVE_DEBOUNCE_MS)
   }
 

@@ -1,32 +1,7 @@
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-
-  return document.getElementById('csrf_token')?.textContent || ''
-}
-
-function csrfHeaders(additionalHeaders = {}) {
-  if (window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(additionalHeaders)
-  }
-
-  return {
-    'X-CSRFToken': getCsrfToken(),
-    ...additionalHeaders,
-  }
-}
-
+import { csrfHeaders } from './csrf'
+import { errorFromBody } from './envelopeError'
 function requestError(label, response, data) {
-  const error = new Error(data?.error || `${label} ${response.status}`)
-  error.status = response.status
-  return error
+  return errorFromBody(data, response.status, label)
 }
 
 export async function fetchCollections({ signal } = {}) {

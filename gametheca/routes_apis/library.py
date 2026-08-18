@@ -1,4 +1,5 @@
 # /gametheca/routes_apis/library.py
+from gametheca.utils.api_response import api_error, api_ok
 from flask import current_app, jsonify, request, url_for
 from flask_login import login_required, current_user
 from gametheca import db
@@ -62,6 +63,9 @@ def _library_public_fields(library: Library) -> dict:
 
 
 def _cap_error(cap: int):
+    # Not api_error: these batch refusals carry `status: 'rejected'`, the
+    # scan-queue contract admin_manage_libs.js branches on, and api_error takes
+    # `status` for the HTTP code so it cannot pass one through.
     return jsonify({
         'ok': False,
         'error': f'library_uuids cap is {cap}',
@@ -117,20 +121,22 @@ def reorder_libraries():
             if library:
                 library.display_order = index
         db.session.commit()
+        # admin_manage_libs.js reads `data.status === 'success'` here.
         return jsonify({'status': 'success'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        current_app.logger.warning('library update failed: %s', e)
+        return jsonify({'status': 'error', 'message': 'Could not update the library'}), 500
 
 @apis_bp.route('/library/<string:library_uuid>', methods=['GET'])
 @login_required
 def get_library(library_uuid):
     """Return information about a specific library"""
     if not user_can_access_library(current_user, library_uuid):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
     if not library:
-        return jsonify({'error': 'Library not found'}), 404
+        return api_error('Library not found', code='not_found')
         
     return jsonify(_library_public_fields(library))
 
@@ -148,10 +154,10 @@ def library_watch(library_uuid):
     Librarian or admin required for PUT.
     """
     if not user_can_access_library(current_user, library_uuid):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
     if not library:
-        return jsonify({'error': 'Library not found'}), 404
+        return api_error('Library not found', code='not_found')
 
     if request.method == 'GET':
         return jsonify({
@@ -161,15 +167,15 @@ def library_watch(library_uuid):
         })
 
     if not is_librarian(current_user):
-        return jsonify({'error': 'Librarian or admin required'}), 403
+        return api_error('Librarian or admin required', code='forbidden')
 
     data = request.get_json(silent=True) or {}
     if 'watch_enabled' not in data:
-        return jsonify({'error': 'watch_enabled required (true|false|null)'}), 400
+        return api_error('watch_enabled required (true|false|null)', code='bad_request')
     try:
         library.watch_enabled = _parse_watch_enabled(data.get('watch_enabled'))
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     db.session.commit()
     return jsonify({
         'uuid': library.uuid,
@@ -306,9 +312,8 @@ def batch_scan_libraries():
         event_level='information',
         audit_user=getattr(current_user, 'id', None),
     )
-    return jsonify({
-        'ok': True,
-        'started': started,
+    return api_ok({
+                'started': started,
         'queued': queued,
         'skipped': skipped,
         'failed': failed,
@@ -473,9 +478,8 @@ def batch_edit_libraries():
             audit_user=getattr(current_user, 'id', None),
         )
 
-    return jsonify({
-        'ok': True,
-        'updated': updated,
+    return api_ok({
+                'updated': updated,
         'skipped': skipped,
         'failed': failed,
         'count': len(uuids),
@@ -599,6 +603,8 @@ def batch_delete_libraries():
     )
 
     http = 200 if started else 400
+    # `ok` is computed: "did any delete start", not "did the request succeed".
+    # api_ok would stamp it True and hide a batch where nothing ran.
     return jsonify({
         'ok': started > 0,
         'started': started,

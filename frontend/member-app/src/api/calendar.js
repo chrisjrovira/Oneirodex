@@ -1,4 +1,6 @@
-﻿export async function fetchCalendar({
+﻿import { errorFromResponse } from './envelopeError'
+
+export async function fetchCalendar({
   signal,
   daysAhead = 60,
   daysBehind = 14,
@@ -15,7 +17,7 @@
   })
 
   if (!response.ok) {
-    throw new Error(`calendar ${response.status}`)
+    throw await errorFromResponse(response, 'calendar')
   }
 
   return response.json()

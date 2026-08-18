@@ -1,27 +1,5 @@
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-
-  return document.getElementById('csrf_token')?.textContent || ''
-}
-
-function csrfHeaders(additionalHeaders = {}) {
-  if (window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(additionalHeaders)
-  }
-
-  return {
-    'X-CSRFToken': getCsrfToken(),
-    ...additionalHeaders,
-  }
-}
+import { csrfHeaders } from './csrf'
+import { errorFromResponse } from './envelopeError'
 
 export function buildTrailerParams(filters = {}) {
   const params = new URLSearchParams()
@@ -53,7 +31,7 @@ export async function fetchTrailerFilters({ signal } = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`trailers/filters ${response.status}`)
+    throw await errorFromResponse(response, 'trailers/filters')
   }
 
   return response.json()
@@ -83,7 +61,7 @@ export async function fetchRandomTrailer({ signal, filters } = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(`trailers/random ${response.status}`)
+    throw await errorFromResponse(response, 'trailers/random')
   }
 
   return response.json()
@@ -96,7 +74,7 @@ export async function fetchAttractModeSettings({ signal } = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`attract-mode/settings ${response.status}`)
+    throw await errorFromResponse(response, 'attract-mode/settings')
   }
 
   return response.json()
@@ -111,7 +89,7 @@ export async function saveAttractModePreferences({ autoplay, filters }) {
   })
 
   if (!response.ok) {
-    throw new Error(`attract-mode/user-override ${response.status}`)
+    throw await errorFromResponse(response, 'attract-mode/user-override')
   }
 
   return response.json()

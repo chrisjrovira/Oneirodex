@@ -1,29 +1,6 @@
+import { errorFromBody } from './envelopeError'
+import { csrfHeaders } from './csrf'
 import { toggleFavorite as defaultToggleFavorite } from './userActions.js'
-
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-
-  return document.getElementById('csrf_token')?.textContent || ''
-}
-
-function csrfHeaders(additionalHeaders = {}) {
-  if (window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(additionalHeaders)
-  }
-
-  return {
-    'X-CSRFToken': getCsrfToken(),
-    ...additionalHeaders,
-  }
-}
 
 async function postJson(url, body) {
   const response = await fetch(url, {
@@ -84,8 +61,7 @@ export async function batchSetFavorite(uuids, favorite, options = {}) {
   }
 
   if (response.status !== 404 && response.status !== 501) {
-    const error = new Error(data.error || `batch favorite ${response.status}`)
-    error.status = response.status
+    const error = errorFromBody(data, response.status, 'batch favorite')
     error.payload = data
     throw error
   }
@@ -165,8 +141,7 @@ export async function batchCheckFreshness(uuids) {
     throw error
   }
 
-  const error = new Error(data.error || `batch freshness ${response.status}`)
-  error.status = response.status
+  const error = errorFromBody(data, response.status, 'batch freshness')
   error.payload = data
   throw error
 }
@@ -215,8 +190,7 @@ export async function batchSetPlayStatus(uuids, status) {
     throw error
   }
 
-  const error = new Error(data.error || `batch status ${response.status}`)
-  error.status = response.status
+  const error = errorFromBody(data, response.status, 'batch status')
   error.payload = data
   throw error
 }
@@ -253,8 +227,7 @@ export async function batchAddToWishlist(uuids) {
     throw error
   }
 
-  const error = new Error(data.error || `batch wishlist ${response.status}`)
-  error.status = response.status
+  const error = errorFromBody(data, response.status, 'batch wishlist')
   error.payload = data
   throw error
 }
@@ -301,8 +274,7 @@ export async function batchRefreshImages(uuids) {
     throw error
   }
 
-  const error = new Error(data.error || `batch refresh images ${response.status}`)
-  error.status = response.status
+  const error = errorFromBody(data, response.status, 'batch refresh images')
   error.payload = data
   throw error
 }

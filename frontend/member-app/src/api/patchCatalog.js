@@ -1,21 +1,5 @@
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-  return ''
-}
-
-function csrfHeaders(extra = {}) {
-  if (window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(extra)
-  }
-  return { 'X-CSRFToken': getCsrfToken(), ...extra }
-}
+import { csrfHeaders } from './csrf'
+import { errorFromResponse } from './envelopeError'
 
 export async function searchPatchCatalog({ gameUuid, q, signal } = {}) {
   const params = new URLSearchParams()
@@ -29,14 +13,10 @@ export async function searchPatchCatalog({ gameUuid, q, signal } = {}) {
     credentials: 'same-origin',
     signal,
   })
-  const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const error = new Error(data.error || `patch-catalog search ${response.status}`)
-    error.status = response.status
-    error.data = data
-    throw error
+    throw await errorFromResponse(response, 'patch-catalog search')
   }
-  return data
+  return response.json().catch(() => ({}))
 }
 
 export async function attachPatchCatalogGuide(body) {
@@ -46,12 +26,8 @@ export async function attachPatchCatalogGuide(body) {
     headers: csrfHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(body),
   })
-  const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const error = new Error(data.error || `patch-catalog attach ${response.status}`)
-    error.status = response.status
-    error.data = data
-    throw error
+    throw await errorFromResponse(response, 'patch-catalog attach')
   }
-  return data
+  return response.json().catch(() => ({}))
 }

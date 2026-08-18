@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from PIL import Image as PILImage
 from itsdangerous import URLSafeTimedSerializer
 
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.forms import (
     ScanFolderForm, CsrfProtectForm,
     AutoScanForm, UpdateUnmatchedFolderForm,
@@ -594,10 +595,10 @@ def upload_image(game_uuid):
     if is_scan_job_running():
         print(f"Attempt to upload image for game UUID: {game_uuid} while scan job is running")
         flash('Cannot upload images while a scan job is running. Please try again later.', 'error')
-        return jsonify({'error': 'Cannot upload images while a scan job is running. Please try again later.'}), 403
+        return api_error('Cannot upload images while a scan job is running. Please try again later.', code='forbidden')
 
     if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+        return api_error('No file part', code='bad_request')
 
     file = request.files['file']
     try:
@@ -606,10 +607,10 @@ def upload_image(game_uuid):
             default='screenshot',
         )
     except ValueError:
-        return jsonify({'error': image_kinds_error_message()}), 400
+        return api_error(image_kinds_error_message(), code='bad_request')
 
     if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
+        return api_error('No selected file', code='bad_request')
 
     # Validate file extension and content type
     allowed_extensions = {'jpg', 'jpeg', 'png', 'gif'}
@@ -617,7 +618,7 @@ def upload_image(game_uuid):
     file_extension = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
 
     if file_extension not in allowed_extensions:
-        return jsonify({'error': 'Only JPG, PNG and GIF files are allowed'}), 400
+        return api_error('Only JPG, PNG and GIF files are allowed', code='bad_request')
 
     # Further validate the file's data to ensure it's a valid image
     try:
@@ -625,7 +626,7 @@ def upload_image(game_uuid):
         img.verify()  # Verify that it is, in fact, an image
         img = PILImage.open(file)
     except (IOError, SyntaxError):
-        return jsonify({'error': 'Invalid image data'}), 400
+        return api_error('Invalid image data', code='bad_request')
 
     file.seek(0)
     max_width, max_height = 1200, 1600
@@ -638,7 +639,7 @@ def upload_image(game_uuid):
     file.seek(0) 
     # Efficient file size check
     if file.content_length > 3 * 1024 * 1024:  # 3MB in bytes
-        return jsonify({'error': 'File size exceeds the 3MB limit'}), 400
+        return api_error('File size exceeds the 3MB limit', code='bad_request')
 
     # Singular kinds: replace existing primary of that kind
     if image_type in SINGULAR_IMAGE_KINDS:
@@ -667,7 +668,7 @@ def upload_image(game_uuid):
     db.session.commit()
     print(f"File saved to DB with ID: {new_image.id}")
 
-    return jsonify({
+    return api_ok({
         'message': 'File uploaded successfully',
         'url': url_for('static', filename=f'library/images/{filename}'),
         'flash': 'Image uploaded successfully!',
@@ -682,18 +683,18 @@ def upload_image(game_uuid):
 def delete_image():
     if is_scan_job_running():
         print("Attempt to delete image while scan job is running")
-        return jsonify({'error': 'Cannot delete images while a scan job is running. Please try again later.'}), 403
+        return api_error('Cannot delete images while a scan job is running. Please try again later.', code='forbidden')
 
     try:
         data = request.get_json()
         if not data or 'image_id' not in data:
-            return jsonify({'error': 'Invalid request. Missing image_id parameter'}), 400
+            return api_error('Invalid request. Missing image_id parameter', code='bad_request')
         
         image_id = data['image_id']
         is_cover = data.get('is_cover', False)
         image = db.session.get(Image, image_id)
         if not image:
-            return jsonify({'error': 'Image not found'}), 404
+            return api_error('Image not found', code='not_found')
 
         # Delete image file from disk
         image_path = os.path.join(current_app.config['IMAGE_SAVE_PATH'], image.url)
@@ -708,12 +709,15 @@ def delete_image():
         response_data = {'message': 'Image deleted successfully'}
         if is_cover:
             response_data['default_cover'] = url_for('static', filename='newstyle/default_cover.jpg')
-            
-        return jsonify(response_data)
+
+        return api_ok(response_data)
     except Exception as e:
         # Log the error for debugging purposes
         print(f"Error deleting image: {str(e)}")
-        return jsonify({'error': 'An unexpected error occurred while deleting the image'}), 500
+        return api_error(
+            'An unexpected error occurred while deleting the image',
+            code='internal',
+        )
 
 
 @bp.route('/delete_scan_job/<job_id>', methods=['POST'])
@@ -772,20 +776,24 @@ def update_unmatched_folder_status():
         folder.status = 'Unmatched' if folder.status == 'Ignore' else 'Ignore'
         try:
             db.session.commit()
+            # `status` stays in the payload: the envelope migration is additive,
+            # and an existing caller (plus test_routes.py) reads it.
             response_data = {
                 'status': 'success',
                 'new_status': folder.status,
                 'message': f'Folder status updated to {folder.status}'
             }
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify(response_data)
+                return api_ok(response_data)
             flash(response_data['message'], 'success')
         except SQLAlchemyError as e:
-            error_msg = f'Error updating folder status: {str(e)}'
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({'status': 'error', 'message': error_msg}), 500
+            # The raw SQLAlchemy text stays in the log. Handing it to the browser
+            # leaks schema and connection detail for no operator benefit.
+            current_app.logger.warning('Folder status update failed: %s', e)
             db.session.rollback()
-            flash(error_msg, 'error')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return api_error('Could not update the folder status', code='internal')
+            flash('Error updating folder status.', 'error')
     else:
         flash('Folder not found.', 'error')
 
@@ -796,18 +804,24 @@ def update_unmatched_folder_status():
 @admin_required
 def clear_unmatched_entry(folder_id):
     """Clear a single unmatched folder entry from the database."""
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     try:
         folder = db.session.get(UnmatchedFolder, folder_id) or abort(404)
         db.session.delete(folder)
         db.session.commit()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'status': 'success', 'message': 'Entry cleared successfully'})
+            return api_ok({'status': 'success', 'message': 'Entry cleared successfully'})
         flash('Unmatched folder entry cleared successfully.', 'success')
     except Exception as e:
         db.session.rollback()
+        current_app.logger.warning('clear unmatched entry failed: %s', e)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'status': 'error', 'message': str(e)}), 500
-        flash(f'Error clearing unmatched folder entry: {str(e)}', 'error')
+            return jsonify({'status': 'error', 'message': 'Could not clear the entry'}), 500
+        flash('Error clearing unmatched folder entry.', 'error')
     return redirect(url_for('main.scan_management'))
 
 @bp.route('/toggle_ignore_status/<folder_id>', methods=['POST'])
@@ -815,6 +829,11 @@ def clear_unmatched_entry(folder_id):
 @admin_required
 def toggle_ignore_status(folder_id):
     """Toggle the ignore status of an unmatched folder."""
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     try:
         folder = db.session.get(UnmatchedFolder, folder_id) or abort(404)
         # Toggle between 'Ignore' and the original status (likely 'Unmatched' or 'Duplicate')
@@ -827,17 +846,18 @@ def toggle_ignore_status(folder_id):
         db.session.commit()
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({
+            return api_ok({
                 'status': 'success',
                 'new_status': folder.status,
-                'message': f'Status changed to {folder.status}'
+                'message': f'Status changed to {folder.status}',
             })
         flash(f'Folder status changed to {folder.status}.', 'success')
     except Exception as e:
         db.session.rollback()
+        current_app.logger.warning('toggle ignore status failed: %s', e)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'status': 'error', 'message': str(e)}), 500
-        flash(f'Error toggling ignore status: {str(e)}', 'error')
+            return jsonify({'status': 'error', 'message': 'Could not change the folder status'}), 500
+        flash('Error toggling ignore status.', 'error')
 
     return redirect(url_for('main.scan_management'))
 
@@ -863,7 +883,7 @@ def refresh_game_images(game_uuid):
     # Check if the request is an AJAX request
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         # Return a JSON response for AJAX requests
-        return jsonify({"message": f"Game images refresh process started for {game_name}.", "status": "info"})
+        return api_ok({"message": f"Game images refresh process started for {game_name}.", "status": "info"})
     else:
         # For non-AJAX requests, perform the usual redirec
         flash(f"Game images refresh process started for {game_name}.", "info")
@@ -875,6 +895,11 @@ def refresh_game_images(game_uuid):
 @admin_required
 def check_image_refresh_progress(game_uuid):
     """Check the progress of an image refresh operation."""
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     progress_data = cache.get(f'image_refresh_progress_{game_uuid}')
 
     if progress_data is None:
@@ -891,23 +916,28 @@ def delete_game_route(game_uuid):
     
     if is_scan_job_running():
         print(f"Error: Attempt to delete game UUID: {game_uuid} while scan job is running")
-        return jsonify({'success': False, 'message': 'Cannot delete the game while a scan job is running. Please try again later.'}), 403
+        return api_error('Cannot delete the game while a scan job is running. Please try again later.', code='forbidden')
     
     try:
         delete_game(game_uuid)
-        return jsonify({'success': True, 'message': 'Game removed from library successfully.'}), 200
+        return api_ok({'message': 'Game removed from library successfully.'})
     except NotFound:
         print(f"Error: game UUID {game_uuid} not found")
-        return jsonify({'success': False, 'message': 'Game not found.'}), 404
+        return api_error('Game not found.', code='not_found')
     except Exception as e:
         print(f"Error deleting game {game_uuid}: {e}")
-        return jsonify({'success': False, 'message': f'Error removing game: {str(e)}'}), 500
+        return api_error('Could not remove the game', code='internal')
 
 
 @bp.route('/delete_folder', methods=['POST'])
 @login_required
 @admin_required
 def delete_folder():
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     data = request.get_json()
     folder_path = data.get('folder_path') if data else None
 
@@ -940,11 +970,15 @@ def delete_folder():
             if folder_entry:
                 db.session.delete(folder_entry)
                 db.session.commit()
-            return jsonify({'status': 'success', 'message': 'Item deleted successfully. Database entry removed.'}), 200
+            return api_ok({'status': 'success', 'message': 'Item deleted successfully. Database entry removed.'})
     except PermissionError:
         return jsonify({'status': 'error', 'message': 'Failed to delete the item due to insufficient permissions. Database entry retained.'}), 403
     except Exception as e:
-        return jsonify({'status': 'error', 'message': f'Error deleting item: {e}. Database entry retained.'}), 500
+        current_app.logger.warning('delete unmatched item failed: %s', e)
+        return jsonify({
+            'status': 'error',
+            'message': 'Could not delete the item. Database entry retained.',
+        }), 500
 
 
 @bp.route('/delete_full_game', methods=['POST'])
@@ -957,18 +991,18 @@ def delete_full_game():
     print(f"Route: /delete_full_game - Game UUID: {game_uuid}")
     if not game_uuid:
         print("Route: /delete_full_game - Game UUID is required.")
-        return jsonify({'success': False, 'message': 'Game UUID is required.'}), 400
+        return api_error('Game UUID is required.', code='bad_request')
 
     if is_scan_job_running():
         print(f"Error: Attempt to delete full game UUID: {game_uuid} while scan job is running")
-        return jsonify({'success': False, 'message': 'Cannot delete the game while a scan job is running. Please try again later.'}), 403
+        return api_error('Cannot delete the game while a scan job is running. Please try again later.', code='forbidden')
 
     game_to_delete = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalar_one_or_none()
     print(f"Route: /delete_full_game - Game to delete: {game_to_delete}")
 
     if not game_to_delete:
         print("Route: /delete_full_game - Game not found.")
-        return jsonify({'success': False, 'message': 'Game not found.'}), 404
+        return api_error('Game not found.', code='not_found')
 
     full_path = game_to_delete.full_disk_path
     print(f"Route: /delete_full_game - Full path: {full_path}")
@@ -987,7 +1021,7 @@ def delete_full_game():
             is_safe, error_message = is_safe_path(full_path, allowed_bases)
             if not is_safe:
                 print(f"Security error: delete_full_game path validation failed for {full_path}: {error_message}")
-                return jsonify({'success': False, 'message': 'Access denied.'}), 403
+                return api_error('Access denied.', code='forbidden')
 
             if is_directory:
                 print(f"Deleting game folder: {full_path}")
@@ -1010,11 +1044,11 @@ def delete_full_game():
             success_message = 'Game and its folder have been deleted successfully.'
         else:
             success_message = 'Game file has been deleted successfully.'
-        return jsonify({'success': True, 'message': success_message}), 200
+        return api_ok({'message': success_message})
     except Exception as e:
         error_message = f"Error deleting game from disk: {e}"
         print(error_message)
-        return jsonify({'success': False, 'message': error_message}), 500
+        return api_error(error_message, code='internal')
 
 
 @bp.route('/delete_library_progress/<job_id>')
@@ -1212,6 +1246,11 @@ def delete_library_background(library_uuid, job_id):
 @login_required
 @admin_required
 def delete_full_library(library_uuid=None):
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     print(f"Route: /delete_full_library - {current_user.name} - {current_user.role} method: {request.method} UUID: {library_uuid}")
     
     if not library_uuid:
@@ -1286,6 +1325,11 @@ def delete_full_library(library_uuid=None):
 @admin_required
 def check_deletion_progress(job_id):
     """Simple progress check endpoint as fallback for SSE"""
+    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
+    # admin_manage_scanjobs.js drive a state machine off `data.status`
+    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
+    # 'not_found'), and api_error takes `status` for the HTTP code so it
+    # cannot carry one. Recorded in the envelope baseline deliberately.
     if job_id in deletion_progress:
         return jsonify(deletion_progress[job_id])
     else:

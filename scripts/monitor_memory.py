@@ -19,18 +19,21 @@ def get_gametheca_processes():
     for proc in psutil.process_iter(['pid', 'name', 'cmdline', 'memory_info']):
         try:
             cmdline = ' '.join(proc.info['cmdline']) if proc.info['cmdline'] else ''
-            
+            # process_iter() stores ad_value (None) for any field it could not
+            # read — AccessDenied on a root-owned process, or a zombie. That is
+            # not raised here, so `name` has to be guarded like the others.
+            name = proc.info['name'] or ''
+
             # Look for GameTheca related processes
             if any([
-                'uvicorn' in proc.info['name'],
+                'uvicorn' in name,
                 'asgi:asgi_app' in cmdline,
                 'gametheca' in cmdline.lower(),
                 '/var/www/gametheca' in cmdline,
-                'gametheca' in cmdline and 'create_app' in cmdline
             ]):
                 processes.append({
                     'pid': proc.info['pid'],
-                    'name': proc.info['name'],
+                    'name': name,
                     'cmdline': cmdline[:100] + '...' if len(cmdline) > 100 else cmdline,
                     'memory_rss': proc.info['memory_info'].rss if proc.info['memory_info'] else 0,
                     'memory_vms': proc.info['memory_info'].vms if proc.info['memory_info'] else 0

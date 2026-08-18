@@ -1,3 +1,5 @@
+import { errorFromResponse } from './envelopeError'
+
 export async function fetchFilterOptions({ signal } = {}) {
   const response = await fetch('/api/filters/bundle', {
     signal,
@@ -5,7 +7,7 @@ export async function fetchFilterOptions({ signal } = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`/api/filters/bundle ${response.status}`)
+    throw await errorFromResponse(response, '/api/filters/bundle')
   }
 
   const data = await response.json()

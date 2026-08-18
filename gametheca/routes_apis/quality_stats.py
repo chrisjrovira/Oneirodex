@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import Response, jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import select
@@ -41,7 +42,7 @@ def quality_profiles_create():
     try:
         created = create_quality_profile(data)
     except (TypeError, ValueError) as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     return jsonify(created), 201
 
 
@@ -54,9 +55,9 @@ def quality_profiles_put():
     try:
         saved = save_quality_profile(data)
     except KeyError as exc:
-        return jsonify({'error': str(exc)}), 404
+        return api_error(str(exc), code='not_found')
     except (TypeError, ValueError) as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     return jsonify(saved)
 
 
@@ -67,11 +68,11 @@ def quality_profiles_set_active():
     data = request.get_json(silent=True) or {}
     profile_id = (data.get('id') or data.get('active_id') or data.get('profile_id') or '').strip()
     if not profile_id:
-        return jsonify({'error': 'id is required'}), 400
+        return api_error('id is required', code='bad_request')
     try:
         saved = set_active_quality_profile(profile_id)
     except KeyError as exc:
-        return jsonify({'error': str(exc)}), 404
+        return api_error(str(exc), code='not_found')
     return jsonify(saved)
 
 
@@ -81,7 +82,7 @@ def quality_profiles_set_active():
 def quality_profiles_get_one(profile_id: str):
     profile = get_quality_profile(profile_id)
     if profile.get('id') != profile_id:
-        return jsonify({'error': f'profile not found: {profile_id}'}), 404
+        return api_error(f'profile not found: {profile_id}', code='not_found')
     return jsonify(profile)
 
 
@@ -93,9 +94,9 @@ def quality_profiles_update_one(profile_id: str):
     try:
         saved = update_quality_profile(profile_id, data)
     except KeyError as exc:
-        return jsonify({'error': str(exc)}), 404
+        return api_error(str(exc), code='not_found')
     except (TypeError, ValueError) as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     return jsonify(saved)
 
 
@@ -106,7 +107,7 @@ def quality_profiles_delete_one(profile_id: str):
     try:
         saved = delete_quality_profile(profile_id)
     except KeyError as exc:
-        return jsonify({'error': str(exc)}), 404
+        return api_error(str(exc), code='not_found')
     return jsonify(saved)
 
 
@@ -117,7 +118,7 @@ def quality_profiles_score():
     data = request.get_json(silent=True) or {}
     title = (data.get('title') or '').strip()
     if not title:
-        return jsonify({'error': 'title is required'}), 400
+        return api_error('title is required', code='bad_request')
     size = data.get('size_bytes')
     try:
         size_bytes = int(size) if size is not None else None
@@ -132,9 +133,9 @@ def quality_profiles_score():
 def playtime_share_card(game_uuid: str):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     row = db.session.execute(
         select(UserGameProgress).filter_by(user_id=current_user.id, game_uuid=game_uuid),
     ).scalars().first()

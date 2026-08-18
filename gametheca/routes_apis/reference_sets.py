@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
@@ -35,7 +36,7 @@ def api_list_reference_sets():
 def api_upload_reference_set():
     upload = request.files.get('file') or request.files.get('dat')
     if not upload or not upload.filename:
-        return jsonify({'error': 'DAT file required'}), 400
+        return api_error('DAT file required', code='bad_request')
 
     platform = (request.form.get('library_platform') or request.form.get('platform') or '').strip()
     region = (request.form.get('region') or 'USA').strip()
@@ -44,9 +45,9 @@ def api_upload_reference_set():
 
     raw = upload.read(MAX_DAT_BYTES + 1)
     if len(raw) > MAX_DAT_BYTES:
-        return jsonify({'error': f'DAT too large (max {MAX_DAT_BYTES} bytes)'}), 400
+        return api_error(f'DAT too large (max {MAX_DAT_BYTES} bytes)', code='bad_request')
     if not raw:
-        return jsonify({'error': 'Empty DAT file'}), 400
+        return api_error('Empty DAT file', code='bad_request')
 
     try:
         validate_library_platform(platform)
@@ -59,9 +60,9 @@ def api_upload_reference_set():
             uploader_id=getattr(current_user, 'id', None),
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except Exception as exc:  # noqa: BLE001 — surface parse errors cleanly
-        return jsonify({'error': f'Failed to parse DAT: {exc}'}), 400
+        return api_error(f'Failed to parse DAT: {exc}', code='bad_request')
 
     log_system_event(
         f'Reference set uploaded: {ref.library_platform}/{ref.region} ({ref.entry_count} entries)',
@@ -76,13 +77,13 @@ def api_upload_reference_set():
 @admin_required
 def api_delete_reference_set(set_id: int):
     if not delete_reference_set(set_id):
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Not found', code='not_found')
     log_system_event(
         f'Reference set deleted: id={set_id}',
         event_type='admin',
         event_level='information',
     )
-    return jsonify({'ok': True, 'id': set_id})
+    return api_ok({'id': set_id})
 
 
 @apis_bp.route('/reference-sets/rehash', methods=['POST'])
@@ -98,11 +99,11 @@ def api_rehash_reference_platform():
         or ''
     ).strip()
     if not platform:
-        return jsonify({'error': 'library_platform required'}), 400
+        return api_error('library_platform required', code='bad_request')
     try:
         result = rehash_library_platform(platform)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     log_system_event(
         f'Reference set rehash: {result["platform"]} hashed={result["hashed"]} skipped={result["skipped"]}',
         event_type='admin',
@@ -123,7 +124,7 @@ def api_set_completion():
         missing_limit = None
 
     if not platform:
-        return jsonify({'error': 'library_platform required'}), 400
+        return api_error('library_platform required', code='bad_request')
 
     try:
         report = compute_set_completion(
@@ -134,16 +135,16 @@ def api_set_completion():
             missing_limit=missing_limit,
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
 
     if report is None:
-        return jsonify({
-            'error': 'no_reference_set',
-            'message': f'No reference set for {platform}/{region}',
-            'library_platform': platform,
-            'region': region,
-            'valid_regions': sorted(VALID_REGIONS),
-            'valid_sources': sorted(VALID_SOURCES),
-        }), 404
+        return api_error(
+            f'No reference set for {platform}/{region}',
+            code='not_found',
+            library_platform=platform,
+            region=region,
+            valid_regions=sorted(VALID_REGIONS),
+            valid_sources=sorted(VALID_SOURCES),
+        )
 
     return jsonify(report)

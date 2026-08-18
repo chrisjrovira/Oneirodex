@@ -97,6 +97,10 @@ def test_api_ok_merges_payload_at_top_level(app):
     assert body['games'] == 12
     assert body['libraries'] == 3
     assert body['success'] is True
+    # `error` and `error_code` are on *every* response, not just failures, so a
+    # client reading them does not get `undefined` on the way through.
+    assert body['error'] is None
+    assert body['error_code'] is None
 
 
 def test_api_ok_payload_cannot_override_envelope(app):
@@ -104,11 +108,22 @@ def test_api_ok_payload_cannot_override_envelope(app):
         body, _ = _body(app, api_ok({'ok': False, 'error': 'sneaky', 'error_code': 'x'}))
 
     assert body['ok'] is True
-    assert 'error' not in body
-    assert 'error_code' not in body
+    # Neutralised rather than absent: the caller's values are still discarded,
+    # which is what this pins, but the keys stay present per the contract above.
+    assert body['error'] is None
+    assert body['error_code'] is None
 
 
 def test_error_codes_map_to_sane_statuses():
     assert ERROR_CODES['forbidden'] == 403
     assert ERROR_CODES['not_found'] == 404
     assert ERROR_CODES['internal'] == 500
+
+
+def test_upstream_failure_is_distinguishable_from_our_own():
+    """`bad_gateway` exists so an operator can tell "the provider answered
+    badly" from "we broke" and from "the integration is switched off" — three
+    different next actions. Fifteen route sites returned a bare 502 before."""
+    assert ERROR_CODES['bad_gateway'] == 502
+    assert ERROR_CODES['internal'] == 500
+    assert ERROR_CODES['unavailable'] == 503

@@ -3,6 +3,7 @@ import csv
 import io
 import os
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, current_app, request, Response
 from flask_login import login_required, current_user
 from gametheca import db
@@ -366,9 +367,9 @@ def _parse_unmatched_list_filters():
     """Query params shared by list + export. Returns (filters_dict, error_response)."""
     status = (request.args.get('status') or 'all').strip()
     if status not in VALID_UNMATCHED_EXPORT_STATUSES:
-        return None, (
-            jsonify({'error': f"Invalid status. Choose one of: {sorted(VALID_UNMATCHED_EXPORT_STATUSES)}"}),
-            400,
+        return None, api_error(
+            f"Invalid status. Choose one of: {sorted(VALID_UNMATCHED_EXPORT_STATUSES)}",
+            code='bad_request',
         )
     return {
         'status': status,
@@ -433,21 +434,21 @@ def _parse_batch_ids(data: dict):
     if raw_ids is None and isinstance(data.get('items'), list):
         raw_ids = [item.get('id') for item in data['items'] if isinstance(item, dict)]
     if not isinstance(raw_ids, list) or not raw_ids:
-        return None, (jsonify({'error': 'ids required (non-empty array)', 'ok': False}), 400)
+        return None, api_error('ids required (non-empty array)', code='bad_request')
     ids = []
     for value in raw_ids:
         text = str(value or '').strip()
         if text:
             ids.append(text)
     if not ids:
-        return None, (jsonify({'error': 'ids required (non-empty array)', 'ok': False}), 400)
+        return None, api_error('ids required (non-empty array)', code='bad_request')
     if len(ids) > UNMATCHED_BATCH_ID_CAP:
-        return None, (jsonify({
-            'error': f'ids cap is {UNMATCHED_BATCH_ID_CAP}',
-            'ok': False,
-            'cap': UNMATCHED_BATCH_ID_CAP,
-            'requested': len(ids),
-        }), 400)
+        return None, api_error(
+            f'ids cap is {UNMATCHED_BATCH_ID_CAP}',
+            code='bad_request',
+            cap=UNMATCHED_BATCH_ID_CAP,
+            requested=len(ids),
+        )
     seen = set()
     unique = []
     for i in ids:
@@ -686,27 +687,26 @@ def amend_unmatched_folder_name(folder_id):
     """Soft-amend librarian search/display names. Does NOT rename disk folder_path."""
     data = request.get_json(silent=True) or {}
     if not any(k in data for k in ('search_name', 'display_name', 'name')):
-        return jsonify({
-            'error': 'Provide search_name and/or display_name (name aliases search_name)',
-            'ok': False,
-            'disk_rename': False,
-        }), 400
+        return api_error(
+            'Provide search_name and/or display_name (name aliases search_name)',
+            code='bad_request',
+            disk_rename=False,
+        )
 
     folder = db.session.get(UnmatchedFolder, folder_id)
     if not folder:
-        return jsonify({'error': 'Unmatched folder not found', 'ok': False}), 404
+        return api_error('Unmatched folder not found', code='not_found')
 
     changed = _apply_soft_amend(folder, data)
     if not changed:
-        return jsonify({
-            'error': 'Provide search_name and/or display_name (name aliases search_name)',
-            'ok': False,
-            'disk_rename': False,
-        }), 400
+        return api_error(
+            'Provide search_name and/or display_name (name aliases search_name)',
+            code='bad_request',
+            disk_rename=False,
+        )
 
     db.session.commit()
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'id': folder.id,
         'folder_path': folder.folder_path,
         'folder_name': folder_basename(folder.folder_path) or None,
@@ -745,8 +745,7 @@ def batch_clear_unmatched_folders():
             db.session.rollback()
             results.append({'id': folder_id, 'ok': False, 'error': str(exc)})
 
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'cleared': cleared,
         'failed': sum(1 for r in results if not r.get('ok')),
         'results': results,
@@ -769,19 +768,19 @@ def batch_mark_unmatched_kind():
 
     kind_raw = data.get('item_kind') or data.get('content_kind') or data.get('kind')
     if not kind_raw or not str(kind_raw).strip():
-        return jsonify({
-            'error': f'item_kind required. Choose one of: {sorted(ITEM_KINDS)}',
-            'item_kinds': sorted(ITEM_KINDS),
-            'ok': False,
-        }), 400
+        return api_error(
+            f'item_kind required. Choose one of: {sorted(ITEM_KINDS)}',
+            code='bad_request',
+            item_kinds=sorted(ITEM_KINDS),
+        )
     folded = str(kind_raw).strip().lower()
     _aliases = {'app', 'utility', 'utilities', 'software', 'emu', 'experiences'}
     if folded not in ITEM_KINDS and folded not in _aliases:
-        return jsonify({
-            'error': f'Invalid item_kind. Choose one of: {sorted(ITEM_KINDS)}',
-            'item_kinds': sorted(ITEM_KINDS),
-            'ok': False,
-        }), 400
+        return api_error(
+            f'Invalid item_kind. Choose one of: {sorted(ITEM_KINDS)}',
+            code='bad_request',
+            item_kinds=sorted(ITEM_KINDS),
+        )
     kind = normalize_item_kind(kind_raw)
 
     results = []
@@ -815,8 +814,7 @@ def batch_mark_unmatched_kind():
             db.session.rollback()
             results.append({'id': folder_id, 'ok': False, 'error': str(exc)})
 
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'item_kind': kind,
         'marked': marked,
         'failed': sum(1 for r in results if not r.get('ok')),
@@ -837,10 +835,10 @@ def batch_fix_unmatched_duplicates():
 
     action = (data.get('action') or '').strip().lower()
     if action not in VALID_DUPLICATE_FIX_ACTIONS:
-        return jsonify({
-            'error': f"Invalid action. Choose one of: {sorted(VALID_DUPLICATE_FIX_ACTIONS)}",
-            'ok': False,
-        }), 400
+        return api_error(
+            f"Invalid action. Choose one of: {sorted(VALID_DUPLICATE_FIX_ACTIONS)}",
+            code='bad_request',
+        )
 
     notes = (data.get('notes') or '')[:512] or None
     results = []
@@ -866,8 +864,7 @@ def batch_fix_unmatched_duplicates():
         audit_user=getattr(current_user, 'id', None),
     )
 
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'action': action,
         'fixed': fixed,
         'failed': sum(1 for r in results if not r.get('ok')),
@@ -912,12 +909,12 @@ def batch_amend_unmatched_names():
 
     if isinstance(items, list) and items:
         if len(items) > UNMATCHED_BATCH_ID_CAP:
-            return jsonify({
-                'error': f'ids cap is {UNMATCHED_BATCH_ID_CAP}',
-                'ok': False,
-                'cap': UNMATCHED_BATCH_ID_CAP,
-                'requested': len(items),
-            }), 400
+            return api_error(
+                f'ids cap is {UNMATCHED_BATCH_ID_CAP}',
+                code='bad_request',
+                cap=UNMATCHED_BATCH_ID_CAP,
+                requested=len(items),
+            )
         for item in items:
             if not isinstance(item, dict):
                 results.append({'id': None, 'ok': False, 'error': 'invalid_item'})
@@ -932,16 +929,15 @@ def batch_amend_unmatched_names():
         if err:
             return err
         if not any(k in data for k in ('search_name', 'display_name', 'name')):
-            return jsonify({
-                'error': 'Provide search_name and/or display_name (or items[] with per-id fields)',
-                'ok': False,
-                'disk_rename': False,
-            }), 400
+            return api_error(
+                'Provide search_name and/or display_name (or items[] with per-id fields)',
+                code='bad_request',
+                disk_rename=False,
+            )
         for folder_id in ids:
             _amend_one(folder_id, data)
 
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'amended': amended,
         'failed': sum(1 for r in results if not r.get('ok')),
         'results': results,
@@ -965,13 +961,14 @@ def fix_duplicate_unmatched(folder_id):
     data = request.get_json(silent=True) or {}
     action = (data.get('action') or '').strip().lower()
     if action not in VALID_DUPLICATE_FIX_ACTIONS:
-        return jsonify({
-            'error': f"Invalid action. Choose one of: {sorted(VALID_DUPLICATE_FIX_ACTIONS)}",
-        }), 400
+        return api_error(
+            f"Invalid action. Choose one of: {sorted(VALID_DUPLICATE_FIX_ACTIONS)}",
+            code='bad_request',
+        )
 
     folder = db.session.get(UnmatchedFolder, folder_id)
     if not folder:
-        return jsonify({'error': 'Unmatched folder not found'}), 404
+        return api_error('Unmatched folder not found', code='not_found')
 
     notes = (data.get('notes') or '')[:512] or None
     matched_uuid = getattr(folder, 'matched_game_uuid', None) or data.get('matched_game_uuid')
@@ -996,8 +993,7 @@ def fix_duplicate_unmatched(folder_id):
         ).order_by(DuplicateFixLog.created_at.desc())
     ).scalars().first()
 
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'action': action,
         'folder_id': folder_id,
         'folder_path': folder_path,
@@ -1030,28 +1026,30 @@ def mark_unmatched_folder_kind(folder_id):
     data = request.get_json(silent=True) or {}
     kind_raw = data.get('item_kind') or data.get('content_kind') or data.get('kind')
     if not kind_raw or not str(kind_raw).strip():
-        return jsonify({
-            'error': f'item_kind required. Choose one of: {sorted(ITEM_KINDS)}',
-            'item_kinds': sorted(ITEM_KINDS),
-        }), 400
+        return api_error(
+            f'item_kind required. Choose one of: {sorted(ITEM_KINDS)}',
+            code='bad_request',
+            item_kinds=sorted(ITEM_KINDS),
+        )
     folded = str(kind_raw).strip().lower()
     _aliases = {'app', 'utility', 'utilities', 'software', 'emu', 'experiences'}
     if folded not in ITEM_KINDS and folded not in _aliases:
-        return jsonify({
-            'error': f'Invalid item_kind. Choose one of: {sorted(ITEM_KINDS)}',
-            'item_kinds': sorted(ITEM_KINDS),
-        }), 400
+        return api_error(
+            f'Invalid item_kind. Choose one of: {sorted(ITEM_KINDS)}',
+            code='bad_request',
+            item_kinds=sorted(ITEM_KINDS),
+        )
     kind = normalize_item_kind(kind_raw)
 
     folder = db.session.get(UnmatchedFolder, folder_id)
     if not folder:
-        return jsonify({'error': 'Unmatched folder not found'}), 404
+        return api_error('Unmatched folder not found', code='not_found')
 
     steam_app_id = data.get('steam_app_id')
     try:
         steam_app_id = int(steam_app_id) if steam_app_id is not None else None
     except (TypeError, ValueError):
-        return jsonify({'error': 'steam_app_id must be an integer'}), 400
+        return api_error('steam_app_id must be an integer', code='bad_request')
 
     try:
         game = mark_unmatched_as_kind(
@@ -1064,10 +1062,11 @@ def mark_unmatched_folder_kind(folder_id):
         db.session.commit()
     except ValueError as exc:
         db.session.rollback()
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except Exception as exc:
         db.session.rollback()
-        return jsonify({'error': str(exc)}), 500
+        current_app.logger.warning('scan match update failed: %s', exc)
+        return api_error('Could not update the match', code='internal')
 
     log_system_event(
         f"Marked unmatched as {kind}: {game.name} ({game.uuid})",
@@ -1075,8 +1074,7 @@ def mark_unmatched_folder_kind(folder_id):
         event_level='information',
         audit_user=getattr(current_user, 'id', None),
     )
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'game_uuid': game.uuid,
         'name': game.name,
         'item_kind': game.item_kind,
@@ -1129,9 +1127,9 @@ def open_path_info():
     """
     raw = (request.args.get('path') or request.args.get('full_disk_path') or '').strip()
     if not raw:
-        return jsonify({'error': 'path required'}), 400
+        return api_error('path required', code='bad_request')
     if len(raw) > 2048:
-        return jsonify({'error': 'path too long'}), 400
+        return api_error('path too long', code='bad_request')
 
     exists = False
     try:
@@ -1160,7 +1158,7 @@ def export_unmatched_folders():
 
     fmt = (request.args.get('format', 'csv') or 'csv').lower()
     if fmt not in ('csv', 'json'):
-        return jsonify({'error': "Invalid format. Choose 'csv' or 'json'."}), 400
+        return api_error("Invalid format. Choose 'csv' or 'json'.", code='bad_request')
 
     rows = _query_unmatched_rows(filters)
     folders = [folder for folder, _ln, _pl in rows]
@@ -1308,6 +1306,10 @@ def start_library_scan():
         or request.args.get('library_uuid')
     )
     if not library_uuid:
+        # Deliberately not api_error/api_ok: `status` here is the scan-queue
+        # contract, not the legacy envelope marker. scanQueuePolicy.js documents
+        # it as 'queued' | 'started' | 'rejected', and admin_manage_scanjobs.js
+        # branches on `status === 'rejected'`. Baselined on purpose.
         return jsonify({
             'status': 'rejected',
             'job_id': None,
@@ -1319,6 +1321,10 @@ def start_library_scan():
         select(Library).filter_by(uuid=library_uuid)
     ).scalars().first()
     if not library:
+        # Deliberately not api_error/api_ok: `status` here is the scan-queue
+        # contract, not the legacy envelope marker. scanQueuePolicy.js documents
+        # it as 'queued' | 'started' | 'rejected', and admin_manage_scanjobs.js
+        # branches on `status === 'rejected'`. Baselined on purpose.
         return jsonify({
             'status': 'rejected',
             'job_id': None,
@@ -1333,6 +1339,10 @@ def start_library_scan():
         or library.last_scan_folder
     )
     if not folder:
+        # Deliberately not api_error/api_ok: `status` here is the scan-queue
+        # contract, not the legacy envelope marker. scanQueuePolicy.js documents
+        # it as 'queued' | 'started' | 'rejected', and admin_manage_scanjobs.js
+        # branches on `status === 'rejected'`. Baselined on purpose.
         return jsonify({
             'status': 'rejected',
             'job_id': None,
@@ -1427,6 +1437,10 @@ def refresh_all_libraries():
         if lib.last_scan_folder
     ]
     if not queue:
+        # Deliberately not api_error/api_ok: `status` here is the scan-queue
+        # contract, not the legacy envelope marker. scanQueuePolicy.js documents
+        # it as 'queued' | 'started' | 'rejected', and admin_manage_scanjobs.js
+        # branches on `status === 'rejected'`. Baselined on purpose.
         return jsonify({
             'status': 'rejected',
             'error': 'No libraries have a remembered scan folder yet. Run one Auto Scan per library first.',
@@ -1459,6 +1473,10 @@ def refresh_all_libraries():
             f'Refresh-all started for {len(queue)} libraries '
             f'(sequential worker, force_parallel). {FORCE_PARALLEL_RISK}'
         )
+        # Deliberately not api_error/api_ok: `status` here is the scan-queue
+        # contract, not the legacy envelope marker. scanQueuePolicy.js documents
+        # it as 'queued' | 'started' | 'rejected', and admin_manage_scanjobs.js
+        # branches on `status === 'rejected'`. Baselined on purpose.
         return jsonify({
             'status': 'started',
             'queued': queue,
@@ -1508,8 +1526,7 @@ BAD_MATCH_REASONS = {
 @librarian_required
 def unmatched_bad_match_reasons():
     """Vocabulary for the Bad match picker, so the UI never hardcodes it."""
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'reasons': [{'id': key, 'label': label} for key, label in BAD_MATCH_REASONS.items()],
     })
 
@@ -1526,7 +1543,7 @@ def unmatched_flag_bad_match(folder_id: str):
     """
     row = db.session.get(UnmatchedFolder, folder_id)
     if row is None:
-        return jsonify({'error': 'Folder not found'}), 404
+        return api_error('Folder not found', code='not_found')
 
     data = request.get_json(silent=True) or {}
     raw_reason = data.get('reason')
@@ -1537,18 +1554,19 @@ def unmatched_flag_bad_match(folder_id: str):
         row.bad_match_at = None
         row.bad_match_by_user_id = None
         db.session.commit()
-        return jsonify({'ok': True, 'cleared': True})
+        return api_ok({'cleared': True})
 
     reason = str(raw_reason).strip().lower()
     if reason not in BAD_MATCH_REASONS:
-        return jsonify({
-            'error': f"reason must be one of: {', '.join(sorted(BAD_MATCH_REASONS))}",
-        }), 400
+        return api_error(
+            f"reason must be one of: {', '.join(sorted(BAD_MATCH_REASONS))}",
+            code='bad_request',
+        )
 
     note = (data.get('note') or '').strip()[:500]
     # 'other' without a note is not feedback, it is a shrug.
     if reason == 'other' and not note:
-        return jsonify({'error': 'A note is required when the reason is "other"'}), 400
+        return api_error('A note is required when the reason is "other"', code='bad_request')
 
     from datetime import datetime, timezone
 
@@ -1565,8 +1583,7 @@ def unmatched_flag_bad_match(folder_id: str):
         audit_user=getattr(current_user, 'id', None),
     )
 
-    return jsonify({
-        'ok': True,
+    return api_ok({
         'folder_id': folder_id,
         'reason': reason,
         'label': BAD_MATCH_REASONS[reason],

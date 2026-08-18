@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
@@ -58,7 +59,7 @@ def _indexer_readiness() -> dict:
 @login_required
 def acquire_status():
     readiness = _indexer_readiness()
-    return jsonify({
+    return api_ok({
         'enabled': _acquire_allowed(),
         'arr_enabled': arr_module_on(),
         'debrid_enabled': debrid_enabled(),
@@ -83,15 +84,15 @@ def acquire_status():
 @login_required
 def acquire_search():
     if not arr_module_on():
-        return jsonify({'error': 'Arr module disabled'}), 403
+        return api_error('Arr module disabled', code='forbidden')
     query = (request.args.get('q') or '').strip()
     if not query:
-        return jsonify({'error': 'q required'}), 400
+        return api_error('q required', code='bad_request')
     current_label = (request.args.get('current') or '').strip()
     try:
         hits = search_indexers(query)
     except Exception as exc:
-        return jsonify({'error': str(exc)}), 502
+        return api_error(str(exc), code='bad_gateway')
     ranked = rank_acquire_hits([hit.to_dict() for hit in hits], query=query)
     if current_label:
         for row in ranked:
@@ -108,44 +109,44 @@ def acquire_search():
 def acquire_download():
     """Send magnet/URL to download client or debrid — librarian/admin only."""
     if not is_librarian(current_user):
-        return jsonify({'error': 'Librarian or admin required'}), 403
+        return api_error('Librarian or admin required', code='forbidden')
     data = request.get_json(silent=True) or {}
     url = (data.get('url') or data.get('magnet') or '').strip()
     provider = (data.get('provider') or 'qbittorrent').strip().lower()
     if not url:
-        return jsonify({'error': 'url or magnet required'}), 400
+        return api_error('url or magnet required', code='bad_request')
     if url.lower().startswith('http://') or url.lower().startswith('https://'):
         from gametheca.utils.security import validate_user_outbound_http_url
         ok, result = validate_user_outbound_http_url(url)
         if not ok:
-            return jsonify({'error': result}), 400
+            return api_error(result, code='bad_request')
         url = result
     try:
         if provider in ('qbittorrent', 'transmission', 'sabnzbd', 'nzbget', 'deluge'):
             if not arr_module_on():
-                return jsonify({'error': 'Arr module disabled'}), 403
+                return api_error('Arr module disabled', code='forbidden')
             result = send_to_download_client(url, provider=provider)
-            return jsonify({'ok': True, 'provider': provider, 'result': result})
+            return api_ok({'provider': provider, 'result': result})
         if provider == 'real_debrid':
             if not debrid_enabled():
-                return jsonify({'error': 'Debrid disabled'}), 403
+                return api_error('Debrid disabled', code='forbidden')
             payload = real_debrid_add_magnet(url)
-            return jsonify({'ok': True, 'provider': 'real_debrid', 'result': payload})
+            return api_ok({'provider': 'real_debrid', 'result': payload})
         if provider == 'alldebrid':
             if not debrid_enabled():
-                return jsonify({'error': 'Debrid disabled'}), 403
+                return api_error('Debrid disabled', code='forbidden')
             payload = alldebrid_upload_magnet(url)
-            return jsonify({'ok': True, 'provider': 'alldebrid', 'result': payload})
+            return api_ok({'provider': 'alldebrid', 'result': payload})
         if provider == 'premiumize':
             if not debrid_enabled():
-                return jsonify({'error': 'Debrid disabled'}), 403
+                return api_error('Debrid disabled', code='forbidden')
             payload = premiumize_add_magnet(url)
-            return jsonify({'ok': True, 'provider': 'premiumize', 'result': payload})
+            return api_ok({'provider': 'premiumize', 'result': payload})
         if provider == 'torbox':
             if not debrid_enabled():
-                return jsonify({'error': 'Debrid disabled'}), 403
+                return api_error('Debrid disabled', code='forbidden')
             payload = torbox_add_magnet(url)
-            return jsonify({'ok': True, 'provider': 'torbox', 'result': payload})
-        return jsonify({'error': 'Unknown provider'}), 400
+            return api_ok({'provider': 'torbox', 'result': payload})
+        return api_error('Unknown provider', code='bad_request')
     except Exception as exc:
-        return jsonify({'error': str(exc)}), 502
+        return api_error(str(exc), code='bad_gateway')
