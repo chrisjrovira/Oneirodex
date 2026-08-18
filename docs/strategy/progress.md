@@ -291,6 +291,31 @@ index, and [carryover-w28.md](carryover-w28.md) is the index over the open set.
 **Ratchets after the wave:** API envelope baseline **849**; CSS token baseline **1303** (down from 2365
 when the lint landed). Both are counted per file — see [CLAUDE.md](../../CLAUDE.md).
 
+### W29 — library UI bug pass (2026-08-18)
+
+Twelve reported defects on the Library surface, worked in the order given. Two of them were
+whole-product bugs wearing a library costume.
+
+| # | Reported | Cause | Fix |
+|---|---|---|---|
+| 6 | Changing the theme does nothing on reload | `theme_asset` is applied to string literals, so Jinja **constant-folded** it at template-compile time and Flask cached the compiled template for the process — every install served whichever theme was current at its first render. `data-theme` is a variable, never folded, so the page announced the new theme while wearing the old one | `@pass_context` makes the fold illegal (`nodes._FilterTestCommon.as_const` raises `Impossible`) — [tests/test_theme_asset.py](../../tests/test_theme_asset.py) |
+| 2, 8, 9, 10 | Tile chrome hard to see, doesn't scale; Preview collides at small tiles; hover barely moves; badges mismatched | Controls pinned at 32px and `opacity: 0` until hover; **two** `.game-card:hover` rules, the later one overriding the tile-size curve with `scale(1.08)` + a 2px ring; badge modifiers each redefining size | One geometry scale derived from `--gt-tile-min` for controls, badges and chips; controls rest visible; one hover rule at a flat 1.15 with the ring gone; Preview moved to tile centre |
+| 1 | Empty space above/below tiles; the section below the grid isn't flush | The row gap was counted **three** times (estimate + virtualizer `gap` + row `padding-bottom`), and rows are measured, so measured and estimated rows disagreed by a gap. Separately: `useWindowVirtualizer` against a shell whose window never scrolls, so nothing past the first screenful ever rendered | Gap has one owner (the virtualizer's `gap`); virtualize against the real scroll container via `findScrollParent` |
+| 3 | Tile menu renders under the badges | `.popup-menu` and `.gt-badge-layers` both `z-index: 12`, badges later in DOM order — and interactive badge stacks re-enable pointer events, so they ate clicks too | Menu to `z-index: 40`; badge layers dim and go pointer-inert while an overlay is open |
+| 5 | Selection bar covers the first row; select button reads as an error | Sticky `top: var(--gt-topbar-h)` inside `.gt-shell__main`, which already starts below that bar — counted twice, so the bar rendered a bar-height lower than the space it reserved | `top: 0`; select checkbox moved out of the top-right stack to sit above the bottom-right badges |
+| 4 | Preview too small; no cross-system info | Nothing joined copies of one title across libraries | Larger panel (54rem / 88vh) + **Available on**: every system holding the title, one launcher per emulator core, blockers named — `GET /api/games/{uuid}/editions` |
+| 11, 12 | Brand mark and default cover ignore the theme; cover text unreadable | Both were rasters with colour baked in; an external SVG in `<img>` cannot read the page's tokens | Mark painted from a `mask-image` silhouette filled with `--gt-accent`; cover fallback drawn in CSS with the title as **real text** clamped against `--gt-tile-min` |
+| 7 | Fonts not installed, shouldn't need an admin | Faces were fetched from google/fonts on a background thread at the end of first-run setup **only** — a proxy, an air-gapped host or an install already past setup got a picker full of "not installed" | Faces vendored in `gametheca/setup/fonts/` and copied on every boot beside the icon packs — [tests/test_font_bundle.py](../../tests/test_font_bundle.py) |
+
+**Ratchets after the pass:** CSS token baseline **1303**, now **8 below** it (no `--update` run — the
+headroom is real reduction, not absorbed violations). API envelope baseline **151**, unchanged: the new
+route uses `api_ok`.
+
+**Not verifiable in the harness:** the in-app browser pane does not composite frames, so it dispatches
+no scroll events and completes no image loads. Scroll virtualization was confirmed by dispatching the
+scroll event by hand (rows advanced 0–5 → 4–12); the cover-fallback `onError` path is covered by
+vitest rather than live.
+
 ### Jul 27 agent-team wave
 
 | Seat | Shipped |

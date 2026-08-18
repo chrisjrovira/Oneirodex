@@ -12,7 +12,14 @@ From the member SPA **Account** drawer (under TopNav) → **Preferences**, or Ct
 - **Default (system)** is the built-in theme id `default` (saved explicitly — not `None`).
 - Default brand accent is green **`#2fd67b`** (Style B+C glass); other presets (Aurora, Ember, Violet, Forest, Ocean, Rose, Mono, Sunset, Ice — **9** packs) recolour accent, surfaces, glass/CRT, typography, and paired icon geometry (`GENERATOR_VERSION` 10).
 - Picking a colour swatch also selects that preset’s paired icon pack (still changeable before Save).
+- The chosen theme applies on the **next page load** — every stylesheet, the brand mark, and the tile chrome follow it.
 - If swatches do nothing, accents look wrong, or presets still look accent-only (pre–Wave 2d), the library volume may have stale theme files — ask an admin to **Reset Default Themes** after a rebuild.
+
+> **Fixed:** themes used to appear not to save at all — the page came back with
+> the previous theme's colours however many times you picked a new one. The
+> preference was saving correctly; the stylesheet links were being cached per
+> server process, so a restart was the only thing that ever changed them. See
+> [troubleshooting](troubleshooting.md#a-new-theme-doesnt-appear-after-reload).
 
 ## Icon packs (independent of color)
 
@@ -32,16 +39,23 @@ From the member SPA **Account** drawer (under TopNav) → **Preferences**, or Ct
   automatically (a Game Boy title gets the compact pixel face, a PS1 title the
   disc-era one).
 
-> **If a font seems to do nothing:** the picker lists faces, but the font *files*
-> are supplied by whoever runs your server — GameTheca cannot legally bundle
-> console manufacturers' typefaces, and does not vendor the open-licence ones
-> either. A face whose file is not installed falls back to a standard system
-> font. Ask your admin to install it — [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md).
+- **Every listed face ships with GameTheca.** The open-licence (OFL 1.1) faces
+  are bundled in the release and copied into place on every server start — no
+  download, no admin step, and nothing to do on an air-gapped install. If the
+  picker ever shows *not installed*, that is a genuine file problem on the
+  server, not the normal state.
+
+> **What is *not* bundled:** console manufacturers' own typefaces. Those are
+> trademarked and not licensed for redistribution. The bundled faces evoke each
+> era rather than imitating a brand. An admin can still drop a licensed font in
+> and have it offered alongside — [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md).
 
 ## Tile size
 
 - Preference: continuous **0–100% slider** (TopNav) — legacy S/M/L/XL values still load and map onto the scale.
 - Affects Library / Favorites / similar grids; denser gaps on smaller sizes; grid re-measures with a short debounce so dragging feels smooth instead of snapping between sizes.
+- **Everything on a tile scales with it** — the corner controls (menu, favourite, play status), the badges, the platform chip and the Preview pill all derive their size from the tile, so a 120% tile and a 30% tile read the same way rather than one being all chrome.
+- Hovering a tile lifts it **15%** at every tile size. The lift is a transform, so the grid does not reflow around it.
 
 ## Items per page
 

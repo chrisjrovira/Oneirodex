@@ -9,11 +9,27 @@ Quick checks before pinging an admin.
 | Unstyled Discover/Library | Missing frontend build | Admin rebuilds image / `member-app` dist |
 | Spin forever / Discover stuck on Loading while nav works | Old image without ASGI SSE fix, or companion SSE holding the only worker | Ask admin to rebuild from current tree (not restart alone) — [admin troubleshooting](../admin/troubleshooting.md#spa-navigates-but-pagesadmin-hang-discover-stuck-on-loading). Clear site data if Friends dock was stuck open. |
 | Spin forever (API 401/500) | Auth / server error | Hard refresh; re-login; admin check `/readyz` + logs |
-| Theme didn’t apply | Cache / wrong preference | Preferences → re-pick theme; hard refresh |
+| Theme didn’t apply | Server predates the constant-folding fix | Fixed — see [below](#a-new-theme-doesnt-appear-after-reload). On an older build only a server restart applied a theme change. |
 | Can’t find a page | Nav clutter | **Ctrl+K** / ⌘K command palette — [faq.md](faq.md) |
 | Chat cramped on phone | Old frontend build | Admin rebuild `member-app` (Chat slide-out stacks ≤900px) |
 | Huge tiles on phone | Pref L/XL before density polish | Rebuild; tiles clamp automatically under 900px |
 | Some store links on details look like plain text | Logo assets not shipped yet for that store | Expected for itch · Humble · EA · Ubisoft · Xbox · PSN · Amazon · wikia/fandom · unknown — link still works; Steam/GOG/Epic/IGDB/YouTube/Wikipedia/official have marks |
+
+### A new theme doesn't appear after reload
+
+**Fixed.** Picking a theme saved the preference and changed nothing you could
+see: the page came back with the previous theme's colours, and only a server
+restart ever applied one. Re-picking, hard refreshing and clearing the cache all
+made no difference, because none of them were the problem.
+
+Every template asks for its stylesheets with a *literal* path, and Jinja
+evaluates a filter applied to a literal once, at template-compile time, then
+caches the compiled template for the life of the server process. The first
+page rendered after a restart therefore baked its theme's URLs into every later
+render. The `<html data-theme>` attribute is a variable, never folded, which is
+why the page correctly *announced* the new theme while wearing the old one.
+
+If you are on a build from before this fix, a server restart is the workaround.
 
 ## Downloads
 
