@@ -35,7 +35,7 @@ def test_theme_asset_url_carries_a_version(app):
         clear_theme_asset_versions()
         from gametheca.routes import theme_asset_filter
 
-        url = theme_asset_filter('css/base.css')
+        url = theme_asset_filter(None, 'css/base.css')
 
     assert 'library/themes/' in url
     assert re.search(r'[?&]v=', url), f'no cache-busting version on {url}'

@@ -15,6 +15,7 @@ from gametheca import db, cache
 from datetime import datetime, timezone
 from PIL import Image as PILImage
 from itsdangerous import URLSafeTimedSerializer
+from jinja2 import pass_context
 
 from gametheca.utils.api_response import api_error, api_ok
 from gametheca.forms import (
@@ -1381,8 +1382,28 @@ def _theme_asset_version(fs_path: Path) -> str:
 
 
 @bp.app_template_filter('theme_asset')
-def theme_asset_filter(path):
-    """Convert a relative theme path to the correct themed URL with fallback to default"""
+@pass_context
+def theme_asset_filter(_ctx, path):
+    """Convert a relative theme path to the correct themed URL with fallback to default.
+
+    `@pass_context` is load-bearing and has nothing to do with the context.
+
+    Every call site passes a string literal — `{{ 'css/base.css'|theme_asset }}` —
+    and Jinja's optimiser constant-folds a filter applied to a constant at
+    *compile* time, baking the returned URL into the compiled template. Flask
+    caches compiled templates for the life of the process, so the whole install
+    kept serving whichever theme happened to be current when each template was
+    first rendered. Changing the theme updated `data-theme` on <html> (a real
+    variable lookup, so never folded) while every stylesheet link stayed on the
+    previous theme — which is exactly "changing the theme does nothing on
+    reload", and why it looked like the preference had not saved.
+
+    `nodes._FilterTestCommon.as_const` raises `Impossible` for a filter marked
+    `_PassArg.context`, so this marker is what makes the fold illegal and the
+    call happen per render. The context itself is unused; `current_user` still
+    comes from the request. Do not "tidy" this decorator away — see
+    tests/test_theme_asset.py::test_theme_asset_is_not_constant_folded.
+    """
     from flask_login import current_user
 
     # Get current theme from user preferences or default
