@@ -9,7 +9,25 @@ TEMPLATES = ROOT / 'gametheca' / 'templates'
 ADMIN_TEMPLATES = TEMPLATES / 'admin'
 BASE_ADMIN = TEMPLATES / 'base_admin.html'
 ADMIN_APP_SRC = ROOT / 'frontend' / 'admin-app' / 'src'
-BRAND_MARK = 'gametheca_mark.svg'
+#: How the brand mark is rendered, which is no longer a file reference.
+#:
+#: It used to be `gametheca_mark.svg` in an <img src>. That raster bakes the
+#: default green and a dark plate into the file, and an external SVG loaded
+#: through <img> cannot read the page's custom properties — so on every preset
+#: but the default the whole shell changed colour and the mark stayed green.
+#: The mark is now painted: a `.gt-brand-mark` element masked with a monochrome
+#: silhouette and filled with var(--gt-accent).
+#:
+#: Counting the *class* rather than a filename is the same guard one level up.
+#: The comment below already argued that naming a location is what keeps
+#: breaking this test; naming an asset turned out to have the same flaw, and
+#: this is the second half of that lesson.
+BRAND_MARK = 'gt-brand-mark'
+
+#: The silhouette the class masks, and the stylesheet that paints it. A class
+#: reference alone is hollow — it renders a blank box if either is missing.
+BRAND_GLYPH = 'gametheca_glyph.svg'
+BRAND_CSS = 'gt-shell.css'
 
 #: Admin shell chrome — the components making up the persistent nav frame.
 #: Deliberately a *category* rather than a filename: the mark moving between
@@ -50,6 +68,14 @@ def test_the_admin_brand_mark_is_rendered_by_exactly_one_chrome_component():
     twice (the GT-B2 duplication coming back). So count instead of naming, and
     a future move of the mark between chrome components stays green on its own.
 
+    A third break, and the same lesson one level up: the mark stopped being a
+    raster in an <img> and became a masked `.gt-brand-mark` element, so it could
+    follow the selected theme. Counting a *filename* re-pinned an asset the way
+    the earlier versions re-pinned a location. The class is what "renders the
+    brand" now means, so that is what is counted — with the glyph and the
+    stylesheet checked separately, since a class whose mask or paint is missing
+    renders an invisible box and would otherwise count as success.
+
     The count is scoped to chrome (`CHROME_STEM`). Counting across all of `src`
     was not the same guard: the mark could drop out of the rail and be picked up
     by any ordinary page, the total would still be one, and the shell would
@@ -76,8 +102,21 @@ def test_the_admin_brand_mark_is_rendered_by_exactly_one_chrome_component():
         f'{BRAND_MARK} is rendered outside admin chrome by {outside} — '
         'the brand belongs to the shell frame, not to a page'
     )
-    # A reference alone is hollow if the asset it points at is gone.
-    assert (ROOT / 'gametheca' / 'static' / 'newstyle' / BRAND_MARK).is_file()
+    # A reference alone is hollow if what it points at is gone. For a masked
+    # mark that means two things, and missing either renders a blank box rather
+    # than failing loudly in the browser.
+    glyph = ROOT / 'gametheca' / 'static' / 'newstyle' / BRAND_GLYPH
+    assert glyph.is_file(), f'{BRAND_GLYPH} is missing — .gt-brand-mark has nothing to mask'
+
+    paint = ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / BRAND_CSS
+    css = paint.read_text(encoding='utf-8')
+    assert f'.{BRAND_MARK}' in css, f'no .{BRAND_MARK} rule in {BRAND_CSS}'
+    assert BRAND_GLYPH in css, f'.{BRAND_MARK} in {BRAND_CSS} does not reference {BRAND_GLYPH}'
+    # The point of the rewrite: the fill follows the theme rather than the file.
+    assert '--gt-accent' in css.split(f'.{BRAND_MARK}', 1)[1][:400], (
+        f'.{BRAND_MARK} does not paint with var(--gt-accent) — the mark would '
+        'stop following the selected theme, which is the whole reason it is masked'
+    )
 
 
 def test_admin_dashboard_extends_base_admin():
