@@ -5,7 +5,7 @@ import { GameCard } from './GameCard'
 const game = {
   uuid: '11111111-1111-4111-8111-111111111111',
   name: 'Archery Kings VR',
-  cover_url: '/static/newstyle/default_cover.jpg',
+  cover_url: '/static/library/images/cover.jpg',
   is_favorite: false,
   user_status: null,
   has_local_override: false,

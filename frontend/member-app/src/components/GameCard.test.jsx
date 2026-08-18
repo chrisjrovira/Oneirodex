@@ -9,7 +9,7 @@ function badgeCorner(corner) {
 const baseGame = {
   uuid: '11111111-1111-4111-8111-111111111111',
   name: 'Archery Kings VR',
-  cover_url: '/static/newstyle/default_cover.jpg',
+  cover_url: '/static/library/images/cover.jpg',
   is_favorite: false,
   user_status: null,
   has_local_override: true,
@@ -158,4 +158,29 @@ test('shows disabled Play when firmware_missing even if play_url is set', () => 
   )
   expect(play).toHaveClass('gt-tile-play--disabled')
   expect(screen.queryByRole('link', { name: /play/i })).toBeNull()
+})
+
+test('a title with no art gets a drawn, themed fallback rather than the old JPG', () => {
+  // default_cover.jpg baked the mark and the words into one raster: unreadable
+  // below roughly a 220px tile, and green whatever theme was selected. A row
+  // that carries that path is a row with no art, not a row with art.
+  render(<GameCard game={{ ...baseGame, cover_url: '' }} showPlayStatus={false} isAdmin={false} />)
+
+  const fallback = document.querySelector('[data-cover-fallback]')
+  expect(fallback).not.toBeNull()
+  expect(fallback.textContent).toContain(baseGame.name)
+  expect(document.querySelector('img.game-cover')).toBeNull()
+})
+
+test('the stored placeholder path counts as no art, not as art', () => {
+  render(
+    <GameCard
+      game={{ ...baseGame, cover_url: '/static/newstyle/default_cover.jpg' }}
+      showPlayStatus={false}
+      isAdmin={false}
+    />,
+  )
+
+  expect(document.querySelector('[data-cover-fallback]')).not.toBeNull()
+  expect(document.querySelector('img.game-cover')).toBeNull()
 })

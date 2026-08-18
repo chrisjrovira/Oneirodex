@@ -46,27 +46,29 @@
     position: absolute;
     top: calc(var(--gt-tile-stack-top) + 2 * var(--gt-tile-stride));
     bottom: auto;
-    right: 10px;
-    width: var(--gt-tile-btn);
-    height: var(--gt-tile-btn);
     background-color: var(--gt-tile-btn-bg);
     backdrop-filter: blur(5px);
-    border-radius: 6px;
     border: var(--gt-tile-btn-border);
+    color: var(--gt-tile-btn-fg);
     cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.2s ease;
+    opacity: var(--gt-tile-btn-rest-opacity);
+    transition: opacity 0.18s ease, background-color 0.18s ease, border-color 0.18s ease,
+        transform 0.2s ease;
     z-index: 15;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.game-card:hover .game-status-btn {
+.game-card:hover .game-status-btn,
+.game-status-btn:focus-visible,
+.game-status-btn[aria-expanded='true'] {
     opacity: 1;
 }
 
-/* Badges clear the control stack — 3 buttons normally, 4 while selecting. */
+/* Badges clear the control stack. Three buttons, always — selection moved to
+   the bottom-right corner (LibrarySelectionBar.css), so there is no longer a
+   fourth slot for the badges to dodge. */
 .game-card:has(.game-status-btn) > .popup-menu {
     top: calc(var(--gt-tile-stack-top) + 3 * var(--gt-tile-stride));
 }
@@ -75,17 +77,14 @@
     top: calc(var(--gt-tile-stack-top) + 3 * var(--gt-tile-stride) + 2px);
 }
 
-.game-card:has(.gt-tile-select) .gt-badge-stack--top-right {
-    top: calc(var(--gt-tile-stack-top) + 4 * var(--gt-tile-stride) + 2px);
-}
-
 .game-status-btn:hover {
-    background-color: rgba(0, 0, 0, 0.9);
+    background-color: var(--gt-tile-btn-bg-hover);
+    border-color: var(--gt-accent);
     transform: scale(1.1);
 }
 
 .game-status-btn i {
-    font-size: 16px;
+    font-size: inherit;
     transition: color 0.3s ease, opacity 0.3s ease;
 }
 
@@ -117,12 +116,15 @@
     font-size: 14px;
 }
 
-/* Status Dropdown Menu — opens below the right-side status control */
+/* Status Dropdown Menu — opens below the right-side status control.
+   Anchored off the stack vars like the popup menu is: `top: 116px` was the
+   three-button height at the old fixed 32px button, so it drifted away from
+   the control the moment the buttons started scaling with the tile. */
 .status-dropdown {
     position: absolute;
-    top: 116px;
+    top: calc(var(--gt-tile-stack-top) + 3 * var(--gt-tile-stride));
     bottom: auto;
-    right: 8px;
+    right: var(--gt-tile-edge, 8px);
     min-width: 180px;
     background: var(--pagination-bg);
     backdrop-filter: blur(10px);
@@ -220,24 +222,18 @@
         font-size: 13px;
     }
 
-    .game-status-btn {
-        width: 28px;
-        height: 28px;
-    }
-
-    .game-status-btn i {
-        font-size: 14px;
-    }
+    /* No size override here any more: --gt-tile-btn is derived from
+       --gt-tile-min, and clampTileVarsForNarrowViewport already caps the tile
+       size on narrow viewports, so the button follows without a second opinion
+       that only ever applied to one of the four controls. */
 }
 
-/* Ensure status button shows on mobile when card is tapped */
-@media (max-width: 480px) {
+/* Touch has no hover, so the whole control stack rests visible there rather
+   than relying on a state that never arrives. */
+@media (hover: none) {
+    .button-glass-hamburger,
+    .favorite-btn,
     .game-status-btn {
-        opacity: 0.8;
-    }
-
-    .game-card:hover .game-status-btn,
-    .game-card:active .game-status-btn {
         opacity: 1;
     }
 }

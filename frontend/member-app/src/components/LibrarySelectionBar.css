@@ -1,12 +1,20 @@
 .gt-library-selection {
   position: sticky;
-  /* Docks to the real top bar rather than a copy of its height. The literal
-     3.25rem was the comfortable-density value; the density layer also ships a
-     compact 2.6rem, so on compact this bar detached from the bar above it and
-     floated over the tiles — which is the "covers the tiles" report. Reading the
-     variable means it stays attached at any density, and follows if the shell
-     height is ever retuned. */
-  top: var(--gt-topbar-h, 3.25rem);
+  /* Zero, not the top-bar height.
+   *
+   * The scrollport this bar sticks inside is `.gt-shell__main`, which already
+   * begins *below* the top bar — the shell's grid puts the bar in its own row.
+   * Offsetting by --gt-topbar-h therefore counted that bar twice: sticky pushes
+   * a box down whenever its flow position sits above the threshold, so the bar
+   * rendered one full top-bar height lower than the space it reserved in flow,
+   * and the first row of tiles was drawn underneath it. That is the reported
+   * "top bar lays over the first row of tiles instead of sitting on top of
+   * them", and it happened at rest, before any scrolling.
+   *
+   * At 0 the flow position and the sticky threshold coincide, so the bar sits
+   * exactly where it reserves space, and on scroll it pins to the top of the
+   * content pane — under the chrome, above the grid. */
+  top: 0;
   z-index: 25;
   display: flex;
   flex-wrap: wrap;
@@ -112,22 +120,32 @@
   box-shadow: 0 8px 20px color-mix(in srgb, var(--gt-bg) 55%, transparent);
 }
 
-/* Selection chrome on tiles — fourth in the top-right control stack.
-   It used to sit bottom-left, where it covered the system label. It now shares
-   the stack's size, colour and rhythm so all four controls line up. */
+/* Selection chrome on tiles — bottom-right corner, directly above the
+   bottom-right badge stack.
+ *
+ * It was the fourth button in the top-right stack, which is what made it read
+ * as a UI error: the moment one tile was selected the checkbox appeared on
+ * *every* tile, and four identical squares stacked down the corner of every
+ * cover looks like chrome that has gone wrong rather than a mode you entered.
+ * Down here it is the only occupant of its corner, it reads as a checkbox
+ * rather than as another action button, and it sits above the badges instead
+ * of pushing them a slot further down the opposite corner.
+ *
+ * It keeps the stack's size and colour so it still belongs to the same tile
+ * chrome — only its position changed. */
 .game-card-container.is-selectable .gt-tile-select {
   position: absolute;
-  right: 10px;
+  right: var(--gt-tile-edge, 8px);
   left: auto;
-  top: calc(var(--gt-tile-stack-top) + 3 * var(--gt-tile-stride));
-  bottom: auto;
+  top: auto;
+  /* One badge row plus a gap above the bottom-right stack. Uses the badge
+     height so the clearance tracks the badges themselves rather than a
+     guess that only holds at one tile size. */
+  bottom: calc(var(--gt-tile-edge, 8px) + var(--gt-badge-h, 1.35rem) + var(--gt-tile-btn-gap, 4px));
   z-index: 16;
-  width: var(--gt-tile-btn);
-  height: var(--gt-tile-btn);
   margin: 0;
   appearance: none;
   border: var(--gt-tile-btn-border);
-  border-radius: 6px;
   background: var(--gt-tile-btn-bg);
   backdrop-filter: blur(5px);
   cursor: pointer;
@@ -135,9 +153,9 @@
   transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
-/* Without a play-status button the select moves up one slot. */
-.game-card-container.is-selectable .game-card:not(:has(.game-status-btn)) .gt-tile-select {
-  top: calc(var(--gt-tile-stack-top) + 2 * var(--gt-tile-stride));
+/* No bottom-right badges on this tile — drop into the corner itself. */
+.game-card-container.is-selectable .game-card:not(:has(.gt-badge-stack--bottom-right)) .gt-tile-select {
+  bottom: var(--gt-tile-edge, 8px);
 }
 
 .game-card-container.is-selectable:hover .gt-tile-select,
@@ -151,7 +169,9 @@
   background: color-mix(in srgb, var(--gt-accent) 85%, transparent);
   border-color: var(--gt-accent);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%230b0e14' stroke-width='2.2' d='M3.5 8.2l3 3 6-6'/%3E%3C/svg%3E");
-  background-size: 0.85rem;
+  /* Tracks the button so the tick does not shrink to a dot on a 300px tile
+     or overflow a 24px control on a 120px one. */
+  background-size: calc(var(--gt-tile-btn, 32px) * 0.62);
   background-repeat: no-repeat;
   background-position: center;
 }
@@ -167,7 +187,9 @@
 
 @media (max-width: 900px) {
   .gt-library-selection {
-    top: 0.5rem;
+    /* Same reasoning as above — the content pane is the scrollport at every
+       width, so any positive offset here re-creates the overlap. */
+    top: 0;
   }
 }
 

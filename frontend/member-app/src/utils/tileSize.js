@@ -34,25 +34,33 @@ export function normalizeTilePercent(value) {
   return roundFine(Math.min(TILE_PERCENT_MAX, Math.max(TILE_PERCENT_MIN, n)))
 }
 
-/** Hover lift at the smallest and largest tile sizes. */
-const HOVER_SCALE_MIN_TILE = 1.6
-const HOVER_SCALE_MAX_TILE = 1.06
+/**
+ * Hover lift, flat across the whole tile-size range.
+ *
+ * It used to interpolate 1.6 at the smallest tile down to 1.06 at the largest,
+ * on the theory that small tiles need a big lift to be readable. Two things
+ * were wrong with that. The curve never reached the screen — a second
+ * `.game-card:hover` rule later in components.css hardcoded `scale(1.08)` and
+ * won on source order, so every tile lifted 8% whatever this returned. And a
+ * lift that changes with tile size makes the same gesture behave differently
+ * depending on a slider the member set once and forgot, which reads as a bug
+ * rather than as a feature.
+ *
+ * One value, everywhere: 15% is large enough to pick a tile out of a dense
+ * grid and small enough that the enlarged tile stays inside its own row on a
+ * narrow viewport, which is why the narrow-viewport clamp no longer overrides
+ * it. `transform: scale` does not reflow, so the grid keeps its flow.
+ */
+export const TILE_HOVER_SCALE = 1.15
 
 export function tilePercentToCssVars(percent) {
   const p = normalizeTilePercent(percent) / 100
   const minPx = roundFine(MIN_PX + (MAX_PX - MIN_PX) * p)
   const gapPx = roundFine(6 + 10 * p)
-  // Hover scale runs *against* tile size (W27): small tiles get a big lift
-  // because there is room for it and the art is too small to read otherwise;
-  // large tiles get a nudge, because doubling a 300px tile would cover its
-  // neighbours and half the row.
-  const hoverScale = roundFine(
-    HOVER_SCALE_MIN_TILE - (HOVER_SCALE_MIN_TILE - HOVER_SCALE_MAX_TILE) * p,
-  )
   return {
     '--gt-tile-min': `${minPx}px`,
     '--gt-tile-gap': `${gapPx}px`,
-    '--gt-tile-hover-scale': String(hoverScale),
+    '--gt-tile-hover-scale': String(TILE_HOVER_SCALE),
   }
 }
 
@@ -67,19 +75,18 @@ export function clampTileVarsForNarrowViewport(vars, isNarrow) {
     return vars
   }
 
-  // The hover lift is clamped on every narrow viewport, not only when the tile
-  // size also needs capping. A 1.6x lift needs room either side of the tile and
-  // a narrow viewport fits two or three per row, so the enlarged tile runs off
-  // the edge — and that is *most* true at small tile sizes, which is exactly
-  // the case the size clamp below skips.
-  const narrowed = { ...vars, '--gt-tile-hover-scale': '1.06' }
-
+  // The hover lift is no longer clamped here. It used to be pinned to 1.06 on
+  // every narrow viewport because the old curve reached 1.6 at small tile
+  // sizes, which genuinely ran off the edge of a two-tile row. A flat 1.15 does
+  // not: at 140px that is 21px of growth, ~10px either side, and the tile stays
+  // inside its own track. Keeping the clamp would mean the same hover behaved
+  // differently on a phone for no reason a member could see.
   const minPx = parseInt(String(vars['--gt-tile-min']), 10)
   if (!Number.isFinite(minPx) || minPx <= 140) {
-    return narrowed
+    return vars
   }
   return {
-    ...narrowed,
+    ...vars,
     '--gt-tile-min': '140px',
     '--gt-tile-gap': '6px',
   }

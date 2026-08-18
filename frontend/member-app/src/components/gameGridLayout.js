@@ -22,27 +22,60 @@ export function computeGridColumns(width, tileMin = 180, gap = 10) {
   return Math.max(1, Math.floor((width + g) / (min + g)))
 }
 
-/** Cover is 3:4; row height ≈ tile width * 4/3 (no title strip under cover). */
 /**
- * Height of one virtual row, gap included.
+ * Height of one virtual row — the tiles only, no gap.
  *
- * The gap matters here in a way it does not in the plain grid. That grid is a
- * real CSS grid, so `gap` spaces its rows for free. Virtual rows are absolutely
- * positioned at offsets the virtualiser computes, so the only vertical space
- * between them is whatever this function reports — omitting the gap made the
- * virtualised library butt its rows together while the non-virtual one spaced
- * them, and left `getTotalSize()` short by one gap per row, which is what
- * pushed the pagination bar away from the bottom of the tiles.
+ * The gap deliberately is *not* here. It used to be, and it was the third of
+ * three places the same gap was counted:
  *
- * `.game-library-row` carries the same gap as bottom padding so the measured
- * height agrees with this estimate; otherwise `measureElement` would overwrite
- * it on first paint and the spacing would collapse again.
+ *   1. this estimate returned `tileWidth * 4/3 + gap`
+ *   2. GameGrid passes `gap` to the virtualizer, which spaces rows itself
+ *   3. `.game-library-row` carried `padding-bottom: var(--gt-tile-gap)`, and
+ *      rows are measured with `virtualizer.measureElement`, so that padding
+ *      landed in the measured height too
+ *
+ * Rows were therefore spaced roughly twice as far apart vertically as
+ * horizontally, and — worse — a *measured* row and an *estimated* row differed
+ * by a whole gap, so `getTotalSize()` shrank as rows came into view. The
+ * container reserved height for the estimate, the tiles occupied less, and the
+ * pagination bar sat below a band of nothing that grew with the tile-size
+ * slider (the gap itself scales, 6px → 16px). That is the reported "empty space
+ * above/below tiles" and "the section below the grid doesn't sit flush".
+ *
+ * One owner now: the virtualizer's own `gap` option. It puts the space
+ * *between* rows and not after the last one, which is what a CSS grid `gap`
+ * does and what makes the grid end flush with its final row. Cover is 3:4 and
+ * there is no title strip, so a row is exactly the cover height.
  */
 export function estimateGridRowHeight(width, columnCount, gap = 10) {
   const cols = Math.max(1, columnCount)
   const g = Math.max(0, gap)
   const tileWidth = Math.max(1, (Math.max(width, 1) - g * (cols - 1)) / cols)
-  return Math.ceil(tileWidth * (4 / 3)) + g
+  return Math.ceil(tileWidth * (4 / 3))
+}
+
+/**
+ * Nearest scrollable ancestor, or `null` when the page itself scrolls.
+ *
+ * The library grid virtualises against whatever actually scrolls. In the member
+ * shell that is `.gt-shell__main` — the shell is `height: 100dvh; overflow:
+ * hidden` and the content pane is "the only scroll container in the shell" —
+ * so the window never scrolls at all. Walking up for a real scroller keeps the
+ * grid working in both cases without hardcoding a shell class here.
+ */
+export function findScrollParent(el) {
+  if (!el || typeof getComputedStyle !== 'function') {
+    return null
+  }
+  let node = el.parentElement
+  while (node && node !== document.body && node !== document.documentElement) {
+    const { overflowY, overflow } = getComputedStyle(node)
+    if (/(auto|scroll|overlay)/.test(`${overflowY} ${overflow}`)) {
+      return node
+    }
+    node = node.parentElement
+  }
+  return null
 }
 
 export function chunkGamesIntoRows(games, columnCount) {

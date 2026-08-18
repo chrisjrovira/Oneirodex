@@ -16,14 +16,14 @@ export function AppBar({
   links = [],
   brandTo = '/discover',
   brandLabel = 'GameTheca',
-  markSrc = '/static/newstyle/gametheca_mark.svg',
   tools = null,
   onNavigate,
 }) {
   return (
     <header className="gt-appbar">
       <Link className="gt-appbar__brand" to={brandTo} onClick={onNavigate}>
-        <img className="gt-appbar__mark" src={markSrc} alt="" width={22} height={22} />
+        {/* Painted from a mask so it follows the theme — see .gt-brand-mark. */}
+        <span className="gt-appbar__mark gt-brand-mark" aria-hidden="true" />
         <span>{brandLabel}</span>
       </Link>
 

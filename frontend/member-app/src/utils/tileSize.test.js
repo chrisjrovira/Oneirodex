@@ -1,4 +1,10 @@
-import { clampTileVarsForNarrowViewport, normalizeTilePercent, tilePercentToCssVars, tileSizeToCssVars } from './tileSize'
+import {
+  clampTileVarsForNarrowViewport,
+  normalizeTilePercent,
+  TILE_HOVER_SCALE,
+  tilePercentToCssVars,
+  tileSizeToCssVars,
+} from './tileSize'
 
 test('normalizeTilePercent maps legacy letters and clamps', () => {
   expect(normalizeTilePercent('S')).toBe(25)
@@ -39,37 +45,39 @@ test('clampTileVarsForNarrowViewport caps large tiles', () => {
   expect(clampTileVarsForNarrowViewport(tilePercentToCssVars(100), true)).toEqual({
     '--gt-tile-min': '140px',
     '--gt-tile-gap': '6px',
-    '--gt-tile-hover-scale': '1.06',
+    '--gt-tile-hover-scale': String(TILE_HOVER_SCALE),
   })
 
   // Small tiles keep their size on a narrow viewport — they are already small
-  // enough — but the hover lift is still capped, because that is precisely the
-  // case where the lift is largest and the row is narrowest.
-  expect(clampTileVarsForNarrowViewport(tilePercentToCssVars(0), true)).toEqual({
-    ...tilePercentToCssVars(0),
-    '--gt-tile-hover-scale': '1.06',
-  })
+  // enough — and the hover lift is no longer touched either, now that it is a
+  // flat 15% rather than the old 1.6x-at-small-tiles curve.
+  expect(clampTileVarsForNarrowViewport(tilePercentToCssVars(0), true)).toEqual(
+    tilePercentToCssVars(0),
+  )
 
   expect(clampTileVarsForNarrowViewport(tilePercentToCssVars(100), false)).toEqual(tilePercentToCssVars(100))
 })
 
-test('hover scale runs against tile size', () => {
-  // Small tiles get a real lift because the art is too small to read
-  // otherwise; large tiles get a nudge, since doubling a 300px tile would
-  // cover its neighbours. A flat 1.03 was the old value and read as nothing.
+test('hover scale is one flat value at every tile size', () => {
+  // It used to run against tile size (1.6 small -> 1.06 large). That curve
+  // never reached the screen — a later `.game-card:hover` rule hardcoded
+  // scale(1.08) and won on source order — and a lift that changes with a
+  // slider the member set once reads as a bug rather than a feature.
   const small = Number(tilePercentToCssVars(0)['--gt-tile-hover-scale'])
+  const mid = Number(tilePercentToCssVars(50)['--gt-tile-hover-scale'])
   const large = Number(tilePercentToCssVars(100)['--gt-tile-hover-scale'])
 
-  expect(small).toBeGreaterThan(large)
-  expect(small).toBeGreaterThanOrEqual(1.5)
-  expect(large).toBeLessThanOrEqual(1.1)
-  expect(large).toBeGreaterThan(1)
+  expect(small).toBe(TILE_HOVER_SCALE)
+  expect(mid).toBe(TILE_HOVER_SCALE)
+  expect(large).toBe(TILE_HOVER_SCALE)
+  expect(TILE_HOVER_SCALE).toBeCloseTo(1.15)
 })
 
-test('narrow viewports keep the lift small enough to stay on screen', () => {
+test('narrow viewports keep the same lift', () => {
   const vars = tilePercentToCssVars(0)
   const clamped = clampTileVarsForNarrowViewport(vars, true)
 
-  // At two or three tiles per row a 1.6x lift runs off the edge.
-  expect(Number(clamped['--gt-tile-hover-scale'])).toBeLessThanOrEqual(1.1)
+  // 15% of a 140px tile is ~10px either side — it stays inside its own track,
+  // so there is nothing left for the narrow-viewport clamp to protect against.
+  expect(clamped['--gt-tile-hover-scale']).toBe(String(TILE_HOVER_SCALE))
 })

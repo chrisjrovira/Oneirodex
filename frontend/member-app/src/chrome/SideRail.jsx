@@ -30,7 +30,6 @@ export function SideRail({
     showHelp = false,
     enableVr = false,
     enableActivity = true,
-    markSrc = '/static/newstyle/gametheca_mark.svg',
   } = shellConfig
 
   const primary = getPrimaryLinks()
@@ -105,7 +104,8 @@ export function SideRail({
   return (
     <div className="gt-rail">
       <a className="gt-rail__brand" href="/discover">
-        <img className="gt-rail__mark" src={markSrc} alt="" width={22} height={22} />
+        {/* Painted from a mask so it follows the theme — see .gt-brand-mark. */}
+        <span className="gt-rail__mark gt-brand-mark" aria-hidden="true" />
         <span className="gt-rail__brand-text">GameTheca</span>
       </a>
 

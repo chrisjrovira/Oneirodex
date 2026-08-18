@@ -41,13 +41,19 @@
 
 .game-card .gt-platform-chip {
   position: absolute;
-  left: 0.35rem;
-  bottom: 0.35rem;
+  left: var(--gt-tile-edge, 0.35rem);
+  bottom: var(--gt-tile-edge, 0.35rem);
   z-index: 2;
-  max-width: calc(100% - 0.7rem);
-  padding: 0.18rem 0.4rem;
-  border-radius: 6px;
-  font-size: 0.65rem;
+  max-width: calc(100% - 2 * var(--gt-tile-edge, 0.35rem));
+  padding: 0.18rem var(--gt-badge-pad-x, 0.4rem);
+  min-height: var(--gt-badge-h, 1.35rem);
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--gt-radius-sm, 6px);
+  /* Same scale as the badges — the chip is a corner occupant like they are,
+     and a fixed 0.65rem beside a scaled badge is the mismatch this pass is
+     about. */
+  font-size: var(--gt-badge-fs, 0.65rem);
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -71,31 +77,31 @@
   pointer-events: auto;
 }
 
-.gt-badge {
-  border-radius: 6px;
-  min-width: 1.35rem;
-  min-height: 1.35rem;
-  padding: 3px 6px;
-}
+/* Geometry lives on .gt-badge in the theme's components.css and is derived
+   there from --gt-tile-min so badges scale with the tiles. This copy used to
+   re-pin min-width/min-height/padding in rem, and member-app.css loads after
+   the theme, so it silently won and froze badge size at one scale. Only the
+   member SPA's own tone override stays below. */
 
 /* Badges never share the platform chip corner — keep chip exclusive bottom-left */
 .game-card:has(.gt-badge-stack--bottom-left) .gt-platform-chip {
-  bottom: 2.45rem;
+  bottom: calc(var(--gt-tile-edge, 8px) + var(--gt-badge-h, 1.35rem) + var(--gt-tile-btn-gap, 4px));
 }
 
 /* PLAY is a small bar control under badges — badges win true top-left */
 .game-card .gt-tile-play {
   position: absolute;
   z-index: 14;
-  top: 0.4rem;
-  left: 0.4rem;
+  top: var(--gt-tile-edge, 0.4rem);
+  left: var(--gt-tile-edge, 0.4rem);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 2.5rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.7rem;
+  min-height: var(--gt-badge-h, 1.35rem);
+  padding: 0.25rem var(--gt-badge-pad-x, 0.5rem);
+  border-radius: var(--gt-radius-sm, 6px);
+  font-size: var(--gt-badge-fs, 0.7rem);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -107,7 +113,7 @@
 
 /* Transitional badges (UPDATE/NEW/VR/MISSING) keep top-left; nudge PLAY below */
 .game-card:has(.gt-badge-stack--top-left) .gt-tile-play {
-  top: 2.35rem;
+  top: calc(var(--gt-tile-edge, 8px) + var(--gt-badge-h, 1.35rem) + var(--gt-tile-btn-gap, 4px));
 }
 
 .game-card .gt-tile-play:hover,

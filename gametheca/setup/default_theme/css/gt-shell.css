@@ -178,6 +178,28 @@ body.gt-shell-host > #admin-legacy-content:empty {
   white-space: nowrap;
 }
 
+/* --- Brand mark, themed ----------------------------------------------------
+ *
+ * The mark is painted, not loaded. `gametheca_mark.svg` bakes the default green
+ * and a #0b0d10 plate into the file, and an external SVG referenced from <img>
+ * cannot read the page's custom properties — so on Arcade Neon, Modern Ocean or
+ * any other preset the whole shell changed colour and the GameTheca mark stayed
+ * green. Masking a monochrome silhouette (`gametheca_glyph.svg`) and filling it
+ * with var(--gt-accent) hits an arbitrary theme colour exactly; hue-rotate()
+ * only approximates one and gives up entirely on the near-greyscale presets.
+ *
+ * Applied to a class rather than to `img[src]` so the element carries no image
+ * of its own — an <img> would paint its own (green) pixels over the mask. Every
+ * surface that shows the mark uses this one class.
+ */
+.gt-brand-mark {
+  display: block;
+  flex: 0 0 auto;
+  background-color: var(--gt-accent);
+  -webkit-mask: url('/static/newstyle/gametheca_glyph.svg') center / contain no-repeat;
+  mask: url('/static/newstyle/gametheca_glyph.svg') center / contain no-repeat;
+}
+
 .gt-rail__mark {
   width: 1.4rem;
   height: 1.4rem;

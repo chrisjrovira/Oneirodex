@@ -57,6 +57,20 @@ html.is-tile-resizing .game-library-row {
   display: block;
 }
 
+/* No `padding-bottom` here.
+ *
+ * It used to carry the vertical gap, on the reasoning that a one-row grid's
+ * `gap` only separates columns and absolutely positioned rows would otherwise
+ * stack flush. True on its own — but the virtualizer is also given a `gap`
+ * option and estimateGridRowHeight() also added one, so the same gap was
+ * counted three times. Worse, rows are measured with `measureElement`, so a
+ * measured row included this padding while an unmeasured one only had the
+ * estimate: the two disagreed by a whole gap and getTotalSize() drifted as you
+ * scrolled, leaving the band of dead space under the last row.
+ *
+ * The virtualizer's `gap` is the single owner now. It spaces rows *between*
+ * each other and adds nothing after the last one, which is what lets the grid
+ * end flush with its final row — see gameGridLayout.js. */
 .game-library-row {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min), 1fr));
@@ -64,12 +78,6 @@ html.is-tile-resizing .game-library-row {
   align-items: start;
   box-sizing: border-box;
   transition: gap 0.22s ease;
-  /* Carries the vertical gap itself. A one-row grid's `gap` only separates
-     columns, and these rows are absolutely positioned, so without this the
-     virtualised grid stacked its rows flush while the plain grid spaced
-     them — and the measured height disagreed with estimateGridRowHeight(),
-     which is what left dead space under the last row. */
-  padding-bottom: var(--gt-tile-gap);
 }
 
 /* Raise the whole row while a tile in it has a menu open.

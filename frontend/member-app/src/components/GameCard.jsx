@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { setGameStatus, toggleFavorite } from '../api/userActions'
 import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
+import { CoverFallback } from './CoverFallback'
 import { safeHttpUrl } from '../utils/safeUrl'
 import { platformChipLabels } from '../utils/platformAbbrev'
 import { BadgeStack } from './BadgeStack'
@@ -65,6 +66,8 @@ export function GameCard({
   const [statusOpen, setStatusOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [imgSrc, setImgSrc] = useState(() => coverUrl(game.cover_url))
+  // A cover that never arrives is drawn, not fetched — see CoverFallback.
+  const [coverFailed, setCoverFailed] = useState(false)
   const currentStatus = statusConfig(status)
   const igdbUrl = safeHttpUrl(game.url)
   const steamAppId = game.steam_app_id ? Number(game.steam_app_id) : null
@@ -84,8 +87,13 @@ export function GameCard({
     ? 'firmware missing'
     : 'unsupported archive'
   const platformChip = !hidePlatformChip && game.library_platform ? platformChipLabels(game) : null
+  // The placeholder JPG counts as "no cover": rows created before art was
+  // fetched carry it as a real `cover_url`, so treating it as an image would
+  // put the old baked-in logo back on the tile it was removed from.
+  const hasCover = !coverFailed && Boolean(imgSrc) && imgSrc !== DEFAULT_COVER
   useEffect(() => {
     setImgSrc(coverUrl(game.cover_url))
+    setCoverFailed(false)
     setIsFavorite(Boolean(game.is_favorite))
     setStatus(game.user_status || '')
     setMenuOpen(false)
@@ -466,26 +474,35 @@ export function GameCard({
         )}
 
         <a href={`/game_details/${game.uuid}`}>
-          <img
-            key={`${game.uuid}:${imgSrc}`}
-            src={imgSrc}
-            alt={game.name}
-            className="game-cover"
-            width={250}
-            height={333}
-            loading="lazy"
-            decoding="async"
-            onError={(event) => {
-              const image = event.currentTarget
-              if (image.dataset.fallbackApplied === '1') {
-                return
-              }
-              image.dataset.fallbackApplied = '1'
-              image.removeAttribute('srcset')
-              image.src = DEFAULT_COVER
-              setImgSrc(DEFAULT_COVER)
-            }}
-          />
+          {/* Nothing to show is drawn, not fetched.
+              The old path swapped `src` to default_cover.jpg — a raster with
+              the logo and the words baked into it, unreadable below about a
+              220px tile and green whatever theme was selected. The fallback
+              below is CSS plus the real title, so it scales with the tile and
+              follows the theme. Covers that *do* exist are unaffected. */}
+          {hasCover ? (
+            <img
+              key={`${game.uuid}:${imgSrc}`}
+              src={imgSrc}
+              alt={game.name}
+              className="game-cover"
+              width={250}
+              height={333}
+              loading="lazy"
+              decoding="async"
+              onError={(event) => {
+                const image = event.currentTarget
+                if (image.dataset.fallbackApplied === '1') {
+                  return
+                }
+                image.dataset.fallbackApplied = '1'
+                image.removeAttribute('srcset')
+                setCoverFailed(true)
+              }}
+            />
+          ) : (
+            <CoverFallback name={game.name} />
+          )}
         </a>
 
         {platformChip ? (

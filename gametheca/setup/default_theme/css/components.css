@@ -25,22 +25,28 @@
     max-height: none;
 }
 
-/* Hover lift, scaled relative to how big the tiles already are (W27).
+/* Tile hover: one rule, one lift, no ring.
  *
- * It was a flat `scale(1.03)` — three percent, which reads as nothing, which is
- * why hover "does not expand it really". A flat large scale is wrong too: at
- * 100% tile size a 2x tile would cover half the screen.
+ * There used to be two `.game-card:hover` blocks in this file — this one, and a
+ * second under "Tile hover preview" near the end that hardcoded
+ * `translateY(-6px) scale(1.08)` plus a `0 0 0 2px` accent ring. Same
+ * specificity, later in the file, so the second one won: `--gt-tile-hover-scale`
+ * was computed, shipped and then ignored, and the ring it added is the hard
+ * outline reported on the glow edge. The two are merged here and the ring is
+ * gone — the glow alone marks the hovered tile.
  *
- * `--gt-tile-hover-scale` is set alongside the tile-size vars in tileSize.js
- * and interpolates 1.6 (small tiles, where there is room and detail is scarce)
- * down to 1.06 (large tiles, where a nudge is all that is wanted). The fallback
- * keeps a sensible lift if the var never arrives — classic Jinja pages do not
- * run the SPA's tile-size code. */
+ * `--gt-tile-hover-scale` is a flat 1.15 from tileSize.js. `transform: scale`
+ * does not reflow, so the grid keeps its flow while the tile grows over its
+ * neighbours. The fallback covers classic Jinja pages, which never run the
+ * SPA's tile-size code. */
 .game-card:hover,
 .game-card:focus-within {
-    transform: translateY(-2px) scale(var(--gt-tile-hover-scale, 1.15));
+    transform: translateY(-4px) scale(var(--gt-tile-hover-scale, 1.15));
     z-index: 6;
-    box-shadow: 0 8px 20px var(--shadow-dark-strong);
+    box-shadow:
+        0 16px 34px var(--shadow-dark-strong),
+        0 0 26px 4px color-mix(in srgb, var(--gt-accent) 42%, transparent);
+    transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
 /* Menu open beats hover: the pointer has to leave the tile to reach the menu,
@@ -70,12 +76,94 @@
     border: 1px solid var(--game-border-gray);
     border-radius: var(--border-radius-xs);
     max-width: none;
-    /* Always show a placeholder so missing/broken covers never leave empty tiles */
-    background-color: var(--bg-dark-secondary, #1a1a22);
-    background-image: url('/static/newstyle/default_cover.jpg');
+    /* Themed ground behind the image, not the old default_cover.jpg.
+       The raster carried a baked-in logo and baked-in text that was unreadable
+       at any tile size below about 220px, and it stayed green whatever theme
+       was selected. A gradient in theme tokens shows through for the moment
+       before a cover paints and never contradicts the rest of the page; the
+       real fallback, with the title as live text, is .gt-cover-fallback. */
+    background-color: var(--gt-surface, #1a1a22);
+    background-image: linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--gt-surface-2) 92%, transparent) 0%,
+        color-mix(in srgb, var(--gt-bg) 96%, transparent) 100%
+    );
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+}
+
+/* --- Cover fallback --------------------------------------------------------
+ *
+ * Drawn, never fetched. This replaces default_cover.jpg on the tile path
+ * entirely: one raster with the logo and the words baked in could not be
+ * themed, and its text was set for a size the tiles have not been since the
+ * size slider became continuous (120px … 300px). Here the mark is a mask filled
+ * with the theme accent and the title is real text, so both stay legible and
+ * both follow the theme.
+ *
+ * Same box as .game-cover — it stands in for the image, so it has to occupy
+ * exactly the space the image would have.
+ */
+.gt-cover-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    padding: 12% 10%;
+    border: 1px solid var(--gt-border);
+    border-radius: var(--gt-radius-xs);
+    background:
+        radial-gradient(
+            circle at 50% 32%,
+            color-mix(in srgb, var(--gt-accent) 16%, transparent) 0%,
+            transparent 62%
+        ),
+        linear-gradient(
+            160deg,
+            color-mix(in srgb, var(--gt-surface-2) 95%, transparent) 0%,
+            var(--gt-bg) 100%
+        );
+    box-shadow: 0 4px 12px var(--shadow-dark-strong);
+    text-align: center;
+    overflow: hidden;
+}
+
+.gt-cover-fallback__mark {
+    width: 34%;
+    /* Square, and tied to the width so it scales with the tile rather than
+       needing a breakpoint per size. */
+    aspect-ratio: 1;
+    opacity: 0.9;
+}
+
+/* Real text, clamped to the tile — the whole reason the raster was replaced.
+   The floor keeps it readable on a 120px tile; the ceiling stops a 300px tile
+   turning the title into a headline. */
+.gt-cover-fallback__title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(0.68rem, calc(var(--gt-tile-min, 180px) * 0.075), 1.1rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--gt-text);
+    overflow-wrap: anywhere;
+}
+
+.gt-cover-fallback__note {
+    margin: 0;
+    font-size: clamp(0.55rem, calc(var(--gt-tile-min, 180px) * 0.048), 0.75rem);
+    letter-spacing: var(--gt-label-tracking, 0.06em);
+    text-transform: uppercase;
+    color: var(--gt-text-muted);
 }
 
 /* Shimmer Effect */
@@ -111,53 +199,98 @@
     }
 }
 
-/* Tile top-right control stack — one size, one colour, one rhythm.
-   Order top to bottom: menu · favourite · play status · select.
+/* Tile chrome geometry — one scale for every control and badge on a tile.
+   Order top to bottom in the top-right stack: menu · favourite · play status.
+   (Selection moved to the bottom-right corner; see LibrarySelectionBar.css.)
    Every control derives its offset from these vars so the stack cannot drift
-   out of alignment when a button is added or hidden. */
+   out of alignment when a button is added or hidden.
+
+   Everything here is derived from --gt-tile-min rather than pinned to px.
+   The controls used to be a flat 32px at every slider position, so at the
+   smallest tile size four 32px buttons covered most of the cover art and at
+   the largest they were lost against it — the tile scaled and its chrome did
+   not. --gt-tile-min is what tileSize.js drives (120px … 300px) and it is a
+   registered @property, so these interpolate with the tiles instead of
+   stepping. The clamps keep a small tile's controls big enough to hit and stop
+   a 300px tile growing a 47px hamburger; at the default 50% (210px) the button
+   lands on ~32px, which is where it has always been. */
 .game-card {
-    --gt-tile-btn: 32px;
+    --gt-tile-btn: clamp(24px, calc(var(--gt-tile-min, 180px) * 0.155), 40px);
     /* Named --gt-tile-btn-gap, not --gt-tile-gap: the grid uses that name for
        the space *between tiles* and sets it from tileSize.js. Reusing it here
        shadowed the grid's value inside every card — harmless only because the
        grid reads it on the row rather than the card, which is a coincidence
        rather than a design. */
-    --gt-tile-btn-gap: 4px;
-    --gt-tile-stack-top: 10px;
+    --gt-tile-btn-gap: clamp(3px, calc(var(--gt-tile-min, 180px) * 0.022), 6px);
+    /* One inset for every corner occupant — controls, chips and badges — so
+       nothing sits a few px out of line with its neighbour across the tile. */
+    --gt-tile-edge: clamp(5px, calc(var(--gt-tile-min, 180px) * 0.042), 11px);
+    --gt-tile-stack-top: var(--gt-tile-edge);
     --gt-tile-stride: calc(var(--gt-tile-btn) + var(--gt-tile-btn-gap));
+    --gt-tile-btn-icon: calc(var(--gt-tile-btn) * 0.5);
+
+    /* Badges share the same scale (see .gt-badge). They were a fixed 10px on a
+       1.35rem box, which is unreadable on a 300px tile and oversized on a
+       120px one, and several modifiers redefined the size so badges of
+       different kinds did not even match each other. */
+    --gt-badge-h: clamp(15px, calc(var(--gt-tile-min, 180px) * 0.105), 24px);
+    --gt-badge-fs: clamp(8px, calc(var(--gt-tile-min, 180px) * 0.052), 12px);
+    --gt-badge-pad-x: clamp(4px, calc(var(--gt-tile-min, 180px) * 0.03), 8px);
 
     /* Themed, not hardcoded. These were rgba(0,0,0,.7) on a rgba(255,255,255,.2)
        hairline — flat values that ignored the theme entirely and left a
        near-invisible control over light cover art. Same fix as the auto-scan
        cards (W27-D5): point the variables at the theme so every pack gets a
-       control it can actually see, rather than tuning one value per complaint. */
-    --gt-tile-btn-bg: color-mix(in srgb, var(--gt-surface) 88%, transparent);
+       control it can actually see, rather than tuning one value per complaint.
+
+       Near-opaque rather than 88%: these sit on arbitrary cover art, and a
+       translucent surface over a bright box-art highlight is the other half of
+       "hard to view". The shadow does the separating so the fill can stay flat
+       and themed. */
+    --gt-tile-btn-bg: color-mix(in srgb, var(--gt-surface) 96%, transparent);
     --gt-tile-btn-bg-hover: var(--gt-surface);
     --gt-tile-btn-border: 1px solid var(--gt-border);
     --gt-tile-btn-fg: var(--gt-text);
+    --gt-tile-btn-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+    /* Resting visibility. The controls were opacity:0 until .game-card:hover,
+       which meant "the buttons are hard to see" was literally true — on touch
+       there is no hover at all, so they were never revealed. They now rest
+       legible and come fully forward on hover/focus. */
+    --gt-tile-btn-rest-opacity: 0.92;
+}
+
+/* One shared shape for every control in the tile stack. Each rule below still
+   owns its own offset, but nothing owns its own size any more. */
+.button-glass-hamburger,
+.favorite-btn,
+.game-status-btn,
+.game-card-container.is-selectable .gt-tile-select {
+    width: var(--gt-tile-btn);
+    height: var(--gt-tile-btn);
+    right: var(--gt-tile-edge);
+    left: auto;
+    border-radius: var(--gt-radius-sm, 6px);
+    font-size: var(--gt-tile-btn-icon);
+    line-height: 1;
+    box-shadow: var(--gt-tile-btn-shadow);
 }
 
 /* Popup Menu Button — first in the top-right stack */
 .button-glass-hamburger {
     position: absolute;
     top: var(--gt-tile-stack-top);
-    right: 10px;
-    left: auto;
     z-index: 15;
-    width: var(--gt-tile-btn);
-    height: var(--gt-tile-btn);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     background-color: var(--gt-tile-btn-bg);
     backdrop-filter: blur(5px);
-    border-radius: 6px;
     padding: 0;
     border: var(--gt-tile-btn-border);
     cursor: pointer;
     color: var(--gt-tile-btn-fg);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    opacity: var(--gt-tile-btn-rest-opacity);
+    transition: opacity 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
 .button-glass-hamburger:hover {
@@ -165,7 +298,11 @@
     border-color: var(--gt-accent);
 }
 
-.button-glass-hamburger i {
+/* The React tiles render a <span> glyph, not an <i>. Colouring only the <i>
+   left the icon on whatever it inherited — one of the reasons these read as
+   washed out over cover art. */
+.button-glass-hamburger i,
+.button-glass-hamburger > span {
     color: var(--gt-tile-btn-fg);
 }
 
@@ -180,25 +317,24 @@
     position: absolute;
     top: calc(var(--gt-tile-stack-top) + var(--gt-tile-stride));
     bottom: auto;
-    right: 10px;
-    width: var(--gt-tile-btn);
-    height: var(--gt-tile-btn);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     background-color: var(--gt-tile-btn-bg);
     backdrop-filter: blur(5px);
-    border-radius: 6px;
     border: var(--gt-tile-btn-border);
     cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    color: var(--gt-tile-btn-fg);
+    opacity: var(--gt-tile-btn-rest-opacity);
+    transition: opacity 0.18s ease, color 0.18s ease, background-color 0.18s ease,
+        border-color 0.18s ease;
     z-index: 15;
 }
 
-.favorite-btn i {
-    color: var(--gt-tile-btn-fg);
-    transition: color 0.3s ease;
+.favorite-btn i,
+.favorite-btn > span {
+    color: inherit;
+    transition: color 0.18s ease;
 }
 
 .favorite-btn:hover {
@@ -212,7 +348,9 @@
     opacity: 1;
 }
 
-.favorite-btn.favorited i {
+/* Colour the button, not an <i> the React tiles never render — the heart used
+   to stay grey however many times it was favourited. */
+.favorite-btn.favorited {
     color: var(--color-pink-favorite);
 }
 
@@ -226,8 +364,27 @@
    it — the same rule the comment on the stack already claimed. */
 .game-card > .popup-menu {
     top: calc(var(--gt-tile-stack-top) + (2 * var(--gt-tile-stride)));
-    right: 8px;
+    right: var(--gt-tile-edge);
     left: auto;
+    /* Above the badge layers (12) and the VR stack (13), and above the control
+       stack itself (15/16).
+       .popup-menu's own z-index is 12 in base.css, the same as .gt-badge-layers
+       — and BadgeStack renders *after* the menu in the card, so on a tie the
+       badges won on source order and painted over the menu items. That is the
+       reported "badges overlay the menu, hard to see and click": UPDATE/NEW sat
+       on top of Edit Details and ate the click, because an interactive badge
+       stack re-enables pointer-events. */
+    z-index: 40;
+}
+
+/* Belt and braces for the same report: while a menu or status dropdown is
+   open, the badge overlays stop competing for the pointer entirely. Raising
+   the menu fixes what you can see; this fixes what you can click, including
+   the interactive badge stacks that set pointer-events back to auto. */
+.game-card[data-overlay-open='true'] .gt-badge-layers {
+    opacity: 0.25;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
 }
 
 /* Legacy single badges (kept for non-React pages) */
@@ -302,8 +459,8 @@
 }
 
 .gt-badge-stack--bottom-left {
-    bottom: 8px;
-    left: 8px;
+    bottom: var(--gt-tile-edge, 8px);
+    left: var(--gt-tile-edge, 8px);
     right: auto;
     top: auto;
 }
@@ -312,8 +469,8 @@
    clear a play-status button that now lives in the top-right stack, which left
    UPDATE and friends floating one row above the corner on every tile. */
 .gt-badge-stack--bottom-right {
-    bottom: 8px;
-    right: 8px;
+    bottom: var(--gt-tile-edge, 8px);
+    right: var(--gt-tile-edge, 8px);
     left: auto;
     top: auto;
 }
@@ -325,8 +482,8 @@
 
 /* Badges win true top-left (UPDATE/NEW/VR/MISSING); PLAY is nudged in glass.css when present */
 .gt-badge-stack--top-left {
-    top: 8px;
-    left: 8px;
+    top: var(--gt-tile-edge, 8px);
+    left: var(--gt-tile-edge, 8px);
     right: auto;
     bottom: auto;
 }
@@ -336,7 +493,7 @@
    about how many buttons are actually above it. */
 .gt-badge-stack--top-right {
     top: calc(var(--gt-tile-stack-top) + 2 * var(--gt-tile-stride) + 2px);
-    right: 8px;
+    right: var(--gt-tile-edge, 8px);
     left: auto;
     bottom: auto;
 }
@@ -348,8 +505,8 @@
 }
 
 .gt-badge-stack--vr.gt-badge-stack--top-left {
-    top: 8px;
-    left: 8px;
+    top: var(--gt-tile-edge, 8px);
+    left: var(--gt-tile-edge, 8px);
     right: auto;
     bottom: auto;
 }
@@ -466,6 +623,18 @@
     vertical-align: middle;
 }
 
+/* One badge geometry, everywhere.
+ *
+ * Every dimension lives on this rule and every modifier below sets colour and
+ * nothing else. Before, the base was a fixed 10px on a 1.35rem box while
+ * --missing added its own letter-spacing and weight and --clear/--restore
+ * their own font-size, so two badges on the same tile did not match each other
+ * — which is the "badges should share one set of dimensions" report. The
+ * geometry now also tracks --gt-tile-min (see .game-card), so badges scale with
+ * the tiles they sit on rather than staying 10px on a 300px cover.
+ *
+ * The rule for adding a badge tone: background, and `color` only where the
+ * background is too light for white text. Nothing else belongs in a modifier. */
 .gt-badge {
     display: inline-flex;
     align-items: center;
@@ -473,11 +642,12 @@
     gap: 2px;
     position: relative;
     box-sizing: border-box;
-    min-width: 1.35rem;
-    min-height: 1.35rem;
-    padding: 3px 6px;
-    border-radius: 6px;
-    font-size: 10px;
+    min-width: var(--gt-badge-h, 1.35rem);
+    min-height: var(--gt-badge-h, 1.35rem);
+    padding: 0 var(--gt-badge-pad-x, 6px);
+    border: 0;
+    border-radius: var(--gt-radius-sm, 6px);
+    font-size: var(--gt-badge-fs, 10px);
     font-weight: 700;
     letter-spacing: 0.04em;
     line-height: 1.2;
@@ -487,6 +657,9 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
+/* The dismiss affordance is a control *inside* a badge, so it takes its size
+   from the badge rather than setting one. --clear / --restore are badges in
+   their own right and now differ from the rest only in being clickable. */
 .gt-badge__dismiss,
 .gt-badge--clear,
 .gt-badge--restore {
@@ -496,21 +669,20 @@
     background: rgba(0, 0, 0, 0.45);
     color: inherit;
     font: inherit;
-    line-height: 1;
-    padding: 0 4px;
-    border-radius: 4px;
+    font-size: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
 }
 
 .gt-badge__dismiss {
+    min-width: 0;
+    min-height: 0;
+    padding: 0 3px;
     margin-left: 2px;
+    line-height: 1;
+    border-radius: var(--gt-radius-xs, 4px);
+    box-shadow: none;
     opacity: 0.85;
-}
-
-.gt-badge--clear,
-.gt-badge--restore {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
 }
 
 .gt-badge--danger { background: rgba(196, 48, 43, 0.95); }
@@ -522,8 +694,6 @@
 .gt-badge--missing {
     background: rgba(55, 58, 66, 0.92);
     color: rgba(232, 228, 220, 0.95);
-    letter-spacing: 0.05em;
-    font-weight: 650;
 }
 .gt-badge--meta { background: rgba(0, 110, 200, 0.95); }
 .gt-badge--kind { background: rgba(90, 110, 140, 0.95); }
@@ -809,41 +979,39 @@ a.gt-chip:focus {
 
 /* --- Tile hover preview (UX-B3) ------------------------------------------- */
 
-/* Lift and glow in the active accent, so the treatment follows whichever theme
-   is applied.
+/* The lift and glow that used to live here are merged into the single
+   `.game-card:hover` rule near the top of this file. Two rules for one state,
+   the second silently overriding the first, is how the tile-size hover curve
+   ended up dead and how the accent ring ended up on screen unowned. */
 
-   Deliberately pronounced. The previous values — scale(1.045), a 1px ring and a
-   14px glow at 28% — were close enough to nothing that the tile under the
-   cursor was hard to pick out of a dense grid, which is the whole job of a
-   hover state. The card already sets z-index 6, so growing over its neighbours
-   is fine, and the 0.3s base transition is shortened here: a hover that takes a
-   third of a second to arrive reads as lag when you sweep across a grid. */
-.game-card:hover,
-.game-card:focus-within {
-    transform: translateY(-6px) scale(1.08);
-    box-shadow:
-        0 16px 34px var(--shadow-dark-strong),
-        0 0 0 2px color-mix(in srgb, var(--gt-accent) 80%, transparent),
-        0 0 30px 6px color-mix(in srgb, var(--gt-accent) 45%, transparent);
-    transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
-}
-
+/* Dead centre, not a corner.
+ *
+ * This sat bottom-centre, which is only clear on a large tile: at 120–150px the
+ * platform chip (bottom-left) and the badge stack (bottom-right) close in from
+ * both sides and the pill lands on top of them. The centre is the one region no
+ * badge stack, chip or control stack ever claims, so it cannot re-collide at
+ * any tile size.
+ *
+ * It stays small and text-only on purpose. The cover behind it is a link to the
+ * full details page, and that is the tile's primary target — the preview is the
+ * secondary one and should not swallow the middle of the tile. */
 .gt-tile-preview-hint {
     position: absolute;
     left: 50%;
-    bottom: 10px;
-    transform: translate(-50%, 6px);
+    top: 50%;
+    transform: translate(-50%, calc(-50% + 6px));
     z-index: 17;
-    padding: 0.22rem 0.7rem;
-    border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
-    background: rgba(0, 0, 0, 0.72);
+    padding: 0.24rem 0.75rem;
+    border-radius: var(--gt-radius-pill, 999px);
+    border: 1px solid color-mix(in srgb, var(--gt-accent) 55%, transparent);
+    background: rgba(0, 0, 0, 0.78);
     backdrop-filter: blur(5px);
     color: var(--text-white, #f2f4f8);
     font: inherit;
-    font-size: 0.72rem;
+    font-size: clamp(0.6rem, calc(var(--gt-tile-min, 180px) * 0.055), 0.85rem);
     font-weight: 700;
     letter-spacing: 0.02em;
+    white-space: nowrap;
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
@@ -854,7 +1022,7 @@ a.gt-chip:focus {
 .gt-tile-preview-hint:focus-visible {
     opacity: 1;
     pointer-events: auto;
-    transform: translate(-50%, 0);
+    transform: translate(-50%, -50%);
 }
 
 @media (prefers-reduced-motion: reduce) {
