@@ -170,8 +170,13 @@ talks to an endpoint outside the process, so it stays opt-in.
   never clobbered.
 - Routes: `POST /admin/api/artwork/generate` (one game) ·
   `POST /admin/api/artwork/generate/batch` (fill missing covers).
-- Compose has a commented sidecar block — see `docker-compose.yml` under the
-  `artwork` profile.
+- Compose ships an SD.Next sidecar under the `artwork` profile
+  (`docker compose --profile artwork up -d`) — see `docker-compose.yml`. That
+  service overrides the image's CMD: `saladtechnologies/sdnext:latest` still
+  passes `--skip-tests`, which its pinned SD.Next checkout does not define, so
+  the stock command dies at argparse with *unrecognized arguments* before the
+  server ever binds. Its volumes mount at `/webui/data/models` and
+  `/webui/outputs` — the image has no `/app`.
 
 Prefer to supply your own art instead? See
 [theme-fonts-and-images.md](theme-fonts-and-images.md#batch-artwork-upload).

@@ -250,9 +250,26 @@ services:
     restart: unless-stopped
     environment:
       - SD_NOHASHING=true
+    # The image ships a CMD that still passes `--skip-tests`, a flag its own
+    # pinned SD.Next checkout (f45b3328, 2023-12-12) never defined — argparse
+    # exits before the server binds, so the container restart-loops with
+    # "error: unrecognized arguments: --skip-tests". This is the stock CMD
+    # minus that flag; `--skip-torch` already covers the torch test it meant.
+    command:
+      - --listen
+      - --no-download
+      - --docs
+      - --skip-requirements
+      - --skip-extensions
+      - --skip-git
+      - --skip-torch
+      - --quick
     volumes:
-      - sdnext_models:/app/models
-      - sdnext_outputs:/app/outputs
+      # The app lives at /webui with DATA_DIR=/webui/data (models resolve to
+      # <data-dir>/models) and runs with cwd=/webui, so generated images land
+      # in /webui/outputs. There is no /app in this image.
+      - sdnext_models:/webui/data/models
+      - sdnext_outputs:/webui/outputs
     ports:
       - "${SDNEXT_HOST_PORT:-7860}:7860"
     # deploy:
