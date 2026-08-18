@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import current_app, jsonify, request
 from flask_login import login_required
 
@@ -64,15 +65,18 @@ def storage_status():
 @admin_required
 def hardlink_preview():
     if not _helpers_enabled():
-        return jsonify({'error': 'Hardlink helpers are disabled'}), 403
+        return api_error('Hardlink helpers are disabled', code='forbidden')
     data = request.get_json(silent=True) or {}
     source = (data.get('source') or '').strip()
     dest = (data.get('dest') or '').strip()
     if not source or not dest:
-        return jsonify({'error': 'source and dest are required'}), 400
+        return api_error('source and dest are required', code='bad_request')
     ok, err = _paths_allowed(source, dest)
     if not ok:
-        return jsonify({'error': err}), 403
+        return api_error(err, code='forbidden')
+    # Deliberately not api_ok: preview_hardlink returns `ok: would_succeed` —
+    # the answer to "would this hardlink work", not "did the request work".
+    # api_ok stamps ok=True, which would turn every "no" into a "yes".
     return jsonify(preview_hardlink(source, dest))
 
 
@@ -81,23 +85,21 @@ def hardlink_preview():
 @admin_required
 def hardlink_apply():
     if not _apply_allowed():
-        return jsonify({
-            'error': 'Hardlink apply is disabled. Set ALLOW_HARDLINK_APPLY=true.',
-        }), 403
+        return api_error('Hardlink apply is disabled. Set ALLOW_HARDLINK_APPLY=true.', code='forbidden')
     data = request.get_json(silent=True) or {}
     source = (data.get('source') or '').strip()
     dest = (data.get('dest') or '').strip()
     if not source or not dest:
-        return jsonify({'error': 'source and dest are required'}), 400
+        return api_error('source and dest are required', code='bad_request')
     ok, err = _paths_allowed(source, dest)
     if not ok:
-        return jsonify({'error': err}), 403
+        return api_error(err, code='forbidden')
     try:
         result = apply_hardlink(source, dest)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except OSError as exc:
-        return jsonify({'error': f'Hardlink failed: {exc}'}), 500
+        return api_error(f'Hardlink failed: {exc}', code='internal')
     try:
         log_system_event(
             f'Hardlink created: {result.get("source")} -> {result.get("dest")}',

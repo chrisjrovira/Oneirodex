@@ -1,4 +1,5 @@
 # /gametheca/routes_admin_ext/attract_mode.py
+from gametheca.utils.api_response import api_error, api_ok
 from flask import render_template, request, jsonify
 from flask_login import login_required, current_user
 from gametheca.models import GlobalSettings, UserAttractModeSettings, Library, Genre, Theme, Game
@@ -122,12 +123,12 @@ def save_attract_mode_settings():
         data = request.get_json()
 
         if not data:
-            return jsonify({'success': False, 'message': 'No data provided'}), 400
+            return api_error('No data provided', code='bad_request')
 
         # Validate data
         errors = validate_attract_mode_settings(data)
         if errors:
-            return jsonify({'success': False, 'message': 'Validation failed', 'errors': errors}), 400
+            return api_error('Validation failed', code='bad_request', errors=errors)
 
         # Get or create global settings
         global_settings = global_settings_row_or_create()
@@ -157,15 +158,12 @@ def save_attract_mode_settings():
             current_user.id
         )
 
-        return jsonify({
-            'success': True,
-            'message': 'Attract mode settings saved successfully'
-        })
+        return api_ok({'message': 'Attract mode settings saved successfully'})
 
     except Exception as e:
         db.session.rollback()
         logging.error(f"Error saving attract mode settings: {e}")
-        return jsonify({'success': False, 'message': f'Failed to save settings: {str(e)}'}), 500
+        return api_error('Could not save the attract mode settings', code='internal')
 
 
 @admin2_bp.route('/api/attract-mode/settings', methods=['GET'])
@@ -230,7 +228,7 @@ def save_user_attract_mode_override():
 
         if not data:
             logging.warning('No data provided in request')
-            return jsonify({'success': False, 'message': 'No data provided'}), 400
+            return api_error('No data provided', code='bad_request')
 
         # Get or create user settings
         user_settings = db.session.execute(
@@ -259,15 +257,12 @@ def save_user_attract_mode_override():
             current_user.id
         )
 
-        return jsonify({
-            'success': True,
-            'message': 'Your attract mode preferences have been saved'
-        })
+        return api_ok({'message': 'Your attract mode preferences have been saved'})
 
     except Exception as e:
         db.session.rollback()
         logging.error(f"Error saving user attract mode override: {e}", exc_info=True)
-        return jsonify({'success': False, 'message': f'Failed to save preferences: {str(e)}'}), 500
+        return api_error('Could not save your attract mode preferences', code='internal')
 
 
 def validate_attract_mode_settings(data):

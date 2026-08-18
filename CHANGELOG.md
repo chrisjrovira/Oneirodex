@@ -297,6 +297,11 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **Storage, API tokens and attract mode answer through the envelope** — baseline **175 → 151**.
+  Two more `str(e)` values stop reaching the browser — both were already being logged, so nothing is
+  lost by not also shipping them. `storage.py` keeps one site, now annotated: `preview_hardlink()`
+  returns `ok: would_succeed`, the answer to *"would this hardlink work"* rather than *"did the request
+  work"*, and `api_ok` stamps `ok=True` — which would turn every "no" into a "yes"
 - **HLTB, game mods, game servers and the SMTP test answer through the envelope** — baseline
   **209 → 175**. `hltb.py` no longer imports `jsonify` at all. One more raw `str(e)` — a database
   exception, which can carry connection and schema detail — stops reaching the browser on SMTP save.
