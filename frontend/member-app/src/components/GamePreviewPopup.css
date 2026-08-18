@@ -28,10 +28,18 @@
 
 .gt-preview {
   position: relative;
-  width: min(100%, 42rem);
-  max-height: min(84vh, 34rem);
+  /* Wider and taller than it was (42rem / min(84vh, 34rem)).
+   *
+   * Two reasons. The panel was already tight for a cover plus a six-line
+   * summary, and it now carries a systems section with a launcher button per
+   * emulator core underneath that — at the old height the whole of that section
+   * was below the fold on a laptop, which is the same as not shipping it.
+   * The vh cap (no second rem cap) means it grows into the screen it is on
+   * instead of stopping at a size chosen for a 1366x768 laptop. */
+  width: min(100%, 54rem);
+  max-height: 88vh;
   overflow-y: auto;
-  padding: 1.1rem 1.2rem;
+  padding: 1.35rem 1.5rem;
   border-radius: 14px;
   border: 1px solid color-mix(in srgb, var(--gt-accent) 34%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
@@ -51,7 +59,7 @@
   border-radius: 8px;
   background: transparent;
   color: var(--gt-text-muted);
-  font-size: 1.35rem;
+  font-size: var(--gt-font-xl);
   line-height: 1;
   cursor: pointer;
 }
@@ -70,7 +78,7 @@
 
 .gt-preview__cover {
   flex: 0 0 auto;
-  width: 9.5rem;
+  width: 12.5rem;
   max-width: 34%;
   height: auto;
   border-radius: 10px;
@@ -84,7 +92,7 @@
 
 .gt-preview__title {
   margin: 0 2rem 0.45rem 0;
-  font-size: 1.2rem;
+  font-size: var(--gt-font-2xl);
   line-height: 1.25;
 }
 
@@ -101,7 +109,7 @@
 .gt-preview__badge {
   padding: 0.12rem 0.55rem;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   font-weight: 650;
   letter-spacing: 0.02em;
   border: 1px solid transparent;
@@ -143,23 +151,23 @@
   border-radius: 999px;
   border: 1px solid var(--gt-border);
   background: color-mix(in srgb, var(--gt-surface-2) 80%, transparent);
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
 }
 
 .gt-preview__genres {
   margin: 0 0 0.5rem;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
 /* Shortened on purpose — this previews the page, it does not replace it. */
 .gt-preview__summary {
   margin: 0 0 0.9rem;
-  font-size: 0.88rem;
-  line-height: 1.5;
+  font-size: var(--gt-font-md);
+  line-height: 1.55;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 6;
+  -webkit-line-clamp: 8;
   overflow: hidden;
 }
 
@@ -174,6 +182,144 @@
   gap: 0.5rem;
 }
 
+
+
+/* --- Available on (which systems, and how to launch each) ------------------
+ *
+ * The grid renders one tile per library row, so a household holding a title on
+ * both SNES and PC sees two unrelated tiles and no hint that either is the same
+ * game. This section is where they are shown as one title: one row per copy,
+ * and one button per emulator core that copy can actually be played with.
+ *
+ * Copies that cannot be launched still get a row, carrying the reason. Hiding
+ * them would answer "which systems is this on?" with a half-truth, and the
+ * reason (missing firmware, catalog-only, no browser core) is usually the thing
+ * the member needs to act on.
+ */
+.gt-preview__systems {
+  margin-top: 1.1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--gt-border);
+}
+
+.gt-preview__systems-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  font-size: var(--gt-label-size, 0.75rem);
+  font-weight: var(--gt-label-weight, 700);
+  letter-spacing: var(--gt-label-tracking, 0.06em);
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
+}
+
+.gt-preview__systems-count {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--gt-accent);
+}
+
+.gt-preview__systems-empty {
+  margin: 0;
+  font-size: var(--gt-font-sm);
+  color: var(--gt-text-muted);
+}
+
+.gt-preview__system-list {
+  display: grid;
+  /* Two up when there is room, one when there is not — a launcher row needs its
+     full width more than the list needs a fixed column count. */
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gt-preview__system {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: var(--gt-radius-lg, 10px);
+  border: 1px solid var(--gt-border);
+  background: color-mix(in srgb, var(--gt-surface-2) 65%, transparent);
+}
+
+.gt-preview__system--current {
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 10%, transparent);
+}
+
+.gt-preview__system-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.gt-preview__system-name {
+  font-size: var(--gt-font-md);
+  font-weight: 650;
+  color: var(--gt-text);
+}
+
+.gt-preview__system-library {
+  font-size: var(--gt-font-xs);
+  color: var(--gt-text-muted);
+}
+
+.gt-preview__system-tag {
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--gt-radius-pill, 999px);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
+  font-size: var(--gt-font-xs);
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--gt-accent);
+}
+
+.gt-preview__system-tag--warn {
+  border-color: color-mix(in srgb, var(--gt-danger) 45%, transparent);
+  color: var(--gt-danger);
+}
+
+.gt-preview__launchers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.gt-preview__launcher {
+  font-size: var(--gt-font-xs);
+  padding: 0.3rem 0.6rem;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+/* The core the backend would have picked anyway, marked rather than reordered —
+   the list stays in a stable order and the default is still obvious. */
+.gt-preview__launcher.is-default {
+  border-color: color-mix(in srgb, var(--gt-accent) 60%, transparent);
+  color: var(--gt-accent);
+}
+
+.gt-preview__system-note {
+  margin: 0;
+  font-size: var(--gt-font-xs);
+  line-height: 1.4;
+  color: var(--gt-text-muted);
+}
+
+.gt-preview__system-link {
+  align-self: flex-start;
+  font-size: var(--gt-font-xs);
+  color: var(--gt-accent);
+}
+
 @media (max-width: 640px) {
   .gt-preview__body {
     flex-direction: column;
@@ -182,5 +328,9 @@
   .gt-preview__cover {
     width: 7.5rem;
     max-width: 45%;
+  }
+
+  .gt-preview__system-list {
+    grid-template-columns: 1fr;
   }
 }

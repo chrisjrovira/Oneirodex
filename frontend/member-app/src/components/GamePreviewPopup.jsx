@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import { fetchGameEditions } from '../api/gameEditions'
 import './GamePreviewPopup.css'
 
 /** Fired when a preview opens, so any other open preview closes itself. */
@@ -9,9 +10,12 @@ const PREVIEW_OPENED = 'gt-preview-opened'
 /**
  * Shortened game detail shown before committing to the full page (UX-B3).
  *
- * Deliberately a summary, not a second details page: cover, a clamped blurb,
- * and the few facts people actually scan for. Anything more and it competes
- * with the page it is supposed to preview.
+ * Still a summary rather than a second details page — cover, a clamped blurb,
+ * the few facts people scan for — with one thing the details page cannot give
+ * you either: which *systems* the household holds this title on, and a launcher
+ * per emulator core for each of them. The grid shows one tile per library row,
+ * so two copies of one game read as two unrelated games; this is the only place
+ * they are shown as one title with a choice of how to play it.
  */
 /** "Added" is the one date people scan for and it was not shown at all. */
 export function formatAdded(value) {
@@ -60,9 +64,51 @@ export function previewBadges(game) {
   return badges
 }
 
+/**
+ * How the "Available on" heading counts.
+ *
+ * Distinct *systems*, not rows: two copies of one game in two PC libraries is
+ * one system, and a member reading "2 systems" would go looking for a second
+ * console. Returns null below two, because "1 systems" next to a list of one is
+ * both wrong and pointless.
+ */
+export function systemCountLabel(editions) {
+  const systems = new Set(
+    (editions || []).map((row) => row.library_platform).filter(Boolean),
+  )
+  return systems.size > 1 ? `${systems.size} systems` : null
+}
+
+/** Why a copy cannot be launched in the browser, in the member's words. */
+export function editionBlockerText(edition) {
+  if (!edition || edition.can_play_in_browser) {
+    return null
+  }
+  if (edition.firmware_missing) {
+    return edition.companion_hint || 'Needs firmware before it can run here'
+  }
+  switch (edition.play_blocker) {
+    case 'catalog_only':
+      return 'Catalog entry — not playable'
+    case 'unsupported_archive':
+      return edition.companion_hint || 'Archive type cannot be opened for browser play'
+    case 'no_browser_core':
+      return 'No browser core for this system'
+    case 'companion_preferred':
+    case 'companion_or_catalog':
+      return edition.companion_hint || 'Plays through the desktop companion'
+    default:
+      return edition.companion_hint || 'Not playable in the browser'
+  }
+}
+
 export function GamePreviewPopup({ game, onClose }) {
   const panelRef = useRef(null)
   const closeRef = useRef(null)
+  // `null` while loading; `[]` once we know there is nothing to add. The two
+  // are different on screen: a spinner versus no section at all.
+  const [editions, setEditions] = useState(null)
+  const [editionsFailed, setEditionsFailed] = useState(false)
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -92,6 +138,30 @@ export function GamePreviewPopup({ game, onClose }) {
     window.dispatchEvent(new CustomEvent(PREVIEW_OPENED, { detail: token }))
     return () => window.removeEventListener(PREVIEW_OPENED, onOther)
   }, [onClose])
+
+  // Availability across systems is a second request on purpose: it is a join
+  // across libraries that the browse payload has no business carrying for every
+  // tile on the page, and the preview is the only surface that asks for it.
+  useEffect(() => {
+    const uuid = game?.uuid
+    if (!uuid) {
+      return undefined
+    }
+    const controller = new AbortController()
+    setEditions(null)
+    setEditionsFailed(false)
+    fetchGameEditions(uuid, { signal: controller.signal })
+      .then((data) => setEditions(data.editions || []))
+      .catch((error) => {
+        if (error?.name !== 'AbortError') {
+          // A failed lookup costs the systems list and nothing else — the
+          // preview is still a preview without it.
+          setEditionsFailed(true)
+          setEditions([])
+        }
+      })
+    return () => controller.abort()
+  }, [game?.uuid])
 
   // The page behind a modal must not scroll — otherwise the wheel moves the
   // grid under a dialog that is meant to have taken over.
@@ -205,6 +275,92 @@ export function GamePreviewPopup({ game, onClose }) {
             </div>
           </div>
         </div>
+
+        <section className="gt-preview__systems" aria-label="Available systems">
+          <h3 className="gt-preview__systems-title">
+            Available on
+            {systemCountLabel(editions) ? (
+              <span className="gt-preview__systems-count">
+                {systemCountLabel(editions)}
+              </span>
+            ) : null}
+          </h3>
+
+          {editions === null ? (
+            <p className="gt-preview__systems-empty">Checking your libraries…</p>
+          ) : editions.length === 0 ? (
+            <p className="gt-preview__systems-empty">
+              {editionsFailed
+                ? 'Could not check which systems this is on.'
+                : 'Only in this library.'}
+            </p>
+          ) : (
+            <ul className="gt-preview__system-list">
+              {editions.map((edition) => {
+                const blocker = editionBlockerText(edition)
+                return (
+                  <li
+                    key={edition.uuid}
+                    className={`gt-preview__system${
+                      edition.is_current ? ' gt-preview__system--current' : ''
+                    }`}
+                  >
+                    <div className="gt-preview__system-head">
+                      <span className="gt-preview__system-name">
+                        {edition.library_platform_label ||
+                          edition.library_platform ||
+                          'Unknown system'}
+                      </span>
+                      {edition.library_name ? (
+                        <span className="gt-preview__system-library">
+                          {edition.library_name}
+                        </span>
+                      ) : null}
+                      {edition.is_current ? (
+                        <span className="gt-preview__system-tag">This copy</span>
+                      ) : null}
+                      {edition.path_missing ? (
+                        <span className="gt-preview__system-tag gt-preview__system-tag--warn">
+                          Files missing
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {edition.launchers?.length ? (
+                      <div className="gt-preview__launchers">
+                        {edition.launchers.map((launcher) => (
+                          <a
+                            key={`${edition.uuid}:${launcher.core}`}
+                            className={`gt-btn gt-btn--secondary gt-preview__launcher${
+                              launcher.is_default ? ' is-default' : ''
+                            }`}
+                            href={launcher.play_url}
+                            title={`Play on ${
+                              edition.library_platform_label || edition.library_platform
+                            } with ${launcher.label}`}
+                          >
+                            {`Play · ${launcher.label}`}
+                          </a>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="gt-preview__system-note">{blocker}</p>
+                    )}
+
+                    {!edition.is_current ? (
+                      <Link
+                        className="gt-preview__system-link"
+                        to={`/game_details/${edition.uuid}`}
+                      >
+                        Open this copy
+                      </Link>
+                    ) : null}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
       </div>
     </div>,
     document.body,

@@ -1,7 +1,53 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { expect, test, vi } from 'vitest'
-import { GamePreviewPopup, formatAdded, previewBadges } from './GamePreviewPopup'
+import { beforeEach, expect, test, vi } from 'vitest'
+import { fetchGameEditions } from '../api/gameEditions'
+import {
+  editionBlockerText,
+  GamePreviewPopup,
+  formatAdded,
+  previewBadges,
+  systemCountLabel,
+} from './GamePreviewPopup'
+
+// The systems section is a second request. Every test here would otherwise hit
+// the network, and an unmocked rejection lands as a state update after the test
+// has finished — which fails the *next* test rather than this one.
+vi.mock('../api/gameEditions', () => ({
+  fetchGameEditions: vi.fn(() => Promise.resolve({ editions: [] })),
+}))
+
+const SNES_EDITION = {
+  uuid: 'abc-123',
+  name: 'Portal 2',
+  is_current: true,
+  library_name: 'PC Games',
+  library_platform: 'PCWIN',
+  library_platform_label: 'PC Windows',
+  can_play_in_browser: false,
+  play_blocker: 'companion_or_catalog',
+  companion_hint: 'Plays through the desktop companion',
+  launchers: [],
+}
+
+const GBA_EDITION = {
+  uuid: 'def-456',
+  name: 'Portal 2',
+  is_current: false,
+  library_name: 'Handhelds',
+  library_platform: 'GBA',
+  library_platform_label: 'Game Boy Advance',
+  can_play_in_browser: true,
+  launchers: [
+    { core: 'mgba', label: 'mgba', is_default: true, play_url: '/play?core=mgba' },
+    { core: 'vba_next', label: 'vba_next', is_default: false, play_url: '/play?core=vba_next' },
+  ],
+}
+
+beforeEach(() => {
+  fetchGameEditions.mockReset()
+  fetchGameEditions.mockResolvedValue({ editions: [] })
+})
 
 const GAME = {
   uuid: 'abc-123',
@@ -151,4 +197,82 @@ test('renders nothing without a game', () => {
     </MemoryRouter>,
   )
   expect(container).toBeEmptyDOMElement()
+})
+
+
+test('lists every system the title is held on, current copy marked', async () => {
+  // The grid renders one tile per library row, so two copies of a game read as
+  // two unrelated games. This section is the only place they are one title.
+  fetchGameEditions.mockResolvedValue({ editions: [SNES_EDITION, GBA_EDITION] })
+  renderPopup()
+
+  await waitFor(() => expect(screen.getByText('Game Boy Advance')).toBeInTheDocument())
+  // Scoped to the section: "PC Windows" is also the tile's platform fact, and an
+  // unscoped query matches both.
+  const systems = document.querySelector('.gt-preview__systems')
+  expect(within(systems).getByText('PC Windows')).toBeInTheDocument()
+  expect(within(systems).getByText('This copy')).toBeInTheDocument()
+  expect(within(systems).getByText('2 systems')).toBeInTheDocument()
+})
+
+test('offers a launcher per emulator core, not just the preferred one', async () => {
+  fetchGameEditions.mockResolvedValue({ editions: [GBA_EDITION] })
+  renderPopup()
+
+  await waitFor(() =>
+    expect(screen.getByRole('link', { name: /Play · mgba/ })).toHaveAttribute(
+      'href',
+      '/play?core=mgba',
+    ),
+  )
+  expect(screen.getByRole('link', { name: /Play · vba_next/ })).toHaveAttribute(
+    'href',
+    '/play?core=vba_next',
+  )
+})
+
+test('a copy that cannot be launched says why instead of being hidden', async () => {
+  // Dropping unplayable copies would answer "which systems is this on?" with a
+  // half-truth, and the reason is usually the thing to act on.
+  fetchGameEditions.mockResolvedValue({ editions: [SNES_EDITION] })
+  renderPopup()
+
+  await waitFor(() =>
+    expect(screen.getByText('Plays through the desktop companion')).toBeInTheDocument(),
+  )
+})
+
+test('a failed lookup costs the systems list and nothing else', async () => {
+  fetchGameEditions.mockRejectedValue(new Error('boom'))
+  renderPopup()
+
+  await waitFor(() =>
+    expect(screen.getByText(/Could not check which systems/i)).toBeInTheDocument(),
+  )
+  // The preview is still a preview.
+  expect(screen.getByText('A first-person puzzle game.')).toBeInTheDocument()
+})
+
+test('editionBlockerText names the blocker a member can act on', () => {
+  expect(editionBlockerText({ can_play_in_browser: true })).toBeNull()
+  expect(editionBlockerText({ play_blocker: 'catalog_only' })).toMatch(/Catalog/)
+  expect(editionBlockerText({ play_blocker: 'no_browser_core' })).toMatch(/browser core/)
+  // Firmware wins over the generic blocker: it is the specific, fixable one.
+  expect(
+    editionBlockerText({ firmware_missing: true, play_blocker: 'no_browser_core' }),
+  ).toMatch(/firmware/i)
+})
+
+
+test('the systems count counts systems, not copies', () => {
+  // Two copies in two PC libraries is one system. "2 systems" would send a
+  // member looking for a console that is not there, and "1 systems" beside a
+  // one-item list is wrong twice over.
+  const pc = { library_platform: 'PCWIN' }
+  expect(systemCountLabel([pc, { ...pc }])).toBeNull()
+  expect(systemCountLabel([pc])).toBeNull()
+  expect(systemCountLabel([])).toBeNull()
+  expect(systemCountLabel([pc, { library_platform: 'GBA' }])).toBe('2 systems')
+  // A row with no platform at all must not inflate the count.
+  expect(systemCountLabel([pc, { library_platform: null }])).toBeNull()
 })

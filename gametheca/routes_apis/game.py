@@ -696,6 +696,41 @@ def game_details_api(game_uuid):
     return jsonify(build_game_details_payload(game, current_user))
 
 
+@apis_bp.route('/games/<game_uuid>/editions', methods=['GET'])
+@login_required
+def game_editions_api(game_uuid):
+    """Every system this title exists on in the library, with per-core launchers.
+
+    The tile grid shows one row per library, so a household holding the same
+    game on two systems sees two unrelated tiles and no way to tell they are the
+    same game — let alone to choose which one to play. The preview popup asks
+    this and renders the answer as a launch menu.
+
+    Read-only, and access-filtered the same way browse is: a member only sees
+    copies in libraries they can already see.
+    """
+    game = db.session.execute(
+        select(Game).filter_by(uuid=game_uuid)
+    ).scalars().first()
+    refusal = _refuse_inaccessible_game(game)
+    if refusal:
+        return refusal
+
+    from gametheca.utils.game_editions import editions_for_game
+
+    editions = editions_for_game(game, current_user)
+    return api_ok({
+        'uuid': game.uuid,
+        'name': game.name,
+        'editions': editions,
+        # Distinct systems rather than distinct rows: two copies of one game in
+        # two SNES libraries is one system, and the preview says "SNES" once.
+        'system_count': len({
+            row['library_platform'] for row in editions if row['library_platform']
+        }),
+    })
+
+
 @apis_bp.route('/game_screenshots/<game_uuid>')
 @login_required
 def game_screenshots(game_uuid):

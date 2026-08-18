@@ -325,6 +325,21 @@
         "responses": { "200": { "description": "Queued" }, "403": { "description": "Forbidden" } }
       }
     },
+    "/api/games/{game_uuid}/editions": {
+      "get": {
+        "summary": "Systems this title exists on, with per-core launchers",
+        "description": "Every copy of the same title across the caller's accessible libraries, one entry per library row, each carrying its own play options and a launch URL per browser-playable emulator core. Titles are paired by normalised name because Game.igdb_id and Game.slug are both unique, so cross-platform copies cannot share either. Always returns at least the requested game, so a caller never has to special-case a single-system title.",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "parameters": [
+          { "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Envelope with editions[] and system_count" },
+          "403": { "description": "Library not accessible to the caller" },
+          "404": { "description": "Game not found" }
+        }
+      }
+    },
     "/api/games/{game_uuid}/saves": {
       "get": {
         "summary": "List emulator cloud save slots",
