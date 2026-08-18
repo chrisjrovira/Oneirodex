@@ -135,6 +135,14 @@
  * chrome — only its position changed. */
 .game-card-container.is-selectable .gt-tile-select {
   position: absolute;
+  /* Same shape as the top-right controls, from the same vars. Spelled out here
+     rather than joined to their selector list in the theme's components.css:
+     this class belongs to the member app, and one class defined in two
+     stylesheets resolves by load order under cssCodeSplit. */
+  width: var(--gt-tile-btn, 32px);
+  height: var(--gt-tile-btn, 32px);
+  border-radius: var(--gt-radius-sm, 6px);
+  box-shadow: var(--gt-tile-btn-shadow, 0 2px 6px rgba(0, 0, 0, 0.55));
   right: var(--gt-tile-edge, 8px);
   left: auto;
   top: auto;

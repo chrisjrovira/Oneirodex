@@ -259,12 +259,21 @@
     --gt-tile-btn-rest-opacity: 0.92;
 }
 
-/* One shared shape for every control in the tile stack. Each rule below still
-   owns its own offset, but nothing owns its own size any more. */
+/* One shared shape for the two controls *this file owns*.
+ *
+ * `.game-status-btn` and `.gt-tile-select` deliberately are not listed here
+ * even though they take the identical shape. Their base rules live in
+ * games/game_status.css and the member app's LibrarySelectionBar.css, and
+ * naming them here would make each of those classes defined in two
+ * stylesheets — which is precisely what cssDuplicateRules.test.js budgets
+ * against, and for a good reason: with cssCodeSplit, two definitions resolve by
+ * load order, i.e. by the reader's navigation history.
+ *
+ * The values are not duplicated even though the property list is: every one is
+ * a var declared on `.game-card` above, so there is still exactly one place to
+ * change the size of a tile control. */
 .button-glass-hamburger,
-.favorite-btn,
-.game-status-btn,
-.game-card-container.is-selectable .gt-tile-select {
+.favorite-btn {
     width: var(--gt-tile-btn);
     height: var(--gt-tile-btn);
     right: var(--gt-tile-edge);

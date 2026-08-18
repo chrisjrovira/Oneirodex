@@ -46,6 +46,19 @@
     position: absolute;
     top: calc(var(--gt-tile-stack-top) + 2 * var(--gt-tile-stride));
     bottom: auto;
+    /* Same shape as the hamburger and favourite, from the same vars — but
+       spelled out here rather than joined to their selector list in
+       components.css, because a class defined in two stylesheets resolves by
+       load order under cssCodeSplit. One owner per class; one source per
+       value. */
+    width: var(--gt-tile-btn);
+    height: var(--gt-tile-btn);
+    right: var(--gt-tile-edge);
+    left: auto;
+    border-radius: var(--gt-radius-sm, 6px);
+    font-size: var(--gt-tile-btn-icon);
+    line-height: 1;
+    box-shadow: var(--gt-tile-btn-shadow);
     background-color: var(--gt-tile-btn-bg);
     backdrop-filter: blur(5px);
     border: var(--gt-tile-btn-border);
