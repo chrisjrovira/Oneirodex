@@ -1,5 +1,6 @@
 # /gametheca/routes_admin_ext/hltb.py
-from flask import jsonify, request
+from gametheca.utils.api_response import api_error, api_ok
+from flask import request
 from flask_login import login_required
 from gametheca.models import GlobalSettings, Game
 from gametheca import db
@@ -20,16 +21,12 @@ def get_hltb_statistics():
     """Get statistics about HLTB data coverage."""
     try:
         stats = get_hltb_stats()
-        return jsonify({
-            'success': True,
-            'stats': stats
+        return api_ok({
+                        'stats': stats
         })
     except Exception as e:
         logger.error(f"Error getting HLTB stats: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return api_error(str(e), code='internal')
 
 
 @admin2_bp.route('/api/hltb/refresh/<game_uuid>', methods=['POST'])
@@ -41,10 +38,7 @@ def refresh_game_hltb(game_uuid):
         # Check if HLTB integration is enabled
         settings = global_settings_row()
         if not settings or not settings.enable_hltb_integration:
-            return jsonify({
-                'success': False,
-                'error': 'HLTB integration is not enabled'
-            }), 400
+            return api_error('HLTB integration is not enabled', code='bad_request')
 
         # Get game
         game = db.session.execute(
@@ -52,10 +46,7 @@ def refresh_game_hltb(game_uuid):
         ).scalars().first()
 
         if not game:
-            return jsonify({
-                'success': False,
-                'error': 'Game not found'
-            }), 404
+            return api_error('Game not found', code='not_found')
 
         # Fetch and update HLTB data
         success = update_game_hltb_sync(game_uuid, game.name)
@@ -63,9 +54,8 @@ def refresh_game_hltb(game_uuid):
         if success:
             # Refresh the game object to get updated data
             db.session.refresh(game)
-            return jsonify({
-                'success': True,
-                'message': f'HLTB data updated for {game.name}',
+            return api_ok({
+                                'message': f'HLTB data updated for {game.name}',
                 'data': {
                     'hltb_id': game.hltb_id,
                     'hltb_main_story': game.hltb_main_story,
@@ -76,17 +66,11 @@ def refresh_game_hltb(game_uuid):
                 }
             })
         else:
-            return jsonify({
-                'success': False,
-                'error': 'Failed to fetch HLTB data. Game may not be found on HowLongToBeat.'
-            }), 404
+            return api_error('Failed to fetch HLTB data. Game may not be found on HowLongToBeat.', code='not_found')
 
     except Exception as e:
         logger.error(f"Error refreshing HLTB data for game {game_uuid}: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return api_error(str(e), code='internal')
 
 
 @admin2_bp.route('/api/hltb/bulk-refresh', methods=['POST'])
@@ -98,10 +82,7 @@ def bulk_refresh_hltb():
         # Check if HLTB integration is enabled
         settings = global_settings_row()
         if not settings or not settings.enable_hltb_integration:
-            return jsonify({
-                'success': False,
-                'error': 'HLTB integration is not enabled'
-            }), 400
+            return api_error('HLTB integration is not enabled', code='bad_request')
 
         # Get limit from request (default 50, max 200)
         limit = request.json.get('limit', 50) if request.json else 50
@@ -111,9 +92,8 @@ def bulk_refresh_hltb():
         games_to_update = get_games_without_hltb(limit=limit)
 
         if not games_to_update:
-            return jsonify({
-                'success': True,
-                'message': 'No games need HLTB data update',
+            return api_ok({
+                                'message': 'No games need HLTB data update',
                 'processed': 0,
                 'successful': 0,
                 'failed': 0
@@ -139,9 +119,8 @@ def bulk_refresh_hltb():
                 errors.append(f'{game.name}: {str(e)}')
                 logger.error(f"Error updating HLTB for {game.name}: {e}")
 
-        return jsonify({
-            'success': True,
-            'message': f'Processed {processed} games: {successful} successful, {failed} failed',
+        return api_ok({
+                        'message': f'Processed {processed} games: {successful} successful, {failed} failed',
             'processed': processed,
             'successful': successful,
             'failed': failed,
@@ -150,7 +129,4 @@ def bulk_refresh_hltb():
 
     except Exception as e:
         logger.error(f"Error in bulk HLTB refresh: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return api_error(str(e), code='internal')

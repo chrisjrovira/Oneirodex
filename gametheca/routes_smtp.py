@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, jsonify
+from gametheca.utils.api_response import api_error, api_ok
+from flask import Blueprint, current_app, render_template, request, jsonify
 from flask_login import login_required
 from gametheca.utils.auth import admin_required
 from gametheca.utils.global_settings import (
@@ -65,7 +66,9 @@ def smtp_settings():
             return jsonify({'status': 'success', 'message': 'SMTP settings updated successfully'})
         except Exception as e:
             db.session.rollback()
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            current_app.logger.warning('SMTP settings save failed: %s', e)
+        # Stays on jsonify: admin_manage_smtp_settings.js reads `data.status`.
+        return jsonify({'status': 'error', 'message': 'Could not save SMTP settings'}), 500
     
     return render_template('admin/admin_manage_smtp_settings.html', settings=settings)
 
@@ -75,10 +78,7 @@ def smtp_settings():
 def smtp_test():
     settings = global_settings_row()
     if not settings:
-        return jsonify({
-            'success': False,
-            'message': 'SMTP settings not configured'
-        }), 400
+        return api_error('SMTP settings not configured', code='bad_request')
 
     # Create SMTPTester instance
     tester = SMTPTester(debug=False)
@@ -94,6 +94,8 @@ def smtp_test():
     )
 
     if success:
+        # 200 + `success`: the request worked, the connection test is what
+        # failed or passed. admin_manage_smtp_settings.js reads `data.success`.
         return jsonify({
             'success': True,
             'result': result

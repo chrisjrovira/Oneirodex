@@ -297,6 +297,13 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **HLTB, game mods, game servers and the SMTP test answer through the envelope** — baseline
+  **209 → 175**. `hltb.py` no longer imports `jsonify` at all. One more raw `str(e)` — a database
+  exception, which can carry connection and schema detail — stops reaching the browser on SMTP save.
+  **The SMTP *connection test* deliberately keeps answering 200 with `success: false`**: the request
+  itself succeeded and only the thing it tested failed, `admin_manage_smtp_settings.js` branches on
+  `data.success`, and the test says so in a comment. The SMTP *settings* save keeps its `status` for
+  the same script
 - **IGDB, quality stats, reference sets and related media answer through the envelope** — 12 each → 0,
   baseline **257 → 209**. Two IGDB endpoints were **answering HTTP 200 with an error body**, so a
   client branching on status saw a missing parameter or an upstream failure as success. They answer
