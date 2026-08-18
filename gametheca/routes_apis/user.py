@@ -1,4 +1,5 @@
 # /gametheca/routes_apis/user.py
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request, url_for
 from flask_login import login_required, current_user
 from gametheca import db
@@ -35,7 +36,7 @@ def member_profile(user_id: int):
     """Public member profile — ACL-filtered recent games (Wave 14b)."""
     target = db.session.get(User, user_id)
     if not target or not target.state:
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Not found', code='not_found')
     friends = accepted_friend_ids(current_user.id)
     is_self = target.id == current_user.id
     is_friend = target.id in friends
@@ -86,18 +87,18 @@ def member_profile(user_id: int):
 def member_profile_compare(user_id: int, other_id: int):
     """Compare playtime with a friend (Wave 14b)."""
     if current_user.id not in {user_id, other_id}:
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     friends = accepted_friend_ids(current_user.id)
     peers = {user_id, other_id}
     if current_user.id not in peers:
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     other = other_id if current_user.id == user_id else user_id
     if other != current_user.id and other not in friends:
-        return jsonify({'error': 'Friends only'}), 403
+        return api_error('Friends only', code='forbidden')
     left = db.session.get(User, user_id)
     right = db.session.get(User, other_id)
     if not left or not right:
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Not found', code='not_found')
     left_rows = {
         r.game_uuid: r
         for r in db.session.execute(
@@ -155,7 +156,7 @@ def check_username():
     username = data.get('username')
     if not username:
         print(f"Check username: Missing username")
-        return jsonify({"error": "Missing username parameter"}), 400
+        return api_error('Missing username parameter', code='bad_request')
     print(f"Checking username: {username}")
     existing_user = db.session.execute(select(User).filter(func.lower(User.name) == func.lower(username))).scalars().first()
     return jsonify({"exists": existing_user is not None})
@@ -165,9 +166,9 @@ def check_username():
 def check_favorite(game_uuid):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     is_favorite = game in current_user.favorites
     return jsonify({'is_favorite': is_favorite})
 
@@ -176,9 +177,9 @@ def check_favorite(game_uuid):
 def toggle_favorite(game_uuid):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     
     if game in current_user.favorites:
         current_user.favorites.remove(game)
@@ -188,7 +189,7 @@ def toggle_favorite(game_uuid):
         is_favorite = True
     
     db.session.commit()
-    return jsonify({'success': True, 'is_favorite': is_favorite})
+    return api_ok({'is_favorite': is_favorite})
 
 
 @apis_bp.route('/favorites', methods=['GET'])
@@ -295,7 +296,7 @@ def get_game_status(game_uuid):
     """Get the current user's completion status for a game"""
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
 
     # Query the status
     status_row = db.session.execute(
@@ -310,9 +311,8 @@ def get_game_status(game_uuid):
     status = status_row[0] if status_row else None
     status_info = get_status_info(status)
 
-    return jsonify({
-        'success': True,
-        'status': status,
+    return api_ok({
+                'status': status,
         'status_info': status_info
     })
 
@@ -322,7 +322,7 @@ def set_game_status(game_uuid):
     """Set or update the user's completion status for a game"""
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
 
     data = request.get_json()
     status = data.get('status', '').strip()
@@ -330,7 +330,7 @@ def set_game_status(game_uuid):
     # Validate status
     valid_statuses = ['unplayed', 'unfinished', 'beaten', 'completed', 'null', '']
     if status not in valid_statuses:
-        return jsonify({'error': 'Invalid status value'}), 400
+        return api_error('Invalid status value', code='bad_request')
 
     # If status is empty, remove the status record
     if not status:
@@ -343,9 +343,8 @@ def set_game_status(game_uuid):
             )
         )
         db.session.commit()
-        return jsonify({
-            'success': True,
-            'status': None,
+        return api_ok({
+                        'status': None,
             'status_info': get_status_info(None),
             'message': 'Status cleared'
         })
@@ -387,9 +386,8 @@ def set_game_status(game_uuid):
     db.session.commit()
     status_info = get_status_info(status)
 
-    return jsonify({
-        'success': True,
-        'status': status,
+    return api_ok({
+                'status': status,
         'status_info': status_info,
         'message': f'Status updated to {status_info["label"]}'
     })

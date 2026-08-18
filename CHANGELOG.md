@@ -297,6 +297,14 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **AI assist, the user API and admin settings answer through the envelope** — 17 / 17 / 16 → 1 / 0 / 0,
+  baseline **343 → 294**. `user.py`'s play-status responses keep their `status` key: there it is the
+  game's own state (`beaten`, `unplayed`), not an envelope marker, and the same is true of AI config's
+  `status: 'saved'`. `settings.py`'s `status: 'error'` **was** the marker and is gone — checked first
+  that its only caller, the integrations template, reads `response.ok` and `data.message`, both of which
+  `api_error` still provides. The one site left in `ai_assist.py` is annotated: `ollama_status()` reports
+  `error` as *why* Ollama is unreachable on an otherwise fine 200, and `api_ok` pops `error`, so
+  wrapping it would delete the field the endpoint exists to return
 - **Acquire, companion client and emulator saves answer through the envelope** — **19 / 19 / 17 → 0**,
   baseline **398 → 343**. All three were single-shape files, so the conversion was mechanical; the two
   keys that needed a decision both stay as payload data — the acquire readiness `message`, and the

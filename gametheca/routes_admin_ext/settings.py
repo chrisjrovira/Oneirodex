@@ -4,6 +4,7 @@ import logging
 import os
 from datetime import datetime, timezone
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import render_template, request, jsonify, abort, current_app, redirect, url_for, flash
 from flask_login import login_required, current_user
 from sqlalchemy import select
@@ -338,11 +339,11 @@ def update_settings():
     try:
         # Validate request has JSON content
         if not request.is_json:
-            return jsonify({'error': 'Request must be JSON'}), 400
+            return api_error('Request must be JSON', code='bad_request')
 
         new_settings = request.get_json()
         if not new_settings:
-            return jsonify({'error': 'No settings data provided'}), 400
+            return api_error('No settings data provided', code='bad_request')
 
         # Validate settings data
         validation_errors = validate_settings_data(new_settings)
@@ -368,12 +369,12 @@ def update_settings():
         )
         cache.delete('global_settings')
 
-        return jsonify({'message': 'Settings updated successfully'}), 200
+        return api_ok({'message': 'Settings updated successfully'})
 
     except Exception as e:
         db.session.rollback()
         logging.error(f"Error updating settings: {str(e)}")
-        return jsonify({'error': 'Failed to update settings'}), 500
+        return api_error('Failed to update settings', code='internal')
 
 
 @admin2_bp.route('/admin/settings', methods=['GET', 'POST'])
@@ -473,10 +474,7 @@ def integrations_igdb_save():
         client_secret = data.get('igdb_client_secret', '').strip()
 
         if len(client_id) < 20 or len(client_secret) < 20:
-            return jsonify({
-                'status': 'error',
-                'message': 'Client ID and Secret must be at least 20 characters long'
-            }), 400
+            return api_error('Client ID and Secret must be at least 20 characters long', code='bad_request')
 
         settings.igdb_client_id = client_id
         settings.igdb_client_secret = client_secret
@@ -484,12 +482,12 @@ def integrations_igdb_save():
         db.session.commit()
         log_system_event("IGDB settings updated via integrations page")
 
-        return jsonify({'status': 'success', 'message': 'IGDB settings saved successfully'})
+        return api_ok({'message': 'IGDB settings saved successfully'})
 
     except Exception as e:
         db.session.rollback()
         logging.error(f"Error saving IGDB settings from integrations: {str(e)}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return api_error(str(e), code='internal')
 
 
 @admin2_bp.route('/admin/integrations/igdb/test', methods=['POST'])
@@ -502,10 +500,7 @@ def integrations_igdb_test():
         settings = global_settings_row()
 
         if not settings or not settings.igdb_client_id or not settings.igdb_client_secret:
-            return jsonify({
-                'status': 'error',
-                'message': 'IGDB settings not configured. Please save your settings first.'
-            }), 400
+            return api_error('IGDB settings not configured. Please save your settings first.', code='bad_request')
 
         # Test the IGDB API with a simple query
         response = make_igdb_api_request('https://api.igdb.com/v4/games', 'fields name; limit 1;')
@@ -515,14 +510,14 @@ def integrations_igdb_test():
             settings.igdb_last_tested = datetime.now(timezone.utc)
             db.session.commit()
             log_system_event("IGDB API test successful via integrations page")
-            return jsonify({'status': 'success', 'message': 'IGDB API test successful'})
+            return api_ok({'message': 'IGDB API test successful'})
         else:
             logging.warning("IGDB API test failed - invalid response")
-            return jsonify({'status': 'error', 'message': 'Invalid API response'}), 500
+            return api_error('Invalid API response', code='internal')
 
     except Exception as e:
         logging.error(f"Error testing IGDB from integrations: {str(e)}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return api_error(str(e), code='internal')
 
 
 @admin2_bp.route('/admin/integrations/oidc/save', methods=['POST'])
@@ -548,9 +543,9 @@ def integrations_oidc_save():
             try:
                 role_map = json.loads(role_map)
             except json.JSONDecodeError:
-                return jsonify({'status': 'error', 'message': 'Role map must be valid JSON.'}), 400
+                return api_error('Role map must be valid JSON.', code='bad_request')
         if role_map is not None and not isinstance(role_map, dict):
-            return jsonify({'status': 'error', 'message': 'Role map must be a JSON object.'}), 400
+            return api_error('Role map must be a JSON object.', code='bad_request')
         settings.oidc_role_map = role_map
 
         if settings.oidc_enabled:
@@ -562,20 +557,17 @@ def integrations_oidc_save():
             if not settings.oidc_redirect_uri:
                 missing.append('redirect URI')
             if missing:
-                return jsonify({
-                    'status': 'error',
-                    'message': f"When enabling SSO, provide: {', '.join(missing)}.",
-                }), 400
+                return api_error(f"When enabling SSO, provide: {', '.join(missing)}.", code='bad_request')
 
         settings.last_updated = datetime.now(timezone.utc)
         db.session.commit()
         cache.delete('global_settings')
         log_system_event('OIDC settings updated via integrations page', event_type='audit', event_level='information')
-        return jsonify({'status': 'success', 'message': 'OIDC settings saved successfully.'})
+        return api_ok({'message': 'OIDC settings saved successfully.'})
     except Exception as e:
         db.session.rollback()
         logging.error(f"Error saving OIDC settings: {str(e)}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return api_error(str(e), code='internal')
 
 
 @admin2_bp.route('/admin/integrations/community', methods=['POST'])

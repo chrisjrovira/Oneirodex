@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import login_required
 from sqlalchemy import select
@@ -33,6 +34,10 @@ def _basename(path: str | None) -> str:
 @login_required
 @admin_required
 def ai_status():
+    # Deliberately not api_ok: `ollama_status()` reports `error` as *why*
+    # Ollama is unreachable, on an otherwise fine 200 — data, not an envelope
+    # failure. api_ok pops `error`, so wrapping this would delete the one field
+    # the endpoint exists to return. Baselined on purpose.
     return jsonify(ollama_status())
 
 
@@ -45,9 +50,9 @@ def ai_config():
         return jsonify(get_ai_config())
     data = request.get_json(silent=True) or {}
     if not any(key in data for key in ('enabled', 'enable_ai_assist', 'ollama_base_url', 'ollama_model')):
-        return jsonify({'error': 'No recognized fields to update'}), 400
+        return api_error('No recognized fields to update', code='bad_request')
     saved = save_ai_config(data)
-    return jsonify({'status': 'saved', **saved})
+    return api_ok({'status': 'saved', **saved})
 
 
 @apis_bp.route('/ai/triage', methods=['POST'])
@@ -55,7 +60,7 @@ def ai_config():
 @admin_required
 def ai_triage():
     if not ai_enabled():
-        return jsonify({'error': 'AI assist is disabled'}), 403
+        return api_error('AI assist is disabled', code='forbidden')
     data = request.get_json(silent=True) or {}
     name = (data.get('name') or data.get('folder_name') or '').strip()
     platform = data.get('platform')
@@ -63,7 +68,7 @@ def ai_triage():
     if folder_id and not name:
         row = db.session.get(UnmatchedFolder, folder_id)
         if not row:
-            return jsonify({'error': 'Unmatched folder not found'}), 404
+            return api_error('Unmatched folder not found', code='not_found')
         name = (getattr(row, 'search_name', None) or '').strip() or _basename(row.folder_path)
         if not platform and row.library_uuid:
             lib = db.session.execute(
@@ -76,11 +81,11 @@ def ai_triage():
     try:
         result = triage_folder(name, platform)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     except ConnectionError as exc:
-        return jsonify({'error': str(exc)}), 503
+        return api_error(str(exc), code='unavailable')
     return jsonify(result)
 
 
@@ -89,7 +94,7 @@ def ai_triage():
 @admin_required
 def ai_doctor_notes():
     if not ai_enabled():
-        return jsonify({'error': 'AI assist is disabled'}), 403
+        return api_error('AI assist is disabled', code='forbidden')
     data = request.get_json(silent=True) or {}
     context = {
         'issues': data.get('issues') or data.get('issue_codes') or [],
@@ -100,17 +105,17 @@ def ai_doctor_notes():
     if game_uuid:
         game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
         if not game:
-            return jsonify({'error': 'Game not found'}), 404
+            return api_error('Game not found', code='not_found')
         context['game_name'] = game.name
         context['summary'] = context.get('summary') or (game.summary or '')[:500]
     try:
         result = doctor_notes(context)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     except ConnectionError as exc:
-        return jsonify({'error': str(exc)}), 503
+        return api_error(str(exc), code='unavailable')
     return jsonify(result)
 
 @apis_bp.route('/ai/apply-triage', methods=['POST'])
@@ -119,10 +124,11 @@ def ai_doctor_notes():
 def ai_apply_triage():
     """Apply a chosen triage title to an existing game (never silent)."""
     if not ai_auto_apply_enabled():
-        return jsonify({
-            'error': 'AI auto-apply is disabled. Set ENABLE_AI_AUTO_APPLY=true.',
-            'auto_apply_enabled': False,
-        }), 403
+        return api_error(
+            'AI auto-apply is disabled. Set ENABLE_AI_AUTO_APPLY=true.',
+            code='forbidden',
+            auto_apply_enabled=False,
+        )
     data = request.get_json(silent=True) or {}
     try:
         result = apply_triage_title(
@@ -130,9 +136,9 @@ def ai_apply_triage():
             (data.get('title') or data.get('name') or '').strip(),
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except LookupError as exc:
-        return jsonify({'error': str(exc)}), 404
+        return api_error(str(exc), code='not_found')
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     return jsonify(result), 200 if result.get('unchanged') else 201
