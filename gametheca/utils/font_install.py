@@ -1,23 +1,41 @@
 """Install the built-in theme fonts.
 
-``scripts/fetch-fonts.py`` has always known how to do this. Nothing called it,
-so a fresh install offered five faces in the picker and shipped none of them —
-``available_fonts()`` reported ``installed: False`` for each, which was honest
-and still left the product looking broken to anyone who had not read the script.
+The faces ship *with* GameTheca, in ``gametheca/setup/fonts``. Installing them
+is a file copy onto the library volume, and the network is only a fallback for
+a face the bundle happens not to carry.
 
-This is the same download, importable, so first boot can do it and the script
-stays the manual/air-gapped path. Both use one source table: two copies of a URL
-list is how one of them ends up stale.
+It did not used to be. The faces were fetched from ``google/fonts`` at first
+boot and nothing else, so an install behind a proxy, on an air-gapped box, or
+simply one where the fetch failed quietly ended up with a picker offering five
+fonts and shipping none of them — every entry reading "not installed", with the
+remedy being a script nobody knew to run. Downloading an asset we are allowed to
+redistribute, in order to have it locally, was the wrong shape: it made a
+cosmetic feature depend on the internet and on an admin.
+
+The runtime location is a Docker volume in production, so a copy on every boot
+is what keeps a fresh volume populated — ``gametheca/static/library/fonts`` is
+deliberately gitignored, like the rest of that tree.
 
 All faces are SIL Open Font License 1.1 from the official ``google/fonts``
-repository, fetched by exact path.
+repository. ``OFL.txt`` travels with them and is copied alongside, because
+redistributing them without the licence text is not permitted.
 """
 
 from __future__ import annotations
 
 import os
+import shutil
 import urllib.error
 import urllib.request
+
+#: Tracked directory the faces ship in, resolved relative to the package rather
+#: than the process CWD — uvicorn and Docker do not agree on the latter.
+BUNDLED_FONTS_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'setup', 'fonts'
+)
+
+#: Files copied beside the faces. The licence is not optional.
+BUNDLED_EXTRAS = ('OFL.txt',)
 
 RAW = 'https://raw.githubusercontent.com/google/fonts/main/ofl'
 
@@ -55,22 +73,62 @@ def missing_builtin_fonts(root: str) -> list[str]:
     return missing
 
 
-def install_builtin_fonts(root: str, *, force: bool = False) -> int:
-    """Download any missing built-in face into *root*. Returns files written.
+def seed_builtin_fonts(root: str, *, force: bool = False) -> int:
+    """Copy bundled faces into *root*. Returns files written.
 
-    Never raises for a single failed download: a face that does not arrive falls
-    through to the next family in its CSS stack, so one unreachable URL should
-    cost one font rather than the whole install.
+    The whole point of preloading: no network, no admin, no ordering
+    requirement. Safe to call on every boot — it only writes what is missing
+    unless *force* is set.
+    """
+    if not os.path.isdir(BUNDLED_FONTS_DIR):
+        return 0
+
+    os.makedirs(root, exist_ok=True)
+    wanted = list(FONT_SOURCES) if force else missing_builtin_fonts(root)
+    written = 0
+
+    for name in [*wanted, *BUNDLED_EXTRAS]:
+        source = os.path.join(BUNDLED_FONTS_DIR, name)
+        dest = os.path.join(root, name)
+        if not os.path.isfile(source):
+            continue
+        if os.path.isfile(dest) and not force and name in BUNDLED_EXTRAS:
+            continue
+        try:
+            shutil.copyfile(source, dest)
+        except OSError:
+            # A read-only or full volume costs the face, not the boot.
+            continue
+        if name not in BUNDLED_EXTRAS:
+            written += 1
+
+    return written
+
+
+def install_builtin_fonts(root: str, *, force: bool = False) -> int:
+    """Ensure every built-in face exists under *root*. Returns files written.
+
+    Bundle first, network second. The download is kept for a face registered in
+    ``BUILT_IN_FONTS`` that the bundle does not carry — adding one to the
+    registry should not need a release to be usable — but on a normal install
+    the copy satisfies everything and nothing is fetched at all.
+
+    Never raises for a single failure: a face that does not arrive falls through
+    to the next family in its CSS stack, so one unreachable URL or one
+    unwritable file should cost one font rather than the whole install.
     """
     os.makedirs(root, exist_ok=True)
+
+    written = seed_builtin_fonts(root, force=force)
+
+    remaining = list(FONT_SOURCES) if force else missing_builtin_fonts(root)
+    if not remaining:
+        return written
 
     opener = urllib.request.build_opener()
     opener.addheaders = [('User-Agent', USER_AGENT)]
 
-    wanted = list(FONT_SOURCES) if force else missing_builtin_fonts(root)
-    written = 0
-
-    for name in wanted:
+    for name in remaining:
         url = FONT_SOURCES.get(name)
         if not url:
             # Registered face with no source here — worth knowing about, but not

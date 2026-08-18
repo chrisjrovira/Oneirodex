@@ -28,33 +28,57 @@ faces chosen to *evoke* each era:
 | `share-tech-mono` | Share Tech Mono | arcade cabinet | SIL OFL 1.1 |
 | `orbitron` | Orbitron | 32-bit / disc era | SIL OFL 1.1 |
 
-> ⚠️ **The font *files* are not vendored in this repo.** The registry describes
-> the faces; the `.ttf` files are operator-supplied, exactly like WebRetro cores
-> and reference DATs. Until you install them, every entry except `system-ui`
-> falls through to its CSS fallback (`Courier New`, `Arial Black`, …) — so the
-> picker will appear to "do nothing".
+> ✅ **All five ship with GameTheca — you do not install them.** The `.ttf`
+> files are vendored in `gametheca/setup/fonts/` (with `OFL.txt`) and copied
+> into the runtime fonts folder on **every** startup, so a fresh volume
+> repopulates itself. No network, no admin step, works air-gapped.
 >
-> The API reports this honestly: each entry carries `installed: true|false`, and
-> `@font-face` rules are only emitted for files that actually exist.
+> The API still reports `installed: true|false` per entry and only emits
+> `@font-face` for files that exist — so if the picker ever says *not
+> installed*, that is a real filesystem problem (read-only or full volume),
+> not the normal state. Check the boot log for `Theme font install skipped`.
 
-### Installing the built-in faces
+### How the built-in faces get installed
 
-All five are on [Google Fonts](https://fonts.google.com/) under the Open Font
-License. Download each family, then drop the `.ttf` into the fonts folder using
-**exactly** the filename the registry expects:
+| Step | What happens |
+|---|---|
+| Boot, phase 4 | `seed_builtin_fonts()` copies any missing bundled face into the fonts folder — same model as the icon packs beside it |
+| Face not in the bundle | Falls back to a background download from google/fonts; `FETCH_FONTS_ON_BOOT=false` disables that half only |
+| Copy fails | Logged, boot continues — a missing face degrades to the next family in its CSS stack |
+
+Runtime location is `gametheca/static/library/fonts/` (override with
+`FONT_PATH`). Under Compose that lives inside the volume mounted at
+`LIBRARY_HOST_PATH`. That path is gitignored, which is exactly why the bundled
+copy exists: the tracked source of truth is `gametheca/setup/fonts/`.
+
+Filenames are load-bearing — `missing_builtin_fonts()` matches the `file` field
+in `BUILT_IN_FONTS`:
 
 ```
 PressStart2P-Regular.ttf
 Silkscreen-Regular.ttf
 VT323-Regular.ttf
 ShareTechMono-Regular.ttf
-Orbitron-Bold.ttf
+Orbitron-Variable.ttf
 ```
 
-Default location is `gametheca/static/library/fonts/`. Under Compose that lives
-inside the volume mounted at `LIBRARY_HOST_PATH`, so the files survive a rebuild.
+> **Adding a face to the registry?** Put the file in `gametheca/setup/fonts/`
+> in the same commit. `tests/test_font_bundle.py` fails on a registered face
+> with no bundled file, because that combination is what put "not installed" in
+> front of members in the first place.
 
-Restart is not required — the catalogue is read from disk per request.
+Restart is not required to *pick* a font — the catalogue is read from disk per
+request. A restart is what installs a face the bundle gained in an upgrade.
+
+### Historical note
+
+Before this, the faces were fetched from google/fonts on a background thread at
+the end of first-run setup and nowhere else. An install behind a proxy, on an
+air-gapped box, one already past setup, or one where the fetch simply failed
+quietly ended up offering five fonts in the picker and shipping none of them —
+with the remedy being `scripts/fetch-fonts.py`, a script nobody knew to run.
+Downloading a redistributable asset in order to have it locally was the wrong
+shape; the files ship now.
 
 ### Uploading a font from the admin UI
 

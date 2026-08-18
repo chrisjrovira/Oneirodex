@@ -229,6 +229,27 @@ class InitializationManager:
             except Exception as icon_err:
                 _safe_print(f"[WARN] Icon pack install skipped: {icon_err}")
 
+            # Theme fonts, same reasoning as the icon packs above: the runtime
+            # directory is a volume, so a fresh one starts empty and has to be
+            # repopulated from the tracked bundle. This used to happen only at
+            # the end of first-run setup, and only over the network — an install
+            # that was already past setup, or one behind a proxy, offered five
+            # faces in the picker and had none of them on disk. A local copy
+            # needs no network and no admin.
+            try:
+                from gametheca.utils.font_install import seed_builtin_fonts
+
+                fonts_path = os.path.join(library_path, 'fonts')
+                seeded = seed_builtin_fonts(fonts_path)
+                if seeded:
+                    _safe_print(f"[OK] Theme fonts installed: {seeded} face(s)")
+                else:
+                    _safe_print("[OK] Theme fonts ready")
+            except Exception as font_err:
+                # Cosmetic: a missing face degrades to the next family in its
+                # CSS stack, so this must never take a boot down.
+                _safe_print(f"[WARN] Theme font install skipped: {font_err}")
+
             _safe_print("[OK] Filesystem setup completed")
             return True
 

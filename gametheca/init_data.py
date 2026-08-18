@@ -132,54 +132,70 @@ def initialize_library_folders():
 def initialize_theme_fonts():
     """Install the built-in OFL faces the font picker offers.
 
-    The picker has always listed these and reported `installed: False` for any
-    whose file was absent — honest, but it meant a fresh install offered five
-    fonts and shipped none of them, and the fix was a script nobody knew to run.
+    A local copy from ``gametheca/setup/fonts``, inline — five small files, no
+    network, so there is nothing to background and nothing to fail. The picker
+    lists these faces and reports ``installed: False`` for any whose file is
+    absent, which was honest and still meant a fresh install offered five fonts
+    and shipped none of them.
 
-    Deliberately best-effort and off the boot path: the files come from
-    google/fonts over the network, and a slow or firewalled host must not be a
-    slow or failed startup. `FETCH_FONTS_ON_BOOT=false` turns it off for
-    air-gapped installs, which should use `scripts/fetch-fonts.py --out` against
-    a local mirror instead.
+    It used to download them from google/fonts on a background thread, which is
+    why it was best-effort and why so many installs never got them: a proxy, an
+    air-gapped host, or a fetch that failed quietly all ended in a picker full
+    of "not installed" with the fix being a script nobody knew to run.
+
+    Anything the bundle does not carry — a face added to ``BUILT_IN_FONTS``
+    after a release — still falls back to the network, and
+    ``FETCH_FONTS_ON_BOOT=false`` disables *that* half for air-gapped installs.
+    The bundled copy always runs; there is no reason to opt out of a file copy.
     """
     from flask import current_app
 
-    if not current_app.config.get('FETCH_FONTS_ON_BOOT', True):
-        return
-
-    from gametheca.utils.theme_fonts import BUILT_IN_FONTS, fonts_dir
+    from gametheca.utils.font_install import (
+        install_builtin_fonts,
+        missing_builtin_fonts,
+        seed_builtin_fonts,
+    )
+    from gametheca.utils.theme_fonts import fonts_dir
 
     root = fonts_dir()
     os.makedirs(root, exist_ok=True)
-    missing = [
-        entry['file'] for entry in BUILT_IN_FONTS.values()
-        if entry.get('file') and not os.path.isfile(os.path.join(root, entry['file']))
-    ]
-    if not missing:
+
+    try:
+        written = seed_builtin_fonts(root)
+    except Exception as exc:  # noqa: BLE001 — cosmetics never block a boot
+        log_system_event(
+            f"Theme fonts not installed ({exc})",
+            event_type='startup', event_level='warning', audit_user='system',
+        )
         return
 
+    if written:
+        print(f"Installed {written} bundled theme font(s)")
+
+    missing = missing_builtin_fonts(root)
+    if not missing or not current_app.config.get('FETCH_FONTS_ON_BOOT', True):
+        return
+
+    # Only faces the bundle does not carry reach the network, and only in the
+    # background — that half keeps its old best-effort contract.
     def _fetch():
         try:
-            from gametheca.utils.font_install import install_builtin_fonts
-
-            written = install_builtin_fonts(root)
-            if written:
+            fetched = install_builtin_fonts(root)
+            if fetched:
                 log_system_event(
-                    f"Installed {written} theme font(s) on first boot",
+                    f"Fetched {fetched} theme font(s) not in the bundle",
                     event_type='startup', event_level='info', audit_user='system',
                 )
         except Exception as exc:
-            # A missing font degrades to the next family in the CSS stack, so
-            # this is cosmetic — it must never take the server down with it.
             log_system_event(
-                f"Theme fonts not installed ({exc}); run scripts/fetch-fonts.py",
+                f"Theme fonts not fetched ({exc}); run scripts/fetch-fonts.py",
                 event_type='startup', event_level='warning', audit_user='system',
             )
 
     from gametheca.utils.background import run_in_background
 
     run_in_background(current_app._get_current_object(), _fetch, name='font-install')
-    print(f"Fetching {len(missing)} theme font(s) in the background")
+    print(f"Fetching {len(missing)} theme font(s) not in the bundle")
 
 
 def initialize_emulator_bios():
