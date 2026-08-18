@@ -297,6 +297,15 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **Libraries, ownership and social answer through the envelope** — 15 / 15 / 13 → 6 / 0 / 0,
+  baseline **294 → 257**. The friend-request path needed care rather than conversion: it builds one
+  anti-enumeration response and returns it from two places, so an unknown username is indistinguishable
+  from a real one. `api_ok` already returns `(body, status)`, so the `, 200` at each return site had to
+  go with it — and the lint's double-wrap guard would not have caught that form, because the value
+  arrives through a variable rather than a literal call. `test_social_friends_enum.py` still passes.
+  `library.py` keeps six on purpose, now annotated: three batch refusals carry the scan-queue
+  `status: 'rejected'`, one `ok` is computed (`started > 0`, meaning "did any delete start"), and
+  `admin_manage_libs.js` reads `data.status === 'success'` off another
 - **AI assist, the user API and admin settings answer through the envelope** — 17 / 17 / 16 → 1 / 0 / 0,
   baseline **343 → 294**. `user.py`'s play-status responses keep their `status` key: there it is the
   game's own state (`beaten`, `unplayed`), not an envelope marker, and the same is true of AI config's

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import or_, select
@@ -114,10 +115,10 @@ def social_friends_reject(friendship_id: int):
     """Decline an incoming pending request (same effect as delete for recipient)."""
     row = db.session.get(UserFriendship, friendship_id)
     if not row or row.friend_user_id != current_user.id or row.status != 'pending':
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Not found', code='not_found')
     db.session.delete(row)
     db.session.commit()
-    return jsonify({'ok': True})
+    return api_ok()
 
 
 @apis_bp.route('/social/friends/<int:friendship_id>/block', methods=['POST'])
@@ -125,14 +126,14 @@ def social_friends_reject(friendship_id: int):
 def social_friends_block(friendship_id: int):
     row = db.session.get(UserFriendship, friendship_id)
     if not row or (row.user_id != current_user.id and row.friend_user_id != current_user.id):
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Not found', code='not_found')
     row.status = 'blocked'
     row.updated_at = datetime.now(timezone.utc)
     # Ensure blocker is always user_id for consistent filtering later.
     if row.friend_user_id == current_user.id:
         row.user_id, row.friend_user_id = row.friend_user_id, row.user_id
     db.session.commit()
-    return jsonify({'ok': True, 'friendship': row.to_dict()})
+    return api_ok({'friendship': row.to_dict()})
 
 
 @apis_bp.route('/social/friends', methods=['POST'])
@@ -153,16 +154,15 @@ def social_friends_request():
         ).scalars().first()
 
     # Anti-enumeration: unknown / blocked users share this response (no 404).
-    opaque_ok = jsonify({
-        'ok': True,
+    opaque_ok = api_ok({
         'sent': False,
         'message': 'If that username exists, a friend request was sent.',
     })
 
     if not target:
-        return opaque_ok, 200
+        return opaque_ok
     if target.id == current_user.id:
-        return jsonify({'error': 'Cannot friend yourself'}), 400
+        return api_error('Cannot friend yourself', code='bad_request')
     existing = db.session.execute(
         select(UserFriendship).where(
             or_(
@@ -173,8 +173,8 @@ def social_friends_request():
     ).scalars().first()
     if existing:
         if existing.status == 'blocked':
-            return opaque_ok, 200
-        return jsonify({'ok': True, 'friendship': existing.to_dict(), 'existing': True, 'sent': False})
+            return opaque_ok
+        return api_ok({'friendship': existing.to_dict(), 'existing': True, 'sent': False})
     row = UserFriendship(
         user_id=current_user.id,
         friend_user_id=target.id,
@@ -186,7 +186,7 @@ def social_friends_request():
         notify_friend_request(target, current_user)
     except Exception:
         pass
-    return jsonify({'ok': True, 'friendship': row.to_dict(), 'sent': True}), 201
+    return api_ok({'friendship': row.to_dict(), 'sent': True}, status=201)
 
 
 @apis_bp.route('/social/friends/<int:friendship_id>/accept', methods=['POST'])
@@ -194,9 +194,9 @@ def social_friends_request():
 def social_friends_accept(friendship_id: int):
     row = db.session.get(UserFriendship, friendship_id)
     if not row or row.friend_user_id != current_user.id:
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Not found', code='not_found')
     if row.status == 'blocked':
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Not found', code='not_found')
     row.status = 'accepted'
     row.updated_at = datetime.now(timezone.utc)
     db.session.commit()
@@ -206,7 +206,7 @@ def social_friends_accept(friendship_id: int):
             notify_friend_accepted(requester, current_user)
         except Exception:
             pass
-    return jsonify({'ok': True, 'friendship': row.to_dict()})
+    return api_ok({'friendship': row.to_dict()})
 
 
 @apis_bp.route('/social/friends/<int:friendship_id>', methods=['DELETE'])
@@ -214,7 +214,7 @@ def social_friends_accept(friendship_id: int):
 def social_friends_delete(friendship_id: int):
     row = db.session.get(UserFriendship, friendship_id)
     if not row or (row.user_id != current_user.id and row.friend_user_id != current_user.id):
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Not found', code='not_found')
     db.session.delete(row)
     db.session.commit()
-    return jsonify({'ok': True})
+    return api_ok()
