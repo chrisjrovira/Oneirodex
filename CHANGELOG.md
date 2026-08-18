@@ -297,6 +297,12 @@ Work since the 1.0.0-beta tag (2026-08-06).
   collection belongs to someone else" on a write and "That collection is private" on a read, which are
   different refusals and used to read identically. The two sentences `test_collections_api_wiring.py`
   greps for are kept verbatim
+- **IGDB, quality stats, reference sets and related media answer through the envelope** — 12 each → 0,
+  baseline **257 → 209**. Two IGDB endpoints were **answering HTTP 200 with an error body**, so a
+  client branching on status saw a missing parameter or an upstream failure as success. They answer
+  400 and 502 now; the only consumer (`admin_game_identify.js`) never checked status, so nothing
+  relied on the old codes — but two tests pinned them, and both are updated with the reason rather
+  than silently relaxed
 - **Libraries, ownership and social answer through the envelope** — 15 / 15 / 13 → 6 / 0 / 0,
   baseline **294 → 257**. The friend-request path needed care rather than conversion: it builds one
   anti-enumeration response and returns it from two places, so an unknown username is indistinguishable

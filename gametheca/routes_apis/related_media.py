@@ -8,6 +8,7 @@ outward action is a link to where the thing legitimately lives.
 
 from __future__ import annotations
 
+from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import select
@@ -60,9 +61,9 @@ def related_media_list(game_uuid: str):
     """Media attached to this game, plus the vocabularies for the editor."""
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
 
     rows = db.session.execute(
         select(GameRelatedMedia)
@@ -75,9 +76,8 @@ def related_media_list(game_uuid: str):
     for item in items:
         counts[item['media_kind']] = counts.get(item['media_kind'], 0) + 1
 
-    return jsonify({
-        'ok': True,
-        'game_uuid': game_uuid,
+    return api_ok({
+                'game_uuid': game_uuid,
         'items': items,
         # Which facets exist at all — lets the UI show only the kinds present
         # rather than a row of empty categories.
@@ -94,37 +94,33 @@ def related_media_list(game_uuid: str):
 def related_media_create(game_uuid: str):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
 
     data = request.get_json(silent=True) or {}
     title = (data.get('title') or '').strip()
     if not title:
-        return jsonify({'error': 'A title is required'}), 400
+        return api_error('A title is required', code='bad_request')
 
     kind = (data.get('media_kind') or '').strip().lower()
     if kind not in MEDIA_KINDS:
-        return jsonify({
-            'error': f"media_kind must be one of: {', '.join(sorted(MEDIA_KINDS))}",
-        }), 400
+        return api_error(f"media_kind must be one of: {', '.join(sorted(MEDIA_KINDS))}", code='bad_request')
 
     relation = (data.get('relation') or 'tie_in').strip().lower()
     if relation not in RELATIONS:
-        return jsonify({
-            'error': f"relation must be one of: {', '.join(sorted(RELATIONS))}",
-        }), 400
+        return api_error(f"relation must be one of: {', '.join(sorted(RELATIONS))}", code='bad_request')
 
     try:
         external_url = _clean_url(data.get('external_url'))
         cover_url = _clean_url(data.get('cover_url'))
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
 
     year = data.get('year')
     if year not in (None, ''):
         try:
             year = int(year)
         except (TypeError, ValueError):
-            return jsonify({'error': 'year must be a number'}), 400
+            return api_error('year must be a number', code='bad_request')
     else:
         year = None
 
@@ -143,7 +139,7 @@ def related_media_create(game_uuid: str):
     )
     db.session.add(row)
     db.session.commit()
-    return jsonify({'ok': True, 'item': row.to_dict()}), 201
+    return api_ok({'item': row.to_dict()}, status=201)
 
 
 @apis_bp.route('/games/<game_uuid>/related_media/<int:item_id>', methods=['DELETE'])
@@ -153,7 +149,7 @@ def related_media_delete(game_uuid: str, item_id: int):
     row = db.session.get(GameRelatedMedia, item_id)
     # Require the matching game, so an id alone cannot delete across games.
     if row is None or row.game_uuid != game_uuid:
-        return jsonify({'error': 'Item not found'}), 404
+        return api_error('Item not found', code='not_found')
     db.session.delete(row)
     db.session.commit()
-    return jsonify({'ok': True, 'removed': item_id})
+    return api_ok({'removed': item_id})
