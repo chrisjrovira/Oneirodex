@@ -88,6 +88,17 @@
     gap: 10px;
 }
 
+/* Page indicator: a sentence, not a button. It sat between Previous and Next
+   looking like a third control and splitting the navigation in half. */
+.gt-pagination .page-info {
+    background: transparent;
+    padding: 0;
+    min-width: 0;
+    color: var(--gt-text-muted);
+    font-size: var(--gt-font-sm, 14px);
+    font-weight: 600;
+}
+
 .pagination-controls-right,
 .pagination-footer {
     display: flex;
@@ -105,15 +116,54 @@
     align-items: center;
 }
 
+/* Indicator left, moves centre, page size hard right.
+   `justify-content: space-between` with the page-size label pushed by its own
+   auto margin, so the three parts keep their positions whatever the labels
+   translate to — a fixed gap put "Per page" wherever the button widths left it. */
 .pagination-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--gt-space-4, 12px);
+    width: 100%;
     background: var(--container-glass-primary);
     backdrop-filter: blur(10px);
     padding: 8px 12px;
     border-radius: 12px;
     border: 1px solid var(--border-light);
+}
+
+.gt-pagination__page {
+    margin-right: auto;
+}
+
+.gt-pagination__perpage {
+    margin-left: auto;
+}
+
+/* The four moves are one control, so the segmented primitive owns their shape.
+   `.btn-pagination` stays on them for the classic Jinja pager, which still
+   renders detached buttons — these overrides are what stop that older rule
+   putting a border and a radius back on each segment. */
+.gt-pagination__moves .btn-pagination {
+    border: 0;
+    border-radius: 0;
+    min-width: 0;
+    height: auto;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+}
+
+.gt-pagination__moves .gt-seg__item:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* A disabled segment must not light up under the pointer — the shared
+   `.gt-seg__item:hover` has no idea these can be disabled. */
+.gt-pagination__moves .gt-seg__item:disabled:hover {
+    background: transparent;
+    color: var(--gt-text-muted);
 }
 
 .btn-pagination {
