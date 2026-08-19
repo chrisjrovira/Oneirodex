@@ -120,3 +120,23 @@ From `frontend/member-app/src/utils/badgeSignals.js` + `BadgeStack` + platform c
 | RELEASE | RELEASE | release within 30d | No tile badge / no LHN chip |
 
 LHN filter chips: UPDATE, MISSING, NEW, LANG (not VR). Legacy URL params `freshness_behind` / `recent_release` still parseable.
+
+---
+
+## Open — carried into 2026-08-19 (W29 library UI pass)
+
+Three things the library pass left behind. Recorded here rather than in a commit
+message so they are findable by the next person to open this file.
+
+| Item | State | What it needs |
+|---|---|---|
+| **Blank downloaded covers** | Not built | Containment landed — tiles are pinned to 3:4 with `object-fit: cover` and the card clips, so a bad file can no longer distort its row. But nothing *inspects* the image: a cover that downloads successfully and is blank, or carries no title, still renders as an empty tile. Needs a degenerate-image check at scrape/identify time (near-uniform pixels, or no text found), falling through to `render_cover_art()` — which already draws the title and is what a coverless title gets today via `utils/cover_url.py`. |
+| **README screenshots** | Blocked | Every README slot is still pre-rail chrome. `scripts/capture_docs_media.py` must run against a real library — `http://192.168.50.116:5006` is reachable but the repo-default capture account (`admin`) does not exist there, and the local `:5006` database is empty (0 games, 0 libraries). Rebuild both SPAs first, or the capture photographs the previous dist. **Check the frames**: exit code 3 only reports a *skipped* surface, and a run has already produced `ok /chat -> /library`, i.e. a library page sitting in the chat slot having passed every health check. |
+| **Hover stacking** | Unverified | `.game-library-row:has(.game-card:hover)` lifts the row so an enlarged tile clears its neighbours (a row is transformed, so the card's own `z-index` cannot escape it). Reasoned about and shipped, never seen render — hover a tile mid-grid and confirm nothing overlaps it. `GameGrid.css`. |
+
+**Standing note for anyone editing theme CSS:** run
+`npx vitest run src/cssDuplicateRules.test.js` *before* calling the change done.
+That guard budgets one owning stylesheet per class — under `cssCodeSplit` two
+definitions resolve by load order, i.e. by the reader's navigation history — and
+it caught two separate regressions in this pass, both after they had already
+been pushed.
