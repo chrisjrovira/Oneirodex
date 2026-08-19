@@ -1,4 +1,5 @@
 """theme_asset must resolve per render, from the Flask app root — not process CWD."""
+import pathlib
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -97,6 +98,45 @@ def test_pass_context_makes_the_fold_impossible(theme_app):
 
     theme_app.jinja_env.filters['theme_asset'] = theme_asset_filter
     parsed = theme_app.jinja_env.parse("{{ 'css/base.css'|theme_asset }}")
+    filter_node = next(parsed.find_all(nodes.Filter))
+
+    with theme_app.app_context(), theme_app.test_request_context('/'):
+        with pytest.raises(nodes.Impossible):
+            filter_node.as_const()
+
+
+def test_dist_bundles_are_versioned_so_a_rebuild_is_visible(theme_app):
+    """A built SPA bundle must carry a cache-busting token.
+
+    asgi.py serves everything outside static/library/themes with
+    `public, max-age=3600`, so an unversioned bundle URL means a browser keeps
+    the previous member-app.css and .js for an hour after a deploy. The symptom
+    is not "the cache is stale" — it is a change that half works, because a rule
+    living in the theme (served no-cache) lands immediately while a rule in the
+    bundle does not.
+    """
+    dist = pathlib.Path(theme_app.root_path) / 'static' / 'dist' / 'member-app'
+    dist.mkdir(parents=True)
+    (dist / 'member-app.css').write_text('/* built */', encoding='utf-8')
+
+    from gametheca.routes import dist_asset_filter
+
+    with theme_app.app_context(), theme_app.test_request_context('/'):
+        url = dist_asset_filter(None, 'member-app/member-app.css')
+
+    assert 'dist/member-app/member-app.css' in url
+    assert 'v=' in url, f'no cache-busting token in {url}'
+    assert not url.endswith('v=0'), 'token fell back to the missing-file value'
+
+
+def test_dist_asset_is_not_constant_folded(theme_app):
+    """Same trap as theme_asset: every call site passes a literal."""
+    from jinja2 import nodes
+
+    from gametheca.routes import dist_asset_filter
+
+    theme_app.jinja_env.filters['dist_asset'] = dist_asset_filter
+    parsed = theme_app.jinja_env.parse("{{ 'member-app/member-app.css'|dist_asset }}")
     filter_node = next(parsed.find_all(nodes.Filter))
 
     with theme_app.app_context(), theme_app.test_request_context('/'):

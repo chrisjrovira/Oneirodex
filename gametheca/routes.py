@@ -1381,6 +1381,40 @@ def _theme_asset_version(fs_path: Path) -> str:
     return token
 
 
+@bp.app_template_filter('dist_asset')
+@pass_context
+def dist_asset_filter(_ctx, path):
+    """Version a built SPA bundle URL so a rebuild is visible immediately.
+
+    The theme tree got this treatment in W28 and the SPA dists did not, which
+    left a gap nobody could see from either side. `asgi.py` serves anything
+    outside `static/library/themes/` with `public, max-age=3600`, and these were
+    linked at a bare, unchanging path — so after a deploy every browser kept the
+    previous `member-app.css` and `member-app.js` for an hour.
+
+    That produced symptoms that look like a CSS bug rather than a cache: a rule
+    living in the theme (served `no-cache`) took effect at once while a rule in
+    the bundle did not, so one half of a change would work and the other half
+    appeared broken. A hovered tile clearing its neighbours *within* a row while
+    still being covered by the row below is exactly that split — the card rule
+    is in components.css, the row rule is in the bundle.
+
+    Same token as `theme_asset`: mtime and size, memoised per resolved path.
+
+    `@pass_context` for the same reason `theme_asset` needs it — every call site
+    passes a literal, and Jinja folds a filter applied to a constant at compile
+    time, which would bake one token in for the life of the process and undo the
+    point of versioning after a rebuild-without-restart.
+    """
+    root = Path(current_app.root_path) / 'static'
+    target = root / 'dist' / path
+    return url_for(
+        'static',
+        filename=f'dist/{path}',
+        v=_theme_asset_version(target),
+    )
+
+
 @bp.app_template_filter('theme_asset')
 @pass_context
 def theme_asset_filter(_ctx, path):

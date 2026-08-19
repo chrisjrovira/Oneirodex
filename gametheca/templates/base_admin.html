@@ -37,7 +37,7 @@
     {% if icon_pack_css %}<link rel="stylesheet" id="gt-icon-pack-css" href="{{ icon_pack_css }}">{% endif %}
     <link rel="stylesheet" id="gt-theme-fonts-css" href="{{ url_for('apis.theme_fonts_css') }}">
     <link rel="stylesheet" href="{{ 'css/admin/admin-shell.css'|theme_asset }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='dist/admin-app/admin-app.css') }}">
+    <link rel="stylesheet" href="{{ 'admin-app/admin-app.css'|dist_asset }}">
     <script src="{{ 'js/gt_loading_motifs.js'|theme_asset }}"></script>
     <script src="{{ 'js/gt_sortable_table.js'|theme_asset }}"></script>
     {# Inline: theme volume CSS can lag until Reset Themes. Stacking-context
@@ -81,6 +81,6 @@
     {% include 'partials/flash_messages.html' ignore missing %}
     {% block content %}{% endblock %}
 </div>
-<script type="module" src="{{ url_for('static', filename='dist/admin-app/admin-app.js') }}"></script>
+<script type="module" src="{{ 'admin-app/admin-app.js'|dist_asset }}"></script>
 </body>
 </html>

@@ -26,6 +26,6 @@
   data-enable-delete-on-disk="{{ 'true' if enable_delete_game_on_disk else 'false' }}"
   data-current-filters="{{ (filters if filters is defined else {})|tojson|e }}"
 ></div>
-<link rel="stylesheet" href="{{ url_for('static', filename='dist/member-app/member-app.css') }}">
-<script type="module" src="{{ url_for('static', filename='dist/member-app/member-app.js') }}"></script>
+<link rel="stylesheet" href="{{ 'member-app/member-app.css'|dist_asset }}">
+<script type="module" src="{{ 'member-app/member-app.js'|dist_asset }}"></script>
 {% endblock %}
