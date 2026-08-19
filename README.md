@@ -63,7 +63,7 @@ GameTheca is a **Flask + React** game library server you run at home (or on a NA
 ### 👥 Household access
 - ✉️ Invite-based membership + parental / library ACL
 - 🎨 Color themes **and** independent icon packs (Outline · Filled · Duotone · Pixel · Soft · Mono)
-- 🔤 **Themeable fonts** with era-appropriate faces per system — files are operator-supplied ([theme-fonts-and-images.md](docs/admin/theme-fonts-and-images.md))
+- 🔤 **Themeable fonts** with era-appropriate faces per system — the OFL faces ship with GameTheca and install themselves on boot, no admin step and no network ([theme-fonts-and-images.md](docs/admin/theme-fonts-and-images.md))
 - 📱 Mobile density polish (hamburger nav · stacked filters · Chat touch targets ≤900px)
 
 ### 🎮 Play & companion
@@ -191,7 +191,7 @@ Force the setup wizard: `./startweb.sh --force-setup` (required when upgrading f
 | `ENABLE_AI_ARTWORK` / `AI_ARTWORK_URL` / `AI_ARTWORK_ENGINE` | Generated cover art — **off by default**; point at your own A1111-compatible endpoint (`a1111` engine covers AUTOMATIC1111 / SD.Next / Forge) |
 | `SCAN_CHECK_FRESHNESS` / `SCAN_FRESHNESS_LIMIT` | Check versions / updates / DLC after a scan — **off by default** (it is store HTTP traffic); cap defaults to 50 titles |
 | `DAT_HASH_INNER_ARCHIVE` | Open zip/7z/rar and hash the inner dump when the outer archive hash misses (on) |
-| `FONT_PATH` / `FONT_MAX_BYTES` | Where uploaded theme fonts live (default `static/library/fonts`) and the per-file cap (default 8MB) |
+| `FONT_PATH` / `FONT_MAX_BYTES` | Where theme fonts live (default `static/library/fonts`; the bundled faces are copied here on boot) and the per-file cap for operator uploads (default 8MB) |
 
 Full lists: [`.env.example`](.env.example) · [`.env.docker.example`](.env.docker.example) · [`.env.unraid.example`](.env.unraid.example) · [settings-modules.md](docs/admin/settings-modules.md)
 
@@ -268,6 +268,7 @@ docker compose build --no-cache && docker compose up -d
 | Support not on GitHub | Expected without `SUPPORT_GITHUB_TOKEN` — inbox still works |
 | SSO fails | Env `OIDC_ENABLED` **and** Admin → Integrations |
 | Themes look wrong after upgrade | [themes-reset.md](docs/admin/themes-reset.md) |
+| Picking a theme changes nothing on reload | Fixed — a server from before that fix bakes the first render's theme into every later one ([troubleshooting](docs/user/troubleshooting.md#a-new-theme-doesnt-appear-after-reload)) |
 
 Still stuck? **More → Report issue** (members) or open a GitHub issue with deploy type, URL, and redacted logs.
 

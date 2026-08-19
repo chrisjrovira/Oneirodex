@@ -74,6 +74,12 @@ Household mode is Admin → Themes → **Loading icons** (rotate catalogue or lo
 **Why do some games show a GameTheca placeholder cover?**  
 Titles without downloaded artwork use branded fallbacks (`default_cover.jpg`). Admins can generate custom placeholders in **Admin → Settings → Art studio** and attach them to games or set a site-wide fallback pack.
 
+**Do I need an admin to install fonts?**  
+No. Every face the Font picker lists ships with GameTheca and is copied into place on each server start — no download, no admin step, works air-gapped. "Not installed" now means a real filesystem problem on the server, not the normal state. What is *not* bundled is console manufacturers' own typefaces; those are trademarked, so the bundled faces evoke each era instead — [preferences-themes.md](preferences-themes.md).
+
+**I picked a theme and nothing changed after reload.**  
+Fixed. On a build from before that fix, the whole install served whichever theme was current when its templates were first rendered, so only a server restart ever applied a change — re-picking and hard refreshing did nothing because neither was the problem. See [troubleshooting](troubleshooting.md#a-new-theme-doesnt-appear-after-reload).
+
 **Theme/prefs look wrong after deploy?**  
 Ask an admin for **Reset Default Themes** if `gt-account.css` / `modal-components` lag on the library volume — [themes-reset.md](../admin/themes-reset.md).
 
