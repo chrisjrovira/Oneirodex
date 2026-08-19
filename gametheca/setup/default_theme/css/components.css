@@ -868,10 +868,22 @@
     align-items: center;
 }
 
+/* Two columns, four actions — Download/Update on the left, Install/Uninstall on
+   the right. Row-major flow over the existing DOM order (Download, Install,
+   Update, Uninstall) lands each pair in its own column with no markup change,
+   so the lifecycle reads down each side: get it, then update it; put it on the
+   device, then take it off. Stacked one per row, these four were most of the
+   menu's height. */
 .gt-action-bar--compact {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 4px;
-    flex-direction: column;
     align-items: stretch;
+}
+
+/* A single action must not stretch across both columns and read as a banner. */
+.gt-action-bar--compact > :only-child {
+    grid-column: 1 / -1;
 }
 
 .gt-action-bar__btn {

@@ -91,6 +91,34 @@ export function isLibrarySearchRoute(pathname = '') {
  * Ctrl/Cmd+K command palette for primary + More nav jumps and Preferences.
  * On Library routes, title search is primary; nav categories remain available.
  */
+/**
+ * Should this keystroke open the palette and become its first character?
+ *
+ * "Any key" has to mean *any key the reader meant as typing*, or the feature
+ * turns into a trap. Excluded, and why:
+ *
+ *   - modifier chords (Ctrl/Cmd/Alt): those are shortcuts, not text — Ctrl+C
+ *     must stay copy. Shift is allowed, because Shift+A is just "A".
+ *   - anything but a single character: Enter, Tab, Escape, arrows and F-keys
+ *     all report multi-character `key` values, so one length check covers them.
+ *   - space: it scrolls, and a palette that opens on scroll is unusable.
+ *   - keystrokes already going somewhere that takes text — an input, textarea,
+ *     select, or any contenteditable region. Without this, typing in the
+ *     filter box or a chat composer would yank focus away mid-word.
+ *
+ * Exported for tests: the exclusions are the whole feature, and they are much
+ * easier to state as cases than to drive through a rendered palette.
+ */
+export function typeToSearchKey(event) {
+  if (event.metaKey || event.ctrlKey || event.altKey) return false
+  if (!event.key || event.key.length !== 1 || event.key === ' ') return false
+
+  const target = event.target
+  if (!target || typeof target.closest !== 'function') return true
+  if (target.isContentEditable) return false
+  return !target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')
+}
+
 export function CommandPalette({
   shellConfig = {},
   open: openProp,
@@ -126,11 +154,20 @@ export function CommandPalette({
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
         setOpen((prev) => !prev)
+        return
+      }
+      // Type-to-search: any printable key opens the palette with that character
+      // already in it, so finding a game does not require remembering a
+      // shortcut. Deliberately narrow about when it fires — see typeToSearchKey.
+      if (!open && typeToSearchKey(event)) {
+        event.preventDefault()
+        setQuery(event.key)
+        setOpen(true)
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [setOpen])
+  }, [open, setOpen])
 
   useEffect(() => {
     if (!open) {

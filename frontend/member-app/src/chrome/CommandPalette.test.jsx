@@ -3,7 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { searchGames } from '../api/collections'
 import { openPreferencesModal } from '../api/preferences'
-import { buildPaletteCommands, CommandPalette, isLibrarySearchRoute } from './CommandPalette'
+import {
+  buildPaletteCommands,
+  CommandPalette,
+  isLibrarySearchRoute,
+  typeToSearchKey,
+} from './CommandPalette'
 
 const navigateMock = vi.fn()
 
@@ -200,4 +205,44 @@ test('admin external command uses location href', async () => {
   expect(loc.href).toBe('/admin/dashboard')
 
   vi.unstubAllGlobals()
+})
+
+
+describe('type-to-search', () => {
+  const key = (k, extra = {}) => ({ key: k, target: document.body, ...extra })
+
+  test('a printable key opens the palette and seeds it', () => {
+    expect(typeToSearchKey(key('a'))).toBe(true)
+    expect(typeToSearchKey(key('7'))).toBe(true)
+    // Shift is not a chord — Shift+A is just "A".
+    expect(typeToSearchKey(key('A', { shiftKey: true }))).toBe(true)
+  })
+
+  test('shortcuts and navigation keys are left alone', () => {
+    // Ctrl+C must stay copy; Enter/Tab/Escape/arrows must keep working.
+    expect(typeToSearchKey(key('c', { ctrlKey: true }))).toBe(false)
+    expect(typeToSearchKey(key('c', { metaKey: true }))).toBe(false)
+    expect(typeToSearchKey(key('c', { altKey: true }))).toBe(false)
+    for (const k of ['Enter', 'Tab', 'Escape', 'ArrowDown', 'F5', 'Backspace']) {
+      expect(typeToSearchKey(key(k))).toBe(false)
+    }
+    // Space scrolls; a palette that opens on scroll is unusable.
+    expect(typeToSearchKey(key(' '))).toBe(false)
+  })
+
+  test('typing into a field is never hijacked', () => {
+    // Without this the filter box and the chat composer would lose focus
+    // mid-word to a palette the reader did not ask for.
+    for (const tag of ['input', 'textarea', 'select']) {
+      const el = document.createElement(tag)
+      document.body.appendChild(el)
+      expect(typeToSearchKey(key('a', { target: el }))).toBe(false)
+      el.remove()
+    }
+    const rich = document.createElement('div')
+    rich.setAttribute('contenteditable', 'true')
+    document.body.appendChild(rich)
+    expect(typeToSearchKey(key('a', { target: rich }))).toBe(false)
+    rich.remove()
+  })
 })

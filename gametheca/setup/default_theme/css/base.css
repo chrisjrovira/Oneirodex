@@ -941,6 +941,14 @@ form textarea {
     box-shadow: var(--gt-shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.42));
     color: var(--gt-text);
     z-index: 12;
+    /* Scroll rather than run off the screen. An admin sees eleven rows plus the
+       action bar, which is taller than a tile and taller than the space under
+       it near the bottom of the grid — so the last options simply could not be
+       reached. Capped against the viewport, not the tile, because the menu is
+       positioned relative to the card but painted over the page. */
+    max-height: min(70vh, 26rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 /* Layout only — the row treatment belongs to the control inside it, so a link
