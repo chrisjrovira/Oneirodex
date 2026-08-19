@@ -63,18 +63,33 @@ def _login(client, user):
 
 
 class TestStyleguideAccess:
-    def test_requires_login(self, client):
+    def test_requires_login(self, client, configured_install):
+        """`configured_install` states the precondition this was relying on.
+
+        `check_setup_status` is a `before_request` hook and `is_setup_required()`
+        means "no users exist", so against an empty schema every anonymous
+        request is redirected to `/setup` and never reaches the login gate this
+        asserts on. Locally it passed because the shared test database always
+        had a user left behind by an earlier test; on CI, which starts clean and
+        runs this first in the class, it failed with
+        `assert 'login' in '/setup'`.
+
+        The precondition is what needed stating, not the assertion. Widening it
+        to accept `/setup` as well would have gone green while testing nothing —
+        a styleguide with its auth decorator removed would still redirect to the
+        wizard on a fresh database and pass.
+        """
         response = client.get('/dev/styleguide')
         assert response.status_code == 302
         assert 'login' in response.location
 
-    def test_requires_admin(self, client, regular_user):
+    def test_requires_admin(self, client, configured_install, regular_user):
         _login(client, regular_user)
         response = client.get('/dev/styleguide')
         assert response.status_code == 302
         assert 'login' in response.location
 
-    def test_renders_for_admin(self, client, admin_user):
+    def test_renders_for_admin(self, client, configured_install, admin_user):
         _login(client, admin_user)
         response = client.get('/dev/styleguide')
         assert response.status_code == 200
