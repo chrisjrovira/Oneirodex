@@ -31,6 +31,12 @@ from gametheca.models import (
     GameUpdate, user_favorites, GameExtra,
 )
 from gametheca.platform import LibraryPlatform
+from gametheca.utils.game_editions import normalize_title
+from gametheca.utils.title_grouping import (
+    editions_by_title_key,
+    platform_rank_case,
+    title_key_expr,
+)
 from gametheca.utils.secondary_scrapers import game_card_flags
 from gametheca.utils.store_ownership import get_matched_owned_game_uuids, ownership_flags
 from gametheca.utils.functions import (
@@ -138,6 +144,46 @@ def browse_games():
     if theme:
         query = query.filter(Game.themes.any(Theme.name == theme))
     query = apply_badge_filters(query, request.args, user=current_user)
+
+    # One tile per title, not per row in one library.
+    #
+    # A household keeping Chrono Trigger on SNES, PC and Switch had three
+    # unrelated tiles; the copies are reachable from the preview's "Available
+    # on" list, which is where they belong. Titles pair on the normalised name
+    # because `igdb_id` and `slug` are both unique per row and so cannot be
+    # shared across systems — see utils/title_grouping.
+    #
+    # `DISTINCT ON` picks the representative inside the query, so `db.paginate`
+    # still counts titles rather than rows and every page stays full. Ordering
+    # is (key, recency desc, id): the copy on the latest system the title was
+    # released on wins, and `id` makes the choice deterministic when two copies
+    # sit on equally recent hardware.
+    #
+    # The whereclause is reused rather than the filters re-applied, so the
+    # representative is always chosen from rows the member can actually see and
+    # that match what they filtered — every filter above is a WHERE on Game
+    # (the `.has()` / `.any()` ones are correlated EXISTS, not joins), so this
+    # cannot drift from the query it mirrors. With a system filter active that
+    # is exactly what makes the surviving copy the one on *that* system.
+    platform_of_library = (
+        select(Library.platform)
+        .where(Library.uuid == Game.library_uuid)
+        .scalar_subquery()
+    )
+    grouping_key = title_key_expr(Game.name)
+    hardware_recency = platform_rank_case(platform_of_library)
+
+    representatives = select(Game.id.label('id'))
+    if query.whereclause is not None:
+        representatives = representatives.where(query.whereclause)
+    representatives = (
+        representatives
+        .distinct(grouping_key)
+        .order_by(grouping_key, hardware_recency.desc(), Game.id)
+        .subquery()
+    )
+    query = query.filter(Game.id.in_(select(representatives.c.id)))
+
     if sort_by == 'name':
         query = query.order_by(Game.name.asc() if sort_order == 'asc' else Game.name.desc())
     elif sort_by == 'rating':
@@ -151,7 +197,30 @@ def browse_games():
 
     # Pagination
     pagination = db.paginate(query, page=page, per_page=per_page, error_out=False)
+
+    # Which systems each surviving title exists on — one query for the page.
+    #
+    # Deliberately ACL-scoped but *not* filtered by the member's current view.
+    # With a system filter active the browse query can only see that system's
+    # copies, and the badge has to say "NES" plus how many other systems hold
+    # the title — which are exactly the rows that filter excluded. One bulk
+    # lookup keyed on the same grouping expression, so a page of a thousand
+    # tiles costs one round trip rather than a thousand.
     games = pagination.items
+    edition_platforms_by_key: dict[str, list[str]] = {}
+    page_title_keys = sorted({normalize_title(game.name) for game in games if game.name})
+    if page_title_keys:
+        edition_query = (
+            select(grouping_key.label('title_key'), Library.platform)
+            .select_from(Game)
+            .join(Library, Library.uuid == Game.library_uuid)
+            .where(grouping_key.in_(page_title_keys))
+        )
+        edition_query = apply_game_access_filters(edition_query, current_user)
+        edition_platforms_by_key = editions_by_title_key(
+            (row[0], getattr(row[1], 'name', None))
+            for row in db.session.execute(edition_query).all()
+        )
 
     # Get all user statuses for games in this page (batch query for performance)
     game_uuids = [game.uuid for game in games]
@@ -245,6 +314,10 @@ def browse_games():
             library_platform_key = getattr(platform, 'name', None) or str(platform)
             library_platform_label = getattr(platform, 'value', None) or library_platform_key
 
+        edition_platforms = edition_platforms_by_key.get(normalize_title(game.name)) or (
+            [library_platform_key] if library_platform_key else []
+        )
+
         steam_app_id = getattr(game, 'steam_app_id', None)
         steam_url = getattr(game, 'steam_url', None) or None
         if steam_app_id and not steam_url:
@@ -274,6 +347,12 @@ def browse_games():
             'steam_app_id': steam_app_id,
             'steam_url': steam_url,
             'badge_title_collision': bool(library_platform_key),
+            # Newest hardware first, so the client reads element 0 as "the
+            # latest system this was released on" and never has to rank
+            # anything itself. Always includes this row's own system, so the
+            # count is systems-for-the-title, not systems-besides-this-one.
+            'edition_platforms': edition_platforms,
+            'edition_count': len(edition_platforms),
             **browse_play_fields(game),
             **game_card_flags(game),
             **rom_browse_flags(

@@ -105,7 +105,12 @@
   min-width: 0;
 }
 
+/* The view strip is a row in its own right now that it portals into the top
+   bar's centre slot on its own, rather than as one child of a full-width bar. */
 .gt-contextbar__views {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
@@ -258,6 +263,13 @@
   display: inline-flex;
 }
 
+/* Anchored to the trigger's own side.
+ *
+ * The panel was unconditionally `right: 0`, which was right while every popover
+ * lived at the right-hand end of the bar. Filters moved to the lead slot beside
+ * the rail toggle, and a right-anchored panel there opens *leftward*: over the
+ * rail with it expanded, and off the left edge of the window with it collapsed.
+ * `data-align` already existed on the wrapper and nothing had ever read it. */
 .gt-pop__panel {
   position: absolute;
   top: calc(100% + 0.4rem);
@@ -265,7 +277,15 @@
   z-index: 60;
   min-width: 18rem;
   max-width: min(26rem, 90vw);
-  max-height: min(70vh, 34rem);
+  /* Scroll only when the screen genuinely cannot fit the list.
+   *
+   * The cap was `min(70vh, 34rem)`, and the 34rem half is what made a tall
+   * window scroll a list it had ample room for — a fixed rem cap cannot know
+   * how much space there is. The panel hangs below the bar, so the space it may
+   * use is the viewport minus the bar minus a margin to keep it off the bottom
+   * edge. `overflow-y: auto` then only bites when the content really is
+   * taller than that. */
+  max-height: calc(100dvh - var(--gt-topbar-h, 3.25rem) - 2rem);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 0.75rem;
@@ -273,6 +293,11 @@
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.gt-pop[data-align='start'] > .gt-pop__panel {
+  right: auto;
+  left: 0;
 }
 
 .gt-pop__head {

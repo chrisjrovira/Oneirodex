@@ -426,3 +426,26 @@
   overflow: visible;
   gap: 0.6rem;
 }
+
+/* One box, not two.
+ *
+ * The popover panel is already a bordered, filled, rounded surface with a
+ * shadow, and the filter form draws exactly the same thing inside it — so the
+ * filters sat in a box, inside a box, under a head row repeating the word
+ * already printed on the trigger that opened it. The panel keeps the frame
+ * because it is the thing that floats; the form inside it becomes layout only.
+ *
+ * Scoped to the chromeless panel so the rail layout, where this form *is* the
+ * only surface, is untouched. */
+.gt-pop__panel--bare .library-filters.container-filtersandsort {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+/* Done closes; Apply and Clear act. Pushed to its own end so the destructive
+   pair and the dismiss are not one undifferentiated row of three. */
+.library-filters .button-group .library-filters__done {
+  margin-left: auto;
+}

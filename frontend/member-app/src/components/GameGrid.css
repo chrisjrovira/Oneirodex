@@ -113,6 +113,58 @@ html.is-tile-resizing .game-library-row {
   z-index: 25;
 }
 
+/* A hovered tile grows down and inward — never up, never past a side edge.
+ *
+ * `.gt-shell__main` is the only scroll container in the shell, and CSS computes
+ * the unset axis of a scroller to `auto`, so it clips on all four sides. A tile
+ * scaled from its centre pushes ~12.5% of its size past every edge; the top bar
+ * then paints over whatever rose above the container ("the top row is painted
+ * under the top nav") and the badges in the tile's corners are the first thing
+ * lost on the sides.
+ *
+ * Pinning the Y origin to `top` for every tile means growth is always downward,
+ * where the container scrolls and nothing is clipped. The scale is unchanged,
+ * so the affordance is identical.
+ */
+.game-library-row .game-card:hover,
+.game-library-row .game-card:focus-within,
+.game-library-container[data-library-grid] .game-card:hover,
+.game-library-container[data-library-grid] .game-card:focus-within {
+  transform-origin: center top;
+}
+
+/* Edge columns grow inward, so a hovered tile stays inside the scroller.
+ *
+ * `.gt-shell__main` sets `overflow-y: auto`, and CSS computes the other axis to
+ * `auto` too — a scroll container clips horizontally whether or not it was
+ * asked to. A tile scaled to 1.25 from its centre pushes ~12.5% of its width
+ * past each edge, and on the start side that overflow is not even scrollable:
+ * it is simply cut. The badges live in the tile's corners, so they are the
+ * first thing to go — the reported "when a tile is enlarged the badges get cut
+ * off".
+ *
+ * Anchoring the first column's origin to its left edge and the last column's
+ * to its right edge makes those tiles grow entirely inward. The scale is
+ * unchanged, so the affordance is identical; only the direction of growth
+ * differs, and only for the two columns where growing outward was invisible
+ * anyway. Middle columns keep growing from the centre.
+ *
+ * `:first-child` / `:last-child` are the column positions here because a row
+ * holds exactly one card per column — see GameGrid's row render. */
+.game-library-row > .game-card-container:first-child .game-card:hover,
+.game-library-row > .game-card-container:first-child .game-card:focus-within,
+.game-library-container[data-library-grid] > .game-card-container:first-child .game-card:hover,
+.game-library-container[data-library-grid] > .game-card-container:first-child .game-card:focus-within {
+  transform-origin: left top;
+}
+
+.game-library-row > .game-card-container:last-child .game-card:hover,
+.game-library-row > .game-card-container:last-child .game-card:focus-within,
+.game-library-container[data-library-grid] > .game-card-container:last-child .game-card:hover,
+.game-library-container[data-library-grid] > .game-card-container:last-child .game-card:focus-within {
+  transform-origin: right top;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .game-library-container[data-library-grid]:not([data-library-virtual]),
   .game-library-row {

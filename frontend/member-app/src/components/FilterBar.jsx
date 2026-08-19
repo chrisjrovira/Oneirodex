@@ -130,6 +130,11 @@ export function FilterBar({
   // context bar. Rendering it here as well would give one filter two controls,
   // so the panel yields ownership rather than duplicating it.
   hideKind = false,
+  // Supplied by the popover host. The panel owns its own dismiss control so the
+  // popover does not have to draw a head row around it — see Popover's
+  // `chromeless` prop. Absent in the rail layout, where the panel is not a
+  // popover and there is nothing to close.
+  onDone = null,
 }) {
   const [draft, setDraft] = useState(filters)
   const [options, setOptions] = useState(EMPTY_OPTIONS)
@@ -377,6 +382,15 @@ export function FilterBar({
           <button className="gt-btn gt-btn--secondary" type="button" onClick={clear}>
             {t('Clear')}
           </button>
+          {onDone ? (
+            <button
+              className="gt-btn gt-btn--secondary library-filters__done"
+              type="button"
+              onClick={onDone}
+            >
+              {t('Done')}
+            </button>
+          ) : null}
         </div>
       </div>
     </form>

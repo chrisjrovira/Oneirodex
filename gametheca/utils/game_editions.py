@@ -28,8 +28,13 @@ from sqlalchemy import select
 
 from gametheca import db
 from gametheca.models import Game
+from gametheca.utils.title_grouping import TITLE_KEY_PATTERN
 
-_NON_ALNUM = re.compile(r'[^a-z0-9]+')
+# Imported, not restated. The browse grid groups tiles with the same key
+# computed in SQL (`utils/title_grouping.title_key_expr`); if these two
+# patterns ever drifted, the grid would collapse a set of copies that the
+# preview then refused to list as one title.
+_NON_ALNUM = re.compile(TITLE_KEY_PATTERN)
 
 #: Cap on rows considered for one lookup. A library with thousands of copies of
 #: one name is a scan fault, not a use case, and the preview shows a handful.

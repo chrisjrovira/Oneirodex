@@ -70,6 +70,7 @@ export function GameGrid({
   selectionEnabled = false,
   selectedIds = null,
   onSelectionToggle,
+  activePlatform = '',
 }) {
   const listRef = useRef(null)
   // `undefined` = not resolved yet, `null` = resolved to "the window scrolls".
@@ -226,6 +227,7 @@ export function GameGrid({
     hidePlatformChip,
     selectionEnabled,
     onSelectionToggle,
+    activePlatform,
   }
 
   const selecting = selectionEnabled && selectedIds && selectedIds.size > 0

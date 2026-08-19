@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-/** Slot in the top bar that page controls render into. */
+/**
+ * Slots in the top bar that page controls render into.
+ *
+ * Three, not one. The bar answers three different questions and they belong at
+ * three different places in it: what can I narrow this to (lead, beside the
+ * rail toggle), which sibling view am I on (centre), and how much is here
+ * (trail, beside the tile size control). A single slot put all three in a row
+ * wherever the widest label happened to leave them.
+ */
 export const TOPBAR_SLOT_ID = 'gt-topbar-slot'
+export const TOPBAR_LEAD_ID = 'gt-topbar-lead'
+export const TOPBAR_TRAIL_ID = 'gt-topbar-trail'
 
 /**
  * Bar two — everything the current page can do (UIR-1, Option B).
@@ -70,7 +80,24 @@ export function SegmentedViews({ views, active, onSelect, label = 'Views' }) {
   )
 }
 
-export function Popover({ label, icon = null, count = 0, children, align = 'end' }) {
+/**
+ * @param {object} props
+ * @param {boolean} [props.chromeless] Drop the panel's own head row. Use when
+ *   the content already carries its own frame and dismiss control — otherwise
+ *   the panel and the content read as two nested boxes with the trigger's own
+ *   label repeated between them.
+ * @param {React.ReactNode | ((api: { close: () => void }) => React.ReactNode)}
+ *   props.children Given a function, it receives `close` so the content can own
+ *   its own dismiss control.
+ */
+export function Popover({
+  label,
+  icon = null,
+  count = 0,
+  children,
+  align = 'end',
+  chromeless = false,
+}) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef(null)
   const panelRef = useRef(null)
@@ -101,17 +128,19 @@ export function Popover({ label, icon = null, count = 0, children, align = 'end'
         <div
           id={panelId}
           ref={panelRef}
-          className="gt-pop__panel"
+          className={`gt-pop__panel${chromeless ? ' gt-pop__panel--bare' : ''}`}
           role="dialog"
           aria-label={label}
         >
-          <div className="gt-pop__head">
-            <span className="gt-pop__title">{label}</span>
-            <button type="button" className="gt-cbtn" onClick={close}>
-              Done
-            </button>
-          </div>
-          {children}
+          {chromeless ? null : (
+            <div className="gt-pop__head">
+              <span className="gt-pop__title">{label}</span>
+              <button type="button" className="gt-cbtn" onClick={close}>
+                Done
+              </button>
+            </div>
+          )}
+          {typeof children === 'function' ? children({ close }) : children}
         </div>
       ) : null}
     </div>
@@ -129,55 +158,99 @@ export function ContextBar({
   overflow = null,
   t = (key) => key,
 }) {
-  const [slot, setSlot] = useState(null)
+  const [slots, setSlots] = useState(null)
 
-  // Find the top bar's slot after mount, not during render: TopBar and the
-  // routed page mount in the same commit, so the node does not exist while this
+  // Find the top bar's slots after mount, not during render: TopBar and the
+  // routed page mount in the same commit, so the nodes do not exist while this
   // component is first rendering.
   useEffect(() => {
-    setSlot(document.getElementById(TOPBAR_SLOT_ID))
+    const centre = document.getElementById(TOPBAR_SLOT_ID)
+    if (!centre) {
+      return
+    }
+    setSlots({
+      centre,
+      lead: document.getElementById(TOPBAR_LEAD_ID),
+      trail: document.getElementById(TOPBAR_TRAIL_ID),
+    })
   }, [])
 
-  const content = (
-    <div className="gt-contextbar">
+  // A page that takes `close` owns its own dismiss, so the popover drops its
+  // head row: the panel already carries a frame, and the trigger beside it
+  // already says "Filters" — with the head the popover drew a second box around
+  // a box and repeated the word between them. Pages still passing a plain node
+  // (Calendar, Trailers) keep the head, because it holds their only Done.
+  const ownsDismiss = typeof filters === 'function'
+  const filterControl = filters ? (
+    /* Left-anchored: this trigger sits at the *left* end of the bar now, and a
+       right-anchored panel there opens over the rail — or off the window edge
+       once the rail is collapsed. */
+    <Popover
+      label={t('Filters')}
+      count={filterCount}
+      chromeless={ownsDismiss}
+      align="start"
+    >
+      {filters}
+    </Popover>
+  ) : null
+
+  const viewControl = (
+    <>
       <SegmentedViews
         views={views}
         active={activeView}
         onSelect={onSelectView}
         label={t('Views')}
       />
-
-      <div className="gt-contextbar__actions">
-        {summary ? <span className="gt-contextbar__count">{summary}</span> : null}
-
-        {filters ? (
-          <Popover label={t('Filters')} count={filterCount}>
-            {filters}
-          </Popover>
-        ) : null}
-
-        {actions}
-
-        {overflow ? (
-          <Popover label={t('More')}>{overflow}</Popover>
-        ) : null}
-      </div>
-    </div>
+      {actions}
+      {overflow ? <Popover label={t('More')}>{overflow}</Popover> : null}
+    </>
   )
+
+  const countControl = summary ? (
+    <span className="gt-contextbar__count">{summary}</span>
+  ) : null
 
   // One bar, not two.
   //
   // This rendered as its own row under the top bar, which read as "a toolbar on
   // the page" rather than as chrome — the thing the two-bar layout was supposed
   // to stop. A page's controls belong beside the page's name, so the content
-  // portals into a slot in the top bar instead.
+  // portals into the top bar instead.
   //
   // Portalled rather than lifted into TopBar via props: every page already
   // feeds this component, so moving the render target moves all of them at
   // once, and each page keeps owning its own handlers. Same pattern the library
   // filters already use with #gt-rail-slot.
   //
-  // Falls back to rendering in place when there is no top bar — Big Picture,
-  // the pop-out chat host, and tests — rather than vanishing.
-  return slot ? createPortal(content, slot) : content
+  // Three targets rather than one — see the slot ids above. Filters sits with
+  // the rail toggle because narrowing is the first thing you do to a list; the
+  // views sit centred because they are the page itself; the count sits with the
+  // tile size control because both describe how much you are looking at.
+  //
+  // Falls back to one inline bar when there is no top bar — Big Picture, the
+  // pop-out chat host, and tests — rather than vanishing.
+  if (!slots) {
+    return (
+      <div className="gt-contextbar">
+        {viewControl}
+        <div className="gt-contextbar__actions">
+          {countControl}
+          {filterControl}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {createPortal(filterControl, slots.lead || slots.centre)}
+      {createPortal(
+        <div className="gt-contextbar__views">{viewControl}</div>,
+        slots.centre,
+      )}
+      {createPortal(countControl, slots.trail || slots.centre)}
+    </>
+  )
 }

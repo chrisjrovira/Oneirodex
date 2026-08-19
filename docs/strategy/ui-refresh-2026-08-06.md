@@ -39,6 +39,31 @@ Two bars, and nothing above the content but those two.
 The left filter rail goes away. The grid gets the width back — six tiles per row
 where five fit before, at the same tile size.
 
+### Revision, 2026-08-19 — where each control actually sits
+
+Two bars became one (GT-B2: the rail took identity and destinations, so bar one
+had nothing left to be). What survived was a single bar holding bar two's job,
+and it filled left-to-right from one slot — so Filters, the view strip and the
+result count landed wherever the widest label left them, which is not a layout.
+
+The bar now has three named slots and each answers a different question:
+
+| Slot | Holds | Why there |
+|---|---|---|
+| **Lead** — beside the rail toggle | **Filters** | Narrowing a list is the first thing you do to it, and the rail toggle is the other control that changes what is on screen rather than what is in it |
+| **Centre** — takes the slack | Sibling views, page actions, ⋯ More | Centred and growing outward, so a page with six views reads as balanced rather than as a strip pushed hard right |
+| **Trail** — beside the tile size control | The result count (`1,284 titles`) | Both answer "how much am I looking at" |
+
+**The page name appears only when the rail is collapsed.** UIR-1 removed it and
+GT-B5 put it back; each was right for one rail state. Expanded, the rail already
+names the active destination in words a few pixels to the left, so the bar's copy
+is a second answer to a question nothing asked. Collapsed, the rail is a column
+of icons and the bar is the only place the answer exists.
+
+The tile size slider is **collapsed to a four-dot mark until hovered or focused**
+for the same reason: 5.5rem of permanent bar for a control touched once a session,
+sitting next to two that are used constantly.
+
 ### Why B over the pill-per-control variant
 
 Browsing wants pixels for cover art and shallow filtering. A row of eight

@@ -47,10 +47,59 @@
   white-space: nowrap;
 }
 
+/* Resting mark: a 2x2 dot grid that reads as "tiles". This is the whole
+   control until you reach for it. */
+.gt-tile-size__grip {
+  flex: 0 0 auto;
+  width: 3px;
+  height: 3px;
+  background: currentColor;
+  box-shadow:
+    5px 0 0 currentColor,
+    0 5px 0 currentColor,
+    5px 5px 0 currentColor;
+  margin-inline-end: 5px;
+}
+
+/* Collapsed until you are on it.
+ *
+ * A permanently open slider is 5.5rem of bar spent on a control that is touched
+ * once a session and then not again, sitting next to the two things that are
+ * used constantly. Collapsed to zero it costs nothing; hovering the group, or
+ * focusing the range with the keyboard, opens it — and it stays open while the
+ * value is being changed because the pointer is necessarily on it to drag.
+ *
+ * Width and opacity rather than `display: none`, so the transition has
+ * something to run on and the range keeps its place in the tab order — a
+ * keyboard user tabs to it and it opens on :focus-within. */
 .gt-tile-size__slider {
-  width: 5.5rem;
+  width: 0;
+  padding: 0;
+  opacity: 0;
   accent-color: var(--gt-accent);
   cursor: pointer;
+  transition:
+    width var(--gt-motion-normal, 180ms) var(--gt-motion-ease, ease),
+    opacity var(--gt-motion-fast, 120ms) var(--gt-motion-ease, ease);
+}
+
+.gt-tile-size:hover .gt-tile-size__slider,
+.gt-tile-size:focus-within .gt-tile-size__slider {
+  width: 5.5rem;
+  opacity: 1;
+}
+
+/* The grip has done its job once the slider is out; keeping both makes the
+   control jump wider than it needs to be. */
+.gt-tile-size:hover .gt-tile-size__grip,
+.gt-tile-size:focus-within .gt-tile-size__grip {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-tile-size__slider {
+    transition: none;
+  }
 }
 
 /* Below the tablet breakpoint the bar is tight and tile size is a desktop

@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 
 import { AccountPanel } from './AccountPanel'
-import { TOPBAR_SLOT_ID } from './ContextBar'
+import { TOPBAR_LEAD_ID, TOPBAR_SLOT_ID, TOPBAR_TRAIL_ID } from './ContextBar'
 import { IconMenu, IconUser } from './icons'
 import { TileSizeControl } from './TileSizeControl'
 import { getPageTitle } from './navConfig'
@@ -108,22 +108,29 @@ export function TopBar({
           <IconMenu />
         </button>
 
-        {/* The page name lives here, not in a card at the top of each page.
+        {/* The page name, but only when the rail is collapsed.
             UIR-1 removed it from the bar on the grounds that bar two's view
-            switcher named the section; with the rail owning destinations there
-            is no switcher here, so the bar is where the answer belongs — and
-            the per-page title cards become the duplicate instead. */}
-        {pageTitle ? <span className="gt-topbar__section">{pageTitle}</span> : null}
+            switcher named the section; GT-B5 put it back because the rail owns
+            destinations now. Both were right for one rail state each: an
+            expanded rail already shows which entry is active, in words, a few
+            pixels to the left — so the bar's copy is a second answer to a
+            question nothing asked. Collapsed, the rail is a column of icons and
+            the bar is the only place the answer exists. */}
+        {railState === 'collapsed' && pageTitle ? (
+          <span className="gt-topbar__section">{pageTitle}</span>
+        ) : null}
+
+        {/* Lead slot: Filters. Narrowing a list is the first thing you do to
+            it, so it sits with the rail toggle rather than drifting to
+            wherever the view labels ended. */}
+        <div id={TOPBAR_LEAD_ID} className="gt-topbar__lead" />
 
         {views ? <div className="gt-topbar__views">{views}</div> : null}
 
-        {/* Page controls land here (one-bar layout). ContextBar portals into
-            this node, so every page's own filters, views and actions sit beside
-            the page name instead of in a second row below it. Empty when the
-            current page has no controls, and collapses to nothing. */}
+        {/* Centre slot: the page's own views and actions. Centred and growing
+            outward from the middle, so adding a view keeps the strip balanced
+            instead of pushing everything right. ContextBar portals here. */}
         <div id={TOPBAR_SLOT_ID} className="gt-topbar__page" />
-
-        <div className="gt-topbar__spacer" />
 
         <div className="gt-topbar__actions">
           {/* The search field is gone from the bar (GT-B16).
@@ -137,6 +144,11 @@ export function TopBar({
             onChange={onTileSizeChange}
             shellConfig={shellConfig}
           />
+
+          {/* Trail slot: how much is here. After the size control, not before —
+              both answer "how much am I looking at", and the count is the
+              readout of what the slider just changed. */}
+          <div id={TOPBAR_TRAIL_ID} className="gt-topbar__trail" />
 
           <div className="gt-topnav__dropdown">
             <button

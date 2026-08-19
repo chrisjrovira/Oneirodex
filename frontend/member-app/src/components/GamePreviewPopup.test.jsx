@@ -6,6 +6,7 @@ import {
   editionBlockerText,
   GamePreviewPopup,
   formatAdded,
+  formatReleased,
   previewBadges,
   systemCountLabel,
 } from './GamePreviewPopup'
@@ -118,6 +119,22 @@ test('a missing-files title is warned about, not decorated', () => {
 test('formatAdded ignores values it cannot read rather than printing junk', () => {
   expect(formatAdded(null)).toBeNull()
   expect(formatAdded('not-a-date')).toBeNull()
+})
+
+// The release fact was absent from every preview in the library and nobody
+// noticed, because the facts row read `first_release_year` — a key browse has
+// never sent — and a missing fact is filtered out silently. Assert against the
+// key the payload actually carries.
+test('formatReleased reads the field browse really sends', () => {
+  expect(formatReleased({ first_release_date: '1997-01-31' })).toMatch(/^Released /)
+  expect(formatReleased({ first_release_date: '1997-01-31' })).toMatch(/1997/)
+})
+
+test('formatReleased still accepts a bare year, and refuses junk', () => {
+  expect(formatReleased({ first_release_year: 1997 })).toBe('Released 1997')
+  expect(formatReleased({ first_release_date: 'not-a-date' })).toBeNull()
+  expect(formatReleased({})).toBeNull()
+  expect(formatReleased(null)).toBeNull()
 })
 
 test('links through to the real details route', () => {

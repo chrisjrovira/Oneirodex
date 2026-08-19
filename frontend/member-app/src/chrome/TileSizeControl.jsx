@@ -114,6 +114,11 @@ export function TileSizeControl({
 
   return (
     <div className="gt-tile-size" role="group" aria-label="Library tile size">
+      {/* The resting affordance. The slider collapses to nothing until you are
+          on it, so without this the control would be an invisible gap in the
+          bar — you cannot hover what you cannot see. Drawn in CSS as a 2x2 dot
+          grid rather than shipped as an icon: it is four dots. */}
+      <span className="gt-tile-size__grip" aria-hidden="true" />
       <span className="gt-tile-size__label" aria-hidden="true">
         {displayPercent}%
       </span>

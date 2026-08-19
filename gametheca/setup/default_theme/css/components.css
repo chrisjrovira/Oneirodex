@@ -23,9 +23,39 @@
     width: 100%;
     max-width: none;
     max-height: none;
-    /* Last line of defence for a bad cover: nothing inside a tile may paint
-       outside it. The corner controls and badges are positioned within the
-       card, so this costs them nothing. */
+    border-radius: var(--gt-radius-md, 8px);
+    /* Every tile is its own stacking context.
+     *
+     * `position: relative` with `z-index: auto` is *not* one, so a resting
+     * card's overlays escaped it: the badge layers (12), the VR stack (13) and
+     * the control stack (15) all resolved against the row instead. A hovered
+     * card only lifts to 6, so the neighbours' badges kept painting over the
+     * enlarged tile — the reported "badges from nearby tiles still overlap the
+     * tile you hover on". Raising the hover value would have been an arms race
+     * against every overlay z-index in the file.
+     *
+     * With `isolation`, card-to-card order is decided by the card's own
+     * z-index alone (hover 6, overlay-open 20) and everything inside stays
+     * inside. */
+    isolation: isolate;
+}
+
+/* The clip belongs to the artwork, not to the tile.
+ *
+ * `overflow: hidden` used to sit on `.game-card` as "last line of defence for
+ * a bad cover", on the reasoning that the corner controls are positioned
+ * within the card so it cost them nothing. The tile menu is not: it is
+ * deliberately wider (12rem) and taller than a tile, and it is a child of the
+ * card — so the card clipped its own menu to the cover. That is the reported
+ * "menu is too large, you cannot see anything"; what you saw was a sliver of a
+ * full-size menu, not an oversized one.
+ *
+ * The guarantee survives because it never depended on this rule: .game-cover
+ * is pinned to 3:4 with `object-fit: cover` at `width: 100%`, so the image
+ * cannot exceed its box. Clipping the link that holds it keeps the rounded
+ * corner and the containment, and lets the menu paint over the grid again. */
+.game-card__cover-link {
+    display: block;
     overflow: hidden;
     border-radius: var(--gt-radius-md, 8px);
 }
@@ -46,11 +76,16 @@
  * SPA's tile-size code. */
 .game-card:hover,
 .game-card:focus-within {
-    transform: translateY(-4px) scale(var(--gt-tile-hover-scale, 1.25));
+    /* No `translateY(-4px)` any more, and the origin is pinned to the top edge
+       in GameGrid.css: a tile may not grow upward. `.gt-shell__main` is the
+       scroll container, so anything rising past its top edge is painted over by
+       the bar — reported as "the top row is painted under the top nav". Growing
+       down and sideways costs nothing, because below is scrollable. */
+    transform: scale(var(--gt-tile-hover-scale, 1.25));
     z-index: 6;
     box-shadow:
         0 16px 34px var(--shadow-dark-strong),
-        0 0 26px 4px color-mix(in srgb, var(--gt-accent) 42%, transparent);
+        0 0 26px 4px color-mix(in srgb, var(--gt-accent) 53%, transparent);
     transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
@@ -78,6 +113,41 @@
     z-index: 20;
 }
 
+/* Overlays undo the tile's scale rather than the tile undoing it for them.
+ *
+ * The menu is a child of the card, so `scale(1.25)` scaled the menu too: a
+ * 12rem panel rendered at 15rem with every row a quarter larger — the reported
+ * "the buttons are huge and should fit within the menu". They were the right
+ * size for a tile pretending to be 25% bigger.
+ *
+ * The first fix cancelled the card's transform while an overlay was open. That
+ * traded one bug for another: opening the play-status dropdown made the tile
+ * you were still hovering *shrink* under the pointer. The tile is not the thing
+ * that is wrong — its scale is the hover affordance and the pointer has not
+ * left it.
+ *
+ * So the overlays divide it back out. Origin is the corner each one is anchored
+ * to, so the anchor point does not move as the counter-scale applies. Scoped to
+ * :hover / :focus-within because those are exactly the states in which the card
+ * is scaled: with neither, the card is at 1 and dividing would shrink the
+ * panel. */
+.game-card:hover > .popup-menu,
+.game-card:focus-within > .popup-menu {
+    transform: scale(calc(1 / var(--gt-tile-hover-scale, 1.25)));
+    transform-origin: top right;
+}
+
+.game-card:hover > .popup-menu--play,
+.game-card:focus-within > .popup-menu--play {
+    transform-origin: top left;
+}
+
+.game-card:hover .status-dropdown,
+.game-card:focus-within .status-dropdown {
+    transform: scale(calc(1 / var(--gt-tile-hover-scale, 1.25)));
+    transform-origin: top right;
+}
+
 /* Reduced motion removes the *animation*, not the affordance.
  *
  * Both reduced-motion blocks in this file used to set `transform: none`, so on
@@ -90,7 +160,6 @@
 @media (prefers-reduced-motion: reduce) {
     .game-card:hover,
     .game-card:focus-within {
-        transform: scale(var(--gt-tile-hover-scale, 1.25));
         transition: none;
     }
 }
@@ -413,8 +482,15 @@
 
 /* Colour the button, not an <i> the React tiles never render — the heart used
    to stay grey however many times it was favourited. */
+/* Themed, not a fixed pink.
+ *
+ * This was `--color-pink-favorite` (#ff69b4) — one hard-coded hue that ignored
+ * the theme entirely, so on every preset but the pink-adjacent ones the one
+ * control with a resting state was also the one control that did not belong to
+ * the palette. The token stays declared in base.css for the legacy Jinja
+ * pages; the tile follows the accent like the rest of the tile chrome. */
 .favorite-btn.favorited {
-    color: var(--color-pink-favorite);
+    color: var(--gt-favorite, var(--gt-accent));
 }
 
 .favorite-btn.processing {
@@ -444,6 +520,29 @@
        on top of Edit Details and ate the click, because an interactive badge
        stack re-enables pointer-events. */
     z-index: 40;
+}
+
+/* The Play explainer anchors to the Play chip, which is top-left, rather than
+   to the hamburger stack on the right. Same panel treatment as the actions
+   menu — it is the same kind of object — but it opens under the control that
+   raised the question. */
+.game-card > .popup-menu--play {
+    top: calc(var(--gt-tile-stack-top) + var(--gt-badge-h) + var(--gt-tile-btn-gap));
+    left: var(--gt-tile-edge);
+    right: auto;
+    min-width: 14rem;
+    max-width: 18rem;
+}
+
+/* The reason itself: prose, not a menu row. It is the only thing in this panel
+   that is not actionable, so it must not look pressable. */
+.popup-menu__note {
+    margin: 0 0 var(--gt-space-2, 0.4rem);
+    padding: 0 var(--gt-space-3, 0.5rem);
+    color: var(--gt-text-muted);
+    font-size: var(--gt-font-sm, 0.82rem);
+    line-height: 1.4;
+    white-space: normal;
 }
 
 /* Belt and braces for the same report: while a menu or status dropdown is

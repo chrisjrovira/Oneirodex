@@ -471,8 +471,41 @@ body.gt-shell-host > #admin-legacy-content:empty {
   white-space: nowrap;
 }
 
+/* Still rendered by partials/topbar.html for the Jinja pages, which have no
+   context bar to fill the middle. The React bar uses the centre slot's own
+   flex-grow instead. */
 .gt-topbar__spacer {
   flex: 1 1 auto;
+}
+
+/* Lead and trail are content-sized: they hold one control each and must not
+   steal width from the centre. */
+.gt-topbar__lead,
+.gt-topbar__trail {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gt-space-2);
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+/* The centre takes the slack and centres what is in it, so a page with two
+   views and a page with six both read as balanced rather than left-packed with
+   a growing tail. Scrolls rather than wraps when a narrow window cannot fit the
+   strip — the bar is one row by definition. */
+.gt-topbar__page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gt-space-2);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.gt-topbar__page::-webkit-scrollbar {
+  display: none;
 }
 
 .gt-topbar__actions {

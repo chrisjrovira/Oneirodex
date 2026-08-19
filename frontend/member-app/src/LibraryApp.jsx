@@ -521,6 +521,9 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     selectionEnabled: true,
     selectedIds,
     onSelectionToggle: handleSelectionToggle,
+    // Filtered to a system, a grouped tile names *that* system rather than the
+    // newest one the title exists on — you are looking at that copy.
+    activePlatform: filters.library_platform || '',
   }
 
   let content
@@ -670,7 +673,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
           activeView={activeView}
           onSelectView={selectKindView}
           filterCount={activeFilterCount}
-          filters={
+          filters={({ close }) => (
             <div className="library-filters-stack">
               <FilterBar
                 filters={filters}
@@ -679,9 +682,10 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
                 onClear={clearFilters}
                 t={t}
                 hideKind
+                onDone={close}
               />
             </div>
-          }
+          )}
           summary={
             typeof result?.total === 'number'
               ? `${result.total.toLocaleString()} ${t('titles')}`

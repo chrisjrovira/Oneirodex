@@ -6,15 +6,23 @@
 
     This exists so the mark can be *themed*. gametheca_mark.svg bakes the
     default green (#12a4a0 -> #4ef2a1) and a #0b0d10 plate into the file, and an
-    external SVG loaded through <img> cannot see the page's custom properties,
-    so on any preset other than the default the brand stayed green while
-    everything around it changed. A monochrome silhouette can be used as a CSS
+    external SVG loaded through an &lt;img&gt; element cannot see the page's
+    custom properties, so on any preset other than the default the brand stayed
+    green while everything around it changed. A monochrome silhouette can be used as a CSS
     mask-image and painted with var(--gt-accent), which reaches an arbitrary
     theme colour exactly — where filter: hue-rotate() only approximates one and
     collapses on the near-greyscale presets.
 
     Keep the geometry in step with gametheca_mark.svg: same viewBox, same
     coordinates. Only the fills differ, and only because a mask reads alpha.
+
+    Angle brackets in this text are escaped, and must stay escaped. An SVG is
+    XML: a bare tag written in prose here opens an element that is never closed,
+    the whole document fails to parse, and a mask whose source will not decode
+    paints nothing at all — the element keeps its box and the mark silently
+    disappears. That is exactly how the brand went missing from the rail, and
+    nothing caught it because every check asked whether the file was *served*.
+    tests/test_static_svg.py parses it now.
   </desc>
 
   <!-- The case frame: two uprights and a shelf. -->

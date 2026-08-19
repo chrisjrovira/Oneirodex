@@ -1,5 +1,13 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { GameCard } from './GameCard'
+
+/** The blocked-Play panel links out (Help, Report), so those cases need a
+ *  router. The rest of the file renders bare on purpose — a badge does not. */
+function renderRouted(ui) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>)
+}
 
 /** `data-corner` lives on the per-corner stack inside the badge-layers wrapper. */
 function badgeCorner(corner) {
@@ -111,8 +119,16 @@ test('renders MISSING badge when path_missing is true', () => {
   expect(screen.getByTitle(/no longer on disk/i)).toHaveTextContent('MISSING')
 })
 
-test('shows disabled Play when play_blocker is unsupported_archive', () => {
-  render(
+// A blocked Play is a *button*, not a dead span.
+//
+// It used to be a <span aria-disabled> whose only explanation lived in a native
+// `title`: never shown on a touch screen, unreachable by keyboard, and gone the
+// moment the pointer moved. Play is precisely the control someone presses when
+// they do not know why a title will not run, so these assert that it can
+// answer — not merely that it looks unavailable.
+test('a blocked Play explains itself on press: unsupported archive', async () => {
+  const user = userEvent.setup()
+  renderRouted(
     <GameCard
       game={{
         ...baseGame,
@@ -125,14 +141,22 @@ test('shows disabled Play when play_blocker is unsupported_archive', () => {
     />,
   )
   const play = screen.getByLabelText(/browser play unavailable — unsupported archive/i)
-  expect(play.tagName).toBe('SPAN')
-  expect(play).toHaveAttribute('aria-disabled', 'true')
-  expect(play).toHaveAttribute('title', 'Cannot extract .tar.gz for browser play.')
+  expect(play.tagName).toBe('BUTTON')
   expect(play).toHaveClass('gt-tile-play--disabled')
+  expect(play).toHaveAttribute('aria-expanded', 'false')
+
+  await user.click(play)
+  const panel = screen.getByRole('dialog', { name: /cannot be played in the browser/i })
+  expect(panel).toHaveTextContent('Cannot extract .tar.gz for browser play.')
+  expect(screen.getByRole('link', { name: /browser play requirements/i })).toBeTruthy()
+  expect(screen.getByRole('link', { name: /report an issue/i })).toBeTruthy()
+  // Not an admin, so the firmware page is not offered.
+  expect(screen.queryByRole('link', { name: /emulator profiles/i })).toBeNull()
 })
 
-test('shows disabled Play when firmware_missing even if play_url is set', () => {
-  render(
+test('a blocked Play explains itself on press: missing firmware', async () => {
+  const user = userEvent.setup()
+  renderRouted(
     <GameCard
       game={{
         ...baseGame,
@@ -150,14 +174,32 @@ test('shows disabled Play when firmware_missing even if play_url is set', () => 
     />,
   )
   const play = screen.getByLabelText(/browser play unavailable — firmware missing/i)
-  expect(play.tagName).toBe('SPAN')
-  expect(play).toHaveAttribute('aria-disabled', 'true')
-  expect(play).toHaveAttribute(
-    'title',
-    'yabause needs BIOS under Admin → emulator BIOS (missing: saturn_bios.bin)',
-  )
+  expect(play.tagName).toBe('BUTTON')
   expect(play).toHaveClass('gt-tile-play--disabled')
-  expect(screen.queryByRole('link', { name: /play/i })).toBeNull()
+  // The blocker outranks a play_url that is present but unusable: no live link.
+  expect(screen.queryByRole('link', { name: /^play/i })).toBeNull()
+
+  await user.click(play)
+  expect(
+    screen.getByRole('dialog', { name: /cannot be played in the browser/i }),
+  ).toHaveTextContent('yabause needs BIOS under Admin → emulator BIOS (missing: saturn_bios.bin)')
+})
+
+test('an admin also gets the route that fixes it', async () => {
+  const user = userEvent.setup()
+  renderRouted(
+    <GameCard
+      game={{ ...baseGame, firmware_missing: true, bios: { message: 'needs BIOS' } }}
+      showPlayStatus={false}
+      isAdmin
+    />,
+  )
+  await user.click(screen.getByLabelText(/browser play unavailable — firmware missing/i))
+  // The member is told what is wrong; the admin is told where to go and fix it.
+  expect(screen.getByRole('link', { name: /emulator profiles/i })).toHaveAttribute(
+    'href',
+    '/admin/emulator_profiles',
+  )
 })
 
 test('a title with no art gets a drawn, themed fallback rather than the old JPG', () => {

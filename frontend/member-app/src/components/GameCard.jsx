@@ -4,11 +4,16 @@ import { setGameStatus, toggleFavorite } from '../api/userActions'
 import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
 import { CoverFallback } from './CoverFallback'
 import { safeHttpUrl } from '../utils/safeUrl'
-import { platformChipLabels } from '../utils/platformAbbrev'
+import { editionChipLabels } from '../utils/platformAbbrev'
 import { BadgeStack } from './BadgeStack'
 import { GameActionBar } from './GameActionBar'
 import { GamePreviewPopup } from './GamePreviewPopup'
-import { firmwareBlockMessage, isFirmwarePlayBlocked } from '../utils/playHonesty'
+import {
+  FIRMWARE_ADMIN_HREF,
+  FIRMWARE_HELP_HREF,
+  firmwareBlockMessage,
+  isFirmwarePlayBlocked,
+} from '../utils/playHonesty'
 
 const DEFAULT_COVER = DEFAULT_COVER_URL
 
@@ -45,6 +50,19 @@ function getCsrfToken() {
 
 const LONG_PRESS_MS = 480
 
+/**
+ * Fired when a tile opens a menu, so every other tile closes its own.
+ *
+ * The document-level click handler below cannot do this on its own: opening a
+ * second menu means clicking that card's hamburger, and that handler calls
+ * `stopPropagation()` so the click never reaches document — so the first menu
+ * stayed open and two lived on screen at once. Same singleton pattern
+ * GamePreviewPopup already uses for previews, and for the same reason: the
+ * alternative is lifting menu state into the grid, which would re-render every
+ * tile whenever any one of them opened a menu.
+ */
+const TILE_OVERLAY_OPENED = 'gt-tile-overlay-opened'
+
 export function GameCard({
   game,
   showPlayStatus = false,
@@ -55,6 +73,10 @@ export function GameCard({
   selectionEnabled = false,
   selected = false,
   onSelectionToggle,
+  // The system filter in force, when there is one. The chip names the system
+  // you are looking at rather than the newest one the title exists on — see
+  // editionChipLabels.
+  activePlatform = '',
 }) {
   const cardRef = useRef(null)
   const longPressTimer = useRef(0)
@@ -66,6 +88,11 @@ export function GameCard({
   const [statusPending, setStatusPending] = useState(false)
   const [statusOpen, setStatusOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  // Why a blocked Play cannot run. A native `title` was the only answer
+  // before, which never appears on touch and is unreachable by keyboard —
+  // so the one control that needs an explanation was the one that could not
+  // give one.
+  const [playInfoOpen, setPlayInfoOpen] = useState(false)
   const [imgSrc, setImgSrc] = useState(() => coverUrl(game.cover_url))
   // A cover that never arrives is drawn, not fetched — see CoverFallback.
   const [coverFailed, setCoverFailed] = useState(false)
@@ -91,7 +118,10 @@ export function GameCard({
   const playBlockLabel = firmwareBlocked
     ? 'firmware missing'
     : 'unsupported archive'
-  const platformChip = !hidePlatformChip && game.library_platform ? platformChipLabels(game) : null
+  const platformChip =
+    !hidePlatformChip && (game.library_platform || game.edition_platforms?.length)
+      ? editionChipLabels(game, activePlatform)
+      : null
   // The placeholder JPG counts as "no cover": rows created before art was
   // fetched carry it as a real `cover_url`, so treating it as an image would
   // put the old baked-in logo back on the tile it was removed from.
@@ -103,6 +133,7 @@ export function GameCard({
     setStatus(game.user_status || '')
     setMenuOpen(false)
     setStatusOpen(false)
+    setPlayInfoOpen(false)
   }, [game.uuid, game.cover_url, game.is_favorite, game.user_status])
 
   useEffect(() => {
@@ -111,20 +142,41 @@ export function GameCard({
     }
   }, [])
 
+  // One tile overlay at a time, across the whole grid.
+  const overlayToken = useRef({})
+  const anyOverlayOpen = menuOpen || statusOpen || playInfoOpen
+
   useEffect(() => {
-    if (!menuOpen && !statusOpen) {
+    if (!anyOverlayOpen) {
+      return undefined
+    }
+    const token = overlayToken.current
+    const onOther = (event) => {
+      if (event.detail === token) return
+      setMenuOpen(false)
+      setStatusOpen(false)
+      setPlayInfoOpen(false)
+    }
+    window.addEventListener(TILE_OVERLAY_OPENED, onOther)
+    window.dispatchEvent(new CustomEvent(TILE_OVERLAY_OPENED, { detail: token }))
+    return () => window.removeEventListener(TILE_OVERLAY_OPENED, onOther)
+  }, [anyOverlayOpen])
+
+  useEffect(() => {
+    if (!menuOpen && !statusOpen && !playInfoOpen) {
       return undefined
     }
     const closeMenus = (event) => {
       if (!cardRef.current?.contains(event.target)) {
         setMenuOpen(false)
         setStatusOpen(false)
+        setPlayInfoOpen(false)
       }
     }
 
     document.addEventListener('click', closeMenus)
     return () => document.removeEventListener('click', closeMenus)
-  }, [menuOpen, statusOpen])
+  }, [menuOpen, statusOpen, playInfoOpen])
 
   const handleFavoriteClick = async (event) => {
     event.preventDefault()
@@ -228,7 +280,7 @@ export function GameCard({
         // below it — the card dropped back to auto and the next tile in DOM
         // order painted over the menu. On touch there is no hover at all, so
         // the menu was always underneath.
-        data-overlay-open={menuOpen || statusOpen ? 'true' : undefined}
+        data-overlay-open={menuOpen || statusOpen || playInfoOpen ? 'true' : undefined}
         data-name={game.name}
         data-genres={(game.genres || []).join(', ')}
       >
@@ -494,7 +546,9 @@ export function GameCard({
           </div>
         )}
 
-        <a href={`/game_details/${game.uuid}`}>
+        {/* The clip lives here now, not on .game-card — the card was clipping
+            its own popup menu. See .game-card__cover-link in components.css. */}
+        <a className="game-card__cover-link" href={`/game_details/${game.uuid}`}>
           {/* Nothing to show is drawn, not fetched.
               The old path swapped `src` to default_cover.jpg — a raster with
               the logo and the words baked into it, unreadable below about a
@@ -527,8 +581,20 @@ export function GameCard({
         </a>
 
         {platformChip ? (
-          <span className="gt-platform-chip" title={platformChip.full}>
+          <span
+            className="gt-platform-chip"
+            title={
+              platformChip.extra > 0
+                ? `${platformChip.full} · also on ${platformChip.extra} other ${
+                    platformChip.extra === 1 ? 'system' : 'systems'
+                  }`
+                : platformChip.full
+            }
+          >
             {platformChip.abbrev}
+            {platformChip.extra > 0 ? (
+              <span className="gt-platform-chip__more">{`+${platformChip.extra}`}</span>
+            ) : null}
           </span>
         ) : null}
 
@@ -543,14 +609,69 @@ export function GameCard({
             Play
           </a>
         ) : playBlocked ? (
-          <span
-            className="gt-tile-play gt-tile-play--disabled"
-            title={playBlockHint}
-            aria-disabled="true"
-            aria-label={`${game.name}: browser play unavailable — ${playBlockLabel}`}
-          >
-            Play
-          </span>
+          <>
+            {/* A button, not a dead <span>. The blocker copy used to live in a
+                native `title`: invisible on touch, unreachable by keyboard, and
+                gone the moment the pointer moved. Play is exactly the control a
+                member presses when they do not know why something will not run,
+                so it has to be able to answer. */}
+            <button
+              type="button"
+              className="gt-tile-play gt-tile-play--disabled"
+              aria-expanded={playInfoOpen}
+              aria-controls={playInfoOpen ? `playBlock-${game.uuid}` : undefined}
+              aria-label={`${game.name}: browser play unavailable — ${playBlockLabel}. Why?`}
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                setMenuOpen(false)
+                setStatusOpen(false)
+                setPlayInfoOpen((open) => !open)
+              }}
+              onPointerDown={(event) => event.stopPropagation()}
+            >
+              Play
+            </button>
+            {playInfoOpen && (
+              <div
+                id={`playBlock-${game.uuid}`}
+                className="popup-menu popup-menu--play"
+                role="dialog"
+                aria-label={`Why ${game.name} cannot be played in the browser`}
+              >
+                <p className="popup-menu__note">{playBlockHint}</p>
+                {firmwareBlocked && isAdmin ? (
+                  <div className="menu-item">
+                    <a className="menu-button" href={FIRMWARE_ADMIN_HREF}>
+                      Emulator profiles
+                    </a>
+                  </div>
+                ) : null}
+                <div className="menu-item">
+                  <Link
+                    className="menu-button"
+                    to={FIRMWARE_HELP_HREF}
+                    onClick={() => setPlayInfoOpen(false)}
+                  >
+                    Browser play requirements
+                  </Link>
+                </div>
+                <div className="menu-item">
+                  <Link
+                    className="menu-button"
+                    to={`/report?${new URLSearchParams({
+                      area: 'library',
+                      title: `Cannot play ${game.name} in browser (${playBlockLabel})`,
+                      url: `/game_details/${game.uuid}`,
+                    })}`}
+                    onClick={() => setPlayInfoOpen(false)}
+                  >
+                    Report an issue
+                  </Link>
+                </div>
+              </div>
+            )}
+          </>
         ) : null}
 
         <BadgeStack

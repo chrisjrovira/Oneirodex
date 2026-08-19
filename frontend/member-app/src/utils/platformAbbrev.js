@@ -97,4 +97,46 @@ export function platformChipLabels(game) {
   return { abbrev, full: full || abbrev }
 }
 
+/**
+ * The platform chip for a tile that stands for copies on several systems.
+ *
+ * Browse collapses copies of one title into one row and sends
+ * `edition_platforms` ordered newest hardware first, so which system to name is
+ * already decided — with one exception. Filtered to a system, the tile *is*
+ * that system's copy, and naming a different one would be a lie about what you
+ * are looking at: on NES with a title also on GBA and SNES, the chip reads NES,
+ * not GBA.
+ *
+ * The `+N` counts the **other** systems, which is what `+N` means everywhere
+ * else it appears in this UI (badge overflow, and the preview's system count).
+ * So NES · GBA · SNES filtered to NES reads `NES +2`, and unfiltered reads
+ * `GBA +2`.
+ *
+ * @param {object} game browse row
+ * @param {string} [activePlatform] the `library_platform` filter, when set
+ * @returns {{abbrev: string, full: string, extra: number} | null}
+ */
+export function editionChipLabels(game, activePlatform = '') {
+  const platforms = Array.isArray(game?.edition_platforms)
+    ? game.edition_platforms.filter(Boolean)
+    : []
+
+  // No grouping information: fall back to the tile's own system, which is what
+  // the chip showed before this existed.
+  if (platforms.length === 0) {
+    const base = platformChipLabels(game)
+    return base.abbrev ? { ...base, extra: 0 } : null
+  }
+
+  const active = String(activePlatform || '')
+  const lead = active && platforms.includes(active) ? active : platforms[0]
+  const abbrev = abbreviatePlatform(lead) || lead
+  const full =
+    lead === game?.library_platform
+      ? (game?.library_platform_label || lead)
+      : lead
+
+  return { abbrev, full, extra: Math.max(0, platforms.length - 1) }
+}
+
 export { PLATFORM_ABBREV }

@@ -84,6 +84,15 @@
    member SPA's own tone override stays below. */
 
 /* Badges never share the platform chip corner — keep chip exclusive bottom-left */
+/* "+2" rides inside the chip rather than beside it: it qualifies the system
+   name, and a second free-floating pill in the corner would read as another
+   badge. Slightly dimmer so the system stays the thing you read first. */
+.gt-platform-chip__more {
+  margin-inline-start: 0.25em;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
 .game-card:has(.gt-badge-stack--bottom-left) .gt-platform-chip {
   bottom: calc(var(--gt-tile-edge, 8px) + var(--gt-badge-h, 1.35rem) + var(--gt-tile-btn-gap, 4px));
 }
@@ -122,8 +131,16 @@
   outline: none;
 }
 
+/* The blocked variant is a <button> now (it opens the why-not panel), so it
+   has to shed the UA button defaults the <a> never had. */
 .game-card .gt-tile-play--disabled {
-  cursor: not-allowed;
+  border: 0;
+  font: inherit;
+  font-size: var(--gt-badge-fs, 0.7rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
   opacity: 0.55;
   filter: grayscale(0.35);
   pointer-events: auto;

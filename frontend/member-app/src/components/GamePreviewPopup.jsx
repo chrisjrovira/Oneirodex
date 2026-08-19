@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { fetchGameEditions } from '../api/gameEditions'
+import { ExternalStoreLinks } from './ExternalStoreLinks'
 import './GamePreviewPopup.css'
 
 /** Fired when a preview opens, so any other open preview closes itself. */
@@ -17,16 +18,37 @@ const PREVIEW_OPENED = 'gt-preview-opened'
  * so two copies of one game read as two unrelated games; this is the only place
  * they are shown as one title with a choice of how to play it.
  */
-/** "Added" is the one date people scan for and it was not shown at all. */
-export function formatAdded(value) {
+/** Shared date shape, so "Released" and "Added" cannot drift apart. */
+function formatDate(value) {
   if (!value) return null
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return null
-  return `Added ${date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-  })}`
+  })
+}
+
+/** "Added" is the one date people scan for and it was not shown at all. */
+export function formatAdded(value) {
+  const text = formatDate(value)
+  return text ? `Added ${text}` : null
+}
+
+/**
+ * When the game came out, beside when it arrived here.
+ *
+ * The facts row asked for `game.first_release_year`, which browse has never
+ * sent — so the release fact was silently absent on every tile in the library.
+ * The payload carries `first_release_date`; read that, and show the same
+ * precision as Added so the pair reads as a pair.
+ */
+export function formatReleased(game) {
+  const text = formatDate(game?.first_release_date)
+  if (text) return `Released ${text}`
+  const year = game?.first_release_year
+  return year ? `Released ${year}` : null
 }
 
 /**
@@ -182,9 +204,11 @@ export function GamePreviewPopup({ game, onClose }) {
     game.size,
     game.status_label,
     game.rating != null ? `Rating ${Math.round(Number(game.rating))}` : null,
-    game.first_release_year || null,
     game.is_multi_disc && game.disc_count ? `${game.disc_count} discs` : null,
-    formatAdded(game.date_identified),
+    // Released then Added, adjacent and in that order: one is about the game,
+    // the other about this household's copy of it.
+    formatReleased(game),
+    formatAdded(game.date_identified || game.date_created),
   ].filter(Boolean)
 
   const genres = Array.isArray(game.genres) ? game.genres.slice(0, 6) : []
@@ -267,6 +291,16 @@ export function GamePreviewPopup({ game, onClose }) {
                 No summary yet for this title.
               </p>
             )}
+
+            {/* Store and catalog marks, from the fields browse already sends.
+                Steam and the catalog page are on every browse row; GOG / Epic
+                and the rest live in `game.urls`, which browse does not carry
+                per tile — see the handoff note in the preview docs. */}
+            <ExternalStoreLinks
+              urls={game.urls}
+              steamUrl={game.steam_url}
+              igdbUrl={game.url_igdb || game.url}
+            />
 
             <div className="gt-preview__actions">
               <Link className="gt-btn gt-btn--primary" to={`/game_details/${game.uuid}`}>
