@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { setGameStatus, toggleFavorite } from '../api/userActions'
 import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
 import { CoverFallback } from './CoverFallback'
@@ -74,7 +75,11 @@ export function GameCard({
   const steamStoreUrl = safeHttpUrl(game.steam_url) || (steamAppId ? `https://store.steampowered.com/app/${steamAppId}` : null)
   const steamRunUrl = steamAppId ? `steam://run/${steamAppId}` : null
   const firmwareBlocked = isFirmwarePlayBlocked(game)
-  const playDemoHref =
+  // Browser play, not a demo. It was `playHref`, which read as "this is
+  // the demo link" and was the reason a "Play demo" item sat in the tile menu
+  // for a feature that does not exist. `demo_url` stays as a fallback because
+  // some rows genuinely carry one and it is still the thing PLAY should open.
+  const playHref =
     firmwareBlocked ? null : game.play_url || game.demo_url || null
   const archiveBlocked = game.play_blocker === 'unsupported_archive'
   const archiveBlockHint =
@@ -243,6 +248,97 @@ export function GameCard({
             onPointerDown={(event) => event.stopPropagation()}
           />
         ) : null}
+        {/* Top-right stack, in the order it is painted: favourite, play
+            status, menu. Favourite leads because it is the only one with a
+            resting state — a favourited tile keeps its heart while the rest of
+            the stack stays hidden until hover — so it must not sit underneath
+            two controls that are invisible at the time. Keeping the DOM in the
+            same order keeps tab order walking the stack the way the eye does. */}
+        <button
+          type="button"
+          className={`favorite-btn${isFavorite ? ' favorited' : ''}${favoritePending ? ' processing' : ''}`}
+          data-game-uuid={game.uuid}
+          data-is-favorite={String(isFavorite)}
+          data-chrome-anchor="top-right"
+          aria-label={`${isFavorite ? 'Remove' : 'Add'} ${game.name} ${isFavorite ? 'from' : 'to'} favorites`}
+          aria-pressed={isFavorite}
+          disabled={favoritePending}
+          onClick={handleFavoriteClick}
+        >
+          <span aria-hidden="true">{isFavorite ? '♥' : '♡'}</span>
+        </button>
+
+        {showPlayStatus && (
+          <>
+            <button
+              type="button"
+              className={`game-status-btn${statusPending ? ' processing' : ''}`}
+              data-game-uuid={game.uuid}
+              data-current-status={status}
+              data-chrome-anchor="top-right"
+              title={currentStatus.label}
+              aria-label={`Game status: ${currentStatus.label}`}
+              aria-expanded={statusOpen}
+              disabled={statusPending}
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                setMenuOpen(false)
+                setStatusOpen((open) => !open)
+              }}
+            >
+              {statusPending ? (
+                <span className="gt-spinner gt-spinner--sm" aria-hidden="true" />
+              ) : (
+                <span
+                  className="gt-status-dot"
+                  style={{
+                    background: currentStatus.color,
+                    opacity: status ? 1 : 0.4,
+                  }}
+                  aria-hidden="true"
+                />
+              )}
+            </button>
+            {statusOpen && (
+              <div
+                className="status-dropdown"
+                data-game-uuid={game.uuid}
+                style={{ display: 'block' }}
+              >
+                {STATUS_OPTIONS.map((option) => (
+                  <button
+                    key={option.value || 'clear'}
+                    type="button"
+                    className="status-dropdown-option"
+                    data-status={option.value}
+                    style={{
+                      background: 'none',
+                      borderLeft: 0,
+                      borderRight: 0,
+                      borderTop: option.value ? 0 : '1px solid rgba(255, 255, 255, 0.2)',
+                      width: '100%',
+                      textAlign: 'left',
+                    }}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      handleStatusSelect(option.value)
+                    }}
+                  >
+                    <span
+                      className="gt-status-dot"
+                      style={{ background: option.color, marginRight: '0.45rem' }}
+                      aria-hidden="true"
+                    />
+                    <span className="status-label">{option.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
         <button
           id={`menuButton-${game.uuid}`}
           type="button"
@@ -259,20 +355,6 @@ export function GameCard({
           }}
         >
           <span aria-hidden="true">☰</span>
-        </button>
-
-        <button
-          type="button"
-          className={`favorite-btn${isFavorite ? ' favorited' : ''}${favoritePending ? ' processing' : ''}`}
-          data-game-uuid={game.uuid}
-          data-is-favorite={String(isFavorite)}
-          data-chrome-anchor="top-right"
-          aria-label={`${isFavorite ? 'Remove' : 'Add'} ${game.name} ${isFavorite ? 'from' : 'to'} favorites`}
-          aria-pressed={isFavorite}
-          disabled={favoritePending}
-          onClick={handleFavoriteClick}
-        >
-          <span aria-hidden="true">{isFavorite ? '♥' : '♡'}</span>
         </button>
 
         {/* Hover affordance — the tile itself opens details, so this is the one
@@ -392,85 +474,24 @@ export function GameCard({
                 </a>
               </div>
             )}
-            {playDemoHref && (
-              <div className="menu-item">
-                <a className="menu-button" href={playDemoHref}>
-                  Play demo
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-
-        {showPlayStatus && (
-          <>
-            <button
-              type="button"
-              className={`game-status-btn${statusPending ? ' processing' : ''}`}
-              data-game-uuid={game.uuid}
-              data-current-status={status}
-              data-chrome-anchor="top-right"
-              title={currentStatus.label}
-              aria-label={`Game status: ${currentStatus.label}`}
-              aria-expanded={statusOpen}
-              disabled={statusPending}
-              onClick={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                setMenuOpen(false)
-                setStatusOpen((open) => !open)
-              }}
-            >
-              {statusPending ? (
-                <span className="gt-spinner gt-spinner--sm" aria-hidden="true" />
-              ) : (
-                <span
-                  className="gt-status-dot"
-                  style={{
-                    background: currentStatus.color,
-                    opacity: status ? 1 : 0.4,
-                  }}
-                  aria-hidden="true"
-                />
-              )}
-            </button>
-            {statusOpen && (
-              <div
-                className="status-dropdown"
-                data-game-uuid={game.uuid}
-                style={{ display: 'block' }}
+            {/* Last, and always present. Everything above it depends on the
+                title being right; this is what a member reaches for when it is
+                not — wrong artwork, wrong match, a file that will not run. The
+                report form is prefilled from here so they do not have to
+                describe which game they were looking at. */}
+            <div className="menu-item">
+              <Link
+                className="menu-button"
+                to={`/report?${new URLSearchParams({
+                  area: 'library',
+                  title: `Issue with ${game.name}`,
+                  url: `/game_details/${game.uuid}`,
+                })}`}
               >
-                {STATUS_OPTIONS.map((option) => (
-                  <button
-                    key={option.value || 'clear'}
-                    type="button"
-                    className="status-dropdown-option"
-                    data-status={option.value}
-                    style={{
-                      background: 'none',
-                      borderLeft: 0,
-                      borderRight: 0,
-                      borderTop: option.value ? 0 : '1px solid rgba(255, 255, 255, 0.2)',
-                      width: '100%',
-                      textAlign: 'left',
-                    }}
-                    onClick={(event) => {
-                      event.preventDefault()
-                      event.stopPropagation()
-                      handleStatusSelect(option.value)
-                    }}
-                  >
-                    <span
-                      className="gt-status-dot"
-                      style={{ background: option.color, marginRight: '0.45rem' }}
-                      aria-hidden="true"
-                    />
-                    <span className="status-label">{option.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
+                Report an issue
+              </Link>
+            </div>
+          </div>
         )}
 
         <a href={`/game_details/${game.uuid}`}>
@@ -511,10 +532,10 @@ export function GameCard({
           </span>
         ) : null}
 
-        {playDemoHref ? (
+        {playHref ? (
           <a
             className="gt-tile-play"
-            href={playDemoHref}
+            href={playHref}
             title="Play in browser"
             aria-label={`Play ${game.name} in browser`}
             onClick={(event) => event.stopPropagation()}

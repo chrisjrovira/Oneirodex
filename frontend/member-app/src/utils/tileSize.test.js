@@ -70,14 +70,14 @@ test('hover scale is one flat value at every tile size', () => {
   expect(small).toBe(TILE_HOVER_SCALE)
   expect(mid).toBe(TILE_HOVER_SCALE)
   expect(large).toBe(TILE_HOVER_SCALE)
-  expect(TILE_HOVER_SCALE).toBeCloseTo(1.15)
+  expect(TILE_HOVER_SCALE).toBeCloseTo(1.25)
 })
 
 test('narrow viewports keep the same lift', () => {
   const vars = tilePercentToCssVars(0)
   const clamped = clampTileVarsForNarrowViewport(vars, true)
 
-  // 15% of a 140px tile is ~10px either side — it stays inside its own track,
+  // 25% of a 140px tile is ~17px either side — it stays inside its own track,
   // so there is nothing left for the narrow-viewport clamp to protect against.
   expect(clamped['--gt-tile-hover-scale']).toBe(String(TILE_HOVER_SCALE))
 })

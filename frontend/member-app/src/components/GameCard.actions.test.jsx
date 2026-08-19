@@ -1,6 +1,15 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { GameCard } from './GameCard'
+
+// The tile menu links out to the report form, so the card now needs a router
+// the way every other surface rendering it already has one. Rendering it bare
+// fails on `useContext(...)` being null, which reads as a card bug rather than
+// a missing test wrapper.
+function renderCard(ui) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>)
+}
 
 const game = {
   uuid: '11111111-1111-4111-8111-111111111111',
@@ -33,7 +42,7 @@ test('favorite toggle posts with CSRF and updates the card', async () => {
   const fetchMock = vi.fn(() => jsonResponse({ success: true, is_favorite: true }))
   vi.stubGlobal('fetch', fetchMock)
 
-  render(<GameCard game={game} />)
+  renderCard(<GameCard game={game} />)
   const favorite = screen.getByRole('button', { name: /add archery kings vr to favorites/i })
   await user.click(favorite)
 
@@ -57,7 +66,7 @@ test('status selection posts with CSRF and updates the status button', async () 
   )
   vi.stubGlobal('fetch', fetchMock)
 
-  render(<GameCard game={game} showPlayStatus />)
+  renderCard(<GameCard game={game} showPlayStatus />)
   await user.click(screen.getByRole('button', { name: /game status: no status/i }))
   await user.click(screen.getByRole('button', { name: 'Completed' }))
 
@@ -76,7 +85,7 @@ test('status selection posts with CSRF and updates the status button', async () 
 
 test('popup exposes navigation actions and gates admin actions', async () => {
   const user = userEvent.setup()
-  const { rerender } = render(<GameCard game={game} isAdmin={false} />)
+  const { rerender } = renderCard(<GameCard game={game} isAdmin={false} />)
 
   await user.click(screen.getByRole('button', { name: /open actions for archery kings vr/i }))
   expect(screen.getByRole('button', { name: 'Download' })).toBeInTheDocument()
@@ -84,12 +93,12 @@ test('popup exposes navigation actions and gates admin actions', async () => {
   expect(screen.queryByRole('button', { name: 'Remove Game from DB' })).toBeNull()
   await user.click(screen.getByRole('button', { name: /open actions for archery kings vr/i }))
 
+  // `rerender` replaces the whole tree, so the router has to come with it —
+  // passing the card alone drops the context its menu link needs.
   rerender(
-    <GameCard
-      game={game}
-      isAdmin
-      enableDeleteOnDisk
-    />,
+    <MemoryRouter>
+      <GameCard game={game} isAdmin enableDeleteOnDisk />
+    </MemoryRouter>,
   )
   await user.click(screen.getByRole('button', { name: /open actions for archery kings vr/i }))
   expect(screen.getByRole('link', { name: 'Edit Details' })).toHaveAttribute(
@@ -108,8 +117,7 @@ test('popup exposes navigation actions and gates admin actions', async () => {
 
 test('popup ignores javascript: IGDB urls', async () => {
   const user = userEvent.setup()
-  render(
-    <GameCard
+  renderCard(<GameCard
       game={{ ...game, url: 'javascript:alert(1)' }}
       isAdmin={false}
     />,

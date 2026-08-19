@@ -40,11 +40,11 @@
     opacity: 0.7;
 }
 
-/* Status Button on Game Cards — right-side chrome stack (under hamburger + favorite) */
-/* Third in the top-right stack (see components.css for the shared vars). */
+/* Status Button on Game Cards — right-side chrome stack, under the favourite. */
+/* Second in the top-right stack (see components.css for the shared vars). */
 .game-status-btn {
     position: absolute;
-    top: calc(var(--gt-tile-stack-top) + 2 * var(--gt-tile-stride));
+    top: calc(var(--gt-tile-stack-top) + var(--gt-tile-stride));
     bottom: auto;
     /* Same shape as the hamburger and favourite, from the same vars — but
        spelled out here rather than joined to their selector list in
@@ -132,10 +132,11 @@
 /* Status Dropdown Menu — opens below the right-side status control.
    Anchored off the stack vars like the popup menu is: `top: 116px` was the
    three-button height at the old fixed 32px button, so it drifted away from
-   the control the moment the buttons started scaling with the tile. */
+   the control the moment the buttons started scaling with the tile. Two
+   strides, not three — the status control moved to the second slot. */
 .status-dropdown {
     position: absolute;
-    top: calc(var(--gt-tile-stack-top) + 3 * var(--gt-tile-stride));
+    top: calc(var(--gt-tile-stack-top) + 2 * var(--gt-tile-stride));
     bottom: auto;
     right: var(--gt-tile-edge, 8px);
     min-width: 180px;
@@ -242,7 +243,9 @@
 }
 
 /* Touch has no hover, so the whole control stack rests visible there rather
-   than relying on a state that never arrives. */
+   than relying on a state that never arrives. Hover-only is a pointer
+   behaviour; on a device with no pointer it would mean "unreachable", which is
+   a defect rather than a preference. */
 @media (hover: none) {
     .button-glass-hamburger,
     .favorite-btn,

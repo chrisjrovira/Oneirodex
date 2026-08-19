@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import './ReportIssuePage.css'
 
 function csrfToken() {
@@ -11,14 +11,37 @@ const AREAS = [
   'social', 'themes', 'admin', 'oidc', 'security', 'other',
 ]
 
+/**
+ * Seed the form from the query string, for reports opened from somewhere.
+ *
+ * The tile menu's "Report an issue" arrives with the game's name and its
+ * details URL already known. Making the member retype them is how a report ends
+ * up saying "the artwork is wrong" with no way to tell which of nine hundred
+ * titles they meant.
+ *
+ * Only fields the form already owns, and `area` only when it is one of the
+ * allowed values — a link is untrusted input like any other, and a bad `area`
+ * would put the select into a state its own options cannot represent.
+ */
+export function prefillFromSearch(params) {
+  const area = params.get('area')
+  return {
+    title: params.get('title') || '',
+    url: params.get('url') || '',
+    area: AREAS.includes(area) ? area : 'other',
+  }
+}
+
 export function ReportIssuePage() {
-  const [title, setTitle] = useState('')
+  const [searchParams] = useSearchParams()
+  const [seeded] = useState(() => prefillFromSearch(searchParams))
+  const [title, setTitle] = useState(seeded.title)
   const [body, setBody] = useState('')
-  const [area, setArea] = useState('other')
+  const [area, setArea] = useState(seeded.area)
   const [severity, setSeverity] = useState('P2')
   const [deploy, setDeploy] = useState('Unraid')
   const [client, setClient] = useState('')
-  const [url, setUrl] = useState('')
+  const [url, setUrl] = useState(seeded.url)
   const [logs, setLogs] = useState('')
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)

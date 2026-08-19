@@ -912,46 +912,107 @@ form textarea {
 
 
 
-/* Style for the popup menu */
+/* Tile / card context menu.
+ *
+ * Was `#2e2929` on `#505563` hover with `#ddd` text — flat values that ignored
+ * the theme completely, so the one piece of chrome you open *on top of* the
+ * art was the one piece that never matched it.
+ *
+ * It also rendered its items three different ways. `.menu-item` padded 8px and
+ * carried the hover; a nested `button` padded `8px 15px` and carried a
+ * *different* hover; an `<a>` inherited neither. So the same menu had rows of
+ * different heights, different insets and two different highlight colours
+ * depending on whether the action happened to be a link, a button or a form
+ * submit — which is the "all items should look the same" report.
+ *
+ * The fix is to stop styling the wrapper and style the control. `.menu-item` is
+ * now layout only; every row is a `.menu-button` with one padding, one height,
+ * one hover, whatever element it is. */
 .popup-menu {
     position: absolute;
-    background-color: #2e2929;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    padding: 12px 16px;
+    min-width: 12rem;
+    padding: var(--gt-space-2, 0.4rem);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--gt-surface);
+    border: 1px solid var(--gt-border);
+    border-radius: var(--gt-radius-lg, 10px);
+    box-shadow: var(--gt-shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.42));
+    color: var(--gt-text);
     z-index: 12;
 }
 
+/* Layout only — the row treatment belongs to the control inside it, so a link
+   and a form submit cannot drift apart again. */
 .menu-item {
     display: block;
-    padding: 8px;
-    text-decoration: none;
-    color: white;
-    cursor: pointer;
-}
-
-.menu-item:hover, .menu-item button:hover, .menu-item a:hover {
-    background-color: #505563;
-}
-
-
-.menu-item button {
-    background: none;
-    border: none;
-    color: #ddd;
-    cursor: pointer;
-    padding: 8px 15px;
-    width: 100%;
-    text-align: left;
-}
-
-.menu-item button:hover {
-    background-color: #333;
-}
-
-
-.menu-item a {
+    padding: 0;
+    margin: 0;
     color: inherit;
+    cursor: pointer;
+}
+
+/* One row treatment for every action, whatever element it is. */
+.popup-menu .menu-button,
+.menu-item > a,
+.menu-item > button {
+    display: flex;
+    align-items: center;
+    gap: var(--gt-space-2, 0.4rem);
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 2rem;
+    padding: var(--gt-space-2, 0.4rem) var(--gt-space-3, 0.5rem);
+    border: 0;
+    border-radius: var(--gt-radius-sm, 6px);
+    background: transparent;
+    color: var(--gt-text);
+    font: inherit;
+    font-size: var(--gt-font-sm, 0.82rem);
+    text-align: left;
     text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--gt-motion-fast, 120ms) var(--gt-motion-ease, ease),
+        color var(--gt-motion-fast, 120ms) var(--gt-motion-ease, ease);
+}
+
+.popup-menu .menu-button:hover,
+.menu-item > a:hover,
+.menu-item > button:hover {
+    background-color: color-mix(in srgb, var(--gt-accent) 20%, transparent);
+    color: var(--gt-text);
+}
+
+.popup-menu .menu-button:focus-visible,
+.menu-item > a:focus-visible,
+.menu-item > button:focus-visible {
+    outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+    outline-offset: -2px;
+}
+
+/* Destructive actions read as destructive. They used to be identical to
+   "Edit Details", which is not a difference a member should have to remember. */
+.popup-menu .menu-button.delete-game,
+.popup-menu .menu-button.trigger-delete-modal {
+    color: var(--gt-danger);
+}
+
+.popup-menu .menu-button.delete-game:hover,
+.popup-menu .menu-button.trigger-delete-modal:hover {
+    background-color: color-mix(in srgb, var(--gt-danger) 20%, transparent);
+}
+
+/* The action bar is a row of its own controls rather than a menu row, so it
+   keeps its own inset — owned by components.css, not restated here. One class,
+   one stylesheet: under cssCodeSplit a second definition resolves by load
+   order, which is what cssDuplicateRules.test.js budgets against. */
+
+/* A form wrapper is a layout element like .menu-item — it must not add a second
+   inset around the button it holds. */
+.popup-menu form.menu-item {
+    padding: 0;
+    margin: 0;
 }
 
 

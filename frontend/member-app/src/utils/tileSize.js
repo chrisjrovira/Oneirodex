@@ -46,12 +46,13 @@ export function normalizeTilePercent(value) {
  * depending on a slider the member set once and forgot, which reads as a bug
  * rather than as a feature.
  *
- * One value, everywhere: 15% is large enough to pick a tile out of a dense
- * grid and small enough that the enlarged tile stays inside its own row on a
- * narrow viewport, which is why the narrow-viewport clamp no longer overrides
- * it. `transform: scale` does not reflow, so the grid keeps its flow.
+ * One value, everywhere: 25% is large enough to pick a tile out of a dense grid
+ * at a glance, and `transform: scale` does not reflow, so the grid keeps its
+ * flow however far the tile grows. The narrow-viewport clamp no longer
+ * overrides it — a quarter of a 140px tile is ~17px either side, which stays
+ * inside its own track.
  */
-export const TILE_HOVER_SCALE = 1.15
+export const TILE_HOVER_SCALE = 1.25
 
 export function tilePercentToCssVars(percent) {
   const p = normalizeTilePercent(percent) / 100
@@ -77,8 +78,8 @@ export function clampTileVarsForNarrowViewport(vars, isNarrow) {
 
   // The hover lift is no longer clamped here. It used to be pinned to 1.06 on
   // every narrow viewport because the old curve reached 1.6 at small tile
-  // sizes, which genuinely ran off the edge of a two-tile row. A flat 1.15 does
-  // not: at 140px that is 21px of growth, ~10px either side, and the tile stays
+  // sizes, which genuinely ran off the edge of a two-tile row. A flat 1.25 does
+  // not: at 140px that is 35px of growth, ~17px either side, and the tile stays
   // inside its own track. Keeping the clamp would mean the same hover behaved
   // differently on a phone for no reason a member could see.
   const minPx = parseInt(String(vars['--gt-tile-min']), 10)

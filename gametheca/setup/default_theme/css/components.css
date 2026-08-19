@@ -23,6 +23,11 @@
     width: 100%;
     max-width: none;
     max-height: none;
+    /* Last line of defence for a bad cover: nothing inside a tile may paint
+       outside it. The corner controls and badges are positioned within the
+       card, so this costs them nothing. */
+    overflow: hidden;
+    border-radius: var(--gt-radius-md, 8px);
 }
 
 /* Tile hover: one rule, one lift, no ring.
@@ -41,12 +46,28 @@
  * SPA's tile-size code. */
 .game-card:hover,
 .game-card:focus-within {
-    transform: translateY(-4px) scale(var(--gt-tile-hover-scale, 1.15));
+    transform: translateY(-4px) scale(var(--gt-tile-hover-scale, 1.25));
     z-index: 6;
     box-shadow:
         0 16px 34px var(--shadow-dark-strong),
         0 0 26px 4px color-mix(in srgb, var(--gt-accent) 42%, transparent);
     transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
+}
+
+/* Resting ring — themed, and rounded to match the tile it outlines.
+   Only at rest: on hover the accent glow above is the marker, and keeping a
+   hard ring underneath it is the outline-on-the-glow-edge problem again. */
+.game-card .game-cover,
+.game-card .gt-cover-fallback {
+    border-color: color-mix(in srgb, var(--gt-accent) 34%, var(--gt-border));
+    transition: border-color 0.16s ease-out;
+}
+
+.game-card:hover .game-cover,
+.game-card:focus-within .game-cover,
+.game-card:hover .gt-cover-fallback,
+.game-card:focus-within .gt-cover-fallback {
+    border-color: transparent;
 }
 
 /* Menu open beats hover: the pointer has to leave the tile to reach the menu,
@@ -57,20 +78,46 @@
     z-index: 20;
 }
 
+/* Reduced motion removes the *animation*, not the affordance.
+ *
+ * Both reduced-motion blocks in this file used to set `transform: none`, so on
+ * a machine with the OS setting on, a hovered tile did not change at all —
+ * reported as "the tile does not enlarge, did we build that?". It was built and
+ * measured at 1.25; this rule was cancelling it. The scale is what marks which
+ * tile the pointer is on, and a size change is not vestibular motion; the
+ * animated travel between the two states is. So keep the scale, drop the
+ * translate and the transition, and it lands instantly instead of gliding. */
 @media (prefers-reduced-motion: reduce) {
     .game-card:hover,
     .game-card:focus-within {
-        transform: none;
+        transform: scale(var(--gt-tile-hover-scale, 1.25));
+        transition: none;
     }
 }
 
+/* The tile decides the box; the image only decides what fills it.
+ *
+ * A cover is whatever the scraper downloaded, and that is not always a cover:
+ * a 4000px banner, a 16:9 screenshot, an HTML error page saved as .jpg. With
+ * the box driven by the image, one bad download stretched its tile and shoved
+ * the rest of the row out of line — reported as art "expanding out of the
+ * bounds".
+ *
+ * `aspect-ratio` plus `object-fit: cover` pins every tile to 3:4 and crops the
+ * overflow instead of growing; `max-width/height: 100%` and `overflow: hidden`
+ * on the card stop anything escaping even if a stylesheet elsewhere unsets the
+ * ratio. Cropping a wide image is a visible compromise, but a predictable grid
+ * is worth more than showing the edges of one bad file. */
 .game-cover {
     display: block;
     position: relative;
     width: 100%;
+    max-width: 100%;
+    max-height: 100%;
     aspect-ratio: 3 / 4;
     height: auto;
     object-fit: cover;
+    object-position: center;
     transition: transform var(--transition-normal), box-shadow var(--transition-normal);
     box-shadow: 0 4px 12px var(--shadow-dark-strong);
     border: 1px solid var(--game-border-gray);
@@ -200,7 +247,10 @@
 }
 
 /* Tile chrome geometry — one scale for every control and badge on a tile.
-   Order top to bottom in the top-right stack: menu · favourite · play status.
+   Order top to bottom in the top-right stack: favourite · play status · menu.
+   Favourite leads because it is the one control that also has a *resting*
+   state — a favourited tile shows its heart with the pointer elsewhere — so it
+   must not sit under two buttons that are invisible at the time.
    (Selection moved to the bottom-right corner; see LibrarySelectionBar.css.)
    Every control derives its offset from these vars so the stack cannot drift
    out of alignment when a button is added or hidden.
@@ -252,11 +302,15 @@
     --gt-tile-btn-border: 1px solid var(--gt-border);
     --gt-tile-btn-fg: var(--gt-text);
     --gt-tile-btn-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
-    /* Resting visibility. The controls were opacity:0 until .game-card:hover,
-       which meant "the buttons are hard to see" was literally true — on touch
-       there is no hover at all, so they were never revealed. They now rest
-       legible and come fully forward on hover/focus. */
-    --gt-tile-btn-rest-opacity: 0.92;
+    /* Hidden at rest, revealed on hover.
+       They were briefly always-on, to answer "the buttons are hard to see" —
+       but three permanent squares on every tile is chrome competing with the
+       art, and the real complaint was contrast, which the near-opaque themed
+       fill above fixes. The one exception is a favourited tile: its heart stays
+       visible with the pointer elsewhere, because that is state rather than an
+       action, and a member scanning the grid should be able to see what they
+       have favourited without touring it with the mouse. */
+    --gt-tile-btn-rest-opacity: 0;
 }
 
 /* One shared shape for the two controls *this file owns*.
@@ -284,10 +338,10 @@
     box-shadow: var(--gt-tile-btn-shadow);
 }
 
-/* Popup Menu Button — first in the top-right stack */
+/* Popup Menu Button — last in the top-right stack (see the order note above) */
 .button-glass-hamburger {
     position: absolute;
-    top: var(--gt-tile-stack-top);
+    top: calc(var(--gt-tile-stack-top) + 2 * var(--gt-tile-stride));
     z-index: 15;
     display: inline-flex;
     align-items: center;
@@ -321,10 +375,10 @@
     opacity: 1;
 }
 
-/* Favorite Button — second in the top-right stack */
+/* Favorite Button — first in the top-right stack (see the order note above) */
 .favorite-btn {
     position: absolute;
-    top: calc(var(--gt-tile-stack-top) + var(--gt-tile-stride));
+    top: var(--gt-tile-stack-top);
     bottom: auto;
     display: inline-flex;
     align-items: center;
@@ -366,6 +420,12 @@
 .favorite-btn.processing {
     pointer-events: none;
     opacity: 0.7;
+}
+
+/* No play-status control on this card — the menu closes the gap rather than
+   leaving a hole where the second slot would have been. */
+.game-card:not(:has(.game-status-btn)) .button-glass-hamburger {
+    top: calc(var(--gt-tile-stack-top) + var(--gt-tile-stride));
 }
 
 /* Anchors under the hamburger + favourite pair. Derived from the stack vars
@@ -708,6 +768,98 @@
 .gt-badge--kind { background: rgba(90, 110, 140, 0.95); }
 .gt-badge--overflow { background: rgba(30, 30, 30, 0.9); }
 
+/* Toast host — mirrored from the member SPA's glass.css so classic Jinja pages
+   report the same way. Deliberate cross-tree duplication (the rule the
+   duplicate-class guard scopes per tree): the image-refresh flash is raised by
+   a classic form POST and rendered by theme JS, which never loads member-app.css.
+   Without this, moving that banner into a toast would have made it invisible on
+   exactly the pages that raise it. */
+.gt-toast-host {
+    position: fixed;
+    z-index: 2400;
+    top: 1rem;
+    right: 1rem;
+    bottom: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: min(22rem, calc(100vw - 2rem));
+    pointer-events: none;
+}
+
+.gt-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.7rem 0.6rem 0.7rem 0.95rem;
+    border-radius: var(--gt-radius-lg, 10px);
+    border: 1px solid var(--gt-border);
+    background: var(--gt-surface);
+    color: var(--gt-text);
+    box-shadow: var(--gt-shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.35));
+    font-size: var(--gt-font-md, 0.92rem);
+    line-height: 1.35;
+}
+
+.gt-toast__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.gt-toast__close {
+    flex: 0 0 auto;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--gt-radius-sm, 6px);
+    background: transparent;
+    color: var(--gt-text-muted);
+    font-size: var(--gt-font-base, 1.05rem);
+    line-height: 1;
+    cursor: pointer;
+}
+
+.gt-toast__close:hover,
+.gt-toast__close:focus-visible {
+    background: color-mix(in srgb, var(--gt-text) 14%, transparent);
+    color: var(--gt-text);
+}
+
+.gt-toast--success { border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent); }
+.gt-toast--error { border-color: color-mix(in srgb, var(--gt-danger) 60%, transparent); }
+.gt-toast--warn { border-color: color-mix(in srgb, var(--gt-warning) 60%, transparent); }
+
+/* The refresh spinner rides inside the toast now rather than in a page banner. */
+.gt-toast .image-refresh-spinner {
+    flex: 0 0 auto;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.1rem;
+}
+
+.gt-toast .image-refresh-spinner svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.gt-toast .spinner-circle-bg {
+    fill: none;
+    stroke: var(--gt-border);
+    stroke-width: 2;
+}
+
+.gt-toast .spinner-circle-progress {
+    fill: none;
+    stroke: var(--gt-accent);
+    stroke-width: 2;
+    stroke-dasharray: 62.83;
+    stroke-dashoffset: 62.83;
+    transition: stroke-dashoffset 0.3s ease;
+}
+
 /* GameTheca GameActionBar */
 .gt-action-bar {
     display: flex;
@@ -1035,9 +1187,14 @@ a.gt-chip:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    /* See the reduced-motion note beside the hover rule near the top of this
+       file: the scale stays, the travel and the easing go. This block used to
+       repeat `transform: none` and was the one that actually won, being later
+       in the file. */
     .game-card:hover,
     .game-card:focus-within {
-        transform: none;
+        transform: scale(var(--gt-tile-hover-scale, 1.25));
+        transition: none;
     }
 
     .gt-tile-preview-hint {
