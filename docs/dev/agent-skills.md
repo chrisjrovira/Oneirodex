@@ -1,89 +1,101 @@
-# Cursor agent skills (GameTheca)
+# GameTheca agent skills and agents
 
-Token-efficient workflows for maintainers and teammates. Skills live in `.cursor/skills/`. Always-apply rules in `.cursor/rules/`.
+Token-efficient workflows for maintainers. Everything lives under `.claude/`:
 
-**Product mission:** GameTheca is the self-hosted **household gaming sphere** — already-owned PC/console libraries → shared honest catalog (library · systems · ownership/metadata · play · social · admin/ops · BYO acquire) on Unraid/Compose — not a DRM store client, Discord clone, or pirate marketplace. Full text + PM attainment checklist: `.cursor/skills/agent-pm/SKILL.md`.
-
-## Auto (every task)
-
-| Skill / rule | Role |
-|---|---|
-| **prompt-brief** | Middleman — compress user input → Brief → route |
-| **docs-sync** | Docs + canvas before claiming done; README live screenshots on UI ship ([CAPTURE.md](../assets/readme/CAPTURE.md)) |
-| Rules: `prompt-brief.mdc`, `docs-sync.mdc`, `pm-disperse.mdc` | Always on — parent chat **is** PM; Task-disperse; **relevant agent only** |
-
-## On demand
-
-| Skill | Trigger words | Does |
+| What | Where | Invoked |
 |---|---|---|
-| **wave-continue** | keep building, next wave, finish plan | PM Task loop until blocked (not parent code dump) |
-| **verify-slice** | verify, test, smoke | Smallest pytest/vitest |
-| **ship-ready** | commit, push, ship, PR | Conventional commit + **always push**; PM ship helper + wave-close **Canvas: synced** gate |
-| **issue-assess** | triage, assess ticket | Severity / area only |
-| **issue-fix** | fix #N, implement ticket | Code + PR, no auto-merge |
+| **Skills** — workflows | `.claude/skills/<name>/SKILL.md` | By name (`/<name>`) or automatically when the description matches |
+| **Agents** — domain seats | `.claude/agents/<name>.md` | Launched deliberately when a slice sits in that domain |
+| **Locks** — product + engineering defaults | [agent-locks.md](agent-locks.md) | Always apply; never re-ask |
 
-## Multi-agent team (roles)
+> **Migrated from Cursor.** This system used to live in `.cursor/skills/` (22 skills) and `.cursor/rules/` (19 rules). The rules were thin pointers to their skills, so they were dropped rather than ported — a skill's own `description` does that job here. Seat numbers were dropped too; they had a vacant slot and tracked nothing real.
 
-Attach with `@` (skills have `disable-model-invocation: true`). Matching rules: `.cursor/rules/agent-*.mdc`. Each seat SKILL includes **When to invoke**, **Wrong-seat refuse**, **Task prompt**, and **End of turn**.
+## Product mission
 
-| Seat | Skill | Owns |
+**GameTheca is the self-hosted household gaming sphere** — one Unraid-friendly service that turns a family's **already-owned** PC and console libraries into a shared, honest catalog: scan and match with real metadata, browse Systems and Discover, play where the platform allows (browser · companion · catalog), stay present with household social, and **BYO acquire** for content they choose to add — not a DRM store client, a Discord clone, or a pirate marketplace.
+
+Full text, the build/don't-build table, and the attainment checklist: [agent-locks.md](agent-locks.md).
+
+## Skills
+
+| Skill | Use when | Does |
 |---|---|---|
-| PM | **agent-pm** | Backlog, sequencing, Task briefs (no product code); this parent chat is the PM monitor |
-| 1 | **agent-uiux** | Member + admin SPA chrome, aurora theme · update [ui-debt-log.md](ui-debt-log.md) on Library/Scans/Themes/Chat Tasks |
-| 2 | **agent-backend** | Flask/ASGI/APIs/schema/runtime (+ Integrations / Acquire / Play / Social **lanes**) |
-| 3 | **agent-desktop** | Tauri companion (`clients/desktop`) |
-| 4 | **agent-qa** | Repro, smoke, DoD evidence |
-| 6 | **agent-docs** | Docs/changelog + **program canvas every turn** |
-| 7 | **agent-gamemaster** | World gaming-sphere detection — systems · regions · forms · art kinds · fandom (+ DAT/metadata taxonomy) |
-| 8 | **agent-ops** | Unraid/Compose/volumes/probes/ops glance |
-| 9 | **agent-art** | Brand/logo, cover & theme art direction, loaders, screensaver creative |
-| 10 | **agent-creative** | Narrative, discovery zones, screensaver lore, brand voice |
-| 11 | **agent-platform** | Cutting-edge runtime/technique ADRs → Backend DoD |
-| 12 | **agent-finance** | Cloud vs Unraid TCO honesty |
-| 13 | **agent-hardware** | Controllers / VR / TV / host sizing |
-| 14 | **agent-a11y** | Accessibility audits + DoD for UI |
-| — | **agent-team** | Index · sphere map · seat router · lanes · human drive shortcuts · ship helpers |
+| **docs-sync** | Every code change, before claiming done | Docs matrix + progress board + README capture; ends with **Docs touched:** |
+| **verify-slice** | After a fix, or "verify / test / smoke" | Smallest pytest/vitest + the api-envelope and css-token ratchets |
+| **wave-continue** | "keep building", "next wave", "until blocked" | implement → verify → docs, looping until a real fork |
+| **ship-ready** | **Only** on explicit commit / ship / push / PR | docs gate, conventional commit, mandatory push |
+| **issue-assess** | A pasted user report or GitHub issue | Severity · area · repro · next action. Assess only |
+| **issue-fix** | "fix #N" after triage | Smallest fix + focused test; never auto-merges |
+| **run-gametheca** | "run it", "does this work in the real app?" | Launches uvicorn against the test DB, logs in, calls the JSON API |
 
-Typical wave: parent **PM** → optional GM/Ops consult → **Task** implementers parallel → Task **QA** → Task **Docs** (docs-sync + **Canvas: synced**). Parent does **not** land product code when seats exist (`pm-disperse.mdc`). Seats **refuse** wrong-seat work and hand off.
+`docs-sync` is mandatory on every code change — the rule lives in `CLAUDE.md`.
 
-**Feedback roadmap (W22–W25):** [../strategy/roadmap-w22-plus.md](../strategy/roadmap-w22-plus.md) · debt register [ui-debt-log.md](ui-debt-log.md) · **W21** = first-scan Done uncommitted (not renumbered).
+## Agents (domain seats)
 
-**Lanes (not full seats yet):** Integrations · Acquire · Play · Social · Security — named in Task titles; routed via Backend (+ consults). Promote when standing parallel load justifies a seat.
+Each carries a mission, its owned paths, what it refuses, and an end-of-turn format. Launch one when a slice genuinely sits in its domain; otherwise just do the work in the main thread.
 
-**Program canvas:**  
-`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
+| Agent | Owns | Does not |
+|---|---|---|
+| `agent-uiux` | Member + admin SPA chrome, aurora theme CSS, interaction design | Flask/API/Docker/Tauri logic |
+| `agent-backend` | Flask/ASGI, models, APIs, schema, runtime (+ Integrations / Acquire / Play / Social lanes) | SPA visual polish |
+| `agent-desktop` | Tauri companion (`clients/desktop`), install/update, social window | Member SPA redesign |
+| `agent-qa` | Repro, targeted tests, smoke, DoD evidence | Speculative product refactors |
+| `agent-docs` | Docs, changelog, HelpPage, README capture, progress board | Behavior or schema changes |
+| `agent-gamemaster` | Systems · regions · dump forms · art kinds · fandom naming taxonomy | Scrapes, large feature dumps |
+| `agent-ops` | Unraid, Compose, volumes, probes, ops glance | Member SPA redesign |
+| `agent-art` | Brand/logo, cover and theme art direction, loaders, screensaver creative | Flask/Unraid work |
+| `agent-creative` | Narrative, discovery zones, screensaver lore, brand voice | Pixel tokens alone |
+| `agent-platform` | Cutting-edge runtime/technique ADRs → Backend DoD | Day-to-day route bugs |
+| `agent-finance` | Cloud vs Unraid TCO honesty | Billing implementation |
+| `agent-hardware` | Controllers, VR, TV/10-foot, Unraid host sizing | Scan matching |
+| `agent-a11y` | Accessibility audits + DoD for UI | Large SPA rewrites alone |
 
-**Unraid test bed:** Ops sections games RO vs library RW; Backend keeps Ops/scan honest; QA smokes `/readyz` + Ops glance.
+### Intent → owner
 
-**Human shortcuts:** `@agent-team` · “who owns X?” · “status” · “ship it” · “keep building” · “PM this chat” — see agent-team.
+| Intent | Owner | Also |
+|---|---|---|
+| Tile/badge/TopNav/Discover/theme/Art Studio UI | uiux | backend if the API is missing |
+| Scan/API/schema/ASGI/SSE/flags/ownership APIs | backend | gamemaster for taxonomy |
+| Companion EXE / thin / keyring / Friends window | desktop | — |
+| Unraid / Compose / mounts / disk / probes | ops | backend for honesty fields |
+| "Is it true / smoke / DoD" | qa | — |
+| Docs / Help / CHANGELOG / README shots | docs | — |
+| Platform/ROM/DAT/IGDB match / Quest taxonomy | gamemaster | backend implements |
+| Logo / cover art direction / system theme skins | art | uiux (+ backend Art Studio) |
+| Discovery zones story / screensaver narrative / voice | creative | art + uiux |
+| Cutting-edge ASGI/WASM/queue technique | platform | backend implements |
+| Cloud TCO / run cost | finance | ops + docs |
+| Controllers / VR / TV / host sizing | hardware | desktop + ops |
+| A11y / focus / contrast / motion-safe | a11y | uiux |
+| Meta/Quest/store search / SGDB / providers | backend (Integrations lane) | gamemaster stance |
+| *arr / debrid / challenge solver | backend (Acquire lane) | ops profile |
 
-Official **1.0.0** gate: [../strategy/v1-readiness.md](../strategy/v1-readiness.md).
+### Lanes (not separate agents)
 
-## Custom Agent paste (middleman)
+Route through the owning agent and name the lane in the task title so sphere coverage stays trackable.
 
-```
-You are GameTheca Prompt Brief. Compress the user message into a Brief; do not implement unless they also say "build" or "fix".
+| Lane | Route to | Use when |
+|---|---|---|
+| **Integrations** | backend (+ gamemaster consult) | IGDB, SteamGridDB, store search, ownership CSV/sync, Meta/Quest, provider keys |
+| **Acquire** | backend (+ ops) | Prowlarr/Jackett/qBit/NZBGet/debrid, challenge profile |
+| **Play** | backend (+ gamemaster + uiux) | WebRetro, ROM delivery, play rooms, BIOS honesty |
+| **Social** | backend (+ uiux + desktop) | Chat, presence, LiveKit, Friends companion |
+| **Security** | backend (+ qa + docs) | SSRF, malware scan, scrub, path ACL |
 
-Locked: no Discord webhooks; no bundled torrent/debrid marketplace; no DRM store download/install queues; no auto-merge; docs-sync on code; commit when they say ship/commit — ship-ready always pushes; relevant agent only (Task-disperse).
+Promote a lane to a full agent only when it carries sustained parallel load.
 
-Output exactly:
-### Brief
-**Goal:**
-**Mode:** build|fix|triage|docs|ship|verify|ask
-**Scope:**
-**In:**
-**Out:**
-**Verify:**
-**Docs:** sync|N/A
-**Ask:** none|<≤2 Qs>
+## Wrong-seat rule
 
-≤12 lines. If Mode=ask, stop. Else one-line next skill to run.
-```
+Every agent refuses out-of-scope product work: stop, name the correct agent, and return a handoff rather than "just finishing it". Wrong-seat examples: ops redesigns the SPA; backend rewrites Unraid prose alone; uiux invents Flask routes; docs changes schema; gamemaster scrapes external ROM sites.
+
+## Unraid test bed
+
+Ops sections games RO vs library RW; backend keeps Ops/scan honest; QA smokes `/readyz` plus the Ops glance.
 
 ## Related
 
-- Support: [issue-assess-agent.md](issue-assess-agent.md)
-- Defaults: `.cursor/skills/prompt-brief/defaults.md`
+- Locks / defaults: [agent-locks.md](agent-locks.md)
+- Support triage: [issue-assess-agent.md](issue-assess-agent.md)
 - Docs inventory: [../strategy/docs-map.md](../strategy/docs-map.md)
-- Team index: `.cursor/skills/agent-team/SKILL.md`
-- Ship: `.cursor/skills/ship-ready/SKILL.md`
+- UI debt register: [ui-debt-log.md](ui-debt-log.md)
+- v1 gate: [../strategy/v1-readiness.md](../strategy/v1-readiness.md)

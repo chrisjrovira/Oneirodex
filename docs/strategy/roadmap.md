@@ -10,10 +10,9 @@
 
 Member chrome is largely locked. Parallel tracks: **v1 caveats** (health probes, CI, Ops near-realtime, migrations/pins) · **Admin SPA** progressive Jinja→React · operator-owned WASM/Authentik/Hub/Unraid (desktop stays unsigned — no cert purchase).
 
-Program board canvas:  
-`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
+Program board: [progress.md](progress.md).  
 
-See [progress.md](progress.md) for Jul 27 status. New team seat: `@agent-ops`.
+See [progress.md](progress.md) for Jul 27 status. New team seat: `agent-ops`.
 
 ## Product north star
 

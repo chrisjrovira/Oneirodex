@@ -21,8 +21,7 @@
 
 **P0 done / P1 partial (pre-aurora densify):** P0 auth · account · identify · member SPA button/date/toast leaks closed. **P1 densify (this wave, code):** high-traffic admin Jinja onto `gt-adminpage` + 1600px settings cap. **P1 residual:** `new_server_info.html` / `new_server_settings.html` · `view_newsletter.html` · `admin_manage_themes_readme.html` · remaining nested Bootstrap cards on low-traffic pages. **CDN → local vendor (Waves 12–13):** Bootstrap on `base_admin` / member `base` / `base_empty` (`static/vendor/bootstrap/5.3.2/`); Wave 13 also scrubbed jquery/datatables/notify/cropper/sortable/chart → `/static/vendor/...` (rebuild/restart picks up vendor — not Reset Themes). **Wave 13:** admin-app `QualityProfilesPage` at `/admin/quality_profiles` (Jinja emptied to SPA shell). Optional retire of dead `game_details.html`.
 
-Program board: Cursor canvas  
-`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
+Program board: [progress.md](progress.md).  
 
 ## Principles
 

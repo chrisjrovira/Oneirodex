@@ -18,7 +18,7 @@
 | **C — Named rivals in marketing/stance** | Peer product names used only to say “we’re not them” in README, user/admin guides, Help, desktop README | **Rewrite** as capability non-goals without product names: e.g. “no bundled torrent marketplace”, “no DRM store download queues”, “no Discord webhooks”. |
 | **D — Integration / format brands (KEEP)** | Playnite **import**, ES-DE / Pegasus **export**, Prowlarr/Jackett/qBittorrent **connectors**, Steam/GOG/Epic **ownership register**, LiveKit, Authentik/OIDC | **Allowed** — these are shipped features or BYO tools operators configure. Do not strip APIs or user docs for Class D. |
 | **D2 — Admin Acquire presets (KEEP, admin-only)** | Curated Torznab/Newznab **preset display names** in Admin → Arr / `indexer_presets.json` / Arr admin UI | **Allowed in admin surfaces only** — operators enable presets and supply their own API keys/URLs. Still **ban** those display names from README, Help marketing, CHANGELOG headlines, member SPA marketing copy, and CI artifacts. |
-| **E — Cursor / agent private** | Agent transcripts, local canvases outside repo | Not uploaded with product; still scrub if someone pastes into Issues/PRs. |
+| **E — agent private** | Agent transcripts and scratch outside the repo | Not uploaded with product; still scrub if someone pastes into Issues/PRs. |
 
 **Locked product non-goals (keep the rules, drop rival names in external streams):**
 
@@ -37,7 +37,7 @@
 | `docs/superpowers/**` (Class A token in ≥3 files) | A | Delete or rewrite lines (SCRUB-1) |
 | `docs/strategy/competitive.md` (50+ peer catalog) | B | **Done (stub)** — full catalog in `docs/_private/` only |
 | `docs/strategy/roadmap.md`, `features.md`, `ui.md`, `social-av.md`, strategy `README.md`, `v1-readiness.md`, `thin-client.md` | B/C | Neutralize named rivals; keep product intent (SCRUB-3) |
-| `clients/desktop/README.md`, `.cursor/skills/**`, `docs/dev/agent-skills.md` | C | Neutralize non-goal wording (SCRUB-3) |
+| `clients/desktop/README.md`, `.claude/skills/**`, `.claude/agents/**`, `docs/dev/agent-skills.md` | C | Neutralize non-goal wording (SCRUB-3) |
 | `docs/superpowers/specs|plans/**` | B/C | Neutralized Class A examples → `[Repack]` / scene-tag language (SCRUB-4 polish) |
 | Playnite / Pegasus / ES-DE / Prowlarr code + user docs | D | **No purge** |
 | Git history / remote | A/B | Optional history rewrite only if human approves (SCRUB-5) |
@@ -58,7 +58,7 @@
 | **SCRUB-6** | P1 | Docs + Human | GitHub surface | **Done** — PR/Issue templates + [github-scrub-2026-07-27.md](archive/github-scrub-2026-07-27.md) (0 Class A hits) |
 | **SCRUB-7** | P0 | QA + UI | Shipped UI clean | **Done** for source; rebuild `static/dist` on next image — see [scrub-shipped-bundles.md](../runbooks/scrub-shipped-bundles.md) |
 | **SCRUB-8** | P1 | Backend | Comments + WAREZ→GAMES | **Done** — `DATA_FOLDER_GAMES` + deprecated alias |
-| **SCRUB-9** | P1 | Docs / PM | Prevention | **Done** — gitignore, cursor rule, docs-sync, banned-tokens in `_private` |
+| **SCRUB-9** | P1 | Docs | Prevention | **Done** — gitignore, docs-sync, banned-tokens in `_private`; the always-on scrub rule now lives in [../dev/agent-locks.md](../dev/agent-locks.md) |
 
 ---
 

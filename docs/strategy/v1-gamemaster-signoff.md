@@ -1,7 +1,7 @@
 # Game Master domain sign-off — official 1.0
 
 **Date:** 2026-07-27  
-**Seat:** `@agent-gamemaster` (team seat 7)  
+**Seat:** `agent-gamemaster` (team seat 7)  
 **Gate:** [v1-readiness.md](v1-readiness.md) § gate 7  
 **Sources:** [emulation-coverage.md](emulation-coverage.md) · [library-and-systems.md](../user/library-and-systems.md) · [browser-play.md](../user/browser-play.md)
 
@@ -37,11 +37,11 @@ Operators and release authors must know:
 
 ## Handoffs
 
-- `@agent-docs`: Keep release notes / FAQ / troubleshooting aligned with this matrix; scrub any “play everything in browser” language.
-- `@agent-uiux`: Preserve Systems badges + no Play CTA when `play_mode` is companion/catalog or core deferred.
-- `@agent-backend`: `play_mode_for_platform` / disk discovery / `deferred_cores` remain authoritative; do not invent scrape or DRM-queue endpoints for 1.0.
-- `@agent-desktop`: Companion launch + hints stay the honest path for GC/Wii/DC/3DS/PS2/Vita and deferred WASM systems.
-- `@agent-qa`: Gate assertions that browser Play is absent where matrix says No / Companion / Catalog.
+- `agent-docs`: Keep release notes / FAQ / troubleshooting aligned with this matrix; scrub any “play everything in browser” language.
+- `agent-uiux`: Preserve Systems badges + no Play CTA when `play_mode` is companion/catalog or core deferred.
+- `agent-backend`: `play_mode_for_platform` / disk discovery / `deferred_cores` remain authoritative; do not invent scrape or DRM-queue endpoints for 1.0.
+- `agent-desktop`: Companion launch + hints stay the honest path for GC/Wii/DC/3DS/PS2/Vita and deferred WASM systems.
+- `agent-qa`: Gate assertions that browser Play is absent where matrix says No / Companion / Catalog.
 
 ## Do not (1.0 release notes)
 

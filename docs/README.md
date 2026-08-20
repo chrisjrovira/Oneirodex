@@ -6,7 +6,7 @@ Hub for product, ops, and developer docs. Naming: **GameTheca** (package `gameth
 
 Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs/assets/readme/`), quick start, and troubleshooting.
 
-**Docs sync:** every code change must update the relevant docs — project skill `.cursor/skills/docs-sync/` + always-apply rule `.cursor/rules/docs-sync.mdc`.
+**Docs sync:** every code change must update the relevant docs — project skill `.claude/skills/docs-sync/`, required by `CLAUDE.md`.
 
 ## Start here
 

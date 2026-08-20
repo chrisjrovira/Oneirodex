@@ -359,15 +359,15 @@ Canonical target: **Baldur's Gate: Dark Alliance**. Must not auto-pick BG3 / BG1
 
 | Seat | File / area | Work |
 |---|---|---|
-| **@agent-backend** | `gametheca/utils/game_name_parse.py` | **Done** A0–A14 (Incl Update · unbracketed scene/repack · date-stamps · Update/Build prose · edition/add-on · VR re-pass · `bare_franchise`) |
-| **@agent-backend** | `gametheca/utils/gamenames.py` | **Done** Stage C + C10 edition peel + C11 bare-franchise + **C13** stylized compact (W21-BE-3) + **C14** punctuation-light (W22) + **BE-DET-9** fandom variant expand |
-| **@agent-backend** | `gametheca/utils/match_scoring.py` | **Done W21-BE-3** remaster primary-head · sequel asymmetry cap · equivalent-title collapse; **BE-DET-9** soft alias score boost; threshold ≥0.92 |
-| **@agent-backend** | `gametheca/utils/fandom_alias.py` | **Done BE-DET-9** soft alias · series · remaster · regional EN↔JP · soft-title adjacency · propose-first flags |
-| **@agent-backend** | `gametheca/utils/game_core.py` (scan identify) | **Done** variant_base = `parse_game_label` (PC/folder) or `parse_console_rom_label` (pilot platforms files + dump-shaped folders); C11 + ROM propose-only; W22 bare UPDATE package path; **BE-DET-9** fandom soft propose-first |
-| **@agent-backend** | `gametheca/utils/rom_name_peel.py` | **Done** B15–B20 · shared DAT peel · gate GB…SWITCH + Saturn/DC/Neo Geo CD (**BE-DET-1…3 + BE-DET-7** files · dump-shaped folders · SWITCH A1∪B16 · `.gdi`/`.cdi`) · **BE-DET-8** Arcade/AES set-folder peel + propose-first · AES≠CD · `ROM_EXT_RE` P1+disc forms · propose-only / multicart detect · **Next BE-DET-10** |
-| **@agent-backend** / **@agent-ops** | skip-dir / Admin `dir:` | PCWIN tool folders (OpenVR Metrics, converters, editors) — skip, do not match |
-| **@agent-qa** | `tests/test_utils_game_name_parse.py`, `tests/test_utils_gamenames.py` (+ scoring) | **Done** A0–A14 + C10/C11 · **QA 166 PASS** |
-| **@agent-qa** | `tests/test_console_rom_peel.py` | **QA PASS** (B15–B20 · C12/C14 · N64/SNES/GBA · peel gate · propose-only) |
-| **@agent-qa** | `tests/test_be_det9_fandom_alias.py` (+ W21-BE-3) | **QA PASS 65/65** — BE-DET-9 soft alias fixture pack · DoD met · live skipped |
-| **@agent-docs** | this file + progress + canvas | **Done** B15–B20 · **DOC-W22-M8** W22-match slice · **DOC-DET** detection coverage · **BE-DET-9** capability note (propose-first soft alias · no Class A lists) |
-| **@agent-ops** | Unraid rescan Library A PCWIN `scan_depth=2` | **Documented** — propose-only then full after human ship; prefer ship A9+ before second full rescan |
+| **`agent-backend`** | `gametheca/utils/game_name_parse.py` | **Done** A0–A14 (Incl Update · unbracketed scene/repack · date-stamps · Update/Build prose · edition/add-on · VR re-pass · `bare_franchise`) |
+| **`agent-backend`** | `gametheca/utils/gamenames.py` | **Done** Stage C + C10 edition peel + C11 bare-franchise + **C13** stylized compact (W21-BE-3) + **C14** punctuation-light (W22) + **BE-DET-9** fandom variant expand |
+| **`agent-backend`** | `gametheca/utils/match_scoring.py` | **Done W21-BE-3** remaster primary-head · sequel asymmetry cap · equivalent-title collapse; **BE-DET-9** soft alias score boost; threshold ≥0.92 |
+| **`agent-backend`** | `gametheca/utils/fandom_alias.py` | **Done BE-DET-9** soft alias · series · remaster · regional EN↔JP · soft-title adjacency · propose-first flags |
+| **`agent-backend`** | `gametheca/utils/game_core.py` (scan identify) | **Done** variant_base = `parse_game_label` (PC/folder) or `parse_console_rom_label` (pilot platforms files + dump-shaped folders); C11 + ROM propose-only; W22 bare UPDATE package path; **BE-DET-9** fandom soft propose-first |
+| **`agent-backend`** | `gametheca/utils/rom_name_peel.py` | **Done** B15–B20 · shared DAT peel · gate GB…SWITCH + Saturn/DC/Neo Geo CD (**BE-DET-1…3 + BE-DET-7** files · dump-shaped folders · SWITCH A1∪B16 · `.gdi`/`.cdi`) · **BE-DET-8** Arcade/AES set-folder peel + propose-first · AES≠CD · `ROM_EXT_RE` P1+disc forms · propose-only / multicart detect · **Next BE-DET-10** |
+| **`agent-backend`** / **`agent-ops`** | skip-dir / Admin `dir:` | PCWIN tool folders (OpenVR Metrics, converters, editors) — skip, do not match |
+| **`agent-qa`** | `tests/test_utils_game_name_parse.py`, `tests/test_utils_gamenames.py` (+ scoring) | **Done** A0–A14 + C10/C11 · **QA 166 PASS** |
+| **`agent-qa`** | `tests/test_console_rom_peel.py` | **QA PASS** (B15–B20 · C12/C14 · N64/SNES/GBA · peel gate · propose-only) |
+| **`agent-qa`** | `tests/test_be_det9_fandom_alias.py` (+ W21-BE-3) | **QA PASS 65/65** — BE-DET-9 soft alias fixture pack · DoD met · live skipped |
+| **`agent-docs`** | this file + [progress.md](progress.md) | **Done** B15–B20 · **DOC-W22-M8** W22-match slice · **DOC-DET** detection coverage · **BE-DET-9** capability note (propose-first soft alias · no Class A lists) |
+| **`agent-ops`** | Unraid rescan Library A PCWIN `scan_depth=2` | **Documented** — propose-only then full after human ship; prefer ship A9+ before second full rescan |

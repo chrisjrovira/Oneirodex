@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-27  
 **Status:** Supported — not a ship blocker  
-**Owners:** `@agent-uiux` · `@agent-docs`
+**Owners:** `agent-uiux` · `agent-docs`
 
 ## Stance
 

@@ -145,7 +145,7 @@ Standing constraints unchanged: **no** Discord · **no Class A** intel in public
 | ART-6 Stock / platform image packs | **Backend shipped (uncommitted)** — `GET/POST /admin/api/art-studio/stock` (+ generate) · apply `mode=library|fallback` · Pillow packs under `static/library/stock/` (22 platforms + 12 motifs) · pytest `test_cover_art_stock.py` 6 PASS — UI picker parallel — [cover-art-studio.md](cover-art-studio.md#stock--platform-packs-art-6) |
 | Name-resolution fishermans fix | **Shipped (shipping)** — heuristic colon variants require ≥4 tokens (`A Fishermans Tale` stays as-is; known-subtitle / franchise-head only for shorter titles) — [name-resolution.md](name-resolution.md) |
 | META/IMG/ART + Wave 1+2 QA | **PASS** — QA **138/138** (includes fishermans colon fix) — ship-ready next |
-| PM Task-disperse process | **Shipped (process)** — always-apply `pm-disperse.mdc` · parent Tasks Ops/Backend/UI/Desktop/QA/Docs/GM · Docs owns program canvas **every Docs turn** (TLDR/Done/Next/Blocked/Team flow mandatory; PM refuses wave close without Canvas: synced) — [agent-skills.md](../dev/agent-skills.md) |
+| PM Task-disperse process | **Superseded 2026-08-20** — was an always-apply Cursor rule (`pm-disperse.mdc`) dispatching Task seats, with Docs rewriting the program canvas every turn. Retired with the Cursor migration: the main thread does the work, domain agents are launched deliberately, and this file is the board — [agent-skills.md](../dev/agent-skills.md) |
 | Team process refresh (Jul 29) | **Shipped (process)** — `agent-team` north star (gaming sphere) · intent→seat router · wrong-seat refuse · relevant-agent only · “this chat is PM” monitor · human drive shortcuts · lanes · `ship-ready` PM helper + test-before-ship + Canvas gate — [agent-skills.md](../dev/agent-skills.md) · no product behavior change from process wave alone |
 | Deep scan stall (folder size / IGDB) | **Shipped** — defer size walk on identify · 60s size timeout · IGDB HTTP timeout · rate-limiter unlock · max 3 name fallbacks |
 | Scan progress stall at 1 + empty Stop UX | **Shipped** — atomic `bump_scan_job_progress` · Stop drains in-flight · Cancelled shows `Stopped N/total` · Stopping button labeled |
@@ -165,9 +165,9 @@ Standing constraints unchanged: **no** Discord · **no Class A** intel in public
 | Security P0/P1 + Sec-B | Done — [security.md](security.md) |
 | Icon packs (6 styles, any color theme) | Shipped — [icon-themes.md](icon-themes.md) |
 | Support tickets (no Discord) | Shipped — [support-inbox.md](../admin/support-inbox.md) |
-| Docs sync on every change | Skill + always-apply rule — `.cursor/skills/docs-sync/` |
+| Docs sync on every change | Skill — `.claude/skills/docs-sync/`, required by `CLAUDE.md` |
 | README live media | **On branch `cursor/readme-live-screenshots` @ 7ef42a94 (local, not pushed)** — hero · Library · Systems live PNGs; mock JPGs deleted — [CAPTURE.md](../assets/readme/CAPTURE.md) · **Capture needed** when `:5006` healthy (`screenshot-chat.png` **Wave 16 full-room** · **Wave 17 Unmatched** filters/batch/**Amend naming**/**Dupe of** · **Wave 18** Scan jobs timing/filters · details cover **⋮** · **Wave 19** Edit Images aurora · Cheats gate (retroarch-only) · full path wrap · chip underline/scale · Calendar/News · play honesty · Library MISSING/multi-select · Admin Manual Queue/Force · prior W9–14 · theme refresh) — `:5006` /login not healthy this turn · **Waves 4–14 on main @ c35a927b** · **Waves 15–19 polish uncommitted** · **next:** Capture when stack healthy → merge/push README branch → main |
-| Prompt-brief middleman | Always-on — `.cursor/skills/prompt-brief/` · [agent-skills.md](../dev/agent-skills.md) |
+| Agent locks (product + engineering defaults) | Always-on — [agent-locks.md](../dev/agent-locks.md) · index [agent-skills.md](../dev/agent-skills.md) |
 | Bug scrub triage | [bug-triage.md](bug-triage.md) |
 | Competitive catalog | Private vault only — `docs/_private/` (gitignored); public stub [competitive.md](competitive.md) · **Jul 27 landscape expansion** (≥30 net-new × 8 service lanes) |
 | Scan mgmt Wave 2 (unmatched/image queue/art studio reliability) | **Shipped (code)** — unmatched rows gain **copy path** · **OpenPathModal** open/reveal (companion `open_path` / clipboard — **no** Auto Scan jump; Wave 2a) · **fix search** prefill · CSV/JSON **export**; Image Queue gains thumbnails · **group by game** · **Failed** status + reasons · **retry failed**; fixed eager cover/screenshot download during scan/identify silently discarding its result (double-downloaded covers, never recorded `is_downloaded`/`last_error`) so failures no longer look like permanent "Pending"; Art studio generate/apply/download now return structured JSON on disk `OSError`/`PermissionError` instead of a bare 500, and roll back + delete the orphaned file if the DB commit fails after a cover write — [libraries-and-scans.md](../admin/libraries-and-scans.md#unmatched-folders) · [settings-modules.md](../admin/settings-modules.md#art-studio-cover-placeholders) — **DB-backed pytest unverified in this sandbox** (no local Postgres/docker) |
@@ -245,11 +245,11 @@ Many-leaf console libs remain **LOCKED** (no mega-lib). Product slices Done unco
 
 **Full-program review 2026-08-03:** every wave reviewed · **9 real defects found and fixed** (1 security-high: DM `@mention` leak to non-members · MISSING chip filter never wired server-side · Refresh-freshness never re-probed · scan-queue TOCTOU race · missing `clear_permission_errors` route · 2 dead admin links · `formatBytes` null · email fallback escaping) · 4 test bugs repaired (stale `data-corner` queries · a time-bomb NEW-badge date that expired today) · **2 items need a product decision** (LiveKit room ACL · per-thread Voice scoping) · first full pytest run on record: **2791 pass / 128 fail**, of which **81 are test-infra or local-Python-3.14 artifacts, not product** (app ships 3.12) — [review-2026-08-03-findings.md](archive/review-2026-08-03-findings.md)
 
-**Immediate board next (ordered):** (1) **W23** Themes-as-systems (W22 UI rem closed — UID-004 + UID-016 UI+BE Done) — [roadmap-w22-plus.md](roadmap-w22-plus.md) · (2) **Human ship** Waves **15–20 + W21 + W22-match + UI-W22-M7 + UID-* + BE-DET-1…10** (Done uncommitted · **BE-DET-9 QA PASS 65/65** · **BE-DET-10 QA PASS 10/10 + admin vitest 73/73** · **BE-DET-8 QA PASS 141/141**) · (3) **Ops** schema restart · Reset Themes `admin_manage_scanjobs` · DAT uploads · Arcade/AES + prior leaf rescans after ship · **Blocked:** `:5006` often down · no Class A · no Discord · **Canvas: synced**
+**Immediate board next (ordered):** (1) **W23** Themes-as-systems (W22 UI rem closed — UID-004 + UID-016 UI+BE Done) — [roadmap-w22-plus.md](roadmap-w22-plus.md) · (2) **Human ship** Waves **15–20 + W21 + W22-match + UI-W22-M7 + UID-* + BE-DET-1…10** (Done uncommitted · **BE-DET-9 QA PASS 65/65** · **BE-DET-10 QA PASS 10/10 + admin vitest 73/73** · **BE-DET-8 QA PASS 141/141**) · (3) **Ops** schema restart · Reset Themes `admin_manage_scanjobs` · DAT uploads · Arcade/AES + prior leaf rescans after ship · **Blocked:** `:5006` often down · no Class A · no Discord
 
 ### Wave 22+ — feedback roadmap (In progress)
 
-Human 2026-08-01 feedback. **W21** stays first-scan fallback (above) — not renumbered. Full table: [roadmap-w22-plus.md](roadmap-w22-plus.md). UI debt register: [ui-debt-log.md](../dev/ui-debt-log.md). Presentation: `wave-program-presentation.canvas.tsx`.
+Human 2026-08-01 feedback. **W21** stays first-scan fallback (above) — not renumbered. Full table: [roadmap-w22-plus.md](roadmap-w22-plus.md). UI debt register: [ui-debt-log.md](../dev/ui-debt-log.md).
 
 | Wave | Focus | Primary seats | Status |
 |---|---|---|---|
@@ -328,11 +328,11 @@ vitest rather than live.
 | Game Master | [v1-gamemaster-signoff.md](v1-gamemaster-signoff.md) · CHANGELOG Emulation honesty |
 | Docs | [admin-hybrid.md](admin-hybrid.md) · [upgrade-notes-1.0.md](upgrade-notes-1.0.md) · [observability-profile.md](../runbooks/observability-profile.md) |
 
-## Agent team (Jul 27 · seats extended 2026-08-01)
+## Agent team (Jul 27 · seats extended 2026-08-01 · migrated off Cursor 2026-08-20)
 
-Seats **1–14:** PM · UI/UX · Backend · Desktop · QA · Docs · Game Master · Ops · **Art** · **Creative** · **Platform** · **Finance** · **Hardware** · **A11y**. Index: [agent-skills.md](../dev/agent-skills.md) · router: `.cursor/skills/agent-team/SKILL.md`.
+13 domain agents in `.claude/agents/`: UI/UX · Backend · Desktop · QA · Docs · Game Master · Ops · **Art** · **Creative** · **Platform** · **Finance** · **Hardware** · **A11y**. Seat numbers were dropped in the migration — they had a vacant slot and tracked nothing real. Index and intent router: [agent-skills.md](../dev/agent-skills.md).
 
-**Disperse:** Parent chat **is** the PM monitor — **Task**s seats (**relevant agent only**; seats refuse wrong-seat). Exception: human-asked process/skill edits may land in-parent. Docs owns program canvas Done/Next/Blocked/Team flow each wave; ship-ready wave close requires **Canvas: synced**.
+**How work routes:** the main thread does the work; a domain agent is launched only when a slice genuinely sits in its territory, and agents still refuse wrong-seat asks and hand off. This board — Ship TLDR · Done · Next · Blocked — is the program board, kept true by `docs-sync` on every change rather than by a separate canvas.
 
 ## Flags
 

@@ -2,17 +2,11 @@
 
 **Date:** 2026-08-16 · **Product version:** 1.0.0-beta  
 **Purpose:** Inventory of docs, ops, and communications.  
-**Sync rule:** `.cursor/skills/docs-sync/` + `.cursor/rules/docs-sync.mdc` — update on every code change.
+**Sync rule:** `.claude/skills/docs-sync/` — update on every code change; required by `CLAUDE.md`.
 
-**Program board:**  
-`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`  
-**Owner:** Docs (`@agent-docs`) refreshes this canvas **each wave** (Done · Next · Blocked · Team flow) from the PM content brief. PM owns the brief; Docs owns the file edit.
+**Program board:** [progress.md](progress.md) — Ship TLDR · Done · Next · Blocked. Refreshed by `agent-docs` each wave.
 
-**Feature roadmap mockups:**  
-`C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\feature-roadmap-mockups.canvas.tsx`
-
-**Wave program presentation (W21–W25 + UI debt):**  
-`C:\Users\cephyrix_zyth\.cursor\projects\192-168-50-116-isos-gametheca\canvases\wave-program-presentation.canvas.tsx`
+> The board used to be a Cursor canvas outside the repo (`…/.cursor/projects/…/gametheca-program.canvas.tsx`), alongside canvases for the feature-roadmap mockups and the W21–W25 wave presentation. Those retired with the Cursor migration on 2026-08-20; `progress.md` is the tracked board now.
 
 ## Status legend
 
@@ -103,6 +97,7 @@
 | Guide | Status | Notes |
 |---|---|---|
 | Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — **W22-1 Done** unified chrome (`/libraries` · `/scan_management`) · multi-select sticky **Scan**/**Edit**/**Delete** → `POST …/batch/{scan,edit,delete}` · **BE batch APIs Done** (`force` skips typed names; UI prefers batch / 404 soft-degrade) · Layout chips · `gt-toast-host` · scan queue/force · unmatched · **UID-005** top actions / Resolve pills / client sort · Wave 18 timing/filters · **Scanning filters** · **W20-1/1b** propose/import · **W20-2** trail · **W20-4** scan-match · **W20-5a** Stage D · post-deploy Reset Themes (`admin_manage_libs` for sticky Scan/Edit · `admin_manage_scanjobs`) |
+| [members-and-invites.md](../admin/members-and-invites.md) | Have | Invites as links (email optional) · admin-created accounts with no email · `.invalid` placeholder rationale |
 | Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` 10 · Reset after Wave 2d · **W22-1** `admin_manage_libs` + `admin_manage_scanjobs` (+ **UID-005** · Soft title/Utility) · loading motifs on volume |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — feature defaults ON · OIDC opt-in · malware block-on-hit · ClamAV · native Arr indexers (add/bulk/presets) + Prowlarr/Jackett · **W20-4** Scan/match Settings **Done** (`/admin/scan_match` + `GET|PUT /api/admin/scan-match/config` · defaults 0.92/0.08/0.85/conservative) |
 | Discover sections (storefront · zones · events) | Have | [discover-sections.md](../admin/discover-sections.md) — manual pick / library / platform / genre zones, reorder + hide built-ins · **W25** storefront shelves (`curated_for_you` · `upcoming`) · `shelf`/`hero`/`carousel` layouts · scheduled **events** (`starts_at`/`ends_at`, UTC) |
@@ -135,6 +130,8 @@
 |---|---|---|
 | [unraid-deploy.md](../runbooks/unraid-deploy.md) | Have | New Unraid container · volume sectioning (games RO vs library RW) · monitor-while-testing · `.env.unraid.example` |
 | [docker-compose-deploy.md](../runbooks/docker-compose-deploy.md) | Have | Compose install · LiveKit + **ClamAV** + **challenge** profiles |
+| [install-native.md](../runbooks/install-native.md) | Have | Native install Linux · macOS · Windows · installer flags · systemd/launchd/NSSM · upgrade |
+| [remote-scan-locations.md](../runbooks/remote-scan-locations.md) | Have | `GT_LIBRARY_ROOTS` — NAS shares / extra disks; SMB · NFS · UNC · autofs · Docker binds |
 | [observability-profile.md](../runbooks/observability-profile.md) | Have | Optional Prometheus stub (`# profile: observability`) |
 | [container-wont-start.md](../runbooks/container-wont-start.md) | Have | Crash loops |
 | [livekit-unraid.md](../runbooks/livekit-unraid.md) | Have | Optional voice SFU |
@@ -163,10 +160,10 @@
 | Doc | Status |
 |---|---|
 | Issue assess / fix workflow | Have — [dev/issue-assess-agent.md](../dev/issue-assess-agent.md) |
-| Agent skills index | Have — [dev/agent-skills.md](../dev/agent-skills.md) — seats **1–14** (Art · Creative · Platform · Finance · Hardware · A11y added 2026-08-01) · sphere · seat router · wrong-seat refuse · ship helpers · lanes |
+| Agent skills + agents index | Have — [dev/agent-skills.md](../dev/agent-skills.md) — 7 skills · 13 domain agents · intent router · wrong-seat refuse · lanes |
 | UI debt log (recurring defects) | Have — [dev/ui-debt-log.md](../dev/ui-debt-log.md) — badge inventory · UID-001…015 · **UID-001**/**UID-002**/**UID-005**/**UID-009** done · UI Tasks must update |
-| Docs-sync skill | Have — `.cursor/skills/docs-sync/` |
-| Prompt-brief middleman | Have — `.cursor/skills/prompt-brief/` + rule |
+| Docs-sync skill | Have — `.claude/skills/docs-sync/` |
+| Agent locks (product + engineering defaults) | Have — [dev/agent-locks.md](../dev/agent-locks.md) |
 | UI tokens (Wave 0 / B+C) | Have — [dev/ui-wave0-tokens.md](../dev/ui-wave0-tokens.md) |
 | Architecture overview | Create |
 | Local dev setup | Update |
@@ -193,7 +190,7 @@ Also: Friends companion dock + `/social-companion` pop-out, Support report form,
 | Area | Action |
 |---|---|
 | README | Synced for 0.2.0 — **live PNG screenshots** (hero · Library · Systems) · Chat Capture **needed** · feature defaults ON · OIDC opt-in · ClamAV profile · Friends companion · no Discord |
-| [progress.md](progress.md) | Aug 01 — **BE-DET-9 Done** fandom alias · **QA PASS 65/65** · fixture pack 50 soft · DoD met · live skipped · **BE-DET-8** Arcade/AES · **QA PASS 141/141** · **UID-016** BE disk-meta **QA PASS 13/13** (UI soft-read **32/32**) · **UID-004 Done** (**QA PASS 33/33**) · **W22 UI rem closed** · **BE-DET-1…8** preserved · **UID-009/001/002/005** QA PASS · **UI-W22-M7** · **W22-1** · **W22-match** · **QA PASS 138+10** · **Next** **BE-DET-10** image kinds · **W23** · [roadmap-w22-plus.md](roadmap-w22-plus.md) · [ui-debt-log.md](../dev/ui-debt-log.md) · **Reset Themes** `admin_manage_scanjobs` + `gt-chrome.css` + libs/badge · **Finance TCO Done** · **W21** preserved · W23–W25 Queued · seats 1–14 · `:5006` BLOCKED · smoking gun: `(digits)` ≠ Steam App IDs · no Class A · **Canvas: synced** |
+| [progress.md](progress.md) | Aug 01 — **BE-DET-9 Done** fandom alias · **QA PASS 65/65** · fixture pack 50 soft · DoD met · live skipped · **BE-DET-8** Arcade/AES · **QA PASS 141/141** · **UID-016** BE disk-meta **QA PASS 13/13** (UI soft-read **32/32**) · **UID-004 Done** (**QA PASS 33/33**) · **W22 UI rem closed** · **BE-DET-1…8** preserved · **UID-009/001/002/005** QA PASS · **UI-W22-M7** · **W22-1** · **W22-match** · **QA PASS 138+10** · **Next** **BE-DET-10** image kinds · **W23** · [roadmap-w22-plus.md](roadmap-w22-plus.md) · [ui-debt-log.md](../dev/ui-debt-log.md) · **Reset Themes** `admin_manage_scanjobs` + `gt-chrome.css` + libs/badge · **Finance TCO Done** · **W21** preserved · W23–W25 Queued · seats 1–14 · `:5006` BLOCKED · smoking gun: `(digits)` ≠ Steam App IDs · no Class A |
 | CHANGELOG | Unreleased — BE-DET-9 fandom soft alias + BE-DET-8 Arcade/AES + UID-016/004 + waves 14–18 catch-up; bump when cutting 0.2.0 |
 | `.env.example` | Includes LiveKit + SUPPORT_GITHUB_* + malware scan |
 | In-app Help (`/help`) | Accordion Help · Kind Soft titles / Utilities · EXP/TOOL tooltips · Library Filters chevron-rail collapse · Tile badges four-corner / no OUT/~ /RELEASE · Jump top/bottom on scrollable pages · Chat slide-out · Preferences sectioned · Report Context/Logs collapsed · News tabs · Notifications dense · API token urlsafe/`-`/`_` + HTTP Copy · Ctrl/Cmd+K · Signals UPDATE · MISSING · NEW · LANG · Friends · no Discord |

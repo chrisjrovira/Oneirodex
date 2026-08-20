@@ -14,9 +14,6 @@ gametheca/static/library/images
 /gametheca/static/images/*.jpg
 /venv
 /.venv
-/.codebuddy
-/.codebuddy/*
-.codebuddy
 /.git
 # Track CI workflows + PR/issue templates; ignore other local .github scratch if any
 /.github/*
@@ -25,12 +22,6 @@ gametheca/static/library/images
 !/.github/PULL_REQUEST_TEMPLATE.md
 !/.github/ISSUE_TEMPLATE/
 !/.github/ISSUE_TEMPLATE/**
-/gametheca/static/library/zips/
-CLAUDE.md
-/.claude/*
-.claude/settings.local.json
-letsrebuild.md
-.claude/settings.local.json
 # Python
 __pycache__/
 *.py[cod]
@@ -82,7 +73,11 @@ clients/desktop/src-tauri/target/
 .eggs/
 
 # Development / scratch (do not ignore real project docs or CI)
-.claude/
+# .claude/skills + .claude/agents are the tracked agent system (migrated off .cursor/).
+# Everything else under .claude/ is local session state.
+.claude/*
+!.claude/skills/
+!.claude/agents/
 .codebuddy/
 CLAUDE.md
 letsrebuild.md

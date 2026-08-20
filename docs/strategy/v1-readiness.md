@@ -1,9 +1,9 @@
 # Official v1 readiness — program review
 
 **Date:** 2026-07-27  
-**Status:** Planning board (feed from `@agent-team` scratch review)  
+**Status:** Planning board (feed from the agent review — [../dev/agent-skills.md](../dev/agent-skills.md))  
 **Current ship track:** 0.2.0 → **1.0.0** only after caveats below are closed or explicitly deferred  
-**Program board:** `C:\Users\cephyrix_zyth\.cursor\projects\c-Users-cephyrix-zyth-Desktop-gametheca\canvases\gametheca-program.canvas.tsx`
+**Program board:** [progress.md](progress.md)
 
 ## North-star decision (locked)
 
@@ -41,7 +41,7 @@
 
 | Seat | Skill | v1 focus |
 |---|---|---|
-| PM | `agent-pm` | Sequence P0→P2; gate 1.0.0 |
+| Maintainer | main thread | Sequence P0→P2; gate 1.0.0 |
 | UI/UX | `agent-uiux` | Polish, a11y, virtualization, palette, admin chrome consistency |
 | Backend | `agent-backend` | Migrations, probes, worker correctness, flag clarity |
 | Desktop | `agent-desktop` | Path polish · **V1-DESK-1 secure store shipped** · unsigned distribution (no certs) · E2E-critical paths |

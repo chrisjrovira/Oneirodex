@@ -1,6 +1,6 @@
 # PM living backlog — misses before official 1.0.0
 
-**Date:** 2026-07-27 · **Owner:** `@agent-pm`  
+**Date:** 2026-07-27 · **Owner:** `maintainer`  
 **Source:** team scratch review + Jul 27 wave close-out  
 **Rule:** Keep-and-enhance; no stack rewrite; no Discord / marketplace / DRM queues / romhacking.net scrape
 
@@ -64,25 +64,25 @@ P2 / defer:   MISS-UI-4 (ADR defer) · MISS-GM-1 · SCRUB-5/6b · OPS-CERT
 
 ## Ready prompts (executed in this session)
 
-### @agent-docs — MISS-DOC-1/2/3
+### `agent-docs` — MISS-DOC-1/2/3
 Close gate 8 as far as text allows; Capture checklist; scrub progress competitive leftover.
 
-### @agent-backend — MISS-BE-1/2/3
+### `agent-backend` — MISS-BE-1/2/3
 Workers default 1; OpenAPI/version hygiene; document ops `services`.
 
-### @agent-uiux — MISS-UI-1/2/3
+### `agent-uiux` — MISS-UI-1/2/3
 Empty/loading pattern; skip link; one Integrations React slice.
 
-### @agent-qa — MISS-QA-1/2/3
+### `agent-qa` — MISS-QA-1/2/3
 Activity + VoiceLobby tests; CI desktop vitest; scrub-7 note.
 
-### @agent-desktop — MISS-DESK-1/2
+### `agent-desktop` — MISS-DESK-1/2
 app.ts smoke + auth caveat docs.
 
-### @agent-ops — MISS-OPS-1/2
+### `agent-ops` — MISS-OPS-1/2
 Observability stub profile + Unraid checklist verify.
 
-### @agent-gamemaster — MISS-GM-1
+### `agent-gamemaster` — MISS-GM-1
 CHANGELOG caveats blurb.
 
 ## Open decisions (locked for this wave)

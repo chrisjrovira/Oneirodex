@@ -1,7 +1,7 @@
 # UI debt log (recurring defects)
 
 **Purpose:** Stop the UI seat from “fixing” the same human complaints without a durable register.  
-**Rule:** Before closing any `@agent-uiux` Task that touches Library tiles, Filters, Admin Scans/Unmatched, Themes, Emulators, Settings, or Chat chrome — **read this file**, tick related open debts, and **append** a Change log row for what you shipped (or explicitly mark `deferred` with reason).
+**Rule:** Before closing any `agent-uiux` Task that touches Library tiles, Filters, Admin Scans/Unmatched, Themes, Emulators, Settings, or Chat chrome — **read this file**, tick related open debts, and **append** a Change log row for what you shipped (or explicitly mark `deferred` with reason).
 
 **Owner:** UI/UX · **QA verifies** against open `open` rows · **PM** prioritizes wave IDs.
 
@@ -43,7 +43,7 @@ Status: `open` | `in_progress` | `done` | `deferred` | `wontfix`
 4. **Theme/Reset Themes gap** — classic admin theme copies stale after ship; human sees old UI until Ops Reset Themes.
 5. **No presentation** — human can’t see open vs done across waves in one place.
 
-**Hardening (2026-08-01):** This log + presentation canvas + UI skill gate + new Art/Creative seats.
+**Hardening (2026-08-01):** This log + the UI debt gate in `agent-uiux` + the Art/Creative agents.
 
 ---
 

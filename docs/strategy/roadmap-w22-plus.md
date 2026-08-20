@@ -5,7 +5,7 @@
 UI recurring defects: [ui-debt-log.md](../dev/ui-debt-log.md).
 
 **Finance (cross-wave):** TCO sketch **Done** — Unraid-first · [cloud-tco-ballpark.md](cloud-tco-ballpark.md) (detail in private vault).  
-Presentation canvas: `wave-program-presentation.canvas.tsx` (Cursor canvases folder).
+Program board: [progress.md](progress.md).
 
 | Wave | Focus | Primary seats | Status |
 |---|---|---|---|

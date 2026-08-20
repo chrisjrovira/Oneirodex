@@ -305,7 +305,7 @@ pytest tests/test_security_suite.py tests/test_set_completion.py tests/test_logi
 
 Set `TEST_DATABASE_URL` (DB name must contain `test`, default `gamethecatest`) for DB-backed tests — [local-postgres-pytest.md](docs/runbooks/local-postgres-pytest.md).
 
-**Agent workflow:** docs sync on every change (`.cursor/skills/docs-sync/`) · task briefing (`.cursor/skills/prompt-brief/`) — [agent-skills.md](docs/dev/agent-skills.md).
+**Agent workflow:** docs sync on every change (`.claude/skills/docs-sync/`) · locked defaults ([agent-locks.md](docs/dev/agent-locks.md)) — [agent-skills.md](docs/dev/agent-skills.md).
 
 ### Versioning
 

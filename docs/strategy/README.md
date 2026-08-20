@@ -54,5 +54,5 @@ Member free-store claims: [../user/free-games.md](../user/free-games.md) (Wave 1
 - Member SPA: `frontend/member-app/`
 - Admin SPA: `frontend/admin-app/` (hybrid with Jinja forms)
 - Runbooks: `docs/runbooks/` · Guides: `docs/user/`, `docs/admin/`
-- Docs sync skill: `.cursor/skills/docs-sync/`
+- Docs sync skill: `.claude/skills/docs-sync/`
 - Desktop: `clients/desktop/` · Headset clients notes: `clients/quest/` (Quest = one seat; see [headset-vr.md](headset-vr.md))

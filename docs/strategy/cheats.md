@@ -66,7 +66,7 @@
 
 ## Handoffs
 
-- **@agent-backend:** `.cht` builder · `cheat_surface` on browse/details · refuse `.cht` when not `retroarch` · librarian+ disk paths  
-- **@agent-uiux:** Hide RetroArch Cheats when `cheat_surface !== 'retroarch'`; treat `pc_wand` as reserved (no panel until wand ships)  
-- **@agent-desktop:** Stage `.cht` only when `cheat_surface === 'retroarch'`  
-- **@agent-docs:** User note under browser-play / companion · progress Wave 19 bullet
+- **`agent-backend`:** `.cht` builder · `cheat_surface` on browse/details · refuse `.cht` when not `retroarch` · librarian+ disk paths  
+- **`agent-uiux`:** Hide RetroArch Cheats when `cheat_surface !== 'retroarch'`; treat `pc_wand` as reserved (no panel until wand ships)  
+- **`agent-desktop`:** Stage `.cht` only when `cheat_surface === 'retroarch'`  
+- **`agent-docs`:** User note under browser-play / companion · progress Wave 19 bullet

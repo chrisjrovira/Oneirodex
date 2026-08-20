@@ -258,10 +258,10 @@ Priority lean: ops on per-leaf libs + skip-dir ≫ **LOCKED enum add** ≫ depth
 | Seat | Ask |
 |---|---|
 | **Ops / Admin** | Create one library per ROM leaf from the tables; follow **Suggested apply order**; exclude list; typo NES path as-is; library nested `ROMs` under emu trees (PS1/PSP); test-scan before Arcade ~6k; private path checklist when available |
-| **@agent-backend** | LOCKED enum add list **shipped (code)**; skip-dir **Done (W20-7 #4 · uncommitted · extended globs + repack regex + Admin `re:`/`dir:`)**; **W20-1 propose leaf libs shipped (code)** |
-| **@agent-docs** | Keep [libraries-and-scans.md](../admin/libraries-and-scans.md) pointer current; program canvas when wave lands |
-| **@agent-uiux** | W20-1: Admin confirm/create UI shipped (Libraries + Library tools mount; create-on-confirm only) |
-| **@agent-desktop** | Companion launch still keyed by platform enum — wrong library platform ⇒ wrong core hints |
+| **`agent-backend`** | LOCKED enum add list **shipped (code)**; skip-dir **Done (W20-7 #4 · uncommitted · extended globs + repack regex + Admin `re:`/`dir:`)**; **W20-1 propose leaf libs shipped (code)** |
+| **`agent-docs`** | Keep [libraries-and-scans.md](../admin/libraries-and-scans.md) pointer current; update [progress.md](progress.md) when the wave lands |
+| **`agent-uiux`** | W20-1: Admin confirm/create UI shipped (Libraries + Library tools mount; create-on-confirm only) |
+| **`agent-desktop`** | Companion launch still keyed by platform enum — wrong library platform ⇒ wrong core hints |
 
 ## Do not
 

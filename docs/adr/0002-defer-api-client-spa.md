@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-27  
 **Status:** Accepted — **defer** wiring into member SPA (MISS-UI-4)  
-**Owners:** `@agent-uiux` · `@agent-backend` · `@agent-pm`
+**Owners:** `agent-uiux` · `agent-backend` · `maintainer`
 
 ## Context
 

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-27  
 **Status:** Accepted for 1.0 — **defer Alembic**; keep `updateschema.py` + `create_all`  
-**Owners:** `@agent-backend` · `@agent-ops` · `@agent-pm`
+**Owners:** `agent-backend` · `agent-ops` · `maintainer`
 
 ## Context
 
