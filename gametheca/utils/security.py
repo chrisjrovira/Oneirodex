@@ -52,7 +52,13 @@ def is_safe_path(user_path, allowed_bases):
 
 
 def get_allowed_base_directories(app):
-    """Get allowed base directories from app configuration."""
+    """Get allowed base directories from app configuration.
+
+    Every path-sensitive route funnels through here, so the extra scan
+    locations declared in ``GT_LIBRARY_ROOTS`` are appended in one place rather
+    than being threaded through scan, download, delete, storage and export
+    individually.
+    """
     allowed_bases = []
     games = app.config.get('DATA_FOLDER_GAMES')
     if games:
@@ -62,6 +68,15 @@ def get_allowed_base_directories(app):
         base_path = app.config.get(key)
         if base_path:
             allowed_bases.append(base_path)
+
+    from gametheca.utils.library_roots import library_root_paths, same_path
+
+    for root_path in library_root_paths(app):
+        # Compared as paths, not as strings: a root written "/games" and a
+        # DATA_FOLDER_GAMES of "/games/" are one directory, and listing it
+        # twice would only make the allowlist harder to read in logs.
+        if not any(same_path(root_path, existing) for existing in allowed_bases):
+            allowed_bases.append(root_path)
     return allowed_bases
 
 

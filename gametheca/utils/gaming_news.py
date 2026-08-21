@@ -7,11 +7,42 @@ import xml.etree.ElementTree as ET
 from typing import Any
 from urllib.request import Request, urlopen
 
-FEED_URLS = (
+DEFAULT_FEED_URLS = (
     'https://www.polygon.com/rss/index.xml',
     'https://www.pcgamer.com/rss/',
     'https://www.rockpapershotgun.com/feed',
 )
+
+
+def feed_urls() -> tuple[str, ...]:
+    """Which sites headlines come from.
+
+    Was a hardcoded tuple, so a household that did not care for one of these
+    three — or wanted a site of its own — had no say at all. ``GT_NEWS_FEEDS``
+    replaces the list entirely (comma or pipe separated); unset keeps the
+    defaults. Only http(s) entries are accepted: this list is fetched by the
+    server, so a `file://` in it would be a read of the server's own disk.
+    """
+    import os
+
+    raw = (os.getenv('GT_NEWS_FEEDS') or '').strip()
+    if not raw:
+        return DEFAULT_FEED_URLS
+
+    urls = []
+    for chunk in raw.replace('|', ',').split(','):
+        url = chunk.strip()
+        if url.lower().startswith(('http://', 'https://')) and url not in urls:
+            urls.append(url)
+    return tuple(urls) or DEFAULT_FEED_URLS
+
+
+def source_name(url: str) -> str:
+    """The host, as shown on a headline card and used to filter by site."""
+    try:
+        return url.split('/')[2].replace('www.', '')
+    except IndexError:
+        return url
 
 _TAG_RE = re.compile(r'<[^>]+>')
 
@@ -122,10 +153,10 @@ def _parse_feed(xml_bytes: bytes, source: str) -> list[dict[str, Any]]:
 
 def fetch_gaming_headlines(*, limit: int = 12) -> list[dict[str, Any]]:
     collected: list[dict[str, Any]] = []
-    for url in FEED_URLS:
+    for url in feed_urls():
         if len(collected) >= limit:
             break
-        source = url.split('/')[2].replace('www.', '')
+        source = source_name(url)
         try:
             req = Request(url, headers={'User-Agent': 'GameThecaNews/0.2'})
             with urlopen(req, timeout=6) as resp:

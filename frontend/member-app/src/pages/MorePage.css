@@ -154,6 +154,14 @@
   border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
 }
 
+/* The refresh control rides the right end of the inbox rule, opposite its
+   heading — on the section it acts on rather than in bar two, where nothing
+   said which list "Refresh" meant. */
+.gt-updates__refresh-tip {
+  margin-left: auto;
+  align-self: center;
+}
+
 .gt-updates__section-head h2,
 .gt-updates__inbox > .gt-updates__section-head h2 {
   margin: 0;

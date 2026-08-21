@@ -16,44 +16,50 @@ import { base } from './icons'
 export const railIconPaths = {
   'acquire': (
     <>
-      <path d="M6 3H3v9a9 9 0 0 0 18 0V3h-3v9a6 6 0 0 1-12 0V3z"/>
-      <path d="M3 8h3M18 8h3"/>
+      <path d="M5 8h14l-1.3 11.2a2 2 0 0 1-2 1.8H8.3a2 2 0 0 1-2-1.8L5 8z"/>
+      <path d="M9 8V6a3 3 0 0 1 6 0v2"/>
+      <path d="M12 11.5v5M9.5 14h5" strokeWidth="2.2"/>
     </>
   ),
   'activity': (
     <>
-      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+      <path d="M2 12h4l2.5-7 4 14L15.5 12H22"/>
+      <circle cx="15.5" cy="12" r="2" fill="currentColor" stroke="none"/>
     </>
   ),
   'admin': (
     <>
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>
+      <path d="M12 2.5 4 5.5v6c0 5 3.4 9.2 8 10.5 4.6-1.3 8-5.5 8-10.5v-6l-8-3z"/>
+      <path d="m8.8 12 2.2 2.2 4.2-4.4" fill="none"/>
     </>
   ),
   'big-picture': (
     <>
-      <rect x="2" y="7" width="20" height="14" rx="2"/>
-      <path d="m17 2-5 5-5-5"/>
+      <rect x="2" y="4" width="20" height="14" rx="2"/>
+      <path d="M8 21h8"/>
+      <path d="M10.5 8.7v4.6L15 11l-4.5-2.3z" fill="currentColor" stroke="none"/>
     </>
   ),
   'calendar': (
     <>
       <rect x="3" y="5" width="18" height="16" rx="2"/>
-      <path d="M16 3v4M8 3v4M3 11h18"/>
+      <path d="M16 3v4M8 3v4M3 10h18"/>
+      <rect x="6.5" y="13" width="4" height="4" rx="1" fill="currentColor" stroke="none"/>
     </>
   ),
   'chat': (
     <>
-      <path d="M3 11 21 6v12L3 14v-3z"/>
-      <path d="M11.5 16.7a3 3 0 0 1-5.8-1.5"/>
+      <path d="M21 12a8 7 0 0 1-8 7 9 9 0 0 1-3-.5L5 20l1.2-3.3A6.7 6.7 0 0 1 5 12a8 7 0 0 1 16 0z"/>
+      <circle cx="9.5" cy="12" r="1.1" fill="currentColor" stroke="none"/>
+      <circle cx="13" cy="12" r="1.1" fill="currentColor" stroke="none"/>
+      <circle cx="16.5" cy="12" r="1.1" fill="currentColor" stroke="none"/>
     </>
   ),
   'collections': (
     <>
-      <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-      <polyline points="2 17 12 22 22 17"/>
+      <path d="M12 2 2 7l10 5 10-5-10-5z" fill="currentColor" stroke="none"/>
       <polyline points="2 12 12 17 22 12"/>
+      <polyline points="2 17 12 22 22 17"/>
     </>
   ),
   'content': (
@@ -64,8 +70,9 @@ export const railIconPaths = {
   ),
   'dashboard': (
     <>
-      <rect x="3" y="4" width="18" height="16" rx="2"/>
-      <path d="M10 4v16"/>
+      <rect x="3" y="4" width="7.5" height="16" rx="2" fill="currentColor" stroke="none"/>
+      <rect x="13.5" y="4" width="7.5" height="7" rx="2"/>
+      <rect x="13.5" y="13" width="7.5" height="7" rx="2"/>
     </>
   ),
   'discover': (
@@ -76,26 +83,33 @@ export const railIconPaths = {
   ),
   'downloads': (
     <>
-      <path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>
+      <path d="M12 3v9"/>
+      <path d="M8 10.5 12 15l4-4.5z" fill="currentColor" stroke="none"/>
+      <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
     </>
   ),
   'favorites': (
     <>
-      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>
+      <path
+        d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"
+        fill="currentColor"
+        stroke="none"
+      />
     </>
   ),
   'friends': (
     <>
-      <circle cx="9" cy="8" r="4"/>
-      <path d="M2 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>
-      <path d="M17 4.6a4 4 0 0 1 0 6.8M18.6 20c0-2.1-.7-4-1.9-5.5"/>
+      <circle cx="9" cy="8" r="3.6" fill="currentColor" stroke="none"/>
+      <path d="M2.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/>
+      <circle cx="17.5" cy="9.5" r="2.6"/>
+      <path d="M17.5 14.2c2.4 0 4.3 1.9 4.3 4.3"/>
     </>
   ),
   'help': (
     <>
       <circle cx="12" cy="12" r="9"/>
-      <path d="M9.5 9.2a2.6 2.6 0 1 1 3.4 2.5c-.6.2-.9.8-.9 1.4v.4"/>
-      <path d="M12 17h.01"/>
+      <path d="M9.4 9.4a2.7 2.7 0 1 1 3.5 2.6c-.6.2-.9.8-.9 1.4v.3"/>
+      <circle cx="12" cy="17" r="1.2" fill="currentColor" stroke="none"/>
     </>
   ),
   'integrations': (
@@ -111,8 +125,9 @@ export const railIconPaths = {
   ),
   'library': (
     <>
-      <rect x="2" y="6" width="20" height="12" rx="3"/>
-      <path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/>
+      <rect x="3" y="4" width="4.5" height="16" rx="1" fill="currentColor" stroke="none"/>
+      <rect x="9.5" y="4" width="4.5" height="16" rx="1"/>
+      <path d="m16.6 5.4 3.9 1-3.1 13.2-3.9-1z"/>
     </>
   ),
   'logout': (
@@ -124,33 +139,37 @@ export const railIconPaths = {
   ),
   'news': (
     <>
-      <path d="M3 11 21 6v12L3 14v-3z"/>
-      <path d="M11.5 16.7a3 3 0 0 1-5.8-1.5"/>
+      <path d="M4 5h13a1 1 0 0 1 1 1v13H6a2 2 0 0 1-2-2V5z"/>
+      <path d="M18 9h2a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2"/>
+      <rect x="7" y="8" width="8" height="3" rx="0.5" fill="currentColor" stroke="none"/>
+      <path d="M7 14h8"/>
     </>
   ),
   'notifications': (
     <>
-      <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10z"/>
+      <path d="M6 10.5a6 6 0 0 1 12 0c0 3.8 1.4 5.2 1.4 5.2H4.6S6 14.3 6 10.5z"/>
       <path d="M10 19a2 2 0 0 0 4 0"/>
+      <circle cx="18" cy="5.5" r="2.6" fill="currentColor" stroke="none"/>
     </>
   ),
   'ownership': (
     <>
-      <path d="M6 2 3 6v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4H6z"/>
-      <path d="M3 6h18"/>
-      <path d="M16 10a4 4 0 0 1-8 0"/>
+      <circle cx="8" cy="8" r="4.2" fill="currentColor" stroke="none"/>
+      <path d="m11 11 9 9"/>
+      <path d="m17.5 17.5 2-2M15 15l2-2"/>
     </>
   ),
   'playtime': (
     <>
       <circle cx="12" cy="12" r="9"/>
-      <path d="M12 7v5l3 2"/>
+      <path d="M12 7.2V12l3.2 2.1"/>
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>
     </>
   ),
   'report': (
     <>
-      <rect x="7" y="8" width="10" height="11" rx="5"/>
-      <path d="M9 4l1.5 2M15 4l-1.5 2M4 12H2M22 12h-2M4 17l-2 1M22 18l-2-1M9 8V6M15 8V6"/>
+      <path d="M5 21V3"/>
+      <path d="M5 4.2h11.5l-2 3.4 2 3.4H5z" fill="currentColor" stroke="none"/>
     </>
   ),
   'settings': (
@@ -168,43 +187,63 @@ export const railIconPaths = {
   ),
   'systems': (
     <>
-      <rect x="7" y="7" width="10" height="10" rx="1"/>
-      <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/>
+      <rect x="6.5" y="6.5" width="11" height="11" rx="2"/>
+      <rect x="10" y="10" width="4" height="4" rx="1" fill="currentColor" stroke="none"/>
+      <path d="M9.5 2v3M14.5 2v3M9.5 19v3M14.5 19v3M2 9.5h3M2 14.5h3M19 9.5h3M19 14.5h3"/>
     </>
   ),
   'trailers': (
     <>
-      <rect x="2" y="3" width="20" height="18" rx="2"/>
-      <path d="M7 3v18M17 3v18M2 9h5M2 15h5M17 9h5M17 15h5"/>
+      <rect x="4" y="3" width="16" height="18" rx="2"/>
+      <path d="M4 8h3M4 12h3M4 16h3M17 8h3M17 12h3M17 16h3"/>
+      <path d="M10.5 9.2v5.6L15 12l-4.5-2.8z" fill="currentColor" stroke="none"/>
     </>
   ),
   'updates': (
     <>
-      <path d="M12 19V5M5 12l7-7 7 7"/>
+      <path d="M20 12a8 8 0 1 1-2.6-5.9"/>
+      <path d="M20.5 3v5h-5z" fill="currentColor" stroke="none"/>
     </>
   ),
   'users': (
     <>
-      <circle cx="9" cy="8" r="4"/>
-      <path d="M2 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>
-      <path d="M17 4.6a4 4 0 0 1 0 6.8M18.6 20c0-2.1-.7-4-1.9-5.5"/>
+      <circle cx="8.5" cy="8" r="3.4"/>
+      <path d="M2 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/>
+      <circle cx="17.5" cy="6.5" r="2.4" fill="currentColor" stroke="none"/>
+      <path d="M17.5 11.5c2.5 0 4.5 2 4.5 4.5"/>
     </>
   ),
   'vr': (
     <>
-      <rect x="2" y="7" width="20" height="10" rx="3"/>
-      <circle cx="7.5" cy="12" r="2"/>
-      <circle cx="16.5" cy="12" r="2"/>
+      <path d="M3 8.5h18a1 1 0 0 1 1 1v4a2 2 0 0 1-2 2h-3.4l-1.8-2.2h-3.6L11.4 15.5H8a2 2 0 0 1-2-2"/>
+      <path d="M2 9.5v4a2 2 0 0 0 2 2"/>
+      <circle cx="8.2" cy="11.6" r="1.5" fill="currentColor" stroke="none"/>
+      <circle cx="15.8" cy="11.6" r="1.5" fill="currentColor" stroke="none"/>
     </>
   ),
   'wishlist': (
     <>
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-      <rect x="8" y="2" width="8" height="4" rx="1"/>
-      <path d="M8 12h8M8 16h5"/>
+      <path d="m12 3.2 2.7 5.5 6 .9-4.35 4.24 1.03 6-5.38-2.83-5.38 2.83 1.03-6L3.3 9.6l6-.9L12 3.2z"/>
+      <path d="m12 7.5 1.2 2.5 2.7.4-1.95 1.9.46 2.7L12 13.7l-2.41 1.3.46-2.7L8.1 10.4l2.7-.4L12 7.5z" fill="currentColor" stroke="none"/>
     </>
   ),
 }
+
+/**
+ * The viewBox is not optional here.
+ *
+ * `base` carries width/height but no viewBox, and every glyph in this file is
+ * drawn on a 24-unit grid. Without a viewBox an SVG maps user units 1:1 to
+ * pixels, so an 18px-wide element showed the **top-left 18x24 of a 24x24
+ * drawing** — every icon silently cropped, losing whatever detail sat right of
+ * x=18. That is why the rail read as a column of similar half-glyphs and why
+ * the collapsed rail looked like it was cutting them off: it was.
+ *
+ * Padded by one unit on each side so a 2px stroke sitting on the edge of the
+ * grid (`M3 8h3M18 8h3`, `M22 12h-4`) is not sliced in half by the viewport
+ * boundary.
+ */
+const RAIL_VIEWBOX = '-1 -1 26 26'
 
 /** @param {{ name: string, size?: number }} props */
 export function RailIcon({ name, size = 18, ...rest }) {
@@ -213,7 +252,15 @@ export function RailIcon({ name, size = 18, ...rest }) {
   // invisible, not a mark the eye reads as a real category.
   if (!glyph) return null
   return (
-    <svg {...base} width={size} height={size} aria-hidden="true" focusable="false" {...rest}>
+    <svg
+      {...base}
+      viewBox={RAIL_VIEWBOX}
+      width={size}
+      height={size}
+      aria-hidden="true"
+      focusable="false"
+      {...rest}
+    >
       {glyph}
     </svg>
   )

@@ -90,12 +90,27 @@
   border-top: none;
 }
 
+/* Panels, the way admin draws them.
+ *
+ * These were large soft cards with generous padding — a different object from
+ * the bordered glass panels every admin surface uses, on a page whose whole job
+ * is reference material. Matching `.gt-admin-panel` (glass fill, 1px border,
+ * 10px radius, 1rem padding) makes Help read as documentation rather than as a
+ * marketing page, and lines it up with the admin help sections it sits beside
+ * in the product.
+ */
 .gt-help__section {
-  padding: clamp(1rem, 2.2vw, 1.75rem);
-  background: var(--gt-surface);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-help-panel-radius, 14px);
+  padding: 1rem;
+  background: var(--gt-glass-bg, var(--gt-surface));
+  border: 1px solid var(--gt-glass-border, var(--gt-border));
+  border-radius: var(--gt-radius-lg);
   color: var(--gt-text);
+}
+
+/* The open one is the one you are reading; the accent edge says so without
+   moving anything. */
+.gt-help__section.is-open {
+  border-color: color-mix(in srgb, var(--gt-accent) 40%, var(--gt-border));
 }
 
 .gt-help__section h2 {

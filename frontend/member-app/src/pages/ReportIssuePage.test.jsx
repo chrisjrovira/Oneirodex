@@ -13,7 +13,10 @@ test('keeps logs and context collapsed by default', () => {
     </MemoryRouter>,
   )
 
-  expect(screen.getByRole('heading', { name: 'Report issue' })).toBeInTheDocument()
+  // "Report", not "Report issue": the form takes ideas as well as defects now.
+  expect(screen.getByRole('heading', { name: 'Report' })).toBeInTheDocument()
+  expect(screen.getByRole('radio', { name: /Something is broken/ })).toBeChecked()
+  expect(screen.getByRole('radio', { name: /An idea/ })).not.toBeChecked()
   expect(screen.getByLabelText('Title')).toBeInTheDocument()
   expect(screen.getByLabelText('Symptom')).toBeInTheDocument()
 

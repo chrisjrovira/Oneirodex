@@ -104,19 +104,27 @@ export function WishlistPage({ shellConfig = {} } = {}) {
     <>
     {useNewChrome ? (
         <ContextBar
+          /* Whose requests you are looking at is a *view* of this page, not an
+             action on it — the same relationship Library's All/Games/Soft
+             titles strip encodes. As a lone toggle button it read as a third
+             action sitting beside "Request a title", and nothing said what the
+             unpressed state was showing. Two segments name both states.
+
+             Librarians only: everyone else has exactly one view, and a
+             one-segment switcher is a label pretending to be a control. */
+          views={
+            isLibrarian
+              ? [
+                  { id: 'mine', label: 'My requests' },
+                  { id: 'all', label: 'Everyone’s' },
+                ]
+              : []
+          }
+          activeView={showAll ? 'all' : 'mine'}
+          onSelectView={(view) => setShowAll(view === 'all')}
           summary={requests ? `${requests.length} requests` : null}
           actions={
             <>
-              {isLibrarian ? (
-                <button
-                  type="button"
-                  className={`gt-cbtn${showAll ? ' is-on' : ''}`}
-                  aria-pressed={showAll}
-                  onClick={() => setShowAll((value) => !value)}
-                >
-                  Everyone’s requests
-                </button>
-              ) : null}
               <Popover label="Request a title">
               <form className="gt-wishlist__form" onSubmit={handleCreate}>
                 <label htmlFor="gt-wishlist-title">Title</label>

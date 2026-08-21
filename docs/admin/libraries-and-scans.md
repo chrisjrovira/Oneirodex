@@ -4,10 +4,30 @@
 
 Admin surfaces today are **Jinja** under `base_admin` (top bar). A React admin SPA is planned; paths below stay valid during migration.
 
+## Where can a library point?
+
+By default: anywhere under the games folder (`DATA_FOLDER_GAMES`) or the OS base
+folder (`BASE_FOLDER_POSIX` / `BASE_FOLDER_WINDOWS`) — Docker mounts both at
+`/storage`.
+
+Beyond that, the operator declares extra **scan locations** in
+`GT_LIBRARY_ROOTS`: a NAS share, a second disk, another Docker bind. Each one
+becomes a starting point in the **Scan location** picker on Auto Scan and Manual,
+and a row in Ops path health. The picker only renders once there is more than
+one location, so single-location installs are unchanged.
+
+A location that is configured but not currently mounted is still listed, marked
+*not mounted* — see [../runbooks/remote-scan-locations.md](../runbooks/remote-scan-locations.md)
+for mounting recipes per OS and for the Docker host-path-vs-container-path trap.
+
+`GET /api/library_roots` (admin) returns the same list the picker uses:
+`{ok, roots: [{id, label, path, source, default, exists, read, write}]}`.
+
 ## Add a library
 
 1. Admin → **Libraries & scans** (`/libraries` or `/scan_management?active_tab=libraries`).
-2. Point the folder at the games mount (Docker: under `/storage/...`).
+2. Point the folder at the games mount (Docker: under `/storage/...`), or pick
+   another **Scan location** when the operator has declared extras.
 3. Set **scan depth** on create/edit (GET seeds the form; save persists it).
 4. **Update library when folders change** — per-library incremental watch (`watch_enabled`: follow global / prefer on / opt out). Global `GT_LIBRARY_WATCH` may still gate Unraid (Ops → Library watch).
 5. Prefer a small test scan before a full library scan.

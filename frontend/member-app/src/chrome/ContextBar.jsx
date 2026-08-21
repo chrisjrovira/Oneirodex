@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 /**
@@ -13,6 +13,9 @@ import { createPortal } from 'react-dom'
 export const TOPBAR_SLOT_ID = 'gt-topbar-slot'
 export const TOPBAR_LEAD_ID = 'gt-topbar-lead'
 export const TOPBAR_TRAIL_ID = 'gt-topbar-trail'
+
+/** Marks a host div as belonging to one ContextBar instance. */
+const HOST_ATTR = 'data-gt-contextbar-host'
 
 /**
  * Bar two — everything the current page can do (UIR-1, Option B).
@@ -159,21 +162,54 @@ export function ContextBar({
   t = (key) => key,
 }) {
   const [slots, setSlots] = useState(null)
+  const instanceId = useId()
 
-  // Find the top bar's slots after mount, not during render: TopBar and the
-  // routed page mount in the same commit, so the nodes do not exist while this
-  // component is first rendering.
-  useEffect(() => {
+  // Own the nodes we portal into, and evict anyone else's.
+  //
+  // Portalling straight into the shared slot divs left a page's controls in the
+  // bar after that page was gone: the first ContextBar mounted after login
+  // never had its portal torn down, so its view strip sat in the centre slot on
+  // every subsequent page — Library showed Activity's "Everyone / Friends only"
+  // above its own strip, which read as buttons that follow you around. React
+  // only removes portal children if the *unmount* runs, and a route that
+  // suspends and is discarded can skip it.
+  //
+  // So each instance appends its own host div, tagged with its id, and sweeps
+  // out hosts belonging to any other instance as it arrives. Cleanup still
+  // removes our own hosts on the way out; the sweep is what makes a missed
+  // cleanup self-correcting rather than permanent — the next page to render
+  // controls clears whatever was stranded.
+  useLayoutEffect(() => {
+    if (typeof document === 'undefined') return undefined
+
     const centre = document.getElementById(TOPBAR_SLOT_ID)
-    if (!centre) {
-      return
-    }
-    setSlots({
+    if (!centre) return undefined
+
+    const targets = {
       centre,
       lead: document.getElementById(TOPBAR_LEAD_ID),
       trail: document.getElementById(TOPBAR_TRAIL_ID),
+    }
+
+    const hosts = {}
+    Object.entries(targets).forEach(([name, target]) => {
+      if (!target) return
+      target.querySelectorAll(`[${HOST_ATTR}]`).forEach((node) => {
+        if (node.getAttribute(HOST_ATTR) !== instanceId) node.remove()
+      })
+      const host = document.createElement('div')
+      host.setAttribute(HOST_ATTR, instanceId)
+      host.className = 'gt-contextbar__host'
+      target.appendChild(host)
+      hosts[name] = host
     })
-  }, [])
+
+    setSlots(hosts)
+    return () => {
+      Object.values(hosts).forEach((host) => host.remove())
+      setSlots(null)
+    }
+  }, [instanceId])
 
   // A page that takes `close` owns its own dismiss, so the popover drops its
   // head row: the panel already carries a frame, and the trigger beside it
@@ -243,13 +279,13 @@ export function ContextBar({
     )
   }
 
+  // No extra wrapper around `viewControl`: SegmentedViews already renders
+  // `.gt-contextbar__views`, so wrapping it produced that class nested inside
+  // itself and two boxes' worth of layout for one strip.
   return (
     <>
       {createPortal(filterControl, slots.lead || slots.centre)}
-      {createPortal(
-        <div className="gt-contextbar__views">{viewControl}</div>,
-        slots.centre,
-      )}
+      {createPortal(viewControl, slots.centre)}
       {createPortal(countControl, slots.trail || slots.centre)}
     </>
   )

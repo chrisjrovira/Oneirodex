@@ -43,6 +43,11 @@ services:
       - DATABASE_PORT=5432
       # Container paths (always); host paths live on the volume mounts below
       - DATA_FOLDER_GAMES=/storage
+      # Extra scan locations, as the CONTAINER sees them. Every path listed
+      # here needs a matching bind mount below, otherwise it is a root that
+      # browses as an empty folder. See docs/runbooks/remote-scan-locations.md
+      #   GT_LIBRARY_ROOTS=NAS ROMs=/storage2|Archive=/storage3
+      - GT_LIBRARY_ROOTS=${GT_LIBRARY_ROOTS:-}
       - UPLOAD_FOLDER=/app/gametheca/static/library
       - SECRET_KEY=${SECRET_KEY}
       - DEV_MODE=${DEV_MODE:-false}
@@ -112,6 +117,14 @@ services:
       - "${DATA_FOLDER_GAMES}:/storage:ro"
       # Library/uploads: host LIBRARY_HOST_PATH → covers, themes, uploads (RW)
       - "${LIBRARY_HOST_PATH:-./data/library}:/app/gametheca/static/library"
+      # Extra scan locations (second disk, NAS share, another appdata share).
+      # Uncomment one line per location, mount it RO like /storage, and list the
+      # container path in GT_LIBRARY_ROOTS above. The host side is mounted by
+      # the host — Docker binds what the kernel already has, it does not speak
+      # SMB or NFS itself. See docs/runbooks/remote-scan-locations.md
+      # - "${LIBRARY_ROOT_2_HOST_PATH}:/storage2:ro"
+      # - "${LIBRARY_ROOT_3_HOST_PATH}:/storage3:ro"
+      # - "${LIBRARY_ROOT_4_HOST_PATH}:/storage4:ro"
       # Optional WebRetro cores bind-mount (PCE/VICE/DOS). Host dir must include
       # the shipped 24 cores OR run scripts/fetch-webretro-cores.sh --defaults first —
       # an empty mount hides image cores. See docs/runbooks/webretro-cores.md

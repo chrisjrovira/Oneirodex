@@ -41,8 +41,10 @@ export function PaginationBar({
 
   return (
     <nav className="pagination-controls gt-pagination" aria-label="Library pagination">
+      {/* Control first, label after — "50 per page" is how the setting reads
+          aloud, and the number is the part you look for when scanning the bar.
+          Label-then-control put a word where the eye expects the value. */}
       <label className="gt-pagination__perpage">
-        <span className="gt-pagination__label">{t('Per page')}</span>
         <select
           className="dropdown-perpage"
           aria-label={t('Per page')}
@@ -58,6 +60,7 @@ export function PaginationBar({
             <option value={perPage}>{perPage}</option>
           )}
         </select>
+        <span className="gt-pagination__label">{t('Per page')}</span>
       </label>
 
       <div className="gt-seg gt-pagination__moves" role="group" aria-label={t('Pages')}>

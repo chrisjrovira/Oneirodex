@@ -26,6 +26,7 @@
   <a href="#-features">Features</a> ·
   <a href="#-screenshots">Screenshots</a> ·
   <a href="#-quick-start">Quick start</a> ·
+  <a href="#-scan-locations-nas-shares-extra-disks">Scan locations</a> ·
   <a href="#-configuration">Config</a> ·
   <a href="#-troubleshooting">Troubleshooting</a> ·
   <a href="#-documentation">Docs</a>
@@ -121,16 +122,70 @@ Live UI captures live in [`docs/assets/readme/`](docs/assets/readme/) (synced fr
 
 ## ⚡ Quick start
 
-### 🐧 Linux installer
+Three ways in. Pick one — you do not need the others.
+
+| | Best for | Guide |
+|---|---|---|
+| 🐳 **Docker Compose** | NAS, Unraid, anything already running Docker | [below](#-docker-compose) |
+| 💻 **Native installer** | Bare metal Linux · macOS · Windows | [below](#-native-installers) · [install-native.md](docs/runbooks/install-native.md) |
+| 🔧 **Manual** | You want every step yourself | [below](#-manual-install) |
+
+Whichever you choose, GameTheca can scan **more than the disk it runs on** — NAS
+shares, second disks, extra mounts — see [scan locations](#-scan-locations-nas-shares-extra-disks).
+
+### 💻 Native installers
 
 ```bash
 git clone --depth 1 https://github.com/chrisjrovira/gametheca.git
 cd gametheca
+```
+
+<table>
+<tr><th>🐧 Linux</th><th>🍎 macOS</th><th>🪟 Windows</th></tr>
+<tr valign="top">
+<td>
+
+```bash
 chmod +x install-linux.sh
 ./install-linux.sh
 ```
 
-Useful flags: `--games-dir /path/to/games` · `--dev` · `--no-db` · `--force`
+apt · dnf · yum · pacman · zypper
+
+</td>
+<td>
+
+```bash
+chmod +x install-macos.sh
+./install-macos.sh
+```
+
+Homebrew (you install brew)
+
+</td>
+<td>
+
+```powershell
+.\install-windows.ps1
+```
+
+winget for Python · PostgreSQL
+
+</td>
+</tr>
+</table>
+
+Each one checks prerequisites, creates the database, builds a virtualenv, and
+writes a `.env` with a generated `SECRET_KEY`.
+
+Common flags — `--games-dir PATH` · `--library-roots 'NAS=/mnt/nas/roms'` ·
+`--port 5006` · `--no-db` · `--dev` · `--force` · `--verbose`
+(Windows uses `-GamesDir`, `-LibraryRoots`, `-Port`, `-SkipDb`, `-Dev`, `-Force`).
+
+Start after installing: `./startweb.sh` — Windows: `.\startweb_windows.cmd`
+
+Service units for boot/login start (systemd · launchd · Task Scheduler / NSSM)
+are in [install-native.md](docs/runbooks/install-native.md).
 
 ### 🐳 Docker Compose
 
@@ -152,11 +207,13 @@ Open **http://localhost:5006** — Postgres is the `db` service; games mount at 
 
 | Deploy | Guide |
 |---|---|
+| 💻 Native (Linux · macOS · Windows) | [install-native.md](docs/runbooks/install-native.md) |
+| 📂 NAS shares / extra disks | [remote-scan-locations.md](docs/runbooks/remote-scan-locations.md) |
 | 🏠 Unraid / NAS | [NAS-DEPLOY.md](NAS-DEPLOY.md) · [unraid-deploy.md](docs/runbooks/unraid-deploy.md) |
 | 🐳 Compose deep dive | [docker-compose-deploy.md](docs/runbooks/docker-compose-deploy.md) |
 | 🔥 Won’t start | [container-wont-start.md](docs/runbooks/container-wont-start.md) |
 
-### 💻 Manual (Windows / Linux)
+### 🔧 Manual install
 
 1. PostgreSQL **17+** with a `gametheca` database  
 2. Copy `.env.example` → `.env` — set `DATABASE_URL`, `SECRET_KEY`, `DATA_FOLDER_GAMES`, `UPLOAD_FOLDER`  
@@ -164,6 +221,38 @@ Open **http://localhost:5006** — Postgres is the `db` service; games mount at 
 4. `./startweb.sh` or `startweb_windows.cmd`
 
 Force the setup wizard: `./startweb.sh --force-setup` (required when upgrading from &lt; 2.0).
+
+Full walkthrough, service units and upgrade notes: [install-native.md](docs/runbooks/install-native.md)
+
+---
+
+## 📂 Scan locations (NAS shares, extra disks)
+
+GameTheca scans **any path the service can open** — which is not limited to the
+machine it runs on. A NAS share, a second internal disk, an external drive: all
+scannable once the host has mounted them.
+
+Two steps, in this order:
+
+1. **Mount it** — `fstab` on Linux, autofs on macOS, a UNC path on Windows, a
+   bind mount in Docker. GameTheca does not speak SMB or NFS; the OS does.
+2. **Declare it** — list the mount in `GT_LIBRARY_ROOTS` so the admin folder
+   browser and the path allowlist know about it.
+
+```bash
+# Native: paths on this machine
+GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games
+
+# Docker: paths as the CONTAINER sees them, one bind each in docker-compose.yml
+GT_LIBRARY_ROOTS=NAS ROMs=/storage2|Archive=/storage3
+```
+
+Each location then shows up as a **Scan location** in Admin → Libraries & scans,
+and gets its own row in Ops path health — so a share that stops being mounted
+reads as *not mounted* instead of as an empty library.
+
+Per-OS mounting recipes, Docker binds, permissions and troubleshooting:
+**[remote-scan-locations.md](docs/runbooks/remote-scan-locations.md)**
 
 ---
 
@@ -174,6 +263,7 @@ Force the setup wizard: `./startweb.sh --force-setup` (required when upgrading f
 | `DATABASE_URL` | Postgres URL (`db` host inside Compose) |
 | `SECRET_KEY` | **Required** — container refuses the placeholder |
 | `DATA_FOLDER_GAMES` | Root of on-disk games — **required** (see upgrade note below) |
+| `GT_LIBRARY_ROOTS` | Extra scan locations beyond that one folder — NAS shares, second disks. Pipe-separated, optional `Label=` prefix. Docker: use the *container* path — [remote-scan-locations.md](docs/runbooks/remote-scan-locations.md) |
 | `UPLOAD_FOLDER` | Covers / themes (Compose: `/app/gametheca/static/library`) |
 | `LIBRARY_HOST_PATH` | Host path mounted to `UPLOAD_FOLDER` in Docker |
 | `ENABLE_LIVEKIT` / `LIVEKIT_*` | Household voice (on by default; needs secrets + profile) |
@@ -265,6 +355,7 @@ docker compose build --no-cache && docker compose up -d
 | Symptom | What to try |
 |---|---|
 | Scans stuck | [libraries-and-scans.md](docs/admin/libraries-and-scans.md) |
+| Scan location shows "not mounted" | The share is not mounted, or Docker got the host path instead of the container path — [remote-scan-locations.md](docs/runbooks/remote-scan-locations.md#troubleshooting) |
 | Support not on GitHub | Expected without `SUPPORT_GITHUB_TOKEN` — inbox still works |
 | SSO fails | Env `OIDC_ENABLED` **and** Admin → Integrations |
 | Themes look wrong after upgrade | [themes-reset.md](docs/admin/themes-reset.md) |
@@ -284,7 +375,7 @@ Still stuck? **More → Report issue** (members) or open a GitHub issue with dep
 | 🗂️ Library | [Library & systems](docs/user/library-and-systems.md) · [Translation patches](docs/user/translation-patches.md) |
 | 🎨 Look & feel | [Preferences & themes](docs/user/preferences-themes.md) · [Fonts & image uploads](docs/admin/theme-fonts-and-images.md) |
 | 🛡️ Admins | [Libraries & scans](docs/admin/libraries-and-scans.md) · [Discover sections](docs/admin/discover-sections.md) · [Support inbox](docs/admin/support-inbox.md) · [Settings modules](docs/admin/settings-modules.md) |
-| 🚢 Operators | [Unraid](docs/runbooks/unraid-deploy.md) · [Compose](docs/runbooks/docker-compose-deploy.md) · [LiveKit](docs/runbooks/livekit-unraid.md) · [OIDC](docs/runbooks/oidc-sso.md) · [WebRetro cores](docs/runbooks/webretro-cores.md) · [Emulator BIOS](docs/runbooks/emulator-bios.md) · [Reference sets](docs/runbooks/reference-sets.md) · [Building installers](docs/runbooks/local-installers.md) |
+| 🚢 Operators | [Native install](docs/runbooks/install-native.md) · [Scan locations](docs/runbooks/remote-scan-locations.md) · [Unraid](docs/runbooks/unraid-deploy.md) · [Compose](docs/runbooks/docker-compose-deploy.md) · [LiveKit](docs/runbooks/livekit-unraid.md) · [OIDC](docs/runbooks/oidc-sso.md) · [WebRetro cores](docs/runbooks/webretro-cores.md) · [Emulator BIOS](docs/runbooks/emulator-bios.md) · [Reference sets](docs/runbooks/reference-sets.md) · [Building installers](docs/runbooks/local-installers.md) |
 | 🗺️ Roadmap | [Strategy](docs/strategy/README.md) · [Progress](docs/strategy/progress.md) · [Docs index](docs/README.md) |
 | 🔌 API | [openapi.json](docs/openapi/openapi.json) |
 

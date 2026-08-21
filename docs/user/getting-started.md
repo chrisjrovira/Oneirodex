@@ -24,7 +24,15 @@ After login you land in the **member SPA** with a **top nav** (no left sidebar):
 | More | Collections, wishlist, updates, playtime, calendar, ownership, Big Picture, Activity, Friends (dock), Chat (left slide-out), Notifications, Report issue, … |
 | Admin | Admins only — opens the admin shell |
 
-**Profile / account** lives under the compressed TopNav account control (not a full-page takeover). **More → Friends** opens the stay-open Friends dock in place — it does **not** navigate to `/social-companion` as the main SPA shell.
+**Profile / account** lives under the compressed TopNav account control (not a full-page takeover). Choosing **Profile**, **Change avatar**, **Change password**, **Invites** or **API tokens** opens the **account modal** over the page you were on, styled like the game preview popup, with a strip along the top to move between the five panels without closing. Nothing navigates away, so your scroll position and filters survive. The old `/settings_*` and `/user/invites` pages still work if you open them directly — they are the fallback for Big Picture and for a browser with JavaScript off.
+
+**More → Friends** opens the stay-open Friends dock in place — it does **not** navigate to `/social-companion` as the main SPA shell.
+
+### Inviting someone
+
+Account menu → **Profile → Invites**. Enter an email address to have the server send the invite, or **leave it blank** to get a link you can pass on however you like — a chat message, a note, reading it out. The link is the invite either way; email is only one way of delivering it, so a household with no mail server can still add members. Links last 48 hours and count against your invite quota until used or revoked.
+
+If you are an admin and the new member has no email at all — a child's console login, the living-room account — **Admin → Invites → Add member without email** creates the account directly with a username and password you choose.
 
 **Keyboard:** Tab to **Skip to main content** (first focusable control) to jump past the top nav into `#main-content`. Top nav and the **Ctrl/Cmd+K** command palette show a visible focus ring on keyboard focus. On long scrollable pages, **Jump to top** / **Jump to bottom** controls appear bottom-left (hide when the page doesn’t scroll).
 

@@ -170,6 +170,13 @@ test('new chrome keeps every playback action reachable', async () => {
 
   await user.click(screen.getByRole('button', { name: 'Another one' }))
   await waitFor(() => expect(trailersApi.fetchRandomTrailer).toHaveBeenCalledTimes(2))
+
+  // Reachable, not necessarily on the bar. Four peer buttons was this page
+  // inventing its own toolbar; "Another one" is the one pressed repeatedly and
+  // stays visible, the once-a-session actions moved behind the overflow. The
+  // assertion this test exists for is that none of them became unreachable.
+  expect(screen.queryByRole('button', { name: 'Settings' })).toBeNull()
+  await user.click(screen.getByRole('button', { name: /More/i }))
   expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument()
 })
 

@@ -152,3 +152,9 @@ gametheca/static/library/generated/
 
 # Debris from an unexpanded shell variable — never a real project path
 %TEMP%/
+
+# Local compose overrides. Compose reads docker-compose.override.yml on top of
+# docker-compose.yml automatically, which makes it the right place for facts
+# about *this* machine — a GPU device reservation, a local bind mount. Shipping
+# one would hand every deployment hardware it may not have.
+docker-compose.override.yml

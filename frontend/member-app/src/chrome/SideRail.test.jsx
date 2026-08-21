@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, it, test, vi } from 'vitest'
 
 import { SideRail } from './SideRail'
 import { getMoreGroups, getPrimaryLinks } from './navConfig'
@@ -78,4 +79,49 @@ test('collapsed rail keeps labels in the accessibility tree', () => {
 
   expect(screen.getByRole('link', { name: 'Library' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Wishlist' })).toBeInTheDocument()
+})
+
+describe('rail groups fold away', () => {
+  /**
+   * Twenty-three destinations is a long column and most sessions live in one
+   * part of it. The group heading was already there doing nothing, so it became
+   * the control rather than adding one beside it.
+   */
+  function renderRail(props = {}) {
+    return render(
+      <MemoryRouter>
+        <SideRail shellConfig={{ showTrailers: true, showHelp: true }} {...props} />
+      </MemoryRouter>,
+    )
+  }
+
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  it('every group starts open', () => {
+    renderRail()
+    const toggles = screen.getAllByRole('button', { expanded: true })
+    expect(toggles.length).toBeGreaterThan(0)
+  })
+
+  it('folding a group hides its destinations and remembers the choice', async () => {
+    const user = userEvent.setup()
+    renderRail()
+
+    expect(screen.getByRole('link', { name: 'Wishlist' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Library/i }))
+
+    expect(screen.queryByRole('link', { name: 'Wishlist' })).toBeNull()
+    expect(window.localStorage.getItem('gt.rail.collapsedGroups')).toContain('library')
+  })
+
+  it('a collapsed rail forces every group open', () => {
+    // The headings are visually hidden at icon width, so a folded group would
+    // be destinations that vanished with no visible control to bring them back.
+    window.localStorage.setItem('gt.rail.collapsedGroups', JSON.stringify(['library']))
+    renderRail({ railState: 'collapsed' })
+
+    expect(screen.getByRole('link', { name: 'Wishlist' })).toBeInTheDocument()
+  })
 })

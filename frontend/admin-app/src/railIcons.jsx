@@ -17,7 +17,11 @@
  */
 const base = {
   className: 'gt-icon',
-  viewBox: '0 0 24 24',
+  // Padded by a unit on each side: a 2px stroke sitting on the edge of the
+  // 24-unit grid is otherwise sliced in half by the viewport boundary. The
+  // member rail uses the same box — see its RailIcon, where the viewBox was
+  // missing entirely and every glyph was being cropped.
+  viewBox: '-1 -1 26 26',
   fill: 'none',
   stroke: 'currentColor',
   strokeWidth: 2,

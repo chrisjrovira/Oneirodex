@@ -43,6 +43,8 @@ function tabFromHash() {
 
 // One list, two renderers: the old tab strip and bar two's segmented control
 // must never drift apart into different sets of sections.
+const MUTED_SOURCES_KEY = 'gt.news.mutedSources'
+
 const NEWS_VIEWS = [
   { id: 'all', label: 'All' },
   { id: 'admins', label: 'Admins' },
@@ -55,6 +57,18 @@ export function NewsPage({ shellConfig = {} }) {
   const [announcements, setAnnouncements] = useState(null)
   const [freeGames, setFreeGames] = useState(null)
   const [headlines, setHeadlines] = useState(null)
+  const [sources, setSources] = useState([])
+  // Which sites the reader has switched off. Kept client-side: this is a view
+  // preference over a list the operator controls, not account state, and a
+  // schema column for "I do not care for that site" would be heavier than the
+  // thing it stores.
+  const [mutedSources, setMutedSources] = useState(() => {
+    try {
+      return new Set(JSON.parse(window.localStorage.getItem(MUTED_SOURCES_KEY) || '[]'))
+    } catch {
+      return new Set()
+    }
+  })
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
   const [assistMsg, setAssistMsg] = useState({})
@@ -125,6 +139,7 @@ export function NewsPage({ shellConfig = {} }) {
       if (newsResult.status === 'fulfilled') {
         const newsData = newsResult.value
         setHeadlines(Array.isArray(newsData.items) ? newsData.items : [])
+        setSources(Array.isArray(newsData.sources) ? newsData.sources : [])
       } else {
         setHeadlines([])
       }
@@ -135,6 +150,28 @@ export function NewsPage({ shellConfig = {} }) {
       controller.abort()
     }
   }, [retryCount])
+
+  function toggleSource(source) {
+    setMutedSources((previous) => {
+      const next = new Set(previous)
+      if (next.has(source)) next.delete(source)
+      else next.add(source)
+      try {
+        window.localStorage.setItem(MUTED_SOURCES_KEY, JSON.stringify([...next]))
+      } catch {
+        // View preference only — the filter still applies for this session.
+      }
+      return next
+    })
+  }
+
+  // Muting a site hides its articles everywhere on this page, including the
+  // hero — a muted source promoted to the featured slot would be the one story
+  // you asked not to see, in the largest box.
+  const visibleHeadlines = useMemo(
+    () => (headlines || []).filter((item) => !mutedSources.has(item.source)),
+    [headlines, mutedSources],
+  )
 
   const loading = !error && (!announcements || !freeGames || !headlines)
   const showAdmins = activeTab === 'all' || activeTab === 'admins'
@@ -147,21 +184,21 @@ export function NewsPage({ shellConfig = {} }) {
       return { kind: 'admin', item: announcements[0] }
     }
     if (activeTab === 'admins') return null
-    if (headlines?.length) {
-      return { kind: 'headline', item: headlines[0] }
+    if (visibleHeadlines.length) {
+      return { kind: 'headline', item: visibleHeadlines[0] }
     }
     if (freeGames?.length) {
       return { kind: 'free', item: freeGames[0] }
     }
     return null
-  }, [activeTab, announcements, headlines, freeGames])
+  }, [activeTab, announcements, visibleHeadlines, freeGames])
 
   const adminRest =
     announcements && featured?.kind === 'admin'
       ? announcements.slice(1)
       : announcements || []
   const headlineRest =
-    headlines && featured?.kind === 'headline' ? headlines.slice(1) : headlines || []
+    featured?.kind === 'headline' ? visibleHeadlines.slice(1) : visibleHeadlines
   const freeRest = freeGames && featured?.kind === 'free' ? freeGames.slice(1) : freeGames || []
 
   // Counts ride on the segments themselves rather than a separate summary —
@@ -172,11 +209,11 @@ export function NewsPage({ shellConfig = {} }) {
     const counts = {
       admins: announcements?.length || 0,
       free: freeGames?.length || 0,
-      headlines: headlines?.length || 0,
+      headlines: visibleHeadlines.length,
     }
     counts.all = counts.admins + counts.free + counts.headlines
     return NEWS_VIEWS.map((view) => ({ ...view, count: counts[view.id] }))
-  }, [loading, error, announcements, freeGames, headlines])
+  }, [loading, error, announcements, freeGames, visibleHeadlines])
 
   return (
     <>
@@ -419,16 +456,44 @@ export function NewsPage({ shellConfig = {} }) {
         <section className="gt-news__section gt-news__headlines" aria-labelledby="news-headlines-heading">
           <div className="gt-news__section-head">
             <h2 id="news-headlines-heading">Gaming headlines</h2>
-            <span className="gt-news__count">{headlines.length}</span>
+            <span className="gt-news__count">{visibleHeadlines.length}</span>
           </div>
-          {headlines.length === 0 ? (
-            <p className="gt-news__empty">No external headlines available right now.</p>
+
+          {/* Pick your sites. Every configured source is listed whether or not
+              it has an article today — filtering by what happened to arrive
+              would hide a quiet site behind its own silence. */}
+          {sources.length > 0 ? (
+            <div className="gt-news__sources" role="group" aria-label="Headline sources">
+              {sources.map((source) => {
+                const on = !mutedSources.has(source)
+                return (
+                  <button
+                    key={source}
+                    type="button"
+                    className="gt-cbtn gt-news__source"
+                    aria-pressed={on}
+                    onClick={() => toggleSource(source)}
+                    title={on ? `Hide ${source}` : `Show ${source}`}
+                  >
+                    {source}
+                  </button>
+                )
+              })}
+            </div>
+          ) : null}
+
+          {visibleHeadlines.length === 0 ? (
+            <p className="gt-news__empty">
+              {mutedSources.size > 0 && headlines.length > 0
+                ? 'Every source is switched off — turn one back on above.'
+                : 'No external headlines available right now.'}
+            </p>
           ) : (
             /* Image-forward cards (UX-C14) — the way Steam/Epic present news.
                Feeds that carry no artwork fall back to a text card rather than
                a broken frame. */
             <ul className="gt-news__cards">
-              {(activeTab === 'headlines' ? headlines : headlineRest).map((item) => (
+              {(activeTab === 'headlines' ? visibleHeadlines : headlineRest).map((item) => (
                 <li key={item.url} className="gt-news__card">
                   <a
                     className="gt-news__card-link"

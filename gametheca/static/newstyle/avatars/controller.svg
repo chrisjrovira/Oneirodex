@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Gamepad">
+  <title>Gamepad</title>
+  <rect width="128" height="128" rx="28" fill="#12161c"/>
+  <rect x="1.5" y="1.5" width="125" height="125" rx="26.5" fill="none" stroke="#2fd67b" stroke-opacity="0.35" stroke-width="3"/>
+  <g fill="none" stroke="#2fd67b" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M44 46h40c13 0 21 9 24 22l6 25c2 9-3 15-11 15-6 0-10-3-14-9l-8-12H47l-8 12c-4 6-8 9-14 9-8 0-13-6-11-15l6-25c3-13 11-22 24-22z"/>
+    <path d="M44 70h16M52 62v16"/>
+  </g>
+  <circle cx="84" cy="66" r="5.5" fill="#2fd67b"/>
+  <circle cx="95" cy="77" r="5.5" fill="#2fd67b"/>
+</svg>

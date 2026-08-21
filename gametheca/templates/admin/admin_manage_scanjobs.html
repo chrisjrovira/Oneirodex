@@ -200,6 +200,18 @@
                             <div class="auto-scan-location">
                                 <h5 class="auto-scan-location__title">{{ icons.icon('folder', size=18) }} Scan location</h5>
                                 <div class="path-input-group">
+                                    <div class="gt-root-picker" id="scanRootPickerAuto" hidden>
+                                        <label class="config-label" for="scanRootSelectAuto"
+                                               data-toggle="tooltip"
+                                               title="Which mounted location to browse. Extra locations come from GT_LIBRARY_ROOTS.">
+                                            Scan location
+                                        </label>
+                                        <select class="form-control config-input gt-root-select" id="scanRootSelectAuto"
+                                                data-path-input="#folder_path" data-root-input="#autoLibraryRoot"
+                                                data-path-var="currentPathAuto"></select>
+                                        <div class="gt-root-picker__hint" id="scanRootHintAuto" hidden></div>
+                                    </div>
+                                    {{ auto_form.library_root(id="autoLibraryRoot", type="hidden") }}
                                     {{ auto_form.folder_path.label(class="config-label", **{"data-toggle": "tooltip", "title": "Browse or enter the path to scan for games. Leave empty to scan the configured base directory. Click a folder to select it, then Start Scan."}) }}
                                     <div class="input-with-button">
                                         {{ auto_form.folder_path(class="form-control path-input", placeholder="Select a folder below, or leave empty for base directory") }}
@@ -399,7 +411,19 @@
                             </div>
                         {% endfor %}
                     </div>
+                    <div class="form-group gt-root-picker" id="scanRootPickerManual" hidden>
+                        <label for="scanRootSelectManual"
+                               data-toggle="tooltip"
+                               title="Which mounted location to browse. Extra locations come from GT_LIBRARY_ROOTS.">
+                            Scan location
+                        </label>
+                        <select class="form-control gt-root-select" id="scanRootSelectManual"
+                                data-path-input="#manualFolderPath" data-root-input="#manualLibraryRoot"
+                                data-path-var="currentPathManual"></select>
+                        <div class="gt-root-picker__hint" id="scanRootHintManual" hidden></div>
+                    </div>
                     <div class="form-group">
+                        {{ manual_form.library_root(id="manualLibraryRoot", type="hidden") }}
                         {{ manual_form.folder_path.label(**{"data-toggle": "tooltip", "title": "Browse or enter the path to scan for games"}) }}
                         {{ manual_form.folder_path(class="form-control", id="manualFolderPath") }}
                         {% if manual_form.folder_path.errors %}

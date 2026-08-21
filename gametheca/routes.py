@@ -58,6 +58,7 @@ from gametheca.utils.image_kinds import (
 )
 from gametheca.utils.scanning import refresh_images_in_background, is_scan_job_running
 from gametheca.utils.game_core import delete_game
+from gametheca.utils.library_roots import resolve_scan_path
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories
 from gametheca.utils.cover_url import resolve_game_cover_url
 from gametheca.utils.unmatched import handle_delete_unmatched
@@ -400,8 +401,16 @@ def scan_folder():
         if form.cancel.data:
             return redirect(url_for('main.scan_folder'))
         
-        folder_path = form.folder_path.data
+        # Relative to the scan location the folder browser was pointed at, so
+        # this legacy entry point resolves paths the same way scan_management
+        # does rather than only accepting absolutes.
+        folder_path, root_error = resolve_scan_path(
+            form.folder_path.data, form.library_root.data, current_app,
+        )
         print(f"Scanning folder: {folder_path}")
+        if root_error:
+            flash(f'Service configuration error: {root_error}', 'error')
+            return redirect(url_for('main.scan_folder'))
 
         # Validate folder path security
         allowed_bases = get_allowed_base_directories(current_app)

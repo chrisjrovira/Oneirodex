@@ -66,6 +66,9 @@ class ResetPasswordRequestForm(FlaskForm):
 class AutoScanForm(FlaskForm):
     # Empty path is allowed and means "scan the configured base directory"
     folder_path = StringField('Browse Folder Path', validators=[Optional()])
+    # Which declared scan location folder_path is relative to. Empty keeps the
+    # historical behaviour of resolving against the OS base folder.
+    library_root = StringField('Scan location', validators=[Optional()])
     library_uuid = SelectField('Select Library', coerce=str, validators=[DataRequired()])
     scan_mode = RadioField('My Games are:', choices=[('folders', 'Folders'), ('files', 'Files')], default='folders')
     remove_missing = BooleanField('Remove missing games')
@@ -99,6 +102,7 @@ class EditProfileForm(FlaskForm):
 class ScanFolderForm(FlaskForm):
     # Empty path is allowed and means "scan the configured base directory"
     folder_path = StringField('Folder Path', validators=[Optional()])
+    library_root = StringField('Scan location', validators=[Optional()])
     scan_mode = RadioField('My Games are:', choices=[('folders', 'Folders'), ('files', 'Files')], default='folders')
     library_uuid = SelectField('Select Library', coerce=str, validators=[DataRequired()])
     force_updates_extras_scan = BooleanField('Force scan for new updates and extras on existing games')

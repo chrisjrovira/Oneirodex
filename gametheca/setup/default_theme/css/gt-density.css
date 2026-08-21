@@ -61,6 +61,14 @@
   --gt-rail-w: 13.5rem;
   --gt-rail-w-collapsed: 3.25rem;
   --gt-rail-item-h: 2.2rem;
+  /* One left edge for the whole rail. `--gt-rail-inset` is where a glyph
+     starts, brand and nav rows alike; `--gt-rail-gutter` is how much of that
+     the scroll container contributes, the link supplying the remainder so its
+     highlight still spans the rail. `--gt-rail-icon-w` is the icon column, used
+     by both the brand mark and every row, so labels line up under the wordmark. */
+  --gt-rail-inset: 0.9rem;
+  --gt-rail-gutter: 0.4rem;
+  --gt-rail-icon-w: 1.25rem;
 }
 
 [data-density='compact'] {
@@ -85,6 +93,9 @@
   --gt-rail-w: 12rem;
   --gt-rail-w-collapsed: 3rem;
   --gt-rail-item-h: 1.8rem;
+  --gt-rail-inset: 0.75rem;
+  --gt-rail-gutter: 0.35rem;
+  --gt-rail-icon-w: 1.15rem;
 }
 
 /* Touch targets win over density below the tablet breakpoint. A 1.85rem control

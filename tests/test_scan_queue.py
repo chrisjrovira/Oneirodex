@@ -341,6 +341,8 @@ class TestManualScanQueuesWhenBusy:
         mock_form = Mock()
         mock_form.validate_on_submit.return_value = True
         mock_form.library_uuid.data = sample_library.uuid
+        # No scan location picked -> resolve against the OS base folder
+        mock_form.library_root.data = ''
         mock_form.folder_path.data = 'pc'
         mock_form.scan_mode.data = 'folders'
         mock_form.force_updates_extras_scan.data = False

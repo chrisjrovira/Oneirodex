@@ -2401,3 +2401,23 @@ a.unmatched-dupe-of__title:hover {
     align-items: center;
     gap: var(--gt-space-3);
 }
+
+/* Scan location picker — only rendered when GT_LIBRARY_ROOTS gives the admin
+   more than one mounted location to choose between. */
+.gt-root-picker {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gt-space-2);
+}
+
+.gt-root-picker[hidden] {
+    display: none;
+}
+
+.gt-root-picker__hint {
+    font-size: var(--gt-font-md);
+    color: var(--gt-text-muted);
+    /* The resolved path is the answer to "am I about to scan the NAS or the
+       local disk", so it wraps rather than truncating. */
+    overflow-wrap: anywhere;
+}

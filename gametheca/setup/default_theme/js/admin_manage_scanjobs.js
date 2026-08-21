@@ -1108,6 +1108,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setupFolderBrowse('#browseFoldersBtn', '#folderContents', '#loadingSpinner', '#upFolderBtn', '#folder_path', 'currentPathAuto');
     setupFolderBrowse('#browseFoldersBtnManual', '#folderContentsManual', '#loadingSpinnerManual', '#upFolderBtnManual', '#manualFolderPath', 'currentPathManual');
+    loadScanLocations();
 
     // No complex toggle functionality needed for simplified table
 
@@ -2852,12 +2853,95 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Folder browse setup function
+/**
+ * Populate the "Scan location" pickers from /api/library_roots.
+ *
+ * The picker only appears once there is a real choice to make: an install that
+ * never set GT_LIBRARY_ROOTS has exactly one location, and a select with one
+ * option is noise. A location that is configured but not currently mounted
+ * still gets listed, marked unavailable — hiding it would turn "the NAS is
+ * down" into "my library vanished".
+ */
+function loadScanLocations() {
+    var $selects = $('.gt-root-select');
+    if (!$selects.length) {
+        return;
+    }
+
+    $.ajax({
+        url: '/api/library_roots',
+        success: function(data) {
+            var roots = (data && data.roots) || [];
+            if (roots.length < 2) {
+                return;
+            }
+
+            $selects.each(function() {
+                var $select = $(this);
+                var pathVar = $select.data('path-var');
+                var $rootInput = $($select.data('root-input'));
+                var $picker = $select.closest('.gt-root-picker');
+                var $hint = $picker.find('.gt-root-picker__hint');
+
+                $select.empty();
+                roots.forEach(function(root) {
+                    var label = root.label + (root.exists ? '' : ' — not mounted');
+                    $select.append($('<option>').val(root.id).text(label).prop('selected', !!root.default));
+                });
+
+                /**
+                 * Reflect the current selection into the hidden field and hint.
+                 *
+                 * `clearPath` is false on the initial pass on purpose. A folder
+                 * path is relative to its root, so *switching* root invalidates
+                 * it and it must go — but on load the field may already hold a
+                 * path the server put there (a re-rendered form after a failed
+                 * submit), and blanking that made the operator retype what they
+                 * had just entered.
+                 */
+                function syncSelection(clearPath) {
+                    var rootId = $select.val() || '';
+                    var root = roots.filter(function(item) { return item.id === rootId; })[0];
+                    $rootInput.val(rootId);
+                    window[pathVar + 'Root'] = rootId;
+                    if (clearPath) {
+                        window[pathVar] = '';
+                        $($select.data('path-input')).val('');
+                    }
+                    if (root && !root.exists) {
+                        $hint.text('Not mounted right now: ' + root.path).prop('hidden', false);
+                    } else if (root) {
+                        $hint.text(root.path).prop('hidden', false);
+                    } else {
+                        $hint.prop('hidden', true);
+                    }
+                }
+
+                $select.off('change.gtRoots').on('change.gtRoots', function () {
+                    syncSelection(true);
+                });
+                syncSelection(false);
+                $picker.prop('hidden', false);
+            });
+        },
+        error: function(error) {
+            // A missing roots endpoint (older server, or a 403) must not break
+            // the folder browser: it keeps its historical single-root behaviour.
+            console.error('Error fetching scan locations:', error);
+        }
+    });
+}
+
 function setupFolderBrowse(browseButtonId, folderContentsId, spinnerId, upButtonId, inputFieldId, currentPathVar) {
     // Store the initial library selection
     var initialLibrarySelection = $(inputFieldId).closest('form').find('select[name="library_uuid"]').val();
     
     $(browseButtonId).click(function() {
         window[currentPathVar] = ''; // Reset the current path
+        // Re-read the picker on every open: the admin may have changed the
+        // scan location since the last browse.
+        var $rootSelect = $('.gt-root-select[data-path-var="' + currentPathVar + '"]');
+        window[currentPathVar + 'Root'] = $rootSelect.val() || '';
         $(upButtonId).hide(); // Initially hide the "Up" button
         // Preserve the library selection
         var librarySelect = $(inputFieldId).closest('form').find('select[name="library_uuid"]');
@@ -2917,9 +3001,17 @@ function fetchFolders(path, folderContentsId, spinnerId, upButtonId, inputFieldI
             $spinner.hide();
         }
     }
+    // The selected scan location travels with every listing request. Without
+    // it the server falls back to the OS base folder, so browsing a NAS root
+    // would silently drop back to /storage on the first click.
+    var browseData = { path: path };
+    var selectedRoot = window[currentPathVar + 'Root'];
+    if (selectedRoot) {
+        browseData.root = selectedRoot;
+    }
     $.ajax({
         url: '/api/browse_folders_ss',
-        data: { path: path },
+        data: browseData,
         success: function(data) {
             clearBusy();
             $(folderContentsId).empty();

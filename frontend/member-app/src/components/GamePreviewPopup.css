@@ -176,10 +176,20 @@
   font-style: italic;
 }
 
+/* Store marks and the details button are two rows of buttons, and both had
+   zero margin — so "IGDB" and "Open details" sat flush against each other and
+   read as one stack of controls glued together. The gap between the two rows is
+   larger than the gap within either, so they group as two rows rather than one
+   grid. */
 .gt-preview__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.gt-preview__text .gt-store-links {
+  margin-top: 0.85rem;
 }
 
 

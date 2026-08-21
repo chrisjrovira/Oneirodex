@@ -28,6 +28,30 @@ def get_system_info():
         'Current Time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
+# Ops rows for GT_LIBRARY_ROOTS entries are keyed with this prefix so the
+# read-only-is-fine rule that already covers the games mount covers them too.
+LIBRARY_ROOT_KEY_PREFIX = 'LIBRARY_ROOT: '
+
+
+def _probe_path(path):
+    """Existence / read / write for one configured path.
+
+    Guarded because a severed network mount can raise from ``os.path.exists``
+    rather than answering False, and that is precisely the case Ops exists to
+    report.
+    """
+    try:
+        exists = os.path.exists(path)
+        return {
+            'path': path,
+            'read': os.access(path, os.R_OK) if exists else False,
+            'write': os.access(path, os.W_OK) if exists else False,
+            'exists': exists,
+        }
+    except OSError:
+        return {'path': path, 'read': False, 'write': False, 'exists': False}
+
+
 def get_config_values():
     """Get safe configuration values."""
     whitelist = {
@@ -43,13 +67,25 @@ def get_config_values():
         if hasattr(Config, item):
             path = getattr(Config, item)
             if path:
-                safe_config_values[item] = {
-                    'path': path,
-                    'read': os.access(path, os.R_OK) if os.path.exists(path) else False,
-                    'write': os.access(path, os.W_OK) if os.path.exists(path) else False,
-                    'exists': os.path.exists(path)
-                }
-    
+                safe_config_values[item] = _probe_path(path)
+
+    # Extra scan locations get their own rows so Ops shows a share that stopped
+    # being mounted. An unmounted root is the failure that otherwise reads as
+    # "the scan found nothing" with no explanation anywhere.
+    # Keyed by label *and* path. Label alone collided: two roots sharing one —
+    # `Archive=/mnt/a|Archive=/mnt/b` is a plausible typo — wrote the same dict
+    # key, so one of them vanished from the very view that exists to report a
+    # root that stopped being mounted.
+    for root in getattr(Config, 'LIBRARY_ROOTS', None) or []:
+        path = root.get('path')
+        if not path:
+            continue
+        label = root.get('label') or path
+        key = f'{LIBRARY_ROOT_KEY_PREFIX}{label}'
+        if key in safe_config_values and safe_config_values[key].get('path') != path:
+            key = f'{key} ({path})'
+        safe_config_values[key] = _probe_path(path)
+
     return safe_config_values
 
 def get_active_users():

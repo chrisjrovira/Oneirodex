@@ -209,14 +209,33 @@ function TrailerPlayer({ videoId, skipFirst, settingsRef, onAdvance, title, game
   }, [videoId, settingsRef])
 
   return (
-    <div className="gt-trailers__video">
-      <iframe
-        ref={frameRef}
-        title={title ? `Trailer — ${title}` : 'Game trailer'}
-        src={src}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      />
+    /* The set, not just a rectangle.
+       Trailers are the one page that is purely about watching something, and a
+       bare iframe on a flat panel is the least evocative way to present that in
+       an app about games. The cabinet is drawn entirely from theme tokens — no
+       image — so it recolours with whatever preset is chosen instead of pinning
+       the page to one palette. Decorative parts are aria-hidden; the iframe is
+       still just an iframe to a screen reader. */
+    <div className="gt-trailers__set">
+      <div className="gt-trailers__video">
+        <span className="gt-trailers__scanlines" aria-hidden="true" />
+        <span className="gt-trailers__glare" aria-hidden="true" />
+        <iframe
+          ref={frameRef}
+          title={title ? `Trailer — ${title}` : 'Game trailer'}
+          src={src}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+      <div className="gt-trailers__bezel" aria-hidden="true">
+        <span className="gt-trailers__brand">GameTheca</span>
+        <span className="gt-trailers__knobs">
+          <span className="gt-trailers__knob" />
+          <span className="gt-trailers__knob" />
+          <span className="gt-trailers__led" />
+        </span>
+      </div>
       {/* Caption belongs to the video, not the page (W27-F1). It sits under the
           frame rather than over it so it never covers the picture, and it is a
           link because "what am I watching" and "take me to it" are the same
@@ -633,25 +652,38 @@ export function TrailersPage({ shellConfig = {} } = {}) {
             />
           }
           filterCount={activeFilterBadges.length}
+          /* One visible action, the rest behind the overflow — the shape
+             every other page's bar already has. Four peer buttons in a row was
+             the trailers page inventing its own toolbar: "Another one" is what
+             you press over and over, and Settings, Big Picture and Exit are
+             each pressed once a session at most. Ranking them by how often they
+             are used is what the two-bar design calls for; showing them as
+             equals was what made this bar look unlike the others. */
           actions={
-            <>
+            <button type="button" className="gt-cbtn" onClick={requestTrailer}>
+              Another one
+            </button>
+          }
+          overflow={
+            <div className="gt-trailers__overflow">
+              <button
+                type="button"
+                className="menu-button"
+                onClick={() => setSettingsOpen(true)}
+              >
+                Settings
+              </button>
               {attractMode ? (
                 <>
-                  <button type="button" className="gt-cbtn" onClick={exitAttractMode}>
-                    Exit Attract Mode
-                  </button>
-                  <button type="button" className="gt-cbtn" onClick={openBigPicture}>
+                  <button type="button" className="menu-button" onClick={openBigPicture}>
                     Big Picture
+                  </button>
+                  <button type="button" className="menu-button" onClick={exitAttractMode}>
+                    Exit Attract Mode
                   </button>
                 </>
               ) : null}
-              <button type="button" className="gt-cbtn" onClick={() => setSettingsOpen(true)}>
-                Settings
-              </button>
-              <button type="button" className="gt-cbtn" onClick={requestTrailer}>
-                Another one
-              </button>
-            </>
+            </div>
           }
         />
       ) : null}

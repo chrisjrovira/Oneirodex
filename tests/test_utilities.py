@@ -185,6 +185,8 @@ class TestHandleAutoScanCore:
         )
         db_session.add(running_library)
         mock_form.library_uuid.data = running_library.uuid
+        # No scan location picked -> resolve against the OS base folder
+        mock_form.library_root.data = ''
 
         # Create actual running scan job in database
         running_job = ScanJob(
@@ -289,6 +291,8 @@ class TestHandleManualScanCore:
         )
         db_session.add(library)
         mock_form.library_uuid.data = library.uuid
+        # No scan location picked -> resolve against the OS base folder
+        mock_form.library_root.data = ''
 
         running_job = ScanJob(
             folders={"/base/pc": True},

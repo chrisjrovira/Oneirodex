@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 
-import { AccountPanel } from './AccountPanel'
+import { AccountModal } from './AccountModal'
 import { TOPBAR_LEAD_ID, TOPBAR_SLOT_ID, TOPBAR_TRAIL_ID } from './ContextBar'
 import { IconMenu, IconUser } from './icons'
 import { TileSizeControl } from './TileSizeControl'
@@ -23,11 +23,14 @@ import { openPreferencesModal } from '../api/preferences'
  * pages that still render its markup are migrated.
  */
 
+/* `modal` entries open an AccountModal panel instead of navigating.
+   Only Logout still leaves the app, because it has to. Preferences keeps its
+   own existing modal — it was already one, and it is Jinja-rendered. */
 const ACCOUNT_LINKS = [
-  { id: 'profile', href: '#account-profile', label: 'Profile', profilePanel: true },
+  { id: 'profile', href: '/settings_profile_view', label: 'Profile', modal: 'profile' },
   { id: 'preferences', href: '/settings_panel', label: 'Preferences', preferences: true },
-  { id: 'tokens', to: '/tokens', label: 'API tokens' },
-  { id: 'password', href: '/settings_password', label: 'Change Password' },
+  { id: 'tokens', href: '/tokens', label: 'API tokens', modal: 'tokens' },
+  { id: 'password', href: '/settings_password', label: 'Change Password', modal: 'password' },
   { id: 'logout', href: '/logout', label: 'Logout' },
 ]
 
@@ -52,7 +55,7 @@ export function TopBar({
   const { pathname } = useLocation()
   const pageTitle = getPageTitle(pathname, { showTrailers, showHelp, enableVr, enableActivity })
   const [accountOpen, setAccountOpen] = useState(false)
-  const [profilePanelOpen, setProfilePanelOpen] = useState(false)
+  const [accountModal, setAccountModal] = useState(null)
   const accountId = useId()
   const rootRef = useRef(null)
   const paletteHint = commandPaletteHint()
@@ -83,10 +86,18 @@ export function TopBar({
     }
   }
 
-  function handleProfileClick(event) {
-    event.preventDefault()
-    setAccountOpen(false)
-    setProfilePanelOpen(true)
+  /* Profile opens the modal directly.
+     It used to open a right-hand drawer whose entire content was a list of
+     links to the same five panels the modal already switches between — a menu
+     in front of a menu, with the drawer adding nothing but a second click and a
+     second visual language. The drawer is gone; every entry here lands on its
+     panel. */
+  function openAccountModal(panel) {
+    return (event) => {
+      event.preventDefault()
+      setAccountOpen(false)
+      setAccountModal(panel)
+    }
   }
 
   return (
@@ -98,32 +109,43 @@ export function TopBar({
             collapsed rail while it sat there expanded with its labels showing.
             Shown is 'open' or 'expanded'; the one state that is not is
             'collapsed'. partials/topbar.html has always had this right. */}
-        <button
-          type="button"
-          className="gt-cbtn gt-topbar__rail-toggle"
-          aria-label="Toggle navigation"
-          aria-expanded={railState !== 'collapsed'}
-          onClick={onToggleRail}
-        >
-          <IconMenu />
-        </button>
+        {/* Start group. Wrapped, and paired with an equally-growing actions
+            group in gt-shell.css, so the centre slot lands on the *page's*
+            midpoint rather than on the midpoint of whatever width the two sides
+            happened to leave. Unwrapped, every side control that appeared or
+            changed width nudged the view switcher off centre. */}
+        <div className="gt-topbar__start">
+          <button
+            type="button"
+            className="gt-cbtn gt-topbar__rail-toggle"
+            aria-label="Toggle navigation"
+            aria-expanded={railState !== 'collapsed'}
+            onClick={onToggleRail}
+          >
+            <IconMenu />
+          </button>
 
-        {/* The page name, but only when the rail is collapsed.
-            UIR-1 removed it from the bar on the grounds that bar two's view
-            switcher named the section; GT-B5 put it back because the rail owns
-            destinations now. Both were right for one rail state each: an
-            expanded rail already shows which entry is active, in words, a few
-            pixels to the left — so the bar's copy is a second answer to a
-            question nothing asked. Collapsed, the rail is a column of icons and
-            the bar is the only place the answer exists. */}
-        {railState === 'collapsed' && pageTitle ? (
-          <span className="gt-topbar__section">{pageTitle}</span>
-        ) : null}
+          {/* Lead slot: Filters, immediately after the rail toggle.
+              The two form one control cluster — open the nav, narrow the list —
+              and they are sized and aligned as one in gt-shell.css. Nothing goes
+              between them: the page name used to, which pushed Filters to a
+              different x position on every page and put a label in the middle of
+              a pair of buttons. */}
+          <div id={TOPBAR_LEAD_ID} className="gt-topbar__lead" />
 
-        {/* Lead slot: Filters. Narrowing a list is the first thing you do to
-            it, so it sits with the rail toggle rather than drifting to
-            wherever the view labels ended. */}
-        <div id={TOPBAR_LEAD_ID} className="gt-topbar__lead" />
+          {/* The page name, but only when the rail is collapsed, and after the
+              control cluster rather than inside it.
+              UIR-1 removed it from the bar on the grounds that bar two's view
+              switcher named the section; GT-B5 put it back because the rail owns
+              destinations now. Both were right for one rail state each: an
+              expanded rail already shows which entry is active, in words, a few
+              pixels to the left — so the bar's copy is a second answer to a
+              question nothing asked. Collapsed, the rail is a column of icons and
+              the bar is the only place the answer exists. */}
+          {railState === 'collapsed' && pageTitle ? (
+            <span className="gt-topbar__section">{pageTitle}</span>
+          ) : null}
+        </div>
 
         {views ? <div className="gt-topbar__views">{views}</div> : null}
 
@@ -139,16 +161,18 @@ export function TopBar({
               costing permanent width. ⌘K still opens the palette — the shortcut
               is listed in the account menu so it stays discoverable. */}
 
+          {/* Trail slot: how much is here, and it reads *before* the control
+              that changes it. Both answer "how much am I looking at", so they
+              belong together — but the count is a label and the slider is the
+              instrument, and a label after its instrument reads as a value
+              readout rather than as the page's result count. */}
+          <div id={TOPBAR_TRAIL_ID} className="gt-topbar__trail" />
+
           <TileSizeControl
             value={tileSize || shellConfig.tileSize || '50'}
             onChange={onTileSizeChange}
             shellConfig={shellConfig}
           />
-
-          {/* Trail slot: how much is here. After the size control, not before —
-              both answer "how much am I looking at", and the count is the
-              readout of what the slider just changed. */}
-          <div id={TOPBAR_TRAIL_ID} className="gt-topbar__trail" />
 
           <div className="gt-topnav__dropdown">
             <button
@@ -180,9 +204,16 @@ export function TopBar({
                   Search everything <kbd>{paletteHint}</kbd>
                 </button>
                 {ACCOUNT_LINKS.map((link) => {
-                  if (link.profilePanel) {
+                  if (link.modal) {
+                    // Still an <a href>: middle-click and "open in new tab"
+                    // land on the server-rendered page, which is the fallback.
                     return (
-                      <a key={link.id} href={link.href} role="menuitem" onClick={handleProfileClick}>
+                      <a
+                        key={link.id}
+                        href={link.href}
+                        role="menuitem"
+                        onClick={openAccountModal(link.modal)}
+                      >
                         {link.label}
                       </a>
                     )
@@ -197,18 +228,6 @@ export function TopBar({
                       >
                         {link.label}
                       </a>
-                    )
-                  }
-                  if (link.to) {
-                    return (
-                      <NavLink
-                        key={link.id}
-                        to={link.to}
-                        role="menuitem"
-                        onClick={() => setAccountOpen(false)}
-                      >
-                        {link.label}
-                      </NavLink>
                     )
                   }
                   return (
@@ -228,11 +247,7 @@ export function TopBar({
         </div>
       </header>
 
-      <AccountPanel
-        open={profilePanelOpen}
-        onClose={() => setProfilePanelOpen(false)}
-        shellConfig={shellConfig}
-      />
+      <AccountModal panel={accountModal} onClose={() => setAccountModal(null)} />
     </>
   )
 }

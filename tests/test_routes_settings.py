@@ -11,6 +11,7 @@ from PIL import Image as PILImage
 from gametheca import create_app, db
 from gametheca.models import User, InviteToken, UserPreference
 from gametheca.forms import EditProfileForm, UserPasswordForm, UserPreferencesForm
+from gametheca.utils.avatar import DEFAULT_AVATAR
 
 
 
@@ -195,7 +196,7 @@ class TestSettingsProfileEdit:
             
             assert response.status_code == 302
             db_session.refresh(test_user)
-            assert test_user.avatarpath == 'newstyle/avatar_default.jpg'
+            assert test_user.avatarpath == DEFAULT_AVATAR
     
     def test_post_with_valid_image_upload(self, client, test_user, db_session):
         """Test POST request with valid image upload."""
@@ -253,9 +254,13 @@ class TestSettingsProfileEdit:
             
             with patch('gametheca.routes_settings.flash') as mock_flash:
                 response = client.post('/settings_profile_edit', data={}, follow_redirects=False)
-                
+
                 assert response.status_code == 302
-                mock_flash.assert_called_with('File size exceeds the 5MB limit.', 'error')
+                # The size rule moved to utils/avatar.py with the rest of the
+                # upload path, so the route now reports the helper's wording.
+                mock_flash.assert_called_with(
+                    'Image is larger than the 5MB limit.', 'error',
+                )
     
     def test_post_directory_creation_error(self, client, test_user):
         """Test POST request with directory creation error."""
@@ -275,14 +280,17 @@ class TestSettingsProfileEdit:
             mock_form.avatar.data = mock_file
             mock_form_class.return_value = mock_form
             
-            with patch('gametheca.routes_settings.os.path.exists', return_value=False), \
-                 patch('gametheca.routes_settings.os.makedirs', side_effect=OSError('Permission denied')), \
+            # Patched where the upload path now lives, not on the route module.
+            with patch('gametheca.utils.avatar.os.makedirs',
+                       side_effect=OSError('Permission denied')), \
                  patch('gametheca.routes_settings.flash') as mock_flash:
-                
+
                 response = client.post('/settings_profile_edit', data={}, follow_redirects=False)
-                
+
                 assert response.status_code == 302
-                mock_flash.assert_called_with('Error processing request. Please try again.', 'error')
+                mock_flash.assert_called_with(
+                    'Could not write to the avatar folder.', 'error',
+                )
     
     def test_post_database_commit_error(self, client, test_user, db_session):
         """Test POST request with database commit error."""

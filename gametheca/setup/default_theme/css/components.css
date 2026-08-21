@@ -74,8 +74,21 @@
  * does not reflow, so the grid keeps its flow while the tile grows over its
  * neighbours. The fallback covers classic Jinja pages, which never run the
  * SPA's tile-size code. */
+/* `:has(:focus-visible)` rather than `:focus-within`.
+ *
+ * `:focus-within` matches focus from any source, and clicking a tile — or any
+ * control inside it — leaves focus there. The tile therefore stayed enlarged
+ * after the pointer left and only shrank once something else took focus, which
+ * is the reported "you have to click off the screen to make it go back down".
+ *
+ * `:focus-visible` is the browser's own answer to "did this focus arrive by
+ * keyboard": a mouse click on a button does not match it, a Tab does. So the
+ * keyboard affordance survives and the mouse no longer leaves tiles stuck open.
+ * The card itself is checked as well as its descendants because the cover link
+ * is the card's own focus target on some pages. */
 .game-card:hover,
-.game-card:focus-within {
+.game-card:focus-visible,
+.game-card:has(:focus-visible) {
     /* No `translateY(-4px)` any more, and the origin is pinned to the top edge
        in GameGrid.css: a tile may not grow upward. `.gt-shell__main` is the
        scroll container, so anything rising past its top edge is painted over by
@@ -83,9 +96,14 @@
        down and sideways costs nothing, because below is scrollable. */
     transform: scale(var(--gt-tile-hover-scale, 1.25));
     z-index: 6;
+    /* Glow is 25% stronger than the 53%/26px/4px it shipped at: the hovered
+       tile is the only thing marking where the pointer is now that the ring is
+       gone, and at the old strength it lost that argument against a bright
+       cover. Opacity, blur and spread all move together — raising opacity alone
+       reads as a harder edge rather than as more light. */
     box-shadow:
         0 16px 34px var(--shadow-dark-strong),
-        0 0 26px 4px color-mix(in srgb, var(--gt-accent) 53%, transparent);
+        0 0 33px 5px color-mix(in srgb, var(--gt-accent) 66%, transparent);
     transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
@@ -99,9 +117,9 @@
 }
 
 .game-card:hover .game-cover,
-.game-card:focus-within .game-cover,
+.game-card:has(:focus-visible) .game-cover,
 .game-card:hover .gt-cover-fallback,
-.game-card:focus-within .gt-cover-fallback {
+.game-card:has(:focus-visible) .gt-cover-fallback {
     border-color: transparent;
 }
 
@@ -128,22 +146,22 @@
  *
  * So the overlays divide it back out. Origin is the corner each one is anchored
  * to, so the anchor point does not move as the counter-scale applies. Scoped to
- * :hover / :focus-within because those are exactly the states in which the card
+ * :hover / keyboard focus because those are exactly the states in which the card
  * is scaled: with neither, the card is at 1 and dividing would shrink the
  * panel. */
 .game-card:hover > .popup-menu,
-.game-card:focus-within > .popup-menu {
+.game-card:has(:focus-visible) > .popup-menu {
     transform: scale(calc(1 / var(--gt-tile-hover-scale, 1.25)));
     transform-origin: top right;
 }
 
 .game-card:hover > .popup-menu--play,
-.game-card:focus-within > .popup-menu--play {
+.game-card:has(:focus-visible) > .popup-menu--play {
     transform-origin: top left;
 }
 
 .game-card:hover .status-dropdown,
-.game-card:focus-within .status-dropdown {
+.game-card:has(:focus-visible) .status-dropdown {
     transform: scale(calc(1 / var(--gt-tile-hover-scale, 1.25)));
     transform-origin: top right;
 }
@@ -159,7 +177,8 @@
  * translate and the transition, and it lands instantly instead of gliding. */
 @media (prefers-reduced-motion: reduce) {
     .game-card:hover,
-    .game-card:focus-within {
+    .game-card:focus-visible,
+    .game-card:has(:focus-visible) {
         transition: none;
     }
 }
@@ -1303,7 +1322,8 @@ a.gt-chip:focus {
        repeat `transform: none` and was the one that actually won, being later
        in the file. */
     .game-card:hover,
-    .game-card:focus-within {
+    .game-card:focus-visible,
+    .game-card:has(:focus-visible) {
         transform: scale(var(--gt-tile-hover-scale, 1.25));
         transition: none;
     }

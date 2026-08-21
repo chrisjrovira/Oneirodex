@@ -42,6 +42,10 @@
     <script src="{{ 'js/preferences_modal.js'|theme_asset }}"></script>
     <script src="{{ 'js/popup_menu.js'|theme_asset }}"></script>
     <script src="{{ 'js/delete_game_modal.js'|theme_asset }}"></script>
+    {# Turns the flash container into toasts. base.html has always loaded this;
+       this template did not, and the member SPA extends *this* one — so the
+       shell was the single page where a flash pushed the whole grid down. #}
+    <script src="{{ 'js/image_refresh_progress.js'|theme_asset }}"></script>
     <style>
       /* No left sidebar on member SPA shell */
       #content.member-spa-content {

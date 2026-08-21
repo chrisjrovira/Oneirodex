@@ -3,6 +3,12 @@ from flask import jsonify, request, current_app
 import os, sys
 from flask_login import login_required
 from gametheca.utils.auth import admin_required
+from gametheca.utils.api_response import api_error, api_ok
+from gametheca.utils.library_roots import (
+    library_roots,
+    resolve_library_root,
+    root_availability,
+)
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories
 from . import apis_bp
 
@@ -18,12 +24,35 @@ def _list_directory(folder_path):
     return sorted(contents, key=lambda x: (not x['isDir'], x['name'].lower()))
 
 
+@apis_bp.route('/library_roots')
+@login_required
+@admin_required
+def library_roots_list():
+    """Scan locations the folder browser may start from.
+
+    Availability is probed per root because the interesting failure is a share
+    that is configured but not mounted: without the probe that root browses as
+    an empty folder and reads as "my games disappeared".
+    """
+    roots = [root_availability(root) for root in library_roots(current_app)]
+    return api_ok({'roots': roots})
+
+
 @apis_bp.route('/browse_folders_ss')
 @login_required
 @admin_required
 def browse_folders_ss():
-    # Select base by operating system
-    base_directory = current_app.config.get('BASE_FOLDER_WINDOWS') if os.name == 'nt' else current_app.config.get('BASE_FOLDER_POSIX')
+    # Select base by operating system, unless the caller picked a declared root
+    # (extra mount / NAS share). No root argument keeps the historical
+    # behaviour so existing callers are unaffected.
+    root_arg = request.args.get('root')
+    if root_arg:
+        root = resolve_library_root(root_arg, current_app)
+        if not root:
+            return api_error('Unknown scan location', code='not_found')
+        base_directory = root['path']
+    else:
+        base_directory = current_app.config.get('BASE_FOLDER_WINDOWS') if os.name == 'nt' else current_app.config.get('BASE_FOLDER_POSIX')
     print(f'SS folder browser: Base directory: {base_directory}', file=sys.stderr)
 
     # Deep-link support: unmatched-folder "Open" jumps straight to an absolute

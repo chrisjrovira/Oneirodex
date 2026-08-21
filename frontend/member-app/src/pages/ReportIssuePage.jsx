@@ -38,6 +38,7 @@ export function ReportIssuePage() {
   const [title, setTitle] = useState(seeded.title)
   const [body, setBody] = useState('')
   const [area, setArea] = useState(seeded.area)
+  const [kind, setKind] = useState('issue')
   const [severity, setSeverity] = useState('P2')
   const [deploy, setDeploy] = useState('Unraid')
   const [client, setClient] = useState('')
@@ -65,6 +66,7 @@ export function ReportIssuePage() {
         body: JSON.stringify({
           title,
           body,
+          kind,
           area,
           severity,
           deploy_hint: deploy,
@@ -91,7 +93,7 @@ export function ReportIssuePage() {
   return (
     <div className="gt-more-page gt-report">
       <div className="gt-page-header">
-        <h1>Report issue</h1>
+        <h1>Report</h1>
       </div>
       <p className="gt-more-page__lede">
         Files a ticket for maintainers. Syncs to GitHub when configured; admins see it in-app.
@@ -121,6 +123,36 @@ export function ReportIssuePage() {
           <h2 className="gt-report__section-title" id="report-primary-heading">
             What happened
           </h2>
+
+          {/* Asked first, because it changes what the rest of the form means.
+              The page was headed "Report issue" and collected feature requests
+              into the same pile, so triage had to read every title to sort
+              them — and a request filed as a bug reads as a broken product. */}
+          <fieldset className="gt-report__kind">
+            <legend className="gt-report__kind-legend">What are you filing?</legend>
+            <div className="gt-report__kind-options">
+              {[
+                { id: 'issue', label: 'Something is broken', hint: 'It does not work as it should' },
+                { id: 'enhancement', label: 'An idea', hint: 'Something new, or better' },
+              ].map((option) => (
+                <label
+                  key={option.id}
+                  className="gt-report__kind-option"
+                  data-selected={kind === option.id ? 'true' : undefined}
+                >
+                  <input
+                    type="radio"
+                    name="report-kind"
+                    value={option.id}
+                    checked={kind === option.id}
+                    onChange={() => setKind(option.id)}
+                  />
+                  <span className="gt-report__kind-label">{option.label}</span>
+                  <span className="gt-report__kind-hint">{option.hint}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <label className="gt-report__field">
             <span>Title</span>
             <input

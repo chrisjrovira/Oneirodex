@@ -25,6 +25,9 @@ VALID_AREAS = frozenset({
 })
 VALID_SEV = frozenset({'P0', 'P1', 'P2', 'P3'})
 
+# Bug report vs feature request — the two things the one Report form collects.
+VALID_KINDS = frozenset({'issue', 'enhancement'})
+
 # Compact caps — logs/symptoms optional; avoid huge blobs in UI payloads.
 _BODY_MAX = 2000
 _LOGS_MAX = 4000
@@ -42,6 +45,12 @@ def support_ticket_create():
     area = (data.get('area') or 'other').strip().lower()
     if area not in VALID_AREAS:
         area = 'other'
+    # A request for something new is not a defect, and filing it as one both
+    # misleads triage and makes the product look broken. Unknown values fall
+    # back to 'issue' rather than 404ing a report someone took time to write.
+    kind = (data.get('kind') or 'issue').strip().lower()
+    if kind not in VALID_KINDS:
+        kind = 'issue'
     severity = (data.get('severity') or 'P2').strip().upper()
     if severity not in VALID_SEV:
         severity = 'P2'
@@ -51,6 +60,7 @@ def support_ticket_create():
         title=title,
         body=body or '',
         area=area,
+        kind=kind,
         severity=severity,
         role_at_submit=normalize_role(getattr(current_user, 'role', None)),
         deploy_hint=(data.get('deploy_hint') or data.get('deploy') or '')[:64] or None,
@@ -63,10 +73,12 @@ def support_ticket_create():
     db.session.add(ticket)
     db.session.commit()
 
+    # The kind leads the title and rides along as a label, so the distinction
+    # survives into the issue tracker instead of stopping at our database.
     gh = create_github_issue(
-        title=f'[support] {ticket.severity} {ticket.area}: {ticket.title}',
+        title=f'[{ticket.kind}] {ticket.severity} {ticket.area}: {ticket.title}',
         body=build_issue_body(ticket.to_dict()),
-        labels=['support', ticket.severity.lower(), ticket.area],
+        labels=['support', ticket.kind, ticket.severity.lower(), ticket.area],
     )
     if gh.get('ok'):
         ticket.github_sync = 'synced'

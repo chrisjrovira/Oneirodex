@@ -294,7 +294,13 @@ def gaming_news_feed():
     except Exception as exc:
         current_app.logger.warning('gaming news feed failed: %s', exc)
         items = []
-    return jsonify({'items': items, 'empty': len(items) == 0})
+    # The configured sites travel with the headlines so the reader can turn
+    # one off without first having to receive an article from it — a site that
+    # is quiet today would otherwise be invisible and unfilterable.
+    from gametheca.utils.gaming_news import feed_urls, source_name
+
+    sources = sorted({source_name(url) for url in feed_urls()})
+    return jsonify({'items': items, 'sources': sources, 'empty': len(items) == 0})
 
 
 @apis_bp.route('/news/free-games', methods=['GET'])

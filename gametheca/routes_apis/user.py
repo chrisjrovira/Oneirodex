@@ -1,5 +1,6 @@
 # /gametheca/routes_apis/user.py
 from gametheca.utils.api_response import api_error, api_ok
+from gametheca.utils.avatar import DEFAULT_AVATAR
 from flask import jsonify, request, url_for
 from flask_login import login_required, current_user
 from gametheca import db
@@ -66,7 +67,7 @@ def member_profile(user_id: int):
         })
         if len(recent) >= 12:
             break
-    avatar = getattr(target, 'avatarpath', None) or 'newstyle/avatar_default.jpg'
+    avatar = getattr(target, 'avatarpath', None) or DEFAULT_AVATAR
     return jsonify({
         'user': {
             'id': target.id,

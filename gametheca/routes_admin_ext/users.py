@@ -8,6 +8,7 @@ from sqlalchemy import select, func
 from . import admin2_bp
 from uuid import uuid4
 from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.accounts import display_email, is_placeholder_email, placeholder_email
 from gametheca.utils.auth import admin_required
 from gametheca.utils.rbac import VALID_ROLES as RBAC_VALID_ROLES
 from gametheca.utils.library_acl import (
@@ -156,8 +157,12 @@ def list_users_api():
         'users': [
             {
                 'id': u.id,
+                # The placeholder is an implementation detail of the NOT NULL
+                # constraint. Showing it in the roster would invite someone to
+                # copy it into a mail client.
+                'email': display_email(u.email) or '',
+                'has_email': not is_placeholder_email(u.email),
                 'name': u.name,
-                'email': u.email,
                 'role': u.role,
                 'state': bool(u.state),
                 'is_email_verified': bool(u.is_email_verified),
@@ -186,11 +191,21 @@ def manage_user_api(user_id):
         state = data.get('state', True)
         is_email_verified = data.get('is_email_verified', True)
         about = data.get('about', '')
-        
+
+        # An address is optional. A household account for a child's console or
+        # the living-room TV has nowhere to send mail, and demanding one was
+        # what stopped an admin creating that account at all. Without one the
+        # user gets an unroutable placeholder — see utils/accounts.py — and is
+        # never marked email-verified, because there is nothing to verify.
+        emailless = not email
+        if emailless:
+            email = placeholder_email(username)
+            is_email_verified = False
+
         # Input validation
         refusal = _first_refusal(
             lambda: validate_username(username),
-            lambda: validate_email(email),
+            lambda: (True, "") if emailless else validate_email(email),
             lambda: validate_role(role),
             lambda: validate_about(about),
         )
@@ -228,8 +243,21 @@ def manage_user_api(user_id):
             new_user.set_password(password)
             db.session.add(new_user)
             db.session.commit()
-            log_system_event(f"Admin {current_user.name} created new user: {username} (email: {email}, role: {role})", event_type='audit', event_level='information')
-            return api_ok()
+            log_system_event(
+                f"Admin {current_user.name} created new user: {username} "
+                f"(email: {'none — local account' if emailless else email}, role: {role})",
+                event_type='audit',
+                event_level='information',
+            )
+            return api_ok({
+                'user': {
+                    'id': new_user.id,
+                    'name': new_user.name,
+                    'email': display_email(new_user.email),
+                    'has_email': not emailless,
+                    'role': new_user.role,
+                },
+            })
         except IntegrityError as e:
             db.session.rollback()
             log_system_event(f"Admin {current_user.name} failed to create user {username}: Database integrity error", event_type='audit', event_level='error')
@@ -246,7 +274,8 @@ def manage_user_api(user_id):
     if request.method == 'GET':
         content_filters = get_user_content_filters(user.id)
         return jsonify({
-            'email': user.email,
+            'email': display_email(user.email) or '',
+            'has_email': not is_placeholder_email(user.email),
             'role': user.role,
             'state': user.state,
             'about': user.about,
@@ -277,17 +306,29 @@ def manage_user_api(user_id):
         
         # Validate and update email if provided
         if 'email' in data:
-            new_email = data['email'].strip().lower()
-            if new_email != user.email.lower():
+            new_email = (data['email'] or '').strip().lower()
+
+            # The editor renders a placeholder address as an empty field, so an
+            # unchanged emailless account comes back as ''. That must mean
+            # "still no address", not "clear the column" — and clearing an
+            # address the user does have is a real request, satisfied the same
+            # way a new emailless account is.
+            if not new_email:
+                if not is_placeholder_email(user.email):
+                    changes.append(f"email from '{user.email}' to none — local account")
+                    user.email = placeholder_email(user.name)
+                    user.is_email_verified = False
+            elif new_email != (user.email or '').lower():
                 valid, error = validate_email(new_email)
                 if not valid:
                     return api_error(error, code='bad_request')
-                    
+
                 valid, error = check_email_unique(new_email, exclude_user_id=user_id)
                 if not valid:
                     return api_error(error, code='bad_request')
-                
-                changes.append(f"email from '{user.email}' to '{new_email}'")
+
+                previous = display_email(user.email) or 'none — local account'
+                changes.append(f"email from '{previous}' to '{new_email}'")
                 user.email = new_email
         
         # Validate and update role if provided

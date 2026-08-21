@@ -48,6 +48,13 @@ _READ_ONLY_OK_PATH_KEYS = frozenset({
 })
 
 
+def _write_required(key):
+    """Extra scan locations are read-only for the same reason /storage is."""
+    from gametheca.utils.status import LIBRARY_ROOT_KEY_PREFIX
+
+    return key not in _READ_ONLY_OK_PATH_KEYS and not key.startswith(LIBRARY_ROOT_KEY_PREFIX)
+
+
 def _path_problems(config_values):
     """Return configured paths that are missing, unreadable, or wrongly unwritable.
 
@@ -61,7 +68,7 @@ def _path_problems(config_values):
             problems.append({'key': key, 'reason': 'missing'})
         elif not details.get('read', False):
             problems.append({'key': key, 'reason': 'not readable'})
-        elif key not in _READ_ONLY_OK_PATH_KEYS and not details.get('write', False):
+        elif _write_required(key) and not details.get('write', False):
             problems.append({'key': key, 'reason': 'not writable'})
     return problems
 

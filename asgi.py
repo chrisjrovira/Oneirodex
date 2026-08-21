@@ -267,15 +267,32 @@ class LazyASGIApp:
             await self._send_error(send, 404, "Not Found")
             return
 
-        # Theme files are rewritten in place by Reset Themes while every
-        # template keeps pointing at the same path, so an hour of blind caching
-        # meant a completed reset stayed invisible until a hard refresh.
-        # `theme_asset` now versions those URLs, and this is the second half:
-        # even an unversioned reference revalidates instead of being assumed
-        # fresh. Everything else — hashed SPA bundles, images, fonts — is
-        # content-addressed or genuinely static, and keeps the hour.
-        is_mutable_theme_asset = '/static/library/themes/' in path.replace('\\', '/')
-        cache_control = b"no-cache" if is_mutable_theme_asset else b"public, max-age=3600"
+        # Two families of file are rewritten in place at a stable path, so an
+        # hour of blind caching hides a change that has already shipped. Images
+        # and fonts are genuinely static and keep the hour.
+        #
+        # Theme files are rewritten by Reset Themes while every template keeps
+        # pointing at the same path. `theme_asset` versions those URLs, and this
+        # is the second half: even an unversioned reference revalidates instead
+        # of being assumed fresh.
+        normalized = path.replace('\\', '/')
+        is_mutable_theme_asset = '/static/library/themes/' in normalized
+        # The SPA *entry* bundle is unhashed on purpose so Jinja can link it,
+        # and the `?v=` on that link makes the script tag fetch fresh. But the
+        # lazy route chunks `import` the entry by its bare path, with no query,
+        # and that unversioned URL was cached for an hour — so after a rebuild
+        # every lazily-loaded route went on running the *previous* build's
+        # shared code while the versioned script tag reported the new one.
+        # Observed directly: a fixed component kept rendering its old markup,
+        # and `performance` showed two fetches of member-app.js at two sizes.
+        # `chunks/` keeps the hour — those names carry a content hash, so a new
+        # build is a new URL and caching them hard is the point.
+        is_spa_entry = '/static/dist/' in normalized and '/chunks/' not in normalized
+        cache_control = (
+            b"no-cache"
+            if (is_mutable_theme_asset or is_spa_entry)
+            else b"public, max-age=3600"
+        )
 
         headers = [
             (b"content-type", content_type.encode("ascii", "ignore")),

@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom'
 import { fetchCalendar } from '../api/calendar'
 import { ContextBar } from '../chrome/ContextBar'
+import { RailIcon } from '../chrome/railIcons'
 import { queueClientCommand } from '../api/clientCommands'
 import { addWantedUpdate, fetchStoreSearch, fetchUpdatesInbox } from '../api/updates'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
@@ -198,16 +199,6 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
                 ? `Updated ${lastUpdatedAt.toLocaleTimeString()}`
                 : null
           }
-          actions={
-            <button
-              type="button"
-              className="gt-cbtn"
-              disabled={manualRefreshing || (!items && !error)}
-              onClick={() => void refreshInbox('manual')}
-            >
-              {manualRefreshing ? 'Refreshing…' : 'Refresh'}
-            </button>
-          }
         />
       ) : null}
     <div className="gt-more-page gt-updates gt-panels">
@@ -336,8 +327,30 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
       </section>
 
       <section className="gt-updates__inbox">
+        {/* The refresh control sits on the heading of the thing it refreshes.
+            In bar two it was a word ("Refresh") a long way from the list it
+            acted on, and nothing said *what* it would refresh. As a symbol on
+            the inbox rule it is unambiguous and costs no width. The label lives
+            in the hover tooltip rather than on the button. */}
         <div className="gt-updates__section-head">
           <h2>Library freshness inbox</h2>
+          <span className="gt-tip gt-updates__refresh-tip">
+            <button
+              type="button"
+              className="gt-iconbtn"
+              aria-label="Refresh the freshness inbox"
+              data-busy={manualRefreshing ? 'true' : undefined}
+              disabled={manualRefreshing || (!items && !error)}
+              onClick={() => void refreshInbox('manual')}
+            >
+              <RailIcon name="updates" size={16} />
+            </button>
+            <span className="gt-tip__bubble" role="tooltip">
+              {manualRefreshing
+                ? 'Checking your library against store versions…'
+                : 'Re-check your library against store versions. Runs on its own periodically; this asks now.'}
+            </span>
+          </span>
         </div>
         {error ? (
           <div role="alert">

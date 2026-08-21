@@ -37,6 +37,7 @@ PACKAGE_MANAGER=""
 DB_PASSWORD=""
 SECRET_KEY=""
 GAMES_DIR=""
+LIBRARY_ROOTS=""
 FORCE_INSTALL=false
 DEV_MODE=false
 SKIP_DB=false
@@ -225,6 +226,14 @@ parse_arguments() {
                 GAMES_DIR="$2"
                 shift 2
                 ;;
+            --library-roots)
+                if [ $# -lt 2 ]; then
+                    print_error "--library-roots requires an argument"
+                    exit 1
+                fi
+                LIBRARY_ROOTS="$2"
+                shift 2
+                ;;
             --port)
                 if [ $# -lt 2 ]; then
                     print_error "--port requires an argument"
@@ -260,6 +269,7 @@ show_help() {
     echo "  --verbose, -v    Show detailed installation output"
     echo "  --quiet, -q      Suppress detailed output (default)"
     echo "  --games-dir PATH Specify games directory"
+    echo "  --library-roots  Extra scan locations, \"|\"-separated, optional Label="
     echo "  --port PORT      Custom port (default: 5006)"
     echo "  --help, -h       Show this help message"
     echo
@@ -267,7 +277,14 @@ show_help() {
     echo "  ./install-linux.sh"
     echo "  ./install-linux.sh --verbose"
     echo "  ./install-linux.sh --games-dir /home/user/games"
+    echo "  ./install-linux.sh --games-dir /srv/games --library-roots 'NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive'"
     echo "  ./install-linux.sh --force --dev --verbose"
+    echo
+    echo "SCAN LOCATIONS:"
+    echo "  GameTheca scans any path this machine can open, so a NAS share counts"
+    echo "  once the host has mounted it. Mount it first (fstab / systemd automount),"
+    echo "  then pass the mount point to --library-roots. Details:"
+    echo "  docs/runbooks/remote-scan-locations.md"
 }
 
 # Backup existing configuration files
@@ -768,6 +785,34 @@ configure_application() {
         print_success "Games directory exists: $GAMES_DIR"
     fi
 
+    # Extra scan locations. Anything already mounted on this machine qualifies —
+    # a NAS share under /mnt, a second disk, an external drive. Mounting is the
+    # operator's job; this only records where GameTheca should look.
+    if [ -z "$LIBRARY_ROOTS" ]; then
+        echo
+        print_info "Extra scan locations beyond $GAMES_DIR (optional)."
+        print_info "Separate with '|', label with 'Name=': 'NAS ROMs=/mnt/nas/roms|/mnt/archive'"
+        read -p "Extra scan locations [none]: " input_roots
+        LIBRARY_ROOTS="${input_roots:-}"
+    fi
+
+    if [ -n "$LIBRARY_ROOTS" ]; then
+        # Warn, do not fail: an automount can be legitimately absent at install
+        # time and appear on first access.
+        OLD_IFS="$IFS"
+        IFS='|'
+        for entry in $LIBRARY_ROOTS; do
+            root_path="${entry#*=}"
+            root_path="$(echo "$root_path" | sed 's/^ *//; s/ *$//')"
+            if [ -n "$root_path" ] && [ ! -d "$root_path" ]; then
+                print_warning "Scan location not mounted yet: $root_path"
+            elif [ -n "$root_path" ]; then
+                print_success "Scan location found: $root_path"
+            fi
+        done
+        IFS="$OLD_IFS"
+    fi
+
     # Create .env file
     print_verbose "Creating environment configuration..."
 
@@ -782,6 +827,11 @@ TEST_DATABASE_URL=postgresql://gamethecauser:$DB_PASSWORD@localhost:5432/gamethe
 
 # Game files directory
 DATA_FOLDER_GAMES=$GAMES_DIR
+
+# Extra scan locations: NAS shares, second disks, anything else this machine
+# has mounted. "|"-separated, optional "Label=" prefix. The share must already
+# be mounted here — see docs/runbooks/remote-scan-locations.md
+GT_LIBRARY_ROOTS=$LIBRARY_ROOTS
 
 # Base folders for path resolution
 BASE_FOLDER_WINDOWS=C:\\
@@ -857,6 +907,9 @@ show_summary() {
     echo
     echo -e "${CYAN}📌 Access URL:${NC} http://localhost:$CUSTOM_PORT"
     echo -e "${CYAN}📌 Games Directory:${NC} $GAMES_DIR"
+    if [ -n "$LIBRARY_ROOTS" ]; then
+        echo -e "${CYAN}📌 Extra Scan Locations:${NC} $LIBRARY_ROOTS"
+    fi
     if [ "$SKIP_DB" != true ]; then
         echo -e "${CYAN}📌 Database:${NC} gametheca (credentials stored in .env)"
     fi

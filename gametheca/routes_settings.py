@@ -1,13 +1,9 @@
-import os
-from PIL import Image as PILImage
-from werkzeug.utils import secure_filename
-from uuid import uuid4
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, jsonify
 from flask_login import login_required, current_user
 from gametheca.forms import EditProfileForm, UserPasswordForm, UserPreferencesForm
 from gametheca.models import User, InviteToken, UserPreference
 from sqlalchemy import select, func
-from gametheca.utils.functions import square_image
+from gametheca.utils.avatar import DEFAULT_AVATAR, save_avatar, thumbnail_for
 from gametheca.utils.processors import get_global_settings
 from gametheca import cache
 from gametheca import db
@@ -43,100 +39,14 @@ def settings_profile_edit():
     if form.validate_on_submit():
         file = form.avatar.data
         if file:
-            MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB in bytes
-            file.seek(0, os.SEEK_END)
-            file_size = file.tell()
-            file.seek(0)
-            
-            if file_size > MAX_FILE_SIZE:
-                flash(f"File size exceeds the {MAX_FILE_SIZE//1024//1024}MB limit.", "error")
+            # One implementation of "what is a valid avatar and what happens to
+            # the old one", shared with POST /api/account/avatar.
+            _path, error = save_avatar(file, current_user, current_app)
+            if error:
+                flash(error, 'error')
                 return redirect(url_for('settings.settings_profile_edit'))
-
-            upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'images/avatars_users')
-            if not os.path.exists(upload_folder):
-                try:
-                    os.makedirs(upload_folder, exist_ok=True)
-                except Exception as e:
-                    print(f"Error creating upload directory: {e}")
-                    flash("Error processing request. Please try again.", 'error')
-                    return redirect(url_for('settings.settings_profile_edit'))
-
-            old_avatarpath = current_user.avatarpath
-            if old_avatarpath and old_avatarpath != 'newstyle/avatar_default.jpg':
-                old_thumbnailpath = os.path.splitext(old_avatarpath)[0] + '_thumbnail' + os.path.splitext(old_avatarpath)[1]
-            else:
-                old_thumbnailpath = None
-
-            filename = secure_filename(file.filename)
-            uuid_filename = str(uuid4()) + '.' + filename.rsplit('.', 1)[1].lower()
-            image_path = os.path.join(upload_folder, uuid_filename)
-            file.save(image_path)
-
-            # Image processing
-            img = PILImage.open(image_path)
-            is_gif = img.format == 'GIF' and 'duration' in img.info
-
-            if is_gif:
-                # For GIFs, maintain animation but resize each frame
-                frames = []
-                try:
-                    while True:
-                        # Copy the current frame
-                        frame = img.copy()
-                        # Resize the frame maintaining aspect ratio
-                        frame.thumbnail((500, 500), PILImage.LANCZOS)
-                        # Add the frame to our list
-                        frames.append(frame)
-                        # Go to next frame
-                        img.seek(img.tell() + 1)
-                except EOFError:
-                    pass  # We've hit the end of the GIF
-
-                # Save the resized GIF with all frames
-                frames[0].save(
-                    image_path,
-                    save_all=True,
-                    append_images=frames[1:],
-                    format='GIF',
-                    duration=img.info.get('duration', 100),
-                    loop=img.info.get('loop', 0)
-                )
-
-                # Create thumbnail (first frame only for performance)
-                thumbnail = frames[0].copy()
-                thumbnail.thumbnail((50, 50), PILImage.LANCZOS)
-                thumbnail_path = os.path.splitext(image_path)[0] + '_thumbnail' + os.path.splitext(image_path)[1]
-                thumbnail.save(thumbnail_path, 'GIF')
-
-            else:
-                # For non-GIF images, use the existing square_image processing
-                img = square_image(img, 500)
-                img.save(image_path)
-                
-                # Create thumbnail
-                thumbnail = img.copy()
-                thumbnail.thumbnail((50, 50), PILImage.LANCZOS)
-                thumbnail_path = os.path.splitext(image_path)[0] + '_thumbnail' + os.path.splitext(image_path)[1]
-                thumbnail.save(thumbnail_path)
-
-            # Delete old avatar files if they exist
-            if old_avatarpath and old_avatarpath != 'newstyle/avatar_default.jpg':
-                try:
-                    old_avatar_full_path = os.path.join(upload_folder, os.path.basename(old_avatarpath))
-                    if os.path.exists(old_avatar_full_path):
-                        os.remove(old_avatar_full_path)
-                    if old_thumbnailpath:
-                        old_thumbnail_full_path = os.path.join(upload_folder, os.path.basename(old_thumbnailpath))
-                        if os.path.exists(old_thumbnail_full_path):
-                            os.remove(old_thumbnail_full_path)
-                except Exception as e:
-                    print(f"Error deleting old avatar: {e}")
-                    flash("Error deleting old avatar. Please try again.", 'error')
-
-            current_user.avatarpath = 'library/images/avatars_users/' + uuid_filename
-        else:
-            if not current_user.avatarpath:
-                current_user.avatarpath = 'newstyle/avatar_default.jpg'
+        elif not current_user.avatarpath:
+            current_user.avatarpath = DEFAULT_AVATAR
 
         try:
             db.session.commit()
@@ -155,7 +65,16 @@ def settings_profile_edit():
             print(f"Error in field '{getattr(form, field).label.text}': {error}")
             flash(f"Error in field '{getattr(form, field).label.text}': {error}", 'error')
 
-    return render_template('settings/settings_profile_edit.html', form=form, avatarpath=current_user.avatarpath)
+    # The thumbnail name is a rule about how avatars are stored, so the route
+    # answers it rather than the template deriving it with a string replace —
+    # which produced a request for a `_thumbnail` file the shipped avatars never
+    # had.
+    return render_template(
+        'settings/settings_profile_edit.html',
+        form=form,
+        avatarpath=current_user.avatarpath,
+        thumbnailpath=thumbnail_for(current_user.avatarpath),
+    )
 
 @settings_bp.route('/settings_profile_view', methods=['GET'])
 @login_required

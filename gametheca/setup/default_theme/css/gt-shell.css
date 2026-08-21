@@ -33,7 +33,16 @@
 
 .gt-shell {
   display: grid;
-  grid-template-columns: var(--gt-rail-w) minmax(0, 1fr);
+  /* The rail is as wide as its longest label, and no wider.
+   *
+   * A flat `var(--gt-rail-w)` is a guess that has to be generous enough for the
+   * longest destination in any locale, so on English it left a band of empty
+   * rail down the right-hand side. `fit-content(limit)` resolves to
+   * min(max-content, limit): the column shrinks to the widest label — the rail
+   * labels are `white-space: nowrap`, so max-content is a real measurement of
+   * the longest one — and the token becomes a ceiling rather than a fixed size,
+   * so a long translation still cannot run away with the layout. */
+  grid-template-columns: fit-content(var(--gt-rail-w)) minmax(0, 1fr);
   grid-template-rows: var(--gt-topbar-h) minmax(0, 1fr);
   grid-template-areas:
     'rail topbar'
@@ -104,7 +113,16 @@
  */
 body.gt-shell-host {
   display: grid;
-  grid-template-columns: var(--gt-rail-w) minmax(0, 1fr);
+  /* The rail is as wide as its longest label, and no wider.
+   *
+   * A flat `var(--gt-rail-w)` is a guess that has to be generous enough for the
+   * longest destination in any locale, so on English it left a band of empty
+   * rail down the right-hand side. `fit-content(limit)` resolves to
+   * min(max-content, limit): the column shrinks to the widest label — the rail
+   * labels are `white-space: nowrap`, so max-content is a real measurement of
+   * the longest one — and the token becomes a ceiling rather than a fixed size,
+   * so a long translation still cannot run away with the layout. */
+  grid-template-columns: fit-content(var(--gt-rail-w)) minmax(0, 1fr);
   grid-template-rows: var(--gt-topbar-h) minmax(0, 1fr);
   grid-template-areas:
     'rail topbar'
@@ -164,12 +182,21 @@ body.gt-shell-host > #admin-legacy-content:empty {
   overflow: hidden;
 }
 
+/* Brand sits on the same two columns as every nav row beneath it.
+ *
+ * It had its own `padding-inline: var(--gt-space-4)` while a nav row's icon
+ * starts at the nav's own `--gt-space-2` plus the link's `--gt-space-3`, and
+ * the mark was 1.4rem against the rows' 1.15rem icon column. So neither the
+ * mark nor the word "GameTheca" lined up with anything under them — three
+ * different left edges in the first 3rem of the rail. Both now use
+ * `--gt-rail-inset` and `--gt-rail-icon-w`, so mark-over-icon and
+ * wordmark-over-label are one column each. */
 .gt-rail__brand {
   display: flex;
   align-items: center;
   gap: var(--gt-space-3);
   height: var(--gt-topbar-h);
-  padding-inline: var(--gt-space-4);
+  padding-inline: var(--gt-rail-inset);
   flex: 0 0 auto;
   color: var(--gt-text);
   text-decoration: none;
@@ -201,8 +228,8 @@ body.gt-shell-host > #admin-legacy-content:empty {
 }
 
 .gt-rail__mark {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: var(--gt-rail-icon-w);
+  height: var(--gt-rail-icon-w);
   flex: 0 0 auto;
 }
 
@@ -226,7 +253,12 @@ body.gt-shell-host > #admin-legacy-content:empty {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--gt-space-2) var(--gt-space-2) var(--gt-space-4);
+  /* Horizontal padding is `--gt-rail-gutter` and the link adds the rest of
+     `--gt-rail-inset`, so the hover/active background still runs nearly the
+     full width of the rail while the icon inside it lands on the brand's
+     column. Splitting it the other way would either inset the highlight or
+     misalign the glyph. */
+  padding: var(--gt-space-2) var(--gt-rail-gutter) var(--gt-space-4);
 }
 
 /* Groups are <ul>s so the rail is a list of lists to assistive tech, which is
@@ -246,13 +278,63 @@ body.gt-shell-host > #admin-legacy-content:empty {
 }
 
 .gt-rail__group-label {
-  padding: var(--gt-space-2) var(--gt-space-3);
+  padding: var(--gt-space-2) calc(var(--gt-rail-inset) - var(--gt-rail-gutter));
   font-size: var(--gt-label-size);
   font-weight: var(--gt-label-weight);
   letter-spacing: var(--gt-label-tracking);
   text-transform: uppercase;
   color: var(--gt-text-muted);
   white-space: nowrap;
+}
+
+/* The group heading is the control that folds the group away.
+ *
+ * Twenty-three destinations is a long column, and most sessions use one part of
+ * it. The heading was already sitting above each group doing nothing, so it
+ * becomes the toggle rather than adding a control beside it. */
+.gt-rail__group-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-2);
+  width: 100%;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--gt-radius-sm);
+}
+
+.gt-rail__group-toggle:hover {
+  color: var(--gt-text);
+}
+
+.gt-rail__group-toggle:focus-visible {
+  outline: 2px solid var(--gt-focus-ring);
+  outline-offset: -2px;
+}
+
+/* Points down when open, right when shut — the standard disclosure, drawn in
+   CSS so it needs no glyph and inherits the heading's colour. */
+.gt-rail__group-caret {
+  flex: 0 0 auto;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--gt-motion-fast) var(--gt-motion-ease);
+}
+
+.gt-rail__group-toggle[aria-expanded='false'] .gt-rail__group-caret {
+  transform: rotate(-45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-rail__group-caret {
+    transition: none;
+  }
 }
 
 .gt-rail__link {
@@ -262,7 +344,7 @@ body.gt-shell-host > #admin-legacy-content:empty {
   /* Full width and left-aligned so a <button> lays out like an <a>. */
   width: 100%;
   min-height: var(--gt-rail-item-h);
-  padding: 0 var(--gt-space-3);
+  padding: 0 calc(var(--gt-rail-inset) - var(--gt-rail-gutter));
   border-radius: var(--gt-radius-sm);
   color: var(--gt-text-muted);
   text-decoration: none;
@@ -308,11 +390,51 @@ body.gt-shell-host > #admin-legacy-content:empty {
 
 .gt-rail__icon {
   flex: 0 0 auto;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: var(--gt-rail-icon-w);
+  height: var(--gt-rail-icon-w);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* The glyph fills its column. It used to be a fixed 18px inside a 1.15rem box,
+   which at any root size other than 16px left it floating off-centre. */
+.gt-rail__icon .gt-icon {
+  width: 100%;
+  height: 100%;
+}
+
+/* Icons move when you reach for them.
+ *
+ * A one-shot pop that settles slightly larger, rather than a static scale: the
+ * rail is a column of twenty-odd similar marks, and motion is what tells you
+ * which one the pointer found. It holds at the end (`forwards`) so the hovered
+ * row stays distinct while you read it. */
+@keyframes gt-rail-icon-pop {
+  0% { transform: scale(1) rotate(0deg); }
+  45% { transform: scale(1.22) rotate(-7deg); }
+  100% { transform: scale(1.12) rotate(0deg); }
+}
+
+.gt-rail__link:hover .gt-icon,
+.gt-rail__link:focus-visible .gt-icon {
+  animation: gt-rail-icon-pop var(--gt-motion-normal, 240ms) var(--gt-motion-ease, ease) forwards;
+}
+
+/* The active row keeps a little of it at rest, so "where I am" and "where the
+   pointer is" are different sizes rather than the same one. */
+.gt-rail__link.is-active .gt-icon {
+  transform: scale(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The size change is the affordance and stays; the travel between the two
+     states is the part that is vestibular, so only the animation goes. */
+  .gt-rail__link:hover .gt-icon,
+  .gt-rail__link:focus-visible .gt-icon {
+    animation: none;
+    transform: scale(1.12);
+  }
 }
 
 .gt-rail__label {
@@ -416,6 +538,14 @@ body.gt-shell-host > #admin-legacy-content:empty {
   display: none;
 }
 
+/* A collapsed rail is icons only: the group headings are visually hidden, so a
+   caret beside one would be a control with no label. SideRail also forces every
+   group open in this state — a folded group at icon width would be destinations
+   that vanished with nothing left to click to bring them back. */
+[data-rail='collapsed'] .gt-rail__group-caret {
+  display: none;
+}
+
 /* A collapsed group still needs separating from the one above it, but its
    heading is gone — a rule stands in for the label. */
 [data-rail='collapsed'] .gt-rail__group {
@@ -434,19 +564,56 @@ body.gt-shell-host > #admin-legacy-content:empty {
    Top bar — page scope only
    -------------------------------------------------------------------------- */
 
+/* One gap for the whole row, matching the gap *inside* the lead and trail
+   groups. The bar used to space its top-level children by `--gt-space-3` while
+   each group spaced its own contents by `--gt-space-2`, so the rail toggle sat
+   further from Filters than Filters sat from anything it was grouped with — two
+   buttons that do the same kind of job reading as two separate regions. The
+   centre slot's flex-grow supplies the real separation between regions. */
 .gt-topbar {
   grid-area: topbar;
   display: flex;
   align-items: center;
-  gap: var(--gt-space-3);
+  gap: var(--gt-space-2);
   min-width: 0;
   padding-inline: var(--gt-gutter);
   background: color-mix(in srgb, var(--gt-surface) 88%, var(--gt-bg));
   border-bottom: 1px solid var(--gt-border);
 }
 
+/* Rail toggle and Filters are one cluster: open the nav, narrow the list.
+   Sizing lives on `.gt-cbtn` in gt-appbar.css so both land on `--gt-control-h`;
+   this only keeps them from being squeezed. */
 .gt-topbar__rail-toggle {
   flex: 0 0 auto;
+}
+
+/* The centre slot is centred on the *page*, not on the leftover space.
+ *
+ * With the sides sized by their content and the centre taking the slack, the
+ * midpoint of the slack is not the midpoint of the bar — so the view switcher
+ * sat off-centre by half the difference between the two sides, and moved
+ * whenever either side changed width. Giving both sides `flex: 1 1 0` makes
+ * them equal whatever they contain, which puts the centre on the true middle
+ * and keeps it there. Both may shrink below their content (`min-width: 0`), so
+ * a narrow window still resolves rather than overflowing.
+ *
+ * `.gt-topbar__start` only exists in the React bar; the Jinja partial has no
+ * centre slot to align, and keeps its `__spacer`. */
+.gt-topbar__start,
+.gt-topbar__start ~ .gt-topbar__actions {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.gt-topbar__start {
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-2);
+}
+
+.gt-topbar__start ~ .gt-topbar__actions {
+  justify-content: flex-end;
 }
 
 .gt-topbar__views {
@@ -463,6 +630,9 @@ body.gt-shell-host > #admin-legacy-content:empty {
    The rail already marks which section is active; this is a confirmation for
    someone arriving by deep link or with the rail collapsed, not a page title. */
 .gt-topbar__section {
+  /* Sits after the toggle/Filters cluster, not between them — it is a label,
+     and a label in the middle of a pair of buttons breaks the pair. */
+  margin-inline-start: var(--gt-space-2);
   font-size: var(--gt-label-size);
   font-weight: var(--gt-label-weight);
   letter-spacing: var(--gt-label-tracking);
@@ -493,12 +663,16 @@ body.gt-shell-host > #admin-legacy-content:empty {
    views and a page with six both read as balanced rather than left-packed with
    a growing tail. Scrolls rather than wraps when a narrow window cannot fit the
    strip — the bar is one row by definition. */
+/* Content-sized now, sitting between two equally-growing sides — that is what
+   puts it on the page's midpoint. It still shrinks and scrolls rather than
+   wrapping when a narrow window cannot fit the strip: the bar is one row by
+   definition. */
 .gt-topbar__page {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--gt-space-2);
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
@@ -772,12 +946,82 @@ body.gt-shell-host .gt-admin-main::-webkit-scrollbar-thumb:hover {
   pointer-events: none;
 }
 
-/* Pop-out host (GT-B17) — the route with no chrome around it. */
-.gt-popout-main {
+/* Pop-out host (GT-B17) — its own surface, not the site with the chrome cut off.
+ *
+ * It used to be a bare `<main>` filling the window. At 420px that reads as a
+ * panel; maximised, it is the normal page with no navigation — reported as
+ * "just another instance of the site". A titled bar and a capped column give it
+ * an identity that survives being resized: at any width it is a chat client
+ * sitting on the page background, not a page missing its furniture.
+ */
+.gt-popout {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100dvh;
+  background: var(--gt-bg);
+  color: var(--gt-text);
+}
+
+.gt-popout__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-2);
+  padding-inline: var(--gt-space-3);
+  height: var(--gt-topbar-h);
+  background: color-mix(in srgb, var(--gt-surface) 88%, var(--gt-bg));
+  border-bottom: 1px solid var(--gt-border);
+}
+
+.gt-popout__mark {
+  width: var(--gt-rail-icon-w);
+  height: var(--gt-rail-icon-w);
+}
+
+.gt-popout__title {
+  font-family: var(--font-display, inherit);
+  font-size: var(--gt-font-md);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.gt-popout-main {
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--gt-space-3);
   background: var(--gt-bg);
   color: var(--gt-text);
+}
+
+/* Wide windows get a column, not a stretched conversation. A chat log at
+   1600px is a line of text with a metre of empty space beside it. */
+.gt-popout[data-surface='chat'] .gt-popout-main {
+  width: min(100%, 46rem);
+  margin-inline: auto;
+}
+
+/* Chat inside the shell has no page controls, so bar two would be an empty
+   strip above the conversation. The row is removed rather than hidden — see
+   App.jsx, which also stops rendering the bar so nothing portals into a slot
+   that is not on screen.
+ *
+ * Desktop only, and deliberately so. This rule is more specific than the
+ * mobile `.gt-shell` override *and* later in the file, so unscoped it won a
+ * two-column area map on a viewport that had already been given a single
+ * column — putting `main` in an implicit auto-width column and squeezing the
+ * conversation to nothing on a phone. Below the breakpoint the rail is a fixed
+ * overlay drawer and the single-column mobile layout is already correct; only
+ * the empty topbar row needs removing there. */
+@media (min-width: 901px) {
+  .gt-shell[data-surface='chat'] {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: 'rail main';
+  }
+}
+
+@media (max-width: 900px) {
+  .gt-shell[data-surface='chat'] {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: 'main';
+  }
 }

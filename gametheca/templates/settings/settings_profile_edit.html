@@ -29,9 +29,8 @@
                     </div>
                     <div class="avatar-thumbnail">
                         <h4>{{ icons.icon('crop') }} Thumbnail preview</h4>
-                        {% set thumbnail_path = avatarpath | replace('.', '_thumbnail.') %}
                         <img
-                            src="{{ url_for('static', filename=thumbnail_path) if thumbnail_path else url_for('static', filename='nothumbnail.jpg') }}"
+                            src="{{ url_for('static', filename=thumbnailpath) if thumbnailpath else url_for('static', filename='nothumbnail.jpg') }}"
                             alt="Avatar thumbnail"
                             class="thumbnail-preview"
                         >

@@ -12,6 +12,14 @@
  * markup `utils/toast.js` builds) as soon as it is found, which fixes the layout
  * shift without touching the server flow that produced it: the flash is still
  * flashed, still carries the game uuid, and the polling below is unchanged.
+ *
+ * The same treatment now covers *every* flash on a shell page, not just this
+ * one — see `rehomeFlashes`. On the member shell the flash container renders
+ * above the SPA, so any flash at all shifted the whole grid down and back.
+ *
+ * Loaded by `base.html` **and** `base_empty.html`. It was only on the former,
+ * and the member SPA extends the latter — so on the one page where the layout
+ * shift was worst, none of this ran.
  */
 
 (function () {
@@ -66,17 +74,65 @@
         return { toast: toast, text: text };
     }
 
+    /** Bootstrap's alert category -> the toast tone that means the same thing. */
+    function toneFor(alertElement) {
+        if (alertElement.classList.contains('alert-success')) return 'success';
+        if (alertElement.classList.contains('alert-danger')) return 'error';
+        if (alertElement.classList.contains('alert-warning')) return 'warn';
+        return 'info';
+    }
+
+    /**
+     * Every flash on a shell page becomes a toast, not just the image refresh.
+     *
+     * `partials/flash_messages.html` renders `.container-flash-messages` at the
+     * top of the document, which on the member shell sits *above the SPA* and
+     * pushes the entire library down the moment anything is flashed — then pulls
+     * it back up when the alert is dismissed. One tile's worth of feedback moves
+     * the whole grid twice. Toasts are what the rest of the member surfaces use,
+     * so these join them.
+     *
+     * Only alerts still in the flow are moved, and the image-refresh one is left
+     * for the tracker below, which needs to keep hold of it.
+     */
+    function rehomeFlashes() {
+        var container = document.querySelector('.container-flash-messages');
+        if (!container) {
+            return;
+        }
+        var alerts = [].slice.call(container.querySelectorAll('.alert'));
+        alerts.forEach(function (alertElement) {
+            if (alertElement.classList.contains('alert-image-refresh')) {
+                return;
+            }
+            var tone = toneFor(alertElement);
+            var moved = asToast(alertElement);
+            moved.toast.className = 'gt-toast gt-toast--' + tone;
+            // Successes and notices are announcements and time out like every
+            // other toast. Errors do not: this script also runs on base.html,
+            // which serves login and registration, and a self-dismissing
+            // "Invalid credentials" leaves the member staring at an unchanged
+            // form with no idea why it did not work. They stay until the close
+            // button is used.
+            if (tone !== 'error') {
+                setTimeout(function () {
+                    moved.toast.remove();
+                }, 6000);
+            }
+        });
+        if (!container.querySelector('.alert')) {
+            container.remove();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         var imageRefreshAlert = document.querySelector('.alert-image-refresh');
-        if (!imageRefreshAlert) {
-            return;
+        var gameUuid = imageRefreshAlert && imageRefreshAlert.dataset.gameUuid;
+        if (imageRefreshAlert && gameUuid) {
+            var moved = asToast(imageRefreshAlert);
+            startProgressTracking(moved.toast, moved.text, gameUuid);
         }
-        var gameUuid = imageRefreshAlert.dataset.gameUuid;
-        if (!gameUuid) {
-            return;
-        }
-        var moved = asToast(imageRefreshAlert);
-        startProgressTracking(moved.toast, moved.text, gameUuid);
+        rehomeFlashes();
     });
 
     function startProgressTracking(toast, textNode, gameUuid) {

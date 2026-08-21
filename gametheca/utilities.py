@@ -874,15 +874,16 @@ def handle_auto_scan(auto_form):
             flash('Service configuration error: No allowed base directories configured.', 'danger')
             return redirect(url_for('main.scan_management', active_tab='auto'))
 
-        base_dir = (
-            current_app.config.get('BASE_FOLDER_WINDOWS')
-            if os.name == 'nt'
-            else current_app.config.get('BASE_FOLDER_POSIX')
+        # folder_path is relative to whichever scan location the admin browsed
+        # (the OS base folder unless they picked another declared root).
+        from gametheca.utils.library_roots import resolve_scan_path
+
+        full_path, root_error = resolve_scan_path(
+            folder_path, auto_form.library_root.data, current_app,
         )
-        if not base_dir:
-            flash('Service configuration error: Base folder is not configured for this OS.', 'danger')
+        if root_error:
+            flash(f'Service configuration error: {root_error}', 'danger')
             return redirect(url_for('main.scan_management', active_tab='auto'))
-        full_path = base_dir if not folder_path else os.path.join(base_dir, folder_path)
 
         is_safe, error_message = is_safe_path(full_path, allowed_bases)
         if not is_safe:
@@ -963,11 +964,14 @@ def handle_manual_scan(manual_form):
             flash('Service configuration error: No allowed base directories configured.', 'danger')
             return redirect(url_for('main.scan_management', active_tab='manual'))
 
-        base_dir = current_app.config.get('BASE_FOLDER_WINDOWS') if os.name == 'nt' else current_app.config.get('BASE_FOLDER_POSIX')
-        if not base_dir:
-            flash('Service configuration error: Base folder is not configured for this OS.', 'danger')
+        from gametheca.utils.library_roots import resolve_scan_path
+
+        full_path, root_error = resolve_scan_path(
+            folder_path, manual_form.library_root.data, current_app,
+        )
+        if root_error:
+            flash(f'Service configuration error: {root_error}', 'danger')
             return redirect(url_for('main.scan_management', active_tab='manual'))
-        full_path = base_dir if not folder_path else os.path.join(base_dir, folder_path)
         print(f"Manual scan form submitted. Full path: {full_path}, Library UUID: {library_uuid}")
 
         # Security validation: ensure the constructed path is within allowed directories

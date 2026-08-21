@@ -131,3 +131,69 @@ describe('ContextBar', () => {
     expect(container.querySelector('h1, h2, h3')).toBeNull()
   })
 })
+
+describe('ContextBar portal ownership', () => {
+  /**
+   * The bug these cover: a page's controls stayed in the top bar after the page
+   * was gone. The first ContextBar mounted after login never had its portal
+   * torn down, so Activity's "Everyone / Friends only" strip sat in the centre
+   * slot on every later page — Library rendered it above its own view strip.
+   * Reproduced in a browser, then pinned here.
+   */
+  function mountSlots() {
+    const bar = document.createElement('div')
+    for (const id of ['gt-topbar-lead', 'gt-topbar-slot', 'gt-topbar-trail']) {
+      const slot = document.createElement('div')
+      slot.id = id
+      bar.appendChild(slot)
+    }
+    document.body.appendChild(bar)
+    return bar
+  }
+
+  function centreText() {
+    return (document.getElementById('gt-topbar-slot').textContent || '').trim()
+  }
+
+  it('renders a page’s views into the top bar rather than inline', () => {
+    const bar = mountSlots()
+    render(<ContextBar views={VIEWS} activeView="all" />)
+
+    expect(centreText()).toContain('Games')
+    bar.remove()
+  })
+
+  it('leaves the slot empty when the page unmounts', () => {
+    const bar = mountSlots()
+    const { unmount } = render(<ContextBar views={VIEWS} activeView="all" />)
+    expect(centreText()).toContain('Games')
+
+    unmount()
+    expect(centreText()).toBe('')
+    expect(document.querySelectorAll('[data-gt-contextbar-host]')).toHaveLength(0)
+    bar.remove()
+  })
+
+  it('evicts another page’s stranded controls instead of stacking under them', () => {
+    const bar = mountSlots()
+
+    // Stand in for a portal whose cleanup never ran — the exact state the
+    // browser was left in. A new page must clear it, not render beneath it.
+    const stranded = document.createElement('div')
+    stranded.setAttribute('data-gt-contextbar-host', 'gone-page')
+    stranded.textContent = 'Everyone Friends only'
+    document.getElementById('gt-topbar-slot').appendChild(stranded)
+
+    render(<ContextBar views={VIEWS} activeView="all" />)
+
+    expect(centreText()).not.toContain('Everyone')
+    expect(centreText()).toContain('Games')
+    bar.remove()
+  })
+
+  it('falls back to an inline bar when there is no top bar to portal into', () => {
+    // Big Picture and the pop-out chat host render the route without chrome.
+    const { container } = render(<ContextBar views={VIEWS} activeView="all" />)
+    expect(container.querySelector('.gt-contextbar')).not.toBeNull()
+  })
+})

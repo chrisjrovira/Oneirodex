@@ -10,6 +10,7 @@ import {
   importCsv,
   syncSteam,
 } from '../api/ownership'
+import { ContextBar } from '../chrome/ContextBar'
 import { LoadingOverlay } from '../components/LoadingOverlay'
 import './OwnershipPage.css'
 
@@ -78,7 +79,11 @@ function accountDraftsFrom(summary, current) {
   return next
 }
 
-export function OwnershipPage({ shellConfig: _shellConfig } = {}) {
+export function OwnershipPage({ shellConfig = {} } = {}) {
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
+  // Nothing selected on arrival: the summary is what most visits are for, and
+  // opening a connect form nobody asked for buries it again.
+  const [activeStore, setActiveStore] = useState(null)
   const [summary, setSummary] = useState(null)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
@@ -215,17 +220,40 @@ export function OwnershipPage({ shellConfig: _shellConfig } = {}) {
 
   const stores = summary?.stores || {}
   const enabled = summary ? summary.enabled !== false : false
+  const selectedStore = STORES.find((store) => store.key === activeStore) || null
 
   return (
+    <>
+    {useNewChrome ? (
+      /* One store at a time, chosen from bar two.
+         The page stacked a full connect/import panel for every store, so the
+         owned-titles summary — the thing you came to read — sat above three
+         long forms you were not using. The stores become views; the summary
+         stays put and the chosen store's card opens under it. */
+      <ContextBar
+        views={STORES.map((store) => ({ id: store.key, label: store.label }))}
+        activeView={activeStore || ''}
+        onSelectView={(id) => setActiveStore((current) => (current === id ? null : id))}
+        summary={
+          summary && enabled
+            ? `${summary.total_owned ?? 0} owned · ${summary.total_matched ?? 0} matched`
+            : null
+        }
+      />
+    ) : null}
     <div className="gt-more-page gt-ownership">
-      <div className="gt-page-header">
-        <h1>Store Ownership</h1>
-      </div>
-      <p className="gt-more-page__lede">
-        Link store accounts and import owned-title lists to show which library games you
-        also own elsewhere. Register-only sync — GameTheca never downloads games or DRM
-        from stores.
-      </p>
+      {useNewChrome ? null : (
+        <>
+          <div className="gt-page-header">
+            <h1>Store Ownership</h1>
+          </div>
+          <p className="gt-more-page__lede">
+            Link store accounts and import owned-title lists to show which library games you
+            also own elsewhere. Register-only sync — GameTheca never downloads games or DRM
+            from stores.
+          </p>
+        </>
+      )}
 
       {/* Floating, so the panel below does not jump when the fetch resolves.
           delayMs=0 — this is the initial load, so the page would otherwise sit
@@ -274,8 +302,20 @@ export function OwnershipPage({ shellConfig: _shellConfig } = {}) {
         ) : null}
       </div>
 
+      {summary && enabled && !useNewChrome ? (
+        <p className="gt-ownership__meta">
+          Pick a store above to connect it or import a list.
+        </p>
+      ) : null}
+
+      {summary && enabled && useNewChrome && !selectedStore ? (
+        <p className="gt-ownership__hint">
+          Choose a store in the bar above to link it or import a list.
+        </p>
+      ) : null}
+
       {summary && enabled
-        ? STORES.map((store) => {
+        ? (useNewChrome ? (selectedStore ? [selectedStore] : []) : STORES).map((store) => {
             const state = stores[store.key] || {}
             const message = messages[store.key]
             const busy = busyAction?.startsWith(`${store.key}:`)
@@ -369,5 +409,6 @@ export function OwnershipPage({ shellConfig: _shellConfig } = {}) {
           })
         : null}
     </div>
+    </>
   )
 }

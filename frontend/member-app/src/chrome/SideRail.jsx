@@ -1,9 +1,52 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 
 
 import { RailIcon } from './railIcons'
 import { getMoreGroups, getPrimaryLinks } from './navConfig'
+
+const COLLAPSED_GROUPS_KEY = 'gt.rail.collapsedGroups'
+
+/**
+ * Which rail groups the member has folded away, remembered across sessions.
+ *
+ * Twenty-three destinations is a long column and most sessions live in one part
+ * of it. Persisted because a fold you have to redo on every page load is worse
+ * than no fold at all. Storage failures are swallowed: private-mode browsers
+ * throw on `localStorage`, and losing the preference must not cost the rail.
+ */
+function useCollapsedGroups() {
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem(COLLAPSED_GROUPS_KEY)
+      return new Set(raw ? JSON.parse(raw) : [])
+    } catch {
+      return new Set()
+    }
+  })
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        COLLAPSED_GROUPS_KEY,
+        JSON.stringify([...collapsed]),
+      )
+    } catch {
+      // Preference only — the rail works either way.
+    }
+  }, [collapsed])
+
+  const toggle = useCallback((id) => {
+    setCollapsed((previous) => {
+      const next = new Set(previous)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  return [collapsed, toggle]
+}
 
 /**
  * Left navigation rail for the member shell (GT-B2).
@@ -37,6 +80,7 @@ export function SideRail({
   const collapsed = railState === 'collapsed'
   const { pathname } = useLocation()
   const [filtersHidden, setFiltersHidden] = useState(false)
+  const [collapsedGroups, toggleGroup] = useCollapsedGroups()
 
   // Clicking Library while already on Library used to be a no-op. It is the
   // obvious place to put the filter panel's show/hide, and it is where it used
@@ -131,14 +175,28 @@ export function SideRail({
           ))}
         </ul>
 
-        {groups.map((group) => (
-          <ul className="gt-rail__group gt-rail__list" key={group.id}>
-            <li className="gt-rail__group-label" aria-hidden="true">
-              {group.label}
-            </li>
-            {group.links.map(renderLink)}
-          </ul>
-        ))}
+        {groups.map((group) => {
+          // Never fold a group while the rail is collapsed: the headings are
+          // visually hidden there, so a folded group would be destinations that
+          // disappeared with no visible control to bring them back.
+          const folded = !collapsed && collapsedGroups.has(group.id)
+          return (
+            <ul className="gt-rail__group gt-rail__list" key={group.id}>
+              <li className="gt-rail__group-label">
+                <button
+                  type="button"
+                  className="gt-rail__group-toggle"
+                  aria-expanded={!folded}
+                  onClick={() => toggleGroup(group.id)}
+                >
+                  <span className="gt-rail__group-caret" aria-hidden="true" />
+                  <span>{group.label}</span>
+                </button>
+              </li>
+              {folded ? null : group.links.map(renderLink)}
+            </ul>
+          )
+        })}
 
         {isAdmin ? (
           <ul className="gt-rail__group gt-rail__list">

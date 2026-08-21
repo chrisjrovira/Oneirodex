@@ -181,15 +181,33 @@
   outline-offset: -2px;
 }
 
+/* Each ContextBar owns a host div inside the shared slot so it can guarantee
+   its own removal (see ContextBar.jsx). `display: contents` keeps that
+   ownership invisible to layout — without it the host becomes a flex item and
+   the strip inside it stops participating in the bar's own alignment. */
+.gt-contextbar__host {
+  display: contents;
+}
+
 /* ---------- bar-two buttons ---------- */
 
+/* One height for every bar button.
+ *
+ * Padding alone sized these, so an icon-only button (the rail toggle) came out
+ * shorter and narrower than a labelled one (Filters) sitting beside it, and the
+ * two centred against each other at different sizes — the reported "filters
+ * hamburger and the other buttons should all be the same size and aligned
+ * together". `--gt-control-h` is the same token the tile-size group and the
+ * form controls use, so the whole bar lands on one height. */
 .gt-cbtn {
   appearance: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
+  min-height: var(--gt-control-h);
   font-size: 0.78rem;
-  padding: 0.35rem 0.6rem;
+  padding: 0 0.6rem;
   border-radius: 7px;
   border: 1px solid var(--gt-border);
   background: transparent;
@@ -197,6 +215,121 @@
   cursor: pointer;
   white-space: nowrap;
   transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
+}
+
+/* An icon button that is not a bar button.
+ *
+ * `.gt-cbtn` is sized for bar two and carries a border, which is wrong for a
+ * symbol sitting on a section heading — there it reads as a second box on the
+ * rule. This is the bare version: no chrome until you touch it. */
+.gt-iconbtn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--gt-radius-sm);
+  background: transparent;
+  color: var(--gt-text-muted);
+  cursor: pointer;
+  transition: color 0.14s ease, background 0.14s ease;
+}
+
+.gt-iconbtn:hover:not(:disabled) {
+  color: var(--gt-text);
+  background: color-mix(in srgb, var(--gt-text) 8%, transparent);
+}
+
+.gt-iconbtn:focus-visible {
+  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+  outline-offset: 1px;
+}
+
+.gt-iconbtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Work in progress turns the glyph, so a refresh control says it is refreshing
+   without needing a word beside it. */
+@keyframes gt-iconbtn-spin {
+  to { transform: rotate(360deg); }
+}
+
+.gt-iconbtn[data-busy='true'] .gt-icon {
+  animation: gt-iconbtn-spin 900ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-iconbtn[data-busy='true'] .gt-icon {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* ---------- hover tooltip ---------- */
+
+/* A styled tooltip rather than `title`.
+ *
+ * `title` waits about a second, cannot be styled, and never appears for keyboard
+ * users at all. This shows on hover *and* on focus, which is the point of
+ * putting the label somewhere other than on the button. */
+.gt-tip {
+  position: relative;
+  display: inline-flex;
+}
+
+.gt-tip__bubble {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: max-content;
+  max-width: 16rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: var(--gt-radius-sm);
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface);
+  color: var(--gt-text);
+  font-size: var(--gt-font-sm);
+  font-weight: 400;
+  line-height: 1.35;
+  text-transform: none;
+  letter-spacing: normal;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.gt-tip:hover .gt-tip__bubble,
+.gt-tip:focus-within .gt-tip__bubble {
+  opacity: 1;
+}
+
+/* Near the right edge the bubble would run off; anchor it to the trigger's
+   right instead. Opt-in, because most tooltips have room to centre. */
+.gt-tip--end .gt-tip__bubble {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-tip__bubble {
+    transition: none;
+  }
+}
+
+/* Icon-only buttons are square at that height rather than a narrow slab. */
+.gt-cbtn--icon,
+.gt-topbar__rail-toggle {
+  width: var(--gt-control-h);
+  padding-inline: 0;
 }
 
 /* Hover is suppressed when the control cannot be used. Without the guard a

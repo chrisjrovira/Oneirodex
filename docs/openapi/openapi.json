@@ -6,7 +6,10 @@
     "description": "Self-hosted multi-user game library API. Authenticate with session cookies or Authorization: Bearer gt_<prefix>_<secret>."
   },
   "servers": [
-    { "url": "/", "description": "Current host" }
+    {
+      "url": "/",
+      "description": "Current host"
+    }
   ],
   "components": {
     "securitySchemes": {
@@ -25,29 +28,67 @@
       "Error": {
         "type": "object",
         "properties": {
-          "error": { "type": "string" }
+          "error": {
+            "type": "string"
+          }
         }
       },
       "ApiTokenPublic": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer" },
-          "name": { "type": "string" },
-          "token_prefix": { "type": "string" },
-          "scopes": { "type": "array", "items": { "type": "string" } },
-          "created_at": { "type": "string", "format": "date-time" },
-          "last_used_at": { "type": "string", "format": "date-time", "nullable": true },
-          "revoked": { "type": "boolean" }
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "token_prefix": {
+            "type": "string"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_used_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revoked": {
+            "type": "boolean"
+          }
         }
       },
       "LibraryHealth": {
         "type": "object",
         "properties": {
-          "count": { "type": "integer" },
-          "average_score": { "type": "number" },
-          "grade_counts": { "type": "object" },
-          "top_issues": { "type": "array", "items": { "type": "object" } },
-          "worst": { "type": "array", "items": { "type": "object" } }
+          "count": {
+            "type": "integer"
+          },
+          "average_score": {
+            "type": "number"
+          },
+          "grade_counts": {
+            "type": "object"
+          },
+          "top_issues": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "worst": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
         }
       }
     }
@@ -57,36 +98,67 @@
       "get": {
         "summary": "OpenAPI document",
         "responses": {
-          "200": { "description": "OpenAPI JSON" }
+          "200": {
+            "description": "OpenAPI JSON"
+          }
         }
       }
     },
     "/api/tokens": {
       "get": {
         "summary": "List personal API tokens",
-        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Token list" },
-          "401": { "description": "Unauthorized" }
+          "200": {
+            "description": "Token list"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
         }
       },
       "post": {
         "summary": "Create personal API token",
-        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name"],
+                "required": [
+                  "name"
+                ],
                 "properties": {
-                  "name": { "type": "string" },
+                  "name": {
+                    "type": "string"
+                  },
                   "scopes": {
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "enum": ["read:library", "read:social", "write:presence", "write:download", "write:library", "admin"]
+                      "enum": [
+                        "read:library",
+                        "read:social",
+                        "write:presence",
+                        "write:download",
+                        "write:library",
+                        "admin"
+                      ]
                     }
                   }
                 }
@@ -95,43 +167,72 @@
           }
         },
         "responses": {
-          "201": { "description": "Created; includes one-time secret" },
-          "400": { "description": "Validation error" }
+          "201": {
+            "description": "Created; includes one-time secret"
+          },
+          "400": {
+            "description": "Validation error"
+          }
         }
       }
     },
     "/api/tokens/{token_id}": {
       "delete": {
         "summary": "Revoke a personal API token",
-        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "token_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "Revoked" },
-          "404": { "description": "Not found" }
+          "200": {
+            "description": "Revoked"
+          },
+          "404": {
+            "description": "Not found"
+          }
         }
       }
     },
     "/api/health/library": {
       "get": {
         "summary": "Library health summary (admin)",
-        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 200 }
+            "schema": {
+              "type": "integer",
+              "default": 200
+            }
           },
           {
             "name": "library_uuid",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -139,88 +240,193 @@
             "description": "Health summary",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/LibraryHealth" }
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryHealth"
+                }
               }
             }
           },
-          "403": { "description": "Admin required" }
+          "403": {
+            "description": "Admin required"
+          }
         }
       }
     },
     "/api/health/games/{game_uuid}": {
       "get": {
         "summary": "Per-game health score",
-        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "game_uuid",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "Game health" },
-          "404": { "description": "Not found" }
+          "200": {
+            "description": "Game health"
+          },
+          "404": {
+            "description": "Not found"
+          }
         }
       }
     },
     "/api/events/stream": {
       "get": {
         "summary": "SSE stream for scan/download events",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "text/event-stream" }
+          "200": {
+            "description": "text/event-stream"
+          }
         }
       }
     },
     "/api/search": {
       "get": {
         "summary": "Search games by name",
-        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "query",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "Search results" }
+          "200": {
+            "description": "Search results"
+          }
         }
       }
     },
     "/api/collections": {
       "get": {
         "summary": "List visible collections",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Collection list" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Collection list"
+          }
+        }
       },
       "post": {
         "summary": "Create a collection",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "201": { "description": "Created" }, "400": { "description": "Validation error" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
       }
     },
     "/api/announcements": {
       "get": {
         "summary": "List published announcements",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Announcement list" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Announcement list"
+          }
+        }
       },
       "post": {
         "summary": "Publish announcement (admin)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "201": { "description": "Created" }, "403": { "description": "Admin required" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "403": {
+            "description": "Admin required"
+          }
+        }
       }
     },
     "/api/news/free-games": {
       "get": {
         "summary": "Active free / giveaway store offers (Wave 18)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "store", "in": "query", "schema": { "type": "string" }, "description": "Optional store filter (steam, epic, gog, …)" },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 40 } }
+          {
+            "name": "store",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional store filter (steam, epic, gog, …)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 40
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -232,336 +438,1269 @@
     "/api/news/free-games/{offer_id}/claim-assist": {
       "post": {
         "summary": "Register offer on ownership + Steam sync when connected (Wave 18 dual claim)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "offer_id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Registered / synced" },
-          "400": { "description": "Store not connected or assist unavailable" }
+          "200": {
+            "description": "Registered / synced"
+          },
+          "400": {
+            "description": "Store not connected or assist unavailable"
+          }
         }
       }
     },
     "/api/news/gaming": {
       "get": {
         "summary": "External gaming RSS headlines",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Headline items" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Headline items"
+          }
+        }
       }
     },
     "/api/requests": {
       "get": {
         "summary": "List wishlist requests",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Request list" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request list"
+          }
+        }
       },
       "post": {
         "summary": "Create wishlist request",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "201": { "description": "Created" }, "403": { "description": "Blocked for role" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "403": {
+            "description": "Blocked for role"
+          }
+        }
       }
     },
     "/api/updates/inbox": {
       "get": {
         "summary": "Freshness updates inbox",
         "description": "Behind / heuristic-behind games. Includes generated_at for UI poll. Does not re-check stores — use POST /api/games/{uuid}/freshness/check or POST /api/admin/freshness/refresh.",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 200 } },
-          { "name": "library_uuid", "in": "query", "schema": { "type": "string" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
         ],
-        "responses": { "200": { "description": "count, limit, generated_at, items, freshness_check routes" } }
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 200
+            }
+          },
+          {
+            "name": "library_uuid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "count, limit, generated_at, items, freshness_check routes"
+          }
+        }
       }
     },
     "/api/calendar": {
       "get": {
         "summary": "IGDB release calendar window",
         "description": "Stable 200 with empty releases when IGDB off/empty. Query: days_ahead, days_behind, limit.",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [
-          { "name": "days_ahead", "in": "query", "schema": { "type": "integer", "default": 60 } },
-          { "name": "days_behind", "in": "query", "schema": { "type": "integer", "default": 14 } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 40 } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
         ],
-        "responses": { "200": { "description": "releases list + generated_at" } }
+        "parameters": [
+          {
+            "name": "days_ahead",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 60
+            }
+          },
+          {
+            "name": "days_behind",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 14
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 40
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "releases list + generated_at"
+          }
+        }
       }
     },
     "/api/playtime/sessions": {
       "post": {
         "summary": "Start a play session",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "201": { "description": "Session started" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Session started"
+          }
+        }
       }
     },
     "/api/playtime/me": {
       "get": {
         "summary": "Current user playtime aggregates",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Totals and per-game progress" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Totals and per-game progress"
+          }
+        }
       }
     },
     "/api/acquire/status": {
       "get": {
         "summary": "Acquire module status (arr/debrid/clients)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Feature flags and client list" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Feature flags and client list"
+          }
+        }
       }
     },
     "/api/acquire/search": {
       "get": {
         "summary": "Search BYO indexers (ranked)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [
-          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "current", "in": "query", "schema": { "type": "string" }, "description": "Current library title for newer-repack heuristic" }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
         ],
-        "responses": { "200": { "description": "Ranked hits with score / is_repack" } }
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "current",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Current library title for newer-repack heuristic"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ranked hits with score / is_repack"
+          }
+        }
       }
     },
     "/api/acquire/download": {
       "post": {
         "summary": "Send URL/magnet to download client or debrid (librarian+)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Queued" }, "403": { "description": "Forbidden" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Queued"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
       }
     },
     "/api/games/{game_uuid}/editions": {
       "get": {
         "summary": "Systems this title exists on, with per-core launchers",
         "description": "Every copy of the same title across the caller's accessible libraries, one entry per library row, each carrying its own play options and a launch URL per browser-playable emulator core. Titles are paired by normalised name because Game.igdb_id and Game.slug are both unique, so cross-platform copies cannot share either. Always returns at least the requested game, so a caller never has to special-case a single-system title.",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "game_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Envelope with editions[] and system_count" },
-          "403": { "description": "Library not accessible to the caller" },
-          "404": { "description": "Game not found" }
+          "200": {
+            "description": "Envelope with editions[] and system_count"
+          },
+          "403": {
+            "description": "Library not accessible to the caller"
+          },
+          "404": {
+            "description": "Game not found"
+          }
         }
       }
     },
     "/api/games/{game_uuid}/saves": {
       "get": {
         "summary": "List emulator cloud save slots",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [{ "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Save slots" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Save slots"
+          }
+        }
       },
       "post": {
         "summary": "Upload emulator save slot (multipart file + slot)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [{ "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Saved" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saved"
+          }
+        }
       }
     },
     "/api/games/{game_uuid}/saves/{slot_name}": {
       "get": {
         "summary": "Download emulator save slot",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [
-          { "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } },
-          { "name": "slot_name", "in": "path", "required": true, "schema": { "type": "string" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
         ],
-        "responses": { "200": { "description": "Binary blob" }, "404": { "description": "Missing" } }
+        "parameters": [
+          {
+            "name": "game_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slot_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary blob"
+          },
+          "404": {
+            "description": "Missing"
+          }
+        }
       },
       "delete": {
         "summary": "Delete emulator save slot",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [
-          { "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } },
-          { "name": "slot_name", "in": "path", "required": true, "schema": { "type": "string" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
         ],
-        "responses": { "200": { "description": "Deleted" } }
+        "parameters": [
+          {
+            "name": "game_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slot_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        }
       }
     },
     "/api/games/{game_uuid}/cheats": {
       "get": {
         "summary": "List RetroArch .cht files for a game",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [{ "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Cheat files" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cheat files"
+          }
+        }
       },
       "post": {
         "summary": "Upload .cht cheat file",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [{ "name": "game_uuid", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Stored" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stored"
+          }
+        }
       }
     },
     "/api/activity": {
       "get": {
         "summary": "Library activity / now playing",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Activity feed" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activity feed"
+          }
+        }
       }
     },
     "/api/social/status": {
       "get": {
         "summary": "Lite social status + BYO community chat link",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Friends counts and community_chat_url" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Friends counts and community_chat_url"
+          }
+        }
       }
     },
     "/api/social/friends": {
       "get": {
         "summary": "List friendships",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Friend list" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Friend list"
+          }
+        }
       },
       "post": {
         "summary": "Request friendship by username",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "201": { "description": "Created" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
       }
     },
     "/api/chat/channels": {
       "get": {
         "summary": "List household channels + accessible DMs",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Channels" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Channels"
+          }
+        }
       },
       "post": {
         "summary": "Create household channel (admin/librarian)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "201": { "description": "Created" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
       }
     },
     "/api/chat/dm": {
       "post": {
         "summary": "Open or create a DM thread",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "DM channel" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DM channel"
+          }
+        }
       }
     },
     "/api/chat/channels/{channel_id}/mute": {
       "post": {
         "summary": "Mute or unmute a channel/DM for the current user",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "channel_id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "channel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Muted state updated" },
-          "400": { "description": "muted required" },
-          "404": { "description": "Not found" }
+          "200": {
+            "description": "Muted state updated"
+          },
+          "400": {
+            "description": "muted required"
+          },
+          "404": {
+            "description": "Not found"
+          }
         }
       }
     },
     "/api/chat/channels/{channel_id}/messages": {
       "get": {
         "summary": "List messages (includes reaction counts + attachments)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [
-          { "name": "channel_id", "in": "path", "required": true, "schema": { "type": "integer" } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer" } },
-          { "name": "before", "in": "query", "schema": { "type": "integer" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
         ],
-        "responses": { "200": { "description": "Messages" } }
+        "parameters": [
+          {
+            "name": "channel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages"
+          }
+        }
       },
       "post": {
         "summary": "Post a message (optional attachment_ids from prior upload)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [
-          { "name": "channel_id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
         ],
-        "responses": { "201": { "description": "Created" } }
+        "parameters": [
+          {
+            "name": "channel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
       }
     },
     "/api/chat/channels/{channel_id}/attachments": {
       "post": {
         "summary": "Upload pending chat attachment (multipart file); child accounts 403",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "channel_id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "channel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "201": { "description": "Pending attachment + limits" },
-          "400": { "description": "Size/MIME/empty reject" },
-          "403": { "description": "Child upload ban or no channel access" }
+          "201": {
+            "description": "Pending attachment + limits"
+          },
+          "400": {
+            "description": "Size/MIME/empty reject"
+          },
+          "403": {
+            "description": "Child upload ban or no channel access"
+          }
         }
       }
     },
     "/api/chat/messages/{message_id}/reactions": {
       "post": {
         "summary": "Toggle emoji reaction (fixed Unicode + custom :slug:)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [
-          { "name": "message_id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
         ],
-        "responses": { "200": { "description": "Updated counts" } }
+        "parameters": [
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated counts"
+          }
+        }
       }
     },
     "/api/chat/emoji": {
       "get": {
         "summary": "List fixed + household custom reaction emoji",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Emoji catalog" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Emoji catalog"
+          }
+        }
       },
       "post": {
         "summary": "Upload custom emoji (admin)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "201": { "description": "Created" }, "403": { "description": "Admin only" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "403": {
+            "description": "Admin only"
+          }
+        }
       }
     },
     "/api/chat/emoji/{slug}": {
       "delete": {
         "summary": "Delete custom emoji (admin)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [
-          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
         ],
-        "responses": { "200": { "description": "Deleted" }, "404": { "description": "Not found" } }
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
       }
     },
     "/api/chat/search": {
       "get": {
         "summary": "Search message bodies across accessible channels",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "parameters": [
-          { "name": "q", "in": "query", "required": true, "schema": { "type": "string", "minLength": 2 } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
         ],
-        "responses": { "200": { "description": "Search hits" } }
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search hits"
+          }
+        }
       }
     },
     "/api/rtc/status": {
       "get": {
         "summary": "LiveKit voice enabled + URL",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "RTC status" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "RTC status"
+          }
+        }
       }
     },
     "/api/rtc/token": {
       "post": {
         "summary": "Mint short-lived LiveKit JWT for a room",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Token + room" }, "403": { "description": "Disabled or child policy" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token + room"
+          },
+          "403": {
+            "description": "Disabled or child policy"
+          }
+        }
       }
     },
     "/api/support/tickets": {
       "get": {
         "summary": "List support tickets (own or all for admin)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Tickets" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tickets"
+          }
+        }
       },
       "post": {
         "summary": "Create support ticket (optional GitHub sync)",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "201": { "description": "Created" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
       }
     },
     "/api/plugins": {
       "get": {
         "summary": "Plugin / connector registry",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "Plugins with runtime status" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Plugins with runtime status"
+          }
+        }
       }
     },
     "/api/export/esde": {
       "get": {
         "summary": "ES-DE gamelist.xml export",
-        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
-        "responses": { "200": { "description": "XML" } }
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "XML"
+          }
+        }
+      }
+    },
+    "/api/library_roots": {
+      "get": {
+        "summary": "List scan locations the folder browser may start from",
+        "description": "Admin only. The games folder and the OS base folder are always present; extras come from GT_LIBRARY_ROOTS. Each root is probed, so a share that is configured but not mounted reports exists=false rather than browsing as an empty folder.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Roots with availability"
+          },
+          "403": {
+            "description": "Admin required"
+          }
+        }
+      }
+    },
+    "/api/browse_folders_ss": {
+      "get": {
+        "summary": "Browse folders under a scan location",
+        "description": "Admin only. Omit `root` for the OS base folder.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Path relative to the selected root"
+          },
+          {
+            "name": "root",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Root id from /api/library_roots"
+          },
+          {
+            "name": "abs_path",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Deep link to an absolute path inside the allowlist"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Directory listing"
+          },
+          "403": {
+            "description": "Path outside the allowed directories"
+          },
+          "404": {
+            "description": "Unknown scan location or missing folder"
+          }
+        }
+      }
+    },
+    "/api/account/summary": {
+      "get": {
+        "summary": "Account identity and invite budget",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Summary"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/account/avatar": {
+      "post": {
+        "summary": "Upload a new avatar",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "avatar"
+                ],
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stored; returns the new avatar path"
+          },
+          "400": {
+            "description": "No file supplied"
+          },
+          "422": {
+            "description": "Unsupported or unreadable image"
+          }
+        }
+      }
+    },
+    "/api/account/password": {
+      "post": {
+        "summary": "Change your own password",
+        "description": "The current password is required — a modal opens from anywhere in the app.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "current_password",
+                  "new_password",
+                  "confirm_password"
+                ],
+                "properties": {
+                  "current_password": {
+                    "type": "string"
+                  },
+                  "new_password": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "confirm_password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Changed"
+          },
+          "401": {
+            "description": "Current password incorrect"
+          },
+          "422": {
+            "description": "New password rejected"
+          }
+        }
+      }
+    },
+    "/api/account/invites": {
+      "get": {
+        "summary": "List your open invites",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invites, quota and SMTP readiness"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an invite",
+        "description": "The email address is optional. Without one — or without SMTP — the invite is still created and its URL is returned for the inviter to pass on directly. `emailed` reports whether anything was actually sent.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created; includes the invite URL"
+          },
+          "403": {
+            "description": "Invite quota exhausted"
+          }
+        }
+      }
+    },
+    "/api/account/invites/{token}": {
+      "delete": {
+        "summary": "Revoke one of your invites",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revoked"
+          },
+          "404": {
+            "description": "Not yours, or already gone"
+          }
+        }
       }
     }
   }

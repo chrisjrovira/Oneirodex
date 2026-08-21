@@ -165,7 +165,13 @@ test('new chrome moves refresh and its status into bar two', async () => {
   // The refresh status is the only thing that says whether what you are
   // looking at is current, so it has to survive the move — losing it would
   // make a stale inbox indistinguishable from a fresh one.
-  const refresh = await screen.findByRole('button', { name: 'Refresh' })
+  //
+  // The control is a symbol on the inbox heading now rather than a word in bar
+  // two, so its accessible name is the one the tooltip carries. Queried by
+  // role+name precisely so the icon cannot ship without one.
+  const refresh = await screen.findByRole('button', {
+    name: 'Refresh the freshness inbox',
+  })
   await user.click(refresh)
   await waitFor(() => expect(screen.getByText(/^Updated /)).toBeInTheDocument())
 })

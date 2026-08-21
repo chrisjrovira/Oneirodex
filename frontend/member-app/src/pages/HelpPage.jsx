@@ -1,12 +1,24 @@
 ﻿import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { ContextBar } from '../chrome/ContextBar'
 import './HelpPage.css'
 
+/**
+ * Twelve topics is a strip you scroll, not a switcher you read (W29 human
+ * report: "help buttons are overflowing"). They collapse to five groups.
+ *
+ * Grouped rather than merged, deliberately. Merging the twelve into five
+ * sections would have folded twelve headings and their summaries into five and
+ * — worse — retired ten anchor ids that are linked from elsewhere in the
+ * product: `playHonesty.js` sends a blocked Play straight to `/help#browser-play`.
+ * Every section keeps its id, its heading and its own copy; only the switcher
+ * is shorter, and a group jumps to the first section in it.
+ */
 const FAQ_SECTIONS = [
   {
     id: 'getting-started',
+    group: 'Start',
     title: 'Getting started',
+    short: 'Start',
     summary: 'Nav, Cmd+K, details, health checks',
     items: [
       'Top nav: Discover, Library, Systems, Downloads, Favorites.',
@@ -20,7 +32,9 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'library',
+    group: 'Collection',
     title: 'Library & signals',
+    short: 'Library',
     summary: 'Favorites, chips, tiles, trailers',
     items: [
       'Heart a cover; open Favorites from top nav.',
@@ -37,7 +51,9 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'systems',
+    group: 'Collection',
     title: 'Systems & themes',
+    short: 'Systems',
     summary: 'Platform browse and accents',
     items: [
       'Systems tiles filter the library by console/PC.',
@@ -49,7 +65,9 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'downloads',
+    group: 'Collection',
     title: 'Downloads',
+    short: 'Downloads',
     summary: 'Zip queue and retention',
     items: [
       'Download on a game page starts a server zip.',
@@ -58,7 +76,9 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'social',
+    group: 'Community',
     title: 'Social & voice',
+    short: 'Social',
     summary: 'Friends, chat, LiveKit',
     items: [
       'Friends pill or More → Friends: stay-open dock. Pop out uses /social-companion only.',
@@ -69,7 +89,9 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'updates-calendar',
+    group: 'Collection',
     title: 'Updates & calendar',
+    short: 'Updates',
     summary: 'Freshness inbox and release window',
     items: [
       'More → Updates: freshness inbox auto-refreshes while the tab is visible; use Refresh for an immediate pull. Search stores and apply packs stay as before (dense rows, less glass card clutter).',
@@ -79,7 +101,9 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'free-games',
+    group: 'Community',
     title: 'Free games',
+    short: 'Free games',
     summary: 'News claims and ownership sync',
     items: [
       'News (All · Admins · Free now · Headlines) leads with a featured strip, then densified sections. Free claims live under Free now (and `#free-games`). Claim on the store; Sync ownership if linked.',
@@ -89,7 +113,9 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'translations',
+    group: 'Playing',
     title: 'Translations & patches',
+    short: 'Patches',
     summary: 'Locale chips and Flips',
     items: [
       'Preferred game language (default en-US) ≠ UI language.',
@@ -99,7 +125,9 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'cheats',
+    group: 'Playing',
     title: 'Cheats (.cht)',
+    short: 'Cheats',
     summary: 'Details create / upload / play',
     items: [
       'Game details → Cheats (RetroArch titles only): New cheat (name + code rows + dialect hint) or upload a RetroArch .cht.',
@@ -111,7 +139,9 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'browser-play',
+    group: 'Playing',
     title: 'Browser play & BIOS',
+    short: 'Play',
     summary: 'Firmware honesty, extractors, missing paths',
     items: [
       'Some systems need BIOS/firmware on the host before Play in browser works. Details and tiles show a quiet blocker with the server hint - no Download BIOS button.',
@@ -122,7 +152,9 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'controllers-vr',
+    group: 'Playing',
     title: 'Controllers & VR',
+    short: 'Controllers',
     summary: 'Big Picture and headset browse',
     items: [
       'More → Big Picture: A open, X download, B Attract, Y Friends, Esc exit.',
@@ -132,17 +164,40 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'support',
+    group: 'Support',
     title: 'Need help?',
-    summary: 'Report issue and docs',
+    short: 'Support',
+    summary: 'Report and docs',
     items: [
-      'More → Report issue: title required; symptom/logs optional. Context and Logs stay collapsed until expanded.',
+      'More → Report: choose whether something is broken or you have an idea, then a title. Symptom and logs are optional; Context and Logs stay collapsed until expanded.',
       'Ask your admin for docs/user guides, or see the GitHub repo.',
     ],
   },
 ]
 
+/**
+ * The switcher's five entries, derived from the sections rather than declared
+ * beside them — a group listed here that no section belongs to would render an
+ * empty destination, and a section whose group nobody listed would become
+ * unreachable. Order follows first appearance, so it matches reading order
+ * down the page.
+ */
+const FAQ_GROUPS = FAQ_SECTIONS.reduce((groups, section) => {
+  if (!groups.some((group) => group.id === section.group)) {
+    groups.push({ id: section.group, label: section.group })
+  }
+  return groups
+}, [])
+
+
 export function HelpPage({ shellConfig = {} }) {
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
+  const groupOf = (sectionId) =>
+    FAQ_SECTIONS.find((section) => section.id === sectionId)?.group || FAQ_GROUPS[0].id
+
+  const firstSectionOfGroup = (groupId) =>
+    FAQ_SECTIONS.find((section) => section.group === groupId)?.id || FAQ_SECTIONS[0].id
+
   const [openIds, setOpenIds] = useState(() => {
     const initial = new Set(['getting-started'])
     if (typeof window !== 'undefined') {
@@ -164,11 +219,44 @@ export function HelpPage({ shellConfig = {} }) {
       next.add(hash)
       return next
     })
+    setActiveSection(hash)
     const el = document.getElementById(hash)
     el?.scrollIntoView?.({ block: 'start' })
   }, [])
 
+  // Which topic the strip marks as current. Set by using the strip, and by an
+  // arriving hash, rather than tracked by scroll position: this is a list of
+  // accordions, so "where am I" is decided by the one you opened, not by which
+  // few pixels happen to be under the viewport's midpoint.
+  const [activeSection, setActiveSection] = useState(() => {
+    if (typeof window === 'undefined') return FAQ_SECTIONS[0].id
+    const hash = window.location.hash.replace(/^#/, '')
+    return FAQ_SECTIONS.some((s) => s.id === hash) ? hash : FAQ_SECTIONS[0].id
+  })
+
+  function jumpToSection(id) {
+    if (!FAQ_SECTIONS.some((section) => section.id === id)) return
+    setActiveSection(id)
+    // Opened as well as scrolled to: jumping to a collapsed section would put
+    // its heading under the bar and show nothing underneath it.
+    setOpenIds((current) => {
+      if (current.has(id)) return current
+      const next = new Set(current)
+      next.add(id)
+      return next
+    })
+    document.getElementById(id)?.scrollIntoView?.({ block: 'start' })
+  }
+
   function toggle(id) {
+    // Decide from the current value *outside* the updater: a state updater has
+    // to be pure, and React may replay it (it does so deliberately in
+    // StrictMode), so calling setActiveSection from inside one fires it twice
+    // and reads a value the queue may already have moved past.
+    const opening = !openIds.has(id)
+    if (opening) {
+      setActiveSection(id)
+    }
     setOpenIds((current) => {
       const next = new Set(current)
       if (next.has(id)) {
@@ -192,6 +280,17 @@ export function HelpPage({ shellConfig = {} }) {
     <>
     {useNewChrome ? (
         <ContextBar
+          /* The topic list *is* the page's navigation, so it belongs in bar
+             two with every other page's views. It used to sit inside the
+             content, which meant scrolling the page to reach the control that
+             jumps around the page. Labels are the short forms — the full
+             heading is still on the section itself. */
+          views={FAQ_GROUPS.map((group) => ({
+            id: group.id,
+            label: group.label,
+          }))}
+          activeView={groupOf(activeSection)}
+          onSelectView={(groupId) => jumpToSection(firstSectionOfGroup(groupId))}
           summary={`${openIds.size} of ${FAQ_SECTIONS.length} open`}
           actions={
             <>
@@ -201,9 +300,6 @@ export function HelpPage({ shellConfig = {} }) {
               <button type="button" className="gt-cbtn" onClick={collapseAll}>
                 Collapse all
               </button>
-              <Link className="gt-cbtn" to="/report">
-                Report an issue
-              </Link>
             </>
           }
         />
@@ -225,27 +321,23 @@ export function HelpPage({ shellConfig = {} }) {
             <button type="button" className="gt-btn gt-btn--ghost" onClick={collapseAll}>
               Collapse all
             </button>
-            <Link className="gt-help__support-link" to="/report">
-              Report an issue
-            </Link>
           </div>
         </>
       )}
 
-      {/* One control, not a scatter of pills. These were separate bordered
-          chips that wrapped into two or three ragged rows; as a single
-          segmented strip with rounded ends they read as one thing, and the
-          strip is docked to the content's left edge so it continues the rail
-          rather than floating in the page. `gt-seg` is the shared segmented
-          control the context bar and the admin tab strips already use, so this
-          is the same button in the same place as everywhere else. */}
-      <nav className="gt-seg gt-help__toc" aria-label="Help topics">
-        {FAQ_SECTIONS.map((section) => (
-          <a key={section.id} href={`#${section.id}`} className="gt-seg__item gt-help__toc-chip">
-            {section.title}
-          </a>
-        ))}
-      </nav>
+      {/* The topic strip lives in bar two under the new chrome; rendering it
+          here as well would be the same control twice on one screen. Classic
+          chrome still needs it in the page, because there is no bar to put it
+          in. */}
+      {useNewChrome ? null : (
+        <nav className="gt-seg gt-help__toc" aria-label="Help topics">
+          {FAQ_SECTIONS.map((section) => (
+            <a key={section.id} href={`#${section.id}`} className="gt-seg__item gt-help__toc-chip">
+              {section.title}
+            </a>
+          ))}
+        </nav>
+      )}
 
       <div className="gt-help__sections">
         {FAQ_SECTIONS.map((section) => {

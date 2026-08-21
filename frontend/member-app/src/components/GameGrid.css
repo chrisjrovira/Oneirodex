@@ -109,7 +109,8 @@ html.is-tile-resizing .game-library-row {
  * value (30) on purpose: an open menu must still beat a merely hovered
  * neighbour. */
 .game-library-container[data-library-virtual] .game-library-row:has(.game-card:hover),
-.game-library-container[data-library-virtual] .game-library-row:has(.game-card:focus-within) {
+.game-library-container[data-library-virtual] .game-library-row:has(.game-card:focus-visible),
+.game-library-container[data-library-virtual] .game-library-row:has(.game-card :focus-visible) {
   z-index: 25;
 }
 
@@ -127,9 +128,9 @@ html.is-tile-resizing .game-library-row {
  * so the affordance is identical.
  */
 .game-library-row .game-card:hover,
-.game-library-row .game-card:focus-within,
+.game-library-row .game-card:has(:focus-visible),
 .game-library-container[data-library-grid] .game-card:hover,
-.game-library-container[data-library-grid] .game-card:focus-within {
+.game-library-container[data-library-grid] .game-card:has(:focus-visible) {
   transform-origin: center top;
 }
 
@@ -152,16 +153,16 @@ html.is-tile-resizing .game-library-row {
  * `:first-child` / `:last-child` are the column positions here because a row
  * holds exactly one card per column — see GameGrid's row render. */
 .game-library-row > .game-card-container:first-child .game-card:hover,
-.game-library-row > .game-card-container:first-child .game-card:focus-within,
+.game-library-row > .game-card-container:first-child .game-card:has(:focus-visible),
 .game-library-container[data-library-grid] > .game-card-container:first-child .game-card:hover,
-.game-library-container[data-library-grid] > .game-card-container:first-child .game-card:focus-within {
+.game-library-container[data-library-grid] > .game-card-container:first-child .game-card:has(:focus-visible) {
   transform-origin: left top;
 }
 
 .game-library-row > .game-card-container:last-child .game-card:hover,
-.game-library-row > .game-card-container:last-child .game-card:focus-within,
+.game-library-row > .game-card-container:last-child .game-card:has(:focus-visible),
 .game-library-container[data-library-grid] > .game-card-container:last-child .game-card:hover,
-.game-library-container[data-library-grid] > .game-card-container:last-child .game-card:focus-within {
+.game-library-container[data-library-grid] > .game-card-container:last-child .game-card:has(:focus-visible) {
   transform-origin: right top;
 }
 

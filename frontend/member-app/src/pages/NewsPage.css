@@ -515,3 +515,43 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Source filter — one chip per configured site, pressed when it is showing. */
+.gt-news__sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.7rem;
+}
+
+/* Muted reads as off rather than as merely unselected: this is a list where
+   most chips are usually on, so the exception has to be the loud one. */
+.gt-news__source[aria-pressed='false'] {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+/* Both feeds are bounded and scroll inside themselves.
+ *
+ * Free games and headlines each rendered their full list into the page, so News
+ * grew to whatever the feeds happened to return that day and the page scrolled
+ * past everything else on it. Capping them keeps the two sections and the rest
+ * of the page reachable without a long scroll, and puts the growth inside the
+ * section that owns it. */
+.gt-news__cards,
+.gt-news__free-strip {
+  max-height: min(58vh, 32rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Room for the scrollbar so the last card is not sliced by it. */
+  padding-right: 0.25rem;
+}
+
+@media (max-width: 900px) {
+  /* On a phone the page is the scroll surface and a nested one fights it. */
+  .gt-news__cards,
+  .gt-news__free-strip {
+    max-height: none;
+    overflow-y: visible;
+  }
+}

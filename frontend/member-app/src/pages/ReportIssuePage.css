@@ -157,3 +157,68 @@
   color: var(--gt-accent);
   outline: none;
 }
+
+/* What kind of report — asked first, because it changes what everything below
+   it means. Two large targets rather than a select: there are exactly two
+   answers and the difference between them matters more than the width saved. */
+.gt-report__kind {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+}
+
+.gt-report__kind-legend {
+  padding: 0;
+  margin-bottom: 0.4rem;
+  font-size: var(--gt-font-sm);
+  font-weight: 650;
+  color: var(--gt-text-muted);
+}
+
+.gt-report__kind-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gt-report__kind-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'radio label'
+    '.     hint';
+  align-items: center;
+  gap: 0.15rem 0.5rem;
+  flex: 1 1 12rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--gt-radius-md);
+  border: 1px solid var(--gt-border);
+  background: color-mix(in srgb, var(--gt-bg) 40%, transparent);
+  cursor: pointer;
+}
+
+.gt-report__kind-option:hover {
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+}
+
+.gt-report__kind-option[data-selected='true'] {
+  border-color: var(--gt-accent);
+  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
+}
+
+.gt-report__kind-option input {
+  grid-area: radio;
+  margin: 0;
+  accent-color: var(--gt-accent);
+}
+
+.gt-report__kind-label {
+  grid-area: label;
+  font-weight: 650;
+}
+
+.gt-report__kind-hint {
+  grid-area: hint;
+  font-size: var(--gt-font-sm);
+  color: var(--gt-text-muted);
+}
