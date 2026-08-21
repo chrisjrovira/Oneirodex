@@ -24,15 +24,31 @@
  * Reserving the expanded width means the group's outer size never changes and
  * the animation happens entirely inside it. The cost is a little empty bar at
  * rest, which is invisible.
+ *
+ * Which side the reserve empties onto is the whole point of `flex-end`. This
+ * control sits first in `.gt-topbar__actions`, ahead of the result count and
+ * the account button, and that group is right-packed — so packing this group's
+ * own contents right too puts the resting dot hard against the count, one bar
+ * gap away, and leaves the unused reserve on the left where it merges into the
+ * slack the right-packed group already has. Aligned the other way the dot
+ * floated 6rem clear of the count with an obvious hole after it. It also means
+ * the slider grows leftward into that slack: the count and the account button
+ * never move.
+ *
+ * `padding-inline-end: 0` for the same reason — a trailing pad would add a
+ * second gap on top of the bar's own, and the dot would no longer read as
+ * belonging to the count beside it.
  */
 .gt-tile-size {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--gt-space-2);
   flex: 0 0 auto;
   width: 6.9rem;
   height: var(--gt-control-h);
-  padding-inline: var(--gt-space-2);
+  padding-inline-start: var(--gt-space-2);
+  padding-inline-end: 0;
   border: 0;
   background: transparent;
   color: var(--gt-text-muted);

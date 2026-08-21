@@ -161,18 +161,25 @@ export function TopBar({
               costing permanent width. ⌘K still opens the palette — the shortcut
               is listed in the account menu so it stays discoverable. */}
 
-          {/* Trail slot: how much is here, and it reads *before* the control
-              that changes it. Both answer "how much am I looking at", so they
-              belong together — but the count is a label and the slider is the
-              instrument, and a label after its instrument reads as a value
-              readout rather than as the page's result count. */}
-          <div id={TOPBAR_TRAIL_ID} className="gt-topbar__trail" />
-
+          {/* Slider, then count, then account. The count used to read first,
+              on the argument that a label after its instrument reads as a value
+              readout — but the slider collapses to a single dot at rest, and a
+              collapsed control leading the group left its reserved width as a
+              visible hole between the centre slot and the count. With the
+              slider first and right-aligned inside its own reserve (see
+              TileSizeControl.css), the dot rests against the count, the reserve
+              falls in the bar's existing slack where nothing can see it, and
+              the slider opens leftward into that slack without moving the count
+              or the account button. */}
           <TileSizeControl
             value={tileSize || shellConfig.tileSize || '50'}
             onChange={onTileSizeChange}
             shellConfig={shellConfig}
           />
+
+          {/* Trail slot: how much is here. Still grouped with the control that
+              changes it — both answer "how much am I looking at". */}
+          <div id={TOPBAR_TRAIL_ID} className="gt-topbar__trail" />
 
           <div className="gt-topnav__dropdown">
             <button
