@@ -1,0 +1,80 @@
+/* News tiles sit in the same shelf rhythm as game tiles, but carry type rather
+   than art — an announcement has no cover to show. */
+
+.gt-news-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-2, 0.5rem);
+  min-height: var(--gt-tile-h, 280px);
+  padding: var(--gt-space-3, 0.75rem);
+  border: 1px solid var(--gt-border);
+  border-radius: var(--gt-radius-lg, 10px);
+  background: var(--gt-surface);
+  color: var(--gt-text);
+  text-decoration: none;
+  overflow: hidden;
+}
+
+.gt-news-card:hover,
+.gt-news-card:focus-visible {
+  border-color: var(--gt-accent);
+}
+
+.gt-news-card:focus-visible {
+  outline: var(--gt-focus-ring, 2px solid var(--gt-accent));
+  outline-offset: 2px;
+}
+
+.gt-news-card__art {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--gt-radius-sm, 6px);
+}
+
+.gt-news-card__badge {
+  align-self: flex-start;
+  font-size: var(--gt-font-xs, 0.75rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--gt-radius-sm, 6px);
+  border: 1px solid var(--gt-border);
+  color: var(--gt-text-muted);
+}
+
+.gt-news-card__badge[data-kind='free_game'] {
+  color: var(--gt-accent);
+  border-color: var(--gt-accent);
+}
+
+.gt-news-card__title {
+  font-size: var(--gt-font-md, 1rem);
+  font-weight: 600;
+  line-height: 1.25;
+  /* Two lines, then ellipsis: a long announcement title must not push the
+     summary and date out of a fixed-height tile. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gt-news-card__summary {
+  font-size: var(--gt-font-sm, 0.875rem);
+  color: var(--gt-text-muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gt-news-card__when {
+  margin-block-start: auto;
+  font-size: var(--gt-font-xs, 0.75rem);
+  color: var(--gt-text-muted);
+}

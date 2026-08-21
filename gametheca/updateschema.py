@@ -738,6 +738,48 @@ class DatabaseManager:
         ADD COLUMN IF NOT EXISTS notify_mentions BOOLEAN DEFAULT TRUE;
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS notify_chat BOOLEAN DEFAULT TRUE;
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS share_activity BOOLEAN DEFAULT TRUE;
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS discover_pins TEXT;
+        ALTER TABLE discovery_sections
+        ADD COLUMN IF NOT EXISTS pin_rank INTEGER;
+
+        CREATE TABLE IF NOT EXISTS user_taste_facets (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            facet_type VARCHAR(16) NOT NULL,
+            facet_id INTEGER NOT NULL,
+            weight DOUBLE PRECISION NOT NULL DEFAULT 0,
+            updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+            CONSTRAINT uq_user_taste_facet UNIQUE (user_id, facet_type, facet_id)
+        );
+        CREATE INDEX IF NOT EXISTS ix_user_taste_facets_user_id
+            ON user_taste_facets(user_id);
+
+        CREATE TABLE IF NOT EXISTS game_similarity (
+            id SERIAL PRIMARY KEY,
+            game_uuid VARCHAR(36) NOT NULL REFERENCES games(uuid) ON DELETE CASCADE,
+            neighbour_uuid VARCHAR(36) NOT NULL REFERENCES games(uuid) ON DELETE CASCADE,
+            score DOUBLE PRECISION NOT NULL DEFAULT 0,
+            method VARCHAR(16) NOT NULL DEFAULT 'content',
+            computed_at TIMESTAMP NOT NULL DEFAULT NOW(),
+            CONSTRAINT uq_game_similarity UNIQUE (game_uuid, neighbour_uuid, method)
+        );
+        CREATE INDEX IF NOT EXISTS ix_game_similarity_game_uuid
+            ON game_similarity(game_uuid);
+
+        CREATE TABLE IF NOT EXISTS user_discover_impressions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            game_uuid VARCHAR(36) NOT NULL REFERENCES games(uuid) ON DELETE CASCADE,
+            shown_count INTEGER NOT NULL DEFAULT 0,
+            last_shown_at TIMESTAMP,
+            clicked_at TIMESTAMP,
+            CONSTRAINT uq_user_discover_impression UNIQUE (user_id, game_uuid)
+        );
+        CREATE INDEX IF NOT EXISTS ix_user_discover_impressions_user_id
+            ON user_discover_impressions(user_id);
 
         CREATE TABLE IF NOT EXISTS user_notifications (
             id SERIAL PRIMARY KEY,
@@ -841,6 +883,12 @@ class DatabaseManager:
             resolved_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL
         );
         CREATE INDEX IF NOT EXISTS ix_support_tickets_user_id ON support_tickets(user_id);
+
+        -- Bug report vs feature request. Defaulted rather than backfilled by
+        -- hand: every ticket that predates the split was filed through a form
+        -- headed "Report issue", so 'issue' is what they actually were.
+        ALTER TABLE support_tickets
+        ADD COLUMN IF NOT EXISTS kind VARCHAR(16) NOT NULL DEFAULT 'issue';
 
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS notify_free_games BOOLEAN DEFAULT TRUE;

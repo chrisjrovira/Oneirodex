@@ -64,6 +64,10 @@ def notifications_preferences():
             'notify_free_games': bool(getattr(prefs, 'notify_free_games', True)),
             'email_notify_social': bool(getattr(prefs, 'email_notify_social', True)),
             'email_digest_daily': bool(getattr(prefs, 'email_digest_daily', False)),
+            # Not an alert: whether accepted friends see what this member is
+            # playing on their Discover feed. Lives here because this is the
+            # endpoint that owns member preference toggles.
+            'share_activity': bool(getattr(prefs, 'share_activity', True)),
         })
     data = request.get_json(silent=True) or {}
     for key in (
@@ -74,6 +78,7 @@ def notifications_preferences():
         'notify_free_games',
         'email_notify_social',
         'email_digest_daily',
+        'share_activity',
     ):
         if key in data:
             setattr(prefs, key, bool(data[key]))

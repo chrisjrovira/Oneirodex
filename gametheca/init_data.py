@@ -297,6 +297,39 @@ def initialize_discovery_sections():
             'is_visible': True,
             'display_order': 1
         },
+        # Personal rows lead: what you were doing, then what changed in your
+        # library, then what everyone else likes. Charts are the least
+        # informative rows on the page for a member who already owns the
+        # library, so they stay below.
+        #
+        # Negative orders on purpose. The chart shelves above have carried 1-5
+        # since the first install and an admin may have reordered them since;
+        # seeding these ahead of that range puts them first without renumbering
+        # anyone's existing arrangement. The gaps leave room to drag between.
+        {
+            'name': 'Continue Playing',
+            'identifier': 'continue_playing',
+            'is_visible': True,
+            'display_order': -40
+        },
+        {
+            'name': 'Friends Are Playing',
+            'identifier': 'friends_playing',
+            'is_visible': True,
+            'display_order': -30
+        },
+        {
+            'name': 'Recently Updated Files',
+            'identifier': 'game_updates',
+            'is_visible': True,
+            'display_order': -20
+        },
+        {
+            'name': 'News',
+            'identifier': 'news',
+            'is_visible': True,
+            'display_order': -10
+        },
         {
             'name': 'Most Downloaded',
             'identifier': 'most_downloaded',

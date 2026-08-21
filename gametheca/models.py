@@ -417,7 +417,7 @@ class User(db.Model):
     created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     lastlogin = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     user_id = db.Column(db.String(36), unique=True, nullable=False, default=lambda: str(uuid4()))
-    avatarpath = db.Column(db.String(256), default='newstyle/avatar_default.jpg')
+    avatarpath = db.Column(db.String(256), default='newstyle/avatars/default.svg')
     is_email_verified = db.Column(db.Boolean, default=False)
     email_verification_token = db.Column(db.String(256), nullable=True)
     password_reset_token = db.Column(db.String(256), nullable=True)
@@ -814,6 +814,16 @@ class UserPreference(db.Model):
     notify_chat = db.Column(db.Boolean, default=True, nullable=False)
     notify_support = db.Column(db.Boolean, default=True, nullable=False)
     notify_free_games = db.Column(db.Boolean, default=True, nullable=False)
+    # Whether accepted friends see what this member is playing (the Discover
+    # "Friends are playing" row and nothing wider). Defaults on because the
+    # common install is a household, but scoped to friends only — never
+    # server-wide — and every member can switch themselves off.
+    share_activity = db.Column(db.Boolean, default=True, nullable=False)
+    # Discover rows this member pinned to the top, in their order. A JSON list
+    # of row identifiers rather than a table, matching how `detail_layout`
+    # stores its arrangement. Validated against the live rows on read: a pinned
+    # row is allowed to stop existing, which is not an error.
+    discover_pins = db.Column(JSONEncodedDict, nullable=True)
     # Opt-in: email for @mentions + DMs when SMTP is configured (default off).
     email_notify_social = db.Column(db.Boolean, default=True, nullable=False)
     # Opt-in: batched email of unread mentions/DMs/free games (default off).
@@ -1056,6 +1066,11 @@ class DiscoverySection(db.Model):
     ends_at = db.Column(db.DateTime, nullable=True)
     # Storefront treatment: shelf (default) | hero | carousel
     layout = db.Column(db.String(20), default='shelf', nullable=False)
+    # Admin-forced position. NULL means "wherever display_order puts it"; a
+    # number pins the shelf into the reserved block at the top of every
+    # member's feed, lowest first. Capped at three shelves in assembly so a
+    # member's own pins can never be pushed below the fold.
+    pin_rank = db.Column(db.Integer, nullable=True)
 
     def is_live(self, now=None):
         """True when the shelf is visible and inside its schedule window."""
@@ -1080,6 +1095,99 @@ class DiscoverySection(db.Model):
 
     def __repr__(self):
         return f"<DiscoverySection {self.name}>"
+
+
+class UserTasteFacet(db.Model):
+    """A member's affinity for one facet of a game, rebuilt on a schedule.
+
+    The on-box recommender is content-based: it scores a title by how much its
+    facets overlap what the member already reaches for. Collaborative signal —
+    "people who played this also played that" — needs a population a self-hosted
+    box does not have, so this table, not co-occurrence, is the primary engine.
+
+    Materialised rather than computed per request. The feed only ever SELECTs.
+    """
+
+    __tablename__ = 'user_taste_facets'
+    __table_args__ = (
+        db.UniqueConstraint(
+            'user_id', 'facet_type', 'facet_id', name='uq_user_taste_facet'
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False, index=True,
+    )
+    # genre | theme | perspective | developer
+    facet_type = db.Column(db.String(16), nullable=False)
+    facet_id = db.Column(db.Integer, nullable=False)
+    weight = db.Column(db.Float, default=0.0, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+
+
+class GameSimilarity(db.Model):
+    """Neighbours of a title, and how the neighbourhood was worked out.
+
+    ``method`` is ``content`` (facet overlap — works with one member and a cold
+    library) or ``collab`` (co-occurrence across members, written only when the
+    install has enough people for it to mean anything). Both can exist for a
+    pair; the reader blends them.
+    """
+
+    __tablename__ = 'game_similarity'
+    __table_args__ = (
+        db.UniqueConstraint(
+            'game_uuid', 'neighbour_uuid', 'method', name='uq_game_similarity'
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    game_uuid = db.Column(
+        db.String(36), db.ForeignKey('games.uuid', ondelete='CASCADE'),
+        nullable=False, index=True,
+    )
+    neighbour_uuid = db.Column(
+        db.String(36), db.ForeignKey('games.uuid', ondelete='CASCADE'),
+        nullable=False, index=True,
+    )
+    score = db.Column(db.Float, default=0.0, nullable=False)
+    method = db.Column(db.String(16), default='content', nullable=False)
+    computed_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+
+
+class UserDiscoverImpression(db.Model):
+    """How often Discover has put a title in front of a member.
+
+    Freshness is a rotation property, not a model property: the reason the same
+    eight tiles greet somebody every morning is that nothing remembers having
+    shown them. A title shown repeatedly and never opened is damped down.
+    """
+
+    __tablename__ = 'user_discover_impressions'
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'game_uuid', name='uq_user_discover_impression'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False, index=True,
+    )
+    game_uuid = db.Column(
+        db.String(36), db.ForeignKey('games.uuid', ondelete='CASCADE'),
+        nullable=False, index=True,
+    )
+    shown_count = db.Column(db.Integer, default=0, nullable=False)
+    last_shown_at = db.Column(db.DateTime, nullable=True)
+    # Set when the member actually opened the title. A tile that gets clicked
+    # has earned its place and stops being damped.
+    clicked_at = db.Column(db.DateTime, nullable=True)
 
 
 class InviteToken(db.Model):
@@ -1815,6 +1923,11 @@ class SupportTicket(db.Model):
     title = db.Column(db.String(200), nullable=False)
     body = db.Column(db.Text, nullable=False)
     area = db.Column(db.String(64), nullable=True)
+    # What kind of report this is. "Report issue" collected both bug reports and
+    # feature requests into one undifferentiated pile, so triage had to read
+    # every title to find out which it was — and a request filed as a bug reads
+    # as a broken product. issue|enhancement.
+    kind = db.Column(db.String(16), default='issue', nullable=False)
     severity = db.Column(db.String(8), default='P2', nullable=False)
     role_at_submit = db.Column(db.String(32), nullable=True)
     deploy_hint = db.Column(db.String(64), nullable=True)
@@ -1835,6 +1948,7 @@ class SupportTicket(db.Model):
         payload = {
             'id': self.id,
             'user_id': self.user_id,
+            'kind': self.kind or 'issue',
             'title': self.title,
             'body': body,
             'area': self.area,

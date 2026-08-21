@@ -384,6 +384,23 @@ class InitializationManager:
             # Storefront shelves (W25-STORE-1) — derived, hidden when empty.
             {'name': 'Curated for you', 'identifier': 'curated_for_you', 'is_visible': True, 'display_order': 6},
             {'name': 'Upcoming', 'identifier': 'upcoming', 'is_visible': True, 'display_order': 7},
+            # Personal rows lead: what you were doing, then what changed in your
+            # library, then what everyone else likes. Charts are the least
+            # informative rows for a member who already owns the library.
+            #
+            # Negative orders on purpose. The shelves above have carried 0-7
+            # since the first install and an admin may have reordered them
+            # since; seeding ahead of that range puts these first without
+            # renumbering anyone's arrangement. The gaps leave room to drag
+            # between.
+            {'name': 'Continue Playing', 'identifier': 'continue_playing', 'is_visible': True, 'display_order': -40},
+            {'name': 'Friends Are Playing', 'identifier': 'friends_playing', 'is_visible': True, 'display_order': -30},
+            {'name': 'Recently Updated Files', 'identifier': 'game_updates', 'is_visible': True, 'display_order': -20},
+            {'name': 'News', 'identifier': 'news', 'is_visible': True, 'display_order': -10},
+            # A template rather than a shelf: it renders nothing itself and
+            # carries the visibility switch for the rows the recommender
+            # generates. Hiding it turns the whole family off.
+            {'name': 'Because You Played', 'identifier': 'because_you_played', 'is_visible': True, 'display_order': 8},
         ]
 
         existing_sections = {section.identifier for section in session.execute(select(DiscoverySection)).scalars().all()}

@@ -149,6 +149,51 @@ Work since the 1.0.0-beta tag (2026-08-06).
 
 ### Added
 
+- **Report takes ideas as well as defects.** "Report issue" collected feature requests into the same
+  pile as bugs, so triage had to read every title to sort them and a request filed as a defect read as
+  a broken product. The form asks first, the `kind` rides through to the GitHub issue title and labels,
+  and the rail entry is now just **Report**
+- **Notifications archive themselves.** Reading one changed a dot and nothing else, so the list only
+  ever grew. Inbox now holds what is outstanding and everything read moves to **Archive** — available,
+  not deleted, and not in the way
+- **Choose which sites headlines come from.** The feed list was a hardcoded tuple. `GT_NEWS_FEEDS`
+  replaces it for the operator (http/https only — the server fetches this list), and each member can
+  switch individual sites off on the News page. Every configured source is listed whether or not it has
+  an article today, so a quiet site is still switchable
+- **Rail sections fold away.** Twenty-three destinations is a long column and most sessions live in one
+  part of it. Each group heading is now the control that collapses its group, remembered across
+  sessions. A collapsed rail forces every group open — at icon width the headings are hidden, so a
+  folded group would be destinations that vanished with no visible way back
+- **Rail icons animate on hover** — a one-shot pop that settles slightly larger, so the row the pointer
+  found is distinct in a column of similar marks. Reduced motion keeps the size change and drops the
+  travel
+- **Scan locations beyond the server's own disk** (`GT_LIBRARY_ROOTS`). The folder browser and the
+  path allowlist both keyed off a single `BASE_FOLDER_*`, so a NAS share was unreachable even when
+  the host had it mounted. Roots are declared as `Label=/path` pipe-separated, join the allowlist in
+  one place (`get_allowed_base_directories`), appear as a **Scan location** picker on Auto Scan and
+  Manual, and get their own Ops path-health row — a share that stops being mounted now reads as
+  *not mounted* instead of as an empty library. New `GET /api/library_roots`
+  ([remote-scan-locations.md](docs/runbooks/remote-scan-locations.md))
+- **macOS and Windows installers** — `install-macos.sh` (Homebrew, PostgreSQL 17, launchd notes) and
+  `install-windows.ps1` (winget prerequisites, `psql.exe` discovery off `PATH`, mapped-drive warning).
+  Native install was Linux-or-manual before. `install-linux.sh` gains `--library-roots`, and all three
+  write `GT_LIBRARY_ROOTS`. Service units for all three OSes in
+  [install-native.md](docs/runbooks/install-native.md)
+- **Account modals** — profile, avatar, password, invites and API tokens were five server-rendered
+  pages in three visual idioms; reaching one meant leaving the app and losing your scroll position.
+  They open as one modal over the current page now, built as the same object as the game preview
+  popup (same scrim, z-index band, panel radius, glass, close affordance) with a segmented switcher
+  between the five panels. New `/api/account/*` endpoints back them; the Jinja pages remain as the
+  no-JS and Big Picture fallback and every menu entry keeps a real `href`
+- **Invites without an email address.** The link *is* the invite — email was only one way to deliver
+  it — but the form demanded an address and handed it to a mailer that a household without SMTP had
+  never configured, so the link was created and shown to nobody. The address is optional now and the
+  response reports `emailed` honestly instead of implying delivery
+- **Admin: add a member with no email at all** (Admin → Invites). For a child's console login or the
+  living-room account, where an invite has nowhere to go. `users.email` is `NOT NULL UNIQUE` and is
+  read unchecked in several places, so these accounts get an unroutable RFC 2606 `.invalid`
+  placeholder rather than a relaxed column; it is never displayed as an address
+  ([members-and-invites.md](docs/admin/members-and-invites.md))
 - **Fonts and firmware install with the server.** Both were scripts nobody ran: the picker offered
   five faces and shipped none, and a populated local BIOS folder still read as empty. Fonts install
   in the background and never block startup (`FETCH_FONTS_ON_BOOT`); firmware imports from
@@ -190,6 +235,75 @@ Work since the 1.0.0-beta tag (2026-08-06).
 
 ### Changed
 
+- **Discover learns what you reach for, without anything leaving the box.** A taste profile is built
+  from signals the install already keeps — what you favourited, played, finished, own and downloaded
+  — weighted by how much intent each one carries and decayed so it follows you rather than
+  fossilising. It drives a **Because You Played** row per title you have really put hours into
+  (anchored on playtime, not recency: a row built on something you bounced off reads as a
+  misunderstanding), and *Curated for you* now reads the profile instead of the genre-affinity draft
+  it shipped with. No model file, no new dependency, no telemetry
+- **Collaborative filtering is written, and stays off until it would mean something.** "People who
+  played this also played that" needs a population; on a self-hosted box with a handful of members,
+  two titles co-occurring once is indistinguishable from coincidence. It switches on at 25 members
+  with real play history and is otherwise skipped, with the content-based engine carrying the feed —
+  which is the one that actually works at this scale
+- **The feed stops showing you the same tiles every morning.** Titles you are shown and never open
+  are quietly scored down — to a floor, never suppressed — and opening one clears that immediately.
+  The running order is seeded from you and the date, so it is stable all day and different tomorrow
+  rather than reshuffling under your pointer between glances
+- **Pin the Discover rows you actually use.** Each row header carries a **Pin** button; up to three
+  rows stay at the top of your feed. Pins are stored as rows, not positions, so an admin reordering
+  shelves does not move your pins off what you chose — and a row that later stops existing is dropped
+  quietly rather than erroring, because a genre row going away is not a fault. The fourth pin is
+  refused outright instead of silently discarded: a pin that vanished without a word would look like
+  a bug
+- **Admins can force a shelf to the top of everyone's feed** — `pin_rank` on a discovery section,
+  cleared by setting it back to null. Capped at three shelves on purpose, so that a member's own
+  three pins can never be pushed below the fold on their own home page. Forcing composes with
+  scheduling: a forced shelf outside its event window is still hidden
+- **Discover stops showing you the same game five times.** Rows are now assembled as a page rather
+  than built one at a time: each row drops titles a row above it already showed and backfills from
+  its own depth, and the feed holds at most twenty rows. *Continue Playing* is exempt on purpose —
+  what you are playing belongs there regardless. A row thinned below the point where it is worth
+  showing is dropped and its slot goes to a row that missed the cut; a row that was **always** that
+  short is kept, because a curated three-game zone is not a starved row. Your shelf order is
+  untouched: what this decides is which rows fit, never what sequence they run in
+- **Deduped rows stay deduped when you scroll them.** The feed hands the browser a token naming what
+  each row claimed, and paging a row passes it back. Without it the duplicates would return the
+  moment anyone scrolled — the dedupe would have been decoration. An install with no cache still
+  gets its feed; it just loses dedupe past the first window
+- **Discover knows what you were doing.** Four rows join the feed ahead of the charts: **Continue
+  Playing**, **Friends Are Playing**, **Recently Updated Files** (actual update files landing, as
+  distinct from the metadata timestamp the *Last Updated* shelf reads), and **News** — announcements
+  and live free-game offers in the same vertical rhythm as the game rows rather than exiled to their
+  own tab. Every row now says *why* it is there under its title; an unexplained recommendation reads
+  as an ad and a named one reads as a feature
+- **You decide whether friends see what you are playing.** *Friends Are Playing* is gated on a new
+  preference under Notifications → Preferences. On by default, because the common install is a
+  household — but limited to accepted friends and never server-wide, and one switch turns it off. A
+  pending friend request is not a friendship, and a member who has never touched their preferences
+  counts as sharing: absence is not an opt-out, only an explicit "off" is
+- **Discover rows go deep, and end in a way out.** Every shelf showed the same eight tiles with no
+  way to see the rest of what it stood for. Shelves are now horizontal rows that fill themselves in
+  as you scroll them — twelve tiles arrive with the page, the rest follow — up to forty. Forty is a
+  ceiling rather than a quota: a shelf shows what it honestly has, and the **See all** tile appears
+  only when there is genuinely more than the shelf will display. That tile lands on a real filtered
+  Library view when the shelf can be said as a filter (a genre or platform zone), and on a page for
+  that shelf alone otherwise
+- **Every shelf is now a registered row rather than a branch in one long chain.** Nothing visible
+  changes today; it is what lets a shelf be capped, reordered, pinned or deduped against its
+  neighbours without each shelf's own code taking part. A row resolves through its section, so a
+  hidden or out-of-schedule shelf stays unreachable by direct URL — the new row endpoint is not a way
+  around the visibility toggle
+- **Discover builds the whole page in one batch instead of one tile at a time.** Every card ran its
+  own cover-image lookup, lazy-loaded three relationships, stat'd the game folder twice and re-asked
+  whether a companion client was connected — the last of which is the same answer for every card on
+  the page. Selection and hydration are now separate passes, so the cost tracks the number of shelves
+  rather than the number of tiles: at 120 tiles the feed went from 426 queries to 15, and a title
+  appearing on several shelves is fetched once. Nothing about the page changes except how fast it
+  arrives. One payload correction rides along — Discover cards reported `updates_count: 0` for every
+  game, so the preview popup claimed no updates on titles that had them; it now carries the real count
+  the Library and Updates pages already showed
 - **Ops console and dashboard tables now sort.** Five hand-rolled panel tables moved onto the shared
   `DataTable`, which gained a `toolbar={false}` mode — these panels hold three or four rows, and a
   filter box above them was the reason hand-rolling them looked reasonable. They already shared the
@@ -221,6 +335,91 @@ Work since the 1.0.0-beta tag (2026-08-06).
 
 ### Fixed
 
+- **Error flashes no longer time out.** Converting flashes to toasts applied a 6s dismissal to every
+  tone, and `base.html` serves login and registration — so "Invalid credentials" vanished before a
+  slow reader saw it. Successes and notices still expire; errors wait to be dismissed
+- **The chat shell no longer breaks on phones.** The `data-surface="chat"` rule was more specific than
+  the ≤900px override *and* later in the file, so it applied a two-column area map against the mobile
+  single-column template and squeezed the conversation into an implicit zero-width column. Now scoped
+  per breakpoint
+- **The Notifications inbox cannot disagree with its own count.** Inbox filtered one page of rows
+  client-side, so a member with more read notifications than the page size saw "All caught up" beside a
+  "1 unread" badge, with the notification unreachable. Inbox is a server query now
+- **Two scan locations sharing a label both appear in Ops path health.** Rows were keyed by label alone,
+  so `Archive=/mnt/a|Archive=/mnt/b` reported only the second — from the view whose whole job is to
+  reveal a root that stopped being mounted
+- **The scan-location picker no longer wipes a typed folder path.** Its initial sync cleared the path
+  input, so a re-rendered form after a failed submit lost what the operator had entered. Switching root
+  still clears it, because a relative path does not survive changing what it is relative to
+- **Flashes on the member shell are toasts, not a bar across the top.** `base.html` has always loaded
+  the script that re-homes them; the member SPA extends `base_empty.html`, which did not — so on the one
+  page where it mattered most, a flash rendered above the SPA and pushed the whole grid down, then
+  pulled it back up when dismissed. Refreshing images on one tile moved the entire library twice. The
+  conversion now covers every flash on a shell page, not just the image-refresh one
+- **Trailers play inside a set.** The player was a bare iframe on a flat panel — the least evocative
+  presentation available on the one page that is purely about watching something. It now sits in an
+  analog cabinet drawn entirely from theme tokens (no image), so it recolours with the chosen preset
+  instead of pinning the page to one palette
+- **Help reads as documentation.** Sections adopt the admin panel treatment, the topic strip moved into
+  bar two under short labels — reaching a page's own navigation should not mean scrolling that page —
+  and the duplicate "Report an issue" link is gone; the rail already lists Report
+- **Ownership is one store at a time.** The page stacked a full connect/import panel for every store, so
+  the owned-titles summary sat above three long forms nobody was using. Stores are views in bar two; the
+  summary stays put and the chosen store's card opens beneath it
+- **The chat pop-out is a chat client at any size.** It was a bare `<main>` filling the window: fine at
+  420px, but maximised it was simply the normal page with no navigation. It now has its own titled bar
+  and a capped column. `/chat` inside the shell also drops bar two, which had nothing to hold there
+- **The Updates refresh control says what it refreshes.** It was the word "Refresh" in bar two, a long
+  way from the list it acted on. Now a symbol on the freshness inbox's own rule, with a hover/focus
+  tooltip carrying the explanation
+- **News sections are bounded.** Free games and headlines each rendered their whole feed into the page,
+  so News grew to whatever arrived that day. Each scrolls within itself on desktop
+- **Per page reads as a value, not a label** — the select precedes its caption
+- **Every rail icon was being cropped.** `RailIcon` spread a `base` that carries width and height but
+  no `viewBox`, and without one an SVG maps user units 1:1 to pixels — so an 18px element showed the
+  top-left 18x24 of a 24x24 drawing. Whatever sat right of x=18 was simply gone, which is why the rail
+  read as a column of similar half-glyphs and why the collapsed rail looked like it was slicing them.
+  The admin copy of the same module had kept its `viewBox`; the member copy had lost it. Both now use a
+  1-unit padded box so an edge stroke is not halved either
+- **Rail glyphs redrawn.** Three pairs were byte-identical — `chat`/`news` (both in the Social group),
+  `friends`/`users`, `admin`/`settings` — so the rail genuinely repeated the same mark. Every glyph now
+  has a distinct silhouette and one filled signature element, verified as 31 unique drawings
+- **Rail brand, icons and labels now share one column.** The brand had its own inset and a 1.4rem mark
+  against the rows' 1.15rem icons, so the mark, the wordmark and the nav labels sat on three different
+  left edges in the first 3rem of the rail. All three now derive from `--gt-rail-inset` and
+  `--gt-rail-icon-w`
+- **A page's controls followed you to every other page.** The first `ContextBar` mounted after login
+  never had its portal torn down, so Activity's "Everyone / Friends only" strip sat in the top bar's
+  centre slot for the rest of the session — Library rendered it *above* its own view strip, which read
+  as buttons that had been added everywhere. React only removes portal children if the unmount runs,
+  and a lazy route that suspends and is discarded can skip it. Each `ContextBar` now appends a host
+  element it owns and sweeps out any other instance's on arrival, so a missed cleanup self-corrects on
+  the next navigation instead of persisting. Reproduced in a browser, then pinned with tests
+- **A rebuild was invisible to every lazily-loaded route.** `member-app.js` is deliberately unhashed so
+  Jinja can link it, and the `?v=` on that link made the *script tag* fetch fresh — but the lazy route
+  chunks `import` the entry by its bare path with no query, and that URL was served
+  `public, max-age=3600`. After a rebuild the browser kept running the previous build's shared code in
+  every lazy route while the versioned script tag reported the new one (two fetches of `member-app.js`
+  at two different sizes, visible in `performance`). Unhashed SPA entry bundles now revalidate like
+  theme assets; `chunks/` keeps the long cache, because those names carry a content hash
+- **Tiles stayed enlarged after a click.** `:focus-within` matches focus from any source, so clicking
+  a tile left it scaled until something else took focus — "you have to click off the screen to make it
+  go back down". Every tile-scale rule now keys off `:has(:focus-visible)`, which a mouse click does
+  not match and a Tab does, so the keyboard affordance survives
+- **The tile-size slider shoved the centred controls sideways.** It expands 0 → 5.5rem on hover inside
+  a single flex row, so merely crossing it on the way somewhere else moved the view switcher out from
+  under the pointer. The control reserves its expanded width up front. Its hover border is gone with
+  it; keyboard focus keeps a ring on the range itself
+- **Filters no longer drifts away from the hamburger.** The page name rendered between the rail toggle
+  and the Filters slot, so Filters sat at a different x on every page. The two are one cluster now,
+  and all bar buttons land on `--gt-control-h` — an icon-only button was previously shorter and
+  narrower than the labelled one beside it
+- **Hover glow raised 25%** (53%/26px/4px → 66%/33px/5px). The ring came off in the previous pass,
+  leaving the glow as the only hover marker, and it lost that argument against a bright cover
+- **Preview popup buttons no longer sit on top of each other** — the store links row and the
+  Open details row both had zero margin
+- **Frame removed from the library pager** — a glass panel with a border around a select, a segmented
+  control and a sentence, each of which already carries its own shape
 - **A long wishlist title made a new row on every resubmit.** `POST /api/requests` looked for an
   existing pending row using the full title but stored `title[:255]`, so anything past the column width
   could never match itself and the duplicate guard silently did nothing. Truncation now happens once,

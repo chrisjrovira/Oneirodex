@@ -54,6 +54,9 @@ const CollectionDetailPage = lazy(() =>
 const CollectionsPage = lazy(() =>
   import('./pages/CollectionsPage').then((m) => ({ default: m.CollectionsPage })),
 )
+const DiscoverRowPage = lazy(() =>
+  import('./pages/DiscoverRowPage').then((m) => ({ default: m.DiscoverRowPage })),
+)
 const DownloadsPage = lazy(() =>
   import('./pages/DownloadsPage').then((m) => ({ default: m.DownloadsPage })),
 )
@@ -140,14 +143,35 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
   // session that already has a main window.
   if (isPopoutWindow()) {
     return (
-      <main id="main-content" className="gt-popout-main" tabIndex={-1}>
-        <Outlet />
-      </main>
+      /* A chat client, not the site with its chrome removed.
+         The pop-out was a bare <main>, which at 420px read as a panel but on a
+         maximised window simply became the normal page with no navigation —
+         "just another instance of the site". `gt-popout` gives it its own
+         identity at any width: a titled surface that stays a chat client
+         rather than a page that lost its bars. */
+      <div className="gt-popout" data-surface="chat">
+        <header className="gt-popout__bar">
+          <span className="gt-popout__mark gt-brand-mark" aria-hidden="true" />
+          <span className="gt-popout__title">Chat</span>
+        </header>
+        <main id="main-content" className="gt-popout-main" tabIndex={-1}>
+          <Outlet />
+        </main>
+      </div>
     )
   }
 
+  // Chat is a client, not a page with controls: bar two has nothing to hold
+  // there, so the shell drops its top bar row and gives the height to the
+  // conversation. The rail stays — you still need a way out.
+  const chatSurface = location.pathname.startsWith('/chat')
+
   return (
-    <div className="gt-shell" data-rail={railState}>
+    <div
+      className="gt-shell"
+      data-rail={railState}
+      data-surface={chatSurface ? 'chat' : undefined}
+    >
       <a className="gt-skip-link" href="#main-content">
         Skip to main content
       </a>
@@ -171,14 +195,16 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
           onClick={closeDrawer}
         />
       ) : null}
-      <TopBar
-        shellConfig={shellConfig}
-        tileSize={tileSize}
-        onTileSizeChange={onTileSizeChange}
-        onOpenCommandPalette={() => setPaletteOpen(true)}
-        onToggleRail={toggleRail}
-        railState={railState}
-      />
+      {chatSurface ? null : (
+        <TopBar
+          shellConfig={shellConfig}
+          tileSize={tileSize}
+          onTileSizeChange={onTileSizeChange}
+          onOpenCommandPalette={() => setPaletteOpen(true)}
+          onToggleRail={toggleRail}
+          railState={railState}
+        />
+      )}
       <CommandPalette
         shellConfig={shellConfig}
         open={paletteOpen}
@@ -262,6 +288,15 @@ export function App({ shellConfig = {} }) {
           path="/discover"
           element={
             <DiscoverApp
+              isAdmin={Boolean(shellConfig.isAdmin)}
+              shellConfig={shellConfig}
+            />
+          }
+        />
+        <Route
+          path="/discover/:identifier"
+          element={
+            <DiscoverRowPage
               isAdmin={Boolean(shellConfig.isAdmin)}
               shellConfig={shellConfig}
             />

@@ -1,0 +1,154 @@
+/* Discover rows: horizontal shelves that fill themselves in as they scroll.
+   The vertical rhythm is deliberately uniform so the tiles carry the difference
+   between one row and the next, not the chrome around them. */
+
+.gt-shelf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-2, 0.5rem);
+  margin-block-end: var(--gt-space-6, 1.75rem);
+}
+
+.gt-shelf__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gt-space-3, 0.75rem);
+  padding-inline: var(--gt-gutter, 1rem);
+}
+
+.gt-shelf__title {
+  font-size: var(--gt-font-lg, 1.125rem);
+  font-weight: 600;
+  margin: 0;
+  color: var(--gt-text);
+}
+
+/* Why this row exists. Steam's most valuable pattern: an unexplained
+   recommendation reads as an ad, an explained one reads as a feature. */
+.gt-shelf__reason {
+  font-size: var(--gt-font-xs, 0.75rem);
+  color: var(--gt-text-muted);
+}
+
+.gt-shelf__event {
+  font-size: var(--gt-font-xs, 0.75rem);
+  color: var(--gt-accent);
+  white-space: nowrap;
+}
+
+/* Pushed to the end so the row title and the controls sit at opposite edges,
+   the way every other list header on the site reads. */
+.gt-shelf__pin {
+  margin-inline-start: auto;
+  font-size: var(--gt-font-xs, 0.75rem);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--gt-radius-sm, 6px);
+  border: 1px solid var(--gt-border);
+  background: transparent;
+  color: var(--gt-text-muted);
+  cursor: pointer;
+}
+
+.gt-shelf__pin[aria-pressed='true'] {
+  color: var(--gt-accent);
+  border-color: var(--gt-accent);
+}
+
+.gt-shelf__pin:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gt-shelf__pin:focus-visible {
+  outline: var(--gt-focus-ring, 2px solid var(--gt-accent));
+  outline-offset: 2px;
+}
+
+/* Follows the pin when both are present, and takes the end slot when it is
+   the only control. */
+.gt-shelf__seeall {
+  margin-inline-start: auto;
+  font-size: var(--gt-font-sm, 0.875rem);
+  color: var(--gt-text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Both controls claim the end slot, so when they appear together only the
+   first one may — otherwise the second pushes off again and gaps them apart. */
+.gt-shelf__pin + .gt-shelf__seeall {
+  margin-inline-start: 0;
+}
+
+.gt-shelf__seeall:hover,
+.gt-shelf__seeall:focus-visible {
+  color: var(--gt-accent);
+}
+
+.gt-shelf__track {
+  display: flex;
+  gap: var(--gt-tile-gap, 0.75rem);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  padding-inline: var(--gt-gutter, 1rem);
+  /* Room for a tile's hover lift and focus ring, which would otherwise be
+     clipped by the scroll container. */
+  padding-block: var(--gt-space-2, 0.5rem);
+  scrollbar-width: thin;
+}
+
+.gt-shelf__item {
+  flex: 0 0 auto;
+  width: var(--gt-tile-w, 200px);
+  scroll-snap-align: start;
+}
+
+/* Placeholder holding the space of the tiles being fetched, so the shelf does
+   not jump backwards under the pointer when they land. */
+.gt-shelf__pending {
+  border: 1px dashed var(--gt-border);
+  border-radius: var(--gt-radius-lg, 10px);
+  min-height: var(--gt-tile-h, 280px);
+  opacity: 0.5;
+}
+
+.gt-shelf__more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gt-space-2, 0.5rem);
+  min-height: var(--gt-tile-h, 280px);
+  border: 1px dashed var(--gt-border);
+  border-radius: var(--gt-radius-lg, 10px);
+  background: var(--gt-surface-2);
+  color: var(--gt-text-muted);
+  text-decoration: none;
+}
+
+.gt-shelf__more:hover,
+.gt-shelf__more:focus-visible {
+  border-color: var(--gt-accent);
+  color: var(--gt-accent);
+}
+
+.gt-shelf__more:focus-visible {
+  outline: var(--gt-focus-ring, 2px solid var(--gt-accent));
+  outline-offset: 2px;
+}
+
+.gt-shelf__more-mark {
+  font-size: var(--gt-font-xl, 1.5rem);
+  line-height: 1;
+}
+
+.gt-shelf__more-label {
+  font-size: var(--gt-font-sm, 0.875rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-shelf__track {
+    scroll-behavior: auto;
+  }
+}

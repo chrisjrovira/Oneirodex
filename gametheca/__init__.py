@@ -220,6 +220,9 @@ def create_app():
             try:
                 from gametheca.utils.free_games_poller import start_free_games_scheduler
                 start_free_games_scheduler(app)
+
+                from gametheca.utils.discover_ml.job import start_discover_ml_scheduler
+                start_discover_ml_scheduler(app)
             except Exception as exc:
                 print(f"[FREE GAMES] Could not start: {exc}")
             try:

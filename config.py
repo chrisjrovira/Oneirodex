@@ -15,6 +15,20 @@ def _load_secret_key():
         "and set it in your .env file before starting the application."
     )
 
+def _parse_library_roots(raw):
+    """Parse GT_LIBRARY_ROOTS at import time so app.config carries the list.
+
+    The parser is imported lazily to keep config.py free of package imports at
+    module scope; a failure here must leave the app booting with no extra
+    roots rather than not booting at all.
+    """
+    try:
+        from gametheca.utils.library_roots import parse_library_roots
+    except Exception:  # pragma: no cover - defensive, keeps boot resilient
+        return []
+    return parse_library_roots(raw)
+
+
 class Config(object):
     # Set Database connection string here or in your .env file, when using docker set the hostname to 'db'
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/gametheca')
@@ -27,6 +41,14 @@ class Config(object):
         BASE_FOLDER_WINDOWS = os.getenv('BASE_FOLDER_WINDOWS', 'Z:\\')
     else:  # POSIX (Linux, Unix, MacOS, etc.)
         BASE_FOLDER_POSIX = os.getenv('BASE_FOLDER_POSIX', '/storage')
+
+    # Extra scan locations beyond the single base folder above: NAS shares, a
+    # second internal disk, additional Docker binds. Entries are separated by
+    # "|" and may carry a display label:
+    #   GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games
+    # Mounting the share stays the operator's job — this only tells GameTheca
+    # which mounts are libraries. See docs/runbooks/remote-scan-locations.md.
+    LIBRARY_ROOTS = _parse_library_roots(os.getenv('GT_LIBRARY_ROOTS'))
 
     # YOU CAN LEAVE ALL THESE SETTINGS AT DEFAULT:
     UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'gametheca/static/library')
@@ -178,6 +200,12 @@ class Config(object):
     # Wave 18 — free games feed (News + notifications)
     ENABLE_FREE_GAMES = os.getenv('ENABLE_FREE_GAMES', 'true').lower() == 'true'
     FREE_GAMES_POLL_HOURS = float(os.getenv('FREE_GAMES_POLL_HOURS', '3') or '3')
+    # Discover's on-box recommender. Off means the rebuild daemon never starts;
+    # Discover keeps working and the rows that depend on a profile stay empty.
+    ENABLE_DISCOVER_ML = os.getenv('ENABLE_DISCOVER_ML', 'true').lower() == 'true'
+    DISCOVER_ML_REBUILD_HOURS = float(
+        os.getenv('DISCOVER_ML_REBUILD_HOURS', '24') or '24'
+    )
 
     # Batched email digest (mentions / DMs / free games) — needs admin SMTP
     ENABLE_EMAIL_DIGEST = os.getenv('ENABLE_EMAIL_DIGEST', 'true').lower() == 'true'

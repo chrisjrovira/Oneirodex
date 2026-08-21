@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { fetchDiscoverSections } from './api/discover'
-import { GameGrid } from './components/GameGrid'
+import { fetchDiscoverPins, saveDiscoverPins } from './api/discoverPins'
+import { DiscoverShelf, formatEventEnds, rowItems } from './components/DiscoverShelf'
 import { PageStatus } from './components/PageStatus'
 
 export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [pins, setPins] = useState([])
+  const [maxPins, setMaxPins] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -30,6 +33,40 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
     }
   }, [])
 
+  useEffect(() => {
+    const controller = new AbortController()
+    let cancelled = false
+    fetchDiscoverPins({ signal: controller.signal })
+      .then((state) => {
+        if (cancelled) return
+        setPins(state.pins)
+        setMaxPins(state.maxPins)
+      })
+      .catch(() => {
+        // Pins are an enhancement. A feed that loaded is still a feed, so a
+        // failure here hides the control rather than breaking the page.
+      })
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [])
+
+  const togglePin = useCallback(
+    (identifier) => {
+      setPins((current) => {
+        const next = current.includes(identifier)
+          ? current.filter((pin) => pin !== identifier)
+          : current.concat(identifier).slice(0, maxPins || current.length + 1)
+        // Optimistic: the row order only changes on the next feed load anyway,
+        // so a round trip before updating the control would just feel slow.
+        saveDiscoverPins(next).catch(() => setPins(current))
+        return next
+      })
+    },
+    [maxPins],
+  )
+
   if (loading) {
     return <PageStatus loading loadingMessage="Loading Discover…" />
   }
@@ -41,51 +78,30 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
     )
   }
 
-  const visible = sections.filter((section) => Array.isArray(section.games) && section.games.length > 0)
+  // Rows of games carry `games`, rows of anything else carry `items`. Reading
+  // only the former would have hidden the news row entirely.
+  const visible = sections.filter((section) => rowItems(section).length > 0)
   if (!visible.length) {
     return <PageStatus emptyMessage="No Discover shelves to show yet." />
   }
 
   return visible.map((section) => {
-    const id = String(section.identifier || section.title || 'section')
-    const layout = section.layout || 'shelf'
+    const identifier = String(section.identifier || section.title || 'section')
     return (
-      <section
-        key={id}
-        data-discover-section={id}
-        data-layout={layout}
-        className={`gt-store-shelf gt-store-shelf--${layout}`}
-      >
-        <div className="gt-store-shelf__head">
-          <h2 className={`discovery-${id.replaceAll('_', '-')}-label`}>
-            {section.title}
-          </h2>
-          {section.is_event ? (
-            <span className="gt-store-shelf__event" title="Limited-time shelf">
-              Event{formatEventEnds(section.ends_at)}
-            </span>
-          ) : null}
-        </div>
-        <GameGrid
-          games={section.games}
-          isAdmin={isAdmin}
-          showPlayStatus={Boolean(shellConfig.showPlayStatus)}
-          enableDeleteOnDisk={Boolean(shellConfig.enableDeleteOnDisk)}
-        />
-      </section>
+      <DiscoverShelf
+        key={identifier}
+        section={section}
+        isAdmin={isAdmin}
+        showPlayStatus={Boolean(shellConfig.showPlayStatus)}
+        enableDeleteOnDisk={Boolean(shellConfig.enableDeleteOnDisk)}
+        pinned={pins.includes(identifier)}
+        canPin={pins.length < maxPins}
+        onTogglePin={maxPins ? togglePin : undefined}
+      />
     )
   })
 }
 
-/** " · ends in 3 days" — omitted entirely when there is no honest end date. */
-export function formatEventEnds(endsAt) {
-  if (!endsAt) return ''
-  const end = new Date(endsAt)
-  if (Number.isNaN(end.getTime())) return ''
-  const msLeft = end.getTime() - Date.now()
-  if (msLeft <= 0) return ''
-  const days = Math.floor(msLeft / 86_400_000)
-  if (days >= 2) return ` · ends in ${days} days`
-  const hours = Math.max(1, Math.floor(msLeft / 3_600_000))
-  return ` · ends in ${hours} hour${hours === 1 ? '' : 's'}`
-}
+// Re-exported for the tests and callers that imported it from here before the
+// shelf became its own component.
+export { formatEventEnds }

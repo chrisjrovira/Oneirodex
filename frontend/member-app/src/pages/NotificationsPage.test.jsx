@@ -54,7 +54,28 @@ beforeEach(() => {
   )
 })
 
-test('renders dense inbox with unread marker and filter', async () => {
+test('the inbox asks the server for unread, so it cannot disagree with the count', async () => {
+  // Filtering one page of rows client-side meant a member with more read
+  // notifications than the page size saw an empty Inbox beside a "1 unread"
+  // badge, with no way to reach the notification. Inbox is a server query now.
+  render(
+    <MemoryRouter>
+      <NotificationsPage />
+    </MemoryRouter>,
+  )
+
+  await screen.findByText('Friend request')
+  const listCalls = fetch.mock.calls
+    .map(([url]) => String(url))
+    .filter((url) => url.includes('/api/notifications?'))
+  expect(listCalls.length).toBeGreaterThan(0)
+  expect(listCalls[0]).toContain('unread=1')
+})
+
+test('the inbox holds what is outstanding; read notifications file themselves', async () => {
+  // Reading a notification used to change a dot and nothing else, so the list
+  // only ever grew. Now it moves: the inbox is what still needs you, and
+  // everything seen stays available under Archive rather than being lost.
   const user = userEvent.setup()
   render(
     <MemoryRouter>
@@ -63,13 +84,13 @@ test('renders dense inbox with unread marker and filter', async () => {
   )
 
   expect(await screen.findByText('Friend request')).toBeInTheDocument()
-  expect(screen.getByText('Welcome')).toBeInTheDocument()
+  expect(screen.queryByText('Welcome')).not.toBeInTheDocument()
   expect(screen.getByText('unread')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Mark all read' })).toBeEnabled()
 
-  await user.click(screen.getByRole('button', { name: 'Unread' }))
-  expect(screen.getByText('Friend request')).toBeInTheDocument()
-  expect(screen.queryByText('Welcome')).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Archive' }))
+  expect(screen.getByText('Welcome')).toBeInTheDocument()
+  expect(screen.queryByText('Friend request')).not.toBeInTheDocument()
 })
 
 test('new chrome moves the filter and mark-all into bar two, losing neither', async () => {
@@ -86,11 +107,11 @@ test('new chrome moves the filter and mark-all into bar two, losing neither', as
   expect(screen.getByText('1 unread')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Mark all read' })).toBeEnabled()
 
-  await user.click(screen.getByRole('button', { name: 'Unread' }))
-  expect(screen.queryByText('Welcome')).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Archive' }))
+  expect(screen.getByText('Welcome')).toBeInTheDocument()
 })
 
-test('keeps alert preferences collapsed by default', async () => {
+test('keeps preferences collapsed by default', async () => {
   render(
     <MemoryRouter>
       <NotificationsPage />
@@ -98,7 +119,7 @@ test('keeps alert preferences collapsed by default', async () => {
   )
 
   await screen.findByText('Friend request')
-  const prefs = screen.getByText('Alert preferences').closest('details')
+  const prefs = screen.getByText('Preferences').closest('details')
   expect(prefs.open).toBe(false)
 })
 

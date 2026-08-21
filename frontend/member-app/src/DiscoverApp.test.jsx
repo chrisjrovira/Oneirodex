@@ -1,19 +1,39 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { DiscoverApp } from './DiscoverApp'
 
-function mockDiscoverFetch(sections) {
-  global.fetch = vi.fn().mockResolvedValue({
+/** Shelves link out, so the tree needs a router even when nothing links yet. */
+function renderDiscover(props = {}) {
+  return render(
+    <MemoryRouter>
+      <DiscoverApp isAdmin={false} {...props} />
+    </MemoryRouter>,
+  )
+}
+
+function jsonResponse(body) {
+  return {
     ok: true,
     headers: {
       get(name) {
         return String(name).toLowerCase() === 'content-type' ? 'application/json' : null
       },
     },
-    json: async () => ({ sections }),
-  })
+    json: async () => body,
+  }
 }
 
-test('renders discover section titles and games with the shared grid', async () => {
+function mockDiscoverFetch(sections, { pins = [], maxPins = 3 } = {}) {
+  global.fetch = vi.fn((url) =>
+    Promise.resolve(
+      String(url).includes('/pins')
+        ? jsonResponse({ ok: true, pins, max_pins: maxPins, available: [] })
+        : jsonResponse({ sections }),
+    ),
+  )
+}
+
+test('renders discover section titles and games as horizontal shelves', async () => {
   mockDiscoverFetch([
     {
       identifier: 'latest_games',
@@ -47,11 +67,11 @@ test('renders discover section titles and games with the shared grid', async () 
     },
   ])
 
-  render(<DiscoverApp isAdmin={false} />)
+  renderDiscover()
 
   expect(await screen.findByRole('heading', { name: 'Latest Games' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Highest Rated' })).toBeInTheDocument()
-  expect(document.querySelectorAll('[data-library-grid]')).toHaveLength(2)
+  expect(document.querySelectorAll('.gt-shelf__track')).toHaveLength(2)
   expect(screen.getByRole('img', { name: 'Discover VR Game' })).toHaveAttribute(
     'src',
     '/static/library/images/discover.jpg',
@@ -73,25 +93,75 @@ test('does not render empty discover sections', async () => {
     },
   ])
 
-  render(<DiscoverApp isAdmin={false} />)
+  renderDiscover()
 
   await waitFor(() => {
     expect(screen.getByText(/No Discover shelves/i)).toBeInTheDocument()
   })
   expect(screen.queryByRole('heading', { name: 'Most Favorited Games' })).not.toBeInTheDocument()
-  expect(document.querySelector('[data-library-grid]')).not.toBeInTheDocument()
+  expect(document.querySelector('.gt-shelf__track')).not.toBeInTheDocument()
+})
+
+test('a row deeper than it can show offers a way to see all of it', async () => {
+  mockDiscoverFetch([
+    {
+      identifier: 'latest_games',
+      title: 'Latest Games',
+      total_count: 1,
+      has_more: true,
+      more_href: '/discover/latest_games',
+      games: [{ uuid: 'd-1', name: 'Deep Row Game', cover_url: '/c.jpg', genres: [] }],
+    },
+  ])
+
+  renderDiscover()
+
+  const seeAll = await screen.findByRole('link', { name: 'See all in Latest Games' })
+  expect(seeAll).toHaveAttribute('href', '/discover/latest_games')
+})
+
+test('a row that shows everything it has does not claim there is more', async () => {
+  mockDiscoverFetch([
+    {
+      identifier: 'latest_games',
+      title: 'Latest Games',
+      total_count: 1,
+      has_more: false,
+      more_href: '/discover/latest_games',
+      games: [{ uuid: 'd-1', name: 'Shallow Row Game', cover_url: '/c.jpg', genres: [] }],
+    },
+  ])
+
+  renderDiscover()
+
+  expect(await screen.findByRole('heading', { name: 'Latest Games' })).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: /See all/ })).not.toBeInTheDocument()
 })
 
 test('shows Loading Discover while sections fetch', async () => {
   let resolveFetch
-  global.fetch = vi.fn(
-    () =>
-      new Promise((resolve) => {
-        resolveFetch = resolve
-      }),
-  )
+  // Keyed by URL: the page also asks for the member's pins, and a single
+  // shared resolver would be reassigned by whichever request went out last.
+  global.fetch = vi.fn((url) => {
+    if (String(url).includes('/pins')) {
+      return Promise.resolve({
+        ok: true,
+        headers: {
+          get(name) {
+            return String(name).toLowerCase() === 'content-type'
+              ? 'application/json'
+              : null
+          },
+        },
+        json: async () => ({ ok: true, pins: [], max_pins: 3, available: [] }),
+      })
+    }
+    return new Promise((resolve) => {
+      resolveFetch = resolve
+    })
+  })
 
-  render(<DiscoverApp isAdmin={false} />)
+  renderDiscover()
   expect(screen.getByText('Loading Discover…')).toBeInTheDocument()
 
   resolveFetch({
@@ -107,4 +177,106 @@ test('shows Loading Discover while sections fetch', async () => {
   await waitFor(() => {
     expect(screen.getByText(/No Discover shelves/i)).toBeInTheDocument()
   })
+})
+
+test('a news row renders article tiles, not game tiles', async () => {
+  mockDiscoverFetch([
+    {
+      identifier: 'news',
+      title: 'News',
+      item_kind: 'articles',
+      reason: 'From the server and the stores',
+      total_count: 2,
+      has_more: false,
+      items: [
+        {
+          kind: 'announcement',
+          id: 'announcement-1',
+          title: 'Server maintenance Sunday',
+          summary: 'Back by evening.',
+          href: '/news',
+          published_at: '2026-08-19T10:00:00Z',
+        },
+        {
+          kind: 'free_game',
+          id: 'free-2',
+          title: 'Free This Week',
+          summary: 'Claim before Thursday.',
+          store: 'epic',
+          href: '/news#free-games',
+          published_at: '2026-08-18T10:00:00Z',
+        },
+      ],
+    },
+  ])
+
+  renderDiscover()
+
+  expect(await screen.findByRole('heading', { name: 'News' })).toBeInTheDocument()
+  // The row says why it is there — the provenance rule.
+  expect(screen.getByText('From the server and the stores')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /Server maintenance Sunday/ })).toHaveAttribute(
+    'href',
+    '/news',
+  )
+  expect(screen.getByText('Epic')).toBeInTheDocument()
+})
+
+test('an article row is not dropped for having no games key', async () => {
+  // The feed filter used to read `section.games` only, which hid article rows
+  // entirely because they never carry that key.
+  mockDiscoverFetch([
+    {
+      identifier: 'news',
+      title: 'News',
+      item_kind: 'articles',
+      total_count: 1,
+      items: [{ kind: 'announcement', id: 'a-1', title: 'Still here', href: '/news' }],
+    },
+  ])
+
+  renderDiscover()
+
+  expect(await screen.findByRole('heading', { name: 'News' })).toBeInTheDocument()
+  expect(screen.queryByText(/No Discover shelves/i)).not.toBeInTheDocument()
+})
+
+
+test('a member can pin a row to the top of their feed', async () => {
+  mockDiscoverFetch(
+    [
+      {
+        identifier: 'latest_games',
+        title: 'Latest Games',
+        total_count: 1,
+        games: [{ uuid: 'p-1', name: 'Pinnable', cover_url: '/c.jpg', genres: [] }],
+      },
+    ],
+    { pins: [], maxPins: 3 },
+  )
+
+  renderDiscover()
+
+  const pin = await screen.findByRole('button', { name: 'Pin' })
+  expect(pin).toHaveAttribute('aria-pressed', 'false')
+})
+
+test('the pin control is disabled once the member has used every pin', async () => {
+  // A control that silently did nothing would read as a broken button.
+  mockDiscoverFetch(
+    [
+      {
+        identifier: 'latest_games',
+        title: 'Latest Games',
+        total_count: 1,
+        games: [{ uuid: 'p-1', name: 'Pinnable', cover_url: '/c.jpg', genres: [] }],
+      },
+    ],
+    { pins: ['a', 'b', 'c'], maxPins: 3 },
+  )
+
+  renderDiscover()
+
+  const pin = await screen.findByRole('button', { name: 'Pin' })
+  expect(pin).toBeDisabled()
 })

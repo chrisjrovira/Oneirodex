@@ -371,6 +371,66 @@ def update_discovery_section_schedule(section_id: int) -> tuple[Dict[str, Any], 
     })
 
 
+@admin2_bp.route('/admin/api/discovery_sections/<int:section_id>/pin', methods=['PUT'])
+@login_required
+@admin_required
+def update_discovery_section_pin(section_id: int) -> tuple[Dict[str, Any], int]:
+    """Force a shelf into the reserved block at the top of every member's feed.
+
+    Body: ``pin_rank`` — a number (lowest first), or null to release the shelf
+    back to its ``display_order`` position.
+
+    Only the first three forced shelves take effect. The cap is deliberate: a
+    member gets three pins of their own, and an admin who could force ten would
+    push every member's pins below the fold on their own home page.
+    """
+    section = db.session.get(DiscoverySection, section_id)
+    if not section:
+        return api_error('Shelf not found', code='not_found')
+
+    data = request.get_json(silent=True) or {}
+    raw = data.get('pin_rank')
+    if raw in (None, ''):
+        section.pin_rank = None
+    else:
+        try:
+            section.pin_rank = int(raw)
+        except (TypeError, ValueError):
+            return api_error('pin_rank must be a whole number or null', code='bad_request')
+
+    try:
+        db.session.commit()
+    except Exception as exc:  # noqa: BLE001
+        db.session.rollback()
+        log_system_event(
+            f'Failed to update shelf pin {section_id}: {exc}',
+            event_type='admin_action',
+            event_level='error',
+            audit_user=current_user.id,
+        )
+        return api_error('Internal server error', code='internal')
+
+    log_system_event(
+        (
+            f"Released shelf '{section.name}' from the top block"
+            if section.pin_rank is None
+            else f"Forced shelf '{section.name}' to the top block at rank {section.pin_rank}"
+        ),
+        event_type='admin_action',
+        event_level='information',
+        audit_user=current_user.id,
+    )
+
+    return api_ok({
+        'section': {
+            'id': section.id,
+            'identifier': section.identifier,
+            'name': section.name,
+            'pin_rank': section.pin_rank,
+        },
+    })
+
+
 @admin2_bp.route('/admin/api/discovery_sections/<int:section_id>', methods=['DELETE'])
 @login_required
 @admin_required

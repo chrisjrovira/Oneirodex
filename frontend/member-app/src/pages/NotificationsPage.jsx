@@ -15,6 +15,7 @@ const PREF_ROWS = [
   ['notify_free_games', 'Free games', 'in-app'],
   ['email_notify_social', 'Email mentions & DMs', 'email'],
   ['email_digest_daily', 'Daily email digest', 'email'],
+  ['share_activity', 'Let friends see what I am playing', 'privacy'],
 ]
 
 function formatWhen(value) {
@@ -31,9 +32,16 @@ function formatWhen(value) {
   }
 }
 
+/* Inbox and Archive, not All and Unread.
+ *
+ * "All" mixed what still needs you with what you have already dealt with, and
+ * the pile only ever grew — reading a notification changed a dot and nothing
+ * else. Reading it now *files* it: the inbox holds what is outstanding, and
+ * everything you have seen stays available under Archive rather than being
+ * deleted or buried. */
 const NOTIFICATION_VIEWS = [
-  { id: 'all', label: 'All' },
-  { id: 'unread', label: 'Unread' },
+  { id: 'inbox', label: 'Inbox' },
+  { id: 'archive', label: 'Archive' },
 ]
 
 export function NotificationsPage({ shellConfig = {} }) {
@@ -43,12 +51,23 @@ export function NotificationsPage({ shellConfig = {} }) {
   const [prefs, setPrefs] = useState(null)
   const [error, setError] = useState(null)
   const [prefsOpen, setPrefsOpen] = useState(false)
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('inbox')
   const [busy, setBusy] = useState(false)
 
-  function load() {
+  /**
+   * Fetch the rows for the view being shown.
+   *
+   * The Inbox is defined as "unread", so it has to be *asked for* as unread.
+   * Filtering the default page client-side meant that a member with forty read
+   * notifications newer than their one unread item saw an empty Inbox while
+   * the bar beside it said "1 unread" — the notification was unreachable. The
+   * server already supports the filter; Archive takes a deeper page because it
+   * is history and the read rows are the bulk of it.
+   */
+  function load(view = filter) {
+    const query = view === 'inbox' ? '?unread=1&limit=100' : '?limit=100'
     return Promise.all([
-      fetch('/api/notifications', { credentials: 'same-origin' }).then((r) => {
+      fetch(`/api/notifications${query}`, { credentials: 'same-origin' }).then((r) => {
         if (!r.ok) throw new Error(`notifications ${r.status}`)
         return r.json()
       }),
@@ -67,8 +86,11 @@ export function NotificationsPage({ shellConfig = {} }) {
   }
 
   useEffect(() => {
-    load()
-  }, [])
+    load(filter)
+    // Refetch on switch: Inbox and Archive are different server queries, not
+    // two filters over one page of rows.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter])
 
   async function markAll() {
     if (busy) return
@@ -115,7 +137,9 @@ export function NotificationsPage({ shellConfig = {} }) {
   }
 
   const visible = items.filter((row) => {
-    if (filter === 'unread') return Boolean(row.unread)
+    // Archive is everything already read; the inbox is what is left.
+    if (filter === 'archive') return !row.unread
+    if (filter === 'inbox') return Boolean(row.unread)
     return true
   })
 
@@ -200,7 +224,7 @@ export function NotificationsPage({ shellConfig = {} }) {
           open={prefsOpen}
           onToggle={(e) => setPrefsOpen(e.currentTarget.open)}
         >
-          <summary>Alert preferences</summary>
+          <summary>Preferences</summary>
           <ul className="gt-notifications__pref-list">
             {PREF_ROWS.map(([key, label, kind]) => (
               <li key={key}>
@@ -218,7 +242,10 @@ export function NotificationsPage({ shellConfig = {} }) {
               </li>
             ))}
           </ul>
-          <p className="gt-notifications__pref-note">Email options need SMTP configured by an admin.</p>
+          <p className="gt-notifications__pref-note">
+            Email options need SMTP configured by an admin. Activity sharing is
+            limited to accepted friends and is never server-wide.
+          </p>
         </details>
       ) : null}
 
@@ -228,7 +255,9 @@ export function NotificationsPage({ shellConfig = {} }) {
         </h2>
         {visible.length === 0 ? (
           <p className="gt-more-page__lede">
-            {filter === 'unread' ? 'No unread notifications.' : 'No notifications yet.'}
+            {filter === 'archive'
+              ? 'Nothing archived yet — notifications land here once you have read them.'
+              : 'All caught up.'}
           </p>
         ) : (
           <ul className="gt-notifications__list">
