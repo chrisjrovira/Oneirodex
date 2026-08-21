@@ -126,6 +126,8 @@ of them up means possibly chasing a fix that already shipped.
 The `Theme assets` Ops panel now reports drift so this cannot hide again — it distinguishes *drifted*
 from *never deployed*, and never copies anything itself.
 
+> **Update 2026-08-21 — the debt has a second, newer half, tracked as MISS-QA-4.** The batch above is the 2026-08-13/14 reports. Since then W29-1, W29-2, W29-3 and W29-5 have each shipped chrome work closing with *live verification owed* — Docker Desktop was down for every one of them. Same blocker, different list: those four are **not** stale-CSS suspects, they are simply unseen. W29-5 in particular touches only bundled component CSS, so it needs an SPA rebuild rather than a Reset Themes. Cleared together in one pass — [pm-miss-backlog.md](pm-miss-backlog.md) MISS-QA-4, with MISS-DOC-4 (README capture) riding the same instance.
+
 ### 3. Two verifications blocked on hardware — [W26](roadmap-w26-ux-overhaul.md)
 
 * **EMU-1** — the refresh-rate fix cannot be confirmed on a 60Hz panel; needs a >60Hz display. 60Hz is

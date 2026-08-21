@@ -185,7 +185,7 @@ Priority for **1.0.0** — **no 1.1 track** (see [pm-dispatch-2026-07-27.md](arc
 6. ~~**TC-1**~~ — thin client scopes + `device_kind` + capabilities API — **shipped** — [thin-client.md](thin-client.md) · ~~TC-2 shell build~~ **shipped** (`tauri:build:thin`)  
 6b. **Android APK** — [android-apk-vr.md](android-apk-vr.md) · **Headset/VR** relocked SteamVR/PSVR2-first — [headset-vr.md](headset-vr.md) · **Controllers** — [controller-input.md](controller-input.md) (PAD-DOCS/HELP queued)  
 7. ~~**Desktop MOD-3**~~ — companion mod pack apply **shipped** — [desktop-companion.md](../user/desktop-companion.md) · GOW-2 copy-host stub **deferred** (no GOW API yet)  
-8. **Official 1.0.0** — [v1-readiness.md](v1-readiness.md) · [pm-miss-backlog.md](pm-miss-backlog.md) agent MISS-* **closed** · remaining **human:** Authentik/Hub/Unraid  
+8. **Official 1.0.0** — [v1-readiness.md](v1-readiness.md) · [pm-miss-backlog.md](pm-miss-backlog.md): the original agent MISS-* sets are **closed**, but **four rows reopened 2026-08-21** — MISS-OPS-3/4 · MISS-QA-4 · MISS-DOC-4 · remaining **human:** Authentik/Hub/Unraid  
 9. **SCRUB** — [external-facing-scrub.md](external-facing-scrub.md) · SCRUB-1…4,6–9 done; **SCRUB-6b GitHub Issues/PR search clean** ([github-scrub-2026-07-27.md](archive/github-scrub-2026-07-27.md)); SCRUB-5 history rewrite deferred  
 10. Optional: Admin Integrations **forms** still Jinja (hub cards done MISS-UI-3) — [admin-hybrid.md](admin-hybrid.md)  
 11. **1.0 capacity (non-gating):** Alembic · live Prometheus · api-client SPA ([ADR 0002](../adr/0002-defer-api-client-spa.md))  

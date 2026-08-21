@@ -8,6 +8,7 @@
 
 - **Shipped hard:** healthz/readyz · Ops services pulse · CI · pinned deps · GameGrid virtualize · cmdk · keyring · GM sign-off · scrub templates · Alembic deferred (ADR) · desktop app-smoke · observability stub · Unraid Services checklist · GM CHANGELOG caveats · **UVICORN_WORKERS=1** default · OpenAPI 0.2.0 hygiene · ops `services` contract · api-client SPA defer (ADR 0002)
 - **Still open:** Capture pixels · SCRUB remote bodies (human) · operator secrets
+- **Reopened 2026-08-21:** the agent MISS-* sets below are closed, but four new rows are not — **MISS-OPS-3/4** (GPU request in the deployed Unraid stack · retire the dev override), **MISS-QA-4** (chrome shipped unseen since W29-1), **MISS-DOC-4** (README media stale). QA-4 and DOC-4 share one blocker: no running instance
 - **Disk hygiene (Jul 27):** safe-deleted regenerable caches (`src-tauri/target` · `node_modules`); webretro + `.git` kept — [workspace-disk-hygiene.md](../runbooks/workspace-disk-hygiene.md)
 - **Docs text (MISS-DOC-1/2/3):** done — gate 8 text-complete; Capture checklist landed
 - **Desktop/Ops/GM misses (MISS-DESK-1/2 · MISS-OPS-1/2 · MISS-GM-1):** done
@@ -40,6 +41,10 @@
 | **MISS-OPS-1** | ~~P1~~ | ops | Compose `observability` profile **stub** (commented Prometheus) + runbook | **Done** — compose comment + [observability-profile.md](../runbooks/observability-profile.md) |
 | **MISS-OPS-2** | ~~P1~~ | ops | Unraid smoke checklist includes Services tile + `/readyz` | **Done** — unraid-deploy.md step 0 / 0b |
 | **MISS-GM-1** | ~~P2~~ | gamemaster | Release-notes caveats blurb for CHANGELOG 1.0 | **Done** — CHANGELOG Unreleased + upgrade-notes |
+| **MISS-OPS-3** | P1 | ops + human | **What actually requests a GPU in the deployed Unraid stack.** `docker-compose.yml` never has, and the local `docker-compose.override.yml` that does is gitignored and never left the dev machine — yet the Unraid stack update failed with `nvml error: driver not loaded`, which only a GPU request produces. Something host-side carries one | Grep the on-host stack file for `nvidia` / `deploy:` / `runtime:`; `--profile artwork` updates clean, or the profile is confirmed not in use. [container-wont-start.md](../runbooks/container-wont-start.md) § 7 |
+| **MISS-OPS-4** | P2 | ops | Retire the dev box's gitignored `docker-compose.override.yml` — it duplicates the reservation now tracked in `docker-compose.gpu.yml` | Windows dev host switched to `COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml`; override deleted; sdnext still gets the GPU there |
+| **MISS-QA-4** | P1 | qa | **Four waves of chrome work have shipped without ever being seen render.** W29-1, W29-2, W29-3 and W29-5 each close with *live verification owed* — Docker Desktop was down for all of them. This is one pass, not four | One session against a running instance clearing all four debt-log rows. W29-5 needs only an SPA rebuild (`TileSizeControl.css` is bundled, not a theme asset) — no Reset Themes, unlike the [carryover-w28.md](carryover-w28.md) § 2 batch |
+| **MISS-DOC-4** | P2 | docs | README live media is a revision stale: the top bar's slider/count order changed (W29-5) and `screenshot-library.png` predates it | Capture run against a live instance per [CAPTURE.md](../assets/readme/CAPTURE.md); real pixels only, no restored mock JPGs. Blocked on the same running instance as MISS-QA-4 — do them together |
 | **SCRUB-5** | P2 | human | History rewrite | **Deferred** unless reopened |
 | **SCRUB-6b** | P1 | human | Search GitHub.com Issues/PR bodies | Checklist only |
 | **OPS-CERT** | P0 | human | Authentik · Hub publish · Unraid rebuild | Outside agents — desktop unsigned only (no code-signing cert) |
