@@ -92,6 +92,34 @@ docker compose --profile clamav up -d
 - **Unraid / host clamd:** bind-mount the host socket into the app container and set `CLAMAV_SOCKET=/run/clamav/clamd.sock` instead of TCP.
 - Status: `GET /api/admin/malware-scan/status` (admin) or Admin → Features → Malware scanner section.
 
+### Generated cover art (SD.Next)
+
+```bash
+export ENABLE_AI_ARTWORK=true
+export AI_ARTWORK_URL=http://sdnext:7860
+export AI_ARTWORK_ENGINE=a1111
+docker compose --profile artwork up -d
+```
+
+- **No GPU is requested by default, on purpose.** The sidecar runs on CPU —
+  extremely slow, but it runs. An NVIDIA reservation on a host with no loaded
+  driver does not degrade, it fails container create with `nvml error: driver
+  not loaded` and aborts the whole stack update. See
+  [container-wont-start.md](container-wont-start.md) § 7.
+- **GPU in this Docker host:** opt in with the overlay, after confirming
+  `docker run --rm --gpus all nvidia/cuda:12.4.0-base-ubuntu22.04 nvidia-smi`
+  works:
+
+  ```bash
+  # in .env (Linux hosts; use ";" as the separator on Windows)
+  COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml
+  ```
+
+- **GPU on another machine** (the usual case for a GPU-less NAS): skip the
+  profile entirely. Run SD.Next / AUTOMATIC1111 / Forge over there and point
+  `AI_ARTWORK_URL` at it — the backend only makes an HTTP call. Turnkey pairing
+  for that shape is backlog **GPU-N**, [gpu-worker-node.md](../strategy/gpu-worker-node.md).
+
 ### Challenge / captcha solver (TRAWL)
 
 ```bash

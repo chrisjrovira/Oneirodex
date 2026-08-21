@@ -1,0 +1,48 @@
+# GameTheca Compose overlay — hand the artwork sidecar an NVIDIA GPU.
+#
+# OPT-IN. Nothing in the base stack requests a GPU, and that is deliberate: the
+# reference deployment is Unraid on a box with no discrete GPU, and a `deploy`
+# reservation on a host without a working NVIDIA driver does not degrade — it
+# hard-fails the container create with
+#
+#   error running prestart hook #0 ... nvidia-container-cli: initialization
+#   error: nvml error: driver not loaded
+#
+# which fails the whole `compose up` and reads like the stack is broken when
+# only the optional artwork sidecar is. So the reservation lives here, in a file
+# you have to ask for, instead of in docker-compose.yml where every deployment
+# inherits it.
+#
+# Use it when the DOCKER HOST ITSELF has the NVIDIA driver and the NVIDIA
+# Container Toolkit. If the GPU is on a *different* machine, do not use this at
+# all — run SD.Next / AUTOMATIC1111 / Forge over there and point
+# AI_ARTWORK_URL at it. `gametheca/utils/ai_artwork.py` only ever speaks HTTP to
+# that URL, so a GPU box elsewhere on the LAN needs no compose changes here.
+#
+# Enable, on a Linux host (Unraid, NAS, plain Docker) — in .env:
+#
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml
+#
+# On Windows the default separator is ";" rather than ":", so either use ";" or
+# pin the separator explicitly:
+#
+#   COMPOSE_PATH_SEPARATOR=:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml
+#
+# Verify the host can do it at all BEFORE enabling — this is the same check the
+# prestart hook makes, and it fails in the same way:
+#
+#   docker run --rm --gpus all nvidia/cuda:12.4.0-base-ubuntu22.04 nvidia-smi
+#
+# The sidecar is still behind the `artwork` profile either way, so this overlay
+# only takes effect on `docker compose --profile artwork up -d`.
+
+services:
+  sdnext:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

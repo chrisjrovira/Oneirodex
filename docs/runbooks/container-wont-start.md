@@ -68,6 +68,30 @@ Default host port `5006`. Change the published port mapping if occupied.
 
 If `/app/gametheca/static/library` is not writable, theme install and image downloads fail (may still boot). Mount a writable appdata path.
 
+### 7. `nvml error: driver not loaded` (GPU reservation on a host with no GPU)
+
+Whole-stack symptom, single-service cause. The create fails with:
+
+```text
+error running prestart hook #0: exit status 1, stderr: Auto-detected mode as 'legacy'
+nvidia-container-cli: initialization error: nvml error: driver not loaded
+```
+
+Only the optional `sdnext` artwork sidecar ever asks for a GPU, but the failed
+create aborts the whole `compose up` / stack update, so it reads as "GameTheca
+is broken" when the app container is fine.
+
+| Check | Fix |
+|---|---|
+| Does the host have a working NVIDIA driver? `nvidia-smi` on the host, then `docker run --rm --gpus all nvidia/cuda:12.4.0-base-ubuntu22.04 nvidia-smi` | If either fails, the host cannot serve a GPU — do not request one |
+| Is `COMPOSE_FILE` pulling in `docker-compose.gpu.yml`? | Remove it from `.env`. That overlay is opt-in and only for hosts that pass the check above |
+| Does your deployed stack file carry its own `deploy: … driver: nvidia` or `runtime: nvidia`? | Delete it. `docker-compose.yml` never requests a GPU; a copy edited on the host may |
+| Unraid after an OS upgrade | The Nvidia Driver plugin must be reinstalled for the new kernel and the box rebooted — until then `nvidia-smi` fails and so will every GPU container |
+
+The sidecar runs on **CPU** with no reservation at all — slow, not broken. If the
+GPU is on a different machine, do not start the profile here: run SD.Next /
+AUTOMATIC1111 / Forge there and set `AI_ARTWORK_URL=http://<gpu-host>:7860`.
+
 ## Collect for support
 
 ```text

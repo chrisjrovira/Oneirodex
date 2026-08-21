@@ -21,6 +21,7 @@ Read in this order:
 | 4c | [external-facing-scrub.md](external-facing-scrub.md) | Keep competitor / Class A intel out of public git & builds |
 | 4d | [challenge-bypass.md](challenge-bypass.md) | BYO TRAWL / captcha solvers — **shipped** · profile `challenge` · CH-1…5 · max tier 5 |
 | 4e | [cover-art-studio.md](cover-art-studio.md) | Fallback art + admin art creator — **ART-1…3 shipped** |
+| 4e2 | [gpu-worker-node.md](gpu-worker-node.md) | GPU worker node — GPU-less server + remote render node — **backlog, not started** |
 | 4f | [gow-remote-play.md](gow-remote-play.md) | Moonlight / Wolf remote play — GOW-1/2 **shipped** |
 | 4g | [game-servers-mods.md](game-servers-mods.md) | Mods + household game servers — **MOD-1/2 · SRV-1/2 APIs shipped** |
 | 4h | [ambient-lighting.md](ambient-lighting.md) | Hyperion.ng / Home Assistant — LIGHT-1/2 **shipped** |

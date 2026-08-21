@@ -177,6 +177,17 @@ talks to an endpoint outside the process, so it stays opt-in.
   the stock command dies at argparse with *unrecognized arguments* before the
   server ever binds. Its volumes mount at `/webui/data/models` and
   `/webui/outputs` — the image has no `/app`.
+- **GPU is opt-in and never assumed.** The sidecar runs on CPU by default —
+  extremely slow, but it runs. `docker-compose.yml` requests no GPU at all,
+  because an NVIDIA reservation on a host without a loaded driver fails
+  container create (`nvml error: driver not loaded`) and takes the whole stack
+  update with it. If the *Docker host* has the driver and the NVIDIA Container
+  Toolkit, opt in with `COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml`.
+- **GPU on a different machine?** Do not start the profile. Run SD.Next /
+  AUTOMATIC1111 / Forge on that box and set `AI_ARTWORK_URL=http://<host>:7860`
+  — the backend only makes an HTTP call, so the generator can live anywhere on
+  the LAN. Making that turnkey (pairing, health, queueing) is backlog **GPU-N**,
+  [gpu-worker-node.md](../strategy/gpu-worker-node.md).
 
 Prefer to supply your own art instead? See
 [theme-fonts-and-images.md](theme-fonts-and-images.md#batch-artwork-upload).

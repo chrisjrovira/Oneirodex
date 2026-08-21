@@ -53,6 +53,7 @@ Priority **nice-to-have** — plans only; do not treat as P0/P1 1.0 gates. Shipp
 | **NCS** | nice-to-have | backend + ops + qa | Native challenge solver replaces TRAWL as Compose `challenge` default; FlareSolverr-compat BYO kept | [native-challenge-solver.md](native-challenge-solver.md) NCS-1…5 |
 | **RTC-N** | nice-to-have | backend + ui + desk + ops | Native mesh/thin SFU; LiveKit demoted to BYO | [native-rtc.md](native-rtc.md) RTC-N1…N5 |
 | **MAL-N** | nice-to-have | backend + ops + qa + docs | Native malware engine; ClamAV demoted to BYO; heuristics tier-0 stays | [native-malware-scan.md](native-malware-scan.md) MAL-N1…N5 |
+| **GPU-N** | nice-to-have | backend + ops + desktop + qa | GPU worker node: server stays GPU-less, artwork renders on whatever box has the accelerator; plain `AI_ARTWORK_URL` kept | [gpu-worker-node.md](gpu-worker-node.md) GPU-N1…N5 |
 
 ## Sequencing (this dispatch)
 

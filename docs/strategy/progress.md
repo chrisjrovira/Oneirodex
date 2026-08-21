@@ -193,13 +193,14 @@ Priority for **1.0.0** — **no 1.1 track** (see [pm-dispatch-2026-07-27.md](arc
 
 ### Nice-to-have / post-1.0 (plans only — Jul 29 Docs)
 
-Three **replace optional sidecar** feature guides landed as backlog plans — **no implementation**. TRAWL · LiveKit · ClamAV remain shipped optional sidecars.
+Four backlog plans — **no implementation**. Three replace an optional sidecar (TRAWL · LiveKit · ClamAV all remain shipped optional sidecars); the fourth, **GPU-N** (added 2026-08-21), replaces nothing — it makes the already-working remote `AI_ARTWORK_URL` path turnkey so a GPU-less server can render artwork on whatever box in the house has the accelerator.
 
 | Epic | Guide | Phases | Shipped default until cutover |
 |---|---|---|---|
 | Native challenge solver | [native-challenge-solver.md](native-challenge-solver.md) | NCS-1…NCS-5 | TRAWL (`challenge` profile) |
 | Native household RTC | [native-rtc.md](native-rtc.md) | RTC-N1…RTC-N5 | LiveKit (`livekit` profile) |
 | Native malware scan | [native-malware-scan.md](native-malware-scan.md) | MAL-N1…MAL-N5 | Heuristics + optional ClamAV |
+| GPU worker node | [gpu-worker-node.md](gpu-worker-node.md) | GPU-N1…GPU-N5 | Plain `AI_ARTWORK_URL` → any A1111 endpoint |
 
 **Next for these:** human prioritizes which epic to sprint; PM dispatches Backend/Ops — not a 1.0 gate.
 

@@ -76,6 +76,7 @@
 | Native challenge solver (post-1.0) | Strategy | Have — **nice-to-have backlog (not started)** | [native-challenge-solver.md](native-challenge-solver.md) — NCS-1…5; TRAWL stays 1.0 path |
 | Native household RTC (post-1.0) | Strategy | Have — **nice-to-have backlog (not started)** | [native-rtc.md](native-rtc.md) — RTC-N1…N5; LiveKit stays shipped optional default |
 | Native malware scan (post-1.0) | Strategy | Have — **nice-to-have backlog (not started)** | [native-malware-scan.md](native-malware-scan.md) — MAL-N1…N5; ClamAV stays optional until cutover |
+| GPU worker node (post-1.0) | Strategy | Have — **nice-to-have backlog (not started)** | [gpu-worker-node.md](gpu-worker-node.md) — GPU-N1…N5; plain `AI_ARTWORK_URL` stays the shipped path |
 | Cover art studio | Strategy | Have | [cover-art-studio.md](cover-art-studio.md) — **ART-1…3 + ART-5 shipping** (system templates); ART-4 deferred |
 | GOW / remote play | Strategy | Have | [gow-remote-play.md](gow-remote-play.md) — **GOW-1/2 in 1.0 (in flight)** |
 | Mods + game servers | Strategy | Have | [game-servers-mods.md](game-servers-mods.md) — **MOD-1/2 · SRV-1/2 APIs shipped** |

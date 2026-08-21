@@ -253,8 +253,17 @@ services:
   # SD.Next speaks the same /sdapi/v1/txt2img API as AUTOMATIC1111 and Forge, so
   # AI_ARTWORK_ENGINE=a1111 covers all three. Nothing leaves your network.
   #
-  # NOTE: image generation wants a GPU. Without one it will run on CPU and be
-  # extremely slow rather than fail — uncomment the `deploy` block for NVIDIA.
+  # NOTE: image generation wants a GPU, and this file never asks for one. On CPU
+  # it runs and is extremely slow rather than failing, which is the right
+  # default: an NVIDIA `deploy` reservation on a host without a loaded driver
+  # hard-fails container create ("nvml error: driver not loaded") and takes the
+  # whole `compose up` with it. Two ways to get the GPU, neither of them an edit
+  # to this file:
+  #
+  #   GPU in the Docker host   → docker-compose.gpu.yml, via COMPOSE_FILE
+  #   GPU on another machine   → run SD.Next/A1111/Forge there, set
+  #                              AI_ARTWORK_URL=http://<that-host>:7860 and do
+  #                              not start this profile at all
   # ---------------------------------------------------------------------------
   sdnext:
     profiles: ['artwork']
@@ -285,13 +294,10 @@ services:
       - sdnext_outputs:/webui/outputs
     ports:
       - "${SDNEXT_HOST_PORT:-7860}:7860"
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    # No `deploy:` GPU reservation here on purpose — see the note above. It used
+    # to sit commented out at this spot, which invited exactly one fix ("just
+    # uncomment it") and no way to undo that per host. It lives in
+    # docker-compose.gpu.yml now.
     healthcheck:
       test: ['CMD', 'curl', '-sf', 'http://localhost:7860/sdapi/v1/sd-models']
       interval: 30s
