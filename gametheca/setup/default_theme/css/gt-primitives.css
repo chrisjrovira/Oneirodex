@@ -291,3 +291,142 @@
   color: var(--gt-text-muted);
   font-size: var(--gt-font-xs);
 }
+
+/* --------------------------------------------------------------------------
+   Icon motion
+   --------------------------------------------------------------------------
+
+   Icons had no motion of their own anywhere in the product. Buttons and rail
+   links animated their *background* on hover and the glyph inside sat perfectly
+   still, so a control read as "the box lit up" rather than as "this thing
+   responded to me" — and a press had no visual answer at all beyond the
+   background swapping again.
+
+   One rule for every glyph, applied from the interactive ancestor rather than
+   from the icon, because an icon does not know whether it is inside a button.
+   `.gt-icon` is the shared class on every SVG we ship (see `base` in
+   frontend/member-app/src/chrome/icons.jsx and partials/icons.html), so the
+   SPA glyphs and the Jinja ones move identically without either side opting in.
+
+   The ease overshoots on the way up and settles: that small bounce is what
+   separates "animated" from "resized". The press is faster than the hover on
+   purpose — a press should feel like it happened, not like it is happening.
+   -------------------------------------------------------------------------- */
+
+/* Geometry, moved here from site/sidebar.css (W28).
+ *
+ * Colour is deliberately absent: the glyphs use `stroke="currentColor"` and
+ * inherit whatever the active theme sets. Stroke and fill come from the
+ * `--gt-icon-*` tokens so a colour preset can own an icon silhouette without
+ * fighting icon-pack CSS.
+ *
+ * It lived in `site/sidebar.css`, which only base.html links — so admin pages
+ * and the pop-out hosts had no icon geometry and the preset tokens never
+ * reached them. All three bases link this file. */
+.gt-icon {
+  display: inline-block;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+  stroke-width: var(--gt-icon-stroke);
+  stroke-linecap: var(--gt-icon-linecap);
+  stroke-linejoin: var(--gt-icon-linejoin);
+  fill: var(--gt-icon-fill);
+  fill-opacity: var(--gt-icon-fill-opacity);
+  /* will-change is deliberately absent: these are everywhere, and promoting a
+     few hundred glyphs to their own layers costs more than the animation. */
+  transition: transform var(--gt-motion-base) cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+}
+
+/* `:where()`, not `:is()` — this is the whole point of the block.
+ *
+ * `:is()` takes the specificity of its most specific argument, and
+ * `[role='button']` is an attribute selector at (0,1,0). With `:hover` and
+ * `.gt-icon` that put this rule at (0,3,0) — an exact tie with any ordinary
+ * component rule of the shape `.thing:hover .gt-icon`, e.g.
+ * `.gt-shelf__edge:hover .gt-icon` in DiscoverShelf.css. A tie is broken by
+ * source order, and with `cssCodeSplit: true` a lazy route chunk's order
+ * depends on which pages the reader visited first — so which animation won was
+ * a function of navigation history. That is the same load-order hazard W27
+ * records, and it is not something the duplicate-class guard can see, because
+ * these are different classes in a descendant chain rather than one class
+ * owned twice.
+ *
+ * `:where()` contributes zero specificity, putting this at (0,2,0). Every
+ * component rule now outranks it deterministically and a component can style
+ * its own glyph without knowing this file exists.
+ *
+ * The *descendant* combinator is deliberate and load-bearing: `partials/rail.html`
+ * wraps every glyph in `<span class="gt-rail__icon">`, so a child combinator
+ * would silently drop the animation across the entire Jinja rail — the exact
+ * fix-that-breaks-more this block is being corrected for. Reach stays; only
+ * specificity changes. */
+:where(a, button, summary, label, [role='button'], [role='menuitem'], [role='tab']):hover
+  .gt-icon,
+:where(a, button, summary, label, [role='button'], [role='menuitem'], [role='tab']):focus-visible
+  .gt-icon {
+  transform: scale(1.16);
+}
+
+:where(a, button, summary, label, [role='button'], [role='menuitem'], [role='tab']):active
+  .gt-icon {
+  transform: scale(0.86);
+  transition-duration: var(--gt-motion-fast);
+  transition-timing-function: var(--gt-motion-ease);
+}
+
+/* The rotating-cog rule that used to sit here has been removed rather than
+   rewritten. It keyed off `[data-icon='settings']` and `[data-icon='admin']`,
+   and there is no `data-icon` attribute anywhere in the product — the templates
+   set `data-icon-pack` on <html>, which is a different thing. Its third arm,
+   `.gt-icon--spin`, is applied by nothing. All three selectors matched no
+   element, so the "a cog should turn" behaviour never ran once. Re-adding it
+   means giving the macro in partials/icons.html a real `data-icon` hook first. */
+
+/* Refresh / retry controls: the glyph completes a turn when the action starts,
+   so the icon reports the work rather than only labelling it. Driven by the
+   busy attribute the buttons already set. */
+:where(button, a)[aria-busy='true'] .gt-icon,
+.is-refreshing .gt-icon {
+  animation: gt-icon-spin 900ms linear infinite;
+}
+
+@keyframes gt-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* A toggle that just turned on pops once. `.is-on` and aria-pressed are both
+   already in use across the chrome, so nothing has to be re-marked. */
+:where(button, [role='button'])[aria-pressed='true'] > .gt-icon,
+:where(button, [role='button']).is-on > .gt-icon {
+  animation: gt-icon-pop var(--gt-motion-slow) var(--gt-motion-ease);
+}
+
+@keyframes gt-icon-pop {
+  0% {
+    transform: scale(0.7);
+  }
+  55% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Reduced motion zeroes the duration tokens, which stops the easing but not the
+   transform itself — a glyph would still jump between two sizes. Drop the
+   movement entirely instead; hover feedback is already carried by colour. */
+@media (prefers-reduced-motion: reduce) {
+  .gt-icon,
+  :where(a, button, summary, label, [role='button'], [role='menuitem'], [role='tab']):hover
+    .gt-icon,
+  :where(a, button, summary, label, [role='button'], [role='menuitem'], [role='tab']):active
+    .gt-icon {
+    transform: none;
+    transition: none;
+    animation: none;
+  }
+}

@@ -74,10 +74,23 @@
 {%- elif name == 'calendar' -%}
     <rect x="3" y="5" width="18" height="16" rx="2"/>
     <path d="M16 3v4M8 3v4M3 11h18"/>
-{%- elif name in ('ownership', 'store') -%}
+{%- elif name == 'ownership' -%}
+    {#- A key, not the shopping bag (W28). Ownership is licences held, and a
+        game licence has always been called a key. `store` keeps the bag below,
+        because buying somewhere and owning something are not the same idea. -#}
+    <circle cx="7.5" cy="15.5" r="4.5"/>
+    <path d="M10.7 12.3 21 2"/>
+    <path d="m15.5 7.5 3 3"/>
+    <path d="m18 5 3 3"/>
+{%- elif name == 'store' -%}
     <path d="M6 2 3 6v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4H6z"/>
     <path d="M3 6h18"/>
     <path d="M16 10a4 4 0 0 1-8 0"/>
+{%- elif name in ('report', 'report-issue') -%}
+    {#- Speech bubble with an alert: a message sent about a problem. -#}
+    <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/>
+    <path d="M12 7.5v4"/>
+    <path d="M12 14h.01"/>
 {%- elif name in ('big-picture', 'tv', 'attract') -%}
     <rect x="2" y="7" width="20" height="14" rx="2"/>
     <path d="m17 2-5 5-5-5"/>
