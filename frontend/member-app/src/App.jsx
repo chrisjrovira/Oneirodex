@@ -139,8 +139,16 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
   // dock. They are small by definition, and the chrome is navigation for a
   // session that already has a main window.
   if (isPopoutWindow()) {
+    // Chat manages a full-height layout of its own, so the host drops its
+    // padding for that route only — the other pop-out routes are ordinary
+    // scrolling pages and still want the gutter.
+    const flush = location.pathname.startsWith('/chat')
     return (
-      <main id="main-content" className="gt-popout-main" tabIndex={-1}>
+      <main
+        id="main-content"
+        className={`gt-popout-main${flush ? ' gt-popout-main--flush' : ''}`}
+        tabIndex={-1}
+      >
         <Outlet />
       </main>
     )
@@ -389,7 +397,10 @@ export function App({ shellConfig = {} }) {
           path="/chat"
           element={
             <LazyPage>
-              <ChatPage />
+              {/* shellConfig, because in a pop-out this route *is* the app and
+                  the panel needs the viewer it would otherwise get from the
+                  dock. See ChatPage. */}
+              <ChatPage shellConfig={shellConfig} />
             </LazyPage>
           }
         />

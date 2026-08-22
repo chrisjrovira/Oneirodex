@@ -246,8 +246,16 @@ export function ContextBar({
   return (
     <>
       {createPortal(filterControl, slots.lead || slots.centre)}
+      {/* `gt-contextbar__slot`, not `__views`.
+          `.gt-contextbar__views` carries `overflow-x: auto` so a long segment
+          strip can scroll — and a scroll container clips on *both* axes, so
+          wrapping the actions in it meant every Popover opened inside a box
+          that cut it off at the bar's own height. The panel was rendering
+          correctly and was simply invisible, which is the reported "the button
+          does nothing when you press it" on Collections, Wishlist and Help.
+          The strip keeps its own scrolling inside SegmentedViews. */}
       {createPortal(
-        <div className="gt-contextbar__views">{viewControl}</div>,
+        <div className="gt-contextbar__slot">{viewControl}</div>,
         slots.centre,
       )}
       {createPortal(countControl, slots.trail || slots.centre)}

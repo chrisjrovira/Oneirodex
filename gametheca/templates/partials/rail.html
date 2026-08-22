@@ -17,7 +17,9 @@
 {# Container, not the landmark: the brand links to a destination, so inside
    <nav> it was announced as a navigation item. The nav wraps the links only. #}
 <div class="gt-rail">
-  <a class="gt-rail__brand" href="{{ url_for('discover.discover') if show_discovery else url_for('library.library') }}">
+  {# Mark only, no wordmark (W28) — see .gt-rail__brand--mark-only. The text
+     below stays as the link's accessible name and is hidden in CSS. #}
+  <a class="gt-rail__brand gt-rail__brand--mark-only" href="{{ url_for('discover.discover') if show_discovery else url_for('library.library') }}">
     {# Painted from a mask, not loaded as an image — see .gt-brand-mark in
        gt-shell.css. An <img> of the mark cannot follow the theme. #}
     <span class="gt-rail__mark gt-brand-mark" aria-hidden="true"></span>

@@ -5,7 +5,7 @@ import { AccountPanel } from './AccountPanel'
 import { TOPBAR_LEAD_ID, TOPBAR_SLOT_ID, TOPBAR_TRAIL_ID } from './ContextBar'
 import { IconMenu, IconUser } from './icons'
 import { TileSizeControl } from './TileSizeControl'
-import { getPageTitle } from './navConfig'
+import { getPageTitle, hasTileSizeControl } from './navConfig'
 import { openPreferencesModal } from '../api/preferences'
 
 /**
@@ -51,6 +51,7 @@ export function TopBar({
   const { username = '', showTrailers, showHelp, enableVr, enableActivity } = shellConfig
   const { pathname } = useLocation()
   const pageTitle = getPageTitle(pathname, { showTrailers, showHelp, enableVr, enableActivity })
+  const showTileSize = hasTileSizeControl(pathname)
   const [accountOpen, setAccountOpen] = useState(false)
   const [profilePanelOpen, setProfilePanelOpen] = useState(false)
   const accountId = useId()
@@ -139,11 +140,18 @@ export function TopBar({
               costing permanent width. ⌘K still opens the palette — the shortcut
               is listed in the account menu so it stays discoverable. */}
 
-          <TileSizeControl
-            value={tileSize || shellConfig.tileSize || '50'}
-            onChange={onTileSizeChange}
-            shellConfig={shellConfig}
-          />
+          {/* Only where it changes something (W28). `--gt-tile-min` is read by
+              the game grid and by the card geometry derived from it; every
+              other page ignored it, so the slider sat in the bar on Help,
+              Notifications, Calendar and the rest doing nothing but saving a
+              preference. See hasTileSizeControl. */}
+          {showTileSize ? (
+            <TileSizeControl
+              value={tileSize || shellConfig.tileSize || '50'}
+              onChange={onTileSizeChange}
+              shellConfig={shellConfig}
+            />
+          ) : null}
 
           {/* Trail slot: how much is here. After the size control, not before —
               both answer "how much am I looking at", and the count is the

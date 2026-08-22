@@ -134,11 +134,17 @@ export const railIconPaths = {
       <path d="M10 19a2 2 0 0 0 4 0"/>
     </>
   ),
+  // A key, not a shopping bag (W28). The bag was the `store` glyph doing double
+  // duty, and it said "buy something" on the one page that is about what you
+  // already have. Ownership here is licences held across Steam / GOG / Epic —
+  // and a game licence has been called a key for as long as it has existed, so
+  // the metaphor needs no learning.
   'ownership': (
     <>
-      <path d="M6 2 3 6v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4H6z"/>
-      <path d="M3 6h18"/>
-      <path d="M16 10a4 4 0 0 1-8 0"/>
+      <circle cx="7.5" cy="15.5" r="4.5"/>
+      <path d="M10.7 12.3 21 2"/>
+      <path d="m15.5 7.5 3 3"/>
+      <path d="m18 5 3 3"/>
     </>
   ),
   'playtime': (
@@ -147,10 +153,15 @@ export const railIconPaths = {
       <path d="M12 7v5l3 2"/>
     </>
   ),
+  // A speech bubble carrying an alert, not a beetle (W28). The bug glyph named
+  // one *kind* of report — and at 18px a six-legged silhouette is a smudge.
+  // "Report issue" is a message you send about a problem, which is exactly what
+  // this draws: the bubble is the sending, the mark inside is the problem.
   'report': (
     <>
-      <rect x="7" y="8" width="10" height="11" rx="5"/>
-      <path d="M9 4l1.5 2M15 4l-1.5 2M4 12H2M22 12h-2M4 17l-2 1M22 18l-2-1M9 8V6M15 8V6"/>
+      <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/>
+      <path d="M12 7.5v4"/>
+      <path d="M12 14h.01"/>
     </>
   ),
   'settings': (
