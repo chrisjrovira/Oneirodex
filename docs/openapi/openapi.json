@@ -273,6 +273,44 @@
         "responses": { "200": { "description": "count, limit, generated_at, items, freshness_check routes" } }
       }
     },
+    "/api/updates/scan": {
+      "post": {
+        "summary": "Member-facing freshness sweep of the library",
+        "description": "Re-probes titles the caller can see, oldest-checked first, in one bounded batch — each title is a live store request, so an unbounded sweep would hold a request thread for minutes and rate-limit the caller. The inbox only reads what a probe already found; this is what makes a probe happen. Returns remaining so the UI can say how much of the library is still unswept.",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limit": { "type": "integer", "default": 25, "maximum": 50 },
+                  "library_uuid": { "type": "string" },
+                  "only_stale": { "type": "boolean", "default": true, "description": "Skip titles probed in the last 24h." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ok envelope with requested, checked, behind[], behind_count, errors[], remaining, limit, only_stale" },
+          "500": { "description": "ok:false, error_code internal — results could not be saved" }
+        }
+      }
+    },
+    "/api/admin/libraries/scan": {
+      "post": {
+        "summary": "Start or queue a scan for one library",
+        "description": "Admin only. Body/query: library_uuid (required), folder (defaults to the library's last_scan_folder), scan_mode folders|files, remove_missing, download_missing_images, force_updates_extras, queue_policy queue|force / force_parallel. Response uses the scan-queue contract, not the api_ok envelope: { status: 'queued'|'started'|'rejected', job_id, position, message, risk? }.",
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "status started or queued" },
+          "400": { "description": "rejected — no library_uuid, or no folder and no last_scan_folder" },
+          "404": { "description": "rejected — library not found" },
+          "409": { "description": "rejected — a scan is already running and queue_policy did not allow it" }
+        }
+      }
+    },
     "/api/calendar": {
       "get": {
         "summary": "IGDB release calendar window",

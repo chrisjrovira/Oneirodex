@@ -376,14 +376,19 @@ class InitializationManager:
 
         default_sections = [
             {'name': 'Libraries', 'identifier': 'libraries', 'is_visible': True, 'display_order': 0},
+            # 'Latest Games' is newest *released* (first_release_date); the shelf
+            # below is newest *added here*. They were one shelf answering the
+            # second question under the first question's name — see
+            # routes_discover.build_discover_sections.
             {'name': 'Latest Games', 'identifier': 'latest_games', 'is_visible': True, 'display_order': 1},
-            {'name': 'Most Downloaded', 'identifier': 'most_downloaded', 'is_visible': True, 'display_order': 2},
-            {'name': 'Highest Rated', 'identifier': 'highest_rated', 'is_visible': True, 'display_order': 3},
-            {'name': 'Last Updated', 'identifier': 'last_updated', 'is_visible': True, 'display_order': 4},
-            {'name': 'Most Favorited', 'identifier': 'most_favorited', 'is_visible': True, 'display_order': 5},
+            {'name': 'New Library Games', 'identifier': 'new_library_games', 'is_visible': True, 'display_order': 2},
+            {'name': 'Most Downloaded', 'identifier': 'most_downloaded', 'is_visible': True, 'display_order': 3},
+            {'name': 'Highest Rated', 'identifier': 'highest_rated', 'is_visible': True, 'display_order': 4},
+            {'name': 'Last Updated', 'identifier': 'last_updated', 'is_visible': True, 'display_order': 5},
+            {'name': 'Most Favorited', 'identifier': 'most_favorited', 'is_visible': True, 'display_order': 6},
             # Storefront shelves (W25-STORE-1) — derived, hidden when empty.
-            {'name': 'Curated for you', 'identifier': 'curated_for_you', 'is_visible': True, 'display_order': 6},
-            {'name': 'Upcoming', 'identifier': 'upcoming', 'is_visible': True, 'display_order': 7},
+            {'name': 'Curated for you', 'identifier': 'curated_for_you', 'is_visible': True, 'display_order': 7},
+            {'name': 'Upcoming', 'identifier': 'upcoming', 'is_visible': True, 'display_order': 8},
         ]
 
         existing_sections = {section.identifier for section in session.execute(select(DiscoverySection)).scalars().all()}

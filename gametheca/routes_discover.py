@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from flask import Blueprint
 from flask_login import login_required
 from gametheca.utils.member_spa import render_member_spa
@@ -157,7 +159,37 @@ def build_discover_sections(user) -> list[dict]:
                 'image_url': lib.image_url
             } for lib in libraries]
         elif section.identifier == 'latest_games':
+            # Newest *to the world*, not newest to this install (W28).
+            #
+            # This ordered by `date_created` — the moment a scan first wrote the
+            # row — so "Latest Games" was a list of whatever was imported most
+            # recently, and a fresh install showed a thirty-year-old cartridge
+            # under a heading that promised new releases. That question is worth
+            # answering too, and it now has its own shelf: `new_library_games`.
+            #
+            # Future dates are excluded rather than sorted to the top: an
+            # unreleased title is the Upcoming shelf's subject, and letting it
+            # lead this one would make the two shelves open with the same game.
+            # Naive: `first_release_date` is TIMESTAMP WITHOUT TIME ZONE, and
+            # Postgres refuses to compare that against an aware value.
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
             section_data['latest_games'] = fetch_game_details(
+                db.session.execute(
+                    apply_game_access_filters(
+                        select(Game)
+                        .filter(
+                            Game.first_release_date.isnot(None),
+                            Game.first_release_date <= now,
+                        )
+                        .order_by(Game.first_release_date.desc())
+                        .limit(8),
+                        user,
+                    )
+                ).scalars().all()
+            )
+        elif section.identifier == 'new_library_games':
+            # What "Latest Games" used to mean: newest row in *this* library.
+            section_data['new_library_games'] = fetch_game_details(
                 db.session.execute(
                     apply_game_access_filters(
                         select(Game).order_by(Game.date_created.desc()).limit(8),
