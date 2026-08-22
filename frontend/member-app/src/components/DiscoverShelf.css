@@ -1,0 +1,304 @@
+/* Discover shelves (W28) — see DiscoverShelf.jsx for why this is not GameGrid.
+   -------------------------------------------------------------------------- */
+
+.gt-shelf {
+  /* Bleed: room for a hovered tile to grow into *inside* the scroller.
+   *
+   * `.gt-shelf__track` is `overflow-x: auto`, and CSS resolves the other axis
+   * of a scroll container to `auto` as well — a horizontal scroller clips
+   * vertically whether or not you asked it to. `.game-card:hover` scales to
+   * 1.25 and paints a 26px glow, so without this the top and bottom of every
+   * hovered tile were sliced off flush with the row, which is the reported
+   * "the row cuts off the zoom/glow".
+   *
+   * Derived from `--gt-tile-min` rather than fixed, so it tracks the tile-size
+   * slider: a bigger tile grows by more pixels and needs more room.
+   *
+   * The origin is `center top` (below), so growth is downward — the bottom
+   * value carries the full 25% of the tile's height plus glow, and the top only
+   * needs glow.
+   */
+  --gt-shelf-bleed-x: calc(var(--gt-tile-min, 180px) * 0.16 + 12px);
+  --gt-shelf-bleed-top: 1.4rem;
+  --gt-shelf-bleed-bottom: calc(var(--gt-tile-min, 180px) * 0.36 + 1rem);
+  /* Width of one tile in the shelf. `--gt-tile-min` is the grid's *minimum*;
+     on a shelf there is no track to stretch, so it is the size outright. */
+  --gt-shelf-tile-w: var(--gt-tile-min, 180px);
+
+  display: block;
+  /* The bleed already separates one shelf from the next, so the margin here is
+     small on purpose — doubling them leaves an obvious hole between rows. */
+  margin: 0 0 var(--gt-space-3);
+  position: relative;
+}
+
+/* ---------- head ---------- */
+
+.gt-shelf__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gt-space-3);
+  padding-inline: var(--gt-shelf-bleed-x);
+  margin-bottom: var(--gt-space-2);
+}
+
+/* The shelf name was flat body text — the same weight and colour as the copy
+   beneath it, so nothing separated "this is a section" from "this is a thing in
+   the section". Display face, larger, with an accent rule that starts at the
+   text and stops: a full-width divider would cut the page into bands and fight
+   the tiles for the eye. */
+.gt-shelf__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--gt-font-xl);
+  line-height: 1.15;
+  color: var(--gt-text);
+  letter-spacing: 0.01em;
+  position: relative;
+  padding-bottom: var(--gt-space-2);
+}
+
+.gt-shelf__title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 2.2rem;
+  height: 3px;
+  border-radius: var(--gt-radius-pill);
+  background: linear-gradient(
+    90deg,
+    var(--gt-accent),
+    color-mix(in srgb, var(--gt-accent) 15%, transparent)
+  );
+  transition: width var(--gt-motion-base) var(--gt-motion-ease);
+}
+
+.gt-shelf:hover .gt-shelf__title::after,
+.gt-shelf:focus-within .gt-shelf__title::after {
+  width: 4.5rem;
+}
+
+.gt-shelf__event,
+.gt-shelf__pinned-chip {
+  font-size: var(--gt-label-size);
+  font-weight: var(--gt-label-weight);
+  letter-spacing: var(--gt-label-tracking);
+  text-transform: uppercase;
+  padding: 0.1rem var(--gt-space-3);
+  border-radius: var(--gt-radius-pill);
+  white-space: nowrap;
+}
+
+.gt-shelf__event {
+  color: var(--gt-accent);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
+}
+
+.gt-shelf__pinned-chip {
+  color: var(--gt-accent-contrast);
+  background: var(--gt-accent);
+}
+
+.gt-shelf__count {
+  margin-left: auto;
+  font-size: var(--gt-font-xs);
+  color: var(--gt-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- pin ---------- */
+
+.gt-shelf__pin {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gt-space-2);
+  padding: 0.15rem var(--gt-space-3);
+  border: 1px solid var(--gt-border);
+  border-radius: var(--gt-radius-pill);
+  background: transparent;
+  color: var(--gt-text-muted);
+  font: inherit;
+  font-size: var(--gt-font-xs);
+  cursor: pointer;
+  /* Revealed on hover/focus so a wall of shelves is not also a wall of
+     buttons — but never hidden once a shelf is actually pinned, because then
+     the control is the only way back. */
+  opacity: 0;
+  transition:
+    opacity var(--gt-motion-base) var(--gt-motion-ease),
+    color var(--gt-motion-fast) var(--gt-motion-ease),
+    border-color var(--gt-motion-fast) var(--gt-motion-ease);
+}
+
+.gt-shelf:hover .gt-shelf__pin,
+.gt-shelf:focus-within .gt-shelf__pin,
+.gt-shelf__pin:focus-visible,
+.gt-shelf__pin.is-on {
+  opacity: 1;
+}
+
+.gt-shelf__pin:hover {
+  color: var(--gt-text);
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+}
+
+.gt-shelf__pin.is-on {
+  color: var(--gt-accent);
+  border-color: color-mix(in srgb, var(--gt-accent) 60%, transparent);
+}
+
+.gt-shelf__pin:focus-visible {
+  outline: 2px solid var(--gt-focus-ring);
+  outline-offset: 2px;
+}
+
+/* A pinned shelf needs to read as pinned from across the page, not only from
+   its own button — hence the edge marker as well as the chip. */
+.gt-shelf[data-pinned='true'] .gt-shelf__head {
+  border-left: 3px solid var(--gt-accent);
+  padding-left: calc(var(--gt-shelf-bleed-x) - 3px);
+}
+
+/* ---------- track ---------- */
+
+.gt-shelf__frame {
+  position: relative;
+}
+
+.gt-shelf__track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--gt-shelf-tile-w);
+  gap: var(--gt-tile-gap, 10px);
+  align-items: start;
+
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  /* See --gt-shelf-bleed-* above: this padding is what the hover zoom grows
+     into. It is inside the scroller, so it is scrollable area rather than a
+     gutter the page layout has to give up. */
+  padding: var(--gt-shelf-bleed-top) var(--gt-shelf-bleed-x)
+    var(--gt-shelf-bleed-bottom);
+  scroll-padding-inline: var(--gt-shelf-bleed-x);
+
+  /* The scrollbar is redundant here — the edge buttons and the bleed already
+     say there is more — and a horizontal bar under every shelf reads as a
+     rendering fault. Wheel, drag, keys and the buttons all still work. */
+  scrollbar-width: none;
+}
+
+.gt-shelf__track::-webkit-scrollbar {
+  display: none;
+}
+
+.gt-shelf__track:focus-visible {
+  outline: 2px solid var(--gt-focus-ring);
+  outline-offset: -2px;
+  border-radius: var(--gt-radius-md);
+}
+
+.gt-shelf__cell {
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+/* Growth is downward and inward, exactly as in the library grid — the bleed
+   above is sized for this origin, so changing it here breaks the padding. */
+.gt-shelf__cell .game-card:hover,
+.gt-shelf__cell .game-card:focus-within {
+  transform-origin: center top;
+}
+
+.gt-shelf__cell:first-child .game-card:hover,
+.gt-shelf__cell:first-child .game-card:focus-within {
+  transform-origin: left top;
+}
+
+.gt-shelf__cell:last-child .game-card:hover,
+.gt-shelf__cell:last-child .game-card:focus-within {
+  transform-origin: right top;
+}
+
+/* ---------- edge buttons ---------- */
+
+/* Overlaid on the end tiles rather than placed beside the row: beside costs
+   width on every shelf forever, and puts the control where nobody is looking.
+   Full height of the tile band so the target is large without being a slab. */
+.gt-shelf__edge {
+  position: absolute;
+  top: var(--gt-shelf-bleed-top);
+  bottom: var(--gt-shelf-bleed-bottom);
+  width: var(--gt-shelf-bleed-x);
+  min-width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 7;
+
+  border: 0;
+  cursor: pointer;
+  color: var(--gt-text);
+  /* Fades out over the tiles instead of sitting on a plate, so the row keeps
+     reading as continuous under the control. */
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--gt-bg) 88%, transparent),
+    color-mix(in srgb, var(--gt-bg) 10%, transparent)
+  );
+  opacity: 0;
+  transition: opacity var(--gt-motion-base) var(--gt-motion-ease);
+}
+
+.gt-shelf__edge--start {
+  left: 0;
+  border-radius: var(--gt-radius-md) 0 0 var(--gt-radius-md);
+}
+
+.gt-shelf__edge--end {
+  right: 0;
+  border-radius: 0 var(--gt-radius-md) var(--gt-radius-md) 0;
+  background: linear-gradient(
+    270deg,
+    color-mix(in srgb, var(--gt-bg) 88%, transparent),
+    color-mix(in srgb, var(--gt-bg) 10%, transparent)
+  );
+}
+
+.gt-shelf:hover .gt-shelf__edge,
+.gt-shelf:focus-within .gt-shelf__edge {
+  opacity: 1;
+}
+
+/* Keyboard users never hover, so the button has to appear on focus by itself
+   and not only when something else in the shelf has focus. */
+.gt-shelf__edge:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--gt-focus-ring);
+  outline-offset: -2px;
+}
+
+.gt-shelf__edge:hover .gt-icon {
+  transform: scale(1.25);
+}
+
+/* Coarse pointers cannot hover, so the buttons would only ever appear after a
+   tap that also did something else. Touch scrolls the shelf directly. */
+@media (pointer: coarse) {
+  .gt-shelf__edge {
+    display: none;
+  }
+
+  .gt-shelf__pin {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-shelf__title::after,
+  .gt-shelf__pin,
+  .gt-shelf__edge {
+    transition: none;
+  }
+}

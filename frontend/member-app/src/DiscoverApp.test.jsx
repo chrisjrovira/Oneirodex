@@ -13,7 +13,7 @@ function mockDiscoverFetch(sections) {
   })
 }
 
-test('renders discover section titles and games with the shared grid', async () => {
+test('renders discover section titles and games as scrollable shelves', async () => {
   mockDiscoverFetch([
     {
       identifier: 'latest_games',
@@ -51,7 +51,7 @@ test('renders discover section titles and games with the shared grid', async () 
 
   expect(await screen.findByRole('heading', { name: 'Latest Games' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Highest Rated' })).toBeInTheDocument()
-  expect(document.querySelectorAll('[data-library-grid]')).toHaveLength(2)
+  expect(document.querySelectorAll('.gt-shelf__track')).toHaveLength(2)
   expect(screen.getByRole('img', { name: 'Discover VR Game' })).toHaveAttribute(
     'src',
     '/static/library/images/discover.jpg',
@@ -79,7 +79,7 @@ test('does not render empty discover sections', async () => {
     expect(screen.getByText(/No Discover shelves/i)).toBeInTheDocument()
   })
   expect(screen.queryByRole('heading', { name: 'Most Favorited Games' })).not.toBeInTheDocument()
-  expect(document.querySelector('[data-library-grid]')).not.toBeInTheDocument()
+  expect(document.querySelector('.gt-shelf__track')).not.toBeInTheDocument()
 })
 
 test('shows Loading Discover while sections fetch', async () => {
