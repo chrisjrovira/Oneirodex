@@ -319,11 +319,15 @@ function FilterPanel({ options, optionsError, filters, onChange, onClear, onAppl
         <small>Hold Ctrl/Cmd to select multiple</small>
       </div>
 
+      {/* This panel renders inside the top bar's Filters popover, so its two
+          buttons are bar buttons — they were unclassed, which meant the UA
+          default grey rectangle sitting inside chrome built entirely from
+          `gt-cbtn`. Apply is the primary of the pair. */}
       <div className="gt-trailers__filter-actions">
-        <button type="button" onClick={onApply}>
+        <button type="button" className="gt-cbtn gt-cbtn--primary" onClick={onApply}>
           Apply filters
         </button>
-        <button type="button" onClick={onClear}>
+        <button type="button" className="gt-cbtn" onClick={onClear}>
           Clear All Filters
         </button>
       </div>
@@ -370,10 +374,10 @@ function SettingsModal({ settings, onCancel, onSave }) {
         <small>Load next video after watching for this long (0 to disable)</small>
 
         <div className="gt-trailers__modal-actions">
-          <button type="button" onClick={onCancel}>
+          <button type="button" className="gt-btn gt-btn--ghost" onClick={onCancel}>
             Cancel
           </button>
-          <button type="button" onClick={() => onSave(draft)}>
+          <button type="button" className="gt-btn gt-btn--accent" onClick={() => onSave(draft)}>
             Save
           </button>
         </div>
@@ -670,18 +674,18 @@ export function TrailersPage({ shellConfig = {} } = {}) {
           <div className="gt-trailers__actions">
             {attractMode ? (
               <>
-                <button type="button" onClick={exitAttractMode}>
+                <button type="button" className="gt-btn" onClick={exitAttractMode}>
                   Exit Attract Mode
                 </button>
-                <button type="button" onClick={openBigPicture}>
+                <button type="button" className="gt-btn" onClick={openBigPicture}>
                   Big Picture
                 </button>
               </>
             ) : null}
-            <button type="button" onClick={() => setSettingsOpen(true)}>
+            <button type="button" className="gt-btn" onClick={() => setSettingsOpen(true)}>
               Settings
             </button>
-            <button type="button" onClick={requestTrailer}>
+            <button type="button" className="gt-btn gt-btn--accent" onClick={requestTrailer}>
               Another one
             </button>
           </div>
@@ -701,7 +705,7 @@ export function TrailersPage({ shellConfig = {} } = {}) {
         <div className="gt-trailers__filters">
           <button
             type="button"
-            className="gt-trailers__filter-toggle"
+            className="gt-btn gt-trailers__filter-toggle"
             aria-expanded={panelOpen}
             onClick={() => setPanelOpen((open) => !open)}
           >
@@ -736,7 +740,7 @@ export function TrailersPage({ shellConfig = {} } = {}) {
       {!loading && error ? (
         <div role="alert">
           <p>Unable to load trailers.</p>
-          <button type="button" onClick={requestTrailer}>
+          <button type="button" className="gt-btn" onClick={requestTrailer}>
             Retry
           </button>
         </div>
@@ -746,9 +750,13 @@ export function TrailersPage({ shellConfig = {} } = {}) {
         <div className="gt-trailers__empty" role="status">
           <p>{emptyMessage}</p>
           {emptyCta?.href ? (
-            <a href={emptyCta.href}>{emptyCta.label || 'Go to Library'}</a>
+            <a className="gt-btn" href={emptyCta.href}>
+              {emptyCta.label || 'Go to Library'}
+            </a>
           ) : (
-            <a href="/library">Go to Library</a>
+            <a className="gt-btn" href="/library">
+              Go to Library
+            </a>
           )}
         </div>
       ) : null}

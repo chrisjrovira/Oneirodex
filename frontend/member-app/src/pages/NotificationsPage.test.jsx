@@ -72,7 +72,7 @@ test('renders dense inbox with unread marker and filter', async () => {
   expect(screen.queryByText('Welcome')).not.toBeInTheDocument()
 })
 
-test('new chrome moves the filter and mark-all into bar two, losing neither', async () => {
+test('new chrome moves the filter into bar two and keeps mark-all by the list', async () => {
   const user = userEvent.setup()
   render(
     <MemoryRouter>
@@ -84,7 +84,11 @@ test('new chrome moves the filter and mark-all into bar two, losing neither', as
   // The heading and lede are gone; the unread count they carried is not.
   expect(screen.queryByRole('heading', { name: 'Notifications' })).toBeNull()
   expect(screen.getByText('1 unread')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Mark all read' })).toBeEnabled()
+  // Mark all read is not in the bar (W28): it acts on the list, so it sits on
+  // the Inbox heading row directly above it.
+  const markAll = screen.getByRole('button', { name: 'Mark all read' })
+  expect(markAll).toBeEnabled()
+  expect(markAll.closest('.gt-notifications__inbox-head')).not.toBeNull()
 
   await user.click(screen.getByRole('button', { name: 'Unread' }))
   expect(screen.queryByText('Welcome')).not.toBeInTheDocument()

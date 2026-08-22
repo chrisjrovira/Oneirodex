@@ -11,17 +11,25 @@ const BEHIND_OPTIONS = [0, 7, 14, 30, 90]
 const DEFAULT_AHEAD = 60
 const DEFAULT_BEHIND = 14
 const VIEW_STORAGE_KEY = 'gt.calendar.view'
+// Agenda is gone (W28). It was List grouped by week — the same rows, the same
+// order, one extra heading between them — so it was a third tab that answered
+// a question List already answered. Month is the only view that shows the data
+// differently, and it now carries artwork rather than dots.
 const VIEWS = [
   { id: 'list', label: 'List' },
   { id: 'month', label: 'Month' },
-  { id: 'agenda', label: 'Agenda' },
 ]
+
+/** How long each cover holds before a busy day shows the next one. */
+const DAY_ROTATE_MS = 10_000
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export function readCalendarView() {
   try {
     const raw = window.localStorage?.getItem(VIEW_STORAGE_KEY)
-    if (raw === 'list' || raw === 'month' || raw === 'agenda') return raw
+    // A stored 'agenda' from before the view was retired falls through to
+              // the default rather than selecting a tab that no longer exists.
+              if (raw === 'list' || raw === 'month') return raw
   } catch {
     /* ignore */
   }
@@ -30,7 +38,7 @@ export function readCalendarView() {
 
 export function writeCalendarView(view) {
   try {
-    if (view === 'list' || view === 'month' || view === 'agenda') {
+    if (view === 'list' || view === 'month') {
       window.localStorage?.setItem(VIEW_STORAGE_KEY, view)
     }
   } catch {
@@ -100,34 +108,6 @@ export function buildMonthCells(year, monthIndex, byDate) {
     })
   }
   return cells
-}
-
-/** Group releases into week buckets (week starts Sunday). */
-export function groupReleasesByWeek(releases) {
-  const buckets = new Map()
-  for (const item of releases) {
-    const date = parseReleaseDate(item.first_release_date)
-    if (!date) {
-      const key = 'tba'
-      if (!buckets.has(key)) {
-        buckets.set(key, { key, label: 'Date TBA', sort: Number.POSITIVE_INFINITY, items: [] })
-      }
-      buckets.get(key).items.push(item)
-      continue
-    }
-    const weekStart = new Date(date)
-    weekStart.setDate(date.getDate() - date.getDay())
-    weekStart.setHours(12, 0, 0, 0)
-    const key = toDateKey(weekStart)
-    if (!buckets.has(key)) {
-      const weekEnd = new Date(weekStart)
-      weekEnd.setDate(weekStart.getDate() + 6)
-      const label = `${formatLocaleDate(weekStart, { fallback: key })} – ${formatLocaleDate(weekEnd, { fallback: '' })}`
-      buckets.set(key, { key, label: `Week of ${label}`, sort: weekStart.getTime(), items: [] })
-    }
-    buckets.get(key).items.push(item)
-  }
-  return [...buckets.values()].sort((a, b) => a.sort - b.sort)
 }
 
 function indexByDate(releases) {
@@ -201,6 +181,50 @@ function ListView({ releases, emptyReason }) {
   )
 }
 
+/**
+ * The artwork for one day's cell (W28).
+ *
+ * The month grid drew up to three dots per day, so every busy day looked
+ * identical to every other busy day and the grid carried no information beyond
+ * "something happens here" — the whole point of a month view is to be readable
+ * at a glance, and dots are not readable, they are a legend you have to click.
+ *
+ * A day with several releases cycles through them. The index comes from the
+ * caller, not from a timer here: thirty cells each running their own interval
+ * is thirty timers for one effect, and cells rotating at slightly different
+ * moments reads as flicker rather than as a rotation.
+ */
+function DayArt({ releases, rotation }) {
+  const count = releases.length
+  const item = releases[rotation % count]
+  const cover = item?.cover_url
+
+  return (
+    <span className="gt-calendar__day-art" title={item?.name || undefined}>
+      {cover ? (
+        <img
+          className="gt-calendar__day-cover"
+          // Keyed on the URL so swapping covers restarts the fade rather than
+          // cross-dissolving into a half-loaded image.
+          key={cover}
+          src={cover}
+          alt=""
+          loading="lazy"
+        />
+      ) : (
+        <span className="gt-calendar__day-cover gt-calendar__day-cover--blank" aria-hidden="true">
+          {(item?.name || '?').slice(0, 1).toUpperCase()}
+        </span>
+      )}
+      {count > 1 ? (
+        <span className="gt-calendar__day-more" aria-hidden="true">
+          +{count - 1}
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
 function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason }) {
   const byDate = useMemo(() => indexByDate(releases), [releases])
   const cells = useMemo(
@@ -208,6 +232,31 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
     [focusYear, focusMonth, byDate],
   )
   const [selectedKey, setSelectedKey] = useState(null)
+  const [rotation, setRotation] = useState(0)
+
+  // One timer for the whole grid — see DayArt. Only started when some day
+  // actually has more than one release, so a quiet month runs no timer at all.
+  const rotates = useMemo(
+    () => cells.some((cell) => cell.inMonth && cell.releases.length > 1),
+    [cells],
+  )
+
+  useEffect(() => {
+    if (!rotates) return undefined
+    if (
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      // Auto-advancing artwork is motion nobody asked for; the day panel below
+      // still lists every title, so nothing is lost by holding on the first.
+      return undefined
+    }
+    const timer = window.setInterval(
+      () => setRotation((value) => value + 1),
+      DAY_ROTATE_MS,
+    )
+    return () => window.clearInterval(timer)
+  }, [rotates])
 
   useEffect(() => {
     const todayKey = toDateKey(new Date())
@@ -285,11 +334,7 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
               >
                 <span className="gt-calendar__day-num">{cell.day}</span>
                 {count > 0 ? (
-                  <span className="gt-calendar__markers" aria-hidden="true">
-                    {Array.from({ length: Math.min(count, 3) }, (_, i) => (
-                      <span key={i} className="gt-calendar__dot" />
-                    ))}
-                  </span>
+                  <DayArt releases={cell.releases} rotation={rotation} />
                 ) : null}
               </button>
             )
@@ -324,42 +369,6 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
           </p>
         )}
       </div>
-    </div>
-  )
-}
-
-function AgendaView({ releases }) {
-  const weeks = useMemo(() => groupReleasesByWeek(releases), [releases])
-
-  if (releases.length === 0) {
-    return <p className="gt-calendar__empty">No releases in this window.</p>
-  }
-
-  return (
-    <div className="gt-calendar__agenda">
-      {weeks.map((week) => (
-        <section key={week.key} className="gt-calendar__agenda-week" aria-labelledby={`agenda-${week.key}`}>
-          <h3 id={`agenda-${week.key}`} className="gt-calendar__agenda-label">
-            {week.label}
-          </h3>
-          <ul className="gt-calendar__agenda-list">
-            {week.items.map((item, index) => {
-              const dateLabel = formatLocaleDate(item.first_release_date, { fallback: '' })
-              return (
-                <li key={releaseKey(item, index)} className="gt-calendar__agenda-row">
-                  <time dateTime={item.first_release_date || undefined}>
-                    {dateLabel || 'Date TBA'}
-                  </time>
-                  <div className="gt-calendar__body">
-                    <ReleaseTitle item={item} />
-                    <ReleaseMeta item={item} />
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-      ))}
     </div>
   )
 }
@@ -547,7 +556,6 @@ export function CalendarPage({ shellConfig = {} }) {
               }}
             />
           ) : null}
-          {view === 'agenda' ? <AgendaView releases={releases} /> : null}
         </section>
       ) : null}
     </div>

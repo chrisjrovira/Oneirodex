@@ -3,12 +3,40 @@ import { Link } from 'react-router-dom'
 import { fetchCalendar } from '../api/calendar'
 import { ContextBar } from '../chrome/ContextBar'
 import { queueClientCommand } from '../api/clientCommands'
-import { addWantedUpdate, fetchStoreSearch, fetchUpdatesInbox } from '../api/updates'
+import {
+  addWantedUpdate,
+  fetchStoreSearch,
+  fetchUpdatesInbox,
+  scanLibraryUpdates,
+} from '../api/updates'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { showToast } from '../utils/toast'
 import '../styles/panelGrid.css'
 
 const INBOX_POLL_MS = 50000
+
+/** Circular arrow. `gt-icon` is what the shared hover/press motion keys on, and
+ *  what `aria-busy` spins while a refresh is in flight — see gt-primitives.css. */
+function IconRefresh() {
+  return (
+    <svg
+      className="gt-icon"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M21 12a9 9 0 1 1-2.6-6.4" />
+      <path d="M21 4v5h-5" />
+    </svg>
+  )
+}
 const CALENDAR_TEASER_LIMIT = 5
 
 export function UpdatesPage({ shellConfig = {} } = {}) {
@@ -26,6 +54,11 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
   const [manualRefreshing, setManualRefreshing] = useState(false)
   const [lastUpdatedAt, setLastUpdatedAt] = useState(null)
   const [calendarTeaser, setCalendarTeaser] = useState(null)
+  // Library sweep, separate from the inbox refresh. Refresh re-reads what the
+  // last probe found; this makes a new probe happen. Conflating them is what
+  // left a member with no way to fill an empty inbox — see POST /api/updates/scan.
+  const [scanning, setScanning] = useState(false)
+  const [scanResult, setScanResult] = useState(null)
   const searchRequestId = useRef(0)
   const hasItemsRef = useRef(false)
   const inboxRequestRef = useRef({ id: 0, controller: null })
@@ -187,26 +220,46 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
     }
   }
 
+  async function runLibraryScan() {
+    if (scanning) return
+    setScanning(true)
+    setScanResult(null)
+    try {
+      const data = await scanLibraryUpdates({})
+      setScanResult(data)
+      const found = Number(data?.behind_count) || 0
+      const checked = Number(data?.checked) || 0
+      showToast(
+        found > 0
+          ? `Checked ${checked} title${checked === 1 ? '' : 's'} · ${found} behind`
+          : `Checked ${checked} title${checked === 1 ? '' : 's'} · nothing behind`,
+        found > 0 ? 'info' : 'success',
+      )
+      // The probe writes freshness rows; the inbox reads them. Without this the
+      // member sees a toast saying titles are behind and a list that has not
+      // changed.
+      await refreshInbox('manual')
+    } catch (err) {
+      showToast(err?.message || 'Could not check for updates.', 'error')
+    } finally {
+      setScanning(false)
+    }
+  }
+
   return (
     <>
     {useNewChrome ? (
+        /* Refresh and its timestamp moved down to the inbox they describe
+           (W28) — up here the time was in the bar's trail slot and the button
+           was in its centre, so the readout and the control that produces it
+           sat at opposite ends of the same row. */
         <ContextBar
           summary={
-            manualRefreshing
-              ? 'Refreshing…'
-              : lastUpdatedAt
-                ? `Updated ${lastUpdatedAt.toLocaleTimeString()}`
+            items && items.length > 0
+              ? `${items.length} behind`
+              : items
+                ? 'Nothing behind'
                 : null
-          }
-          actions={
-            <button
-              type="button"
-              className="gt-cbtn"
-              disabled={manualRefreshing || (!items && !error)}
-              onClick={() => void refreshInbox('manual')}
-            >
-              {manualRefreshing ? 'Refreshing…' : 'Refresh'}
-            </button>
           }
         />
       ) : null}
@@ -221,25 +274,6 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
               library, or queue the companion to apply them. Store search is discovery-only (Steam / GOG
               links).
             </p>
-          </div>
-          <div className="gt-updates__refresh">
-            {manualRefreshing ? (
-              <span className="gt-updates__refresh-status" role="status" aria-live="polite">
-                Refreshing…
-              </span>
-            ) : lastUpdatedAt ? (
-              <span className="gt-updates__refresh-status gt-updates__refresh-status--muted">
-                Updated {lastUpdatedAt.toLocaleTimeString()}
-              </span>
-            ) : null}
-            <button
-              type="button"
-              className="gt-btn"
-              disabled={manualRefreshing || (!items && !error)}
-              onClick={() => void refreshInbox('manual')}
-            >
-              {manualRefreshing ? 'Refreshing…' : 'Refresh'}
-            </button>
           </div>
         </div>
         </>
@@ -338,7 +372,57 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
       <section className="gt-updates__inbox">
         <div className="gt-updates__section-head">
           <h2>Library freshness inbox</h2>
+          <div className="gt-updates__inbox-tools">
+            {/* Time first, then the glyph: the timestamp is what the button
+                changes, so it reads left-to-right as "this is how old it is,
+                here is how to fix that". */}
+            {manualRefreshing ? (
+              <span className="gt-updates__refresh-status" role="status" aria-live="polite">
+                Refreshing…
+              </span>
+            ) : lastUpdatedAt ? (
+              <span className="gt-updates__refresh-status gt-updates__refresh-status--muted">
+                Updated {lastUpdatedAt.toLocaleTimeString()}
+              </span>
+            ) : null}
+            <button
+              type="button"
+              className="gt-btn gt-btn--sm gt-updates__refresh-btn"
+              aria-label="Refresh"
+              aria-busy={manualRefreshing ? 'true' : undefined}
+              disabled={manualRefreshing || (!items && !error)}
+              onClick={() => void refreshInbox('manual')}
+            >
+              <IconRefresh />
+            </button>
+            {/* The inbox is a readout of the last probe. This is what makes a
+                probe happen — one bounded batch per press, oldest-checked
+                first. See POST /api/updates/scan. */}
+            <button
+              type="button"
+              className="gt-btn gt-btn--sm gt-btn--accent"
+              disabled={scanning}
+              onClick={() => void runLibraryScan()}
+            >
+              {scanning ? 'Checking library…' : 'Check library for updates'}
+            </button>
+          </div>
         </div>
+        {scanResult ? (
+          <p className="gt-updates__scan-result" role="status">
+            Checked {scanResult.checked} title
+            {scanResult.checked === 1 ? '' : 's'} ·{' '}
+            {scanResult.behind_count > 0
+              ? `${scanResult.behind_count} behind`
+              : 'nothing behind'}
+            {scanResult.remaining > 0
+              ? ` · ${scanResult.remaining} still to check — press again to continue`
+              : ' · whole library checked'}
+            {scanResult.errors?.length
+              ? ` · ${scanResult.errors.length} could not be checked`
+              : ''}
+          </p>
+        ) : null}
         {error ? (
           <div role="alert">
             <p>Unable to load updates.</p>

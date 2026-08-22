@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createRequest, deleteRequest, fetchRequests, resolveRequest } from '../api/wishlist'
 import { ContextBar, Popover } from '../chrome/ContextBar'
+import { RailIcon } from '../chrome/railIcons'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import './WishlistPage.css'
 
@@ -20,6 +21,11 @@ export function WishlistPage({ shellConfig = {} } = {}) {
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
   const [actionError, setActionError] = useState(null)
+  // Separate from actionError on purpose: the create form lives inside a
+  // popover and shows its own failure there, while approve / reject / cancel
+  // fail against a row in the list. One state for both meant a failed request
+  // painted an alert in two places at once.
+  const [createError, setCreateError] = useState(null)
   const [busyId, setBusyId] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -53,7 +59,13 @@ export function WishlistPage({ shellConfig = {} } = {}) {
     setReloadCount((n) => n + 1)
   }
 
-  async function handleCreate(event) {
+  /**
+   * @param {SubmitEvent} event
+   * @param {() => void} [onDone] closes the popover, but only on success —
+   *   dismissing the panel on a failed submit would take the error message
+   *   with it, and the field the member has to correct.
+   */
+  async function handleCreate(event, onDone) {
     event.preventDefault()
     const trimmed = title.trim()
     if (!trimmed) {
@@ -61,14 +73,15 @@ export function WishlistPage({ shellConfig = {} } = {}) {
     }
 
     setSubmitting(true)
-    setActionError(null)
+    setCreateError(null)
     try {
       await createRequest({ title: trimmed, notes: notes.trim() })
       setTitle('')
       setNotes('')
       refetch()
+      onDone?.()
     } catch (err) {
-      setActionError(err)
+      setCreateError(err)
     } finally {
       setSubmitting(false)
     }
@@ -117,8 +130,15 @@ export function WishlistPage({ shellConfig = {} } = {}) {
                   Everyone’s requests
                 </button>
               ) : null}
-              <Popover label="Request a title">
-              <form className="gt-wishlist__form" onSubmit={handleCreate}>
+              <Popover
+                label="Request a title"
+                icon={<RailIcon name="wishlist" size={16} />}
+              >
+              {({ close }) => (
+              <form
+                className="gt-wishlist__form"
+                onSubmit={(event) => handleCreate(event, close)}
+              >
                 <label htmlFor="gt-wishlist-title">Title</label>
                 <input
                   id="gt-wishlist-title"
@@ -138,10 +158,20 @@ export function WishlistPage({ shellConfig = {} } = {}) {
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
                 />
-                <button type="submit" disabled={submitting}>
-                  Request
+                {createError ? (
+                  <p className="gt-wishlist__action-error" role="alert">
+                    {createError.message}
+                  </p>
+                ) : null}
+                <button
+                  type="submit"
+                  className="gt-cbtn gt-cbtn--primary"
+                  disabled={submitting}
+                >
+                  {submitting ? 'Requesting…' : 'Request'}
                 </button>
               </form>
+              )}
               </Popover>
             </>
           }
@@ -177,9 +207,14 @@ export function WishlistPage({ shellConfig = {} } = {}) {
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
           />
-          <button type="submit" disabled={submitting}>
-            Request
+          <button type="submit" className="gt-btn" disabled={submitting}>
+            {submitting ? 'Requesting…' : 'Request'}
           </button>
+          {createError ? (
+            <p className="gt-wishlist__action-error" role="alert">
+              {createError.message}
+            </p>
+          ) : null}
         </form>
         </>
       )}
@@ -204,7 +239,7 @@ export function WishlistPage({ shellConfig = {} } = {}) {
       {error ? (
         <div role="alert">
           <p>Unable to load wishlist.</p>
-          <button type="button" onClick={refetch}>
+          <button type="button" className="gt-btn" onClick={refetch}>
             Retry
           </button>
         </div>
@@ -214,7 +249,9 @@ export function WishlistPage({ shellConfig = {} } = {}) {
 
       {!error && requests && requests.length === 0 ? (
         <p className="gt-wishlist__empty">
-          No requests yet. Add a title above and your librarians will take a look.
+          {useNewChrome
+            ? 'No requests yet. Use Request a title above and your librarians will take a look.'
+            : 'No requests yet. Add a title above and your librarians will take a look.'}
         </p>
       ) : null}
 

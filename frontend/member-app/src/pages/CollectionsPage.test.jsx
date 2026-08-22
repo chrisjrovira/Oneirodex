@@ -121,7 +121,7 @@ test('creates a collection and shows it in the list', async () => {
   await screen.findByText('No collections yet. Create your first shelf with the form above.')
 
   await userEvent.type(screen.getByLabelText('Name'), 'Roguelites')
-  await userEvent.click(screen.getByRole('button', { name: 'Create' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Create shelf' }))
 
   expect(collectionsApi.createCollection).toHaveBeenCalledWith({
     name: 'Roguelites',
@@ -310,7 +310,7 @@ test('new chrome puts the create form behind one button', async () => {
   expect(screen.queryByRole('heading', { name: 'Collections' })).toBeNull()
   expect(screen.queryByPlaceholderText('Cozy co-op nights')).toBeNull()
 
-  await user.click(screen.getByRole('button', { name: /New collection/ }))
+  await user.click(screen.getByRole('button', { name: /New shelf/ }))
   expect(screen.getByPlaceholderText('Cozy co-op nights')).toBeInTheDocument()
 })
 
@@ -323,7 +323,7 @@ test('the empty state points at the control that actually exists', async () => {
       <CollectionsPage shellConfig={{ enableNewChrome: true }} />
     </MemoryRouter>,
   )
-  expect(await screen.findByText(/from New collection above/)).toBeInTheDocument()
+  expect(await screen.findByText(/from New shelf above/)).toBeInTheDocument()
 })
 
 test('new chrome still says which collection you are looking at', async () => {

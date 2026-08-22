@@ -17,26 +17,15 @@
   gap: 0.4rem;
 }
 
-.gt-trailers__actions button,
-.gt-trailers__filter-toggle,
-.gt-trailers__filter-actions button,
-.gt-trailers__modal-actions button {
-  padding: 0.4rem 0.75rem;
-  background: transparent;
-  border: 1px solid var(--gt-border);
-  border-radius: 4px;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.gt-trailers__actions button:hover,
-.gt-trailers__filter-toggle:hover,
-.gt-trailers__filter-actions button:hover,
-.gt-trailers__modal-actions button:hover {
-  border-color: var(--gt-accent);
-  color: var(--gt-accent);
-}
+/* No local button skin here any more (W28).
+ *
+ * These four selectors redrew every button on the page — a 4px radius, a
+ * hairline border, transparent fill — and because they are element-plus-class
+ * they outranked `.gt-btn` and `.gt-cbtn`. So a page that *did* carry the
+ * shared classes still rendered a button nobody else in the product has, which
+ * is exactly the "trailers buttons don't match" report. The markup uses the
+ * shared primitives now and this stylesheet no longer has an opinion about how
+ * a button looks. */
 
 .gt-trailers__filters {
   display: flex;

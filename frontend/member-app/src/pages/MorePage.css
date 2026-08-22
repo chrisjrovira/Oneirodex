@@ -154,6 +154,34 @@
   border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
 }
 
+/* Inbox controls, sitting on the heading row (W28): the timestamp, then the
+   refresh glyph, then the library sweep. `margin-left: auto` rather than
+   `justify-content: space-between` on the parent, because the parent also has
+   to keep working for the section heads that carry no tools at all. */
+.gt-updates__inbox-tools {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gt-space-3);
+  flex-wrap: wrap;
+}
+
+/* Glyph only. The label is on `aria-label`: beside a control already captioned
+   by the timestamp it stands next to, the word "Refresh" is a third piece of
+   text in a row that is meant to read at a glance. */
+.gt-updates__refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--gt-space-3);
+}
+
+.gt-updates__scan-result {
+  margin: 0 0 0.6rem;
+  font-size: var(--gt-font-md);
+  color: var(--gt-text-muted);
+}
+
 .gt-updates__section-head h2,
 .gt-updates__inbox > .gt-updates__section-head h2 {
   margin: 0;

@@ -1,11 +1,23 @@
 ﻿import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ContextBar } from '../chrome/ContextBar'
+import { RailIcon } from '../chrome/railIcons'
 import './HelpPage.css'
 
+/**
+ * `tone` is one of the five semantic colours the theme guarantees — accent,
+ * info, success, warning, danger (see gt-tokens.css). It is not decoration for
+ * its own sake: twelve identical grey panels give the eye nothing to navigate
+ * by, so a section is found by re-reading every heading. Colour plus a glyph
+ * makes "the one about downloads" findable at a glance, and taking both from
+ * the token set means every theme and icon pack restyles them for free rather
+ * than fighting a palette invented here.
+ */
 const FAQ_SECTIONS = [
   {
     id: 'getting-started',
+    icon: 'discover',
+    tone: 'accent',
     title: 'Getting started',
     summary: 'Nav, Cmd+K, details, health checks',
     items: [
@@ -20,6 +32,8 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'library',
+    icon: 'library',
+    tone: 'info',
     title: 'Library & signals',
     summary: 'Favorites, chips, tiles, trailers',
     items: [
@@ -37,6 +51,8 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'systems',
+    icon: 'systems',
+    tone: 'warning',
     title: 'Systems & themes',
     summary: 'Platform browse and accents',
     items: [
@@ -49,6 +65,8 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'downloads',
+    icon: 'downloads',
+    tone: 'info',
     title: 'Downloads',
     summary: 'Zip queue and retention',
     items: [
@@ -58,6 +76,8 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'social',
+    icon: 'friends',
+    tone: 'success',
     title: 'Social & voice',
     summary: 'Friends, chat, LiveKit',
     items: [
@@ -69,16 +89,20 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'updates-calendar',
+    icon: 'calendar',
+    tone: 'warning',
     title: 'Updates & calendar',
     summary: 'Freshness inbox and release window',
     items: [
       'More → Updates: freshness inbox auto-refreshes while the tab is visible; use Refresh for an immediate pull. Search stores and apply packs stay as before (dense rows, less glass card clutter).',
-      'Updates also teases upcoming releases; open the full Release calendar for List / Month / Agenda views (remembered in-browser) plus Ahead/Behind window controls.',
+      'Updates also teases upcoming releases; open the full Release calendar for List or Month views (remembered in-browser) plus Ahead/Behind window controls. Month shows each day’s cover art and cycles through them when more than one title lands that day.',
       'More → Calendar is IGDB metadata only (no downloads). Wishlist and Playtime use the same dense More-page rhythm (honest empty/error).',
     ],
   },
   {
     id: 'free-games',
+    icon: 'news',
+    tone: 'success',
     title: 'Free games',
     summary: 'News claims and ownership sync',
     items: [
@@ -89,6 +113,8 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'translations',
+    icon: 'content',
+    tone: 'info',
     title: 'Translations & patches',
     summary: 'Locale chips and Flips',
     items: [
@@ -99,6 +125,8 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'cheats',
+    icon: 'integrations',
+    tone: 'warning',
     title: 'Cheats (.cht)',
     summary: 'Details create / upload / play',
     items: [
@@ -111,6 +139,8 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'browser-play',
+    icon: 'big-picture',
+    tone: 'danger',
     title: 'Browser play & BIOS',
     summary: 'Firmware honesty, extractors, missing paths',
     items: [
@@ -122,6 +152,8 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'controllers-vr',
+    icon: 'vr',
+    tone: 'accent',
     title: 'Controllers & VR',
     summary: 'Big Picture and headset browse',
     items: [
@@ -132,6 +164,8 @@ const FAQ_SECTIONS = [
   },
   {
     id: 'support',
+    icon: 'report',
+    tone: 'danger',
     title: 'Need help?',
     summary: 'Report issue and docs',
     items: [
@@ -194,21 +228,44 @@ export function HelpPage({ shellConfig = {} }) {
         <ContextBar
           summary={`${openIds.size} of ${FAQ_SECTIONS.length} open`}
           actions={
+            /* Expand first, collapse last, with the unrelated link between
+               them: the two are opposite ends of one range, and sitting them
+               side by side made a mis-click cost the whole page's state. */
             <>
               <button type="button" className="gt-cbtn" onClick={expandAll}>
                 Expand all
               </button>
-              <button type="button" className="gt-cbtn" onClick={collapseAll}>
-                Collapse all
-              </button>
               <Link className="gt-cbtn" to="/report">
                 Report an issue
               </Link>
+              <button type="button" className="gt-cbtn" onClick={collapseAll}>
+                Collapse all
+              </button>
             </>
           }
         />
       ) : null}
     <div className="gt-more-page gt-help">
+      {/* Not `gt-page-header`: that block is deliberately collapsed under the
+          v2 chrome because the bar already names the page. Help is the one page
+          where the name is not the point — a member arrives here stuck, and the
+          first thing on screen should say what this page can do for them and
+          how it is organised. So it is its own banner, and it says something the
+          bar does not. */}
+      {useNewChrome ? (
+      <header className="gt-help__hero">
+        <span className="gt-help__hero-mark" aria-hidden="true">
+          <RailIcon name="help" size={26} />
+        </span>
+        <div className="gt-help__hero-copy">
+          <h1 className="gt-help__hero-title">How GameTheca works</h1>
+          <p className="gt-help__hero-lede">
+            Twelve short sections, colour-coded by topic. Open one for detail, or
+            use Expand all in the bar above to read straight through.
+          </p>
+        </div>
+      </header>
+      ) : null}
       {useNewChrome ? null : (
         <>
           <div className="gt-page-header">
@@ -222,12 +279,12 @@ export function HelpPage({ shellConfig = {} }) {
             <button type="button" className="gt-btn gt-btn--ghost" onClick={expandAll}>
               Expand all
             </button>
-            <button type="button" className="gt-btn gt-btn--ghost" onClick={collapseAll}>
-              Collapse all
-            </button>
             <Link className="gt-help__support-link" to="/report">
               Report an issue
             </Link>
+            <button type="button" className="gt-btn gt-btn--ghost" onClick={collapseAll}>
+              Collapse all
+            </button>
           </div>
         </>
       )}
@@ -241,7 +298,15 @@ export function HelpPage({ shellConfig = {} }) {
           is the same button in the same place as everywhere else. */}
       <nav className="gt-seg gt-help__toc" aria-label="Help topics">
         {FAQ_SECTIONS.map((section) => (
-          <a key={section.id} href={`#${section.id}`} className="gt-seg__item gt-help__toc-chip">
+          <a
+            key={section.id}
+            href={`#${section.id}`}
+            className="gt-seg__item gt-help__toc-chip"
+            data-tone={section.tone}
+          >
+            <span className="gt-help__toc-mark" aria-hidden="true">
+              <RailIcon name={section.icon} size={14} />
+            </span>
             {section.title}
           </a>
         ))}
@@ -254,6 +319,7 @@ export function HelpPage({ shellConfig = {} }) {
             <section
               key={section.id}
               id={section.id}
+              data-tone={section.tone}
               className={`gt-help__section${open ? ' is-open' : ''}`}
             >
               <h2>
@@ -262,6 +328,9 @@ export function HelpPage({ shellConfig = {} }) {
                   aria-expanded={open}
                   onClick={() => toggle(section.id)}
                 >
+                  <span className="gt-help__section-mark" aria-hidden="true">
+                    <RailIcon name={section.icon} size={18} />
+                  </span>
                   <span className="gt-help__section-copy">
                     <span className="gt-help__section-title">{section.title}</span>
                     <span className="gt-help__section-summary">{section.summary}</span>
