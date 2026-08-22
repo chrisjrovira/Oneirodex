@@ -104,6 +104,10 @@ def get_libraries():
             'uuid': lib.uuid,
             'name': lib.name,
             'image_url': lib.image_url if lib.image_url else url_for('static', filename='newstyle/default_library.jpg'),
+            # The admin Scan button posts no folder and lets the scan route fall
+            # back to this. Sending it lets the button say *why* it is disabled
+            # instead of posting a request the route is bound to reject.
+            'last_scan_folder': lib.last_scan_folder or '',
             **_library_watch_payload(lib),
         } for lib in libraries_query
     ]
