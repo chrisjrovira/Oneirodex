@@ -121,6 +121,6 @@ Two things worth knowing before the next pass:
   Always check the exit code, and eyeball the hero before shipping.
 
 Still owed (needs data or config the capture box does not have): Calendar
-List/Month/Agenda · News featured · play honesty / artistic rooms · Library
+List/Month · News featured · play honesty / artistic rooms · Library
 typeahead / MISSING · Admin Extensions/Stock/Art Studio · Friends companion
 pop-out · voice lobby with LiveKit secrets. **Do not invent pixels** for these.

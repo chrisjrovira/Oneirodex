@@ -9,6 +9,26 @@ Admin → **Discovery Sections Management** (`/admin/discovery_sections`) contro
 - **Built-in shelves** (Continue Playing, New Arrivals, Most Favorited, libraries, …) can be **reordered** and **hidden** (visibility toggle) but not deleted.
 - **Custom zones** (`section_type = 'custom'`) are admin-authored shelves, shown with a **Custom** badge. Add one with **+ Add Zone**; edit/delete with the row's pencil/trash icons.
 
+## Latest Games vs New Library Games
+
+Two shelves that sound alike and answer different questions. They used to be one
+shelf answering the second question under the first one's name.
+
+| Identifier | Order | Answers |
+|---|---|---|
+| `latest_games` | `first_release_date` descending, **future dates excluded** | "What has come out recently, in the world?" |
+| `new_library_games` | `date_created` descending | "What has recently appeared *here*?" |
+
+`latest_games` skips unreleased titles on purpose — that is the `upcoming`
+shelf's subject, and leaving them in made both shelves open with the same game.
+A title with no known release date never appears in `latest_games`; it will
+still show under `new_library_games`.
+
+`new_library_games` is seeded for new installs and added to existing ones the
+next time init runs (both seeders are additive and skip identifiers that already
+exist). If you do not see it, it has not been seeded yet — add it by hand with
+identifier `new_library_games`, or re-run init.
+
 ## Storefront shelves
 
 Two built-in shelves give `/discover` a storefront feel. Both are derived

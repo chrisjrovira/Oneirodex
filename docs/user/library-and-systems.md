@@ -54,7 +54,9 @@ Play matrix: [browser-play.md](browser-play.md).
 
 ## Discover & more
 
-- **Discover** (`/discover`) — storefront shelves: **Curated for you** (unplayed titles in genres you already favourite), **Upcoming** (releases still ahead), plus whatever shelves your admin has arranged. Some shelves are **timed events** and appear only during their run. A shelf with nothing honest to show is hidden rather than padded — a brand-new account with no favourites yet will see fewer shelves until it has something to go on.
+- **Discover** (`/discover`) — storefront shelves: **Curated for you** (unplayed titles in genres you already favourite), **Latest Games** (newest *releases*), **New Library Games** (newest titles added *here*), **Upcoming** (releases still ahead), plus whatever shelves your admin has arranged. Some shelves are **timed events** and appear only during their run. A shelf with nothing honest to show is hidden rather than padded — a brand-new account with no favourites yet will see fewer shelves until it has something to go on.
+- Each Discover shelf is **one row you scroll sideways**, not a wrapping grid. Hover near either end and the row scrolls itself, faster the closer you get to the edge; arrow buttons appear over the end tiles for a click instead. The tile-size slider in the bar resizes Discover tiles as well as Library ones.
+- **Pin a shelf** with the pin button on its heading to keep it at the top of Discover. A pinned shelf is marked with an accent edge and a *Pinned* chip. Pins are stored **per device** (browser local storage), so pinning on the TV does not rearrange Discover on your phone.
 - **Favorites**, **Collections**, **Wishlist**, **Updates** (freshness inbox + calendar teaser), **Ownership**, **Big Picture**, optional **VR** / **Trailers** / **Calendar** — under primary nav or **More**.
 - **Admin** is not a primary TopNav button beside Favorites — admins reach `/admin/dashboard` from the section **context** strip (and Ctrl+K → Admin).
 - **Trailers** empty library returns HTTP 200 with a CTA (not an error) — open a title with trailer metadata or ask an admin to enrich covers/videos.
