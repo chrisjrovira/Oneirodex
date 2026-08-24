@@ -162,16 +162,6 @@ export function NotificationsPage({ shellConfig = {} }) {
           activeView={filter}
           onSelectView={setFilter}
           summary={unread > 0 ? `${unread} unread` : 'All caught up'}
-          actions={
-            <button
-              type="button"
-              className="gt-cbtn"
-              disabled={busy || unread === 0}
-              onClick={() => void markAll()}
-            >
-              Mark all read
-            </button>
-          }
         />
       ) : null}
     <div className="gt-more-page gt-notifications">
@@ -206,14 +196,8 @@ export function NotificationsPage({ shellConfig = {} }) {
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              className="gt-btn gt-btn--ghost"
-              disabled={busy || unread === 0}
-              onClick={() => void markAll()}
-            >
-              Mark all read
-            </button>
+            {/* Mark all read moved to the Inbox heading row for both chromes —
+                one control in one place, beside the list it acts on. */}
           </div>
         </div>
       )}
@@ -250,9 +234,25 @@ export function NotificationsPage({ shellConfig = {} }) {
       ) : null}
 
       <section className="gt-notifications__inbox" aria-labelledby="notifications-inbox-heading">
-        <h2 className="gt-notifications__section-title" id="notifications-inbox-heading">
-          Inbox
-        </h2>
+        {/* Mark all read sits on the Inbox heading row, not in the top bar
+            (W28). It acts on the list directly below it, and the bar is where
+            controls that act on the *page* live — so up there it was a long
+            reach from the thing it changes, and it was the only page action in
+            the bar competing with the view segments. On the heading row it
+            reads as part of the list it empties. */}
+        <div className="gt-notifications__inbox-head">
+          <h2 className="gt-notifications__section-title" id="notifications-inbox-heading">
+            Inbox
+          </h2>
+          <button
+            type="button"
+            className="gt-btn gt-btn--ghost gt-btn--sm gt-notifications__mark-all"
+            disabled={busy || unread === 0}
+            onClick={() => void markAll()}
+          >
+            Mark all read
+          </button>
+        </div>
         {visible.length === 0 ? (
           <p className="gt-more-page__lede">
             {filter === 'archive'

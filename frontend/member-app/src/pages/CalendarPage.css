@@ -1,4 +1,4 @@
-/* Release calendar — List / Month / Agenda; aurora densify; no card clutter */
+/* Release calendar — List / Month; aurora densify; no card clutter */
 
 .gt-calendar__header {
   display: flex;
@@ -240,7 +240,9 @@
   align-items: center;
   justify-content: flex-start;
   gap: 0.2rem;
-  min-height: 3.1rem;
+  /* Tall enough to hold a cover thumbnail under the date (W28). The dots this
+     replaced needed 0.4rem; artwork needs a box you can recognise a game in. */
+  min-height: 6.4rem;
   padding: 0.35rem 0.2rem 0.4rem;
   border: 1px solid transparent;
   border-radius: 6px;
@@ -277,19 +279,69 @@
   line-height: 1;
 }
 
-.gt-calendar__markers {
-  display: flex;
-  gap: 0.15rem;
-  align-items: center;
-  justify-content: center;
-  min-height: 0.4rem;
+/* --- Day artwork (W28) ---------------------------------------------------
+ *
+ * Replaces `.gt-calendar__markers` / `.gt-calendar__dot`: up to three identical
+ * dots told you a day was busy and nothing else, so the month grid had to be
+ * clicked cell by cell to be read at all. */
+.gt-calendar__day-art {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 2.9rem;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--gt-radius-xs);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--gt-accent) 12%, var(--gt-surface-2));
 }
 
-.gt-calendar__dot {
-  width: 0.35rem;
-  height: 0.35rem;
-  border-radius: 50%;
-  background: var(--gt-accent);
+.gt-calendar__day-cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Each swap is a new element (keyed on the URL), so this plays on arrival
+     rather than needing a transition between two states. */
+  animation: gt-calendar-cover-in var(--gt-motion-slow) var(--gt-motion-ease);
+}
+
+@keyframes gt-calendar-cover-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* No artwork from IGDB: the initial, rather than an empty box that reads as a
+   failed image. */
+.gt-calendar__day-cover--blank {
+  display: grid;
+  place-items: center;
+  font-size: var(--gt-font-md);
+  font-weight: 700;
+  color: var(--gt-accent);
+}
+
+/* "+2": how many more titles are behind the one currently showing. */
+.gt-calendar__day-more {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  padding: 0 0.2rem;
+  border-radius: var(--gt-radius-xs);
+  background: color-mix(in srgb, var(--gt-bg) 82%, transparent);
+  color: var(--gt-text);
+  font-size: var(--gt-font-xs);
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-calendar__day-cover {
+    animation: none;
+  }
 }
 
 .gt-calendar__day-panel {
@@ -324,82 +376,24 @@
   border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
 }
 
-/* —— Agenda (by week) —— */
-
-.gt-calendar__agenda {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
-
-.gt-calendar__agenda-week {
-  margin: 0;
-}
-
-.gt-calendar__agenda-label {
-  margin: 0 0 0.4rem;
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-accent) 28%, transparent);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--gt-accent);
-}
-
-.gt-calendar__agenda-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.gt-calendar__agenda-row {
-  display: grid;
-  grid-template-columns: 6.5rem minmax(0, 1fr);
-  gap: 0.65rem 0.85rem;
-  align-items: baseline;
-  padding: 0.5rem 0.1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
-  position: relative;
-  padding-left: 0.85rem;
-}
-
-.gt-calendar__agenda-row::before {
-  content: '';
-  position: absolute;
-  left: 0.15rem;
-  top: 0.85rem;
-  width: 0.35rem;
-  height: 0.35rem;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--gt-accent) 70%, transparent);
-}
-
-.gt-calendar__agenda-row time {
-  font-size: 0.8rem;
-  color: var(--gt-text-muted);
-  white-space: nowrap;
-}
-
 @media (max-width: 640px) {
   .gt-calendar__day {
-    min-height: 2.6rem;
+    min-height: 5rem;
     padding: 0.25rem 0.1rem 0.3rem;
   }
 
   .gt-calendar__day-num {
     font-size: 0.78rem;
   }
+
+  .gt-calendar__day-art {
+    max-width: 2.1rem;
+  }
 }
 
 @media (max-width: 520px) {
-  .gt-calendar__row,
-  .gt-calendar__agenda-row {
+  .gt-calendar__row {
     grid-template-columns: 1fr;
     gap: 0.2rem;
-  }
-
-  .gt-calendar__agenda-row {
-    padding-left: 0.85rem;
   }
 }

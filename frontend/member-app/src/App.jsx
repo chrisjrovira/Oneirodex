@@ -424,7 +424,10 @@ export function App({ shellConfig = {} }) {
           path="/chat"
           element={
             <LazyPage>
-              <ChatPage />
+              {/* shellConfig, because in a pop-out this route *is* the app and
+                  the panel needs the viewer it would otherwise get from the
+                  dock. See ChatPage. */}
+              <ChatPage shellConfig={shellConfig} />
             </LazyPage>
           }
         />

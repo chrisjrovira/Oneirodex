@@ -152,6 +152,11 @@ export const railIconPaths = {
       <circle cx="18" cy="5.5" r="2.6" fill="currentColor" stroke="none"/>
     </>
   ),
+  // A key, not a shopping bag (W28). The bag was the `store` glyph doing double
+  // duty, and it said "buy something" on the one page that is about what you
+  // already have. Ownership here is licences held across Steam / GOG / Epic —
+  // and a game licence has been called a key for as long as it has existed, so
+  // the metaphor needs no learning.
   'ownership': (
     <>
       <circle cx="8" cy="8" r="4.2" fill="currentColor" stroke="none"/>
@@ -166,6 +171,9 @@ export const railIconPaths = {
       <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>
     </>
   ),
+  // A flag, not a beetle. The bug glyph named one *kind* of report — and at
+  // 18px a six-legged silhouette is a smudge. Flagging is the conventional verb
+  // for raising an issue, and a filled pennant on a pole survives the size.
   'report': (
     <>
       <path d="M5 21V3"/>

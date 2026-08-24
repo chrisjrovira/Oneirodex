@@ -114,22 +114,33 @@ test('view switcher persists selection in localStorage', async () => {
   expect(screen.getByRole('button', { name: 'Month' })).toHaveAttribute('aria-pressed', 'true')
   expect(window.localStorage.getItem(VIEW_KEY)).toBe('month')
 
-  await user.click(screen.getByRole('button', { name: 'Agenda' }))
-  expect(window.localStorage.getItem(VIEW_KEY)).toBe('agenda')
-  expect(screen.getByRole('button', { name: 'Agenda' })).toHaveAttribute('aria-pressed', 'true')
+  // Agenda is retired (W28) — it was List with week headings, so it never
+  // showed anything List did not.
+  expect(screen.queryByRole('button', { name: 'Agenda' })).toBeNull()
 })
 
 test('restores persisted calendar view on mount', async () => {
-  writeCalendarView('agenda')
-  expect(readCalendarView()).toBe('agenda')
+  writeCalendarView('month')
+  expect(readCalendarView()).toBe('month')
 
   render(<CalendarPage />)
   await screen.findByText('Example Title')
-  expect(screen.getByRole('button', { name: 'Agenda' })).toHaveAttribute('aria-pressed', 'true')
-  expect(screen.getByText(/Week of/i)).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Month' })).toHaveAttribute('aria-pressed', 'true')
 })
 
-test('month view renders release markers from mock data', async () => {
+test('a stored agenda view falls back to List rather than selecting nothing', () => {
+  // Anyone who last used Agenda has 'agenda' in localStorage. Accepting it
+  // would set a view id no tab matches: no button pressed and no view rendered.
+  window.localStorage.setItem(VIEW_KEY, 'agenda')
+  expect(readCalendarView()).toBe('list')
+
+  // And it must not be writable back either.
+  window.localStorage.removeItem(VIEW_KEY)
+  writeCalendarView('agenda')
+  expect(window.localStorage.getItem(VIEW_KEY)).toBeNull()
+})
+
+test('month view renders a rotating cover tile per busy day', async () => {
   const user = userEvent.setup()
   calendarApi.fetchCalendar.mockResolvedValue({
     count: 2,
@@ -167,7 +178,14 @@ test('month view renders release markers from mock data', async () => {
 
   const dayBtn = screen.getByRole('gridcell', { name: /15, 2 releases/i })
   expect(dayBtn).toHaveClass('has-releases')
-  expect(dayBtn.querySelectorAll('.gt-calendar__dot')).toHaveLength(2)
+  // Artwork, not dots (W28): one tile showing the first title, and a "+1"
+  // saying how many more are behind it.
+  expect(dayBtn.querySelectorAll('.gt-calendar__day-art')).toHaveLength(1)
+  expect(dayBtn.querySelector('.gt-calendar__day-more')).toHaveTextContent('+1')
+  expect(dayBtn.querySelector('.gt-calendar__day-art')).toHaveAttribute(
+    'title',
+    'August Drop',
+  )
 
   await user.click(dayBtn)
   const panel = screen.getByText(/Aug/i, { selector: 'h4' }).closest('.gt-calendar__day-panel')

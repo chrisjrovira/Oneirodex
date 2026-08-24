@@ -1,14 +1,15 @@
 """Updates inbox — freshness-behind games in one place."""
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from flask import jsonify, request
+from flask import current_app, jsonify, request
 from flask_login import current_user, login_required
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 
 from gametheca import db
 from gametheca.models import Game, GameExtra, GameUpdate
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.library_acl import apply_game_access_filters
 from gametheca.utils.lifecycle import web_client_connected
 from gametheca.utils.secondary_scrapers import (
@@ -17,6 +18,17 @@ from gametheca.utils.secondary_scrapers import (
 )
 
 from . import apis_bp
+
+# One click = one bounded batch. Each title is a live probe against Steam / GOG,
+# so an unbounded "scan my whole library" would sit on a request thread for
+# minutes and rate-limit the caller out of the stores it depends on. The page
+# reports what is left and the member clicks again — slower, but honest about
+# what it is doing and safe to press twice.
+UPDATES_SCAN_DEFAULT = 25
+UPDATES_SCAN_MAX = 50
+
+# Matches routes_apis/game.py: a title probed inside this window is not re-probed.
+UPDATES_SCAN_STALE_SECONDS = 86400
 
 
 def _basename_label(path: str, fallback: str) -> str:
@@ -268,3 +280,116 @@ def updates_store_search():
             row['library_url'] = None
 
     return jsonify({'q': name, 'source': source, 'results': results[: limit * 2]})
+
+
+def _updates_scan_due_query(library_uuid=None, cutoff=None):
+    """Accessible titles whose freshness has never been probed, or is stale.
+
+    Ordered oldest-first with un-probed titles ahead of everything, so repeated
+    clicks sweep the library instead of re-checking the same head of the list.
+    """
+    query = apply_game_access_filters(select(Game), current_user)
+    if library_uuid:
+        query = query.filter(Game.library_uuid == library_uuid)
+    if cutoff is not None:
+        query = query.filter(
+            or_(
+                Game.freshness_checked_at.is_(None),
+                Game.freshness_checked_at < cutoff,
+            )
+        )
+    return query
+
+
+@apis_bp.route('/updates/scan', methods=['POST'])
+@login_required
+def updates_scan():
+    """Re-probe library titles for store updates, oldest-checked first.
+
+    The inbox is a *readout*: it lists what a previous probe already found. So
+    a member with a fresh install, or one whose titles have not been probed
+    since they were added, saw an empty inbox and had no way to make it fill —
+    the only re-probe controls were per-title, the library multi-select (max 50,
+    and only for titles you had already found), and an admin-only bulk refresh.
+    This is the member-facing "check my library for updates".
+
+    Body JSON:
+      limit (int, default 25, max 50) — titles probed in this batch
+      library_uuid (str, optional) — scope to one library
+      only_stale (bool, default true) — skip anything probed in the last 24h
+
+    Returns ``checked`` / ``behind`` / ``errors`` for the batch and ``remaining``
+    so the page can say how much of the library is still unswept.
+    """
+    from gametheca.utils.freshness import check_and_store_freshness
+
+    data = request.get_json(silent=True) or {}
+    try:
+        limit = int(data.get('limit') or UPDATES_SCAN_DEFAULT)
+    except (TypeError, ValueError):
+        limit = UPDATES_SCAN_DEFAULT
+    limit = max(1, min(limit, UPDATES_SCAN_MAX))
+    library_uuid = (data.get('library_uuid') or '').strip() or None
+    only_stale = bool(data.get('only_stale', True))
+
+    # Naive UTC: `freshness_checked_at` is TIMESTAMP WITHOUT TIME ZONE, which
+    # Postgres will not compare against an aware value.
+    cutoff = (
+        datetime.now(timezone.utc).replace(tzinfo=None)
+        - timedelta(seconds=UPDATES_SCAN_STALE_SECONDS)
+        if only_stale
+        else None
+    )
+
+    due = _updates_scan_due_query(library_uuid, cutoff)
+    total_due = db.session.execute(
+        select(func.count()).select_from(due.subquery())
+    ).scalar() or 0
+
+    games = db.session.execute(
+        due.order_by(
+            Game.freshness_checked_at.asc().nullsfirst(),
+            Game.name.asc(),
+        ).limit(limit)
+    ).scalars().all()
+
+    checked = 0
+    behind = []
+    errors = []
+    for game in games:
+        try:
+            # Warm the relationships the comparison walks, inside the try: a
+            # lazy load that fails must be an error for this title, not a 500
+            # for the batch.
+            _ = list(game.updates or [])
+            _ = list(game.extras or [])
+            _ = list(game.urls or [])
+            public = check_and_store_freshness(game, commit=False, db_session=db.session)
+            checked += 1
+            if public.get('status') in ('behind', 'heuristic_behind'):
+                behind.append({
+                    'uuid': game.uuid,
+                    'name': game.name,
+                    'status': public.get('status'),
+                })
+        except Exception as exc:  # noqa: BLE001 — one bad title must not end the sweep
+            errors.append({'uuid': game.uuid, 'name': game.name, 'error': str(exc)})
+
+    try:
+        db.session.commit()
+    except Exception as exc:  # noqa: BLE001
+        db.session.rollback()
+        current_app.logger.warning('updates scan commit failed: %s', exc)
+        return api_error('Could not save the scan results', code='internal')
+
+    return api_ok({
+        'requested': len(games),
+        'checked': checked,
+        'behind': behind,
+        'behind_count': len(behind),
+        'errors': errors,
+        # What is left *after* this batch, so "Scan again" can say how much.
+        'remaining': max(0, total_due - len(games)),
+        'limit': limit,
+        'only_stale': only_stale,
+    })

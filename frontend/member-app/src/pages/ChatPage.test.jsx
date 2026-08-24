@@ -86,3 +86,44 @@ test('/chat deep-link opens chat event and redirects to library', async () => {
     window.removeEventListener('gt-open-chat-panel', onOpen)
   }
 })
+
+test('the pop-out renders chat alone, with no redirect to the library', async () => {
+  // The regression this pins: ChatPage redirected unconditionally, and
+  // `navigate('/library')` drops the query string — so `?popout=1` was lost,
+  // the shell stopped treating the window as chrome-less, and a 420px pop-out
+  // rendered the rail, the top bar and the library grid with chat sliding over
+  // them. "A minimised version of the whole site."
+  const onOpen = vi.fn()
+  window.addEventListener('gt-open-chat-panel', onOpen)
+  const original = window.location.search
+  try {
+    // jsdom's location is not writable; the module reads window.location.search
+    // directly, so redefining just that property is enough and is reversible.
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, search: '?popout=1&channel=1' },
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/chat']}>
+        <Routes>
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/library" element={<div>LibraryPage</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole('button', { name: /household/i })).toBeInTheDocument()
+    expect(screen.queryByText('LibraryPage')).not.toBeInTheDocument()
+    // No slide-out request either: the window *is* the chat, so asking the
+    // (absent) panel to open would be asking the main window to open a second.
+    expect(onOpen).not.toHaveBeenCalled()
+    expect(document.querySelector('.gt-chat-standalone')).not.toBeNull()
+  } finally {
+    window.removeEventListener('gt-open-chat-panel', onOpen)
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, search: original },
+    })
+  }
+})

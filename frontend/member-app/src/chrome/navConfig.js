@@ -86,6 +86,29 @@ export function getMoreGroups(options = {}) {
   return grouped
 }
 
+/**
+ * Routes where the top bar's tile-size slider actually does something.
+ *
+ * It was rendered on every page. `--gt-tile-min` is only read by the game grid
+ * (GameGrid.js) and by the card geometry derived from it in components.css, so
+ * on Help, Notifications, Calendar, Updates and the rest the slider moved, saved
+ * a preference, and changed nothing anyone could see — a control that lies
+ * about what it does. These three routes are the ones that render tiles.
+ *
+ * Systems is deliberately *not* here: its grid takes `--gt-tile-gap` for
+ * spacing but sizes its own cards, so the slider would nudge the gutters and
+ * leave the tiles alone — which is the same complaint in a quieter form.
+ */
+export const TILE_SIZE_PATHS = ['/discover', '/library', '/favorites']
+
+/** @param {string} pathname */
+export function hasTileSizeControl(pathname) {
+  const path = (pathname || '/').replace(/\/+$/, '') || '/'
+  return TILE_SIZE_PATHS.some(
+    (base) => path === base || path.startsWith(`${base}/`),
+  )
+}
+
 const SECTION_HOME = {
   '/discover': { to: '/discover', label: 'Home' },
   '/library': { to: '/library', label: 'Library home' },

@@ -129,6 +129,34 @@ def _access_filtered(query, user, limit: int) -> list[Game]:
 
 
 def _latest_games(user, limit):
+    """Newest *to the world*, not newest to this install.
+
+    This ordered by `date_created` — the moment a scan first wrote the row — so
+    "Latest Games" was a list of whatever was imported most recently, and a
+    fresh install led with a thirty-year-old cartridge under a heading that
+    promises new releases.
+
+    Future dates are excluded rather than sorted to the top: an unreleased title
+    is the Upcoming row's subject, and letting it lead this one makes both rows
+    open with the same game. Naive UTC, because `first_release_date` is
+    TIMESTAMP WITHOUT TIME ZONE and Postgres will not compare that against an
+    aware value.
+
+    The question the old ordering answered is still worth asking, and it has its
+    own row now — see `_new_library_games`.
+    """
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    return _access_filtered(
+        select(Game)
+        .filter(Game.first_release_date.isnot(None), Game.first_release_date <= now)
+        .order_by(Game.first_release_date.desc()),
+        user,
+        limit,
+    )
+
+
+def _new_library_games(user, limit):
+    """What "Latest Games" used to mean: newest row in *this* library."""
     return _access_filtered(
         select(Game).order_by(Game.date_created.desc()), user, limit
     )
@@ -389,6 +417,10 @@ register(
 
 
 register(RowSpec('latest_games', family='chart', priority=0.5), _latest_games)
+register(
+    RowSpec('new_library_games', family='chart', priority=0.45),
+    _new_library_games,
+)
 register(RowSpec('most_downloaded', family='chart', priority=0.4), _most_downloaded)
 register(RowSpec('highest_rated', family='chart', priority=0.4), _highest_rated)
 register(RowSpec('last_updated', family='chart', priority=0.3), _last_updated)

@@ -131,6 +131,13 @@ def discovery_sections() -> str:
         if section.identifier == 'libraries':
             count = db.session.execute(select(func.count(Library.uuid))).scalar()
         elif section.identifier == 'latest_games':
+            # Counts what the shelf can actually draw from: titles with a known
+            # release date. See routes_discover — this shelf is newest released,
+            # not newest imported.
+            count = db.session.execute(
+                select(func.count(Game.id)).where(Game.first_release_date != None)  # noqa: E711
+            ).scalar()
+        elif section.identifier == 'new_library_games':
             count = db.session.execute(select(func.count(Game.id))).scalar()
         elif section.identifier == 'most_downloaded':
             count = db.session.execute(select(func.count(Game.id)).where(Game.times_downloaded > 0)).scalar()

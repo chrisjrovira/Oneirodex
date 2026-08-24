@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { familyForPlatform } from '../chrome/platformSkins'
 import { roomIdForPlatform, roomStyle } from '../chrome/playRooms'
-import { SystemFamilyMark } from '../chrome/systemMarks'
+import { SystemGlyph } from '../components/systemMotifArt'
 import './SystemsPage.css'
 
 async function fetchLibraryPlatforms({ signal } = {}) {
@@ -155,8 +155,13 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
                     className="gt-systems-tile__main"
                     to={`/library?library_platform=${encodeURIComponent(value)}`}
                   >
+                    {/* The system itself, not its manufacturer (W28). One
+                        Nintendo mark stood in for NES, SNES, N64, GameCube,
+                        Wii and Switch, on a coloured plate that made the tile
+                        about the plate. SystemGlyph draws the per-system motif
+                        the loading states already use. */}
                     <span className="gt-systems-tile__mark" aria-hidden="true">
-                      <SystemFamilyMark family={group.id} />
+                      <SystemGlyph platformValue={value} family={group.id} />
                     </span>
                     <span className="gt-systems-tile__body">
                       <span className="gt-systems-tile__name">{platform.name || value}</span>

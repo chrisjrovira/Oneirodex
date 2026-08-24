@@ -33,7 +33,7 @@
      reference. A horizontal row caps the mark at the line height. */
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--gt-space-3);
   min-height: 9.5rem;
   padding: var(--gt-card-pad);
@@ -55,64 +55,111 @@
   background: color-mix(in srgb, var(--gt-platform-accent) 8%, var(--gt-card-bg));
 }
 
+/* Centred (W28): the glyph is the card's subject, so it sits in the middle of
+   it with the name underneath, rather than tucked into a corner beside a stack
+   of left-aligned counts. */
 .gt-systems-tile__main {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
   gap: var(--gt-space-3);
   flex: 1 1 auto;
   min-width: 0;
   width: 100%;
 }
 
+/* No plate behind the glyph (W28).
+ *
+ * It sat on a filled, rounded square in the manufacturer's brand colour, which
+ * made every tile read as "a coloured chip with some text" — the chip was the
+ * loudest thing on the card and it carried no information the group heading was
+ * not already giving. The drawing alone, larger, in the platform accent, is the
+ * card's subject; the tile's own surface is its background. */
 .gt-systems-tile__mark {
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  /* The hero. Roughly 2.5x the old 2.35rem so the console reads at a glance
-     across the grid, which is what the reference gets right. */
-  width: 4rem;
-  height: 4rem;
-  border-radius: var(--gt-radius-lg);
-  color: var(--gt-accent-contrast);
-  background: var(--gt-platform-accent);
+  width: 5.5rem;
+  height: 5.5rem;
+  color: var(--gt-platform-accent);
+  background: none;
+  transition: transform var(--gt-motion-base) var(--gt-motion-ease);
 }
 
 .gt-systems-tile__mark svg {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 100%;
+  height: 100%;
+}
+
+/* The glyph holds still here.
+ *
+ * `SystemGlyph` draws the motif built for *loading* states, where a pulsing LED
+ * and a sweeping scanline mean "still working". On a page that shows twenty of
+ * them at rest they mean nothing, and twenty infinite animations running for as
+ * long as the page is open is a lot of compositing to say it. The opacity
+ * levels those rules set are kept — they are what gives the drawing its depth —
+ * and only the motion is dropped. Higher specificity than LoadingMotif.css on
+ * purpose; that file owns the loading surface, this one owns Systems. */
+.gt-systems-tile__mark .gt-sysmotif__buttons circle,
+.gt-systems-tile__mark .gt-sysmotif__scanline,
+.gt-systems-tile__mark .gt-sysmotif__led,
+.gt-systems-tile__mark .gt-sysmotif__platter,
+.gt-systems-tile__mark .gt-sysmotif__head {
+  animation: none;
+}
+
+/* Without the press animation the face buttons sit at 0.25 and read as absent,
+   so the resting state has to be set rather than inherited from a keyframe. */
+.gt-systems-tile__mark .gt-sysmotif__buttons circle,
+.gt-systems-tile__mark .gt-sysmotif__led {
+  opacity: 0.85;
+}
+
+.gt-systems-tile:hover .gt-systems-tile__mark,
+.gt-systems-tile:focus-within .gt-systems-tile__mark {
+  transform: scale(1.07);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-systems-tile__mark {
+    transition: none;
+  }
+
+  .gt-systems-tile:hover .gt-systems-tile__mark,
+  .gt-systems-tile:focus-within .gt-systems-tile__mark {
+    transform: none;
+  }
 }
 
 .gt-systems-group[data-family='nintendo'] .gt-systems-tile__mark {
-  background: #e60012;
+  color: #e60012;
 }
 
 .gt-systems-group[data-family='sony'] .gt-systems-tile__mark {
-  background: #0070d1;
+  color: #0070d1;
 }
 
 .gt-systems-group[data-family='xbox'] .gt-systems-tile__mark {
-  background: #2fd67b;
-  color: #0b0d10;
+  color: #2fd67b;
 }
 
 .gt-systems-group[data-family='sega'] .gt-systems-tile__mark {
-  background: #1a66ff;
+  color: #1a66ff;
 }
 
 .gt-systems-group[data-family='atari'] .gt-systems-tile__mark {
-  background: #f5a623;
-  color: #0b0d10;
+  color: #f5a623;
 }
 
 .gt-systems-group[data-family='pc'] .gt-systems-tile__mark {
-  background: var(--gt-accent);
-  color: var(--gt-accent-contrast);
+  color: var(--gt-accent);
 }
 
 .gt-systems-tile__body {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.15rem;
   min-width: 0;
 }

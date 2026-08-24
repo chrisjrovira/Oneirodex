@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ContextBar, Popover } from '../chrome/ContextBar'
+import { RailIcon } from '../chrome/railIcons'
 import { createCollection, deleteCollection, fetchCollections } from '../api/collections'
 import './Collections.css'
 
@@ -103,7 +104,12 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
         <ContextBar
           summary={collections ? `${collections.length} shelves` : null}
           actions={
-            <Popover label="New collection">
+            /* "New shelf", with the same glyph the rail uses for Collections.
+               The page calls them shelves in its own copy and its own count, so
+               a button labelled "New collection" was the only place the word
+               changed — which is why there appeared to be "no way to make
+               shelves". A Collection *is* a shelf; see models.Collection. */
+            <Popover label="New shelf" icon={<RailIcon name="collections" size={16} />}>
           <form className="gt-collections__form" onSubmit={handleCreate}>
             <label className="gt-collections__field">
               Name
@@ -134,8 +140,8 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
               />
               Public
             </label>
-            <button type="submit" disabled={creating}>
-              {creating ? 'Creating…' : 'Create'}
+            <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={creating}>
+              {creating ? 'Creating…' : 'Create shelf'}
             </button>
             {createError ? (
               <p className="gt-collections__error" role="alert">
@@ -187,8 +193,8 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
             />
             Public
           </label>
-          <button type="submit" disabled={creating}>
-            {creating ? 'Creating…' : 'Create'}
+          <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={creating}>
+            {creating ? 'Creating…' : 'Create shelf'}
           </button>
           {createError ? (
             <p className="gt-collections__error" role="alert">
@@ -202,7 +208,11 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
       {error ? (
         <div role="alert">
           <p>Unable to load collections.</p>
-          <button type="button" onClick={() => setRetryCount((n) => n + 1)}>
+          <button
+            type="button"
+            className="gt-btn"
+            onClick={() => setRetryCount((n) => n + 1)}
+          >
             Retry
           </button>
         </div>
@@ -213,7 +223,7 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
       {!error && collections && collections.length === 0 ? (
         <p>
           {useNewChrome
-            ? 'No collections yet. Create your first shelf from New collection above.'
+            ? 'No collections yet. Create your first one from New shelf above.'
             : 'No collections yet. Create your first shelf with the form above.'}
         </p>
       ) : null}
