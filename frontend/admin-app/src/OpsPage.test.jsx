@@ -252,8 +252,18 @@ test('OpsPage shows library watch off honestly', async () => {
   render(<OpsPage />)
 
   expect(await screen.findByRole('heading', { name: 'Services' })).toBeInTheDocument()
-  // Strip tile + Services row both say "Library watch"
-  expect(screen.getAllByText('Library watch').length).toBeGreaterThanOrEqual(2)
+  // Strip tile + Services row both say "Library watch".
+  //
+  // `waitFor`, not a bare `getAllByText`, because the two live in different
+  // regions of the page and awaiting the Services heading only proves that
+  // *fold* has rendered. React is free to commit the metric strip separately,
+  // so a synchronous count here asserts that both regions landed in one commit
+  // — which is a scheduling detail, not the behaviour under test. That is what
+  // failed on CI and passed locally: the count found the Services row and not
+  // yet the tile.
+  await waitFor(() =>
+    expect(screen.getAllByText('Library watch').length).toBeGreaterThanOrEqual(2),
+  )
   expect(
     screen.getByText(/Set GT_LIBRARY_WATCH=1 to enable root-folder incremental watch/),
   ).toBeInTheDocument()
@@ -461,7 +471,10 @@ test('OpsPage manual Refresh shows status; poll does not wipe content', async ()
   render(<OpsPage />)
 
   expect(await screen.findByRole('heading', { name: 'Scans' })).toBeInTheDocument()
-  expect(screen.getByText(/1\.2 ms/)).toBeInTheDocument()
+  // Same cross-region wait as the library-watch count above: the Scans heading
+  // is a fold and the ping is a strip tile, so awaiting one says nothing about
+  // the other having committed yet.
+  await screen.findByText(/1\.2 ms/)
   expect(screen.queryByText(/Loading ops summary/i)).not.toBeInTheDocument()
 
   await user.click(screen.getByRole('button', { name: /^Refresh$/i }))
