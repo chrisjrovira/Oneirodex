@@ -331,28 +331,36 @@ def initialize_discovery_sections():
             'display_order': -10
         },
         {
+            # Newest *added here*, which is what 'Latest Games' used to mean
+            # before it started answering the question its name asks.
+            'name': 'New Library Games',
+            'identifier': 'new_library_games',
+            'is_visible': True,
+            'display_order': 2
+        },
+        {
             'name': 'Most Downloaded',
             'identifier': 'most_downloaded',
             'is_visible': True,
-            'display_order': 2
+            'display_order': 3
         },
         {
             'name': 'Highest Rated',
             'identifier': 'highest_rated',
             'is_visible': True,
-            'display_order': 3
+            'display_order': 4
         },
         {
             'name': 'Last Updated',
             'identifier': 'last_updated',
             'is_visible': True,
-            'display_order': 4
+            'display_order': 5
         },
         {
             'name': 'Most Favorited',
             'identifier': 'most_favorited',
             'is_visible': True,
-            'display_order': 5
+            'display_order': 6
         }
     ]
 

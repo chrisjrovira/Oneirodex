@@ -1,19 +1,11 @@
-/* Shared geometry for the inline SVG icons in templates/partials/icons.html.
-   base.html links this stylesheet on every Jinja page, so it is the one place
-   the .gt-icon defaults live. Colour is deliberately absent: the glyphs use
-   stroke="currentColor" and inherit whatever the active theme sets.
-   Wave 2d: stroke/fill come from --gt-icon-* so each colour preset can own
-   an icon silhouette without fighting icon-pack CSS. */
-.gt-icon {
-    display: inline-block;
-    vertical-align: -0.15em;
-    flex-shrink: 0;
-    stroke-width: var(--gt-icon-stroke);
-    stroke-linecap: var(--gt-icon-linecap);
-    stroke-linejoin: var(--gt-icon-linejoin);
-    fill: var(--gt-icon-fill);
-    fill-opacity: var(--gt-icon-fill-opacity);
-}
+/* `.gt-icon` used to be defined here (W28: moved to gt-primitives.css).
+ *
+ * The old comment said this was "the one place the .gt-icon defaults live"
+ * because base.html links it on every Jinja page — but base_admin.html and
+ * base_empty.html do not, so admin pages and the pop-out hosts got no icon
+ * geometry at all and the --gt-icon-* preset tokens never reached them. It is a
+ * primitive, not a sidebar concern; gt-primitives.css is linked by all three
+ * bases and is where the motion rules for the same class now live too. */
 
 .sidebar {
     height: 100%;

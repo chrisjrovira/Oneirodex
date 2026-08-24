@@ -374,17 +374,30 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  /* Wider column and a taller card: at 16rem with a 16:9 crop these were
+     squatter than they were wide, which is what read as odd — a news card is a
+     portrait object, like the thumbnail-plus-standfirst on any games site. */
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
   gap: 0.75rem;
 }
 
 .gt-news__card {
   min-width: 0;
+  /* One height for every card, whatever the copy says.
+   *
+   * Grid stretches cards to match the tallest in *their row*, so a single long
+   * summary made one row deep and left the next one shallow — a wall of cards
+   * that stepped up and down for no reason the reader could see. The clamps on
+   * the title and summary below cap what the text can ask for, and this floor
+   * stops a headline with no summary and no artwork from asking for less. */
+  min-height: 23rem;
+  display: flex;
 }
 
 .gt-news__card-link {
   display: flex;
   flex-direction: column;
+  width: 100%;
   height: 100%;
   overflow: hidden;
   border-radius: 12px;
@@ -405,17 +418,31 @@
 .gt-news__card-art {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  /* 4:3, not 16:9 — the taller crop is most of where the extra card height
+     comes from, and it suits the portrait-ish thumbnails these feeds ship. */
+  aspect-ratio: 4 / 3;
+  flex: 0 0 auto;
   object-fit: cover;
   background: color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
 }
 
-/* A dead image URL collapses the frame instead of showing a broken icon. */
+/* A dead image URL keeps the frame and paints the empty treatment into it.
+ *
+ * This was `display: none`, which collapsed the art on that one card and left
+ * it visibly shorter than every neighbour — the same uneven-cards complaint,
+ * arriving by a different route. `alt=""` means nothing is announced and no
+ * browser draws a broken-image glyph, so the frame simply reads as artless. */
 .gt-news__card-art.is-broken {
-  display: none;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--gt-accent) 14%, transparent),
+      transparent 60%),
+    color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
 }
 
 .gt-news__card-art--empty {
+  /* A <span>, so it has no intrinsic size — aspect-ratio needs a width to work
+     from and the block above gives it one. */
   background:
     linear-gradient(135deg,
       color-mix(in srgb, var(--gt-accent) 14%, transparent),
@@ -431,15 +458,29 @@
   flex: 1 1 auto;
 }
 
+/* Both clamps use the -webkit- prefixed box properties on purpose: the
+   unprefixed `line-clamp` shorthand is still not what any shipping engine
+   implements, and every engine we target honours these. */
 .gt-news__card-title {
   font-size: 0.95rem;
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  /* Reserved, not just capped: a one-line headline must occupy the same band as
+     a two-line one or the summary below it starts at a different height. */
+  min-height: calc(2 * 1.3em);
+  overflow: hidden;
 }
 
 .gt-news__card-summary {
   font-size: 0.82rem;
   line-height: 1.45;
   color: var(--gt-text-muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
 }
 
 .gt-news__card .gt-news__meta {

@@ -66,3 +66,50 @@ test('new chrome moves the fold controls into bar two and keeps all three', asyn
     'false',
   )
 })
+
+test('the group strip leads the bar and the fold controls follow it', async () => {
+  // The topic groups are the page's navigation, so they come first; Expand and
+  // Collapse are the page's controls and follow.
+  //
+  // Expand before Collapse because they are opposite ends of one range.
+  // They are adjacent: W28 separated them with a "Report an issue" link, which
+  // was removed because Report is a rail destination and a second route to it
+  // does not belong on Help. Asserting order rather than position, so the bar
+  // can gain or lose a control without this breaking.
+  render(
+    <MemoryRouter>
+      <HelpPage shellConfig={{ enableNewChrome: true }} />
+    </MemoryRouter>,
+  )
+
+  const bar = screen
+    .getByRole('button', { name: 'Expand all' })
+    .closest('.gt-contextbar')
+  // Controls only — the open/total readout is a span and is not one of them.
+  const labels = [...bar.querySelectorAll('button, a')].map((el) =>
+    el.textContent.trim(),
+  )
+  expect(labels[0]).toBe('Start')
+  expect(labels.indexOf('Expand all')).toBeLessThan(
+    labels.indexOf('Collapse all'),
+  )
+  expect(labels[labels.length - 1]).toBe('Collapse all')
+})
+
+test('every section carries a theme tone and a glyph', async () => {
+  // Twelve identical grey panels are found by re-reading every heading. The
+  // tone must come from the token set, not from a hex picked in the page.
+  const { container } = render(
+    <MemoryRouter>
+      <HelpPage shellConfig={{ enableNewChrome: true }} />
+    </MemoryRouter>,
+  )
+
+  const sections = container.querySelectorAll('.gt-help__section')
+  expect(sections.length).toBeGreaterThan(0)
+  const allowed = new Set(['accent', 'info', 'success', 'warning', 'danger'])
+  for (const section of sections) {
+    expect(allowed.has(section.getAttribute('data-tone'))).toBe(true)
+    expect(section.querySelector('.gt-help__section-mark svg')).not.toBeNull()
+  }
+})

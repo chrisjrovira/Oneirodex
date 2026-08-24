@@ -243,3 +243,112 @@ That guard budgets one owning stylesheet per class — under `cssCodeSplit` two
 definitions resolve by load order, i.e. by the reader's navigation history — and
 it caught two separate regressions in this pass, both after they had already
 been pushed.
+
+---
+
+## W28 — UI miss sweep (human 2026-08-22)
+
+Twenty-odd reports in one message. Grouping them by what actually caused them is
+more useful than listing them, because four of them turned out to be the *same*
+CSS bug wearing different clothes.
+
+### One root cause, four reports
+
+**A scroll container clips both axes.** `overflow-x: auto` (or `overflow-y`) on
+a parent computes the other axis to `auto` as well, so anything a child paints
+outside the box is cut off — including a panel that opens downward and a tile
+that scales up.
+
+| Reported as | Where | Fix |
+|---|---|---|
+| "collections button in thn ... does nothing when you press the button" | `.gt-topbar__page` had `overflow-x: auto` and is the portal target for every page's actions | slot is `overflow: visible`; the scrolling moved inward to `.gt-contextbar__views`, which holds the segment strip and nothing that opens |
+| "wishlist ... button for request title also does not work" | same | same |
+| Help's expand/collapse (would have been next) | same | same |
+| "discover ... the row cuts off the zoom/glow" | Discover shelves scroll horizontally | `.gt-shelf__track` carries bleed padding *inside* the scroller for the 1.25 hover scale and its glow to grow into |
+
+The popovers were rendering correctly the whole time and were simply invisible.
+Worth remembering the next time a control "does nothing": check whether it is
+drawing somewhere nobody can see before assuming the handler is wrong.
+
+### The rest
+
+| Report | Cause | Fix |
+|---|---|---|
+| Admin cannot scan a library; no retry in the scan log | The React admin only ever had "Refresh all libraries"; `POST /api/admin/libraries/scan` and the Jinja restart existed but had no SPA control | Per-row **Scan** on Libraries, **Scan again** on any finished job (repeats *that* job's folder + settings), both via `useLibraryScan` with the same Queue/Force modal. `GET /api/get_libraries` now returns `last_scan_folder` so the button can disable itself honestly |
+| "favorites does not still have an icon" | `RailIcon` spread `base` from `icons.jsx`, which had **no `viewBox`** — every rail glyph was cropped to its top-left 18×18 corner. Icons drawn near the origin survived, which is why this read as one missing icon rather than one bug | `viewBox` moved into `base`, where the rest of the shared attributes already were |
+| Report / Ownership glyphs | `report` was a beetle (one *kind* of report, and a smudge at 18px); `ownership` reused the `store` shopping bag on the one page about what you already have | Speech bubble with an alert; a key. Jinja `partials/icons.html` mirrored, with `store` split back out |
+| "all icons are still not animated" | Nothing anywhere styled `.gt-icon` — buttons animated their *background* and the glyph inside sat still | One block in `gt-primitives.css`: springy hover scale, faster press, `aria-busy` spin, toggle pop, all disabled under reduced motion. Applied from the interactive ancestor, because an icon does not know it is inside a button. **Corrected since:** the block first shipped with `:is()`, which put it at (0,3,0) — an exact tie with any `.thing:hover .gt-icon` component rule, so the winner was decided by chunk load order. Now `:where()` at (0,2,0), which every component rule outranks deterministically. The dead rotating-cog rule was deleted outright: it keyed off a `data-icon` attribute that does not exist and a `.gt-icon--spin` class nothing applies, so it never matched an element. The descendant combinator was deliberately **kept** — `partials/rail.html` wraps every glyph in `<span class="gt-rail__icon">`, so narrowing to a child combinator would have silently killed the animation across the whole Jinja rail |
+| "slider button in the thn but does nothing" | `TileSizeControl` rendered on every page; `--gt-tile-min` is only read by the game grid | `hasTileSizeControl(pathname)` — Discover, Library, Favorites. Systems is deliberately excluded: it takes `--gt-tile-gap` for gutters but sizes its own cards, which is the same complaint more quietly |
+| Discover: no slider effect, broken zoom, no pinning, no edge controls, flat titles, Upcoming misaligned | Discover rendered every shelf through `GameGrid` — the *library* grid, which wraps and virtualises vertically | New `DiscoverShelf`: one horizontal track, bleed for the zoom, overlaid edge buttons, hover steering with a speed ramp, a pin with two indicators, display-face titles with an accent rule. Alignment falls out of every shelf being the same component |
+| "latest games should be new games to the world" | `latest_games` ordered by `date_created` — when a scan first wrote the row | Orders by `first_release_date` descending, future dates excluded (that is `upcoming`'s subject). The old question got its own shelf, `new_library_games` |
+| "new cards should all be the same size" / "News cards should be double the length" | Grid stretches within a row only, the summary was unclamped, and a failed image `display:none`d itself and shortened that one card | Clamped title (2 lines, reserved) and summary (4 lines), 4:3 art, `min-height`, and a broken image keeps its frame |
+| Systems tiles | Drew `SystemFamilyMark` — one glyph for all of Nintendo — on a filled brand-colour plate | `SystemGlyph` picks the per-system motif the loading states already ship (`LibraryPlatform.<NAME>.lower()`), centred, no plate, tinted with the platform accent |
+| "collections ... no way to make shelves" | Button said *New collection*; the page's own copy and count say *shelves* | Relabelled **New shelf** / **Create shelf** with the Collections glyph. `models.Collection` is docstring'd "collection / shelf", so the word was the only thing out of step |
+| Calendar month dots; Agenda not needed | Up to three identical dots said "something happens here" and nothing else; Agenda was List with week headings | Day cells show cover art, cycling every 10s when a day has several, with `+N`. Agenda removed from the view list, the storage whitelist, the component, the CSS and the docs; a stored `agenda` falls back to List |
+| "Chat pop-out is still just a minimized version of the whole site" | `ChatPage` redirected to `/library` unconditionally, and `navigate()` drops the query string — so `?popout=1` was lost and the shell stopped treating the window as chrome-less | The pop-out renders `ChatPanel` alone; the redirect is for the main-window deep link only |
+| Updates: no way to scan, timestamp far from the button | The inbox is a *readout* of the last freshness probe; the only probes were per-title, multi-select, or admin-only | `POST /api/updates/scan` — bounded batch, oldest-checked first, reports `remaining`. Refresh + timestamp moved onto the inbox heading row, time before glyph |
+| Notifications "mark all read" | Sat in the top bar, which holds page-level controls, while it acts on the list | On the INBOX heading row, baseline-aligned with the label. One control now, not one per chrome |
+| Help page | Twelve identical grey panels; Expand and Collapse adjacent | Per-section tone from the theme's semantic five plus a glyph; a hero that says what the page is for; Expand first, Collapse last, *Report an issue* between them |
+| Trailers buttons | `TrailersPage.css` redrew every button with element-plus-class selectors, so it outranked `.gt-btn` / `.gt-cbtn` even where the markup carried them | Local button skin deleted; markup uses the shared primitives |
+
+### Still open after this pass
+
+| Item | State |
+|---|---|
+| **Per-system silhouettes** | Systems tiles now differ per system, but the motif catalogue is six *archetypes* with variants — NES and SNES both draw a controller, in different variants. Genuinely distinct console silhouettes for 70+ systems is an Art seat job, not a generator one. See the header of `systemMotifArt.jsx` for why it was built that way. |
+| **Discover pins are per-device** | Stored in `localStorage`. A member who pins on the TV does not see it on their phone. Making it follow the account needs a preferences column and a round trip; deliberately not done for a view preference. |
+| **`new_library_games` on existing installs** | Both seeders are additive and skip identifiers that already exist, so the shelf appears the next time init runs. An install that never re-runs init needs the row adding by hand. |
+
+### The verification gap this pass exposed
+
+The frontend guards were all green while the backend half had never been run
+once. Worth stating plainly, because "CI is green" was doing work it had not
+earned:
+
+| Found | Cause |
+|---|---|
+| `tests/test_updates_scan_and_shelves.py` failed 4 of its 5 tests, and had already been added to the CI gate list | It was written but never executed. Three tests called `updates_scan()` directly and read `.get_json()` off the result — but every route here answers through `api_ok` / `api_error`, which end in `return jsonify(body), status`, so a direct call yields a **tuple**. Unwrapped through a `_body()` helper. |
+| The same file's shelf and sweep tests failed on data they did not create | `conftest.db_session` never cleans up — `db.drop_all()` is commented out for speed — so every game any test file has ever committed is still in `gamethecatest`. A global `limit(8)` shelf and an unscoped sweep both see all of it. The sweeps now pass `library_uuid`; the shelf fixtures are dated minutes rather than years from now so they lead the shelf. |
+| `tests/test_admin_shell.py` had been failing since **e17ca7e1**, which is *before* this pass | That commit moved the admin bundles onto the `dist_asset` filter and did not update the test asserting the old literal `dist/admin-app/admin-app.js` path. The test is in the CI gate list, so the gate has been red since then and the pass was built on top of it. |
+
+The lesson is narrow and worth keeping: the ratchets and the vitest suites check
+*contracts* — envelope shape, token usage, one owning stylesheet per class, CSRF
+sourcing. None of them looks at layout, and none of them runs Python. A pass that
+is mostly appearance plus a new route can therefore be fully green locally and
+still be broken in both halves.
+
+---
+
+## W28 reconciled onto the W29 feed work (2026-08-22)
+
+The W28 sweep was built on `main` while a whole session — the Discover feed
+rework, the account modal, the rail group collapse, the tile-size slider
+collapse — sat unmerged on `feat/discover-feed-rework`. Every fix in that
+session read as a regression the moment W28's tree was used, because W28 had
+never seen it. Both branches then solved several of the same reports
+independently, which is the expensive part: `DiscoverShelf`, discover pins, the
+chat pop-out and the ownership/report glyphs each exist twice.
+
+Merged with the feed work as the base. What was dropped and why:
+
+| Dropped | Kept instead |
+|---|---|
+| W28 `DiscoverShelf.jsx/.css`, `utils/discoverPins.js` | the feed's server-backed shelf and `utils/discover_pins.py` — pins follow the account rather than the device, which the W28 version listed as a known limitation |
+| W28 `.gt-popout-main--flush` and its `App.jsx` branch | the feed work's framed `gt-popout` chat surface, which answers the same report more completely |
+| W28's `gt-contextbar__slot` wrapper | direct portal — `SegmentedViews` already renders `.gt-contextbar__views`, so the wrapper nested that class inside itself. The clipping it was working around is fixed properly, in CSS, on `.gt-topbar__page` |
+| W28's speech-bubble `report` and stroked `ownership` glyphs | the flag and the filled key from the icon rework, mirrored into `partials/icons.html` so the SPA and Jinja stay in step |
+| W28's Wishlist librarian toggle | the two-segment `views` switcher — an unpressed toggle cannot say which of two states you are looking at |
+| W28's "Report an issue" links on Help | nothing. Report is a rail destination; a second route to it does not belong on a page about finding things |
+
+Kept from W28, because the feed work does not have them: the `.gt-topbar__page`
+popover fix, the `viewBox` on the shared icon `base`, the tile-size gating, the
+`POST /api/updates/scan` control, and the icon motion block — the last of which
+composes with the rail's own `.gt-rail__link:hover .gt-icon` only because it was
+lowered to `:where()` first.
+
+### Still open
+
+| Item | State |
+|---|---|
+| **Help's Expand / Collapse are adjacent** | W28 separated them with a Report link on the argument that overshooting Expand by one button collapses everything you just opened. The link was the wrong separator and is gone; the adjacency is real and unaddressed. A readout or a spacer between them would settle it. |
+| **`latest_games` vs `new_library_games` dedup** | The feed strips titles an earlier row already showed, so a title in Latest Games never repeats in New Library Games. Correct, but it means New Library Games is "newest imported that is not already above", not "newest imported". |

@@ -147,7 +147,11 @@ export function SideRail({
   // <nav> is announced as a destination and shadows real ones in queries.
   return (
     <div className="gt-rail">
-      <a className="gt-rail__brand" href="/discover">
+      {/* Mark only, no wordmark (W28). The glyph is the brand; the word beside
+          it was a second answer to the same question and it capped the mark at
+          rail-icon size. `gt-rail__brand-text` stays in the markup and is
+          hidden in CSS — it is the link's accessible name. */}
+      <a className="gt-rail__brand gt-rail__brand--mark-only" href="/discover">
         {/* Painted from a mask so it follows the theme — see .gt-brand-mark. */}
         <span className="gt-rail__mark gt-brand-mark" aria-hidden="true" />
         <span className="gt-rail__brand-text">GameTheca</span>

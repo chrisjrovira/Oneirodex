@@ -823,3 +823,26 @@
   font-size: 0.76rem;
   color: var(--gt-text-muted);
 }
+
+/* --------------------------------------------------------------------------
+   Standalone pop-out (W28)
+
+   `/chat?popout=1` renders the panel as the entire window. The panel is
+   already `height: 100%`, so this only has to give it a box that is the window
+   — but that box has to be a real one: `height: 100%` on a child of a `dvh`
+   host chains only if every element between them has a height, and the panel's
+   own inner grid depends on it to know where to scroll.
+   -------------------------------------------------------------------------- */
+
+.gt-chat-standalone {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+  background: var(--gt-bg);
+}
+
+.gt-chat-standalone > .gt-chat-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+}

@@ -131,13 +131,31 @@
   color: var(--gt-text-muted);
 }
 
-.gt-notifications__section-title {
+/* INBOX on the left, Mark all read on the right, sharing one baseline (W28).
+   The button used to live in the top bar; it belongs on the row that heads the
+   list it empties. `baseline` rather than `center` so the button's text sits on
+   the same line as the label, which is what "aligned to it" means here. */
+.gt-notifications__inbox-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gt-space-4);
   margin: 0 0 0.55rem;
+}
+
+.gt-notifications__section-title {
+  margin: 0;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--gt-text-muted);
+}
+
+/* Quiet until it can do something: with nothing unread the control is disabled,
+   and a full-strength disabled button beside a muted label reads as broken. */
+.gt-notifications__mark-all:disabled {
+  opacity: 0.45;
 }
 
 .gt-notifications__list {

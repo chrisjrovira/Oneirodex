@@ -45,8 +45,12 @@ def test_base_admin_exists_without_member_sidebar():
     assert 'id="sidebar"' not in text
     assert 'admin-app-root' in text
     assert 'admin-legacy-content' in text
-    assert 'dist/admin-app/admin-app.js' in text
-    assert 'dist/admin-app/admin-app.css' in text
+    # Both bundles go through the `dist_asset` filter, which appends a build
+    # fingerprint so a rebuilt SPA is not served from cache (e17ca7e1). The
+    # literal `dist/` prefix the path used to carry is now the filter's job, so
+    # assert on what the template names and on the filter carrying it.
+    assert "'admin-app/admin-app.js'|dist_asset" in text
+    assert "'admin-app/admin-app.css'|dist_asset" in text
 
 
 def test_base_admin_loads_spa_assets():

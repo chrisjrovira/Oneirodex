@@ -14,6 +14,30 @@ export async function fetchUpdatesInbox({ signal, limit = 100 } = {}) {
   return response.json()
 }
 
+/**
+ * Re-probe library titles against the stores, oldest-checked first.
+ *
+ * One call is one bounded batch — see POST /api/updates/scan for why. The
+ * response carries `remaining`, so the page can tell the member how much of
+ * their library is still unswept rather than implying one press did all of it.
+ */
+export async function scanLibraryUpdates({ limit, libraryUuid, signal } = {}) {
+  const response = await fetch('/api/updates/scan', {
+    method: 'POST',
+    credentials: 'same-origin',
+    signal,
+    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({
+      ...(limit ? { limit } : {}),
+      ...(libraryUuid ? { library_uuid: libraryUuid } : {}),
+    }),
+  })
+  if (!response.ok) {
+    throw await errorFromResponse(response, 'updates/scan')
+  }
+  return response.json()
+}
+
 export async function fetchStoreSearch({ q, source = 'all', limit = 8, signal } = {}) {
   const params = new URLSearchParams({
     q: q || '',

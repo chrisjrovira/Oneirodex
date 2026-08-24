@@ -40,6 +40,21 @@ Household social is first-party (no third-party chat webhooks). Optional voice u
 - Dismiss with ×, the dimmed scrim, or Esc; reopen from the pill or More anytime. Open preference is remembered in localStorage.
 - `/chat` deep-links open the slide-out and replace to Library (no orphan full-page chat shell).
 - Friends dock **Chat** / DM actions open this panel in place (standalone `/social-companion` still uses `/chat` deep-link).
+
+### Pop out chat
+
+**Pop out** opens `/chat?popout=1` in a small window that is **only chat** — no
+rail, no top bar, no library grid behind it. Keep it beside a game while you
+play; the main window goes back to browsing and the in-page slide-out closes so
+the same conversation is not open twice.
+
+Until W28 the pop-out redirected to `/library` like the ordinary `/chat` deep
+link, and the redirect dropped the `?popout=1` from the URL — so the pop-out
+stopped being recognised as one and rendered the whole site squeezed into a
+420px window with chat sliding over it. It renders the chat panel and nothing
+else now.
+
+`?channel=<id>` on the pop-out URL opens straight into that room.
 - No Discord bots, webhooks, or Discord branding — native GameTheca chat only.
 
 ## Mute a channel or DM

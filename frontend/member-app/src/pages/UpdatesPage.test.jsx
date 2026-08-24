@@ -10,6 +10,7 @@ vi.mock('../api/updates', () => ({
   fetchUpdatesInbox: vi.fn(),
   fetchStoreSearch: vi.fn(),
   addWantedUpdate: vi.fn(),
+  scanLibraryUpdates: vi.fn(),
 }))
 
 vi.mock('../api/clientCommands', () => ({
@@ -24,6 +25,15 @@ beforeEach(() => {
   updatesApi.fetchUpdatesInbox.mockReset()
   updatesApi.fetchStoreSearch.mockReset()
   updatesApi.addWantedUpdate?.mockReset?.()
+  updatesApi.scanLibraryUpdates.mockReset()
+  updatesApi.scanLibraryUpdates.mockResolvedValue({
+    ok: true,
+    checked: 0,
+    behind_count: 0,
+    behind: [],
+    errors: [],
+    remaining: 0,
+  })
   clientCommands.queueClientCommand.mockReset()
   calendarApi.fetchCalendar.mockReset()
   calendarApi.fetchCalendar.mockResolvedValue({
@@ -116,7 +126,11 @@ test('manual Refresh shows brief feedback without wiping inbox', async () => {
   )
 
   expect(await screen.findByText('Behind Game')).toBeInTheDocument()
-  await user.click(screen.getByRole('button', { name: /^Refresh$/i }))
+  // Glyph-only control: its accessible name says which list it refreshes,
+  // because the row also holds "Check library for updates".
+  await user.click(
+    screen.getByRole('button', { name: 'Refresh the freshness inbox' }),
+  )
   expect(screen.getByRole('status')).toHaveTextContent(/Refreshing/i)
   expect(screen.getByText('Behind Game')).toBeInTheDocument()
 
@@ -151,7 +165,7 @@ test('shows upcoming releases teaser with calendar link', async () => {
   expect(screen.getByRole('link', { name: /Open calendar/i })).toHaveAttribute('href', '/calendar')
 })
 
-test('new chrome moves refresh and its status into bar two', async () => {
+test('refresh and its timestamp sit on the inbox heading row', async () => {
   const user = userEvent.setup()
   render(
     <MemoryRouter>
@@ -164,14 +178,53 @@ test('new chrome moves refresh and its status into bar two', async () => {
 
   // The refresh status is the only thing that says whether what you are
   // looking at is current, so it has to survive the move — losing it would
-  // make a stale inbox indistinguishable from a fresh one.
-  //
-  // The control is a symbol on the inbox heading now rather than a word in bar
-  // two, so its accessible name is the one the tooltip carries. Queried by
-  // role+name precisely so the icon cannot ship without one.
+  // make a stale inbox indistinguishable from a fresh one. The control is a
+  // symbol on the inbox heading now rather than a word in bar two, and the
+  // timestamp reads *before* the glyph. Queried by role+name precisely so the
+  // icon cannot ship without an accessible name.
   const refresh = await screen.findByRole('button', {
     name: 'Refresh the freshness inbox',
   })
+  expect(refresh.closest('.gt-updates__inbox-tools')).not.toBeNull()
   await user.click(refresh)
   await waitFor(() => expect(screen.getByText(/^Updated /)).toBeInTheDocument())
+
+  const tools = refresh.closest('.gt-updates__inbox-tools')
+  const stamp = tools.querySelector('.gt-updates__refresh-status')
+  expect(
+    stamp.compareDocumentPosition(refresh) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy()
+})
+
+test('the library sweep is its own control and refills the inbox', async () => {
+  // Refresh re-reads the last probe; this makes a new probe happen. With only
+  // Refresh, an inbox that was empty because nothing had ever been probed
+  // stayed empty however many times you pressed it.
+  const user = userEvent.setup()
+  updatesApi.scanLibraryUpdates.mockResolvedValue({
+    ok: true,
+    checked: 25,
+    behind_count: 2,
+    behind: [],
+    errors: [],
+    remaining: 387,
+  })
+
+  render(
+    <MemoryRouter>
+      <UpdatesPage shellConfig={{ enableNewChrome: true }} />
+    </MemoryRouter>,
+  )
+  await waitFor(() => expect(updatesApi.fetchUpdatesInbox).toHaveBeenCalled())
+  const before = updatesApi.fetchUpdatesInbox.mock.calls.length
+
+  await user.click(screen.getByRole('button', { name: /Check library for updates/i }))
+
+  await waitFor(() => expect(updatesApi.scanLibraryUpdates).toHaveBeenCalled())
+  // Says how much is left, so "press again" is a real instruction rather than
+  // a guess about whether one press did the whole library.
+  expect(await screen.findByText(/387 still to check/i)).toBeInTheDocument()
+  await waitFor(() =>
+    expect(updatesApi.fetchUpdatesInbox.mock.calls.length).toBeGreaterThan(before),
+  )
 })

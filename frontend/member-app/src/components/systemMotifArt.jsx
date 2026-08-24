@@ -18,6 +18,9 @@
  * restyle them for free.
  */
 
+import { SystemFamilyMark } from '../chrome/systemMarks'
+import { SYSTEM_MOTIFS } from './systemMotifCatalogue'
+
 const svgProps = {
   viewBox: '0 0 48 48',
   fill: 'none',
@@ -141,4 +144,41 @@ export const SYSTEM_MOTIF_ARCHETYPES = Object.keys(ARCHETYPES)
 export function SystemMotifArt({ archetype, variant = 0 }) {
   const draw = ARCHETYPES[archetype] || ARCHETYPES.cart
   return draw(variant)
+}
+
+/**
+ * The motif for one LibraryPlatform, by its enum name (`NES`, `PS2`, `PCWIN`).
+ *
+ * The generator derives every motif id as `LibraryPlatform.<NAME>.lower()`, so
+ * the lookup is exactly that and nothing has to be kept in sync by hand — see
+ * scripts/gen_loading_motifs.py.
+ *
+ * @param {string} platformValue
+ * @returns {{ id: string, name: string, archetype: string, variant: number } | null}
+ */
+export function motifForPlatform(platformValue) {
+  const id = String(platformValue || '').toLowerCase()
+  if (!id) return null
+  return SYSTEM_MOTIFS.find((motif) => motif.id === id) || null
+}
+
+/**
+ * Per-system glyph, sized to whatever box it is dropped into.
+ *
+ * The Systems hub drew `SystemFamilyMark` — one glyph for all of Nintendo, one
+ * for all of Sony — so a grid of twelve consoles showed four distinct pictures
+ * between them, on coloured plates that made the tile about the plate. Every
+ * system already has its own motif for the loading states; this is the same
+ * drawing, doing the job it was made for on a surface that is about systems.
+ *
+ * Falls back to the family mark for a platform the catalogue does not know,
+ * which is the honest answer for an id added to the backend enum before the
+ * motifs are regenerated.
+ */
+export function SystemGlyph({ platformValue, family }) {
+  const motif = motifForPlatform(platformValue)
+  if (!motif) {
+    return <SystemFamilyMark family={family} />
+  }
+  return <SystemMotifArt archetype={motif.archetype} variant={motif.variant} />
 }

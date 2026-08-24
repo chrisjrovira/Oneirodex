@@ -106,10 +106,20 @@ No — public docs use GameTheca capability language only. Competitive intel sta
 ## Updates & calendar
 
 **Where are library updates?**  
-**More → Updates** — freshness inbox (auto-refresh while the tab is visible; **Refresh** for an immediate pull), store search / apply packs, plus a short **Upcoming releases** teaser that links to the calendar.
+**More → Updates** — freshness inbox (auto-refresh while the tab is visible), store search / apply packs, plus a short **Upcoming releases** teaser that links to the calendar. The refresh control and the "Updated HH:MM" timestamp sit together on the **Library freshness inbox** heading row, time first.
+
+**The Updates inbox is empty — how do I make it check my library?**  
+Press **Check library for updates** beside Refresh. The two do different things:
+
+- **Refresh** re-reads what the *last* probe found. If nothing has ever been probed, refreshing forever will keep showing nothing.
+- **Check library for updates** makes a new probe happen — `POST /api/updates/scan`, oldest-checked titles first, skipping anything probed in the last 24 hours.
+
+Each press does one bounded batch (25 titles, 50 max) because every title is a live request to Steam / GOG — an unbounded sweep would hang for minutes and get you rate-limited. The line under the heading reports what it found and **how many titles are still to check**, so pressing again picks up where it left off. Librarians and admins still have the library-wide `POST /api/admin/freshness/refresh`.
 
 **Where is the release calendar?**  
-**More → Calendar** — IGDB releases (metadata only) with Ahead/Behind window controls and a **List / Month / Agenda** view switcher (choice remembered in the browser). Month shows day markers; Agenda groups by week. GameTheca does not download those titles.
+**More → Calendar** — IGDB releases (metadata only) with Ahead/Behind window controls and a **List / Month** view switcher (choice remembered in the browser). Month shows each day's **cover art**; when more than one title lands on a day the tile cycles through them every ten seconds and a `+N` badge says how many more there are. Click a day for the full list beneath the grid. GameTheca does not download those titles.
+
+> The old **Agenda** view is gone. It was the List view with week headings between the rows — the same titles in the same order — so it was a third tab that never showed anything List did not. A browser still holding `agenda` as its remembered choice falls back to List.
 
 ## News & notifications
 
@@ -123,7 +133,7 @@ No — public docs use GameTheca capability language only. Competitive intel sta
 No — claim on the store, then sync Ownership for badges. Local DRM-free library folders are separate.
 
 **Where are Notifications?**  
-**More → Notifications** — dense unread inbox; alert prefs live under **Alert preferences**. Empty inbox is honest (HTTP 200).
+**More → Notifications** — dense unread inbox; alert prefs live under **Alert preferences**. Empty inbox is honest (HTTP 200). **Mark all read** sits on the **INBOX** heading row, aligned with the label and directly above the list it clears — not in the top bar, which holds page-level controls.
 
 ## Reporting bugs
 
@@ -132,6 +142,8 @@ No — claim on the store, then sync Ownership for badges. Local DRM-free librar
 
 **Where is Help?**  
 **More → Help** — accordion sections (Getting started open by default); use the topic chips or Expand all. Deep links like `/help#translations` still open that section.
+
+Each section carries a colour and a glyph drawn from the theme's own semantic set (accent · info · success · warning · danger), so a topic can be found at a glance instead of by re-reading twelve identical headings — and a theme or icon pack restyles them along with the rest of the product. In the bar, **Expand all** is first and **Collapse all** is last, with *Report an issue* between them: they used to be adjacent, so overshooting Expand by one button collapsed everything you had just opened.
 
 ## Big Picture
 

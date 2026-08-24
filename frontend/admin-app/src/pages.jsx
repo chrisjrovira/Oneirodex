@@ -10,11 +10,13 @@ import { ProposeLeafLibraries } from './ProposeLeafLibraries'
 import { ScanConflictModal } from './ScanConflictModal'
 import {
   hasActiveScan,
+  isScanBusyStatus,
   isScanQueuedStatus,
   isScanRunning,
   normalizeScanJobsList,
 } from './scanQueuePolicy'
 import { useLibraryRefreshAll } from './useLibraryRefreshAll'
+import { useLibraryScan } from './useLibraryScan'
 import { showToast } from './utils/toast'
 import {
   MeterBar,
@@ -337,6 +339,13 @@ export function LibrariesPage() {
     onConflictChoose,
     onConflictClose,
   } = useLibraryRefreshAll()
+  const {
+    conflictOpen: scanConflictOpen,
+    busyKey: scanBusyKey,
+    startScan,
+    onConflictChoose: onScanConflictChoose,
+    onConflictClose: onScanConflictClose,
+  } = useLibraryScan()
 
   useEffect(() => {
     getJson('/api/get_libraries')
@@ -395,6 +404,42 @@ export function LibrariesPage() {
                 label: 'UUID',
                 render: (lib) => <code>{lib.uuid}</code>,
               },
+              {
+                key: 'last_scan_folder',
+                label: 'Last scan folder',
+                value: (lib) => lib.last_scan_folder || '',
+                render: (lib) =>
+                  lib.last_scan_folder ? <code>{lib.last_scan_folder}</code> : '—',
+              },
+              {
+                // Scanning one library is the thing this page is for, and it
+                // was only reachable from the Jinja surface. Same endpoint and
+                // same Queue / Force conflict handling as Refresh all.
+                key: 'scan',
+                label: 'Scan',
+                sortable: false,
+                render: (lib) => (
+                  <button
+                    type="button"
+                    className="gt-btn gt-btn--sm"
+                    disabled={scanBusyKey === lib.uuid || !lib.last_scan_folder}
+                    title={
+                      lib.last_scan_folder
+                        ? `Re-scan ${lib.last_scan_folder}`
+                        : 'No last scan folder — run one Auto Scan from Libraries & scans first.'
+                    }
+                    onClick={() =>
+                      void startScan({
+                        key: lib.uuid,
+                        libraryUuid: lib.uuid,
+                        label: lib.name,
+                      })
+                    }
+                  >
+                    {scanBusyKey === lib.uuid ? 'Starting…' : 'Scan'}
+                  </button>
+                ),
+              },
             ]}
           />
         )}
@@ -410,6 +455,15 @@ export function LibrariesPage() {
         busy={refreshing}
         onChoose={onConflictChoose}
         onClose={onConflictClose}
+      />
+      {/* A second instance rather than one shared modal: the two buttons post
+          to different endpoints with different bodies, and the choice the
+          operator makes has to go back to the request that was refused. */}
+      <ScanConflictModal
+        open={scanConflictOpen}
+        busy={Boolean(scanBusyKey)}
+        onChoose={onScanConflictChoose}
+        onClose={onScanConflictClose}
       />
     </Page>
   )
@@ -803,6 +857,13 @@ export function ScansPage() {
     onConflictChoose,
     onConflictClose,
   } = useLibraryRefreshAll()
+  const {
+    conflictOpen: scanConflictOpen,
+    busyKey: scanBusyKey,
+    startScan,
+    onConflictChoose: onScanConflictChoose,
+    onConflictClose: onScanConflictClose,
+  } = useLibraryScan()
 
   useEffect(() => {
     let cancelled = false
@@ -912,6 +973,53 @@ export function ScansPage() {
                   value: (job) => job.scan_folder || '',
                   render: (job) => job.scan_folder || '—',
                 },
+                {
+                  // "Scan again" on a finished job (W28). The Jinja scan
+                  // manager has always had this and the SPA table never did,
+                  // so a Failed job could only be re-run by leaving the SPA.
+                  //
+                  // It repeats *that* job — its folder and its three scan
+                  // settings — rather than re-scanning whatever the library
+                  // was last pointed at, which is the difference between a
+                  // retry and a new scan.
+                  key: 'retry',
+                  label: 'Retry',
+                  sortable: false,
+                  render: (job) => {
+                    const active =
+                      isScanBusyStatus(job.status) || isScanQueuedStatus(job.status)
+                    if (active) return <span className="gt-admin-lede">—</span>
+                    return (
+                      <button
+                        type="button"
+                        className="gt-btn gt-btn--sm"
+                        disabled={scanBusyKey === job.id || !job.library_uuid}
+                        title={
+                          job.library_uuid
+                            ? `Re-run this scan of ${job.scan_folder || 'the library folder'}`
+                            : 'This job has no library attached, so it cannot be re-run.'
+                        }
+                        onClick={() =>
+                          void startScan({
+                            key: job.id,
+                            libraryUuid: job.library_uuid,
+                            folder: job.scan_folder || '',
+                            label: job.library_name || job.library || 'Scan',
+                            settings: {
+                              scan_mode: job.setting_filefolder ? 'files' : 'folders',
+                              remove_missing: Boolean(job.setting_remove),
+                              download_missing_images: Boolean(
+                                job.setting_download_missing_images,
+                              ),
+                            },
+                          })
+                        }
+                      >
+                        {scanBusyKey === job.id ? 'Starting…' : 'Scan again'}
+                      </button>
+                    )
+                  },
+                },
               ]}
             />
             {updatedAt ? (
@@ -937,6 +1045,12 @@ export function ScansPage() {
         busy={refreshing}
         onChoose={onConflictChoose}
         onClose={onConflictClose}
+      />
+      <ScanConflictModal
+        open={scanConflictOpen}
+        busy={Boolean(scanBusyKey)}
+        onChoose={onScanConflictChoose}
+        onClose={onScanConflictClose}
       />
     </Page>
   )

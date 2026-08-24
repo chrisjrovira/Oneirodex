@@ -233,6 +233,61 @@ body.gt-shell-host > #admin-legacy-content:empty {
   flex: 0 0 auto;
 }
 
+/* --- Mark-only brand (member shell) ---------------------------------------
+ *
+ * The member rail showed the glyph *and* the word "GameTheca" beside it, at
+ * body size, in the one row of the app whose entire job is to say which product
+ * this is. The glyph already says it, and the word next to it fixed the brand
+ * row's height to the text rather than to the mark — so the mark could never be
+ * bigger than a rail icon and read as a nineteenth destination rather than as
+ * identity.
+ *
+ * The text is *hidden, not removed*: it is the link's accessible name, and a
+ * link whose only content is an aria-hidden decoration has no name at all.
+ *
+ * Scoped to a modifier rather than applied to `.gt-rail__brand` so the admin
+ * rail keeps its wordmark and its "Admin" role badge — admin chrome has to name
+ * which half of the product you are in, and a bare glyph cannot.
+ */
+.gt-rail__brand--mark-only {
+  justify-content: center;
+  gap: 0;
+  /* Taller than one topbar row: the mark is the only thing here now, so the
+     row is sized by what it holds rather than by a line of text. */
+  height: auto;
+  padding-block: var(--gt-space-3);
+}
+
+.gt-rail__brand--mark-only .gt-rail__brand-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.gt-rail__brand--mark-only .gt-rail__mark {
+  /* Sized against the collapsed rail width so the same rule can shrink it
+     below without a second magic number — see the collapsed block. */
+  width: 2.6rem;
+  height: 2.6rem;
+  transition: width var(--gt-motion-base) var(--gt-motion-ease),
+    height var(--gt-motion-base) var(--gt-motion-ease);
+}
+
+/* Collapsed: shrink to fit the icon column, as it did before. */
+[data-rail='collapsed'] .gt-rail__brand--mark-only .gt-rail__mark {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-rail__brand--mark-only .gt-rail__mark {
+    transition: none;
+  }
+}
+
 /* Role badge under the product name — admin chrome identifies the product and
    then says which half of it you are in. */
 .gt-rail__brand-role {
@@ -661,12 +716,20 @@ body.gt-shell-host > #admin-legacy-content:empty {
 
 /* The centre takes the slack and centres what is in it, so a page with two
    views and a page with six both read as balanced rather than left-packed with
-   a growing tail. Scrolls rather than wraps when a narrow window cannot fit the
-   strip — the bar is one row by definition. */
-/* Content-sized now, sitting between two equally-growing sides — that is what
-   puts it on the page's midpoint. It still shrinks and scrolls rather than
-   wrapping when a narrow window cannot fit the strip: the bar is one row by
-   definition. */
+   a growing tail. Content-sized, sitting between two equally-growing sides —
+   that is what puts it on the page's midpoint.
+ *
+ * It must not scroll *here*, and it used to, with `overflow-x: auto`. That is
+ * where every page action's popover went to die: a scroll container clips
+ * *both* axes whatever you set, so a panel opening downward out of a slot one
+ * bar-row tall was cut off flush and never appeared. Collections' "New
+ * collection", Wishlist's "Request a title" and Help's expand/collapse were all
+ * rendering and all invisible — reported as buttons that do nothing.
+ *
+ * The bar is still one row by definition, and a narrow window still scrolls the
+ * strip rather than wrapping it — that just belongs to `.gt-contextbar__views`
+ * now, which holds the segments and nothing that opens. This slot stays
+ * visible. */
 .gt-topbar__page {
   display: flex;
   align-items: center;
@@ -674,12 +737,7 @@ body.gt-shell-host > #admin-legacy-content:empty {
   gap: var(--gt-space-2);
   flex: 0 1 auto;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.gt-topbar__page::-webkit-scrollbar {
-  display: none;
+  overflow: visible;
 }
 
 .gt-topbar__actions {

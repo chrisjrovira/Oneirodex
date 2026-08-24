@@ -5,7 +5,7 @@ import { AccountModal } from './AccountModal'
 import { TOPBAR_LEAD_ID, TOPBAR_SLOT_ID, TOPBAR_TRAIL_ID } from './ContextBar'
 import { IconMenu, IconUser } from './icons'
 import { TileSizeControl } from './TileSizeControl'
-import { getPageTitle } from './navConfig'
+import { getPageTitle, hasTileSizeControl } from './navConfig'
 import { openPreferencesModal } from '../api/preferences'
 
 /**
@@ -54,6 +54,7 @@ export function TopBar({
   const { username = '', showTrailers, showHelp, enableVr, enableActivity } = shellConfig
   const { pathname } = useLocation()
   const pageTitle = getPageTitle(pathname, { showTrailers, showHelp, enableVr, enableActivity })
+  const showTileSize = hasTileSizeControl(pathname)
   const [accountOpen, setAccountOpen] = useState(false)
   const [accountModal, setAccountModal] = useState(null)
   const accountId = useId()
@@ -170,12 +171,21 @@ export function TopBar({
               TileSizeControl.css), the dot rests against the count, the reserve
               falls in the bar's existing slack where nothing can see it, and
               the slider opens leftward into that slack without moving the count
-              or the account button. */}
-          <TileSizeControl
-            value={tileSize || shellConfig.tileSize || '50'}
-            onChange={onTileSizeChange}
-            shellConfig={shellConfig}
-          />
+              or the account button.
+
+              Rendered only where it changes something. `--gt-tile-min` is read
+              by the game grid and by the card geometry derived from it; every
+              other page ignored it, so the slider sat in the bar on Help,
+              Notifications, Calendar and the rest doing nothing but saving a
+              preference. See hasTileSizeControl. On those pages the count
+              simply leads the group, which is where it used to be anyway. */}
+          {showTileSize ? (
+            <TileSizeControl
+              value={tileSize || shellConfig.tileSize || '50'}
+              onChange={onTileSizeChange}
+              shellConfig={shellConfig}
+            />
+          ) : null}
 
           {/* Trail slot: how much is here. Still grouped with the control that
               changes it — both answer "how much am I looking at". */}

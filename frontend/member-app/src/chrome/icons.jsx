@@ -1,5 +1,16 @@
 export const base = {
   className: 'gt-icon',
+  // Every glyph in this file and in railIcons.jsx is drawn on a 24x24 grid, so
+  // the viewBox belongs with the rest of the shared attributes.
+  //
+  // It was only on the components here, and `RailIcon` spreads `base` without
+  // adding one of its own — so the rail rendered 24-unit paths into an 18x18
+  // viewport with no viewBox at all, which means no scaling: each glyph was
+  // cropped to its top-left 18x18 corner. Icons whose strokes sit near the
+  // origin survived that and looked fine, which is why this read as "some rail
+  // icons are missing" rather than as one bug. The heart is drawn across the
+  // full box, so Favorites lost almost all of itself.
+  viewBox: '0 0 24 24',
   fill: 'none',
   stroke: 'currentColor',
   strokeWidth: 2,

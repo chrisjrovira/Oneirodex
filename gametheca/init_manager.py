@@ -376,19 +376,24 @@ class InitializationManager:
 
         default_sections = [
             {'name': 'Libraries', 'identifier': 'libraries', 'is_visible': True, 'display_order': 0},
+            # 'Latest Games' is newest *released* (first_release_date); the shelf
+            # below is newest *added here*. They were one shelf answering the
+            # second question under the first question's name — see
+            # routes_discover.build_discover_sections.
             {'name': 'Latest Games', 'identifier': 'latest_games', 'is_visible': True, 'display_order': 1},
-            {'name': 'Most Downloaded', 'identifier': 'most_downloaded', 'is_visible': True, 'display_order': 2},
-            {'name': 'Highest Rated', 'identifier': 'highest_rated', 'is_visible': True, 'display_order': 3},
-            {'name': 'Last Updated', 'identifier': 'last_updated', 'is_visible': True, 'display_order': 4},
-            {'name': 'Most Favorited', 'identifier': 'most_favorited', 'is_visible': True, 'display_order': 5},
+            {'name': 'New Library Games', 'identifier': 'new_library_games', 'is_visible': True, 'display_order': 2},
+            {'name': 'Most Downloaded', 'identifier': 'most_downloaded', 'is_visible': True, 'display_order': 3},
+            {'name': 'Highest Rated', 'identifier': 'highest_rated', 'is_visible': True, 'display_order': 4},
+            {'name': 'Last Updated', 'identifier': 'last_updated', 'is_visible': True, 'display_order': 5},
+            {'name': 'Most Favorited', 'identifier': 'most_favorited', 'is_visible': True, 'display_order': 6},
             # Storefront shelves (W25-STORE-1) — derived, hidden when empty.
-            {'name': 'Curated for you', 'identifier': 'curated_for_you', 'is_visible': True, 'display_order': 6},
-            {'name': 'Upcoming', 'identifier': 'upcoming', 'is_visible': True, 'display_order': 7},
+            {'name': 'Curated for you', 'identifier': 'curated_for_you', 'is_visible': True, 'display_order': 7},
+            {'name': 'Upcoming', 'identifier': 'upcoming', 'is_visible': True, 'display_order': 8},
             # Personal rows lead: what you were doing, then what changed in your
             # library, then what everyone else likes. Charts are the least
             # informative rows for a member who already owns the library.
             #
-            # Negative orders on purpose. The shelves above have carried 0-7
+            # Negative orders on purpose. The shelves above have carried 0-8
             # since the first install and an admin may have reordered them
             # since; seeding ahead of that range puts these first without
             # renumbering anyone's arrangement. The gaps leave room to drag
@@ -400,7 +405,7 @@ class InitializationManager:
             # A template rather than a shelf: it renders nothing itself and
             # carries the visibility switch for the rows the recommender
             # generates. Hiding it turns the whole family off.
-            {'name': 'Because You Played', 'identifier': 'because_you_played', 'is_visible': True, 'display_order': 8},
+            {'name': 'Because You Played', 'identifier': 'because_you_played', 'is_visible': True, 'display_order': 9},
         ]
 
         existing_sections = {section.identifier for section in session.execute(select(DiscoverySection)).scalars().all()}

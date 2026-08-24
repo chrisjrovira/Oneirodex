@@ -1,5 +1,6 @@
 """The row registry and the row endpoint behind the "see all" tile."""
 
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
@@ -44,6 +45,10 @@ def row_library(db_session):
 def many_games(db_session, row_library):
     from gametheca.utils.discover_providers import ROW_MAX
 
+    # Released, and staggered. `latest_games` orders by `first_release_date`
+    # and skips rows without one, so undated fixtures make that row empty and
+    # these paging assertions measure nothing. Naive UTC to match the column.
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     for i in range(ROW_MAX * 2):
         db_session.add(
             Game(
@@ -51,6 +56,7 @@ def many_games(db_session, row_library):
                 summary='s',
                 rating=60.0 + i,
                 times_downloaded=i + 1,
+                first_release_date=now - timedelta(days=i + 1),
                 library_uuid=row_library.uuid,
             )
         )
