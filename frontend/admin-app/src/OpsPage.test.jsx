@@ -47,6 +47,33 @@ describe('formatScanJobCounters', () => {
   })
 })
 
+/**
+ * OpsPage loads three endpoints, not one: `/ops/summary` for the strip and the
+ * folds, `/ops/system` for the System / Database / Logs panels (GT-B21) and
+ * `/ops/logs` for the recent-events list.
+ *
+ * A mock that answers only `summary` and throws on the rest rejects inside the
+ * component's own load, and where that rejection lands relative to an assertion
+ * depends on scheduling — so tests passed locally and failed on CI, on a
+ * different Node. Answering the two ancillary calls with empty-but-valid bodies
+ * keeps each test about the thing it is actually asserting, while a genuinely
+ * unexpected URL still throws.
+ */
+function ancillaryOpsResponse(url) {
+  const href = String(url)
+  if (href.includes('/admin/api/ops/system')) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ system: {}, database: {}, logs: {}, config: {} }),
+    }
+  }
+  if (href.includes('/admin/api/ops/logs')) {
+    return { ok: true, status: 200, json: async () => ({ events: [] }) }
+  }
+  return null
+}
+
 function mockOpsSummary(overrides = {}) {
   return {
     as_of: new Date().toISOString(),
@@ -141,6 +168,8 @@ test('OpsPage shows library health score and top factors when present', async ()
           }),
       }
     }
+    const ancillary = ancillaryOpsResponse(url)
+    if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
   })
 
@@ -167,6 +196,8 @@ test('OpsPage library health is honest n/a when Backend field absent', async () 
         json: async () => mockOpsSummary(),
       }
     }
+    const ancillary = ancillaryOpsResponse(url)
+    if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
   })
 
@@ -190,6 +221,8 @@ test('OpsPage Scans tile renders honest counters', async () => {
         json: async () => mockOpsSummary(),
       }
     }
+    const ancillary = ancillaryOpsResponse(url)
+    if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
   })
 
@@ -211,6 +244,8 @@ test('OpsPage shows library watch off honestly', async () => {
         json: async () => mockOpsSummary(),
       }
     }
+    const ancillary = ancillaryOpsResponse(url)
+    if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
   })
 
@@ -250,6 +285,8 @@ test('OpsPage shows library watch running with roots and pending', async () => {
           }),
       }
     }
+    const ancillary = ancillaryOpsResponse(url)
+    if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
   })
 
@@ -272,6 +309,8 @@ test('OpsPage status banner lists issues with href', async () => {
         json: async () => mockOpsSummary(),
       }
     }
+    const ancillary = ancillaryOpsResponse(url)
+    if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
   })
 
@@ -321,6 +360,8 @@ test('OpsPage splits action and warning folds; category maps to action', async (
           }),
       }
     }
+    const ancillary = ancillaryOpsResponse(url)
+    if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
   })
 
@@ -364,6 +405,8 @@ test('OpsPage keeps disk_*_critical in Warning / Info fold', async () => {
           }),
       }
     }
+    const ancillary = ancillaryOpsResponse(url)
+    if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
   })
 
@@ -387,8 +430,12 @@ test('OpsPage manual Refresh shows status; poll does not wipe content', async ()
   let callCount = 0
   global.fetch = vi.fn(async (url) => {
     if (!String(url).includes('/admin/api/ops/summary')) {
+      const ancillary = ancillaryOpsResponse(url)
+      if (ancillary) return ancillary
       throw new Error(`unexpected fetch ${url}`)
     }
+    // Only the summary calls are counted, so the ancillary endpoints above
+    // cannot advance the first/second-response sequence this test depends on.
     callCount += 1
     if (callCount === 1) {
       return {
@@ -457,6 +504,8 @@ function mockOpsWithSystemDetail() {
     if (href.includes('/admin/api/ops/logs')) {
       return { ok: true, status: 200, json: async () => ({ events: [] }) }
     }
+    const ancillary = ancillaryOpsResponse(url)
+    if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
   })
 }
