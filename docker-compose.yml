@@ -298,8 +298,12 @@ services:
     # to sit commented out at this spot, which invited exactly one fix ("just
     # uncomment it") and no way to undo that per host. It lives in
     # docker-compose.gpu.yml now.
+    #
+    # The image has no curl (it is a conda-based image; wget is what ships), so
+    # a curl healthcheck can only ever fail with "executable file not found" and
+    # the container sits unhealthy forever while serving fine.
     healthcheck:
-      test: ['CMD', 'curl', '-sf', 'http://localhost:7860/sdapi/v1/sd-models']
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://localhost:7860/sdapi/v1/sd-models']
       interval: 30s
       timeout: 10s
       retries: 3

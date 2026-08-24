@@ -151,6 +151,15 @@ Sidecars are **opt-in** — not started with bare `app` + `db`.
 | `livekit` | `docker compose --profile livekit up -d` | `ENABLE_LIVEKIT=true` + `LIVEKIT_URL` / keys — [livekit-unraid.md](livekit-unraid.md) |
 | `clamav` | `docker compose --profile clamav up -d` | `ENABLE_MALWARE_SCAN=true`, `CLAMAV_HOST=clamav` |
 | `challenge` | `docker compose --profile challenge up -d` | `ENABLE_CHALLENGE_SOLVER=true`, `CHALLENGE_SOLVER_URL=http://trawl:8191` — [challenge-solver-unraid.md](challenge-solver-unraid.md) |
+| `artwork` | `docker compose --profile artwork up -d` | `ENABLE_AI_ARTWORK=true`, `AI_ARTWORK_URL=http://sdnext:7860` — **CPU-only here**, see below |
+
+**`artwork` has no GPU on this box.** The SD.Next sidecar runs on CPU, which is
+extremely slow rather than broken — usually a reason not to enable the profile
+here at all. Never copy a `docker-compose.override.yml` carrying an NVIDIA
+`deploy.resources.reservations` block to `/mnt/user/isos/gametheca/`: Compose
+Manager reads it automatically, and the stack update then dies with
+`nvml error: driver not loaded` while every other service starts fine. See
+[container-wont-start.md](container-wont-start.md) 7.
 
 Full stack in one shot:
 

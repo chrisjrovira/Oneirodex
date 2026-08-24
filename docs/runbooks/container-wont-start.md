@@ -6,6 +6,8 @@
 - Logs stop immediately after start
 - Healthcheck fails forever
 - App unhealthy / restarting while **db is healthy**, logs show `no pg_hba.conf entry … no encryption` (see §3b)
+- GPU service never gets created, `nvml error: driver not loaded` (see 7)
+- Container serves fine but sits **unhealthy** forever (see 8)
 
 ## Checklist (in order)
 
@@ -81,6 +83,17 @@ Only the optional `sdnext` artwork sidecar ever asks for a GPU, but the failed
 create aborts the whole `compose up` / stack update, so it reads as "GameTheca
 is broken" when the app container is fine.
 
+Despite naming a driver, this is almost always a **placement** error rather than
+a driver one: a GPU reservation reached a host that has no NVIDIA GPU. Confirm
+which it is before touching drivers — on the *deploy* host, not your
+workstation:
+
+```bash
+nvidia-smi -L || lspci | grep -i nvidia
+```
+
+No output means there is no GPU to reserve, and no driver work will help.
+
 | Check | Fix |
 |---|---|
 | Does the host have a working NVIDIA driver? `nvidia-smi` on the host, then `docker run --rm --gpus all nvidia/cuda:12.4.0-base-ubuntu22.04 nvidia-smi` | If either fails, the host cannot serve a GPU — do not request one |
@@ -88,9 +101,35 @@ is broken" when the app container is fine.
 | Does your deployed stack file carry its own `deploy: … driver: nvidia` or `runtime: nvidia`? | Delete it. `docker-compose.yml` never requests a GPU; a copy edited on the host may |
 | Unraid after an OS upgrade | The Nvidia Driver plugin must be reinstalled for the new kernel and the box rebooted — until then `nvidia-smi` fails and so will every GPU container |
 
+Unraid's Compose Manager keeps its own copy of the stack files, so check what
+actually landed there rather than what is in the repo:
+
+```bash
+grep -n -A6 reservations /mnt/user/isos/gametheca/docker-compose.yml
+grep -n COMPOSE_FILE /mnt/user/isos/gametheca/.env
+```
+
 The sidecar runs on **CPU** with no reservation at all — slow, not broken. If the
 GPU is on a different machine, do not start the profile here: run SD.Next /
 AUTOMATIC1111 / Forge there and set `AI_ARTWORK_URL=http://<gpu-host>:7860`.
+
+### 8. Healthcheck names a binary the image does not ship
+
+**Signature:** the service answers requests normally but never leaves
+`unhealthy`. The health log shows the probe itself failing to launch:
+
+```text
+OCI runtime exec failed: exec: "curl": executable file not found in $PATH
+```
+
+```bash
+docker inspect <container> --format '{{json .State.Health}}'
+```
+
+An `ExitCode` of `-1` means the probe never ran — this is not the service
+failing. Check what the image actually has before writing a probe:
+`saladtechnologies/sdnext` ships `wget` and no `curl`, which is why the artwork
+sidecar's healthcheck uses `wget`.
 
 ## Collect for support
 

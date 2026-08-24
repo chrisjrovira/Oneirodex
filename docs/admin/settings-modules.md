@@ -176,7 +176,10 @@ talks to an endpoint outside the process, so it stays opt-in.
   passes `--skip-tests`, which its pinned SD.Next checkout does not define, so
   the stock command dies at argparse with *unrecognized arguments* before the
   server ever binds. Its volumes mount at `/webui/data/models` and
-  `/webui/outputs` — the image has no `/app`.
+  `/webui/outputs` — the image has no `/app`. Its healthcheck probes with
+  `wget`, because the image ships no `curl`: a `curl` probe fails with
+  "executable file not found" and the container sits unhealthy forever while
+  serving fine.
 - **GPU is opt-in and never assumed.** The sidecar runs on CPU by default —
   extremely slow, but it runs. `docker-compose.yml` requests no GPU at all,
   because an NVIDIA reservation on a host without a loaded driver fails
