@@ -150,6 +150,57 @@ def app():
 _SCHEMA_READY = False
 
 
+def _truncate_all_tables():
+    """Empty every table once, at the start of a run.
+
+    Nothing used to remove rows at all — `db.drop_all()` sat commented out
+    "for performance" — so `gamethecatest` kept every row any test had ever
+    committed, going back months. That is not inert:
+
+    * a test asserting on a query with `LIMIT` measures whatever else is in the
+      table. `latest_games` returns eight rows, so fixtures dated in years sort
+      below hundreds of accumulated games and the shelf never contains them.
+    * an unscoped sweep processes the whole table. `POST /api/updates/scan`
+      reported `checked == 22` against two fixtures.
+    * both of those failed *locally only*. CI starts from an empty database, so
+      the two environments disagreed about what the same test meant — which is
+      the expensive kind of failure, because the green one is the liar.
+
+    Truncating **per run** rather than per test is deliberate. Per-test
+    isolation would be stricter, but this suite is built on a shared database:
+    `configured_install` and `global_settings` create their rows only if absent,
+    and `configured_install`'s own docstring records tests that pass in a full
+    run "only because some earlier file happened to leave a user row behind".
+    Emptying between tests would expose all of those at once, which is a project
+    rather than a fix. Per run gets the property that actually matters — a local
+    run starts where CI starts — without disturbing the order the suite already
+    depends on.
+
+    Once, before any test has opened a connection, because TRUNCATE takes an
+    ACCESS EXCLUSIVE lock; doing this between tests would reintroduce the lock
+    storm the session-scoped schema build exists to avoid.
+
+    `GT_KEEP_TEST_DATA=1` skips it, for when the leftover rows *are* the thing
+    being investigated.
+    """
+    if os.getenv('GT_KEEP_TEST_DATA') == '1':
+        print('PYTEST: GT_KEEP_TEST_DATA=1 — leaving existing rows in place')
+        return
+
+    from sqlalchemy import text
+
+    tables = [f'"{table.name}"' for table in db.metadata.sorted_tables]
+    if not tables:
+        return
+    # One statement for all of them: CASCADE settles the foreign keys, and doing
+    # it in a single TRUNCATE avoids ordering the tables by dependency.
+    db.session.execute(
+        text(f'TRUNCATE TABLE {", ".join(tables)} RESTART IDENTITY CASCADE')
+    )
+    db.session.commit()
+    print(f'PYTEST: truncated {len(tables)} tables — run starts from an empty database')
+
+
 @pytest.fixture(scope='function')
 def db_session(app):
     """Yield the session, building the schema once per run."""
@@ -161,10 +212,11 @@ def db_session(app):
             # previous run — idempotent, and now paid for once.
             from gametheca.updateschema import DatabaseManager
             DatabaseManager().add_column_if_not_exists()
+            # After the schema is settled, so the truncate names every table
+            # this build knows about — including any the migration just added.
+            _truncate_all_tables()
             _SCHEMA_READY = True
         yield db.session
-        # Optionally drop all tables after test (commented out for performance)
-        # db.drop_all()
 
 @pytest.fixture(scope='function')
 def client(app):
