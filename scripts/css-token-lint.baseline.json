@@ -30,6 +30,9 @@
     "no-raw-font-size": 60,
     "no-raw-color": 17
   },
+  "frontend/member-app/src/chrome/AccountModal.jsx": {
+    "no-raw-inline-style": 3
+  },
   "frontend/member-app/src/chrome/CommandPalette.css": {
     "no-raw-radius": 2,
     "no-raw-font-size": 5
@@ -63,6 +66,9 @@
     "no-raw-radius": 1,
     "no-raw-color": 5,
     "no-raw-font-size": 1
+  },
+  "frontend/member-app/src/components/GameCard.jsx": {
+    "no-raw-inline-style": 1
   },
   "frontend/member-app/src/components/GamePreviewPopup.css": {
     "no-raw-radius": 5

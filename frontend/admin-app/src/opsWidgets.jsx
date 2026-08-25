@@ -532,3 +532,30 @@ export function LibraryHealthFactors({ health, limit = 3 }) {
     </ul>
   )
 }
+
+/** Honest scan glance: processed (= success+failed) / total, matching Scan Jobs.
+ *
+ * Moved here from OpsPage (GT-B34) so the Scans page can use it too. It lived
+ * next to its only caller while the Ops dashboard was the only surface showing
+ * scan progress — which was itself the bug: the page an operator actually
+ * watches a scan on showed less than the dashboard did.
+ */
+export function formatScanJobCounters(job) {
+  const success = Number(job?.folders_success) || 0
+  const failed = Number(job?.folders_failed) || 0
+  const total = Number(job?.total_folders) || 0
+  const processed = success + failed
+  if (total > 0) {
+    return `${processed}/${total}` + (failed ? ` · ${failed} failed` : '')
+  }
+  if (job?.status === 'Queued' || job?.status === 'Pending') {
+    return job?.queue_position != null ? `Queued #${job.queue_position}` : 'Queued'
+  }
+  if (job?.status === 'Running' || job?.status === 'Stopping') {
+    return 'Starting…'
+  }
+  if (job?.progress != null && Number(job.progress) > 0) {
+    return `${job.progress}%`
+  }
+  return '—'
+}

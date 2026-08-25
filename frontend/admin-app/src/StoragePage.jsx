@@ -243,7 +243,7 @@ export function StoragePage() {
       </div>
 
       {result ? (
-        <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+        <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
           <h2 className="gt-admin-panel-title">
             {resultKind === 'apply' ? 'Apply result' : 'Preview result'}
           </h2>

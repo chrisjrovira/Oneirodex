@@ -50,8 +50,10 @@ describe('ScansPage queued jobs', () => {
       </MemoryRouter>,
     )
 
-    expect(await screen.findByText(/Running: yes/i)).toBeInTheDocument()
-    expect(screen.getByText(/queued 1/i)).toBeInTheDocument()
+    // Was `/Running: yes/` + `/queued 1/` — the developer readout GT-B34
+    // replaced. The summary now names the library and its progress.
+    expect(await screen.findByText(/Scanning PCWIN/i)).toBeInTheDocument()
+    expect(screen.getByText(/Scanning PCWIN — 1\/10/i)).toBeInTheDocument()
     await waitFor(() => {
       expect(screen.getByText(/Queued/)).toBeInTheDocument()
     })
@@ -59,6 +61,77 @@ describe('ScansPage queued jobs', () => {
     expect(screen.getByText('PCWIN')).toBeInTheDocument()
     expect(screen.getByText('PS2')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent(/Scanning/i)
+  })
+
+
+  test('a queue with nothing running does not read as idle', async () => {
+    // The bug this wording exists for: an orphaned Running job held the queue,
+    // and the old readout rendered it as "Running: no · queued 1" — which reads
+    // as "nothing to do" rather than "stuck". See the scan-ownership fix.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url) => {
+        if (String(url).includes('/api/scan_jobs_status')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => [
+              { id: 'q1', library_name: 'PS2', status: 'Queued', queue_position: 1 },
+            ],
+          }
+        }
+        return { ok: false, status: 404, json: async () => ({}) }
+      }),
+    )
+
+    render(
+      <MemoryRouter>
+        <ScansPage />
+      </MemoryRouter>,
+    )
+
+    const summary = await screen.findByText(/1 scan queued, none running/i)
+    expect(summary).toBeInTheDocument()
+    expect(summary).toHaveTextContent(/waiting on a job that has not reported a result/i)
+  })
+
+  test('a failed job shows why, not just that it failed', async () => {
+    // The reason is the only thing that explains a queue that stopped moving,
+    // and the table used to drop it entirely even though the API returns it.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url) => {
+        if (String(url).includes('/api/scan_jobs_status')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => [
+              {
+                id: 'f1',
+                library_name: 'PCWIN',
+                status: 'Failed',
+                error_message:
+                  'Scan owner process is no longer running; reclaimed so queued scans can start.',
+                folders_success: 2,
+                folders_failed: 1,
+                total_folders: 9,
+              },
+            ],
+          }
+        }
+        return { ok: false, status: 404, json: async () => ({}) }
+      }),
+    )
+
+    render(
+      <MemoryRouter>
+        <ScansPage />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText(/owner process is no longer running/i)).toBeInTheDocument()
+    // …and the progress it got to before dying, which was also never shown.
+    expect(screen.getByText('3/9 · 1 failed')).toBeInTheDocument()
   })
 
   test('Refresh all while busy opens conflict modal and posts queue_policy', async () => {
@@ -90,7 +163,7 @@ describe('ScansPage queued jobs', () => {
       </MemoryRouter>,
     )
 
-    await screen.findByText(/Running: yes/i)
+    await screen.findByText(/Scanning PCWIN/i)
     await user.click(screen.getByRole('button', { name: /refresh all libraries/i }))
     expect(await screen.findByRole('heading', { name: /scan in progress/i })).toBeInTheDocument()
 

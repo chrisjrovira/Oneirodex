@@ -383,7 +383,7 @@ export function ImagesPage({ embedded = false }) {
         </a>
       </div>
 
-      <section className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+      <section className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
         <h2 className="gt-admin-panel-title">Single title</h2>
         <div className="gt-images-game-search">
           <label className="gt-images-game-search__field">
@@ -445,7 +445,7 @@ export function ImagesPage({ embedded = false }) {
         />
       </section>
 
-      <section className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+      <section className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
         <h2 className="gt-admin-panel-title">Mass image queue</h2>
         <p className="gt-admin-lede">
           Filter pending/failed downloads, retry, and batch download. Library / platform / service
@@ -730,7 +730,7 @@ export function ImagesPage({ embedded = false }) {
         )}
       </section>
 
-      <section className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+      <section className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
         <h2 className="gt-admin-panel-title">Missing covers (health)</h2>
         <p className="gt-admin-lede">
           From <code>/api/health/library</code> worst list — open picker or generate placeholders in

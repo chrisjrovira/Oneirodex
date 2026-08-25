@@ -92,7 +92,32 @@ foundation for the rest rather than a one-page fix.
 | **Converted** | All 21 files in one pass: **59 sites -> 27, 21 files -> 16, five at zero**. Every converted site is now assertive on error, polite on loading, and surfaces `HTTP <status> · <error_code>`; `UsersPage` and `EmulatorFirmwarePanel` kept their Try-again buttons via `onRetry`. |
 | **Deliberately kept** | Success messages, persistent config banners (StoragePage's helpers/apply/read-only disclosures) and inline single-control progress (`Uploading…`, `Refreshing…`, `Scanning…`) are **not** page status and stay hand-rolled. Two of those are asserted singularly by `OpsPage.test.jsx` / `pages.scans.test.jsx`, so converting them would have broken a real contract. The ratchet docstring records this so the remaining 27 is not mistaken for debt. |
 | **Checked, already done** | Admin page `<h1>`/lede are *already* retired by UIR-7 in `gt-appbar.css` — assumed missing, verified present before editing. |
-| **Next section** | Dashboard is done. Remaining admin sections (Libraries & scans, Settings, Content, Users, Integrations, System) now inherit the shared status language, so their per-section work is layout/content rather than chrome. |
+| **Next section** | Dashboard is done. Remaining admin sections now inherit the shared status language, so their per-section work is layout/content rather than chrome. |
+
+### Libraries & scans (2026-08-25)
+
+| | |
+|---|---|
+| **Shipped** | The Scans page was showing **less than the Ops dashboard**: `/api/scan_jobs_status` returns progress, current file, elapsed/ETA, `stalled` and `error_message`, and the table rendered none of them. Added **Progress** and **Detail** columns (reason → stalled → current → ETA), so a reclaimed job now says *why* instead of just Failed. Replaced the developer status readout with a sentence — and the stuck case, which used to render as `Running: no · queued 1` and read as **idle**, now says the queue is waiting on a job that has not reported a result. `formatScanJobCounters` moved to `opsWidgets.jsx` (re-exported from `OpsPage` for its test). |
+| **Caught in-pass** | First cut of the Progress column duplicated the Status cell for queued jobs (`Queued #1` beside `Queued (#1)`) — the new test found it. Progress now defers queue state to Status. |
+| **Guards** | `pages.scans.test.jsx` 3 → 5: a queue with nothing running must not read as idle; a failed job must surface its reason and the progress it reached. |
+| **Deliberately not done** | The Jinja `/scan_management` surface + its 2,423-line stylesheet. That is where the working forms live — its own slice, not a fold-in. |
+
+### Settings (2026-08-25)
+
+| | |
+|---|---|
+| **Shipped** | `SettingsPage` needed nothing. `HubPage` behind it did: it told operators to *"Use the actions above"* — controls GT-B7 deleted — on the one page with nothing else on it, and closed with "Form POSTs still hit the existing Flask endpoints". Both gone. It now offers the section's real destinations (`railDestinations('content')`, or the card's own `Open <title>` link) and otherwise names the rail. |
+| **Guards** | `pages.hub.test.jsx` (4) — the retired sentences must not return; links render; the no-links fallback still answers "what do I do here". |
+
+### Design-token ratchet blind spot (2026-08-25)
+
+| | |
+|---|---|
+| **Shipped** | `css-token-lint` only ever read `.css`, so every JSX inline style literal was invisible to it — it reported "none new" while **19 accumulated across the two SPAs**. It now walks `.jsx`/`.js` and lints inline style objects under a new `no-raw-inline-style` rule. 15 admin literals converted to `var(--gt-space-*)`. |
+| **Baselined, not re-spaced** | The 4 remaining are member-app (`1.1rem`, `1.2rem`, `0.45rem`) with **no exact token**. Rounding them to the nearest scale point would be a silent change to W29 spacing dressed up as a lint fix, so they were recorded instead. Baseline 1257 → 1261, additions only, no existing count touched. |
+| **Guards** | `cssTokenLint.test.js` 3 → 6: the rule sees JSX literals, skips data-driven styles (`background: option.color` is not a design decision), and reports the offending value rather than `undefined`. |
+| **Trap recorded** | A block comment carrying inline code samples made **vitest fail to parse the module** while node and esbuild accepted it in every loader mode. Bisected to the comment, not the code. See [ui-debt-log UID-030](../dev/ui-debt-log.md) — suspect comments first if it recurs. |
 
 > **Reading this file.** The header is current; the wave tables below are a running log kept in
 > the order things happened, so a row states what was true when it was written. Where a row and the

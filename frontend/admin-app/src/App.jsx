@@ -15,7 +15,7 @@ import { QualityProfilesPage } from './QualityProfilesPage'
 import { StoragePage } from './StoragePage'
 import { ScanMatchSettingsPage } from './ScanMatchSettingsPage'
 import { ExtensionsPage } from './ExtensionsPage'
-import { SETTINGS_CARDS } from './navConfig'
+import { SETTINGS_CARDS, railDestinations } from './navConfig'
 import './ops.css'
 import {
   DashboardPage,
@@ -84,10 +84,14 @@ export function resolveRenderMode(root = document.getElementById('admin-app-root
 function SettingsSectionPage() {
   const { pathname } = useLocation()
   const card = SETTINGS_CARDS.find((c) => c.to === pathname)
+  // This renders only when a settings module has no React body yet, so without
+  // a link out it is a titled blank panel. The card knows its own destination;
+  // offering it is the difference between a landing page and a dead end.
   return (
     <HubPage
       title={card?.title || 'Settings module'}
       lede={card?.blurb || 'Server module settings.'}
+      links={card ? [{ href: card.to, label: `Open ${card.title}` }] : []}
     />
   )
 }
@@ -136,6 +140,7 @@ function RoutedAdminPage() {
         <HubPage
           title="Content"
           lede="Discovery shelves, newsletter, announcements, and attract mode."
+          links={railDestinations('content')}
         />
       )
     case 'announcements':

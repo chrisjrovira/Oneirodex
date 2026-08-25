@@ -6,6 +6,7 @@ import { SystemResetPanel } from './SystemResetPanel'
 import { useWidgetOrder } from './useWidgetOrder'
 import {
   LibraryHealthFactors,
+  formatScanJobCounters,
   MeterBar,
   MetricTile,
   OpsStatusBanner,
@@ -25,6 +26,11 @@ import {
 } from './opsWidgets'
 import './ops.css'
 
+// Re-exported: this used to be defined here, and OpsPage.test.jsx imports it
+// from this module. Moving the definition without this would have broken a test
+// that has nothing to do with the move.
+export { formatScanJobCounters }
+
 async function getJson(url) {
   const response = await fetch(url, { credentials: 'same-origin' })
   if (response.status === 401) {
@@ -35,26 +41,6 @@ async function getJson(url) {
   return response.json()
 }
 
-/** Honest scan glance: processed (= success+failed) / total, matching Scan Jobs. */
-export function formatScanJobCounters(job) {
-  const success = Number(job?.folders_success) || 0
-  const failed = Number(job?.folders_failed) || 0
-  const total = Number(job?.total_folders) || 0
-  const processed = success + failed
-  if (total > 0) {
-    return `${processed}/${total}` + (failed ? ` · ${failed} failed` : '')
-  }
-  if (job?.status === 'Queued' || job?.status === 'Pending') {
-    return job?.queue_position != null ? `Queued #${job.queue_position}` : 'Queued'
-  }
-  if (job?.status === 'Running' || job?.status === 'Stopping') {
-    return 'Starting…'
-  }
-  if (job?.progress != null && Number(job.progress) > 0) {
-    return `${job.progress}%`
-  }
-  return '—'
-}
 
 function livekitLabel(livekit) {
   if (!livekit) return 'n/a'

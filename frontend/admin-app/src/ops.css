@@ -609,3 +609,34 @@
   color: var(--gt-danger);
   white-space: nowrap;
 }
+
+/* --- Scans page summary + detail (GT-B34) --------------------------------
+ *
+ * The summary replaces a developer readout ("Running: no · queued 1 · job
+ * 3f2a… · progress 45") that was accurate and unreadable. It is a sentence
+ * because the question it answers is a sentence.
+ */
+.gt-scan-summary {
+  margin: 0 0 0.5rem;
+  color: var(--gt-text);
+  max-width: 70ch;
+}
+
+.gt-scan-detail {
+  color: var(--gt-text);
+}
+
+.gt-scan-detail--muted {
+  color: var(--gt-text-muted);
+}
+
+/* A failed job's reason is the one thing that explains a queue that stopped
+   moving, so it is the only cell on this table allowed to carry danger. */
+.gt-scan-detail--error {
+  color: var(--gt-danger);
+}
+
+.gt-scan-detail--warn {
+  color: var(--gt-text-muted);
+  font-style: italic;
+}

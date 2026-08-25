@@ -97,9 +97,11 @@ export function AnnouncementsPage() {
         </button>
       </form>
 
-      <h2 style={{ marginTop: '1.5rem' }}>Recent</h2>
+      <h2 style={{ marginTop: 'var(--gt-space-6)' }}>Recent</h2>
       <PageStatus loading={!rows} loadingMessage="Loading announcements…" />
-      {rows && rows.length === 0 ? <p>No announcements yet.</p> : null}
+      {rows && rows.length === 0 ? (
+        <PageStatus emptyMessage="No announcements yet." />
+      ) : null}
       {rows && rows.length > 0 ? (
         <ul className="gt-admin-list">
           {rows.map((row) => (

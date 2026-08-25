@@ -227,7 +227,7 @@ export function QualityProfilesPage() {
         active profile scores Arr search hits and extends scan name-clean filters.
       </p>
 
-      <div className="gt-admin-panel" style={{ marginBottom: '1rem' }}>
+      <div className="gt-admin-panel" style={{ marginBottom: 'var(--gt-space-5)' }}>
         <div className="gt-admin-actions-row" style={{ alignItems: 'flex-end', marginTop: 0 }}>
           <label className="gt-admin-field" style={{ flex: '1 1 12rem', margin: 0 }}>
             Profiles
@@ -356,7 +356,7 @@ export function QualityProfilesPage() {
         </div>
       </form>
 
-      <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+      <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
         <h2 className="gt-admin-panel-title">Test title score</h2>
         <p className="gt-admin-lede">
           Probe <code>POST /api/quality-profiles/score</code> against the selected profile.

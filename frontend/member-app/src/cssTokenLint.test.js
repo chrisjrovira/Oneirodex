@@ -3,6 +3,7 @@ import { expect, test } from 'vitest'
 import {
   compareToBaseline,
   lintCss,
+  lintJsxInlineStyles,
   readBaseline,
   runLint,
 } from '../../../scripts/css-token-lint.mjs'
@@ -59,4 +60,41 @@ test('lint ignores hex inside comments and url() data URIs', () => {
   `
 
   expect(lintCss(css, 'probe.css')).toEqual([])
+})
+
+/**
+ * GT-B36. The rule this lint encodes is "*using* a value must go through a
+ * token", but for its whole life it only read `.css` files — so
+ * `style={{ marginTop: '1rem' }}` in a component was a literal it could not
+ * see, and the report kept saying "none new" while they accumulated. There
+ * were 19 across the two SPAs when this was added.
+ */
+test('lint sees literals in JSX inline styles', () => {
+  const jsx = `
+    <div style={{ marginTop: '1rem' }} />
+    <div style={{ color: '#2fd67b' }} />
+    <div style={{ padding: 'var(--gt-space-4)' }} />
+  `
+  const rules = lintJsxInlineStyles(jsx, 'Example.jsx').map((f) => f.rule)
+
+  // The two literals are caught; the tokenised one is not.
+  expect(rules).toEqual(['no-raw-inline-style', 'no-raw-inline-style'])
+})
+
+test('a style built from data is not a token decision', () => {
+  // `background: option.color` is the colour of a thing in the database, not a
+  // design choice this lint has any business rejecting. Only quoted literals
+  // count, which is what keeps data-driven styles out of the ratchet.
+  const jsx = `<span style={{ background: option.color, width: computed }} />`
+
+  expect(lintJsxInlineStyles(jsx, 'Example.jsx')).toEqual([])
+})
+
+test('inline-style findings report the offending value, not undefined', () => {
+  // The CSS rules all report under `detail` and the reporter reads that key, so
+  // a finding using a different name printed "undefined" beside every hit.
+  const [finding] = lintJsxInlineStyles(`<div style={{ gap: '0.45rem' }} />`, 'Example.jsx')
+
+  expect(finding.detail).toBe('0.45rem')
+  expect(finding.file).toBe('Example.jsx')
 })

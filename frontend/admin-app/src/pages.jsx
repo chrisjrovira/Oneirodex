@@ -25,6 +25,7 @@ import {
   OpsStatusBanner,
   companionKindRows,
   companionsTone,
+  formatScanJobCounters,
   dbPingTone,
   formatBytes,
   formatLibraryHealthHint,
@@ -374,7 +375,7 @@ export function LibrariesPage() {
         <a href="#import-leaf">Import CSV/JSON</a>
       </p>
       <div className="gt-admin-panel">
-        <div className="gt-admin-panel__toolbar" style={{ marginBottom: '0.75rem' }}>
+        <div className="gt-admin-panel__toolbar" style={{ marginBottom: 'var(--gt-space-4)' }}>
           <button
             type="button"
             className="gt-btn gt-btn--accent"
@@ -527,14 +528,45 @@ export function SettingsPage() {
   )
 }
 
-export function HubPage({ title, lede }) {
+/**
+ * A section landing page with no body of its own (GT-B35).
+ *
+ * The copy here used to read: "This admin surface runs in the React shell. Use
+ * the actions above for the full workflow. Form POSTs still hit the existing
+ * Flask endpoints." Two problems, one of them a dead end.
+ *
+ * There are no actions above. GT-B7 deleted the per-page `LinkRow` when the
+ * rail took over destinations, so the sentence pointed at controls that had
+ * been removed — and this is precisely the page with nothing else on it, so an
+ * operator following that instruction found blank space. The second sentence
+ * described the app's internal wiring, which is not something an operator can
+ * act on and not something they should have to read.
+ *
+ * `links` is how it stops being a dead end. Passing a section's destinations is
+ * *not* the LinkRow mistake returning: LinkRow put a duplicate nav on top of
+ * every page that already had content. Here the list is the entire purpose of
+ * the page, and it is also the only route to those destinations when the rail
+ * is a closed drawer on a narrow screen.
+ */
+export function HubPage({ title, lede, links = [] }) {
   return (
     <Page title={title} lede={lede}>
       <div className="gt-admin-panel">
-        <p>
-          This admin surface runs in the React shell. Use the actions above for the full workflow.
-          Form POSTs still hit the existing Flask endpoints.
-        </p>
+        {links.length ? (
+          <ul className="gt-settings-list">
+            {links.map((link) => (
+              <li key={link.href}>
+                <a className="gt-settings-row" href={link.href}>
+                  <span className="gt-settings-row__title">{link.label}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="gt-admin-lede">
+            Pick a destination for this section from the rail on the left.
+          </p>
+        )}
       </div>
     </Page>
   )
@@ -650,13 +682,13 @@ export function IntegrationsPage() {
       </div>
 
       {!inventory && !inventoryError ? (
-        <div className="gt-admin-panel gt-admin-inventory" style={{ marginTop: '1rem' }}>
+        <div className="gt-admin-panel gt-admin-inventory" style={{ marginTop: 'var(--gt-space-5)' }}>
           <p>Loading provider inventory…</p>
         </div>
       ) : null}
 
       {inventory && inventory.length > 0 ? (
-        <div className="gt-admin-panel gt-admin-inventory" style={{ marginTop: '1rem' }}>
+        <div className="gt-admin-panel gt-admin-inventory" style={{ marginTop: 'var(--gt-space-5)' }}>
           <h2>Provider inventory</h2>
           <p>
             Live status from <code>GET /api/admin/integrations/inventory</code> — every provider
@@ -685,18 +717,18 @@ export function IntegrationsPage() {
       ) : null}
 
       {inventory && inventory.length === 0 && !inventoryError ? (
-        <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+        <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
           <p>Provider inventory returned no rows — use the cards above.</p>
         </div>
       ) : null}
 
       {inventoryError ? (
-        <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+        <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
           <p>Provider inventory unavailable — use the cards above.</p>
         </div>
       ) : null}
 
-      <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+      <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
         <p>
           Full Integrations tabs (SMTP · IGDB · community · artwork · ownership · OIDC · indexers)
           still render when Jinja content is present. This React hub is the fallback chrome when the
@@ -900,11 +932,40 @@ export function ScansPage() {
   const message = status?.message || status?.status_message || status?.phase || null
   const scanMotifActive = running || queuedJobs.length > 0
 
+  /**
+   * One sentence answering "is anything happening, and if not, why not".
+   *
+   * The queued-but-not-running case is the one that matters and the one the old
+   * readout hid: it rendered as "Running: no · queued 1", which reads as idle.
+   * A queue with work in it and nothing running is either about to promote or
+   * is being held by a job that no longer has a worker — and the operator
+   * cannot tell those apart from a boolean. The Detail column carries the
+   * reclaim reason once the sweep has run; this line at least stops calling it
+   * idle.
+   */
+  const activeJob = jobs.find((job) => isScanBusyStatus(job?.status)) || null
+  let scanSummary
+  if (running && activeJob) {
+    const counters = formatScanJobCounters(activeJob)
+    const where = activeJob.library_name || activeJob.library || 'a library'
+    const eta = activeJob.eta_label ? ` · ~${activeJob.eta_label} left` : ''
+    scanSummary = `Scanning ${where} — ${counters}${eta}`
+  } else if (queuedJobs.length) {
+    scanSummary =
+      `${queuedJobs.length} scan${queuedJobs.length === 1 ? '' : 's'} queued, none running. ` +
+      'A queued scan starts when the current one finishes; if nothing is running, ' +
+      'the queue is waiting on a job that has not reported a result yet.'
+  } else if (jobs.length) {
+    scanSummary = 'No scan running.'
+  } else {
+    scanSummary = 'No scans have run yet.'
+  }
+
   return (
     <Page title="Libraries & scans" lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja Libraries & scans) or Refresh all here.">
       <PageStatus error={error} errorMessage="Unable to load scan status." />
       <div className="gt-admin-panel">
-        <div className="gt-admin-panel__toolbar" style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="gt-admin-panel__toolbar" style={{ marginBottom: 'var(--gt-space-4)', display: 'flex', gap: 'var(--gt-space-4)', flexWrap: 'wrap', alignItems: 'center' }}>
           <button
             type="button"
             className="gt-btn gt-btn--accent"
@@ -921,20 +982,16 @@ export function ScansPage() {
           ) : null}
         </div>
         {!status ? (
-          <p>Loading…</p>
+          <PageStatus loading loadingMessage="Loading scan status…" />
         ) : (
           <>
-            <p>
-              Running: {running ? 'yes' : 'no'}
-              {queuedJobs.length ? <> · queued {queuedJobs.length}</> : null}
-              {status.job_id ? (
-                <>
-                  {' '}
-                  · job <code>{status.job_id}</code>
-                </>
-              ) : null}
-              {progress != null ? <> · progress {String(progress)}</> : null}
-            </p>
+            {/* Was a developer readout — "Running: no · queued 1 · job 3f2a…
+                · progress 45". Every value in it was true and none of it
+                answered the operator's question, which is "is anything
+                happening, and if not, why not". That mattered: a queue held up
+                by an orphaned job rendered as "Running: no · queued 1", which
+                reads as idle rather than stuck. */}
+            <p className="gt-scan-summary">{scanSummary}</p>
             {message ? <p className="gt-admin-lede">{message}</p> : null}
             {/* Scan jobs sort and filter like every other table now (W27-C2).
                 Each column declares `value` where what it renders is not what
@@ -970,6 +1027,53 @@ export function ScansPage() {
                         ? ` (#${job.queue_position})`
                         : ''
                     }`,
+                },
+                {
+                  // Progress and reason were on the Ops dashboard and not here
+                  // (GT-B34), so the page you watch a scan on told you less
+                  // than the glance did. Both come straight off
+                  // /api/scan_jobs_status and were simply never rendered.
+                  key: 'progress',
+                  label: 'Progress',
+                  // Queue state is the Status column's job, not this one's.
+                  // formatScanJobCounters answers "Queued #1" for a queued job
+                  // because on the Ops dashboard it is the only column there
+                  // is; here that put the same fact in two adjacent cells.
+                  render: (job) =>
+                    isScanQueuedStatus(job.status) ? '—' : formatScanJobCounters(job),
+                  // Sorts on folders done, not on the rendered "3/25", which
+                  // would compare as text and put 10 before 9.
+                  value: (job) =>
+                    Number(job.folders_success ?? 0) + Number(job.folders_failed ?? 0),
+                },
+                {
+                  key: 'detail',
+                  label: 'Detail',
+                  sortable: false,
+                  render: (job) => {
+                    // A failed job's reason outranks everything: it is the only
+                    // thing that explains a queue that stopped moving. This is
+                    // where a reclaimed job now says the owner process is gone,
+                    // instead of the operator seeing an idle-looking queue.
+                    if (job.error_message) {
+                      return <span className="gt-scan-detail gt-scan-detail--error">{job.error_message}</span>
+                    }
+                    if (job.stalled) {
+                      return <span className="gt-scan-detail gt-scan-detail--warn">No progress reported</span>
+                    }
+                    if (job.current_processing) {
+                      return <span className="gt-scan-detail">{job.current_processing}</span>
+                    }
+                    if (job.elapsed_label || job.eta_label) {
+                      return (
+                        <span className="gt-scan-detail gt-scan-detail--muted">
+                          {job.elapsed_label || '—'}
+                          {job.eta_label ? ` · ~${job.eta_label} left` : ''}
+                        </span>
+                      )
+                    }
+                    return <span className="gt-scan-detail gt-scan-detail--muted">—</span>
+                  },
                 },
                 {
                   key: 'scan_folder',

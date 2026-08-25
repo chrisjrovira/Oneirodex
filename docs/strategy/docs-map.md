@@ -166,6 +166,7 @@
 | UI debt log (recurring defects) | Have — [dev/ui-debt-log.md](../dev/ui-debt-log.md) — badge inventory · UID-001…015 · **UID-001**/**UID-002**/**UID-005**/**UID-009** done · UI Tasks must update |
 | Docs-sync skill | Have — `.claude/skills/docs-sync/` |
 | Agent locks (product + engineering defaults) | Have — [dev/agent-locks.md](../dev/agent-locks.md) |
+| W31 commit attribution (security vs UI) | Have — [dev/w31-commit-attribution.md](../dev/w31-commit-attribution.md) — 130 UI · 100 security · 6 overlapping; split assessed and deliberately not performed |
 | UI tokens (Wave 0 / B+C) | Have — [dev/ui-wave0-tokens.md](../dev/ui-wave0-tokens.md) |
 | Architecture overview | Create |
 | Local dev setup | Update |

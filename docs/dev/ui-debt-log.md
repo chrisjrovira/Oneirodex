@@ -494,3 +494,101 @@ you convert a site; delete the row at zero.
 Dashboard only (`pages.jsx`): its two competing blocks — a `.gt-admin-alert`
 div and a `.gt-admin-lede` paragraph, on one page — became one `PageStatus` with
 a Retry action. The remaining 20 files are mechanical and gated by the ratchet.
+
+## W30c — Libraries & scans: the page you watch a scan on (2026-08-25)
+
+Second per-section pass. The finding is the one the scan-wedge bug hid behind.
+
+| UID | Symptom | Cause | Fix |
+|---|---|---|---|
+| UID-025 | The **Scans page showed less than the Ops dashboard**. A failed job gave no reason, a running one gave no progress. | `/api/scan_jobs_status` returns `progress_percentage`, `folders_processed`, `current_processing`, `error_message`, `elapsed_label`, `eta_label` and `stalled`. The SPA table rendered `id`, `library`, `status`, `path`, `retry` and dropped the rest. The dashboard's Scans tile rendered them, so the glance beat the workbench. | Added **Progress** (sorting on folders-done, not the rendered string) and **Detail** columns. Detail answers in priority order: failure reason → stalled → current file → elapsed/ETA. |
+| UID-026 | The status line was a developer readout — `Running: no · queued 1 · job 3f2a… · progress 45` | Every value true; none of them the operator's question. Worse, **an orphaned job holding the queue rendered as "Running: no · queued 1", which reads as idle rather than stuck** — the exact state that made scanning look broken. | One sentence: `Scanning PCWIN — 1/10 · ~5m left` when running, and when not, an explicit *"N scans queued, none running… the queue is waiting on a job that has not reported a result yet."* |
+
+`formatScanJobCounters` moved from `OpsPage.jsx` to `opsWidgets.jsx` beside the
+other formatters, re-exported from `OpsPage` so `OpsPage.test.jsx`'s existing
+import keeps working. It lived next to its only caller precisely because the
+dashboard was the only surface showing progress — which was the bug.
+
+### Caught by the new test, not by review
+
+The first cut of the Progress column called `formatScanJobCounters` unguarded.
+That helper answers `Queued #1` for a queued job — correct on the dashboard,
+where it is the only column — so on this table it duplicated the Status cell's
+`Queued (#1)` one column over. Progress now yields `—` for queued rows and
+leaves queue state to the column that owns it.
+
+### Still open in this section
+
+`LibrariesPage` is a thin shell pointing at the Jinja `/scan_management`, and
+the substantive surface is Jinja plus a **2,423-line** `admin_manage_scanjobs.css`.
+That is where the working forms live, so it is a bigger and riskier slice than
+the React pages and is deliberately left for its own pass rather than folded in.
+
+## W30d — Settings: the hub that pointed at deleted controls (2026-08-25)
+
+Third per-section pass. `SettingsPage` itself needed nothing — UX-C9's grouped
+rows and the restored module badges are sound. The defect was one component
+behind it.
+
+| UID | Symptom | Cause | Fix |
+|---|---|---|---|
+| UID-027 | `HubPage` told the operator *"Use the actions above for the full workflow"* — on a page with nothing above. | GT-B7 deleted the per-page `LinkRow` when the rail took over destinations. The copy referring to it was never updated, and this is the one page with no other content, so following the instruction found blank space. | Sentence removed. The page now offers the section's actual destinations, or names the rail when it has none. |
+| UID-028 | The same panel ended with *"Form POSTs still hit the existing Flask endpoints."* | Implementation detail in operator UI — describes the app's wiring, not anything the reader can act on. | Gone. |
+| UID-029 | A settings module with no React body rendered as a titled blank panel. | `SettingsSectionPage` passed only `title`/`lede` to `HubPage`, discarding the card's own `to` — so the page knew where its content was and did not say. | Passes `Open <card title>` as a link. |
+
+### Why links here are not the LinkRow mistake returning
+
+`LinkRow` was removed because it stacked a duplicate nav on top of every admin
+page that already had its own content. `HubPage` has no content — the list *is*
+the page — and it is also the only route to those destinations while the rail is
+a closed drawer on a narrow screen. Reintroducing a nav row generally would
+repeat GT-B7; giving a landing page somewhere to land does not.
+
+Guarded by `pages.hub.test.jsx`: the two retired sentences must not come back,
+links render when supplied, and the no-links fallback still answers "what do I
+do here".
+
+## W30e — the ratchet that could not see half the codebase (2026-08-25)
+
+Found while sweeping the remaining admin sections for repeated defect classes.
+
+| UID | Symptom | Cause | Fix |
+|---|---|---|---|
+| UID-030 | `css-token-lint` reported "OK, none new" while raw literals accumulated in components. | The rule it encodes is *using a value must go through a token* — but `collectCssFiles` only ever collected `.css`. Every `style={{ marginTop: '1rem' }}` in JSX was a literal the ratchet was structurally blind to. **19 across the two SPAs.** | Walk `.jsx`/`.js` too and lint inline style objects. New rule `no-raw-inline-style`. |
+
+### What the sweep found first
+
+Three defect classes were checked across every remaining admin page rather than
+reading each one end to end:
+
+- **Stale wayfinding copy** — none left after UID-027.
+- **Hand-rolled empty states** — one, in `AnnouncementsPage`.
+- **Inline styles** — 31 style objects, 19 carrying literal values. That last one
+  is what exposed the ratchet's blind spot.
+
+### Converted, not baselined
+
+15 admin literals became `var(--gt-space-*)`. The 4 remaining are in member-app
+(`1.1rem`, `1.2rem`, `0.45rem`) and have **no exact token**, so they were
+baselined rather than nudged onto the nearest scale point — rounding them would
+be a silent change to W29's spacing dressed up as a lint fix. Baseline 1257 →
+1261, additions only.
+
+> Note on `--update`: CLAUDE.md says it is for re-recording after a genuine
+> reduction, never to absorb a new violation. These 4 are not new violations —
+> they are newly *visible* ones under a widened rule, which is the one case
+> where extending the baseline is honest. The diff was checked to confirm it
+> added only those rows and changed no existing count.
+
+### A trap worth knowing about this file
+
+A richer version of the new block comment — one carrying inline code samples —
+made **vitest fail to parse the module** with `SyntaxError: Invalid or
+unexpected token`, while `node` imported it happily and `esbuild` compiled it in
+every loader mode. Bisected to the comment, not the code beneath it. Something
+in vite's transform mis-lexes certain comment content in a file that also uses
+template literals.
+
+Two hours of the wrong theories (regex literals, backreferences, JSX loaders)
+came before bisecting. If this file fails to parse under vitest again, **suspect
+the comments first** and bisect rather than reason about the parser.
