@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fetchFavoriteGames } from './api/favorites'
+import { ContextBar } from './chrome/ContextBar'
 import { GameGrid } from './components/GameGrid'
+import { ITEM_KIND_FILTER_CHIPS } from './components/ItemKindFilterChips'
 import { PaginationBar } from './components/PaginationBar'
+import { PageStatus } from './components/PageStatus'
 
 export function FavoritesApp({ initialConfig, shellConfig } = {}) {
   const defaultPerPage = Number(shellConfig?.perPage) || Number(initialConfig?.perPage) || 50
@@ -12,6 +15,17 @@ export function FavoritesApp({ initialConfig, shellConfig } = {}) {
   const [perPage, setPerPage] = useState(defaultPerPage)
   const [pages, setPages] = useState(1)
   const [total, setTotal] = useState(0)
+  /* Favorites is a library, and a big one for anyone who has been using the
+     product a while — so it needs both of the ways Library gives you through a
+     long list: narrow it, or page it. The pager was already here; narrowing was
+     not, so a member with four hundred favourites could only scroll.
+
+     Name and kind, and nothing else, because those are exactly what
+     `GET /api/favorites` supports (`apply_name_filter` / `apply_item_kind_filter`
+     on that route). Offering a control the endpoint cannot honour would be the
+     tile-size slider problem again — a filter that moves and changes nothing. */
+  const [name, setName] = useState('')
+  const [itemKind, setItemKind] = useState('')
 
   useEffect(() => {
     const controller = new AbortController()
@@ -20,7 +34,7 @@ export function FavoritesApp({ initialConfig, shellConfig } = {}) {
     setError(null)
     setGames(null)
     fetchFavoriteGames(
-      { page, per_page: perPage },
+      { page, per_page: perPage, name, item_kind: itemKind },
       { signal: controller.signal },
     )
       .then((result) => {
@@ -39,29 +53,111 @@ export function FavoritesApp({ initialConfig, shellConfig } = {}) {
       active = false
       controller.abort()
     }
-  }, [page, perPage, retryCount])
+  }, [page, perPage, retryCount, name, itemKind])
 
-  if (error) {
+  const kindViews = useMemo(
+    () => [
+      { id: '', label: 'All' },
+      ...ITEM_KIND_FILTER_CHIPS.map((chip) => ({ id: chip.kind, label: chip.label })),
+    ],
+    [],
+  )
+
+  /* Only the search counts toward the badge. The kind is the segmented strip in
+     the open, so counting it would badge the trigger for a filter that is
+     already visible — the same miscount Library's bar deliberately avoids. */
+  const filterCount = name ? 1 : 0
+
+  const bar = (
+    <ContextBar
+      views={kindViews}
+      activeView={itemKind}
+      onSelectView={(kind) => {
+        setPage(1)
+        setItemKind(kind || '')
+      }}
+      filterCount={filterCount}
+      filters={({ close }) => (
+        <form
+          className="gt-favorites__filters"
+          onSubmit={(event) => {
+            event.preventDefault()
+            close()
+          }}
+        >
+          <label>
+            <span className="visually-hidden">Search favorites by title</span>
+            <input
+              type="search"
+              className="form-control"
+              placeholder="Search by title"
+              aria-label="Search favorites by title"
+              autoComplete="off"
+              value={name}
+              onChange={(event) => {
+                setPage(1)
+                setName(event.target.value)
+              }}
+            />
+          </label>
+          <div className="gt-cbtn-group gt-cbtn-group--fill">
+            <button
+              type="button"
+              className="gt-cbtn"
+              disabled={!name}
+              onClick={() => {
+                setPage(1)
+                setName('')
+              }}
+            >
+              Clear
+            </button>
+            <button type="submit" className="gt-cbtn">
+              Done
+            </button>
+          </div>
+        </form>
+      )}
+      summary={total ? `${total.toLocaleString()} favorites` : null}
+    />
+  )
+
+  if (error || !games) {
     return (
-      <div role="alert">
-        <p>Unable to load favorites.</p>
-        <button type="button" onClick={() => setRetryCount((count) => count + 1)}>
-          Retry
-        </button>
-      </div>
+      <>
+        {bar}
+        <PageStatus
+          loading={!error}
+          error={error}
+          errorMessage="Unable to load favorites."
+          loadingMessage="Loading favorites…"
+          onRetry={() => setRetryCount((count) => count + 1)}
+        />
+      </>
     )
   }
 
-  if (!games) {
-    return <p>Loading favorites…</p>
-  }
-
-  if (games.length === 0 && total === 0) {
-    return <p>You haven't added any favorites yet!</p>
+  // "Nothing matched" and "you have none" are different answers, and telling a
+  // member they have no favourites while they are looking at a search box they
+  // just typed into is the wrong one.
+  if (games.length === 0) {
+    return (
+      <>
+        {bar}
+        <PageStatus
+          emptyMessage={
+            name || itemKind
+              ? 'No favorites match that. Clear the filter to see them all.'
+              : "You haven't added any favorites yet!"
+          }
+        />
+      </>
+    )
   }
 
   return (
     <>
+      {bar}
       <GameGrid
         games={games}
         showPlayStatus={initialConfig.showPlayStatus}

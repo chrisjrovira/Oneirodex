@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   checkGameFreshness,
@@ -16,6 +16,8 @@ import { RelatedMediaStrip } from '../components/RelatedMediaStrip'
 import { ExternalStoreLinks } from '../components/ExternalStoreLinks'
 import { GameActionBar } from '../components/GameActionBar'
 import { OpenPathModal } from '../components/OpenPathModal'
+import { AddToCollection } from '../components/AddToCollection'
+import { PageStatus } from '../components/PageStatus'
 import { ScreenshotLightbox } from '../components/ScreenshotLightbox'
 import { coverUrl } from '../utils/coverUrl'
 import {
@@ -70,6 +72,24 @@ export function GameDetailsPage() {
   const [catalogBusy, setCatalogBusy] = useState(false)
   const [catalogStatus, setCatalogStatus] = useState(null)
   const [shotIndex, setShotIndex] = useState(null)
+  /* Screenshot URLs the browser could not load.
+   *
+   * The payload no longer lists art it cannot serve, which fixes the common
+   * case. It cannot fix the other one: a remote IGDB URL that has since gone,
+   * or a local file deleted after the row was written. Either renders a broken
+   * image, and a gallery of broken images is worse than no gallery — so a shot
+   * that fails to load leaves the list, and a section left with nothing does
+   * not render at all. */
+  const [brokenShots, setBrokenShots] = useState(() => new Set())
+
+  const markShotBroken = useCallback((url) => {
+    setBrokenShots((current) => {
+      if (current.has(url)) return current
+      const next = new Set(current)
+      next.add(url)
+      return next
+    })
+  }, [])
   const [videoIndex, setVideoIndex] = useState(null)
   const [adminMenuOpen, setAdminMenuOpen] = useState(false)
   const [summaryExpanded, setSummaryExpanded] = useState(false)
@@ -159,6 +179,12 @@ export function GameDetailsPage() {
   }, [adminMenuOpen])
 
   const videoEmbeds = useMemo(() => trailerEmbedUrls(game), [game])
+
+  /** Screenshots that are actually renderable — see `brokenShots`. */
+  const shownShots = useMemo(
+    () => (game?.screenshots || []).filter((url) => !brokenShots.has(url)),
+    [game?.screenshots, brokenShots],
+  )
 
   const demoLink = useMemo(() => youtubeDemoLink(game), [game])
   const pathRows = useMemo(() => adminPathRows(game), [game])
@@ -274,23 +300,16 @@ export function GameDetailsPage() {
     }
   }
 
-  if (error && !game) {
-    return (
-      <div className="gt-more-page gt-details-page">
-        <div role="alert">
-          <p>Unable to load game details.</p>
-          <button type="button" className="gt-btn" onClick={() => setRetryCount((n) => n + 1)}>
-            Retry
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   if (!game) {
     return (
       <div className="gt-more-page gt-details-page">
-        <p className="gt-more-page__lede">Loading game…</p>
+        <PageStatus
+          loading={!error}
+          error={error}
+          errorMessage="Unable to load game details."
+          loadingMessage="Loading game…"
+          onRetry={() => setRetryCount((n) => n + 1)}
+        />
       </div>
     )
   }
@@ -299,6 +318,21 @@ export function GameDetailsPage() {
 
   return (
     <div className="gt-more-page gt-details-page">
+      {/* Wide, title-free art behind the page.
+          Two rules make this work as atmosphere rather than as a picture the
+          content is sitting on top of: it is never the cover (the cover carries
+          the title, and the title is already on the page in readable type), and
+          it is obscured on three axes at once — blurred, desaturated, and faded
+          out under a gradient that reaches full opacity well before the text
+          starts. Aria-hidden and `pointer-events: none` because it is a surface,
+          not content: nothing here is announced and nothing here is clickable.
+          Absent when a title has no wide art, which leaves the page on its flat
+          surface exactly as before. */}
+      {game.backdrop_url ? (
+        <div className="gt-details-page__backdrop" aria-hidden="true">
+          <img src={game.backdrop_url} alt="" loading="lazy" />
+        </div>
+      ) : null}
       <div className="gt-details-page__nav">
         <Link className="gt-btn" to="/library">
           ← Library
@@ -487,16 +521,32 @@ export function GameDetailsPage() {
                 Play in browser
               </button>
             ) : null}
-            {game.steam_app_id ? (
-              <a className="gt-btn" href={`steam://run/${game.steam_app_id}`}>
-                Launch Steam
-              </a>
-            ) : null}
+            {/* Same control as the tile menu's, at the other place the "where
+                does this go" decision gets made. */}
+            <AddToCollection
+              gameUuid={game.uuid}
+              gameName={game.name}
+              variant="inline"
+            />
             <ExternalStoreLinks
               urls={game.urls}
               steamUrl={game.steam_url}
               igdbUrl={game.url_igdb || game.url}
             />
+            {/* Launch Steam sits second-to-last, immediately before the
+                freshness check.
+                It used to lead the row, right after Play in browser — two
+                "start the game" buttons side by side, one of which only works
+                if you own it on Steam and have the client installed. Grouped
+                with the store links instead, it reads as the last of the
+                "elsewhere" actions, which is what it is: the row now runs
+                play → where else this exists → launch it there → go and look
+                for changes. */}
+            {game.steam_app_id ? (
+              <a className="gt-btn" href={`steam://run/${game.steam_app_id}`}>
+                Launch Steam
+              </a>
+            ) : null}
             <button
               type="button"
               className="gt-btn"
@@ -908,15 +958,23 @@ export function GameDetailsPage() {
                       ) : null}
                     </div>
                     <div className="gt-details-page__version-actions">
-                      {canDownload ? (
+                      {/* Updates get a Download; the base row does not.
+                          Downloading the base game is what the action bar at
+                          the top of the page is for, and it is the *primary*
+                          action there — so this row was a second, quieter copy
+                          of the page's loudest button, sitting under a heading
+                          about versions. Per-update download stays, because
+                          that is the one thing the action bar genuinely cannot
+                          express: "I have the game, I only need patch 1.03". */}
+                      {canDownload && row.kind === 'update' ? (
                         <button
                           type="button"
                           className="gt-btn"
                           disabled={Boolean(busyVersionKey)}
                           onClick={() => {
                             void handleVersionDownload({
-                              kind: row.kind === 'update' ? 'update' : 'base',
-                              versionUuid: row.kind === 'update' ? row.uuid : undefined,
+                              kind: 'update',
+                              versionUuid: row.uuid,
                               label: row.label,
                             })
                           }}
@@ -1073,11 +1131,11 @@ export function GameDetailsPage() {
           nothing when a title has none. */}
       <RelatedMediaStrip gameUuid={game.uuid} />
 
-      {game.screenshots?.length ? (
+      {shownShots.length ? (
         <section className="gt-details-page__section">
           <h2>Screenshots</h2>
           <div className="gt-details-page__shots">
-            {game.screenshots.map((url, index) => (
+            {shownShots.map((url, index) => (
               <button
                 key={url}
                 type="button"
@@ -1087,7 +1145,12 @@ export function GameDetailsPage() {
                 aria-label={`Open screenshot ${index + 1}`}
                 title="Click to open · double-click for fullscreen viewer"
               >
-                <img src={url} alt="" loading="lazy" />
+                <img
+                  src={url}
+                  alt=""
+                  loading="lazy"
+                  onError={() => markShotBroken(url)}
+                />
               </button>
             ))}
           </div>
@@ -1095,7 +1158,7 @@ export function GameDetailsPage() {
       ) : null}
 
       <ScreenshotLightbox
-        urls={game.screenshots || []}
+        urls={shownShots}
         openIndex={shotIndex}
         onClose={() => setShotIndex(null)}
       />

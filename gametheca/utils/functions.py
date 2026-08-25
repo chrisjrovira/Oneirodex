@@ -321,6 +321,7 @@ def download_image(url, save_path):
 
     url = url.replace('/t_thumb/', '/t_original/')
 
+    from gametheca.utils.http_safe import safe_get
     from gametheca.utils.security import validate_user_outbound_http_url
     ok, result = validate_user_outbound_http_url(url)
     if not ok:
@@ -330,7 +331,10 @@ def download_image(url, save_path):
     url = result
 
     try:
-        response = requests.get(url, timeout=30)
+        # safe_get, not requests.get: the validation above covers the URL we
+        # asked for, and a 302 from a valid host to 169.254.169.254 used to be
+        # followed without any further check. Every hop is revalidated now.
+        response = safe_get(url, validator=validate_user_outbound_http_url, timeout=30)
         if response.status_code == 200:
             directory = os.path.dirname(save_path)
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { useSearchParams } from 'react-router-dom'
 import { ArtworkPicker } from './ArtworkPicker'
 import { DataTable } from './DataTable'
@@ -464,11 +465,7 @@ export function ImagesPage({ embedded = false }) {
             ) : null}
           </div>
         ) : null}
-        {queueError ? (
-          <div role="alert" className="gt-admin-alert">
-            {queueError}
-          </div>
-        ) : null}
+        <PageStatus error={queueError} />
         {queueMsg ? (
           <p className="gt-admin-lede" aria-live="polite">
             {queueMsg}
@@ -739,11 +736,7 @@ export function ImagesPage({ embedded = false }) {
           From <code>/api/health/library</code> worst list — open picker or generate placeholders in
           Art studio. Full “missing cover” filter on the download queue needs Backend.
         </p>
-        {missingError ? (
-          <div role="alert" className="gt-admin-alert">
-            {missingError}
-          </div>
-        ) : null}
+        <PageStatus error={missingError} />
         {!missingCovers.length && !missingError ? (
           <p className="gt-admin-lede">No missing-cover titles in the health sample.</p>
         ) : (

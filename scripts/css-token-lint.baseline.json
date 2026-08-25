@@ -30,17 +30,13 @@
     "no-raw-font-size": 60,
     "no-raw-color": 17
   },
-  "frontend/member-app/src/chrome/AccountPanel.css": {
-    "no-raw-font-size": 5,
-    "no-raw-radius": 2
-  },
   "frontend/member-app/src/chrome/CommandPalette.css": {
     "no-raw-radius": 2,
     "no-raw-font-size": 5
   },
   "frontend/member-app/src/chrome/glass.css": {
-    "no-raw-radius": 8,
-    "no-raw-font-size": 6,
+    "no-raw-radius": 5,
+    "no-raw-font-size": 4,
     "no-raw-color": 2
   },
   "frontend/member-app/src/chrome/mobile-density.css": {
@@ -69,15 +65,14 @@
     "no-raw-font-size": 1
   },
   "frontend/member-app/src/components/GamePreviewPopup.css": {
-    "no-raw-radius": 5,
-    "no-raw-font-size": 6
+    "no-raw-radius": 5
   },
   "frontend/member-app/src/components/libraryFilters.css": {
-    "no-raw-radius": 6,
+    "no-raw-radius": 5,
     "no-raw-font-size": 4
   },
   "frontend/member-app/src/components/LibrarySelectionBar.css": {
-    "no-raw-radius": 4,
+    "no-raw-radius": 3,
     "no-raw-font-size": 3
   },
   "frontend/member-app/src/components/LoadingOverlay.css": {
@@ -112,8 +107,8 @@
     "no-raw-radius": 8
   },
   "frontend/member-app/src/pages/CalendarPage.css": {
-    "no-raw-radius": 6,
-    "no-raw-font-size": 16
+    "no-raw-radius": 4,
+    "no-raw-font-size": 14
   },
   "frontend/member-app/src/pages/ChatPage.css": {
     "no-raw-font-size": 39,
@@ -162,14 +157,14 @@
   },
   "frontend/member-app/src/pages/SystemsPage.css": {
     "no-raw-font-size": 6,
-    "no-raw-color": 19
+    "no-raw-color": 17
   },
   "frontend/member-app/src/pages/TokensPage.css": {
     "no-raw-font-size": 12,
     "no-raw-radius": 5
   },
   "frontend/member-app/src/pages/TrailersPage.css": {
-    "no-raw-radius": 6,
+    "no-raw-radius": 4,
     "no-raw-font-size": 1
   },
   "frontend/member-app/src/pages/VrPage.css": {
@@ -262,13 +257,13 @@
   },
   "gametheca/setup/default_theme/css/base.css": {
     "no-raw-radius": 11,
-    "no-raw-color": 36,
+    "no-raw-color": 32,
     "no-raw-font-size": 9
   },
   "gametheca/setup/default_theme/css/components.css": {
     "no-raw-color": 6,
-    "no-raw-radius": 14,
-    "no-raw-font-size": 10
+    "no-raw-font-size": 7,
+    "no-raw-radius": 9
   },
   "gametheca/setup/default_theme/css/form-components.css": {
     "no-raw-radius": 3,
@@ -295,12 +290,12 @@
     "no-raw-font-size": 8
   },
   "gametheca/setup/default_theme/css/games/game_status.css": {
-    "no-raw-radius": 4,
-    "no-raw-font-size": 7,
+    "no-raw-radius": 3,
+    "no-raw-font-size": 5,
     "no-raw-color": 6
   },
   "gametheca/setup/default_theme/css/games/library_browser.css": {
-    "no-raw-radius": 5,
+    "no-raw-radius": 4,
     "no-raw-font-size": 6
   },
   "gametheca/setup/default_theme/css/games/library_filters.css": {
@@ -309,8 +304,8 @@
     "no-raw-color": 2
   },
   "gametheca/setup/default_theme/css/gt-appbar.css": {
-    "no-raw-font-size": 7,
-    "no-raw-radius": 5
+    "no-raw-font-size": 6,
+    "no-raw-radius": 4
   },
   "gametheca/setup/default_theme/css/modal-components.css": {
     "no-raw-font-size": 7,

@@ -3,6 +3,7 @@ import { createRequest, deleteRequest, fetchRequests, resolveRequest } from '../
 import { ContextBar, Popover } from '../chrome/ContextBar'
 import { RailIcon } from '../chrome/railIcons'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
+import { PageStatus } from '../components/PageStatus'
 import './WishlistPage.css'
 
 const RESOLVE_ACTIONS = [
@@ -249,16 +250,13 @@ export function WishlistPage({ shellConfig = {} } = {}) {
         </p>
       ) : null}
 
-      {error ? (
-        <div role="alert">
-          <p>Unable to load wishlist.</p>
-          <button type="button" className="gt-btn" onClick={refetch}>
-            Retry
-          </button>
-        </div>
-      ) : null}
-
-      {!error && !requests ? <p className="gt-wishlist__empty">Loading…</p> : null}
+      <PageStatus
+        loading={!error && !requests}
+        error={error}
+        errorMessage="Unable to load wishlist."
+        loadingMessage="Loading requests…"
+        onRetry={refetch}
+      />
 
       {!error && requests && requests.length === 0 ? (
         <p className="gt-wishlist__empty">
@@ -297,6 +295,7 @@ export function WishlistPage({ shellConfig = {} } = {}) {
                           <button
                             key={action.status}
                             type="button"
+                            className="gt-cbtn"
                             disabled={busyId === item.id}
                             onClick={() => handleResolve(item.id, action.status)}
                           >
@@ -307,6 +306,7 @@ export function WishlistPage({ shellConfig = {} } = {}) {
                     {isLibrarian || item.status === 'pending' ? (
                       <button
                         type="button"
+                        className="gt-cbtn gt-cbtn--danger"
                         disabled={busyId === item.id}
                         onClick={() => handleCancel(item.id)}
                       >

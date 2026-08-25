@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { PageStatus } from './PageStatus'
 
 import { DataTable } from './DataTable'
 import {
@@ -253,11 +254,10 @@ export function ImportLeafLibraries({
         </div>
       ) : null}
 
-      {!unavailable && error ? (
-        <div className="gt-propose-leaf__banner gt-propose-leaf__banner--error" role="alert">
-          {error}
-        </div>
-      ) : null}
+      {/* The soft `unavailable` banner above and the live `status` line below
+          stay as they are: one discloses that a feature is switched off, the
+          other is streaming progress. Neither is a page loading/error state. */}
+      {!unavailable ? <PageStatus error={error} /> : null}
 
       {status ? (
         <p className="gt-propose-leaf__status" role="status" aria-live="polite">

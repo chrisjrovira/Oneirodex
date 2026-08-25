@@ -43,7 +43,7 @@ test('lists announcement cards from API', async () => {
 
   render(<NewsPage />, { wrapper: MemoryRouter })
 
-  expect(screen.getByText('Loading…')).toBeInTheDocument()
+  expect(screen.getByRole('status', { busy: true })).toBeInTheDocument()
   expect(await screen.findByText('Welcome')).toBeInTheDocument()
   expect(screen.getByText('Hello members')).toBeInTheDocument()
   expect(screen.getByText((_, el) => el?.tagName === 'TIME' && el.getAttribute('dateTime') === '2026-07-01T12:00:00+00:00')).toBeInTheDocument()

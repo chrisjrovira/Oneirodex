@@ -38,7 +38,7 @@ test('renders requests returned by the API', async () => {
 
   render(<WishlistPage shellConfig={{}} />)
 
-  expect(screen.getByText('Loading…')).toBeInTheDocument()
+  expect(screen.getByRole('status', { busy: true })).toBeInTheDocument()
   expect(await screen.findByText('Hollow Knight: Silksong')).toBeInTheDocument()
   expect(screen.getByText('Any edition works')).toBeInTheDocument()
   expect(screen.getByText('pending')).toBeInTheDocument()
@@ -70,7 +70,7 @@ test('shows error state with retry', async () => {
   render(<WishlistPage shellConfig={{}} />)
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load wishlist.')
-  await user.click(screen.getByRole('button', { name: 'Retry' }))
+  await user.click(screen.getByRole('button', { name: /Try again/i }))
 
   expect(
     await screen.findByText(
@@ -173,7 +173,7 @@ test('new chrome moves the request form and the librarian toggle into bar two', 
   global.fetch.mockReturnValue(jsonResponse({ requests: [] }))
 
   render(<WishlistPage shellConfig={{ enableNewChrome: true, isLibrarian: true }} />)
-  await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull())
+  await waitFor(() => expect(screen.queryByRole('status', { busy: true })).toBeNull())
 
   expect(screen.queryByRole('heading', { name: 'Wishlist' })).toBeNull()
   // A permanently open request form above the list is furniture, not an action.
@@ -190,7 +190,7 @@ test('the librarian scope toggle stays a real toggle after the move', async () =
   global.fetch.mockReturnValue(jsonResponse({ requests: [] }))
 
   render(<WishlistPage shellConfig={{ enableNewChrome: true, isLibrarian: true }} />)
-  await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull())
+  await waitFor(() => expect(screen.queryByRole('status', { busy: true })).toBeNull())
 
   const toggle = screen.getByRole('button', { name: /Everyone/ })
   expect(toggle).toHaveAttribute('aria-pressed', 'false')
@@ -201,6 +201,6 @@ test('the librarian scope toggle stays a real toggle after the move', async () =
 test('members never see the librarian scope toggle', async () => {
   global.fetch.mockReturnValue(jsonResponse({ requests: [] }))
   render(<WishlistPage shellConfig={{ enableNewChrome: true }} />)
-  await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull())
+  await waitFor(() => expect(screen.queryByRole('status', { busy: true })).toBeNull())
   expect(screen.queryByRole('button', { name: /Everyone/ })).toBeNull()
 })

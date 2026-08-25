@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ContextBar, Popover } from '../chrome/ContextBar'
 import { RailIcon } from '../chrome/railIcons'
 import { createCollection, deleteCollection, fetchCollections } from '../api/collections'
+import { PageStatus } from '../components/PageStatus'
 import './Collections.css'
 
 function itemCountLabel(collection) {
@@ -205,20 +206,13 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
         </>
       )}
 
-      {error ? (
-        <div role="alert">
-          <p>Unable to load collections.</p>
-          <button
-            type="button"
-            className="gt-btn"
-            onClick={() => setRetryCount((n) => n + 1)}
-          >
-            Retry
-          </button>
-        </div>
-      ) : null}
-
-      {!error && !collections ? <p>Loading…</p> : null}
+      <PageStatus
+        loading={!error && !collections}
+        error={error}
+        errorMessage="Unable to load collections."
+        loadingMessage="Loading shelves…"
+        onRetry={() => setRetryCount((n) => n + 1)}
+      />
 
       {!error && collections && collections.length === 0 ? (
         <p>

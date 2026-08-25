@@ -1,5 +1,6 @@
 // Toasts on every mutation (GT-B25).
 import { useEffect, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { DataTable } from './DataTable'
 import { MetricStrip } from './opsWidgets'
 import { csrfHeaders } from './adminApi'
@@ -50,7 +51,7 @@ export function SupportInboxPage() {
   if (error) {
     return (
       <div className="gt-adminpage">
-        <p role="alert">Unable to load support tickets.</p>
+        <PageStatus error errorMessage="Unable to load support tickets." />
       </div>
     )
   }

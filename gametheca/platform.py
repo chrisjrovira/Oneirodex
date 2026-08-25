@@ -152,7 +152,12 @@ class Emulator(PyEnum):
     GBC = "mgba"
 
 
-# Cores present under gametheca/static/vendor/webretro/cores (WebRetro installedCores).
+# Cores provisioned under gametheca/static/vendor/webretro/cores (WebRetro
+# installedCores). These are no longer committed — they are fetched at first
+# boot (FETCH_WEBRETRO_CORES_ON_BOOT) or by scripts/fetch-webretro-cores.sh,
+# because their GPL / non-commercial terms make vendoring them the wrong call.
+# The set is therefore "what a provisioned install runs", and boot warns when
+# the fetch is off and they are absent — see utils/webretro_core_install.py.
 WEBRETR_INSTALLED_CORES = frozenset({
     'a5200', 'freechaf', 'freeintv', 'gearcoleco', 'genesis_plus_gx', 'handy',
     'mednafen_ngp', 'mednafen_psx_hw', 'mednafen_vb', 'mednafen_wswan', 'melonds',

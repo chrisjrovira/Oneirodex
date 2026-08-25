@@ -1,6 +1,7 @@
 // Toasts on every mutation (GT-B25). Outcomes were reported inline only,
 // which is easy to miss when the triggering control has scrolled away.
 import { useEffect, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { getJson, postJson } from './adminApi'
 import { showToast } from './utils/toast'
 
@@ -60,7 +61,7 @@ export function AnnouncementsPage() {
         to keep an unpublished note in this list.
       </p>
 
-      {error ? <div role="alert">{String(error.message || error)}</div> : null}
+      <PageStatus error={error} />
 
       <form className="gt-admin-panel" onSubmit={handleSubmit}>
         <label>
@@ -97,7 +98,7 @@ export function AnnouncementsPage() {
       </form>
 
       <h2 style={{ marginTop: '1.5rem' }}>Recent</h2>
-      {!rows ? <p>Loading…</p> : null}
+      <PageStatus loading={!rows} loadingMessage="Loading announcements…" />
       {rows && rows.length === 0 ? <p>No announcements yet.</p> : null}
       {rows && rows.length > 0 ? (
         <ul className="gt-admin-list">

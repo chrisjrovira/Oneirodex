@@ -12,8 +12,11 @@
                 <form id="preferencesForm" method="POST" action="{{ url_for('settings.settings_panel') }}">
                     {{ form.hidden_tag() }}
 
-                    <section class="gt-prefs-section" aria-labelledby="prefs-library-heading">
-                        <h3 class="gt-prefs-section__title" id="prefs-library-heading">Library</h3>
+                    <details class="gt-prefs-section" data-prefs-section="prefs-library-heading" open>
+                        <summary class="gt-prefs-section__summary">
+                            <span class="gt-prefs-section__caret" aria-hidden="true"></span>
+                            <h3 class="gt-prefs-section__title" id="prefs-library-heading">Library</h3>
+                        </summary>
                         <p class="gt-prefs-section__hint">Browse defaults for page size and sort.</p>
                         <div class="gt-prefs-section__grid">
                             <div class="gt-prefs-field">
@@ -38,10 +41,13 @@
                                 {% endfor %}
                             </div>
                         </div>
-                    </section>
+                    </details>
 
-                    <section class="gt-prefs-section" aria-labelledby="prefs-look-heading">
-                        <h3 class="gt-prefs-section__title" id="prefs-look-heading">Look &amp; density</h3>
+                    <details class="gt-prefs-section" data-prefs-section="prefs-look-heading" open>
+                        <summary class="gt-prefs-section__summary">
+                            <span class="gt-prefs-section__caret" aria-hidden="true"></span>
+                            <h3 class="gt-prefs-section__title" id="prefs-look-heading">Look &amp; density</h3>
+                        </summary>
                         <p class="gt-prefs-section__hint">Theme and icons are independent; tile size is continuous.</p>
                         <div class="gt-prefs-field gt-picker-field">
                             {{ form.theme.label(class="form-label") }}
@@ -112,10 +118,13 @@
                               })();
                             </script>
                         </div>
-                    </section>
+                    </details>
 
-                    <section class="gt-prefs-section" aria-labelledby="prefs-lang-heading">
-                        <h3 class="gt-prefs-section__title" id="prefs-lang-heading">Game language</h3>
+                    <details class="gt-prefs-section" data-prefs-section="prefs-lang-heading" open>
+                        <summary class="gt-prefs-section__summary">
+                            <span class="gt-prefs-section__caret" aria-hidden="true"></span>
+                            <h3 class="gt-prefs-section__title" id="prefs-lang-heading">Game language</h3>
+                        </summary>
                         <p class="gt-prefs-section__hint">ROM / content preference — separate from UI language.</p>
                         <div class="gt-prefs-field">
                             {{ form.preferred_game_locale.label(class="form-label") }}
@@ -124,8 +133,52 @@
                                 <div class="invalid-feedback d-block">{{ error }}</div>
                             {% endfor %}
                         </div>
-                    </section>
+                    </details>
                 </form>
+
+                {# Which sections you folded, remembered between visits.
+                   Same contract as the rail's group collapse
+                   (`gt.rail.collapsedGroups`): a fold you have to redo every
+                   time the modal opens is worse than no fold at all. Storage
+                   failures are swallowed — private-mode browsers throw on
+                   localStorage, and losing a preference must not cost the
+                   preferences panel. #}
+                <script>
+                  (function () {
+                    var KEY = 'gt.prefs.collapsedSections';
+                    var panel = document.getElementById('preferencesModal');
+                    if (!panel) return;
+                    var sections = panel.querySelectorAll('[data-prefs-section]');
+                    if (!sections.length) return;
+
+                    var closed;
+                    try {
+                      closed = JSON.parse(window.localStorage.getItem(KEY) || '[]');
+                    } catch (err) {
+                      closed = [];
+                    }
+                    if (!Array.isArray(closed)) closed = [];
+
+                    function save() {
+                      var next = [];
+                      sections.forEach(function (node) {
+                        if (!node.open) next.push(node.dataset.prefsSection);
+                      });
+                      try {
+                        window.localStorage.setItem(KEY, JSON.stringify(next));
+                      } catch (err) {
+                        /* Preference only — the panel works either way. */
+                      }
+                    }
+
+                    sections.forEach(function (node) {
+                      if (closed.indexOf(node.dataset.prefsSection) !== -1) {
+                        node.open = false;
+                      }
+                      node.addEventListener('toggle', save);
+                    });
+                  })();
+                </script>
             </div>
             <div class="modal-footer gt-prefs-modal__footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

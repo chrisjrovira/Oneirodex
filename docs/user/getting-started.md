@@ -12,21 +12,47 @@ GameTheca is a self-hosted multi-user game library. Members browse and download 
 
 ## Member chrome
 
-After login you land in the **member SPA** with a **top nav** (no left sidebar):
+After login you land in the **member SPA**: a **left rail** of destinations and a slim **top bar**
+for whatever the page you are on can do.
 
-| Link | What it is |
+The rail is grouped, and every group folds away — including **GameTheca**, which holds the five
+core destinations:
+
+| Group | Destinations |
 |---|---|
-| Discover | Shelves / discovery |
-| Library | Full grid + filters |
-| Systems | Browse by console / family |
-| Downloads | Queue and history |
-| Favorites | Your favorites |
-| More | Collections, wishlist, updates, playtime, calendar, ownership, Big Picture, Activity, Friends (dock), Chat (left slide-out), Notifications, Report issue, … |
-| Admin | Admins only — opens the admin shell |
+| **GameTheca** | Discover · Library · Systems · Downloads · Favorites |
+| Library | Collections · Wishlist · Updates · Acquire · Ownership · Release calendar |
+| Social | Friends (dock) · Chat (slide-out) · Notifications · Activity · News |
+| Play | Big Picture · Playtime · VR · Trailers |
+| Support | Report · Help |
+| Manage | Admins only — opens the admin shell |
 
-**Profile / account** lives under the compressed TopNav account control (not a full-page takeover). Choosing **Profile**, **Change avatar**, **Change password**, **Invites** or **API tokens** opens the **account modal** over the page you were on, styled like the game preview popup, with a strip along the top to move between the five panels without closing. Nothing navigates away, so your scroll position and filters survive. The old `/settings_*` and `/user/invites` pages still work if you open them directly — they are the fallback for Big Picture and for a browser with JavaScript off.
+Which groups you have folded is remembered between sessions. Collapsing the whole rail to icons
+leaves every group open, because a folded group in an icons-only rail would be destinations that
+vanished with no visible way back.
 
-**More → Friends** opens the stay-open Friends dock in place — it does **not** navigate to `/social-companion` as the main SPA shell.
+Rail details worth knowing:
+
+- Icons are **large** in the expanded rail, so a destination is recognisable without reading it.
+- Each icon **animates in its own way** on hover — the heart beats, the download arrow falls, the
+  calendar page turns, the refresh mark spins — so motion tells you *which* row you found, not
+  merely that you found one. All of it is suppressed under OS reduced-motion.
+- The section you are in takes your **theme's accent colour**, icon and label together, so "where I
+  am" looks different from "where the pointer is".
+
+The **top bar** carries, left to right: the rail toggle and **Filters** as one merged control, the
+page's own view switcher, the tile-size slider, a count, and your account.
+
+**Profile / account** is the button at the right of the top bar. It shows **your name and your
+chosen avatar** rather than a generic person glyph, and opens the account menu (not a full-page
+takeover). Choosing **Profile**, **Change avatar**, **Change password**, **Invites** or **API tokens** opens the **account modal** over the page you were on, styled like the game preview popup, with a strip along the top to move between the five panels without closing. Nothing navigates away, so your scroll position and filters survive. The old `/settings_*` and `/user/invites` pages still work if you open them directly — they are the fallback for Big Picture and for a browser with JavaScript off.
+
+**Friends** in the rail opens the stay-open Friends dock in place — it does **not** navigate to `/social-companion` as the main SPA shell.
+
+**Loading looks the same everywhere.** Every page, panel and modal that is fetching something shows
+the same animated loading motif and the same **Try again** on failure — Discover and its "see all"
+row pages included. If a page shows you a bare sentence where a loading motif should be, that is a
+bug worth reporting.
 
 ### Inviting someone
 

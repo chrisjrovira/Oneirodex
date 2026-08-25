@@ -25,7 +25,7 @@
                 <div class="avatar-section">
                     <div class="current-avatar">
                         <h4>{{ icons.icon('image') }} Current avatar</h4>
-                        <img src="{{ url_for('static', filename=avatarpath) }}" alt="Current avatar" class="avatar-preview gt-account-avatar">
+                        <img src="{{ avatarpath|avatar_url }}" alt="Current avatar" class="avatar-preview gt-account-avatar">
                     </div>
                     <div class="avatar-thumbnail">
                         <h4>{{ icons.icon('crop') }} Thumbnail preview</h4>

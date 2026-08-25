@@ -69,7 +69,7 @@ test('lists collections from API and links to detail routes', async () => {
 
   renderPage()
 
-  expect(screen.getByText('Loading…')).toBeInTheDocument()
+  expect(screen.getByRole('status', { busy: true })).toBeInTheDocument()
 
   const link = await screen.findByRole('link', { name: /Cozy co-op nights/ })
   expect(link).toHaveAttribute('href', '/collections/abc-123')
@@ -96,7 +96,7 @@ test('shows retry control when the request fails', async () => {
 
   expect(await screen.findByText('Unable to load collections.')).toBeInTheDocument()
 
-  await userEvent.click(screen.getByRole('button', { name: 'Retry' }))
+  await userEvent.click(screen.getByRole('button', { name: /Try again/i }))
 
   expect(
     await screen.findByText('No collections yet. Create your first shelf with the form above.'),
@@ -148,7 +148,7 @@ test('detail page renders items for the routed collection uuid', async () => {
 
   renderDetailPage()
 
-  expect(screen.getByText('Loading…')).toBeInTheDocument()
+  expect(screen.getByRole('status', { busy: true })).toBeInTheDocument()
   expect(await screen.findByRole('heading', { name: 'Cozy co-op nights' })).toBeInTheDocument()
   expect(collectionsApi.fetchCollection).toHaveBeenCalledWith(
     'abc-123',

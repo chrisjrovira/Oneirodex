@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchVrCatalog, fetchVrGame } from '../api/vr'
+import { PageStatus } from '../components/PageStatus'
 import './VrPage.css'
 
 const PER_PAGE = 48
@@ -86,17 +87,13 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
         only — no downloads.
       </p>
 
-      {error ? (
-        <div role="alert">
-          <p>Unable to load the VR catalog.</p>
-          {error.message ? <p className="gt-vr__error-detail">{error.message}</p> : null}
-          <button type="button" onClick={() => setRetryCount((n) => n + 1)}>
-            Retry
-          </button>
-        </div>
-      ) : null}
-
-      {!error && !catalog ? <p className="gt-vr__status">Loading…</p> : null}
+      <PageStatus
+        loading={!error && !catalog}
+        error={error}
+        errorMessage="Unable to load the VR catalog."
+        loadingMessage="Loading VR catalog…"
+        onRetry={() => setRetryCount((n) => n + 1)}
+      />
 
       {!error && catalog ? (
         <p className="gt-vr__status">{catalog.total || 0} games</p>
@@ -125,7 +122,7 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
 
       {!error && catalog && catalog.pages > 1 ? (
         <nav className="gt-vr__pager" aria-label="Catalog pages">
-          <button type="button" disabled={page <= 1} onClick={() => setPage((n) => n - 1)}>
+          <button type="button" className="gt-cbtn" disabled={page <= 1} onClick={() => setPage((n) => n - 1)}>
             Previous
           </button>
           <span>
@@ -133,6 +130,7 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
           </span>
           <button
             type="button"
+            className="gt-cbtn"
             disabled={page >= catalog.pages}
             onClick={() => setPage((n) => n + 1)}
           >
@@ -151,11 +149,12 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
             Back
           </button>
 
-          {detailError ? (
-            <p role="alert">{detailError.message || 'Unable to load this game.'}</p>
-          ) : null}
-
-          {!detailError && !detail ? <p>Loading…</p> : null}
+          <PageStatus
+            loading={!detailError && !detail}
+            error={detailError}
+            errorMessage="Unable to load this game."
+            loadingMessage="Loading game…"
+          />
 
           {!detailError && detail ? (
             <>

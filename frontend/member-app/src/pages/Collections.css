@@ -202,7 +202,7 @@
   list-style: none;
 }
 
-.gt-collection__picker button {
+.gt-collection__picker-item {
   display: flex;
   width: 100%;
   justify-content: space-between;
@@ -216,13 +216,13 @@
   cursor: pointer;
 }
 
-.gt-collection__picker button:hover:not(:disabled),
-.gt-collection__picker button:focus-visible:not(:disabled) {
+.gt-collection__picker-item:hover:not(:disabled),
+.gt-collection__picker-item:focus-visible:not(:disabled) {
   border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
   color: var(--gt-accent);
 }
 
-.gt-collection__picker button:disabled {
+.gt-collection__picker-item:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

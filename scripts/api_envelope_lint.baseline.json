@@ -40,6 +40,5 @@
   "gametheca/routes_settings.py": 3,
   "gametheca/routes_site.py": 5,
   "gametheca/routes_smtp.py": 11,
-  "gametheca/utils/api_tokens.py": 2,
   "gametheca/utils/rbac.py": 1
 }

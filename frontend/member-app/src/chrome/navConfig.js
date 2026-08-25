@@ -1,4 +1,14 @@
-﻿/** Section-aware crumbs for the member top nav. */
+﻿/**
+ * The label the five core destinations sit under in the rail.
+ *
+ * They used to be an unlabelled block above the named groups, which made them
+ * the one part of the rail you could not fold away — and left the product's own
+ * name nowhere in the navigation once the brand mark shrank to a glyph. Naming
+ * the block is what lets it collapse like every other group.
+ */
+export const PRIMARY_GROUP = { id: 'gametheca', label: 'GameTheca' }
+
+/** Section-aware crumbs for the member top nav. */
 export function getPrimaryLinks() {
   return [
     { id: 'discover', to: '/discover', label: 'Discover' },

@@ -324,6 +324,64 @@
     padding-bottom: 0;
 }
 
+/* Each section folds.
+ *
+ * The panel is one scrolling column of three groups, and the group you came for
+ * is usually not the first — so changing your theme meant scrolling past every
+ * library default each time. `<details>` rather than a scripted accordion: it
+ * is keyboard- and screen-reader-correct with no code, it works before any
+ * script runs, and it degrades to "everything visible" if one fails to. The
+ * inline script only remembers which ones you folded.
+ */
+.gt-prefs-modal .gt-prefs-section__summary {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.1rem 0;
+    cursor: pointer;
+    /* The marker is drawn below; the UA triangle would be a second one, and
+       Safari needs the ::-webkit- form to drop it. */
+    list-style: none;
+}
+
+.gt-prefs-modal .gt-prefs-section__summary::-webkit-details-marker {
+    display: none;
+}
+
+.gt-prefs-modal .gt-prefs-section__summary:focus-visible {
+    outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+    outline-offset: 2px;
+    border-radius: var(--gt-radius-xs);
+}
+
+.gt-prefs-modal .gt-prefs-section__caret {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: 0 0 auto;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    color: var(--gt-text-muted);
+    /* Points right when closed, down when open — rotated rather than swapped
+       so the change reads as the same mark turning. */
+    transform: rotate(-45deg);
+    transition: transform var(--gt-motion-fast, 120ms) var(--gt-motion-ease, ease);
+}
+
+.gt-prefs-modal .gt-prefs-section[open] .gt-prefs-section__caret {
+    transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gt-prefs-modal .gt-prefs-section__caret {
+        transition: none;
+    }
+}
+
+.gt-prefs-modal .gt-prefs-section__summary:hover .gt-prefs-section__title,
+.gt-prefs-modal .gt-prefs-section__summary:hover .gt-prefs-section__caret {
+    color: var(--gt-text);
+}
+
 .gt-prefs-modal .gt-prefs-section__title {
     margin: 0 0 0.2rem;
     font-size: 0.72rem;
@@ -331,6 +389,12 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--gt-text-muted);
+}
+
+/* Inside a summary the title is one line of a row, so its bottom margin would
+   push the caret off-centre. */
+.gt-prefs-modal .gt-prefs-section__summary .gt-prefs-section__title {
+    margin-bottom: 0;
 }
 
 .gt-prefs-modal .gt-prefs-section__hint {

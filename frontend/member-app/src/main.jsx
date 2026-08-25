@@ -62,7 +62,12 @@ export function parseShellConfig(rootElement) {
     // unset attribute keeps the existing TopNav and filter rail.
     enableNewChrome: rootElement.dataset.enableNewChrome === 'true',
     showPlayStatus: rootElement.dataset.showPlayStatus === 'true',
+    // AGPL §13 source offer — see config.GT_SOURCE_URL. A modified deployment
+    // owes its users *its* source, so this is configuration, not a constant.
+    sourceUrl: rootElement.dataset.sourceUrl || '',
+    appVersion: rootElement.dataset.appVersion || '',
     username: rootElement.dataset.username || '',
+    avatar: rootElement.dataset.avatar || '',
     locale: rootElement.dataset.locale || 'en',
     perPage: Number(rootElement.dataset.perPage) || 20,
     defaultSort: rootElement.dataset.defaultSort || 'name',

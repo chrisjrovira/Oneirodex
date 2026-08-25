@@ -236,6 +236,33 @@ export function FilterBar({
 
   return (
     <form className="container-filtersandsort library-filters" onSubmit={submit}>
+      {/* Apply / Clear / Done lead the panel, as one control.
+          At the foot they were three detached buttons below every select and
+          chip in the form — so on a filter panel taller than the popover you
+          scrolled past everything you had just set in order to commit it, and
+          "Done" was the furthest thing from the trigger that opened it. They
+          are one decision about one panel, so they read as one segmented
+          control in the same shape the pager and the bar cluster use. */}
+      <div className="library-filters__actions">
+        <div className="gt-cbtn-group gt-cbtn-group--fill">
+          <button className="gt-cbtn gt-cbtn--primary" type="submit">
+            {t('Apply')}
+          </button>
+          <button className="gt-cbtn" type="button" onClick={clear}>
+            {t('Clear')}
+          </button>
+          {onDone ? (
+            <button
+              className="gt-cbtn library-filters__done"
+              type="button"
+              onClick={onDone}
+            >
+              {t('Done')}
+            </button>
+          ) : null}
+        </div>
+      </div>
+
       <div className="library-filters__toolbar">
         <label className="library-filters__search">
           <span className="visually-hidden">{t('Search library')}</span>
@@ -377,21 +404,6 @@ export function FilterBar({
           </div>
         </fieldset>
 
-        <div className="button-group">
-          <button className="gt-btn gt-btn--primary" type="submit">{t('Apply')}</button>
-          <button className="gt-btn gt-btn--secondary" type="button" onClick={clear}>
-            {t('Clear')}
-          </button>
-          {onDone ? (
-            <button
-              className="gt-btn gt-btn--secondary library-filters__done"
-              type="button"
-              onClick={onDone}
-            >
-              {t('Done')}
-            </button>
-          ) : null}
-        </div>
       </div>
     </form>
   )

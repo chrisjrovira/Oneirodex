@@ -6,6 +6,7 @@
 import { formatBearerAuthorization } from '@gametheca/api-client'
 
 import type { AuthStore } from './auth.js'
+import { escapeHtml } from './html.js'
 
 export interface AssistToggle {
   id: string
@@ -56,7 +57,11 @@ export function renderAssistOverlay(
 ): HTMLElement {
   const root = document.createElement('div')
   root.className = 'gt-assist-overlay'
-  root.innerHTML = `<h3>${pack.title}</h3><p class="muted">${pack.policy}</p>`
+  // Escaped, like every other innerHTML site in this client: `pack` is server
+  // data, and this runs inside a Tauri webview with IPC reach.
+  root.innerHTML =
+    `<h3>${escapeHtml(pack.title)}</h3>` +
+    `<p class="muted">${escapeHtml(pack.policy)}</p>`
   const list = document.createElement('ul')
   for (const toggle of pack.toggles) {
     const item = document.createElement('li')

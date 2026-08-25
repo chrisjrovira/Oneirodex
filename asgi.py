@@ -35,6 +35,7 @@ from gametheca.utils.rom_archive import (
     resolve_playable_rom_path,
 )
 from gametheca.utils.security import get_allowed_base_directories, is_safe_path
+from gametheca.utils.security_headers import baseline_static_headers
 from gametheca.utils.static_files import resolve_static_path
 from sqlalchemy import select
 
@@ -294,10 +295,15 @@ class LazyASGIApp:
             else b"public, max-age=3600"
         )
 
+        # Static is served here, outside WsgiToAsgi, so Flask's after_request
+        # never sees it — these have to be stamped again rather than inherited.
+        # Baseline only, no CSP: webretro.html is a static document whose
+        # Emscripten cores would need 'unsafe-eval' anyway.
         headers = [
             (b"content-type", content_type.encode("ascii", "ignore")),
             (b"content-length", str(size).encode()),
             (b"cache-control", cache_control),
+            *baseline_static_headers(),
         ]
 
         await send({

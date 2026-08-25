@@ -1,0 +1,245 @@
+"""Phase 2 of the security/legal playbook — the two SSRF bypasses (S2).
+
+Before this, ``validate_user_outbound_http_url`` promised "never LAN even if the
+homelab flag is on" and could be walked past two ways: a hostname that *resolves*
+to a private address was never resolved, and a redirect to anywhere at all was
+followed without a second look.
+
+The regression that matters most in the other direction is the homelab one —
+``ALLOW_PRIVATE_LAN_URLS`` exists so Unraid installs can point connectors at
+``http://192.168.x.x``, and tightening SSRF is the classic way to break it. That
+case is pinned below.
+
+See docs/strategy/security-legal-playbook.md (S2).
+"""
+
+from __future__ import annotations
+
+import ipaddress
+
+import pytest
+import requests
+
+from gametheca.utils import security
+from gametheca.utils.http_safe import (
+    BlockedOutboundUrl,
+    safe_get,
+    safe_request,
+)
+from gametheca.utils.security import (
+    is_blocked_outbound_host,
+    is_cloud_metadata_host,
+    validate_connector_http_url,
+    validate_user_outbound_http_url,
+)
+
+
+@pytest.fixture
+def resolves(monkeypatch):
+    """Pin DNS so these tests never depend on the network."""
+
+    def _install(mapping: dict[str, list[str]]):
+        def fake(host):
+            return [ipaddress.ip_address(a) for a in mapping.get(host, [])]
+
+        monkeypatch.setattr(security, '_resolve_host', fake)
+
+    return _install
+
+
+# --- bypass 1: the host check was DNS-blind --------------------------------
+
+def test_hostname_resolving_to_loopback_is_blocked(resolves):
+    resolves({'sneaky.example': ['127.0.0.1']})
+    assert is_blocked_outbound_host('sneaky.example') is True
+
+
+def test_hostname_resolving_to_rfc1918_is_blocked(resolves):
+    resolves({'nas.example': ['192.168.1.10']})
+    ok, _ = validate_user_outbound_http_url('http://nas.example/x')
+    assert ok is False
+
+
+def test_hostname_resolving_to_metadata_is_blocked(resolves):
+    resolves({'harmless.example': ['169.254.169.254']})
+    ok, _ = validate_user_outbound_http_url('http://harmless.example/latest/meta-data/')
+    assert ok is False
+
+
+def test_public_hostname_still_allowed(resolves):
+    resolves({'api.example.com': ['93.184.216.34']})
+    ok, cleaned = validate_user_outbound_http_url('https://api.example.com/v1')
+    assert ok is True
+    assert cleaned == 'https://api.example.com/v1'
+
+
+def test_unresolvable_host_is_not_blocked(resolves):
+    """The fetch cannot connect either; failing closed would reject good saves."""
+    resolves({})
+    assert is_blocked_outbound_host('does-not-resolve.invalid') is False
+
+
+def test_resolve_can_be_switched_off(resolves):
+    resolves({'sneaky.example': ['127.0.0.1']})
+    assert is_blocked_outbound_host('sneaky.example', resolve=False) is False
+
+
+# --- literal forms ipaddress rejects ---------------------------------------
+
+@pytest.mark.parametrize('host', [
+    '2130706433',      # decimal 127.0.0.1
+    '0x7f.0.0.1',      # hex-dotted
+    '127.1',           # short form
+    '::ffff:127.0.0.1',  # IPv4-mapped IPv6
+])
+def test_alternate_loopback_literals_are_blocked(host):
+    assert is_blocked_outbound_host(host) is True
+
+
+def test_plain_loopback_and_localhost_still_blocked():
+    assert is_blocked_outbound_host('127.0.0.1') is True
+    assert is_blocked_outbound_host('localhost') is True
+    assert is_blocked_outbound_host('box.local') is True
+
+
+# --- the homelab carve-out must survive ------------------------------------
+
+def test_lan_connector_still_allowed_when_flag_on(monkeypatch):
+    """ALLOW_PRIVATE_LAN_URLS is why Unraid installs work. Do not regress it."""
+    monkeypatch.setattr(security, 'allow_private_lan_urls_enabled', lambda: True)
+    ok, cleaned = validate_connector_http_url('http://192.168.1.50:9696')
+    assert ok is True
+    assert cleaned == 'http://192.168.1.50:9696'
+
+
+def test_metadata_still_blocked_when_lan_flag_on(monkeypatch):
+    monkeypatch.setattr(security, 'allow_private_lan_urls_enabled', lambda: True)
+    ok, _ = validate_connector_http_url('http://169.254.169.254/latest/')
+    assert ok is False
+
+
+def test_metadata_by_name_blocked_when_lan_flag_on(monkeypatch, resolves):
+    """The carve-out used to inspect only the literal string."""
+    monkeypatch.setattr(security, 'allow_private_lan_urls_enabled', lambda: True)
+    resolves({'looks-fine.example': ['169.254.169.254']})
+    ok, _ = validate_connector_http_url('http://looks-fine.example/')
+    assert ok is False
+
+
+def test_cloud_metadata_host_names(resolves):
+    resolves({})
+    assert is_cloud_metadata_host('metadata.google.internal') is True
+    assert is_cloud_metadata_host('169.254.169.254') is True
+    assert is_cloud_metadata_host('example.com') is False
+
+
+# --- bypass 2: redirects were followed unchecked ---------------------------
+
+class _FakeResponse:
+    def __init__(self, status_code=200, location=None):
+        self.status_code = status_code
+        self.headers = {'Location': location} if location else {}
+
+    @property
+    def is_redirect(self):
+        return self.status_code in (301, 302, 303, 307, 308) and 'Location' in self.headers
+
+
+class _FakeSession:
+    """Records every URL actually requested, and replays a scripted chain."""
+
+    def __init__(self, script):
+        self._script = list(script)
+        self.calls = []
+        self.last_kwargs = {}
+
+    def request(self, method, url, **kwargs):
+        self.calls.append((method, url))
+        self.last_kwargs = kwargs
+        return self._script.pop(0) if self._script else _FakeResponse()
+
+
+def _allow_all(url):
+    return True, url
+
+
+def test_redirect_hops_are_revalidated(resolves):
+    """A validated host answering 302 -> private used to be followed."""
+    resolves({'good.example': ['93.184.216.34']})
+    session = _FakeSession([_FakeResponse(302, 'http://169.254.169.254/latest/')])
+
+    with pytest.raises(BlockedOutboundUrl):
+        safe_get(
+            'https://good.example/art.png',
+            validator=validate_user_outbound_http_url,
+            session=session,
+        )
+
+    # It must not have issued the second request.
+    assert session.calls == [('GET', 'https://good.example/art.png')]
+
+
+def test_allowed_redirect_is_followed(resolves):
+    resolves({
+        'good.example': ['93.184.216.34'],
+        'cdn.example': ['93.184.216.35'],
+    })
+    session = _FakeSession([
+        _FakeResponse(302, 'https://cdn.example/real.png'),
+        _FakeResponse(200),
+    ])
+
+    resp = safe_get(
+        'https://good.example/art.png',
+        validator=validate_user_outbound_http_url,
+        session=session,
+    )
+    assert resp.status_code == 200
+    assert session.calls[-1] == ('GET', 'https://cdn.example/real.png')
+
+
+def test_relative_redirect_resolves_against_current_hop():
+    session = _FakeSession([_FakeResponse(302, '/moved.png'), _FakeResponse(200)])
+    safe_get('https://good.example/a/art.png', validator=_allow_all, session=session)
+    assert session.calls[-1] == ('GET', 'https://good.example/moved.png')
+
+
+def test_redirect_chain_is_bounded():
+    session = _FakeSession([_FakeResponse(302, f'https://h{i}.example/') for i in range(12)])
+    with pytest.raises(requests.TooManyRedirects):
+        safe_get('https://start.example/', validator=_allow_all, session=session)
+
+
+def test_initial_url_is_validated_before_any_request():
+    session = _FakeSession([])
+    with pytest.raises(BlockedOutboundUrl):
+        safe_get(
+            'http://127.0.0.1/admin',
+            validator=validate_user_outbound_http_url,
+            session=session,
+        )
+    assert session.calls == []
+
+
+def test_post_body_is_not_replayed_on_a_303():
+    session = _FakeSession([_FakeResponse(303, 'https://good.example/done'), _FakeResponse(200)])
+    safe_request(
+        'POST',
+        'https://good.example/submit',
+        validator=_allow_all,
+        session=session,
+        json={'secret': 'value'},
+    )
+    assert session.calls[-1][0] == 'GET'
+    assert 'json' not in session.last_kwargs
+
+
+def test_allow_redirects_cannot_be_forced_on():
+    session = _FakeSession([_FakeResponse(200)])
+    safe_get(
+        'https://good.example/',
+        validator=_allow_all,
+        session=session,
+        allow_redirects=True,
+    )
+    assert session.last_kwargs['allow_redirects'] is False

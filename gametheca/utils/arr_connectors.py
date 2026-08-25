@@ -234,6 +234,11 @@ def _torznab_api_url(base_url: str) -> str:
     return cleaned + '/api'
 
 
+def _never_lan_indexer_url(url: str) -> tuple[bool, str]:
+    """Indexer hosts are public — never LAN, even with the homelab flag on."""
+    return validate_outbound_http_url(url, allow_http=True, allow_private_lan=False)
+
+
 def _search_native_indexer(indexer: dict[str, Any], query: str, *, limit: int) -> list[ArrHit]:
     base = (indexer.get('url') or '').strip()
     api_key = (indexer.get('api_key') or '').strip()
@@ -254,6 +259,9 @@ def _search_native_indexer(indexer: dict[str, Any], query: str, *, limit: int) -
         api_url,
         params=params,
         timeout=DEFAULT_TIMEOUT,
+        # Same never-LAN policy the URL was validated under above, now applied
+        # to redirect hops as well.
+        validator=_never_lan_indexer_url,
     )
     if resp.status_code >= 400:
         raise RuntimeError(

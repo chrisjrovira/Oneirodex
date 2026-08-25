@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 
 
 import { RailIcon } from './railIcons'
-import { getMoreGroups, getPrimaryLinks } from './navConfig'
+import { PRIMARY_GROUP, getMoreGroups, getPrimaryLinks } from './navConfig'
 
 const COLLAPSED_GROUPS_KEY = 'gt.rail.collapsedGroups'
 
@@ -81,6 +81,10 @@ export function SideRail({
   const { pathname } = useLocation()
   const [filtersHidden, setFiltersHidden] = useState(false)
   const [collapsedGroups, toggleGroup] = useCollapsedGroups()
+  // Same rule the other groups follow: never fold while the rail is collapsed,
+  // because the headings are visually hidden there and a folded group would be
+  // destinations that vanished with no visible control to bring them back.
+  const primaryFolded = !collapsed && collapsedGroups.has(PRIMARY_GROUP.id)
 
   // Clicking Library while already on Library used to be a no-op. It is the
   // obvious place to put the filter panel's show/hide, and it is where it used
@@ -107,6 +111,13 @@ export function SideRail({
           <button
             type="button"
             className="gt-rail__link"
+            /* Which destination this row is, for the stylesheet.
+               Every icon animated identically on hover — one shared pop — so
+               the motion said "you are on a row" rather than "you are on
+               Favorites". gt-shell.css keys a per-destination animation off
+               this attribute: the heart beats, the download arrow falls, the
+               calendar leaf turns. */
+            data-rail-item={link.id}
             onClick={() => {
               onNavigate?.(link)
               onCloseDrawer?.()
@@ -128,6 +139,7 @@ export function SideRail({
           className={({ isActive }) =>
             isActive ? 'gt-rail__link is-active' : 'gt-rail__link'
           }
+          data-rail-item={link.id}
           aria-expanded={link.id === 'library' ? !filtersHidden : undefined}
           onClick={link.id === 'library' ? onLibraryClick : onCloseDrawer}
           // Collapsed hides the visible label, so the title attribute is the
@@ -158,8 +170,25 @@ export function SideRail({
       </a>
 
       <nav className="gt-rail__nav" aria-label="Primary">
+        {/* The five core destinations, under the product's own name.
+            Foldable like every other group — it was the one block of the rail
+            that could not be put away, and on a short screen it was also the
+            block between you and the groups you had already chosen to keep
+            open. The heading uses the same toggle as the rest, so there is one
+            fold interaction in the rail rather than two. */}
         <ul className="gt-rail__group gt-rail__list">
-          {primary.map((link) => (
+          <li className="gt-rail__group-label">
+            <button
+              type="button"
+              className="gt-rail__group-toggle"
+              aria-expanded={!primaryFolded}
+              onClick={() => toggleGroup(PRIMARY_GROUP.id)}
+            >
+              <span className="gt-rail__group-caret" aria-hidden="true" />
+              <span>{PRIMARY_GROUP.label}</span>
+            </button>
+          </li>
+          {primaryFolded ? null : primary.map((link) => (
             <li key={link.id} className="gt-rail__item">
               <ul className="gt-rail__list">{renderLink(link)}</ul>
               {/* Slot for the active section's own controls (GT-B4).
@@ -211,6 +240,7 @@ export function SideRail({
               {/* Full page load: admin is a separate bundle, not a route here. */}
               <a
                 className="gt-rail__link"
+                data-rail-item="admin"
                 href="/admin/dashboard"
                 title={collapsed ? 'Admin' : undefined}
               >

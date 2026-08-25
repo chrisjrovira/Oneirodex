@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { deleteJson, getJson, postJson, putJson } from './adminApi'
 
 const EMPTY_FORM = {
@@ -210,7 +211,7 @@ export function QualityProfilesPage() {
     return (
       <div className="gt-admin-page">
         <h1>Quality Profiles</h1>
-        <p role="alert">{error}</p>
+        <PageStatus error={error} />
         <a className="gt-btn" href="/admin/settings">
           Back to settings
         </a>

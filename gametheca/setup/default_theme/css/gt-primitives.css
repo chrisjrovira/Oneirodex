@@ -26,20 +26,41 @@
    Button
    -------------------------------------------------------------------------- */
 
+/* The same control as `.gt-cbtn` in gt-appbar.css, deliberately.
+ *
+ * These were two button languages: this one sized from `--gt-font-md` with
+ * symmetric padding, the bar one sized from `--gt-control-h`. Both are used on
+ * member pages — often in the same view — so which class a page reached for
+ * decided whether its buttons matched the library. "Still looks like the old
+ * style" was reported against Collections, Wishlist, Trailers, Updates and
+ * Favorites independently; every one of them was this.
+ *
+ * Rather than rewrite ~150 call sites (and miss the ones no tester has found),
+ * the two classes now resolve to one shape. `.gt-btn` stays as the name most of
+ * the product already uses, and keeps its own variants; it simply stops being a
+ * different size and a different hover from the bar it sits under.
+ *
+ * `--gt-control-h` is density-aware, so this also puts every `.gt-btn` on the
+ * compact/comfortable/TV scales it was previously ignoring.
+ */
 .gt-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--gt-space-2);
-  padding: var(--gt-space-2) var(--gt-space-4);
+  min-height: var(--gt-control-h);
+  padding: 0 var(--gt-space-4);
   border: 1px solid var(--gt-border);
   border-radius: var(--gt-radius-sm);
   background: transparent;
-  color: inherit;
+  /* Muted at rest, full text on hover — the bar's contrast ramp. `inherit`
+     made a resting button exactly as loud as the prose beside it. */
+  color: var(--gt-text-muted);
   font: inherit;
-  font-size: var(--gt-font-md);
+  font-size: var(--gt-font-sm);
   line-height: var(--gt-line-tight);
   cursor: pointer;
+  white-space: nowrap;
   text-decoration: none;
   transition:
     border-color var(--gt-motion-fast) var(--gt-motion-ease),
@@ -48,8 +69,17 @@
 }
 
 .gt-btn:hover:not(:disabled):not([aria-disabled='true']) {
-  border-color: var(--gt-accent);
-  color: var(--gt-accent);
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  color: var(--gt-text);
+}
+
+/* The slab this class used to be, kept for the two places that want a button
+   to be the loudest thing on the screen — the setup wizard's next step and a
+   full-width empty-state CTA. Opt-in, so nothing inherits it by accident. */
+.gt-btn--lg {
+  min-height: 0;
+  padding: var(--gt-space-3) var(--gt-space-5);
+  font-size: var(--gt-font-md);
 }
 
 /* Keyboard focus must stay visible on every theme, including CRT/sharp packs
@@ -130,9 +160,13 @@
   border-color: transparent;
 }
 
+/* Now that the base carries `min-height`, a small button has to lower it —
+   otherwise `--sm` trimmed the horizontal padding and left the control the
+   same height, which read as "the same button, squeezed". */
 .gt-btn--sm {
-  padding: var(--gt-space-1) var(--gt-space-3);
-  font-size: var(--gt-font-sm);
+  min-height: calc(var(--gt-control-h) - var(--gt-space-3));
+  padding: 0 var(--gt-space-3);
+  font-size: var(--gt-font-xs);
 }
 
 .gt-btn--pill {
@@ -338,6 +372,38 @@
   transform-origin: center;
 }
 
+/* A glyph that is drawn solid must survive a stroke-only theme.
+ *
+ * `--gt-icon-fill-opacity: 0` is how the outline packs (Arcade Neon, Modern
+ * Violet, Vector Green, Modern Rose, Modern Ice — five of nine presets) get
+ * their silhouette. It is set on `.gt-icon`, the `<svg>`, and inherits down to
+ * every sub-path.
+ *
+ * A sub-path drawn as `fill="currentColor" stroke="none"` — the compass needle,
+ * the play triangle, the activity dot, and 23 rail glyphs in total — has a
+ * `fill` presentation attribute, which beats the inherited `fill: none`, but no
+ * `fill-opacity` attribute at all. So it kept its colour and lost its opacity:
+ * a solid shape painted at zero alpha, with no stroke to fall back on.
+ *
+ * For most glyphs that cost a detail. For **Favorites** it cost the whole icon,
+ * because the heart is a single solid path — which is the "some theme icons are
+ * still invisible, like favorites under arcade neon" report, and it was five
+ * themes rather than one.
+ *
+ * Writing `fill="currentColor"` on a sub-path is an explicit statement that
+ * this piece is solid, so the theme tokens do not get to overrule it. Targeting
+ * the sub-path directly is what makes this work: a declaration on the element
+ * outranks a value inherited from its parent, whatever the specificity.
+ *
+ * The reverse case needs no rule — a sub-path marked `fill="none"` keeps its
+ * own attribute under the filled packs for exactly the same reason.
+ */
+.gt-icon [fill='currentColor'] {
+  fill: currentColor;
+  fill-opacity: 1;
+}
+
+
 /* `:where()`, not `:is()` — this is the whole point of the block.
  *
  * `:is()` takes the specificity of its most specific argument, and
@@ -429,4 +495,81 @@
     transition: none;
     animation: none;
   }
+}
+
+/* ---------- Page status: loading / error / empty (GT-A1 · GT-A2 · GT-B33) ----
+ *
+ * Moved here from frontend/member-app/src/components/PageStatus.css so both
+ * halves of the product render the same status block from one source — the
+ * UIR-4 pattern already used for the rail and the app bar.
+ *
+ * It had to move rather than be copied. The member SPA bundled these rules, so
+ * the admin SPA could not reach them, and admin grew its own status language
+ * instead: at least eight different shapes across fifteen files — bare
+ * `<p>Loading…</p>`, `.gt-admin-alert`, `.gt-admin-lede[role=status]`,
+ * `.gt-error`, `.gt-adminpage-status`, `.gt-admin-banner--warn` and more. Every
+ * one of them is a different answer to "this page is busy" or "this page
+ * failed". Duplicating the CSS into the admin bundle would have made that two
+ * sources of truth for one visual language, which is the thing this file
+ * exists to prevent.
+ *
+ * Both hosts already load gt-primitives.css (base.html and base_admin.html), so
+ * nothing new has to be linked for either app to pick these up.
+ *
+ * Geometry comes from the shared scales — no local px.
+ */
+
+.gt-page-status {
+  margin: var(--gt-space-1) 0;
+  padding: var(--gt-space-4) var(--gt-space-5);
+  border-radius: var(--gt-radius-lg);
+  border: 1px solid var(--gt-glass-border);
+  background: var(--gt-glass-bg);
+  backdrop-filter: blur(var(--gt-glass-blur));
+  color: var(--gt-text-muted);
+}
+
+.gt-page-status__message {
+  margin: 0;
+  font-size: var(--gt-font-md);
+  line-height: var(--gt-line-base);
+  color: inherit;
+}
+
+.gt-page-status--loading {
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-4);
+  border-color: color-mix(in srgb, var(--gt-accent) 36%, transparent);
+  color: var(--gt-accent);
+}
+
+.gt-page-status--empty {
+  border-style: dashed;
+}
+
+/* Error (GT-A2)
+   Danger tokens are intentionally outside preset overrides, so a failure reads
+   as a failure on every theme — including the low-chroma mono pack where an
+   accent-tinted border would not register as a problem. */
+.gt-page-status--error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gt-space-4);
+  border-color: color-mix(in srgb, var(--gt-danger) 45%, transparent);
+  border-left: 3px solid var(--gt-danger);
+  background: color-mix(in srgb, var(--gt-danger) 8%, var(--gt-surface));
+  color: var(--gt-text);
+}
+
+.gt-page-status__body {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.gt-page-status__detail {
+  margin: var(--gt-space-1) 0 0;
+  color: var(--gt-text-muted);
+  font-size: var(--gt-font-xs);
 }

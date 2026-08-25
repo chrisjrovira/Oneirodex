@@ -5,6 +5,7 @@ import { DataTable } from './DataTable'
 import { DupeGlance } from './DupeGlance'
 import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_GROUPS } from './navConfig'
 import { OpenPathModal } from './OpenPathModal'
+import { PageStatus } from './PageStatus'
 import { ImportLeafLibraries } from './ImportLeafLibraries'
 import { ProposeLeafLibraries } from './ProposeLeafLibraries'
 import { ScanConflictModal } from './ScanConflictModal'
@@ -156,17 +157,20 @@ export function DashboardPage() {
 
   return (
     <Page title="Dashboard" lede="Observability glance — libraries, host pulse, and open issues (~15s).">
-      {error ? (
-        <div role="alert" className="gt-admin-alert">
-          Unable to load ops summary. Open System for details.
-        </div>
-      ) : null}
-
-      {bootLoading && !summary ? (
-        <p className="gt-admin-lede" role="status">
-          Loading dashboard…
-        </p>
-      ) : null}
+      {/* GT-B33: the shared status block, not two hand-rolled ones.
+          The error branch used to be a `.gt-admin-alert` div and the loading
+          branch a `.gt-admin-lede` paragraph — two shapes on one page, neither
+          matching the member app, and the error text discarded whatever the
+          server actually said in favour of a fixed sentence. PageStatus keeps
+          the operator-facing sentence and adds the status/error_code line. */}
+      <PageStatus
+        loading={bootLoading && !summary}
+        error={error}
+        errorMessage="Unable to load ops summary. Open System for details."
+        onRetry={() => refresh('manual')}
+        retryLabel="Retry"
+        loadingMessage="Loading dashboard…"
+      />
 
       <OpsStatusBanner
         severity={severity}
@@ -355,7 +359,7 @@ export function LibrariesPage() {
 
   return (
     <Page title="Libraries & scans" lede="Manage library folders and platforms. Classic Jinja surfaces share the same Libraries / Auto / Manual / Unmatched tabs.">
-      {error ? <div role="alert">Unable to load libraries.</div> : null}
+      <PageStatus error={error} errorMessage="Unable to load libraries." />
       <p className="gt-admin-lede">
         Prefer the unified classic page:{' '}
         <a href="/scan_management?active_tab=libraries">Libraries &amp; scans</a>
@@ -815,10 +819,10 @@ export function PluginsPage() {
 
   return (
     <Page title="Plugins & connectors" lede="Built-in registry of metadata, acquire, emu, and export hooks.">
-      {error ? <div role="alert">Unable to load plugins.</div> : null}
+      <PageStatus error={error} errorMessage="Unable to load plugins." />
       <div className="gt-admin-panel">
         {!plugins ? (
-          <p>Loading…</p>
+          <PageStatus loading loadingMessage="Loading plugins…" />
         ) : (
           // Category and status are exactly what someone comes here to group
           // by, so this is the table that most wanted sorting and had none.
@@ -898,7 +902,7 @@ export function ScansPage() {
 
   return (
     <Page title="Libraries & scans" lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja Libraries & scans) or Refresh all here.">
-      {error ? <div role="alert">Unable to load scan status.</div> : null}
+      <PageStatus error={error} errorMessage="Unable to load scan status." />
       <div className="gt-admin-panel">
         <div className="gt-admin-panel__toolbar" style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <button

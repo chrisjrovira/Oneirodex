@@ -24,6 +24,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Operators / ROM reference sets | [runbooks/reference-sets.md](runbooks/reference-sets.md) |
 | Operators / login rate limit (proxy) | [runbooks/login-rate-limit-proxy.md](runbooks/login-rate-limit-proxy.md) |
 | Operators / break-glass | [runbooks/container-wont-start.md](runbooks/container-wont-start.md) |
+| Operators / security posture | [strategy/security.md](strategy/security.md) · [strategy/security-legal-playbook.md](strategy/security-legal-playbook.md) — audit findings, what shipped, and the `CSP_ENFORCE` rollout |
 | Operators / release scrub (SCRUB-7) | [runbooks/scrub-shipped-bundles.md](runbooks/scrub-shipped-bundles.md) · [strategy/external-facing-scrub.md](strategy/external-facing-scrub.md) |
 | Maintainers / disk hygiene | [runbooks/workspace-disk-hygiene.md](runbooks/workspace-disk-hygiene.md) — safe cache deletes vs WebRetro / `.git` |
 | Maintainers / desktop installers | [runbooks/local-installers.md](runbooks/local-installers.md) — build Windows · macOS · Linux bundles without GitHub Actions; a `.dmg` still needs a Mac |

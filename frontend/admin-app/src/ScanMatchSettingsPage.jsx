@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import {
   PEEL_PROFILES,
   SAFE_VARIANT_KEYS,
@@ -97,11 +98,10 @@ export function ScanMatchSettingsPage() {
         leaf-only — GameTheca does not offer mega-library or depth-3 family walk options here.
       </p>
 
-      {loading ? (
-        <p className="gt-admin-lede" role="status">
-          Loading scan/match settings…
-        </p>
-      ) : null}
+      {/* The two `gt-admin-banner` blocks below stay as banners: they disclose
+          rollout state (which policy fields Backend exposes), which is page
+          content rather than a transient loading/error state. */}
+      <PageStatus loading={loading} loadingMessage="Loading scan/match settings…" />
 
       {!loading && degradeReason ? (
         <div className="gt-admin-banner gt-admin-banner--warn" role="status">
@@ -242,11 +242,7 @@ export function ScanMatchSettingsPage() {
               {message}
             </p>
           ) : null}
-          {error ? (
-            <p role="alert" className="gt-admin-lede gt-admin-lede--warn">
-              {error}
-            </p>
-          ) : null}
+          <PageStatus error={error} />
         </form>
       ) : null}
 

@@ -69,6 +69,10 @@
   --gt-rail-inset: 0.9rem;
   --gt-rail-gutter: 0.4rem;
   --gt-rail-icon-w: 1.25rem;
+  /* Multiplier applied to the glyph in the *expanded* rail only — see the note
+     on .gt-rail__icon in gt-shell.css for why 3 is available but not the
+     default. */
+  --gt-rail-icon-scale: 1.8;
 }
 
 [data-density='compact'] {

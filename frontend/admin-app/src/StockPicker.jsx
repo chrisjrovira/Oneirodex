@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { postJson } from './adminApi'
 import { showToast } from './utils/toast'
 
@@ -211,11 +212,9 @@ export function StockPicker({
         </button>
       </div>
 
-      {error ? (
-        <div role="alert" className="gt-admin-alert">
-          {error}
-        </div>
-      ) : null}
+      {/* The `status` line below is progress text for one action, not a page
+          state, so it stays as it is. */}
+      <PageStatus error={error} />
       {status ? (
         <p className="gt-admin-lede" role="status">
           {status}

@@ -498,3 +498,114 @@
   grid-column: 1 / -1;
   margin: 0;
 }
+
+/* --- Danger zone: scoped factory reset (GT-B32) ---------------------------
+ *
+ * Deliberately styled apart from the panels above it. Every other panel on this
+ * page reports state; this one empties the database, and a control of that
+ * consequence should not inherit the visual weight of a metric tile. The danger
+ * colour is carried by the border and the headings rather than by a large red
+ * fill: the panel sits at the bottom of a long page, and a block of red would
+ * pull the eye to the one thing nobody should reach for by accident.
+ */
+.gt-danger-zone {
+  border: 1px solid color-mix(in srgb, var(--gt-danger) 45%, transparent);
+  border-left: 3px solid var(--gt-danger);
+  background: color-mix(in srgb, var(--gt-danger) 6%, transparent);
+}
+
+.gt-danger-zone h2 {
+  color: var(--gt-danger);
+}
+
+.gt-danger-zone__lede {
+  color: var(--gt-text-muted);
+  max-width: 60ch;
+}
+
+.gt-danger-zone__scopes {
+  list-style: none;
+  margin: 0.75rem 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.gt-danger-zone__scopes label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.gt-danger-zone__scope-title {
+  font-weight: 650;
+  color: var(--gt-text);
+}
+
+/* Indented under its checkbox so the consequence reads as part of the choice
+   rather than as a separate paragraph. */
+.gt-danger-zone__scope-blurb {
+  margin: 0.15rem 0 0 1.65rem;
+  color: var(--gt-text-muted);
+  max-width: 62ch;
+}
+
+.gt-danger-zone__plan {
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  border: 1px solid var(--gt-border);
+  background: var(--gt-surface-2);
+}
+
+/* The table list can be 70+ names; it scrolls inside the panel rather than
+   stretching the page it is on. */
+.gt-danger-zone__plan code {
+  display: block;
+  margin-top: 0.4rem;
+  max-height: 9rem;
+  overflow-y: auto;
+  word-break: break-word;
+  color: var(--gt-text-muted);
+}
+
+.gt-danger-zone__confirm {
+  display: block;
+  margin-top: 0.75rem;
+  color: var(--gt-text);
+}
+
+.gt-danger-zone__confirm input {
+  display: block;
+  margin-top: 0.3rem;
+  min-height: var(--gt-control-h);
+  padding: 0 0.55rem;
+  color: var(--gt-text);
+  background: var(--gt-surface);
+  border: 1px solid var(--gt-border);
+}
+
+.gt-danger-zone__confirm input:focus-visible {
+  outline: 2px solid var(--gt-danger);
+  outline-offset: 1px;
+}
+
+.gt-danger-zone__done {
+  margin-top: 0.75rem;
+  color: var(--gt-accent);
+}
+
+.gt-danger-zone__error {
+  margin-top: 0.75rem;
+  color: var(--gt-danger);
+}
+
+/* Per-scope blast radius, on the checkbox rather than inside the expanded plan.
+   Muted and small: it qualifies the label it follows, it is not a second one. */
+.gt-danger-zone__scope-count {
+  margin-left: 0.4rem;
+  font-size: var(--gt-font-xs, 0.75rem);
+  font-weight: 500;
+  color: var(--gt-danger);
+  white-space: nowrap;
+}

@@ -55,9 +55,63 @@ GENERATOR_VERSION = 15
 # Key written into each generated theme.json; also our ownership proof.
 PRESET_MARKER_KEY = 'gametheca_preset'
 
-# Files the generator owns per preset. sync_theme_tree must never overwrite
-# these from the source, and a preset missing any of them is stale.
-PRESET_MANAGED_FILES = ('theme.json', 'css/base.css', 'css/gt-tokens.css')
+# ---------------------------------------------------------------------------
+# Stock avatars
+# ---------------------------------------------------------------------------
+#
+# The seven shipped avatars are flat SVGs drawn in the *default* theme's palette
+# — a green glyph on a near-black panel. They are served as <img>, so they can
+# neither inherit `currentColor` nor read a CSS custom property: on Arcade Neon
+# or Hot Cabinet the member's chosen avatar stayed default-green while every
+# other pixel around it changed.
+#
+# So they are generated per preset, exactly like `gt-tokens.css` is. The source
+# files carry these three colours and nothing else (verified: 24 accent, 7
+# panel, 4 muted occurrences across all seven files), which is what makes a
+# straight substitution safe rather than a guess.
+#
+# Anyone editing the source SVGs must stay inside this palette. `AVATAR_SOURCE_*`
+# is the contract, and `tests/test_preset_avatars.py` fails if a file drifts off
+# it — otherwise a new colour would silently survive into every preset unchanged
+# and only ever be noticed as "that one avatar is still green".
+AVATAR_SOURCE_ACCENT = '#2fd67b'
+AVATAR_SOURCE_PANEL = '#12161c'
+AVATAR_SOURCE_MUTED = '#8a94a3'
+
+AVATAR_FILES = (
+    'arcade.svg',
+    'cartridge.svg',
+    'controller.svg',
+    'default.svg',
+    'disc.svg',
+    'dpad.svg',
+    'joystick.svg',
+)
+
+# Files the generator writes for *every* preset, unconditionally. Two things
+# follow from that: sync_theme_tree must never overwrite them from the source,
+# and a preset missing any of them is stale and gets rebuilt.
+PRESET_MANAGED_FILES = (
+    'theme.json',
+    'css/base.css',
+    'css/gt-tokens.css',
+)
+
+# The recoloured avatars — protected from the sync exactly like the colour CSS,
+# but deliberately *not* part of PRESET_MANAGED_FILES.
+#
+# The difference is that these are written only when the source tree actually
+# ships `avatars/`. Folding them into the managed list made their absence mean
+# "stale", so an install whose source predates them — or any caller passing a
+# source tree without them — would rebuild all nine presets on every single
+# boot, forever, trying to produce files that could never exist. Staleness has
+# to be conditional on the source having something to generate from; see
+# `preset_needs_rebuild`.
+PRESET_AVATAR_FILES = tuple(f'avatars/{name}' for name in AVATAR_FILES)
+
+# What the sync pass must leave alone: everything the generator owns, whether
+# or not its absence would trigger a rebuild.
+PRESET_PROTECTED_FILES = PRESET_MANAGED_FILES + PRESET_AVATAR_FILES
 
 # Folder slug must match how preferences / theme_asset resolve paths.
 # Wave 2d: each preset owns a colour language *and* a paired icon pack
@@ -527,8 +581,16 @@ def is_managed_preset(target: str, preset: dict) -> bool:
     )
 
 
-def preset_needs_rebuild(target: str, preset: dict, fingerprint: str) -> bool:
-    """True when the preset on disk was generated from a different source."""
+def preset_needs_rebuild(
+    target: str, preset: dict, fingerprint: str, source_root: str | None = None
+) -> bool:
+    """True when the preset on disk was generated from a different source.
+
+    ``source_root`` is optional and only widens the check: given one, a preset
+    is also stale when the source ships avatars that the target is missing.
+    Without it the avatars are ignored entirely, which is what keeps a source
+    tree with no ``avatars/`` folder from looking permanently stale.
+    """
     theme_json = os.path.join(target, 'theme.json')
     data = _read_theme_json(theme_json)
     if data is None:
@@ -544,9 +606,21 @@ def preset_needs_rebuild(target: str, preset: dict, fingerprint: str) -> bool:
 
     # A managed file deleted at runtime cannot be restored by the sync pass
     # (the sync deliberately skips managed files), so rebuild instead.
+    required = list(PRESET_MANAGED_FILES)
+
+    # Same argument for the avatars — the sync skips those too — but only for
+    # the ones the source could actually regenerate. Asking for a file the
+    # generator will not write is how a rebuild loop starts.
+    if source_root and os.path.isdir(os.path.join(source_root, 'avatars')):
+        required += [
+            rel
+            for rel in PRESET_AVATAR_FILES
+            if os.path.isfile(os.path.join(source_root, *rel.split('/')))
+        ]
+
     return any(
         not os.path.isfile(os.path.join(target, *rel.split('/')))
-        for rel in PRESET_MANAGED_FILES
+        for rel in required
     )
 
 
@@ -623,6 +697,45 @@ def _write_preset_tokens_css(source_root: str, target: str, preset: dict) -> Non
         fh.write(css)
 
 
+def _write_preset_avatars(source_root: str, target: str, preset: dict) -> None:
+    """Recolour the shipped avatars into this preset's palette.
+
+    Substitution rather than templating, because the source files are plain art
+    with three known colours and no markup we control — see the palette note at
+    the top of this module.
+
+    A missing source folder is not an error: an install that predates the themed
+    avatars keeps serving the ones under `static/newstyle/avatars/`, which is
+    what `avatar_url` falls back to.
+    """
+    source_dir = os.path.join(source_root, 'avatars')
+    if not os.path.isdir(source_dir):
+        return
+
+    tokens = preset_tokens(preset)
+    replacements = (
+        (AVATAR_SOURCE_ACCENT, tokens.get('gt-accent') or AVATAR_SOURCE_ACCENT),
+        (AVATAR_SOURCE_PANEL, tokens.get('gt-surface') or AVATAR_SOURCE_PANEL),
+        (AVATAR_SOURCE_MUTED, tokens.get('gt-text-muted') or AVATAR_SOURCE_MUTED),
+    )
+
+    target_dir = os.path.join(target, 'avatars')
+    os.makedirs(target_dir, exist_ok=True)
+
+    for name in AVATAR_FILES:
+        source_file = os.path.join(source_dir, name)
+        if not os.path.isfile(source_file):
+            continue
+        with open(source_file, 'r', encoding='utf-8') as fh:
+            svg = fh.read()
+        for source_colour, themed in replacements:
+            # Case-insensitively, because SVG hex is case-free and the source
+            # files are hand-edited art.
+            svg = re.sub(re.escape(source_colour), themed, svg, flags=re.IGNORECASE)
+        with open(os.path.join(target_dir, name), 'w', encoding='utf-8') as fh:
+            fh.write(svg)
+
+
 def build_preset(source_root: str, target: str, preset: dict, fingerprint: str) -> None:
     """Regenerate one preset from scratch."""
     if os.path.exists(target):
@@ -639,6 +752,7 @@ def build_preset(source_root: str, target: str, preset: dict, fingerprint: str) 
     )
     _write_preset_base_css(target, preset)
     _write_preset_tokens_css(source_root, target, preset)
+    _write_preset_avatars(source_root, target, preset)
 
 
 def install_preset_themes(themes_path: str, default_source: str, *, force: bool = False) -> int:
@@ -668,7 +782,7 @@ def install_preset_themes(themes_path: str, default_source: str, *, force: bool 
         if os.path.isdir(target) and not is_managed_preset(target, preset):
             continue
 
-        if force or preset_needs_rebuild(target, preset, fingerprint):
+        if force or preset_needs_rebuild(target, preset, fingerprint, default_source):
             build_preset(default_source, target, preset, fingerprint)
             rebuilt += 1
 
@@ -688,5 +802,5 @@ def sync_preset_themes(themes_path: str, default_source: str) -> int:
         target = os.path.join(themes_path, preset['slug'])
         if not os.path.isdir(target) or not is_managed_preset(target, preset):
             continue
-        written += sync_theme_tree(default_source, target, protected=PRESET_MANAGED_FILES)
+        written += sync_theme_tree(default_source, target, protected=PRESET_PROTECTED_FILES)
     return written

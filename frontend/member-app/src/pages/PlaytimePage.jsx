@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react'
 import { fetchMyPlaytime } from '../api/playtime'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
+import { PageStatus } from '../components/PageStatus'
 import './PlaytimePage.css'
 
 function formatDuration(totalSeconds) {
@@ -57,16 +58,13 @@ export function PlaytimePage() {
         </div>
       </div>
 
-      {error ? (
-        <div role="alert">
-          <p>Unable to load playtime.</p>
-          <button type="button" onClick={() => setRetryCount((n) => n + 1)}>
-            Retry
-          </button>
-        </div>
-      ) : null}
-
-      {!error && !data ? <p className="gt-playtime__empty">Loading…</p> : null}
+      <PageStatus
+        loading={!error && !data}
+        error={error}
+        errorMessage="Unable to load playtime."
+        loadingMessage="Loading playtime…"
+        onRetry={() => setRetryCount((n) => n + 1)}
+      />
 
       {!error && data ? (
         <>

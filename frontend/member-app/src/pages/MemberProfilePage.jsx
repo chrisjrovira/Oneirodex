@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { PageStatus } from '../components/PageStatus'
 
 function formatDuration(totalSeconds) {
   const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0))
@@ -32,17 +33,15 @@ export function MemberProfilePage() {
     return () => controller.abort()
   }, [userId])
 
-  if (error) {
+  if (error || !data) {
     return (
       <div className="gt-more-page">
-        <p role="alert">Unable to load profile.</p>
-      </div>
-    )
-  }
-  if (!data) {
-    return (
-      <div className="gt-more-page">
-        <p>Loading…</p>
+        <PageStatus
+          loading={!error}
+          error={error}
+          errorMessage="Unable to load profile."
+          loadingMessage="Loading profile…"
+        />
       </div>
     )
   }

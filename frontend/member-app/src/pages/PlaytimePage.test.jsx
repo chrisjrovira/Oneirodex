@@ -25,7 +25,7 @@ beforeEach(() => {
 
 test('lists dense playtime rows with duration meta', async () => {
   render(<PlaytimePage />)
-  expect(screen.getByText('Loading…')).toBeInTheDocument()
+  expect(screen.getByRole('status', { busy: true })).toBeInTheDocument()
   expect(await screen.findByText('Hades')).toBeInTheDocument()
   expect(screen.getByLabelText('Playtime summary')).toHaveTextContent(/1h 01m/)
   expect(screen.getByText(/2 sessions/)).toBeInTheDocument()
@@ -51,7 +51,7 @@ test('Retry reloads after error', async () => {
 
   render(<PlaytimePage />)
   expect(await screen.findByRole('alert')).toHaveTextContent(/Unable to load playtime/i)
-  await user.click(screen.getByRole('button', { name: /Retry/i }))
+  await user.click(screen.getByRole('button', { name: /Try again/i }))
   await waitFor(() => {
     expect(screen.getByText(/No playtime recorded yet/i)).toBeInTheDocument()
   })

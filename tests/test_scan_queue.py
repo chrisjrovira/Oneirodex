@@ -209,6 +209,119 @@ class TestStartOrQueueScan:
             assert promoted.id == queued.id
             assert db_session.get(ScanJob, queued.id).status == 'Running'
 
+    def test_dead_owner_running_job_reclaimed_immediately(
+        self, app, db_session, sample_library
+    ):
+        """A scan orphaned by a restart must not hold the queue for six hours.
+
+        The row looks perfectly healthy to the time-based sweep — it reported
+        progress a second ago — so only process ownership can tell that nothing
+        is working on it. Before owner_token this wedged every later scan until
+        STALE_RUNNING_SECONDS elapsed, which is what "scanning is broken"
+        looked like from the admin UI.
+        """
+        with app.app_context():
+            now = datetime.now(timezone.utc)
+            orphan = ScanJob(
+                folders={'/games': True},
+                content_type='Games',
+                status='Running',
+                is_enabled=True,
+                last_run=now,
+                last_progress_update=now,
+                library_uuid=sample_library.uuid,
+                scan_folder='/games',
+                # A pid that cannot be running: max_pid is well below this.
+                owner_token=f'{uuid4().hex}:4294967000',
+            )
+            db_session.add(orphan)
+            db_session.commit()
+
+            assert reclaim_stale_busy_jobs() == 1
+            assert db_session.get(ScanJob, orphan.id).status == 'Failed'
+
+    def test_live_owner_running_job_is_left_alone(
+        self, app, db_session, sample_library
+    ):
+        """The sweep must never reclaim a scan this process is still running."""
+        from gametheca.utils.scan_queue import PROCESS_TOKEN
+
+        with app.app_context():
+            now = datetime.now(timezone.utc)
+            live = ScanJob(
+                folders={'/games': True},
+                content_type='Games',
+                status='Running',
+                is_enabled=True,
+                last_run=now,
+                last_progress_update=now,
+                library_uuid=sample_library.uuid,
+                scan_folder='/games',
+                owner_token=PROCESS_TOKEN,
+            )
+            db_session.add(live)
+            db_session.commit()
+
+            assert reclaim_stale_busy_jobs() == 0
+            assert db_session.get(ScanJob, live.id).status == 'Running'
+
+    def test_untokened_running_job_still_waits_for_timeout(
+        self, app, db_session, sample_library
+    ):
+        """Rows written before owner_token existed keep the old behaviour.
+
+        A NULL token is not evidence of death, so upgrading must not sweep a
+        genuinely running scan out from under itself on first boot.
+        """
+        with app.app_context():
+            now = datetime.now(timezone.utc)
+            legacy = ScanJob(
+                folders={'/games': True},
+                content_type='Games',
+                status='Running',
+                is_enabled=True,
+                last_run=now,
+                last_progress_update=now,
+                library_uuid=sample_library.uuid,
+                scan_folder='/games',
+                owner_token=None,
+            )
+            db_session.add(legacy)
+            db_session.commit()
+
+            assert reclaim_stale_busy_jobs() == 0
+            assert db_session.get(ScanJob, legacy.id).status == 'Running'
+
+    def test_scan_after_dead_owner_starts_instead_of_queueing(
+        self, app, db_session, sample_library
+    ):
+        """End to end: the first request after a restart starts, not queues."""
+        with app.app_context():
+            now = datetime.now(timezone.utc)
+            orphan = ScanJob(
+                folders={'/games': True},
+                content_type='Games',
+                status='Running',
+                is_enabled=True,
+                last_run=now,
+                last_progress_update=now,
+                library_uuid=sample_library.uuid,
+                scan_folder='/games',
+                owner_token=f'{uuid4().hex}:4294967000',
+            )
+            db_session.add(orphan)
+            db_session.commit()
+
+            with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
+                mock_thread.return_value.start = lambda: None
+                result = start_or_queue_scan(
+                    folder_path='/games/next',
+                    library_uuid=sample_library.uuid,
+                    app=app,
+                )
+            assert result['status'] == 'started'
+            assert db_session.get(ScanJob, orphan.id).status == 'Failed'
+
     def test_reclaim_stale_stopping_unblocks_queue(
         self, app, db_session, sample_library
     ):

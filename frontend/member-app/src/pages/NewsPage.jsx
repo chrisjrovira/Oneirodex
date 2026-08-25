@@ -5,6 +5,7 @@ import { claimFreeGameAssist, fetchFreeGames } from '../api/freeGames'
 import { fetchGamingNews } from '../api/gamingNews'
 import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
+import { PageStatus } from '../components/PageStatus'
 import '../styles/panelGrid.css'
 import './NewsPage.css'
 
@@ -249,16 +250,13 @@ export function NewsPage({ shellConfig = {} }) {
         </div>
       )}
 
-      {error ? (
-        <div role="alert">
-          <p>Unable to load news.</p>
-          <button type="button" onClick={() => setRetryCount((n) => n + 1)}>
-            Retry
-          </button>
-        </div>
-      ) : null}
-
-      {loading ? <p>Loading…</p> : null}
+      <PageStatus
+        loading={loading}
+        error={error}
+        errorMessage="Unable to load news."
+        loadingMessage="Loading news…"
+        onRetry={() => setRetryCount((n) => n + 1)}
+      />
 
       {!error && !loading && featured && (activeTab === 'all' || activeTab === 'admins') ? (
         <section className="gt-news__hero gt-panels__full" aria-label="Featured">

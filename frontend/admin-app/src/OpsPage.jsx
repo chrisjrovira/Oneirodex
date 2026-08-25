@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { PageStatus } from './PageStatus'
 
 import { DataTable } from './DataTable'
+import { SystemResetPanel } from './SystemResetPanel'
 import { useWidgetOrder } from './useWidgetOrder'
 import {
   LibraryHealthFactors,
@@ -327,17 +329,13 @@ export function OpsPage() {
         </div>
       </div>
 
-      {error ? (
-        <div role="alert" className="gt-admin-alert">
-          Unable to load ops summary ({error.message}).
-        </div>
-      ) : null}
-
-      {bootLoading && !snapshot ? (
-        <p className="gt-admin-lede" role="status">
-          Loading ops summary…
-        </p>
-      ) : null}
+      {/* The `Refreshing…` indicator above is not a page status — it reports
+          one control's activity and stays where it is. */}
+      <PageStatus
+        error={error}
+        loading={bootLoading && !snapshot}
+        loadingMessage="Loading ops summary…"
+      />
 
       <OpsStatusBanner
         severity={severity}
@@ -712,6 +710,10 @@ export function OpsPage() {
 
       {/* System destinations moved to the rail (GT-B7) — this row repeated
           every entry the rail already lists while the System section is open. */}
+
+      {/* Last on the page on purpose: a control that empties the database
+          should not sit above the ones you use daily. */}
+      <SystemResetPanel />
     </div>
   )
 }

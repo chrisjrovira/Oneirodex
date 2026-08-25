@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { ImagesPage } from './ImagesPage'
 import { StockPicker } from './StockPicker'
 import { getJson, postJson } from './adminApi'
@@ -494,11 +495,7 @@ export function ArtStudioPage() {
 
       {tab === 'studio' ? (
         <>
-          {error ? (
-            <div role="alert" className="gt-admin-alert">
-              {error}
-            </div>
-          ) : null}
+          <PageStatus error={error} />
           {message ? (
             <p className="gt-admin-lede" role="status">
               {message}

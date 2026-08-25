@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { expect, test, vi } from 'vitest'
 
@@ -70,6 +70,46 @@ test('top bar is page scope only — no brand, no destinations', () => {
   for (const link of ADMIN_NAV) {
     expect(container.querySelector(`a[href="${link.path}"]`)).toBeNull()
   }
+})
+
+test('the bar carries no search control of its own (GT-B16 parity)', () => {
+  // The member bar dropped its search under GT-B16: a second search affordance
+  // in the chrome costs permanent width and buys nothing over the page's own
+  // filtering. Admin kept a "Search ⌘K" button, which was the most visible
+  // difference between the two bars. ⌘K still works — AdminCommandPalette binds
+  // it — and the hint now lives in the account menu, as it does for members.
+  renderTopBar()
+
+  expect(screen.queryByRole('button', { name: /^search/i })).toBeNull()
+})
+
+test('the palette hint moved into the account menu, and still opens it', () => {
+  const onOpen = vi.fn()
+  document.addEventListener('gt-admin-palette:open', onOpen)
+
+  renderTopBar()
+  // fireEvent, not .click(): the menu is React state, and a raw DOM click is
+  // not wrapped in act(), so the panel never renders before the next query.
+  fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+
+  const hint = screen.getByRole('menuitem', { name: /search everything/i })
+  expect(hint).toBeInTheDocument()
+  fireEvent.click(hint)
+  expect(onOpen).toHaveBeenCalledTimes(1)
+
+  document.removeEventListener('gt-admin-palette:open', onOpen)
+})
+
+test('the section label appears only when the rail is collapsed', () => {
+  // An expanded rail already names the active section a few pixels to the left,
+  // so the bar repeating it is a second answer to a question nothing asked.
+  // Same rule the member bar follows.
+  const expanded = renderTopBar({ railState: 'expanded' })
+  expect(expanded.container.querySelector('.gt-topbar__section')).toBeNull()
+  expanded.unmount()
+
+  const collapsed = renderTopBar({ railState: 'collapsed' })
+  expect(collapsed.container.querySelector('.gt-topbar__section')).toBeTruthy()
 })
 
 test('top bar exposes the rail toggle and wires it up', async () => {

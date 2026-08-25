@@ -21,7 +21,7 @@
         <h2 class="gt-account-section__title" id="profile-avatar-heading">Avatar</h2>
         <div class="gt-account-profile-head">
             <img
-                src="{{ url_for('static', filename=current_user.avatarpath) }}"
+                src="{{ current_user.avatarpath|avatar_url }}"
                 alt=""
                 class="gt-account-avatar"
                 title="Profile picture"

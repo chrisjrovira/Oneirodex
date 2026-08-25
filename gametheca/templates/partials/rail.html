@@ -128,7 +128,7 @@
       <details class="gt-rail__account">
         <summary class="gt-rail__link">
           <span class="gt-rail__icon">
-            <img src="{{ url_for('static', filename=current_user.avatarpath) }}" alt=""
+            <img src="{{ current_user.avatarpath|avatar_url }}" alt=""
                  class="gt-rail__avatar">
           </span>
           <span class="gt-rail__label">{{ current_user.name | capitalize }}</span>
