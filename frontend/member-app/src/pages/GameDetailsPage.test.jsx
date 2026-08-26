@@ -605,3 +605,50 @@ test('admin can remove missing versions via cleanup_orphans', async () => {
   const versionsSection = document.getElementById('updates')
   expect(within(versionsSection).getByRole('status')).toHaveTextContent(/Removed 1 missing version/i)
 })
+
+test('later sections sit in the content grid beside the facts rail', async () => {
+  renderDetails()
+
+  expect(await screen.findByRole('heading', { name: 'Celeste' })).toBeInTheDocument()
+  const grid = document.querySelector('.gt-details-page__content-grid')
+  expect(grid).toBeTruthy()
+  expect(grid.querySelector('.gt-details-page__section--summary')).toBeTruthy()
+  expect(grid.querySelector('.gt-details-page__section--facts')).toBeTruthy()
+  const flow = grid.querySelector('.gt-details-page__flow')
+  expect(flow).toBeTruthy()
+  expect(within(flow).getByRole('heading', { name: 'Versions' })).toBeInTheDocument()
+  expect(within(flow).getByRole('heading', { name: 'Extras & DLC' })).toBeInTheDocument()
+  expect(within(flow).getByRole('heading', { name: 'Screenshots' })).toBeInTheDocument()
+  expect(within(flow).getByRole('heading', { name: 'Trailers & videos' })).toBeInTheDocument()
+})
+
+test('facts rail stays in the grid when there is no summary', async () => {
+  global.fetch = vi.fn((url) => {
+    if (String(url).includes('/details')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ ...detailsPayload, summary: '' }),
+      })
+    }
+    if (String(url).includes('/versions')) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            versions: [
+              { kind: 'base', id: 1, uuid: detailsPayload.uuid, label: 'Base game', is_default: true },
+            ],
+          }),
+      })
+    }
+    return Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) })
+  })
+
+  renderDetails()
+
+  expect(await screen.findByRole('heading', { name: 'Celeste' })).toBeInTheDocument()
+  const grid = document.querySelector('.gt-details-page__content-grid')
+  expect(grid.querySelector('.gt-details-page__section--summary')).toBeNull()
+  expect(grid.querySelector('.gt-details-page__section--facts')).toBeTruthy()
+  expect(within(grid.querySelector('.gt-details-page__flow')).getByRole('heading', { name: 'Versions' })).toBeInTheDocument()
+})

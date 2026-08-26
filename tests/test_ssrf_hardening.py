@@ -5,10 +5,10 @@ homelab flag is on" and could be walked past two ways: a hostname that *resolves
 to a private address was never resolved, and a redirect to anywhere at all was
 followed without a second look.
 
-The regression that matters most in the other direction is the homelab one —
-``ALLOW_PRIVATE_LAN_URLS`` exists so Unraid installs can point connectors at
-``http://192.168.x.x``, and tightening SSRF is the classic way to break it. That
-case is pinned below.
+``safe_request`` now also dials the address that passed that check, so a DNS
+rebind between the check and the socket cannot steer the connection onto
+loopback or link-local. Homelab ``ALLOW_PRIVATE_LAN_URLS`` must still reach
+RFC1918 connectors — that case is pinned below.
 
 See docs/strategy/security-legal-playbook.md (S2).
 """
@@ -175,8 +175,9 @@ def test_redirect_hops_are_revalidated(resolves):
             session=session,
         )
 
-    # It must not have issued the second request.
-    assert session.calls == [('GET', 'https://good.example/art.png')]
+    # Dialed the checked address, not the name — and not the private hop.
+    assert session.calls == [('GET', 'https://93.184.216.34/art.png')]
+    assert session.last_kwargs['headers']['Host'] == 'good.example'
 
 
 def test_allowed_redirect_is_followed(resolves):
@@ -195,7 +196,11 @@ def test_allowed_redirect_is_followed(resolves):
         session=session,
     )
     assert resp.status_code == 200
-    assert session.calls[-1] == ('GET', 'https://cdn.example/real.png')
+    assert session.calls == [
+        ('GET', 'https://93.184.216.34/art.png'),
+        ('GET', 'https://93.184.216.35/real.png'),
+    ]
+    assert session.last_kwargs['headers']['Host'] == 'cdn.example'
 
 
 def test_relative_redirect_resolves_against_current_hop():
@@ -243,6 +248,62 @@ def test_allow_redirects_cannot_be_forced_on():
         allow_redirects=True,
     )
     assert session.last_kwargs['allow_redirects'] is False
+
+
+def test_connection_uses_the_address_that_was_checked(resolves, monkeypatch):
+    """A rebind after the check must not change where we dial."""
+    addrs = {'good.example': ['93.184.216.34']}
+
+    def fake(host):
+        return [ipaddress.ip_address(a) for a in addrs.get(host, [])]
+
+    monkeypatch.setattr(security, '_resolve_host', fake)
+    session = _FakeSession([_FakeResponse(200)])
+    safe_get(
+        'https://good.example/art.png',
+        validator=validate_user_outbound_http_url,
+        session=session,
+    )
+    addrs['good.example'] = ['127.0.0.1']
+    assert session.calls == [('GET', 'https://93.184.216.34/art.png')]
+    assert session.last_kwargs['headers']['Host'] == 'good.example'
+
+
+def test_rebind_to_loopback_during_pin_is_blocked(resolves, monkeypatch):
+    """If DNS has already flipped by the time we pick an address, fail closed."""
+    addrs = {'good.example': ['93.184.216.34']}
+    calls = {'n': 0}
+
+    def fake(host):
+        calls['n'] += 1
+        # Validator resolves once; pin resolves again.
+        if calls['n'] > 1:
+            return [ipaddress.ip_address('127.0.0.1')]
+        return [ipaddress.ip_address(a) for a in addrs.get(host, [])]
+
+    monkeypatch.setattr(security, '_resolve_host', fake)
+    session = _FakeSession([_FakeResponse(200)])
+    with pytest.raises(BlockedOutboundUrl):
+        safe_get(
+            'https://good.example/art.png',
+            validator=validate_user_outbound_http_url,
+            session=session,
+        )
+    assert session.calls == []
+
+
+def test_lan_connector_pin_keeps_rfc1918(monkeypatch, resolves):
+    """Homelab connectors must still reach the NAS after the pin."""
+    monkeypatch.setattr(security, 'allow_private_lan_urls_enabled', lambda: True)
+    resolves({'nas.home': ['192.168.1.50']})
+    session = _FakeSession([_FakeResponse(200)])
+    safe_get(
+        'http://nas.home:9696/api',
+        validator=validate_connector_http_url,
+        session=session,
+    )
+    assert session.calls == [('GET', 'http://192.168.1.50:9696/api')]
+    assert session.last_kwargs['headers']['Host'] == 'nas.home:9696'
 
 
 def test_provider_cover_fetch_rejects_loopback():

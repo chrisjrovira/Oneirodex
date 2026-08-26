@@ -1,14 +1,10 @@
 # Roadmap execution progress
 
-**Branch:** `main` — through **W32** (`6c363570`, player chrome + licence/privacy leftovers).
-**UX-B7 toasts + library-add completion are Done uncommitted.** Historical wave rows
-that still say "Done uncommitted" further down this file should be read as *shipped*.  
+**Branch:** `main` — UX-B4 game-details flow, CSP extract, DNS pin.
+Historical wave rows that still say "Done uncommitted" further down this file should be read as *shipped*.  
 **Release:** **1.0.0-beta** — see the root [CHANGELOG.md](../../CHANGELOG.md) for what has landed
 since the tag. Waves **4–28** are all on `origin/main`.  
-**Updated:** 2026-08-16 — the W26/W27/W28 line (22 commits) fast-forwarded onto `main`. Repo
-housekeeping in the same pass: five merged branches and one dead worktree deleted, dated
-point-in-time reports moved to [archive/](archive/README.md), stray root scripts moved into
-`scripts/`. **Next:** the open set in [carryover-w28.md](carryover-w28.md), which is the index over
+**Updated:** 2026-08-26 — CSP extract + DNS pin. **Next:** the open set in [carryover-w28.md](carryover-w28.md), which is the index over
 [W26](roadmap-w26-ux-overhaul.md) · [W27](roadmap-w27-ux-feedback.md) · [ui-debt-log.md](../dev/ui-debt-log.md).
 Standing constraints unchanged: **no** Discord · **no Class A** intel in public docs.
 
@@ -95,7 +91,7 @@ The 2026-08-25 retail rundown: child ACL that W31 S10 left on the Bearer path, C
 | **WebRetro licence** | MIT, Copyright (c) 2021 BinBashBanana — upstream LICENSE copied to `static/vendor/webretro/LICENSE`; notices no longer say unconfirmed |
 | **Envelope leftovers** | Profile, Systems, loading-icon, related-media failures go through `errorFromResponse` / `errorFromBody` |
 | **Player chrome (UID-007)** | Play bar Pause / Reset / Mute / volume / Power. Bezel overlay for touch and stage mousemove. Bridge: `gt-pause` · `gt-reset` · `gt-audio`. Firmware island was already closed. |
-| **Not done** | CSP enforce · README recapture (needs a populated instance) |
+| **Not done** | CSP *enforce* (inline `onclick=` + WebRetro eval still need `'unsafe-inline'` / `'unsafe-eval'`) · README recapture (needs a populated instance) |
 | **Capture** | skipped — empty test DB |
 
 ## UX-B7 — toasts + library-add completion (2026-08-25)
@@ -109,6 +105,29 @@ The human ask was toasts on every surface, dismissible, and "only show games whe
 | **Admin SPA** | `showToast` gained the close button (parity with member). Admin chrome polls `/api/notifications` for `library_added` the same way the member shell does. Grouping lives in `frontend/shared/libraryScanNotify.js`. |
 | **Guards** | `tests/test_gt_toast.py` (CI) · digest hold in `tests/test_browse_path_status.py` (CI) · admin `toast.test.js` dismiss + textContent |
 | **Not this slice** | CSP still report-only. Theme copies of `gtShowAdminToast` in scanjobs/libs still draw their own toast until Reset Themes; `$.notify` call sites are the ones this pass converted. |
+
+## UX-B4 — game details flow beside the facts rail (2026-08-26)
+
+The first pass sized the summary/facts row to the summary so the rail could run past it. Later
+sections still started *below* that row, so a short summary still left a hole.
+
+| | |
+|---|---|
+| **Layout** | Versions, extras, cheats, related media, screenshots and trailers now live in `.gt-details-page__flow` inside the same grid as summary + facts. Facts occupies column 2 across both rows. Narrow viewports keep document order: summary → details → the rest. |
+| **Guards** | `GameDetailsPage.test.jsx` — later headings must be inside the content grid; the facts rail stays in the grid when there is no summary. |
+| **Also closed on the board** | **UX-C8** remaining React tables were already on `DataTable` (`pages.jsx`, `ProposeLeafLibraries`, `ImportLeafLibraries`). Ops `DetailPanel` and Services stay hand-rolled by decision (key/value and a fixed diagnostic checklist). |
+| **Not this slice** | README recapture needs a populated instance. |
+
+## CSP extract + DNS pin (2026-08-26)
+
+The two leftover *code* items from the W31 playbook that were still open on purpose.
+
+| | |
+|---|---|
+| **Inline `<script>`** | Executable bodies extracted from Jinja to `static/js/gt_*.js` (not theme copies — no Reset Themes). Jinja values travel as `type=application/json`, `data-*`, or `<template>` islands. Ratchet: `tests/test_no_inline_scripts.py` (CI). |
+| **Still report-only** | `CSP_ENFORCE` stays false. Classic templates still have `onclick=` handlers, and WebRetro still needs `'unsafe-eval'` / `'wasm-unsafe-eval'`. Flipping enforcement now would break those. |
+| **DNS pin** | `http_safe.safe_request` dials the address that passed the SSRF check and restores the hostname on `Host` / SNI. Homelab `ALLOW_PRIVATE_LAN_URLS` still reaches RFC1918. Callers that bypass `safe_request` still have the rebind hole. |
+| **Guards** | `test_no_inline_scripts.py` · new pin cases in `test_ssrf_hardening.py` (rebind-after-check still hits the checked IP; rebind-before-pin fails closed; LAN connector still pins to 192.168.x) |
 
 ## W30b — admin page bodies, section by section (2026-08-25, in progress)
 
@@ -406,7 +425,7 @@ Many-leaf console libs remain **LOCKED** (no mega-lib). Product slices Done unco
 
 **Full-program review 2026-08-03:** every wave reviewed · **9 real defects found and fixed** (1 security-high: DM `@mention` leak to non-members · MISSING chip filter never wired server-side · Refresh-freshness never re-probed · scan-queue TOCTOU race · missing `clear_permission_errors` route · 2 dead admin links · `formatBytes` null · email fallback escaping) · 4 test bugs repaired (stale `data-corner` queries · a time-bomb NEW-badge date that expired today) · **2 items need a product decision** (LiveKit room ACL · per-thread Voice scoping) · first full pytest run on record: **2791 pass / 128 fail**, of which **81 are test-infra or local-Python-3.14 artifacts, not product** (app ships 3.12) — [review-2026-08-03-findings.md](archive/review-2026-08-03-findings.md)
 
-**Immediate board next (ordered):** (1) **CSP** stays report-only until the 24 inline-script templates and WebRetro WASM settle · (2) **W23 remainder** Themes-as-systems / art packs (`UID-006` · `UID-011` · `UID-012` — art seat) — [roadmap-w22-plus.md](roadmap-w22-plus.md) · (3) **Ops** Reset Themes after `game_edit_images.js` / scan-tab JS · **Blocked:** live `:5006` often down · no Class A · no Discord · README recapture needs a populated instance
+**Immediate board next (ordered):** (1) **CSP enforcement** — still report-only until inline `onclick=` handlers and WebRetro WASM settle · (2) **W23 remainder** Themes-as-systems / art packs (`UID-006` · `UID-011` · `UID-012` — art seat) — [roadmap-w22-plus.md](roadmap-w22-plus.md) · (3) **Ops** Reset Themes after `game_edit_images.js` / scan-tab JS · **Blocked:** live `:5006` often down · no Class A · no Discord · README recapture needs a populated instance
 
 ### Wave 22+ — feedback roadmap (In progress)
 

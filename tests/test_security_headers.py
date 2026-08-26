@@ -3,8 +3,8 @@
 The interesting assertions here are the *negative* ones. Permissions-Policy is
 the header most likely to be "hardened" into breaking shipped features, so the
 LiveKit and controller entries are pinned. And the CSP must stay report-only by
-default, because enforcing it would break the inline-script templates and the
-WebRetro cores on the day it shipped.
+default: executable inline ``<script>`` is gone, but inline event handlers and
+the WebRetro cores would still break under a strict ``script-src``.
 
 See docs/strategy/security-legal-playbook.md (S1, S3).
 """

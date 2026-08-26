@@ -189,28 +189,6 @@
 <script src="{{ 'js/chart-utils.js'|theme_asset }}"></script>
 <script src="{{ 'js/admin/server_status.js'|theme_asset }}"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function(tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-
-        document.querySelectorAll('time.gt-locale-time[datetime]').forEach(function (el) {
-            var d = new Date(el.getAttribute('datetime'));
-            if (!isNaN(d.getTime())) {
-                el.textContent = d.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' });
-            }
-        });
-    });
-
-    initializeServerData({
-        cpuUsage: {{ cpu_usage.percent|default(0) }},
-        memoryUsage: {% if memory_usage %}{{ memory_usage|tojson }}{% else %}null{% endif %},
-        diskUsage: {% if disk_usage %}{{ disk_usage|tojson }}{% else %}null{% endif %},
-        gamesUsage: {% if games_usage %}{{ games_usage|tojson }}{% else %}null{% endif %}
-    });
-
-    document.addEventListener('DOMContentLoaded', initializeServerStatus);
-</script>
+<script type="application/json" id="gt-server-status-data">{{ {"cpuUsage": cpu_usage.percent|default(0), "memoryUsage": memory_usage if memory_usage else None, "diskUsage": disk_usage if disk_usage else None, "gamesUsage": games_usage if games_usage else None}|tojson }}</script>
+<script src="{{ url_for('static', filename='js/gt_admin_server_status.js') }}"></script>
 {% endblock %}

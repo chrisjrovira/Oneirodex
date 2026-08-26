@@ -256,9 +256,9 @@ meant zero fonts written.
 
 | Item | Why it is not closed |
 |---|---|
-| **CSP enforcement** | `CSP_ENFORCE=false`. Enforcing today breaks the 24 inline-script templates and the WebRetro WASM cores. The newsletter page no longer loads CKEditor from a CDN. Flip enforcement once the admin bodies settle and the reports come back clean |
+| **CSP enforcement** | `CSP_ENFORCE=false`. Executable inline `<script>` is gone from Jinja (ratchet: `tests/test_no_inline_scripts.py`). Enforcing today still breaks inline `onclick=` handlers and the WebRetro WASM cores (`'unsafe-eval'` / `'wasm-unsafe-eval'`). Flip enforcement once those settle and the reports come back clean |
 | **Non-commercial core clauses** | `snes9x` and `genesis_plus_gx` restrict commercial distribution. Taking them out of the tree makes the operator the provisioning party, which is the right shape — it does not settle what a commercial host is then doing. Worth an hour of counsel if GameTheca is ever hosted commercially |
-| **DNS rebinding** | The SSRF fix is resolve-then-connect, so a rebind between the check and the socket still wins. Closing it means pinning the resolved address into the connection — a bigger change than this pass. Stated in `is_blocked_outbound_host`'s docstring rather than left implied |
+| **DNS rebinding** | **Closed for `safe_request` callers (2026-08-26).** The hop is dialed by the address that passed the check; the original hostname is restored on `Host` / SNI. Callers that bypass `http_safe` still have the hole. Homelab `ALLOW_PRIVATE_LAN_URLS` still reaches RFC1918 — pinned by test |
 
 ### Decision taken (2026-08-25): the cores come out
 

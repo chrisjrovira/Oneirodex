@@ -1,0 +1,65 @@
+"""Ratchet: Jinja templates must not ship executable inline <script>.
+
+Executable inline script is what kept CSP on ``'unsafe-inline'`` for *pages*.
+JSON ``<script type="application/json">`` tags are data, not script, and CSP
+allows them. Inline event handlers (``onclick=``) and WebRetro's
+``'unsafe-eval'`` / ``'wasm-unsafe-eval'`` are separate leftover reasons the
+policy stays report-only — this file only guards the ``<script>`` half.
+
+See docs/strategy/security-legal-playbook.md.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / 'gametheca' / 'templates'
+STATIC_JS = Path(__file__).resolve().parents[1] / 'gametheca' / 'static' / 'js'
+JINJA_RE = re.compile(r'\{\{|\{%')
+
+SCRIPT_RE = re.compile(r'<script(?P<attrs>[^>]*)>(?P<body>.*?)</script>', re.I | re.S)
+SRC_RE = re.compile(r'\bsrc\s*=', re.I)
+TYPE_RE = re.compile(r"""type\s*=\s*["']([^"']+)""", re.I)
+
+# CSP-safe data islands. Anything else without src= is executable JS.
+JSON_TYPES = {
+    'application/json',
+    'application/ld+json',
+}
+
+
+def _executable_inline_scripts(text: str, path: Path) -> list[str]:
+    hits = []
+    for match in SCRIPT_RE.finditer(text):
+        attrs = match.group('attrs')
+        if SRC_RE.search(attrs):
+            continue
+        type_match = TYPE_RE.search(attrs)
+        typ = (type_match.group(1) if type_match else 'text/javascript').strip().lower()
+        if typ in JSON_TYPES:
+            continue
+        line = text[: match.start()].count('\n') + 1
+        rel = path.relative_to(TEMPLATE_ROOT).as_posix()
+        hits.append(f'{rel}:{line} type={typ!r}')
+    return hits
+
+
+def test_templates_have_no_executable_inline_scripts():
+    hits = []
+    for path in sorted(TEMPLATE_ROOT.rglob('*.html')):
+        hits.extend(_executable_inline_scripts(path.read_text(encoding='utf-8'), path))
+    assert hits == [], (
+        'Executable inline <script> without src= — extract to static/js '
+        'or move data into type=application/json:\n  ' + '\n  '.join(hits)
+    )
+
+
+def test_extracted_static_js_has_no_jinja():
+    """A mechanical extract that left `{% if %}` in a .js file is a SyntaxError."""
+    hits = []
+    for path in sorted(STATIC_JS.glob('gt_*.js')):
+        text = path.read_text(encoding='utf-8')
+        if JINJA_RE.search(text):
+            hits.append(path.name)
+    assert hits == [], 'Jinja leftover in static JS: ' + ', '.join(hits)

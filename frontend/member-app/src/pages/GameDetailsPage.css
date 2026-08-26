@@ -155,51 +155,64 @@
   font-size: 1.15rem;
 }
 
-/* One definition, not two.
+/* Two-column body (UX-B4).
  *
- * `grid-template-rows: min-content` was a second `.gt-details-page__content-grid`
- * block further down the file overriding this one — the kind of split that
- * makes a layout impossible to read. Merged, and stated once: the first row is
- * sized to its content so the facts rail can run past the summary rather than
- * inflating the row to match it. */
+ * The first pass only put summary + facts in this grid, so later sections
+ * started below the taller column and left a hole under a short summary.
+ * Facts now occupy column 2 across summary + the rest of the page body;
+ * everything after Details lives in `.gt-details-page__flow` so it climbs
+ * beside the rail rather than waiting for it to finish.
+ *
+ * `grid-row: 1 / -1` does not work here: -1 is the last *explicit* line, and
+ * this grid has no explicit rows. Facts spans the two implicit rows we create
+ * (summary + flow), or the single flow row when there is no summary. */
 .gt-details-page__content-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
-  grid-template-rows: min-content;
-  /* The *only* thing separating sections — see the margin reset below. */
   gap: 1.6rem 2rem;
   align-items: start;
   margin-bottom: 8px;
 }
 
-.gt-details-page__content-grid:not(:has(.gt-details-page__section--summary)) {
-  grid-template-columns: 1fr;
+.gt-details-page__section--summary {
+  grid-column: 1;
+  grid-row: 1;
 }
 
-/* Gap or margin, not both.
- *
- * Every section carries `margin-bottom: 28px` from when this page was a plain
- * vertical stack. They are grid items now, and the grid already spaces its rows
- * — so each row was separated by 28px of margin *plus* 20px of gap, and the
- * last row trailed 28px into nothing. Roughly a section's worth of blank page
- * between every pair of sections, which is the "lots of empty space" on a page
- * whose content had not changed.
- *
- * The margin stays on the class for any section rendered outside this grid; it
- * is only retired for the ones the grid is already spacing. */
-.gt-details-page__content-grid > .gt-details-page__section {
-  margin-bottom: 0;
-}
-
-.gt-details-page__section--summary,
 .gt-details-page__section--facts {
+  grid-column: 2;
+  grid-row: 1 / span 2;
   align-self: start;
 }
 
-/* Below the two-column break the grid is a single column, and its row gap is
-   still what separates the sections — so nothing to restore. The rule that used
-   to add a margin back here now double-spaced the one layout that was never the
-   problem. */
+.gt-details-page__flow {
+  grid-column: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.gt-details-page__content-grid:has(.gt-details-page__section--summary) .gt-details-page__flow {
+  grid-row: 2;
+}
+
+.gt-details-page__content-grid:not(:has(.gt-details-page__section--summary)) .gt-details-page__section--facts {
+  grid-row: 1;
+}
+
+/* Gap or margin, not both — the grid (and the flow column) already space
+ * their children. The class keeps its margin for any section rendered
+ * outside this grid. */
+.gt-details-page__content-grid > .gt-details-page__section,
+.gt-details-page__flow > .gt-details-page__section {
+  margin-bottom: 0;
+}
+
+.gt-details-page__flow > .gt-relmedia,
+.gt-details-page__flow > .gt-pccheats {
+  margin-bottom: 0;
+}
 
 .gt-details-page__paths {
   display: flex;
@@ -414,6 +427,13 @@
 
   .gt-details-page__content-grid {
     grid-template-columns: 1fr;
+  }
+
+  .gt-details-page__section--summary,
+  .gt-details-page__section--facts,
+  .gt-details-page__flow {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .gt-details-page__summary {

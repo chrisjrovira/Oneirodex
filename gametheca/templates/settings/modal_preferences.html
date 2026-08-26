@@ -107,16 +107,7 @@
                             {% for error in form.tile_size.errors %}
                                 <div class="invalid-feedback d-block">{{ error }}</div>
                             {% endfor %}
-                            <script>
-                              (function () {
-                                var input = document.getElementById('tileSizeSelect');
-                                var label = document.getElementById('tileSizeValue');
-                                if (!input || !label) return;
-                                var sync = function () { label.textContent = input.value + '%'; };
-                                input.addEventListener('input', sync);
-                                sync();
-                              })();
-                            </script>
+                            <script src="{{ url_for('static', filename='js/gt_prefs_tile_size.js') }}"></script>
                         </div>
                     </details>
 
@@ -143,42 +134,7 @@
                    failures are swallowed — private-mode browsers throw on
                    localStorage, and losing a preference must not cost the
                    preferences panel. #}
-                <script>
-                  (function () {
-                    var KEY = 'gt.prefs.collapsedSections';
-                    var panel = document.getElementById('preferencesModal');
-                    if (!panel) return;
-                    var sections = panel.querySelectorAll('[data-prefs-section]');
-                    if (!sections.length) return;
-
-                    var closed;
-                    try {
-                      closed = JSON.parse(window.localStorage.getItem(KEY) || '[]');
-                    } catch (err) {
-                      closed = [];
-                    }
-                    if (!Array.isArray(closed)) closed = [];
-
-                    function save() {
-                      var next = [];
-                      sections.forEach(function (node) {
-                        if (!node.open) next.push(node.dataset.prefsSection);
-                      });
-                      try {
-                        window.localStorage.setItem(KEY, JSON.stringify(next));
-                      } catch (err) {
-                        /* Preference only — the panel works either way. */
-                      }
-                    }
-
-                    sections.forEach(function (node) {
-                      if (closed.indexOf(node.dataset.prefsSection) !== -1) {
-                        node.open = false;
-                      }
-                      node.addEventListener('toggle', save);
-                    });
-                  })();
-                </script>
+                <script src="{{ url_for('static', filename='js/gt_prefs_sections.js') }}"></script>
             </div>
             <div class="modal-footer gt-prefs-modal__footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

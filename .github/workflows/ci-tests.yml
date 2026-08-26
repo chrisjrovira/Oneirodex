@@ -81,6 +81,7 @@ jobs:
           tests/test_security_suite.py
           tests/test_security_headers.py
           tests/test_ssrf_hardening.py
+          tests/test_no_inline_scripts.py
           tests/test_image_upload_hardening.py
           tests/test_auth_hardening.py
           tests/test_theme_js_guards.py

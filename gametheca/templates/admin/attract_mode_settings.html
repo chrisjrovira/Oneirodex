@@ -194,11 +194,7 @@
 
 <!-- Include the attract mode admin JavaScript -->
 <link rel="stylesheet" href="{{ 'css/admin_attract_mode.css'|theme_asset }}">
+<script type="application/json" id="gt-attract-settings">{{ settings|tojson }}</script>
+<script src="{{ url_for('static', filename='js/gt_attract_boot.js') }}"></script>
 <script src="{{ 'js/admin_attract_mode.js'|theme_asset }}"></script>
-
-<!-- Pass settings data to JavaScript -->
-<script>
-    window.attractModeSettings = {{ settings | tojson | safe }};
-</script>
-
 {% endblock %}

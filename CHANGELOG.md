@@ -153,6 +153,8 @@ Work since the 1.0.0-beta tag (2026-08-06).
 - **WebRetro front end is MIT.** Upstream LICENSE (Copyright (c) 2021 BinBashBanana) is in `static/vendor/webretro/LICENSE`; third-party notices no longer leave it unconfirmed. Libretro cores stay operator-provisioned.
 - **DataTables and Cropper.js no longer load on every classic page.** Member `base.html` and the admin shell dropped them; Cropper is on admin library-create, DataTables on logs and download requests. jQuery stays for toast notify.
 - **Provider cover fetch follows the same SSRF gate as `download_image`.** IGDB / SteamGridDB / GiantBomb / Meta Quest `fetch_image` went through raw `requests.get`. They now use `fetch_outbound_image` (`http_safe.safe_get` + `validate_user_outbound_http_url` on every redirect hop).
+- **Outbound fetches pin the address that passed the SSRF check.** `http_safe.safe_request` connects to the resolved IP and puts the original hostname on `Host` / SNI, so a DNS rebind between check and connect cannot steer the socket onto loopback or link-local. Homelab `ALLOW_PRIVATE_LAN_URLS` still reaches RFC1918 connectors.
+- **Classic pages no longer ship executable inline `<script>`.** Jinja interpolations moved to JSON tags, `data-*`, or `<template>` islands; the JS lives under `static/js` (not a theme copy). CSP stays report-only: inline `onclick=` handlers and WebRetro `'unsafe-eval'` / `'wasm-unsafe-eval'` remain. Do not set `CSP_ENFORCE=true` yet.
 - **Newsletter no longer depends on Flask-Mail or the CKEditor CDN.** Send uses `smtp.send_email_quiet` like invites; the compose page is a textarea. CSP no longer allowlists `cdn.ckeditor.com`.
 - **Edit Images no longer interpolates upload URLs into `innerHTML`.** Needs **Reset Default Themes** so the theme-volume copy of `game_edit_images.js` refreshes.
 
@@ -246,6 +248,7 @@ Work since the 1.0.0-beta tag (2026-08-06).
 
 ### Changed
 
+- **Game details later sections sit beside the facts rail (UX-B4).** Versions, extras, screenshots and trailers used to start below the taller Details column, leaving a hole under a short summary. They now share the two-column grid so that body climbs the left while Details stays on the right. Narrow viewports still read summary → details → the rest.
 - **Discover learns what you reach for, without anything leaving the box.** A taste profile is built
   from signals the install already keeps — what you favourited, played, finished, own and downloaded
   — weighted by how much intent each one carries and decayed so it follows you rather than

@@ -69,15 +69,5 @@
 </div>
 
 <script src="{{ 'js/admin_manage_libs.js'|theme_asset }}"></script>
-<script>
-(function () {
-  ['deleteWarningModal', 'batchEditModal'].forEach(function (id) {
-    var modalEl = document.getElementById(id);
-    if (!modalEl) return;
-    if (modalEl.parentElement !== document.body) {
-      document.body.appendChild(modalEl);
-    }
-  });
-})();
-</script>
+<script src="{{ url_for('static', filename='js/gt_reparent_lib_modals.js') }}"></script>
 {% endblock %}

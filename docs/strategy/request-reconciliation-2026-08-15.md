@@ -87,7 +87,7 @@ chat pop-out · Steam metadata mapping · scan freshness (updates/DLC) · admin 
 |---|---|
 | "toast notifications should be used for all user and admin pages / should be able to be closed / should only show games when a library has been **fully** added" | `UX-B7`. **Done 2026-08-25** — member dismiss was earlier; admin SPA close + library-add poll; classic `$.notify` bridged to `gt_toast.js`; digest held until the scan ends |
 | "check stores should be renamed to show its for updates/dlcs" | Renamed on the React details page with a comment explaining why — and **missed on the Jinja page**, which still said "Check stores" until this reconciliation. Fixed now |
-| "details should also be reworked to not allow so much emtpy space under summary" | `UX-B4`. Row sizes to the summary; later sections still do not flow up beside the rail |
+| "details should also be reworked to not allow so much emtpy space under summary" | `UX-B4`. **Done 2026-08-26** — later sections flow up beside the facts rail |
 | "all tables should be fiterable and sortable across the UI" | Substantially closed this session. `DataTable` was React-only, so classic pages could never use it — now `gt_sortable_table.js` covers them. Two Ops tables stay hand-rolled by decision |
 | "every category of button" must match | Started this session: `.gt-cbtn` gained the disabled state it never had, focus unified. **`.gt-cbtn` is still off the token scales**, and ten page-local button classes are untouched |
 | "i want to get rid of all header information on a page and build a second title bar" | Landed, but `UIR-3` left per-page header actions in place; moving them is per-page work that was never finished |

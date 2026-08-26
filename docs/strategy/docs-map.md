@@ -27,7 +27,7 @@
 | Social lite pointer | `docs/strategy/social.md` | Have |
 | Social + A/V waves | `docs/strategy/social-av.md` | Have (W16 shipped) · post-1.0 native RTC plan → [native-rtc.md](native-rtc.md) |
 | Security suite | `docs/strategy/security.md` | Have · post-1.0 native malware plan → [native-malware-scan.md](native-malware-scan.md) |
-| Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have (2026-08-25) — audit findings with evidence; Phases 0–6 shipped; WebRetro MIT confirmed; L7 operator notes in [privacy-data-handling.md](../admin/privacy-data-handling.md); remaining on purpose: CSP report-only, non-commercial core clauses, DNS rebind |
+| Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have (2026-08-26) — audit findings with evidence; Phases 0–6 shipped; inline `<script>` extracted; DNS pin on `safe_request`; WebRetro MIT confirmed; L7 operator notes in [privacy-data-handling.md](../admin/privacy-data-handling.md); remaining on purpose: CSP report-only (`onclick=` / WebRetro eval), non-commercial core clauses |
 | Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs + loading motifs (`GENERATOR_VERSION` 10) |
 | Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |

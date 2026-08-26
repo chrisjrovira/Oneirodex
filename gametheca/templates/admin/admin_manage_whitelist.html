@@ -83,42 +83,5 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-    let currentDeleteId = null;
-
-    document.querySelectorAll('.delete-whitelist').forEach(button => {
-        button.addEventListener('click', function() {
-            currentDeleteId = this.dataset.id;
-            document.getElementById('emailToDelete').textContent = this.dataset.email;
-            deleteModal.show();
-        });
-    });
-
-    document.getElementById('confirmDelete').addEventListener('click', function() {
-        if (currentDeleteId) {
-            fetch(`/admin/whitelist/${currentDeleteId}`, {
-                method: 'DELETE',
-                headers: CSRFUtils.getHeaders({
-                    'Content-Type': 'application/json'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error deleting entry: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error deleting entry');
-            });
-            deleteModal.hide();
-        }
-    });
-});
-</script>
+<script src="{{ url_for('static', filename='js/gt_admin_whitelist.js') }}"></script>
 {% endblock %}

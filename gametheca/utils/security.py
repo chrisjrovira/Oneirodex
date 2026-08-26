@@ -167,10 +167,11 @@ def is_blocked_outbound_host(hostname: str | None, *, resolve: bool = True) -> b
     either, and failing closed here would reject legitimate connector URLs saved
     while DNS happens to be down.
 
-    Residual risk, stated rather than papered over: this is resolve-then-connect,
-    so a DNS rebind between the check and the socket still wins. Closing that
-    needs the resolved address pinned into the connection, which is a bigger
-    change than this one; the practical hole is the one closed here.
+    Residual risk without a pin: this is resolve-then-connect, so a DNS rebind
+    between the check and the socket still wins. ``http_safe.safe_request``
+    closes that by dialing the address that just passed the check and putting
+    the original hostname on ``Host`` / SNI. Callers that bypass ``safe_request``
+    still have the hole.
     """
     if not hostname:
         return True

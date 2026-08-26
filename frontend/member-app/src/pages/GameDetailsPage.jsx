@@ -687,8 +687,8 @@ export function GameDetailsPage() {
             ) : null}
           </dl>
         </section>
-      </div>
 
+        <div className="gt-details-page__flow">
       {game.show_translations_block ? (
         <section className="gt-details-page__section" id="translations">
           <h2>Translations &amp; patches</h2>
@@ -1157,12 +1157,6 @@ export function GameDetailsPage() {
         </section>
       ) : null}
 
-      <ScreenshotLightbox
-        urls={shownShots}
-        openIndex={shotIndex}
-        onClose={() => setShotIndex(null)}
-      />
-
       <section className="gt-details-page__section">
         <h2>Trailers &amp; videos</h2>
         {videoEmbeds.length > 0 ? (
@@ -1200,6 +1194,14 @@ export function GameDetailsPage() {
           </p>
         )}
       </section>
+        </div>
+      </div>
+
+      <ScreenshotLightbox
+        urls={shownShots}
+        openIndex={shotIndex}
+        onClose={() => setShotIndex(null)}
+      />
 
       <ScreenshotLightbox
         mode="videos"

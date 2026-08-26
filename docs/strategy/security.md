@@ -3,7 +3,7 @@
 **Date:** 2026-07-26 · **Updated:** 2026-08-25 · **Status:** active  
 **Second pass (2026-08-25):** full audit + remediation Phases 0–6 shipped —
 [security-legal-playbook.md](security-legal-playbook.md) carries the findings, the evidence, and
-what stays open on purpose (CSP report-only; non-commercial core clauses; DNS rebind). Child
+what stays open on purpose (CSP report-only until `onclick=` / WebRetro eval settle; non-commercial core clauses). Child
 Bearer/Acquire/command ACL, provider `fetch_image` SSRF, WebRetro MIT confirmation, and operator
 [privacy-data-handling.md](../admin/privacy-data-handling.md) landed after that playbook. Summary of the original pass is in
 [What Phases 0–4 shipped](#what-phases-04-shipped) below.  
@@ -45,7 +45,7 @@ Full findings, evidence and the remaining phases: [security-legal-playbook.md](s
 | ID | Was | Now |
 |---|---|---|
 | S1 | No security response headers at all — no `after_request` in the app | `utils/security_headers.py` — `nosniff` · `Referrer-Policy` · `X-Frame-Options` · `Permissions-Policy` on every response, plus the same baseline re-stamped in `asgi.py` for native `/static/*`, which never reaches Flask. CSP ships **report-only** (`CSP_ENFORCE=false`); HSTS only when `SESSION_COOKIE_SECURE` |
-| S2 | SSRF validators were DNS-blind *and* redirect-blind | `is_blocked_outbound_host` resolves names and checks every address; alternate literals (`2130706433`, `0x7f.0.0.1`, `::ffff:127.0.0.1`) parsed; new `utils/http_safe.py` revalidates every redirect hop. Cloud metadata now blocked by resolution too, not just by literal. `ALLOW_PRIVATE_LAN_URLS` still reopens RFC1918 — pinned by test |
+| S2 | SSRF validators were DNS-blind *and* redirect-blind | `is_blocked_outbound_host` resolves names and checks every address; alternate literals (`2130706433`, `0x7f.0.0.1`, `::ffff:127.0.0.1`) parsed; new `utils/http_safe.py` revalidates every redirect hop **and pins the checked address** (connect to IP, original hostname on `Host` / SNI). Cloud metadata now blocked by resolution too, not just by literal. `ALLOW_PRIVATE_LAN_URLS` still reopens RFC1918 — pinned by test |
 | S3 | `MAX_CONTENT_LENGTH` unset; the 413 handler promised a 10MB cap that could never fire | `MAX_UPLOAD_MB` (default 128, headroom over the 64MB firmware cap) · 413 handler quotes the real number and answers API callers with the envelope (`payload_too_large`) |
 | S4 | Cover resize was dead code — `thumbnail()` ran, original bytes were saved | Resized image is what gets written; real byte-size check *before* decode; 60-megapixel ceiling |
 | S5 | `assists.ts` interpolated server strings into `innerHTML` unescaped | Shared `clients/desktop/src/html.ts`; source-scan ratchet in `html.test.ts` covers the next one |

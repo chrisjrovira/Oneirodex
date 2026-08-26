@@ -9,12 +9,14 @@ Two callers, because GameTheca serves responses from two places:
   never reaches Flask (see the comment there — the bridge breaks under
   concurrent asset loads).
 
-**Why the CSP is report-only by default.** Twenty-four Jinja templates carry an
-inline ``<script>``, and the WebRetro iframe runs Emscripten WASM cores. A
-policy strict enough to be worth enforcing would break both on the day it
-shipped. So the default reports and does not block; an operator flips
-``CSP_ENFORCE=true`` once their deployment is clean. The other headers have no
-such cost and are unconditional.
+**Why the CSP is report-only by default.** Executable inline ``<script>``
+bodies have been extracted to ``static/js``, but classic templates still use
+inline event handlers (``onclick=``) and the WebRetro iframe still needs
+``'unsafe-eval'`` / ``'wasm-unsafe-eval'`` for Emscripten cores. A policy
+strict enough to drop ``'unsafe-inline'`` from ``script-src`` would break
+those on the day it shipped. So the default reports and does not block; an
+operator flips ``CSP_ENFORCE=true`` once reports come back clean *and* the
+handlers are gone. The other headers have no such cost and are unconditional.
 
 The static path deliberately gets the baseline only, no CSP: ``webretro.html``
 is a static document, and a policy applied there would have to carry
@@ -66,10 +68,12 @@ def _csp_directives() -> dict[str, str]:
     """
     return {
         'default-src': "'self'",
-        # 'unsafe-inline' for the 24 inline-script templates, 'wasm-unsafe-eval'
-        # + 'unsafe-eval' for the WebRetro Emscripten cores. Every one of these
-        # is a thing to remove later, not a thing to pretend is fine — which is
-        # why this ships report-only.
+        # 'unsafe-inline' remains for inline event handlers (onclick=) still
+        # on classic templates; 'wasm-unsafe-eval' + 'unsafe-eval' for the
+        # WebRetro Emscripten cores. Executable <script> bodies are gone from
+        # Jinja (see tests/test_no_inline_scripts.py). Every one of these is a
+        # thing to remove later, not a thing to pretend is fine — which is why
+        # this ships report-only.
         'script-src': (
             "'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'"
         ),
