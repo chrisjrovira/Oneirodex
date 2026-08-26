@@ -742,17 +742,11 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
     if not scan_job_entry:
         return scan_job_id
 
-    if scan_was_cancelled:
-        # Counters already finalized; skip Completed / remove_missing / image pass
-        print(f"Scan cancelled for folder: {folder_path} with ScanJob ID: {scan_job_id}")
-        _drain_scan_queue_safe()
-        return scan_job_id
-
-    # The library is done filling, so the pending new-game digest can go out with
-    # a final count (UX-B7). Without this it fires on a five-second debounce, so
-    # any pause longer than that — a slow scrape, a big file, a rate-limited
-    # provider — announces a library that is still being added to, and the same
-    # scan produces several "N games added" alerts with different Ns.
+    # The library is done filling (completed *or* cancelled after some titles
+    # landed), so the pending new-game digest can go out with a final count
+    # (UX-B7). Without this it fires on a five-second debounce, so any pause
+    # longer than that — a slow scrape, a big file, a rate-limited provider —
+    # announces a library that is still being added to.
     try:
         from gametheca.utils.notifications import flush_library_add_digest
 
@@ -760,6 +754,12 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
     except Exception as exc:
         # A notification must never fail a completed scan.
         print(f"Could not flush library-add digest: {exc}")
+
+    if scan_was_cancelled:
+        # Counters already finalized; skip Completed / remove_missing / image pass
+        print(f"Scan cancelled for folder: {folder_path} with ScanJob ID: {scan_job_id}")
+        _drain_scan_queue_safe()
+        return scan_job_id
 
     if scan_job_entry.status != 'Failed':
         scan_job_entry.status = 'Completed'

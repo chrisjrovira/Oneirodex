@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import delete, select
 
-from gametheca.models import Game, GlobalSettings, Library, User, UserNotification
+from gametheca.models import Game, GlobalSettings, Library, ScanJob, User, UserNotification
 from gametheca.platform import LibraryPlatform
 from gametheca.utils.library_health import (
     PATH_STATUS_MISSING,
@@ -328,3 +328,58 @@ def test_flushing_an_idle_library_is_harmless(app, db_session, path_library):
     with app.app_context():
         flush_library_add_digest(path_library.uuid, app)
         flush_library_add_digest('', app)
+
+
+def test_running_scan_holds_the_digest_until_flush(app, db_session, admin_staff, path_library):
+    """Debounce must not fire while a scan for this library is still Running.
+
+    The five-second window is right for watch/import. During a scan it is how
+    "12 games added" then "30 games added" happened for one library (UX-B7).
+    """
+    from gametheca.utils.notifications import (
+        _library_add_timers,
+        flush_library_add_digest,
+        schedule_library_add_digest,
+    )
+
+    admin, librarian = admin_staff
+    job = ScanJob(
+        folders={'/games': True},
+        content_type='Games',
+        status='Running',
+        is_enabled=True,
+        library_uuid=path_library.uuid,
+        scan_folder='/games',
+    )
+    db_session.add(job)
+    db_session.commit()
+
+    game = Game(
+        uuid=str(uuid4()),
+        name='Held Until Complete',
+        library_uuid=path_library.uuid,
+        full_disk_path=f'/test/held/{uuid4().hex}',
+        path_status=PATH_STATUS_OK,
+    )
+    db_session.add(game)
+    db_session.commit()
+
+    with app.app_context():
+        schedule_library_add_digest(
+            library_uuid=path_library.uuid,
+            library_name=path_library.name,
+            game_uuid=game.uuid,
+            game_name=game.name,
+            debounce_seconds=0.01,
+            app=app,
+        )
+        assert path_library.uuid not in _library_add_timers, (
+            'a Running scan started the debounce timer — that is the mid-scan leak'
+        )
+        flush_library_add_digest(path_library.uuid, app)
+
+    rows = db_session.execute(select(UserNotification)).scalars().all()
+    staff_ids = {admin.id, librarian.id}
+    digests = [r for r in rows if r.kind == 'library_added' and r.user_id in staff_ids]
+    assert digests, 'holding the timer also swallowed the digest'
+    assert digests[0].payload.get('count') == 1

@@ -3,6 +3,7 @@ import { useRailState } from '../../shared/useRailState'
 import { AdminSideRail } from './AdminSideRail'
 import { AdminTopNav } from './AdminTopNav'
 import { useAdminShellFrame } from './useAdminShellFrame'
+import { useLibraryScanToasts } from './useLibraryScanToasts'
 import { AnnouncementsPage } from './AnnouncementsPage'
 import { SupportInboxPage } from './SupportInboxPage'
 import { InvitesPage } from './InvitesPage'
@@ -166,6 +167,7 @@ export function App() {
   const { railState, drawerOpen, toggle: toggleRail, closeDrawer } = useRailState()
 
   useAdminShellFrame(railState)
+  useLibraryScanToasts({ enabled: true })
 
   return (
     <div className="gt-admin-shell">

@@ -24,3 +24,20 @@ test('showToast mounts top-right host and auto-dismisses', () => {
   vi.advanceTimersByTime(220)
   expect(document.getElementById('gt-toast-host')).toBeNull()
 })
+
+test('can be dismissed before the timer runs out', () => {
+  showToast('Scan failed', 'error')
+  const close = document.querySelector('.gt-toast__close')
+  expect(close).toBeTruthy()
+
+  close.click()
+  vi.advanceTimersByTime(220)
+  expect(document.getElementById('gt-toast-host')).toBeNull()
+})
+
+test('message text is never parsed as markup', () => {
+  showToast('<img src=x onerror=alert(1)>', 'info')
+  const text = document.querySelector('.gt-toast__text')
+  expect(text.querySelector('img')).toBeNull()
+  expect(text.textContent).toContain('<img')
+})

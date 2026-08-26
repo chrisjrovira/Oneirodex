@@ -66,7 +66,7 @@ is confirmed, since a mis-clocked player would otherwise be blamed on the cores.
 | **UX-B4** | Game details: kill the dead space under the summary — **partly done**: row now sizes to the summary instead of the taller facts rail. Full fix (flow later sections up beside the rail) still pending |
 | **UX-B5** | Cards must never render empty space — **Done (admin card grids)**: root cause was `repeat(auto-fill, …)`, which keeps empty columns alive so a two-card row stayed narrow with dead space beside it; switched to `auto-fit`. Cards are now flex columns at `height: 100%`, so a short card fills its cell instead of leaving a gap under it |
 | **UX-B6** | Loading icons: **animated per icon**, shown as a **popup** — inline spinners shift the layout on every server event — **component built (`LoadingOverlay`), call sites not yet migrated.** The 6 animated motifs already existed; what was missing was a non-displacing surface. Fixed-position, 250ms delay so fast requests do not flash, `blocking` variant only for page-owning work |
-| **UX-B7** | **Toasts everywhere** (member + admin), dismissible; only announce games once a library has **fully** finished adding — **dismiss done**: close button + returned dismiss handle, per-toast (closing one leaves the rest), body stays `textContent` so server strings/titles are never parsed as markup. **Still open:** admin-side adoption, and gating game announcements on library-add completion (backend signal) |
+| **UX-B7** | **Toasts everywhere** (member + admin), dismissible; only announce games once a library has **fully** finished adding — **done 2026-08-25**: member dismiss was earlier; admin SPA close button + library-add poll; classic `$.notify` bridged to `gt_toast.js`; digest held until the scan job ends (cancel included). Watch/import still debounce |
 
 ## C. Admin IA (medium–large)
 
@@ -129,8 +129,6 @@ grouping at the top of this file was meant to prevent:
 |---|---|
 | **UID-008a** / UX-B6 | `LoadingOverlay` + 6 animated motifs exist, but ~47 classic Jinja pages still render `.gt-spinner` — the motifs shipped SPA-only |
 | **UX-C8** | `DataTable` migration incomplete — `OpsPage`, `pages.jsx`, `ProposeLeafLibraries`, `ImportLeafLibraries` still hand-rolled |
-| **UID-014** | `MetricStrip` extracted and adopted on Users + firmware; Support · Invites · Storage · Extensions still to go |
-| **UX-B7** | Admin-side toast adoption, and gating game announcements on library-add **completion** (needs the backend signal) |
 | **UID-006** | Presets can diverge on geometry now that the scales exist; the art seat still has to author the packs |
 | **UX-B4** | Game details dead space — row sizes to the summary, but later sections still do not flow up beside the rail |
 

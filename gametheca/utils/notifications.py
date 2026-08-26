@@ -12,7 +12,15 @@ from markupsafe import escape
 from sqlalchemy import func, select
 
 from gametheca import db
-from gametheca.models import Game, GlobalSettings, Library, User, UserNotification, UserPreference
+from gametheca.models import (
+    Game,
+    GlobalSettings,
+    Library,
+    ScanJob,
+    User,
+    UserNotification,
+    UserPreference,
+)
 from gametheca.utils.rbac import role_at_least
 from gametheca.utils.smtp import send_email_quiet
 from gametheca.utils.global_settings import global_settings_row
@@ -258,6 +266,27 @@ def admin_alerts_enabled(flag: str) -> bool:
     return bool(getattr(settings, flag, True))
 
 
+def library_scan_is_active(library_uuid: str) -> bool:
+    """True when this library has a scan that is still filling the catalog.
+
+    Watch/import still use the debounce timer. A Running/Stopping job is the
+    UX-B7 gate: do not announce titles until that job ends and
+    :func:`flush_library_add_digest` runs.
+    """
+    if not library_uuid:
+        return False
+    try:
+        row = db.session.execute(
+            select(ScanJob.id).where(
+                ScanJob.library_uuid == library_uuid,
+                ScanJob.status.in_(('Running', 'Stopping')),
+            ).limit(1)
+        ).first()
+        return row is not None
+    except Exception:
+        return False
+
+
 def library_add_digest_seconds() -> float:
     raw = os.environ.get('GT_LIBRARY_ADD_NOTIFY_DEBOUNCE_SEC')
     if raw is None or str(raw).strip() == '':
@@ -366,6 +395,11 @@ def schedule_library_add_digest(
                 old.cancel()
             except Exception:
                 pass
+        # A live scan will flush once at the end. Starting the debounce timer
+        # here is what produced mid-scan "N games added" toasts whenever a
+        # scrape paused longer than the window.
+        if library_scan_is_active(library_uuid):
+            return
         flask_app = app
         if flask_app is None:
             try:

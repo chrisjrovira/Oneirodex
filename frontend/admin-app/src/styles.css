@@ -1789,7 +1789,10 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-toast {
   pointer-events: auto;
-  padding: 0.7rem 0.95rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.7rem 0.6rem 0.7rem 0.95rem;
   border-radius: 10px;
   border: 1px solid var(--gt-border);
   background: var(--gt-surface);
@@ -1798,6 +1801,31 @@ body.admin-shell.modal-open > .modal-backdrop {
   font-size: 0.92rem;
   line-height: 1.35;
   animation: gt-toast-in 0.18s ease-out;
+}
+
+.gt-toast__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.gt-toast__close {
+  flex: 0 0 auto;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--gt-radius-sm, 6px);
+  background: transparent;
+  color: var(--gt-text-muted);
+  font-size: var(--gt-font-md);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gt-toast__close:hover,
+.gt-toast__close:focus-visible {
+  background: color-mix(in srgb, var(--gt-text) 14%, transparent);
+  color: var(--gt-text);
 }
 
 .gt-toast--success {

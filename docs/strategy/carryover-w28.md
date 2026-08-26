@@ -72,8 +72,7 @@ Nothing new is invented here. These are pointers, so the registers stay authorit
 
 ### Smaller, still open — [W26 § Open set](roadmap-w26-ux-overhaul.md)
 
-`UX-C8` DataTable migration · `UX-B7` admin toast adoption + library-add completion signal ·
-`UID-006` theme packs (art seat) · `UX-B4` game-details dead space.
+`UX-C8` DataTable migration · `UID-006` theme packs (art seat) · `UX-B4` game-details dead space.
 
 `UID-008a` and `UID-014` are listed as open there but **closed since** — see the debt log, which
 stayed current when that file did not.

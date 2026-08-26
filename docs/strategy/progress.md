@@ -1,9 +1,8 @@
 # Roadmap execution progress
 
-**Branch:** `main` — everything through **W28** plus W31 P0/P1 (`52f78bc9`) is on
-`origin/main`. **W32 leftovers + UID-007 player chrome are Done uncommitted** (vendor JS
-scope · WebRetro MIT · L7 privacy notes · envelope leftovers · play-bar chrome). Historical
-wave rows that still say "Done uncommitted" further down this file should be read as *shipped*.  
+**Branch:** `main` — through **W32** (`6c363570`, player chrome + licence/privacy leftovers).
+**UX-B7 toasts + library-add completion are Done uncommitted.** Historical wave rows
+that still say "Done uncommitted" further down this file should be read as *shipped*.  
 **Release:** **1.0.0-beta** — see the root [CHANGELOG.md](../../CHANGELOG.md) for what has landed
 since the tag. Waves **4–28** are all on `origin/main`.  
 **Updated:** 2026-08-16 — the W26/W27/W28 line (22 commits) fast-forwarded onto `main`. Repo
@@ -98,6 +97,18 @@ The 2026-08-25 retail rundown: child ACL that W31 S10 left on the Bearer path, C
 | **Player chrome (UID-007)** | Play bar Pause / Reset / Mute / volume / Power. Bezel overlay for touch and stage mousemove. Bridge: `gt-pause` · `gt-reset` · `gt-audio`. Firmware island was already closed. |
 | **Not done** | CSP enforce · README recapture (needs a populated instance) |
 | **Capture** | skipped — empty test DB |
+
+## UX-B7 — toasts + library-add completion (2026-08-25)
+
+The human ask was toasts on every surface, dismissible, and "only show games when a library has been fully added". Dismiss already existed on the member SPA. The rest did not.
+
+| | |
+|---|---|
+| **Digest hold** | `schedule_library_add_digest` no longer starts the debounce timer while that library has a Running/Stopping scan. Watch/import still debounce. `flush_library_add_digest` now also runs on **cancel**, so titles that landed still announce. |
+| **Classic pages** | `static/js/gt_toast.js` on all three shells, after `notify.min.js`. Replaces `$.notify` with the same dismissible `gt-toast` host. No Reset Themes — this file is not a theme copy. |
+| **Admin SPA** | `showToast` gained the close button (parity with member). Admin chrome polls `/api/notifications` for `library_added` the same way the member shell does. Grouping lives in `frontend/shared/libraryScanNotify.js`. |
+| **Guards** | `tests/test_gt_toast.py` (CI) · digest hold in `tests/test_browse_path_status.py` (CI) · admin `toast.test.js` dismiss + textContent |
+| **Not this slice** | CSP still report-only. Theme copies of `gtShowAdminToast` in scanjobs/libs still draw their own toast until Reset Themes; `$.notify` call sites are the ones this pass converted. |
 
 ## W30b — admin page bodies, section by section (2026-08-25, in progress)
 

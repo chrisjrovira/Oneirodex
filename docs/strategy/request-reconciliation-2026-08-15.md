@@ -85,7 +85,7 @@ chat pop-out · Steam metadata mapping · scan freshness (updates/DLC) · admin 
 
 | Your request | What actually happened |
 |---|---|
-| "toast notifications should be used for all user and admin pages / should be able to be closed / should only show games when a library has been **fully** added" | `UX-B7`. Dismiss shipped. **Admin adoption did not**, and the "only when fully added" gate needs a backend completion signal that was never built |
+| "toast notifications should be used for all user and admin pages / should be able to be closed / should only show games when a library has been **fully** added" | `UX-B7`. **Done 2026-08-25** — member dismiss was earlier; admin SPA close + library-add poll; classic `$.notify` bridged to `gt_toast.js`; digest held until the scan ends |
 | "check stores should be renamed to show its for updates/dlcs" | Renamed on the React details page with a comment explaining why — and **missed on the Jinja page**, which still said "Check stores" until this reconciliation. Fixed now |
 | "details should also be reworked to not allow so much emtpy space under summary" | `UX-B4`. Row sizes to the summary; later sections still do not flow up beside the rail |
 | "all tables should be fiterable and sortable across the UI" | Substantially closed this session. `DataTable` was React-only, so classic pages could never use it — now `gt_sortable_table.js` covers them. Two Ops tables stay hand-rolled by decision |

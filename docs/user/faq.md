@@ -42,6 +42,9 @@ Preferences → items per page: **20 / 50 / 100 / 200 / 250 / 300 / 400 / 500 / 
 **What are Signals chips?**  
 Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params as the badges; they persist with other filters. VR is a tile badge / More → VR, not a Signals chip. MISSING means files were removed from disk. Tile badges sit in four corners only (occupied corners; rounded-square chrome). No OUT / ~ / RELEASE on tiles or Signals chips (UPDATE alone covers freshness-behind).
 
+**When do “N games added” toasts show?**  
+When a library scan **finishes** (or is cancelled after titles landed), not while it is still running. Watch/import still group into a short digest. Toasts are dismissible (×) on member and admin, including classic admin pages.
+
 **Can I hide the Library Filters column?**  
 On desktop, the chevron collapses Filters to a slim rail so covers reclaim the width (saved in the browser). On phones/narrow tablets (≤900px), Filters still open as a drawer — collapse rail does not apply.
 

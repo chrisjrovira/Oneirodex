@@ -159,7 +159,7 @@ Work since the 1.0.0-beta tag (2026-08-06).
 ### Added
 
 - **Operator privacy / data-handling notes.** What the host stores, what can leave if you enable SMTP / metadata APIs / OIDC / LiveKit / GitHub support, and how `child` accounts are denied download and Acquire — [privacy-data-handling.md](docs/admin/privacy-data-handling.md). Not a public ToS.
-- **Player chrome on browser play (UID-007).** Pause, Reset, Mute, volume and Power on the play bar, plus an in-game overlay. Mute/volume write RetroArch config through the existing iframe bridge. Power leaves the game the same way ← Library does.
+- **Toasts are dismissible on admin too, and new games wait for the scan to finish (UX-B7).** Classic `$.notify` calls the same aurora toast. A running scan no longer announces "N games added" mid-pass.
 - **Report takes ideas as well as defects.** "Report issue" collected feature requests into the same
   pile as bugs, so triage had to read every title to sort them and a request filed as a defect read as
   a broken product. The form asks first, the `kind` rides through to the GitHub issue title and labels,
