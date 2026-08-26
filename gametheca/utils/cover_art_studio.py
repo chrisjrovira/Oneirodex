@@ -28,6 +28,23 @@ GT_TEXT = (242, 244, 248)
 GT_TEXT_MUTED = (196, 204, 216)
 GT_ACCENT = (47, 214, 123)
 
+# Operator title scaling. The slider default used to be 1.0 and the renderer
+# skipped the multiply at 1.0, which is why Art Studio still drew tiny type
+# after the slider shipped (UID-011). 1.3× is the new idle size; 0.85 is the
+# floor so the control cannot undo the legibility this module exists for.
+TITLE_SCALE_MIN = 0.85
+TITLE_SCALE_MAX = 2.0
+DEFAULT_TITLE_SCALE = 1.3
+
+
+def clamp_title_scale(title_scale) -> float:
+    try:
+        if title_scale is None or title_scale == '':
+            return DEFAULT_TITLE_SCALE
+        return min(max(float(title_scale), TITLE_SCALE_MIN), TITLE_SCALE_MAX)
+    except (TypeError, ValueError):
+        return DEFAULT_TITLE_SCALE
+
 # Per-system template packs: distinct palette + glyph for readable tiles ≥200×300.
 # Keys are normalized (casefold) LibraryPlatform names/values and common short labels.
 SystemPalette = tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], str]
@@ -771,7 +788,7 @@ def _draw_title_block(
     variant: str,
     is_wide: bool,
     is_square: bool,
-    title_scale: float = 1.0,
+    title_scale: float = DEFAULT_TITLE_SCALE,
 ) -> None:
     """Readable title treatment — hero-sized type, not a tiny subtitle caption."""
     # Floor scales with the canvas. A flat 14px was ~2.7% of a 512px cover, which
@@ -800,12 +817,10 @@ def _draw_title_block(
         text_left = None
         y_anchor = 0.58
 
-    # Operator scaling, clamped: below ~0.6 the type drops under the legibility
-    # floor this function exists to defend, and above 2x it overruns the canvas.
-    try:
-        scale = min(max(float(title_scale or 1.0), 0.6), 2.0)
-    except (TypeError, ValueError):
-        scale = 1.0
+    # Operator scaling, clamped: below TITLE_SCALE_MIN the type drops under the
+    # legibility floor this function exists to defend, and above 2x it overruns
+    # the canvas.
+    scale = clamp_title_scale(title_scale)
     if scale != 1.0:
         min_title = max(10, int(min_title * scale))
         max_title = max(min_title, int(max_title * scale))
@@ -871,7 +886,7 @@ def render_cover_art(
     palette_override: SystemPalette | None = None,
     headline_override: str | None = None,
     subtitle_override: str | None = None,
-    title_scale: float = 1.0,
+    title_scale: float = DEFAULT_TITLE_SCALE,
 ) -> Image.Image:
     """Render a branded placeholder/cover at the given size with per-system templates.
 
@@ -1184,7 +1199,7 @@ def generate_size_matrix(
     fmt: str = 'webp',
     headline_override: str | None = None,
     subtitle_override: str | None = None,
-    title_scale: float = 1.0,
+    title_scale: float = DEFAULT_TITLE_SCALE,
 ) -> dict[str, bytes]:
     """Generate all UI sizes for one title.
 
@@ -1270,7 +1285,7 @@ def save_pack(
     package_root: str | Path | None = None,
     headline_override: str | None = None,
     subtitle_override: str | None = None,
-    title_scale: float = 1.0,
+    title_scale: float = DEFAULT_TITLE_SCALE,
 ) -> dict[str, Any]:
     pack_id = pack_id or uuid.uuid4().hex[:12]
     pack_dir = safe_pack_dir(pack_id, package_root)

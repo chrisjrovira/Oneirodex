@@ -18,6 +18,7 @@ from gametheca.utils.cover_art_studio import (
     apply_pack_as_fallback,
     apply_pack_to_game,
     build_zip_bytes,
+    clamp_title_scale,
     generate_size_matrix,
     pack_preview_url,
     render_cover_art,
@@ -77,10 +78,7 @@ def art_studio_preview():
     # derived values; an explicit empty subtitle means "no subtitle".
     headline_override = data.get('headline')
     subtitle_override = data.get('subtitle')
-    try:
-        title_scale = float(data.get('title_scale') or 1.0)
-    except (TypeError, ValueError):
-        title_scale = 1.0
+    title_scale = clamp_title_scale(data.get('title_scale'))
 
     img = render_cover_art(
         width, height, title=title, system=system, variant=variant, artistic=artistic,
@@ -116,10 +114,7 @@ def art_studio_generate():
     # Same overrides the preview accepts. Without them Generate would render the
     # derived text while the preview above it showed the operator's, so the
     # preview would be lying about its own output.
-    try:
-        pack_title_scale = float(data.get('title_scale') or 1.0)
-    except (TypeError, ValueError):
-        pack_title_scale = 1.0
+    pack_title_scale = clamp_title_scale(data.get('title_scale'))
 
     try:
         manifest = save_pack(

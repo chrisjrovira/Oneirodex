@@ -1,10 +1,11 @@
-function copyToClipboard(textToCopy) {
-    // Use the full URL that's already in the textToCopy parameter
-    const buttonElement = event.target;
+function copyToClipboard(textToCopy, fromEl) {
+    const buttonElement = (fromEl && fromEl.closest)
+        ? fromEl.closest('button')
+        : (typeof event !== 'undefined' && event && event.target);
     
     // Copy text to clipboard
     navigator.clipboard.writeText(textToCopy).then(() => {
-        // Store original text and change to "COPIED!"
+        if (!buttonElement) return;
         const originalText = buttonElement.textContent;
         buttonElement.textContent = 'COPIED!';
         

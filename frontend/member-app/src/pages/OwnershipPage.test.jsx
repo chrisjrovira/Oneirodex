@@ -53,6 +53,9 @@ test('renders ownership summary after loading', async () => {
   expect(screen.getByText(/Steam: connected · 10 titles · 4 matched/)).toBeInTheDocument()
   expect(screen.getByText(/GOG: not connected · 2 titles · 1 matched/)).toBeInTheDocument()
   expect(screen.getByText('Steam API key configured')).toBeInTheDocument()
+  expect(
+    screen.getByText(/GOG\/Epic: live register when a token is saved/),
+  ).toBeInTheDocument()
   expect(global.fetch).toHaveBeenCalledWith(
     '/api/ownership',
     expect.objectContaining({ credentials: 'same-origin' }),

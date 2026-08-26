@@ -10,13 +10,15 @@ with `snes9x` and `genesis_plus_gx` adding clauses that restrict commercial dist
 licence text or Corresponding Source offer travelled with them. `cores/README.md` had described the
 directory as "operator-owned" all along and `tests/test_webretro_cores.py` opens with "no multi-MB
 WASM in repo"; the tree simply did not match. Fetching them onto the operator's own box makes the
-operator the party provisioning them. See
+operator the party provisioning them. Operator notes on the `snes9x` / `genesis_plus_gx`
+non-commercial clauses (quotes + questions for a lawyer, **not counsel**):
+[webretro-core-clauses.md](../admin/webretro-core-clauses.md). See also
 [security-legal-playbook.md](../strategy/security-legal-playbook.md) (L1).
 
 **Air-gapped installs:** set `FETCH_WEBRETRO_CORES_ON_BOOT=false` and use `--from-dir`. Boot logs a
 warning naming the missing cores rather than letting browser play fail silently.
 
-Related: [browser-play.md](../user/browser-play.md) · [emulation-coverage.md](../strategy/emulation-coverage.md)
+Related: [browser-play.md](../user/browser-play.md) · [emulation-coverage.md](../strategy/emulation-coverage.md) · [webretro-core-clauses.md](../admin/webretro-core-clauses.md)
 
 ## Storage path
 
@@ -48,7 +50,9 @@ where the first-boot fetch writes them, provided the volume is writable:
 .\scripts\fetch-webretro-cores.ps1 -FromDir C:\path\to\built\cores
 ```
 
-You are responsible for each core’s license compliance.
+You are responsible for each core’s license compliance. For `snes9x` and `genesis_plus_gx`,
+start with [webretro-core-clauses.md](../admin/webretro-core-clauses.md) — that file is research
+notes, not permission.
 
 ## Deferred cores (Wave 19)
 

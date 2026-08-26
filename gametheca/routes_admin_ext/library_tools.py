@@ -1,11 +1,12 @@
-"""Admin UI for library recognition tools: rename, proposals, doctor."""
+"""Admin UI for library recognition tools: rename, proposals, doctor.
 
-from flask import render_template
+The tools themselves live as a tab of Libraries & scans
+(`/scan_management?active_tab=tools`). This route keeps old bookmarks working.
+"""
+
+from flask import redirect, url_for
 from flask_login import login_required
-from sqlalchemy import select
 
-from gametheca import db
-from gametheca.models import Library
 from gametheca.utils.auth import admin_required
 from . import admin2_bp
 
@@ -14,5 +15,4 @@ from . import admin2_bp
 @login_required
 @admin_required
 def library_tools_page():
-    libraries = db.session.execute(select(Library).order_by(Library.name)).scalars().all()
-    return render_template('admin/admin_library_tools.html', libraries=libraries)
+    return redirect(url_for('main.scan_management', active_tab='tools'))

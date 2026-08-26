@@ -39,7 +39,7 @@
                         <td class="admin_manage_downloads-td-data-6">{{ request[0].request_time.strftime('%Y-%m-%d %H:%M') if request[0].request_time else 'N/A' }}</td>
                         <td class="admin_manage_downloads-td-data-7">{{ request[0].completion_time.strftime('%Y-%m-%d %H:%M') if request[0].completion_time else 'N/A' }}</td>
                         <td>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteModal({{ request[0].id }})">Delete</button>
+                            <button type="button" class="btn btn-danger btn-sm" data-gt-click="showDeleteModal" data-gt-arg="{{ request[0].id }}">Delete</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -71,7 +71,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+                <button type="button" class="btn btn-danger" data-gt-click="confirmDelete">Delete</button>
             </div>
         </div>
     </div>

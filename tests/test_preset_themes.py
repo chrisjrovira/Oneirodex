@@ -148,6 +148,12 @@ class TestPresetGeneration:
         assert len(set(strokes.values())) >= 4, strokes
         assert len(set(blurs.values())) >= 4, blurs
 
+        radii = {
+            slug: preset_tokens(next(p for p in PRESET_THEMES if p['slug'] == slug))['gt-radius-md']
+            for slug in PRESET_SLUGS
+        }
+        assert len(set(radii.values())) >= 4, radii
+
     def test_accent_contrast_flips_with_accent_brightness(self):
         light_accent = preset_tokens({'btn_primary': '#7dd3fc', 'bg_dark_30': '', 'bg_dark_40': ''})
         dark_accent = preset_tokens({'btn_primary': '#3b82f6', 'bg_dark_30': '', 'bg_dark_40': ''})

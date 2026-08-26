@@ -487,6 +487,10 @@ body.gt-shell-host > #admin-legacy-content:empty {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* Resting glyphs take the theme accent so the rail reads as that pack's
+     colour, not muted grey that ignores the preset (W27-E4 code half).
+     Labels stay muted; the active row still paints glyph *and* label. */
+  color: var(--gt-accent);
 }
 
 .gt-shell:not([data-rail='collapsed']) .gt-rail__icon {

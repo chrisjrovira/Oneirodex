@@ -50,6 +50,7 @@
      views=[
        ('libraries', 'Libraries', url_for('library.libraries')),
        ('auto', 'Auto scan', url_for('main.scan_management', active_tab='auto')),
+       ('tools', 'Library tools', url_for('main.scan_management', active_tab='tools')),
        ('manual', 'Manual scan', url_for('main.scan_management', active_tab='manual')),
        ('unmatched', 'Unmatched', url_for('main.scan_management', active_tab='unmatched')),
        ('scan_filters', 'Filters', url_for('main.scan_management', active_tab='scan_filters')),

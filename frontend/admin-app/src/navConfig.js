@@ -259,7 +259,7 @@ export const HUB_LINKS = {
     { href: '/admin/library/add', label: 'Add one library' },
     { href: '/libraries#propose-leaf', label: 'Add many — scan a folder for libraries' },
     { href: '/libraries#import-leaf', label: 'Add many — import CSV / JSON' },
-    { href: '/admin/library_tools', label: 'Library tools' },
+    { href: '/scan_management?active_tab=tools', label: 'Library tools' },
     { href: '/admin/edit_filters', label: 'Release filters' },
     { href: '/admin/extensions', label: 'Extensions' },
     { href: '/admin/art_studio#images', label: 'Art & images' },

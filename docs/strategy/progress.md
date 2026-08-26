@@ -1,12 +1,22 @@
 # Roadmap execution progress
 
-**Branch:** `main` — UX-B4 game-details flow, CSP extract, DNS pin.
+**Branch:** `main` — leftover admin/member chrome: tools tab, stats grid, dupe pop-out, Ops redirect, rail accent.
 Historical wave rows that still say "Done uncommitted" further down this file should be read as *shipped*.  
 **Release:** **1.0.0-beta** — see the root [CHANGELOG.md](../../CHANGELOG.md) for what has landed
 since the tag. Waves **4–28** are all on `origin/main`.  
-**Updated:** 2026-08-26 — CSP extract + DNS pin. **Next:** the open set in [carryover-w28.md](carryover-w28.md), which is the index over
-[W26](roadmap-w26-ux-overhaul.md) · [W27](roadmap-w27-ux-feedback.md) · [ui-debt-log.md](../dev/ui-debt-log.md).
+**Updated:** 2026-08-26 — W27 leftovers that were still code. **Next:** README recapture on a populated instance; **Ops** Reset Themes (`GENERATOR_VERSION` 16, plus this pass's theme CSS/JS). Remaining open is art/capture/Amazon, not code — [carryover-w28.md](carryover-w28.md).
 Standing constraints unchanged: **no** Discord · **no Class A** intel in public docs.
+
+## Leftover code pass (2026-08-26)
+
+Six slices that were still real work after art packs / GOG-Epic live / CSP enforce.
+
+| | |
+|---|---|
+| **Shipped** | Dead sidebar JS/CSS stripped from `gt_shell_rail.js` · `/admin/server_status_page` redirects to Ops · Statistics charts in a bounded CSS grid (`maintainAspectRatio: false`) · Unmatched dupe compare **Pop out** on the live Jinja path · Library tools is a tab of Libraries & scans (`?active_tab=tools`; old URL redirects) · Rail glyphs at rest use `--gt-accent` (W27-E4 code half — not per-theme drawings) |
+| **Reset Themes** | `gt-shell.css` · `admin_manage_scanjobs.js` / `.css` · `admin-pages.css` · `chart-utils.js` · `base.css` · `sidebar.css` |
+| **Still not code** | README recapture · six visually distinct icon packs · per-theme icon drawings · Amazon live sync · silent DRM redeem · UID-018 envelope remainder · UIR-3 header actions |
+
 
 ## W29 — member UI sweep (2026-08-24)
 
@@ -91,7 +101,7 @@ The 2026-08-25 retail rundown: child ACL that W31 S10 left on the Bearer path, C
 | **WebRetro licence** | MIT, Copyright (c) 2021 BinBashBanana — upstream LICENSE copied to `static/vendor/webretro/LICENSE`; notices no longer say unconfirmed |
 | **Envelope leftovers** | Profile, Systems, loading-icon, related-media failures go through `errorFromResponse` / `errorFromBody` |
 | **Player chrome (UID-007)** | Play bar Pause / Reset / Mute / volume / Power. Bezel overlay for touch and stage mousemove. Bridge: `gt-pause` · `gt-reset` · `gt-audio`. Firmware island was already closed. |
-| **Not done** | CSP *enforce* (inline `onclick=` + WebRetro eval still need `'unsafe-inline'` / `'unsafe-eval'`) · README recapture (needs a populated instance) |
+| **Not done** | README recapture (needs a populated instance). CSP *enforce* closed later the same day — `onclick=` extracted, WebRetro stays off Flask CSP. |
 | **Capture** | skipped — empty test DB |
 
 ## UX-B7 — toasts + library-add completion (2026-08-25)
@@ -125,9 +135,23 @@ The two leftover *code* items from the W31 playbook that were still open on purp
 | | |
 |---|---|
 | **Inline `<script>`** | Executable bodies extracted from Jinja to `static/js/gt_*.js` (not theme copies — no Reset Themes). Jinja values travel as `type=application/json`, `data-*`, or `<template>` islands. Ratchet: `tests/test_no_inline_scripts.py` (CI). |
-| **Still report-only** | `CSP_ENFORCE` stays false. Classic templates still have `onclick=` handlers, and WebRetro still needs `'unsafe-eval'` / `'wasm-unsafe-eval'`. Flipping enforcement now would break those. |
+| **Still report-only (at extract)** | Closed later the same day — see **CSP enforce + GOG/Epic + art packs** below. |
 | **DNS pin** | `http_safe.safe_request` dials the address that passed the SSRF check and restores the hostname on `Host` / SNI. Homelab `ALLOW_PRIVATE_LAN_URLS` still reaches RFC1918. Callers that bypass `safe_request` still have the rebind hole. |
 | **Guards** | `test_no_inline_scripts.py` · new pin cases in `test_ssrf_hardening.py` (rebind-after-check still hits the checked IP; rebind-before-pin fails closed; LAN connector still pins to 192.168.x) |
+
+## CSP enforce · GOG/Epic live register · art packs (2026-08-26)
+
+The five leftovers that had been out of scope on purpose.
+
+| | |
+|---|---|
+| **Theme packs (UID-006)** | `GENERATOR_VERSION` **16** authors radius, spacing, type and shadow per preset — not just hue. Slugs unchanged; descriptions name the system language without trademarked console names. **Reset Default Themes** after deploy. |
+| **Art Studio type (UID-011)** | Idle title scale is **1.3×** (floor 0.85×). The slider always posts `title_scale`. |
+| **Brand glyph (UID-012)** | Closed cabinet (lintel + shelf) so the mark does not read as a controller. |
+| **GOG / Epic live register** | Same shape as Steam: IDs and names into `UserOwnedTitle`, **never a download**. Unofficial Galaxy / launcher surfaces; paste a refresh token or Epic device-auth JSON (or household env). Fail honestly on 401. CSV still works. Poller skips an account that has neither a saved credential nor env. |
+| **CSP enforce** | `CSP_ENFORCE` defaults **true**. `onclick=` extracted to `data-gt-*` + `gt_dom_actions.js`. Flask `script-src` is `'self'`. WebRetro is native `/static/*` with **no CSP**. |
+| **Core clauses** | Operator notes (quotes + questions, **not counsel**): [webretro-core-clauses.md](../admin/webretro-core-clauses.md). |
+| **Capture** | skipped unless a populated capture instance is up — empty test DB must not overwrite README pixels. |
 
 ## W30b — admin page bodies, section by section (2026-08-25, in progress)
 
@@ -425,7 +449,7 @@ Many-leaf console libs remain **LOCKED** (no mega-lib). Product slices Done unco
 
 **Full-program review 2026-08-03:** every wave reviewed · **9 real defects found and fixed** (1 security-high: DM `@mention` leak to non-members · MISSING chip filter never wired server-side · Refresh-freshness never re-probed · scan-queue TOCTOU race · missing `clear_permission_errors` route · 2 dead admin links · `formatBytes` null · email fallback escaping) · 4 test bugs repaired (stale `data-corner` queries · a time-bomb NEW-badge date that expired today) · **2 items need a product decision** (LiveKit room ACL · per-thread Voice scoping) · first full pytest run on record: **2791 pass / 128 fail**, of which **81 are test-infra or local-Python-3.14 artifacts, not product** (app ships 3.12) — [review-2026-08-03-findings.md](archive/review-2026-08-03-findings.md)
 
-**Immediate board next (ordered):** (1) **CSP enforcement** — still report-only until inline `onclick=` handlers and WebRetro WASM settle · (2) **W23 remainder** Themes-as-systems / art packs (`UID-006` · `UID-011` · `UID-012` — art seat) — [roadmap-w22-plus.md](roadmap-w22-plus.md) · (3) **Ops** Reset Themes after `game_edit_images.js` / scan-tab JS · **Blocked:** live `:5006` often down · no Class A · no Discord · README recapture needs a populated instance
+**Immediate board next (ordered):** (1) **Ops** Reset Themes after `GENERATOR_VERSION` 16 (geometry packs) · (2) README recapture when a populated capture instance is up · **Blocked:** no Class A · no Discord · live `:5006` often down
 
 ### Wave 22+ — feedback roadmap (In progress)
 

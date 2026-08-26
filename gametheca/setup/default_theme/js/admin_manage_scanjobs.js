@@ -439,6 +439,7 @@ function buildDupeOfHtml(folder) {
         <div class="unmatched-dupe-compare__banner">
           <span class="unmatched-dupe-of__label">Compare</span>
           <span class="unmatched-dupe-compare__banner-text">Folder vs library game — path, size, and date when the API provides them</span>
+          <button type="button" class="btn btn-sm btn-outline-light unmatched-dupe-compare__pop">Pop out</button>
         </div>
         <div class="unmatched-dupe-compare__grid">
           <div class="unmatched-dupe-compare__side unmatched-dupe-compare__side--folder">
@@ -988,6 +989,7 @@ const SCAN_TAB_PANES = {
     library: '#librariesPanel',
     deleteLibrary: '#librariesPanel',
     auto: '#autoScan',
+    tools: '#libraryTools',
     manual: '#manualScan',
     unmatched: '#unmatchedFolders',
     scan_filters: '#scanFilters',
@@ -999,6 +1001,7 @@ const SCAN_TAB_PANES = {
 const SCAN_PANE_TABS = {
     librariesPanel: 'libraries',
     autoScan: 'auto',
+    libraryTools: 'tools',
     manualScan: 'manual',
     unmatchedFolders: 'unmatched',
     scanFilters: 'scan_filters',
@@ -1667,12 +1670,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${badMatchControl(folder)}
                         <button
                             type="button"
-                            onclick="window.toggleIgnoreStatus('${folder.id}', this)"
+                            data-gt-click="toggleIgnoreStatus"
+                            data-gt-arg="${folder.id}"
                             class="btn btn-outline-light btn-sm"
                             title="Ignored folders are not scanned">
                             ${ignoreLabel}
                         </button>
-                        <button type="button" onclick="clearEntry('${folder.id}')" class="btn btn-outline-light btn-sm" title="Remove from unmatched list">Clear</button>
+                        <button type="button" data-gt-click="clearEntry" data-gt-arg="${folder.id}" class="btn btn-outline-light btn-sm" title="Remove from unmatched list">Clear</button>
                         <form class="delete-folder-form" style="display: inline;">
                             <input type="hidden" name="csrf_token" value="${csrfToken}">
                             <input type="hidden" name="folder_path" value="${escapedPath}">
@@ -1922,6 +1926,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 copyPathToClipboard(path).then(ok => {
                     showToast(ok ? 'Path copied to clipboard' : 'Could not copy path', ok ? 'success' : 'info');
                 });
+                return;
+            }
+
+            const popBtn = event.target.closest('.unmatched-dupe-compare__pop');
+            if (popBtn) {
+                const compare = popBtn.closest('.unmatched-dupe-compare');
+                if (compare) showDupeComparePopout(compare);
                 return;
             }
 
@@ -2211,6 +2222,47 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         document.body.appendChild(overlay);
+    }
+
+    function showDupeComparePopout(compareEl) {
+        const existing = document.getElementById('gt-dupe-compare-modal');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'gt-dupe-compare-modal';
+        overlay.className = 'gt-dupe-compare-modal';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-labelledby', 'gt-dupe-compare-modal-title');
+        overlay.innerHTML =
+            '<div class="gt-dupe-compare-modal__panel">' +
+              '<div class="gt-dupe-compare-modal__toolbar">' +
+                '<h2 id="gt-dupe-compare-modal-title">Folder vs library game</h2>' +
+                '<button type="button" class="gt-dupe-compare-modal__close" aria-label="Close">×</button>' +
+              '</div>' +
+              '<div class="gt-dupe-compare-modal__body"></div>' +
+            '</div>';
+
+        const clone = compareEl.cloneNode(true);
+        const clonePop = clone.querySelector('.unmatched-dupe-compare__pop');
+        if (clonePop) clonePop.remove();
+        overlay.querySelector('.gt-dupe-compare-modal__body').appendChild(clone);
+
+        function close() {
+            overlay.remove();
+            document.removeEventListener('keydown', onKey);
+        }
+        function onKey(event) {
+            if (event.key === 'Escape') close();
+        }
+
+        overlay.addEventListener('click', function(event) {
+            if (event.target === overlay) close();
+        });
+        overlay.querySelector('.gt-dupe-compare-modal__close').addEventListener('click', close);
+        document.addEventListener('keydown', onKey);
+        document.body.appendChild(overlay);
+        overlay.querySelector('.gt-dupe-compare-modal__close').focus();
     }
 
     // Filtering functionality

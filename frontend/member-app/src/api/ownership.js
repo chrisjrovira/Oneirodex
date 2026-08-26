@@ -49,9 +49,13 @@ export async function syncSteam() {
   return mutate('/api/ownership/steam/sync', 'sync_steam', { json: {} })
 }
 
-export async function connectGog(gogUserId) {
+export async function connectGog(gogUserId, { refreshToken, accessToken } = {}) {
   return mutate('/api/ownership/gog', 'connect_gog', {
-    json: { gog_user_id: gogUserId },
+    json: {
+      gog_user_id: gogUserId,
+      ...(refreshToken ? { refresh_token: refreshToken } : {}),
+      ...(accessToken ? { access_token: accessToken } : {}),
+    },
   })
 }
 
@@ -59,14 +63,25 @@ export async function disconnectGog() {
   return mutate('/api/ownership/gog', 'disconnect_gog', { method: 'DELETE' })
 }
 
-export async function connectEpic(epicAccountId) {
+export async function syncGog() {
+  return mutate('/api/ownership/gog/sync', 'sync_gog', { json: {} })
+}
+
+export async function connectEpic(epicAccountId, { deviceAuth } = {}) {
   return mutate('/api/ownership/epic', 'connect_epic', {
-    json: { epic_account_id: epicAccountId },
+    json: {
+      epic_account_id: epicAccountId,
+      ...(deviceAuth ? { device_auth: deviceAuth } : {}),
+    },
   })
 }
 
 export async function disconnectEpic() {
   return mutate('/api/ownership/epic', 'disconnect_epic', { method: 'DELETE' })
+}
+
+export async function syncEpic() {
+  return mutate('/api/ownership/epic/sync', 'sync_epic', { json: {} })
 }
 
 /**

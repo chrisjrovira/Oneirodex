@@ -17,6 +17,8 @@ from gametheca.utils.store_ownership import (
     import_meta_quest_csv,
     import_steam_csv,
     is_ownership_sync_enabled,
+    sync_epic_owned_games,
+    sync_gog_owned_games,
     sync_steam_owned_games,
 )
 
@@ -116,7 +118,15 @@ def connect_gog():
     data = request.get_json(silent=True) or {}
     gog_user_id = (data.get('gog_user_id') or data.get('user_id') or '').strip() or None
     note = (data.get('note') or '').strip() or None
-    account = connect_gog_account(current_user.id, gog_user_id, note)
+    refresh_token = (data.get('refresh_token') or data.get('token') or '').strip() or None
+    access_token = (data.get('access_token') or '').strip() or None
+    account = connect_gog_account(
+        current_user.id,
+        gog_user_id,
+        note,
+        refresh_token=refresh_token,
+        access_token=access_token,
+    )
     return jsonify({
         'account': account.to_dict(),
         'summary': get_ownership_summary(current_user.id),
@@ -130,6 +140,25 @@ def disconnect_gog():
         return _feature_disabled_response()
     disconnect_gog_account(current_user.id)
     return jsonify({'summary': get_ownership_summary(current_user.id)})
+
+
+@apis_bp.route('/ownership/gog/sync', methods=['POST'])
+@login_required
+def sync_gog():
+    if not is_ownership_sync_enabled():
+        return _feature_disabled_response()
+    try:
+        result = sync_gog_owned_games(current_user.id)
+    except PermissionError as exc:
+        return api_error(str(exc), code='forbidden')
+    except ValueError as exc:
+        return api_error(str(exc), code='bad_request')
+    except Exception as exc:
+        return api_error(f'GOG sync failed: {exc}', code='bad_gateway')
+    return jsonify({
+        **result,
+        'summary': get_ownership_summary(current_user.id),
+    })
 
 
 @apis_bp.route('/ownership/gog/csv', methods=['POST'])
@@ -160,7 +189,10 @@ def connect_epic():
         data.get('epic_account_id') or data.get('user_id') or ''
     ).strip() or None
     note = (data.get('note') or '').strip() or None
-    account = connect_epic_account(current_user.id, epic_account_id, note)
+    device_auth = data.get('device_auth') or data.get('token') or None
+    account = connect_epic_account(
+        current_user.id, epic_account_id, note, device_auth=device_auth,
+    )
     return jsonify({
         'account': account.to_dict(),
         'summary': get_ownership_summary(current_user.id),
@@ -174,6 +206,25 @@ def disconnect_epic():
         return _feature_disabled_response()
     disconnect_epic_account(current_user.id)
     return jsonify({'summary': get_ownership_summary(current_user.id)})
+
+
+@apis_bp.route('/ownership/epic/sync', methods=['POST'])
+@login_required
+def sync_epic():
+    if not is_ownership_sync_enabled():
+        return _feature_disabled_response()
+    try:
+        result = sync_epic_owned_games(current_user.id)
+    except PermissionError as exc:
+        return api_error(str(exc), code='forbidden')
+    except ValueError as exc:
+        return api_error(str(exc), code='bad_request')
+    except Exception as exc:
+        return api_error(f'Epic sync failed: {exc}', code='bad_gateway')
+    return jsonify({
+        **result,
+        'summary': get_ownership_summary(current_user.id),
+    })
 
 
 @apis_bp.route('/ownership/epic/csv', methods=['POST'])

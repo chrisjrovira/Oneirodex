@@ -75,6 +75,23 @@ def test_statistics_scripts_use_theme_asset():
     assert "library/themes/default/js/" not in html
 
 
+def test_statistics_charts_sit_in_a_bounded_grid():
+    """W27-D3: Bootstrap columns + unbounded Chart.js grew a dual-axis scroll."""
+    html = (ROOT / 'gametheca' / 'templates' / 'admin' / 'admin_statistics.html').read_text(
+        encoding='utf-8',
+    )
+    css = (
+        ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / 'admin' / 'admin-pages.css'
+    ).read_text(encoding='utf-8')
+    js = (
+        ROOT / 'gametheca' / 'setup' / 'default_theme' / 'js' / 'chart-utils.js'
+    ).read_text(encoding='utf-8')
+    assert 'gt-adminpage-charts' in html
+    assert 'col-md-6' not in html
+    assert 'maintainAspectRatio: false' in js
+    assert 'height: 17.5rem' in css
+
+
 def test_orphaned_manage_downloads_css_is_gone():
     path = (
         ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / 'admin'

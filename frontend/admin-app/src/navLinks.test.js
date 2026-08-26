@@ -86,7 +86,6 @@ describe('section ownership', () => {
     ['/admin/extensions', 'libraries'],
     ['/admin/art_studio', 'libraries'],
     ['/admin/edit_filters', 'libraries'],
-    ['/admin/library_tools', 'libraries'],
     ['/scan_management', 'libraries'],
     ['/admin/whitelist', 'users'],
     ['/admin/smtp_settings', 'integrations'],
@@ -96,7 +95,14 @@ describe('section ownership', () => {
 
   test('query strings and fragments do not change ownership', () => {
     expect(resolveNavSection('/scan_management?active_tab=libraries')).toBe('libraries')
+    expect(resolveNavSection('/scan_management?active_tab=tools')).toBe('libraries')
     expect(resolveNavSection('/admin/integrations#oidc')).toBe('integrations')
+  })
+
+  test('library tools hub link points at the scan-management tab', () => {
+    const hrefs = HUB_LINKS.libraries.map((item) => item.href)
+    expect(hrefs).toContain('/scan_management?active_tab=tools')
+    expect(hrefs).not.toContain('/admin/library_tools')
   })
 
   test('every resolved section is a real nav id', () => {

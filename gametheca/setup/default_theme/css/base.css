@@ -415,37 +415,6 @@ body::after {
     font-weight: bold;
 }
 
-.user-expand-icon {
-    margin-left: 7px;
-    transition: transform 0.3s ease;
-}
-
-.user-account-menu {
-    display: none;
-    padding: 10px;
-    bottom: 40px;
-}
-
-.account-menu-option {
-    display: block;
-    padding: 5px;
-    color: #ecf0f1;
-    text-decoration: none;
-    transition: background-color 0.2s ease;
-    border-radius: 15px;
-}
-
-.account-menu-option i {
-    width: 20px;
-    margin-right: 8px;
-    text-align: center;
-}
-
-.account-menu-option:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: #ecf0f1;
-}
-
 .hide {
     display: none;
 }

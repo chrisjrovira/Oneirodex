@@ -41,6 +41,7 @@
              views=[
                ('libraries', 'Libraries', '#librariesPanel'),
                ('auto', 'Auto scan', '#autoScan'),
+               ('tools', 'Library tools', '#libraryTools'),
                ('manual', 'Manual scan', '#manualScan'),
                ('unmatched', 'Unmatched', '#unmatchedFolders'),
                ('scan_filters', 'Filters', '#scanFilters'),
@@ -58,7 +59,7 @@
            replaces. Views stay in-page (`data_toggle='tab'`) because these are
            panes of one document — turning them into page loads to gain a
            prettier strip would be a straight downgrade. Libraries links here
-           with the same seven labels, so landing on this page now shows the
+           with the same eight labels, so landing on this page now shows the
            same bar rather than the old strip. #}
         {% if not enable_new_chrome %}
         <div class="gt-adminpage-header">
@@ -75,6 +76,9 @@
             </li>
             <li class="admin_manage_scanjobs-nav-item nav-item">
                 <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'auto' or not active_tab %}active{% endif %}" id="autoScan-tab" data-bs-toggle="tab" href="#autoScan">Auto Scan</a>
+            </li>
+            <li class="admin_manage_scanjobs-nav-item nav-item">
+                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'tools' %}active{% endif %}" id="libraryTools-tab" data-bs-toggle="tab" href="#libraryTools">Library tools</a>
             </li>
             <li class="admin_manage_scanjobs-nav-item nav-item">
                 <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'manual' %}active{% endif %}" id="manualScan-tab" data-bs-toggle="tab" href="#manualScan">Manual Scan</a>
@@ -125,7 +129,7 @@
                             <div class="config-grid">
                                 <div class="config-item">
                                     {{ auto_form.library_uuid.label(class="config-label", **{"data-toggle": "tooltip", "title": "Choose which library to scan games into"}) }}
-                                    {{ auto_form.library_uuid(class="form-control config-input", id="libraryUuid", onchange='onLibraryChange(this.value, "auto")') }}
+                                    {{ auto_form.library_uuid(class="form-control config-input", id="libraryUuid", **{"data-gt-change": "onLibraryChange", "data-gt-arg2": "auto"}) }}
                                     {% if auto_form.library_uuid.errors %}
                                         {% for error in auto_form.library_uuid.errors %}
                                             <div class="alert alert-danger">{{ error }}</div>
@@ -289,7 +293,7 @@
                             <div class="jobs-controls">
                                 <form action="{{ url_for('main.clear_all_scan_jobs') }}" method="post" class="inline-form">
                                     {{ csrf_form.csrf_token }}
-                                    <button type="submit" class="btn btn-outline-danger btn-sm control-btn" onclick="return confirm('Delete ALL jobs?');">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm control-btn" data-gt-confirm="Delete ALL jobs?">
                                         {{ icons.icon('trash') }} <span class="btn-text">Clear All</span>
                                     </button>
                                 </form>
@@ -394,6 +398,11 @@
                 {% endif %}
             </div>
 
+            <!-- Library tools (same page as Auto Scan — W26 Libraries & Scans overhaul) -->
+            <div id="libraryTools" class="admin_manage_scanjobs-tab-panel tab-pane {% if active_tab == 'tools' %}active{% else %}fade{% endif %}">
+                {% include 'admin/partials/admin_library_tools_body.html' %}
+            </div>
+
             <!-- Manual Scan Tab -->
             <div id="manualScan" class="admin_manage_scanjobs-manual-panel gt-adminpage-panel tab-pane {% if active_tab == 'manual' %}active{% else %}fade{% endif %}"><br>
                 <div class="admin_manage_scanjobs-tab-header">
@@ -404,7 +413,7 @@
                     <!-- Library Selection -->
                     <div class="admin_manage_scanjobs-library form-group">
                         {{ manual_form.library_uuid.label(**{"data-toggle": "tooltip", "title": "Choose which library to scan games into"}) }}
-                        {{ manual_form.library_uuid(class="form-control", id="manualLibraryUuid", onchange='onLibraryChange(this.value, "manual")') }}
+                        {{ manual_form.library_uuid(class="form-control", id="manualLibraryUuid", **{"data-gt-change": "onLibraryChange", "data-gt-arg2": "manual"}) }}
                         {% if manual_form.library_uuid.errors %}
                             {% for error in manual_form.library_uuid.errors %}
                                 <div class="alert alert-danger">{{ error }}</div>
@@ -513,12 +522,12 @@
                             <form action="" method="post">
                                 {{ csrf_form.csrf_token }}
                                 <input type="hidden" name="submit" value="DeleteAllUnmatched">
-                                <button type="submit" class="admin_manage_scanjobs-clearall-btn unmatched-resolve-bar__pill" data-toggle="tooltip" title="Remove all entries from the unmatched folders list" onclick="return confirm('Are you sure you want to delete all entries in the list? This cannot be undone.');">Clear All</button>
+                                <button type="submit" class="admin_manage_scanjobs-clearall-btn unmatched-resolve-bar__pill" data-toggle="tooltip" title="Remove all entries from the unmatched folders list" data-gt-confirm="Are you sure you want to delete all entries in the list? This cannot be undone.">Clear All</button>
                             </form>
                             <form action="" method="post">
                                 {{ csrf_form.csrf_token }}
                                 <input type="hidden" name="submit" value="DeleteOnlyUnmatched">
-                                <button type="submit" class="admin_manage_scanjobs-clearunmatched-btn unmatched-resolve-bar__pill" data-toggle="tooltip" title="Remove only folders with 'Unmatched' status, keeping identified items" onclick="return confirm('Are you sure you want to clear all unmatched folders? This cannot be undone.');">Clear Unmatched</button>
+                                <button type="submit" class="admin_manage_scanjobs-clearunmatched-btn unmatched-resolve-bar__pill" data-toggle="tooltip" title="Remove only folders with 'Unmatched' status, keeping identified items" data-gt-confirm="Are you sure you want to clear all unmatched folders? This cannot be undone.">Clear Unmatched</button>
                             </form>
                             <button type="button" id="reclassifyDuplicatesBtn" class="unmatched-resolve-bar__pill" data-toggle="tooltip" title="Change false Duplicate rows (different folder titles, same IGDB) back to Unmatched">Fix false duplicates</button>
                             <button type="button" id="backfillSuggestedKindBtn" class="unmatched-resolve-bar__pill" data-toggle="tooltip" title="Fill missing Suggested kind chips from on-disk scan proposals (legacy rows)">Backfill kind hints</button>
@@ -780,7 +789,7 @@
                                         {{ csrf_form.csrf_token }}
                                         <input type="hidden" name="submit" value="DeleteReleaseGroup">
                                         <input type="hidden" name="filter_id" value="{{ group.id }}">
-                                        <button type="submit" class="admin_manage_filters-remove-btn btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this filter?')">
+                                        <button type="submit" class="admin_manage_filters-remove-btn btn btn-danger btn-sm" data-gt-confirm="Are you sure you want to delete this filter?">
                                             {{ icons.icon('trash') }} Remove
                                         </button>
                                     </form>
@@ -828,38 +837,38 @@
                     <div class="row mb-3">
                         <div class="col-md-7">
                             <div class="btn-group flex-wrap">
-                                <button class="btn btn-success" onclick="downloadBatch(10)">
+                                <button type="button" class="btn btn-success" data-gt-click="downloadBatch" data-gt-arg="10">
                                     {{ icons.icon('download') }} Download 10
                                 </button>
-                                <button class="btn btn-success" onclick="downloadBatch(50)">
+                                <button type="button" class="btn btn-success" data-gt-click="downloadBatch" data-gt-arg="50">
                                     {{ icons.icon('download') }} Download 50
                                 </button>
-                                <button class="btn btn-primary" onclick="downloadBatch(100)">
+                                <button type="button" class="btn btn-primary" data-gt-click="downloadBatch" data-gt-arg="100">
                                     {{ icons.icon('download') }} Download 100
                                 </button>
-                                <button id="retryFailedBtn" class="btn btn-warning" onclick="retryFailed()" title="Retry every image the queue could not download">
+                                <button type="button" id="retryFailedBtn" class="btn btn-warning" data-gt-click="retryFailed" title="Retry every image the queue could not download">
                                     {{ icons.icon('refresh') }} Retry failed
                                 </button>
-                                <button id="autoPickBtn" class="btn btn-outline-info" onclick="autoPickBest()" title="POST /admin/api/covers/batch/apply policy=sgdb_then_igdb_then_generate">
+                                <button type="button" id="autoPickBtn" class="btn btn-outline-info" data-gt-click="autoPickBest" title="POST /admin/api/covers/batch/apply policy=sgdb_then_igdb_then_generate">
                                     {{ icons.icon('image') }} Auto-pick best
                                 </button>
                                 <a class="btn btn-outline-light" href="/admin/art_studio#images">
                                     {{ icons.icon('image') }} Art &amp; images picker
                                 </a>
-                                <button class="btn btn-secondary" onclick="refreshQueue()">
+                                <button type="button" class="btn btn-secondary" data-gt-click="refreshQueue">
                                     {{ icons.icon('refresh') }} Refresh
                                 </button>
                             </div>
                         </div>
                         <div class="col-md-5">
                             <div class="d-flex gap-2 flex-wrap justify-content-md-end">
-                                <select id="status-filter" class="form-select" onchange="applyFilters()">
+                                <select id="status-filter" class="form-select" data-gt-change="applyFilters">
                                     <option value="all">All Images</option>
                                     <option value="pending">Pending Only</option>
                                     <option value="failed">Failed Only</option>
                                     <option value="downloaded">Downloaded Only</option>
                                 </select>
-                                <select id="type-filter" class="form-select" onchange="applyFilters()">
+                                <select id="type-filter" class="form-select" data-gt-change="applyFilters">
                                     <option value="all">All Types</option>
                                     <option value="cover">Covers</option>
                                     <option value="screenshot">Screenshots</option>
@@ -871,7 +880,7 @@
                                     <option value="">Platform (needs Backend)</option>
                                 </select>
                                 <div class="form-check form-switch align-self-center ms-1" style="white-space: nowrap;">
-                                    <input class="form-check-input" type="checkbox" id="group-by-game" onchange="applyFilters()">
+                                    <input class="form-check-input" type="checkbox" id="group-by-game" data-gt-change="applyFilters">
                                     <label class="form-check-label" for="group-by-game">Group by game</label>
                                 </div>
                             </div>
@@ -980,5 +989,6 @@
 
 <script src="{{ 'js/admin_manage_libs.js'|theme_asset }}"></script>
 <script src="{{ url_for('static', filename='js/gt_reparent_lib_modals.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gt_admin_library_tools.js') }}"></script>
 
 {% endblock %}

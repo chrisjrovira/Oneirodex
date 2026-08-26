@@ -17,7 +17,7 @@ This is **not** a DRM download client. Claiming always happens on Steam / Epic /
 | Avenue | When | Action |
 |---|---|---|
 | **A — Deeplink** | Always | **Claim** (HTTPS) or **Open in app** (`steam://` / Epic launcher URI when that store is linked) |
-| **B — Connected assist** | Store linked under Ownership | **Sync ownership** registers the title and, for Steam, re-runs live library sync |
+| **B — Connected assist** | Store linked under Ownership | **Sync ownership** registers the title. Steam / GOG / Epic re-run live library sync when a token is saved |
 
 GameTheca never silently redeems DRM. Claim on the store first (A), then Sync ownership (B) so badges update.
 

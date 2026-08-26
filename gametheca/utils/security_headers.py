@@ -9,18 +9,15 @@ Two callers, because GameTheca serves responses from two places:
   never reaches Flask (see the comment there — the bridge breaks under
   concurrent asset loads).
 
-**Why the CSP is report-only by default.** Executable inline ``<script>``
-bodies have been extracted to ``static/js``, but classic templates still use
-inline event handlers (``onclick=``) and the WebRetro iframe still needs
-``'unsafe-eval'`` / ``'wasm-unsafe-eval'`` for Emscripten cores. A policy
-strict enough to drop ``'unsafe-inline'`` from ``script-src`` would break
-those on the day it shipped. So the default reports and does not block; an
-operator flips ``CSP_ENFORCE=true`` once reports come back clean *and* the
-handlers are gone. The other headers have no such cost and are unconditional.
+Flask pages enforce CSP by default (``CSP_ENFORCE=true``). Executable inline
+``<script>`` and inline event handlers (``onclick=``) are gone from Jinja
+(ratchets in ``tests/test_no_inline_scripts.py``). The WebRetro player is a
+static document under ``/static/*`` and therefore gets the baseline only — no
+CSP — so Flask ``script-src`` does not need ``'unsafe-eval'`` / ``'wasm-unsafe-eval'``.
+``style-src`` still allows ``'unsafe-inline'`` for the many ``style=`` attributes
+on classic templates.
 
-The static path deliberately gets the baseline only, no CSP: ``webretro.html``
-is a static document, and a policy applied there would have to carry
-``'unsafe-eval'`` for the cores anyway.
+Set ``CSP_ENFORCE=false`` to report without blocking.
 """
 
 from __future__ import annotations
@@ -68,15 +65,7 @@ def _csp_directives() -> dict[str, str]:
     """
     return {
         'default-src': "'self'",
-        # 'unsafe-inline' remains for inline event handlers (onclick=) still
-        # on classic templates; 'wasm-unsafe-eval' + 'unsafe-eval' for the
-        # WebRetro Emscripten cores. Executable <script> bodies are gone from
-        # Jinja (see tests/test_no_inline_scripts.py). Every one of these is a
-        # thing to remove later, not a thing to pretend is fine — which is why
-        # this ships report-only.
-        'script-src': (
-            "'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'"
-        ),
+        'script-src': "'self'",
         'style-src': "'self' 'unsafe-inline'",
         # Cover art and screenshots come from whichever metadata provider the
         # operator configured (IGDB, SteamGridDB, Giant Bomb, Meta Quest, store
@@ -111,7 +100,7 @@ def baseline_static_headers() -> list[tuple[bytes, bytes]]:
 def apply_security_headers(app: Flask) -> None:
     """Register the ``after_request`` that stamps every Flask response."""
 
-    csp_enforce = bool(app.config.get('CSP_ENFORCE'))
+    csp_enforce = bool(app.config.get('CSP_ENFORCE', True))
     csp_enabled = bool(app.config.get('CSP_ENABLED', True))
     # HSTS is meaningless over plain HTTP and actively hostile on a LAN box
     # reached by IP, so it follows the same signal the secure cookie does.

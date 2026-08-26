@@ -28,6 +28,7 @@ CONVERTED_TEMPLATES = [
     'admin/admin_manage_library_create.html',
     'admin/admin_server_status.html',
     'admin/admin_library_tools.html',
+    'admin/partials/admin_library_tools_body.html',
     'admin/arr_module.html',
     'admin/admin_manage_smtp_settings.html',
     'admin/detail_layout.html',
@@ -219,6 +220,18 @@ class TestConvertedTemplates:
                 f"base.html queries {retired}, retired with the sidebar in GT-B2"
             )
         assert '<details class="gt-rail__account">' in read_template('partials/rail.html')
+
+    def test_shell_rail_js_has_no_dead_sidebar_handlers(self):
+        """GT-B2 leftover: submenu / filter-visibility lookups matched nothing."""
+        src = (
+            Path(__file__).resolve().parents[1]
+            / 'gametheca' / 'static' / 'js' / 'gt_shell_rail.js'
+        ).read_text(encoding='utf-8')
+        assert 'gt-rail-toggle' in src
+        assert 'closeAllSubmenus' not in src
+        assert 'has-submenu' not in src
+        assert 'container-filtersandsort' not in src
+        assert 'user-expand-icon' not in src
 
     def test_settings_shell_has_no_second_vertical_nav(self):
         shell = read_template('admin/admin_settings_shell.html')

@@ -70,7 +70,7 @@
                 {{ form.submit(class="btn btn-primary gt-themes-btn") }}
             </form>
             <form method="POST" action="{{ url_for('admin2.reset_default_themes') }}" class="gt-themes-reset"
-                  onsubmit="return confirm('Reset all default themes? This overwrites modifications to shipped themes.');">
+                  data-gt-confirm="Reset all default themes? This overwrites modifications to shipped themes.">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <button type="submit" class="btn btn-warning gt-themes-btn">Reset Default Themes</button>
             </form>
@@ -147,7 +147,7 @@
                 </div>
                 <form action="{{ url_for('admin2.delete_theme', theme_name=theme.folder) }}" method="POST"
                       class="theme-list-row__actions"
-                      onsubmit="return confirm('Delete this theme?');">
+                      data-gt-confirm="Delete this theme?">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="btn btn-outline-light btn-sm">Delete</button>
                 </form>

@@ -96,9 +96,9 @@
 </div>
 
 <div id="myModal" class="modal-details">
-    <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-    <a class="next" onclick="plusSlides(1)">&#10095;</a>
-    <span class="close cursor" onclick="closeModal()">&times;</span>
+    <a class="prev" href="#" data-gt-click="plusSlides" data-gt-arg="-1">&#10094;</a>
+    <a class="next" href="#" data-gt-click="plusSlides" data-gt-arg="1">&#10095;</a>
+    <span class="close cursor" data-gt-click="closeModal">&times;</span>
     <div class="modal-content">
         {% for image in game.images if 'cover' not in image.url %}
             <div class="mySlides">
@@ -113,7 +113,7 @@
 {# Updates & Extras Modal - Custom Implementation #}
 {% if game.updates or game.extras %}
 <div id="extrasModal" class="modal-extras">
-    <span class="close cursor" onclick="closeExtrasModal()">&times;</span>
+    <span class="close cursor" data-gt-click="closeExtrasModal">&times;</span>
     <div class="modal-extras-content">
         <div class="modal-extras-header">
             <h3>Updates & Extras for {{ game.name }}</h3>
@@ -121,8 +121,8 @@
         <div class="modal-extras-body">
             {% if game.updates and game.extras %}
                 <div class="extras-tabs">
-                    <button class="extras-tab-button active" onclick="showExtrasTab('updates')">Updates</button>
-                    <button class="extras-tab-button" onclick="showExtrasTab('extras')">Extras</button>
+                    <button type="button" class="extras-tab-button active" data-gt-click="showExtrasTab" data-gt-arg="updates">Updates</button>
+                    <button type="button" class="extras-tab-button" data-gt-click="showExtrasTab" data-gt-arg="extras">Extras</button>
                 </div>
             {% endif %}
             
@@ -185,7 +185,7 @@
             {# NFO Modal #}
             {% if game.nfo_content and game.nfo_content.lower() != 'none' %}
                 <div id="nfoModal" class="modal-nfo">
-                    <span class="close cursor" onclick="closeNfoModal()">&times;</span>
+                    <span class="close cursor" data-gt-click="closeNfoModal">&times;</span>
                     <div class="modal-nfo-content">
                         <div class="modal-nfo-header">
                             <h3>{{ game.name }} - NFO</h3>
@@ -375,7 +375,7 @@
                                             </div>
                                         {% endif %}
                                         {% if current_user.is_admin %}
-                                            <button class="chip" onclick="refreshHLTB('{{ game.uuid }}')" title="Refresh HLTB data" style="cursor: pointer; background: rgba(100, 100, 255, 0.3);">
+                                            <button type="button" class="chip" data-gt-click="refreshHLTB" data-gt-arg="{{ game.uuid }}" title="Refresh HLTB data" style="cursor: pointer; background: rgba(100, 100, 255, 0.3);">
                                                 {{ icons.icon('refresh', title='Refresh HLTB data') }}
                                             </button>
                                         {% endif %}
@@ -463,7 +463,7 @@
                             </div>
                             
                             {% if (enable_game_updates and game.updates) or (enable_game_extras and game.extras) %}
-                                <button type="button" class="button-glass-extras" onclick="openExtrasModal()">
+                                <button type="button" class="button-glass-extras" data-gt-click="openExtrasModal">
                                     Updates & Extras
                                     {% if game.updates or game.extras %}
                                         ({% if game.updates %}{{ game.updates|length }}{% endif %}{% if game.updates and game.extras %} + {% endif %}{% if game.extras %}{{ game.extras|length }}{% endif %})
@@ -472,7 +472,7 @@
                             {% endif %}
                         </div>
                         {% if game.nfo_content and game.nfo_content.lower() != 'none' %}
-                            <div class="nfo-button" onclick="openNfoModal()" title="View NFO">
+                            <div class="nfo-button" data-gt-click="openNfoModal" title="View NFO">
                                 {{ icons.icon('file', extra_class='nfo-icon') }}
                                 <span class="nfo-text">NFO</span>
                             </div>
@@ -492,7 +492,7 @@
                         <img src="{{ url_for('static', filename='library/images/' + image.url) }}" 
                              alt="{{ game.name }} Screenshot" 
                              class="screenshot-image" 
-                             onclick="openModal({{ loop.index }})">
+                             data-gt-click="openModal" data-gt-arg="{{ loop.index }}">
                     {% endfor %}
                 </div>
             {% endif %}

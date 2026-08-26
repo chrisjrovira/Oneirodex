@@ -83,11 +83,11 @@
                             {% set button_seconds_remaining = (invite.expires_at - naive_current).total_seconds() %}
                         {% endif %}
                         <button type="button" class="btn btn-outline-secondary btn-sm" {% if button_seconds_remaining <= 0 %}disabled{% endif %}
-                        onclick="copyToClipboard('{{ site_url }}/register?token={{ invite.token }}')">Copy invite URL</button>
+                        data-gt-click="copyToClipboard" data-gt-arg="{{ site_url }}/register?token={{ invite.token }}">Copy invite URL</button>
                     {% else %}
                         <button type="button" class="btn btn-outline-secondary btn-sm" disabled>Copy invite URL</button>
                     {% endif %}
-                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteInvite('{{ invite.token }}')">Delete</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" data-gt-click="deleteInvite" data-gt-arg="{{ invite.token }}">Delete</button>
                 </div>
             </div>
             {% else %}

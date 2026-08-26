@@ -9,7 +9,8 @@ The product used to serve WebRetro's upstream ToS / privacy / cookie pages from 
 (finding L3). Those files are gone so this host does not impersonate another site's operator.
 
 Related: [members-and-invites.md](members-and-invites.md) · [settings-modules.md](settings-modules.md) ·
-[../strategy/security.md](../strategy/security.md)
+[../strategy/security.md](../strategy/security.md) ·
+[webretro-core-clauses.md](webretro-core-clauses.md) (snes9x / genesis_plus_gx — not counsel)
 
 ## What stays on your server
 
@@ -21,6 +22,7 @@ Related: [members-and-invites.md](members-and-invites.md) · [settings-modules.m
 | Playtime | Per-user totals and session heartbeats | `share_activity` (default on) controls whether others in the household see it |
 | Presence | Online / away / in-game | Derived from play sessions and companion heartbeats, not a third-party tracker |
 | Chat | Channel messages, reactions, attachments | Household Spaces only. **No Discord** |
+| Store ownership | Steam ID; GOG refresh token; Epic device-auth JSON; synced title IDs | Register only — never a store download. Tokens are not returned by the ownership API after save |
 | Notifications | In-app inbox + archive | Optional SMTP for mentions/DMs and a daily digest, each a member preference |
 | Support reports | Title, body, optional logs, client/url hints | Stays local unless you configured GitHub issue sync |
 | Companion devices | Heartbeat / last-seen | Desktop client stores its token in the OS credential store, not plaintext config |
@@ -32,7 +34,7 @@ There is no GameTheca cloud account, no product analytics SaaS, and no Discord.
 | Channel | When | What goes out |
 |---|---|---|
 | SMTP | You set a mailer | Invite links, optional social/digest mail — only to addresses you or members provided |
-| IGDB / Giant Bomb / SteamGridDB / Meta Quest | You set API keys | Search titles and cover URLs so the catalog can be identified. Cover bytes are fetched through the same SSRF gate as other outbound HTTP |
+| Steam / GOG / Epic ownership | Member saves a Steam ID, GOG refresh token, or Epic device auth (or household env) | Store account ids and owned-title lists come back. Tokens stay on this host. Unofficial Galaxy / launcher APIs for GOG and Epic |
 | News feeds | `GT_NEWS_FEEDS` (http/https only) | The **server** fetches those URLs; members can hide individual sources |
 | OIDC | `OIDC_ENABLED` | Username / email / groups from *your* IdP (Authentik, etc.) |
 | LiveKit | Voice profile | Room tokens for household voice; media goes to the LiveKit you deployed |

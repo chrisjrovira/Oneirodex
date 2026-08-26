@@ -1,11 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>GameTheca glyph</title>
   <desc>
-    Silhouette of the GameTheca mark — the case frame and the shelf of game
-    cases, solid on transparent, with no plate behind it.
+    Silhouette of the GameTheca mark — a closed cabinet (lintel, uprights,
+    shelf) holding a shelf of game cases, solid on transparent, with no plate
+    behind it. The lintel is what makes this a theca (a case), not a U-shape
+    that can be read as a controller body.
 
     This exists so the mark can be *themed*. gametheca_mark.svg bakes the
-    default green (#12a4a0 -> #4ef2a1) and a #0b0d10 plate into the file, and an
+    default green (#12a4a0 -&gt; #4ef2a1) and a #0b0d10 plate into the file, and an
     external SVG loaded through an &lt;img&gt; element cannot see the page's
     custom properties, so on any preset other than the default the brand stayed
     green while everything around it changed. A monochrome silhouette can be used as a CSS
@@ -25,9 +27,10 @@
     tests/test_static_svg.py parses it now.
   </desc>
 
-  <!-- The case frame: two uprights and a shelf. -->
-  <rect x="12.4" y="17" width="3.2" height="30" rx="1.5" fill="#000"/>
-  <rect x="48.4" y="17" width="3.2" height="30" rx="1.5" fill="#000"/>
+  <!-- Closed cabinet: lintel, uprights, shelf. -->
+  <rect x="12.4" y="14.5" width="39.2" height="3.2" rx="1.5" fill="#000"/>
+  <rect x="12.4" y="14.5" width="3.2" height="33.1" rx="1.5" fill="#000"/>
+  <rect x="48.4" y="14.5" width="3.2" height="33.1" rx="1.5" fill="#000"/>
   <rect x="12.4" y="44.4" width="39.2" height="3.2" rx="1.5" fill="#000"/>
 
   <!-- The collection. Opacity carries the uneven-shelf reading through the

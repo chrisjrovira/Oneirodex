@@ -144,7 +144,10 @@ Each press does one bounded batch (25 titles, 50 max) because every title is a l
 **News → Free now.** Claim opens the store page (or launcher if that account is linked under Ownership). Details: [free-games.md](free-games.md).
 
 **Will GameTheca add the game to my DRM library automatically?**  
-No — claim on the store, then sync Ownership for badges. Local DRM-free library folders are separate.
+No — claim on the store, then sync Ownership for badges. Steam / GOG / Epic live-sync the register when a token is saved; they still never download the game. Local DRM-free library folders are separate.
+
+**How do I keep GOG or Epic ownership current?**  
+**More → Ownership.** Save a GOG refresh token or Epic device-auth JSON (Heroic / Legendary), then **Sync**. Same idea as Steam Web API. Tokens stay on your server; they are not shown again after save. CSV import still works if you do not want live sync.
 
 **Where are Notifications?**  
 **More → Notifications** — dense unread inbox; alert prefs live under **Alert preferences**. Empty inbox is honest (HTTP 200). **Mark all read** sits on the **INBOX** heading row, aligned with the label and directly above the list it clears — not in the top bar, which holds page-level controls.

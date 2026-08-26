@@ -381,8 +381,8 @@ def test_ownership_api_disabled(client, app, db_session, user):
     assert resp.status_code == 403
 
 
-@patch('gametheca.utils.store_ownership.requests.get')
-def test_steam_sync_register_only(mock_get, db_session, user):
+@patch('gametheca.utils.store_ownership._outbound')
+def test_steam_sync_register_only(mock_out, db_session, user):
     from gametheca.utils.store_ownership import connect_steam_account, sync_steam_owned_games
 
     _ensure_global_settings(
@@ -392,8 +392,8 @@ def test_steam_sync_register_only(mock_get, db_session, user):
     )
 
     connect_steam_account(user.id, '76561198000000000')
-    mock_get.return_value.status_code = 200
-    mock_get.return_value.json.return_value = {
+    mock_out.return_value.status_code = 200
+    mock_out.return_value.json.return_value = {
         'response': {
             'games': [
                 {'appid': 570, 'name': 'Dota 2'},
@@ -404,11 +404,124 @@ def test_steam_sync_register_only(mock_get, db_session, user):
 
     result = sync_steam_owned_games(user.id)
     assert result['synced'] == 2
-    assert mock_get.call_count == 1
-    call_args = mock_get.call_args
-    assert 'GetOwnedGames' in call_args[0][0]
+    assert mock_out.call_count == 1
+    call_args = mock_out.call_args
+    assert 'GetOwnedGames' in call_args[0][1]
 
     rows = db_session.execute(
         select(UserOwnedTitle).filter_by(user_id=user.id, store='steam')
     ).scalars().all()
     assert len(rows) == 2
+
+
+@patch('gametheca.utils.store_ownership._outbound')
+def test_gog_live_sync_register_only(mock_out, db_session, user):
+    from gametheca.utils.store_ownership import connect_gog_account, sync_gog_owned_games
+
+    _ensure_global_settings(db_session, enable_store_ownership_sync=True)
+    connect_gog_account(user.id, refresh_token='refresh-abc')
+
+    def fake_out(method, url, **kwargs):
+        class Resp:
+            status_code = 200
+            content = b'{}'
+
+            def json(self):
+                if 'token' in url:
+                    return {'access_token': 'acc', 'refresh_token': 'refresh-abc'}
+                if 'user/data/games' in url:
+                    return {'owned': [1207658924, 12]}
+                if 'products' in url:
+                    return [
+                        {'id': 1207658924, 'title': 'The Witcher 3'},
+                        {'id': 12, 'title': 'Demo'},
+                    ]
+                return {}
+
+            def raise_for_status(self):
+                return None
+
+        return Resp()
+
+    mock_out.side_effect = fake_out
+    result = sync_gog_owned_games(user.id)
+    assert result['synced'] == 2
+    assert result['store'] == 'gog'
+    rows = db_session.execute(
+        select(UserOwnedTitle).filter_by(user_id=user.id, store='gog')
+    ).scalars().all()
+    assert {row.external_app_id for row in rows} == {'1207658924', '12'}
+    account = db_session.execute(
+        select(StoreAccount).filter_by(user_id=user.id, store='gog')
+    ).scalars().one()
+    assert 'refresh_token' in account.credential
+    assert 'access_token' not in account.to_dict()
+
+
+@patch('gametheca.utils.store_ownership._outbound')
+def test_epic_live_sync_register_only(mock_out, db_session, user):
+    from gametheca.utils.store_ownership import connect_epic_account, sync_epic_owned_games
+
+    _ensure_global_settings(db_session, enable_store_ownership_sync=True)
+    connect_epic_account(
+        user.id,
+        device_auth={
+            'account_id': 'acc1',
+            'device_id': 'dev1',
+            'secret': 'sec1',
+        },
+    )
+
+    def fake_out(method, url, **kwargs):
+        class Resp:
+            status_code = 200
+            content = b'{}'
+
+            def json(self):
+                if 'oauth/token' in url:
+                    return {'access_token': 'eg1', 'displayName': 'Player'}
+                if 'library' in url:
+                    return {
+                        'records': [
+                            {'catalogItemId': 'cat-a', 'title': 'Fortnite'},
+                            {'catalogItemId': 'cat-b', 'appName': 'Other'},
+                        ],
+                        'responseMetadata': {},
+                    }
+                return {}
+
+            def raise_for_status(self):
+                return None
+
+        return Resp()
+
+    mock_out.side_effect = fake_out
+    result = sync_epic_owned_games(user.id)
+    assert result['synced'] == 2
+    assert result['store'] == 'epic'
+    rows = db_session.execute(
+        select(UserOwnedTitle).filter_by(user_id=user.id, store='epic')
+    ).scalars().all()
+    assert {row.external_app_id for row in rows} == {'cat-a', 'cat-b'}
+
+
+@patch('gametheca.utils.store_ownership._outbound')
+def test_gog_401_fails_honestly(mock_out, db_session, user):
+    from gametheca.utils.store_ownership import connect_gog_account, sync_gog_owned_games
+
+    _ensure_global_settings(db_session, enable_store_ownership_sync=True)
+    connect_gog_account(user.id, refresh_token='dead-token')
+
+    class Resp:
+        status_code = 401
+        content = b'{}'
+
+        def json(self):
+            return {}
+
+        def raise_for_status(self):
+            raise AssertionError('401 must not be treated as success')
+
+    mock_out.return_value = Resp()
+    with pytest.raises(ValueError, match='rejected'):
+        sync_gog_owned_games(user.id)

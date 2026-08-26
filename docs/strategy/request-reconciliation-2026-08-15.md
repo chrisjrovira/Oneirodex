@@ -68,16 +68,16 @@ chat pop-out · Steam metadata mapping · scan freshness (updates/DLC) · admin 
 | Your request | State |
 |---|---|
 | ~~"we need a cheat system like wand or pcchests for pc games that are installed"~~ | `FEAT-D2` — **built, and this row was wrong.** Corrected 2026-08-16: `PcCheat`, full CRUD at `/games/<uuid>/pc_cheats` (librarian-gated writes), and `PcCheatsPanel` mounted on game details behind `cheat_surface === 'pc_wand'`, with seven tests including the stance line and the empty state. I checked for the model and the route prefix and stopped there, which is the same half-look that produces the stale register entries this file complains about |
-| "gaming services we link to need to **sync** to the service like steam does not just a upload that wont stay up to date" | GOG/Epic live sync. **Not built, deliberately** — neither store has a documented ownership API. The honesty layer (`STORE_SYNC_MODE`) shipped instead, so the UI admits a snapshot is stale |
-| "claiming free games should be seemless when an account is attached" | `FEAT-D6`. Depends on the above. **Not built** |
+| "gaming services we link to need to **sync** to the service like steam does not just a upload that wont stay up to date" | GOG/Epic live register **built 2026-08-26** (unofficial surfaces, no downloads). Amazon stays snapshot. |
+| "claiming free games should be seemless when an account is attached" | `FEAT-D6`. Silent DRM redeem is still out of scope. Sync ownership after claim now hits Steam / GOG / Epic live when a token is saved |
 | "emulators pages need to be redesigned and have the look feel, visuals of the system being played and what a users room, arcade would look like" | `UID-007`. Room skins + clock/BIOS earlier; **player chrome built 2026-08-25** (Pause/Reset/Mute/volume/Power + overlay). Provenance-Emu was the chrome reference |
-| "statistices should be redone, and look better and have more graphs, tables, etc" | `W27-D3`. **Not built** — re-report of `UX-C13`, which added content without fixing layout |
-| "the whole unmatched table needs a better UI as it seems cramped, dupes are too small" | `W27-C4`, including the pop-out dupe preview. **Not built** |
-| "library tools needs to be much more user friendly" + "auto scan and library maker should be on the same page not two" | Libraries & Scans overhaul. **Not built** |
-| "remake a new logo as the controller one is too silly" | `UID-012`. **Not built** — needs art direction |
-| "the artwork we create the text is still tiny and not legiable it should be editable in the art studio" | `UID-011`. Legibility floors landed; the **editable** part did not |
-| Themes "named after consoles/systems", each reflecting that system | `W27-E1` / `UID-006`. Token scales exist; **packs never authored** |
-| "All LHN icons should follow the selected theme's colour" | `W27-E4`. **Not built** |
+| "statistices should be redone, and look better and have more graphs, tables, etc" | `W27-D3`. **Layout done 2026-08-26** — bounded CSS grid + Chart.js `maintainAspectRatio: false`. Chart skins unchanged |
+| "the whole unmatched table needs a better UI as it seems cramped, dupes are too small" | `W27-C4`. **Pop-out done 2026-08-26** on the live Jinja unmatched compare. Broader unmatched redesign still open if it still reads cramped |
+| "library tools needs to be much more user friendly" + "auto scan and library maker should be on the same page not two" | Libraries & Scans overhaul. **Done 2026-08-26** — Tools tab on `/scan_management?active_tab=tools`; `/admin/library_tools` redirects |
+| "remake a new logo as the controller one is too silly" | `UID-012`. **Done 2026-08-26** — closed cabinet glyph (lintel + shelf), not a pad |
+| "the artwork we create the text is still tiny and not legiable it should be editable in the art studio" | `UID-011`. **Done 2026-08-26** — Art Studio idle title 1.3× (floor 0.85×); slider always posts `title_scale`. Headline/subtitle already editable |
+| Themes "named after consoles/systems", each reflecting that system | `W27-E1` / `UID-006`. **Done 2026-08-26** — `GENERATOR_VERSION` 16 authors geometry per preset. Slugs unchanged; descriptions name the system language without trademarked console names |
+| "All LHN icons should follow the selected theme's colour" | `W27-E4`. **Code half done 2026-08-26** — resting rail glyphs use `--gt-accent`. Per-theme alternate drawings still art |
 | Competitive-scan adoption: nested AND/OR filter builder + saved filters, Apprise notifications, session tracking + activity heatmap, taste-profile picker, persistent "not interested", copy-level physical detail, RAWG/Wikidata sources, public list pages with RSS | From your ~47-repo review. Recorded as candidates; **none started** |
 | ~20 emulator repos (08-13) for the "mobile look" systems visuals | Reviewed; **the visual direction was never built** |
 

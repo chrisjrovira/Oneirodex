@@ -117,17 +117,17 @@
     function actionsCellFor(image) {
         const status = image.status || (image.is_downloaded ? 'downloaded' : 'pending');
         const retryOrDownload = status === 'failed'
-            ? `<button class="btn btn-sm btn-warning me-1" onclick="downloadSingle(${image.id})" title="Retry download">
+            ? `<button type="button" class="btn btn-sm btn-warning me-1" data-gt-click="downloadSingle" data-gt-arg="${image.id}" title="Retry download">
                     ${ICON_DOWNLOAD_SVG} Retry
                </button>`
             : (status === 'pending'
-                ? `<button class="btn btn-sm btn-success me-1" onclick="downloadSingle(${image.id})" title="Download">
+                ? `<button type="button" class="btn btn-sm btn-success me-1" data-gt-click="downloadSingle" data-gt-arg="${image.id}" title="Download">
                         ${ICON_DOWNLOAD_SVG}
                    </button>`
                 : '');
         return `
             ${retryOrDownload}
-            <button class="btn btn-sm btn-danger" onclick="deleteSingle(${image.id})" title="Delete">
+            <button type="button" class="btn btn-sm btn-danger" data-gt-click="deleteSingle" data-gt-arg="${image.id}" title="Delete">
                 ${ICON_TRASH_SVG}
             </button>
         `;
@@ -230,7 +230,7 @@
 
         let html = `
             <li class="page-item ${!pagination.has_prev ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${pagination.page - 1})">Previous</a>
+                <a class="page-link" href="#" data-gt-click="changePage" data-gt-arg="${pagination.page - 1}">Previous</a>
             </li>
         `;
 
@@ -241,14 +241,14 @@
         for (let i = startPage; i <= endPage; i++) {
             html += `
                 <li class="page-item ${i === pagination.page ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                    <a class="page-link" href="#" data-gt-click="changePage" data-gt-arg="${i}">${i}</a>
                 </li>
             `;
         }
 
         html += `
             <li class="page-item ${!pagination.has_next ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${pagination.page + 1})">Next</a>
+                <a class="page-link" href="#" data-gt-click="changePage" data-gt-arg="${pagination.page + 1}">Next</a>
             </li>
         `;
 

@@ -1,8 +1,6 @@
 # Security & legal remediation playbook
 
-**Date:** 2026-08-24 · **Updated:** 2026-08-25 — **all six phases shipped**, plus W32 follow-through
-(WebRetro MIT · L7 operator notes · vendor JS scoped off the member/admin shells). **Status:** complete,
-with CSP enforcement still report-only — see the end.
+**Date:** 2026-08-24 · **Updated:** 2026-08-26 — CSP now **enforces** by default; GOG/Epic live register sync; operator notes for snes9x / genesis_plus_gx (not counsel).
 **Scope:** backend (`gametheca/`, `asgi.py`, `config.py`), four SPAs, Tauri desktop client, vendored third-party code
 **Related:** [security.md](security.md) (the 2026-07-26 pass — still accurate, this extends it) ·
 [external-facing-scrub.md](external-facing-scrub.md) · [../dev/agent-locks.md](../dev/agent-locks.md)
@@ -217,7 +215,7 @@ Each phase ends with the repo's own gates — `verify-slice`, both ratchets
 | Phase | Covers | Shape of the work | Status |
 |---|---|---|---|
 | **0 — Dependencies** | S7 | `npm audit fix` in member-app and admin-app | **Done** — both SPAs at zero. Lockfiles only, no `package.json` change, so no breaking bumps |
-| **1 — Perimeter** | S1, S3 | `after_request` in `create_app`; `MAX_CONTENT_LENGTH` set and the 413 copy made true | **Done** — `utils/security_headers.py`. The find that changed the shape: `/static/*` is served natively in `asgi.py` and never reaches Flask, so the baseline is stamped in **both** places. CSP report-only |
+| **1 — Perimeter** | S1, S3 | `after_request` in `create_app`; `MAX_CONTENT_LENGTH` set and the 413 copy made true | **Done** — `utils/security_headers.py`. Native `/static/*` never reaches Flask, so the baseline is stamped in **both** places. CSP **enforces** as of 2026-08-26 (`CSP_ENFORCE=true`); WebRetro `/static/*` has no CSP |
 | **2 — SSRF** | S2 | Resolve-then-check; per-hop redirect revalidation; alternate literal forms | **Done** — `utils/http_safe.py` + `security.py`. Homelab `ALLOW_PRIVATE_LAN_URLS` pinned by test |
 | **3 — Uploads & XSS** | S4, S5 | Save the resized image; pixel ceiling; real byte check; escape in `assists.ts` | **Done** — plus a source-scan ratchet so the next unescaped `innerHTML` fails the suite |
 | **4 — Auth hardening** | S6, S8, S10, S11 | `expires_at`; positive `next` rule; narrow session scopes; envelope | **Done** — NULL expiry means never, so the upgrade cannot log out a live companion |
@@ -252,12 +250,12 @@ order-dependent, and `font_install` imports nothing this work touched. The modul
 bundled-first fonts; the test still encodes the older network-only contract where an HTML error page
 meant zero fonts written.
 
-## What stays open, on purpose
+## Follow-through after the playbook
 
-| Item | Why it is not closed |
+| Item | Status |
 |---|---|
-| **CSP enforcement** | `CSP_ENFORCE=false`. Executable inline `<script>` is gone from Jinja (ratchet: `tests/test_no_inline_scripts.py`). Enforcing today still breaks inline `onclick=` handlers and the WebRetro WASM cores (`'unsafe-eval'` / `'wasm-unsafe-eval'`). Flip enforcement once those settle and the reports come back clean |
-| **Non-commercial core clauses** | `snes9x` and `genesis_plus_gx` restrict commercial distribution. Taking them out of the tree makes the operator the provisioning party, which is the right shape — it does not settle what a commercial host is then doing. Worth an hour of counsel if GameTheca is ever hosted commercially |
+| **CSP enforcement** | **Closed 2026-08-26.** `CSP_ENFORCE` defaults true. Inline `<script>` and `onclick=` are gone (ratchet: `tests/test_no_inline_scripts.py`). WebRetro is native `/static/*` with baseline headers only, so Flask `script-src` is `'self'`. Set `CSP_ENFORCE=false` to report-only. `style-src` still allows `'unsafe-inline'` |
+| **Non-commercial core clauses** | **Open — operator notes, not counsel.** `snes9x` and `genesis_plus_gx` restrict commercial distribution. Quotes + questions for a lawyer: [webretro-core-clauses.md](../admin/webretro-core-clauses.md). Taking them out of the tree makes the operator the provisioning party — it does not settle a commercial host |
 | **DNS rebinding** | **Closed for `safe_request` callers (2026-08-26).** The hop is dialed by the address that passed the check; the original hostname is restored on `Host` / SNI. Callers that bypass `http_safe` still have the hole. Homelab `ALLOW_PRIVATE_LAN_URLS` still reaches RFC1918 — pinned by test |
 
 ### Decision taken (2026-08-25): the cores come out
@@ -278,9 +276,8 @@ already exists, and `cores/README.md` already describes the directory that way. 
 accepted — a fresh install cannot do browser play until the fetch runs, so **Phase 5 must ship the
 first-boot fetch and the removal together**, not the removal alone.
 
-Counsel is still worth an hour on the non-commercial clauses (`snes9x`, `genesis_plus_gx`) if
-GameTheca is ever hosted commercially, because removal from the tree does not settle what an operator
-who runs the fetch is then distributing.
+Counsel is still a human. Operator notes (quotes + questions, not advice):
+[webretro-core-clauses.md](../admin/webretro-core-clauses.md).
 
 ---
 
@@ -291,9 +288,8 @@ Phase 5 touches `static/vendor/` only. **None of them overlap the admin SPA chro
 Jinja templates** that the open UI/UX admin work is in — confirmed by the Phase 0–4 run, which
 changed no admin SPA file and left the CSS ratchet untouched.
 
-The one adjacency is Phase 1's CSP, and it is why the policy ships report-only: enforcement should
-wait until the admin bodies settle and the reports come back clean. Until then it costs nothing and
-surfaces violations early.
+Phase 1's CSP now **enforces** (2026-08-26). Classic `onclick=` is gone; WebRetro WASM never sees
+the Flask policy. `style-src 'unsafe-inline'` remains. Set `CSP_ENFORCE=false` only to report.
 
 **Docs touched:** `docs/strategy/security-legal-playbook.md` · `docs/strategy/security.md` ·
 `docs/strategy/progress.md` · `docs/strategy/docs-map.md` · `docs/README.md` ·

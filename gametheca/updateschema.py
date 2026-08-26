@@ -723,10 +723,14 @@ class DatabaseManager:
             user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             store VARCHAR(16) NOT NULL,
             external_account_id VARCHAR(64),
+            credential TEXT,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             CONSTRAINT uq_store_account_user_store UNIQUE (user_id, store)
         );
         CREATE INDEX IF NOT EXISTS ix_store_accounts_user_id ON store_accounts(user_id);
+
+        ALTER TABLE store_accounts
+        ADD COLUMN IF NOT EXISTS credential TEXT;
 
         CREATE TABLE IF NOT EXISTS user_owned_titles (
             id SERIAL PRIMARY KEY,

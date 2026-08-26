@@ -1,6 +1,6 @@
 # Documentation map (runbooks, SOPs, assets)
 
-**Date:** 2026-08-25 · **Product version:** 1.0.0-beta  
+**Date:** 2026-08-26 · **Product version:** 1.0.0-beta  
 **Purpose:** Inventory of docs, ops, and communications.  
 **Sync rule:** `.claude/skills/docs-sync/` — update on every code change; required by `CLAUDE.md`.
 
@@ -27,8 +27,8 @@
 | Social lite pointer | `docs/strategy/social.md` | Have |
 | Social + A/V waves | `docs/strategy/social-av.md` | Have (W16 shipped) · post-1.0 native RTC plan → [native-rtc.md](native-rtc.md) |
 | Security suite | `docs/strategy/security.md` | Have · post-1.0 native malware plan → [native-malware-scan.md](native-malware-scan.md) |
-| Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have (2026-08-26) — audit findings with evidence; Phases 0–6 shipped; inline `<script>` extracted; DNS pin on `safe_request`; WebRetro MIT confirmed; L7 operator notes in [privacy-data-handling.md](../admin/privacy-data-handling.md); remaining on purpose: CSP report-only (`onclick=` / WebRetro eval), non-commercial core clauses |
-| Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs + loading motifs (`GENERATOR_VERSION` 10) |
+| Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have (2026-08-26) — Phases 0–6 shipped; CSP **enforces** by default; DNS pin on `safe_request`; WebRetro MIT confirmed; L7 [privacy-data-handling.md](../admin/privacy-data-handling.md); remaining: non-commercial core clauses — operator notes (not counsel) in [webretro-core-clauses.md](../admin/webretro-core-clauses.md) |
+| Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs + loading motifs; colour presets author geometry at `GENERATOR_VERSION` **16** |
 | Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
 | Emulation coverage (Wave 19) | `docs/strategy/emulation-coverage.md` | Have |
@@ -98,9 +98,9 @@
 
 | Guide | Status | Notes |
 |---|---|---|
-| Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — **W22-1 Done** unified chrome (`/libraries` · `/scan_management`) · multi-select sticky **Scan**/**Edit**/**Delete** → `POST …/batch/{scan,edit,delete}` · **BE batch APIs Done** (`force` skips typed names; UI prefers batch / 404 soft-degrade) · Layout chips · `gt-toast-host` · **UX-B7** library-add digest at scan end · scan queue/force · unmatched · **UID-005** top actions / Resolve pills / client sort · Wave 18 timing/filters · **Scanning filters** · **W20-1/1b** propose/import · **W20-2** trail · **W20-4** scan-match · **W20-5a** Stage D · post-deploy Reset Themes (`admin_manage_libs` for sticky Scan/Edit · `admin_manage_scanjobs`) |
+| Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — **W22-1 Done** unified chrome (`/libraries` · `/scan_management`) · **Library tools tab** (`?active_tab=tools`; `/admin/library_tools` redirects) · multi-select sticky **Scan**/**Edit**/**Delete** → `POST …/batch/{scan,edit,delete}` · **BE batch APIs Done** (`force` skips typed names; UI prefers batch / 404 soft-degrade) · Layout chips · `gt-toast-host` · **UX-B7** library-add digest at scan end · scan queue/force · unmatched · **UID-005** top actions / Resolve pills / client sort · **W27-C4** dupe compare Pop out · Wave 18 timing/filters · **Scanning filters** · **W20-1/1b** propose/import · **W20-2** trail · **W20-4** scan-match · **W20-5a** Stage D · post-deploy Reset Themes (`admin_manage_libs` for sticky Scan/Edit · `admin_manage_scanjobs`) |
 | [members-and-invites.md](../admin/members-and-invites.md) | Have | Invites as links (email optional) · admin-created accounts with no email · `.invalid` placeholder rationale |
-| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` 10 · Reset after Wave 2d · **W22-1** `admin_manage_libs` + `admin_manage_scanjobs` (+ **UID-005** · Soft title/Utility) · loading motifs on volume |
+| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **16** (geometry packs) · Reset after deploy · **W22-1** `admin_manage_libs` + `admin_manage_scanjobs` (+ **UID-005** · Soft title/Utility) · loading motifs on volume |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — feature defaults ON · OIDC opt-in · malware block-on-hit · ClamAV · native Arr indexers (add/bulk/presets) + Prowlarr/Jackett · **W20-4** Scan/match Settings **Done** (`/admin/scan_match` + `GET|PUT /api/admin/scan-match/config` · defaults 0.92/0.08/0.85/conservative) |
 | Discover sections (storefront · zones · events) | Have | [discover-sections.md](../admin/discover-sections.md) — manual pick / library / platform / genre zones, reorder + hide built-ins · **W25** storefront shelves (`curated_for_you` · `upcoming`) · `shelf`/`hero`/`carousel` layouts · scheduled **events** (`starts_at`/`ends_at`, UTC) |
 | Theme fonts & batch artwork | Have | [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md) — OFL/era faces (no manufacturer typefaces; **files operator-supplied**, `installed` reported honestly) · magic-byte validated upload · `<uuid>[_<kind>]` batch image upload |
@@ -109,7 +109,8 @@
 | Library root watch | Have | [library-root-watch-spike.md](../admin/library-root-watch-spike.md) — Wave 3 optional `GT_LIBRARY_WATCH` (default off); Ops `services.library_watch` |
 | Troubleshooting | Have | [troubleshooting.md](../admin/troubleshooting.md) — Features / malware / OIDC notes |
 | Privacy & data handling | Have | [privacy-data-handling.md](../admin/privacy-data-handling.md) — operator-adaptable notes (L7); not a public ToS |
-| First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 10 |
+| WebRetro core clauses | Have | [webretro-core-clauses.md](../admin/webretro-core-clauses.md) — snes9x / genesis_plus_gx quotes + lawyer questions; **not counsel** |
+| First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 16 |
 | Propose-only scan & proposals | Create | |
 | Library Doctor & rename templates | Create | |
 | Unmatched & false duplicates | Have | [libraries-and-scans.md#unmatched-folders](../admin/libraries-and-scans.md#unmatched-folders) — Wave 17: filters · batch · soft **Amend naming** · nested `matched_game` / **Dupe of** · **UID-005** per-row top actions · Resolve equal pills · client sort Folder/Status/Library/Platform · Dupe glance parity · **W20-2** `transforms[]` + **Name transform trail** expander (Dupe glance + scanjobs; soft-degrade) · Dupe glance · merge/keep/ignore · OpenPathModal · export · PC extras |
@@ -144,7 +145,7 @@
 | [local-postgres-pytest.md](../runbooks/local-postgres-pytest.md) | Have | Docker Desktop Postgres for pytest |
 | [steamgriddb-artwork.md](../runbooks/steamgriddb-artwork.md) | Have | Artwork key |
 | [desktop-code-signing.md](../runbooks/desktop-code-signing.md) | Have | Unsigned-only product stance |
-| [webretro-cores.md](../runbooks/webretro-cores.md) | Have | Operator-vendor PCE/VICE/DOS WASM |
+| [webretro-cores.md](../runbooks/webretro-cores.md) | Have | Operator-vendor WASM fetch; non-commercial clauses for snes9x / genesis_plus_gx → [webretro-core-clauses.md](../admin/webretro-core-clauses.md) (not counsel) |
 | [reference-sets.md](../runbooks/reference-sets.md) | Have | No-Intro/Redump DAT set completeness |
 | [login-rate-limit-proxy.md](../runbooks/login-rate-limit-proxy.md) | Have | Proxy + app login rate limits (O8) |
 | [release-checklist.md](../runbooks/release-checklist.md) | Have | Release SOP · CI core pytest / vitest note |

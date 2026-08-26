@@ -9,6 +9,7 @@ hiding it.
 """
 
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -162,3 +163,26 @@ def test_ops_summary_reports_no_reason_as_none_not_empty_string(
     mine = [j for j in snapshot['jobs'] if j.get('id') == job.id]
     assert mine
     assert mine[0]['error_message'] is None
+
+
+def test_library_tools_live_on_scan_management(admin_client):
+    """Auto Scan and library maker are tabs of the same page."""
+    body = admin_client.get('/scan_management').get_data(as_text=True)
+    assert 'id="libraryTools"' in body
+    assert 'id="propose-leaf-mount"' in body
+    assert 'gt_admin_library_tools.js' in body
+
+
+def test_library_tools_page_redirects_to_the_scan_tab(admin_client):
+    response = admin_client.get('/admin/library_tools')
+    assert response.status_code == 302
+    assert 'active_tab=tools' in response.headers['Location']
+
+
+def test_unmatched_compare_offers_a_pop_out():
+    src = (
+        Path(__file__).resolve().parents[1]
+        / 'gametheca' / 'setup' / 'default_theme' / 'js' / 'admin_manage_scanjobs.js'
+    ).read_text(encoding='utf-8')
+    assert 'showDupeComparePopout' in src
+    assert 'unmatched-dupe-compare__pop' in src

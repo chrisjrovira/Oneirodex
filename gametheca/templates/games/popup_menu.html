@@ -40,7 +40,7 @@
     </div>
     <div class="menu-item">
         {% if game.url %}
-        <button type="submit" onclick="window.open('{{ game.url }}', 'target=_new')" class="menu-button">Open IGDB Page</button>
+        <button type="button" data-gt-open="{{ game.url }}" class="menu-button">Open IGDB Page</button>
         {% endif %}
     </div>
 </div>

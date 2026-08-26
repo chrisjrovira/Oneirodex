@@ -50,7 +50,10 @@ from datetime import date
 # admin_manage_igdb_settings and admin_manage_scanjobs gained a real
 # :focus-visible ring. A preset still carrying the old copies has controls a
 # keyboard user cannot locate.
-GENERATOR_VERSION = 15
+# 16 (UID-006 art packs): each preset now authors radius / space / type /
+# shadow as a system visual language, not hue-only tint. Operators must
+# Reset Themes so regenerated gt-tokens.css picks up the geometry.
+GENERATOR_VERSION = 16
 
 # Key written into each generated theme.json; also our ownership proof.
 PRESET_MARKER_KEY = 'gametheca_preset'
@@ -121,7 +124,7 @@ PRESET_THEMES = [
     {
         'slug': 'aurora',
         'name': 'Arcade Neon',
-        'description': 'CRT cyan glow — chunky pixel icons, scanline glass.',
+        'description': '8-bit cabinet — square corners, tight tiles, CRT scan.',
         'btn_primary': '#22d3ee',
         'btn_primary_hover': '#06b6d4',
         'bg_dark_40': 'rgba(10, 24, 32, 0.94)',
@@ -149,7 +152,7 @@ PRESET_THEMES = [
     {
         'slug': 'ember',
         'name': 'Hot Cabinet',
-        'description': 'Arcade magenta — solid filled glyphs on cabinet black.',
+        'description': 'Coin-op cabinet — pill chips, deep shadow, filled glyphs.',
         'btn_primary': '#f472b6',
         'btn_primary_hover': '#ec4899',
         'bg_dark_40': 'rgba(28, 10, 22, 0.94)',
@@ -177,7 +180,7 @@ PRESET_THEMES = [
     {
         'slug': 'violet',
         'name': 'Modern Violet',
-        'description': 'Soft violet glass — thin soft stroke icons.',
+        'description': 'Sixth-gen glass — large radius, heavy blur, thin strokes.',
         'btn_primary': '#a78bfa',
         'btn_primary_hover': '#8b5cf6',
         'bg_dark_40': 'rgba(22, 16, 36, 0.94)',
@@ -205,7 +208,7 @@ PRESET_THEMES = [
     {
         'slug': 'forest',
         'name': 'Vector Green',
-        'description': 'Phosphor green — crisp outline icons, low glass.',
+        'description': 'Vector monitor — zero radius, tight type, phosphor green.',
         'btn_primary': '#4ade80',
         'btn_primary_hover': '#22c55e',
         'bg_dark_40': 'rgba(12, 24, 18, 0.94)',
@@ -233,7 +236,7 @@ PRESET_THEMES = [
     {
         'slug': 'ocean',
         'name': 'Modern Ocean',
-        'description': 'Deep blue chrome — duotone fill icons.',
+        'description': 'Seventh-gen chrome — medium radius, duotone fill.',
         'btn_primary': '#3b82f6',
         'btn_primary_hover': '#2563eb',
         'bg_dark_40': 'rgba(10, 18, 36, 0.94)',
@@ -261,7 +264,7 @@ PRESET_THEMES = [
     {
         'slug': 'rose',
         'name': 'Modern Rose',
-        'description': 'Muted rose charcoal — soft thin strokes.',
+        'description': 'Handheld — compact space, serif display, soft strokes.',
         'btn_primary': '#fb7185',
         'btn_primary_hover': '#f43f5e',
         'bg_dark_40': 'rgba(28, 14, 20, 0.94)',
@@ -289,7 +292,7 @@ PRESET_THEMES = [
     {
         'slug': 'mono',
         'name': 'Modern Mono',
-        'description': 'Neutral slate — heavy mono block icons.',
+        'description': 'Home computer — 0 radius, no shadow, dense mono blocks.',
         'btn_primary': '#94a3b8',
         'btn_primary_hover': '#64748b',
         'bg_dark_40': 'rgba(18, 18, 22, 0.94)',
@@ -317,7 +320,7 @@ PRESET_THEMES = [
     {
         'slug': 'sunset',
         'name': 'Coin Gold',
-        'description': 'Coin-slot gold — filled glyphs, warm cabinet CRT.',
+        'description': 'Medal cabinet — warm gold, large shadow, chunky type.',
         'btn_primary': '#fbbf24',
         'btn_primary_hover': '#eab308',
         'bg_dark_40': 'rgba(24, 18, 8, 0.94)',
@@ -345,7 +348,7 @@ PRESET_THEMES = [
     {
         'slug': 'ice',
         'name': 'Modern Ice',
-        'description': 'Pale sky on cold navy — soft stroke, high blur.',
+        'description': 'HD-era frost — max radius, airy space, high blur.',
         'btn_primary': '#7dd3fc',
         'btn_primary_hover': '#38bdf8',
         'bg_dark_40': 'rgba(12, 20, 32, 0.94)',
@@ -531,7 +534,137 @@ def preset_tokens(preset: dict) -> dict:
             if value is None or value == '':
                 continue
             tokens[str(name)] = str(value)
+    for name, value in _system_geometry(str(preset.get('slug') or '')).items():
+        tokens[name] = value
     return tokens
+
+
+def _system_geometry(slug: str) -> dict:
+    """Per-preset radius / space / type / shadow — the system visual language.
+
+    Colour and icon stroke already live on each preset's ``tokens`` dict.
+    These keys are what made packs read as tint-only: nothing overrode the
+    shared scales. Slugs stay stable (preference keys); geometry is the pack.
+    """
+    packs = {
+        'aurora': {
+            'gt-radius-xs': '0px',
+            'gt-radius-sm': '0px',
+            'gt-radius-md': '2px',
+            'gt-radius-lg': '2px',
+            'gt-radius-xl': '4px',
+            'gt-radius-2xl': '4px',
+            'gt-radius-3xl': '4px',
+            'gt-space-4': '0.5rem',
+            'gt-space-5': '0.65rem',
+            'gt-font-base': '0.95rem',
+            'gt-shadow-md': '0 2px 0 rgba(0, 0, 0, 0.55)',
+            'gt-motion-base': '80ms',
+        },
+        'ember': {
+            'gt-radius-xs': '6px',
+            'gt-radius-sm': '8px',
+            'gt-radius-md': '12px',
+            'gt-radius-lg': '16px',
+            'gt-radius-xl': '20px',
+            'gt-radius-2xl': '24px',
+            'gt-radius-3xl': '28px',
+            'gt-space-5': '1.05rem',
+            'gt-shadow-md': '0 8px 24px rgba(0, 0, 0, 0.5)',
+            'gt-shadow-lg': '0 18px 40px rgba(0, 0, 0, 0.55)',
+        },
+        'violet': {
+            'gt-radius-xs': '8px',
+            'gt-radius-sm': '10px',
+            'gt-radius-md': '14px',
+            'gt-radius-lg': '18px',
+            'gt-radius-xl': '22px',
+            'gt-radius-2xl': '28px',
+            'gt-radius-3xl': '32px',
+            'gt-space-5': '1.15rem',
+            'gt-shadow-md': '0 6px 20px rgba(20, 10, 40, 0.45)',
+        },
+        'forest': {
+            'gt-radius-xs': '0px',
+            'gt-radius-sm': '0px',
+            'gt-radius-md': '0px',
+            'gt-radius-lg': '0px',
+            'gt-radius-xl': '0px',
+            'gt-radius-2xl': '0px',
+            'gt-radius-3xl': '0px',
+            'gt-space-4': '0.45rem',
+            'gt-space-5': '0.7rem',
+            'gt-font-base': '0.92rem',
+            'gt-shadow-sm': 'none',
+            'gt-shadow-md': 'none',
+            'gt-motion-base': '90ms',
+        },
+        'ocean': {
+            'gt-radius-xs': '4px',
+            'gt-radius-sm': '6px',
+            'gt-radius-md': '10px',
+            'gt-radius-lg': '12px',
+            'gt-radius-xl': '14px',
+            'gt-radius-2xl': '18px',
+            'gt-radius-3xl': '22px',
+            'gt-space-5': '1rem',
+            'gt-shadow-md': '0 4px 16px rgba(0, 20, 48, 0.4)',
+        },
+        'rose': {
+            'gt-radius-xs': '6px',
+            'gt-radius-sm': '8px',
+            'gt-radius-md': '12px',
+            'gt-radius-lg': '14px',
+            'gt-radius-xl': '16px',
+            'gt-radius-2xl': '20px',
+            'gt-radius-3xl': '24px',
+            'gt-space-4': '0.55rem',
+            'gt-space-5': '0.85rem',
+            'gt-font-lg': '1.05rem',
+        },
+        'mono': {
+            'gt-radius-xs': '0px',
+            'gt-radius-sm': '0px',
+            'gt-radius-md': '0px',
+            'gt-radius-lg': '0px',
+            'gt-radius-xl': '0px',
+            'gt-radius-2xl': '0px',
+            'gt-radius-3xl': '0px',
+            'gt-space-2': '0.3rem',
+            'gt-space-5': '0.8rem',
+            'gt-shadow-sm': 'none',
+            'gt-shadow-md': 'none',
+            'gt-shadow-lg': 'none',
+            'gt-font-base': '0.9rem',
+        },
+        'sunset': {
+            'gt-radius-xs': '4px',
+            'gt-radius-sm': '8px',
+            'gt-radius-md': '14px',
+            'gt-radius-lg': '18px',
+            'gt-radius-xl': '22px',
+            'gt-radius-2xl': '26px',
+            'gt-radius-3xl': '30px',
+            'gt-font-2xl': '1.65rem',
+            'gt-shadow-md': '0 8px 20px rgba(40, 20, 0, 0.5)',
+            'gt-shadow-lg': '0 20px 44px rgba(40, 16, 0, 0.55)',
+        },
+        'ice': {
+            'gt-radius-xs': '10px',
+            'gt-radius-sm': '14px',
+            'gt-radius-md': '18px',
+            'gt-radius-lg': '22px',
+            'gt-radius-xl': '26px',
+            'gt-radius-2xl': '32px',
+            'gt-radius-3xl': '36px',
+            'gt-space-5': '1.2rem',
+            'gt-space-6': '1.75rem',
+            'gt-font-base': '1.05rem',
+            'gt-shadow-sm': '0 1px 8px rgba(120, 180, 220, 0.18)',
+            'gt-shadow-md': '0 8px 28px rgba(10, 30, 50, 0.35)',
+        },
+    }
+    return packs.get(slug, {})
 
 
 def preset_icon_pack(preset: dict) -> str:

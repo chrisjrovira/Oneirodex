@@ -16,11 +16,8 @@ Scope
 Register-only, exactly as the sync itself is: this records which titles an
 account owns. It downloads nothing and changes nothing on disk.
 
-Only stores with a real live API are polled. GOG and Epic are CSV-only in this
-slice (`get_gog_api_token` / `get_epic_api_token` are documented stubs), so
-polling them would burn wakeups to accomplish nothing — they are skipped by
-capability rather than by a hardcoded list, so implementing one is enough to
-enrol it.
+Only stores with a real live API are polled. GOG and Epic use unofficial
+Galaxy / launcher surfaces (operator-supplied tokens); Amazon stays CSV-only.
 """
 
 from __future__ import annotations
@@ -33,7 +30,7 @@ _scheduler_started = False
 #: Stores that can actually be re-synced live today. Derived from the handler
 #: registry below — see _live_sync_handlers for why this must not be edited
 #: on its own.
-LIVE_SYNC_STORES = ('steam',)
+LIVE_SYNC_STORES = ('steam', 'gog', 'epic')
 
 
 def _live_sync_handlers() -> dict:
@@ -57,6 +54,16 @@ def _live_sync_handlers() -> dict:
             'credential': store_ownership.get_steam_web_api_key,
             'sync': store_ownership.sync_steam_owned_games,
             'missing': 'no Steam Web API key configured',
+        },
+        'gog': {
+            'credential': store_ownership.gog_live_ready,
+            'sync': store_ownership.sync_gog_owned_games,
+            'missing': 'no GOG refresh token configured',
+        },
+        'epic': {
+            'credential': store_ownership.epic_live_ready,
+            'sync': store_ownership.sync_epic_owned_games,
+            'missing': 'no Epic device auth configured',
         },
     }
 
@@ -145,13 +152,22 @@ def sync_all_linked_accounts() -> dict:
     synced = 0
     failed = 0
     for account in accounts:
-        if not account.external_account_id:
-            continue
-        handler = usable.get((account.store or '').lower())
+        store = (account.store or '').lower()
+        handler = usable.get(store)
         if handler is None:
             # Unreachable given the filter, and deliberately not a fallthrough:
             # syncing an unknown store with whichever function happened to be in
             # scope is exactly the bug this registry replaced.
+            continue
+        if store == 'steam' and not account.external_account_id:
+            continue
+        if store == 'gog' and not (
+            getattr(account, 'credential', None) or store_ownership.get_gog_api_token()
+        ):
+            continue
+        if store == 'epic' and not (
+            getattr(account, 'credential', None) or store_ownership.get_epic_api_token()
+        ):
             continue
         try:
             handler['sync'](account.user_id)

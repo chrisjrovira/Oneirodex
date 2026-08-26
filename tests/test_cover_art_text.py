@@ -78,7 +78,7 @@ class TestOverrides:
     def test_absurd_scale_is_clamped_not_obeyed(self):
         """Clamping defends the legibility floor this module exists for."""
         tiny = render_cover_art(320, 480, title='Portal 2', system='PC', title_scale=0.01)
-        floor = render_cover_art(320, 480, title='Portal 2', system='PC', title_scale=0.6)
+        floor = render_cover_art(320, 480, title='Portal 2', system='PC', title_scale=0.85)
         assert tiny.tobytes() == floor.tobytes()
 
         huge = render_cover_art(320, 480, title='Portal 2', system='PC', title_scale=99)

@@ -699,15 +699,33 @@
     color: var(--gt-accent);
 }
 
-/* Chart.js canvases need a bounded box or they grow unbounded. */
+/* Chart.js canvases need a bounded box or they grow unbounded and dual-axis
+   scroll the page (W27-D3). Grid, not Bootstrap columns, so leftover horizontal
+   space is empty cells rather than a second scrollbar. */
+.gt-adminpage-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+    gap: var(--gt-adminpage-gap);
+    overflow-x: hidden;
+}
+
 .gt-adminpage-chart {
     position: relative;
-    min-height: 260px;
-    margin-bottom: var(--gt-adminpage-gap);
+    height: 17.5rem;
+    min-height: 17.5rem;
+    max-height: 17.5rem;
+    max-width: 100%;
+    overflow: hidden;
+    margin-bottom: 0;
     padding: 1rem;
     background: var(--gt-surface-2);
     border: 1px solid var(--gt-border);
     border-radius: var(--gt-adminpage-radius-sm);
+}
+
+.gt-adminpage-chart canvas {
+    display: block;
+    max-width: 100%;
 }
 
 /* Emulator profile rows are built by inline JS; style the generated classes. */

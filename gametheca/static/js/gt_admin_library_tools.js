@@ -1,6 +1,8 @@
 /* Extracted from the matching Jinja template so the page has no inline
  * <script>. Lives under static/js, not a theme copy — no Reset Themes. */
 (function() {
+  if (!document.getElementById('doctorDryRunBtn')) return;
+
   const csrf = (window.CSRFUtils && CSRFUtils.getToken) ? CSRFUtils.getToken() : '';
   function headers() {
     return {'Content-Type': 'application/json', 'X-CSRFToken': csrf};

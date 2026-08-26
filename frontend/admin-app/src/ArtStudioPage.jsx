@@ -12,6 +12,10 @@ const PREVIEW_VARIANTS = [
   { key: 'wide', width: 960, height: 540, label: '960×540', kind: 'wide' },
 ]
 
+const DEFAULT_TITLE_SCALE = 1.3
+const TITLE_SCALE_MIN = 0.85
+const TITLE_SCALE_MAX = 2
+
 const FALLBACK_ASSETS = [
   {
     key: 'cover',
@@ -69,7 +73,7 @@ export function ArtStudioPage() {
      already does with an absent key. */
   const [headline, setHeadline] = useState('')
   const [subtitle, setSubtitle] = useState('')
-  const [titleScale, setTitleScale] = useState(1)
+  const [titleScale, setTitleScale] = useState(DEFAULT_TITLE_SCALE)
   const previewReqId = useRef(0)
 
   const skin = useMemo(() => skinForPlatform(system), [system])
@@ -125,7 +129,7 @@ export function ArtStudioPage() {
             // which is a different instruction from leaving it out.
             ...(headline.trim() ? { headline: headline.trim() } : {}),
             ...(subtitle !== '' ? { subtitle } : {}),
-            ...(titleScale !== 1 ? { title_scale: titleScale } : {}),
+            title_scale: titleScale,
           })
           if (reqId !== previewReqId.current) return
           next[size.key] = data.preview
@@ -191,7 +195,7 @@ export function ArtStudioPage() {
         // other than what was on screen when it was clicked.
         ...(headline.trim() ? { headline: headline.trim() } : {}),
         ...(subtitle !== '' ? { subtitle } : {}),
-        ...(titleScale !== 1 ? { title_scale: titleScale } : {}),
+        title_scale: titleScale,
       })
       setPackId(data.pack_id)
       setPreviewUrl(data.preview_url)
@@ -633,8 +637,8 @@ export function ArtStudioPage() {
                   </span>
                   <input
                     type="range"
-                    min="0.6"
-                    max="2"
+                    min={TITLE_SCALE_MIN}
+                    max={TITLE_SCALE_MAX}
                     step="0.05"
                     value={titleScale}
                     onChange={(e) => setTitleScale(Number(e.target.value))}
@@ -642,7 +646,7 @@ export function ArtStudioPage() {
                   />
                 </label>
                 <p id="gt-art-scale-hint" className="gt-art-studio__hint">
-                  Clamped 0.6×–2× by the renderer, which also refuses to overflow the
+                  Clamped {TITLE_SCALE_MIN}×–{TITLE_SCALE_MAX}× by the renderer, which also refuses to overflow the
                   canvas — the slider asks for a size, it does not override the fit.
                   Leave the fields empty to keep the text derived from the title; an
                   empty subtitle is kept as “no subtitle”.

@@ -101,8 +101,11 @@ jobs:
           tests/test_integrations_inventory_sources.py
           tests/test_cascade_default_behaviour.py
           tests/test_ownership_poller.py
+          tests/test_store_ownership.py
           tests/test_emulator_bios_discovery.py
           tests/test_cover_art_variety.py
+          tests/test_cover_art_text.py
+          tests/test_preset_themes.py
           tests/test_global_settings_singleton.py
           tests/test_routes_info.py
           tests/test_template_icons.py

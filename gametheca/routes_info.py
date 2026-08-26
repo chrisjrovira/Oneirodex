@@ -1,13 +1,13 @@
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, jsonify, redirect, render_template, request, url_for
 from flask_login import login_required
 from sqlalchemy import select
 
 from gametheca import db
 from gametheca.utils.auth import admin_required
 from gametheca.utils.processors import get_global_settings
-from gametheca.utils.system_stats import format_bytes, get_cpu_usage, get_memory_usage, get_disk_usage, get_process_count, get_open_files, get_games_folder_usage
+from gametheca.utils.system_stats import format_bytes
 from gametheca.utils.uptime import get_formatted_system_uptime, get_formatted_app_uptime
-from gametheca.utils.status import get_system_info, get_config_values, get_active_users, get_log_info, check_server_settings, get_database_info
+from gametheca.utils.status import get_system_info, get_config_values, get_active_users, get_log_info, get_database_info
 from gametheca import app_version, app_start_time
 from gametheca import cache
 from gametheca.utils.event_logging import log_system_event
@@ -80,8 +80,8 @@ def ops_system_json():
     and errors; this is the remainder, exposed as JSON so it can be folded into
     the same pane instead of living in its own template.
 
-    Read-only and admin-gated. Every value comes from the helpers the status
-    page already used, so the two cannot disagree while both exist.
+    Read-only and admin-gated. Every value comes from the helpers the retired
+    status page used, so Ops and the old page could not disagree while it existed.
     """
     try:
         system_info = get_system_info()
@@ -167,60 +167,8 @@ def ops_logs_json():
 @login_required
 @admin_required
 def admin_server_status():
-    # Check server settings
-    settings_valid, error_message = check_server_settings()
-    if not settings_valid:
-        flash(error_message, 'warning')
-        return redirect(url_for('site.admin_dashboard'))
-
-    try:
-        # Get all required statistics
-        cpu_usage = get_cpu_usage()
-        process_count = get_process_count()
-        open_files = get_open_files()
-        memory_usage = get_memory_usage()
-        disk_usage = get_disk_usage()
-        games_usage = get_games_folder_usage()
-        system_info = get_system_info()
-        config_values = get_config_values()
-        active_users = get_active_users()
-        log_info = get_log_info()
-        database_info = get_database_info()
-        
-        # Format usage statistics
-        for usage in [memory_usage, disk_usage, games_usage]:
-            if usage:
-                for key in ['total', 'used', 'available', 'free']:
-                    if key in usage:
-                        usage[f'{key}_formatted'] = format_bytes(usage[key])
-
-        # Add uptime information to system_info
-        system_info['System Uptime'] = get_formatted_system_uptime()
-        system_info['Application Uptime'] = get_formatted_app_uptime(app_start_time)
-
-        # Log the access
-        log_system_event("Admin accessed server status page", event_type='audit', event_level='information')
-
-    except Exception as e:
-        flash(f'Error accessing server settings: {str(e)}', 'error')
-        return redirect(url_for('site.admin_dashboard'))
-
-    return render_template(
-        'admin/admin_server_status.html',
-        config_values=config_values,
-        system_info=system_info,
-        app_version=app_version,
-        process_count=process_count,
-        open_files=open_files,
-        cpu_usage=cpu_usage,
-        memory_usage=memory_usage,
-        disk_usage=disk_usage,
-        games_usage=games_usage,
-        log_count=log_info['count'],
-        active_users=active_users,
-        latest_log=log_info['latest'],
-        database_info=database_info
-    )
+    """Retired: the Ops console is the one health surface (W27-D1)."""
+    return redirect(url_for('info.admin_ops'))
 
 
 # /admin/new_server_info retired (W27-D1).

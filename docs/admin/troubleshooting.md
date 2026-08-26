@@ -51,13 +51,14 @@ Product toggles live under **Admin → Features** (and setup → Features). Env 
 ## Security headers / uploads
 
 Baseline headers (`nosniff`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`) are always
-sent and need no configuration. The CSP is **report-only** on purpose — see
-[security.md](../strategy/security.md#what-phases-04-shipped).
+sent and need no configuration. CSP **enforces** by default (`CSP_ENFORCE=true`) — see
+[security.md](../strategy/security.md).
 
 | Symptom | Check |
 |---|---|
-| Console full of “Content Security Policy … would block” | Expected. `CSP_ENFORCE=false` reports without blocking. Clear the reports first, then set `CSP_ENFORCE=true` |
-| Set `CSP_ENFORCE=true` and browser play broke | Enforcement still needs `'unsafe-eval'` / `'wasm-unsafe-eval'` for WebRetro cores, and classic templates still use inline `onclick=` handlers. Executable `<script>` bodies are gone from Jinja. Set it back to `false` until those are gone. The newsletter editor is a plain textarea now — CKEditor is no longer on the box |
+| Console full of “Content Security Policy … would block” | A leftover inline handler or `eval`. Classic pages use `data-gt-*` + `gt_dom_actions.js`. Set `CSP_ENFORCE=false` only to report without blocking |
+| Set `CSP_ENFORCE=true` and browser play broke | Unexpected: WebRetro is `/static/*` with **no CSP**. Check that you did not put a CSP on the native static handler. Flask `script-src` is `'self'` only |
+| Classic button does nothing after upgrade | `onclick=` was removed. Confirm `gt_dom_actions.js` loads from `base.html` / `base_admin.html` |
 | Site pinned to HTTPS and now unreachable by IP | HSTS. It is only sent when `SESSION_COOKIE_SECURE=true`; set `HSTS_SECONDS=0` and clear the browser's HSTS entry |
 | Large firmware upload rejected with 413 | Global ceiling is `MAX_UPLOAD_MB` (default 128). Raise it *and* `EMULATOR_BIOS_MAX_BYTES` together — the per-route firmware limit is the tighter of the two |
 | Cover uploads suddenly smaller on disk | Expected. Covers over 1200×1600 are now stored resized; previously the resize ran and the original was saved anyway |
@@ -71,7 +72,8 @@ sent and need no configuration. The CSP is **report-only** on purpose — see
 
 | Integration | Notes |
 |---|---|
-| SMTP / IGDB / OIDC / SteamGridDB | Admin → Integrations hub |
+| GOG / Epic sync 401 | Token expired or unofficial API changed | Re-paste a refresh token / device-auth JSON. CSV still works. GameTheca does not download those stores |
+| Ownership poller skipped GOG or Epic | No per-account credential and no household env | Save a token on Ownership, or set `GOG_REFRESH_TOKEN` / `EPIC_DEVICE_AUTH` |
 | Community chat | BYO Stoat/Matrix URL only |
 | Discord | **Removed** — use Support inbox + in-app admin alerts |
 | LiveKit | [livekit-unraid.md](../runbooks/livekit-unraid.md) · Plugins → `rtc.livekit` |
@@ -121,6 +123,8 @@ Expected if `SUPPORT_GITHUB_TOKEN` unset (`github_sync=skipped`). Ticket + admin
 | Stuck jobs / unmatched / freshness | [libraries-and-scans.md](libraries-and-scans.md) |
 | Scan unmatched table cramped / no Open path after deploy | Theme CSS/JS under `static/library/themes/` can lag the image. Rebuild/restart, then **Admin → Themes → Reset Themes** so `admin_manage_scanjobs` CSS/JS refresh; hard-refresh Scan management. — [themes-reset.md](themes-reset.md) · [libraries-and-scans.md#unmatched-folders](libraries-and-scans.md#unmatched-folders) |
 | Libraries & scans missing unified tabs / multi-select / Force delete after W22-1 deploy | Volume copies of `admin_manage_libs` + `admin_manage_scanjobs` lag the image. Rebuild/restart, then **Admin → Themes → Reset Themes**; hard-refresh `/libraries` and `/scan_management`. — [themes-reset.md](themes-reset.md) · [libraries-and-scans.md](libraries-and-scans.md) |
+| Library tools is still a separate page | It is a tab of Libraries & scans now (`/scan_management?active_tab=tools`). `/admin/library_tools` redirects there. If the tab is missing after deploy, **Reset Themes** so `admin_manage_scanjobs` picks up the pane. |
+| Unmatched Compare has no **Pop out** | Theme-volume `admin_manage_scanjobs.js` / `.css` are stale. **Reset Themes**, then reload Unmatched. |
 | Admin pages still look 1100px / nested glass after densify deploy | Theme volume copies lag. **Admin → Themes → Reset Themes**, hard-refresh. See [themes-reset.md](themes-reset.md) P1 densified-admin row. |
 | Images stuck "Pending" forever, or covers missing after scan/identify despite `IMAGE_SAVE_PATH` being writable | Fixed: the eager cover/screenshot download run during scan/identify was discarding its result (and, for covers, downloading twice) instead of recording success/failure. Every download path now sets `is_downloaded`/`last_error` on the `Image` row — check Admin → Scan management → **Image Queue**, filter **Failed Only**, hover the red badge for the reason, then **Retry failed**. |
 | Matched game shows branded **No cover art** placeholder but screenshots/IGDB summary are present | Cover ref shape bug: expanded IGDB `cover` objects (`{id, url}`) were passed into `where id={dict}` and the cover row was never stored, while screenshot id lists still worked. Identify/match now normalizes int-or-dict refs, reuses embedded URLs, and keeps `download_url` for remote display until the local file lands. If `IMAGE_SAVE_PATH` is not writable, `last_error` records that and the remote URL still resolves. Retry from Image Queue or re-run identify image refresh. |

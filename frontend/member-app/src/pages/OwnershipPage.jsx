@@ -8,6 +8,8 @@ import {
   disconnectSteam,
   fetchOwnership,
   importCsv,
+  syncEpic,
+  syncGog,
   syncSteam,
 } from '../api/ownership'
 import { ContextBar } from '../chrome/ContextBar'
@@ -25,6 +27,7 @@ const STORES = [
     numericField: true,
     saveLabel: 'Save Steam ID',
     connect: connectSteam,
+    sync: syncSteam,
     disconnect: disconnectSteam,
     disconnectPrompt: 'Remove Steam link and clear synced Steam ownership?',
     csvLabel: 'Or import app IDs (CSV, one per line)',
@@ -35,38 +38,47 @@ const STORES = [
   {
     key: 'gog',
     label: 'GOG',
-    meta: 'Register-only — import product IDs or id,name rows via CSV. No live GOG download.',
+    meta: 'Live register sync via the unofficial GOG Galaxy client when a refresh token is saved. CSV still works. GameTheca never downloads GOG titles.',
     fieldLabel: 'GOG user ID or note (optional)',
     fieldPlaceholder: 'Optional label for your GOG link',
+    tokenLabel: 'GOG refresh token (from Heroic / Galaxy)',
+    tokenPlaceholder: 'Paste refresh token — never shown again after save',
+    tokenKind: 'password',
     numericField: false,
     saveLabel: 'Save GOG link',
-    connect: connectGog,
+    connect: (id, extras) => connectGog(id, extras),
+    sync: syncGog,
     disconnect: disconnectGog,
     disconnectPrompt: 'Remove GOG link and clear imported GOG ownership?',
     csvLabel: 'Import owned titles (CSV: product ID or id,name per line)',
     csvPlaceholder: 'product_id,name\n1207658924,The Witcher 3',
     csvNoun: 'GOG titles',
-    canSync: false,
+    canSync: true,
   },
   {
     key: 'epic',
     label: 'Epic Games',
-    meta: 'Register-only — import catalog item IDs or id,name rows via CSV. No live Epic download.',
+    meta: 'Live register sync via unofficial Epic device auth (Legendary / Heroic) when saved. CSV still works. GameTheca never downloads Epic titles.',
     fieldLabel: 'Epic account ID or note (optional)',
     fieldPlaceholder: 'Optional label for your Epic link',
+    tokenLabel: 'Epic device auth JSON',
+    tokenPlaceholder: '{"account_id":"…","device_id":"…","secret":"…"}',
+    tokenKind: 'textarea',
     numericField: false,
     saveLabel: 'Save Epic link',
-    connect: connectEpic,
+    connect: (id, extras) => connectEpic(id, extras),
+    sync: syncEpic,
     disconnect: disconnectEpic,
     disconnectPrompt: 'Remove Epic link and clear imported Epic ownership?',
     csvLabel: 'Import owned titles (CSV: catalog item ID or id,name per line)',
     csvPlaceholder: 'catalog_item_id,name\nfn,Fortnite',
     csvNoun: 'Epic titles',
-    canSync: false,
+    canSync: true,
   },
 ]
 
 const EMPTY_DRAFTS = { steam: '', gog: '', epic: '' }
+const EMPTY_TOKENS = { steam: '', gog: '', epic: '' }
 
 function accountDraftsFrom(summary, current) {
   const stores = summary?.stores || {}
@@ -91,6 +103,7 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
   const [busyAction, setBusyAction] = useState(null)
   const [messages, setMessages] = useState({})
   const [accountDrafts, setAccountDrafts] = useState(EMPTY_DRAFTS)
+  const [tokenDrafts, setTokenDrafts] = useState(EMPTY_TOKENS)
   const [csvDrafts, setCsvDrafts] = useState(EMPTY_DRAFTS)
   const fileInputs = useRef({})
 
@@ -143,10 +156,18 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
 
   async function handleConnect(store, event) {
     event.preventDefault()
+    const extras = {}
+    if (store.key === 'gog' && tokenDrafts.gog.trim()) {
+      extras.refreshToken = tokenDrafts.gog.trim()
+    }
+    if (store.key === 'epic' && tokenDrafts.epic.trim()) {
+      extras.deviceAuth = tokenDrafts.epic.trim()
+    }
     const result = await runAction(`${store.key}:connect`, store.key, () =>
-      store.connect(accountDrafts[store.key]),
+      store.connect(accountDrafts[store.key], extras),
     )
     if (result) {
+      setTokenDrafts((current) => ({ ...current, [store.key]: '' }))
       setMessage(store.key, { tone: 'ok', text: `${store.label} link saved.` })
     }
   }
@@ -160,12 +181,13 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
     )
     if (result) {
       setAccountDrafts((current) => ({ ...current, [store.key]: '' }))
+      setTokenDrafts((current) => ({ ...current, [store.key]: '' }))
       setMessage(store.key, { tone: 'ok', text: `${store.label} link removed.` })
     }
   }
 
   async function handleSync(store) {
-    const result = await runAction(`${store.key}:sync`, store.key, () => syncSteam())
+    const result = await runAction(`${store.key}:sync`, store.key, () => store.sync())
     if (result) {
       setMessage(store.key, {
         tone: 'ok',
@@ -296,7 +318,7 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
                 : 'Steam: no API key — use CSV import'}
             </span>
             <span className="gt-ownership__meta">
-              GOG/Epic: CSV import only — no store downloads
+              GOG/Epic: live register when a token is saved — still no store downloads
             </span>
           </article>
         ) : null}
@@ -351,6 +373,43 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
                       }
                     />
                   </label>
+                  {store.tokenKind === 'password' ? (
+                    <label>
+                      {store.tokenLabel}
+                      <input
+                        type="password"
+                        autoComplete="off"
+                        value={tokenDrafts[store.key]}
+                        placeholder={store.tokenPlaceholder}
+                        onChange={(event) =>
+                          setTokenDrafts((current) => ({
+                            ...current,
+                            [store.key]: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                  ) : null}
+                  {store.tokenKind === 'textarea' ? (
+                    <label>
+                      {store.tokenLabel}
+                      <textarea
+                        rows={3}
+                        autoComplete="off"
+                        value={tokenDrafts[store.key]}
+                        placeholder={store.tokenPlaceholder}
+                        onChange={(event) =>
+                          setTokenDrafts((current) => ({
+                            ...current,
+                            [store.key]: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                  ) : null}
+                  {state.has_credential ? (
+                    <p className="gt-ownership__meta">A live-sync token is saved for this store.</p>
+                  ) : null}
                   <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={busy}>
                     {busyAction === `${store.key}:connect` ? 'Saving…' : store.saveLabel}
                   </button>

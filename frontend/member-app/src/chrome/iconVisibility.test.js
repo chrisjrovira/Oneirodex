@@ -87,3 +87,11 @@ test('Favorites is solid, which is exactly the case that regressed', () => {
   expect(parts[0].fill).toBe('currentColor')
   expect(parts[0].stroke).toBe('none')
 })
+
+test('resting rail glyphs take the theme accent (W27-E4 code half)', () => {
+  const css = readFileSync(
+    join(HERE, '../../../../gametheca/setup/default_theme/css/gt-shell.css'),
+    'utf8',
+  )
+  expect(css).toMatch(/\.gt-rail__icon\s*\{[^}]*color:\s*var\(--gt-accent\)/s)
+})

@@ -1,10 +1,9 @@
-"""Ratchet: Jinja templates must not ship executable inline <script>.
+"""Ratchet: Jinja templates must not ship executable inline script.
 
-Executable inline script is what kept CSP on ``'unsafe-inline'`` for *pages*.
-JSON ``<script type="application/json">`` tags are data, not script, and CSP
-allows them. Inline event handlers (``onclick=``) and WebRetro's
-``'unsafe-eval'`` / ``'wasm-unsafe-eval'`` are separate leftover reasons the
-policy stays report-only — this file only guards the ``<script>`` half.
+Executable inline ``<script>`` and inline event handlers (``onclick=``) are
+what kept CSP on ``'unsafe-inline'`` for pages. JSON
+``<script type="application/json">`` tags are data, not script. Classic pages
+declare intent on ``data-gt-*`` and ``static/js/gt_dom_actions.js`` runs it.
 
 See docs/strategy/security-legal-playbook.md.
 """
@@ -16,6 +15,10 @@ from pathlib import Path
 
 TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / 'gametheca' / 'templates'
 STATIC_JS = Path(__file__).resolve().parents[1] / 'gametheca' / 'static' / 'js'
+THEME_JS = (
+    Path(__file__).resolve().parents[1]
+    / 'gametheca' / 'setup' / 'default_theme' / 'js'
+)
 JINJA_RE = re.compile(r'\{\{|\{%')
 
 SCRIPT_RE = re.compile(r'<script(?P<attrs>[^>]*)>(?P<body>.*?)</script>', re.I | re.S)
@@ -27,6 +30,14 @@ JSON_TYPES = {
     'application/json',
     'application/ld+json',
 }
+
+EVENT_ATTR_RE = re.compile(
+    r'\son(?:click|change|submit|keyup|keydown|input|mouseover|mouseenter|'
+    r'focus|blur|error|load|toggle)\s*=',
+    re.I,
+)
+JS_URL_RE = re.compile(r"""(?:href|src|action)\s*=\s*['"]\s*javascript:""", re.I)
+INLINE_HANDLER_IN_JS_RE = re.compile(r'''\bon(?:click|change|submit)\s*=\s*['"]''')
 
 
 def _executable_inline_scripts(text: str, path: Path) -> list[str]:
@@ -55,6 +66,21 @@ def test_templates_have_no_executable_inline_scripts():
     )
 
 
+def test_templates_have_no_inline_event_handlers():
+    """onclick= is script as far as CSP script-src is concerned."""
+    hits = []
+    for path in sorted(TEMPLATE_ROOT.rglob('*.html')):
+        text = path.read_text(encoding='utf-8')
+        rel = path.relative_to(TEMPLATE_ROOT).as_posix()
+        for index, line in enumerate(text.splitlines(), start=1):
+            if EVENT_ATTR_RE.search(line) or JS_URL_RE.search(line):
+                hits.append(f'{rel}:{index}')
+    assert hits == [], (
+        'Inline event handler or javascript: URL — use data-gt-click / '
+        'data-gt-change / data-gt-confirm / data-gt-open:\n  ' + '\n  '.join(hits)
+    )
+
+
 def test_extracted_static_js_has_no_jinja():
     """A mechanical extract that left `{% if %}` in a .js file is a SyntaxError."""
     hits = []
@@ -63,3 +89,21 @@ def test_extracted_static_js_has_no_jinja():
         if JINJA_RE.search(text):
             hits.append(path.name)
     assert hits == [], 'Jinja leftover in static JS: ' + ', '.join(hits)
+
+
+def test_shipped_js_does_not_inject_inline_handlers():
+    """innerHTML + onclick= recreates the handler CSP just dropped."""
+    hits = []
+    paths = list(STATIC_JS.glob('gt_*.js'))
+    if THEME_JS.is_dir():
+        paths.extend(THEME_JS.glob('*.js'))
+    for path in sorted(paths):
+        if path.name == 'gt_dom_actions.js':
+            continue
+        text = path.read_text(encoding='utf-8')
+        if INLINE_HANDLER_IN_JS_RE.search(text):
+            hits.append(path.name)
+    assert hits == [], (
+        'JS still injects onclick=/onchange=/onsubmit= — switch to data-gt-*:\n  '
+        + '\n  '.join(hits)
+    )

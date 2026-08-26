@@ -11,7 +11,7 @@
 
 ## Problem
 
-Identify UI today searches **Steam · RAWG · GOG** (`SUPPORTED_SOURCES` in `metadata_search.py`). Artwork providers are IGDB / SteamGridDB / GiantBomb (`providers/`). Ownership sync accepts **steam | gog | epic | amazon** (`VALID_STORES` in `store_ownership.py`) with live Steam only; GOG/Epic = CSV stubs.
+Identify UI today searches **Steam · RAWG · GOG** (`SUPPORTED_SOURCES` in `metadata_search.py`). Artwork providers are IGDB / SteamGridDB / GiantBomb (`providers/`). Ownership sync accepts **steam | gog | epic | amazon** (`VALID_STORES` in `store_ownership.py`). Steam / GOG / Epic are **live** register sync when a credential is saved (unofficial Galaxy / launcher surfaces for GOG and Epic). Amazon stays CSV / snapshot.
 
 **Gap:** Meta Quest Store–exclusive (and similar store-only) titles often miss IGDB/Steam — operators cannot identify or badge them.
 
@@ -23,7 +23,7 @@ Identify UI today searches **Steam · RAWG · GOG** (`SUPPORTED_SOURCES` in `met
 |---|---|---|---|---|
 | **P0** | **Meta Quest Store** | Yes — name → store id + title + public cover | CSV / manual paste first | This slice |
 | **P1** | **itch.io** | Nice (weak public catalog search) | Yes — official OAuth `profile:owned` | After P0 stubs |
-| **P1** | **Epic Games Store** | Optional (unofficial store GraphQL only) | CSV already stubbed — keep | Ownership polish; search later |
+| **P1** | **Epic Games Store** | Optional (unofficial store GraphQL only) | Live register via unofficial device auth + CSV | Ownership polish shipped 2026-08-26; search later |
 | **P2** | **Amazon / Prime Gaming** | Low | CSV (already in `VALID_STORES`) | When CSV UX exists |
 | **P3** | **SideQuest** | Optional community catalog for sideload titles | N/A (not a DRM ownership source) | After Meta; label as community |
 | **Defer** | **PSN · Xbox** | No public third-party catalog API | Manual / Playnite import only | Not live sync in 1.x |
@@ -38,8 +38,8 @@ Do **not** prioritize SideQuest over Meta Store for paid Quest exclusives. SideQ
 |---|---|---|
 | **Meta Quest Store** | **No** public Meta Graph “store search” for third-party library apps. Horizon docs cover *developer* discovery UX, not a catalog API we can call. Community reverse-engineered GraphQL (`graph.oculus.com`) exists but is **unofficial**, token/doc_id fragile, ToS-risk. | **Default:** CSV / admin paste of Meta app id + title + cover URL. **Optional later:** unofficial GraphQL behind admin flag + “unsupported” banner — never default-on. Do not vendor Quest Store DB dumps into the product. |
 | **itch.io** | **Yes** for *your* library (`api.itch.io`, OAuth `profile:owned`). No first-class public “search all itch games by name” API. | Ownership: OAuth register-only. Identify: defer HTML/RSS scrape or skip until a stable public search exists. |
-| **Epic** | **No** documented public catalog API. Store uses internal GraphQL. | Keep CSV ownership. Identify search = unofficial only → same caution as Meta. |
-| **Steam / GOG** | Public-enough store search already used | Keep as primary identify sources. |
+| **Epic** | **No** documented public catalog API. Store uses internal GraphQL. | **Ownership:** unofficial launcher device-auth live register (Legendary / Heroic JSON), plus CSV. Identify search remains unofficial-only. Never a download. |
+| **Steam / GOG** | Public-enough store search already used | Keep as primary identify sources. **Ownership:** Steam Web API live; GOG Galaxy unofficial live register (refresh token) + CSV. Never a download. |
 | **PSN / Xbox** | No usable public catalog/ownership API for self-hosted apps | Register via Playnite CSV / manual only. No live sync claims. |
 | **SideQuest** | Community / unofficial | Identify-only helper; never ownership source of truth for Meta purchases. |
 

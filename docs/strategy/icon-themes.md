@@ -49,7 +49,7 @@ Each pack: `manifest.json` + `pack.css` (+ optional `icons/`, `images/` for futu
 
 ## Wave 2d — preset colour + icon pairing
 
-Presets (`GENERATOR_VERSION` **10**) are no longer accent-only. Each pack owns glass, CRT, typography, text tint, secondary accent, and `--gt-icon-*` geometry, plus a **paired default icon pack** in `theme.json` (`default_icon_pack`). Preferences auto-selects the paired pack when you pick a colour swatch (still overridable before save).
+Presets (`GENERATOR_VERSION` **16**) own glass, CRT, typography, text tint, secondary accent, `--gt-icon-*` geometry, **and** radius / space / type / shadow per pack (UID-006). Paired default icon pack still lives in `theme.json` (`default_icon_pack`). Preferences auto-selects the paired pack when you pick a colour swatch (still overridable before save). **Reset Default Themes** after a generator bump.
 
 ### Before → after token deltas (summary)
 

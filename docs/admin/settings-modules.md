@@ -133,7 +133,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 ## Art studio (cover placeholders)
 
 - **Admin → Settings → Art studio** or `/admin/art_studio` (React; admin/ops only). Tabs: **Studio** · **Backup & stock** (`#stock`) · **Pick & queue** (`#images`).
-- Local Pillow renderer — aurora tokens (`--gt-*`), no paid cloud AI. Preview/generate use **artistic** compositions by default (`artistic: true` on `POST /admin/api/art-studio/preview`; optional `artistic: false` for legacy flat A/B).
+- Local Pillow renderer — aurora tokens (`--gt-*`), no paid cloud AI. Preview/generate use **artistic** compositions by default (`artistic: true` on `POST /admin/api/art-studio/preview`; optional `artistic: false` for legacy flat A/B). Idle **title scale is 1.3×** (floor 0.85×); the slider always posts `title_scale`.
 - **Title-first studio:** large live preview stage; typing a title debounces preview. System / platform selector + preview size toggles (200×300 · 400×600 · 960×540 wide). Soft-fails preview lag with toast.
 - **Actions:** Preview · Generate pack · Download ZIP · Set as fallback · Apply to game UUID.
 - **Backup & stock** (`#stock`): thumbnail grid of platform packs + stock motifs from `GET /admin/api/art-studio/stock`; ungenerated packs auto-call `POST …/stock/generate` on apply. Select → preview → **Use as library default** / **Set fallback** via `POST /admin/api/art-studio/apply` (`mode=fallback|library`). Soft empty state if catalog 404. Library create/edit Jinja **Choose image** links here.
@@ -145,6 +145,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - API: `POST /admin/api/art-studio/preview|generate|apply|apply-batch`, `GET /admin/api/art-studio/download/<pack_id>`, `POST /admin/api/art-studio/batch-generate`, `GET /admin/api/art-studio/stock`, `POST /admin/api/art-studio/stock/generate`; covers mass tools under `/admin/api/covers/*`.
 - **System templates:** generated covers use per-system palette + glyph (NES/SNES/PS1/Switch/PC/…) so 200×300 tiles stay readable — not a generic subtitle-only placeholder.
 - **Meta Quest Store:** identify `GET /api/search_metadata?source=meta_quest|meta|quest` · ownership CSV `POST /api/ownership/meta_quest/csv` · `META_QUEST_API_MODE` / `META_QUEST_UNOFFICIAL_GRAPHQL` (off by default) — [store-metadata-identify.md](../strategy/store-metadata-identify.md).
+- **Ownership register:** members link Steam / GOG / Epic under **More → Ownership**. Steam Web API, unofficial GOG Galaxy refresh token, unofficial Epic device auth — IDs and names only, never a download. Household env: `STEAM_WEB_API_KEY`, `GOG_REFRESH_TOKEN`, `EPIC_DEVICE_AUTH`. Amazon stays CSV.
 - Disk failures (read-only `IMAGE_SAVE_PATH` / generated-pack folder, out of space) surface as a JSON `error` and show in the red alert banner instead of a bare 500 — check the message for the exact path/permission problem. If applying a pack to a game fails partway (DB error after the file was written), the orphaned file is cleaned up automatically.
 - Guide: [cover-art-studio.md](../strategy/cover-art-studio.md).
 - Artwork picker: [steamgriddb-artwork.md](../runbooks/steamgriddb-artwork.md) · [libraries-and-scans.md](libraries-and-scans.md#image-queue).

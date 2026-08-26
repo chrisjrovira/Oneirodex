@@ -1,9 +1,9 @@
 # Security suite — GameTheca
 
-**Date:** 2026-07-26 · **Updated:** 2026-08-25 · **Status:** active  
+**Date:** 2026-07-26 · **Updated:** 2026-08-26 · **Status:** active  
 **Second pass (2026-08-25):** full audit + remediation Phases 0–6 shipped —
 [security-legal-playbook.md](security-legal-playbook.md) carries the findings, the evidence, and
-what stays open on purpose (CSP report-only until `onclick=` / WebRetro eval settle; non-commercial core clauses). Child
+what stays open on purpose (non-commercial core clauses — operator notes, not counsel). **CSP now enforces by default.** Child
 Bearer/Acquire/command ACL, provider `fetch_image` SSRF, WebRetro MIT confirmation, and operator
 [privacy-data-handling.md](../admin/privacy-data-handling.md) landed after that playbook. Summary of the original pass is in
 [What Phases 0–4 shipped](#what-phases-04-shipped) below.  
@@ -44,7 +44,7 @@ Full findings, evidence and the remaining phases: [security-legal-playbook.md](s
 
 | ID | Was | Now |
 |---|---|---|
-| S1 | No security response headers at all — no `after_request` in the app | `utils/security_headers.py` — `nosniff` · `Referrer-Policy` · `X-Frame-Options` · `Permissions-Policy` on every response, plus the same baseline re-stamped in `asgi.py` for native `/static/*`, which never reaches Flask. CSP ships **report-only** (`CSP_ENFORCE=false`); HSTS only when `SESSION_COOKIE_SECURE` |
+| S1 | No security response headers at all — no `after_request` in the app | `utils/security_headers.py` — `nosniff` · `Referrer-Policy` · `X-Frame-Options` · `Permissions-Policy` on every response, plus the same baseline re-stamped in `asgi.py` for native `/static/*`, which never reaches Flask. CSP **enforces** by default (`CSP_ENFORCE=true`); WebRetro `/static/*` has no CSP. HSTS only when `SESSION_COOKIE_SECURE` |
 | S2 | SSRF validators were DNS-blind *and* redirect-blind | `is_blocked_outbound_host` resolves names and checks every address; alternate literals (`2130706433`, `0x7f.0.0.1`, `::ffff:127.0.0.1`) parsed; new `utils/http_safe.py` revalidates every redirect hop **and pins the checked address** (connect to IP, original hostname on `Host` / SNI). Cloud metadata now blocked by resolution too, not just by literal. `ALLOW_PRIVATE_LAN_URLS` still reopens RFC1918 — pinned by test |
 | S3 | `MAX_CONTENT_LENGTH` unset; the 413 handler promised a 10MB cap that could never fire | `MAX_UPLOAD_MB` (default 128, headroom over the 64MB firmware cap) · 413 handler quotes the real number and answers API callers with the envelope (`payload_too_large`) |
 | S4 | Cover resize was dead code — `thumbnail()` ran, original bytes were saved | Resized image is what gets written; real byte-size check *before* decode; 60-megapixel ceiling |
@@ -59,7 +59,7 @@ Full findings, evidence and the remaining phases: [security-legal-playbook.md](s
 
 | ID | Was | Now |
 |---|---|---|
-| L1 | 24 libretro cores committed as 71MB of binaries with no licence text and no Corresponding Source offer — while `cores/README.md` called the directory "operator-owned" and `test_webretro_cores.py` opened with "no multi-MB WASM in repo" | Untracked and gitignored; fetched at first boot by `utils/webretro_core_install.py` (`FETCH_WEBRETRO_CORES_ON_BOOT`), which stages to a temp name so an interrupted fetch cannot leave a half-core. Boot warns by name when the fetch is off and cores are absent — [webretro-cores.md](../runbooks/webretro-cores.md) |
+| L1 | 24 libretro cores committed as 71MB of binaries with no licence text and no Corresponding Source offer — while `cores/README.md` called the directory "operator-owned" and `test_webretro_cores.py` opened with "no multi-MB WASM in repo" | Untracked and gitignored; fetched at first boot by `utils/webretro_core_install.py` (`FETCH_WEBRETRO_CORES_ON_BOOT`), which stages to a temp name so an interrupted fetch cannot leave a half-core. Boot warns by name when the fetch is off and cores are absent — [webretro-cores.md](../runbooks/webretro-cores.md). `snes9x` / `genesis_plus_gx` non-commercial clauses: operator notes (not counsel) in [webretro-core-clauses.md](../admin/webretro-core-clauses.md) |
 | L2 | Eight vendored JS libraries, zero licence files — while `font_install.py` already stated the rule ("redistributing them without the licence text is not permitted") and shipped `OFL.txt` beside the faces | `static/vendor/THIRD-PARTY-NOTICES.md` with copyright lines **read out of each shipped file's own banner**, plus `scripts/fetch-vendor-licenses.sh` for canonical upstream texts. WebRetro front end is **MIT** (Copyright (c) 2021 BinBashBanana) — `webretro/LICENSE` from upstream; cores stay operator-provisioned |
 | L3 | `webretro/info/{tos,privacy,cookiepolicy,index,changelog}.html` served from every deployment — the upstream author's terms, naming a different site as "this Website operator", linking a broken `http://privacy.html`, carrying Discord links against our own non-goals | Deleted, along with the `Info` link in `standalone.html` that was the only thing pointing at them. `standalone.html` itself stays — it is the iframe `webretro.html` embeds. Stray `ddd.txt` gone; duplicate `sortablejs` 1.14.0 consolidated onto 1.15.2 |
 | L4 | AGPL §13 obligation stated in README, discharged nowhere in the running app | `GT_SOURCE_URL` → member Help ("About & licence" + page footer) and the admin footer. **Configurable on purpose:** §13 obliges *this* deployment to offer *its* source, so a fork must point at its own. Rendered only when set — a dead link is worse than none |

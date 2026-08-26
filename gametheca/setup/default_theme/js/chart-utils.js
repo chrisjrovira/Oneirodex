@@ -12,9 +12,13 @@ function createChart(canvasId, chartType, chartData, chartOptions) {
         console.error(`Canvas element with ID '${canvasId}' not found.`);
         return null;
     }
+    const options = Object.assign({}, chartOptions, {
+        responsive: true,
+        maintainAspectRatio: false,
+    });
     return new Chart(ctx.getContext('2d'), {
         type: chartType,
         data: chartData,
-        options: chartOptions
+        options: options
     });
 }

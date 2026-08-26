@@ -108,10 +108,10 @@ function updateTableWithNewData(category, data) {
     newRow.innerHTML = `
         <td class="type-value">${data.value}</td>
         <td>
-            <button class="btn btn-sm btn-warning" onclick="editFileType(this)">
+            <button type="button" class="btn btn-sm btn-warning" data-gt-click="editFileType">
                 <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-sm btn-danger" onclick="deleteFileType('${category}', ${data.id})">
+            <button type="button" class="btn btn-sm btn-danger" data-gt-click="deleteFileType" data-gt-arg="${category}" data-gt-arg2="${data.id}">
                 <i class="fas fa-trash"></i>
             </button>
         </td>

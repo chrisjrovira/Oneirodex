@@ -2,9 +2,9 @@
 
 The interesting assertions here are the *negative* ones. Permissions-Policy is
 the header most likely to be "hardened" into breaking shipped features, so the
-LiveKit and controller entries are pinned. And the CSP must stay report-only by
-default: executable inline ``<script>`` is gone, but inline event handlers and
-the WebRetro cores would still break under a strict ``script-src``.
+LiveKit and controller entries are pinned. CSP enforces by default: inline
+``<script>`` and ``onclick=`` are gone from Jinja, and WebRetro is a static
+document that never receives this Flask policy.
 
 See docs/strategy/security-legal-playbook.md (S1, S3).
 """
@@ -94,8 +94,14 @@ def test_unused_features_are_denied(feature):
 
 # --- CSP ------------------------------------------------------------------
 
-def test_csp_is_report_only_by_default():
+def test_csp_enforces_by_default():
     headers = _headers()
+    assert 'Content-Security-Policy' in headers
+    assert 'Content-Security-Policy-Report-Only' not in headers
+
+
+def test_csp_report_only_when_asked():
+    headers = _headers(CSP_ENFORCE=False)
     assert 'Content-Security-Policy-Report-Only' in headers
     assert 'Content-Security-Policy' not in headers
 
@@ -123,9 +129,11 @@ def test_csp_carries_the_cheap_wins(directive):
 
 
 def test_csp_allows_what_the_app_actually_loads():
-    """WASM cores, provider art, and the LiveKit socket. No off-box script CDN."""
+    """Provider art and the LiveKit socket. No eval, no off-box script CDN."""
     csp = build_csp()
-    assert "'wasm-unsafe-eval'" in csp
+    assert "'unsafe-inline'" not in csp.split('script-src', 1)[-1].split(';', 1)[0]
+    assert "'unsafe-eval'" not in csp
+    assert "'wasm-unsafe-eval'" not in csp
     assert 'cdn.ckeditor.com' not in csp
     assert 'img-src' in csp and 'https:' in csp
     assert 'wss:' in csp

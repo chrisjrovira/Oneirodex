@@ -46,7 +46,7 @@
                data-image-id="{{ cover_image.id }}"
                id="cover-preview-img">
           <div class="delete-cover-image-container">
-            <button class="btn btn-danger" type="button" onclick="deleteImage({{ cover_image.id }})">Delete Cover Image</button>
+            <button class="btn btn-danger" type="button" data-gt-click="deleteImage" data-gt-arg="{{ cover_image.id }}">Delete Cover Image</button>
           </div>
         {% else %}
           <img src="{{ url_for('static', filename='newstyle/default_cover.jpg') }}" alt="Default Cover Image" id="cover-preview-img">
@@ -89,7 +89,7 @@
     <div id="image-editor-list" class="image-editor-list">
       {% for image in images %}
       <div class="image-editor-image" id="image-{{ image.id }}">
-        <button class="btn btn-danger" type="button" onclick="deleteImage({{ image.id }})">Delete</button>
+        <button class="btn btn-danger" type="button" data-gt-click="deleteImage" data-gt-arg="{{ image.id }}">Delete</button>
         <img src="{{ url_for('static', filename='library/images/' + image.url) }}" alt="Screenshot">
       </div>
       {% endfor %}
@@ -115,7 +115,7 @@
       {% for image in other_images %}
       <div class="image-editor-image" id="image-{{ image.id }}" data-kind="{{ image.image_type }}">
         <span class="gt-edit-images__label">{{ image.image_type|capitalize }}</span>
-        <button class="btn btn-danger" type="button" onclick="deleteImage({{ image.id }})">Delete</button>
+        <button class="btn btn-danger" type="button" data-gt-click="deleteImage" data-gt-arg="{{ image.id }}">Delete</button>
         <img src="{{ url_for('static', filename='library/images/' + image.url) }}" alt="{{ image.image_type }}">
       </div>
       {% endfor %}

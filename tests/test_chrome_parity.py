@@ -106,7 +106,7 @@ SCANJOBS = ROOT / 'gametheca' / 'templates' / 'admin' / 'admin_manage_scanjobs.h
 
 
 def test_in_page_views_stay_in_page():
-    """Libraries & scans is one document with seven panes, so its segments must
+    """Libraries & scans is one document with eight panes, so its segments must
     keep Bootstrap's client-side switch. Turning them into real navigations to
     gain a prettier strip would trade a working feature for a cosmetic one."""
     markup = _read(SCANJOBS)
@@ -179,10 +179,17 @@ def test_lazy_loaded_panels_are_found_by_target_not_by_id():
     """The image queue only fetches on `shown.bs.tab`. The old strip's anchor
     carried id="imageQueue-tab"; bar two's segment does not, so an id lookup
     would leave the panel permanently empty under the new chrome — with no
-    error anywhere to say why."""
+    error anywhere to say why.
+
+    The selector lives in `gt_admin_scanjobs_inline.js` (extracted off the
+    template so CSP can enforce). Pin the JS, not a string that used to sit
+    inline in the Jinja.
+    """
     markup = _read(SCANJOBS)
+    js = _read(ROOT / 'gametheca' / 'static' / 'js' / 'gt_admin_scanjobs_inline.js')
     assert "getElementById('imageQueue-tab')" not in markup
-    assert '[data-bs-toggle="tab"][href="#imageQueue"]' in markup
+    assert "getElementById('imageQueue-tab')" not in js
+    assert '[data-bs-toggle="tab"][href="#imageQueue"]' in js
 
 
 def test_both_admin_strips_survive_until_the_flag_is_permanent():

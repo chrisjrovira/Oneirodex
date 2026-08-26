@@ -154,12 +154,14 @@ Work since the 1.0.0-beta tag (2026-08-06).
 - **DataTables and Cropper.js no longer load on every classic page.** Member `base.html` and the admin shell dropped them; Cropper is on admin library-create, DataTables on logs and download requests. jQuery stays for toast notify.
 - **Provider cover fetch follows the same SSRF gate as `download_image`.** IGDB / SteamGridDB / GiantBomb / Meta Quest `fetch_image` went through raw `requests.get`. They now use `fetch_outbound_image` (`http_safe.safe_get` + `validate_user_outbound_http_url` on every redirect hop).
 - **Outbound fetches pin the address that passed the SSRF check.** `http_safe.safe_request` connects to the resolved IP and puts the original hostname on `Host` / SNI, so a DNS rebind between check and connect cannot steer the socket onto loopback or link-local. Homelab `ALLOW_PRIVATE_LAN_URLS` still reaches RFC1918 connectors.
-- **Classic pages no longer ship executable inline `<script>`.** Jinja interpolations moved to JSON tags, `data-*`, or `<template>` islands; the JS lives under `static/js` (not a theme copy). CSP stays report-only: inline `onclick=` handlers and WebRetro `'unsafe-eval'` / `'wasm-unsafe-eval'` remain. Do not set `CSP_ENFORCE=true` yet.
+- **Classic pages no longer ship executable inline `<script>` or `onclick=`.** Jinja interpolations moved to JSON tags, `data-*`, or `<template>` islands; the JS lives under `static/js`. **CSP enforces by default** (`CSP_ENFORCE=true`). WebRetro WASM is a native `/static/*` document with baseline headers only, so Flask `script-src` is `'self'`. Set `CSP_ENFORCE=false` to report-only.
 - **Newsletter no longer depends on Flask-Mail or the CKEditor CDN.** Send uses `smtp.send_email_quiet` like invites; the compose page is a textarea. CSP no longer allowlists `cdn.ckeditor.com`.
 - **Edit Images no longer interpolates upload URLs into `innerHTML`.** Needs **Reset Default Themes** so the theme-volume copy of `game_edit_images.js` refreshes.
 
 ### Added
 
+- **GOG and Epic live ownership register sync.** Same shape as Steam: IDs and names into `UserOwnedTitle`, never a download. Unofficial Galaxy / launcher surfaces; paste a refresh token or Epic device-auth JSON (or household env). Fail honestly on 401. CSV still works.
+- **Operator notes for snes9x / genesis_plus_gx non-commercial clauses.** Quotes from upstream plus questions to take to a lawyer — [webretro-core-clauses.md](docs/admin/webretro-core-clauses.md). Not counsel.
 - **Operator privacy / data-handling notes.** What the host stores, what can leave if you enable SMTP / metadata APIs / OIDC / LiveKit / GitHub support, and how `child` accounts are denied download and Acquire — [privacy-data-handling.md](docs/admin/privacy-data-handling.md). Not a public ToS.
 - **Toasts are dismissible on admin too, and new games wait for the scan to finish (UX-B7).** Classic `$.notify` calls the same aurora toast. A running scan no longer announces "N games added" mid-pass.
 - **Report takes ideas as well as defects.** "Report issue" collected feature requests into the same
@@ -248,6 +250,16 @@ Work since the 1.0.0-beta tag (2026-08-06).
 
 ### Changed
 
+- **Theme packs are system visual languages (`GENERATOR_VERSION` 16).** Each preset now overrides radius, spacing, type and shadow — not just hue. **Reset Default Themes** after deploy.
+- **Art Studio idle title size is 1.3×** (floor 0.85×). The slider always posts `title_scale`.
+- **Brand glyph is a closed cabinet** (lintel + shelf), so it does not read as a controller.
+- **CSP enforces by default.** `onclick=` is gone from Jinja; WebRetro is outside Flask CSP.
+- **Library tools live on Libraries & scans.** `/scan_management?active_tab=tools`; `/admin/library_tools` redirects. Auto Scan and the library maker are one page.
+- **`/admin/server_status_page` redirects to Ops.** Login and admin still required.
+- **Statistics charts sit in a bounded grid** (W27-D3). Chart.js no longer grows a dual-axis scroll.
+- **Unmatched dupe compare has Pop out** (W27-C4) on the live Jinja table.
+- **Rail glyphs at rest use the theme accent** (W27-E4 code half). Per-theme drawings remain art.
+- **Dead sidebar chrome is gone** from `gt_shell_rail.js` (submenu / filter-visibility leftovers).
 - **Game details later sections sit beside the facts rail (UX-B4).** Versions, extras, screenshots and trailers used to start below the taller Details column, leaving a hole under a short summary. They now share the two-column grid so that body climbs the left while Details stays on the right. Narrow viewports still read summary → details → the rest.
 - **Discover learns what you reach for, without anything leaving the box.** A taste profile is built
   from signals the install already keeps — what you favourited, played, finished, own and downloaded

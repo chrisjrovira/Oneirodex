@@ -67,12 +67,11 @@ class Config(object):
     REMEMBER_COOKIE_SAMESITE = os.getenv('REMEMBER_COOKIE_SAMESITE', 'Lax')
 
     # HTTP security response headers — see gametheca/utils/security_headers.py.
-    # The CSP ships **report-only**: 24 Jinja templates carry an inline
-    # <script>, the newsletter editor loads CKEditor from a CDN, and the
-    # WebRetro cores are Emscripten WASM. Enforcing on day one would break all
-    # three, so an operator flips CSP_ENFORCE once their reports come back clean.
+    # CSP enforces by default. Classic onclick= is gone; WebRetro WASM is a
+    # native /static/* document with baseline headers only (no CSP), so Flask
+    # pages do not need 'unsafe-eval'. Set CSP_ENFORCE=false to report-only.
     CSP_ENABLED = os.getenv('CSP_ENABLED', 'true').lower() == 'true'
-    CSP_ENFORCE = os.getenv('CSP_ENFORCE', 'false').lower() == 'true'
+    CSP_ENFORCE = os.getenv('CSP_ENFORCE', 'true').lower() == 'true'
     # Only sent when SESSION_COOKIE_SECURE is on — HSTS on a LAN box reached by
     # IP over plain HTTP is a lockout, not a hardening.
     HSTS_SECONDS = int(os.getenv('HSTS_SECONDS', '31536000') or '31536000')

@@ -36,6 +36,7 @@ const FAQ_SECTIONS = [
       'Ctrl+K / ⌘K (or Search) opens the command palette. On Library it searches titles first.',
       'On long scrollable pages, Jump to top / Jump to bottom controls appear bottom-left (hide when the page does not scroll).',
       'More hubs Collections, Wishlist, Ownership, Big Picture, and related tools.',
+      'Ownership registers Steam / GOG / Epic titles you already own. Live sync when a token is saved (GOG refresh token, Epic device-auth JSON). Never a store download.',
       'Account → API tokens for companion secrets (shown once). Paste the full gt_… string — hyphens/underscores inside are normal. Prefer HTTPS copy; on plain HTTP use Copy or select the secret field + Ctrl/⌘C.',
       'Cover → details: trailers, Cheats on RetroArch titles (.cht create/upload), Extras & DLC honesty, screenshots, download. Admins: ⋮ → Edit / Open path (companion reveal).',
       'Site down? Ask admin for /healthz, /readyz, or Ops → Services.',
@@ -130,7 +131,7 @@ const FAQ_SECTIONS = [
     short: 'Free games',
     summary: 'News claims and ownership sync',
     items: [
-      'News (All · Admins · Free now · Headlines) leads with a featured strip, then densified sections. Free claims live under Free now (and `#free-games`). Claim on the store; Sync ownership if linked.',
+      'News (All · Admins · Free now · Headlines) leads with a featured strip, then densified sections. Free claims live under Free now (and `#free-games`). Claim on the store; Sync ownership if linked (Steam / GOG / Epic live when a token is saved).',
       'GameTheca never downloads DRM titles for you.',
       'Opt out under Notifications → Alert preferences.',
     ],

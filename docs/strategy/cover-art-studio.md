@@ -117,6 +117,7 @@ UI: stock picker grid → Generate if `generated: false` → Apply to library (c
 
 - Missing cover never shows a broken image; branded fallback is recognizable as GameTheca  
 - Admin can generate a full size set for one title in &lt;10s local  
+- Idle title scale is **1.3×** (floor 0.85×); headline/subtitle/`title_scale` always post from the studio UI  
 - Vitest/pytest for URL resolution still green  
 
 ## Locked

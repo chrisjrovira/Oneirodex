@@ -1543,6 +1543,66 @@ a.unmatched-stage-e__name {
     color: var(--gt-text-muted);
 }
 
+.unmatched-dupe-compare__pop {
+    margin-left: auto;
+}
+
+.gt-dupe-compare-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: color-mix(in srgb, var(--gt-bg) 45%, transparent);
+}
+
+.gt-dupe-compare-modal__panel {
+    width: min(72rem, 100%);
+    max-height: min(90vh, 48rem);
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: var(--gt-radius-xl);
+    border: 1px solid var(--gt-border);
+    background: var(--gt-surface);
+    color: var(--gt-text);
+}
+
+.gt-dupe-compare-modal__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.gt-dupe-compare-modal__toolbar h2 {
+    margin: 0;
+    font-size: var(--gt-font-lg);
+}
+
+.gt-dupe-compare-modal__close {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: var(--gt-radius-pill);
+    border: 1px solid var(--gt-border);
+    background: var(--gt-surface-2, var(--gt-surface));
+    color: var(--gt-text);
+    font-size: var(--gt-font-xl);
+    cursor: pointer;
+}
+
+.gt-dupe-compare-modal .unmatched-dupe-compare {
+    margin-top: 0;
+}
+
+.gt-dupe-compare-modal .unmatched-dupe-compare__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
 .unmatched-dupe-compare__grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

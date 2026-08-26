@@ -37,7 +37,7 @@
             <div class="list-group mb-3">
             {% for user in users %}
                 <label class="list-group-item">
-                    <input class="form-check-input me-1 userCheckbox" type="checkbox" name="user" value="{{ user.email }}" checked onchange="updateRecipients()">
+                    <input class="form-check-input me-1 userCheckbox" type="checkbox" name="user" value="{{ user.email }}" checked data-gt-change="updateRecipients">
                     {{ user.email }}
                 </label>
             {% endfor %}
