@@ -27,7 +27,7 @@
 | Social lite pointer | `docs/strategy/social.md` | Have |
 | Social + A/V waves | `docs/strategy/social-av.md` | Have (W16 shipped) · post-1.0 native RTC plan → [native-rtc.md](native-rtc.md) |
 | Security suite | `docs/strategy/security.md` | Have · post-1.0 native malware plan → [native-malware-scan.md](native-malware-scan.md) |
-| Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have (2026-08-25) — audit findings with evidence; Phases 0–6 shipped; remaining on purpose: CSP report-only, WebRetro licence unconfirmed |
+| Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have (2026-08-25) — audit findings with evidence; Phases 0–6 shipped; WebRetro MIT confirmed; L7 operator notes in [privacy-data-handling.md](../admin/privacy-data-handling.md); remaining on purpose: CSP report-only, non-commercial core clauses, DNS rebind |
 | Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs + loading motifs (`GENERATOR_VERSION` 10) |
 | Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
@@ -108,6 +108,7 @@
 | Ops summary (`services` + `scans` contract) | Have | [ops-summary.md](../admin/ops-summary.md) — Grafana enrich (`load_avg` / process / db_ping / readyz) · two-fold `issues.items` (`category` action\|warning\|info; **disk = info**) · LiveKit · malware · companions · queues · scan counters |
 | Library root watch | Have | [library-root-watch-spike.md](../admin/library-root-watch-spike.md) — Wave 3 optional `GT_LIBRARY_WATCH` (default off); Ops `services.library_watch` |
 | Troubleshooting | Have | [troubleshooting.md](../admin/troubleshooting.md) — Features / malware / OIDC notes |
+| Privacy & data handling | Have | [privacy-data-handling.md](../admin/privacy-data-handling.md) — operator-adaptable notes (L7); not a public ToS |
 | First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 10 |
 | Propose-only scan & proposals | Create | |
 | Library Doctor & rename templates | Create | |
@@ -194,9 +195,9 @@ Also: Friends companion dock + `/social-companion` pop-out, Support report form,
 |---|---|
 | README | Synced for **1.0.0-beta** — live PNG screenshots (hero · Library · Systems) · Chat Capture **needed** (populated instance) · feature defaults ON · OIDC opt-in · ClamAV profile · Friends companion · no Discord · no OUT/~ badge copy |
 | [progress.md](progress.md) | Aug 01 — **BE-DET-9 Done** fandom alias · **QA PASS 65/65** · fixture pack 50 soft · DoD met · live skipped · **BE-DET-8** Arcade/AES · **QA PASS 141/141** · **UID-016** BE disk-meta **QA PASS 13/13** (UI soft-read **32/32**) · **UID-004 Done** (**QA PASS 33/33**) · **W22 UI rem closed** · **BE-DET-1…8** preserved · **UID-009/001/002/005** QA PASS · **UI-W22-M7** · **W22-1** · **W22-match** · **QA PASS 138+10** · **Next** **BE-DET-10** image kinds · **W23** · [roadmap-w22-plus.md](roadmap-w22-plus.md) · [ui-debt-log.md](../dev/ui-debt-log.md) · **Reset Themes** `admin_manage_scanjobs` + `gt-chrome.css` + libs/badge · **Finance TCO Done** · **W21** preserved · W23–W25 Queued · seats 1–14 · `:5006` BLOCKED · smoking gun: `(digits)` ≠ Steam App IDs · no Class A |
-| CHANGELOG | Unreleased — child ACL · CSRF ratchet · Flask-Mail collapse · CKEditor off-box · provider `fetch_image` SSRF · docs hygiene; bump when cutting the next tag |
+| CHANGELOG | Unreleased — child ACL · CSRF ratchet · Flask-Mail collapse · CKEditor off-box · provider `fetch_image` SSRF · vendor JS scoped · WebRetro MIT · L7 privacy notes · docs hygiene; bump when cutting the next tag |
 | `.env.example` | Includes LiveKit + SUPPORT_GITHUB_* + malware scan |
-| In-app Help (`/help`) | Accordion Help · Kind Soft titles / Utilities · EXP/TOOL tooltips · Library Filters chevron-rail collapse · Tile badges four-corner / no OUT/~ /RELEASE · Jump top/bottom on scrollable pages · Chat slide-out · Preferences sectioned · Report Context/Logs collapsed · News tabs · Notifications dense · API token urlsafe/`-`/`_` + HTTP Copy · Ctrl/Cmd+K · Signals UPDATE · MISSING · NEW · LANG · Friends · no Discord |
+| In-app Help (`/help`) | Accordion Help · Kind Soft titles / Utilities · EXP/TOOL tooltips · Library Filters chevron-rail collapse · Tile badges four-corner / no OUT/~ /RELEASE · Jump top/bottom on scrollable pages · Chat slide-out · Preferences sectioned · Report Context/Logs collapsed · News tabs · Notifications dense · API token urlsafe/`-`/`_` + HTTP Copy · Ctrl/Cmd+K · Signals UPDATE · MISSING · NEW · LANG · Friends · no Discord · browser-play Pause/Reset/Mute/volume/Power |
 | Discord | Excised from product — do not reintroduce |
 
 ---

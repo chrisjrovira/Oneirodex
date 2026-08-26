@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { errorFromResponse } from '../api/envelopeError'
 import { PageStatus } from '../components/PageStatus'
 
 function formatDuration(totalSeconds) {
@@ -23,7 +24,7 @@ export function MemberProfilePage() {
       signal: controller.signal,
     })
       .then(async (response) => {
-        if (!response.ok) throw new Error(`Profile ${response.status}`)
+        if (!response.ok) throw await errorFromResponse(response, 'Profile')
         return response.json()
       })
       .then(setData)

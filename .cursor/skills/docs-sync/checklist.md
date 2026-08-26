@@ -32,6 +32,7 @@ Canonical map: [docs/strategy/docs-map.md](../../../docs/strategy/docs-map.md).
 | Themes | `docs/admin/themes-reset.md` |
 | Settings & modules | `docs/admin/settings-modules.md` |
 | Support inbox | `docs/admin/support-inbox.md` |
+| Privacy / data handling | `docs/admin/privacy-data-handling.md` |
 | Troubleshooting | `docs/admin/troubleshooting.md` |
 
 ## Runbooks (ops)

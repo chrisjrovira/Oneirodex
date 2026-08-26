@@ -22,6 +22,16 @@
             <strong class="gt-play-brand">GameTheca</strong>
             <span class="gt-play-system" id="gt-play-system" hidden></span>
         </div>
+        <div class="gt-play-chrome" role="toolbar" aria-label="Playback">
+            <button type="button" class="gt-play-ctrl" data-gt-play="pause" aria-pressed="false">Pause</button>
+            <button type="button" class="gt-play-ctrl" data-gt-play="reset">Reset</button>
+            <button type="button" class="gt-play-ctrl" data-gt-play="mute" aria-pressed="false">Mute</button>
+            <label class="gt-play-vol">
+                <span class="gt-play-vol__label">Vol</span>
+                <input type="range" id="gt-play-volume" min="0" max="100" value="100" step="1" aria-label="Volume">
+            </label>
+            <button type="button" class="gt-play-ctrl" data-gt-play="power" title="Leave this game">Power</button>
+        </div>
         <button type="button" id="gt-sync-save" title="Push/pull libretro .state/.srm via WebRetro IndexedDB bridge">Sync cloud saves</button>
         <label id="gt-cheat-label" hidden>Cheats <select id="gt-cheat-select"><option value="">None</option></select></label>
         <button type="button" id="gt-load-cheat" hidden>Apply .cht</button>
@@ -32,6 +42,14 @@
         <div id="gt-play-bezel">
             <div class="gt-play-bezel-mat" aria-hidden="true"></div>
             <div id="webretro"></div>
+            <div id="gt-play-overlay" class="gt-play-overlay" data-gt-play-overlay>
+                <div class="gt-play-overlay__cluster" role="toolbar" aria-label="In-game playback">
+                    <button type="button" class="gt-play-ctrl" data-gt-play="pause" aria-pressed="false">Pause</button>
+                    <button type="button" class="gt-play-ctrl" data-gt-play="reset">Reset</button>
+                    <button type="button" class="gt-play-ctrl" data-gt-play="mute" aria-pressed="false">Mute</button>
+                    <button type="button" class="gt-play-ctrl" data-gt-play="power" title="Leave this game">Power</button>
+                </div>
+            </div>
         </div>
     </div>
     <script src="./constants.js"></script>
@@ -138,6 +156,89 @@
 
             if (backBtn) {
                 backBtn.addEventListener('click', goBackToLibrary);
+            }
+
+            var chromePaused = false;
+            var chromeMuted = false;
+
+            function syncChromeLabels(state) {
+                state = state || {};
+                if (typeof state.paused === 'boolean') chromePaused = state.paused;
+                if (typeof state.muted === 'boolean') chromeMuted = state.muted;
+                var pauseText = chromePaused ? 'Resume' : 'Pause';
+                var muteText = chromeMuted ? 'Unmute' : 'Mute';
+                document.querySelectorAll('[data-gt-play="pause"]').forEach(function (btn) {
+                    btn.textContent = pauseText;
+                    btn.setAttribute('aria-pressed', chromePaused ? 'true' : 'false');
+                });
+                document.querySelectorAll('[data-gt-play="mute"]').forEach(function (btn) {
+                    btn.textContent = muteText;
+                    btn.setAttribute('aria-pressed', chromeMuted ? 'true' : 'false');
+                });
+                var vol = document.getElementById('gt-play-volume');
+                if (vol && typeof state.volume === 'number') {
+                    vol.value = String(state.volume);
+                }
+            }
+
+            function runChrome(type, payload) {
+                return callEmu(type, payload || {}, 4000).then(function (res) {
+                    syncChromeLabels(res);
+                    return res;
+                }).catch(function (err) {
+                    setStatus((err && err.message) ? err.message : 'Control failed');
+                });
+            }
+
+            function onPlayChromeClick(ev) {
+                var btn = ev.target.closest('[data-gt-play]');
+                if (!btn) return;
+                var action = btn.getAttribute('data-gt-play');
+                if (action === 'power') {
+                    goBackToLibrary();
+                    return;
+                }
+                if (action === 'pause') {
+                    runChrome('gt-pause', {});
+                    return;
+                }
+                if (action === 'reset') {
+                    runChrome('gt-reset', {});
+                    return;
+                }
+                if (action === 'mute') {
+                    runChrome('gt-audio', { muted: !chromeMuted });
+                }
+            }
+
+            document.querySelectorAll('[data-gt-play]').forEach(function (el) {
+                el.addEventListener('click', onPlayChromeClick);
+            });
+
+            var volumeEl = document.getElementById('gt-play-volume');
+            if (volumeEl) {
+                volumeEl.addEventListener('input', function () {
+                    var value = Number(volumeEl.value);
+                    runChrome('gt-audio', { muted: value <= 0, volume: value });
+                });
+            }
+
+            var overlayEl = document.getElementById('gt-play-overlay');
+            var overlayTimer = 0;
+            function showOverlay() {
+                if (!overlayEl) return;
+                overlayEl.classList.add('is-visible');
+                window.clearTimeout(overlayTimer);
+                overlayTimer = window.setTimeout(function () {
+                    if (overlayEl && !overlayEl.contains(document.activeElement)) {
+                        overlayEl.classList.remove('is-visible');
+                    }
+                }, 2800);
+            }
+            var stageEl = document.getElementById('gt-play-stage');
+            if (stageEl && overlayEl) {
+                stageEl.addEventListener('mousemove', showOverlay);
+                overlayEl.addEventListener('focusin', showOverlay);
             }
 
             function setStatus(msg) {

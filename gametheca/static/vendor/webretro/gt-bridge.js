@@ -120,9 +120,100 @@
     );
   }
 
+  function pauseButton() {
+    return document.getElementById('pause');
+  }
+
+  function pauseLabel() {
+    var el = pauseButton();
+    return el ? String(el.textContent || '').trim() : '';
+  }
+
+  function isCorePaused() {
+    if (typeof window !== 'undefined' && typeof window.isPaused === 'boolean') {
+      return window.isPaused;
+    }
+    return pauseLabel() === 'Resume';
+  }
+
+  function applyPause(wantPaused) {
+    var el = pauseButton();
+    var paused = isCorePaused();
+    if (typeof wantPaused === 'boolean' && wantPaused === paused) {
+      return paused;
+    }
+    if (el && !el.classList.contains('disabled') && typeof el.click === 'function') {
+      el.click();
+      return isCorePaused();
+    }
+    try {
+      if (typeof Module === 'undefined') return paused;
+      if (wantPaused === false || (!wantPaused && paused)) {
+        if (typeof Module.resumeMainLoop === 'function') Module.resumeMainLoop();
+        if (typeof window !== 'undefined') window.isPaused = false;
+        return false;
+      }
+      if (typeof Module.pauseMainLoop === 'function') Module.pauseMainLoop();
+      if (typeof window !== 'undefined') window.isPaused = true;
+      return true;
+    } catch (e) {
+      return paused;
+    }
+  }
+
+  function volumeToDb(pct) {
+    var n = Math.max(0, Math.min(100, Number(pct)));
+    if (!Number.isFinite(n) || n <= 0) return -80;
+    return Math.round(Math.log10(n / 100) * 20 * 10) / 10;
+  }
+
+  function stripAudioConfig(cfg) {
+    return String(cfg || '')
+      .replace(/audio_mute\s*=\s*"[^"]*"\n?/g, '')
+      .replace(/audio_volume\s*=\s*"[^"]*"\n?/g, '');
+  }
+
+  var lastVolumePct = 100;
+  var lastMuted = false;
+
+  function applyAudio(opts) {
+    opts = opts || {};
+    var muted = typeof opts.muted === 'boolean' ? opts.muted : lastMuted;
+    var volume = opts.volume;
+    if (volume != null && volume !== '') {
+      var parsed = Number(volume);
+      if (Number.isFinite(parsed)) {
+        lastVolumePct = Math.max(0, Math.min(100, parsed));
+      }
+    }
+    if (lastVolumePct <= 0) muted = true;
+    lastMuted = muted;
+    var db = muted ? -80 : volumeToDb(lastVolumePct);
+    if (typeof extraConfigExtras === 'string') {
+      extraConfigExtras = stripAudioConfig(extraConfigExtras);
+      extraConfigExtras += 'audio_mute = "' + (muted ? 'true' : 'false') + '"\n';
+      extraConfigExtras += 'audio_volume = "' + db + '"\n';
+    }
+    try {
+      if (typeof tryApplyConfig === 'function') tryApplyConfig();
+    } catch (e) {}
+    return { muted: lastMuted, volume: lastMuted ? 0 : lastVolumePct };
+  }
+
+  function controlState() {
+    return {
+      paused: isCorePaused(),
+      muted: lastMuted,
+      volume: lastMuted ? 0 : lastVolumePct,
+    };
+  }
+
   // Expose for optional unit tests in Node (not used by emulator runtime).
   if (typeof window !== 'undefined') {
-    window.__gtBridgeTest = { pickSramBytes: pickSramBytes };
+    window.__gtBridgeTest = {
+      pickSramBytes: pickSramBytes,
+      volumeToDb: volumeToDb,
+    };
   }
 
   window.addEventListener('message', function (ev) {
@@ -203,6 +294,40 @@
               ? 'Press Load State in RetroArch menu if play did not resume'
               : null,
         });
+        return;
+      }
+
+      if (type === 'gt-pause') {
+        var paused = applyPause(typeof data.paused === 'boolean' ? data.paused : undefined);
+        done(Object.assign({ ok: true }, controlState(), { paused: paused }));
+        return;
+      }
+
+      if (type === 'gt-reset') {
+        try {
+          var resetEl = document.getElementById('resetbutton') || document.getElementById('resetbutton2');
+          if (resetEl && !resetEl.classList.contains('disabled') && typeof resetEl.click === 'function') {
+            resetEl.click();
+          } else if (typeof Module !== 'undefined' && typeof Module._cmd_reset === 'function') {
+            Module._cmd_reset();
+          } else {
+            done({ ok: false, error: 'Reset is not ready yet' });
+            return;
+          }
+          done(Object.assign({ ok: true }, controlState()));
+        } catch (resetErr) {
+          done({ ok: false, error: String(resetErr && resetErr.message ? resetErr.message : resetErr) });
+        }
+        return;
+      }
+
+      if (type === 'gt-audio') {
+        done(Object.assign({ ok: true }, applyAudio(data)));
+        return;
+      }
+
+      if (type === 'gt-control-state') {
+        done(Object.assign({ ok: true }, controlState()));
         return;
       }
 

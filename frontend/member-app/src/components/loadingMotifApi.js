@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { errorFromResponse } from '../api/envelopeError'
 import { pickLoadingMotifId } from './LoadingMotif'
 
 let cachedSettings = null
@@ -18,7 +19,7 @@ export async function fetchLoadingIconSettings() {
   })
     .then(async (res) => {
       if (!res.ok) {
-        throw new Error(`loading-icon ${res.status}`)
+        throw await errorFromResponse(res, 'loading-icon')
       }
       return res.json()
     })

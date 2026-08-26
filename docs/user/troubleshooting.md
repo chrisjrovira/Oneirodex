@@ -64,6 +64,7 @@ update.
 | PS1 (or other `.cue`-based disc) never starts / stuck loading ROM | Large cue+bin download still in flight, or BIOS missing | Disc sets download as a bundled `play.zip` (cue + bin/img together) and can take a while on slower storage/network — let it finish. Confirm SCPH/region BIOS via Admin upload **or** household private BIOS mount — [browser-play.md](browser-play.md#bios--firmware-filenames-only) · [PS1 zip note](browser-play.md#ps1-and-other-disccue-downloads-are-bundled-as-a-zip) |
 | No browser Play button on a scanned `.gz` | Non-ROM gzip (e.g. `.tar.gz`) | Repack as `.zip` / raw ROM; Play is suppressed for unsupported archives |
 | No sound on Start | Browser autoplay policy suspends audio until a page gesture | Click once into the play screen, then press Start |
+| Pause / Reset / Mute do nothing | Core still booting, or a cached player shell | Wait until the game is running; hard-refresh (Ctrl+F5). Controls are on the **play bar** — the overlay cannot see hover over the iframe canvas |
 | SNES game crackles / audio pitch shifts on busy scenes | WASM CPU pressure causing emulation slowdown | Pre-start gear → **Reduce Slowdown (Overclock)**; still choppy → use desktop companion for that title — [browser-play.md](browser-play.md#audiovideo-tuning--wasm-limits-snes-and-friends) |
 
 ## Social / voice

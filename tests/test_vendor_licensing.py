@@ -106,14 +106,60 @@ class TestNotices:
         assert 'Permission is hereby granted' in text
         assert 'WITHOUT WARRANTY OF ANY KIND' in text
 
-    def test_notices_do_not_assert_an_unknown_licence(self):
-        """WebRetro's licence is unconfirmed; the file must say so, not guess."""
+    def test_webretro_licence_is_mit_from_upstream(self):
+        """The front end is MIT; cores stay operator-provisioned with their own terms."""
         text = NOTICES.read_text(encoding='utf-8')
-        assert 'Verify before release' in text
+        assert 'Verify before release' not in text
+        assert 'Copyright (c) 2021 BinBashBanana' in text
+        licence = VENDOR / 'webretro' / 'LICENSE'
+        assert licence.is_file()
+        body = licence.read_text(encoding='utf-8')
+        assert 'MIT License' in body
+        assert 'Copyright (c) 2021 BinBashBanana' in body
 
     def test_licence_fetch_script_is_executable_and_covers_the_tree(self):
         script = REPO_ROOT / 'scripts' / 'fetch-vendor-licenses.sh'
         assert script.is_file()
         body = script.read_text(encoding='utf-8')
-        for name in ('bootstrap', 'jquery', 'sortablejs', 'datatables', 'cropperjs'):
+        for name in ('bootstrap', 'jquery', 'sortablejs', 'datatables', 'cropperjs', 'webretro'):
             assert name in body
+        assert 'BinBashBanana/webretro' in body
+
+
+# --- Load sites: heavy vendor JS stays off the member shell ---------------
+
+TEMPLATES = REPO_ROOT / 'gametheca' / 'templates'
+_DATATABLES_PATH = 'vendor/datatables/'
+_CROPPER_PATH = 'vendor/cropperjs/'
+
+
+def _template_hits(needle: str) -> set[str]:
+    hits = set()
+    for path in TEMPLATES.rglob('*.html'):
+        if needle in path.read_text(encoding='utf-8'):
+            hits.add(path.relative_to(TEMPLATES).as_posix())
+    return hits
+
+
+class TestVendorLoadSites:
+    def test_member_and_admin_shells_do_not_load_datatables_or_cropper(self):
+        """Login, settings, playrom, and every admin SPA route paid for tables
+        and an image cropper they never called. jQuery stays on the shells
+        because preferences_modal.js still optionally calls $.notify."""
+        for name in ('base.html', 'base_empty.html', 'base_admin.html'):
+            text = (TEMPLATES / name).read_text(encoding='utf-8')
+            assert _DATATABLES_PATH not in text, name
+            assert _CROPPER_PATH not in text, name
+
+    def test_datatables_loads_only_on_logs_and_download_requests(self):
+        assert _template_hits(_DATATABLES_PATH) == {'partials/vendor_datatables.html'}
+        assert _template_hits("partials/vendor_datatables.html") == {
+            'admin/admin_manage_downloads.html',
+            'admin/admin_server_logs.html',
+        }
+
+    def test_cropper_loads_only_on_library_create(self):
+        assert _template_hits(_CROPPER_PATH) == {'partials/vendor_cropper.html'}
+        assert _template_hits("partials/vendor_cropper.html") == {
+            'admin/admin_manage_library_create.html',
+        }

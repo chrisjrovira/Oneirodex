@@ -9,8 +9,8 @@
 #   ./scripts/fetch-vendor-licenses.sh
 #
 # Safe to re-run: existing files are overwritten with the same upstream text.
-# Needs network. WebRetro is deliberately absent — its licence is unconfirmed
-# (see THIRD-PARTY-NOTICES.md) and this script does not guess.
+# Needs network. WebRetro's MIT text is included (upstream LICENSE, 2021
+# BinBashBanana) — the vendored JS still has no banner of its own.
 
 set -euo pipefail
 
@@ -26,6 +26,7 @@ datatables/1.13.7	https://raw.githubusercontent.com/DataTables/DataTables/1.13.7
 jquery/3.7.1	https://raw.githubusercontent.com/jquery/jquery/3.7.1/LICENSE.txt
 notify/0.4.2	https://raw.githubusercontent.com/mouse0270/bootstrap-notify/master/LICENSE
 sortablejs/1.15.2	https://raw.githubusercontent.com/SortableJS/Sortable/1.15.2/LICENSE
+webretro	https://raw.githubusercontent.com/BinBashBanana/webretro/master/LICENSE
 "
 
 failed=0
@@ -53,4 +54,3 @@ fi
 
 echo
 echo "Done. Inventory: gametheca/static/vendor/THIRD-PARTY-NOTICES.md"
-echo "WebRetro's licence is still unconfirmed — see that file before a public release."

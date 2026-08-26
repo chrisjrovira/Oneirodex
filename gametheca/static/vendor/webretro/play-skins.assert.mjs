@@ -11,6 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const src = readFileSync(join(__dirname, 'play-skins.js'), 'utf8');
 const css = readFileSync(join(__dirname, 'play-skins.css'), 'utf8');
 const html = readFileSync(join(__dirname, 'webretro.html'), 'utf8');
+const bridge = readFileSync(join(__dirname, 'gt-bridge.js'), 'utf8');
 
 const sandbox = { window: {}, console };
 vm.runInNewContext(src, sandbox);
@@ -52,6 +53,14 @@ assert(html.includes('gt-play-atmosphere'), 'html atmosphere');
 assert(html.includes('gt-play-bar-identity'), 'html bar identity');
 assert(html.includes('gt-play-bezel-mat'), 'html bezel mat');
 assert(html.includes('← Library'), 'library back button');
+assert(html.includes('data-gt-play="pause"'), 'pause control');
+assert(html.includes('data-gt-play="reset"'), 'reset control');
+assert(html.includes('data-gt-play="mute"'), 'mute control');
+assert(html.includes('data-gt-play="power"'), 'power control');
+assert(html.includes('id="gt-play-volume"'), 'volume slider');
+assert(html.includes('gt-play-overlay'), 'in-game overlay');
+assert(css.includes('.gt-play-overlay'), 'overlay CSS');
+assert(css.includes('.gt-play-chrome'), 'bar chrome cluster');
 
 // Distinct wallpaper cues for spot-check platforms
 assert(css.includes('wood panel') || css.includes('NINTENDO ENTERTAINMENT SYSTEM'), 'NES room cue');
@@ -88,5 +97,11 @@ assert(skins.roomForPlatform('NOT_A_PLATFORM') === 'crt_living_room', 'unknown p
 assert(skins.SCANLINE_BY_ROOM.handheld === 0, 'handheld has no scanlines');
 assert(skins.SCANLINE_BY_ROOM.crt_living_room > skins.SCANLINE_BY_ROOM.disc_era,
   'CRT living room is stronger than late disc-era sets');
+
+assert(bridge.includes("type === 'gt-pause'"), 'bridge pause');
+assert(bridge.includes("type === 'gt-reset'"), 'bridge reset');
+assert(bridge.includes("type === 'gt-audio'"), 'bridge audio');
+assert(bridge.includes('audio_mute'), 'bridge writes audio_mute');
+assert(bridge.includes('_cmd_reset'), 'bridge can call core reset');
 
 console.log('play-skins.assert: OK (' + cases.length + ' platforms + motion/aspect/html)');

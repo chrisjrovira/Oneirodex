@@ -20,7 +20,7 @@ project's canonical `LICENSE` file next to its code as well.
 | [jQuery](https://jquery.com/) | 3.7.1 | MIT | © OpenJS Foundation and other contributors |
 | [bootstrap-notify](https://github.com/mouse0270/bootstrap-notify) | 0.4.2 | MIT | **No banner** in the vendored copy; identifier from upstream |
 | [Sortable](https://github.com/SortableJS/Sortable) | 1.15.2 | MIT | All contributors to Sortable |
-| [WebRetro](https://github.com/BinBashBanana/webretro) | 6.5 | **Verify before release** | Upstream states no licence in the vendored copy — see the note below |
+| [WebRetro](https://github.com/BinBashBanana/webretro) | 6.5 | MIT | Copyright (c) 2021 BinBashBanana — from [upstream LICENSE](https://github.com/BinBashBanana/webretro/blob/master/LICENSE); the vendored JS has no banner |
 
 ## The MIT licence
 
@@ -49,9 +49,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 `webretro/` is the browser-play front end. Two things about it are worth recording:
 
-1. **Its licence is not asserted here.** The vendored copy carries no licence file and no banner, so
-   this file does not claim one. Confirm against
-   [the upstream repository](https://github.com/BinBashBanana/webretro) before a public release.
+1. **The front end is MIT.** Upstream
+   [LICENSE](https://github.com/BinBashBanana/webretro/blob/master/LICENSE) is MIT, Copyright (c)
+   2021 BinBashBanana. A copy sits at [webretro/LICENSE](webretro/LICENSE). The vendored JS still
+   has no banner; the identifier comes from that upstream file, not from a comment in the minified
+   sources.
 2. **The libretro cores are not in this tree.** `webretro/cores/` is gitignored and provisioned at
    first boot — see [cores/README.md](webretro/cores/README.md) and
    `gametheca/utils/webretro_core_install.py`. They carry GPL-2.0, GPL-3.0 and MPL-2.0 terms, and

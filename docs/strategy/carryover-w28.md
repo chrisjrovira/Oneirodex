@@ -65,7 +65,7 @@ Nothing new is invented here. These are pointers, so the registers stay authorit
 
 | Item | Why it is still open |
 |---|---|
-| Emulator player chrome — volume · power · reset · pause, per-system UI | UID-007; clock fix done, chrome untouched. Reference target named by the human: Provenance-Emu |
+| Emulator player chrome — volume · power · reset · pause, per-system UI | **Done 2026-08-25** — UID-007. Clock + BIOS island were earlier; bar + overlay chrome landed. |
 | Libraries & Scans overhaul — auto-scan / library-maker unification | extends UX-C2 · UX-C3 |
 | Card layout redesign | surfaces unified, individual layouts untouched; extends UX-B5 |
 | GOG / Epic live sync | genuinely unbuilt, deliberately — neither store has a documented ownership API. The honesty layer (`STORE_SYNC_MODE`) shipped in its place |
@@ -86,7 +86,7 @@ stayed current when that file did not.
 
 ### Debt log — [ui-debt-log.md](../dev/ui-debt-log.md)
 
-`UID-011` cover type sizing · `UID-012` controller logo · `UID-006` · `UID-007` ·
+`UID-011` cover type sizing · `UID-012` controller logo · `UID-006` ·
 `UID-017` page-CSS token migration · `UID-018` route migration to `api_response.py`.
 
 ---

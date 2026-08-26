@@ -1,7 +1,8 @@
 # Security & legal remediation playbook
 
-**Date:** 2026-08-24 · **Updated:** 2026-08-25 — **all six phases shipped.** **Status:** complete,
-with two items deliberately left open (CSP enforcement · WebRetro's own licence) — see the end
+**Date:** 2026-08-24 · **Updated:** 2026-08-25 — **all six phases shipped**, plus W32 follow-through
+(WebRetro MIT · L7 operator notes · vendor JS scoped off the member/admin shells). **Status:** complete,
+with CSP enforcement still report-only — see the end.
 **Scope:** backend (`gametheca/`, `asgi.py`, `config.py`), four SPAs, Tauri desktop client, vendored third-party code
 **Related:** [security.md](security.md) (the 2026-07-26 pass — still accurate, this extends it) ·
 [external-facing-scrub.md](external-facing-scrub.md) · [../dev/agent-locks.md](../dev/agent-locks.md)
@@ -199,7 +200,9 @@ Help link is the customary form and is a small change.
   It deserves an explicit written stance rather than only a default, since anti-circumvention framing
   is jurisdiction-sensitive.
 - **L7** — the product handles email digests, presence, playtime telemetry and **child accounts**, and
-  ships no privacy or data-handling document for operators to adapt.
+  ships no privacy or data-handling document for operators to adapt. **Closed in W32:**
+  [privacy-data-handling.md](../admin/privacy-data-handling.md) — operator-adaptable notes, not a
+  public ToS.
 
 ---
 
@@ -220,6 +223,14 @@ Each phase ends with the repo's own gates — `verify-slice`, both ratchets
 | **4 — Auth hardening** | S6, S8, S10, S11 | `expires_at`; positive `next` rule; narrow session scopes; envelope | **Done** — NULL expiry means never, so the upgrade cannot log out a live companion |
 | **5 — Licensing** | L1, L2, L3 | Vendor licence notices; delete `webretro/info/**` and the stray `ddd.txt`; drop the duplicate `sortablejs`; move the cores out of the tree | **Done** — removal and first-boot fetch shipped together. `standalone.html` kept: tracing it showed `webretro.html` embeds it as the emulator iframe, so deleting it would have taken browser play with it |
 | **6 — Legal surface** | L4, L5, S9 | Source-offer link on member Help + admin footer; provider attribution; fix the Windows path-scrub regex | **Done** — the source URL is `GT_SOURCE_URL`, not a constant, because §13 is about *this* deployment |
+
+### W32 follow-through
+
+| Item | Status |
+|---|---|
+| Vendor JS on member `base.html` (and admin shell) | **Done** — DataTables and Cropper.js load only on the pages that call them. jQuery stays for `$.notify` |
+| WebRetro's own licence | **Done** — upstream MIT, Copyright (c) 2021 BinBashBanana; `webretro/LICENSE` + notices |
+| L7 privacy/data-handling notes | **Done** — [privacy-data-handling.md](../admin/privacy-data-handling.md) |
 
 ### What Phases 0–4 cost, in case it matters later
 
@@ -246,7 +257,6 @@ meant zero fonts written.
 | Item | Why it is not closed |
 |---|---|
 | **CSP enforcement** | `CSP_ENFORCE=false`. Enforcing today breaks the 24 inline-script templates and the WebRetro WASM cores. The newsletter page no longer loads CKEditor from a CDN. Flip enforcement once the admin bodies settle and the reports come back clean |
-| **WebRetro's own licence** | The vendored copy carries no licence file and no banner, so `THIRD-PARTY-NOTICES.md` records it as unconfirmed rather than asserting one. Confirm upstream before a public release |
 | **Non-commercial core clauses** | `snes9x` and `genesis_plus_gx` restrict commercial distribution. Taking them out of the tree makes the operator the provisioning party, which is the right shape — it does not settle what a commercial host is then doing. Worth an hour of counsel if GameTheca is ever hosted commercially |
 | **DNS rebinding** | The SSRF fix is resolve-then-connect, so a rebind between the check and the socket still wins. Closing it means pinning the resolved address into the connection — a bigger change than this pass. Stated in `is_blocked_outbound_host`'s docstring rather than left implied |
 

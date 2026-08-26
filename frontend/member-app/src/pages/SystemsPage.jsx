@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { errorFromResponse } from '../api/envelopeError'
 import { familyForPlatform } from '../chrome/platformSkins'
 import { roomIdForPlatform, roomStyle } from '../chrome/playRooms'
 import { SystemGlyph } from '../components/systemMotifArt'
@@ -11,7 +12,7 @@ async function fetchLibraryPlatforms({ signal } = {}) {
     credentials: 'same-origin',
   })
   if (!response.ok) {
-    throw new Error(`library_platforms ${response.status}`)
+    throw await errorFromResponse(response, 'library_platforms')
   }
   return response.json()
 }

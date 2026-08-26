@@ -51,7 +51,8 @@ are vendored, so there is nothing to configure and no performance cost.
 
 Browser play opens `webretro.html` with a per-system **artistic room** — multi-layer wallpaper, floor plane, ambient lamp, bezel material sheen, bar typography hierarchy (brand eyebrow + system label), and light motion (wall drift · lamp breathe · bezel specular) — not just an accent color. Pass `platform=` (or rely on `core=` mapping) so the skin applies immediately; the bar shows the system name as the hero label.
 
-- **← Library** on the play bar returns via `history.back()` when the referrer is same-origin, else falls back to `/library`.
+- **← Library** on the play bar returns via `history.back()` when the referrer is same-origin, else falls back to `/library`. **Power** does the same.
+- **Pause · Reset · Mute · volume** sit on the play bar and talk to the WebRetro iframe over the existing save-bridge (`gt-pause` / `gt-reset` / `gt-audio`). Mute and volume write RetroArch `audio_mute` / `audio_volume` and reload config. An in-game overlay repeats Pause/Reset/Mute/Power; it stays visible on touch, and on a pointer it fades in when you move over the play stage (the game canvas is an iframe, so hover over the picture itself cannot reveal it — the bar is the reliable control).
 - Distinct rooms include NES den, SNES living room, Genesis arcade corner, PS1 CRT night, Dreamcast swirl, Arcade cabinet, GB/GBA handheld slabs, PC desk, and more — distinguishable at a glance without reading docs.
 - The emulator screen is **aspect-locked to the core's native shape** (SNES/NES/Genesis ~4:3, GBA 3:2, GB/GBC ~10:9, NDS portrait dual-screen, PSP/Vita ~16:9, etc.) instead of stretching to fill the bezel, so you no longer get big empty black bars around the picture.
 - Motion respects `prefers-reduced-motion`.

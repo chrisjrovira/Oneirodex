@@ -177,6 +177,7 @@ const FAQ_SECTIONS = [
       'Some systems need BIOS/firmware on the host before Play in browser works. Details and tiles show a quiet blocker with the server hint - no Download BIOS button.',
       'Admins upload legally obtained firmware under Admin → Emulators (emulator BIOS), or mount a private host BIOS folder. GameTheca never ships copyrighted BIOS files.',
       'Compressed ROMs extract on play. Prefer .zip when possible; .rar/.7z need host tools. Failures show the server hint (missing extractor) in the play shell.',
+      'The play bar has Pause, Reset, Mute, volume, and Power (Power leaves the game, same as ← Library). An in-game overlay repeats Pause/Reset/Mute/Power — it stays visible on touch; on a mouse it appears when you move over the play stage.',
       'If a version is Missing on disk, Download is hidden; a 410 path_missing response toasts the backend hint (remove missing versions or restore files).',
     ],
   },

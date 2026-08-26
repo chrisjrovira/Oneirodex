@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { errorFromBody } from '../api/envelopeError'
 import './RelatedMediaStrip.css'
 
 /**
@@ -36,7 +37,7 @@ export function RelatedMediaStrip({ gameUuid }) {
         credentials: 'same-origin',
       })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'failed')
+      if (!response.ok) throw errorFromBody(data, response.status, 'related media')
       setItems(Array.isArray(data.items) ? data.items : [])
       setKinds(Array.isArray(data.kinds) ? data.kinds : [])
     } catch {

@@ -1,8 +1,9 @@
 # Roadmap execution progress
 
-**Branch:** `main` — everything through **W28** is committed and pushed. There is no
-"Done uncommitted" work outstanding; the phrase appears further down this file only in
-historical wave rows and should be read as *shipped* there.  
+**Branch:** `main` — everything through **W28** plus W31 P0/P1 (`52f78bc9`) is on
+`origin/main`. **W32 leftovers + UID-007 player chrome are Done uncommitted** (vendor JS
+scope · WebRetro MIT · L7 privacy notes · envelope leftovers · play-bar chrome). Historical
+wave rows that still say "Done uncommitted" further down this file should be read as *shipped*.  
 **Release:** **1.0.0-beta** — see the root [CHANGELOG.md](../../CHANGELOG.md) for what has landed
 since the tag. Waves **4–28** are all on `origin/main`.  
 **Updated:** 2026-08-16 — the W26/W27/W28 line (22 commits) fast-forwarded onto `main`. Repo
@@ -77,7 +78,7 @@ before/after table is in [security.md](security.md#what-phases-04-shipped).
 | **Phase 6 — legal surface** | `GT_SOURCE_URL` discharges AGPL §13 on member Help and the admin footer — **configurable**, because §13 obliges *this* deployment to offer *its* source, so a fork must point at its own. IGDB / Giant Bomb / SteamGridDB credited. S9 path-scrub regex fixed: the Windows rule matched *doubled* backslashes, so on a Windows host nothing was ever scrubbed |
 | **New env (5–6)** | `GT_SOURCE_URL` · `FETCH_WEBRETRO_CORES_ON_BOOT` |
 | **New guards (5–6)** | `test_vendor_licensing.py` (19) · `test_legal_surface.py` (21) — the notices test is a ratchet: vendor a new library without a notice and it fails |
-| **Not done** | CSP enforcement — stays report-only until the 24 inline-script templates and WebRetro WASM cores settle. Newsletter no longer loads CKEditor from a CDN. WebRetro's own licence is recorded as **unconfirmed** rather than guessed; confirm upstream before a public release |
+| **Not done (at ship)** | CSP enforcement — stays report-only until the 24 inline-script templates and WebRetro WASM cores settle. Newsletter no longer loads CKEditor from a CDN. WebRetro's own licence was recorded as unconfirmed here; **W32 confirmed MIT** (BinBashBanana, 2021) |
 
 ## W32 — retail follow-through (2026-08-25)
 
@@ -89,9 +90,13 @@ The 2026-08-25 retail rundown: child ACL that W31 S10 left on the Bearer path, C
 | **CSRF (UID-019)** | Twelve member-SPA pages/components/hooks now import `api/csrf.js`. Contract test walks **all** of `src/` — zero local copies, no baseline map. |
 | **Off-box / mail** | Newsletter sends through `smtp.send_email_quiet`; `flask_mail` dropped. Newsletter compose is a textarea; CSP no longer allowlists `cdn.ckeditor.com`. |
 | **SSRF / XSS** | Provider `fetch_image` uses `fetch_outbound_image` (same hop-revalidating gate as `download_image`). Edit Images builds DOM nodes instead of interpolating `data.url` into `innerHTML` — **Reset Themes** to pick up the theme-volume JS. |
-| **Guards** | `test_auth_hardening.py` child/Bearer/Acquire/command cases · `test_theme_js_guards.py` (scan-tab selector, Edit Images, GameGrid `auto-fill`) in CI core · envelope CSRF walk |
-| **Docs** | docs-map / v1-readiness / Help+FAQ Spaces+AGPL / README OUT/~ retirement / security.md S10+Acquire |
-| **Not done** | Player chrome (UID-007) · CSP enforce · vendor jQuery/DataTables on member `base.html` · README recapture (needs a populated instance) |
+| **Guards** | `test_auth_hardening.py` child/Bearer/Acquire/command cases · `test_theme_js_guards.py` (scan-tab selector, Edit Images, GameGrid `auto-fill`) in CI core · envelope CSRF walk · vendor load-site + WebRetro MIT asserts in `test_vendor_licensing.py` |
+| **Docs** | docs-map / v1-readiness / Help+FAQ Spaces+AGPL / README OUT/~ retirement / security.md S10+Acquire · operator [privacy-data-handling.md](../admin/privacy-data-handling.md) (L7) |
+| **Vendor JS** | DataTables and Cropper.js **off** `base.html` / `base_empty.html` / `base_admin.html`. Cropper loads on admin library-create; DataTables on admin logs + download requests. jQuery stays on the shells (`preferences_modal.js` → `$.notify`) |
+| **WebRetro licence** | MIT, Copyright (c) 2021 BinBashBanana — upstream LICENSE copied to `static/vendor/webretro/LICENSE`; notices no longer say unconfirmed |
+| **Envelope leftovers** | Profile, Systems, loading-icon, related-media failures go through `errorFromResponse` / `errorFromBody` |
+| **Player chrome (UID-007)** | Play bar Pause / Reset / Mute / volume / Power. Bezel overlay for touch and stage mousemove. Bridge: `gt-pause` · `gt-reset` · `gt-audio`. Firmware island was already closed. |
+| **Not done** | CSP enforce · README recapture (needs a populated instance) |
 | **Capture** | skipped — empty test DB |
 
 ## W30b — admin page bodies, section by section (2026-08-25, in progress)
@@ -390,7 +395,7 @@ Many-leaf console libs remain **LOCKED** (no mega-lib). Product slices Done unco
 
 **Full-program review 2026-08-03:** every wave reviewed · **9 real defects found and fixed** (1 security-high: DM `@mention` leak to non-members · MISSING chip filter never wired server-side · Refresh-freshness never re-probed · scan-queue TOCTOU race · missing `clear_permission_errors` route · 2 dead admin links · `formatBytes` null · email fallback escaping) · 4 test bugs repaired (stale `data-corner` queries · a time-bomb NEW-badge date that expired today) · **2 items need a product decision** (LiveKit room ACL · per-thread Voice scoping) · first full pytest run on record: **2791 pass / 128 fail**, of which **81 are test-infra or local-Python-3.14 artifacts, not product** (app ships 3.12) — [review-2026-08-03-findings.md](archive/review-2026-08-03-findings.md)
 
-**Immediate board next (ordered):** (1) **Retail follow-through** — member SPA CSRF copies (UID-019) · player chrome (UID-007) · CSP report-only until inline scripts settle · (2) **W23 remainder** Themes-as-systems / art packs — [roadmap-w22-plus.md](roadmap-w22-plus.md) · (3) **Ops** Reset Themes after `game_edit_images.js` / scan-tab JS · **Blocked:** live `:5006` often down · no Class A · no Discord
+**Immediate board next (ordered):** (1) **CSP** stays report-only until the 24 inline-script templates and WebRetro WASM settle · (2) **W23 remainder** Themes-as-systems / art packs (`UID-006` · `UID-011` · `UID-012` — art seat) — [roadmap-w22-plus.md](roadmap-w22-plus.md) · (3) **Ops** Reset Themes after `game_edit_images.js` / scan-tab JS · **Blocked:** live `:5006` often down · no Class A · no Discord · README recapture needs a populated instance
 
 ### Wave 22+ — feedback roadmap (In progress)
 

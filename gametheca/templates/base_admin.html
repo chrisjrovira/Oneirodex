@@ -8,8 +8,8 @@
     <title>{% block title %}GameTheca Admin{% endblock %}</title>
     {% include 'partials/favicon.html' %}
     <script src="{{ url_for('static', filename='vendor/jquery/3.7.1/jquery.min.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatables/1.13.7/css/jquery.dataTables.min.css') }}">
-    <script src="{{ url_for('static', filename='vendor/datatables/1.13.7/js/jquery.dataTables.min.js') }}"></script>
+    {# DataTables is not on every admin page — only logs and download
+       requests load it. Cropper is only on admin library-create. #}
     {# Local Bootstrap — no CDN. Theme CSS still needs Reset Themes after deploy. #}
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/5.3.2/css/bootstrap.min.css') }}">
     <script src="{{ url_for('static', filename='vendor/bootstrap/5.3.2/js/bootstrap.bundle.min.js') }}"></script>

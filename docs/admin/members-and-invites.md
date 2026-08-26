@@ -64,7 +64,7 @@ Consequences worth knowing:
 | `admin` | Everything, including the admin shell |
 | `librarian` | Library and scan management |
 | `user` | Browse, download, play, chat |
-| `child` | As `user`, subject to the parental / library ACL |
+| `child` | Browse, play, and chat within the parental / library ACL. No admin, no library writes, no Acquire search, no companion download/install |
 
 Library allowlists and content filters are per-user, under **Admin → Users**.
 
@@ -81,5 +81,6 @@ Library allowlists and content filters are per-user, under **Admin → Users**.
 ## Related
 
 - [settings-modules.md](settings-modules.md) — SMTP, site URL, feature toggles
+- [privacy-data-handling.md](privacy-data-handling.md) — what the host stores and what `child` cannot do
 - [../user/getting-started.md](../user/getting-started.md) — the member's view of the account modal
 - [../runbooks/oidc-sso.md](../runbooks/oidc-sso.md) — SSO instead of local accounts

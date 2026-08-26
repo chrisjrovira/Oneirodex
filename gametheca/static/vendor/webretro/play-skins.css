@@ -116,6 +116,7 @@ body.gt-play-shell {
   height: auto;
   flex: 0 0 auto;
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   padding: var(--gt-play-bar-pad, 8px 16px);
@@ -209,6 +210,89 @@ body.gt-play-shell {
 
 #gt-emu-bar button:not(.gt-emu-back):hover {
   filter: brightness(1.08);
+}
+
+#gt-emu-bar .gt-play-chrome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+#gt-emu-bar .gt-play-ctrl[aria-pressed="true"] {
+  outline: 2px solid var(--gt-play-fg, #eee);
+  outline-offset: 1px;
+}
+
+.gt-play-vol {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gt-play-vol__label {
+  color: var(--gt-play-fg, #eee);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gt-play-vol input[type="range"] {
+  width: 88px;
+  accent-color: var(--gt-play-accent, #2fd67b);
+}
+
+.gt-play-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  padding: 12px 14px 16px;
+  background: linear-gradient(transparent, color-mix(in srgb, #000 78%, transparent));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.gt-play-overlay.is-visible,
+.gt-play-overlay:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gt-play-overlay .gt-play-ctrl {
+  background: color-mix(in srgb, var(--gt-play-accent, #2fd67b) 82%, #111);
+  color: var(--gt-play-btn-fg, #111);
+  border: 0;
+  padding: 6px 10px;
+  border-radius: var(--gt-play-radius, 4px);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.gt-play-overlay__cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+@media (hover: none) {
+  .gt-play-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-play-overlay {
+    transition: none;
+  }
 }
 
 #gt-emu-bar select {

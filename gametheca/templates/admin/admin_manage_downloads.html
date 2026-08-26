@@ -1,5 +1,8 @@
 <!-- templates/admin/admin_manage_downloads.html -->
-{% extends "base_admin.html" %}  
+{% extends "base_admin.html" %}
+{% block styles %}
+{% include 'partials/vendor_datatables.html' %}
+{% endblock %}
 {% block content %}
 {% import 'partials/icons.html' as icons %}
 <link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">

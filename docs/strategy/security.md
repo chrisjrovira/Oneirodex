@@ -3,8 +3,9 @@
 **Date:** 2026-07-26 · **Updated:** 2026-08-25 · **Status:** active  
 **Second pass (2026-08-25):** full audit + remediation Phases 0–6 shipped —
 [security-legal-playbook.md](security-legal-playbook.md) carries the findings, the evidence, and
-what stays open on purpose (CSP report-only, WebRetro licence). Child Bearer/Acquire/command ACL
-and provider `fetch_image` SSRF landed after that playbook. Summary of the original pass is in
+what stays open on purpose (CSP report-only; non-commercial core clauses; DNS rebind). Child
+Bearer/Acquire/command ACL, provider `fetch_image` SSRF, WebRetro MIT confirmation, and operator
+[privacy-data-handling.md](../admin/privacy-data-handling.md) landed after that playbook. Summary of the original pass is in
 [What Phases 0–4 shipped](#what-phases-04-shipped) below.  
 **Related:** [social-av.md](social-av.md) · full-app review canvas · **malware (shipped):** `ENABLE_MALWARE_SCAN` + heuristics + optional ClamAV — [settings-modules.md](../admin/settings-modules.md) · **post-1.0 nice-to-have:** [native-malware-scan.md](native-malware-scan.md) (MAL-N1…N5 — native engine; ClamAV stays optional until cutover)
 
@@ -59,10 +60,11 @@ Full findings, evidence and the remaining phases: [security-legal-playbook.md](s
 | ID | Was | Now |
 |---|---|---|
 | L1 | 24 libretro cores committed as 71MB of binaries with no licence text and no Corresponding Source offer — while `cores/README.md` called the directory "operator-owned" and `test_webretro_cores.py` opened with "no multi-MB WASM in repo" | Untracked and gitignored; fetched at first boot by `utils/webretro_core_install.py` (`FETCH_WEBRETRO_CORES_ON_BOOT`), which stages to a temp name so an interrupted fetch cannot leave a half-core. Boot warns by name when the fetch is off and cores are absent — [webretro-cores.md](../runbooks/webretro-cores.md) |
-| L2 | Eight vendored JS libraries, zero licence files — while `font_install.py` already stated the rule ("redistributing them without the licence text is not permitted") and shipped `OFL.txt` beside the faces | `static/vendor/THIRD-PARTY-NOTICES.md` with copyright lines **read out of each shipped file's own banner**, plus `scripts/fetch-vendor-licenses.sh` for canonical upstream texts. WebRetro's own licence is recorded as unconfirmed rather than guessed |
+| L2 | Eight vendored JS libraries, zero licence files — while `font_install.py` already stated the rule ("redistributing them without the licence text is not permitted") and shipped `OFL.txt` beside the faces | `static/vendor/THIRD-PARTY-NOTICES.md` with copyright lines **read out of each shipped file's own banner**, plus `scripts/fetch-vendor-licenses.sh` for canonical upstream texts. WebRetro front end is **MIT** (Copyright (c) 2021 BinBashBanana) — `webretro/LICENSE` from upstream; cores stay operator-provisioned |
 | L3 | `webretro/info/{tos,privacy,cookiepolicy,index,changelog}.html` served from every deployment — the upstream author's terms, naming a different site as "this Website operator", linking a broken `http://privacy.html`, carrying Discord links against our own non-goals | Deleted, along with the `Info` link in `standalone.html` that was the only thing pointing at them. `standalone.html` itself stays — it is the iframe `webretro.html` embeds. Stray `ddd.txt` gone; duplicate `sortablejs` 1.14.0 consolidated onto 1.15.2 |
 | L4 | AGPL §13 obligation stated in README, discharged nowhere in the running app | `GT_SOURCE_URL` → member Help ("About & licence" + page footer) and the admin footer. **Configurable on purpose:** §13 obliges *this* deployment to offer *its* source, so a fork must point at its own. Rendered only when set — a dead link is worse than none |
 | L5 | IGDB, Giant Bomb and SteamGridDB data surfaced with no attribution | Credited in the member Help "About & licence" section |
+| L7 | No application privacy/data-handling doc | Operator-adaptable notes at [privacy-data-handling.md](../admin/privacy-data-handling.md) — not a public ToS |
 | S9 | `sanitize_path_for_logging`'s Windows rule matched *doubled* backslashes, which real paths do not have — so on a Windows host nothing was scrubbed | One rule covering both separators, preserving separator and casing |
 
 **Post-deploy:** app restart for the `updateschema` `api_tokens.expires_at` column. First boot after

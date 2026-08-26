@@ -20,7 +20,10 @@ Account menu → **API tokens** (`/tokens`). Create with the **Desktop companion
 By design — thin is connect-only (browse / social / Big Picture). Use the **full** companion on the install PC. Build: `npm run tauri:build:thin` — [thin-client.md](thin-client.md).
 
 **Child account can’t see some games.**  
-Parental ACL / library allowlists filter the library. That’s intentional.
+Parental ACL / library allowlists filter the library. That’s intentional. Child accounts also cannot search Acquire or use companion download/install commands.
+
+**Where is account data stored?**  
+On the machine that runs GameTheca (self-hosted). Operators: [privacy-data-handling.md](../admin/privacy-data-handling.md).
 
 ## Library & downloads
 
@@ -62,6 +65,11 @@ Game details → **Extras & DLC**. Rows show honest **on-server** when the vault
 
 **Open path does nothing / doesn’t open Auto Scan.**  
 Open path uses **OpenPathModal** → companion `open_path` (or clipboard fallback). It never jumps to Auto Scan. Pair the desktop companion Online and send a path your PC can see — [desktop-companion.md](desktop-companion.md).
+
+## Browser play
+
+**Where are pause, reset, and mute in the browser player?**  
+On the play bar above the screen: Pause, Reset, Mute, volume, and Power. Power leaves the game, same as **← Library**. An overlay repeats Pause/Reset/Mute/Power on touch, or when you move the pointer over the play stage. See [browser-play.md](browser-play.md).
 
 ## Themes & icons
 

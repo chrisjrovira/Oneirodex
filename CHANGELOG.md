@@ -150,12 +150,16 @@ Work since the 1.0.0-beta tag (2026-08-06).
 ### Security
 
 - **Child ACL on tokens, Acquire, and companion commands.** Session-cookie deny for `write:download` / `write:library` / `admin` now also applies to Bearer tokens, so an already-minted companion secret cannot be used by a child. Children cannot create those scopes (including the Desktop companion preset); Acquire search returns 403; `POST /api/client/commands` for download/install/update/uninstall/patch/mod-pack requires `write:download`. Thin-client tokens still work.
+- **WebRetro front end is MIT.** Upstream LICENSE (Copyright (c) 2021 BinBashBanana) is in `static/vendor/webretro/LICENSE`; third-party notices no longer leave it unconfirmed. Libretro cores stay operator-provisioned.
+- **DataTables and Cropper.js no longer load on every classic page.** Member `base.html` and the admin shell dropped them; Cropper is on admin library-create, DataTables on logs and download requests. jQuery stays for toast notify.
 - **Provider cover fetch follows the same SSRF gate as `download_image`.** IGDB / SteamGridDB / GiantBomb / Meta Quest `fetch_image` went through raw `requests.get`. They now use `fetch_outbound_image` (`http_safe.safe_get` + `validate_user_outbound_http_url` on every redirect hop).
 - **Newsletter no longer depends on Flask-Mail or the CKEditor CDN.** Send uses `smtp.send_email_quiet` like invites; the compose page is a textarea. CSP no longer allowlists `cdn.ckeditor.com`.
 - **Edit Images no longer interpolates upload URLs into `innerHTML`.** Needs **Reset Default Themes** so the theme-volume copy of `game_edit_images.js` refreshes.
 
 ### Added
 
+- **Operator privacy / data-handling notes.** What the host stores, what can leave if you enable SMTP / metadata APIs / OIDC / LiveKit / GitHub support, and how `child` accounts are denied download and Acquire — [privacy-data-handling.md](docs/admin/privacy-data-handling.md). Not a public ToS.
+- **Player chrome on browser play (UID-007).** Pause, Reset, Mute, volume and Power on the play bar, plus an in-game overlay. Mute/volume write RetroArch config through the existing iframe bridge. Power leaves the game the same way ← Library does.
 - **Report takes ideas as well as defects.** "Report issue" collected feature requests into the same
   pile as bugs, so triage had to read every title to sort them and a request filed as a defect read as
   a broken product. The form asks first, the `kind` rides through to the GitHub issue title and labels,
