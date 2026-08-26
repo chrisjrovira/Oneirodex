@@ -640,3 +640,12 @@
   color: var(--gt-text-muted);
   font-style: italic;
 }
+
+/* A failed scan's reason in the Ops jobs table (GT-B38).
+ *
+ * The only cell in this table allowed to carry danger: it is what explains a
+ * queue that stopped, and the console previously showed the failure without it.
+ */
+.gt-ops-table__error {
+  color: var(--gt-danger);
+}

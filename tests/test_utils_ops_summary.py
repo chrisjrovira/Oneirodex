@@ -243,6 +243,9 @@ def test_scan_snapshot_counts_active_folder_failures():
         folders_failed=2,
         current_processing='Processing: Halo (3/4)',
         last_progress_update=last_update,
+        # _scan_job_payload reads this like its siblings (GT-B38); a stub
+        # standing in for a ScanJob has to carry the fields the payload reads.
+        error_message=None,
     )
     active_result = MagicMock()
     active_result.scalars.return_value.all.return_value = [active_job]
@@ -289,6 +292,7 @@ def test_scan_snapshot_includes_recent_terminal_jobs():
         folders_failed=1,
         current_processing=None,
         last_progress_update=datetime(2026, 7, 27, 11, 0, tzinfo=timezone.utc),
+        error_message=None,
     )
     active_result = MagicMock()
     active_result.scalars.return_value.all.return_value = []

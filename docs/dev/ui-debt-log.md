@@ -592,3 +592,55 @@ template literals.
 Two hours of the wrong theories (regex literals, backreferences, JSX loaders)
 came before bisecting. If this file fails to parse under vitest again, **suspect
 the comments first** and bisect rather than reason about the parser.
+
+## W30f — the classic scan page hid the reason too (2026-08-25)
+
+The Jinja `/scan_management` surface, taken as its own slice. The React SPA
+points at it for scan work, so it is the page an operator actually watches — and
+it was hiding the same thing the SPA was.
+
+| UID | Symptom | Cause | Fix |
+|---|---|---|---|
+| UID-031 | A **reclaimed scan showed only "Failed"** with no explanation. | `getDisplayStatus()` translates exactly two `error_message` values — "Scan cancelled by user" and "Scan job interrupted by server restart" — into friendly statuses, and lets every other reason fall through to the bare status word. The ownership sweep's message is a third one, so the fix that ended the six-hour queue wedge reported *nothing* on the page where it mattered. | New `failureReason()`: any Failed job with a reason now shows it under the status. Suppressed when the friendly status already says it, so nothing is stated twice. |
+| UID-032 | First paint disagreed with every poll after it. | The template computed progress as `folders_success / total_folders`; `progressCounts()` in the JS computes `success + failed`. A job with any failed folder showed one number on load and a different one two seconds later. | Template now counts processed the same way, notes the failure count, and `data-sort-progress` uses the same figure — it was sorting on a number the operator could not see. |
+
+### Self-inflicted, and worth naming
+
+UID-031 is a gap this wave created. The scan-ownership work added a new
+`error_message` and taught the React table to surface it, but not this one — so
+the surface most likely to be watched during a scan was the last to learn about
+the fix meant to explain that exact failure. Adding an `error_message` is not
+done until every table that renders scan jobs can show it.
+
+Guarded by `tests/test_scan_jobs_failure_reason.py`: the reclaim reason reaches
+the page, processed counts failures, and the sort key matches the caption.
+
+> **Deploy note.** The JS and CSS live in `setup/default_theme/`, which
+> `static/library/themes/` copies at boot. This change needs a restart, or
+> **Admin → Themes → Reset Themes**, before it shows.
+
+### UID-033 — and the third surface, found by applying the lesson
+
+Having written "adding an `error_message` is not done until every table that
+renders scan jobs can show it", the obvious next move was to check whether any
+other surface rendered scan jobs. One did.
+
+`_scan_job_payload` in `ops_summary.py` carried counts, current folder,
+elapsed, ETA and `stalled` — everything needed to read a scan **except the one
+field that explains a job that stopped**. So the Ops console reported failures
+and never their reason, the reclaim message included, because the field never
+left the backend for that surface.
+
+Payload now carries `error_message` (normalised to `None`, since `ScanJob`
+defaults it to an empty string and `''` versus `None` renders differently once
+a UI branches on it). The Ops jobs table's `Current` column became `Detail`
+with the same priority the Scans page uses: reason, then stalled, then current
+folder.
+
+Not a new disclosure — `/api/scan_jobs_status` has always returned the field to
+the same admin-only audience.
+
+**Three surfaces, one field, found one at a time.** The first was fixed because
+it was the page being demoed, the second because the lesson was written down,
+the third because the lesson was then applied. Worth remembering which of those
+three was cheapest.

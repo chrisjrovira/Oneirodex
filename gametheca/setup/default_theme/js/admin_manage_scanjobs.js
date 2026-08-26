@@ -1126,6 +1126,21 @@ document.addEventListener('DOMContentLoaded', function() {
         return job.status;
     }
 
+    // Every other reason a scan failed, which used to be invisible here.
+    //
+    // getDisplayStatus translates two specific messages into friendly statuses
+    // and lets the rest fall through to a bare "Failed" — so a job reclaimed
+    // because its owner process died reported nothing at all, and the operator
+    // saw a queue that had simply stopped with no explanation. That is the
+    // exact confusion the scan-ownership work set out to end, and this surface
+    // was still hiding it. Any Failed job with a reason now shows the reason.
+    function failureReason(job, displayStatus) {
+        if (job.status !== 'Failed' || !job.error_message) return '';
+        // Already said by the status word itself — do not say it twice.
+        if (displayStatus !== 'Failed') return '';
+        return job.error_message;
+    }
+
     function progressCounts(job) {
         const success = Number(job.folders_success) || 0;
         const failed = Number(job.folders_failed) || 0;
@@ -1366,6 +1381,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </form>`;
                     }
 
+                    // Status plus, when there is one, the reason underneath it.
+                    const displayStatus = getDisplayStatus(job);
+                    const reason = failureReason(job, displayStatus);
+                    const statusCell = reason
+                        ? `${escapeHtml(displayStatus)}<div class="gt-scan-fail-reason">${escapeHtml(reason)}</div>`
+                        : escapeHtml(displayStatus);
+
                     const row = document.createElement('tr');
                     // Sort key for the Progress column (W27-C2). The cell renders a bar
                     // and a "3/25 (12%)" caption, neither of which compares numerically
@@ -1376,7 +1398,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${job.id.substring(0, 8)}</td>
                         <td>${escapeHtml(job.library_name || 'N/A')}</td>
                         <td>${escapeHtml(job.scan_folder || 'N/A')}</td>
-                        <td>${escapeHtml(getDisplayStatus(job))}</td>
+                        <td>${statusCell}</td>
                         <td>${progressColumn}</td>
                         <td>${actionsColumn}</td>
                     `;

@@ -98,11 +98,24 @@ const SCAN_JOB_COLUMNS = [
     value: (job) => Number(job.folders_success ?? 0) + Number(job.folders_failed ?? 0),
   },
   {
-    key: 'current_processing',
-    label: 'Current',
-    render: (job) => (
-      <span className="gt-ops-table__muted">{job.current_processing || '—'}</span>
-    ),
+    // Same priority the Scans page uses (GT-B38): the reason a job stopped
+    // outranks what it was doing, because it is the only thing that explains a
+    // queue that is no longer moving. This column showed `current_processing`
+    // alone, which is null on a failed job — so the console reported that a
+    // scan had failed and never why, the reclaim message included.
+    key: 'detail',
+    label: 'Detail',
+    render: (job) => {
+      if (job.error_message) {
+        return <span className="gt-ops-table__error">{job.error_message}</span>
+      }
+      if (job.stalled) {
+        return <span className="gt-ops-table__muted">No progress reported</span>
+      }
+      return (
+        <span className="gt-ops-table__muted">{job.current_processing || '—'}</span>
+      )
+    },
   },
 ]
 

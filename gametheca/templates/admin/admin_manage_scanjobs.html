@@ -354,14 +354,28 @@
                                     {% if jobs %}
                                         {% for job in jobs[:25] %}
                                         <tr data-job-id="{{ job.id }}"
-                                            data-sort-progress="{{ ((job.folders_success or 0) / job.total_folders * 100) | round(1) if job.total_folders else 0 }}">
+                                            data-sort-progress="{{ (((job.folders_success or 0) + (job.folders_failed or 0)) / job.total_folders * 100) | round(1) if job.total_folders else 0 }}">
                                             <td>{{ job.id }}</td>
                                             <td>{{ job.library.name if job.library else 'N/A' }}</td>
                                             <td>{{ job.scan_folder or 'N/A' }}</td>
-                                            <td>{{ job.status }}</td>
+                                            {# Reason under the status, matching what the poll renders.
+                                               A Failed job used to show only the word, so a scan
+                                               reclaimed because its owner process died explained
+                                               nothing. #}
+                                            <td>
+                                                {{ job.status }}
+                                                {% if job.status == 'Failed' and job.error_message %}
+                                                    <div class="gt-scan-fail-reason">{{ job.error_message }}</div>
+                                                {% endif %}
+                                            </td>
+                                            {# processed = success + failed, as progressCounts() in
+                                               admin_manage_scanjobs.js computes it. Counting only
+                                               successes made the first paint disagree with every
+                                               poll after it whenever a folder had failed. #}
                                             <td>
                                                 {% if job.total_folders %}
-                                                    {{ job.folders_success or 0 }}/{{ job.total_folders }}
+                                                    {{ (job.folders_success or 0) + (job.folders_failed or 0) }}/{{ job.total_folders }}
+                                                    {%- if job.folders_failed %} · {{ job.folders_failed }} failed{% endif %}
                                                 {% else %}
                                                     —
                                                 {% endif %}

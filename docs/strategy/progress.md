@@ -101,7 +101,19 @@ foundation for the rest rather than a one-page fix.
 | **Shipped** | The Scans page was showing **less than the Ops dashboard**: `/api/scan_jobs_status` returns progress, current file, elapsed/ETA, `stalled` and `error_message`, and the table rendered none of them. Added **Progress** and **Detail** columns (reason → stalled → current → ETA), so a reclaimed job now says *why* instead of just Failed. Replaced the developer status readout with a sentence — and the stuck case, which used to render as `Running: no · queued 1` and read as **idle**, now says the queue is waiting on a job that has not reported a result. `formatScanJobCounters` moved to `opsWidgets.jsx` (re-exported from `OpsPage` for its test). |
 | **Caught in-pass** | First cut of the Progress column duplicated the Status cell for queued jobs (`Queued #1` beside `Queued (#1)`) — the new test found it. Progress now defers queue state to Status. |
 | **Guards** | `pages.scans.test.jsx` 3 → 5: a queue with nothing running must not read as idle; a failed job must surface its reason and the progress it reached. |
-| **Deliberately not done** | The Jinja `/scan_management` surface + its 2,423-line stylesheet. That is where the working forms live — its own slice, not a fold-in. |
+| **Deliberately not done at the time** | The Jinja `/scan_management` surface — taken as its own slice below. |
+
+### Classic scan page — the reason was hidden here too (2026-08-25)
+
+| | |
+|---|---|
+| **Shipped** | `getDisplayStatus()` translated exactly two `error_message` values into friendly statuses and showed every other reason as a bare **"Failed"** — including the message the ownership sweep writes when it reclaims an orphaned job. **The fix that ended the six-hour queue wedge reported nothing on the page most likely to be watched during a scan.** Any failed job now shows its reason under the status, suppressed where the friendly status already says it. |
+| **Also** | The template computed progress as successes only while the poll counts successes + failures, so first paint disagreed with every refresh whenever a folder failed. Both now count processed identically, note the failure count, and sort on the same figure — `data-sort-progress` had been ordering the table by a number the operator could not see. |
+| **Self-inflicted** | UID-031 was created by this wave: the ownership work added a new `error_message` and taught the SPA table about it but not this one. Adding an `error_message` is not done until every table rendering scan jobs can show it. |
+| **Guards** | `tests/test_scan_jobs_failure_reason.py` (3) — the reclaim reason reaches the page, processed counts failures, sort key matches the caption. |
+| **Deploy note** | JS/CSS ship from `setup/default_theme/`, so this needs a restart or **Admin → Themes → Reset Themes** to appear. |
+| **Third surface (UID-033)** | Applying that lesson found one more: `_scan_job_payload` in `ops_summary.py` carried counts, current folder, elapsed, ETA and `stalled` — everything except the field explaining a job that stopped. The Ops console reported failures and never their reason. Payload now carries `error_message` (normalised to `None`; `ScanJob` defaults it to `''`, which renders differently once a UI branches on it), and the Ops jobs table's `Current` column became `Detail` with the Scans-page priority: reason → stalled → current. |
+| **Contract note** | Additive to `/admin/api/ops/summary`; the ops-summary key assertion is a superset check so it stayed green. Two `SimpleNamespace` stubs needed the new field — the payload reads it directly like its siblings rather than going defensive with `getattr`, so a stub standing in for a `ScanJob` must carry what the payload reads. |
 
 ### Settings (2026-08-25)
 

@@ -81,6 +81,7 @@ Built by `gametheca.utils.ops_summary._services_snapshot`. Brief field map:
 | `game_servers` | Household registry pulse — `count`, `reachable`, per-server `display_name` / TCP or HTTP probe |
 | `readyz` | In-process readiness snippet — `status`, `http_status`, `checks` (same shape as `/readyz`), `check_ms`; **`null` when probe fails** |
 | `malware_module_enabled` | Convenience bool mirroring malware module enable |
+| `jobs[].error_message` | Why a job stopped, or `null`. Added 2026-08-25 — the payload carried counts, current folder, elapsed, ETA and `stalled` and dropped the one field explaining a failure, so Ops could report that a scan failed and never why. Normalised to `null`: `ScanJob` defaults it to an empty string |
 | `library_watch` | Optional root-folder incremental watch (`GT_LIBRARY_WATCH`, default off) — `enabled`, `running`, `roots`, `pending_libraries`, `debounce_seconds`, `last_event_at`, `last_enqueue_at`, `note` |
 
 No Discord / webhook sinks — alerts stay in-app SystemEvents / optional SMTP digest.
