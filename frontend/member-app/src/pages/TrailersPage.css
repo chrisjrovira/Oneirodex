@@ -194,22 +194,15 @@
   );
 }
 
-/* The cabinet below the tube: wordmark on the left, controls on the right. */
+/* The cabinet below the tube. The wordmark that used to sit on the left is
+   gone (`.gt-trailers__brand` with it), so the controls take the end slot on
+   their own rather than being pushed there by a label. */
 .gt-trailers__bezel {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.75rem;
   padding: 0.55rem 0.35rem 0.7rem;
-}
-
-.gt-trailers__brand {
-  font-family: var(--font-display, inherit);
-  font-size: var(--gt-font-xs);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--gt-text-muted) 70%, transparent);
 }
 
 .gt-trailers__knobs {
@@ -261,10 +254,12 @@
   }
 }
 
+/* The title now leads the set, so its rule is on the *bottom* — it separates
+   the caption from the picture below it rather than from the bezel above. */
 .gt-trailers__caption {
   margin: 0;
   padding: 0.5rem 0.75rem;
-  border-top: 1px solid var(--gt-border);
+  border-bottom: 1px solid var(--gt-border);
   font-size: var(--gt-font-base);
   font-weight: 600;
 }

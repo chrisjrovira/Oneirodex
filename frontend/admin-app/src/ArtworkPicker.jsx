@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { getJson, postJson } from './adminApi'
 
 const ARTWORK_PROVIDERS = [
@@ -264,11 +265,7 @@ export function ArtworkPicker({
         </p>
       )}
 
-      {error ? (
-        <div role="alert" className="gt-admin-alert">
-          {error}
-        </div>
-      ) : null}
+      <PageStatus error={error} />
       {status ? (
         <p className="gt-admin-lede" aria-live="polite">
           {status}

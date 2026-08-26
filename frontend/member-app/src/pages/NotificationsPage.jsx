@@ -291,7 +291,7 @@ export function NotificationsPage({ shellConfig = {} }) {
                     )
                   ) : null}
                   {row.unread ? (
-                    <button type="button" disabled={busy} onClick={() => void markOne(row.id)}>
+                    <button type="button" className="gt-cbtn" disabled={busy} onClick={() => void markOne(row.id)}>
                       Mark read
                     </button>
                   ) : null}

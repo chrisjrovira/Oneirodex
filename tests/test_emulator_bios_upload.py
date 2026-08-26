@@ -77,9 +77,22 @@ def test_blank_filename_rejected(app):
 
 def test_default_cap_is_sane_and_allowlist_covers_the_known_cores():
     assert DEFAULT_BIOS_MAX_BYTES == 64 * 1024 * 1024
-    # Every filename in BIOS_REQUIREMENTS must be uploadable.
-    from gametheca.utils.emulator_bios import BIOS_REQUIREMENTS
+    # Every filename in BIOS_REQUIREMENTS must be uploadable, or the panel
+    # reports a missing file the operator has no way to supply.
+    #
+    # Two tracks, because some firmware names cannot be expressed as an
+    # extension: the VICE C64 ROMs have no suffix, and citra's key file is a
+    # plain .txt. Those are allowed by exact name so the volume does not have to
+    # accept every extensionless or text upload — see ALLOWED_BIOS_EXACT_NAMES.
+    from gametheca.utils.emulator_bios import (
+        ALLOWED_BIOS_EXACT_NAMES,
+        BIOS_REQUIREMENTS,
+    )
 
-    for required in BIOS_REQUIREMENTS.values():
+    for core, required in BIOS_REQUIREMENTS.items():
         for name in required:
-            assert os.path.splitext(name)[1].lower() in ALLOWED_BIOS_EXTENSIONS
+            extension = os.path.splitext(name)[1].lower()
+            assert (
+                extension in ALLOWED_BIOS_EXTENSIONS
+                or name.lower() in ALLOWED_BIOS_EXACT_NAMES
+            ), f'{core} requires {name!r}, which the upload allowlist would reject'

@@ -150,6 +150,19 @@ gametheca/static/library/fonts/
 # Art-studio output — generated per install, not source
 gametheca/static/library/generated/
 
+# WebRetro libretro cores — operator-provisioned, not vendored (71MB of WASM).
+#
+# These were committed despite cores/README.md describing the directory as
+# "operator-owned" and tests/test_webretro_cores.py opening with "no multi-MB
+# WASM in repo". They carry a mix of GPL-2.0/3.0, MPL-2.0 and — for snes9x and
+# genesis_plus_gx — custom non-commercial terms, and shipping GPL binaries means
+# shipping their licence text and a Corresponding Source offer with them.
+#
+# Fetched on first boot (FETCH_WEBRETRO_CORES_ON_BOOT), or by hand with
+# scripts/fetch-webretro-cores.sh --defaults. The README stays tracked.
+gametheca/static/vendor/webretro/cores/*_libretro.js
+gametheca/static/vendor/webretro/cores/*_libretro.wasm
+
 # Debris from an unexpanded shell variable — never a real project path
 %TEMP%/
 

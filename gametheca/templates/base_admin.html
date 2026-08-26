@@ -75,12 +75,28 @@
    Pages must state their intent rather than have it inferred: under the old
    heuristic, adding a `.card` or a <table> to a Jinja template silently deleted
    the React body for that route. #}
+{# Identity for the top bar's account control, the same way member_spa.html
+   feeds the member shell. Admin previously had no access to who was signed in,
+   so its bar could not carry the account button the member bar has — which was
+   one of the reasons the two halves did not read as one product. #}
 <div id="admin-app-root" data-admin-chrome="1"
+     data-username="{{ current_user.name or '' }}"
+     data-avatar="{{ current_user.avatarpath|avatar_url }}"
      data-admin-render="{% block admin_render %}auto{% endblock %}"></div>
 <div id="admin-legacy-content" class="gt-admin-legacy">
     {% include 'partials/flash_messages.html' ignore missing %}
     {% block content %}{% endblock %}
 </div>
+{# AGPL §13 source offer. The member app carries it on Help; admin is its own
+   surface and an operator is exactly who needs to know where the source is.
+   URL is GT_SOURCE_URL — a modified deployment must point at its own fork. #}
+{% if source_url %}
+<footer class="gt-admin-licence">
+  GameTheca {{ app_version }} — free software under the
+  <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer">GNU AGPL v3.0</a>.
+  <a href="{{ source_url }}" target="_blank" rel="noopener noreferrer">Get the source code</a>.
+</footer>
+{% endif %}
 <script type="module" src="{{ 'admin-app/admin-app.js'|dist_asset }}"></script>
 </body>
 </html>

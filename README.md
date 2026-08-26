@@ -424,10 +424,24 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Affero General Public License for more details.
 ```
 
+**Running a modified copy? Set `GT_SOURCE_URL` to your fork.** The app surfaces
+a "Get the source code" link on member **Help** and in the admin footer — that
+is how §13 is actually discharged rather than merely stated here. It defaults to
+this repository, which is wrong the moment you modify anything, because §13
+obliges you to offer *your* users *your* source.
+
 **Content is separate from code.** The licence above covers GameTheca itself. It
 says nothing about the games, ROMs, BIOS or artwork you point it at — use
 GameTheca only with software you are authorized to share. Unauthorized
 distribution of copyrighted material is not supported.
+
+**Third-party code.** The browser libraries under
+`gametheca/static/vendor/` are separate works under their own licences —
+inventory in
+[THIRD-PARTY-NOTICES.md](gametheca/static/vendor/THIRD-PARTY-NOTICES.md). The
+libretro emulator cores are **not** distributed here: they carry GPL and
+non-commercial terms, so they are fetched onto your machine at first boot
+([webretro-cores.md](docs/runbooks/webretro-cores.md)).
 
 ---
 

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { fetchDiscoverRow } from '../api/discover'
 import { GameCard } from './GameCard'
 import { NewsCard } from './NewsCard'
+import { useRowScroll } from './useRowScroll'
 import './DiscoverShelf.css'
 
 /**
@@ -49,6 +50,7 @@ export function DiscoverShelf({
   pinned = false,
   canPin = true,
   onTogglePin,
+  onHide,
 }) {
   const identifier = String(section.identifier || '')
   const itemKind = section.item_kind || 'games'
@@ -56,8 +58,16 @@ export function DiscoverShelf({
   const [games, setGames] = useState(() => rowItems(section))
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState(false)
-  const trackRef = useRef(null)
   const abortRef = useRef(null)
+  // Arrows, edge-hover and wheel, shared with every other horizontal row.
+  const {
+    ref: trackRef,
+    overflow,
+    measure,
+    scrollByPage,
+    onPointerMove,
+    onPointerLeave,
+  } = useRowScroll()
 
   // A fresh feed replaces the row wholesale rather than appending to whatever
   // the previous one had scrolled to.
@@ -107,11 +117,12 @@ export function DiscoverShelf({
   const handleScroll = useCallback(() => {
     const track = trackRef.current
     if (!track) return
+    measure()
     const remaining = track.scrollWidth - track.scrollLeft - track.clientWidth
     if (remaining <= LOAD_AHEAD_PX) {
       loadMore()
     }
-  }, [loadMore])
+  }, [loadMore, measure, trackRef])
 
   if (!games.length) {
     return null
@@ -127,7 +138,12 @@ export function DiscoverShelf({
       className={`gt-shelf gt-shelf--${layout}`}
     >
       <div className="gt-shelf__head">
-        <h2 className="gt-shelf__title">{section.title}</h2>
+        {/* The rule is drawn by the heading itself (see .gt-shelf__title in the
+            stylesheet) rather than by a border under the whole head row, so it
+            stops at the words instead of running the width of the page. */}
+        <h2 className="gt-shelf__title">
+          <span className="gt-shelf__title-text">{section.title}</span>
+        </h2>
         {section.reason ? (
           <span className="gt-shelf__reason">{section.reason}</span>
         ) : null}
@@ -156,6 +172,19 @@ export function DiscoverShelf({
             {pinned ? 'Pinned' : 'Pin'}
           </button>
         ) : null}
+        {onHide ? (
+          <button
+            type="button"
+            className="gt-shelf__hide"
+            /* Hiding is reversible and the way back has to be visible from
+               here, or a row put away is a row gone for good — the control
+               says where it went. */
+            title="Hide this row (restore it from Discover’s row settings)"
+            onClick={() => onHide(identifier)}
+          >
+            Hide
+          </button>
+        ) : null}
         {showSeeAll ? (
           <Link className="gt-shelf__seeall" to={section.more_href}>
             See all
@@ -164,43 +193,72 @@ export function DiscoverShelf({
       </div>
 
       <div
-        className="gt-shelf__track"
-        ref={trackRef}
-        onScroll={handleScroll}
-        role="list"
-        aria-label={section.title}
+        className="gt-shelf__viewport"
+        onPointerMove={onPointerMove}
+        onPointerLeave={onPointerLeave}
       >
-        {games.map((item, index) => (
-          <div className="gt-shelf__item" role="listitem" key={itemKey(item, index)}>
-            {itemKind === 'articles' ? (
-              <NewsCard item={item} />
-            ) : (
-              <GameCard
-                game={item}
-                isAdmin={isAdmin}
-                showPlayStatus={showPlayStatus}
-                enableDeleteOnDisk={enableDeleteOnDisk}
-              />
-            )}
-          </div>
-        ))}
+        {/* Rendered whether or not they are usable, and disabled when they are
+            not: arrows that appear and disappear as a row fills itself in move
+            the tiles under the pointer mid-reach. */}
+        <button
+          type="button"
+          className="gt-shelf__arrow gt-shelf__arrow--start"
+          aria-label={`Scroll ${section.title} left`}
+          disabled={!overflow.start}
+          onClick={() => scrollByPage(-1)}
+        >
+          <span aria-hidden="true">‹</span>
+        </button>
 
-        {loading ? (
-          <div className="gt-shelf__item gt-shelf__pending" aria-hidden="true" />
-        ) : null}
+        <div
+          className="gt-shelf__track"
+          ref={trackRef}
+          onScroll={handleScroll}
+          role="list"
+          aria-label={section.title}
+        >
+          {games.map((item, index) => (
+            <div className="gt-shelf__item" role="listitem" key={itemKey(item, index)}>
+              {itemKind === 'articles' ? (
+                <NewsCard item={item} />
+              ) : (
+                <GameCard
+                  game={item}
+                  isAdmin={isAdmin}
+                  showPlayStatus={showPlayStatus}
+                  enableDeleteOnDisk={enableDeleteOnDisk}
+                />
+              )}
+            </div>
+          ))}
 
-        {showSeeAll && complete ? (
-          <Link
-            className="gt-shelf__item gt-shelf__more"
-            to={section.more_href}
-            aria-label={`See all in ${section.title}`}
-          >
-            <span className="gt-shelf__more-mark" aria-hidden="true">
-              +
-            </span>
-            <span className="gt-shelf__more-label">See all</span>
-          </Link>
-        ) : null}
+          {loading ? (
+            <div className="gt-shelf__item gt-shelf__pending" aria-hidden="true" />
+          ) : null}
+
+          {showSeeAll && complete ? (
+            <Link
+              className="gt-shelf__item gt-shelf__more"
+              to={section.more_href}
+              aria-label={`See all in ${section.title}`}
+            >
+              <span className="gt-shelf__more-mark" aria-hidden="true">
+                +
+              </span>
+              <span className="gt-shelf__more-label">See all</span>
+            </Link>
+          ) : null}
+        </div>
+
+        <button
+          type="button"
+          className="gt-shelf__arrow gt-shelf__arrow--end"
+          aria-label={`Scroll ${section.title} right`}
+          disabled={!overflow.end}
+          onClick={() => scrollByPage(1)}
+        >
+          <span aria-hidden="true">›</span>
+        </button>
       </div>
     </section>
   )

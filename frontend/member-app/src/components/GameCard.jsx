@@ -6,6 +6,7 @@ import { CoverFallback } from './CoverFallback'
 import { safeHttpUrl } from '../utils/safeUrl'
 import { editionChipLabels } from '../utils/platformAbbrev'
 import { BadgeStack } from './BadgeStack'
+import { AddToCollection } from './AddToCollection'
 import { GameActionBar } from './GameActionBar'
 import { GamePreviewPopup } from './GamePreviewPopup'
 import {
@@ -434,6 +435,17 @@ export function GameCard({
                 variant="compact"
                 lifecycleState={game.lifecycle_state || 'not_downloaded'}
                 clientConnected={Boolean(game.client_connected)}
+              />
+            </div>
+            {/* Filing a game is a decision you make while looking at it, so the
+                control belongs on the tile rather than four navigations away
+                inside the shelf you want to put it on. */}
+            <div className="menu-item">
+              <AddToCollection
+                gameUuid={game.uuid}
+                gameName={game.name}
+                variant="menu"
+                onAdded={() => setMenuOpen(false)}
               />
             </div>
             {isAdmin && (

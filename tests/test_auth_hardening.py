@@ -1,0 +1,247 @@
+"""Phase 4 of the security/legal playbook — auth hardening (S6, S8, S10, S11).
+
+The expiry tests carry the migration stance as much as the behaviour: a NULL
+``expires_at`` means "never", because every token that existed before the column
+did is NULL, and an upgrade that logged out live companions would be a worse
+outcome than the finding it fixed.
+
+See docs/strategy/security-legal-playbook.md.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
+from uuid import uuid4
+
+import pytest
+
+from gametheca.models import ApiToken, User
+from gametheca.utils import api_tokens
+from gametheca.utils.api_tokens import (
+    generate_api_token,
+    require_api_scope,
+    user_has_scope,
+    verify_bearer_token_detailed,
+)
+from gametheca.utils.auth import safe_next_url
+
+
+@pytest.fixture
+def member(db_session):
+    user_uuid = str(uuid4())
+    user = User(
+        name=f'member_{user_uuid[:8]}',
+        email=f'member_{user_uuid[:8]}@example.com',
+        password_hash='hashed',
+        role='user',
+        user_id=user_uuid,
+        avatarpath='newstyle/avatar_default.jpg',
+    )
+    user.set_password('memberpassword123')
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+# --- S8: open redirect ----------------------------------------------------
+
+class TestSafeNextUrl:
+    @pytest.mark.parametrize('candidate', [
+        '/admin/dashboard',
+        '/library?q=zelda&page=2',
+        '/games/abc#screenshots',
+    ])
+    def test_same_site_paths_pass_through(self, app, candidate):
+        with app.test_request_context('/'):
+            assert safe_next_url(candidate) == candidate
+
+    @pytest.mark.parametrize('candidate', [
+        'http://evil.com/steal',
+        'https://evil.com/steal',
+        '//evil.com/steal',
+        # The bypass the old netloc check missed: empty netloc, but a browser
+        # normalises the leading /\ to // and treats it as protocol-relative.
+        '/\\evil.com/steal',
+        '\\\\evil.com/steal',
+        'javascript:alert(1)',
+        'evil.com',
+        '',
+        None,
+    ])
+    def test_off_site_candidates_fall_back(self, app, candidate):
+        with app.test_request_context('/'):
+            result = safe_next_url(candidate)
+            assert result != candidate
+            assert result.startswith('/')
+            assert not result.startswith('//')
+
+    def test_fallback_is_a_real_route(self, app):
+        with app.test_request_context('/'):
+            assert safe_next_url(None).startswith('/')
+
+
+# --- S6: token expiry -----------------------------------------------------
+
+class TestTokenExpiry:
+    def test_token_without_expiry_never_expires(self, db_session, member):
+        row, raw = generate_api_token(member, 'legacy')
+        assert row.expires_at is None
+        assert row.is_expired() is False
+        assert row.is_active() is True
+
+        user, token, reason = verify_bearer_token_detailed(raw)
+        assert reason is None
+        assert user.id == member.id
+
+    def test_pre_existing_null_rows_keep_working(self, db_session, member):
+        """The upgrade must not log out a live companion."""
+        row, raw = generate_api_token(member, 'companion')
+        row.expires_at = None
+        db_session.commit()
+
+        _user, _token, reason = verify_bearer_token_detailed(raw)
+        assert reason is None
+
+    def test_expiry_is_applied_when_requested(self, db_session, member):
+        row, _raw = generate_api_token(member, 'scoped', expires_in_days=30)
+        assert row.expires_at is not None
+        # The column is TIMESTAMP, so Postgres hands it back naive after the
+        # commit — which is the case is_expired() normalises. Do the same here.
+        stored = row.expires_at
+        if stored.tzinfo is None:
+            stored = stored.replace(tzinfo=timezone.utc)
+        remaining = stored - datetime.now(timezone.utc)
+        assert timedelta(days=29) < remaining <= timedelta(days=30)
+
+    def test_expired_token_is_rejected(self, db_session, member):
+        row, raw = generate_api_token(member, 'stale', expires_in_days=1)
+        row.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+        db_session.commit()
+
+        user, token, reason = verify_bearer_token_detailed(raw)
+        assert user is None
+        assert token is None
+        assert reason == 'expired'
+
+    def test_unexpired_token_still_verifies(self, db_session, member):
+        _row, raw = generate_api_token(member, 'fresh', expires_in_days=7)
+        _user, _token, reason = verify_bearer_token_detailed(raw)
+        assert reason is None
+
+    def test_expiry_checked_after_the_hash(self, db_session, member):
+        """A wrong secret must not be distinguishable from an expired one."""
+        row, raw = generate_api_token(member, 'stale', expires_in_days=1)
+        row.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+        db_session.commit()
+
+        prefix = raw.rsplit('_', 1)[0]
+        _u, _t, reason = verify_bearer_token_detailed(f'{prefix}_wrongsecret')
+        assert reason == 'bad_hash'
+
+    def test_naive_timestamps_compare_as_utc(self, member):
+        row = ApiToken(
+            user_id=member.id,
+            name='naive',
+            token_prefix='deadbeef',
+            token_hash='x',
+            scopes=['read:library'],
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=1),
+        )
+        assert row.is_expired() is True
+
+    def test_negative_expiry_is_refused(self, db_session, member):
+        with pytest.raises(ValueError):
+            generate_api_token(member, 'bad', expires_in_days=0)
+
+    def test_public_dict_reports_expiry(self, db_session, member):
+        row, _raw = generate_api_token(member, 'shown', expires_in_days=5)
+        public = row.to_public_dict()
+        assert public['expires_at'] is not None
+        assert public['expired'] is False
+
+
+# --- S10: session-cookie scopes -------------------------------------------
+
+class TestSessionScopes:
+    @pytest.fixture(autouse=True)
+    def _no_bearer_token(self, app, monkeypatch):
+        monkeypatch.setattr(api_tokens, 'g', SimpleNamespace(api_token=None))
+
+    def _as(self, monkeypatch, role):
+        monkeypatch.setattr(
+            api_tokens,
+            'current_user',
+            SimpleNamespace(is_authenticated=True, role=role),
+        )
+
+    @pytest.mark.parametrize('scope', ['admin', 'write:library', 'write:download'])
+    def test_child_is_denied_write_and_admin_scopes(self, monkeypatch, scope):
+        self._as(monkeypatch, 'child')
+        assert user_has_scope(scope) is False
+
+    @pytest.mark.parametrize('scope', ['read:library', 'read:social', 'write:presence'])
+    def test_child_keeps_read_and_presence(self, monkeypatch, scope):
+        self._as(monkeypatch, 'child')
+        assert user_has_scope(scope) is True
+
+    @pytest.mark.parametrize('scope', ['read:library', 'write:library', 'write:download'])
+    def test_member_keeps_every_non_admin_scope(self, monkeypatch, scope):
+        self._as(monkeypatch, 'user')
+        assert user_has_scope(scope) is True
+
+    def test_member_is_still_denied_admin(self, monkeypatch):
+        self._as(monkeypatch, 'user')
+        assert user_has_scope('admin') is False
+
+    def test_admin_gets_everything(self, monkeypatch):
+        self._as(monkeypatch, 'admin')
+        assert user_has_scope('admin') is True
+        assert user_has_scope('write:library') is True
+
+    def test_anonymous_gets_nothing(self, monkeypatch):
+        monkeypatch.setattr(
+            api_tokens,
+            'current_user',
+            SimpleNamespace(is_authenticated=False, role=None),
+        )
+        assert user_has_scope('read:library') is False
+
+
+# --- S11: envelope on the scope decorator ---------------------------------
+
+class TestScopeDecoratorEnvelope:
+    def _route(self, app, scope='admin'):
+        @require_api_scope(scope)
+        def handler():
+            return {'ok': True}
+
+        return handler
+
+    def test_unauthenticated_returns_the_envelope(self, app, monkeypatch):
+        monkeypatch.setattr(
+            api_tokens,
+            'current_user',
+            SimpleNamespace(is_authenticated=False, role=None),
+        )
+        with app.test_request_context('/api/thing'):
+            response, status = self._route(app)()
+            assert status == 401
+            body = response.get_json()
+            assert body['ok'] is False
+            assert body['error_code'] == 'unauthorized'
+
+    def test_missing_scope_returns_the_envelope(self, app, monkeypatch):
+        monkeypatch.setattr(api_tokens, 'g', SimpleNamespace(api_token=None))
+        monkeypatch.setattr(
+            api_tokens,
+            'current_user',
+            SimpleNamespace(is_authenticated=True, role='user'),
+        )
+        with app.test_request_context('/api/thing'):
+            response, status = self._route(app)()
+            assert status == 403
+            body = response.get_json()
+            assert body['ok'] is False
+            assert body['error_code'] == 'forbidden'
+            assert body['detail']['required_scope'] == 'admin'

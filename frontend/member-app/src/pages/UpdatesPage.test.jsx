@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { UpdatesPage } from './UpdatesPage'
@@ -126,12 +126,25 @@ test('manual Refresh shows brief feedback without wiping inbox', async () => {
   )
 
   expect(await screen.findByText('Behind Game')).toBeInTheDocument()
-  // Glyph-only control: its accessible name says which list it refreshes,
-  // because the row also holds "Check library for updates".
-  await user.click(
-    screen.getByRole('button', { name: 'Refresh the freshness inbox' }),
+  // Glyph-only control, and now the *only* refresh control on the page — its
+  // accessible name has to carry what the word would have said.
+  const refresh = screen.getByRole('button', {
+    name: 'Check the library against store versions',
+  })
+  await user.click(refresh)
+
+  // Scoped to the control's own row. The page carries a second `role="status"`
+  // — the scan result line ("Checked N titles · …") — now that this one control
+  // runs the probe, so an unscoped query matches two live regions. Both are
+  // correct; this test is about the busy state on the heading row.
+  //
+  // Busy feedback, whichever half of the round trip is in flight: the probe
+  // ("Checking library…") or the inbox re-read that follows it ("Refreshing…").
+  // The point of the test is that there *is* feedback and the list survives it.
+  const tools = refresh.closest('.gt-updates__inbox-tools')
+  expect(within(tools).getByRole('status')).toHaveTextContent(
+    /Checking library|Refreshing/i,
   )
-  expect(screen.getByRole('status')).toHaveTextContent(/Refreshing/i)
   expect(screen.getByText('Behind Game')).toBeInTheDocument()
 
   resolveInbox({
@@ -149,7 +162,7 @@ test('manual Refresh shows brief feedback without wiping inbox', async () => {
   })
 
   await waitFor(() => {
-    expect(screen.queryByText(/^Refreshing…$/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^(Refreshing|Checking library)…$/)).not.toBeInTheDocument()
   })
 })
 
@@ -183,7 +196,7 @@ test('refresh and its timestamp sit on the inbox heading row', async () => {
   // timestamp reads *before* the glyph. Queried by role+name precisely so the
   // icon cannot ship without an accessible name.
   const refresh = await screen.findByRole('button', {
-    name: 'Refresh the freshness inbox',
+    name: 'Check the library against store versions',
   })
   expect(refresh.closest('.gt-updates__inbox-tools')).not.toBeNull()
   await user.click(refresh)
@@ -196,10 +209,20 @@ test('refresh and its timestamp sit on the inbox heading row', async () => {
   ).toBeTruthy()
 })
 
-test('the library sweep is its own control and refills the inbox', async () => {
-  // Refresh re-reads the last probe; this makes a new probe happen. With only
-  // Refresh, an inbox that was empty because nothing had ever been probed
-  // stayed empty however many times you pressed it.
+/**
+ * The library sweep and the inbox re-read are **one** control now.
+ *
+ * They used to be two, side by side on the same rule, both reading as "refresh
+ * this list" — the glyph re-read the stored inbox, the button ran a fresh probe
+ * and *then* re-read the inbox itself. Nobody could be expected to know which
+ * one they wanted, and the quiet one silently did less.
+ *
+ * They collapse into the glyph, wired to the probe, because the probe was
+ * already the strict superset. This test keeps its original job — a press makes
+ * a new probe happen, reports what is left, and refills the inbox — and only
+ * changes which control it presses.
+ */
+test('the one refresh control probes the library and refills the inbox', async () => {
   const user = userEvent.setup()
   updatesApi.scanLibraryUpdates.mockResolvedValue({
     ok: true,
@@ -218,7 +241,12 @@ test('the library sweep is its own control and refills the inbox', async () => {
   await waitFor(() => expect(updatesApi.fetchUpdatesInbox).toHaveBeenCalled())
   const before = updatesApi.fetchUpdatesInbox.mock.calls.length
 
-  await user.click(screen.getByRole('button', { name: /Check library for updates/i }))
+  await user.click(
+    screen.getByRole('button', { name: 'Check the library against store versions' }),
+  )
+
+  // …and there is no second control that looks like it does the same thing.
+  expect(screen.queryByRole('button', { name: /Check library for updates/i })).toBeNull()
 
   await waitFor(() => expect(updatesApi.scanLibraryUpdates).toHaveBeenCalled())
   // Says how much is left, so "press again" is a real instruction rather than

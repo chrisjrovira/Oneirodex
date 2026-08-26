@@ -11,6 +11,7 @@ import {
   updateCollection,
 } from '../api/collections'
 import { applyPlatformSkin, clearPlatformSkin, sharedPlatform } from '../chrome/platformSkins'
+import { PageStatus } from '../components/PageStatus'
 import './Collections.css'
 
 function loadErrorMessage(error) {
@@ -331,7 +332,7 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
             />
             Public
           </label>
-          <button type="submit" disabled={saving}>
+          <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={saving}>
             {saving ? 'Saving…' : 'Save changes'}
           </button>
           {saveError ? (
@@ -342,16 +343,13 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
         </form>
       ) : null}
 
-      {error ? (
-        <div role="alert">
-          <p>{loadErrorMessage(error)}</p>
-          <button type="button" onClick={() => setRetryCount((n) => n + 1)}>
-            Retry
-          </button>
-        </div>
-      ) : null}
-
-      {!error && !collection ? <p>Loading…</p> : null}
+      <PageStatus
+        loading={!error && !collection}
+        error={error}
+        errorMessage={error ? loadErrorMessage(error) : null}
+        loadingMessage="Loading shelf…"
+        onRetry={() => setRetryCount((n) => n + 1)}
+      />
 
       {!error && collection && items.length === 0 ? (
         <p>No games in this collection yet. Search below to add one.</p>
@@ -428,6 +426,7 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
                   <li key={game.uuid}>
                     <button
                       type="button"
+                      className="gt-collection__picker-item"
                       disabled={already || addingUuid === game.uuid}
                       onClick={() => handleAdd(game)}
                     >

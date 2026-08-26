@@ -1,6 +1,20 @@
 # WebRetro cores — operator vendor guide
 
-**Status:** Default image ships the **24** WebRetro 6.5 cores already in this tree. PCE / VICE / DOSBox WASM stay **operator-owned** (size + licensing) — drop them here or mount a host folder. Companion Play remains available without them.
+**Status (changed 2026-08-25):** the **24** WebRetro 6.5 cores are **no longer committed**. They are
+fetched into this directory on first boot (`FETCH_WEBRETRO_CORES_ON_BOOT`, default on), or by the
+script below. PCE / VICE / DOSBox WASM remain operator-owned as before. Companion Play works without
+any of them.
+
+**Why they left the tree.** They were 71MB of binaries carrying GPL-2.0, GPL-3.0 and MPL-2.0 terms,
+with `snes9x` and `genesis_plus_gx` adding clauses that restrict commercial distribution — and no
+licence text or Corresponding Source offer travelled with them. `cores/README.md` had described the
+directory as "operator-owned" all along and `tests/test_webretro_cores.py` opens with "no multi-MB
+WASM in repo"; the tree simply did not match. Fetching them onto the operator's own box makes the
+operator the party provisioning them. See
+[security-legal-playbook.md](../strategy/security-legal-playbook.md) (L1).
+
+**Air-gapped installs:** set `FETCH_WEBRETRO_CORES_ON_BOOT=false` and use `--from-dir`. Boot logs a
+warning naming the missing cores rather than letting browser play fail silently.
 
 Related: [browser-play.md](../user/browser-play.md) · [emulation-coverage.md](../strategy/emulation-coverage.md)
 
@@ -12,7 +26,8 @@ gametheca/static/vendor/webretro/cores/
   {core_id}_libretro.wasm
 ```
 
-Optional Docker bind-mount (must include shipped cores **or** run `--defaults` into that host dir first — an empty mount hides image cores):
+Optional Docker bind-mount — with the cores no longer in the image, an empty mount is now simply
+where the first-boot fetch writes them, provided the volume is writable:
 
 ```yaml
 # docker-compose.yml (uncomment when ready)

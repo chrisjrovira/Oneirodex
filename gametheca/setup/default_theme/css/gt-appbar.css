@@ -216,16 +216,30 @@
  * hamburger and the other buttons should all be the same size and aligned
  * together". `--gt-control-h` is the same token the tile-size group and the
  * form controls use, so the whole bar lands on one height. */
+/* The one button shape.
+ *
+ * `.gt-btn` in gt-primitives.css is now defined to land on exactly these
+ * values, because "the buttons on <page> still look like the old style" was
+ * reported once per page for five pages running and the cause was never the
+ * page: it was two button classes with two geometries. Whichever one a page
+ * happened to reach for decided whether it matched the library.
+ *
+ * The literals this used to carry (0.78rem, 7px, 0.6rem) were the reason the
+ * two could not be reconciled by eye — they sat one notch off the scale that
+ * `.gt-btn` was already using. They are scale values now, so the two classes
+ * are the same control rendered from the same tokens rather than two
+ * near-misses that have to be kept in sync by hand.
+ */
 .gt-cbtn {
   appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: var(--gt-space-2);
   min-height: var(--gt-control-h);
-  font-size: 0.78rem;
-  padding: 0 0.6rem;
-  border-radius: 7px;
+  font-size: var(--gt-font-sm);
+  padding: 0 var(--gt-space-4);
+  border-radius: var(--gt-radius-sm);
   border: 1px solid var(--gt-border);
   background: transparent;
   color: var(--gt-text-muted);
@@ -383,6 +397,84 @@
   border-color: var(--gt-accent);
   color: var(--gt-bg);
   font-weight: 600;
+}
+
+/* Destructive page actions. Semantic colours are deliberately excluded from
+   preset overrides, so "Delete collection" reads as danger on every theme —
+   the same contract `.gt-btn--danger` already had. This variant existed only
+   on the old primitive, which is why every destructive control on a member
+   page had to opt out of the bar language to look dangerous. */
+.gt-cbtn--danger {
+  color: var(--gt-danger, var(--gt-text));
+  border-color: color-mix(in srgb, var(--gt-danger, var(--gt-text)) 45%, transparent);
+}
+
+.gt-cbtn--danger:hover:not(:disabled):not([aria-disabled='true']) {
+  color: var(--gt-danger, var(--gt-text));
+  border-color: var(--gt-danger, var(--gt-accent));
+  background: color-mix(in srgb, var(--gt-danger, var(--gt-text)) 12%, transparent);
+}
+
+/* No chrome until touched. For a control that sits inside another framed
+   surface — a modal's Cancel, a row's inline action — where a second border
+   reads as a box inside a box. */
+.gt-cbtn--ghost {
+  border-color: transparent;
+}
+
+/* ---------- merged control clusters ----------
+ *
+ * Two or more `.gt-cbtn` that answer one question read as one control: the
+ * outer corners round, the inner ones square, and the shared edges collapse to
+ * a single rule rather than two borders sitting 1px apart.
+ *
+ * This is the shape the top bar's rail-toggle + Filters pair always wanted, and
+ * the shape a filter panel's Apply / Clear / Done row wants — three verbs about
+ * one panel, not three unrelated buttons that happen to be adjacent.
+ */
+.gt-cbtn-group {
+  display: inline-flex;
+  align-items: stretch;
+  /* Collapse the shared edge instead of drawing it twice. */
+  gap: 0;
+}
+
+.gt-cbtn-group > .gt-cbtn {
+  border-radius: 0;
+  /* The button to the right owns the shared edge, so only one is painted. */
+  margin-inline-start: -1px;
+}
+
+.gt-cbtn-group > .gt-cbtn:first-child {
+  margin-inline-start: 0;
+  border-start-start-radius: var(--gt-radius-sm);
+  border-end-start-radius: var(--gt-radius-sm);
+}
+
+.gt-cbtn-group > .gt-cbtn:last-child {
+  border-start-end-radius: var(--gt-radius-sm);
+  border-end-end-radius: var(--gt-radius-sm);
+}
+
+/* A hovered or focused member must paint its edges over its neighbours', or
+   the highlight is clipped on whichever side the next button overlaps. */
+.gt-cbtn-group > .gt-cbtn:hover,
+.gt-cbtn-group > .gt-cbtn:focus-visible,
+.gt-cbtn-group > .gt-cbtn.is-on,
+.gt-cbtn-group > .gt-cbtn--primary {
+  position: relative;
+  z-index: 1;
+}
+
+/* The group is one control, so it stretches as one: each member takes an equal
+   share when the cluster is told to fill its row. */
+.gt-cbtn-group--fill {
+  display: flex;
+  width: 100%;
+}
+
+.gt-cbtn-group--fill > .gt-cbtn {
+  flex: 1 1 0;
 }
 
 /* Active filters must stay visible from the collapsed state. Without this

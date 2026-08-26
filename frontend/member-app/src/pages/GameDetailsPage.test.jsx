@@ -328,7 +328,19 @@ test('shows youtube_demo_url when no trailers exist', async () => {
   expect(screen.queryByTitle('Game trailer 1')).toBeNull()
 })
 
-test('versions: default chip + Download when downloadable; Missing on disk hides Download', async () => {
+/**
+ * The base row no longer carries a Download.
+ *
+ * Downloading the base game is the action bar's primary button at the top of
+ * the page, so this row was a second, quieter copy of the loudest control on
+ * the page — under a heading about versions, which is not what it was for.
+ * Per-*update* download stays, because it is the one thing the action bar
+ * cannot express: "I have the game, I only need patch 1.03".
+ *
+ * The fixture gains a downloadable update so all three cases are covered at
+ * once: base (never), update-downloadable (yes), update-missing (no).
+ */
+test('versions: base has no Download; a downloadable update does; missing hides it', async () => {
   global.fetch = vi.fn((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
@@ -361,6 +373,15 @@ test('versions: default chip + Download when downloadable; Missing on disk hides
                 downloadable: false,
                 size: null,
               },
+              {
+                kind: 'update',
+                id: 3,
+                uuid: 'update-ready',
+                label: 'Update: patch-1.03.bin',
+                is_default: false,
+                downloadable: true,
+                size: '40 MB',
+              },
             ],
           }),
       })
@@ -381,8 +402,14 @@ test('versions: default chip + Download when downloadable; Missing on disk hides
   const versionsSection = document.getElementById('updates')
   expect(versionsSection).toBeTruthy()
   expect(versionsSection).toHaveTextContent('1.2 GB')
+  // Exactly one: the downloadable update. Not the base row, not the missing one.
   const downloadButtons = within(versionsSection).getAllByRole('button', { name: 'Download' })
   expect(downloadButtons).toHaveLength(1)
+  // …and it is the one attached to the update, which is what makes this a test
+  // of the rule rather than of the count.
+  expect(
+    downloadButtons[0].closest('li')?.textContent,
+  ).toMatch(/patch-1\.03\.bin/)
   expect(within(versionsSection).getByText(/Missing on disk/i)).toBeInTheDocument()
   expect(within(versionsSection).getByText(/Update: gone\.bin/i)).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /Remove missing versions/i })).toBeNull()
@@ -474,6 +501,16 @@ test('version download toasts Backend hint on 410 path_missing', async () => {
                 is_default: true,
                 downloadable: true,
               },
+              // The row that still has a Download button to press. Base no
+              // longer does — see the versions test above.
+              {
+                kind: 'update',
+                id: 2,
+                uuid: 'update-ready',
+                label: 'Update: patch-1.03.bin',
+                is_default: false,
+                downloadable: true,
+              },
             ],
           }),
       })
@@ -492,8 +529,8 @@ test('version download toasts Backend hint on 410 path_missing', async () => {
   await user.click(within(document.getElementById('updates')).getByRole('button', { name: 'Download' }))
   await waitFor(() => {
     expect(initiateGameDownload).toHaveBeenCalledWith(detailsPayload.uuid, {
-      kind: 'base',
-      versionUuid: undefined,
+      kind: 'update',
+      versionUuid: 'update-ready',
     })
   })
   expect(showToast).toHaveBeenCalledWith('Use game details → Remove missing versions', 'error')

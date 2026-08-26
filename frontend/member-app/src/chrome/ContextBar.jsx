@@ -13,6 +13,12 @@ import { createPortal } from 'react-dom'
 export const TOPBAR_SLOT_ID = 'gt-topbar-slot'
 export const TOPBAR_LEAD_ID = 'gt-topbar-lead'
 export const TOPBAR_TRAIL_ID = 'gt-topbar-trail'
+/* Four, now. The lead slot sits *inside* the merged toggle/Filters control, so
+   anything portalled there is styled as a member of that group — correct for
+   Filters, wrong for a page title, which would acquire a button's border and a
+   squared-off inner edge. The title gets its own slot immediately after the
+   cluster instead. */
+export const TOPBAR_TITLE_ID = 'gt-topbar-title'
 
 /** Marks a host div as belonging to one ContextBar instance. */
 const HOST_ATTR = 'data-gt-contextbar-host'
@@ -154,6 +160,7 @@ export function ContextBar({
   views,
   activeView,
   onSelectView,
+  title = null,
   filters = null,
   filterCount = 0,
   summary = null,
@@ -188,6 +195,7 @@ export function ContextBar({
     const targets = {
       centre,
       lead: document.getElementById(TOPBAR_LEAD_ID),
+      title: document.getElementById(TOPBAR_TITLE_ID),
       trail: document.getElementById(TOPBAR_TRAIL_ID),
     }
 
@@ -248,6 +256,24 @@ export function ContextBar({
     <span className="gt-contextbar__count">{summary}</span>
   ) : null
 
+  /* A name for a page the nav tables cannot name.
+   *
+   * `getPageTitle` derives bar one's section label from the rail's own link
+   * tables, which is right for every routed destination and useless for the
+   * ones whose name is data: a Discover row's "see all" page is called
+   * whatever that row is called, and the table can only ever say "Discover".
+   * DiscoverRowPage had been passing `title` since it was written and this
+   * component simply did not accept the prop, so the name was dropped on the
+   * floor — the page opened with no indication of which row you had opened.
+   *
+   * Rendered into the lead slot as the same `.gt-topbar__section` element the
+   * bar uses for its own titles, so a data-named page reads identically to a
+   * table-named one. gt-shell.css suppresses the bar's copy when this is
+   * present, otherwise a collapsed rail showed both. */
+  const titleControl = title ? (
+    <span className="gt-topbar__section">{title}</span>
+  ) : null
+
   // One bar, not two.
   //
   // This rendered as its own row under the top bar, which read as "a toolbar on
@@ -270,6 +296,7 @@ export function ContextBar({
   if (!slots) {
     return (
       <div className="gt-contextbar">
+        {titleControl}
         {viewControl}
         <div className="gt-contextbar__actions">
           {countControl}
@@ -285,6 +312,7 @@ export function ContextBar({
   return (
     <>
       {createPortal(filterControl, slots.lead || slots.centre)}
+      {createPortal(titleControl, slots.title || slots.lead || slots.centre)}
       {createPortal(viewControl, slots.centre)}
       {createPortal(countControl, slots.trail || slots.centre)}
     </>

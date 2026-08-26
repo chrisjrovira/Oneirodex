@@ -90,7 +90,7 @@ test('shows error with retry', async () => {
   render(<DownloadsPage />)
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load downloads.')
-  await user.click(screen.getByRole('button', { name: 'Retry' }))
+  await user.click(screen.getByRole('button', { name: /Try again/i }))
   expect(await screen.findByText('You have no downloads yet.')).toBeInTheDocument()
 })
 

@@ -6,13 +6,17 @@
 
 From the member SPA **Account** drawer (under TopNav) → **Preferences**, or Ctrl/Cmd+K → Preferences. The modal uses sectioned aurora chrome (`gt-prefs-modal`: Library · Look & density · Game language) — dense sections, **no heavy cards**. Changes save to your user profile and usually reload the page.
 
+Preferences is three folding sections — **Library**, **Look & density** and **Game
+language**. Fold the ones you are not using and it stays folded next time; the panel
+opens fully expanded until you change that.
+
 ## Color theme presets
 
 - Pick a preset from the **swatch grid** in Preferences — the underlying `<select>` is visually hidden (still keyboard/screen-reader reachable) for a slimmer picker. Preferences is the only theme picker; if you are an admin, the Themes admin page handles installing and resetting themes, not choosing one.
 - **Default (system)** is the built-in theme id `default` (saved explicitly — not `None`).
 - Default brand accent is green **`#2fd67b`** (Style B+C glass); other presets (Aurora, Ember, Violet, Forest, Ocean, Rose, Mono, Sunset, Ice — **9** packs) recolour accent, surfaces, glass/CRT, typography, and paired icon geometry (`GENERATOR_VERSION` 10).
 - Picking a colour swatch also selects that preset’s paired icon pack (still changeable before Save).
-- The chosen theme applies on the **next page load** — every stylesheet, the brand mark, and the tile chrome follow it.
+- The chosen theme applies on the **next page load** — every stylesheet, the brand mark, the tile chrome, and the **stock avatars** follow it. The seven avatars GameTheca ships are recoloured into each preset's palette, so a gamepad avatar is cyan on Arcade Neon and magenta on Hot Cabinet rather than staying default-green. An avatar you uploaded yourself is your picture and is never recoloured.
 - If swatches do nothing, accents look wrong, or presets still look accent-only (pre–Wave 2d), the library volume may have stale theme files — ask an admin to **Reset Default Themes** after a rebuild.
 
 > **Fixed:** themes used to appear not to save at all — the page came back with
@@ -25,6 +29,7 @@ From the member SPA **Account** drawer (under TopNav) → **Preferences**, or Ct
 
 - Preferences → **Icon pack**: Outline, Filled, Duotone, Pixel, Soft, Mono block.
 - Packs only change glyph weight/style; they use `currentColor`, so they work with **any** color theme (e.g. Aurora + Pixel).
+- A preset can also set the icon *silhouette* — stroke weight, corner style, and whether glyphs are outlined or solid. A glyph drawn as a solid shape (the Favorites heart, the play triangle) stays visible under the outline presets rather than being erased by them.
 - Details: [icon-themes.md](../strategy/icon-themes.md).
 
 ## Fonts

@@ -59,7 +59,18 @@ test('read/writeFiltersVisible persist LHN collapse preference', () => {
   expect(readFiltersVisible()).toBe(true)
 })
 
-test('FilterBar uses aurora button classes', async () => {
+/**
+ * The point of this test has not changed: the filter actions must use the
+ * product's shared button classes and not Bootstrap's.
+ *
+ * Which shared class did change. `.gt-btn` and `.gt-cbtn` were two button
+ * languages with two geometries, and this panel additionally re-styled whatever
+ * it was given from scratch in `libraryFilters.css` — which is why the filter
+ * buttons never matched the bar they open from. The two classes resolve to one
+ * shape now and the local override is gone, so the panel carries `.gt-cbtn`,
+ * the same class the trigger beside it carries.
+ */
+test('FilterBar uses the shared bar button classes', async () => {
   const user = userEvent.setup()
   const onApply = vi.fn()
   const onClear = vi.fn()
@@ -68,11 +79,15 @@ test('FilterBar uses aurora button classes', async () => {
 
   const apply = await screen.findByRole('button', { name: 'Apply' })
   const clear = screen.getByRole('button', { name: 'Clear' })
-  expect(apply.className).toContain('gt-btn')
-  expect(apply.className).toContain('gt-btn--primary')
-  expect(clear.className).toContain('gt-btn--secondary')
+  expect(apply.className).toContain('gt-cbtn')
+  expect(apply.className).toContain('gt-cbtn--primary')
+  expect(clear.className).toContain('gt-cbtn')
   expect(apply.className).not.toContain('btn-primary')
   expect(clear.className).not.toContain('btn-secondary')
+
+  // One merged control, not three adjacent buttons.
+  expect(apply.parentElement?.className).toContain('gt-cbtn-group')
+  expect(clear.parentElement).toBe(apply.parentElement)
 
   await user.click(apply)
   expect(onApply).toHaveBeenCalled()
@@ -147,7 +162,23 @@ test('FilterBar hosts signal chips in the filter section', async () => {
   expect(onApply).toHaveBeenCalledWith({ has_updates: '1' })
 })
 
-test('FilterBar Kind/Signals sit above Apply; body stays mounted', async () => {
+/**
+ * Apply now *leads* the panel. This test asserted the opposite, deliberately,
+ * so the reversal is worth stating.
+ *
+ * The old order put the three actions at the foot, below every select and chip.
+ * That reads fine on a short panel and fails on a real one: inside the popover
+ * the form scrolls, so committing a filter meant scrolling back past everything
+ * you had just set, and "Done" — the control that closes the thing you are
+ * looking at — ended up the furthest point in it from the trigger that opened
+ * it. Leading with the actions keeps them one movement from the trigger at any
+ * panel height, and they are sticky so they stay reachable while the body
+ * scrolls under them.
+ *
+ * Kind still precedes Signals, and the body still stays mounted; both of those
+ * were the rest of this test's job and neither changed.
+ */
+test('FilterBar leads with Apply; Kind precedes Signals; body stays mounted', async () => {
   const { container } = render(
     <FilterBar filters={{}} onApply={() => {}} onClear={() => {}} />,
   )
@@ -161,7 +192,7 @@ test('FilterBar Kind/Signals sit above Apply; body stays mounted', async () => {
     kind.compareDocumentPosition(signals) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy()
   expect(
-    signals.compareDocumentPosition(apply) & Node.DOCUMENT_POSITION_FOLLOWING,
+    apply.compareDocumentPosition(kind) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy()
   expect(screen.queryByRole('button', { name: 'Hide filters' })).toBeNull()
 })

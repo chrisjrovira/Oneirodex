@@ -12,6 +12,7 @@ import {
 } from '../api/ownership'
 import { ContextBar } from '../chrome/ContextBar'
 import { LoadingOverlay } from '../components/LoadingOverlay'
+import { PageStatus } from '../components/PageStatus'
 import './OwnershipPage.css'
 
 const STORES = [
@@ -208,12 +209,11 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
         <div className="gt-page-header">
           <h1>Store Ownership</h1>
         </div>
-        <div role="alert">
-          <p>Unable to load store ownership.</p>
-          <button type="button" onClick={() => setRetryCount((count) => count + 1)}>
-            Retry
-          </button>
-        </div>
+        <PageStatus
+          error={error}
+          errorMessage="Unable to load store ownership."
+          onRetry={() => setRetryCount((count) => count + 1)}
+        />
       </div>
     )
   }
@@ -351,14 +351,14 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
                       }
                     />
                   </label>
-                  <button type="submit" disabled={busy}>
+                  <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={busy}>
                     {busyAction === `${store.key}:connect` ? 'Saving…' : store.saveLabel}
                   </button>
                 </form>
 
                 <div className="gt-ownership__actions">
                   {store.canSync ? (
-                    <button type="button" disabled={busy} onClick={() => handleSync(store)}>
+                    <button type="button" className="gt-cbtn" disabled={busy} onClick={() => handleSync(store)}>
                       {busyAction === `${store.key}:sync`
                         ? `Syncing from ${store.label}…`
                         : `Sync from ${store.label}`}
@@ -366,6 +366,7 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
                   ) : null}
                   <button
                     type="button"
+                    className="gt-cbtn"
                     disabled={busy || !state.connected}
                     onClick={() => handleDisconnect(store)}
                   >
@@ -400,7 +401,7 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
                       }}
                     />
                   </label>
-                  <button type="submit" disabled={busy}>
+                  <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={busy}>
                     {busyAction === `${store.key}:csv` ? 'Importing…' : 'Import CSV'}
                   </button>
                 </form>

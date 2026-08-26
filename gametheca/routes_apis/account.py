@@ -22,7 +22,12 @@ from sqlalchemy import func, select
 from gametheca import db
 from gametheca.models import InviteToken, User
 from gametheca.utils.api_response import api_error, api_ok
-from gametheca.utils.avatar import STOCK_AVATARS, save_avatar, set_stock_avatar
+from gametheca.utils.avatar import (
+    STOCK_AVATARS,
+    avatar_url,
+    save_avatar,
+    set_stock_avatar,
+)
 from gametheca.utils.global_settings import global_settings_row
 from gametheca.utils.smtp import is_smtp_config_valid
 
@@ -110,8 +115,13 @@ def account_summary():
         'email': current_user.email,
         'role': current_user.role,
         'avatar_path': current_user.avatarpath,
+        # Resolved alongside the raw path rather than instead of it: the path is
+        # the identity the client sends back, the URL is what it renders. Shipped
+        # avatars resolve into the active theme, so the picker and the account
+        # header show the same recoloured art the rail does — see avatar_url.
+        'avatar_url': avatar_url(current_user.avatarpath),
         'stock_avatars': [
-            {**entry, 'url': url_for('static', filename=entry['path'])}
+            {**entry, 'url': avatar_url(entry['path'])}
             for entry in STOCK_AVATARS
         ],
         'invite_quota': current_user.invite_quota,
@@ -145,7 +155,7 @@ def account_avatar():
     # any proxy holding the old bytes under the old name.
     return api_ok({
         'avatar_path': path,
-        'avatar_url': url_for('static', filename=path),
+        'avatar_url': avatar_url(path),
     })
 
 
@@ -172,7 +182,7 @@ def account_stock_avatar():
 
     return api_ok({
         'avatar_path': path,
-        'avatar_url': url_for('static', filename=path),
+        'avatar_url': avatar_url(path),
     })
 
 

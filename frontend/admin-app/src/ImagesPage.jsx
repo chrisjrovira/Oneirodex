@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { useSearchParams } from 'react-router-dom'
 import { ArtworkPicker } from './ArtworkPicker'
 import { DataTable } from './DataTable'
@@ -382,7 +383,7 @@ export function ImagesPage({ embedded = false }) {
         </a>
       </div>
 
-      <section className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+      <section className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
         <h2 className="gt-admin-panel-title">Single title</h2>
         <div className="gt-images-game-search">
           <label className="gt-images-game-search__field">
@@ -444,7 +445,7 @@ export function ImagesPage({ embedded = false }) {
         />
       </section>
 
-      <section className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+      <section className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
         <h2 className="gt-admin-panel-title">Mass image queue</h2>
         <p className="gt-admin-lede">
           Filter pending/failed downloads, retry, and batch download. Library / platform / service
@@ -464,11 +465,7 @@ export function ImagesPage({ embedded = false }) {
             ) : null}
           </div>
         ) : null}
-        {queueError ? (
-          <div role="alert" className="gt-admin-alert">
-            {queueError}
-          </div>
-        ) : null}
+        <PageStatus error={queueError} />
         {queueMsg ? (
           <p className="gt-admin-lede" aria-live="polite">
             {queueMsg}
@@ -733,17 +730,13 @@ export function ImagesPage({ embedded = false }) {
         )}
       </section>
 
-      <section className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+      <section className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
         <h2 className="gt-admin-panel-title">Missing covers (health)</h2>
         <p className="gt-admin-lede">
           From <code>/api/health/library</code> worst list — open picker or generate placeholders in
           Art studio. Full “missing cover” filter on the download queue needs Backend.
         </p>
-        {missingError ? (
-          <div role="alert" className="gt-admin-alert">
-            {missingError}
-          </div>
-        ) : null}
+        <PageStatus error={missingError} />
         {!missingCovers.length && !missingError ? (
           <p className="gt-admin-lede">No missing-cover titles in the health sample.</p>
         ) : (

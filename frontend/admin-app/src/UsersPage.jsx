@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { DataTable } from './DataTable'
 import { MetricStrip } from './opsWidgets'
 
@@ -51,17 +52,7 @@ export function UsersPage() {
         editor when needed.
       </p>
 
-      {error ? (
-        <div className="gt-error" role="alert">
-          <div className="gt-error__message">
-            Unable to load users.
-            <p className="gt-error__detail">{String(error.message || error)}</p>
-          </div>
-          <button type="button" className="gt-btn gt-btn--sm" onClick={load}>
-            Try again
-          </button>
-        </div>
-      ) : null}
+      <PageStatus error={error} errorMessage="Unable to load users." onRetry={load} />
 
       {!error && !loading ? (
         <MetricStrip
@@ -102,11 +93,7 @@ export function UsersPage() {
         </a>
       </div>
 
-      {loading ? (
-        <p role="status" aria-busy="true">
-          Loading accounts…
-        </p>
-      ) : null}
+      <PageStatus loading={loading} loadingMessage="Loading accounts…" />
 
       {!loading && !error && users.length === 0 ? (
         <p className="gt-empty">No accounts yet. Invite someone to get started.</p>

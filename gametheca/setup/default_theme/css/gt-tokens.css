@@ -48,6 +48,11 @@
      preset_themes.preset_tokens), which is what turns a colour preset into a
      visual language: sharp/CRT packs push these toward 0, soft packs upward.
      ---------------------------------------------------------------------- */
+  /* Width of the content pane's scrollbar. Read by .gt-shell__main's webkit
+     rule and reserved by .gt-topbar, so the bar and the pane share a midpoint —
+     see the note there. One definition, or they drift. */
+  --gt-scrollbar-w: 9px;
+
   --gt-radius-xs: 4px;
   --gt-radius-sm: 6px;
   --gt-radius-md: 8px;

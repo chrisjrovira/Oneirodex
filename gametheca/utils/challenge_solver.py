@@ -445,13 +445,30 @@ def fetch_with_challenge_retry(
     url: str,
     *,
     session: requests.Session | None = None,
+    validator: Any = None,
     _solver_used: bool = False,
     **kwargs: Any,
 ) -> requests.Response:
-    """HTTP fetch with at most one challenge-solver retry when enabled."""
+    """HTTP fetch with at most one challenge-solver retry when enabled.
+
+    Pass *validator* (one of the ``validate_*_http_url`` helpers) to have every
+    redirect hop revalidated instead of only the URL handed in — indexer hosts
+    are operator-supplied, so an indexer that answers ``302`` should not be able
+    to redirect the fetch somewhere the validator would have refused.
+    """
     http = session or requests
-    request_fn = getattr(http, method.lower())
     timeout = kwargs.pop('timeout', DEFAULT_TIMEOUT_SEC)
+
+    if validator is not None:
+        from gametheca.utils.http_safe import safe_request
+
+        def request_fn(target, **call_kwargs):
+            return safe_request(
+                method, target, validator=validator, session=session, **call_kwargs
+            )
+    else:
+        request_fn = getattr(http, method.lower())
+
     resp = request_fn(url, timeout=timeout, **kwargs)
 
     if _solver_used or not is_challenge_response(resp):

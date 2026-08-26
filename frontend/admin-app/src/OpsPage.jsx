@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { PageStatus } from './PageStatus'
 
 import { DataTable } from './DataTable'
+import { SystemResetPanel } from './SystemResetPanel'
 import { useWidgetOrder } from './useWidgetOrder'
 import {
   LibraryHealthFactors,
+  formatScanJobCounters,
   MeterBar,
   MetricTile,
   OpsStatusBanner,
@@ -23,6 +26,11 @@ import {
 } from './opsWidgets'
 import './ops.css'
 
+// Re-exported: this used to be defined here, and OpsPage.test.jsx imports it
+// from this module. Moving the definition without this would have broken a test
+// that has nothing to do with the move.
+export { formatScanJobCounters }
+
 async function getJson(url) {
   const response = await fetch(url, { credentials: 'same-origin' })
   if (response.status === 401) {
@@ -33,26 +41,6 @@ async function getJson(url) {
   return response.json()
 }
 
-/** Honest scan glance: processed (= success+failed) / total, matching Scan Jobs. */
-export function formatScanJobCounters(job) {
-  const success = Number(job?.folders_success) || 0
-  const failed = Number(job?.folders_failed) || 0
-  const total = Number(job?.total_folders) || 0
-  const processed = success + failed
-  if (total > 0) {
-    return `${processed}/${total}` + (failed ? ` · ${failed} failed` : '')
-  }
-  if (job?.status === 'Queued' || job?.status === 'Pending') {
-    return job?.queue_position != null ? `Queued #${job.queue_position}` : 'Queued'
-  }
-  if (job?.status === 'Running' || job?.status === 'Stopping') {
-    return 'Starting…'
-  }
-  if (job?.progress != null && Number(job.progress) > 0) {
-    return `${job.progress}%`
-  }
-  return '—'
-}
 
 function livekitLabel(livekit) {
   if (!livekit) return 'n/a'
@@ -110,11 +98,24 @@ const SCAN_JOB_COLUMNS = [
     value: (job) => Number(job.folders_success ?? 0) + Number(job.folders_failed ?? 0),
   },
   {
-    key: 'current_processing',
-    label: 'Current',
-    render: (job) => (
-      <span className="gt-ops-table__muted">{job.current_processing || '—'}</span>
-    ),
+    // Same priority the Scans page uses (GT-B38): the reason a job stopped
+    // outranks what it was doing, because it is the only thing that explains a
+    // queue that is no longer moving. This column showed `current_processing`
+    // alone, which is null on a failed job — so the console reported that a
+    // scan had failed and never why, the reclaim message included.
+    key: 'detail',
+    label: 'Detail',
+    render: (job) => {
+      if (job.error_message) {
+        return <span className="gt-ops-table__error">{job.error_message}</span>
+      }
+      if (job.stalled) {
+        return <span className="gt-ops-table__muted">No progress reported</span>
+      }
+      return (
+        <span className="gt-ops-table__muted">{job.current_processing || '—'}</span>
+      )
+    },
   },
 ]
 
@@ -327,17 +328,13 @@ export function OpsPage() {
         </div>
       </div>
 
-      {error ? (
-        <div role="alert" className="gt-admin-alert">
-          Unable to load ops summary ({error.message}).
-        </div>
-      ) : null}
-
-      {bootLoading && !snapshot ? (
-        <p className="gt-admin-lede" role="status">
-          Loading ops summary…
-        </p>
-      ) : null}
+      {/* The `Refreshing…` indicator above is not a page status — it reports
+          one control's activity and stays where it is. */}
+      <PageStatus
+        error={error}
+        loading={bootLoading && !snapshot}
+        loadingMessage="Loading ops summary…"
+      />
 
       <OpsStatusBanner
         severity={severity}
@@ -712,6 +709,10 @@ export function OpsPage() {
 
       {/* System destinations moved to the rail (GT-B7) — this row repeated
           every entry the rail already lists while the System section is open. */}
+
+      {/* Last on the page on purpose: a control that empties the database
+          should not sit above the ones you use daily. */}
+      <SystemResetPanel />
     </div>
   )
 }

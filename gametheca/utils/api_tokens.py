@@ -6,15 +6,16 @@ import hashlib
 import logging
 import re
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 
-from flask import current_app, g, has_app_context, jsonify
+from flask import current_app, g, has_app_context
 from flask_login import current_user
 from sqlalchemy import select
 
 from gametheca import db, login_manager
 from gametheca.models import ApiToken, User
+from gametheca.utils.api_response import api_error
 
 VALID_SCOPES = frozenset({
     'read:library',
@@ -68,8 +69,13 @@ def generate_api_token(
     user: User,
     name: str,
     scopes: list[str] | None = None,
+    expires_in_days: int | None = None,
 ) -> tuple[ApiToken, str]:
-    """Create a token row and return (model, raw_token). Raw shown once."""
+    """Create a token row and return (model, raw_token). Raw shown once.
+
+    ``expires_in_days=None`` keeps the historical behaviour — a token that lives
+    until it is revoked. Callers that can afford an expiry should set one.
+    """
     cleaned = []
     for scope in scopes or ['read:library']:
         scope = (scope or '').strip()
@@ -85,12 +91,19 @@ def generate_api_token(
         # Defensive: urlsafe alphabet is already A-Za-z0-9_-, so this should not fire.
         raise RuntimeError('generated api token failed purity check')
 
+    expires_at = None
+    if expires_in_days is not None:
+        if expires_in_days <= 0:
+            raise ValueError('expires_in_days must be positive')
+        expires_at = datetime.now(timezone.utc) + timedelta(days=expires_in_days)
+
     row = ApiToken(
         user_id=user.id,
         name=(name or 'API token').strip()[:100],
         token_prefix=prefix,
         token_hash=_hash_secret(secret),
         scopes=cleaned,
+        expires_at=expires_at,
     )
     db.session.add(row)
     db.session.commit()
@@ -127,7 +140,7 @@ def verify_bearer_token_detailed(
     """Like verify_bearer_token, but returns a scrubbed failure reason.
 
     Reasons (never include the secret): malformed | unknown_prefix | bad_hash |
-    inactive_user. Success returns reason=None.
+    expired | inactive_user. Success returns reason=None.
     """
     if not raw or not raw.startswith(TOKEN_PREFIX):
         return None, None, 'malformed'
@@ -145,6 +158,10 @@ def verify_bearer_token_detailed(
         return None, None, 'unknown_prefix'
     if not secrets.compare_digest(row.token_hash, _hash_secret(secret)):
         return None, None, 'bad_hash'
+    # Checked after the hash so an expired token cannot be distinguished from a
+    # wrong one without knowing the secret.
+    if row.is_expired():
+        return None, None, 'expired'
 
     user = db.session.get(User, row.user_id)
     if not user or not user.state:
@@ -184,16 +201,32 @@ def load_user_from_request(req):
     return user
 
 
+# Scopes a session-cookie caller gets purely by being signed in, per role.
+# Everything a `child` may do is gated by the library ACL and per-route role
+# checks anyway — this stops `require_api_scope` from being the *only* gate and
+# silently handing a child write scopes it never needs.
+_SESSION_SCOPE_DENY = {
+    'child': frozenset({'admin', 'write:library', 'write:download'}),
+}
+
+
 def user_has_scope(scope: str) -> bool:
     if not current_user.is_authenticated:
         return False
     token = getattr(g, 'api_token', None)
-    if token is None:
-        # Session cookie: admins get all scopes; members get non-admin
-        if current_user.role == 'admin':
-            return True
-        return scope != 'admin'
-    return token.has_scope(scope)
+    if token is not None:
+        return token.has_scope(scope)
+
+    # Session cookie: admins get every scope; everyone else gets the non-admin
+    # set, minus whatever their role is explicitly denied.
+    from gametheca.utils.rbac import normalize_role
+
+    role = normalize_role(getattr(current_user, 'role', None))
+    if role == 'admin':
+        return True
+    if scope == 'admin':
+        return False
+    return scope not in _SESSION_SCOPE_DENY.get(role, frozenset())
 
 
 def require_api_scope(scope: str):
@@ -203,9 +236,16 @@ def require_api_scope(scope: str):
         @wraps(fn)
         def wrapped(*args, **kwargs):
             if not current_user.is_authenticated:
-                return jsonify({'error': 'Unauthorized'}), 401
+                # api_error, not a bare jsonify: the frontend branches on
+                # error_code, and these two were the only auth failures in the
+                # tree that shipped without one.
+                return api_error('Unauthorized', code='unauthorized')
             if not user_has_scope(scope):
-                return jsonify({'error': f'Missing scope: {scope}'}), 403
+                return api_error(
+                    f'Missing scope: {scope}',
+                    code='forbidden',
+                    detail={'required_scope': scope},
+                )
             return fn(*args, **kwargs)
 
         return wrapped

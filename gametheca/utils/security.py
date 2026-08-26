@@ -4,10 +4,16 @@ from __future__ import annotations
 
 import ipaddress
 import re
+import socket
 from pathlib import Path
 from urllib.parse import urlparse
 
 from flask import current_app
+
+
+#: ``/home/alice``, ``/Users/alice`` and ``C:\Users\alice`` all name a person.
+#: Matches the home-directory word, its separator, and the one segment after it.
+_USER_DIR_RE = re.compile(r'([Uu]sers?|[Hh]ome)([/\\])[^/\\]+')
 
 
 def is_safe_path(user_path, allowed_bases):
@@ -90,15 +96,82 @@ def sanitize_path_for_logging(path, max_length=100):
     else:
         truncated = path
 
-    sanitized = re.sub(r'[Uu]sers?/[^/]+', 'Users/[USER]', truncated)
-    sanitized = re.sub(r'[Hh]ome/[^/]+', 'home/[USER]', sanitized)
-    sanitized = re.sub(r'\\\\[Uu]sers\\\\[^\\\\]+', r'\\Users\\[USER]', sanitized)
+    # One rule for both separators. The three it replaces were POSIX-only twice
+    # over: the Windows rule was written `\\\\[Uu]sers\\\\`, which the regex
+    # engine reads as *two* literal backslashes, and a Windows path has one — so
+    # it never matched anything, and on a Windows host nothing was scrubbed at
+    # all. Separator and casing are preserved so the log still reads naturally.
+    sanitized = _USER_DIR_RE.sub(r'\1\2[USER]', truncated)
 
     return sanitized
 
 
-def is_blocked_outbound_host(hostname: str | None) -> bool:
-    """Block obvious SSRF targets (localhost, link-local, private IPv4 literals)."""
+def _is_blocked_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    """True for any address an outbound fetch has no business reaching."""
+    # An IPv4-mapped IPv6 literal (``::ffff:127.0.0.1``) reports False for
+    # is_loopback on its own, so unwrap it before asking.
+    mapped = getattr(ip, 'ipv4_mapped', None)
+    if mapped is not None:
+        ip = mapped
+    return bool(
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_reserved
+        or ip.is_multicast
+        or ip.is_unspecified
+    )
+
+
+def _parse_ip_literal(host: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
+    """Parse *host* as an IP literal, including the forms ``ip_address`` rejects.
+
+    ``http://2130706433/`` and ``http://0x7f.0.0.1/`` are both 127.0.0.1 to a
+    resolver but raise ValueError in ``ipaddress``. ``inet_aton`` accepts the
+    decimal, octal and hex dotted forms, which is exactly the gap.
+    """
+    try:
+        return ipaddress.ip_address(host)
+    except ValueError:
+        pass
+    try:
+        return ipaddress.ip_address(socket.inet_aton(host))
+    except (OSError, ValueError):
+        return None
+
+
+def _resolve_host(host: str) -> list[ipaddress.IPv4Address | ipaddress.IPv6Address]:
+    """Every address *host* currently resolves to. Empty when it does not resolve."""
+    try:
+        infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
+    except (OSError, UnicodeError):
+        return []
+    found = []
+    for info in infos:
+        candidate = _parse_ip_literal(info[4][0])
+        if candidate is not None:
+            found.append(candidate)
+    return found
+
+
+def is_blocked_outbound_host(hostname: str | None, *, resolve: bool = True) -> bool:
+    """Block SSRF targets — localhost, link-local, and private/loopback addresses.
+
+    Checking the *literal* only is not enough: ``http://attacker.example/`` that
+    resolves to 127.0.0.1 or 169.254.169.254 passed every check here, which
+    defeated ``validate_user_outbound_http_url`` entirely despite its docstring
+    promising never to reach the LAN. So a name that is not itself an IP gets
+    resolved and every returned address is checked.
+
+    A host that does not resolve is *not* blocked: the fetch cannot connect
+    either, and failing closed here would reject legitimate connector URLs saved
+    while DNS happens to be down.
+
+    Residual risk, stated rather than papered over: this is resolve-then-connect,
+    so a DNS rebind between the check and the socket still wins. Closing that
+    needs the resolved address pinned into the connection, which is a bigger
+    change than this one; the practical hole is the one closed here.
+    """
     if not hostname:
         return True
     host = hostname.strip().lower().rstrip('.')
@@ -106,20 +179,41 @@ def is_blocked_outbound_host(hostname: str | None) -> bool:
         return True
     if host.startswith('[') and host.endswith(']'):
         host = host[1:-1]
-    try:
-        ip = ipaddress.ip_address(host)
-        return bool(
-            ip.is_private
-            or ip.is_loopback
-            or ip.is_link_local
-            or ip.is_reserved
-            or ip.is_multicast
-            or ip.is_unspecified
-        )
-    except ValueError:
-        pass
-    if re.match(r'^\d+\.\d+\.\d+\.\d+$', host):
+
+    literal = _parse_ip_literal(host)
+    if literal is not None:
+        return _is_blocked_ip(literal)
+
+    if not resolve:
+        return False
+
+    resolved = _resolve_host(host)
+    return any(_is_blocked_ip(ip) for ip in resolved)
+
+
+def is_cloud_metadata_host(hostname: str | None) -> bool:
+    """True for a cloud instance-metadata endpoint, by name or by resolution.
+
+    Kept separate from :func:`is_blocked_outbound_host` because this one stays
+    blocked even when ``ALLOW_PRIVATE_LAN_URLS`` reopens RFC1918 for homelab
+    connectors — reaching a NAS is the point, reaching 169.254.169.254 never is.
+    """
+    if not hostname:
         return True
+    host = hostname.strip().lower().rstrip('.')
+    if host.startswith('[') and host.endswith(']'):
+        host = host[1:-1]
+    if host in {'metadata.google.internal', '169.254.169.254'}:
+        return True
+
+    literal = _parse_ip_literal(host)
+    candidates = [literal] if literal is not None else _resolve_host(host)
+    for ip in candidates:
+        mapped = getattr(ip, 'ipv4_mapped', None)
+        if mapped is not None:
+            ip = mapped
+        if ip.is_link_local:
+            return True
     return False
 
 
@@ -159,12 +253,12 @@ def validate_outbound_http_url(
     if not parsed.hostname:
         return False, 'URL host required'
     lan_ok = allow_private_lan_urls_enabled() if allow_private_lan is None else bool(allow_private_lan)
-    if is_blocked_outbound_host(parsed.hostname) and not lan_ok:
-        return False, 'URL host is not allowed'
-    if lan_ok and is_blocked_outbound_host(parsed.hostname):
-        # Still block cloud metadata endpoints even when LAN is allowed.
-        host = parsed.hostname.strip().lower().rstrip('.')
-        if host in {'169.254.169.254', 'metadata.google.internal'} or host.startswith('169.254.'):
+    if is_blocked_outbound_host(parsed.hostname):
+        # Homelab installs legitimately point connectors at RFC1918 hosts, so
+        # ALLOW_PRIVATE_LAN_URLS reopens those — but never cloud metadata, which
+        # is checked against the *resolved* addresses too, not just the literal.
+        # A name resolving to 169.254.169.254 used to walk straight through here.
+        if not lan_ok or is_cloud_metadata_host(parsed.hostname):
             return False, 'URL host is not allowed'
     if allowed_hostnames is not None and parsed.hostname.lower() not in {
         h.lower() for h in allowed_hostnames

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import './PcCheatsPanel.css'
 
 /**
@@ -121,12 +122,12 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }) {
 
       {stance ? <p className="gt-pccheats__stance">{stance}</p> : null}
 
-      {loading ? <p className="gt-pccheats__muted">Loading…</p> : null}
-      {error ? (
-        <p className="gt-pccheats__error" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <PageStatus
+        loading={loading}
+        error={error}
+        loadingMessage="Loading cheats…"
+        className="gt-pccheats__status"
+      />
 
       {!loading && !error && cheats.length === 0 ? (
         <p className="gt-pccheats__muted">

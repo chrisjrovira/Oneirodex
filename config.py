@@ -65,7 +65,34 @@ class Config(object):
     REMEMBER_COOKIE_SECURE = os.getenv('REMEMBER_COOKIE_SECURE', 'true').lower() == 'true'
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_SAMESITE = os.getenv('REMEMBER_COOKIE_SAMESITE', 'Lax')
-    
+
+    # HTTP security response headers — see gametheca/utils/security_headers.py.
+    # The CSP ships **report-only**: 24 Jinja templates carry an inline
+    # <script>, the newsletter editor loads CKEditor from a CDN, and the
+    # WebRetro cores are Emscripten WASM. Enforcing on day one would break all
+    # three, so an operator flips CSP_ENFORCE once their reports come back clean.
+    CSP_ENABLED = os.getenv('CSP_ENABLED', 'true').lower() == 'true'
+    CSP_ENFORCE = os.getenv('CSP_ENFORCE', 'false').lower() == 'true'
+    # Only sent when SESSION_COOKIE_SECURE is on — HSTS on a LAN box reached by
+    # IP over plain HTTP is a lockout, not a hardening.
+    HSTS_SECONDS = int(os.getenv('HSTS_SECONDS', '31536000') or '31536000')
+
+    # Firmware upload ceiling. utils/emulator_bios.py already reads this from
+    # config and documents the override, but nothing ever populated it, so the
+    # env var silently did nothing and the 64MB default always won.
+    EMULATOR_BIOS_MAX_BYTES = int(os.getenv('EMULATOR_BIOS_MAX_BYTES', '0') or '0')
+
+    # Global request-body ceiling. Every upload route already has its own,
+    # tighter limit (firmware at 64MB is the largest); without this one, none of
+    # them applied until after Werkzeug had buffered the whole body. Default
+    # keeps headroom over the firmware cap so raising that alone cannot wedge
+    # uploads behind a lower global limit.
+    _bios_mb = (EMULATOR_BIOS_MAX_BYTES or (64 * 1024 * 1024)) // (1024 * 1024)
+    MAX_UPLOAD_MB = int(
+        os.getenv('MAX_UPLOAD_MB', '') or max(128, _bios_mb + 16)
+    )
+    MAX_CONTENT_LENGTH = MAX_UPLOAD_MB * 1024 * 1024
+
     # Zipstream configuration for streaming ZIP downloads
     ZIPSTREAM_CHUNK_SIZE = int(os.getenv('ZIPSTREAM_CHUNK_SIZE', 65536))  # 64KB chunks for memory efficiency
     ZIPSTREAM_COMPRESSION_LEVEL = int(os.getenv('ZIPSTREAM_COMPRESSION_LEVEL', 0))  # ZIP_STORED for compatibility
@@ -133,6 +160,16 @@ class Config(object):
     # none. Runs in the background and never blocks or fails startup. Turn off
     # for air-gapped installs and use scripts/fetch-fonts.py --out instead.
     FETCH_FONTS_ON_BOOT = os.getenv('FETCH_FONTS_ON_BOOT', 'true').lower() == 'true'
+
+    # WebRetro cores are provisioned, not vendored — they carry GPL and
+    # non-commercial terms that make shipping them in the tree the wrong call.
+    # Off means browser play stays dark until an operator runs
+    # scripts/fetch-webretro-cores.sh (which also takes --from-dir for
+    # air-gapped installs). Boot says so in the log rather than leaving it to be
+    # discovered as "browser play is broken".
+    FETCH_WEBRETRO_CORES_ON_BOOT = os.getenv(
+        'FETCH_WEBRETRO_CORES_ON_BOOT', 'true'
+    ).lower() == 'true'
 
     # Point at a local firmware collection to have it imported on boot. Existing
     # files are never replaced, so this tops up what is missing and is safe to
@@ -244,6 +281,17 @@ class Config(object):
 
     # When true (default), OIDC JIT updates never overwrite an existing user's role.
     OIDC_LOCK_ROLES = os.getenv('OIDC_LOCK_ROLES', 'true').lower() == 'true'
+
+    # AGPL §13: a user interacting with this over a network must be offered the
+    # Corresponding Source. README states the obligation; this is what actually
+    # discharges it in the running app.
+    #
+    # Configurable precisely because §13 is about *this* deployment: if you
+    # modify GameTheca and run it for others, you owe them **your** source, not
+    # upstream's. Point this at your fork before you deploy a modified build.
+    GT_SOURCE_URL = os.getenv(
+        'GT_SOURCE_URL', 'https://github.com/chrisjrovira/gametheca'
+    )
 
     # In-app support → GitHub Issues (optional; tickets still save without a token)
     SUPPORT_GITHUB_TOKEN = os.getenv('SUPPORT_GITHUB_TOKEN', '')

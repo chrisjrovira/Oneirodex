@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { DataTable } from './DataTable'
 import { MetricStrip } from './opsWidgets'
 import { putJson } from './adminApi'
@@ -89,7 +90,7 @@ function AddMemberForm({ onCreated }) {
         email later from their own profile.
       </p>
 
-      {error ? <p role="alert">{error}</p> : null}
+      <PageStatus error={error} />
       {done ? <p role="status">{done}</p> : null}
 
       <label className="gt-admin-field">
@@ -171,7 +172,7 @@ export function InvitesPage() {
   if (error) {
     return (
       <div className="gt-admin-page">
-        <p role="alert">Unable to load invite quotas.</p>
+        <PageStatus error errorMessage="Unable to load invite quotas." />
       </div>
     )
   }

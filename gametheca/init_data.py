@@ -127,6 +127,68 @@ def initialize_library_folders():
     os.makedirs(os.path.join(library_path, 'fonts'), exist_ok=True)
     initialize_theme_fonts()
     initialize_emulator_bios()
+    initialize_webretro_cores()
+
+
+def initialize_webretro_cores():
+    """Provision the WebRetro cores, which are no longer vendored.
+
+    Unlike the fonts, there is no bundled copy to fall back on: the cores carry
+    GPL and non-commercial terms that make redistributing them here the wrong
+    move, so the network is the only path. See
+    ``gametheca/utils/webretro_core_install.py``.
+
+    Best-effort and backgrounded, like every other boot asset — browser play is
+    a feature, not a precondition for the app starting.
+    """
+    from flask import current_app
+
+    from gametheca.utils.webretro_core_install import (
+        install_missing_cores,
+        missing_cores,
+    )
+
+    try:
+        missing = missing_cores()
+    except Exception as exc:  # noqa: BLE001 — never block a boot on this
+        log_system_event(
+            f"WebRetro cores not checked ({exc})",
+            event_type='startup', event_level='warning', audit_user='system',
+        )
+        return
+
+    if not missing:
+        return
+
+    if not current_app.config.get('FETCH_WEBRETRO_CORES_ON_BOOT', True):
+        # Said plainly rather than left to be discovered as "browser play is
+        # broken": the platform layer still advertises these cores.
+        log_system_event(
+            f"{len(missing)} WebRetro core(s) missing and the boot fetch is off — "
+            "browser play will not start for those platforms. "
+            "Run scripts/fetch-webretro-cores.sh --defaults (or --from-dir).",
+            event_type='startup', event_level='warning', audit_user='system',
+        )
+        return
+
+    def _fetch():
+        installed, failed = install_missing_cores()
+        if installed:
+            log_system_event(
+                f"Fetched {installed} WebRetro core(s)",
+                event_type='startup', event_level='info', audit_user='system',
+            )
+        if failed:
+            log_system_event(
+                f"WebRetro core(s) not fetched: {', '.join(failed)}; "
+                "run scripts/fetch-webretro-cores.sh --defaults",
+                event_type='startup', event_level='warning', audit_user='system',
+            )
+
+    from gametheca.utils.background import run_in_background
+
+    run_in_background(current_app._get_current_object(), _fetch, name='webretro-cores')
+    print(f"Fetching {len(missing)} WebRetro core(s) — browser play warms up shortly")
 
 
 def initialize_theme_fonts():

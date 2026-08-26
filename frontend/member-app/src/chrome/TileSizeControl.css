@@ -87,7 +87,19 @@
   width: 0.75rem;
   height: 0.75rem;
   border-radius: var(--gt-radius-circle, 50%);
-  background: currentColor;
+  /* The theme's own colour, at rest.
+     `currentColor` resolved to `--gt-text-muted` here, so the one pixel of this
+     control that is visible when nobody is touching it was grey on every theme
+     — the slider looked switched off, and the accent only appeared once you
+     were already using it. The thumb is the control; it should say which theme
+     you are in. */
+  background: var(--gt-accent);
+}
+
+/* Hovered, the real range takes over and the accent moves to `accent-color`
+   below, so the dot does not need to hold it any more. */
+.gt-tile-size:hover .gt-tile-size__grip {
+  background: var(--gt-accent);
 }
 
 /* Collapsed until you are on it.

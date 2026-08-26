@@ -206,6 +206,39 @@ const FAQ_SECTIONS = [
       'Ask your admin for docs/user guides, or see the GitHub repo.',
     ],
   },
+  {
+    // AGPL §13 requires that people using this *over a network* be offered the
+    // Corresponding Source "through some standard or customary means". The
+    // README said so; nothing in the running app did. This section is where the
+    // obligation is actually discharged, which is why the source link is
+    // rendered from shellConfig rather than hardcoded — a modified deployment
+    // owes its users its own source.
+    //
+    // It also carries provider attribution: IGDB (Twitch), Giant Bomb and
+    // SteamGridDB each ask for it in their API terms, and the member app
+    // surfaced their data with none.
+    id: 'about',
+    group: 'Support',
+    icon: 'report',
+    tone: 'info',
+    title: 'About & licence',
+    short: 'About',
+    summary: 'Source code, licence, data credits',
+    items: [
+      'GameTheca is free software under the GNU Affero General Public License v3.0. You may run, study, modify and share it.',
+      'Running a modified copy as a network service? AGPL §13 means you owe your users that modified source. Admins set GT_SOURCE_URL to point here at their own fork.',
+      'The licence covers GameTheca itself — not the games, ROMs, BIOS or artwork you point it at.',
+      'Game metadata and artwork come from IGDB (an Amazon company), Giant Bomb, SteamGridDB and store pages, depending on what your admin configured.',
+      'Browser play uses WebRetro with libretro emulator cores, provisioned by your admin rather than shipped with GameTheca.',
+    ],
+    links: [
+      { key: 'source', label: 'Source code (AGPL §13)', href: null, fromConfig: 'sourceUrl' },
+      { key: 'licence', label: 'GNU AGPL v3.0', href: 'https://www.gnu.org/licenses/agpl-3.0.html' },
+      { key: 'igdb', label: 'IGDB', href: 'https://www.igdb.com/' },
+      { key: 'giantbomb', label: 'Giant Bomb', href: 'https://www.giantbomb.com/' },
+      { key: 'steamgriddb', label: 'SteamGridDB', href: 'https://www.steamgriddb.com/' },
+    ],
+  },
 ]
 
 /**
@@ -427,6 +460,7 @@ export function HelpPage({ shellConfig = {} }) {
               <h2>
                 <button
                   type="button"
+                  className="gt-help__section-toggle"
                   aria-expanded={open}
                   onClick={() => toggle(section.id)}
                 >
@@ -443,23 +477,64 @@ export function HelpPage({ shellConfig = {} }) {
                 </button>
               </h2>
               {open ? (
-                <ul>
-                  {section.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+                <>
+                  <ul>
+                    {section.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  {section.links ? (
+                    <p className="gt-help__links">
+                      {section.links
+                        // A link whose href comes from config is dropped when
+                        // that config is empty rather than rendered dead — an
+                        // offer of source that goes nowhere is worse than none.
+                        .map((link) => ({
+                          ...link,
+                          href: link.fromConfig ? shellConfig[link.fromConfig] : link.href,
+                        }))
+                        .filter((link) => link.href)
+                        .map((link) => (
+                          <a
+                            key={link.key}
+                            className="gt-help__link"
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {link.label}
+                          </a>
+                        ))}
+                    </p>
+                  ) : null}
+                </>
               ) : null}
             </section>
           )
         })}
       </div>
 
-      <p className="gt-help__footer">
-        Repo:{' '}
-        <a href="https://github.com/chrisjrovira/gametheca" target="_blank" rel="noopener noreferrer">
-          chrisjrovira/gametheca
-        </a>
-      </p>
+      {/* The source offer, on every render of this page rather than only inside
+          the About section — AGPL §13 wants it reachable, not hunted for. The
+          URL is configuration: a modified deployment must point at its own. */}
+      {shellConfig.sourceUrl ? (
+        <p className="gt-help__footer">
+          GameTheca{shellConfig.appVersion ? ` ${shellConfig.appVersion}` : ''} — free software under
+          the{' '}
+          <a
+            href="https://www.gnu.org/licenses/agpl-3.0.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GNU AGPL v3.0
+          </a>
+          .{' '}
+          <a href={shellConfig.sourceUrl} target="_blank" rel="noopener noreferrer">
+            Get the source code
+          </a>
+          .
+        </p>
+      ) : null}
     </div>
     </>
   )

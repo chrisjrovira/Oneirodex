@@ -14,6 +14,7 @@ from urllib.parse import urlparse, urlunparse
 from flask_caching import Cache
 from gametheca.utils.db import check_postgres_port_open
 from gametheca.utils.proxy import apply_proxy_fix
+from gametheca.utils.security_headers import apply_security_headers
 from gametheca.utils.icon_themes import icon_pack_css_url
 
 db = SQLAlchemy()
@@ -47,6 +48,7 @@ def create_app():
     
     csrf.init_app(app)
     apply_proxy_fix(app)
+    apply_security_headers(app)
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/library')
 
     from gametheca.utils.i18n import init_babel
@@ -75,9 +77,29 @@ def create_app():
 
     @app.errorhandler(413)
     def request_entity_too_large(error):
-        """Handle file upload size limit exceeded errors."""
+        """Handle file upload size limit exceeded errors.
+
+        Two fixes over the previous version. It quoted a flat "10MB" that was
+        never the real limit — and could not have been, because
+        MAX_CONTENT_LENGTH was unset, so Flask never raised this at all. And it
+        redirected unconditionally, which answered an XHR upload with an HTML
+        page the caller could not read. API callers now get the envelope.
+        """
         from flask import flash, redirect, request
-        flash('The file you tried to upload is too large. Maximum file size is 10MB.', 'error')
+        from gametheca.utils.api_response import api_error
+
+        limit_mb = app.config.get('MAX_UPLOAD_MB', 0)
+        message = f'The file you tried to upload is too large. Maximum size is {limit_mb}MB.'
+
+        wants_json = (
+            request.path.startswith('/api/')
+            or request.accept_mimetypes.best == 'application/json'
+            or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        )
+        if wants_json:
+            return api_error(message, code='payload_too_large')
+
+        flash(message, 'error')
         return redirect(request.url)
 
     @app.context_processor
@@ -123,6 +145,10 @@ def create_app():
             # page headers back, but there is no longer an old shell to pair
             # them with, so that is a stopgap rather than a supported look.
             'enable_new_chrome': bool(app.config.get('ENABLE_NEW_CHROME', True)),
+            # AGPL §13 source offer — every template gets it, so member SPA and
+            # admin can both surface it without threading it through each view.
+            'source_url': app.config.get('GT_SOURCE_URL', ''),
+            'app_version': app_version,
         }
 
     @app.before_request
@@ -207,6 +233,27 @@ def create_app():
             print("⚠️  Initialization not completed - this may cause issues")
 
         if ('pytest' not in sys.modules and 'PYTEST_CURRENT_TEST' not in os.environ):
+            # Reclaim scans orphaned by whatever ended the last process.
+            #
+            # InitializationManager already does this, but only on the operator
+            # path (startweb*.sh runs it once before workers). Anything else —
+            # a dev server, a respawned worker, a container whose entrypoint was
+            # bypassed — booted straight past it, leaving 'Running' rows that no
+            # thread was working on. is_scan_busy() then reported busy and every
+            # new scan queued behind a ghost for STALE_RUNNING_SECONDS (6h),
+            # which is what "scanning is broken" looked like from the admin UI.
+            #
+            # Safe to run in every process, including multi-worker: the sweep
+            # only reclaims jobs whose owning process is provably gone, so a
+            # sibling worker's live scan is left alone.
+            try:
+                from gametheca.utils.scan_queue import reclaim_stale_busy_jobs
+                reclaimed = reclaim_stale_busy_jobs()
+                if reclaimed:
+                    print(f"[SCAN QUEUE] Reclaimed {reclaimed} orphaned scan job(s) at startup")
+            except Exception as exc:
+                print(f"[SCAN QUEUE] Startup reclaim failed: {exc}")
+
             try:
                 from gametheca.utils.scan_scheduler import start_scan_scheduler
                 start_scan_scheduler(app)

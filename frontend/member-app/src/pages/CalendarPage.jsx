@@ -2,6 +2,7 @@
 import { fetchCalendar } from '../api/calendar'
 import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
+import { PageStatus } from '../components/PageStatus'
 import './CalendarPage.css'
 
 const AHEAD_OPTIONS = [30, 60, 90, 180]
@@ -258,12 +259,17 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
     return () => window.clearInterval(timer)
   }, [rotates])
 
+  // Today, hoisted out of the effect below.
+  // It was computed there and thrown away, so the one date every calendar marks
+  // was the one date this one did not — on a month with no releases there was
+  // nothing at all to say where in the year you were standing.
+  const todayKey = toDateKey(new Date())
+
   useEffect(() => {
-    const todayKey = toDateKey(new Date())
     const withReleases = cells.filter((c) => c.inMonth && c.releases.length > 0)
     const preferToday = withReleases.find((c) => c.dateKey === todayKey)
     setSelectedKey(preferToday?.dateKey || withReleases[0]?.dateKey || null)
-  }, [focusYear, focusMonth, cells])
+  }, [focusYear, focusMonth, cells, todayKey])
 
   const selected = cells.find((c) => c.dateKey === selectedKey && c.inMonth)
   const selectedReleases = selected?.releases || []
@@ -308,6 +314,7 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
           {cells.map((cell) => {
             const count = cell.releases.length
             const isSelected = cell.inMonth && cell.dateKey === selectedKey
+            const isToday = cell.inMonth && cell.dateKey === todayKey
             return (
               <button
                 key={`${cell.dateKey}-${cell.inMonth ? 'in' : 'out'}`}
@@ -318,13 +325,16 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
                   cell.inMonth ? '' : 'is-out',
                   count ? 'has-releases' : '',
                   isSelected ? 'is-selected' : '',
+                  isToday ? 'is-today' : '',
                 ]
                   .filter(Boolean)
                   .join(' ')}
                 disabled={!cell.inMonth}
                 aria-label={
                   cell.inMonth
-                    ? `${cell.day}${count ? `, ${count} release${count === 1 ? '' : 's'}` : ''}`
+                    ? `${cell.day}${isToday ? ', today' : ''}${
+                        count ? `, ${count} release${count === 1 ? '' : 's'}` : ''
+                      }`
                     : undefined
                 }
                 aria-pressed={isSelected}
@@ -335,6 +345,15 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
                 <span className="gt-calendar__day-num">{cell.day}</span>
                 {count > 0 ? (
                   <DayArt releases={cell.releases} rotation={rotation} />
+                ) : null}
+                {/* How busy the day is, stated. The artwork alone says "there
+                    is something here"; a day with nine releases and a day with
+                    one looked identical until you clicked it. From two up only
+                    — a "1" on every single-release day is noise. */}
+                {count > 1 ? (
+                  <span className="gt-calendar__day-count" aria-hidden="true">
+                    {count}
+                  </span>
                 ) : null}
               </button>
             )
@@ -524,16 +543,13 @@ export function CalendarPage({ shellConfig = {} }) {
         </div>
       )}
 
-      {error ? (
-        <div role="alert">
-          <p>Unable to load calendar.</p>
-          <button type="button" onClick={() => setRetryCount((n) => n + 1)}>
-            Retry
-          </button>
-        </div>
-      ) : null}
-
-      {loading ? <p>Loading…</p> : null}
+      <PageStatus
+        loading={loading}
+        error={error}
+        errorMessage="Unable to load calendar."
+        loadingMessage="Loading calendar…"
+        onRetry={() => setRetryCount((n) => n + 1)}
+      />
 
       {!error && payload ? (
         <section className="gt-calendar__section" aria-labelledby="calendar-releases-heading">

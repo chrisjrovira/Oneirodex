@@ -12,6 +12,125 @@ point-in-time reports moved to [archive/](archive/README.md), stray root scripts
 [W26](roadmap-w26-ux-overhaul.md) · [W27](roadmap-w27-ux-feedback.md) · [ui-debt-log.md](../dev/ui-debt-log.md).
 Standing constraints unchanged: **no** Discord · **no Class A** intel in public docs.
 
+## W29 — member UI sweep (2026-08-24)
+
+One human list across Discover / Library / details / Favorites / Collections / Wishlist / Updates /
+Trailers / rail / top bar. Four root causes account for most of it — two button languages, an
+unadopted shared loading component, two undefined CSS custom properties, and a scroll container
+clipping the axis it was not scrolling. Full register in [ui-debt-log.md](../dev/ui-debt-log.md#w29--member-ui-sweep-human-2026-08-24).
+
+| | |
+|---|---|
+| **Shipped** | One button shape across `.gt-btn` / `.gt-cbtn` + `.gt-cbtn-group` primitive · `PageStatus` adopted by 18 more files · Discover row scrolling (edge-hover · arrows · wheel) via shared `useRowScroll` · Discover tile slider actually wired · uniform shelf/news tiles · hover no longer clipped · row hide + restore + pin reorder (**new `discover_hidden` column**, `GET/PUT /api/discover/pins` carries `hidden`) · `ContextBar` gained the `title` prop it was already being passed · sticky library pager · merged rail-toggle/Filters cluster · filter actions moved to the top · top-bar/grid centre alignment · details backdrop (`backdrop_url`) + screenshot honesty + action-row order + base-download removal · Favorites filters · Add to collection from tile & details · Updates refresh de-duplicated · Trailers title/branding · rail GameTheca group + larger icons + per-destination motion + themed active state · account avatar button |
+| **New ratchet** | `frontend/member-app/src/buttonLanguage.test.js` — every rendered `<button>` carries a class. Zero, no baseline. |
+| **Schema** | `user_preferences.discover_hidden TEXT` — added to `updateschema.py`, applied on boot. |
+| **Deviation** | Rail icons ship at **1.8x**, not the requested 3x; `--gt-rail-icon-scale` exposes it. At 3x a 23-destination rail runs ~1500px. |
+| **Still open** | Updates page redesign · Release calendar redesign · theme-ready default avatars · collapsible Preferences sections · six visually distinct icon packs · per-theme icon contrast audit · details layout re-flow |
+
+### W29 second pass — the carried items (same day)
+
+| | |
+|---|---|
+| **Shipped** | Icon visibility across themes (**5 of 9 presets** were erasing solid glyph sub-paths; Favorites vanished entirely) · theme-recoloured stock avatars generated per preset + `avatar_url()` resolver and `\|avatar_url` filter · collapsible Preferences sections (native `<details>`, fold state persisted) · Updates page re-ordered so the freshness inbox leads full-width with the two lookups paired beneath · Release calendar today-marker, per-day release count, and grid-beside-day layout on wide screens · details page section spacing (margin *and* grid gap were both applying) |
+| **New schema** | none |
+| **New guards** | `chrome/iconVisibility.test.js` · `tests/test_preset_avatars.py` (13 tests incl. a palette contract and the managed-vs-protected split) |
+| **Hazard caught in-pass** | Generated avatars in `PRESET_MANAGED_FILES` would have rebuilt all nine presets on every boot forever on any source tree without an `avatars/` folder. Split into `PRESET_MANAGED_FILES` (staleness) and `PRESET_PROTECTED_FILES` (sync) — see [ui-debt-log.md](../dev/ui-debt-log.md). |
+| **Still open** | Six visually distinct icon packs (art, not code) |
+
+## W30 — admin chrome parity · scan wedge · reset · firmware coverage (2026-08-24)
+
+Four independent items in one pass. The scan one was a real defect with a six-hour blast radius,
+not a polish item.
+
+| | |
+|---|---|
+| **Scan queue wedge (fixed)** | A scan orphaned by a restart stayed `Running` forever, so `is_scan_busy()` reported busy and **every** later scan queued behind a ghost until `STALE_RUNNING_SECONDS` (6h) aged it out. Reproduced end-to-end, then fixed by process ownership: **new `scan_jobs.owner_token`** (`<boot_id>:<pid>`), and a job whose owner process is provably gone is reclaimed on sight — at boot, on the scans status poll, and before any new scan is accepted. Recycled pids are handled by comparing process create-time against the job start. Rows with a NULL token (pre-upgrade) keep the old timeout behaviour rather than being swept out from under a live scan. |
+| **Admin chrome parity** | Top-bar **search button removed** (GT-B16 parity — ⌘K still works, hint moved into the account menu) · rail toggle now in a `.gt-cbtn-group` cluster · **account control added** (admin had none; `#admin-app-root` now carries `data-username`/`data-avatar`) · section label only when the rail is collapsed · `data-rail-item` on admin rail links so the shared per-destination icon motion applies · forced `compact` density dropped, so admin controls are the same height as member's. |
+| **Danger zone reset** | `POST /admin/api/system/reset` — four scopes (`catalog` · `libraries` · `users` · `settings`), preview-by-default, `"RESET GAMETHECA"` to confirm, single-transaction `TRUNCATE … CASCADE`, acting admin restored so nobody is locked out. **Never touches files** — the module has no filesystem access. UI at the bottom of Admin → System. |
+| **Firmware coverage** | `BIOS_REQUIREMENTS` went 21 → **32 cores**; every core reachable from `platform_emulator_mapping` that needs firmware now has a row. Hard-required set gained Atari 5200, Channel F, CreatiVision, 3DS, Vita. Upload allowlist gained `.pup/.n64/.sms/.col` plus an **exact-name** track for the extensionless C64 ROMs and `aes_keys.txt`. Stance unchanged: GameTheca never downloads or bundles BIOS. |
+| **Firmware per-platform honesty (bug)** | The per-system panel unioned every requirement of every core mapped to a platform, so `genesis_plus_gx` needing the Sega CD BIOS made Mega Drive, Master System, Game Gear, SG-1000 and 32X all claim to need it — and report **ready** once those files existed, on the strength of firmware irrelevant to a cartridge. Right verdict, nonsense reasoning. New `PLATFORM_BIOS_OVERRIDES` scopes requirements per platform; systems needing nothing drop out of the panel. Same trap fixed for `mgba` (GB/GBC), `mednafen_pce*` (PCE/SuperGrafx) and `dolphin` (Wii). Panel went 42 → 32 rows, all 10 removed being false. Per-core view unchanged. |
+| **Reset blast radius surfaced** | Each danger-zone checkbox now shows its real table count on mount (catalog 40 · libraries 45 · **users 44** · settings 7), fetched from the read-only preview. The users label was the problem — clearing members also clears everything recording *who did it*; it now says so. |
+| **Schema** | `scan_jobs.owner_token VARCHAR(80)` — added to `updateschema.py`, applied on boot. |
+| **New guards** | `tests/test_system_reset.py` (12) — incl. a coverage assert that every table belongs to exactly one scope · 4 new scan-queue tests covering dead-owner, live-owner, legacy-NULL and first-request-after-restart. |
+| **Not done** | Admin page *bodies* (Dashboard/Ops/Settings cards, and the ~47 Jinja templates) still use their own idiom — chrome only this pass, by agreement. |
+| **Capture: needed, deliberately deferred** | Admin chrome changed visibly (top bar, rail, control heights), so the README admin slots are stale. Capture was **not** run: the only instance available to an agent here is the **test** database, which holds a couple of scratch games and one throwaway library. Shooting that would replace real product art with near-empty frames — the same reasoning behind the script's `_ERROR_MARKERS` guard, which exists because bad art is worse than stale art. Re-run `python scripts/capture_docs_media.py` against a **populated** instance (`CAPTURE_BASE_URL`), then refresh `docs/assets/readme/`. |
+
+## W31 — security & legal audit, remediation Phases 0–4 (2026-08-25)
+
+Full audit of backend, four SPAs, desktop client and vendored code, then execution. Findings,
+evidence and the open phases: [security-legal-playbook.md](security-legal-playbook.md); the
+before/after table is in [security.md](security.md#what-phases-04-shipped).
+
+| | |
+|---|---|
+| **Audit** | 11 security findings (3 high) + 7 legal. The expensive classes were **absent** — no `eval`/`pickle`/`yaml.load`, one list-form `subprocess`, no string-built SQL, and theme-ZIP extraction already validates every member against traversal and symlinks. The findings were missing *outer* layers, not broken inner ones |
+| **Phase 0 — deps** | `npm audit fix` on both SPAs → **zero** vulnerabilities (was 3 high + 1 moderate: react-router CSRF bypass · nanoid · postcss). Lockfiles only; no `package.json` change |
+| **Phase 1 — perimeter** | New `utils/security_headers.py`: `nosniff` · `Referrer-Policy` · `X-Frame-Options` · `Permissions-Policy` everywhere, **re-stamped in `asgi.py`** because native `/static/*` never reaches Flask. CSP **report-only** by default — 24 inline-script templates, a CKEditor CDN and the WebRetro WASM cores would all break under enforcement. `MAX_CONTENT_LENGTH` set at last: the 413 handler had been promising a 10MB cap that could never fire |
+| **Phase 2 — SSRF** | The validators were DNS-blind *and* redirect-blind — `validate_user_outbound_http_url` promised "never LAN" and a hostname resolving to 127.0.0.1 walked straight through, as did any 302. Names are resolved and every address checked; alternate literals (`2130706433`, `0x7f.0.0.1`, `::ffff:127.0.0.1`) parsed; new `utils/http_safe.py` revalidates each redirect hop. Homelab `ALLOW_PRIVATE_LAN_URLS` still works — pinned by test |
+| **Phase 3 — uploads & XSS** | Cover resize was **dead code**: `thumbnail()` ran and the original bytes were saved, so oversized covers were stored whole. Real byte check before decode, 60-megapixel ceiling, resized image actually written. Desktop `assists.ts` was the one `innerHTML` site not escaping server data — shared `html.ts` plus a source-scan ratchet |
+| **Phase 4 — auth** | `api_tokens.expires_at` (**NULL = never**, so no live companion is logged out by the upgrade) · `safe_next_url` closes the `/\evil.com` redirect bypass · session-cookie `child` no longer granted `write:library`/`write:download` · `require_api_scope` moved onto `api_error` |
+| **Schema** | `api_tokens.expires_at TIMESTAMP` — in `updateschema.py`, applied on boot |
+| **New env** | `CSP_ENABLED` · `CSP_ENFORCE` · `HSTS_SECONDS` · `MAX_UPLOAD_MB` · `EMULATOR_BIOS_MAX_BYTES` (that last was read from config but never populated, so its documented override silently did nothing) |
+| **New guards** | `test_security_headers.py` (27) · `test_ssrf_hardening.py` (22) · `test_image_upload_hardening.py` (10) · `test_auth_hardening.py` (36) · `clients/desktop/src/html.test.ts` (9) — all in the CI core subset |
+| **Verification** | 344 pytest passed across the affected areas, 0 failed. Envelope ratchet tightened **151 → 149** (the `require_api_scope` fix); CSS ratchet unchanged |
+| **Phase 5 — licensing** | The 24 libretro cores are **out of the tree** (71MB) and fetched at first boot via `utils/webretro_core_install.py` — removal and fetch shipped together, because removal alone would break browser play on a fresh install. `static/vendor/THIRD-PARTY-NOTICES.md` covers all eight vendored JS libraries, with copyright lines read out of each shipped file's own banner. `webretro/info/**` deleted — five pages of the upstream author's ToS/privacy/cookie policy that every deployment was serving from its own domain, complete with Discord links against our own non-goals |
+| **Phase 6 — legal surface** | `GT_SOURCE_URL` discharges AGPL §13 on member Help and the admin footer — **configurable**, because §13 obliges *this* deployment to offer *its* source, so a fork must point at its own. IGDB / Giant Bomb / SteamGridDB credited. S9 path-scrub regex fixed: the Windows rule matched *doubled* backslashes, so on a Windows host nothing was ever scrubbed |
+| **New env (5–6)** | `GT_SOURCE_URL` · `FETCH_WEBRETRO_CORES_ON_BOOT` |
+| **New guards (5–6)** | `test_vendor_licensing.py` (19) · `test_legal_surface.py` (21) — the notices test is a ratchet: vendor a new library without a notice and it fails |
+| **Not done** | CSP enforcement — stays report-only until the admin page bodies settle and the reports come back clean. WebRetro's own licence is recorded as **unconfirmed** rather than guessed; confirm upstream before a public release |
+
+## W30b — admin page bodies, section by section (2026-08-25, in progress)
+
+Started with **Dashboard**. The first finding was not section-specific, so it became the
+foundation for the rest rather than a one-page fix.
+
+| | |
+|---|---|
+| **Shipped** | Shared `PageStatus` for admin. `.gt-page-status` **moved** from the member bundle into `gt-primitives.css` (loaded by `base.html`, `base_empty.html` *and* `base_admin.html`), and a matching component added to admin-app — same API, same classes, same error→loading→empty precedence, no `LoadingMotif` (member-side polish admin would have to pull in). Dashboard converted: its `.gt-admin-alert` div and `.gt-admin-lede` paragraph became one status block with Retry, and it now surfaces `HTTP <status> · <error_code>` instead of discarding what the server said. |
+| **Finding** | Admin had **eight** different shapes for "busy"/"failed" across **21 files** — the W29 root cause ("an unadopted shared loading component") repeated on the other surface. Several announced failures politely or with no live region at all. |
+| **New ratchet** | `frontend/admin-app/src/statusLanguage.test.js` — baseline-counted per file plus a stale-row guard, same model as the envelope and CSS ratchets. |
+| **Converted** | All 21 files in one pass: **59 sites -> 27, 21 files -> 16, five at zero**. Every converted site is now assertive on error, polite on loading, and surfaces `HTTP <status> · <error_code>`; `UsersPage` and `EmulatorFirmwarePanel` kept their Try-again buttons via `onRetry`. |
+| **Deliberately kept** | Success messages, persistent config banners (StoragePage's helpers/apply/read-only disclosures) and inline single-control progress (`Uploading…`, `Refreshing…`, `Scanning…`) are **not** page status and stay hand-rolled. Two of those are asserted singularly by `OpsPage.test.jsx` / `pages.scans.test.jsx`, so converting them would have broken a real contract. The ratchet docstring records this so the remaining 27 is not mistaken for debt. |
+| **Checked, already done** | Admin page `<h1>`/lede are *already* retired by UIR-7 in `gt-appbar.css` — assumed missing, verified present before editing. |
+| **Next section** | Dashboard is done. Remaining admin sections now inherit the shared status language, so their per-section work is layout/content rather than chrome. |
+
+### Libraries & scans (2026-08-25)
+
+| | |
+|---|---|
+| **Shipped** | The Scans page was showing **less than the Ops dashboard**: `/api/scan_jobs_status` returns progress, current file, elapsed/ETA, `stalled` and `error_message`, and the table rendered none of them. Added **Progress** and **Detail** columns (reason → stalled → current → ETA), so a reclaimed job now says *why* instead of just Failed. Replaced the developer status readout with a sentence — and the stuck case, which used to render as `Running: no · queued 1` and read as **idle**, now says the queue is waiting on a job that has not reported a result. `formatScanJobCounters` moved to `opsWidgets.jsx` (re-exported from `OpsPage` for its test). |
+| **Caught in-pass** | First cut of the Progress column duplicated the Status cell for queued jobs (`Queued #1` beside `Queued (#1)`) — the new test found it. Progress now defers queue state to Status. |
+| **Guards** | `pages.scans.test.jsx` 3 → 5: a queue with nothing running must not read as idle; a failed job must surface its reason and the progress it reached. |
+| **Deliberately not done at the time** | The Jinja `/scan_management` surface — taken as its own slice below. |
+
+### Classic scan page — the reason was hidden here too (2026-08-25)
+
+| | |
+|---|---|
+| **Shipped** | `getDisplayStatus()` translated exactly two `error_message` values into friendly statuses and showed every other reason as a bare **"Failed"** — including the message the ownership sweep writes when it reclaims an orphaned job. **The fix that ended the six-hour queue wedge reported nothing on the page most likely to be watched during a scan.** Any failed job now shows its reason under the status, suppressed where the friendly status already says it. |
+| **Also** | The template computed progress as successes only while the poll counts successes + failures, so first paint disagreed with every refresh whenever a folder failed. Both now count processed identically, note the failure count, and sort on the same figure — `data-sort-progress` had been ordering the table by a number the operator could not see. |
+| **Self-inflicted** | UID-031 was created by this wave: the ownership work added a new `error_message` and taught the SPA table about it but not this one. Adding an `error_message` is not done until every table rendering scan jobs can show it. |
+| **Guards** | `tests/test_scan_jobs_failure_reason.py` (3) — the reclaim reason reaches the page, processed counts failures, sort key matches the caption. |
+| **Deploy note** | JS/CSS ship from `setup/default_theme/`, so this needs a restart or **Admin → Themes → Reset Themes** to appear. |
+| **Third surface (UID-033)** | Applying that lesson found one more: `_scan_job_payload` in `ops_summary.py` carried counts, current folder, elapsed, ETA and `stalled` — everything except the field explaining a job that stopped. The Ops console reported failures and never their reason. Payload now carries `error_message` (normalised to `None`; `ScanJob` defaults it to `''`, which renders differently once a UI branches on it), and the Ops jobs table's `Current` column became `Detail` with the Scans-page priority: reason → stalled → current. |
+| **Contract note** | Additive to `/admin/api/ops/summary`; the ops-summary key assertion is a superset check so it stayed green. Two `SimpleNamespace` stubs needed the new field — the payload reads it directly like its siblings rather than going defensive with `getattr`, so a stub standing in for a `ScanJob` must carry what the payload reads. |
+
+### Settings (2026-08-25)
+
+| | |
+|---|---|
+| **Shipped** | `SettingsPage` needed nothing. `HubPage` behind it did: it told operators to *"Use the actions above"* — controls GT-B7 deleted — on the one page with nothing else on it, and closed with "Form POSTs still hit the existing Flask endpoints". Both gone. It now offers the section's real destinations (`railDestinations('content')`, or the card's own `Open <title>` link) and otherwise names the rail. |
+| **Guards** | `pages.hub.test.jsx` (4) — the retired sentences must not return; links render; the no-links fallback still answers "what do I do here". |
+
+### Design-token ratchet blind spot (2026-08-25)
+
+| | |
+|---|---|
+| **Shipped** | `css-token-lint` only ever read `.css`, so every JSX inline style literal was invisible to it — it reported "none new" while **19 accumulated across the two SPAs**. It now walks `.jsx`/`.js` and lints inline style objects under a new `no-raw-inline-style` rule. 15 admin literals converted to `var(--gt-space-*)`. |
+| **Baselined, not re-spaced** | The 4 remaining are member-app (`1.1rem`, `1.2rem`, `0.45rem`) with **no exact token**. Rounding them to the nearest scale point would be a silent change to W29 spacing dressed up as a lint fix, so they were recorded instead. Baseline 1257 → 1261, additions only, no existing count touched. |
+| **Guards** | `cssTokenLint.test.js` 3 → 6: the rule sees JSX literals, skips data-driven styles (`background: option.color` is not a design decision), and reports the offending value rather than `undefined`. |
+| **Trap recorded** | A block comment carrying inline code samples made **vitest fail to parse the module** while node and esbuild accepted it in every loader mode. Bisected to the comment, not the code. See [ui-debt-log UID-030](../dev/ui-debt-log.md) — suspect comments first if it recurs. |
+
 > **Reading this file.** The header is current; the wave tables below are a running log kept in
 > the order things happened, so a row states what was true when it was written. Where a row and the
 > CHANGELOG disagree about status, the CHANGELOG wins.

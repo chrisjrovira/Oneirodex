@@ -1,5 +1,5 @@
 from gametheca.utils.api_response import api_error, api_ok
-from flask import render_template, request, jsonify, session
+from flask import current_app, render_template, request, jsonify, session
 from flask_login import login_required, current_user
 from gametheca.utils.auth import admin_required
 from gametheca.models import SystemEvents, DiscoverySection, Game, Genre, Library, user_favorites
@@ -668,3 +668,81 @@ def clear_permission_errors() -> tuple[Dict[str, Any], int]:
     for key in ('permission_check_failed', 'permission_errors', 'permission_check_path'):
         session.pop(key, None)
     return api_ok()
+
+
+# --- System reset (danger zone) --------------------------------------------
+#
+# The confirmation phrase is required in the request body rather than being a
+# UI-only guard. A destructive endpoint that any authenticated admin can fire
+# with an empty POST is one stray fetch away from an accident, and "the button
+# asks first" is not a property of the API.
+RESET_CONFIRM_PHRASE = 'RESET GAMETHECA'
+
+
+@admin2_bp.route('/admin/api/system/reset', methods=['POST'])
+@login_required
+@admin_required
+def system_reset_plan_or_perform():
+    """Preview or carry out a scoped factory reset.
+
+    ``POST {"scopes": [...]}`` returns the plan — every table that would be
+    emptied, including those reached by cascade — and changes nothing.
+
+    ``POST {"scopes": [...], "confirm": "RESET GAMETHECA"}`` performs it.
+
+    Never deletes files. See gametheca/utils/system_reset.py.
+    """
+    from gametheca.utils.system_reset import RESET_SCOPES, expand_scopes, perform_reset, plan_reset
+
+    data = request.get_json(silent=True) or {}
+    requested = data.get('scopes')
+    if not isinstance(requested, list) or not requested:
+        return api_error(
+            'Choose at least one thing to reset.',
+            code='bad_request',
+            detail={'valid_scopes': sorted(RESET_SCOPES)},
+        )
+
+    unknown = [s for s in requested if s not in RESET_SCOPES]
+    if unknown:
+        return api_error(
+            f'Unknown reset scope: {", ".join(sorted(unknown))}.',
+            code='bad_request',
+            detail={'valid_scopes': sorted(RESET_SCOPES)},
+        )
+
+    confirm = data.get('confirm')
+    if confirm is None:
+        # Preview. Deliberately the default: a caller that forgets the phrase
+        # gets a description of the damage, not the damage.
+        return api_ok(plan_reset(requested), performed=False)
+
+    if confirm != RESET_CONFIRM_PHRASE:
+        return api_error(
+            f'Type "{RESET_CONFIRM_PHRASE}" exactly to confirm.',
+            code='unprocessable',
+        )
+
+    scopes = expand_scopes(requested)
+    # Logged *before* the reset: the settings scope truncates system_events, so
+    # an entry written afterwards would be the only row in an otherwise empty
+    # audit log, and one written inside would be erased by its own operation.
+    log_system_event(
+        f"System reset requested (scopes: {', '.join(scopes)})",
+        event_type='admin_action',
+        event_level='warning',
+        audit_user=current_user.id,
+    )
+
+    try:
+        result = perform_reset(scopes, actor_user_id=current_user.id)
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.exception('System reset failed')
+        return api_error(
+            'Reset failed and nothing was changed.',
+            code='internal',
+            detail={'reason': type(exc).__name__},
+        )
+
+    return api_ok(result)
