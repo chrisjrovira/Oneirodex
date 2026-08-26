@@ -42,17 +42,15 @@ Admin → emulator BIOS shows which required names are present. Missing BIOS sur
 
 ## Play shell (WebRetro room)
 
-**Scanlines (2026-08-06).** Each room now carries a scanline treatment matched
+**Scanlines (2026-08-06) and picture modes (2026-08-26).** Each room carries a scanline treatment matched
 to the hardware it evokes: strongest on a living-room CRT, present on an arcade
-monitor, faint on late disc-era sets, and **absent on handhelds** — an LCD panel
-never had scanlines, and drawing them there is what makes fake-CRT filters look
-like a gimmick. This is a CSS overlay, not a RetroArch shader: no shader presets
-are vendored, so there is nothing to configure and no performance cost.
+monitor, faint on late disc-era sets, and **absent on handhelds** by default — an LCD panel
+never had scanlines. The **Picture** control on the play bar cycles three treatments: **CRT** (room scanlines + a light tube vignette), **Sharp** (nearest-neighbour, scanlines off), and **Soft** (RetroArch `video_smooth`). This is CSS plus one RetroArch flag, not a shader pack: no `.slangp` presets are vendored, so there is no GPU shader cost and nothing extra to install. Handheld and desk rooms default to Sharp.
 
 Browser play opens `webretro.html` with a per-system **artistic room** — multi-layer wallpaper, floor plane, ambient lamp, bezel material sheen, bar typography hierarchy (brand eyebrow + system label), and light motion (wall drift · lamp breathe · bezel specular) — not just an accent color. Pass `platform=` (or rely on `core=` mapping) so the skin applies immediately; the bar shows the system name as the hero label.
 
 - **← Library** on the play bar returns via `history.back()` when the referrer is same-origin, else falls back to `/library`. **Power** does the same.
-- **Pause · Reset · Mute · volume** sit on the play bar and talk to the WebRetro iframe over the existing save-bridge (`gt-pause` / `gt-reset` / `gt-audio`). Mute and volume write RetroArch `audio_mute` / `audio_volume` and reload config. An in-game overlay repeats Pause/Reset/Mute/Power; it stays visible on touch, and on a pointer it fades in when you move over the play stage (the game canvas is an iframe, so hover over the picture itself cannot reveal it — the bar is the reliable control).
+- **Pause · Reset · Mute · volume · Save · Load · Rewind · FF · Picture** sit on the play bar and talk to the WebRetro iframe over the save-bridge (`gt-pause` / `gt-reset` / `gt-audio` / `gt-save-state` / `gt-load-state` / `gt-cabinet-key` / `gt-picture`). Mute and volume write RetroArch `audio_mute` / `audio_volume` and reload config. **Save / Load** click the iframe's own state commands (also **F2** / **F3** with the game focused). **Rewind** is a hold (Right Shift, or hold the bar button). **FF** toggles with **F5** (hold **Tab** in the game to burst). **Picture** cycles CRT (room scanlines + tube vignette) · Sharp (nearest-neighbour, scanlines off) · Soft (RetroArch `video_smooth`). This is CSS plus one RetroArch flag — **no shader presets are vendored**, and run-ahead is not enabled (single-thread WASM cannot afford it). Rewind stays **off** on heavy cores (N64, PS1, Saturn, Dreamcast, PSP). An in-game overlay repeats Pause/Reset/Mute/Save/Load/Rewind/FF/Power; it stays visible on touch, and on a pointer it fades in when you move over the play stage (the game canvas is an iframe, so hover over the picture itself cannot reveal it — the bar is the reliable control). Press **?** for the shortcut list.
 - Distinct rooms include NES den, SNES living room, Genesis arcade corner, PS1 CRT night, Dreamcast swirl, Arcade cabinet, GB/GBA handheld slabs, PC desk, and more — distinguishable at a glance without reading docs.
 - The emulator screen is **aspect-locked to the core's native shape** (SNES/NES/Genesis ~4:3, GBA 3:2, GB/GBC ~10:9, NDS portrait dual-screen, PSP/Vita ~16:9, etc.) instead of stretching to fill the bezel, so you no longer get big empty black bars around the picture.
 - Motion respects `prefers-reduced-motion`.

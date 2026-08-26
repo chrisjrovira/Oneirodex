@@ -219,6 +219,12 @@ body.gt-play-shell {
   gap: 8px;
 }
 
+#gt-emu-bar button:not(.gt-emu-back):disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+}
+
 #gt-emu-bar .gt-play-ctrl[aria-pressed="true"] {
   outline: 2px solid var(--gt-play-fg, #eee);
   outline-offset: 1px;
@@ -473,6 +479,98 @@ body.gt-play-shell {
     transparent 3px
   );
   mix-blend-mode: multiply;
+}
+
+/* Picture modes — CRT analogue (scanlines + tube vignette), Sharp pixels, Soft filter.
+ * Not RetroArch slangp presets; those are not vendored. */
+[data-picture="crt"] #webretro {
+  box-shadow:
+    var(--gt-play-screen-shadow, inset 0 0 0 2px rgba(0, 0, 0, 0.55)),
+    inset 0 0 42px rgba(20, 80, 40, 0.16);
+}
+
+[data-picture="crt"] #webretro::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 88% 78% at 50% 48%, transparent 52%, rgba(0, 0, 0, 0.32) 100%);
+  opacity: 0.9;
+}
+
+[data-picture="sharp"] #webretro,
+[data-picture="sharp"] #gt-webretro-frame {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+[data-picture="soft"] #webretro,
+[data-picture="soft"] #gt-webretro-frame {
+  image-rendering: auto;
+}
+
+.gt-play-help {
+  max-width: min(32rem, calc(100vw - 2rem));
+  background: var(--gt-play-bar-bg, #141418);
+  color: var(--gt-play-fg, #eee);
+  border: 1px solid color-mix(in srgb, var(--gt-play-accent, #2fd67b) 55%, #333);
+  border-radius: var(--gt-play-radius, 8px);
+  padding: 16px 18px 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+}
+
+.gt-play-help::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.gt-play-help h2 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gt-play-help table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.gt-play-help th,
+.gt-play-help td {
+  text-align: left;
+  padding: 5px 8px 5px 0;
+  vertical-align: top;
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-play-fg, #eee) 12%, transparent);
+}
+
+.gt-play-help kbd {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--gt-play-accent, #2fd67b) 40%, #444);
+  background: color-mix(in srgb, var(--gt-play-accent, #2fd67b) 12%, #111);
+}
+
+.gt-play-help__note {
+  margin: 12px 0 14px;
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0.75;
+}
+
+.gt-play-help .gt-play-ctrl {
+  background: var(--gt-play-accent, #2fd67b);
+  color: var(--gt-play-btn-fg, #111);
+  border: 0;
+  padding: 6px 14px;
+  border-radius: var(--gt-play-radius, 4px);
+  font-weight: 600;
+  cursor: pointer;
 }
 
 #gt-webretro-frame {

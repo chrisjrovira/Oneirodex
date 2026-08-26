@@ -22,7 +22,7 @@
 | Document | Path | Status |
 |---|---|---|
 | Competitive gap analysis | `docs/strategy/competitive.md` | **Stub** — full catalog in private vault per [external-facing-scrub.md](external-facing-scrub.md) · vault refreshed **2026-08-26** (≥50 net-new) |
-| Capability inspiration (INSP-*) | `docs/strategy/capability-inspiration.md` | **Have** — 2026-08-26 landscape pass; tickets only, no implementation |
+| Capability inspiration (INSP-*) | `docs/strategy/capability-inspiration.md` | **Have** — 2026-08-26 landscape pass; picture/rewind/FF/save-load chrome shipped the same day (not an INSP) |
 | External-facing scrub policy | `docs/strategy/external-facing-scrub.md` | Have — Class A/B/C/D rules + SCRUB backlog; SCRUB-6 PR + Issues templates |
 | Feature build plans | `docs/strategy/features.md` | Have |
 | Social lite pointer | `docs/strategy/social.md` | Have |

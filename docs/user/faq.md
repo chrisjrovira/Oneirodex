@@ -71,8 +71,8 @@ Open path uses **OpenPathModal** → companion `open_path` (or clipboard fallbac
 
 ## Browser play
 
-**Where are pause, reset, and mute in the browser player?**  
-On the play bar above the screen: Pause, Reset, Mute, volume, and Power. Power leaves the game, same as **← Library**. An overlay repeats Pause/Reset/Mute/Power on touch, or when you move the pointer over the play stage. See [browser-play.md](browser-play.md).
+**Where are pause, reset, mute, save, and rewind in the browser player?**  
+On the play bar above the screen: Pause, Reset, Mute, volume, Save, Load, Rewind, FF, Picture, and Power. Power leaves the game, same as **← Library**. **?** opens the shortcut list (F2/F3 save/load, hold Right Shift to rewind, F5 fast-forward). An overlay repeats the in-game controls on touch, or when you move the pointer over the play stage. See [browser-play.md](browser-play.md).
 
 ## Themes & icons
 

@@ -233,6 +233,7 @@ Work since the 1.0.0-beta tag (2026-08-06).
   a `.dmg` genuinely needs a Mac
 - **BIOS import** from an operator-supplied local collection (`scripts/import_bios.py`), preferring the
   majority copy when candidates disagree
+- **Cabinet playback on the WebRetro play bar.** Save / Load / Rewind (hold) / fast-forward / Picture (CRT · Sharp · Soft) / shortcut help. RetroArch rewind is on for light cores with a 10 MB buffer; it stays off on N64/PS1/Saturn/Dreamcast/PSP. No shader packs, no run-ahead — [browser-play.md](docs/user/browser-play.md)
 - **Ownership polling** (`gametheca/utils/ownership_poller.py`) and a `/styleguide` route
 - **CSS token lint** (`scripts/css-token-lint.mjs`) with a baseline — 2365 violations down to 1317
 - **Sortable classic tables** (`js/gt_sortable_table.js`) — the Jinja counterpart to the React

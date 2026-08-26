@@ -194,6 +194,56 @@
     handheld: 0
   };
 
+  var PICTURE_MODES = ['crt', 'sharp', 'soft'];
+  var PICTURE_LABELS = { crt: 'CRT', sharp: 'Sharp', soft: 'Soft' };
+  var STORAGE_PICTURE = 'gt-play-picture';
+
+  function defaultPictureForRoom(room) {
+    if (room === 'handheld' || room === 'desk') return 'sharp';
+    return 'crt';
+  }
+
+  function readStoredPicture() {
+    try {
+      if (typeof localStorage === 'undefined') return '';
+      var stored = localStorage.getItem(STORAGE_PICTURE);
+      if (stored === 'crt' || stored === 'sharp' || stored === 'soft') return stored;
+    } catch (e) {}
+    return '';
+  }
+
+  function applyPictureMode(mode) {
+    var body = typeof document !== 'undefined' ? document.body : null;
+    var root = typeof document !== 'undefined' ? document.documentElement : null;
+    var room = (body && body.getAttribute('data-play-room')) || 'crt_living_room';
+    var next = (mode === 'crt' || mode === 'sharp' || mode === 'soft')
+      ? mode
+      : (readStoredPicture() || defaultPictureForRoom(room));
+    if (root) {
+      root.setAttribute('data-picture', next);
+      if (body) body.setAttribute('data-picture', next);
+      if (next === 'crt') {
+        var scan = SCANLINE_BY_ROOM[room];
+        root.style.setProperty(
+          '--gt-play-scanline-opacity',
+          String(scan === undefined ? 0 : scan)
+        );
+      } else {
+        root.style.setProperty('--gt-play-scanline-opacity', '0');
+      }
+    }
+    try {
+      if (typeof localStorage !== 'undefined') localStorage.setItem(STORAGE_PICTURE, next);
+    } catch (e2) {}
+    return next;
+  }
+
+  function cyclePictureMode(current) {
+    var idx = PICTURE_MODES.indexOf(current);
+    var next = PICTURE_MODES[(idx + 1) % PICTURE_MODES.length];
+    return applyPictureMode(next);
+  }
+
   var ROOM_BY_PLATFORM = (function () {
     var out = {};
     for (var room in ROOM_PLATFORMS) {
@@ -240,6 +290,8 @@
       String(scanline === undefined ? 0 : scanline)
     );
 
+    var picture = applyPictureMode();
+
     var aspect = aspectForPlatform(platform || 'pc');
     var aspectCss = aspect[0] + ' / ' + aspect[1];
     root.style.setProperty('--gt-play-aspect', aspectCss);
@@ -252,6 +304,8 @@
       familyLabel: meta.label,
       systemLabel: PLATFORM_LABELS[platform] || platform || meta.label,
       aspectRatio: aspect,
+      picture: picture,
+      room: room,
     };
   }
 
@@ -265,5 +319,10 @@
     ASPECT_RATIOS: ASPECT_RATIOS,
     roomForPlatform: roomForPlatform,
     SCANLINE_BY_ROOM: SCANLINE_BY_ROOM,
+    PICTURE_MODES: PICTURE_MODES,
+    PICTURE_LABELS: PICTURE_LABELS,
+    defaultPictureForRoom: defaultPictureForRoom,
+    applyPictureMode: applyPictureMode,
+    cyclePictureMode: cyclePictureMode,
   };
 })(typeof window !== 'undefined' ? window : this);

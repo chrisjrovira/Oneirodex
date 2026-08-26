@@ -30,6 +30,12 @@
                 <span class="gt-play-vol__label">Vol</span>
                 <input type="range" id="gt-play-volume" min="0" max="100" value="100" step="1" aria-label="Volume">
             </label>
+            <button type="button" class="gt-play-ctrl" data-gt-play="save" title="Save state (F2)">Save</button>
+            <button type="button" class="gt-play-ctrl" data-gt-play="load" title="Load state (F3)">Load</button>
+            <button type="button" class="gt-play-ctrl" data-gt-play="rewind" title="Hold to rewind (Right Shift)" aria-pressed="false">Rewind</button>
+            <button type="button" class="gt-play-ctrl" data-gt-play="ff" title="Toggle fast-forward (F5)" aria-pressed="false">FF</button>
+            <button type="button" class="gt-play-ctrl" data-gt-play="picture" id="gt-play-picture" title="Picture: CRT, Sharp, or Soft">CRT</button>
+            <button type="button" class="gt-play-ctrl" data-gt-play="help" title="Play shortcuts" aria-haspopup="dialog" aria-controls="gt-play-help">?</button>
             <button type="button" class="gt-play-ctrl" data-gt-play="power" title="Leave this game">Power</button>
         </div>
         <button type="button" id="gt-sync-save" title="Push/pull libretro .state/.srm via WebRetro IndexedDB bridge">Sync cloud saves</button>
@@ -38,6 +44,28 @@
         <span id="gt-emu-status" role="status" aria-live="polite"></span>
     </div>
     <div id="gt-play-alert" class="gt-play-alert" role="alert" aria-live="assertive" hidden></div>
+    <dialog id="gt-play-help" class="gt-play-help">
+        <form method="dialog">
+            <h2>Play shortcuts</h2>
+            <table>
+                <thead>
+                    <tr><th>Control</th><th>What it does</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Pause · Reset · Mute</td><td>Play bar and overlay</td></tr>
+                    <tr><td>Save / Load</td><td>Instant state — also <kbd>F2</kbd> / <kbd>F3</kbd> in the game</td></tr>
+                    <tr><td>Rewind</td><td>Hold the button, or hold <kbd>Right Shift</kbd> with the game focused</td></tr>
+                    <tr><td>FF</td><td>Toggle — also <kbd>F5</kbd>. Hold <kbd>Tab</kbd> in the game to burst</td></tr>
+                    <tr><td>Picture</td><td>CRT (scanlines) · Sharp (nearest) · Soft (smooth). Cycles on the bar</td></tr>
+                    <tr><td>Screenshot</td><td><kbd>F4</kbd> in the game</td></tr>
+                    <tr><td>Quick Menu</td><td><kbd>F1</kbd> in the game</td></tr>
+                    <tr><td><kbd>?</kbd></td><td>This list</td></tr>
+                </tbody>
+            </table>
+            <p class="gt-play-help__note">Rewind stays off on heavy cores (N64, PS1, Saturn, Dreamcast, PSP) because a rewind buffer stutters in the browser. Picture is CSS plus RetroArch smooth — no shader packs are shipped. Hard-refresh the play tab after a deploy.</p>
+            <button type="submit" class="gt-play-ctrl" value="close">Close</button>
+        </form>
+    </dialog>
     <div id="gt-play-stage">
         <div id="gt-play-bezel">
             <div class="gt-play-bezel-mat" aria-hidden="true"></div>
@@ -47,6 +75,10 @@
                     <button type="button" class="gt-play-ctrl" data-gt-play="pause" aria-pressed="false">Pause</button>
                     <button type="button" class="gt-play-ctrl" data-gt-play="reset">Reset</button>
                     <button type="button" class="gt-play-ctrl" data-gt-play="mute" aria-pressed="false">Mute</button>
+                    <button type="button" class="gt-play-ctrl" data-gt-play="save" title="Save state (F2)">Save</button>
+                    <button type="button" class="gt-play-ctrl" data-gt-play="load" title="Load state (F3)">Load</button>
+                    <button type="button" class="gt-play-ctrl" data-gt-play="rewind" title="Hold to rewind (Right Shift)" aria-pressed="false">Rewind</button>
+                    <button type="button" class="gt-play-ctrl" data-gt-play="ff" title="Toggle fast-forward (F5)" aria-pressed="false">FF</button>
                     <button type="button" class="gt-play-ctrl" data-gt-play="power" title="Leave this game">Power</button>
                 </div>
             </div>
@@ -160,11 +192,50 @@
 
             var chromePaused = false;
             var chromeMuted = false;
+            var chromeFastForward = false;
+            var pictureMode = (skin && skin.picture) ? skin.picture : 'crt';
+            var helpEl = document.getElementById('gt-play-help');
+            var pictureBtn = document.getElementById('gt-play-picture');
+
+            function pictureLabel(mode) {
+                if (window.GameThecaPlaySkins && window.GameThecaPlaySkins.PICTURE_LABELS) {
+                    return window.GameThecaPlaySkins.PICTURE_LABELS[mode] || mode;
+                }
+                return mode === 'sharp' ? 'Sharp' : mode === 'soft' ? 'Soft' : 'CRT';
+            }
+
+            function syncPictureLabel(mode) {
+                if (mode) pictureMode = mode;
+                if (pictureBtn) {
+                    pictureBtn.textContent = pictureLabel(pictureMode);
+                    pictureBtn.title = 'Picture: CRT, Sharp, or Soft (now ' + pictureLabel(pictureMode) + ')';
+                }
+            }
+
+            syncPictureLabel(pictureMode);
+
+            function syncRewindEnabled(enabled) {
+                document.querySelectorAll('[data-gt-play="rewind"]').forEach(function (btn) {
+                    btn.disabled = !enabled;
+                    btn.title = enabled
+                        ? 'Hold to rewind (Right Shift)'
+                        : 'Rewind is off for this core (too heavy in the browser)';
+                });
+            }
+
+            function openPlayHelp() {
+                if (!helpEl) return;
+                if (typeof helpEl.showModal === 'function') helpEl.showModal();
+                else helpEl.setAttribute('open', '');
+            }
 
             function syncChromeLabels(state) {
                 state = state || {};
                 if (typeof state.paused === 'boolean') chromePaused = state.paused;
                 if (typeof state.muted === 'boolean') chromeMuted = state.muted;
+                if (typeof state.fastForward === 'boolean') chromeFastForward = state.fastForward;
+                if (typeof state.rewindEnabled === 'boolean') syncRewindEnabled(state.rewindEnabled);
+                if (state.picture) syncPictureLabel(state.picture);
                 var pauseText = chromePaused ? 'Resume' : 'Pause';
                 var muteText = chromeMuted ? 'Unmute' : 'Mute';
                 document.querySelectorAll('[data-gt-play="pause"]').forEach(function (btn) {
@@ -174,6 +245,9 @@
                 document.querySelectorAll('[data-gt-play="mute"]').forEach(function (btn) {
                     btn.textContent = muteText;
                     btn.setAttribute('aria-pressed', chromeMuted ? 'true' : 'false');
+                });
+                document.querySelectorAll('[data-gt-play="ff"]').forEach(function (btn) {
+                    btn.setAttribute('aria-pressed', chromeFastForward ? 'true' : 'false');
                 });
                 var vol = document.getElementById('gt-play-volume');
                 if (vol && typeof state.volume === 'number') {
@@ -194,6 +268,10 @@
                 var btn = ev.target.closest('[data-gt-play]');
                 if (!btn) return;
                 var action = btn.getAttribute('data-gt-play');
+                if (action === 'rewind') {
+                    ev.preventDefault();
+                    return;
+                }
                 if (action === 'power') {
                     goBackToLibrary();
                     return;
@@ -208,11 +286,80 @@
                 }
                 if (action === 'mute') {
                     runChrome('gt-audio', { muted: !chromeMuted });
+                    return;
+                }
+                if (action === 'save') {
+                    runChrome('gt-save-state', {}).then(function (res) {
+                        if (res && res.ok) setStatus('State saved');
+                    });
+                    return;
+                }
+                if (action === 'load') {
+                    runChrome('gt-load-state', {}).then(function (res) {
+                        if (res && res.ok) setStatus('State loaded');
+                    });
+                    return;
+                }
+                if (action === 'ff') {
+                    runChrome('gt-cabinet-key', { code: 'F5', pulse: true });
+                    return;
+                }
+                if (action === 'picture') {
+                    var next = (window.GameThecaPlaySkins && window.GameThecaPlaySkins.cyclePictureMode)
+                        ? window.GameThecaPlaySkins.cyclePictureMode(pictureMode)
+                        : pictureMode;
+                    syncPictureLabel(next);
+                    runChrome('gt-picture', { mode: next });
+                    return;
+                }
+                if (action === 'help') {
+                    openPlayHelp();
                 }
             }
 
             document.querySelectorAll('[data-gt-play]').forEach(function (el) {
                 el.addEventListener('click', onPlayChromeClick);
+            });
+
+            function bindHoldRewind(btn) {
+                var held = false;
+                function release() {
+                    if (!held) return;
+                    held = false;
+                    btn.setAttribute('aria-pressed', 'false');
+                    runChrome('gt-cabinet-key', { code: 'ShiftRight', down: false });
+                    window.removeEventListener('pointerup', release);
+                    window.removeEventListener('pointercancel', release);
+                    window.removeEventListener('blur', release);
+                }
+                function press(ev) {
+                    if (btn.disabled) return;
+                    if (ev.type === 'pointerdown' && ev.button != null && ev.button !== 0) return;
+                    if (ev.type === 'keydown' && ev.key !== ' ' && ev.key !== 'Enter') return;
+                    ev.preventDefault();
+                    if (held) return;
+                    held = true;
+                    btn.setAttribute('aria-pressed', 'true');
+                    runChrome('gt-cabinet-key', { code: 'ShiftRight', down: true });
+                    window.addEventListener('pointerup', release);
+                    window.addEventListener('pointercancel', release);
+                    window.addEventListener('blur', release);
+                }
+                btn.addEventListener('pointerdown', press);
+                btn.addEventListener('keydown', press);
+                btn.addEventListener('keyup', function (ev) {
+                    if (ev.key === ' ' || ev.key === 'Enter') release();
+                });
+            }
+
+            document.querySelectorAll('[data-gt-play="rewind"]').forEach(bindHoldRewind);
+
+            document.addEventListener('keydown', function (ev) {
+                if (ev.key !== '?' && !(ev.shiftKey && ev.key === '/')) return;
+                var tag = (ev.target && ev.target.tagName) ? ev.target.tagName.toLowerCase() : '';
+                if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+                ev.preventDefault();
+                openPlayHelp();
             });
 
             var volumeEl = document.getElementById('gt-play-volume');
@@ -470,6 +617,14 @@
             // Defer cloud pull until after ROM/main — do not compete with core WASM download.
             emuFrame.addEventListener('load', function () {
                 window.setTimeout(function () { pullCloudIntoEmu(); }, 500);
+                window.setTimeout(function () {
+                    callEmu('gt-picture', { mode: pictureMode }, 2500).then(function (res) {
+                        syncChromeLabels(res);
+                    }).catch(function () {});
+                    callEmu('gt-ping', {}, 2000).then(function (res) {
+                        syncChromeLabels(res);
+                    }).catch(function () {});
+                }, 800);
             });
 
             function loadCheatOptions() {

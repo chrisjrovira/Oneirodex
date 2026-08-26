@@ -200,11 +200,138 @@
     return { muted: lastMuted, volume: lastMuted ? 0 : lastVolumePct };
   }
 
+  var lastPicture = 'crt';
+  var lastFastForward = false;
+  var lastRewindHeld = false;
+  var lastRewindEnabled = true;
+
+  /** Heavy cores stutter if rewind keeps a frame buffer on single-thread WASM. */
+  var HEAVY_REWIND_CORES = {
+    mupen64plus_next: 1,
+    parallel_n64: 1,
+    mednafen_psx_hw: 1,
+    mednafen_psx: 1,
+    pcsx_rearmed: 1,
+    yabause: 1,
+    yabasanshiro: 1,
+    flycast: 1,
+    ppsspp: 1,
+  };
+
+  function rewindOkForCore(id) {
+    var c = String(id || '').toLowerCase();
+    return !HEAVY_REWIND_CORES[c];
+  }
+
+  function applyRewindForCurrentCore() {
+    var id = typeof core !== 'undefined' ? core : '';
+    lastRewindEnabled = rewindOkForCore(id);
+    if (typeof extraConfigExtras !== 'string') return lastRewindEnabled;
+    extraConfigExtras = String(extraConfigExtras).replace(/rewind_enable\s*=\s*"[^"]*"\n?/g, '');
+    if (!lastRewindEnabled) {
+      extraConfigExtras += 'rewind_enable = "false"\n';
+    }
+    return lastRewindEnabled;
+  }
+
+  applyRewindForCurrentCore();
+
+  function stripPictureConfig(cfg) {
+    return String(cfg || '').replace(/video_smooth\s*=\s*"[^"]*"\n?/g, '');
+  }
+
+  function applyPicture(mode) {
+    var next = mode === 'soft' || mode === 'sharp' || mode === 'crt' ? mode : 'crt';
+    lastPicture = next;
+    if (typeof extraConfigExtras === 'string') {
+      extraConfigExtras = stripPictureConfig(extraConfigExtras);
+      extraConfigExtras += 'video_smooth = "' + (next === 'soft' ? 'true' : 'false') + '"\n';
+    }
+    try {
+      if (typeof tryApplyConfig === 'function') tryApplyConfig();
+    } catch (e) {}
+    try {
+      var canvasEl = document.getElementById('canvas');
+      if (canvasEl) {
+        canvasEl.className = next === 'soft' ? 'textureSmooth' : 'texturePixelated';
+      }
+      var smoothEl = document.getElementById('smooth');
+      if (smoothEl) smoothEl.checked = next === 'soft';
+    } catch (e2) {}
+    return lastPicture;
+  }
+
+  var CABINET_KEYS = {
+    ShiftRight: { key: 'Shift', keyCode: 16 },
+    Tab: { key: 'Tab', keyCode: 9 },
+    F5: { key: 'F5', keyCode: 116 },
+  };
+
+  function dispatchCabinetKey(code, down) {
+    var meta = CABINET_KEYS[code];
+    if (!meta) return false;
+    var type = down ? 'keydown' : 'keyup';
+    var ev;
+    try {
+      ev = new KeyboardEvent(type, {
+        key: meta.key,
+        code: code,
+        keyCode: meta.keyCode,
+        which: meta.keyCode,
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+      });
+      try {
+        Object.defineProperty(ev, 'keyCode', { get: function () { return meta.keyCode; } });
+        Object.defineProperty(ev, 'which', { get: function () { return meta.keyCode; } });
+      } catch (e) {}
+    } catch (err) {
+      return false;
+    }
+    window.dispatchEvent(ev);
+    document.dispatchEvent(ev);
+    var canvasEl = document.getElementById('canvas');
+    if (canvasEl) canvasEl.dispatchEvent(ev);
+    if (code === 'ShiftRight') lastRewindHeld = !!down;
+    if (code === 'Tab' && down) lastFastForward = true;
+    if (code === 'Tab' && !down) lastFastForward = false;
+    return true;
+  }
+
+  function pulseCabinetKey(code) {
+    dispatchCabinetKey(code, true);
+    window.setTimeout(function () {
+      dispatchCabinetKey(code, false);
+    }, 40);
+    if (code === 'F5') lastFastForward = !lastFastForward;
+    return true;
+  }
+
+  function clickWebretroControl(id, fallback) {
+    var el = document.getElementById(id);
+    if (el && !el.classList.contains('disabled') && typeof el.click === 'function') {
+      el.click();
+      return true;
+    }
+    try {
+      if (typeof Module !== 'undefined' && typeof fallback === 'function') {
+        fallback();
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
   function controlState() {
     return {
       paused: isCorePaused(),
       muted: lastMuted,
       volume: lastMuted ? 0 : lastVolumePct,
+      picture: lastPicture,
+      fastForward: lastFastForward,
+      rewindHeld: lastRewindHeld,
+      rewindEnabled: lastRewindEnabled,
     };
   }
 
@@ -213,6 +340,7 @@
     window.__gtBridgeTest = {
       pickSramBytes: pickSramBytes,
       volumeToDb: volumeToDb,
+      rewindOkForCore: rewindOkForCore,
     };
   }
 
@@ -234,6 +362,8 @@
           ready: typeof romName !== 'undefined' && !!romName,
           romName: typeof romName !== 'undefined' ? romName : null,
           mainCompleted: typeof mainCompleted !== 'undefined' ? !!mainCompleted : false,
+          rewindEnabled: lastRewindEnabled,
+          picture: lastPicture,
         });
         return;
       }
@@ -356,6 +486,50 @@
           path: path,
           hint: 'Quick Menu → Cheats → Load Cheat File (or Enable) if the core does not auto-load',
         });
+        return;
+      }
+
+      if (type === 'gt-save-state') {
+        var saved = clickWebretroControl('savestate', function () {
+          Module._cmd_save_state();
+        });
+        if (!saved) {
+          done({ ok: false, error: 'Save state is not ready yet' });
+          return;
+        }
+        done(Object.assign({ ok: true }, controlState()));
+        return;
+      }
+
+      if (type === 'gt-load-state') {
+        var loaded = clickWebretroControl('loadstate', function () {
+          Module._cmd_load_state();
+        });
+        if (!loaded) {
+          done({ ok: false, error: 'Load state is not ready yet' });
+          return;
+        }
+        done(Object.assign({ ok: true }, controlState()));
+        return;
+      }
+
+      if (type === 'gt-picture') {
+        done(Object.assign({ ok: true }, controlState(), { picture: applyPicture(data.mode) }));
+        return;
+      }
+
+      if (type === 'gt-cabinet-key') {
+        var code = String(data.code || '');
+        if (!CABINET_KEYS[code]) {
+          done({ ok: false, error: 'Unknown cabinet key' });
+          return;
+        }
+        if (data.pulse) {
+          pulseCabinetKey(code);
+        } else {
+          dispatchCabinetKey(code, !!data.down);
+        }
+        done(Object.assign({ ok: true }, controlState()));
         return;
       }
 

@@ -4,7 +4,7 @@
 Historical wave rows that still say "Done uncommitted" further down this file should be read as *shipped*.  
 **Release:** **1.0.0-beta** — see the root [CHANGELOG.md](../../CHANGELOG.md) for what has landed
 since the tag. Waves **4–28** are all on `origin/main`.  
-**Updated:** 2026-08-26 — W27 leftovers that were still code. Landscape pass ticketed as INSP-* ([capability-inspiration.md](capability-inspiration.md)); named catalog stays private. **Next:** README recapture on a populated instance; **Ops** Reset Themes (`GENERATOR_VERSION` 16, plus this pass's theme CSS/JS). Remaining open is art/capture/Amazon, not code — [carryover-w28.md](carryover-w28.md).
+**Updated:** 2026-08-26 — Cabinet playback on the WebRetro play bar (Save / Load / Rewind / FF / Picture / shortcuts). Landscape pass ticketed as INSP-* ([capability-inspiration.md](capability-inspiration.md)); named catalog stays private. **Next:** README recapture on a populated instance; **Ops** Reset Themes (`GENERATOR_VERSION` 16, plus this pass's theme CSS/JS). Remaining open is art/capture/Amazon, not code — [carryover-w28.md](carryover-w28.md).
 Standing constraints unchanged: **no** Discord · **no Class A** intel in public docs.
 
 ## Leftover code pass (2026-08-26)
@@ -16,6 +16,16 @@ Six slices that were still real work after art packs / GOG-Epic live / CSP enfor
 | **Shipped** | Dead sidebar JS/CSS stripped from `gt_shell_rail.js` · `/admin/server_status_page` redirects to Ops · Statistics charts in a bounded CSS grid (`maintainAspectRatio: false`) · Unmatched dupe compare **Pop out** on the live Jinja path · Library tools is a tab of Libraries & scans (`?active_tab=tools`; old URL redirects) · Rail glyphs at rest use `--gt-accent` (W27-E4 code half — not per-theme drawings) |
 | **Reset Themes** | `gt-shell.css` · `admin_manage_scanjobs.js` / `.css` · `admin-pages.css` · `chart-utils.js` · `base.css` · `sidebar.css` |
 | **Still not code** | README recapture · six visually distinct icon packs · per-theme icon drawings · Amazon live sync · silent DRM redeem · UID-018 envelope remainder · UIR-3 header actions |
+
+## Cabinet playback (2026-08-26)
+
+Living-room OS frontends (shader sets, rewind, fast-forward, save/load hotkeys) mapped onto the existing WebRetro shell — not a whole-OS clone, and **no** vendored shader/bezel packs.
+
+| | |
+|---|---|
+| **Shipped** | Play bar **Save / Load / Rewind / FF / Picture / ?**. Bridge: `gt-save-state` · `gt-load-state` · `gt-cabinet-key` · `gt-picture`. RetroArch rewind + FF keybinds (Right Shift / F5 / Tab) win over the old `nul` binds. Picture: CRT · Sharp · Soft (CSS + `video_smooth`). Rewind off on N64/PS1/Saturn/DC/PSP |
+| **Not this slice** | `.slangp` shader packs · third-party bezel art · run-ahead · achievements · netplay · shipping a living-room OS image |
+| **Capture** | needed — play chrome changed; recapture on a populated instance (test DB is empty) |
 
 
 ## W29 — member UI sweep (2026-08-24)
@@ -100,7 +110,7 @@ The 2026-08-25 retail rundown: child ACL that W31 S10 left on the Bearer path, C
 | **Vendor JS** | DataTables and Cropper.js **off** `base.html` / `base_empty.html` / `base_admin.html`. Cropper loads on admin library-create; DataTables on admin logs + download requests. jQuery stays on the shells (`preferences_modal.js` → `$.notify`) |
 | **WebRetro licence** | MIT, Copyright (c) 2021 BinBashBanana — upstream LICENSE copied to `static/vendor/webretro/LICENSE`; notices no longer say unconfirmed |
 | **Envelope leftovers** | Profile, Systems, loading-icon, related-media failures go through `errorFromResponse` / `errorFromBody` |
-| **Player chrome (UID-007)** | Play bar Pause / Reset / Mute / volume / Power. Bezel overlay for touch and stage mousemove. Bridge: `gt-pause` · `gt-reset` · `gt-audio`. Firmware island was already closed. |
+| **Player chrome (UID-007)** | Play bar Pause / Reset / Mute / volume / Power. Bezel overlay for touch and stage mousemove. Bridge: `gt-pause` · `gt-reset` · `gt-audio`. Firmware island was already closed. **Cabinet follow-through (2026-08-26):** Save / Load / Rewind / FF / Picture / shortcuts. |
 | **Not done** | README recapture (needs a populated instance). CSP *enforce* closed later the same day — `onclick=` extracted, WebRetro stays off Flask CSP. |
 | **Capture** | skipped — empty test DB |
 

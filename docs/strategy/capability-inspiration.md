@@ -1,7 +1,7 @@
 # Capability inspiration (public)
 
 **Date:** 2026-08-26  
-**Status:** living backlog — tickets only, no implementation in this pass  
+**Status:** living backlog — INSP-* still open; browser **picture / rewind / FF / save-load chrome** shipped 2026-08-26 (not an INSP ticket)  
 **Companion:** named peer catalog stays in `docs/_private/` (gitignored) — see [competitive.md](competitive.md) · [external-facing-scrub.md](external-facing-scrub.md)  
 **Re-score sheet:** [competitor-rescore.md](competitor-rescore.md)
 
@@ -18,6 +18,7 @@ Locks unchanged: no Discord product surface · no DRM store download queues · n
 | ES-DE / Pegasus export packs | `/api/export/esde` · `/api/export/pegasus` |
 | Multi-source identify cascade | IGDB + Steam/GOG/Epic/itch/Giant Bomb/MobyGames/RAWG/TheGamesDB + HLTB |
 | Browser play with honesty badges | WebRetro + `play_mode` / `play_blocker` |
+| Cabinet rewind / FF / save-load / picture modes | Play bar + `gt-bridge.js` — CRT·Sharp·Soft; no shader packs |
 | Desktop companion install/launch | `clients/desktop` |
 | Torznab/Newznab registry + optional hubs | Arr settings · Prowlarr/Jackett |
 | Moonlight-family remote play CTA | [gow-remote-play.md](gow-remote-play.md) |
@@ -49,7 +50,7 @@ These were already the ranked public opportunities in [gap-review-2026-08-05.md]
 | Disk-level Library Health | **INSP-23** | Hashes already computed |
 | Fifth completion state | **INSP-21** | “Won't play” |
 | Mod profile depth | **INSP-22** | Beyond URL paste |
-| CRT shaders / run-ahead | unchanged | Real work, not a config line — leave with play-room skins |
+| CRT shaders / run-ahead | **picture modes shipped 2026-08-26** | CRT · Sharp · Soft on the play bar (CSS + `video_smooth`). `.slangp` packs and run-ahead stay unscheduled — WASM cannot afford run-ahead; we do not vendor shader files |
 
 ---
 
