@@ -29,7 +29,7 @@
 | Social + A/V waves | `docs/strategy/social-av.md` | Have (W16 shipped) · post-1.0 native RTC plan → [native-rtc.md](native-rtc.md) |
 | Security suite | `docs/strategy/security.md` | Have · post-1.0 native malware plan → [native-malware-scan.md](native-malware-scan.md) |
 | Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have (2026-08-26) — Phases 0–6 shipped; CSP **enforces** by default; DNS pin on `safe_request`; WebRetro MIT confirmed; L7 [privacy-data-handling.md](../admin/privacy-data-handling.md); remaining: non-commercial core clauses — operator notes (not counsel) in [webretro-core-clauses.md](../admin/webretro-core-clauses.md) |
-| Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs + loading motifs; colour presets author geometry at `GENERATOR_VERSION` **16** |
+| Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs + loading motifs; colour presets author geometry + decade rooms at `GENERATOR_VERSION` **17** |
 | Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
 | Emulation coverage (Wave 19) | `docs/strategy/emulation-coverage.md` | Have |
@@ -60,7 +60,7 @@
 |---|---|---|---|
 | Getting started (web) | End users | Have | [getting-started.md](../user/getting-started.md) |
 | Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) — Signals chips · Ctrl+K title search · details trailers/extras/`on_server` · OpenPathModal · page sizes →1000 · Friends dock |
-| Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — Wave 2d 9 distinct presets + paired icon packs · loading icons admin tip · **font picker** (files operator-supplied — admin [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md)) |
+| Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — decade rooms + colour cabinets, grouped room-card picker · Wave 2d paired icon packs · loading icons admin tip · **font picker** (files operator-supplied — admin [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md)) |
 | Downloading games | End users | Have | [downloads.md](../user/downloads.md) — native Torznab/Newznab + optional Prowlarr/Jackett merge |
 | Browser / companion play matrix | End users | Have | [browser-play.md](../user/browser-play.md) · sample free ROMs [samples/free-roms/](../../samples/free-roms/README.md) |
 | Free games (News claims) | End users | Have | [free-games.md](../user/free-games.md) |
@@ -101,7 +101,7 @@
 |---|---|---|
 | Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — **W22-1 Done** unified chrome (`/libraries` · `/scan_management`) · **Library tools tab** (`?active_tab=tools`; `/admin/library_tools` redirects) · multi-select sticky **Scan**/**Edit**/**Delete** → `POST …/batch/{scan,edit,delete}` · **BE batch APIs Done** (`force` skips typed names; UI prefers batch / 404 soft-degrade) · Layout chips · `gt-toast-host` · **UX-B7** library-add digest at scan end · scan queue/force · unmatched · **UID-005** top actions / Resolve pills / client sort · **W27-C4** dupe compare Pop out · Wave 18 timing/filters · **Scanning filters** · **W20-1/1b** propose/import · **W20-2** trail · **W20-4** scan-match · **W20-5a** Stage D · post-deploy Reset Themes (`admin_manage_libs` for sticky Scan/Edit · `admin_manage_scanjobs`) |
 | [members-and-invites.md](../admin/members-and-invites.md) | Have | Invites as links (email optional) · admin-created accounts with no email · `.invalid` placeholder rationale |
-| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **16** (geometry packs) · Reset after deploy · **W22-1** `admin_manage_libs` + `admin_manage_scanjobs` (+ **UID-005** · Soft title/Utility) · loading motifs on volume |
+| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **17** (decade rooms + `gt-era.css`) · Reset after deploy · **W22-1** `admin_manage_libs` + `admin_manage_scanjobs` (+ **UID-005** · Soft title/Utility) · loading motifs on volume |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — feature defaults ON · OIDC opt-in · malware block-on-hit · ClamAV · native Arr indexers (add/bulk/presets) + Prowlarr/Jackett · **W20-4** Scan/match Settings **Done** (`/admin/scan_match` + `GET|PUT /api/admin/scan-match/config` · defaults 0.92/0.08/0.85/conservative) |
 | Discover sections (storefront · zones · events) | Have | [discover-sections.md](../admin/discover-sections.md) — manual pick / library / platform / genre zones, reorder + hide built-ins · **W25** storefront shelves (`curated_for_you` · `upcoming`) · `shelf`/`hero`/`carousel` layouts · scheduled **events** (`starts_at`/`ends_at`, UTC) |
 | Theme fonts & batch artwork | Have | [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md) — OFL/era faces (no manufacturer typefaces; **files operator-supplied**, `installed` reported honestly) · magic-byte validated upload · `<uuid>[_<kind>]` batch image upload |
@@ -111,7 +111,7 @@
 | Troubleshooting | Have | [troubleshooting.md](../admin/troubleshooting.md) — Features / malware / OIDC notes |
 | Privacy & data handling | Have | [privacy-data-handling.md](../admin/privacy-data-handling.md) — operator-adaptable notes (L7); not a public ToS |
 | WebRetro core clauses | Have | [webretro-core-clauses.md](../admin/webretro-core-clauses.md) — snes9x / genesis_plus_gx quotes + lawyer questions; **not counsel** |
-| First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 16 |
+| First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 17 |
 | Propose-only scan & proposals | Create | |
 | Library Doctor & rename templates | Create | |
 | Unmatched & false duplicates | Have | [libraries-and-scans.md#unmatched-folders](../admin/libraries-and-scans.md#unmatched-folders) — Wave 17: filters · batch · soft **Amend naming** · nested `matched_game` / **Dupe of** · **UID-005** per-row top actions · Resolve equal pills · client sort Folder/Status/Library/Platform · Dupe glance parity · **W20-2** `transforms[]` + **Name transform trail** expander (Dupe glance + scanjobs; soft-degrade) · Dupe glance · merge/keep/ignore · OpenPathModal · export · PC extras |

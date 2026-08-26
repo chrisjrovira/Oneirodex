@@ -53,7 +53,14 @@ from datetime import date
 # 16 (UID-006 art packs): each preset now authors radius / space / type /
 # shadow as a system visual language, not hue-only tint. Operators must
 # Reset Themes so regenerated gt-tokens.css picks up the geometry.
-GENERATOR_VERSION = 16
+# 17 (decade rooms): presets carry an era room (same setting language as the
+# play shell) so chrome is wallpaper/window/floor, not a solid colour slab.
+# The tree gained css/gt-era.css. Reset Themes so every pack copies it and
+# regenerated gt-tokens.css picks up --gt-era.
+GENERATOR_VERSION = 17
+
+# Play-room id used when a theme does not name one (default + uploaded packs).
+DEFAULT_ERA = 'wood_den_80s'
 
 # Key written into each generated theme.json; also our ownership proof.
 PRESET_MARKER_KEY = 'gametheca_preset'
@@ -125,6 +132,8 @@ PRESET_THEMES = [
         'slug': 'aurora',
         'name': 'Arcade Neon',
         'description': '8-bit cabinet — square corners, tight tiles, CRT scan.',
+        'group': 'cabinet',
+        'era': 'arcade_cabinet',
         'btn_primary': '#22d3ee',
         'btn_primary_hover': '#06b6d4',
         'bg_dark_40': 'rgba(10, 24, 32, 0.94)',
@@ -153,6 +162,8 @@ PRESET_THEMES = [
         'slug': 'ember',
         'name': 'Hot Cabinet',
         'description': 'Coin-op cabinet — pill chips, deep shadow, filled glyphs.',
+        'group': 'cabinet',
+        'era': 'arcade_cabinet',
         'btn_primary': '#f472b6',
         'btn_primary_hover': '#ec4899',
         'bg_dark_40': 'rgba(28, 10, 22, 0.94)',
@@ -181,6 +192,8 @@ PRESET_THEMES = [
         'slug': 'violet',
         'name': 'Modern Violet',
         'description': 'Sixth-gen glass — large radius, heavy blur, thin strokes.',
+        'group': 'cabinet',
+        'era': 'media_center_00s',
         'btn_primary': '#a78bfa',
         'btn_primary_hover': '#8b5cf6',
         'bg_dark_40': 'rgba(22, 16, 36, 0.94)',
@@ -209,6 +222,8 @@ PRESET_THEMES = [
         'slug': 'forest',
         'name': 'Vector Green',
         'description': 'Vector monitor — zero radius, tight type, phosphor green.',
+        'group': 'cabinet',
+        'era': 'desk',
         'btn_primary': '#4ade80',
         'btn_primary_hover': '#22c55e',
         'bg_dark_40': 'rgba(12, 24, 18, 0.94)',
@@ -237,6 +252,8 @@ PRESET_THEMES = [
         'slug': 'ocean',
         'name': 'Modern Ocean',
         'description': 'Seventh-gen chrome — medium radius, duotone fill.',
+        'group': 'cabinet',
+        'era': 'media_center_00s',
         'btn_primary': '#3b82f6',
         'btn_primary_hover': '#2563eb',
         'bg_dark_40': 'rgba(10, 18, 36, 0.94)',
@@ -265,6 +282,8 @@ PRESET_THEMES = [
         'slug': 'rose',
         'name': 'Modern Rose',
         'description': 'Handheld — compact space, serif display, soft strokes.',
+        'group': 'cabinet',
+        'era': 'teen_bedroom_90s',
         'btn_primary': '#fb7185',
         'btn_primary_hover': '#f43f5e',
         'bg_dark_40': 'rgba(28, 14, 20, 0.94)',
@@ -293,6 +312,8 @@ PRESET_THEMES = [
         'slug': 'mono',
         'name': 'Modern Mono',
         'description': 'Home computer — 0 radius, no shadow, dense mono blocks.',
+        'group': 'cabinet',
+        'era': 'desk',
         'btn_primary': '#94a3b8',
         'btn_primary_hover': '#64748b',
         'bg_dark_40': 'rgba(18, 18, 22, 0.94)',
@@ -321,6 +342,8 @@ PRESET_THEMES = [
         'slug': 'sunset',
         'name': 'Coin Gold',
         'description': 'Medal cabinet — warm gold, large shadow, chunky type.',
+        'group': 'cabinet',
+        'era': 'wood_den_80s',
         'btn_primary': '#fbbf24',
         'btn_primary_hover': '#eab308',
         'bg_dark_40': 'rgba(24, 18, 8, 0.94)',
@@ -349,6 +372,8 @@ PRESET_THEMES = [
         'slug': 'ice',
         'name': 'Modern Ice',
         'description': 'HD-era frost — max radius, airy space, high blur.',
+        'group': 'cabinet',
+        'era': 'media_center_00s',
         'btn_primary': '#7dd3fc',
         'btn_primary_hover': '#38bdf8',
         'bg_dark_40': 'rgba(12, 20, 32, 0.94)',
@@ -373,9 +398,262 @@ PRESET_THEMES = [
             'gt-icon-fill-opacity': '0',
         },
     },
+    {
+        'slug': 'era-80s',
+        'name': '1980s wood den',
+        'description': 'Family television, wood panel, harvest lamp — when a lot of households started.',
+        'group': 'decade',
+        'era': 'wood_den_80s',
+        'btn_primary': '#e8c07d',
+        'btn_primary_hover': '#d4a85c',
+        'bg_dark_40': 'rgba(26, 20, 16, 0.88)',
+        'bg_dark_30': 'rgba(14, 10, 8, 0.92)',
+        'icon_pack': 'pixel',
+        'tokens': {
+            'gt-text': '#f4e6d0',
+            'gt-text-muted': '#c8a878',
+            'gt-border': 'rgba(232, 192, 125, 0.22)',
+            'gt-accent-2': '#ffb765',
+            'gt-glass-bg': 'rgba(28, 18, 12, 0.72)',
+            'gt-glass-border': 'rgba(232, 192, 125, 0.28)',
+            'gt-glass-blur': '6px',
+            'gt-crt-opacity': '0.1',
+            'gt-tile-gap': '8px',
+            'font-display': '"Press Start 2P", "Lucida Console", monospace',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '2.5',
+            'gt-icon-linecap': 'square',
+            'gt-icon-linejoin': 'miter',
+            'gt-icon-fill': 'none',
+            'gt-icon-fill-opacity': '0',
+        },
+    },
+    {
+        'slug': 'era-90s',
+        'name': '1990s teen bedroom',
+        'description': 'Posters, carpet, afternoon window — 16-bit on the floor.',
+        'group': 'decade',
+        'era': 'teen_bedroom_90s',
+        'btn_primary': '#c9a0d4',
+        'btn_primary_hover': '#b084c0',
+        'bg_dark_40': 'rgba(28, 21, 36, 0.88)',
+        'bg_dark_30': 'rgba(16, 12, 22, 0.92)',
+        'icon_pack': 'filled',
+        'tokens': {
+            'gt-text': '#f3e8f8',
+            'gt-text-muted': '#d4a0c8',
+            'gt-border': 'rgba(201, 160, 212, 0.22)',
+            'gt-accent-2': '#d4a574',
+            'gt-glass-bg': 'rgba(32, 20, 40, 0.74)',
+            'gt-glass-border': 'rgba(201, 160, 212, 0.28)',
+            'gt-glass-blur': '8px',
+            'gt-crt-opacity': '0.06',
+            'gt-tile-gap': '10px',
+            'font-display': '"Arial Black", "Segoe UI", sans-serif',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '1.4',
+            'gt-icon-linecap': 'round',
+            'gt-icon-linejoin': 'round',
+            'gt-icon-fill': 'currentColor',
+            'gt-icon-fill-opacity': '0.88',
+        },
+    },
+    {
+        'slug': 'era-late90s',
+        'name': 'Late-90s carpet den',
+        'description': 'Basement rec room, disc cases, tube still in the corner.',
+        'group': 'decade',
+        'era': 'carpet_den_late_90s',
+        'btn_primary': '#8aa4ff',
+        'btn_primary_hover': '#6a88ee',
+        'bg_dark_40': 'rgba(18, 16, 24, 0.9)',
+        'bg_dark_30': 'rgba(10, 8, 16, 0.94)',
+        'icon_pack': 'duotone',
+        'tokens': {
+            'gt-text': '#e8ecff',
+            'gt-text-muted': '#9bb0ff',
+            'gt-border': 'rgba(138, 164, 255, 0.22)',
+            'gt-accent-2': '#6a8cff',
+            'gt-glass-bg': 'rgba(20, 16, 32, 0.76)',
+            'gt-glass-border': 'rgba(138, 164, 255, 0.28)',
+            'gt-glass-blur': '8px',
+            'gt-crt-opacity': '0.05',
+            'gt-tile-gap': '10px',
+            'font-display': '"Orbitron", "Segoe UI", sans-serif',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '1.7',
+            'gt-icon-linecap': 'round',
+            'gt-icon-linejoin': 'round',
+            'gt-icon-fill': 'currentColor',
+            'gt-icon-fill-opacity': '0.22',
+        },
+    },
+    {
+        'slug': 'era-00s',
+        'name': '2000s media centre',
+        'description': 'Silver-black stand, tray-loading boxes, evening window.',
+        'group': 'decade',
+        'era': 'media_center_00s',
+        'btn_primary': '#3f9bff',
+        'btn_primary_hover': '#2b7fe0',
+        'bg_dark_40': 'rgba(11, 18, 32, 0.88)',
+        'bg_dark_30': 'rgba(6, 10, 20, 0.94)',
+        'icon_pack': 'soft',
+        'tokens': {
+            'gt-text': '#e8f2ff',
+            'gt-text-muted': '#7fd3ff',
+            'gt-border': 'rgba(63, 155, 255, 0.22)',
+            'gt-accent-2': '#7fd3ff',
+            'gt-glass-bg': 'rgba(10, 18, 36, 0.7)',
+            'gt-glass-border': 'rgba(63, 155, 255, 0.28)',
+            'gt-glass-blur': '10px',
+            'gt-crt-opacity': '0.02',
+            'gt-tile-gap': '11px',
+            'font-display': '"Segoe UI Semibold", "Segoe UI", sans-serif',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '1.35',
+            'gt-icon-linecap': 'round',
+            'gt-icon-linejoin': 'round',
+            'gt-icon-fill': 'none',
+            'gt-icon-fill-opacity': '0',
+        },
+    },
+    {
+        'slug': 'era-arcade',
+        'name': 'Arcade floor',
+        'description': 'Dark room, marquee overhead, coins on the bezel.',
+        'group': 'decade',
+        'era': 'arcade_cabinet',
+        'btn_primary': '#ff2d6f',
+        'btn_primary_hover': '#e01858',
+        'bg_dark_40': 'rgba(12, 8, 18, 0.9)',
+        'bg_dark_30': 'rgba(6, 4, 12, 0.95)',
+        'icon_pack': 'filled',
+        'tokens': {
+            'gt-text': '#ffe8f0',
+            'gt-text-muted': '#ff8ab0',
+            'gt-border': 'rgba(255, 45, 111, 0.24)',
+            'gt-accent-2': '#25e0ff',
+            'gt-glass-bg': 'rgba(16, 6, 18, 0.78)',
+            'gt-glass-border': 'rgba(255, 45, 111, 0.32)',
+            'gt-glass-blur': '6px',
+            'gt-crt-opacity': '0.08',
+            'gt-tile-gap': '8px',
+            'font-display': '"Arial Black", "Impact", sans-serif',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '1.5',
+            'gt-icon-linecap': 'round',
+            'gt-icon-linejoin': 'round',
+            'gt-icon-fill': 'currentColor',
+            'gt-icon-fill-opacity': '0.9',
+        },
+    },
+    {
+        'slug': 'era-desk',
+        'name': 'Computer desk',
+        'description': 'Home computer, desk lamp, phosphor glow.',
+        'group': 'decade',
+        'era': 'desk',
+        'btn_primary': '#5ef08a',
+        'btn_primary_hover': '#3ed46c',
+        'bg_dark_40': 'rgba(13, 20, 16, 0.9)',
+        'bg_dark_30': 'rgba(8, 12, 10, 0.94)',
+        'icon_pack': 'outline',
+        'tokens': {
+            'gt-text': '#e8f8ee',
+            'gt-text-muted': '#a9f7c1',
+            'gt-border': 'rgba(94, 240, 138, 0.2)',
+            'gt-accent-2': '#a9f7c1',
+            'gt-glass-bg': 'rgba(8, 20, 14, 0.82)',
+            'gt-glass-border': 'rgba(94, 240, 138, 0.24)',
+            'gt-glass-blur': '4px',
+            'gt-crt-opacity': '0.07',
+            'gt-tile-gap': '9px',
+            'font-display': '"VT323", "Courier New", monospace',
+            'font-ui': '"Segoe UI", "Helvetica Neue", sans-serif',
+            'gt-icon-stroke': '2',
+            'gt-icon-linecap': 'butt',
+            'gt-icon-linejoin': 'miter',
+            'gt-icon-fill': 'none',
+            'gt-icon-fill-opacity': '0',
+        },
+    },
 ]
 
 PRESET_SLUGS = tuple(preset['slug'] for preset in PRESET_THEMES)
+PRESET_BY_SLUG = {preset['slug']: preset for preset in PRESET_THEMES}
+
+
+def era_for_theme(slug: str | None) -> str:
+    """Play-room / UI atmosphere id for a theme folder slug."""
+    key = (slug or '').strip() or 'default'
+    if key == 'default':
+        return DEFAULT_ERA
+    preset = PRESET_BY_SLUG.get(key)
+    if preset:
+        return str(preset.get('era') or DEFAULT_ERA)
+    return DEFAULT_ERA
+
+
+def theme_picker_groups(choices) -> list[dict]:
+    """Group Preferences theme choices into decade rooms, colour cabinets, uploads.
+
+    *choices* is the WTForms ``(value, label)`` list. Unknown / uploaded slugs
+    land in Installed so the picker still covers every installed folder.
+    """
+    groups = {
+        'decade': {
+            'id': 'decade',
+            'label': 'Decade rooms',
+            'hint': 'The room you started in — same scenery language as browser play.',
+            'items': [],
+        },
+        'cabinet': {
+            'id': 'cabinet',
+            'label': 'Colour cabinets',
+            'hint': 'Palette packs that still sit in an era room, not a flat colour.',
+            'items': [],
+        },
+        'installed': {
+            'id': 'installed',
+            'label': 'Installed',
+            'hint': 'Themes uploaded on this server.',
+            'items': [],
+        },
+    }
+    for value, label in choices:
+        slug = str(value)
+        name = str(label)
+        preset = PRESET_BY_SLUG.get(slug)
+        if slug == 'default':
+            groups['cabinet']['items'].append({
+                'slug': slug,
+                'name': name,
+                'description': 'System default — wood den scenery, green glass.',
+                'era': DEFAULT_ERA,
+                'icon_pack': 'outline',
+            })
+            continue
+        if preset:
+            gid = str(preset.get('group') or 'cabinet')
+            if gid not in groups:
+                gid = 'installed'
+            groups[gid]['items'].append({
+                'slug': slug,
+                'name': name,
+                'description': str(preset.get('description') or ''),
+                'era': str(preset.get('era') or DEFAULT_ERA),
+                'icon_pack': preset_icon_pack(preset),
+            })
+            continue
+        groups['installed']['items'].append({
+            'slug': slug,
+            'name': name,
+            'description': 'Uploaded theme.',
+            'era': DEFAULT_ERA,
+            'icon_pack': '',
+        })
+    return [group for group in (groups['decade'], groups['cabinet'], groups['installed']) if group['items']]
 
 
 # --------------------------------------------------------------------------
@@ -534,6 +812,7 @@ def preset_tokens(preset: dict) -> dict:
             if value is None or value == '':
                 continue
             tokens[str(name)] = str(value)
+    tokens['gt-era'] = str(preset.get('era') or DEFAULT_ERA)
     for name, value in _system_geometry(str(preset.get('slug') or '')).items():
         tokens[name] = value
     return tokens
@@ -663,6 +942,79 @@ def _system_geometry(slug: str) -> dict:
             'gt-shadow-sm': '0 1px 8px rgba(120, 180, 220, 0.18)',
             'gt-shadow-md': '0 8px 28px rgba(10, 30, 50, 0.35)',
         },
+        'era-80s': {
+            'gt-radius-xs': '0px',
+            'gt-radius-sm': '2px',
+            'gt-radius-md': '2px',
+            'gt-radius-lg': '4px',
+            'gt-radius-xl': '4px',
+            'gt-radius-2xl': '4px',
+            'gt-radius-3xl': '6px',
+            'gt-space-4': '0.5rem',
+            'gt-space-5': '0.7rem',
+            'gt-font-base': '0.95rem',
+            'gt-shadow-md': '0 2px 0 rgba(0, 0, 0, 0.55)',
+            'gt-motion-base': '80ms',
+        },
+        'era-90s': {
+            'gt-radius-xs': '4px',
+            'gt-radius-sm': '6px',
+            'gt-radius-md': '10px',
+            'gt-radius-lg': '14px',
+            'gt-radius-xl': '18px',
+            'gt-radius-2xl': '22px',
+            'gt-radius-3xl': '26px',
+            'gt-space-5': '1rem',
+            'gt-shadow-md': '0 8px 22px rgba(40, 16, 48, 0.48)',
+        },
+        'era-late90s': {
+            'gt-radius-xs': '3px',
+            'gt-radius-sm': '6px',
+            'gt-radius-md': '10px',
+            'gt-radius-lg': '12px',
+            'gt-radius-xl': '16px',
+            'gt-radius-2xl': '20px',
+            'gt-radius-3xl': '24px',
+            'gt-shadow-md': '0 6px 18px rgba(16, 12, 32, 0.5)',
+        },
+        'era-00s': {
+            'gt-radius-xs': '6px',
+            'gt-radius-sm': '8px',
+            'gt-radius-md': '12px',
+            'gt-radius-lg': '16px',
+            'gt-radius-xl': '20px',
+            'gt-radius-2xl': '24px',
+            'gt-radius-3xl': '28px',
+            'gt-space-5': '1.05rem',
+            'gt-shadow-md': '0 6px 20px rgba(8, 20, 40, 0.42)',
+        },
+        'era-arcade': {
+            'gt-radius-xs': '2px',
+            'gt-radius-sm': '4px',
+            'gt-radius-md': '8px',
+            'gt-radius-lg': '12px',
+            'gt-radius-xl': '16px',
+            'gt-radius-2xl': '20px',
+            'gt-radius-3xl': '24px',
+            'gt-space-4': '0.5rem',
+            'gt-shadow-md': '0 8px 24px rgba(40, 0, 20, 0.55)',
+            'gt-shadow-lg': '0 18px 40px rgba(40, 0, 24, 0.6)',
+        },
+        'era-desk': {
+            'gt-radius-xs': '0px',
+            'gt-radius-sm': '0px',
+            'gt-radius-md': '0px',
+            'gt-radius-lg': '0px',
+            'gt-radius-xl': '0px',
+            'gt-radius-2xl': '0px',
+            'gt-radius-3xl': '0px',
+            'gt-space-4': '0.45rem',
+            'gt-space-5': '0.7rem',
+            'gt-font-base': '0.92rem',
+            'gt-shadow-sm': 'none',
+            'gt-shadow-md': 'none',
+            'gt-motion-base': '90ms',
+        },
     }
     return packs.get(slug, {})
 
@@ -769,6 +1121,8 @@ def _write_theme_json(
     slug: str,
     fingerprint: str,
     icon_pack: str = 'outline',
+    era: str = DEFAULT_ERA,
+    group: str = 'cabinet',
 ) -> None:
     payload = {
         'name': name,
@@ -777,11 +1131,15 @@ def _write_theme_json(
         'version': '1.0.0',
         'release_date': date.today().isoformat(),
         'default_icon_pack': icon_pack,
+        'era': era,
+        'group': group,
         PRESET_MARKER_KEY: {
             'slug': slug,
             'generator': GENERATOR_VERSION,
             'source': fingerprint,
             'icon_pack': icon_pack,
+            'era': era,
+            'group': group,
         },
     }
     with open(path, 'w', encoding='utf-8') as fh:
@@ -882,6 +1240,8 @@ def build_preset(source_root: str, target: str, preset: dict, fingerprint: str) 
         slug=preset['slug'],
         fingerprint=fingerprint,
         icon_pack=preset_icon_pack(preset),
+        era=str(preset.get('era') or DEFAULT_ERA),
+        group=str(preset.get('group') or 'cabinet'),
     )
     _write_preset_base_css(target, preset)
     _write_preset_tokens_css(source_root, target, preset)

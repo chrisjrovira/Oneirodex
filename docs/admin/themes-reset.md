@@ -1,6 +1,6 @@
 # Themes & reset
 
-Themes live on the **library volume** (`/app/gametheca/static/library/themes/...`), not only in the image. Source of truth for defaults: `gametheca/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 16** in `gametheca/utils/preset_themes.py` (radius / space / type / shadow per preset, plus Wave 2d colour + icon + glass/CRT). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
+Themes live on the **library volume** (`/app/gametheca/static/library/themes/...`), not only in the image. Source of truth for defaults: `gametheca/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 17** in `gametheca/utils/preset_themes.py` (decade rooms + colour cabinets, `css/gt-era.css`, `--gt-era`, plus geometry / Wave 2d colour + icon + glass/CRT). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
 
 ## Default look
 
@@ -50,13 +50,16 @@ Or delete `themes/default` (and stale presets) under the library volume and rest
 | Account / prefs chrome (`gt-account.css` · prefs modal · `modal-components`) | Theme tree → **library volume** | After Wave 2c densify: if account/prefs chrome still looks pre-sectioned or modal stacking lags, run **Reset Default Themes** (volume copies stale) — same gate as aurora scrub row above |
 | Wave 2d presets + loading motifs (`GENERATOR_VERSION` **10** at the time · paired `default_icon_pack` · `gt-loading-motifs.css` / `gt_loading_motifs.js`) | Theme tree tokens/CSS/JS → **library volume** | After Wave 2d ship: rebuild **and** **Reset Default Themes** — without Reset, presets stay accent-only (v9) and Auto Scan misses motif CSS |
 | Geometry packs (`GENERATOR_VERSION` **16** — UID-006 radius / space / type / shadow per preset) | Theme tree tokens → **library volume** | After 2026-08-26: rebuild **and** **Reset Default Themes** — without Reset, presets keep v10 geometry (hue + pairing only) |
+| Decade rooms (`GENERATOR_VERSION` **17** — `gt-era.css`, six era presets, colour cabinets sit in a play-room, themed placeholder covers) | Theme tree CSS/JS/tokens → **library volume** | After 2026-08-26: rebuild **and** **Reset Default Themes** — without Reset, member/admin chrome stays a flat colour slab and the Preferences picker is still the tiny swatch grid |
 
 If a fresh Unraid pull looks half-applied (new play-skins room art shows but admin still looks old, or vice versa), check which of the two you skipped.
 
 ## Apply a theme
 
 **Preferences is the only theme picker.** Everyone — admins included — chooses a theme in
-**Preferences**, which sets colour theme, icon pack, font and tile size together.
+**Preferences**, which sets colour theme, icon pack, font and tile size together. The picker
+is grouped **Decade rooms** / **Colour cabinets** / **Installed** with a miniature of the
+era room on each card, so fifteen-plus presets stay scannable.
 
 > **Changed 2026-08-16.** The Admin → Themes page used to carry its own swatch grid writing the same
 > `current_user.preferences.theme` that Preferences writes, so the two surfaces could disagree about

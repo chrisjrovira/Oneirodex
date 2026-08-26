@@ -49,7 +49,7 @@ Each pack: `manifest.json` + `pack.css` (+ optional `icons/`, `images/` for futu
 
 ## Wave 2d — preset colour + icon pairing
 
-Presets (`GENERATOR_VERSION` **16**) own glass, CRT, typography, text tint, secondary accent, `--gt-icon-*` geometry, **and** radius / space / type / shadow per pack (UID-006). Paired default icon pack still lives in `theme.json` (`default_icon_pack`). Preferences auto-selects the paired pack when you pick a colour swatch (still overridable before save). **Reset Default Themes** after a generator bump.
+Presets (`GENERATOR_VERSION` **17**) own glass, CRT, typography, text tint, secondary accent, `--gt-icon-*` geometry, radius / space / type / shadow per pack (UID-006), **and** an era room (`--gt-era` / `html[data-era]`) so chrome is wallpaper rather than a colour slab. Paired default icon pack still lives in `theme.json` (`default_icon_pack`). Preferences auto-selects the paired pack when you pick a room card (still overridable before save). **Reset Default Themes** after a generator bump.
 
 ### Before → after token deltas (summary)
 

@@ -77,13 +77,13 @@ On the play bar above the screen: Pause, Reset, Mute, volume, Save, Load, Rewind
 ## Themes & icons
 
 **Theme vs icon pack?**  
-Color theme = palette/chrome (Wave 2d: glass/CRT/type + paired default pack). Icon pack = glyph style (outline, filled, …) — still overridable. Independent after save — [preferences-themes.md](preferences-themes.md). Preferences is sectioned (Library · Look & density · Game language) without heavy cards and uses the theme **swatch grid** (not name-only). **Preferences is the only place a theme is chosen** — admins included; the separate admin picker was retired in favour of one surface that cannot disagree with itself.
+- Color theme = **decade room or colour cabinet** (wallpaper, window, posters, floor — same setting language as browser play — plus palette/chrome). Icon pack = glyph style (outline, filled, …) — still overridable. Independent after save — [preferences-themes.md](preferences-themes.md). Preferences is sectioned (Library · Look & density · Game language) and uses a **grouped room-card picker** (Decade rooms · Colour cabinets · Installed uploads), not a tiny swatch grid. **Preferences is the only place a theme is chosen** — admins included; the separate admin picker was retired in favour of one surface that cannot disagree with itself.
 
 **Loading spinners look wrong / stuck on ring?**  
 Household mode is Admin → Themes → **Loading icons** (rotate catalogue or lock one). Motif CSS needs **Reset Default Themes** after Wave 2d deploy — [themes-reset.md](../admin/themes-reset.md).
 
 **Why do some games show a GameTheca placeholder cover?**  
-Titles without downloaded artwork use branded fallbacks (`default_cover.jpg`). Admins can generate custom placeholders in **Admin → Settings → Art studio** and attach them to games or set a site-wide fallback pack.
+Titles without downloaded artwork get a branded placeholder painted in your **active decade room** (wood planks, posters, carpet, marquee, phosphor — cached per theme). The generic `default_cover.jpg` is only the last fallback if rendering fails. Admins can generate decade-room / platform / stock packs in **Admin → Settings → Art studio** and attach them to games or set a site-wide fallback pack.
 
 **Do I need an admin to install fonts?**  
 No. Every face the Font picker lists ships with GameTheca and is copied into place on each server start — no download, no admin step, works air-gapped. "Not installed" now means a real filesystem problem on the server, not the normal state. What is *not* bundled is console manufacturers' own typefaces; those are trademarked, so the bundled faces evoke each era instead — [preferences-themes.md](preferences-themes.md).

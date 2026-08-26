@@ -34,6 +34,9 @@ body.gt-play-shell {
 }
 
 #gt-play-atmosphere .gt-play-wall,
+#gt-play-atmosphere .gt-play-window,
+#gt-play-atmosphere .gt-play-posters,
+#gt-play-atmosphere .gt-play-furnish,
 #gt-play-atmosphere .gt-play-floor,
 #gt-play-atmosphere .gt-play-lamp,
 #gt-play-atmosphere .gt-play-vignette,
@@ -91,6 +94,34 @@ body.gt-play-shell {
   );
   background-size: 180px 180px;
   mix-blend-mode: overlay;
+}
+
+/* Window · posters · bed silhouettes — original geometry, no photos. */
+#gt-play-atmosphere .gt-play-window {
+  inset: var(--gt-play-window-inset, 7% 6% auto auto);
+  width: var(--gt-play-window-w, 0);
+  height: var(--gt-play-window-h, 0);
+  background: var(--gt-play-window, none);
+  box-shadow: var(--gt-play-window-frame, none);
+  border-radius: 2px;
+  opacity: var(--gt-play-window-opacity, 0);
+}
+
+#gt-play-atmosphere .gt-play-posters {
+  inset: 10% 22% 42% 5%;
+  background: var(--gt-play-posters, none);
+  opacity: var(--gt-play-posters-opacity, 0);
+}
+
+#gt-play-atmosphere .gt-play-furnish {
+  inset: auto auto var(--gt-play-bed-bottom, 14%) auto;
+  left: var(--gt-play-bed-left, 2%);
+  width: var(--gt-play-bed-w, 0);
+  height: var(--gt-play-bed-h, 0);
+  background: var(--gt-play-bed, none);
+  border-radius: var(--gt-play-bed-radius, 8px 18px 4px 4px);
+  opacity: var(--gt-play-bed-opacity, 0);
+  box-shadow: var(--gt-play-bed-shadow, none);
 }
 
 @keyframes gt-play-wall-drift {
@@ -1420,6 +1451,135 @@ body.gt-play-shell {
   --gt-play-bezel-border: 4px solid #8b6914;
   --gt-play-wallpaper: linear-gradient(180deg, #201808, #0e0a04);
   --gt-play-scanline-opacity: 0.25;
+}
+
+/* Era rooms (setting / decade). Bezel stays per-platform.
+ * These sit last so wallpaper, window, posters, and floor win over per-platform
+ * wallpaper tints. Hardware chrome is untouched. No manufacturer marks. */
+[data-play-room="wood_den_80s"] {
+  --gt-play-room-bg: #1a1410;
+  --gt-play-wallpaper:
+    repeating-linear-gradient(90deg, #3a2818 0 13px, #2a1c10 13px 26px),
+    linear-gradient(180deg, #2a1c12, #120c08);
+  --gt-play-floor:
+    repeating-linear-gradient(90deg, rgba(90, 50, 28, 0.35) 0 18px, rgba(50, 28, 14, 0.45) 18px 36px),
+    linear-gradient(180deg, transparent, rgba(70, 42, 22, 0.7) 28%, #140c08);
+  --gt-play-floor-h: 40%;
+  --gt-play-ambient:
+    radial-gradient(ellipse 45% 32% at 18% 78%, rgba(255, 170, 70, 0.28), transparent 55%),
+    radial-gradient(ellipse 30% 24% at 78% 18%, rgba(255, 210, 140, 0.12), transparent 50%);
+  --gt-play-window: linear-gradient(180deg, #f0c878 0%, #c87838 42%, #3a2010 100%);
+  --gt-play-window-frame: inset 0 0 0 7px #4a3018, 0 0 18px rgba(255, 180, 80, 0.2);
+  --gt-play-window-w: 15%;
+  --gt-play-window-h: 28%;
+  --gt-play-window-opacity: 0.72;
+  --gt-play-posters:
+    linear-gradient(#8a5a28, #8a5a28) 8% 12% / 9% 16% no-repeat,
+    linear-gradient(#5a3820, #5a3820) 20% 8% / 7% 18% no-repeat;
+  --gt-play-posters-opacity: 0.45;
+  --gt-play-furniture: linear-gradient(180deg, #5a4030, #3a2818 55%, #241810);
+  --gt-play-furniture-h: 22%;
+  --gt-play-bed-opacity: 0;
+}
+
+[data-play-room="teen_bedroom_90s"] {
+  --gt-play-room-bg: #1c1524;
+  --gt-play-wallpaper:
+    repeating-linear-gradient(180deg, #3a2a48 0 18px, #322440 18px 20px, #2a1c38 20px 38px),
+    linear-gradient(180deg, #2a1c38, #16101c);
+  --gt-play-floor:
+    radial-gradient(circle at 20% 40%, rgba(80, 40, 50, 0.4) 0 2px, transparent 3px),
+    linear-gradient(180deg, transparent, rgba(72, 36, 48, 0.65) 30%, #140c12);
+  --gt-play-floor-h: 38%;
+  --gt-play-ambient:
+    radial-gradient(ellipse 40% 50% at 88% 18%, rgba(255, 200, 120, 0.32), transparent 55%),
+    radial-gradient(ellipse 50% 30% at 50% 100%, rgba(160, 90, 180, 0.16), transparent 60%);
+  --gt-play-window: linear-gradient(180deg, #8ec8ff 0%, #f4c878 38%, #e8a050 70%, #6a4030 100%);
+  --gt-play-window-frame: inset 0 0 0 8px #5a3a28, 0 0 20px rgba(255, 190, 100, 0.28);
+  --gt-play-window-w: 16%;
+  --gt-play-window-h: 34%;
+  --gt-play-window-opacity: 0.85;
+  --gt-play-posters:
+    linear-gradient(#c45c6a, #c45c6a) 6% 10% / 10% 18% no-repeat,
+    linear-gradient(#3a6a9a, #3a6a9a) 18% 6% / 8% 20% no-repeat,
+    linear-gradient(#d4b04a, #d4b04a) 28% 14% / 7% 14% no-repeat,
+    linear-gradient(#4a8a62, #4a8a62) 10% 34% / 9% 12% no-repeat;
+  --gt-play-posters-opacity: 0.55;
+  --gt-play-bed: linear-gradient(180deg, #5a3a58 0 28%, #3a2438 28% 100%);
+  --gt-play-bed-w: 28%;
+  --gt-play-bed-h: 22%;
+  --gt-play-bed-left: 3%;
+  --gt-play-bed-bottom: 16%;
+  --gt-play-bed-opacity: 0.62;
+  --gt-play-bed-shadow: 10px 0 0 #2a1828;
+  --gt-play-furniture: linear-gradient(180deg, #4a3a5a, #2a2038);
+  --gt-play-furniture-h: 16%;
+}
+
+[data-play-room="carpet_den_late_90s"] {
+  --gt-play-room-bg: #121018;
+  --gt-play-wallpaper: linear-gradient(180deg, #1c1828 0 62%, #141018 62% 100%);
+  --gt-play-floor:
+    repeating-linear-gradient(90deg, rgba(90, 40, 50, 0.28) 0 22px, rgba(40, 20, 30, 0.4) 22px 44px),
+    linear-gradient(180deg, transparent, rgba(50, 24, 36, 0.7) 32%, #0c0810);
+  --gt-play-floor-h: 42%;
+  --gt-play-ambient:
+    radial-gradient(ellipse 55% 35% at 50% 0%, rgba(80, 100, 200, 0.18), transparent 55%);
+  --gt-play-window: linear-gradient(180deg, #1a2848 0%, #3a5080 100%);
+  --gt-play-window-frame: inset 0 0 0 6px #2a2438;
+  --gt-play-window-w: 12%;
+  --gt-play-window-h: 14%;
+  --gt-play-window-inset: 6% 8% auto auto;
+  --gt-play-window-opacity: 0.55;
+  --gt-play-posters:
+    linear-gradient(#2a4a8a, #2a4a8a) 8% 16% / 11% 22% no-repeat,
+    linear-gradient(#8a2a4a, #8a2a4a) 22% 10% / 8% 18% no-repeat;
+  --gt-play-posters-opacity: 0.4;
+  --gt-play-bed: radial-gradient(ellipse at 40% 80%, #3a2848 0 55%, transparent 56%);
+  --gt-play-bed-w: 24%;
+  --gt-play-bed-h: 18%;
+  --gt-play-bed-left: 4%;
+  --gt-play-bed-opacity: 0.5;
+  --gt-play-furniture: linear-gradient(180deg, #2a2e38, #141820);
+  --gt-play-furniture-h: 20%;
+}
+
+[data-play-room="media_center_00s"] {
+  --gt-play-room-bg: #0b1220;
+  --gt-play-wallpaper: linear-gradient(180deg, #141c2c, #0a1018);
+  --gt-play-floor: linear-gradient(180deg, transparent, rgba(12, 20, 36, 0.75) 35%, #060a12);
+  --gt-play-floor-h: 34%;
+  --gt-play-ambient:
+    radial-gradient(ellipse 40% 45% at 90% 16%, rgba(80, 140, 220, 0.22), transparent 55%);
+  --gt-play-window: linear-gradient(180deg, #1a3860 0%, #0c1828 100%);
+  --gt-play-window-frame: inset 0 0 0 5px #1a2438;
+  --gt-play-window-w: 14%;
+  --gt-play-window-h: 30%;
+  --gt-play-window-opacity: 0.6;
+  --gt-play-posters: linear-gradient(#1a3a5a, #1a3a5a) 7% 14% / 8% 16% no-repeat;
+  --gt-play-posters-opacity: 0.28;
+  --gt-play-bed-opacity: 0;
+  --gt-play-furniture: linear-gradient(180deg, #2a3448, #121820 40%, #0a1018);
+  --gt-play-furniture-h: 18%;
+}
+
+[data-play-room="arcade_cabinet"] {
+  --gt-play-window-opacity: 0;
+  --gt-play-posters-opacity: 0;
+  --gt-play-bed-opacity: 0;
+}
+
+[data-play-room="desk"] {
+  --gt-play-window: linear-gradient(180deg, #c8dce8 0%, #88a8b8 100%);
+  --gt-play-window-frame: inset 0 0 0 6px #4a5048;
+  --gt-play-window-w: 18%;
+  --gt-play-window-h: 26%;
+  --gt-play-window-opacity: 0.55;
+  --gt-play-posters:
+    linear-gradient(#6a6048, #6a6048) 8% 12% / 12% 16% no-repeat,
+    linear-gradient(#3a5040, #3a5040) 22% 10% / 8% 12% no-repeat;
+  --gt-play-posters-opacity: 0.4;
+  --gt-play-bed-opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

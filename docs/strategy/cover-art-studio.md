@@ -70,6 +70,7 @@ Operators pick from a catalog instead of only the single dull `default_library.j
 
 | Kind | Pack id examples | Storage |
 |---|---|---|
+| `era` | `era-80s-den`, `era-90s-bedroom`, `era-arcade-floor` | `static/library/stock/{id}/` |
 | `platform` | `platform-nes`, `platform-psx`, `platform-pcwin` | `static/library/stock/{id}/` |
 | `stock` | `stock-controller`, `stock-crt-grid`, `stock-neon-court` | same |
 
@@ -77,7 +78,7 @@ Operators pick from a catalog instead of only the single dull `default_library.j
 - **Generate:** `POST /admin/api/art-studio/stock/generate` body `{ ids?: string[] }` — idempotent Pillow write of the size matrix
 - **Apply library:** `POST /admin/api/art-studio/apply` `{ pack_id, mode: "library", library_uuid }` → sets `Library.image_url` to the pack wide/hero static URL
 - **Apply fallback:** existing `{ pack_id, mode: "fallback" }` also resolves packs under `library/stock/`
-- Original geometry only (controller silhouette, cartridge, disc ring, CRT grid, neon court, …) — no scraped box art
+- Original geometry only (controller silhouette, cartridge, disc ring, CRT grid, neon court, decade-room scenery) — no scraped box art. Platform packs also paint the play-room for that hardware. Untitled library tiles cache a per-theme placeholder (`covers/{title_hash}_{theme_slug}.jpg`) so backup art follows the member's decade room.
 
 ### Frontend handoff (exact)
 

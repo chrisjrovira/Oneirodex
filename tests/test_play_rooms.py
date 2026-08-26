@@ -23,15 +23,19 @@ class TestRoomMapping:
             assert room_id_for_platform('NEOGEO') == 'arcade_cabinet'
             assert room_id_for_platform('SNES') != room_id_for_platform('NEOGEO')
 
-    def test_handhelds_share_a_room_across_brands(self, app):
+    def test_nineties_handhelds_share_the_teen_bedroom(self, app):
+        """Cart-era pockets sat on the same bedroom floor as a SNES — not a
+        generic daylight void, and not a 2000s media centre."""
         with app.app_context():
-            for key in ('GB', 'LYNX', 'NGP', 'PSP', 'WS'):
-                assert room_id_for_platform(key) == 'handheld'
+            for key in ('GB', 'LYNX', 'NGP', 'WS'):
+                assert room_id_for_platform(key) == 'teen_bedroom_90s'
+            assert room_id_for_platform('PSP') == 'media_center_00s'
 
-    def test_disc_generation_is_its_own_setting(self, app):
+    def test_late_nineties_disc_generation_is_the_carpet_den(self, app):
         with app.app_context():
-            for key in ('PSX', 'SEGA_SATURN', 'NGC', 'THREEDO'):
-                assert room_id_for_platform(key) == 'disc_era'
+            for key in ('PSX', 'SEGA_SATURN', 'THREEDO'):
+                assert room_id_for_platform(key) == 'carpet_den_late_90s'
+            assert room_id_for_platform('NGC') == 'media_center_00s'
 
     def test_computers_land_on_the_desk(self, app):
         with app.app_context():
@@ -58,7 +62,7 @@ class TestRoomPayload:
     def test_carries_palette_and_era_font(self, app):
         with app.app_context():
             room = room_for_platform('NES')
-            assert room['id'] == 'crt_living_room'
+            assert room['id'] == 'wood_den_80s'
             assert room['backdrop'].startswith('#')
             assert room['glow'].startswith('#')
             # Pairs with the font registry rather than duplicating it.

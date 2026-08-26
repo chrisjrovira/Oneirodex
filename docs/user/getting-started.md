@@ -75,7 +75,7 @@ On phones and narrow tablets (≤900px), the top nav becomes a **hamburger** men
 1. Open **Library** and filter by platform or Signals (sticky Filters on desktop; drawer ≤900px). Tile size is the TopNav percent slider. Ctrl+K to search titles.
 2. Open **Systems** and pick a console family.
 3. Open a game → details (trailers / YouTube demo when present, Extras & DLC with on-server honesty, screenshot fullscreen, store marks) → **Download** (streaming zip).
-4. Open preferences (account menu) → sectioned Preferences (theme swatch + icon pack + tile size; no heavy cards).
+4. Open preferences (account menu) → sectioned Preferences (decade-room cards + icon pack + tile size; no heavy cards).
 5. Optional: **Friends** pill / **More → Friends**, **Chat** pill / **More → Chat** (left slide-out), **News** (tabs), **Notifications** (dense unread inbox), **Help** (accordion), or **Report issue** (Context/Logs collapsed).
 
 More: [library-and-systems.md](library-and-systems.md) · [preferences-themes.md](preferences-themes.md) · [downloads.md](downloads.md) · [social-and-voice.md](social-and-voice.md) · [faq.md](faq.md) · [troubleshooting.md](troubleshooting.md)

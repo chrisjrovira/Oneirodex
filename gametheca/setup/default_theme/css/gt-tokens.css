@@ -20,6 +20,8 @@
   --gt-tile-min: 180px;
   --gt-tile-gap: 10px;
   --gt-crt-opacity: 0.03;
+  /* Era room the chrome atmosphere keys on (play rooms + decade themes). */
+  --gt-era: wood_den_80s;
   /* Style B glass launcher chrome */
   --gt-glass-bg: rgba(20, 24, 32, 0.72);
   --gt-glass-border: rgba(255, 255, 255, 0.14);

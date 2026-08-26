@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ current_theme|default('default') }}" data-icon-pack="{{ current_icon_pack|default('outline') }}">
+<html lang="en" data-theme="{{ current_theme|default('default') }}" data-era="{{ current_era|default('wood_den_80s') }}" data-icon-pack="{{ current_icon_pack|default('outline') }}">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
@@ -39,6 +39,8 @@
     {% if icon_pack_css %}<link rel="stylesheet" id="gt-icon-pack-css" href="{{ icon_pack_css }}">{% endif %}
     <link rel="stylesheet" id="gt-theme-fonts-css" href="{{ url_for('apis.theme_fonts_css') }}">
     <link rel="stylesheet" href="{{ 'member-app/member-app.css'|dist_asset }}">
+    {# After the SPA bundle so decade rooms show through opaque shell fills. #}
+    <link rel="stylesheet" href="{{ 'css/gt-era.css'|theme_asset }}">
 
     <script src="{{ 'js/gt_loading_motifs.js'|theme_asset }}"></script>
     <script src="{{ 'js/preferences_modal.js'|theme_asset }}"></script>
@@ -68,6 +70,7 @@
     {% endblock %}
 </head>
 <body>
+{% include 'partials/era_atmosphere.html' %}
 <div id="content" class="member-spa-content">
     {% include 'partials/flash_messages.html' %}
     {% block content %}{% endblock %}

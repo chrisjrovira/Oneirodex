@@ -2,7 +2,7 @@
 <!-- in templates/base.html -->
 <!DOCTYPE html>
 
-<html lang="en" data-theme="{{ current_theme|default('default') }}" data-icon-pack="{{ current_icon_pack|default('outline') }}"{% if enable_new_chrome %} data-chrome="v2"{% endif %}>
+<html lang="en" data-theme="{{ current_theme|default('default') }}" data-era="{{ current_era|default('wood_den_80s') }}" data-icon-pack="{{ current_icon_pack|default('outline') }}"{% if enable_new_chrome %} data-chrome="v2"{% endif %}>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
@@ -51,6 +51,8 @@
     <link rel="stylesheet" href="{{ 'css/gt-loading-motifs.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/games/library_browser.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/games/game_status.css'|theme_asset }}">
+    {# After shell/page CSS so the translucent canvas beats opaque fills. #}
+    <link rel="stylesheet" href="{{ 'css/gt-era.css'|theme_asset }}">
     {% if icon_pack_css %}<link rel="stylesheet" id="gt-icon-pack-css" href="{{ icon_pack_css }}">{% endif %}
     {# Declares @font-face for every installed theme face and applies the
        member's chosen family. Without it the font picker cannot do anything. #}
@@ -66,6 +68,7 @@
     {% endblock %}
 </head>
 <body>
+{% include 'partials/era_atmosphere.html' %}
 
 
 

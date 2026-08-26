@@ -7,6 +7,7 @@ import os
 from flask import current_app, url_for
 
 from gametheca.utils.cover_art_studio import generated_root, render_cover_art
+from gametheca.utils.preset_themes import DEFAULT_ERA, era_for_theme
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,26 @@ def _placeholder_slug(title):
     return hashlib.sha1(title.strip().lower().encode('utf-8')).hexdigest()[:20]
 
 
+def _current_theme_era() -> tuple[str, str]:
+    """Active theme slug + era room for placeholder art.
+
+    Unauthenticated / no preference falls back to the default wood den so
+    untitled tiles still get room scenery rather than a flat green slab.
+    """
+    slug = 'default'
+    try:
+        from flask_login import current_user
+
+        if (
+            getattr(current_user, 'is_authenticated', False)
+            and getattr(current_user, 'preferences', None)
+        ):
+            slug = current_user.preferences.theme or 'default'
+    except Exception:
+        slug = 'default'
+    return slug, era_for_theme(slug)
+
+
 def _placeholder_cover_filename(title):
     """Render (or reuse a cached) branded placeholder cover for ``title``.
 
@@ -36,12 +57,15 @@ def _placeholder_cover_filename(title):
     if not title:
         return None
     try:
+        theme_slug, era = _current_theme_era()
         covers_dir = generated_root() / _PLACEHOLDER_COVER_SUBDIR
-        filename = f'{_placeholder_slug(title)}.jpg'
+        filename = f'{_placeholder_slug(title)}_{theme_slug}.jpg'
         dest = covers_dir / filename
         if not dest.is_file():
             covers_dir.mkdir(parents=True, exist_ok=True)
-            img = render_cover_art(600, 900, title=title, variant='tile')
+            img = render_cover_art(
+                600, 900, title=title, variant='tile', era=era or DEFAULT_ERA,
+            )
             img.convert('RGB').save(dest, format='JPEG', quality=88, optimize=True)
         return f'library/generated/{_PLACEHOLDER_COVER_SUBDIR}/{filename}'
     except Exception as exc:

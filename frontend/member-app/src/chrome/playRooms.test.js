@@ -21,16 +21,18 @@ test('arcade hardware is its own setting', () => {
   expect(roomIdForPlatform('ARCADE')).not.toBe(roomIdForPlatform('SNES'))
 })
 
-test('handhelds share a room across brands', () => {
-  for (const key of ['GB', 'LYNX', 'NGP', 'PSP', 'WS']) {
-    expect(roomIdForPlatform(key)).toBe('handheld')
+test('nineties handhelds share the teen bedroom, later pockets the media centre', () => {
+  for (const key of ['GB', 'LYNX', 'NGP', 'WS']) {
+    expect(roomIdForPlatform(key)).toBe('teen_bedroom_90s')
   }
+  expect(roomIdForPlatform('PSP')).toBe('media_center_00s')
 })
 
-test('disc generation is distinct from cartridge era', () => {
-  expect(roomIdForPlatform('PSX')).toBe('disc_era')
-  expect(roomIdForPlatform('SEGA_SATURN')).toBe('disc_era')
+test('late-nineties disc generation is the carpet den', () => {
+  expect(roomIdForPlatform('PSX')).toBe('carpet_den_late_90s')
+  expect(roomIdForPlatform('SEGA_SATURN')).toBe('carpet_den_late_90s')
   expect(roomIdForPlatform('PSX')).not.toBe(roomIdForPlatform('NES'))
+  expect(roomIdForPlatform('NGC')).toBe('media_center_00s')
 })
 
 test('computers land on the desk', () => {
@@ -64,5 +66,5 @@ test('roomStyle returns custom properties only, so nothing leaks globally', () =
 })
 
 test('roomForPlatform returns the room object', () => {
-  expect(roomForPlatform('NES')).toBe(ROOMS.crt_living_room)
+  expect(roomForPlatform('NES')).toBe(ROOMS.wood_den_80s)
 })

@@ -33,7 +33,12 @@ export function normalizeStockCatalog(data) {
       return {
         id,
         label: String(row.label || row.name || row.title || id),
-        kind: row.kind === 'platform' ? 'platform' : 'stock',
+        kind:
+          row.kind === 'platform'
+            ? 'platform'
+            : row.kind === 'era'
+              ? 'era'
+              : 'stock',
         platform: row.platform ? String(row.platform) : '',
         packId: String(row.pack_id || row.packId || id),
         thumb,
@@ -68,7 +73,7 @@ async function fetchStockCatalog() {
 export function StockPicker({
   onApplied,
   heading = 'Platform & stock art',
-  lede = 'Original GameTheca packs — pick a platform look or stock motif, preview, then set as library default / fallback.',
+  lede = 'Original GameTheca packs — pick a decade room, platform look, or stock motif, then set as library default / fallback.',
   showLibraryUuid = false,
 } = {}) {
   const [items, setItems] = useState([])
@@ -121,6 +126,7 @@ export function StockPicker({
   const visible = useMemo(() => {
     if (filter === 'platform') return items.filter((i) => i.kind === 'platform')
     if (filter === 'stock') return items.filter((i) => i.kind === 'stock')
+    if (filter === 'era') return items.filter((i) => i.kind === 'era')
     return items
   }, [items, filter])
 
@@ -224,6 +230,7 @@ export function StockPicker({
       <div className="gt-stock-picker__filters" role="group" aria-label="Catalog filter">
         {[
           { id: 'all', label: 'All' },
+          { id: 'era', label: 'Decade rooms' },
           { id: 'platform', label: 'Platforms' },
           { id: 'stock', label: 'Stock motifs' },
         ].map((f) => (
@@ -281,7 +288,7 @@ export function StockPicker({
                     />
                   ) : (
                     <span className="gt-stock-picker__thumb-ph" aria-hidden="true">
-                      {item.kind === 'platform' ? '◆' : '◇'}
+                      {item.kind === 'platform' ? '◆' : item.kind === 'era' ? '▣' : '◇'}
                     </span>
                   )}
                 </span>
@@ -292,7 +299,9 @@ export function StockPicker({
                       ? item.platform
                         ? `Platform · ${item.platform}`
                         : 'Platform'
-                      : 'Stock motif'}
+                      : item.kind === 'era'
+                        ? 'Decade room'
+                        : 'Stock motif'}
                     {item.generated ? '' : ' · needs generate'}
                   </span>
                 </span>

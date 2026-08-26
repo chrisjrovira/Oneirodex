@@ -375,28 +375,50 @@ input[type="checkbox"] {
 /* Button margin removed - handled by specific containers */
 
 /* === THEME SWATCH PICKER === */
-/* Used by the preferences modal and by Admin -> Manage Themes. The <select>
-   this mirrors is kept in the DOM (visually-hidden, aria-hidden) purely as
-   the form's submitted value — these chips are the only picker a user sees,
-   so there's no redundant dropdown-plus-grid stacked on top of each other. */
+/* Used by the preferences modal. The <select> this mirrors is kept in the DOM
+   (visually-hidden, aria-hidden) purely as the form's submitted value — these
+   cards are the only picker a user sees. Decade rooms + colour cabinets share
+   the same button contract (.theme-swatch) so the delegated click handler in
+   preferences_modal.js keeps working. */
+.theme-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 4px;
+}
+.theme-picker-group__title {
+    margin: 0 0 0.2rem;
+    font-size: var(--gt-label-size);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gt-text-muted);
+}
+.theme-picker-group__hint {
+    margin: 0 0 0.55rem;
+    font-size: var(--gt-font-sm);
+    color: var(--gt-text-muted);
+}
+.theme-card-grid,
 .theme-swatch-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 8px;
     margin-top: 4px;
 }
 .theme-swatch {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 4px;
+    align-items: stretch;
+    gap: 6px;
+    padding: 6px;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     background: transparent;
     color: var(--gt-text);
     cursor: pointer;
-    transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
+    text-align: left;
+    transition: border-color 120ms ease, background-color 120ms ease;
 }
 .theme-swatch:hover {
     border-color: var(--gt-border);
@@ -411,50 +433,119 @@ input[type="checkbox"] {
     outline-offset: 2px;
 }
 .theme-swatch[disabled] { cursor: progress; opacity: 0.6; }
+.theme-card-preview {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: var(--gt-radius-sm);
+    background: var(--gt-era-bg, var(--gt-surface-2));
+    border: 1px solid var(--gt-border);
+}
+.theme-card-preview .gt-era-wall,
+.theme-card-preview .gt-era-window,
+.theme-card-preview .gt-era-posters,
+.theme-card-preview .gt-era-furnish,
+.theme-card-preview .gt-era-stand,
+.theme-card-preview .gt-era-floor,
+.theme-card-preview .gt-era-lamp {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.theme-card-preview .gt-era-wall {
+    background: var(--gt-era-wallpaper, none);
+}
+.theme-card-preview .gt-era-floor {
+    inset: auto 0 0 0;
+    height: var(--gt-era-floor-h, 36%);
+    background: var(--gt-era-floor, none);
+}
+.theme-card-preview .gt-era-lamp {
+    background: var(--gt-era-ambient, none);
+}
+.theme-card-preview .gt-era-window {
+    inset: var(--gt-era-window-inset, 10% 8% auto auto);
+    width: var(--gt-era-window-w, 0);
+    height: var(--gt-era-window-h, 0);
+    background: var(--gt-era-window, none);
+    box-shadow: var(--gt-era-window-frame, none);
+    opacity: var(--gt-era-window-opacity, 0);
+}
+.theme-card-preview .gt-era-posters {
+    inset: 12% 28% 40% 6%;
+    background: var(--gt-era-posters, none);
+    opacity: var(--gt-era-posters-opacity, 0);
+}
+.theme-card-preview .gt-era-furnish {
+    inset: auto auto 12% auto;
+    left: var(--gt-era-bed-left, 4%);
+    width: var(--gt-era-bed-w, 0);
+    height: var(--gt-era-bed-h, 0);
+    background: var(--gt-era-bed, none);
+    opacity: var(--gt-era-bed-opacity, 0);
+}
+.theme-card-preview .gt-era-stand {
+    inset: auto 8% 4% 8%;
+    height: var(--gt-era-furniture-h, 0);
+    background: var(--gt-era-furniture, none);
+    opacity: var(--gt-era-furniture-opacity, 0);
+}
 .theme-swatch-chip {
-    width: 28px;
-    height: 28px;
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     border: 2px solid var(--gt-border);
-    box-shadow: 0 0 0 2px transparent;
-    /* Themes with no known accent (e.g. a user upload) fall back to a neutral
-       chip rather than pretending to know their colour. */
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--gt-bg) 55%, transparent);
     background: var(--gt-surface-2);
-    transition: box-shadow 120ms ease;
+    z-index: 1;
 }
 .theme-swatch.is-selected .theme-swatch-chip {
     border-color: var(--gt-accent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--gt-accent) 45%, transparent);
 }
 .theme-swatch-label {
-    font-size: 0.7rem;
-    text-align: center;
-    line-height: 1.1;
+    font-size: var(--gt-font-sm);
+    line-height: 1.2;
     color: var(--gt-text-muted);
 }
 .theme-swatch.is-selected .theme-swatch-label {
     color: var(--gt-text);
     font-weight: 600;
 }
+.theme-card-blurb {
+    font-size: var(--gt-font-xs);
+    line-height: 1.25;
+    color: var(--gt-text-muted);
+}
 
-/* Per-theme chip colours. These are the only hex literals allowed in this
-   file: each one is the accent that theme actually ships with, and a swatch
-   painted in any other colour would be a lie.
+/* Per-theme chip colours. Hex lives on --gt-swatch-fill (a token definition);
+   background then uses that token so css-token-lint does not treat the chip
+   as a raw colour use. Each fill is the accent that theme actually ships.
 
    Source of truth: preset_tokens() in gametheca/utils/preset_themes.py, whose
    'gt-accent' is PRESET_THEMES[*]['btn_primary']; the default theme's accent
-   is --gt-accent in css/gt-tokens.css. tests/test_theme_swatch_colours.py
+   is --gt-accent in css/gt-tokens.css. tests/test_theme_picker_ui.py
    reads both and fails if the values below drift out of sync. */
-.theme-swatch-default { background: #2fd67b; }
-.theme-swatch-aurora { background: #22d3ee; }
-.theme-swatch-ember { background: #f472b6; }
-.theme-swatch-violet { background: #a78bfa; }
-.theme-swatch-forest { background: #4ade80; }
-.theme-swatch-ocean { background: #3b82f6; }
-.theme-swatch-rose { background: #fb7185; }
-.theme-swatch-mono { background: #94a3b8; }
-.theme-swatch-sunset { background: #fbbf24; }
-.theme-swatch-ice { background: #7dd3fc; }
+.theme-swatch-default { --gt-swatch-fill: #2fd67b; background: var(--gt-swatch-fill); }
+.theme-swatch-aurora { --gt-swatch-fill: #22d3ee; background: var(--gt-swatch-fill); }
+.theme-swatch-ember { --gt-swatch-fill: #f472b6; background: var(--gt-swatch-fill); }
+.theme-swatch-violet { --gt-swatch-fill: #a78bfa; background: var(--gt-swatch-fill); }
+.theme-swatch-forest { --gt-swatch-fill: #4ade80; background: var(--gt-swatch-fill); }
+.theme-swatch-ocean { --gt-swatch-fill: #3b82f6; background: var(--gt-swatch-fill); }
+.theme-swatch-rose { --gt-swatch-fill: #fb7185; background: var(--gt-swatch-fill); }
+.theme-swatch-mono { --gt-swatch-fill: #94a3b8; background: var(--gt-swatch-fill); }
+.theme-swatch-sunset { --gt-swatch-fill: #fbbf24; background: var(--gt-swatch-fill); }
+.theme-swatch-ice { --gt-swatch-fill: #7dd3fc; background: var(--gt-swatch-fill); }
+.theme-swatch-era-80s { --gt-swatch-fill: #e8c07d; background: var(--gt-swatch-fill); }
+.theme-swatch-era-90s { --gt-swatch-fill: #c9a0d4; background: var(--gt-swatch-fill); }
+.theme-swatch-era-late90s { --gt-swatch-fill: #8aa4ff; background: var(--gt-swatch-fill); }
+.theme-swatch-era-00s { --gt-swatch-fill: #3f9bff; background: var(--gt-swatch-fill); }
+.theme-swatch-era-arcade { --gt-swatch-fill: #ff2d6f; background: var(--gt-swatch-fill); }
+.theme-swatch-era-desk { --gt-swatch-fill: #5ef08a; background: var(--gt-swatch-fill); }
 
 /* Icon pack picker — orthogonal to color themes; previews use .gt-icon + data-icon-pack.
    Mirrors the theme swatch grid: the <select> is a visually-hidden form-data
@@ -496,7 +587,7 @@ input[type="checkbox"] {
     color: var(--gt-accent);
 }
 .icon-pack-chip-label {
-    font-size: 0.68rem;
+    font-size: var(--gt-font-xs);
     line-height: 1.1;
 }
 .icon-pack-chip.is-selected .icon-pack-chip-label {

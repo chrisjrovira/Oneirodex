@@ -4,8 +4,21 @@
 Historical wave rows that still say "Done uncommitted" further down this file should be read as *shipped*.  
 **Release:** **1.0.0-beta** — see the root [CHANGELOG.md](../../CHANGELOG.md) for what has landed
 since the tag. Waves **4–28** are all on `origin/main`.  
-**Updated:** 2026-08-26 — Cabinet playback on the WebRetro play bar (Save / Load / Rewind / FF / Picture / shortcuts). Landscape pass ticketed as INSP-* ([capability-inspiration.md](capability-inspiration.md)); named catalog stays private. **Next:** README recapture on a populated instance; **Ops** Reset Themes (`GENERATOR_VERSION` 16, plus this pass's theme CSS/JS). Remaining open is art/capture/Amazon, not code — [carryover-w28.md](carryover-w28.md).
+**Updated:** 2026-08-26 — Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup/placeholder art follows the room. Cabinet playback on the WebRetro play bar remains shipped. Landscape pass ticketed as INSP-* ([capability-inspiration.md](capability-inspiration.md)); named catalog stays private. **Next:** README recapture on a populated instance; **Ops** Reset Themes (`GENERATOR_VERSION` **17**, `gt-era.css`). Remaining open is art/capture/Amazon, not code — [carryover-w28.md](carryover-w28.md).
 Standing constraints unchanged: **no** Discord · **no Class A** intel in public docs.
+
+## Decade rooms (2026-08-26)
+
+Themes are rooms, not solid colour slabs. Member and admin chrome share wallpaper / window / posters / floor / lamp with browser play (`html[data-era]`).
+
+| | |
+|---|---|
+| **Shipped** | Six decade presets (`era-80s` · `era-90s` · `era-late90s` · `era-00s` · `era-arcade` · `era-desk`) plus colour cabinets that still sit in a play room · grouped Preferences picker (Decade rooms / Colour cabinets / Installed) · `css/gt-era.css` atmosphere on all three shells · placeholder covers cached per theme · Art Studio **Decade rooms** stock packs |
+| **Reset Themes** | `GENERATOR_VERSION` **17** — volume copies miss `gt-era.css` and `--gt-era` until reset |
+| **Capture** | needed — picker and chrome changed; recapture on a populated instance (test DB is empty) |
+
+
+
 
 ## Leftover code pass (2026-08-26)
 
@@ -459,7 +472,7 @@ Many-leaf console libs remain **LOCKED** (no mega-lib). Product slices Done unco
 
 **Full-program review 2026-08-03:** every wave reviewed · **9 real defects found and fixed** (1 security-high: DM `@mention` leak to non-members · MISSING chip filter never wired server-side · Refresh-freshness never re-probed · scan-queue TOCTOU race · missing `clear_permission_errors` route · 2 dead admin links · `formatBytes` null · email fallback escaping) · 4 test bugs repaired (stale `data-corner` queries · a time-bomb NEW-badge date that expired today) · **2 items need a product decision** (LiveKit room ACL · per-thread Voice scoping) · first full pytest run on record: **2791 pass / 128 fail**, of which **81 are test-infra or local-Python-3.14 artifacts, not product** (app ships 3.12) — [review-2026-08-03-findings.md](archive/review-2026-08-03-findings.md)
 
-**Immediate board next (ordered):** (1) **Ops** Reset Themes after `GENERATOR_VERSION` 16 (geometry packs) · (2) README recapture when a populated capture instance is up · **Blocked:** no Class A · no Discord · live `:5006` often down
+**Immediate board next (ordered):** (1) **Ops** Reset Themes after `GENERATOR_VERSION` 17 (decade rooms + `gt-era.css`) · (2) README recapture when a populated capture instance is up · **Blocked:** no Class A · no Discord · live `:5006` often down
 
 ### Wave 22+ — feedback roadmap (In progress)
 

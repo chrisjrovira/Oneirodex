@@ -88,6 +88,7 @@ class Element {
 
     setAttribute(name, value) { this._attributes[name] = String(value); }
     getAttribute(name) { return name in this._attributes ? this._attributes[name] : null; }
+    removeAttribute(name) { delete this._attributes[name]; }
 
     /** Simple selectors only: '#id', '.class' or a tag name. */
     matches(selector) {
@@ -214,9 +215,13 @@ function injectPreferencesModal(container, themes, selected) {
     const modal = buildElement('div', { id: 'preferencesModal' });
     const select = buildElement('select', { id: 'themeSelect', value: selected });
     const grid = buildElement('div', { id: 'themeSwatchGrid' });
+    const eras = { default: 'wood_den_80s', ember: 'arcade_cabinet' };
 
     themes.forEach((slug) => {
-        const swatch = buildElement('button', { classes: ['theme-swatch'], data: { theme: slug } });
+        const swatch = buildElement('button', {
+            classes: ['theme-swatch'],
+            data: { theme: slug, era: eras[slug] || 'wood_den_80s' },
+        });
         swatch.appendChild(buildElement('span', {
             classes: ['theme-swatch-chip', 'theme-swatch-' + slug],
         }));
@@ -265,6 +270,11 @@ assert.equal(
     CHIP_COLOURS['theme-swatch-ember'],
     'live preview should repaint the accent token'
 );
+assert.equal(
+    documentElement.getAttribute('data-era'),
+    'arcade_cabinet',
+    'live preview should switch the decade room'
+);
 
 // 5. Changing the native <select> keeps the swatches in step.
 select.value = 'default';
@@ -281,6 +291,11 @@ assert.equal(
     documentElement.style.getPropertyValue('--gt-accent'),
     '',
     'closing the modal should revert an unsaved preview'
+);
+assert.equal(
+    documentElement.getAttribute('data-era'),
+    null,
+    'closing the modal should restore the previous decade room'
 );
 
 // 7. Re-opening (base.html refetches and replaces the markup) rebinds nothing

@@ -279,7 +279,11 @@
     }
 }
 
-/* Preferences modal — sectioned aurora (Bootstrap modal behavior kept) */
+.gt-prefs-modal .modal-dialog,
+.gt-prefs-modal .gt-prefs-modal__dialog {
+    max-width: min(56rem, 96vw);
+}
+
 .gt-prefs-modal .gt-prefs-modal__panel {
     background: var(--gt-surface);
     border: 1px solid var(--gt-border);
