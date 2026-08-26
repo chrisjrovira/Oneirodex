@@ -982,6 +982,72 @@ function attachDeleteFolderFormListeners() {
     });
 }
 
+/** activeTab token (URL / localStorage / meta) → the pane it names. */
+const SCAN_TAB_PANES = {
+    libraries: '#librariesPanel',
+    library: '#librariesPanel',
+    deleteLibrary: '#librariesPanel',
+    auto: '#autoScan',
+    manual: '#manualScan',
+    unmatched: '#unmatchedFolders',
+    scan_filters: '#scanFilters',
+    file_extensions: '#fileExtensions',
+    image_queue: '#imageQueue',
+};
+
+/** The reverse map, for writing the active pane back to the URL. */
+const SCAN_PANE_TABS = {
+    librariesPanel: 'libraries',
+    autoScan: 'auto',
+    manualScan: 'manual',
+    unmatchedFolders: 'unmatched',
+    scanFilters: 'scan_filters',
+    fileExtensions: 'file_extensions',
+    imageQueue: 'image_queue',
+};
+
+/**
+ * Every tab trigger on this page, whichever chrome drew it.
+ *
+ * Selected by what it *targets*, never by its own id: bar two
+ * (`enable_new_chrome`, on by default) replaced the Bootstrap strip with
+ * `.gt-seg__item` anchors that carry the same `data-bs-toggle="tab"` and
+ * `href="#autoScan"` but none of the old `#autoScan-tab` ids. The template's
+ * image-queue hook already selects this way for the same reason.
+ */
+function scanTabTriggers() {
+    return document.querySelectorAll('[data-bs-toggle="tab"][href^="#"]');
+}
+
+/**
+ * Show one tab pane, with or without a trigger to drive it.
+ *
+ * This used to be a bare `new bootstrap.Tab(document.querySelector('#…-tab'))`.
+ * Under bar two that selector is null, Bootstrap dereferences it, and the
+ * TypeError aborted the rest of this DOMContentLoaded handler — so every
+ * binding registered after it was silently lost, the Browse button (which
+ * binds ~70 lines further down) included. Missing trigger is now a normal
+ * case: fall back to driving the pane classes directly.
+ */
+function showScanTab(paneSelector) {
+    const trigger = document.querySelector(
+        '[data-bs-toggle="tab"][href="' + paneSelector + '"]'
+    );
+    if (trigger && window.bootstrap && window.bootstrap.Tab) {
+        new bootstrap.Tab(trigger).show();
+        return;
+    }
+    const pane = document.querySelector(paneSelector);
+    if (!pane || !pane.parentElement) return;
+    pane.parentElement
+        .querySelectorAll(':scope > .tab-pane')
+        .forEach(function (el) {
+            el.classList.remove('active', 'show');
+        });
+    // `show` matters for the panes the server rendered with `fade`.
+    pane.classList.add('active', 'show');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log("Document loaded. Setting up form submission handlers and tab activation based on activeTab.");
 
@@ -1004,69 +1070,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const activeTab = urlActiveTab || storedActiveTab || metaActiveTab || 'auto';
     console.log("Active tab determined:", activeTab, {urlActiveTab, storedActiveTab, metaActiveTab});
 
-    switch (activeTab) {
-        case 'libraries':
-        case 'library':
-        case 'deleteLibrary': {
-            console.log("Activating libraries tab.");
-            const librariesTab = document.querySelector('#libraries-tab');
-            if (librariesTab) new bootstrap.Tab(librariesTab).show();
-            else new bootstrap.Tab(document.querySelector('#autoScan-tab')).show();
-            break;
-        }
-        case 'manual':
-            console.log("Activating manualScan tab.");
-            new bootstrap.Tab(document.querySelector('#manualScan-tab')).show();
-            break;
-        case 'unmatched':
-            console.log("Activating unmatchedFolders tab.");
-            new bootstrap.Tab(document.querySelector('#unmatchedFolders-tab')).show();
-            break;
-        case 'scan_filters':
-            console.log("Activating scanFilters tab.");
-            new bootstrap.Tab(document.querySelector('#scanFilters-tab')).show();
-            break;
-        case 'file_extensions':
-            console.log("Activating fileExtensions tab.");
-            new bootstrap.Tab(document.querySelector('#fileExtensions-tab')).show();
-            break;
-        case 'image_queue':
-            console.log("Activating imageQueue tab.");
-            new bootstrap.Tab(document.querySelector('#imageQueue-tab')).show();
-            break;
-        default:
-            console.log("Defaulting to activating autoScan tab.");
-            new bootstrap.Tab(document.querySelector('#autoScan-tab')).show();
-    }
+    // The libraries pane is not rendered for every operator, so fall back to
+    // Auto Scan the way the old id-based branch did.
+    const requestedPane = SCAN_TAB_PANES[activeTab] || '#autoScan';
+    const targetPane =
+        document.querySelector(requestedPane) ? requestedPane : '#autoScan';
+    console.log("Activating tab pane:", targetPane);
+    showScanTab(targetPane);
 
     // Add event listeners to all tab links to update URL and localStorage when clicked
-    document.querySelectorAll('.admin_manage_scanjobs-nav-tabs .nav-link').forEach(tab => {
+    scanTabTriggers().forEach(tab => {
         tab.addEventListener('shown.bs.tab', function(event) {
             const tabId = event.target.getAttribute('href').substring(1); // Remove # from href
-            let activeTabValue = 'auto';
-
-            switch(tabId) {
-                case 'librariesPanel':
-                    activeTabValue = 'libraries';
-                    break;
-                case 'manualScan':
-                    activeTabValue = 'manual';
-                    break;
-                case 'unmatchedFolders':
-                    activeTabValue = 'unmatched';
-                    break;
-                case 'scanFilters':
-                    activeTabValue = 'scan_filters';
-                    break;
-                case 'fileExtensions':
-                    activeTabValue = 'file_extensions';
-                    break;
-                case 'imageQueue':
-                    activeTabValue = 'image_queue';
-                    break;
-                default:
-                    activeTabValue = 'auto';
-            }
+            const activeTabValue = SCAN_PANE_TABS[tabId] || 'auto';
 
             // Store in localStorage for persistence
             localStorage.setItem('scan_management_active_tab', activeTabValue);
