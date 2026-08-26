@@ -36,6 +36,18 @@ Prioritize against this — every backlog item should advance at least one row, 
 6. **Ops reliability** — Unraid deploy, volumes, themes reset, readiness, ship gates
 7. **Acquire BYO** — indexer registry + hubs; never DRM install queues
 
+## Product name (chosen, cutover not started)
+
+**Chosen public name: Oneirodex** (oh-NY-roh-dex) · slug `oneirodex` · [ADR 0003](../adr/0003-product-name-oneirodex.md).
+
+Until an explicit rename wave, **keep writing GameTheca** in UI, Help, README, and operator docs. Package path stays `gametheca/`. Docker, Compose, Unraid, GitHub, `GT_*`, and `--gt-*` / `.gt-*` stay as they are. Do not mix Oneirodex into copy except this lock, the ADR, and the progress / docs-hub naming rows.
+
+| Default | Value |
+|---|---|
+| Spelling | Oneirodex — one word, capital O. Not OneiroDex, not ONEIRODEX in UI |
+| Until cutover | GameTheca everywhere user-facing; identifiers unchanged |
+| Env / CSS | Keep `GT_*` and `gt-` until an identifier wave. No `OD_*` aliases yet |
+
 ## Product locks
 
 | Default | Value |

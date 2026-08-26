@@ -2,7 +2,7 @@
 
 **Product version:** 1.0.0-beta — see root [CHANGELOG.md](../CHANGELOG.md) and [VERSION](../VERSION).
 
-Hub for product, ops, and developer docs. Naming: **GameTheca** (package `gametheca/`, Docker `chrisjrovira/gametheca`).
+Hub for product, ops, and developer docs. Naming: **GameTheca** until cutover (package `gametheca/`, Docker `chrisjrovira/gametheca`). Chosen public name **Oneirodex** — [ADR 0003](adr/0003-product-name-oneirodex.md); do not mix it into guides until a rename wave.
 
 Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs/assets/readme/`), quick start, and troubleshooting.
 
@@ -50,6 +50,7 @@ docs/
   README.md                 ← you are here
   strategy/                 ← product direction & execution
     archive/                ← dated point-in-time reports, kept for provenance
+  adr/                      ← architecture decision records
   user/                     ← end-user guides + FAQ
   admin/                    ← admin guides
   runbooks/                 ← deploy & incident procedures
@@ -62,7 +63,8 @@ docs/
 
 | Surface | Value |
 |---|---|
-| Product | GameTheca |
+| Product (shipped today) | GameTheca |
+| Product (chosen, not cut over) | Oneirodex — [ADR 0003](adr/0003-product-name-oneirodex.md) |
 | Version | 1.0.0-beta |
 | GitHub | chrisjrovira/gametheca |
 | App / DB containers | gametheca-app · gametheca-db |

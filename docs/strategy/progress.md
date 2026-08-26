@@ -4,9 +4,18 @@
 
 **Release:** **1.0.0-beta** — see the root [CHANGELOG.md](../../CHANGELOG.md). Waves **4–28** are on `origin/main`.
 
-**Updated:** 2026-08-26. Standing constraints: **no** Discord · **no Class A** intel in public docs.
+**Updated:** 2026-08-26 — **Product name chosen: Oneirodex** (cutover not started). Standing constraints: **no** Discord · **no Class A** intel in public docs.
 
-Wave diary (W4–W28): [archive/progress-waves-2026-07-08.md](archive/progress-waves-2026-07-08.md). Open set: [carryover-w28.md](carryover-w28.md). UI register: [ui-debt-log.md](../dev/ui-debt-log.md) (open table only).
+Wave diary (W4–W28): [archive/progress-waves-2026-07-08.md](archive/progress-waves-2026-07-08.md). Open set: [carryover-w28.md](carryover-w28.md). UI register: [ui-debt-log.md](../dev/ui-debt-log.md) (open table only). Name lock: [ADR 0003](../adr/0003-product-name-oneirodex.md).
+
+## Product name (2026-08-26)
+
+| | |
+|---|---|
+| **Chosen** | **Oneirodex** (oh-NY-roh-dex) · slug `oneirodex` · [ADR 0003](../adr/0003-product-name-oneirodex.md) |
+| **Shipped surface** | Still **GameTheca** — UI, package `gametheca/`, Docker, GitHub, `GT_*`, `--gt-*` |
+| **Do not** | Mix Oneirodex into user-facing copy until a rename wave is asked for |
+| **Claim soon (human)** | GitHub user/org `oneirodex` · PyPI/npm slugs · `oneirodex.com` / `.dev` / `.app` (RDAP 404 on 26 Aug 2026). `.io` not confirmed |
 
 ## Ship TLDR
 
@@ -33,6 +42,7 @@ Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup
 | UID-017 / UID-018 | Token migration remainder · envelope remainder |
 | UIR-3 | Set completion / Playtime into bar two |
 | Amazon / silent DRM | Not code this cycle |
+| Rename to Oneirodex | Name locked ([ADR 0003](../adr/0003-product-name-oneirodex.md)); **not** a 1.0 gate. Public-string wave first, then ops identifiers, then `gametheca/` / `GT_*` / `gt-`. Only when asked. |
 
 ## Blocked
 

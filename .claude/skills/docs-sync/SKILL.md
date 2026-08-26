@@ -34,7 +34,7 @@ Read [checklist.md](checklist.md) for the inventory map. Prefer **updating an ex
 - Concise; tables over prose.
 - Match `progress.md` — do not claim more than the code does.
 - Do not invent screenshots; mark Capture needed in docs-map if the UI is new **and** capture cannot run this turn.
-- Prefer the GameTheca product name; the package path stays `gametheca/`.
+- Until the Oneirodex cutover ([ADR 0003](../../../docs/adr/0003-product-name-oneirodex.md)), keep writing **GameTheca** in user/admin docs; the package path stays `gametheca/`. Do not mix Oneirodex into guides except the ADR, agent-locks, progress, and the docs-hub naming table.
 
 ## Anti-patterns
 
