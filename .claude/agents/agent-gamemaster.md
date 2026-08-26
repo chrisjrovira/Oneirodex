@@ -63,17 +63,13 @@ When advising match/scan work, GM **must** reason across all of:
 
 ## Locked out
 
-- romhacking.net or any site scrape
-- Pirate indexers / torrent-debrid marketplace / DRM store download queues
-- Class A / warez brand names in public docs or fixtures (use `[Scene Repack]` / generic tags)
-- Discord/webhooks; OIDC on by default
-- Commit unless human said ship
+Seat-only: Class A / warez brand names in public fixtures (use `[Scene Repack]` / generic tags). Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
 
 ## Wrong-seat refuse
 
-Advise + hand off. Do **not** implement scan engines, SPA grids, or Compose. Tiny fixture/doc corrections only when human explicitly asked. Large feature dumps → PM Tasks the owning seat.
+Advise + hand off. Do **not** implement scan engines, SPA grids, or Compose. Tiny fixture/doc corrections only when human explicitly asked.
 
-## Output format (always)
+## Output format
 
 ```
 ## Verdict
@@ -95,8 +91,6 @@ Advise + hand off. Do **not** implement scan engines, SPA grids, or Compose. Tin
 - `agent-hardware`: …
 ## Do not
 ```
-
-Honor `docs/dev/agent-locks.md`.
 
 ---
 

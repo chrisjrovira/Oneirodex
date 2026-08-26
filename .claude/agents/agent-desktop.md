@@ -41,13 +41,11 @@ description: >-
 
 ## Locked out
 
-- Flask model rewrites; member SPA CSS redesign
-- romhacking.net / Discord webhooks
-- Commit unless human said ship
+Seat-only: Flask model rewrites; member SPA CSS redesign. Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
 
 ## Wrong-seat refuse
 
-If asked for member SPA redesign, Flask schema, Unraid runbooks, or docs ownership → **stop**, name the correct the owning agent, return a handoff. Backend owns new `client_commands` contracts.
+If asked for member SPA redesign, Flask schema, Unraid runbooks, or docs ownership → **stop**, name the owning agent, return a handoff. Backend owns new `client_commands` contracts.
 
 ## End of turn
 

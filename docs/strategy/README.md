@@ -1,6 +1,6 @@
 # GameTheca strategy pack
 
-**Product version:** 0.2.0 (in progress) — see [../../CHANGELOG.md](../../CHANGELOG.md).
+**Product version:** 1.0.0-beta — see [../../CHANGELOG.md](../../CHANGELOG.md).
 
 Product direction for GameTheca as a **self-hosted, multi-user, DRM-free library & distribution platform**.
 
@@ -31,7 +31,7 @@ Read in this order:
 | 4j | [name-resolution.md](name-resolution.md) | Folder → IGDB search variants · letter-bucket `scan_depth=2` |
 | 4k | [console-gaming-libraries.md](console-gaming-libraries.md) | `_console-gaming` → one library per platform leaf · exclude emus |
 | 5 | [ui.md](ui.md) | UI rebuild waves, BadgeStack, GameActionBar |
-| 6 | [progress.md](progress.md) | What shipped / what's next — Waves **4–28** all on `main` as of 2026-08-16 |
+| 6 | [progress.md](progress.md) | Living board (Ship TLDR · Done · Next · Blocked) — wave diary in [archive/progress-waves-2026-07-08.md](archive/progress-waves-2026-07-08.md) |
 | 6b | [roadmap-w22-plus.md](roadmap-w22-plus.md) | Feedback waves **W22–W25** |
 | 6c | [carryover-w28.md](carryover-w28.md) | **W26–W28 open set** — the index over W26 · W27 · ui-debt-log |
 | 6d | [request-reconciliation-2026-08-15.md](request-reconciliation-2026-08-15.md) | Every ask across past conversations, checked against the registers |
@@ -57,5 +57,5 @@ Member free-store claims: [../user/free-games.md](../user/free-games.md) (Wave 1
 - Member SPA: `frontend/member-app/`
 - Admin SPA: `frontend/admin-app/` (hybrid with Jinja forms)
 - Runbooks: `docs/runbooks/` · Guides: `docs/user/`, `docs/admin/`
-- Docs sync skill: `.claude/skills/docs-sync/`
+- Docs sync skill: `.cursor/skills/docs-sync/` (mirrored under `.claude/skills/docs-sync/`)
 - Desktop: `clients/desktop/` · Headset clients notes: `clients/quest/` (Quest = one seat; see [headset-vr.md](headset-vr.md))

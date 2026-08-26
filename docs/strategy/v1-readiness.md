@@ -143,4 +143,4 @@ SMTP digest (existing) ──► daily / critical operator mail
 - [bug-triage.md](bug-triage.md) — scrub status  
 - [v1-gamemaster-signoff.md](v1-gamemaster-signoff.md) — Game Master domain gate 7  
 - [../dev/agent-skills.md](../dev/agent-skills.md) — team skills including Ops  
-- Ops glance design: `docs/superpowers/specs/2026-07-22-ops-glance-design.md`
+- Ops glance design: `docs/strategy/archive/superpowers-2026-07/specs/2026-07-22-ops-glance-design.md`
