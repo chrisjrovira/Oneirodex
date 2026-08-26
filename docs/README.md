@@ -6,7 +6,7 @@ Hub for product, ops, and developer docs. Naming: **GameTheca** (package `gameth
 
 Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs/assets/readme/`), quick start, and troubleshooting.
 
-**Docs sync:** every code change must update the relevant docs — project skill `.cursor/skills/docs-sync/` (mirrored under `.claude/skills/docs-sync/`), required by `CLAUDE.md`.
+**Docs sync:** every code change must update the relevant docs — project skill `.cursor/skills/docs-sync/` (mirrored under `.claude/skills/docs-sync/`).
 
 ## Start here
 
@@ -35,7 +35,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Product / roadmap | [strategy/README.md](strategy/README.md) · [strategy/progress.md](strategy/progress.md) · [strategy/roadmap-w22-plus.md](strategy/roadmap-w22-plus.md) · [strategy/v1-readiness.md](strategy/v1-readiness.md) · [strategy/v1-gamemaster-signoff.md](strategy/v1-gamemaster-signoff.md) · [strategy/thin-client.md](strategy/thin-client.md) (post-1.0) · [strategy/challenge-bypass.md](strategy/challenge-bypass.md) (BYO solvers · 1.0) · [strategy/native-challenge-solver.md](strategy/native-challenge-solver.md) · [strategy/native-rtc.md](strategy/native-rtc.md) · [strategy/native-malware-scan.md](strategy/native-malware-scan.md) (nice-to-have post-1.0) · [strategy/cover-art-studio.md](strategy/cover-art-studio.md) (ART-1…3 · 1.0) · [strategy/gow-remote-play.md](strategy/gow-remote-play.md) (GOW-1/2 shipped) · [strategy/ambient-lighting.md](strategy/ambient-lighting.md) (LIGHT-1/2 shipped) · [strategy/cloud-tco-ballpark.md](strategy/cloud-tco-ballpark.md) (Unraid vs cloud cost) · [strategy/emulation-coverage.md](strategy/emulation-coverage.md) |
 | Product / recent waves | [strategy/carryover-w28.md](strategy/carryover-w28.md) — **start here for what is open** · [strategy/roadmap-w26-ux-overhaul.md](strategy/roadmap-w26-ux-overhaul.md) (W26 UX backlog + FEAT-D) · [strategy/roadmap-w27-ux-feedback.md](strategy/roadmap-w27-ux-feedback.md) (W27) · [strategy/social-spaces-and-storefront.md](strategy/social-spaces-and-storefront.md) (W23/W25 design) |
 | Is everything done? | [strategy/request-reconciliation-2026-08-15.md](strategy/request-reconciliation-2026-08-15.md) — every ask across past conversations, checked against the registers rather than against recaps |
-| Past reviews & dispatches (archived) | [strategy/archive/](strategy/archive/README.md) — dated point-in-time reports: PM dispatch · GitHub scrub · full-program review · gap review · code review. Kept for provenance; **not** current guidance |
+| Past reviews & dispatches (archived) | [strategy/archive/](strategy/archive/README.md) — dated point-in-time reports plus July superpowers specs. Kept for provenance; **not** current guidance |
 | UI refresh plan (two-bar chrome) | [strategy/ui-refresh-2026-08-06.md](strategy/ui-refresh-2026-08-06.md) — Option B approved; UIR-1…6 shipped in W26, UIR-7 tracked in [carryover-w28.md](strategy/carryover-w28.md) |
 | Scope policy | [strategy/scope.md](strategy/scope.md) — unscheduled is not refused; decisions live in the private vault |
 | Docs inventory | [strategy/docs-map.md](strategy/docs-map.md) |
@@ -56,7 +56,6 @@ docs/
   openapi/                  ← HTTP contract
   assets/readme/            ← root README icons & screenshots
   dev/                      ← engineering notes / Cursor agent workflow
-  superpowers/              ← design specs, plans, handoffs
 ```
 
 ## Naming

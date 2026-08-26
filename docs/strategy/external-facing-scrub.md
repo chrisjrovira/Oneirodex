@@ -34,11 +34,11 @@
 
 | Location | Class | Action |
 |---|---|---|
-| `docs/superpowers/**` (Class A token in ≥3 files) | A | Delete or rewrite lines (SCRUB-1) |
+| `docs/strategy/archive/superpowers-2026-07/**` (Class A token in ≥3 files) | A | Delete or rewrite lines (SCRUB-1) |
 | `docs/strategy/competitive.md` (50+ peer catalog) | B | **Done (stub)** — full catalog in `docs/_private/` only |
 | `docs/strategy/roadmap.md`, `features.md`, `ui.md`, `social-av.md`, strategy `README.md`, `v1-readiness.md`, `thin-client.md` | B/C | Neutralize named rivals; keep product intent (SCRUB-3) |
 | `clients/desktop/README.md`, `.claude/skills/**`, `.claude/agents/**`, `docs/dev/agent-skills.md` | C | Neutralize non-goal wording (SCRUB-3) |
-| `docs/superpowers/specs|plans/**` | B/C | Neutralized Class A examples → `[Repack]` / scene-tag language (SCRUB-4 polish) |
+| `docs/strategy/archive/superpowers-2026-07/specs|plans/**` | B/C | Neutralized Class A examples → `[Repack]` / scene-tag language (SCRUB-4 polish) |
 | Playnite / Pegasus / ES-DE / Prowlarr code + user docs | D | **No purge** |
 | Git history / remote | A/B | Optional history rewrite only if human approves (SCRUB-5) |
 | GitHub: Issues, PR bodies, Discussions, Actions logs | A/B/C | Human + SCRUB-6 checklist |
