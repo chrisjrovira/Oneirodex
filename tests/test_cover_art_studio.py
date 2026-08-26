@@ -23,6 +23,16 @@ from gametheca.utils.cover_art_studio import (
 )
 
 
+def test_era_room_scenery_is_distinct():
+    """Backup art for a wood den must not look like an arcade floor."""
+    den = render_cover_art(200, 300, title='Demo', era='wood_den_80s')
+    arcade = render_cover_art(200, 300, title='Demo', era='arcade_cabinet')
+    bedroom = render_cover_art(200, 300, title='Demo', era='teen_bedroom_90s')
+    assert den.tobytes() != arcade.tobytes()
+    assert den.tobytes() != bedroom.tobytes()
+    assert arcade.tobytes() != bedroom.tobytes()
+
+
 def test_render_cover_art_returns_valid_image():
     img = render_cover_art(400, 600, title='Test Game', system='SNES')
     assert img.size == (400, 600)

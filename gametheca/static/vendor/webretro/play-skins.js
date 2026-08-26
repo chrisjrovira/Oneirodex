@@ -175,24 +175,98 @@
   // file is vendored, loads standalone in the player frame, and has no bundler.
   // Regenerate from the Python map rather than hand-editing.
   var ROOM_PLATFORMS = {
+    wood_den_80s: 'ARCADIA ASTROCADE ATARI_2600 ATARI_5200 ATARI_7800 CHAF COLECO CREATIVISION GX4000 INTV NES O2EM PCE SEGA_MS SEGA_SG1000 STUDIO2 SUPERGRAFX VECTREX',
+    teen_bedroom_90s: 'ADVISION GB GBC LYNX NGP NGPC SEGA_32X SEGA_GG SEGA_MD SNES SUPERVISION VB WS',
+    carpet_den_late_90s: 'JAGUAR N64 PCE_CD PCFX PSX SEGA_CD SEGA_SATURN THREEDO',
+    media_center_00s: 'GBA N3DS NDS NGC PS2 PS3 PSP PSVITA SEGA_DC SWITCH WII X360 XBOX XONE XSX',
     arcade_cabinet: 'ARCADE DAPHNE NEOGEO NEOGEO_CD PINBALL',
-    crt_living_room: 'ARCADIA ASTROCADE ATARI_2600 ATARI_5200 ATARI_7800 CHAF COLECO CREATIVISION GX4000 INTV N64 NES O2EM PCE SEGA_32X SEGA_MD SEGA_MS SEGA_SG1000 SNES STUDIO2 SUPERGRAFX VECTREX',
-    desk: 'AMIGA MAC PCDOS PCWIN VICE_X128 VICE_X64SC VICE_XPET VICE_XPLUS4 VICE_XVIC',
-    disc_era: 'JAGUAR NGC PCE_CD PCFX PS2 PS3 PSX SEGA_CD SEGA_DC SEGA_SATURN SWITCH THREEDO WII',
-    handheld: 'ADVISION GB GBA GBC LYNX N3DS NDS NGP NGPC PSP PSVITA SUPERVISION WS'
+    desk: 'AMIGA MAC PCDOS PCWIN VICE_X128 VICE_X64SC VICE_XPET VICE_XPLUS4 VICE_XVIC'
   };
 
-  // Scanlines are a CRT artefact: strongest on a living-room tube, present on
-  // an arcade monitor, faint on late disc-era sets, and **absent on handhelds**
-  // because an LCD panel never had them. Getting that last one wrong is what
-  // makes fake-CRT filters look like a gimmick.
-  var SCANLINE_BY_ROOM = {
-    crt_living_room: 0.55,
-    arcade_cabinet: 0.4,
-    desk: 0.28,
-    disc_era: 0.16,
-    handheld: 0
+  // LCD / handheld panels never had CRT scanlines — even when the room is a
+  // 1990s bedroom. Getting that wrong is what makes fake-CRT filters look
+  // like a gimmick.
+  var LCD_PLATFORMS = {
+    GB: 1, GBC: 1, GBA: 1, NDS: 1, N3DS: 1, PSP: 1, PSVITA: 1,
+    LYNX: 1, NGP: 1, NGPC: 1, WS: 1, SUPERVISION: 1, ADVISION: 1, SEGA_GG: 1
   };
+
+  // Scanlines follow the *display*, with a room fallback for CRT sets:
+  // strongest on an 80s tube, still present late-90s, faint on 00s sets.
+  var SCANLINE_BY_ROOM = {
+    wood_den_80s: 0.55,
+    teen_bedroom_90s: 0.48,
+    carpet_den_late_90s: 0.32,
+    media_center_00s: 0.14,
+    arcade_cabinet: 0.4,
+    desk: 0.28
+  };
+
+  var PICTURE_MODES = ['crt', 'sharp', 'soft'];
+  var PICTURE_LABELS = { crt: 'CRT', sharp: 'Sharp', soft: 'Soft' };
+  var STORAGE_PICTURE = 'gt-play-picture';
+
+  function isLcdPlatform(platformId) {
+    var id = String(platformId || '').trim().toUpperCase();
+    return !!LCD_PLATFORMS[id];
+  }
+
+  function defaultPictureForRoom(room) {
+    if (room === 'desk') return 'sharp';
+    return 'crt';
+  }
+
+  function defaultPictureForPlatform(platformId, room) {
+    if (isLcdPlatform(platformId)) return 'sharp';
+    return defaultPictureForRoom(room);
+  }
+
+  function scanlineFor(platformId, room) {
+    if (isLcdPlatform(platformId)) return 0;
+    var scan = SCANLINE_BY_ROOM[room];
+    return scan === undefined ? 0 : scan;
+  }
+
+  function readStoredPicture() {
+    try {
+      if (typeof localStorage === 'undefined') return '';
+      var stored = localStorage.getItem(STORAGE_PICTURE);
+      if (stored === 'crt' || stored === 'sharp' || stored === 'soft') return stored;
+    } catch (e) {}
+    return '';
+  }
+
+  function applyPictureMode(mode) {
+    var body = typeof document !== 'undefined' ? document.body : null;
+    var root = typeof document !== 'undefined' ? document.documentElement : null;
+    var room = (body && body.getAttribute('data-play-room')) || 'wood_den_80s';
+    var platform = (body && body.getAttribute('data-platform')) || '';
+    var next = (mode === 'crt' || mode === 'sharp' || mode === 'soft')
+      ? mode
+      : (readStoredPicture() || defaultPictureForPlatform(platform, room));
+    if (root) {
+      root.setAttribute('data-picture', next);
+      if (body) body.setAttribute('data-picture', next);
+      if (next === 'crt') {
+        root.style.setProperty(
+          '--gt-play-scanline-opacity',
+          String(scanlineFor(platform, room))
+        );
+      } else {
+        root.style.setProperty('--gt-play-scanline-opacity', '0');
+      }
+    }
+    try {
+      if (typeof localStorage !== 'undefined') localStorage.setItem(STORAGE_PICTURE, next);
+    } catch (e2) {}
+    return next;
+  }
+
+  function cyclePictureMode(current) {
+    var idx = PICTURE_MODES.indexOf(current);
+    var next = PICTURE_MODES[(idx + 1) % PICTURE_MODES.length];
+    return applyPictureMode(next);
+  }
 
   var ROOM_BY_PLATFORM = (function () {
     var out = {};
@@ -208,7 +282,7 @@
 
   function roomForPlatform(platformId) {
     var key = String(platformId || '').trim().toUpperCase();
-    return ROOM_BY_PLATFORM[key] || 'crt_living_room';
+    return ROOM_BY_PLATFORM[key] || 'wood_den_80s';
   }
 
   function applyPlaySkin(platformId, coreId) {
@@ -232,13 +306,14 @@
     root.style.setProperty('--gt-platform-accent', meta.accent);
 
     var room = roomForPlatform(platform || 'pc');
-    var scanline = SCANLINE_BY_ROOM[room];
     root.setAttribute('data-play-room', room);
     body.setAttribute('data-play-room', room);
     root.style.setProperty(
       '--gt-play-scanline-opacity',
-      String(scanline === undefined ? 0 : scanline)
+      String(scanlineFor(platform, room))
     );
+
+    var picture = applyPictureMode();
 
     var aspect = aspectForPlatform(platform || 'pc');
     var aspectCss = aspect[0] + ' / ' + aspect[1];
@@ -252,6 +327,8 @@
       familyLabel: meta.label,
       systemLabel: PLATFORM_LABELS[platform] || platform || meta.label,
       aspectRatio: aspect,
+      picture: picture,
+      room: room,
     };
   }
 
@@ -265,5 +342,14 @@
     ASPECT_RATIOS: ASPECT_RATIOS,
     roomForPlatform: roomForPlatform,
     SCANLINE_BY_ROOM: SCANLINE_BY_ROOM,
+    LCD_PLATFORMS: LCD_PLATFORMS,
+    PICTURE_MODES: PICTURE_MODES,
+    PICTURE_LABELS: PICTURE_LABELS,
+    isLcdPlatform: isLcdPlatform,
+    scanlineFor: scanlineFor,
+    defaultPictureForRoom: defaultPictureForRoom,
+    defaultPictureForPlatform: defaultPictureForPlatform,
+    applyPictureMode: applyPictureMode,
+    cyclePictureMode: cyclePictureMode,
   };
 })(typeof window !== 'undefined' ? window : this);

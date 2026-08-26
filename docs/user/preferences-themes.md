@@ -12,12 +12,13 @@ opens fully expanded until you change that.
 
 ## Color theme presets
 
-- Pick a preset from the **swatch grid** in Preferences — the underlying `<select>` is visually hidden (still keyboard/screen-reader reachable) for a slimmer picker. Preferences is the only theme picker; if you are an admin, the Themes admin page handles installing and resetting themes, not choosing one.
-- **Default (system)** is the built-in theme id `default` (saved explicitly — not `None`).
-- Default brand accent is green **`#2fd67b`** (Style B+C glass); other presets (Aurora, Ember, Violet, Forest, Ocean, Rose, Mono, Sunset, Ice — **9** packs) recolour accent, surfaces, glass/CRT, typography, spacing, radius and paired icon geometry (`GENERATOR_VERSION` 16). Ask an admin to **Reset Default Themes** after that bump or presets stay on the previous generator.
-- Picking a colour swatch also selects that preset’s paired icon pack (still changeable before Save).
-- The chosen theme applies on the **next page load** — every stylesheet, the brand mark, the tile chrome, and the **stock avatars** follow it. The seven avatars GameTheca ships are recoloured into each preset's palette, so a gamepad avatar is cyan on Arcade Neon and magenta on Hot Cabinet rather than staying default-green. An avatar you uploaded yourself is your picture and is never recoloured.
-- If swatches do nothing, accents look wrong, or presets still look accent-only (pre–Wave 2d), the library volume may have stale theme files — ask an admin to **Reset Default Themes** after a rebuild.
+- Pick a preset from the **room-card picker** in Preferences — grouped into **Decade rooms** (the place you started: 1980s wood den, 1990s teen bedroom, late-90s carpet den, 2000s media centre, arcade floor, computer desk), **Colour cabinets** (Arcade Neon, Hot Cabinet, … plus Default), and **Installed** (uploads). The underlying `<select>` is visually hidden. Preferences is the only theme picker; if you are an admin, the Themes admin page handles installing and resetting themes, not choosing one.
+- A theme is a **room**, not a solid colour. Member and admin chrome share wallpaper, window, posters, floor and lamp with the browser-play rooms (`html[data-era]`). Colour cabinets still sit in an era room rather than a flat slab.
+- **Default (system)** is the built-in theme id `default` (saved explicitly — not `None`). It uses the 1980s wood-den scenery with the green glass accent.
+- Default brand accent is green **`#2fd67b`** (Style B+C glass). Colour cabinets (Aurora, Ember, Violet, Forest, Ocean, Rose, Mono, Sunset, Ice) plus six decade rooms recolour accent, surfaces, glass/CRT, typography, spacing, radius, paired icon geometry, **and** the era room (`GENERATOR_VERSION` 17). Ask an admin to **Reset Default Themes** after that bump or presets stay on the previous generator and miss `gt-era.css`.
+- Picking a room card also selects that preset’s paired icon pack (still changeable before Save). The live preview repaints the accent **and** switches the room scenery before you save.
+- The chosen theme applies on the **next page load** — every stylesheet, the brand mark, the tile chrome, the **stock avatars**, and **backup/placeholder covers** follow it. Untitled games get a Pillow placeholder painted in the active decade room (cached per theme). The seven avatars GameTheca ships are recoloured into each preset's palette. An avatar you uploaded yourself is your picture and is never recoloured.
+- If cards do nothing, accents look wrong, rooms stay flat, or presets still look accent-only, the library volume may have stale theme files — ask an admin to **Reset Default Themes** after a rebuild.
 
 > **Fixed:** themes used to appear not to save at all — the page came back with
 > the previous theme's colours however many times you picked a new one. The

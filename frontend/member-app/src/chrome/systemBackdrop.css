@@ -20,6 +20,33 @@
   to { opacity: 1; }
 }
 
+/* Era-room wallpaper wash — same setting language as play rooms, faint so tiles win. */
+.gt-system-backdrop__wall {
+  position: absolute;
+  inset: 0;
+  background: var(--gt-room-wallpaper, none);
+  opacity: 0.22;
+}
+
+.gt-system-backdrop[data-play-room='wood_den_80s'] {
+  --gt-room-wallpaper: repeating-linear-gradient(90deg, #3a2818 0 13px, #2a1c10 13px 26px);
+}
+.gt-system-backdrop[data-play-room='teen_bedroom_90s'] {
+  --gt-room-wallpaper: repeating-linear-gradient(180deg, #3a2a48 0 18px, #322440 18px 20px, #2a1c38 20px 38px);
+}
+.gt-system-backdrop[data-play-room='carpet_den_late_90s'] {
+  --gt-room-wallpaper: repeating-linear-gradient(90deg, rgba(90, 40, 50, 0.45) 0 22px, rgba(40, 20, 30, 0.25) 22px 44px);
+}
+.gt-system-backdrop[data-play-room='media_center_00s'] {
+  --gt-room-wallpaper: linear-gradient(180deg, #141c2c, #0a1018);
+}
+.gt-system-backdrop[data-play-room='arcade_cabinet'] {
+  --gt-room-wallpaper: radial-gradient(80% 50% at 50% 0%, #3a1028, transparent 60%);
+}
+.gt-system-backdrop[data-play-room='desk'] {
+  --gt-room-wallpaper: repeating-linear-gradient(0deg, rgba(94, 240, 138, 0.08) 0 1px, transparent 1px 4px);
+}
+
 /* Family-tinted wash, anchored top-right so the grid's top-left stays clean. */
 .gt-system-backdrop__wash {
   position: absolute;

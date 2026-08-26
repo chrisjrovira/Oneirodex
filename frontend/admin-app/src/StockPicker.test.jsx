@@ -37,6 +37,23 @@ test('normalizeStockCatalog accepts Backend items wrapper', () => {
   expect(rows[1].label).toBe('CRT grid')
 })
 
+test('normalizeStockCatalog keeps decade-room packs as era kind', () => {
+  const rows = normalizeStockCatalog({
+    items: [
+      {
+        id: 'era-80s-den',
+        label: '1980s wood den',
+        kind: 'era',
+        pack_id: 'era-80s-den',
+        generated: true,
+        urls: { tile: '/static/library/stock/era-80s-den/tile_400x600.webp' },
+      },
+    ],
+  })
+  expect(rows[0].kind).toBe('era')
+  expect(rows[0].label).toBe('1980s wood den')
+})
+
 test('normalizeStockCatalog hides thumbs until generated', () => {
   const rows = normalizeStockCatalog({
     items: [

@@ -1,5 +1,6 @@
 import './systemBackdrop.css'
 import { familyForPlatform } from './platformSkins'
+import { roomIdForPlatform, roomStyle } from './playRooms'
 
 /**
  * Dimmed, system-themed backdrop behind the library grid.
@@ -32,6 +33,7 @@ export function SystemBackdrop({ platform, label }) {
     return null
   }
   const family = familyForPlatform(platform) || 'pc'
+  const room = roomIdForPlatform(platform)
   const name = (label || platform || '').trim()
   if (!name) {
     return null
@@ -41,8 +43,11 @@ export function SystemBackdrop({ platform, label }) {
     <div
       className="gt-system-backdrop"
       data-backdrop-family={family}
+      data-play-room={room}
+      style={roomStyle(platform)}
       aria-hidden="true"
     >
+      <div className="gt-system-backdrop__wall" />
       <div className="gt-system-backdrop__wash" />
       <div className="gt-system-backdrop__grid" />
       <span

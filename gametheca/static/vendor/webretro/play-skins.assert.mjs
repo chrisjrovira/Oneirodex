@@ -49,7 +49,13 @@ assert(css.includes('gt-play-lamp-breathe'), 'lamp breathe motion');
 assert(css.includes('gt-play-specular'), 'bezel specular motion');
 assert(css.includes('aspect-ratio: var(--gt-play-aspect'), 'aspect-lock intact');
 assert(css.includes('prefers-reduced-motion'), 'reduced-motion gate');
-assert(html.includes('gt-play-atmosphere'), 'html atmosphere');
+assert(html.includes('gt-play-window'), 'html window layer');
+assert(html.includes('gt-play-posters'), 'html posters layer');
+assert(html.includes('gt-play-furnish'), 'html furnish layer');
+assert(css.includes('[data-play-room="wood_den_80s"]'), '80s wood den CSS');
+assert(css.includes('[data-play-room="teen_bedroom_90s"]'), '90s bedroom CSS');
+assert(css.includes('[data-play-room="carpet_den_late_90s"]'), 'late-90s den CSS');
+assert(css.includes('[data-play-room="media_center_00s"]'), '00s media centre CSS');
 assert(html.includes('gt-play-bar-identity'), 'html bar identity');
 assert(html.includes('gt-play-bezel-mat'), 'html bezel mat');
 assert(html.includes('← Library'), 'library back button');
@@ -57,10 +63,20 @@ assert(html.includes('data-gt-play="pause"'), 'pause control');
 assert(html.includes('data-gt-play="reset"'), 'reset control');
 assert(html.includes('data-gt-play="mute"'), 'mute control');
 assert(html.includes('data-gt-play="power"'), 'power control');
+assert(html.includes('data-gt-play="save"'), 'save state control');
+assert(html.includes('data-gt-play="load"'), 'load state control');
+assert(html.includes('data-gt-play="rewind"'), 'rewind control');
+assert(html.includes('data-gt-play="ff"'), 'fast-forward control');
+assert(html.includes('data-gt-play="picture"'), 'picture control');
+assert(html.includes('id="gt-play-help"'), 'shortcuts help');
 assert(html.includes('id="gt-play-volume"'), 'volume slider');
 assert(html.includes('gt-play-overlay'), 'in-game overlay');
 assert(css.includes('.gt-play-overlay'), 'overlay CSS');
 assert(css.includes('.gt-play-chrome'), 'bar chrome cluster');
+assert(css.includes('[data-picture="crt"]'), 'CRT picture CSS');
+assert(css.includes('[data-picture="sharp"]'), 'sharp picture CSS');
+assert(css.includes('[data-picture="soft"]'), 'soft picture CSS');
+assert(css.includes('.gt-play-help'), 'shortcuts dialog CSS');
 
 // Distinct wallpaper cues for spot-check platforms
 assert(css.includes('wood panel') || css.includes('NINTENDO ENTERTAINMENT SYSTEM'), 'NES room cue');
@@ -77,31 +93,43 @@ assert(src.includes('--gt-play-scanline-opacity'), 'scanline var is actually set
 
 assert(typeof skins.roomForPlatform === 'function', 'roomForPlatform exported');
 const roomCases = [
-  ['SNES', 'crt_living_room'],
-  ['SEGA_MD', 'crt_living_room'],
+  ['SNES', 'teen_bedroom_90s'],
+  ['SEGA_MD', 'teen_bedroom_90s'],
   ['ARCADE', 'arcade_cabinet'],
   ['NEOGEO', 'arcade_cabinet'],
-  ['GB', 'handheld'],
-  ['PSP', 'handheld'],
-  ['PSX', 'disc_era'],
-  ['SEGA_DC', 'disc_era'],
+  ['GB', 'teen_bedroom_90s'],
+  ['PSP', 'media_center_00s'],
+  ['PSX', 'carpet_den_late_90s'],
+  ['SEGA_DC', 'media_center_00s'],
   ['PCWIN', 'desk'],
   ['VICE_X64SC', 'desk'],
 ];
 for (const [platform, room] of roomCases) {
   assert(skins.roomForPlatform(platform) === room, `${platform} room → ${room}`);
 }
-assert(skins.roomForPlatform('NOT_A_PLATFORM') === 'crt_living_room', 'unknown platform falls back');
+assert(skins.roomForPlatform('NOT_A_PLATFORM') === 'wood_den_80s', 'unknown platform falls back');
 
-// Handhelds are LCD — scanlines there are the tell of a gimmick filter.
-assert(skins.SCANLINE_BY_ROOM.handheld === 0, 'handheld has no scanlines');
-assert(skins.SCANLINE_BY_ROOM.crt_living_room > skins.SCANLINE_BY_ROOM.disc_era,
-  'CRT living room is stronger than late disc-era sets');
+// LCD panels never had CRT scanlines, even in a bedroom.
+assert(skins.scanlineFor('GB', 'teen_bedroom_90s') === 0, 'GB LCD has no scanlines');
+assert(skins.scanlineFor('PSP', 'media_center_00s') === 0, 'PSP LCD has no scanlines');
+assert(skins.SCANLINE_BY_ROOM.wood_den_80s > skins.SCANLINE_BY_ROOM.carpet_den_late_90s,
+  '1980s wood den scanlines are stronger than late-90s carpet den');
 
 assert(bridge.includes("type === 'gt-pause'"), 'bridge pause');
 assert(bridge.includes("type === 'gt-reset'"), 'bridge reset');
 assert(bridge.includes("type === 'gt-audio'"), 'bridge audio');
+assert(bridge.includes("type === 'gt-save-state'"), 'bridge save state');
+assert(bridge.includes("type === 'gt-load-state'"), 'bridge load state');
+assert(bridge.includes("type === 'gt-picture'"), 'bridge picture');
+assert(bridge.includes("type === 'gt-cabinet-key'"), 'bridge cabinet keys');
 assert(bridge.includes('audio_mute'), 'bridge writes audio_mute');
 assert(bridge.includes('_cmd_reset'), 'bridge can call core reset');
+assert(bridge.includes('_cmd_save_state'), 'bridge can call save state');
+assert(typeof skins.defaultPictureForRoom === 'function', 'defaultPictureForRoom exported');
+assert(skins.defaultPictureForPlatform('GB', 'teen_bedroom_90s') === 'sharp', 'GB picture defaults sharp (LCD)');
+assert(skins.defaultPictureForRoom('desk') === 'sharp', 'desk picture defaults sharp');
+assert(skins.defaultPictureForRoom('wood_den_80s') === 'crt', 'wood den picture defaults crt');
+assert(skins.defaultPictureForRoom('arcade_cabinet') === 'crt', 'arcade picture defaults crt');
+assert(skins.PICTURE_MODES.join(',') === 'crt,sharp,soft', 'picture cycle order');
 
 console.log('play-skins.assert: OK (' + cases.length + ' platforms + motion/aspect/html)');

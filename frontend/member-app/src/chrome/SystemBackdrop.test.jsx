@@ -25,6 +25,14 @@ describe('SystemBackdrop', () => {
     expect(screen.getByText('SNES')).toBeInTheDocument()
   })
 
+  it('tags the play room so the backdrop can follow the era setting', () => {
+    const { container } = render(<SystemBackdrop platform="SNES" label="Super NES" />)
+    expect(
+      container.querySelector('[data-play-room="teen_bedroom_90s"]'),
+    ).not.toBeNull()
+    expect(container.querySelector('.gt-system-backdrop__wall')).not.toBeNull()
+  })
+
   it('tags the console family so CSS can tint it', () => {
     const { container } = render(<SystemBackdrop platform="PSX" label="PlayStation" />)
     expect(

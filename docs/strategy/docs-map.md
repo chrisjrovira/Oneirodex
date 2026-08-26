@@ -21,14 +21,15 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 
 | Document | Path | Status |
 |---|---|---|
-| Competitive gap analysis | `docs/strategy/competitive.md` | **Stub** — full catalog in private vault per [external-facing-scrub.md](external-facing-scrub.md) |
+| Competitive gap analysis | `docs/strategy/competitive.md` | **Stub** — full catalog in private vault per [external-facing-scrub.md](external-facing-scrub.md) · vault refreshed **2026-08-26** |
+| Capability inspiration (INSP-*) | `docs/strategy/capability-inspiration.md` | **Have** — 2026-08-26 landscape pass; picture/rewind/FF/save-load chrome shipped the same day (not an INSP) |
 | External-facing scrub policy | `docs/strategy/external-facing-scrub.md` | Have — Class A/B/C/D rules + SCRUB backlog |
 | Feature build plans | `docs/strategy/features.md` | Have |
 | Social lite pointer | `docs/strategy/social.md` | Have |
 | Social + A/V waves | `docs/strategy/social-av.md` | Have (W16 shipped) · post-1.0 → [native-rtc.md](native-rtc.md) |
 | Security suite | `docs/strategy/security.md` | Have · post-1.0 → [native-malware-scan.md](native-malware-scan.md) |
 | Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have — Phases 0–6 shipped; CSP **enforces**; remaining core-clause notes are not counsel |
-| Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs; `GENERATOR_VERSION` **16** |
+| Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs; decade rooms at `GENERATOR_VERSION` **17** |
 | Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
 | Emulation coverage (Wave 19) | `docs/strategy/emulation-coverage.md` | Have |
@@ -47,7 +48,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Console / emulator library layout | `docs/strategy/console-gaming-libraries.md` | Have — per-leaf libs; skip-dir; no depth-3 walker |
 | Docs map (this file) | `docs/strategy/docs-map.md` | Have |
 | Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) |
-| Competitive re-score template | `docs/strategy/competitor-rescore.md` | Create |
+| Competitive re-score template | `docs/strategy/competitor-rescore.md` | **Have** — 2026-08-26; named scores stay in `docs/_private/peer-notes/` |
 | Cloud vs Unraid TCO ballpark | `docs/strategy/cloud-tco-ballpark.md` | Have — Unraid-first; worksheet in private vault |
 
 ---
@@ -58,7 +59,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 |---|---|---|---|
 | Getting started (web) | End users | Have | [getting-started.md](../user/getting-started.md) |
 | Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) |
-| Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) |
+| Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — decade rooms + colour cabinets, grouped room-card picker |
 | Downloading games | End users | Have | [downloads.md](../user/downloads.md) |
 | Browser / companion play matrix | End users | Have | [browser-play.md](../user/browser-play.md) |
 | Free games (News claims) | End users | Have | [free-games.md](../user/free-games.md) |
@@ -100,7 +101,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 |---|---|---|
 | Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — merged chrome; tools tab; batch APIs |
 | [members-and-invites.md](../admin/members-and-invites.md) | Have | Invites as links; admin-created accounts with no email |
-| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **16** |
+| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **17** (decade rooms + `gt-era.css`) |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — OIDC opt-in; native Arr + Prowlarr/Jackett |
 | Discover sections | Have | [discover-sections.md](../admin/discover-sections.md) |
 | Theme fonts & batch artwork | Have | [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md) |
@@ -110,7 +111,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Troubleshooting | Have | [troubleshooting.md](../admin/troubleshooting.md) |
 | Privacy & data handling | Have | [privacy-data-handling.md](../admin/privacy-data-handling.md) — not a public ToS |
 | WebRetro core clauses | Have | [webretro-core-clauses.md](../admin/webretro-core-clauses.md) — **not counsel** |
-| First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP |
+| First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 17 |
 | Propose-only scan & proposals | Create | |
 | Library Doctor & rename templates | Create | |
 | Unmatched & false duplicates | Have | Covered in libraries-and-scans.md |

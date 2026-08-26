@@ -26,14 +26,21 @@ def read(path: Path) -> str:
 
 
 def swatch_colours() -> dict:
-    """Every `.theme-swatch-<slug> { background: <colour> }` rule in the CSS."""
-    return {
-        match.group(1): match.group(2).strip().lower()
-        for match in re.finditer(
-            r'\.theme-swatch-([a-z0-9_-]+)\s*\{\s*background:\s*([^;}]+)[;}]',
-            read(FORM_COMPONENTS_CSS),
-        )
-    }
+    """Every `.theme-swatch-<slug>` fill colour in the CSS.
+
+    Chip rules define `--gt-swatch-fill` (a token) and paint `background` from
+    it, so css-token-lint treats the hex as a definition rather than a use.
+    """
+    colours = {}
+    for match in re.finditer(
+        r'\.theme-swatch-([a-z0-9_-]+)\s*\{([^}]*)\}',
+        read(FORM_COMPONENTS_CSS),
+    ):
+        slug, body = match.group(1), match.group(2)
+        fill = re.search(r'--gt-swatch-fill:\s*(#[0-9a-fA-F]{3,8})', body)
+        if fill:
+            colours[slug] = fill.group(1).strip().lower()
+    return colours
 
 
 def default_accent() -> str:
@@ -75,10 +82,12 @@ def test_preferences_modal_renders_selectable_swatches():
     html = read(TEMPLATES / 'settings' / 'modal_preferences.html')
 
     assert 'id="themeSwatchGrid"' in html
-    assert 'data-theme="{{ value }}"' in html
+    assert 'data-theme="{{ item.slug }}"' in html
+    assert 'theme_picker_groups' in html
+    assert 'theme-card-preview' in html
     # Selection is server-rendered too, so the picker reads correctly even
     # before any JavaScript touches it.
-    assert "form.theme.data == value" in html
+    assert "form.theme.data == item.slug" in html
 
 
 def test_admin_manage_themes_sends_you_to_preferences_to_choose():

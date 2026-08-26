@@ -28,12 +28,19 @@
         mono: 'mono',
         sunset: 'filled',
         ice: 'soft',
-        default: 'outline'
+        default: 'outline',
+        'era-80s': 'pixel',
+        'era-90s': 'filled',
+        'era-late90s': 'duotone',
+        'era-00s': 'soft',
+        'era-arcade': 'filled',
+        'era-desk': 'outline'
     };
 
     // Inline values displaced by the preview, so closing without saving restores
     // exactly what was there before (null = no preview active).
     var displacedTokens = null;
+    var displacedEra = undefined;
 
     function notify(message, level) {
         if (window.jQuery && typeof window.jQuery.notify === 'function') {
@@ -94,20 +101,41 @@
         });
     }
 
+    function previewEra(era) {
+        var root = document.documentElement;
+        if (!era) {
+            return;
+        }
+        if (displacedEra === undefined) {
+            displacedEra = root.getAttribute('data-era');
+        }
+        root.setAttribute('data-era', era);
+    }
+
     function clearPreview() {
-        if (displacedTokens === null) {
+        if (displacedTokens === null && displacedEra === undefined) {
             return;
         }
         var root = document.documentElement;
-        PREVIEW_TOKENS.forEach(function (token, index) {
-            var previous = displacedTokens[index];
-            if (previous) {
-                root.style.setProperty(token, previous);
+        if (displacedTokens !== null) {
+            PREVIEW_TOKENS.forEach(function (token, index) {
+                var previous = displacedTokens[index];
+                if (previous) {
+                    root.style.setProperty(token, previous);
+                } else {
+                    root.style.removeProperty(token);
+                }
+            });
+            displacedTokens = null;
+        }
+        if (displacedEra !== undefined) {
+            if (displacedEra) {
+                root.setAttribute('data-era', displacedEra);
             } else {
-                root.style.removeProperty(token);
+                root.removeAttribute('data-era');
             }
-        });
-        displacedTokens = null;
+            displacedEra = undefined;
+        }
     }
 
     function selectTheme(value) {
@@ -122,11 +150,15 @@
 
     function applySelection(value) {
         syncSwatches(value);
-        var colour = accentOf(swatchFor(value));
+        var swatch = swatchFor(value);
+        var colour = accentOf(swatch);
         if (colour) {
             previewAccent(colour);
         }
-        var paired = PRESET_ICON_PACKS[value];
+        if (swatch && swatch.dataset.era) {
+            previewEra(swatch.dataset.era);
+        }
+        var paired = (swatch && swatch.dataset.iconPack) || PRESET_ICON_PACKS[value];
         if (paired) {
             previewIconPack(paired);
         }
@@ -230,6 +262,7 @@
             // The preview now matches what was saved, so let it stand until the
             // reload swaps in the real stylesheet.
             displacedTokens = null;
+            displacedEra = undefined;
 
             var modalElement = document.getElementById('preferencesModal');
             var modal = window.bootstrap && modalElement

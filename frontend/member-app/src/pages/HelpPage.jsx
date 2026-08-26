@@ -76,7 +76,7 @@ const FAQ_SECTIONS = [
       'Tile badges use four corners only (occupied corners; no empty reserved slots) with rounded-square chrome. Signals: VR, UPDATE, MISSING, NEW, LANG (vs Preferences → Preferred game language). No OUT/~ / RELEASE on tiles.',
       'Inside a system, accents follow that family; global search keeps default glass.',
       'Export packs (bottom of Systems): ES-DE gamelist.xml and Pegasus metadata for other frontends — optional; paths stay portable.',
-      'Change themes in Preferences — it sets colour theme, icon pack, font and tile size together, and is the only place a theme is chosen. The change is visible on a normal reload; no hard refresh.',
+      'Change themes in Preferences — decade rooms (the place you started) and colour cabinets. Member and admin chrome share the same room scenery as browser play. Theme, icon pack, font and tile size save together. Preferences is the only place a theme is chosen. The change is visible on a normal reload; no hard refresh.',
     ],
   },
   {
@@ -178,7 +178,7 @@ const FAQ_SECTIONS = [
       'Some systems need BIOS/firmware on the host before Play in browser works. Details and tiles show a quiet blocker with the server hint - no Download BIOS button.',
       'Admins upload legally obtained firmware under Admin → Emulators (emulator BIOS), or mount a private host BIOS folder. GameTheca never ships copyrighted BIOS files.',
       'Compressed ROMs extract on play. Prefer .zip when possible; .rar/.7z need host tools. Failures show the server hint (missing extractor) in the play shell.',
-      'The play bar has Pause, Reset, Mute, volume, and Power (Power leaves the game, same as ← Library). An in-game overlay repeats Pause/Reset/Mute/Power — it stays visible on touch; on a mouse it appears when you move over the play stage.',
+      'The play bar has Pause, Reset, Mute, volume, Save, Load, Rewind, FF, Picture, and Power (Power leaves the game, same as ← Library). ? opens shortcuts (F2/F3 save/load, hold Right Shift to rewind, F5 fast-forward). An overlay repeats the in-game controls on touch; on a mouse it appears when you move over the play stage.',
       'If a version is Missing on disk, Download is hidden; a 410 path_missing response toasts the backend hint (remove missing versions or restore files).',
     ],
   },

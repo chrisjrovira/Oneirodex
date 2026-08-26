@@ -1,6 +1,6 @@
 {% import 'partials/icons.html' as icons -%}
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ current_theme|default('default') }}" data-icon-pack="{{ current_icon_pack|default('outline') }}"{% if enable_new_chrome %} data-chrome="v2"{% endif %}>
+<html lang="en" data-theme="{{ current_theme|default('default') }}" data-era="{{ current_era|default('wood_den_80s') }}" data-icon-pack="{{ current_icon_pack|default('outline') }}"{% if enable_new_chrome %} data-chrome="v2"{% endif %}>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
@@ -40,6 +40,8 @@
     <link rel="stylesheet" id="gt-theme-fonts-css" href="{{ url_for('apis.theme_fonts_css') }}">
     <link rel="stylesheet" href="{{ 'css/admin/admin-shell.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'admin-app/admin-app.css'|dist_asset }}">
+    {# After shell + SPA CSS so decade rooms show through opaque body fills. #}
+    <link rel="stylesheet" href="{{ 'css/gt-era.css'|theme_asset }}">
     <script src="{{ 'js/gt_loading_motifs.js'|theme_asset }}"></script>
     <script src="{{ 'js/gt_sortable_table.js'|theme_asset }}"></script>
     {# Inline: theme volume CSS can lag until Reset Themes. Stacking-context
@@ -65,6 +67,7 @@
     {% block styles %}{% endblock %}
 </head>
 <body class="admin-shell admin-spa">
+{% include 'partials/era_atmosphere.html' %}
 {# React owns the top nav; Jinja page body stays visible for forms until fully migrated.
 
    data-admin-render (GT-A3) declares which body a page wants, replacing the old

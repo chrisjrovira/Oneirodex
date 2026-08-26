@@ -320,7 +320,10 @@
 }
 
 /* Ambience: a light suggestion of the setting, never enough to fight the text. */
-.gt-systems-tile[data-room='crt_living_room']::after,
+.gt-systems-tile[data-room='wood_den_80s']::after,
+.gt-systems-tile[data-room='teen_bedroom_90s']::after,
+.gt-systems-tile[data-room='carpet_den_late_90s']::after,
+.gt-systems-tile[data-room='media_center_00s']::after,
 .gt-systems-tile[data-room='arcade_cabinet']::after {
   content: '';
   position: absolute;
@@ -329,11 +332,32 @@
   opacity: 0.16;
 }
 
-.gt-systems-tile[data-room='crt_living_room']::after {
+.gt-systems-tile[data-room='wood_den_80s']::after {
   background: repeating-linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.16) 0 1px,
-    transparent 1px 3px
+    90deg,
+    rgba(90, 50, 28, 0.45) 0 8px,
+    rgba(40, 24, 12, 0.2) 8px 16px
+  );
+}
+
+.gt-systems-tile[data-room='teen_bedroom_90s']::after {
+  --gt-poster-a: #c45c6a;
+  --gt-poster-b: #3a6a9a;
+  background:
+    linear-gradient(var(--gt-poster-a), var(--gt-poster-a)) 8% 12% / 12% 22% no-repeat,
+    linear-gradient(var(--gt-poster-b), var(--gt-poster-b)) 24% 8% / 10% 26% no-repeat,
+    repeating-linear-gradient(
+      180deg,
+      rgba(80, 50, 90, 0.35) 0 10px,
+      transparent 10px 12px
+    );
+}
+
+.gt-systems-tile[data-room='carpet_den_late_90s']::after {
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(90, 40, 50, 0.35) 0 10px,
+    rgba(40, 20, 30, 0.2) 10px 20px
   );
 }
 
@@ -344,6 +368,14 @@
     transparent 60%
   );
   opacity: 0.28;
+}
+
+.gt-systems-tile[data-room='media_center_00s']::after {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--gt-room-glow) 28%, transparent),
+    transparent 55%
+  );
 }
 
 .gt-systems-tile[data-room='desk']::after {

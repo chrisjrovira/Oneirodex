@@ -15,6 +15,7 @@ from gametheca.utils.db import check_postgres_port_open
 from gametheca.utils.proxy import apply_proxy_fix
 from gametheca.utils.security_headers import apply_security_headers
 from gametheca.utils.icon_themes import icon_pack_css_url
+from gametheca.utils.preset_themes import era_for_theme, theme_picker_groups
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -114,9 +115,14 @@ def create_app():
             icon_pack_css = None
         return dict(
             current_theme=current_theme,
+            current_era=era_for_theme(current_theme),
             current_icon_pack=current_icon_pack,
             icon_pack_css=icon_pack_css,
         )
+
+    @app.template_filter('theme_picker_groups')
+    def theme_picker_groups_filter(choices):
+        return theme_picker_groups(choices)
 
     @app.context_processor
     def inject_feature_flags():

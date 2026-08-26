@@ -18,6 +18,7 @@ from gametheca.models import Library
 from gametheca.utils.cover_art_studio import (
     SIZE_MATRIX,
     SYSTEM_TEMPLATES,
+    ERA_ART,
     SystemPalette,
     _filename_for,
     _image_to_bytes,
@@ -28,6 +29,7 @@ from gametheca.utils.cover_art_studio import (
     safe_stock_dir,
     stock_root,
 )
+from gametheca.utils.play_rooms import room_id_for_platform
 
 # Motif key → (label, palette). Original geometry only — never scraped box art.
 StockPalette = SystemPalette  # (top, bottom, accent, glyph_unused)
@@ -94,6 +96,46 @@ STOCK_MOTIFS: dict[str, dict[str, Any]] = {
         'palette': ((20, 24, 32), (11, 13, 16), (47, 214, 123), 'mark'),
     },
 }
+
+# Decade-room backup packs — same setting language as UI themes / play rooms.
+ERA_STOCK_PACKS: list[dict[str, str]] = [
+    {
+        'id': 'era-80s-den',
+        'era': 'wood_den_80s',
+        'label': '1980s wood den',
+        'motif': 'crt_grid',
+    },
+    {
+        'id': 'era-90s-bedroom',
+        'era': 'teen_bedroom_90s',
+        'label': '1990s teen bedroom',
+        'motif': 'cartridge',
+    },
+    {
+        'id': 'era-late90s-den',
+        'era': 'carpet_den_late_90s',
+        'label': 'Late-90s carpet den',
+        'motif': 'disc_ring',
+    },
+    {
+        'id': 'era-00s-media',
+        'era': 'media_center_00s',
+        'label': '2000s media centre',
+        'motif': 'controller',
+    },
+    {
+        'id': 'era-arcade-floor',
+        'era': 'arcade_cabinet',
+        'label': 'Arcade floor',
+        'motif': 'joystick',
+    },
+    {
+        'id': 'era-computer-desk',
+        'era': 'desk',
+        'label': 'Computer desk',
+        'motif': 'circuit',
+    },
+]
 
 # Major LibraryPlatform / Art Studio system keys → selectable platform packs.
 MAJOR_PLATFORM_PACKS: list[dict[str, str]] = [
@@ -187,6 +229,16 @@ def list_stock_catalog(package_root: str | Path | None = None) -> list[dict[str,
                 package_root=package_root,
             )
         )
+    for pack in ERA_STOCK_PACKS:
+        items.append(
+            _catalog_entry(
+                pack_id=pack['id'],
+                label=pack['label'],
+                kind='era',
+                platform=None,
+                package_root=package_root,
+            )
+        )
     return items
 
 
@@ -204,8 +256,19 @@ def _platform_key_for_pack_id(pack_id: str) -> str | None:
     return None
 
 
+def _era_key_for_pack_id(pack_id: str) -> str | None:
+    for pack in ERA_STOCK_PACKS:
+        if pack['id'] == pack_id:
+            return pack['era']
+    return None
+
+
 def _all_pack_ids() -> list[str]:
-    return [p['id'] for p in MAJOR_PLATFORM_PACKS] + [m['id'] for m in STOCK_MOTIFS.values()]
+    return (
+        [p['id'] for p in MAJOR_PLATFORM_PACKS]
+        + [m['id'] for m in STOCK_MOTIFS.values()]
+        + [p['id'] for p in ERA_STOCK_PACKS]
+    )
 
 
 def generate_size_matrix_stock(
@@ -214,6 +277,7 @@ def generate_size_matrix_stock(
     system: str | None = None,
     motif: str | None = None,
     palette: SystemPalette | None = None,
+    era: str | None = None,
     fmt: str = 'webp',
 ) -> dict[str, bytes]:
     fmt = (fmt or 'webp').lower()
@@ -230,6 +294,7 @@ def generate_size_matrix_stock(
             artistic=True,
             motif=motif,
             palette_override=palette,
+            era=era,
         )
         name = _filename_for(prefix, w, h, fmt)
         out[name] = _image_to_bytes(img, fmt)
@@ -245,16 +310,34 @@ def save_stock_pack(
     """Idempotent write of one platform or stock pack under library/stock/."""
     motif_key = _motif_key_for_pack_id(pack_id)
     platform_key = _platform_key_for_pack_id(pack_id)
-    if motif_key is None and platform_key is None:
+    era_key = _era_key_for_pack_id(pack_id)
+    if motif_key is None and platform_key is None and era_key is None:
         raise ValueError(f'Unknown stock/platform pack id: {pack_id}')
 
     pack_dir = safe_stock_dir(pack_id, package_root)
     pack_dir.mkdir(parents=True, exist_ok=True)
 
-    if motif_key is not None:
+    era_used = ''
+    if era_key is not None:
+        pack_meta = next(p for p in ERA_STOCK_PACKS if p['id'] == pack_id)
+        title = pack_meta['label']
+        art = ERA_ART[era_key]
+        palette: SystemPalette = (art['top'], art['bottom'], art['accent'], art['glyph'])
+        files = generate_size_matrix_stock(
+            title=title,
+            motif=pack_meta['motif'],
+            palette=palette,
+            era=era_key,
+            fmt=fmt,
+        )
+        kind = 'era'
+        system = ''
+        motif_key = pack_meta['motif']
+        era_used = era_key
+    elif motif_key is not None:
         meta = STOCK_MOTIFS[motif_key]
         title = meta['label']
-        palette: SystemPalette = meta['palette']
+        palette = meta['palette']
         files = generate_size_matrix_stock(
             title=title,
             motif=motif_key,
@@ -271,9 +354,11 @@ def save_stock_pack(
         # Ensure template exists
         if platform_key not in SYSTEM_TEMPLATES and platform_key.replace('_', ' ') not in SYSTEM_TEMPLATES:
             resolve_system_template(platform_key)
+        era_used = room_id_for_platform(platform_key)
         files = generate_size_matrix_stock(
             title=title,
             system=platform_key,
+            era=era_used,
             fmt=fmt,
         )
         kind = 'platform'
@@ -289,6 +374,7 @@ def save_stock_pack(
         'system': system,
         'kind': kind,
         'motif': motif_key or '',
+        'era': era_used,
         'format': fmt,
         'files': written,
     }

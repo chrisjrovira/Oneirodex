@@ -9,6 +9,7 @@ from uuid import uuid4
 import pytest
 
 from gametheca.utils.cover_art_stock import (
+    ERA_STOCK_PACKS,
     MAJOR_PLATFORM_PACKS,
     STOCK_MOTIFS,
     apply_pack_to_library,
@@ -37,8 +38,13 @@ def test_stock_catalog_non_empty_and_has_platforms(tmp_path):
     stock_ids = {i['id'] for i in items if i['kind'] == 'stock'}
     assert 'stock-controller' in stock_ids
     assert 'stock-crt-grid' in stock_ids
+    era_ids = {i['id'] for i in items if i['kind'] == 'era'}
+    assert 'era-80s-den' in era_ids
+    assert 'era-90s-bedroom' in era_ids
+    assert len(era_ids) >= 6
     assert len(STOCK_MOTIFS) >= 8
     assert len(MAJOR_PLATFORM_PACKS) >= 8
+    assert len(ERA_STOCK_PACKS) >= 6
     for item in items:
         assert item['pack_id']
         assert item['label']
@@ -63,6 +69,11 @@ def test_generate_stock_pack_writes_files(tmp_path):
             again = save_stock_pack('platform-nes', package_root=tmp_path)
             assert again['kind'] == 'platform'
             assert (stock / 'platform-nes' / 'tile_200x300.webp').is_file()
+
+            era = save_stock_pack('era-80s-den', package_root=tmp_path)
+            assert era['kind'] == 'era'
+            assert era['era'] == 'wood_den_80s'
+            assert (stock / 'era-80s-den' / 'tile_400x600.webp').is_file()
 
 
 def test_generate_stock_packs_batch(tmp_path):

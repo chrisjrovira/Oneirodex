@@ -1,6 +1,6 @@
 {% import 'partials/icons.html' as icons %}
 <div class="modal fade gt-prefs-modal" id="preferencesModal" tabindex="-1" aria-labelledby="preferencesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg gt-prefs-modal__dialog">
         <div class="modal-content gt-prefs-modal__panel">
             <div class="modal-header gt-prefs-modal__header">
                 <h5 class="modal-title gt-prefs-modal__title" id="preferencesModalLabel">
@@ -48,21 +48,48 @@
                             <span class="gt-prefs-section__caret" aria-hidden="true"></span>
                             <h3 class="gt-prefs-section__title" id="prefs-look-heading">Look &amp; density</h3>
                         </summary>
-                        <p class="gt-prefs-section__hint">Theme and icons are independent; tile size is continuous.</p>
+                        <p class="gt-prefs-section__hint">Decade rooms match how gaming looked when you started. Colour cabinets still sit in a room, not a flat slab. Theme and icons are independent; tile size is continuous.</p>
                         <div class="gt-prefs-field gt-picker-field">
                             {{ form.theme.label(class="form-label") }}
                             {{ form.theme(class="form-select visually-hidden", id="themeSelect", tabindex="-1", **{"aria-hidden": "true"}) }}
                             {% for error in form.theme.errors %}
                                 <div class="invalid-feedback d-block">{{ error }}</div>
                             {% endfor %}
-                            <div class="theme-swatch-grid" id="themeSwatchGrid" role="group" aria-label="Theme previews">
-                                {% for value, label in form.theme.choices %}
-                                <button type="button" class="theme-swatch{% if form.theme.data == value %} is-selected{% endif %}"
-                                        data-theme="{{ value }}" title="{{ label }}"
-                                        aria-pressed="{{ 'true' if form.theme.data == value else 'false' }}">
-                                    <span class="theme-swatch-chip theme-swatch-{{ value }}"></span>
-                                    <span class="theme-swatch-label">{{ label }}</span>
-                                </button>
+                            {% set picker_groups = form.theme.choices|theme_picker_groups %}
+                            <div class="theme-picker" id="themeSwatchGrid" role="group" aria-label="Theme previews">
+                                {% for group in picker_groups %}
+                                <section class="theme-picker-group" data-group="{{ group.id }}">
+                                    <h4 class="theme-picker-group__title">{{ group.label }}</h4>
+                                    {% if group.hint %}
+                                    <p class="theme-picker-group__hint">{{ group.hint }}</p>
+                                    {% endif %}
+                                    <div class="theme-card-grid">
+                                        {% for item in group.items %}
+                                        <button type="button"
+                                                class="theme-swatch theme-card{% if form.theme.data == item.slug %} is-selected{% endif %}"
+                                                data-theme="{{ item.slug }}"
+                                                data-era="{{ item.era }}"
+                                                {% if item.icon_pack %}data-icon-pack="{{ item.icon_pack }}"{% endif %}
+                                                title="{{ item.name }}"
+                                                aria-pressed="{{ 'true' if form.theme.data == item.slug else 'false' }}">
+                                            <span class="theme-card-preview" data-era="{{ item.era }}" aria-hidden="true">
+                                                <span class="gt-era-wall"></span>
+                                                <span class="gt-era-window"></span>
+                                                <span class="gt-era-posters"></span>
+                                                <span class="gt-era-furnish"></span>
+                                                <span class="gt-era-stand"></span>
+                                                <span class="gt-era-floor"></span>
+                                                <span class="gt-era-lamp"></span>
+                                                <span class="theme-swatch-chip theme-swatch-{{ item.slug }}"></span>
+                                            </span>
+                                            <span class="theme-swatch-label">{{ item.name }}</span>
+                                            {% if item.description %}
+                                            <span class="theme-card-blurb">{{ item.description }}</span>
+                                            {% endif %}
+                                        </button>
+                                        {% endfor %}
+                                    </div>
+                                </section>
                                 {% endfor %}
                             </div>
                         </div>

@@ -262,8 +262,8 @@
     "no-raw-font-size": 1
   },
   "gametheca/setup/default_theme/css/base.css": {
-    "no-raw-radius": 11,
-    "no-raw-color": 32,
+    "no-raw-radius": 10,
+    "no-raw-color": 30,
     "no-raw-font-size": 9
   },
   "gametheca/setup/default_theme/css/components.css": {
@@ -272,9 +272,7 @@
     "no-raw-radius": 9
   },
   "gametheca/setup/default_theme/css/form-components.css": {
-    "no-raw-radius": 3,
-    "no-raw-font-size": 2,
-    "no-raw-color": 10
+    "no-raw-radius": 2
   },
   "gametheca/setup/default_theme/css/games/discover.css": {
     "no-raw-font-size": 5,

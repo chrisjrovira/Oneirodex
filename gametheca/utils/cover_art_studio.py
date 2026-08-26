@@ -96,6 +96,54 @@ SYSTEM_TEMPLATES: dict[str, SystemPalette] = {
     'default': ((20, 24, 32), (11, 13, 16), (47, 214, 123), 'mark'),
 }
 
+# Decade-room palettes for backup/placeholder art. Geometry is original (wood
+# stripes, poster blocks, carpet bands) — never scraped box art. Keys match
+# play_rooms.ROOMS / html[data-era].
+ERA_ART: dict[str, dict[str, Any]] = {
+    'wood_den_80s': {
+        'top': (42, 28, 18),
+        'bottom': (18, 12, 8),
+        'accent': (232, 192, 125),
+        'glyph': 'cart',
+        'kind': 'wood',
+    },
+    'teen_bedroom_90s': {
+        'top': (56, 42, 72),
+        'bottom': (22, 16, 28),
+        'accent': (201, 160, 212),
+        'glyph': 'cart',
+        'kind': 'posters',
+    },
+    'carpet_den_late_90s': {
+        'top': (28, 24, 40),
+        'bottom': (12, 10, 16),
+        'accent': (138, 164, 255),
+        'glyph': 'disc',
+        'kind': 'carpet',
+    },
+    'media_center_00s': {
+        'top': (20, 28, 44),
+        'bottom': (8, 12, 20),
+        'accent': (63, 155, 255),
+        'glyph': 'disc',
+        'kind': 'media',
+    },
+    'arcade_cabinet': {
+        'top': (48, 12, 28),
+        'bottom': (8, 6, 15),
+        'accent': (255, 45, 111),
+        'glyph': 'cabinet',
+        'kind': 'marquee',
+    },
+    'desk': {
+        'top': (16, 32, 22),
+        'bottom': (8, 14, 10),
+        'accent': (94, 240, 138),
+        'glyph': 'pc',
+        'kind': 'phosphor',
+    },
+}
+
 SIZE_MATRIX: list[tuple[str, int, int]] = [
     ('tile', 200, 300),
     ('tile', 400, 600),
@@ -874,6 +922,97 @@ def _draw_title_block(
     draw.text((sx, y + last_descent + 10), subtitle, fill=accent, font=sub_font)
 
 
+def _paint_era_scenery(
+    img: Image.Image,
+    *,
+    era: str,
+    accent: tuple[int, int, int],
+    seed: int,
+) -> None:
+    """Draw era-room scenery onto a cover: wood, posters, carpet, marquee, desk.
+
+    Original geometry only — the same idea as css/gt-era.css, in pixels so
+    placeholder tiles follow the active decade theme.
+    """
+    meta = ERA_ART.get(era)
+    if not meta:
+        return
+    width, height = img.size
+    draw = ImageDraw.Draw(img)
+    kind = meta['kind']
+    secondary = _mix_rgb(accent, (255, 255, 255), 0.25)
+    plank = max(6, width // 18)
+
+    if kind == 'wood':
+        for x in range(0, width, plank):
+            col = _mix_rgb(accent, (40, 24, 12), 0.15 + ((x + seed) % 5) * 0.05)
+            draw.rectangle([x, 0, x + max(2, plank // 4), height], fill=col)
+        wx, wy = int(width * 0.72), int(height * 0.08)
+        ww, wh = int(width * 0.18), int(height * 0.22)
+        draw.rectangle([wx, wy, wx + ww, wy + wh], fill=(240, 200, 120))
+        draw.rectangle([wx, wy, wx + ww, wy + wh], outline=(74, 48, 24), width=max(2, width // 80))
+    elif kind == 'posters':
+        posters = (
+            (0.06, 0.10, 0.12, 0.20, (196, 92, 106)),
+            (0.20, 0.06, 0.10, 0.22, (58, 106, 154)),
+            (0.32, 0.14, 0.08, 0.16, (212, 176, 74)),
+            (0.10, 0.34, 0.11, 0.14, (74, 138, 98)),
+        )
+        for px, py, pw, ph, col in posters:
+            x0, y0 = int(width * px), int(height * py)
+            draw.rectangle(
+                [x0, y0, x0 + int(width * pw), y0 + int(height * ph)],
+                fill=col,
+                outline=_mix_rgb(col, (0, 0, 0), 0.35),
+            )
+        wx, wy = int(width * 0.74), int(height * 0.07)
+        ww, wh = int(width * 0.16), int(height * 0.26)
+        draw.rectangle([wx, wy, wx + ww, wy + wh], fill=(142, 200, 255))
+        draw.rectangle([wx, wy, wx + ww, wy + wh], outline=(90, 58, 40), width=max(2, width // 70))
+    elif kind == 'carpet':
+        band = max(8, width // 14)
+        floor_y = int(height * 0.58)
+        for x in range(0, width, band):
+            col = (90, 40, 50) if (x // band + seed) % 2 else (40, 20, 30)
+            draw.rectangle([x, floor_y, x + band, height], fill=_mix_rgb(col, accent, 0.15))
+        x0, y0 = int(width * 0.08), int(height * 0.12)
+        draw.rectangle(
+            [x0, y0, x0 + int(width * 0.14), y0 + int(height * 0.22)],
+            fill=(42, 74, 138),
+        )
+    elif kind == 'media':
+        wx, wy = int(width * 0.76), int(height * 0.10)
+        ww, wh = int(width * 0.14), int(height * 0.24)
+        draw.rectangle([wx, wy, wx + ww, wy + wh], fill=(26, 56, 96))
+        draw.rectangle([wx, wy, wx + ww, wy + wh], outline=(26, 36, 56), width=max(2, width // 90))
+        stand_y = int(height * 0.72)
+        draw.rectangle([int(width * 0.12), stand_y, int(width * 0.88), height], fill=(18, 24, 36))
+    elif kind == 'marquee':
+        draw.rectangle([0, 0, width, max(8, height // 10)], fill=accent)
+        glow = _mix_rgb(accent, (37, 224, 255), 0.45)
+        draw.ellipse(
+            [int(width * 0.2), -int(height * 0.1), int(width * 0.8), int(height * 0.18)],
+            fill=glow,
+        )
+    elif kind == 'phosphor':
+        for y in range(0, height, max(3, height // 48)):
+            draw.line([(0, y), (width, y)], fill=_mix_rgb(accent, (0, 0, 0), 0.75))
+        wx, wy = int(width * 0.70), int(height * 0.08)
+        ww, wh = int(width * 0.18), int(height * 0.20)
+        draw.rectangle([wx, wy, wx + ww, wy + wh], fill=(200, 220, 232))
+        draw.rectangle([wx, wy, wx + ww, wy + wh], outline=(74, 80, 72), width=max(2, width // 80))
+    else:
+        return
+
+    # Floor band so every era cover has a "room" rather than a floating slab.
+    floor_h = max(12, height // 5)
+    for i in range(floor_h):
+        t = i / max(floor_h - 1, 1)
+        col = _mix_rgb(meta['bottom'], (0, 0, 0), 0.2 + t * 0.4)
+        draw.line([(0, height - floor_h + i), (width, height - floor_h + i)], fill=col)
+    _ = secondary, seed
+
+
 def render_cover_art(
     width: int,
     height: int,
@@ -887,6 +1026,7 @@ def render_cover_art(
     headline_override: str | None = None,
     subtitle_override: str | None = None,
     title_scale: float = DEFAULT_TITLE_SCALE,
+    era: str | None = None,
 ) -> Image.Image:
     """Render a branded placeholder/cover at the given size with per-system templates.
 
@@ -896,11 +1036,16 @@ def render_cover_art(
 
     ``motif`` selects an optional stock geometry overlay (controller, crt_grid, …).
     ``palette_override`` bypasses system template lookup (used by stock packs).
+    ``era`` paints decade-room scenery (wood den, teen bedroom, …) so backup art
+    follows the active UI theme rather than a generic green slab.
     """
     title = (title or '').strip()
     system = (system or '').strip()
     variant = (variant or 'tile').strip().lower()
     motif = (motif or '').strip().lower() or None
+    era_key = (era or '').strip()
+    if era_key and era_key not in ERA_ART:
+        era_key = ''
     if variant not in ('tile', 'wide', 'square', 'hero'):
         if width == height:
             variant = 'square'
@@ -914,8 +1059,15 @@ def render_cover_art(
 
     if palette_override is not None:
         top, bottom, accent, glyph = palette_override
+    elif era_key and not system:
+        meta = ERA_ART[era_key]
+        top, bottom, accent, glyph = meta['top'], meta['bottom'], meta['accent'], meta['glyph']
     else:
         top, bottom, accent, glyph = resolve_system_template(system)
+        if era_key:
+            meta = ERA_ART[era_key]
+            top = _mix_rgb(top, meta['top'], 0.45)
+            bottom = _mix_rgb(bottom, meta['bottom'], 0.45)
     seed_key = title if title else f'gametheca::{system or motif or "default"}::{variant}'
     seed = _title_seed(seed_key)
     secondary = _title_secondary_accent(seed, accent) if artistic else accent
@@ -947,6 +1099,9 @@ def render_cover_art(
             seed=seed,
         )
         draw = ImageDraw.Draw(img)
+        if era_key:
+            _paint_era_scenery(img, era=era_key, accent=accent, seed=seed)
+            draw = ImageDraw.Draw(img)
         if motif:
             _draw_stock_geometry(
                 draw,

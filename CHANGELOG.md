@@ -160,6 +160,7 @@ Work since the 1.0.0-beta tag (2026-08-06).
 
 ### Added
 
+- **Decade room themes.** Preferences is no longer a tiny colour-chip grid. Six era rooms (1980s wood den, 1990s teen bedroom, late-90s carpet den, 2000s media centre, arcade floor, computer desk) plus the existing colour cabinets sit in the same wallpaper/window/floor language as browser play, on member *and* admin chrome. Untitled-game placeholders and Art Studio backup packs follow the room. Needs **Reset Default Themes** (`GENERATOR_VERSION` 17) so volume copies pick up `gt-era.css`.
 - **GOG and Epic live ownership register sync.** Same shape as Steam: IDs and names into `UserOwnedTitle`, never a download. Unofficial Galaxy / launcher surfaces; paste a refresh token or Epic device-auth JSON (or household env). Fail honestly on 401. CSV still works.
 - **Operator notes for snes9x / genesis_plus_gx non-commercial clauses.** Quotes from upstream plus questions to take to a lawyer — [webretro-core-clauses.md](docs/admin/webretro-core-clauses.md). Not counsel.
 - **Operator privacy / data-handling notes.** What the host stores, what can leave if you enable SMTP / metadata APIs / OIDC / LiveKit / GitHub support, and how `child` accounts are denied download and Acquire — [privacy-data-handling.md](docs/admin/privacy-data-handling.md). Not a public ToS.
@@ -233,6 +234,7 @@ Work since the 1.0.0-beta tag (2026-08-06).
   a `.dmg` genuinely needs a Mac
 - **BIOS import** from an operator-supplied local collection (`scripts/import_bios.py`), preferring the
   majority copy when candidates disagree
+- **Cabinet playback on the WebRetro play bar.** Save / Load / Rewind (hold) / fast-forward / Picture (CRT · Sharp · Soft) / shortcut help. RetroArch rewind is on for light cores with a 10 MB buffer; it stays off on N64/PS1/Saturn/Dreamcast/PSP. No shader packs, no run-ahead — [browser-play.md](docs/user/browser-play.md)
 - **Ownership polling** (`gametheca/utils/ownership_poller.py`) and a `/styleguide` route
 - **CSS token lint** (`scripts/css-token-lint.mjs`) with a baseline — 2365 violations down to 1317
 - **Sortable classic tables** (`js/gt_sortable_table.js`) — the Jinja counterpart to the React
