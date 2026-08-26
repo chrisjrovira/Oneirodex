@@ -13,7 +13,7 @@ Keep the program moving without checking in after every slice.
 
 ## Loop
 
-1. Read `docs/strategy/progress.md` for the next **pending** item.
+1. Read the **living head** of `docs/strategy/progress.md` (Ship TLDR · Done · Next · Blocked) for the next **pending** item. Do not load the wave-diary archive.
 2. Implement the smallest complete slice of it. A slice is done when the whole vertical is done — route + client wrapper + test + CI entry + doc line — not when the happy path compiles.
 3. Run **verify-slice** for the touched areas.
 4. Run **docs-sync** — progress board plus whatever the change touched.
@@ -40,6 +40,6 @@ Keep the program moving without checking in after every slice.
 
 ## Bringing in a specialist
 
-Most slices do not need one. When a slice sits squarely in a domain seat's territory — ROM/DAT taxonomy, Unraid volume layout, accessibility audit, art direction — the matching subagent in `.claude/agents/` carries that context. Launch one only when the user asks for it; otherwise just do the work.
+Most slices do not need one. When a slice sits squarely in a domain seat's territory — ROM/DAT taxonomy, Unraid volume layout, accessibility audit, art direction — the matching subagent in `.cursor/agents/` carries that context. Launch one only when the user asks for it; otherwise just do the work.
 
 Locked defaults: [docs/dev/agent-locks.md](../../../docs/dev/agent-locks.md).

@@ -20,6 +20,7 @@ Run this **only** when the user explicitly asks to commit / push / PR / ship. Ne
 5. No secrets (`.env`, tokens, keys); never stage `docs/_private/`.
 6. Conventional commit: `feat|fix|chore|docs|refactor|test(scope): …`
 7. Author via `-c` flags only, never `git config`.
+8. **Prompt trees:** if `.cursor/skills`, `.cursor/agents`, or `.claude/` counterparts changed, run `python scripts/sync_prompt_trees.py` (or `--check` and fail on drift). Edit `.cursor/` only; the script mirrors into `.claude/`.
 
 ## Commit
 

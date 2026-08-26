@@ -6,8 +6,8 @@ Canonical map: [docs/strategy/docs-map.md](../../../docs/strategy/docs-map.md).
 
 | Artifact | Path |
 |---|---|
-| Progress board | `docs/strategy/progress.md` — Ship TLDR · Done · Next · Blocked |
-| Docs map | `docs/strategy/docs-map.md` |
+| Progress board (living head only) | `docs/strategy/progress.md` — Ship TLDR · Done · Next · Blocked |
+| Docs map | `docs/strategy/docs-map.md` — Status = Have/Update/Create + one clause |
 | Docs hub | `docs/README.md` |
 | Root README | `README.md` |
 | Env examples | `.env.example`, `.env.docker.example`, `.env.unraid.example`, `.env.nas.example` |

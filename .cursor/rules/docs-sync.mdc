@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Docs sync
 
-Do not claim more than the code does. Update the smallest existing doc; do not add a parallel guide. `docs/strategy/progress.md` is the board (Ship TLDR · Done · Next · Blocked).
+Do not claim more than the code does. Update the smallest existing doc; do not add a parallel guide. `docs/strategy/progress.md` is the **living** board (Ship TLDR · Done · Next · Blocked) — do not append wave diaries or paste QA PASS strings into docs-map Status cells.
 
 Never introduce Class A / warez-adjacent brand names. Never commit `docs/_private/`. Capability language only for non-goals.
 

@@ -17,6 +17,8 @@ finding here has since been fixed, the fix is recorded in the root
 | [review-2026-08-03-findings.md](review-2026-08-03-findings.md) | 2026-08-03 | Full-program review; 9 defects found and fixed, first full pytest run on record |
 | [gap-review-2026-08-05.md](gap-review-2026-08-05.md) | 2026-08-05 | What was missing, half-done or subpar after the W23/W25/W26 waves |
 | [code-review-2026-08-06.md](code-review-2026-08-06.md) | 2026-08-06 | Static passes over the whole codebase plus a full pytest run |
+| [progress-waves-2026-07-08.md](progress-waves-2026-07-08.md) | 2026-07-08 → 2026-08-26 | W4–W28 wave diary formerly in `progress.md` |
+| [superpowers-2026-07/](superpowers-2026-07/README.md) | 2026-07 | July design specs, plans, and Wave 2 handoff |
 
 Archived 2026-08-16. The decisions these locked in are summarised in
 [progress.md](../progress.md); the scrub policy they fed lives in

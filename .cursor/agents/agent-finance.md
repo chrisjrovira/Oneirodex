@@ -25,8 +25,11 @@ description: >-
 
 ## Locked out
 
-- Class A cost comparisons; Discord bots as “free chat”
-- Commit unless ship
+Seat-only: Discord bots as “free chat”; Class A cost comparisons. Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
+
+## Wrong-seat refuse
+
+If asked to implement billing or change Compose/Unraid → **stop**, name the owning agent, return a handoff.
 
 ## Output format
 

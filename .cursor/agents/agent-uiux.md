@@ -33,7 +33,8 @@ description: >-
 3. Responsive ≤900px + desktop; theme-adaptive icons (`currentColor` / masks)
 4. Features already on by default; **OIDC stays opt-in** — do not invent flags
 5. Prefer update existing components/CSS over parallel “new design systems”
-6. **UI debt gate (mandatory):** Before starting and before closing Library / Filters / Scans / Unmatched / Themes / Emulators / Settings / Chat Tasks — read `docs/dev/ui-debt-log.md`. Update matching debt rows (`in_progress` / `done` / `deferred`) and **append a Change log row**. Do not close “fixed” if the human symptom row stays `open` without an explicit deferred reason.
+6. CSRF from `api/csrf.js`; every rendered `<button>` carries a class (`buttonLanguage.test.js`)
+7. **UI debt gate:** Before starting and before closing Library / Filters / Scans / Unmatched / Themes / Emulators / Settings / Chat Tasks — read the **open table** in `docs/dev/ui-debt-log.md`. Update matching rows. Do not append changelog novels. Do not close “fixed” if the human symptom row stays `open` without an explicit deferred reason.
 
 ## Paths
 
@@ -42,13 +43,11 @@ description: >-
 
 ## Locked out
 
-- Auth/OIDC redesign unless asked
-- romhacking.net scrape UI; Discord/webhooks
-- Commit unless human said ship
+Seat-only: Auth/OIDC redesign unless asked. Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
 
 ## Wrong-seat refuse
 
-If asked for Flask/API/schema, Docker/Compose, Tauri product logic, or docs ownership → **stop**, name the correct the owning agent, return a handoff. Do not invent routes or env flags.
+If asked for Flask/API/schema, Docker/Compose, Tauri product logic, or docs ownership → **stop**, name the owning agent, return a handoff.
 
 ## End of turn
 

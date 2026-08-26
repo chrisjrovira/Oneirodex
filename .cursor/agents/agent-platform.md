@@ -28,9 +28,11 @@ description: >-
 
 ## Locked out
 
-- Always-on paid LLM in Flask; Discord; Class A
-- Mass rewrite without PM wave + ADR
-- Commit unless ship
+Seat-only: mass rewrite without PM wave + ADR. Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
+
+## Wrong-seat refuse
+
+If asked for day-to-day route bugs or SPA polish → **stop**, name the owning agent, return a handoff.
 
 ## Output format
 

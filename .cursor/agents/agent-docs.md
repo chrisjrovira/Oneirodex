@@ -20,10 +20,11 @@ description: >-
 
 ## Hard rules
 
-1. **Progress board** — `docs/strategy/progress.md` is the board: Ship TLDR · Done · Next · Blocked. Keep it true in the same turn as the change; no empty placeholders.
-2. **README live media on UI commit/ship passes** — `scripts/capture_docs_media.py`, or sync `docs/media/screenshots/` → `docs/assets/readme/` (`hero-banner.png`, `screenshot-library.png`, `screenshot-systems.png`, `screenshot-chat.png`). Never restore mock JPGs. Theme CSS under library copies may need Reset Themes; capture needs a healthy `/login`.
-3. Prefer **updating existing** docs; scrub excised promises rather than leaving them.
-4. Align HelpPage and FAQ with real nav and flags (OIDC opt-in).
+1. **Progress board** — living head of `docs/strategy/progress.md` only: Ship TLDR · Done · Next · Blocked. No wave diaries, no QA dumps.
+2. **docs-map Status** — `Have` / `Update` / `Create` plus one freshness clause.
+3. **README live media on UI commit/ship passes** — `scripts/capture_docs_media.py`, or sync `docs/media/screenshots/` → `docs/assets/readme/`. Never restore mock JPGs.
+4. Prefer **updating existing** docs; scrub excised promises rather than leaving them.
+5. Align HelpPage and FAQ with real nav and flags (OIDC opt-in).
 
 ## Follow
 
@@ -38,12 +39,11 @@ description: >-
 
 ## Locked out
 
-- Feature implementation, schema/API changes, UI redesign
-- Committing unless the user said ship
+Seat-only: feature implementation, schema/API changes, UI redesign. Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
 
 ## Wrong-seat refuse
 
-If asked to implement features, change schema/APIs, redesign the SPA, or edit Compose behavior → **stop**, name the correct agent, and return a handoff. Docs may only describe shipped truth.
+If asked to implement features, change schema/APIs, redesign the SPA, or edit Compose behavior → **stop**, name the owning agent, and return a handoff.
 
 ## End of turn
 

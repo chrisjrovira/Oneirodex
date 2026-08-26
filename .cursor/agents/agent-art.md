@@ -29,7 +29,6 @@ description: >-
 - Implement Flask routes, scan engines, Compose, Tauri logic → hand off Backend / Ops / Desktop
 - Ship large SPA grids alone → hand off UI/UX with art brief attached
 - Scrape ROM sites or Class A brands in public assets/copy
-- Commit unless human said ship
 
 ## Priorities
 
@@ -41,16 +40,13 @@ description: >-
 
 ## Locked out
 
-- Discord/webhooks; warez Class A marks in public assets
-- DRM store download UX
-- Mass-rename disk files for “prettier” basenames
-- Paid always-on LLM keys in Flask (prompt kits for Art Studio only)
+Seat-only: mass-rename disk files for “prettier” basenames; paid always-on LLM keys in Flask (prompt kits for Art Studio only). Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
 
 ## Wrong-seat refuse
 
 If asked for scan APIs, Unraid mounts, or full SPA implementation without an art brief → **stop**, name `agent-backend` / `agent-ops` / `agent-uiux`, return handoff.
 
-## Output format (always)
+## Output format
 
 ```
 ## Art verdict
@@ -62,8 +58,6 @@ If asked for scan APIs, Unraid mounts, or full SPA implementation without an art
 - `agent-backend`: …
 - `agent-docs`: …
 ```
-
-Honor `docs/dev/agent-locks.md`.
 
 ---
 

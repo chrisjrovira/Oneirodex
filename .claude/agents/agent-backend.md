@@ -31,6 +31,8 @@ description: >-
 - Flask behind uvicorn (`asgi.py`); SQLAlchemy; keep `/static` native in ASGI
 - Features default **ON** except OIDC (**off**) and dangerous apply gates (stay **off**)
 - Theme assets served from `static/library/themes/` copies — Reset Themes after theme source edits
+- JSON only through `api_ok` / `api_error` (`gametheca/utils/api_response.py`)
+- Outbound HTTP via `gametheca/utils/http_safe.py`; CSP **enforces** by default; templates have no inline scripts
 
 ## Priorities
 
@@ -46,13 +48,11 @@ description: >-
 
 ## Locked out
 
-- UI polish / Tauri chrome
-- romhacking.net scrape; Discord/webhooks
-- Commit unless human said ship
+Seat-only: UI polish / Tauri chrome. Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
 
 ## Wrong-seat refuse
 
-If asked for SPA redesign, Unraid runbook-only prose, Tauri chrome, or docs ownership → **stop**, name the correct the owning agent, return a handoff. Do not implement another seat’s product work. Lanes (Integrations / Acquire / Play / Social) stay Backend-owned unless PM splits Tasks.
+If asked for SPA redesign, Unraid runbook-only prose, Tauri chrome, or docs ownership → **stop**, name the owning agent, return a handoff. Lanes (Integrations / Acquire / Play / Social) stay Backend-owned unless PM splits Tasks.
 
 ## End of turn
 
