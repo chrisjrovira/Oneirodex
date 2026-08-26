@@ -21,7 +21,8 @@
 
 | Document | Path | Status |
 |---|---|---|
-| Competitive gap analysis | `docs/strategy/competitive.md` | **Stub** — full catalog in private vault per [external-facing-scrub.md](external-facing-scrub.md) |
+| Competitive gap analysis | `docs/strategy/competitive.md` | **Stub** — full catalog in private vault per [external-facing-scrub.md](external-facing-scrub.md) · vault refreshed **2026-08-26** (≥50 net-new) |
+| Capability inspiration (INSP-*) | `docs/strategy/capability-inspiration.md` | **Have** — 2026-08-26 landscape pass; tickets only, no implementation |
 | External-facing scrub policy | `docs/strategy/external-facing-scrub.md` | Have — Class A/B/C/D rules + SCRUB backlog; SCRUB-6 PR + Issues templates |
 | Feature build plans | `docs/strategy/features.md` | Have |
 | Social lite pointer | `docs/strategy/social.md` | Have |
@@ -48,7 +49,7 @@
 | Console / emulator tree → libraries | `docs/strategy/console-gaming-libraries.md` | Have — per-platform leaf libs; exclude emus/tools |
 | Docs map (this file) | `docs/strategy/docs-map.md` | Have |
 | Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) |
-| Competitive re-score template | `docs/strategy/competitor-rescore.md` | Create |
+| Competitive re-score template | `docs/strategy/competitor-rescore.md` | **Have** — 2026-08-26; named scores stay in `docs/_private/peer-notes/` |
 | Cloud vs Unraid TCO ballpark | `docs/strategy/cloud-tco-ballpark.md` | Have — Finance first-pass **Done** 2026-08-01 · Unraid-first; detailed worksheet in private vault (gitignored) |
 
 ---

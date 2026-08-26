@@ -9,6 +9,8 @@ Read in this order:
 | # | Doc | Purpose |
 |---|---|---|
 | 1 | [competitive.md](competitive.md) | Private vault pointer (peer catalogs gitignored) |
+| 1b | [capability-inspiration.md](capability-inspiration.md) | INSP-* tickets from the 2026-08-26 landscape pass (capability language) |
+| 1c | [competitor-rescore.md](competitor-rescore.md) | Empty re-score rubric — named scores stay private |
 | 2 | [roadmap.md](roadmap.md) | North star, quarters, milestones, current focus |
 | 2b | [scope.md](scope.md) | How scope is recorded — unscheduled ≠ refused |
 | 3 | [v1-readiness.md](v1-readiness.md) | Official 1.0.0 gate — keep-and-enhance + Ops |

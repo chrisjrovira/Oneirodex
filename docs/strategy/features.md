@@ -1,7 +1,7 @@
 # Feature Build Plans
 
 **Date:** 2026-07-23 · **Updated:** 2026-07-29  
-**Companion:** private competitive catalog in `docs/_private/` — see [external-facing-scrub.md](external-facing-scrub.md)  
+**Companion:** private competitive catalog in `docs/_private/` — see [external-facing-scrub.md](external-facing-scrub.md) · public tickets [capability-inspiration.md](capability-inspiration.md)  
 Each plan is implementation-ready at the *decision* level (scope, files, risks, tests) — not pre-written code.
 
 ---
