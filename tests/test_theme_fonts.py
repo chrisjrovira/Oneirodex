@@ -103,3 +103,78 @@ class TestFontFaceCss:
             assert 'mylicensedface' in catalogue
             assert catalogue['mylicensedface']['era'] == 'operator'
             assert catalogue['mylicensedface']['installed'] is True
+
+
+@pytest.fixture
+def font_member(db_session):
+    """A member whose preferences pin a non-default face."""
+    from uuid import uuid4
+
+    from gametheca.models import User, UserPreference
+
+    user_uuid = str(uuid4())
+    user = User(
+        name=f'fontuser_{user_uuid[:8]}',
+        email=f'font_{user_uuid[:8]}@example.com',
+        role='user',
+        user_id=user_uuid,
+    )
+    user.set_password('testpassword123')
+    db_session.add(user)
+    db_session.commit()
+
+    db_session.add(UserPreference(user_id=user.id, font='vt323'))
+    db_session.commit()
+    return user
+
+
+class TestFontsCssRoute:
+    """`GET /api/theme/fonts.css` — the only thing that declares the families.
+
+    The route read `current_user` while the module imported just
+    `login_required`, so every request raised `NameError` and 500'd: the
+    @font-face block and the per-account preference reached no page at all,
+    signed in or out. Nothing exercised the route, only the registry beneath
+    it — which is why a plain missing import survived.
+    """
+
+    def test_signed_out_falls_back_to_the_default_face(self, client):
+        """Deliberately unauthenticated — the login page renders in it too."""
+        response = client.get('/api/theme/fonts.css')
+
+        assert response.status_code == 200
+        assert response.headers['Content-Type'].startswith('text/css')
+        body = response.get_data(as_text=True)
+        assert '--gt-font-family:' in body
+        assert BUILT_IN_FONTS[DEFAULT_FONT_ID]['stack'] in body
+
+    def test_signed_in_gets_the_account_preference(self, client, font_member):
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(font_member.id)
+            sess['_fresh'] = True
+
+        response = client.get('/api/theme/fonts.css')
+
+        assert response.status_code == 200
+        body = response.get_data(as_text=True)
+        assert BUILT_IN_FONTS['vt323']['stack'] in body
+
+    def test_query_override_beats_the_preference(self, client, font_member):
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(font_member.id)
+            sess['_fresh'] = True
+
+        body = client.get('/api/theme/fonts.css?font=orbitron').get_data(as_text=True)
+
+        assert BUILT_IN_FONTS['orbitron']['stack'] in body
+
+    def test_installed_faces_get_their_font_face_rules(self, client, app, tmp_path):
+        """Without these the files are installed and the picker lists them, but
+        no page ever declares the families — the feature is inert."""
+        app.config['FONT_PATH'] = str(tmp_path)
+        (tmp_path / 'VT323-Regular.ttf').write_bytes(b'\x00\x01\x00\x00')
+
+        body = client.get('/api/theme/fonts.css').get_data(as_text=True)
+
+        assert '@font-face' in body
+        assert "src: url('/static/library/fonts/VT323-Regular.ttf')" in body
