@@ -110,6 +110,7 @@ Expected if `SUPPORT_GITHUB_TOKEN` unset (`github_sync=skipped`). Ticket + admin
 
 | Symptom | Check |
 |---|---|
+| **Browse** does nothing on Scan management — no folder list, no spinner, no error | **Fixed 2026-08-25.** Not a permissions or mount problem: the button had no click handler at all. The page activated its tab strip by ids the current chrome (`ENABLE_NEW_CHROME`, **on** by default) no longer renders, which threw and aborted the rest of the page's startup script before the Browse wiring ran. The scan-location picker staying hidden and the active tab not surviving a reload are the **same** fault, not separate ones. Rebuild/restart, then **Admin → Themes → Reset Themes** so `admin_manage_scanjobs.js` refreshes. Still dead afterwards? Open the browser console and look for `TypeError … reading 'closest'` — if it names a *different* script, that page has the same class of bug. — [themes-reset.md](themes-reset.md) · [remote-scan-locations.md](../runbooks/remote-scan-locations.md) |
 | Listing finds many games but each identify takes forever | Fixed: scan identify no longer walks the whole game tree for size before commit; size fills in background. Restart app / re-run scan after upgrade. |
 | Size shows `0.00 KB` briefly after scan | Expected until deferred size job finishes (large Unraid trees). |
 | Progress stuck at 1 while library keeps growing | Fixed: multithreaded counter races + Stop early-exit. Redeploy app; counters use atomic bumps and Stop drains in-flight work. |
