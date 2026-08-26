@@ -60,7 +60,12 @@ test('ExtensionsPage lists extensions and supports add/remove happy path', async
   try {
     render(<ExtensionsPage />)
     expect(await screen.findByRole('heading', { name: 'File Extensions' })).toBeInTheDocument()
-    expect(screen.getByText('.zip')).toBeInTheDocument()
+    // The heading is written in the loading branch as well as the loaded one, so
+    // awaiting it says nothing about the fetch having resolved — it can be
+    // satisfied by the skeleton. The chips only exist once `loading` flips, so
+    // the first one gets `findByText`. Everything below it comes out of the same
+    // `sections.map` in that same commit and can stay synchronous.
+    expect(await screen.findByText('.zip')).toBeInTheDocument()
     expect(screen.getByText('.iso')).toBeInTheDocument()
     expect(screen.getByText('.nes')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Archives' })).toBeInTheDocument()
@@ -105,7 +110,11 @@ test('App route /admin/extensions mounts Extensions UI', async () => {
       </MemoryRouter>,
     )
     expect(await screen.findByRole('heading', { name: 'File Extensions' })).toBeInTheDocument()
-    expect(screen.getByText(/library scan recognition/i)).toBeInTheDocument()
+    // Same reason as the chip await above, and this test mounts the full App
+    // router on top of it, so the page arrives over more commits still. The lede
+    // is loaded-branch-only; `findByText` waits for it instead of asserting that
+    // it committed alongside a heading the skeleton already satisfied.
+    expect(await screen.findByText(/library scan recognition/i)).toBeInTheDocument()
   } finally {
     global.fetch = originalFetch
   }
