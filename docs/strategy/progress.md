@@ -131,6 +131,16 @@ foundation for the rest rather than a one-page fix.
 | **Guards** | `cssTokenLint.test.js` 3 → 6: the rule sees JSX literals, skips data-driven styles (`background: option.color` is not a design decision), and reports the offending value rather than `undefined`. |
 | **Trap recorded** | A block comment carrying inline code samples made **vitest fail to parse the module** while node and esbuild accepted it in every loader mode. Bisected to the comment, not the code. See [ui-debt-log UID-030](../dev/ui-debt-log.md) — suspect comments first if it recurs. |
 
+### Theme fonts never reached any page (2026-08-25)
+
+| | |
+|---|---|
+| **Shipped** | `GET /api/theme/fonts.css` raised `NameError: current_user` on **every** request — `routes_apis/providers.py` imported only `login_required` from `flask_login`. One missing name, and the route that emits the `@font-face` blocks and sets `--gt-font-family` 500'd for every visitor, signed in or out. The whole font feature was inert: files installed, picker populated, preference saved, and no page ever declaring a family. Fixed by importing the name. |
+| **Why it survived** | `tests/test_theme_fonts.py` covered the registry beneath the route thoroughly — catalogue, licence stance, resolution, `@font-face` emission — and never issued a request. Everything the util promised was true; nothing checked that the delivery route ran. A plain missing import is exactly what util-only coverage cannot see. |
+| **Guards** | Four route tests added to `tests/test_theme_fonts.py`: signed-out falls back to `DEFAULT_FONT_ID`, signed-in gets the account preference, `?font=` overrides it, and installed faces get their `@font-face` rules. Three of the four fail with the import removed. |
+| **Envelope note** | The route returns `text/css`, not JSON, so it is deliberately outside `api_ok`/`api_error`. Left that way; both ratchets clean. |
+| **Docs gap closed** | `theme-fonts-and-images.md` listed `/api/theme/fonts` and the two admin routes but not `fonts.css` — the one that actually makes the feature visible. Now documented, with its unauthenticated-on-purpose rationale. |
+
 > **Reading this file.** The header is current; the wave tables below are a running log kept in
 > the order things happened, so a row states what was true when it was written. Where a row and the
 > CHANGELOG disagree about status, the CHANGELOG wins.

@@ -2,7 +2,7 @@
 
 from gametheca.utils.api_response import api_error, api_ok
 from flask import jsonify, request
-from flask_login import login_required
+from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from gametheca import db

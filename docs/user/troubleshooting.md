@@ -10,6 +10,7 @@ Quick checks before pinging an admin.
 | Spin forever / Discover stuck on Loading while nav works | Old image without ASGI SSE fix, or companion SSE holding the only worker | Ask admin to rebuild from current tree (not restart alone) — [admin troubleshooting](../admin/troubleshooting.md#spa-navigates-but-pagesadmin-hang-discover-stuck-on-loading). Clear site data if Friends dock was stuck open. |
 | Spin forever (API 401/500) | Auth / server error | Hard refresh; re-login; admin check `/readyz` + logs |
 | Theme didn’t apply | Server predates the constant-folding fix | Fixed — see [below](#a-new-theme-doesnt-appear-after-reload). On an older build only a server restart applied a theme change. |
+| Font pref changed nothing | Server predates the `fonts.css` fix | Fixed — see [below](#the-font-preference-had-no-effect). On an older build no font choice, including the default, ever reached the page. |
 | Can’t find a page | Nav clutter | **Ctrl+K** / ⌘K command palette — [faq.md](faq.md) |
 | Chat cramped on phone | Old frontend build | Admin rebuild `member-app` (Chat slide-out stacks ≤900px) |
 | Huge tiles on phone | Pref L/XL before density polish | Rebuild; tiles clamp automatically under 900px |
@@ -30,6 +31,20 @@ render. The `<html data-theme>` attribute is a variable, never folded, which is
 why the page correctly *announced* the new theme while wearing the old one.
 
 If you are on a build from before this fix, a server restart is the workaround.
+
+### The font preference had no effect
+
+**Fixed.** Preferences → **Font** saved your choice and the picker listed every
+face, but nothing on any page ever changed — including back to the default.
+
+The stylesheet that declares the font families, `/api/theme/fonts.css`, failed
+on every request with a server error. So the `@font-face` rules were never
+delivered and `--gt-font-family` was never set: the browser fell through to its
+own defaults no matter what was chosen. It affected everyone equally, signed in
+or out, which is why it did not look preference-shaped.
+
+There is no workaround on a build from before this fix — the fix is a server
+update.
 
 ## Downloads
 

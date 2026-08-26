@@ -129,8 +129,19 @@ Systems with no opinion fall back to `system-ui`.
 | Method | Route | Who |
 |---|---|---|
 | `GET` | `/api/theme/fonts` | any signed-in member — catalogue + `installed` flags |
+| `GET` | `/api/theme/fonts.css` | **anyone, signed in or not** — the stylesheet itself |
 | `POST` | `/admin/api/theme/fonts` | admin — upload |
 | `DELETE` | `/admin/api/theme/fonts/<filename>` | admin — remove an uploaded face |
+
+`fonts.css` is the route that makes the feature visible: it emits the
+`@font-face` blocks for every installed face and sets `--gt-font-family` from
+the caller's preference (`?font=<id>` overrides it; unknown ids fall back to
+`system-ui`). Installing the files and listing them in the picker does nothing
+on its own — without this stylesheet no page ever declares the families.
+
+Unauthenticated on purpose: public CSS for public font files, so the login page
+renders in the household face too. Cached for 60s, so a font upload or a
+preference change shows up promptly rather than instantly.
 
 ---
 
