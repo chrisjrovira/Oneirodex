@@ -3,7 +3,6 @@ import sys, os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from flask_mail import Mail
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
 from flask_sqlalchemy import SQLAlchemy
@@ -19,7 +18,6 @@ from gametheca.utils.icon_themes import icon_pack_css_url
 
 db = SQLAlchemy()
 login_manager = LoginManager()
-mail = Mail()
 cache = Cache(config={'CACHE_TYPE': 'SimpleCache'})
 csrf = CSRFProtect()
 app_start_time = datetime.now()
@@ -71,7 +69,6 @@ def create_app():
     check_postgres_port_open(parsed_url.hostname, 5432, 60, 2)
     db.init_app(app)
     login_manager.init_app(app)
-    mail.init_app(app)
     login_manager.login_view = 'login.login'
     cache.init_app(app)
 

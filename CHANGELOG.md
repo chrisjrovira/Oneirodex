@@ -147,6 +147,13 @@ contract had drifted across `0.1.0` and `0.2.0` and now all read `1.0.0-beta`.
 
 Work since the 1.0.0-beta tag (2026-08-06).
 
+### Security
+
+- **Child ACL on tokens, Acquire, and companion commands.** Session-cookie deny for `write:download` / `write:library` / `admin` now also applies to Bearer tokens, so an already-minted companion secret cannot be used by a child. Children cannot create those scopes (including the Desktop companion preset); Acquire search returns 403; `POST /api/client/commands` for download/install/update/uninstall/patch/mod-pack requires `write:download`. Thin-client tokens still work.
+- **Provider cover fetch follows the same SSRF gate as `download_image`.** IGDB / SteamGridDB / GiantBomb / Meta Quest `fetch_image` went through raw `requests.get`. They now use `fetch_outbound_image` (`http_safe.safe_get` + `validate_user_outbound_http_url` on every redirect hop).
+- **Newsletter no longer depends on Flask-Mail or the CKEditor CDN.** Send uses `smtp.send_email_quiet` like invites; the compose page is a textarea. CSP no longer allowlists `cdn.ckeditor.com`.
+- **Edit Images no longer interpolates upload URLs into `innerHTML`.** Needs **Reset Default Themes** so the theme-volume copy of `game_edit_images.js` refreshes.
+
 ### Added
 
 - **Report takes ideas as well as defects.** "Report issue" collected feature requests into the same

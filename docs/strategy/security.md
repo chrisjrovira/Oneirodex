@@ -1,9 +1,11 @@
 # Security suite — GameTheca
 
 **Date:** 2026-07-26 · **Updated:** 2026-08-25 · **Status:** active  
-**Second pass (2026-08-25):** full audit + remediation Phases 0–4 shipped —
-[security-legal-playbook.md](security-legal-playbook.md) carries the findings, the evidence and the
-remaining phases. Summary of what changed is in [What Phases 0–4 shipped](#what-phases-04-shipped) below.  
+**Second pass (2026-08-25):** full audit + remediation Phases 0–6 shipped —
+[security-legal-playbook.md](security-legal-playbook.md) carries the findings, the evidence, and
+what stays open on purpose (CSP report-only, WebRetro licence). Child Bearer/Acquire/command ACL
+and provider `fetch_image` SSRF landed after that playbook. Summary of the original pass is in
+[What Phases 0–4 shipped](#what-phases-04-shipped) below.  
 **Related:** [social-av.md](social-av.md) · full-app review canvas · **malware (shipped):** `ENABLE_MALWARE_SCAN` + heuristics + optional ClamAV — [settings-modules.md](../admin/settings-modules.md) · **post-1.0 nice-to-have:** [native-malware-scan.md](native-malware-scan.md) (MAL-N1…N5 — native engine; ClamAV stays optional until cutover)
 
 ## Baseline (already strong)
@@ -33,7 +35,7 @@ remaining phases. Summary of what changed is in [What Phases 0–4 shipped](#wha
 | P1 | Arr/Ollama connector URL private-IP policy (LAN homelab flag) | **Done** — `ALLOW_PRIVATE_LAN_URLS` |
 | P1 | OIDC role overwrite policy (lock after provision) | **Done** — `OIDC_LOCK_ROLES` (default true) |
 | P1 | CSRF on client lifecycle POST (Bearer-only or CSRF) | **Done** — Bearer required on lifecycle POST |
-| P2 | Login rate limit · export path leakage · acquire search for children · username enum | **Partial** — rate limit · O9 enum · O10 portable ES-DE/Pegasus paths shipped |
+| P2 | Login rate limit · export path leakage · username enum | **Partial** — rate limit · O9 enum · O10 portable ES-DE/Pegasus paths shipped. **Acquire search is denied for `child` accounts.** |
 
 ## What Phases 0–4 shipped
 
@@ -49,7 +51,7 @@ Full findings, evidence and the remaining phases: [security-legal-playbook.md](s
 | S6 | API tokens never expired | `api_tokens.expires_at` — **NULL = never**, so no live companion is logged out by the upgrade; `generate_api_token(..., expires_in_days=)` opt-in |
 | S7 | 3 high + 1 moderate npm advisories | `npm audit fix` — both SPAs at zero. No `package.json` change; lockfiles only |
 | S8 | `next=/\evil.com` passed the `netloc != ''` check | `utils/auth.safe_next_url` — positive rule: one leading `/`, no scheme, no authority |
-| S10 | Session-cookie `child` got every non-admin scope | `_SESSION_SCOPE_DENY` removes `admin` · `write:library` · `write:download` from `child` |
+| S10 | Session-cookie `child` got every non-admin scope | `_SESSION_SCOPE_DENY` removes `admin` · `write:library` · `write:download` from `child` on **session and Bearer**. Children cannot mint those scopes (including the companion preset). Acquire search and companion download/install commands are denied. |
 | S11 | `require_api_scope` returned bare `jsonify({'error': …})` | Routed through `api_error`; envelope baseline tightened 151 → 149 |
 
 ### Phases 5–6 — licensing and legal surface

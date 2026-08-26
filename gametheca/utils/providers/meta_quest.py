@@ -26,6 +26,7 @@ from gametheca.utils.providers.base import (
     ImageSearchResult,
     MetadataImageProvider,
     ProviderDisabledError,
+    fetch_outbound_image,
     mask_api_key,
 )
 from gametheca.utils.providers.igdb import igdb_credentials_configured
@@ -281,9 +282,4 @@ class MetaQuestProvider(MetadataImageProvider):
 
     def fetch_image(self, url: str) -> tuple[bytes, str | None]:
         self._require_enabled()
-        if not url.startswith(('http://', 'https://')):
-            raise ValueError('Image URL must be absolute http(s)')
-        response = requests.get(url, timeout=DEFAULT_TIMEOUT)
-        if response.status_code != 200:
-            raise RuntimeError(f'Failed to download image ({response.status_code})')
-        return response.content, response.headers.get('Content-Type')
+        return fetch_outbound_image(url, timeout=DEFAULT_TIMEOUT)

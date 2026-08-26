@@ -16,6 +16,7 @@ from sqlalchemy import select
 from gametheca import db, login_manager
 from gametheca.models import ApiToken, User
 from gametheca.utils.api_response import api_error
+from gametheca.utils.rbac import normalize_role
 
 VALID_SCOPES = frozenset({
     'read:library',
@@ -41,6 +42,18 @@ TOKEN_PREFIX = 'gt_'
 # Public prefix is secrets.token_hex(4); secret is secrets.token_urlsafe(32).
 _RAW_TOKEN_RE = re.compile(r'^gt_[0-9a-f]{8}_[A-Za-z0-9_-]+$')
 _logger = logging.getLogger(__name__)
+
+# Scopes a role may never hold — session cookie *or* Bearer. W31 S10 only
+# narrowed the session path; a child could still mint `write:download` and the
+# bearer branch in user_has_scope skipped this map entirely.
+_SESSION_SCOPE_DENY = {
+    'child': frozenset({'admin', 'write:library', 'write:download'}),
+}
+
+
+def forbidden_scopes_for_role(role: str | None) -> frozenset[str]:
+    """Scopes this role must never be granted, including on an API token."""
+    return _SESSION_SCOPE_DENY.get(normalize_role(role), frozenset())
 
 
 def _hash_secret(secret: str) -> str:
@@ -76,11 +89,21 @@ def generate_api_token(
     ``expires_in_days=None`` keeps the historical behaviour — a token that lives
     until it is revoked. Callers that can afford an expiry should set one.
     """
+    denied = forbidden_scopes_for_role(getattr(user, 'role', None))
     cleaned = []
+    rejected = []
     for scope in scopes or ['read:library']:
         scope = (scope or '').strip()
-        if scope in VALID_SCOPES and scope not in cleaned:
-            cleaned.append(scope)
+        if scope not in VALID_SCOPES or scope in cleaned:
+            continue
+        if scope in denied:
+            rejected.append(scope)
+            continue
+        cleaned.append(scope)
+    if rejected:
+        raise ValueError(
+            'scopes not allowed for this account: ' + ', '.join(rejected)
+        )
     if not cleaned:
         cleaned = ['read:library']
 
@@ -201,32 +224,26 @@ def load_user_from_request(req):
     return user
 
 
-# Scopes a session-cookie caller gets purely by being signed in, per role.
-# Everything a `child` may do is gated by the library ACL and per-route role
-# checks anyway — this stops `require_api_scope` from being the *only* gate and
-# silently handing a child write scopes it never needs.
-_SESSION_SCOPE_DENY = {
-    'child': frozenset({'admin', 'write:library', 'write:download'}),
-}
-
-
 def user_has_scope(scope: str) -> bool:
     if not current_user.is_authenticated:
+        return False
+    role = normalize_role(getattr(current_user, 'role', None))
+    # Role deny-list wins over a Bearer token that already carries the scope
+    # (tokens minted before this gate, or a companion preset a child should
+    # never have been able to create).
+    if scope in forbidden_scopes_for_role(role):
         return False
     token = getattr(g, 'api_token', None)
     if token is not None:
         return token.has_scope(scope)
 
-    # Session cookie: admins get every scope; everyone else gets the non-admin
-    # set, minus whatever their role is explicitly denied.
-    from gametheca.utils.rbac import normalize_role
-
-    role = normalize_role(getattr(current_user, 'role', None))
+    # Session cookie: admins get every remaining scope; everyone else gets the
+    # non-admin set, minus whatever their role is explicitly denied (above).
     if role == 'admin':
         return True
     if scope == 'admin':
         return False
-    return scope not in _SESSION_SCOPE_DENY.get(role, frozenset())
+    return True
 
 
 def require_api_scope(scope: str):

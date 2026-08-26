@@ -69,6 +69,66 @@ describe('CSRF handling lives in one module', () => {
   })
 })
 
+/**
+ * The api/ tests above are not enough. CSRF copies grew back in pages,
+ * components, and hooks (NotificationsPage went meta-only again) because the
+ * ratchet never looked there. This walk is the whole member SPA source tree.
+ * Every file must be zero — there is no baseline map to absorb a new copy.
+ */
+const SRC_ROOT = path.resolve(API_DIR, '..')
+
+function walkSrcFiles(dir = SRC_ROOT, acc = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules') continue
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      walkSrcFiles(full, acc)
+      continue
+    }
+    if (!/\.(js|jsx)$/.test(entry.name)) continue
+    // Production modules only. Tests may set a meta tag or assert the header
+    // object csrfHeaders() produced; those are not local lookup copies.
+    if (/\.test\.(js|jsx)$/.test(entry.name)) continue
+    const rel = path.relative(SRC_ROOT, full).split(path.sep).join('/')
+    if (rel === 'api/csrf.js' || rel === 'api/envelopeError.js') continue
+    acc.push(rel)
+  }
+  return acc
+}
+
+const LOCAL_CSRF_DEF =
+  /^\s*(?:export\s+)?(?:async\s+)?(?:function|const)\s+(getCsrfToken|csrfToken|csrfHeaders)\b/
+const META_CSRF = /meta\[name=["']csrf-token["']\]/
+const HEADER_CSRF = /['"]X-CSRFToken['"]\s*:/
+
+function csrfOffendersIn(source) {
+  return source.split(/\r?\n/).flatMap((line, index) => {
+    if (LOCAL_CSRF_DEF.test(line) || META_CSRF.test(line) || HEADER_CSRF.test(line)) {
+      return [`${index + 1}: ${line.trim()}`]
+    }
+    return []
+  })
+}
+
+describe('CSRF handling lives in one module across src/', () => {
+  const files = walkSrcFiles().sort()
+
+  test('the walk finds production modules', () => {
+    expect(files.length).toBeGreaterThan(20)
+    expect(files).not.toContain('api/csrf.js')
+    expect(files).not.toContain('api/envelopeError.js')
+  })
+
+  test.each(files)('%s has no local CSRF lookup', (rel) => {
+    const source = fs.readFileSync(path.join(SRC_ROOT, rel), 'utf8')
+    expect(
+      csrfOffendersIn(source),
+      `import { csrfHeaders } from api/csrf.js instead — the shared chain is the `
+        + `superset, so a local copy can only be narrower`,
+    ).toEqual([])
+  })
+})
+
 describe('api wrappers report failures through the shared envelope helper', () => {
   test.each(sourceFiles())('%s', (name) => {
     const source = fs.readFileSync(path.join(API_DIR, name), 'utf8')

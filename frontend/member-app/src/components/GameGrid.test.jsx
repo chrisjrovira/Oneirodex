@@ -73,6 +73,17 @@ test('the row CSS does not re-add the gap it no longer owns', () => {
   expect(row.slice(0, row.indexOf('}'))).not.toMatch(/padding-bottom/)
 })
 
+test('library grid uses auto-fill so a lone tile stays tile-sized', () => {
+  const css = readFileSync(join(HERE, 'GameGrid.css'), 'utf8')
+  const start = css.indexOf(
+    '.game-library-container[data-library-grid]:not([data-library-virtual]) {',
+  )
+  expect(start).toBeGreaterThanOrEqual(0)
+  const block = css.slice(start, css.indexOf('}', start))
+  expect(block).toMatch(/repeat\(auto-fill/)
+  expect(block).not.toMatch(/auto-fit/)
+})
+
 test('findScrollParent finds the scrolling ancestor, not the window', () => {
   // The member shell locks the page and scrolls `.gt-shell__main` instead, so a
   // window virtualizer never advances and everything past the first screenful

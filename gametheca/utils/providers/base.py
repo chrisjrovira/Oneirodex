@@ -5,6 +5,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 
+from gametheca.utils.http_safe import safe_get
+from gametheca.utils.security import validate_user_outbound_http_url
+
 
 @dataclass(frozen=True)
 class ImageSearchResult:
@@ -58,6 +61,33 @@ class MetadataImageProvider(ABC):
     def config_hint(self) -> str:
         """Human-readable hint for enabling this provider."""
         return 'Configure provider credentials in environment or Admin settings.'
+
+
+def fetch_outbound_image(
+    url: str,
+    *,
+    timeout: int,
+    headers: dict | None = None,
+) -> tuple[bytes, str | None]:
+    """Download cover bytes through the same SSRF gate as ``download_image``.
+
+    Provider ``fetch_image`` used to call ``requests.get`` on the URL as given,
+    so a 302 from a valid CDN to a loopback host walked past the validator.
+    """
+    if not (url or '').startswith(('http://', 'https://')):
+        raise ValueError('Image URL must be absolute http(s)')
+    ok, result = validate_user_outbound_http_url(url)
+    if not ok:
+        raise ValueError(f'Blocked outbound URL: {result}')
+    response = safe_get(
+        result,
+        validator=validate_user_outbound_http_url,
+        timeout=timeout,
+        headers=headers,
+    )
+    if response.status_code != 200:
+        raise RuntimeError(f'Failed to download image ({response.status_code})')
+    return response.content, response.headers.get('Content-Type')
 
 
 def mask_api_key(key: str | None) -> str | None:

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import { csrfHeaders } from '../api/csrf'
+import { errorFromBody } from '../api/envelopeError'
 
 /**
  * Space rail — the spaces ("servers") a member belongs to, each expanding into
@@ -28,7 +30,7 @@ export function SpaceRail({
     try {
       const response = await fetch('/api/chat/spaces', { credentials: 'same-origin' })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Could not load spaces')
+      if (!response.ok) throw errorFromBody(data, response.status, 'Could not load spaces')
       setSpaces(Array.isArray(data.spaces) ? data.spaces : [])
     } catch (err) {
       setError(err.message || 'Could not load spaces')
@@ -52,14 +54,11 @@ export function SpaceRail({
       const response = await fetch('/api/chat/spaces/join', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '',
-        },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ token }),
       })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Could not join')
+      if (!response.ok) throw errorFromBody(data, response.status, 'Could not join')
       setInviteToken('')
       setJoinMsg(`Joined ${data.space?.name || 'space'}.`)
       await loadSpaces()

@@ -1,8 +1,8 @@
 # Official v1 readiness — program review
 
-**Date:** 2026-07-27  
+**Date:** 2026-07-27 · **Updated:** 2026-08-25  
 **Status:** Planning board (feed from the agent review — [../dev/agent-skills.md](../dev/agent-skills.md))  
-**Current ship track:** 0.2.0 → **1.0.0** only after caveats below are closed or explicitly deferred  
+**Current ship track:** **1.0.0-beta** — caveats below that still read 0.2.0 are historical; semver, Compose tag, and OpenAPI follow `VERSION`  
 **Program board:** [progress.md](progress.md)
 
 ## North-star decision (locked)
@@ -29,7 +29,7 @@
 | Area | Candidate | Purpose |
 |---|---|---|
 | Member SPA | `@tanstack/react-virtual` | Large library grids — **in use** on `GameGrid` (V1-UI-1 partial) |
-| Member SPA | `cmdk` | Command palette (planned Wave 0) |
+| Member SPA | `cmdk` | Command palette (**shipped** — Ctrl/Cmd+K) |
 | Member SPA | `@tanstack/react-query` | Fetch cache / loading consistency |
 | Member SPA | Wire `@gametheca/api-client` | Stop ad-hoc fetch drift |
 | Backend | Alembic | Versioned migrations (replace ad-hoc `updateschema.py` path) |
@@ -109,10 +109,10 @@ SMTP digest (existing) ──► daily / critical operator mail
 | ~~**Challenge bypass CH-1…CH-5**~~ | backend + ops | **Shipped** — profile `challenge`, max tier **5** — [challenge-bypass.md](challenge-bypass.md) |
 | ~~**Cover art studio ART-1…ART-3**~~ | uiux + backend | **Shipped** — [cover-art-studio.md](cover-art-studio.md) |
 | ~~**Mods MOD-1…2 · servers SRV-1…2**~~ | backend + ops | **Shipped** (APIs) — [game-servers-mods.md](game-servers-mods.md) |
-| **GOW-1 / GOW-2 remote play** | backend + desktop | **In flight** — [gow-remote-play.md](gow-remote-play.md) |
-| **LIGHT-1 / LIGHT-2 ambient lighting** | backend | **In flight** — [ambient-lighting.md](ambient-lighting.md) |
-| **Thin client TC-1** | backend + desktop | **In flight** — scopes + `device_kind` — [thin-client.md](thin-client.md) |
-| **Desktop MOD-3 + GOW-2 stub** | desktop | **In flight** — companion mod apply + Moonlight CTA |
+| **GOW-1 / GOW-2 remote play** | backend + desktop | **Shipped** — [gow-remote-play.md](gow-remote-play.md) |
+| **LIGHT-1 / LIGHT-2 ambient lighting** | backend | **Shipped** — [ambient-lighting.md](ambient-lighting.md) |
+| **Thin client TC-1** | backend + desktop | **Shipped** — scopes + `device_kind` — [thin-client.md](thin-client.md) |
+| **Desktop MOD-3 + GOW-2 stub** | desktop | **Shipped** — companion mod apply + Moonlight CTA |
 | Account settings still Jinja | uiux | Documented hybrid; migrate post-1.0 OK |
 | Multi-worker shared state | backend | Default `UVICORN_WORKERS=1` (Compose / Docker entrypoint); override to 2+ OK — documented |
 | Capture screenshots | docs / scripts | **Done** — Playwright recipe + `docs/media/` — [CAPTURE.md](../assets/readme/CAPTURE.md) |
@@ -133,11 +133,11 @@ SMTP digest (existing) ──► daily / critical operator mail
 | LIGHT-3 admin UI + member pref | After LIGHT-1/2 hooks |
 | GOW-3 party PIN · GOW-4 Compose profile docs | After GOW-1/2 |
 
-**1.0 scope (no separate 1.1 track):** CH-1…CH-5 **shipped** · ART-1…ART-3 **shipped** · MOD-1/2 + SRV-1/2 APIs **shipped** · GOW-1/2 · LIGHT-1/2 · TC-1 · Desktop MOD-3/GOW-2 **in flight**.
+**1.0 scope (no separate 1.1 track):** CH-1…CH-5 **shipped** · ART-1…ART-3 **shipped** · MOD-1/2 + SRV-1/2 APIs **shipped** · GOW-1/2 **shipped** · LIGHT-1/2 **shipped** · TC-1 **shipped** · Desktop MOD-3/GOW-2 **shipped**.
 
 ## Related
 
-- [progress.md](progress.md) — 0.2.0 execution  
+- [progress.md](progress.md) — 1.0.0-beta execution  
 - [roadmap.md](roadmap.md) — 12-month themes  
 - [thin-client.md](thin-client.md) — thin client guide (TC-1 in 1.0 scope)  
 - [bug-triage.md](bug-triage.md) — scrub status  

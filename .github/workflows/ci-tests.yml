@@ -83,6 +83,7 @@ jobs:
           tests/test_ssrf_hardening.py
           tests/test_image_upload_hardening.py
           tests/test_auth_hardening.py
+          tests/test_theme_js_guards.py
           tests/test_vendor_licensing.py
           tests/test_legal_surface.py
           tests/test_rbac_unit.py

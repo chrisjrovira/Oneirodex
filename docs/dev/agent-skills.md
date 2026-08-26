@@ -1,14 +1,15 @@
 # GameTheca agent skills and agents
 
-Token-efficient workflows for maintainers. Everything lives under `.claude/`:
+Token-efficient workflows for maintainers. Canonical copies live in **both** trees so Cursor and Claude Code resolve the same seats:
 
-| What | Where | Invoked |
-|---|---|---|
-| **Skills** — workflows | `.claude/skills/<name>/SKILL.md` | By name (`/<name>`) or automatically when the description matches |
-| **Agents** — domain seats | `.claude/agents/<name>.md` | Launched deliberately when a slice sits in that domain |
-| **Locks** — product + engineering defaults | [agent-locks.md](agent-locks.md) | Always apply; never re-ask |
+| What | Claude Code | Cursor | Invoked |
+|---|---|---|---|
+| **Skills** — workflows | `.claude/skills/<name>/SKILL.md` | `.cursor/skills/<name>/SKILL.md` | By name (`/<name>`) or automatically when the description matches |
+| **Agents** — domain seats | `.claude/agents/<name>.md` | `.cursor/agents/<name>.md` | Launched deliberately (`Task` / `/agent-*`) when a slice sits in that domain |
+| **Rules** — glob-scoped | *(none — dropped 2026-08-20)* | `.cursor/rules/*.mdc` | When matching files are in context |
+| **Locks** — product + engineering defaults | [agent-locks.md](agent-locks.md) | same | Always apply; never re-ask |
 
-> **Migrated from Cursor.** This system used to live in `.cursor/skills/` (22 skills) and `.cursor/rules/` (19 rules). The rules were thin pointers to their skills, so they were dropped rather than ported — a skill's own `description` does that job here. Seat numbers were dropped too; they had a vacant slot and tracked nothing real.
+> **2026-08-25 Cursor recreate.** The 2026-08-20 migration parked the team under `.claude/` and dropped the 19 thin Cursor rules. Cursor still loads `.claude/skills` and `.claude/agents` for compatibility, **and** prefers `.cursor/agents/` when the name collides. Skills are duplicated on purpose so `/docs-sync` works if one tree is missing; if a session lists each skill twice, treat `.cursor/skills/` as canonical and ignore the Claude copy. The new rules are five glob files (envelope · SPA CSRF/tokens · docs-sync · desktop · Compose), not the old 19 pointers.
 
 ## Product mission
 

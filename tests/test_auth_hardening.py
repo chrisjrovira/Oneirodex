@@ -245,3 +245,123 @@ class TestScopeDecoratorEnvelope:
             assert body['ok'] is False
             assert body['error_code'] == 'forbidden'
             assert body['detail']['required_scope'] == 'admin'
+
+
+# --- Child ACL: Bearer deny-list, minting, acquire, companion commands ------
+
+def _login(client, app, user):
+    from flask_login import login_user
+
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(user.get_id())
+        sess['_fresh'] = True
+    with app.test_request_context():
+        login_user(user)
+
+
+@pytest.fixture
+def child_user(db_session):
+    user_uuid = str(uuid4())
+    user = User(
+        name=f'child_{user_uuid[:8]}',
+        email=f'child_{user_uuid[:8]}@example.com',
+        password_hash='hashed',
+        role='child',
+        user_id=user_uuid,
+        avatarpath='newstyle/avatar_default.jpg',
+        state=True,
+    )
+    user.set_password('childpassword123')
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+class TestBearerRoleScopes:
+    def test_child_bearer_cannot_use_denied_scopes_even_when_token_has_them(
+        self, monkeypatch,
+    ):
+        token = SimpleNamespace(has_scope=lambda scope: True)
+        monkeypatch.setattr(api_tokens, 'g', SimpleNamespace(api_token=token))
+        monkeypatch.setattr(
+            api_tokens,
+            'current_user',
+            SimpleNamespace(is_authenticated=True, role='child'),
+        )
+        assert user_has_scope('write:download') is False
+        assert user_has_scope('write:library') is False
+        assert user_has_scope('admin') is False
+        assert user_has_scope('read:library') is True
+
+    def test_member_bearer_keeps_write_download(self, monkeypatch):
+        token = SimpleNamespace(has_scope=lambda scope: scope == 'write:download')
+        monkeypatch.setattr(api_tokens, 'g', SimpleNamespace(api_token=token))
+        monkeypatch.setattr(
+            api_tokens,
+            'current_user',
+            SimpleNamespace(is_authenticated=True, role='user'),
+        )
+        assert user_has_scope('write:download') is True
+
+
+class TestChildTokenMinting:
+    def test_generate_refuses_denied_scopes(self, db_session, child_user):
+        with pytest.raises(ValueError, match='not allowed'):
+            generate_api_token(child_user, 'box', ['write:download'])
+
+    def test_generate_still_mints_read_library(self, db_session, child_user):
+        row, raw = generate_api_token(child_user, 'ok', ['read:library'])
+        assert 'write:download' not in (row.scopes or [])
+        assert 'read:library' in row.scopes
+        assert raw.startswith('gt_')
+
+    def test_child_cannot_mint_companion_preset(self, client, app, child_user):
+        _login(client, app, child_user)
+        resp = client.post(
+            '/api/tokens',
+            json={'name': 'box', 'preset': 'companion'},
+        )
+        assert resp.status_code == 403
+        body = resp.get_json()
+        assert body['error_code'] == 'forbidden'
+        assert 'write:download' in (body.get('detail') or {}).get('denied_scopes', [])
+
+    def test_child_can_mint_thin_preset(self, client, app, child_user):
+        _login(client, app, child_user)
+        resp = client.post(
+            '/api/tokens',
+            json={'name': 'thin', 'preset': 'thin'},
+        )
+        assert resp.status_code == 201
+        body = resp.get_json()
+        assert 'write:download' not in body['token']['scopes']
+
+    def test_child_token_list_hides_companion_preset(self, client, app, child_user):
+        _login(client, app, child_user)
+        listed = client.get('/api/tokens')
+        assert listed.status_code == 200
+        body = listed.get_json()
+        assert 'companion' not in body['scope_presets']
+        assert 'thin' in body['scope_presets']
+        assert 'write:download' not in body['valid_scopes']
+
+
+class TestChildAcquireAndCommands:
+    def test_child_cannot_search_acquire(self, client, app, child_user):
+        _login(client, app, child_user)
+        resp = client.get('/api/acquire/search?q=Stub')
+        assert resp.status_code == 403
+        body = resp.get_json()
+        assert body['error_code'] == 'forbidden'
+        assert 'child' in (body.get('error') or '').lower()
+
+    def test_child_cannot_queue_install(self, client, app, child_user):
+        _login(client, app, child_user)
+        resp = client.post(
+            '/api/client/commands',
+            json={'game_uuid': str(uuid4()), 'action': 'install'},
+        )
+        assert resp.status_code == 403
+        body = resp.get_json()
+        assert body['error_code'] == 'forbidden'
+        assert body['detail']['required_scope'] == 'write:download'

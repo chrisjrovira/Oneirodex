@@ -1,0 +1,21 @@
+---
+description: Flask JSON must use the shared API envelope; never grow jsonify envelope keys.
+globs: gametheca/**/*.py,asgi.py,tests/test_*.py
+alwaysApply: false
+---
+
+# API envelope
+
+Return JSON through `api_ok` / `api_error` from `gametheca/utils/api_response.py`. Do not add a `jsonify` whose top-level keys include `error`, `message`, `status`, `success`, or `ok`.
+
+Pick `error_code` from `ERROR_CODES`. Do not invent a token at the call site. `detail` is passed to the browser as given — no secrets, tokens, raw `.env`, or filesystem paths.
+
+A file may never exceed its count in `scripts/api_envelope_lint.baseline.json`. `--update` only after a genuine reduction.
+
+```python
+# ❌
+return jsonify({"error": "not found"}), 404
+
+# ✅
+return api_error("not found", "not_found", status=404)
+```

@@ -102,6 +102,7 @@ const FAQ_SECTIONS = [
     items: [
       'Friends pill or More → Friends: stay-open dock. Pop out uses /social-companion only.',
       'Chat pill / More → Chat / Ctrl+K → Chat: left slide-out room (channels · thread · composer with emoji/attach). Expand widens the panel. Voice & Screenshare in the thread header (LiveKit). Archive (creator/librarian) & Leave. Leave on a household room mutes it. /chat deep-links the same panel. No Discord bots/webhooks.',
+      'Spaces (the rail left of chat): household space is everyone; invite-only spaces are invisible until you redeem a code. Text and voice channels live under a space — not a Discord bot.',
       'More → Activity for presence and optional LiveKit. More → Notifications: dense unread inbox; alert prefs under Alert preferences.',
       'No Discord bots/webhooks — native chat, optional LiveKit, or BYO Stoat/Matrix.',
     ],

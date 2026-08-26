@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
-
-function csrfToken() {
-  return document.querySelector('meta[name="csrf-token"]')?.content || ''
-}
+import { csrfHeaders } from '../api/csrf'
+import { errorFromBody } from '../api/envelopeError'
 
 function partyRoomForGame(gameUuid) {
   const id = (gameUuid || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64)
@@ -57,10 +55,7 @@ export function VoiceLobby({
       const response = await fetch('/api/rtc/token', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken(),
-        },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           room,
           screenshare: screenshare || undefined,
@@ -68,7 +63,7 @@ export function VoiceLobby({
         }),
       })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Token failed')
+      if (!response.ok) throw errorFromBody(data, response.status, 'Token failed')
       setTokenInfo(data)
     } catch (err) {
       setError(err.message || 'Join failed')

@@ -20,6 +20,16 @@ _VALID_ACTIONS = frozenset({
     'apply_mod_pack',
     'open_path',
 })
+# Companion actions that pull or mutate installs. Child accounts and anyone
+# without write:download must not queue these; open_path stays ACL-only.
+WRITE_DOWNLOAD_ACTIONS = frozenset({
+    'download',
+    'install',
+    'update',
+    'uninstall',
+    'apply_patch',
+    'apply_mod_pack',
+})
 _VALID_KINDS = frozenset({'base', 'update', 'extra'})
 _IN_FLIGHT_TTL_SECONDS = 600
 _OPEN_PATH_MAX_LEN = 4096

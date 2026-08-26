@@ -1,4 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { csrfHeaders } from '../api/csrf'
+import { errorFromResponse } from '../api/envelopeError'
 import { PageStatus } from './PageStatus'
 import { SpaceRail } from './SpaceRail'
 import { VoiceLobby } from './VoiceLobby'
@@ -19,10 +21,6 @@ const MAX_ATTACHMENTS_PER_MESSAGE = 5
 const ATTACH_ACCEPT = '.png,.jpg,.jpeg,.webp,.gif,.txt,.csv,.pdf,image/png,image/jpeg,image/webp,image/gif,text/plain,text/csv,application/pdf'
 const ATTACH_HINT_UNAVAILABLE = 'File attach isn’t available yet — uploads land when the server enables them.'
 const ATTACH_HINT_CHILD = 'Child accounts can’t upload attachments.'
-
-function csrfToken() {
-  return document.querySelector('meta[name="csrf-token"]')?.content || ''
-}
 
 function ReactionLabel({ item }) {
   if (item.url) {
@@ -207,7 +205,7 @@ export function ChatPanel({
 
   async function loadChannels() {
     const response = await fetch('/api/chat/channels', { credentials: 'same-origin' })
-    if (!response.ok) throw new Error('channels')
+    if (!response.ok) throw await errorFromResponse(response, 'channels')
     const data = await response.json()
     const list = Array.isArray(data.channels) ? data.channels : []
     setChannels(list)
@@ -226,7 +224,7 @@ export function ChatPanel({
     const qs = params.toString()
     const url = `/api/chat/channels/${channelId}/messages${qs ? `?${qs}` : ''}`
     const response = await fetch(url, { credentials: 'same-origin' })
-    if (!response.ok) throw new Error('messages')
+    if (!response.ok) throw await errorFromResponse(response, 'messages')
     const data = await response.json()
     const next = Array.isArray(data.messages) ? data.messages : []
     if (sinceId) {
@@ -331,7 +329,7 @@ export function ChatPanel({
     showStatus(null)
     try {
       for (const file of files.slice(0, roomLeft)) {
-        const result = await uploadChatAttachment(activeId, file, { csrf: csrfToken() })
+        const result = await uploadChatAttachment(activeId, file)
         if (result.unavailable) {
           setAttachAvailable(false)
           showStatus(ATTACH_HINT_UNAVAILABLE, { isError: true })
@@ -371,7 +369,7 @@ export function ChatPanel({
     const response = await fetch(`/api/chat/channels/${activeId}/messages`, {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(payload),
     })
     const data = await response.json().catch(() => ({}))
@@ -394,7 +392,7 @@ export function ChatPanel({
     const response = await fetch('/api/chat/dm', {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ username }),
     })
     const data = await response.json().catch(() => ({}))
@@ -422,7 +420,7 @@ export function ChatPanel({
       const response = await fetch('/api/chat/channels', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ name, slug, is_child_safe: true }),
       })
       const data = await response.json().catch(() => ({}))
@@ -460,7 +458,7 @@ export function ChatPanel({
     const response = await fetch(`/api/chat/messages/${messageId}/reactions`, {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ emoji }),
     })
     if (!response.ok) return
@@ -482,7 +480,7 @@ export function ChatPanel({
     const response = await fetch(`/api/chat/channels/${activeId}/mute`, {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ muted: nextMuted }),
     })
     const data = await response.json().catch(() => ({}))
@@ -509,7 +507,7 @@ export function ChatPanel({
       const response = await fetch(`/api/chat/channels/${activeId}/archive`, {
         method: 'POST',
         credentials: 'same-origin',
-        headers: { 'X-CSRFToken': csrfToken() },
+        headers: csrfHeaders(),
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) {
@@ -547,7 +545,7 @@ export function ChatPanel({
       const response = await fetch(`/api/chat/channels/${activeId}/leave`, {
         method: 'POST',
         credentials: 'same-origin',
-        headers: { 'X-CSRFToken': csrfToken() },
+        headers: csrfHeaders(),
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) {

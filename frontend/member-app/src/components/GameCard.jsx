@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { getCsrfToken } from '../api/csrf'
 import { setGameStatus, toggleFavorite } from '../api/userActions'
 import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
 import { CoverFallback } from './CoverFallback'
@@ -38,15 +39,6 @@ function statusConfig(status) {
     return NO_STATUS
   }
   return STATUS_OPTIONS.find((option) => option.value === status) || NO_STATUS
-}
-
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-
-  return document.querySelector('input[name="csrf_token"]')?.value || ''
 }
 
 const LONG_PRESS_MS = 480

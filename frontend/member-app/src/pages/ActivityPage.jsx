@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { ContextBar } from '../chrome/ContextBar'
 import { Link } from 'react-router-dom'
+import { csrfHeaders } from '../api/csrf'
+import { errorFromBody, errorFromResponse } from '../api/envelopeError'
+import { ContextBar } from '../chrome/ContextBar'
 import { PageStatus } from '../components/PageStatus'
 import { VoiceLobby } from '../components/VoiceLobby'
 import '../styles/panelGrid.css'
@@ -12,7 +14,7 @@ async function fetchActivity({ signal, friendsOnly } = {}) {
     signal,
   })
   if (!response.ok) {
-    throw new Error(`Activity ${response.status}`)
+    throw await errorFromResponse(response, 'Activity')
   }
   return response.json()
 }
@@ -37,10 +39,6 @@ async function fetchFriends({ signal } = {}) {
     return { friends: [] }
   }
   return response.json()
-}
-
-function csrfToken() {
-  return document.querySelector('meta[name="csrf-token"]')?.content || ''
 }
 
 function presenceLabel(status) {
@@ -156,14 +154,11 @@ export function ActivityPage({ shellConfig = {} } = {}) {
       const response = await fetch('/api/social/friends', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken(),
-        },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ username }),
       })
       const body = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(body.error || 'Request failed')
+      if (!response.ok) throw errorFromBody(body, response.status, 'Request failed')
       setFriendName('')
       if (body.existing) {
         setFriendMsg('Already connected or pending')
@@ -183,7 +178,7 @@ export function ActivityPage({ shellConfig = {} } = {}) {
     await fetch(`/api/social/friends/${id}/accept`, {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'X-CSRFToken': csrfToken() },
+      headers: csrfHeaders(),
     })
     const friendData = await fetchFriends()
     setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
@@ -193,7 +188,7 @@ export function ActivityPage({ shellConfig = {} } = {}) {
     await fetch(`/api/social/friends/${id}/reject`, {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'X-CSRFToken': csrfToken() },
+      headers: csrfHeaders(),
     })
     const friendData = await fetchFriends()
     setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
@@ -203,7 +198,7 @@ export function ActivityPage({ shellConfig = {} } = {}) {
     await fetch(`/api/social/friends/${id}`, {
       method: 'DELETE',
       credentials: 'same-origin',
-      headers: { 'X-CSRFToken': csrfToken() },
+      headers: csrfHeaders(),
     })
     const friendData = await fetchFriends()
     setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])

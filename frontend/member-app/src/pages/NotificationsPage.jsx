@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { csrfHeaders } from '../api/csrf'
+import { errorFromResponse } from '../api/envelopeError'
 import { ContextBar } from '../chrome/ContextBar'
 import './NotificationsPage.css'
-
-function csrfToken() {
-  return document.querySelector('meta[name="csrf-token"]')?.content || ''
-}
 
 const PREF_ROWS = [
   ['notify_friend_requests', 'Friend requests', 'in-app'],
@@ -67,12 +65,12 @@ export function NotificationsPage({ shellConfig = {} }) {
   function load(view = filter) {
     const query = view === 'inbox' ? '?unread=1&limit=100' : '?limit=100'
     return Promise.all([
-      fetch(`/api/notifications${query}`, { credentials: 'same-origin' }).then((r) => {
-        if (!r.ok) throw new Error(`notifications ${r.status}`)
+      fetch(`/api/notifications${query}`, { credentials: 'same-origin' }).then(async (r) => {
+        if (!r.ok) throw await errorFromResponse(r, 'notifications')
         return r.json()
       }),
-      fetch('/api/notifications/preferences', { credentials: 'same-origin' }).then((r) => {
-        if (!r.ok) throw new Error(`preferences ${r.status}`)
+      fetch('/api/notifications/preferences', { credentials: 'same-origin' }).then(async (r) => {
+        if (!r.ok) throw await errorFromResponse(r, 'preferences')
         return r.json()
       }),
     ])
@@ -99,7 +97,7 @@ export function NotificationsPage({ shellConfig = {} }) {
       await fetch('/api/notifications/read', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ all: true }),
       })
       await load()
@@ -115,7 +113,7 @@ export function NotificationsPage({ shellConfig = {} }) {
       await fetch('/api/notifications/read', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ ids: [id] }),
       })
       await load()
@@ -131,7 +129,7 @@ export function NotificationsPage({ shellConfig = {} }) {
     await fetch('/api/notifications/preferences', {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ [key]: next[key] }),
     })
   }

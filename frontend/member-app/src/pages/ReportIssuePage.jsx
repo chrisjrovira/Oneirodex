@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { csrfHeaders } from '../api/csrf'
+import { errorFromBody } from '../api/envelopeError'
 import './ReportIssuePage.css'
-
-function csrfToken() {
-  return document.querySelector('meta[name="csrf-token"]')?.content || ''
-}
 
 const AREAS = [
   'auth', 'library', 'download', 'webretro', 'companion', 'acquire',
@@ -59,10 +57,7 @@ export function ReportIssuePage() {
       const response = await fetch('/api/support/tickets', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken(),
-        },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           title,
           body,
@@ -76,7 +71,7 @@ export function ReportIssuePage() {
         }),
       })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Submit failed')
+      if (!response.ok) throw errorFromBody(data, response.status, 'Submit failed')
       setResult(data.ticket)
       setTitle('')
       setBody('')

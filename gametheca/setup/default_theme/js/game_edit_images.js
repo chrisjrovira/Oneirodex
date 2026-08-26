@@ -102,34 +102,65 @@ function uploadFile(file, gameUuid, csrfToken, imageType = 'screenshot') {
 }
 
 function displayImage(data) {
-    let imageList = document.getElementById('image-editor-list');
-    let newImgDiv = document.createElement('div');
-
-    newImgDiv.id = `image-${data.image_id}`;
-    newImgDiv.className = 'image-editor-image'; // Add this line to set the class
-
-    newImgDiv.innerHTML = `<button class="btn btn-danger" onclick="deleteImage(${data.image_id})">Delete</button><img src="${data.url}" alt="Image" class="image-editor-image" style="max-width: 300px; max-height: 300px;">`;
-    imageList.appendChild(newImgDiv);
+    const imageList = document.getElementById('image-editor-list');
+    imageList.appendChild(buildEditorImageNode(data, {
+        imgClass: 'image-editor-image',
+        alt: 'Image',
+    }));
 }
 
 const SINGULAR_OTHER_KINDS = ['box', 'cart', 'disc', 'logo', 'hero'];
 
 function displayOtherImage(data) {
-    let imageList = document.getElementById('other-image-list');
+    const imageList = document.getElementById('other-image-list');
     if (!imageList) return;
 
     if (SINGULAR_OTHER_KINDS.includes(data.image_type)) {
         imageList.querySelectorAll(`[data-kind="${data.image_type}"]`).forEach((el) => el.remove());
     }
 
-    let newImgDiv = document.createElement('div');
-    newImgDiv.id = `image-${data.image_id}`;
-    newImgDiv.className = 'image-editor-image';
-    newImgDiv.setAttribute('data-kind', data.image_type);
-
     const label = data.image_type.charAt(0).toUpperCase() + data.image_type.slice(1);
-    newImgDiv.innerHTML = `<span class="gt-edit-images__label">${label}</span><button class="btn btn-danger" onclick="deleteImage(${data.image_id})">Delete</button><img src="${data.url}" alt="${label}" style="max-width: 300px; max-height: 300px;">`;
-    imageList.appendChild(newImgDiv);
+    imageList.appendChild(buildEditorImageNode(data, {
+        label,
+        kind: data.image_type,
+        alt: label,
+    }));
+}
+
+function buildEditorImageNode(data, options) {
+    const wrap = document.createElement('div');
+    wrap.id = `image-${data.image_id}`;
+    wrap.className = 'image-editor-image';
+    if (options.kind) {
+        wrap.setAttribute('data-kind', options.kind);
+    }
+
+    if (options.label) {
+        const span = document.createElement('span');
+        span.className = 'gt-edit-images__label';
+        span.textContent = options.label;
+        wrap.appendChild(span);
+    }
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-danger';
+    btn.textContent = 'Delete';
+    btn.addEventListener('click', function () {
+        deleteImage(data.image_id);
+    });
+    wrap.appendChild(btn);
+
+    const img = document.createElement('img');
+    img.src = data.url;
+    img.alt = options.alt || 'Image';
+    if (options.imgClass) {
+        img.className = options.imgClass;
+    }
+    img.style.maxWidth = '300px';
+    img.style.maxHeight = '300px';
+    wrap.appendChild(img);
+    return wrap;
 }
 
 function displayCoverImage(data) {

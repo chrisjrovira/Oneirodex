@@ -57,7 +57,7 @@ sent and need no configuration. The CSP is **report-only** on purpose — see
 | Symptom | Check |
 |---|---|
 | Console full of “Content Security Policy … would block” | Expected. `CSP_ENFORCE=false` reports without blocking. Clear the reports first, then set `CSP_ENFORCE=true` |
-| Set `CSP_ENFORCE=true` and the newsletter editor / browser play broke | Enforcement blocks the CKEditor CDN and the WebRetro WASM cores unless the policy is widened. Set it back to `false` |
+| Set `CSP_ENFORCE=true` and browser play broke | Enforcement still needs `'unsafe-eval'` / `'wasm-unsafe-eval'` for WebRetro cores, and 24 Jinja templates still use inline `<script>`. Set it back to `false` until those are gone. The newsletter editor is a plain textarea now — CKEditor is no longer on the box |
 | Site pinned to HTTPS and now unreachable by IP | HSTS. It is only sent when `SESSION_COOKIE_SECURE=true`; set `HSTS_SECONDS=0` and clear the browser's HSTS entry |
 | Large firmware upload rejected with 413 | Global ceiling is `MAX_UPLOAD_MB` (default 128). Raise it *and* `EMULATOR_BIOS_MAX_BYTES` together — the per-route firmware limit is the tighter of the two |
 | Cover uploads suddenly smaller on disk | Expected. Covers over 1200×1600 are now stored resized; previously the resize ran and the original was saved anyway |

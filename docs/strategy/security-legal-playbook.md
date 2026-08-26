@@ -245,7 +245,7 @@ meant zero fonts written.
 
 | Item | Why it is not closed |
 |---|---|
-| **CSP enforcement** | `CSP_ENFORCE=false`. Enforcing today breaks the 24 inline-script templates, the CKEditor CDN and the WebRetro WASM cores. Flip it once the admin bodies settle and the reports come back clean |
+| **CSP enforcement** | `CSP_ENFORCE=false`. Enforcing today breaks the 24 inline-script templates and the WebRetro WASM cores. The newsletter page no longer loads CKEditor from a CDN. Flip enforcement once the admin bodies settle and the reports come back clean |
 | **WebRetro's own licence** | The vendored copy carries no licence file and no banner, so `THIRD-PARTY-NOTICES.md` records it as unconfirmed rather than asserting one. Confirm upstream before a public release |
 | **Non-commercial core clauses** | `snes9x` and `genesis_plus_gx` restrict commercial distribution. Taking them out of the tree makes the operator the provisioning party, which is the right shape — it does not settle what a commercial host is then doing. Worth an hour of counsel if GameTheca is ever hosted commercially |
 | **DNS rebinding** | The SSRF fix is resolve-then-connect, so a rebind between the check and the socket still wins. Closing it means pinning the resolved address into the connection — a bigger change than this pass. Stated in `is_blocked_outbound_host`'s docstring rather than left implied |

@@ -1,24 +1,12 @@
 import { useEffect, useState } from 'react'
 
+import { csrfHeaders } from '../api/csrf'
+
+import { errorFromBody } from '../api/envelopeError'
+
 import { fetchAcquireStatus, searchAcquire } from '../api/updates'
 
 import { showToast } from '../utils/toast'
-
-
-
-function csrfToken() {
-
-  return (
-
-    document.querySelector('meta[name="csrf-token"]')?.content ||
-
-    document.querySelector('input[name="csrf_token"]')?.value ||
-
-    ''
-
-  )
-
-}
 
 
 
@@ -186,13 +174,7 @@ export function AcquirePage() {
 
         credentials: 'same-origin',
 
-        headers: {
-
-          'Content-Type': 'application/json',
-
-          'X-CSRFToken': csrfToken(),
-
-        },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
 
         body: JSON.stringify({
 
@@ -208,7 +190,7 @@ export function AcquirePage() {
 
       if (!response.ok) {
 
-        throw new Error(data.error || `acquire ${response.status}`)
+        throw errorFromBody(data, response.status, 'acquire')
 
       }
 

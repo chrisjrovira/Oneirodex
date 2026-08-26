@@ -1,6 +1,6 @@
 # Documentation map (runbooks, SOPs, assets)
 
-**Date:** 2026-08-16 · **Product version:** 1.0.0-beta  
+**Date:** 2026-08-25 · **Product version:** 1.0.0-beta  
 **Purpose:** Inventory of docs, ops, and communications.  
 **Sync rule:** `.claude/skills/docs-sync/` — update on every code change; required by `CLAUDE.md`.
 
@@ -27,7 +27,7 @@
 | Social lite pointer | `docs/strategy/social.md` | Have |
 | Social + A/V waves | `docs/strategy/social-av.md` | Have (W16 shipped) · post-1.0 native RTC plan → [native-rtc.md](native-rtc.md) |
 | Security suite | `docs/strategy/security.md` | Have · post-1.0 native malware plan → [native-malware-scan.md](native-malware-scan.md) |
-| Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have (2026-08-25) — audit findings with evidence; Phases 0–4 shipped, 5–6 open (cores licensing decision recorded) |
+| Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have (2026-08-25) — audit findings with evidence; Phases 0–6 shipped; remaining on purpose: CSP report-only, WebRetro licence unconfirmed |
 | Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs + loading motifs (`GENERATOR_VERSION` 10) |
 | Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
@@ -37,7 +37,7 @@
 | Product roadmap | `docs/strategy/roadmap.md` | Have |
 | Feedback roadmap W22–W25 | `docs/strategy/roadmap-w22-plus.md` | Have — Aug-01 human feedback; **W21** = first-scan (Done uncommitted, not renumbered); **W22 UI rem closed** (**W22-1 Done** UI+BE QA **13/13** · **W22-match Done** · **QA PASS 138+10** · **UID-001 QA PASS 31/31** · **UID-002 QA PASS 20/20** · **UID-005** Done · **UID-009 Done** · **QA PASS 11/11** · **UID-016 Done** · UI **32/32** · BE size/mtime **13/13** · **UID-004 Done** · **QA PASS 33/33** · next UI **W23**) · **BE-DET** In progress (**BE-DET-1…9** Done · **DET-8 QA PASS 141/141** · **DET-9 QA PASS 65/65** · **Next** **BE-DET-10**) |
 | Execution progress | `docs/strategy/progress.md` | Have — **W22-1 Done** (BE batch APIs + UI) · UI/BE QA **13/13** · **W22-match Done** · **QA PASS 138+10** · **UID-001 Done** · **QA PASS 31/31** · **UID-002 Done** · **QA PASS 20/20** · **UID-005 Done** · **UID-009 Done** · **QA PASS 11/11** · **UID-016 Done** · UI **32/32** · BE size/mtime **13/13** · **UID-004 Done** · **QA PASS 33/33** · **W22 UI rem closed** · **GM detection coverage brief Done** · **BE-DET-1…9 Done** · **DET-8 QA PASS 141/141** · **DET-9 QA PASS 65/65** · **Next** **BE-DET-10** · links W22+ + ui-debt-log |
-| Official v1 readiness (team review) | `docs/strategy/v1-readiness.md` | Have — gate 8 text-complete; Capture open |
+| Official v1 readiness (team review) | `docs/strategy/v1-readiness.md` | Have — gate 8 text-complete; Capture recipe exists; **1.0.0-beta** ship track; GOW/LIGHT/TC-1/cmdk **shipped** |
 | PM miss backlog (pre-1.0) | `docs/strategy/pm-miss-backlog.md` | Have |
 | Admin hybrid inventory | `docs/strategy/admin-hybrid.md` | Have |
 | Upgrade notes (0.2 → 1.0) | `docs/strategy/upgrade-notes-1.0.md` | Have |
@@ -192,9 +192,9 @@ Also: Friends companion dock + `/social-companion` pop-out, Support report form,
 
 | Area | Action |
 |---|---|
-| README | Synced for 0.2.0 — **live PNG screenshots** (hero · Library · Systems) · Chat Capture **needed** · feature defaults ON · OIDC opt-in · ClamAV profile · Friends companion · no Discord |
+| README | Synced for **1.0.0-beta** — live PNG screenshots (hero · Library · Systems) · Chat Capture **needed** (populated instance) · feature defaults ON · OIDC opt-in · ClamAV profile · Friends companion · no Discord · no OUT/~ badge copy |
 | [progress.md](progress.md) | Aug 01 — **BE-DET-9 Done** fandom alias · **QA PASS 65/65** · fixture pack 50 soft · DoD met · live skipped · **BE-DET-8** Arcade/AES · **QA PASS 141/141** · **UID-016** BE disk-meta **QA PASS 13/13** (UI soft-read **32/32**) · **UID-004 Done** (**QA PASS 33/33**) · **W22 UI rem closed** · **BE-DET-1…8** preserved · **UID-009/001/002/005** QA PASS · **UI-W22-M7** · **W22-1** · **W22-match** · **QA PASS 138+10** · **Next** **BE-DET-10** image kinds · **W23** · [roadmap-w22-plus.md](roadmap-w22-plus.md) · [ui-debt-log.md](../dev/ui-debt-log.md) · **Reset Themes** `admin_manage_scanjobs` + `gt-chrome.css` + libs/badge · **Finance TCO Done** · **W21** preserved · W23–W25 Queued · seats 1–14 · `:5006` BLOCKED · smoking gun: `(digits)` ≠ Steam App IDs · no Class A |
-| CHANGELOG | Unreleased — BE-DET-9 fandom soft alias + BE-DET-8 Arcade/AES + UID-016/004 + waves 14–18 catch-up; bump when cutting 0.2.0 |
+| CHANGELOG | Unreleased — child ACL · CSRF ratchet · Flask-Mail collapse · CKEditor off-box · provider `fetch_image` SSRF · docs hygiene; bump when cutting the next tag |
 | `.env.example` | Includes LiveKit + SUPPORT_GITHUB_* + malware scan |
 | In-app Help (`/help`) | Accordion Help · Kind Soft titles / Utilities · EXP/TOOL tooltips · Library Filters chevron-rail collapse · Tile badges four-corner / no OUT/~ /RELEASE · Jump top/bottom on scrollable pages · Chat slide-out · Preferences sectioned · Report Context/Logs collapsed · News tabs · Notifications dense · API token urlsafe/`-`/`_` + HTTP Copy · Ctrl/Cmd+K · Signals UPDATE · MISSING · NEW · LANG · Friends · no Discord |
 | Discord | Excised from product — do not reintroduce |

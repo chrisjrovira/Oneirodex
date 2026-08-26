@@ -18,7 +18,7 @@ from gametheca.utils.debrid_connectors import (
 )
 from gametheca.utils.indexer_registry import indexer_status_summary
 from gametheca.utils.module_status import arr_module_on
-from gametheca.utils.rbac import is_librarian
+from gametheca.utils.rbac import is_librarian, normalize_role
 
 from . import apis_bp
 
@@ -83,6 +83,11 @@ def acquire_status():
 @apis_bp.route('/acquire/search', methods=['GET'])
 @login_required
 def acquire_search():
+    if normalize_role(getattr(current_user, 'role', None)) == 'child':
+        return api_error(
+            'Acquire search is not available on child accounts',
+            code='forbidden',
+        )
     if not arr_module_on():
         return api_error('Arr module disabled', code='forbidden')
     query = (request.args.get('q') or '').strip()

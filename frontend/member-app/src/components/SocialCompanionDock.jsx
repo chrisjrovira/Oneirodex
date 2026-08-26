@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { csrfHeaders } from '../api/csrf'
+import { errorFromBody } from '../api/envelopeError'
 import { requestOpenChatPanel } from '../hooks/chatPanelApi'
 import {
   mintPartyToken,
@@ -224,15 +226,11 @@ export function SocialCompanionDock({
       const response = await fetch('/api/social/friends', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken':
-            document.querySelector('meta[name="csrf-token"]')?.content || '',
-        },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ username }),
       })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Request failed')
+      if (!response.ok) throw errorFromBody(data, response.status, 'Request failed')
       setAddName('')
       notify(data.sent ? 'Friend request sent' : data.message || 'Request sent')
       await social.reload()
@@ -314,10 +312,7 @@ export function SocialCompanionDock({
                       void fetch(`/api/social/friends/${row.id}/accept`, {
                         method: 'POST',
                         credentials: 'same-origin',
-                        headers: {
-                          'X-CSRFToken':
-                            document.querySelector('meta[name="csrf-token"]')?.content || '',
-                        },
+                        headers: csrfHeaders(),
                       }).then(() => social.reload())
                     }}
                   >

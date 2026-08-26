@@ -1,3 +1,5 @@
+import { csrfHeaders } from '../api/csrf'
+
 const STORAGE_OPEN = 'gt-chat-panel-open'
 /** CustomEvent — TopNav / CommandPalette / deep-link open chat without a full-page takeover. */
 export const OPEN_CHAT_EVENT = 'gt-open-chat-panel'
@@ -114,7 +116,7 @@ export async function probeChatAttachmentUpload(channelId) {
     const response = await fetch(url, {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+      headers: csrfHeaders(),
       body: new FormData(),
     })
     if (response.status === 404 || response.status === 405) return 'no'
@@ -130,7 +132,7 @@ export async function probeChatAttachmentUpload(channelId) {
  * Multipart upload for chat attach. Soft-degrades on 404.
  * @returns {Promise<{ ok: boolean, unavailable?: boolean, attachment?: object, error?: string, status: number }>}
  */
-export async function uploadChatAttachment(channelId, file, { csrf = '' } = {}) {
+export async function uploadChatAttachment(channelId, file) {
   if (!channelId || !file) {
     return { ok: false, status: 0, error: 'Missing channel or file' }
   }
@@ -139,7 +141,7 @@ export async function uploadChatAttachment(channelId, file, { csrf = '' } = {}) 
   const response = await fetch(chatAttachmentUploadUrl(channelId), {
     method: 'POST',
     credentials: 'same-origin',
-    headers: { 'X-CSRFToken': csrf },
+    headers: csrfHeaders(),
     body: form,
   })
   const data = await response.json().catch(() => ({}))

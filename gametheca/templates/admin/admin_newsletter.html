@@ -12,13 +12,9 @@
         </div>
     </div>
     <div class="gt-adminpage-panel">
-        <!-- Add CKEditor CDN -->
-        <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
         <style>
-            .ck-editor__editable {
+            #content {
                 min-height: 300px;
-                background: var(--gt-surface-2) !important;
-                color: var(--gt-text) !important;
             }
         </style>
         <form action="" method="post" novalidate>
@@ -30,7 +26,7 @@
             
             <div class="mb-3">
                 <label for="content" class="form-label">{{ form.content.label }}</label>
-                {{ form.content(id="content", class="form-control input-glass") }}
+                {{ form.content(id="content", class="form-control input-glass", rows="12") }}
             </div>
             
             <div class="mb-3 form-check">
@@ -107,19 +103,6 @@ function updateRecipients() {
 
     console.log('Recipients: ' + document.querySelector('input[name="recipients"]').value);
 }
-
-// Initialize CKEditor
-ClassicEditor
-    .create(document.querySelector('#content'), {
-        toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|', 'undo', 'redo'],
-        placeholder: 'Write your newsletter content here...',
-    })
-    .then(editor => {
-        console.log('Editor initialized');
-    })
-    .catch(error => {
-        console.error(error);
-    });
 
 updateRecipients(); 
 </script>

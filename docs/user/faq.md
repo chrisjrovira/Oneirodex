@@ -91,6 +91,9 @@ Use the **Friends** pill (bottom-right), **More → Friends**, or Big Picture **
 **Where is chat?**  
 **Chat** pill (bottom-left), **More → Chat**, or Ctrl/Cmd+K → Chat opens a **left slide-out** (rooms · messages · composer) — TopNav stays. `/chat` deep-links open the same panel then return you to Library. Dismiss with × / scrim / Esc; reopen anytime. Use **Add** to create a room (child accounts cannot). Thread header **Archive** (household rooms, creator/librarian+) and **Leave** (DM drop / household mute — room list shows a **muted** badge after leave). Optional BYO Stoat/Matrix if the admin set Community chat.
 
+**What are Spaces?**  
+The rail beside chat. **Household** is everyone on the box; **invite-only** spaces stay invisible until you redeem a code. Each space has its own text and voice channels. See [social-and-voice.md](social-and-voice.md).
+
 **Voice doesn’t appear.**  
 LiveKit is optional. If off, Activity shows “LiveKit is off.” Admins enable `ENABLE_LIVEKIT` + compose profile — [social-and-voice.md](social-and-voice.md).
 
@@ -152,4 +155,9 @@ Gamepad-friendly browse at **More → Big Picture**. Esc exits; Attract opens tr
 ## VR / headsets
 
 `/vr` is headset-friendly browse (admin flag), **not Quest-only** — PSVR2/SteamVR use a desktop browser on the PC; Quest friends use the headset browser/PWA. Thin / headset seats have **no** install pipeline. See [controllers-and-vr.md](controllers-and-vr.md) · [headset-vr.md](../strategy/headset-vr.md).
+
+## Licence
+
+**What licence is GameTheca?**  
+GNU AGPL v3. Help → About has the licence link. If you run a *modified* copy as a network service, AGPL §13 means you owe your users that modified source — admins set `GT_SOURCE_URL` to their fork so the Help/About source link is honest.
 

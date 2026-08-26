@@ -16,6 +16,7 @@ from gametheca.utils.client_capabilities import (
     should_deliver_install_commands,
 )
 from gametheca.utils.client_commands import (
+    WRITE_DOWNLOAD_ACTIONS,
     ack_client_commands,
     claim_pending_commands,
     enqueue_client_command,
@@ -121,6 +122,13 @@ def client_commands_post():
     version_uuid = (data.get('version_uuid') or '').strip() or None
     open_path = (data.get('path') or '').strip() or None
     select = data.get('select')
+
+    if action in WRITE_DOWNLOAD_ACTIONS and not user_has_scope('write:download'):
+        return api_error(
+            'Missing scope: write:download',
+            code='forbidden',
+            detail={'required_scope': 'write:download'},
+        )
 
     if action == 'open_path':
         # Unmatched / admin scanjobs may omit game_uuid; matched titles still ACL-check.

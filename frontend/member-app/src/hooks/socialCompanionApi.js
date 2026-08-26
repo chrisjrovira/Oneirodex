@@ -1,11 +1,10 @@
+import { csrfHeaders } from '../api/csrf'
+import { errorFromBody } from '../api/envelopeError'
+
 const STORAGE_OPEN = 'gt-social-companion-open'
 const STORAGE_PINNED = 'gt-social-companion-pinned'
 /** CustomEvent name — TopNav / CommandPalette open the dock without SPA navigation. */
 export const OPEN_SOCIAL_EVENT = 'gt-open-social-companion'
-
-function csrfToken() {
-  return document.querySelector('meta[name="csrf-token"]')?.content || ''
-}
 
 export function presenceLabel(status) {
   if (status === 'in-game') return 'In game'
@@ -73,15 +72,12 @@ export async function openDirectMessage({ userId, username } = {}) {
   const response = await fetch('/api/chat/dm', {
     method: 'POST',
     credentials: 'same-origin',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': csrfToken(),
-    },
+    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(body),
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(data.error || 'Could not open DM')
+    throw errorFromBody(data, response.status, 'Could not open DM')
   }
   return data
 }
@@ -92,15 +88,12 @@ export async function mintPartyToken({ gameUuid, spectator = false } = {}) {
   const response = await fetch('/api/rtc/token', {
     method: 'POST',
     credentials: 'same-origin',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': csrfToken(),
-    },
+    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ room, spectator: spectator || undefined }),
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(data.error || 'Voice party unavailable')
+    throw errorFromBody(data, response.status, 'Voice party unavailable')
   }
   return { ...data, room }
 }

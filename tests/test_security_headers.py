@@ -3,8 +3,8 @@
 The interesting assertions here are the *negative* ones. Permissions-Policy is
 the header most likely to be "hardened" into breaking shipped features, so the
 LiveKit and controller entries are pinned. And the CSP must stay report-only by
-default, because enforcing it would break the inline-script templates, the
-CKEditor CDN and the WebRetro cores on the day it shipped.
+default, because enforcing it would break the inline-script templates and the
+WebRetro cores on the day it shipped.
 
 See docs/strategy/security-legal-playbook.md (S1, S3).
 """
@@ -123,10 +123,10 @@ def test_csp_carries_the_cheap_wins(directive):
 
 
 def test_csp_allows_what_the_app_actually_loads():
-    """WASM cores, the CKEditor CDN, provider art, and the LiveKit socket."""
+    """WASM cores, provider art, and the LiveKit socket. No off-box script CDN."""
     csp = build_csp()
     assert "'wasm-unsafe-eval'" in csp
-    assert 'https://cdn.ckeditor.com' in csp
+    assert 'cdn.ckeditor.com' not in csp
     assert 'img-src' in csp and 'https:' in csp
     assert 'wss:' in csp
 

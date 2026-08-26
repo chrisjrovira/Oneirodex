@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import { csrfHeaders } from '../api/csrf'
+import { errorFromBody, errorFromResponse } from '../api/envelopeError'
 import { PageStatus } from './PageStatus'
 import './PcCheatsPanel.css'
 
@@ -37,7 +39,7 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }) {
         credentials: 'same-origin',
       })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Could not load cheats')
+      if (!response.ok) throw errorFromBody(data, response.status, 'Could not load cheats')
       setCheats(Array.isArray(data.cheats) ? data.cheats : [])
       setMethods(Array.isArray(data.methods) ? data.methods : [])
       setStance(data.stance || '')
@@ -59,10 +61,6 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }) {
 
   const methodLabel = (id) => methods.find((m) => m.id === id)?.label || id
 
-  function csrfToken() {
-    return document.querySelector('meta[name="csrf-token"]')?.content || ''
-  }
-
   async function addCheat(event) {
     event.preventDefault()
     if (!draft.label.trim()) return
@@ -72,11 +70,11 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }) {
       const response = await fetch(`/api/games/${gameUuid}/pc_cheats`, {
         method: 'POST',
         credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(draft),
       })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Could not save')
+      if (!response.ok) throw errorFromBody(data, response.status, 'Could not save')
       setDraft({ label: '', method: draft.method, payload: '', notes: '' })
       await load()
     } catch (err) {
@@ -92,11 +90,10 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }) {
       const response = await fetch(`/api/games/${gameUuid}/pc_cheats/${cheatId}`, {
         method: 'DELETE',
         credentials: 'same-origin',
-        headers: { 'X-CSRFToken': csrfToken() },
+        headers: csrfHeaders(),
       })
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        throw new Error(data.error || 'Could not remove')
+        throw await errorFromResponse(response, 'Could not remove')
       }
       await load()
     } catch (err) {

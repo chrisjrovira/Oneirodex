@@ -10,9 +10,8 @@ Two callers, because GameTheca serves responses from two places:
   concurrent asset loads).
 
 **Why the CSP is report-only by default.** Twenty-four Jinja templates carry an
-inline ``<script>``, ``admin/admin_newsletter.html`` loads CKEditor from
-``cdn.ckeditor.com``, and the WebRetro iframe runs Emscripten WASM cores. A
-policy strict enough to be worth enforcing would break all three on the day it
+inline ``<script>``, and the WebRetro iframe runs Emscripten WASM cores. A
+policy strict enough to be worth enforcing would break both on the day it
 shipped. So the default reports and does not block; an operator flips
 ``CSP_ENFORCE=true`` once their deployment is clean. The other headers have no
 such cost and are unconditional.
@@ -67,15 +66,14 @@ def _csp_directives() -> dict[str, str]:
     """
     return {
         'default-src': "'self'",
-        # 'unsafe-inline' for the 24 inline-script templates, CKEditor for the
-        # newsletter editor, 'wasm-unsafe-eval' + 'unsafe-eval' for the WebRetro
-        # Emscripten cores. Every one of these is a thing to remove later, not a
-        # thing to pretend is fine — which is why this ships report-only.
+        # 'unsafe-inline' for the 24 inline-script templates, 'wasm-unsafe-eval'
+        # + 'unsafe-eval' for the WebRetro Emscripten cores. Every one of these
+        # is a thing to remove later, not a thing to pretend is fine — which is
+        # why this ships report-only.
         'script-src': (
-            "'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' "
-            'https://cdn.ckeditor.com'
+            "'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'"
         ),
-        'style-src': "'self' 'unsafe-inline' https://cdn.ckeditor.com",
+        'style-src': "'self' 'unsafe-inline'",
         # Cover art and screenshots come from whichever metadata provider the
         # operator configured (IGDB, SteamGridDB, Giant Bomb, Meta Quest, store
         # CDNs). Enumerating them would go stale on the next provider.

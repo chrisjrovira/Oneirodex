@@ -14,6 +14,7 @@ from gametheca.utils.providers.base import (
     ImageSearchResult,
     MetadataImageProvider,
     ProviderDisabledError,
+    fetch_outbound_image,
     mask_api_key,
 )
 
@@ -85,12 +86,11 @@ class GiantBombProvider(MetadataImageProvider):
         return results
 
     def fetch_image(self, url: str) -> tuple[bytes, str | None]:
-        resp = requests.get(url, timeout=DEFAULT_TIMEOUT, headers={
-            'User-Agent': 'GameTheca/1.0 (self-hosted library)',
-        })
-        if resp.status_code >= 400:
-            raise RuntimeError(f'Failed to download GiantBomb image ({resp.status_code})')
-        return resp.content, resp.headers.get('Content-Type')
+        return fetch_outbound_image(
+            url,
+            timeout=DEFAULT_TIMEOUT,
+            headers={'User-Agent': 'GameTheca/1.0 (self-hosted library)'},
+        )
 
 
 def pcgamingwiki_enrichment(game_name: str) -> dict:

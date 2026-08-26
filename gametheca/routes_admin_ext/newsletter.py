@@ -1,14 +1,14 @@
 # /gametheca/routes_admin_ext/newsletter.py
-from flask import render_template, redirect, url_for, request, flash, abort
+from flask import render_template, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
-from flask_mail import Message as MailMessage
-from gametheca.models import User, Newsletter, GlobalSettings
-from gametheca import db, mail
+from gametheca.models import User, Newsletter
+from gametheca import db
 from sqlalchemy import select
 from gametheca.forms import NewsletterForm
 from . import admin2_bp
 from gametheca.utils.auth import admin_required
 from gametheca.utils.global_settings import global_settings_row
+from gametheca.utils.smtp import send_email_quiet
 
 @admin2_bp.route('/admin/newsletter', methods=['GET', 'POST'])
 @login_required
@@ -36,8 +36,11 @@ def newsletter():
     form = NewsletterForm()
     users = db.session.execute(select(User)).scalars().all()
     if form.validate_on_submit():
-        # First create the newsletter record
-        recipients = form.recipients.data.split(',')        
+        recipients = [
+            addr.strip()
+            for addr in (form.recipients.data or '').split(',')
+            if addr.strip()
+        ]
         new_newsletter = Newsletter(
             subject=form.subject.data,
             content=form.content.data,
@@ -49,23 +52,22 @@ def newsletter():
         db.session.add(new_newsletter)
         db.session.commit()
 
-        try:
-            # Attempt to send the email
-            msg = MailMessage(form.subject.data, sender=settings_record.smtp_default_sender)
-            msg.html = form.content.data
-            msg.recipients = recipients
-            
-            mail.send(msg)
-            
-            # Update status to sent
+        failed = []
+        for addr in recipients:
+            if not send_email_quiet(addr, form.subject.data, form.content.data):
+                failed.append(addr)
+
+        if failed:
+            new_newsletter.status = 'failed'
+            new_newsletter.error_message = (
+                'Failed to send to: ' + ', '.join(failed)
+            )
+            db.session.commit()
+            flash(new_newsletter.error_message, 'error')
+        else:
             new_newsletter.status = 'sent'
             db.session.commit()
             flash('Newsletter sent successfully!', 'success')
-        except Exception as e:
-            new_newsletter.status = 'failed'
-            new_newsletter.error_message = str(e)
-            db.session.commit()
-            flash(str(e), 'error')
         return redirect(url_for('admin2.newsletter'))
     
     # Get all sent newsletters for display

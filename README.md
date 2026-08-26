@@ -56,7 +56,7 @@ GameTheca is a **Flask + React** game library server you run at home (or on a NA
 - 🔍 Multi-threaded folder scanning & identification (IGDB · Steam · GOG · RAWG)
 - 🖼️ Covers, screenshots, filters, discovery shelves, **Systems** hub by console family
 - 🛍️ **Storefront Discover** — *Curated for you* + *Upcoming* shelves, hero / carousel layouts, and **shelves as timed events** with start & end dates — [discover-sections.md](docs/admin/discover-sections.md)
-- 🏷️ Library badges & freshness (`NEW` · `UPDATE` · `OUT` / `~`)
+- 🏷️ Library badges (`NEW` · `UPDATE` · `MISSING`)
 - 📊 ROM **set completeness** (upload your own No-Intro / Redump DATs) + multi-region heatmap chips
 - 🌐 ROM language chips · preferred `en-US` · optional translation / patch catalog hooks
 - 🎞️ **Related media** on a game — adaptations, tie-ins, soundtracks as context (never a tracker, never a download)

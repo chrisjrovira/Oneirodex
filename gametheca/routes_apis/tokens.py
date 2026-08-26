@@ -10,6 +10,7 @@ from gametheca.models import ApiToken
 from gametheca.utils.api_tokens import (
     TOKEN_SCOPE_PRESETS,
     VALID_SCOPES,
+    forbidden_scopes_for_role,
     generate_api_token,
     is_raw_api_token,
     revoke_api_token,
@@ -28,10 +29,15 @@ def list_api_tokens():
         .filter_by(user_id=current_user.id)
         .order_by(ApiToken.created_at.desc())
     ).scalars().all()
+    denied = forbidden_scopes_for_role(getattr(current_user, 'role', None))
     return jsonify({
         'tokens': [row.to_public_dict() for row in rows],
-        'valid_scopes': sorted(VALID_SCOPES),
-        'scope_presets': TOKEN_SCOPE_PRESETS,
+        'valid_scopes': sorted(s for s in VALID_SCOPES if s not in denied),
+        'scope_presets': {
+            key: preset
+            for key, preset in TOKEN_SCOPE_PRESETS.items()
+            if not denied.intersection(preset['scopes'])
+        },
     })
 
 
@@ -53,6 +59,14 @@ def create_api_token():
         return api_error('scopes must be a list', code='bad_request')
     if current_user.role != 'admin' and scopes and 'admin' in scopes:
         return api_error('admin scope requires admin role', code='forbidden')
+    denied = forbidden_scopes_for_role(getattr(current_user, 'role', None))
+    blocked = [str(s).strip() for s in (scopes or []) if str(s).strip() in denied]
+    if blocked:
+        return api_error(
+            'Those scopes are not allowed for this account',
+            code='forbidden',
+            detail={'denied_scopes': blocked},
+        )
 
     row, raw = generate_api_token(current_user, name, scopes)
     # Contract: `secret` is the raw token only — no labels, expiry, or HTML.

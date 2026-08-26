@@ -243,3 +243,11 @@ def test_allow_redirects_cannot_be_forced_on():
         allow_redirects=True,
     )
     assert session.last_kwargs['allow_redirects'] is False
+
+
+def test_provider_cover_fetch_rejects_loopback():
+    """Artwork providers used raw requests.get — same SSRF hole download_image closed."""
+    from gametheca.utils.providers.base import fetch_outbound_image
+
+    with pytest.raises(ValueError, match='Blocked'):
+        fetch_outbound_image('http://127.0.0.1/cover.jpg', timeout=1)

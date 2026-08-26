@@ -1,0 +1,13 @@
+---
+description: Member/admin SPA CSRF, envelope errors, and CSS tokens — no local copies.
+globs: frontend/**/*.{js,jsx,css}
+alwaysApply: false
+---
+
+# SPA CSRF, envelope, tokens
+
+CSRF comes from `api/csrf.js` (`csrfHeaders(extra)`, or `getCsrfToken()` for a form field). Do not redefine the lookup, hand-build `X-CSRFToken`, or read `meta[name="csrf-token"]` in the page or component.
+
+Failed fetches: `throw await errorFromResponse(response, '<label>')`. If the body was already read, `errorFromBody(data, status, '<label>')`. Do not build `new Error(data.error)`. The helpers append status — the label must not include `${response.status}`.
+
+Defining a CSS token may use a literal (`--btn-primary: #2fd67b`). Using a value must go through a token (`color: var(--gt-accent)`). Run `node scripts/css-token-lint.mjs` after CSS/JSX style edits.

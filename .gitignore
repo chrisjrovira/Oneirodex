@@ -73,7 +73,8 @@ clients/desktop/src-tauri/target/
 .eggs/
 
 # Development / scratch (do not ignore real project docs or CI)
-# .claude/skills + .claude/agents are the tracked agent system (migrated off .cursor/).
+# Agent system: .claude/skills + .claude/agents (Claude Code) and
+# .cursor/skills + .cursor/agents + .cursor/rules (Cursor). Keep both tracked.
 # Everything else under .claude/ is local session state.
 .claude/*
 !.claude/skills/
