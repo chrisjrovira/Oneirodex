@@ -1,30 +1,37 @@
 # GameTheca agent skills and agents
 
-Token-efficient workflows for maintainers. Canonical copies live in **both** trees so Cursor and Claude Code resolve the same seats:
+Token-efficient workflows for maintainers.
 
-| What | Claude Code | Cursor | Invoked |
+| What | Canonical (edit here) | Mirror (generated) | Invoked |
 |---|---|---|---|
-| **Skills** — workflows | `.claude/skills/<name>/SKILL.md` | `.cursor/skills/<name>/SKILL.md` | By name (`/<name>`) or automatically when the description matches |
-| **Agents** — domain seats | `.claude/agents/<name>.md` | `.cursor/agents/<name>.md` | Launched deliberately (`Task` / `/agent-*`) when a slice sits in that domain |
-| **Rules** — glob-scoped | *(none — dropped 2026-08-20)* | `.cursor/rules/*.mdc` | When matching files are in context |
+| **Skills** — workflows | `.cursor/skills/<name>/SKILL.md` | `.claude/skills/` | By name (`/<name>`) or when the description matches |
+| **Agents** — domain seats | `.cursor/agents/<name>.md` | `.claude/agents/` | Launched deliberately (`Task` / `/agent-*`) |
+| **Rules** — glob-scoped | `.cursor/rules/*.mdc` | *(none — Cursor only)* | When matching files are in context |
 | **Locks** — product + engineering defaults | [agent-locks.md](agent-locks.md) | same | Always apply; never re-ask |
 
-> **2026-08-25 Cursor recreate.** The 2026-08-20 migration parked the team under `.claude/` and dropped the 19 thin Cursor rules. Cursor still loads `.claude/skills` and `.claude/agents` for compatibility, **and** prefers `.cursor/agents/` when the name collides. Skills are duplicated on purpose so `/docs-sync` works if one tree is missing; if a session lists each skill twice, treat `.cursor/skills/` as canonical and ignore the Claude copy. The new rules are five glob files (envelope · SPA CSRF/tokens · docs-sync · desktop · Compose), not the old 19 pointers.
+**Edit `.cursor/` only.** Run `python scripts/sync_prompt_trees.py` (or let `ship-ready` do it) so `.claude/` stays identical. CI runs `--check`. If a session lists a skill twice, treat `.cursor/skills/` as canonical.
 
-## Product mission
+Product mission, non-goals, and the attainment checklist: [agent-locks.md](agent-locks.md). Root pointers: [AGENTS.md](../../AGENTS.md) · [CLAUDE.md](../../CLAUDE.md).
 
-**GameTheca is the self-hosted household gaming sphere** — one Unraid-friendly service that turns a family's **already-owned** PC and console libraries into a shared, honest catalog: scan and match with real metadata, browse Systems and Discover, play where the platform allows (browser · companion · catalog), stay present with household social, and **BYO acquire** for content they choose to add — not a DRM store client, a Discord clone, or a pirate marketplace.
+## Context tiers
 
-Full text, the build/don't-build table, and the attainment checklist: [agent-locks.md](agent-locks.md).
+Load the smallest set that covers the turn. Do not follow archive or diary links unless the task is historical.
+
+| Tier | Load |
+|---|---|
+| **Always-on** | [CLAUDE.md](../../CLAUDE.md); glob `.mdc` rules when those files are in context; [agent-locks.md](agent-locks.md) when a lock applies |
+| **On skill / seat** | The matching SKILL.md or agent file — not the whole catalog |
+| **On task** | Living head of [progress.md](../strategy/progress.md); the one user/admin/runbook that matches; [ui-debt-log.md](ui-debt-log.md) **open table only** for UI work |
+| **Never auto-load** | `docs/strategy/archive/` (including July superpowers); wave diaries; ui-debt changelog |
 
 ## Skills
 
 | Skill | Use when | Does |
 |---|---|---|
-| **docs-sync** | Every code change, before claiming done | Docs matrix + progress board + README capture; ends with **Docs touched:** |
-| **verify-slice** | After a fix, or "verify / test / smoke" | Smallest pytest/vitest + the api-envelope and css-token ratchets |
+| **docs-sync** | Finishing a coding task, or the user asks to update docs | Docs matrix + living progress board + README capture; ends with **Docs touched:** |
+| **verify-slice** | User says verify / test / smoke, or ship-ready preflight needs evidence | Smallest pytest/vitest + envelope / css-token / button-language ratchets |
 | **wave-continue** | "keep building", "next wave", "until blocked" | implement → verify → docs, looping until a real fork |
-| **ship-ready** | **Only** on explicit commit / ship / push / PR | docs gate, conventional commit, mandatory push |
+| **ship-ready** | **Only** on explicit commit / ship / push / PR | docs gate, prompt-tree sync, conventional commit, mandatory push |
 | **issue-assess** | A pasted user report or GitHub issue | Severity · area · repro · next action. Assess only |
 | **issue-fix** | "fix #N" after triage | Smallest fix + focused test; never auto-merges |
 | **run-gametheca** | "run it", "does this work in the real app?" | Launches uvicorn against the test DB, logs in, calls the JSON API |

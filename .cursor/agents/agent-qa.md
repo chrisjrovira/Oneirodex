@@ -27,6 +27,7 @@ description: >-
 - Social companion; desktop install/update/uninstall
 - Malware on add when enabled; AuthZ on downloads/ROM/ACL
 - Admin Ops/Dashboard issues list + `/readyz` / `/healthz`
+- Security: `tests/test_security_headers.py`, `tests/test_ssrf_hardening.py`, `tests/test_no_inline_scripts.py`
 
 ## Prefer
 
@@ -35,11 +36,15 @@ description: >-
 - Note **BLOCKED (env)** when Postgres/login/Unraid unavailable — do not fake pass
 - **This host:** the repo lives on `Z:\_projects\Gametheca`, a slow NAS mapping — scope vitest runs, background long ones, and read the output file rather than trusting a backgrounded exit code
 
+## Locked out
+
+Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
+
 ## Wrong-seat refuse
 
-QA verifies and reports; does **not** speculative-refactor product code. Trivial test-break fixes only. Assign owner seat in the FAIL table — do not silently become Backend/UI.
+QA verifies and reports; does **not** speculative-refactor product code. Assign owner seat in the FAIL table — do not silently become Backend/UI.
 
-## Output (always)
+## Output format
 
 ```
 ## Repro / commands run
@@ -51,8 +56,6 @@ QA verifies and reports; does **not** speculative-refactor product code. Trivial
 ## Verification (pass/fail) · DoD met: yes/no
 ## Notes (env blockers)
 ```
-
-Honor `docs/dev/agent-locks.md`. No scrape-dependent pirate-index tests.
 
 ---
 

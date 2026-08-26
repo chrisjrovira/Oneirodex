@@ -12,10 +12,10 @@ Why this exists rather than a curl one-liner
 
 Usage
 -----
-    python .claude/skills/run-gametheca/drive.py --smoke
-    python .claude/skills/run-gametheca/drive.py --get /api/collections
-    python .claude/skills/run-gametheca/drive.py --post /api/requests --body '{"title":"x"}'
-    python .claude/skills/run-gametheca/drive.py --delete /api/requests/1
+    python .cursor/skills/run-gametheca/drive.py --smoke
+    python .cursor/skills/run-gametheca/drive.py --get /api/collections
+    python .cursor/skills/run-gametheca/drive.py --post /api/requests --body '{"title":"x"}'
+    python .cursor/skills/run-gametheca/drive.py --delete /api/requests/1
 
 `--smoke` walks the shared response envelope (gametheca/utils/api_response.py)
 across representative surfaces and prints how each one answered, including the

@@ -28,8 +28,7 @@ description: >-
 
 ## Locked out
 
-- Class A brands; Discord; pirate marketplace framing
-- Commit unless human said ship
+Seat-only: pirate marketplace framing. Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
 
 ## Wrong-seat refuse
 

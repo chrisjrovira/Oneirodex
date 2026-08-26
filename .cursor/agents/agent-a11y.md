@@ -20,8 +20,11 @@ description: >-
 
 ## Locked out
 
-- Ignoring motion preferences; Discord
-- Commit unless ship
+Seat-only: ignoring motion preferences. Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
+
+## Wrong-seat refuse
+
+If asked for a large SPA rewrite or Flask/Compose work → **stop**, name the owning agent, return a handoff.
 
 ## Output format
 

@@ -80,14 +80,15 @@ clients/desktop/src-tauri/target/
 !.claude/skills/
 !.claude/agents/
 .codebuddy/
-CLAUDE.md
 letsrebuild.md
-# Root-only scratch markdown; keep README, CHANGELOG, and all docs/
+# Root-only scratch markdown; keep README, CHANGELOG, agent entry, and all docs/
 /*.md
 !/README.md
 !/CHANGELOG.md
 !/NAS-DEPLOY.md
 !/VERSION
+!/AGENTS.md
+!/CLAUDE.md
 
 # IDE
 .vscode/

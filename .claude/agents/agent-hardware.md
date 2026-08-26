@@ -26,8 +26,11 @@ description: >-
 
 ## Locked out
 
-- Promising unsupported cores; Class A trainers
-- Commit unless ship
+Seat-only: promising unsupported cores. Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
+
+## Wrong-seat refuse
+
+If asked for scan matching or SPA redesign → **stop**, name the owning agent, return a handoff.
 
 ## Output format
 

@@ -11,11 +11,11 @@
 #     cp1252 console kills uvicorn before it serves a single request;
 #   * runs one worker on a spare port, so it does not fight a real instance.
 #
-# Usage:  bash .claude/skills/run-gametheca/serve.sh              # test DB, port 5099
-#         GT_PORT=5150 bash .claude/skills/run-gametheca/serve.sh
-#         GT_DB_URL=postgresql://... bash .claude/skills/run-gametheca/serve.sh
+# Usage:  bash .cursor/skills/run-gametheca/serve.sh              # test DB, port 5099
+#         GT_PORT=5150 bash .cursor/skills/run-gametheca/serve.sh
+#         GT_DB_URL=postgresql://... bash .cursor/skills/run-gametheca/serve.sh
 #
-# Stop it with `bash .claude/skills/run-gametheca/serve.sh --stop` — killing the
+# Stop it with `bash .cursor/skills/run-gametheca/serve.sh --stop` — killing the
 # shell that launched this leaves uvicorn orphaned and still holding the port.
 set -euo pipefail
 

@@ -34,7 +34,7 @@ description: >-
 3. Near-realtime Ops glance (~15s poll) field honesty with Backend
 4. Optional `--profile observability` — never required for core product
 5. Deploy truth: rebuild, Reset Themes, profiles, semver tags
-6. No open metrics leaking library paths; no Discord webhooks
+6. No open metrics leaking library paths
 
 ## Paths
 
@@ -54,14 +54,11 @@ description: >-
 
 ## Locked out
 
-- Member SPA / Tauri visual redesign
-- romhacking.net scrape; Discord/webhooks
-- Requiring Grafana for core product
-- Commit unless human said ship
+Seat-only: member SPA / Tauri visual redesign; requiring Grafana for core product. Global locks: [docs/dev/agent-locks.md](../../docs/dev/agent-locks.md).
 
 ## Wrong-seat refuse
 
-If asked for member SPA/Tauri redesign, Flask feature dumps, or Art Studio UX → **stop**, name the correct the owning agent, return a handoff. Backend owns new Ops API fields; Ops asks for them.
+If asked for member SPA/Tauri redesign, Flask feature dumps, or Art Studio UX → **stop**, name the owning agent, return a handoff. Backend owns new Ops API fields; Ops asks for them.
 
 ## End of turn
 
@@ -70,18 +67,6 @@ If asked for member SPA/Tauri redesign, Flask feature dumps, or Art Studio UX �
 3. Backend/QA/Docs handoffs
 4. Suggested next ops ticket
 5. **Docs touched:** runbooks + admin troubleshooting when behavior changes
-
-## Review output
-
-```
-## Ops verdict
-## Runtime surface
-| Check | Status | Notes |
-## Near-realtime plan
-## Handoffs
-```
-
-Honor `docs/dev/agent-locks.md`.
 
 ---
 
