@@ -72,6 +72,73 @@ def is_shipped_avatar(path: str | None) -> bool:
     )
 
 
+def avatar_url(path: str | None, *, theme: str | None = None) -> str:
+    """Browser URL for an avatar, themed when it is one of ours.
+
+    Two kinds of avatar, two resolutions:
+
+    * **Shipped** (`newstyle/avatars/*.svg`, and the legacy default) — served
+      from the *active theme*, because the preset generator writes a recoloured
+      copy of each one into every theme folder. These are flat SVGs rendered as
+      `<img>`, so they can neither inherit `currentColor` nor read a custom
+      property: without this they stay default-green on all nine presets while
+      the rest of the UI changes around them.
+    * **Uploaded** (`library/images/avatars_users/…`) — a member's own picture.
+      Served exactly as before; recolouring someone's photograph would be
+      absurd, and there is no themed copy of it to serve.
+
+    Falls back to the plain static path whenever the themed file is absent,
+    which covers an install whose theme folders predate the recoloured avatars
+    and the moment before the first boot-time sync has run.
+
+    `theme` is accepted for callers outside a request (tests, the CLI); left
+    unset it reads the signed-in member's preference the same way `theme_asset`
+    does.
+    """
+    from flask import current_app, url_for
+
+    if not path:
+        path = DEFAULT_AVATAR
+
+    if not is_shipped_avatar(path):
+        return url_for('static', filename=path)
+
+    name = os.path.basename(path)
+    # The legacy default is a JPG that never had a themed twin; point it at the
+    # current default SVG, which does.
+    if path == LEGACY_DEFAULT_AVATAR:
+        name = os.path.basename(DEFAULT_AVATAR)
+
+    if theme is None:
+        theme = _current_theme()
+
+    root = os.path.join(current_app.root_path, 'static', 'library', 'themes')
+    for candidate in (theme, 'default'):
+        if not candidate:
+            continue
+        themed = os.path.join(root, candidate, 'avatars', name)
+        if os.path.isfile(themed):
+            return url_for(
+                'static', filename=f'library/themes/{candidate}/avatars/{name}'
+            )
+
+    return url_for('static', filename=path)
+
+
+def _current_theme() -> str:
+    """The signed-in member's theme slug, or 'default'."""
+    try:
+        from flask_login import current_user
+
+        if current_user.is_authenticated:
+            prefs = getattr(current_user, 'preferences', None)
+            if prefs is not None:
+                return getattr(prefs, 'theme', None) or 'default'
+    except Exception:  # noqa: BLE001 — outside a request, or no login manager
+        pass
+    return 'default'
+
+
 # Full size and thumbnail. The thumbnail is what the rail and chat rows use, so
 # it is generated up front rather than resized in the browser on every render.
 AVATAR_MAX_EDGE = 500

@@ -210,6 +210,11 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
             return getattr(existing_job, 'id', None)
         print(f"Using existing scan job: {scan_job_entry.id}")
     else:
+        # Local import: scan_queue imports scan_and_add_games from this module,
+        # so a module-level import here would close the cycle. Every other
+        # scan_queue use in this file is function-local for the same reason.
+        from gametheca.utils.scan_queue import PROCESS_TOKEN
+
         # Create initial scan job
         scan_job_entry = ScanJob(
             folders={folder_path: True},
@@ -229,8 +234,14 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
             setting_download_missing_images=download_missing_images,
             setting_force_updates_extras=force_updates_extras_scan,
             schedule=schedule if schedule in ('8_hours', '24_hours', '48_hours') else None,
+            # This process is about to run the scan on its own thread, so it
+            # owns the job. Without the stamp a job created down this path — the
+            # direct callers that bypass start_or_queue_scan — would be
+            # indistinguishable from a pre-upgrade row, and an orphan here would
+            # go back to blocking the queue for STALE_RUNNING_SECONDS.
+            owner_token=PROCESS_TOKEN,
         )
-        
+
         db.session.add(scan_job_entry)
         try:
             db.session.commit()

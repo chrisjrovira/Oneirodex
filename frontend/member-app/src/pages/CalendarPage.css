@@ -214,6 +214,50 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
+}
+
+/* Wide screens: the grid and the day you picked, side by side.
+ *
+ * Stacked, selecting a busy day pushed the month up and off the top of the
+ * viewport — you clicked a date and lost the calendar you were reading. Beside
+ * it, the grid never moves, and the panel's own scroll cap (see
+ * `.gt-calendar__day-list`) keeps a launch Friday inside its column instead of
+ * setting the page height.
+ *
+ * Below the breakpoint it stays a single column, which is the right shape for a
+ * phone and is what the day panel was always designed for. */
+@media (min-width: 1100px) {
+  .gt-calendar__month {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 21rem);
+    grid-template-areas:
+      'nav nav'
+      'grid panel';
+    align-items: start;
+    gap: 0.75rem 1.25rem;
+  }
+
+  .gt-calendar__month-nav {
+    grid-area: nav;
+  }
+
+  .gt-calendar__grid {
+    grid-area: grid;
+  }
+
+  .gt-calendar__day-panel {
+    grid-area: panel;
+    /* It is a column of its own now, not a block under a rule. */
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  /* With a column to itself the day's list can breathe further than it can
+     when it is sharing the page width with nothing. */
+  .gt-calendar__day-list {
+    max-height: min(58vh, 30rem);
+  }
 }
 
 .gt-calendar__weekday-row,
@@ -271,6 +315,45 @@
 .gt-calendar__day:not(.is-out):focus-visible {
   border-color: color-mix(in srgb, var(--gt-accent) 40%, transparent);
   outline: none;
+}
+
+/* Today.
+ *
+ * A ring on the date rather than a fill on the cell, so it composes with the
+ * three states the cell already has — has-releases, is-selected, hover — rather
+ * than fighting them for the same background. Today can be any of those at the
+ * same time, and it stays legible in all four combinations. */
+.gt-calendar__day.is-today .gt-calendar__day-num {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  border-radius: var(--gt-radius-circle);
+  box-shadow: inset 0 0 0 2px var(--gt-accent);
+  color: var(--gt-text);
+  font-weight: 700;
+}
+
+/* How many releases land on the day, without opening it. */
+.gt-calendar__day-count {
+  position: absolute;
+  top: 0.25rem;
+  inset-inline-end: 0.25rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.2rem;
+  border-radius: var(--gt-radius-pill);
+  background: var(--gt-accent);
+  color: var(--gt-bg);
+  font-size: var(--gt-font-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 .gt-calendar__day-num {
@@ -358,6 +441,16 @@
   color: var(--gt-text-muted);
 }
 
+/* A day's titles scroll inside the panel rather than growing it.
+ *
+ * A launch Friday can carry a dozen releases, and the list simply ran on — so
+ * picking a busy day pushed the month grid off the top of the screen, and the
+ * calendar you were reading disappeared behind the day you had just clicked on.
+ * Bounded and scrollable keeps the grid and the day visible together, which is
+ * the whole point of having both.
+ *
+ * `max-height` rather than a fixed one: a day with two releases still takes two
+ * rows' worth of space, not a reserved slab of empty panel. */
 .gt-calendar__day-list {
   list-style: none;
   margin: 0;
@@ -365,7 +458,12 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  max-height: 14rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
+
 
 .gt-calendar__day-item {
   display: flex;

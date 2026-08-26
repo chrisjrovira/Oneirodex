@@ -83,25 +83,39 @@ export function DiscoverRowPage({ isAdmin = false, shellConfig = {} } = {}) {
     return <Navigate to={row.moreHref} replace />
   }
 
-  if (loading) {
-    return <PageStatus loading loadingMessage="Loading row…" />
-  }
+  /* The row's own name stays in the bar through loading and failure alike.
+     Returning a bare status swapped the whole page — including the title — for
+     a spinner, so "see all" led to an unlabelled loading screen and then, on a
+     slow row, an unlabelled error. The identifier is in the URL and the title
+     usually is not, so there was nothing left to say what had failed. */
+  const bar = <ContextBar title={row?.title || 'Discover'} />
 
-  if (error) {
+  if (loading || error) {
     return (
-      <p className="gt-more-page__lede" role="alert">
-        {error?.message || 'Unable to load this row.'}
-      </p>
+      <>
+        {bar}
+        <PageStatus
+          loading={loading}
+          error={error}
+          errorMessage="Unable to load this row."
+          loadingMessage="Loading row…"
+        />
+      </>
     )
   }
 
   if (!games.length) {
-    return <PageStatus emptyMessage="This row has nothing to show right now." />
+    return (
+      <>
+        {bar}
+        <PageStatus emptyMessage="This row has nothing to show right now." />
+      </>
+    )
   }
 
   return (
     <>
-      <ContextBar title={row?.title || 'Discover'} />
+      {bar}
       <GameGrid
         games={games}
         isAdmin={isAdmin}
@@ -111,7 +125,7 @@ export function DiscoverRowPage({ isAdmin = false, shellConfig = {} } = {}) {
       {row?.hasMore ? (
         <button
           type="button"
-          className="gt-btn gt-btn--secondary"
+          className="gt-cbtn"
           onClick={loadMore}
           disabled={loadingMore}
         >

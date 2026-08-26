@@ -79,6 +79,12 @@ jobs:
           tests/test_utils_ops_summary.py
           tests/test_routes_ops.py
           tests/test_security_suite.py
+          tests/test_security_headers.py
+          tests/test_ssrf_hardening.py
+          tests/test_image_upload_hardening.py
+          tests/test_auth_hardening.py
+          tests/test_vendor_licensing.py
+          tests/test_legal_surface.py
           tests/test_rbac_unit.py
           tests/test_routes_styleguide.py
           tests/test_templates_rail_chrome.py

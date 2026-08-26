@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { deleteJson, getJson, postJson } from './adminApi'
 import { MetricStrip } from './opsWidgets'
 import { showToast } from './utils/toast'
@@ -205,9 +206,7 @@ export function ExtensionsPage() {
     return (
       <div className="gt-admin-page">
         <h1>File Extensions</h1>
-        <p className="gt-admin-lede" role="status">
-          Loading allowed extensions…
-        </p>
+        <PageStatus loading loadingMessage="Loading allowed extensions…" />
       </div>
     )
   }
@@ -216,7 +215,7 @@ export function ExtensionsPage() {
     return (
       <div className="gt-admin-page">
         <h1>File Extensions</h1>
-        <p role="alert">{error}</p>
+        <PageStatus error={error} />
         <a className="gt-btn" href="/libraries">
           Back to libraries
         </a>
@@ -262,11 +261,9 @@ export function ExtensionsPage() {
         ]}
       />
 
-      {error ? (
-        <div className="gt-admin-banner gt-admin-banner--warn" role="status">
-          {error}
-        </div>
-      ) : null}
+      {/* A failure after the list has loaded — the page still works, but this
+          is an error and now says so assertively rather than politely. */}
+      <PageStatus error={error} />
 
       <form className="gt-admin-panel gt-ext-add" onSubmit={onAddSubmit}>
         <div className="gt-admin-actions-row" style={{ alignItems: 'flex-end', marginTop: 0 }}>
@@ -308,11 +305,10 @@ export function ExtensionsPage() {
       </form>
 
       {items.length === 0 ? (
-        <div className="gt-admin-panel gt-ext-empty" role="status">
-          <p className="gt-admin-lede" style={{ marginBottom: 0 }}>
-            Empty list — library scans will not recognize any files until you add extensions.
-          </p>
-        </div>
+        <PageStatus
+          className="gt-ext-empty"
+          emptyMessage="Empty list — library scans will not recognize any files until you add extensions."
+        />
       ) : null}
 
       {suggestions.length && items.length > 0 ? (
@@ -375,9 +371,7 @@ export function ExtensionsPage() {
       })}
 
       {filter && filtered.length === 0 && items.length > 0 ? (
-        <p className="gt-admin-lede" role="status">
-          No extensions match “{filter}”.
-        </p>
+        <PageStatus emptyMessage={`No extensions match “${filter}”.`} />
       ) : null}
 
       <div className="gt-admin-actions-row">

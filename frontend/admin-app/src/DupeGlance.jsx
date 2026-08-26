@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { getJson, postJson } from './adminApi'
 import {
   buildDupeCompare,
@@ -709,8 +710,12 @@ export function DupeGlance({ onOpenPath }) {
         </p>
       ) : null}
 
-      {loading ? <p>Loading unmatched folders…</p> : null}
-      {error ? <div role="alert">Unable to load unmatched folders.</div> : null}
+      <PageStatus
+        loading={loading}
+        loadingMessage="Loading unmatched folders…"
+        error={error}
+        errorMessage="Unable to load unmatched folders."
+      />
 
       {!loading && !error && visible.length === 0 ? (
         <p className="gt-dupe-glance__empty">No folders for this filter.</p>

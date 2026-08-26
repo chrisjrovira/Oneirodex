@@ -81,6 +81,7 @@ Built by `gametheca.utils.ops_summary._services_snapshot`. Brief field map:
 | `game_servers` | Household registry pulse — `count`, `reachable`, per-server `display_name` / TCP or HTTP probe |
 | `readyz` | In-process readiness snippet — `status`, `http_status`, `checks` (same shape as `/readyz`), `check_ms`; **`null` when probe fails** |
 | `malware_module_enabled` | Convenience bool mirroring malware module enable |
+| `jobs[].error_message` | Why a job stopped, or `null`. Added 2026-08-25 — the payload carried counts, current folder, elapsed, ETA and `stalled` and dropped the one field explaining a failure, so Ops could report that a scan failed and never why. Normalised to `null`: `ScanJob` defaults it to an empty string |
 | `library_watch` | Optional root-folder incremental watch (`GT_LIBRARY_WATCH`, default off) — `enabled`, `running`, `roots`, `pending_libraries`, `debounce_seconds`, `last_event_at`, `last_enqueue_at`, `note` |
 
 No Discord / webhook sinks — alerts stay in-app SystemEvents / optional SMTP digest.
@@ -94,3 +95,41 @@ No Discord / webhook sinks — alerts stay in-app SystemEvents / optional SMTP d
 - [challenge-solver-unraid.md](../runbooks/challenge-solver-unraid.md) — TRAWL sidecar (CH-2)  
 - [observability-profile.md](../runbooks/observability-profile.md) — in-app vs Prometheus stub  
 - [unraid-deploy.md](../runbooks/unraid-deploy.md) — checklist step 0b  
+
+## Danger zone — reset this install
+
+Bottom of **Admin → System (Ops)**. Clears GameTheca's *database* and returns the
+install toward first-boot state.
+
+**It never deletes files.** Scanned games, artwork you supplied, firmware on the
+BIOS volume and the theme tree are all left exactly as they are. That is
+structural, not a promise: the reset path in
+`gametheca/utils/system_reset.py` has no filesystem access at all, so a rescan
+rebuilds the catalog from the media still sitting on disk.
+
+| Scope | Clears | Keeps |
+|---|---|---|
+| `catalog` | Games, matches, unmatched folders, scan jobs, artwork records, reference sets | Library definitions — rescan immediately |
+| `libraries` | The configured libraries, their filters and access grants. **Implies `catalog`** | — |
+| `users` | Members, invites, favorites, collections, playtime, chat, saves | **Your own admin account**, so you stay signed in |
+| `settings` | Server settings, IGDB/SMTP/API credentials, themes, discovery sections, announcements | — |
+
+Two steps, enforced by the API rather than by the UI:
+
+1. `POST /admin/api/system/reset` with `{"scopes": [...]}` returns the **plan** —
+   every table it would empty, including those reached by cascade — and changes
+   nothing. This is the default: a call that omits the phrase gets a description
+   of the damage, not the damage.
+2. Repeat with `"confirm": "RESET GAMETHECA"` to perform it.
+
+Tables are emptied in one `TRUNCATE ... RESTART IDENTITY CASCADE`, so the reset
+is a single transaction — it lands whole or not at all, with no half-cleared
+database to unpick.
+
+> **Cascade reaches further than the scope names.** A `catalog` reset also clears
+> the per-member rows that point at games — favorites, playtime, saves, owned
+> titles. The plan lists them under `cascaded` before you confirm; read it.
+
+Every table in the schema is assigned to exactly one scope, and
+`tests/test_system_reset.py` fails if a new model is added without one — so the
+reset cannot silently start leaving rows behind as the schema grows.

@@ -87,6 +87,11 @@
   /* The only scroll container in the shell. Chrome stays put; content moves. */
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* Always reserve the scrollbar, whether or not this page overflows. Two
+     reasons: the content no longer shifts sideways the moment a page grows past
+     one screen, and the top bar can reserve the same width and land on the same
+     midpoint — see .gt-topbar. */
+  scrollbar-gutter: stable;
   padding: var(--gt-stack) var(--gt-gutter) var(--gt-section-gap);
 }
 
@@ -434,15 +439,47 @@ body.gt-shell-host > #admin-legacy-content:empty {
 
 /* Active marker: accent edges on BOTH sides rather than a filled pill. A single
    left edge reads as a stray artifact against the rail's own right border; a
-   matching right edge closes the row so the selection looks deliberate. */
+   matching right edge closes the row so the selection looks deliberate.
+
+   The row's *content* takes the accent too, glyph and label together. It used
+   to go to `--gt-text`, which is the same colour the row takes on hover — so
+   "where I am" and "where the pointer is" were rendered identically and the
+   theme's own colour appeared only in the edges and a 14% wash. Whichever
+   accent a theme sets is now the thing that says which section you are in. */
 .gt-rail__link.is-active {
-  color: var(--gt-text);
+  color: var(--gt-accent);
   background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
   box-shadow:
     inset 2px 0 0 var(--gt-accent),
     inset -2px 0 0 var(--gt-accent);
 }
 
+.gt-rail__link.is-active .gt-rail__label {
+  font-weight: 600;
+}
+
+/* Hover on the row you are already on must not wash the accent back out. */
+.gt-rail__link.is-active:hover {
+  color: var(--gt-accent);
+  background: color-mix(in srgb, var(--gt-accent) 20%, transparent);
+}
+
+/* The icon column.
+ *
+ * Expanded, the glyph was 1.25rem — smaller than the label beside it, in a rail
+ * whose whole job is to be recognised at a glance. It scales up by
+ * `--gt-rail-icon-scale` here, and the row grows to hold it.
+ *
+ * The scale is a token so an install can push it further. 3 is the value the
+ * request asked for and is supported, with a caveat worth knowing before you
+ * set it: at 3 the glyph is ~60px and each row is ~68px, so the member rail's
+ * twenty-three destinations run about 1500px — past the fold on most screens,
+ * which turns a rail you scan into a rail you scroll. 1.8 is the largest value
+ * that keeps every group visible on a 1080p screen, so that is the default.
+ *
+ * Collapsed keeps the original size deliberately: there the rail is 3.25rem
+ * wide and the glyph is the only thing in it, so it is already at its
+ * proportional maximum — scaling there just crops it. */
 .gt-rail__icon {
   flex: 0 0 auto;
   width: var(--gt-rail-icon-w);
@@ -450,6 +487,19 @@ body.gt-shell-host > #admin-legacy-content:empty {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.gt-shell:not([data-rail='collapsed']) .gt-rail__icon {
+  width: calc(var(--gt-rail-icon-w) * var(--gt-rail-icon-scale, 1.8));
+  height: calc(var(--gt-rail-icon-w) * var(--gt-rail-icon-scale, 1.8));
+}
+
+/* The row has to grow with the glyph or the icons collide top and bottom. */
+.gt-shell:not([data-rail='collapsed']) .gt-rail__link {
+  min-height: max(
+    var(--gt-rail-item-h),
+    calc(var(--gt-rail-icon-w) * var(--gt-rail-icon-scale, 1.8) + var(--gt-space-3))
+  );
 }
 
 /* The glyph fills its column. It used to be a fixed 18px inside a 1.15rem box,
@@ -482,11 +532,140 @@ body.gt-shell-host > #admin-legacy-content:empty {
   transform: scale(1.08);
 }
 
+/* ---------- one animation per destination ----------
+ *
+ * The shared pop above tells you the pointer found *a* row. It cannot tell you
+ * which one, because every glyph does the same thing — twenty-three marks
+ * animating identically is the same problem as twenty-three marks sitting
+ * still, one frame later.
+ *
+ * So each destination moves the way its own subject moves: the heart beats, the
+ * download arrow falls, the calendar page turns, the controller shakes. The
+ * motion is a second reading of the icon rather than decoration, which is what
+ * makes it worth the bytes — you learn the rail by feel and stop reading the
+ * labels.
+ *
+ * Keyed off `data-rail-item`, set by SideRail from the same link id the glyph
+ * itself is chosen by, so an icon and its motion cannot get out of step. A
+ * destination with no rule here keeps the shared pop, which is a fine default
+ * and means adding a rail entry never requires touching this block.
+ *
+ * Every one of these is suppressed under `prefers-reduced-motion` — see the end
+ * of the block. */
+
+@keyframes gt-rail-beat {
+  0%, 100% { transform: scale(1.06); }
+  18% { transform: scale(1.32); }
+  32% { transform: scale(1.1); }
+  50% { transform: scale(1.28); }
+}
+
+@keyframes gt-rail-fall {
+  0% { transform: translateY(-22%); opacity: 0.55; }
+  55% { transform: translateY(14%); opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes gt-rail-shake {
+  0%, 100% { transform: rotate(0deg) scale(1.1); }
+  25% { transform: rotate(-9deg) scale(1.1); }
+  75% { transform: rotate(9deg) scale(1.1); }
+}
+
+@keyframes gt-rail-flip {
+  0% { transform: perspective(120px) rotateX(0deg) scale(1.1); }
+  60% { transform: perspective(120px) rotateX(-58deg) scale(1.1); }
+  100% { transform: perspective(120px) rotateX(0deg) scale(1.1); }
+}
+
+@keyframes gt-rail-sweep {
+  0% { transform: rotate(0deg) scale(1.1); }
+  50% { transform: rotate(20deg) scale(1.16); }
+  100% { transform: rotate(0deg) scale(1.1); }
+}
+
+@keyframes gt-rail-rise {
+  0% { transform: translateY(0) scale(1.06); }
+  50% { transform: translateY(-16%) scale(1.18); }
+  100% { transform: translateY(0) scale(1.1); }
+}
+
+@keyframes gt-rail-tick {
+  0%, 100% { transform: rotate(0deg) scale(1.1); }
+  30% { transform: rotate(8deg) scale(1.14); }
+  60% { transform: rotate(-4deg) scale(1.12); }
+}
+
+@keyframes gt-rail-spin {
+  0% { transform: rotate(0deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1.1); }
+}
+
+/* Favorites — a heartbeat, twice, the way a heart actually reads. */
+.gt-rail__link[data-rail-item='favorites']:hover .gt-icon,
+.gt-rail__link[data-rail-item='favorites']:focus-visible .gt-icon {
+  animation: gt-rail-beat 900ms var(--gt-motion-ease, ease) infinite;
+}
+
+/* Downloads — the arrow drops, then the next one drops. */
+.gt-rail__link[data-rail-item='downloads']:hover .gt-icon,
+.gt-rail__link[data-rail-item='downloads']:focus-visible .gt-icon {
+  animation: gt-rail-fall 850ms var(--gt-motion-ease, ease) infinite;
+}
+
+/* Big Picture and VR — a controller being picked up. */
+.gt-rail__link[data-rail-item='big-picture']:hover .gt-icon,
+.gt-rail__link[data-rail-item='big-picture']:focus-visible .gt-icon,
+.gt-rail__link[data-rail-item='vr']:hover .gt-icon,
+.gt-rail__link[data-rail-item='vr']:focus-visible .gt-icon {
+  animation: gt-rail-shake 520ms var(--gt-motion-ease, ease) infinite;
+}
+
+/* Release calendar — a page turning over. */
+.gt-rail__link[data-rail-item='calendar']:hover .gt-icon,
+.gt-rail__link[data-rail-item='calendar']:focus-visible .gt-icon {
+  animation: gt-rail-flip 900ms var(--gt-motion-ease, ease) infinite;
+}
+
+/* Discover — a beam sweeping across. */
+.gt-rail__link[data-rail-item='discover']:hover .gt-icon,
+.gt-rail__link[data-rail-item='discover']:focus-visible .gt-icon {
+  animation: gt-rail-sweep 1100ms var(--gt-motion-ease, ease) infinite;
+}
+
+/* Wishlist and Acquire — the thing you are reaching for lifts toward you. */
+.gt-rail__link[data-rail-item='wishlist']:hover .gt-icon,
+.gt-rail__link[data-rail-item='wishlist']:focus-visible .gt-icon,
+.gt-rail__link[data-rail-item='acquire']:hover .gt-icon,
+.gt-rail__link[data-rail-item='acquire']:focus-visible .gt-icon {
+  animation: gt-rail-rise 800ms var(--gt-motion-ease, ease) infinite;
+}
+
+/* Notifications — a bell rung once per cycle. Playtime's clock ticks the same
+   way, which is the same gesture read differently. */
+.gt-rail__link[data-rail-item='notifications']:hover .gt-icon,
+.gt-rail__link[data-rail-item='notifications']:focus-visible .gt-icon,
+.gt-rail__link[data-rail-item='playtime']:hover .gt-icon,
+.gt-rail__link[data-rail-item='playtime']:focus-visible .gt-icon {
+  animation: gt-rail-tick 700ms var(--gt-motion-ease, ease) infinite;
+}
+
+/* Updates — the refresh mark turns, once per pass. */
+.gt-rail__link[data-rail-item='updates']:hover .gt-icon,
+.gt-rail__link[data-rail-item='updates']:focus-visible .gt-icon {
+  animation: gt-rail-spin 1200ms linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* The size change is the affordance and stays; the travel between the two
-     states is the part that is vestibular, so only the animation goes. */
+     states is the part that is vestibular, so only the animation goes.
+     `:where()` keeps this at zero specificity on the attribute selectors above,
+     so one rule retires every per-destination animation rather than needing a
+     matching override for each. */
   .gt-rail__link:hover .gt-icon,
-  .gt-rail__link:focus-visible .gt-icon {
+  .gt-rail__link:focus-visible .gt-icon,
+  .gt-rail__link[data-rail-item]:hover .gt-icon,
+  .gt-rail__link[data-rail-item]:focus-visible .gt-icon {
     animation: none;
     transform: scale(1.12);
   }
@@ -632,8 +811,70 @@ body.gt-shell-host > #admin-legacy-content:empty {
   gap: var(--gt-space-2);
   min-width: 0;
   padding-inline: var(--gt-gutter);
+  /* The content pane below is the shell's only scroll container and it carries
+     a 9px scrollbar; this bar does not. Two boxes of different widths have two
+     different midpoints, so the centred view switcher sat a few pixels off the
+     centre of the grid underneath it — visible as "the buttons are aligned to
+     the whole UI, not to the page". Reserving the same width here puts both
+     content boxes on one midpoint.
+     Paired with `scrollbar-gutter: stable` on the pane, so the reserve is
+     always there rather than appearing when the page happens to overflow. */
+  padding-inline-end: calc(var(--gt-gutter) + var(--gt-scrollbar-w, 9px));
   background: color-mix(in srgb, var(--gt-surface) 88%, var(--gt-bg));
   border-bottom: 1px solid var(--gt-border);
+}
+
+/* Rail toggle + Filters as one control. The cluster must not be squeezed or
+   stretched by the flexible `__start` group around it. */
+.gt-topbar__cluster {
+  flex: 0 0 auto;
+}
+
+/* The lead slot and ContextBar's portal host are plumbing, not layout: without
+   this they sit between the two buttons as flex items of their own and the
+   shared edge never collapses. `.gt-pop` deliberately keeps its box — it is the
+   Filters popover's positioning context, and dissolving it would re-anchor the
+   panel to the cluster's left edge, i.e. under the burger. */
+.gt-topbar__cluster > .gt-topbar__lead,
+.gt-topbar__cluster .gt-contextbar__host {
+  display: contents;
+}
+
+/* `.gt-cbtn-group > .gt-cbtn` cannot see the Filters trigger, which is one box
+   further down inside `.gt-pop`. These re-state the group's edge rules for the
+   two buttons that actually exist here, keeping the shape identical to every
+   other merged cluster in the product. */
+.gt-topbar__cluster .gt-pop > .gt-cbtn {
+  border-radius: 0;
+  margin-inline-start: -1px;
+  border-start-end-radius: var(--gt-radius-sm);
+  border-end-end-radius: var(--gt-radius-sm);
+}
+
+.gt-topbar__cluster .gt-pop > .gt-cbtn:hover,
+.gt-topbar__cluster .gt-pop > .gt-cbtn:focus-visible,
+.gt-topbar__cluster .gt-pop > .gt-cbtn.is-on {
+  position: relative;
+  z-index: 1;
+}
+
+/* Alone, the toggle is a whole button again.
+ *
+ * `.gt-cbtn-group > .gt-cbtn` squares every corner and `:first-child` restores
+ * only the leading pair — right while Filters is beside it, wrong on the pages
+ * that render no filter popover at all (Help, Notifications, Calendar…), where
+ * it left a lone button with two square corners on its right. `:has()` on the
+ * *absence* of the popover is what tells the two cases apart. */
+.gt-topbar__cluster:not(:has(.gt-pop)) > .gt-topbar__rail-toggle {
+  border-radius: var(--gt-radius-sm);
+}
+
+/* A page-supplied title sits beside the cluster, with the same breathing room
+   the bar's own section label gets. */
+.gt-topbar__title-slot {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
 }
 
 /* Rail toggle and Filters are one cluster: open the nav, narrow the list.
@@ -696,6 +937,24 @@ body.gt-shell-host > #admin-legacy-content:empty {
   white-space: nowrap;
 }
 
+/* A page that names itself wins over the table's guess.
+ *
+ * `getPageTitle` can only name routed destinations, so on a Discover row's
+ * "see all" page it says "Discover" while the page is actually one named row.
+ * ContextBar now portals a real title into the lead slot for those pages; this
+ * retires the bar's own copy whenever it does, so a collapsed rail shows one
+ * name rather than "DISCOVER  ACTION GAMES". */
+.gt-topbar__start:has(.gt-topbar__lead .gt-topbar__section)
+  > .gt-topbar__section {
+  display: none;
+}
+
+/* The portalled title follows Filters, so it needs the same separation from
+   the control cluster that the bar's own copy gets from the toggle. */
+.gt-topbar__lead .gt-topbar__section {
+  margin-inline-start: var(--gt-space-2);
+}
+
 /* Still rendered by partials/topbar.html for the Jinja pages, which have no
    context bar to fill the middle. The React bar uses the centre slot's own
    flex-grow instead. */
@@ -745,6 +1004,57 @@ body.gt-shell-host > #admin-legacy-content:empty {
   align-items: center;
   gap: var(--gt-space-2);
   flex: 0 0 auto;
+}
+
+/* The account button: name, then avatar.
+   The avatar is a real image rather than a masked glyph, so it cannot take the
+   theme's colour the way the rail's icons do. What it takes instead is the
+   theme's *shape* language — the same radius family as every other rounded
+   surface — and an accent ring once the menu is open, so the control still
+   reads as belonging to the theme it is sitting in. */
+.gt-topbar__account {
+  gap: var(--gt-space-3);
+  padding-inline-end: var(--gt-space-2);
+}
+
+.gt-topbar__account-name {
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gt-topbar__account-avatar {
+  flex: 0 0 auto;
+  width: calc(var(--gt-control-h) - var(--gt-space-3));
+  height: calc(var(--gt-control-h) - var(--gt-space-3));
+  border-radius: var(--gt-radius-sm);
+  object-fit: cover;
+  /* A 1px inset keeps a dark avatar off a dark bar edge without a full border,
+     which at this size reads as a box around a box. */
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gt-text) 12%, transparent);
+}
+
+.gt-topbar__account[aria-expanded='true'] {
+  color: var(--gt-text);
+  border-color: var(--gt-accent);
+}
+
+.gt-topbar__account[aria-expanded='true'] .gt-topbar__account-avatar {
+  box-shadow: 0 0 0 1px var(--gt-accent);
+}
+
+/* Below the tablet breakpoint the bar is tight; the avatar identifies the
+   account on its own, and the name is the part that can go. */
+@media (max-width: 700px) {
+  .gt-topbar__account-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 /* A search field that looks like a field invites typing; the palette is the
@@ -939,8 +1249,8 @@ body.gt-shell-host .gt-admin-main {
 .gt-shell__main::-webkit-scrollbar,
 body.gt-shell-host > #admin-legacy-content::-webkit-scrollbar,
 body.gt-shell-host .gt-admin-main::-webkit-scrollbar {
-  width: 9px;
-  height: 9px;
+  width: var(--gt-scrollbar-w, 9px);
+  height: var(--gt-scrollbar-w, 9px);
 }
 
 .gt-rail__nav::-webkit-scrollbar-track,
@@ -1082,4 +1392,21 @@ body.gt-shell-host .gt-admin-main::-webkit-scrollbar-thumb:hover {
     grid-template-rows: minmax(0, 1fr);
     grid-template-areas: 'main';
   }
+}
+
+/* AGPL §13 source offer on the admin surface (base_admin.html).
+ *
+ * Quiet by design: it is a licence obligation that must be *reachable*, not a
+ * call to action competing with the page it sits under. Sits outside the shell
+ * grid so it cannot disturb an area map. */
+.gt-admin-licence {
+  padding: var(--gt-space-5) var(--gt-space-6);
+  border-top: 1px solid var(--gt-border);
+  color: var(--gt-text-muted);
+  font-size: var(--gt-font-sm);
+  text-align: center;
+}
+
+.gt-admin-licence a {
+  color: var(--gt-accent);
 }

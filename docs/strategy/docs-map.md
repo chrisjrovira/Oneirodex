@@ -27,6 +27,7 @@
 | Social lite pointer | `docs/strategy/social.md` | Have |
 | Social + A/V waves | `docs/strategy/social-av.md` | Have (W16 shipped) · post-1.0 native RTC plan → [native-rtc.md](native-rtc.md) |
 | Security suite | `docs/strategy/security.md` | Have · post-1.0 native malware plan → [native-malware-scan.md](native-malware-scan.md) |
+| Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have (2026-08-25) — audit findings with evidence; Phases 0–4 shipped, 5–6 open (cores licensing decision recorded) |
 | Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs + loading motifs (`GENERATOR_VERSION` 10) |
 | Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
@@ -165,6 +166,7 @@
 | UI debt log (recurring defects) | Have — [dev/ui-debt-log.md](../dev/ui-debt-log.md) — badge inventory · UID-001…015 · **UID-001**/**UID-002**/**UID-005**/**UID-009** done · UI Tasks must update |
 | Docs-sync skill | Have — `.claude/skills/docs-sync/` |
 | Agent locks (product + engineering defaults) | Have — [dev/agent-locks.md](../dev/agent-locks.md) |
+| W31 commit attribution (security vs UI) | Have — [dev/w31-commit-attribution.md](../dev/w31-commit-attribution.md) — 130 UI · 100 security · 6 overlapping; split assessed and deliberately not performed |
 | UI tokens (Wave 0 / B+C) | Have — [dev/ui-wave0-tokens.md](../dev/ui-wave0-tokens.md) |
 | Architecture overview | Create |
 | Local dev setup | Update |

@@ -942,7 +942,7 @@ export function ChatPanel({
                     ) : null}
                     <MessageAttachments attachments={m.attachments} />
                     <div className="gt-chat-msg__actions">
-                      <button type="button" onClick={() => setReplyTo(m)}>
+                      <button type="button" className="gt-cbtn gt-cbtn--ghost gt-btn--sm" onClick={() => setReplyTo(m)}>
                         Reply
                       </button>
                       {reactionItems.map((item) => {
@@ -953,6 +953,11 @@ export function ChatPanel({
                           <button
                             key={emoji}
                             type="button"
+                            /* `is-on` is the bar language's pressed state, and
+                               it is already keyed off exactly this condition
+                               everywhere else — a reaction you left reads the
+                               same as an active filter. */
+                            className={`gt-cbtn gt-btn--sm${mine ? ' is-on' : ''}`}
                             aria-pressed={mine}
                             title={mine ? `Remove ${item.label}` : `React ${item.label}`}
                             onClick={() => void toggleReaction(m.id, emoji)}

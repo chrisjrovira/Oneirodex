@@ -127,15 +127,45 @@
    fourth outline around three things that did not need grouping, and it was the
    heaviest edge on the page. Padding stays: the parts still need room to sit
    off the last row of tiles. */
+/* Pinned to the foot of the pane, not to the end of the grid.
+ *
+ * With 500 tiles on a page the pager was a screen and a half below the fold, so
+ * "next page" meant scrolling to the bottom of a page you had just decided you
+ * were done with — and per-page, the control that would have made the page
+ * shorter, was behind the same scroll.
+ *
+ * `position: sticky` with `bottom: 0` keeps it in flow: it sits under the last
+ * row of tiles as before, and only detaches from the end of the content while
+ * the content is taller than the pane. The container it sticks inside is the
+ * shell's scrolling main, so no other page has to know about this.
+ *
+ * It gains a surface here — the transparent version was readable against the
+ * page background but not against a grid of cover art scrolling under it. */
 .pagination-controls {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
     display: flex;
     align-items: center;
     gap: var(--gt-space-4, 12px);
     width: 100%;
-    background: transparent;
-    padding: 8px 0;
+    padding: var(--gt-space-3, 8px) var(--gt-space-4, 12px);
     border: 0;
     border-radius: 0;
+    /* Reaches past the pane's padding so the bar spans the full width rather
+       than floating with a strip of scrolling tiles either side of it. */
+    margin-inline: calc(var(--gt-gutter) * -1);
+    padding-inline: var(--gt-gutter);
+    background: color-mix(in srgb, var(--gt-surface) 92%, var(--gt-bg));
+    border-top: 1px solid var(--gt-border);
+    backdrop-filter: blur(8px);
+}
+
+/* Nothing behind glass on a machine that would rather not composite one. */
+@supports not (backdrop-filter: blur(1px)) {
+    .pagination-controls {
+        background: var(--gt-surface);
+    }
 }
 
 .gt-pagination__page {

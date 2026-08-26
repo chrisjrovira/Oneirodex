@@ -82,6 +82,13 @@ export function AdminSideRail({ railState = 'expanded', onCloseDrawer }) {
                 <a
                   className={active ? 'gt-rail__link is-active' : 'gt-rail__link'}
                   href={link.path}
+                  /* Which destination this row is, for the stylesheet.
+                     gt-shell.css keys a per-destination hover animation off
+                     this attribute. The member rail has always set it; the
+                     admin rail never did, so admin icons sat still while the
+                     identical rail in the member app animated — the same
+                     stylesheet producing two different products. */
+                  data-rail-item={link.id}
                   onClick={onCloseDrawer}
                   title={collapsed ? link.label : undefined}
                   aria-current={active ? 'page' : undefined}
@@ -121,7 +128,12 @@ export function AdminSideRail({ railState = 'expanded', onCloseDrawer }) {
             Leave admin
           </li>
           <li>
-            <a className="gt-rail__link" href="/library" title={collapsed ? 'Library' : undefined}>
+            <a
+              className="gt-rail__link"
+              data-rail-item="library"
+              href="/library"
+              title={collapsed ? 'Library' : undefined}
+            >
               <span className="gt-rail__icon" aria-hidden="true">
                 <RailIcon name="library" />
               </span>
@@ -129,7 +141,12 @@ export function AdminSideRail({ railState = 'expanded', onCloseDrawer }) {
             </a>
           </li>
           <li>
-            <a className="gt-rail__link" href="/logout" title={collapsed ? 'Log out' : undefined}>
+            <a
+              className="gt-rail__link"
+              data-rail-item="logout"
+              href="/logout"
+              title={collapsed ? 'Log out' : undefined}
+            >
               <span className="gt-rail__icon" aria-hidden="true">
                 <RailIcon name="logout" />
               </span>

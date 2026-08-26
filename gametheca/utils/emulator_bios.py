@@ -35,6 +35,43 @@ BIOS_REQUIREMENTS: dict[str, list[str]] = {
     'puae': ['kick34005.A500', 'kick40068.A1200', 'kick33180.A500'],
     'cap32': ['cpc6128.rom'],
     'prosystem': ['7800 BIOS (U).rom'],
+    # --- Coverage completion (2026-08-24) -----------------------------------
+    # Every core reachable from platform_emulator_mapping that asks for a system
+    # file now has a row, so the panel can answer "what do I still need?" for
+    # the whole catalog instead of the subset that happened to be filled in.
+    # Cores that need nothing (stella2014, mednafen_vb/_wswan/_ngp, potator,
+    # vecx, dosbox*) are deliberately still absent — a row for them would be a
+    # permanent "missing" the operator can never satisfy.
+    #
+    # Hard requirements: the core cannot boot the system at all without these.
+    'a5200': ['5200.rom'],
+    'freechaf': ['sl31253.bin', 'sl31254.bin', 'sl90025.bin'],
+    'crvision': ['bioss.rom'],
+    'citra': ['aes_keys.txt', 'boot9.bin'],
+    'vita3k': ['PSP2UPDAT.PUP'],
+    # Optional/accuracy files. Listed so the operator can see the slot exists,
+    # but kept out of BIOS_HARD_REQUIRED_CORES so the panel does not call a
+    # working system broken:
+    #   nestopia   — disksys.rom is Famicom Disk System only; carts are fine.
+    #   dolphin    — GameCube IPL is the boot animation, not a requirement.
+    #   snes9x     — DSP/CX4 co-processor ROMs, needed by a handful of titles.
+    #   *_n64      — 64DD IPL, needed only for 64DD disk images.
+    #   gearsystem — SMS/Coleco boot ROMs improve accuracy; not required.
+    #   virtualjaguar — jagboot.rom is the Jaguar boot logo.
+    #   vice_x64   — the libretro core embeds the C64 ROMs; external copies
+    #                only matter for exact-revision accuracy.
+    'nestopia': ['disksys.rom'],
+    'dolphin': ['IPL.bin'],
+    'snes9x': ['dsp1.bin', 'dsp1b.bin', 'dsp2.bin', 'dsp3.bin', 'dsp4.bin', 'cx4.bin', 'st010.bin', 'st011.bin'],
+    'mupen64plus_next': ['64DD_IPL.n64'],
+    'parallel_n64': ['64DD_IPL.n64'],
+    'gearsystem': ['bios_U.sms', 'bios.col'],
+    'virtualjaguar': ['jagboot.rom'],
+    'vice_x64': ['kernal', 'basic', 'chargen'],
+    # Deliberately absent: mame / mame2003_plus. MAME system files are per-romset
+    # archives (neogeo.zip and friends) that live beside the ROMs, not single
+    # files on the firmware volume, so listing them here would report a
+    # permanent shortfall against a volume that is not where they belong.
 }
 
 # Which of the above a core genuinely cannot boot without. Everything else is an
@@ -44,7 +81,45 @@ BIOS_HARD_REQUIRED_CORES = frozenset({
     'mednafen_psx_hw', 'opera', 'neocd', 'yabause', 'flycast', 'pcsx2',
     'melonds', 'mednafen_pce', 'mednafen_pce_fast', 'mednafen_supergrafx',
     'puae', 'freeintv', 'o2em', 'gearcoleco',
+    # Coverage completion (2026-08-24): these will not boot their system at all
+    # without the listed file, so the panel should say so plainly.
+    'a5200', 'freechaf', 'crvision', 'citra', 'vita3k',
 })
+
+
+# Firmware a *platform* needs, where that differs from what its core asks for.
+#
+# BIOS_REQUIREMENTS is keyed by core, which is right for the per-core view but
+# wrong for the per-system one, because one core covers many consoles. The
+# per-platform panel used to union every requirement of every core mapped to a
+# platform, so `genesis_plus_gx` needing the Sega CD BIOS made Master System,
+# Game Gear, SG-1000, Mega Drive and 32X all claim to need it — and, once the
+# Sega CD files were present, all report "ready" on the strength of firmware
+# that has nothing to do with a cartridge. The verdict was accidentally correct
+# and the reasoning shown to the operator was nonsense.
+#
+# A platform listed here uses exactly these files, whatever its cores ask for.
+# An empty tuple means the system needs no firmware at all, so it drops out of
+# the panel entirely — the same treatment cores with no requirements already get,
+# and better than a row the operator can never satisfy.
+PLATFORM_BIOS_OVERRIDES: dict[str, tuple[str, ...]] = {
+    # genesis_plus_gx carries the Sega CD BIOS; only the Sega CD needs it.
+    'SEGA_MD': (),
+    'SEGA_MS': (),
+    'SEGA_GG': (),
+    'SEGA_32X': (),
+    'SEGA_SG1000': (),
+    # mgba carries gba_bios.bin, which is a GBA file. Game Boy and Game Boy
+    # Color run on the same core and need nothing.
+    'GB': (),
+    'GBC': (),
+    # mednafen_pce* carry the CD system card. HuCard and SuperGrafx carts do not
+    # use it; only the CD add-on does.
+    'PCE': (),
+    'SUPERGRAFX': (),
+    # dolphin carries the GameCube IPL. The Wii does not use it.
+    'WII': (),
+}
 
 
 def bios_status_for_platforms() -> list[dict[str, Any]]:
@@ -68,11 +143,16 @@ def bios_status_for_platforms() -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for platform, cores in platform_emulator_mapping.items():
         core_ids = [c.value for c in cores]
-        needed = {
-            name
-            for core in core_ids
-            for name in BIOS_REQUIREMENTS.get(core, [])
-        }
+        if platform.name in PLATFORM_BIOS_OVERRIDES:
+            # The platform states its own firmware, because its core's list
+            # belongs to a different console on the same core.
+            needed = set(PLATFORM_BIOS_OVERRIDES[platform.name])
+        else:
+            needed = {
+                name
+                for core in core_ids
+                for name in BIOS_REQUIREMENTS.get(core, [])
+            }
         if not needed:
             continue
         missing = sorted(n for n in needed if n.lower() not in present)
@@ -192,6 +272,22 @@ ALLOWED_BIOS_EXTENSIONS = frozenset({
     # (`kick34005.A500`). Anything listed in BIOS_REQUIREMENTS has to be
     # uploadable, or the panel reports a missing file the operator cannot supply.
     '.pce', '.a500', '.a600', '.a1200', '.a4000',
+    # Coverage completion (2026-08-24), same rule — each of these is the literal
+    # shape of a file now named in BIOS_REQUIREMENTS:
+    #   .pup  vita3k's PSP2UPDAT.PUP    .n64  64DD_IPL.n64
+    #   .sms  gearsystem's bios_U.sms   .col  gearsystem's bios.col
+    '.pup', '.n64', '.sms', '.col',
+})
+
+# Firmware files an extension allowlist cannot express.
+#
+# The VICE C64 ROMs ship with no suffix at all, and citra's key file is a plain
+# `.txt` — admitting either by extension would mean admitting every
+# extensionless upload, or every text file, onto the firmware volume. Matching
+# the exact names instead keeps the hole the size of the actual requirement.
+ALLOWED_BIOS_EXACT_NAMES = frozenset({
+    'kernal', 'basic', 'chargen',   # vice_x64
+    'aes_keys.txt',                 # citra
 })
 
 # Retro system files are small; the cap exists to stop a mistaken ROM-set or
@@ -239,9 +335,14 @@ def store_bios_file(file_storage) -> dict[str, Any]:
         raise ValueError('Filename required')
 
     extension = os.path.splitext(original)[1].lower()
-    if extension not in ALLOWED_BIOS_EXTENSIONS:
+    if (
+        extension not in ALLOWED_BIOS_EXTENSIONS
+        and original.lower() not in ALLOWED_BIOS_EXACT_NAMES
+    ):
         allowed = ', '.join(sorted(ALLOWED_BIOS_EXTENSIONS))
-        raise ValueError(f'Unsupported firmware file type "{extension or "none"}". Allowed: {allowed}')
+        raise ValueError(
+            f'Unsupported firmware file type "{extension or "none"}". Allowed: {allowed}'
+        )
 
     size = _upload_size(file_storage)
     limit = _max_bios_bytes()

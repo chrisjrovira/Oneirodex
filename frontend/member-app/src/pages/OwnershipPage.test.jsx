@@ -94,7 +94,7 @@ test('shows retry when the summary request fails', async () => {
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load store ownership.')
 
-  await user.click(screen.getByRole('button', { name: 'Retry' }))
+  await user.click(screen.getByRole('button', { name: /Try again/i }))
 
   expect(await screen.findByText(/12 synced · 5 matched to library/)).toBeInTheDocument()
 })

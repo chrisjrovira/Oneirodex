@@ -59,7 +59,7 @@ beforeEach(() => {
 test('lists dense release rows with date, title, and link', async () => {
   render(<CalendarPage />)
 
-  expect(screen.getByText('Loading…')).toBeInTheDocument()
+  expect(screen.getByRole('status', { busy: true })).toBeInTheDocument()
   expect(await screen.findByText('Example Title')).toBeInTheDocument()
   expect(screen.getByText('upcoming')).toBeInTheDocument()
   const link = screen.getByRole('link', { name: /Example Title/i })
@@ -80,7 +80,7 @@ test('Retry reloads after error', async () => {
 
   render(<CalendarPage />)
   expect(await screen.findByRole('alert')).toHaveTextContent(/Unable to load calendar/i)
-  await user.click(screen.getByRole('button', { name: /Retry/i }))
+  await user.click(screen.getByRole('button', { name: /Try again/i }))
   expect(await screen.findByText('No releases in this window.')).toBeInTheDocument()
 })
 

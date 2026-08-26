@@ -23,18 +23,48 @@ from gametheca.models import DiscoverySection, UserPreference
 from gametheca.utils.discover_feed import MAX_ADMIN_FORCED, MAX_MEMBER_PINS
 
 
-def _stored_pins(user) -> list[str]:
-    """The raw pin list off the member's preferences, defensively typed.
+class PinnedByAdmin(ValueError):
+    """Raised when a member tries to hide a shelf an admin forced on everyone."""
+
+
+def _stored_list(user, attribute: str) -> list[str]:
+    """A raw identifier list off the member's preferences, defensively typed.
 
     The JSON column hands back ``{}`` when a value fails to decode, so a list
     column can legitimately return a dict. Anything that is not a list of
-    strings is treated as no pins rather than allowed to propagate.
+    strings is treated as empty rather than allowed to propagate.
     """
     prefs = getattr(user, 'preferences', None)
-    raw = getattr(prefs, 'discover_pins', None)
+    raw = getattr(prefs, attribute, None)
     if not isinstance(raw, list):
         return []
     return [str(item) for item in raw if isinstance(item, (str, int)) and str(item).strip()]
+
+
+def _stored_pins(user) -> list[str]:
+    return _stored_list(user, 'discover_pins')
+
+
+def _preferences(user) -> UserPreference:
+    """The member's preference row, created on first write."""
+    prefs = getattr(user, 'preferences', None)
+    if prefs is None:
+        prefs = UserPreference(user_id=user.id)
+        db.session.add(prefs)
+        user.preferences = prefs
+    return prefs
+
+
+def _deduped(identifiers) -> list[str]:
+    """Trimmed, de-duplicated, order preserved."""
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for item in identifiers or []:
+        identifier = str(item).strip()
+        if identifier and identifier not in seen:
+            seen.add(identifier)
+            ordered.append(identifier)
+    return ordered
 
 
 def member_pins(user, *, available: Iterable[str] | None = None) -> list[str]:
@@ -80,12 +110,49 @@ def set_member_pins(user, identifiers, *, available: Iterable[str]) -> list[str]
         if len(cleaned) >= MAX_MEMBER_PINS:
             break
 
-    prefs = getattr(user, 'preferences', None)
-    if prefs is None:
-        prefs = UserPreference(user_id=user.id)
-        db.session.add(prefs)
-        user.preferences = prefs
-    prefs.discover_pins = cleaned
+    _preferences(user).discover_pins = cleaned
+    db.session.commit()
+    return cleaned
+
+
+def hidden_rows(user, *, available: Iterable[str] | None = None) -> list[str]:
+    """Row identifiers this member excluded from their own feed.
+
+    Read exactly as forgivingly as pins are: a hidden row that no longer exists
+    is dropped rather than raised, so a member who hid a genre row keeps a valid
+    preference after that row stops being generated for them.
+    """
+    hidden = _deduped(_stored_list(user, 'discover_hidden'))
+    if available is not None:
+        allowed = set(available)
+        hidden = [identifier for identifier in hidden if identifier in allowed]
+    return hidden
+
+
+def set_hidden_rows(user, identifiers, *, available: Iterable[str]) -> list[str]:
+    """Replace a member's hidden rows. Returns what was actually stored.
+
+    Uncapped, unlike pins: pins are capped because the feed reserves a fixed
+    number of slots for them, and there is no equivalent budget on the other
+    side — a member is allowed to hide every row on their feed if that is what
+    they want, and the restore control makes that reversible.
+
+    An admin-forced shelf cannot be hidden. That is the one row an operator is
+    promised a dependable position for — a maintenance notice or an outage
+    banner — and a feed where it can be dismissed permanently is not a feed you
+    can announce anything on. Everything else is the member's to arrange.
+    """
+    allowed = set(available)
+    forced = set(admin_forced())
+    cleaned: list[str] = []
+    for identifier in _deduped(identifiers):
+        if identifier not in allowed:
+            raise ValueError(identifier)
+        if identifier in forced:
+            raise PinnedByAdmin(identifier)
+        cleaned.append(identifier)
+
+    _preferences(user).discover_hidden = cleaned
     db.session.commit()
     return cleaned
 

@@ -61,6 +61,11 @@ ERROR_CODES = {
     'not_found': 404,
     'conflict': 409,
     'unprocessable': 422,
+    # Werkzeug rejected the body against MAX_CONTENT_LENGTH before any route
+    # ran, so the per-route "file too large" message never got a chance to
+    # fire. Distinct from `bad_request` because the client's fix is different:
+    # send less, not send differently.
+    'payload_too_large': 413,
     'rate_limited': 429,
     'internal': 500,
     # An upstream the server depends on answered badly — IGDB, SteamGridDB,

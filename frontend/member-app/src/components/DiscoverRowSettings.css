@@ -1,0 +1,77 @@
+/* Row arrangement panel, opened from Discover's bar.
+   Sits inside a popover that already draws the frame, so this contributes
+   structure and rhythm only — no border, no surface of its own. */
+
+.gt-rowsettings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-5);
+  min-width: 20rem;
+  max-width: 26rem;
+}
+
+.gt-rowsettings__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-3);
+}
+
+.gt-rowsettings__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gt-space-3);
+  margin: 0;
+  font-size: var(--gt-label-size);
+  font-weight: var(--gt-label-weight);
+  letter-spacing: var(--gt-label-tracking);
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
+}
+
+/* "2 of 3" — the pin budget, stated rather than discovered by finding the pin
+   control disabled. */
+.gt-rowsettings__budget {
+  font-variant-numeric: tabular-nums;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.gt-rowsettings__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gt-rowsettings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gt-space-4);
+}
+
+.gt-rowsettings__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gt-text);
+}
+
+/* A hidden row still reads as one of the rows — dimmed, not struck through or
+   greyed to unreadable. It is a state you can leave, and the control beside it
+   is how. */
+.gt-rowsettings__row[data-hidden] .gt-rowsettings__title {
+  color: var(--gt-text-muted);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--gt-text-muted) 50%, transparent);
+}
+
+.gt-rowsettings__empty {
+  margin: 0;
+  font-size: var(--gt-font-sm);
+  color: var(--gt-text-muted);
+}

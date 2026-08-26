@@ -7,20 +7,103 @@
   flex-direction: column;
   gap: var(--gt-space-2, 0.5rem);
   margin-block-end: var(--gt-space-6, 1.75rem);
+
+  /* Shelf tiles are sized from the same custom property as the library grid.
+     `--gt-tile-w` and `--gt-tile-h` were only ever read here and never defined
+     anywhere, so every shelf tile silently used the 200/280 fallbacks and the
+     top bar's tile-size slider — which drives `--gt-tile-min` — changed the
+     library and left Discover exactly as it was. Deriving them here is what
+     connects the control to these rows.
+
+     1.4 is cover aspect plus the caption strip: it is the ratio the 200/280
+     fallback pair already encoded, so nothing moves at the default size. */
+  --gt-tile-w: var(--gt-tile-min, 200px);
+  --gt-tile-h: calc(var(--gt-tile-w) * 1.4);
+
+  /* How far a hovered tile grows past its box, per side. The track has to
+     reserve exactly this much and then take it back as negative margin — see
+     .gt-shelf__track. */
+  --gt-shelf-bleed: calc(
+    var(--gt-tile-h) * (var(--gt-tile-hover-scale, 1.15) - 1) / 2
+  );
 }
 
+/* Every head is the same height whether or not the row has a reason line, an
+   event badge or a pin control.
+   Rows whose head grew by a line pushed their tiles down relative to their
+   neighbours, which is what "not aligned with the rest of the rows" describes:
+   the tiles were fine, the chrome above them was not. Centred rather than
+   baseline-aligned for the same reason — baseline moves with whichever child
+   happens to have the largest type. */
 .gt-shelf__head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  min-height: var(--gt-control-h, 2.25rem);
   gap: var(--gt-space-3, 0.75rem);
   padding-inline: var(--gt-gutter, 1rem);
 }
 
+/* Row titles carry the section, so they get a treatment rather than a rule.
+ *
+ * The underline this replaces was a border on the head row: a hairline running
+ * the full width of the page under every heading, which made the shelves read
+ * as rows of a table. What names a row here is the mark beside it and the
+ * weight of the word — the accent bar is short, vertical and tied to the text,
+ * so it groups with the title instead of dividing the page. */
 .gt-shelf__title {
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-3, 0.75rem);
   font-size: var(--gt-font-lg, 1.125rem);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0;
   color: var(--gt-text);
+}
+
+.gt-shelf__title::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 3px;
+  align-self: stretch;
+  min-height: 1.1em;
+  border-radius: var(--gt-radius-pill, 999px);
+  /* Fades out downward so the mark reads as a highlight rather than a border
+     segment that happens to be vertical. */
+  background: linear-gradient(
+    to bottom,
+    var(--gt-accent),
+    color-mix(in srgb, var(--gt-accent) 15%, transparent)
+  );
+}
+
+/* The word itself, so the gradient wash lands on the text and not on the
+   flexbox that holds the mark too. */
+.gt-shelf__title-text {
+  background: linear-gradient(
+    100deg,
+    var(--gt-text) 30%,
+    color-mix(in srgb, var(--gt-text) 72%, var(--gt-accent))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Forced-colours and any engine without background-clip: text get the plain
+   token colour rather than an invisible heading. */
+@supports not (background-clip: text) {
+  .gt-shelf__title-text {
+    background: none;
+    color: var(--gt-text);
+  }
+}
+
+@media (forced-colors: active) {
+  .gt-shelf__title-text {
+    background: none;
+    color: CanvasText;
+  }
 }
 
 /* Why this row exists. Steam's most valuable pattern: an unexplained
@@ -38,7 +121,8 @@
 
 /* Pushed to the end so the row title and the controls sit at opposite edges,
    the way every other list header on the site reads. */
-.gt-shelf__pin {
+.gt-shelf__pin,
+.gt-shelf__hide {
   margin-inline-start: auto;
   font-size: var(--gt-font-xs, 0.75rem);
   padding: 0.15rem 0.5rem;
@@ -59,9 +143,33 @@
   cursor: not-allowed;
 }
 
-.gt-shelf__pin:focus-visible {
+.gt-shelf__pin:focus-visible,
+.gt-shelf__hide:focus-visible {
   outline: var(--gt-focus-ring, 2px solid var(--gt-accent));
   outline-offset: 2px;
+}
+
+/* Only the first control in the end cluster claims the slot; the rest sit
+   beside it. Same rule the pin and "See all" already needed. */
+.gt-shelf__pin + .gt-shelf__hide,
+.gt-shelf__hide + .gt-shelf__seeall {
+  margin-inline-start: 0;
+}
+
+/* The row chrome is for arranging the feed, not for reading it: present on
+   approach, out of the way otherwise. Keyboard focus brings them back. */
+.gt-shelf__pin,
+.gt-shelf__hide {
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.gt-shelf:hover .gt-shelf__pin,
+.gt-shelf:hover .gt-shelf__hide,
+.gt-shelf__pin:focus-visible,
+.gt-shelf__hide:focus-visible,
+.gt-shelf__pin[aria-pressed='true'] {
+  opacity: 1;
 }
 
 /* Follows the pin when both are present, and takes the end slot when it is
@@ -85,6 +193,12 @@
   color: var(--gt-accent);
 }
 
+/* Holds the track and the two arrows, and owns the pointer zone that drives
+   edge-hover scrolling. */
+.gt-shelf__viewport {
+  position: relative;
+}
+
 .gt-shelf__track {
   display: flex;
   gap: var(--gt-tile-gap, 0.75rem);
@@ -92,16 +206,96 @@
   overflow-y: hidden;
   scroll-snap-type: x proximity;
   padding-inline: var(--gt-gutter, 1rem);
-  /* Room for a tile's hover lift and focus ring, which would otherwise be
-     clipped by the scroll container. */
-  padding-block: var(--gt-space-2, 0.5rem);
   scrollbar-width: thin;
+
+  /* A hovered tile grows, and this is a scroll container, so the growth was
+     being cut off top and bottom.
+     `overflow-x: auto` forces the other axis to clip too — per spec, `visible`
+     computes to `auto` when its partner is not `visible` — so there is no way
+     to let the tile spill out. The fix is to make the box big enough and then
+     take the extra space back: pad by exactly the overshoot, and pull the same
+     amount off as negative margin. The row occupies the same height it always
+     did, the gap between rows does not change by a pixel, and the scaled tile
+     has somewhere to go. */
+  padding-block: calc(var(--gt-space-2, 0.5rem) + var(--gt-shelf-bleed, 0px));
+  margin-block: calc(var(--gt-shelf-bleed, 0px) * -1);
 }
 
+/* Every tile is the same box in every row, so rows line up with each other and
+   a tile with no cover cannot make its row taller than its neighbours. */
 .gt-shelf__item {
   flex: 0 0 auto;
   width: var(--gt-tile-w, 200px);
+  height: var(--gt-tile-h, 280px);
   scroll-snap-align: start;
+}
+
+/* ---------- scroll controls ----------
+ *
+ * Overlaid on the ends of the track rather than placed beside it: a row is as
+ * wide as the content pane, and arrows in flow would cost two tiles' worth of
+ * width on every shelf on the page.
+ */
+.gt-shelf__arrow {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--gt-gutter, 1rem) + var(--gt-space-6, 1.5rem));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  font-size: var(--gt-font-2xl, 1.5rem);
+  line-height: 1;
+  color: var(--gt-text);
+  cursor: pointer;
+  /* Fades the tiles out under the arrow instead of covering them with a slab,
+     which also signals that the row continues past the edge. */
+  background: linear-gradient(
+    to right,
+    var(--gt-bg) 35%,
+    color-mix(in srgb, var(--gt-bg) 0%, transparent)
+  );
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.gt-shelf__arrow--start {
+  inset-inline-start: 0;
+}
+
+.gt-shelf__arrow--end {
+  inset-inline-end: 0;
+  transform: scaleX(-1);
+}
+
+/* Present on hover, and always present for the keyboard — a control that only
+   exists under a pointer cannot be tabbed to. */
+.gt-shelf__viewport:hover .gt-shelf__arrow:not(:disabled),
+.gt-shelf__arrow:focus-visible {
+  opacity: 1;
+}
+
+.gt-shelf__arrow:focus-visible {
+  outline: var(--gt-focus-ring, 2px solid var(--gt-accent));
+  outline-offset: -4px;
+}
+
+/* At the end of a row the arrow is inert, so it does not appear at all rather
+   than appearing greyed — there is nothing past the edge to hint at. */
+.gt-shelf__arrow:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (hover: none) {
+  /* Touch drags the row directly; the arrows would just cover the first and
+     last tile. */
+  .gt-shelf__arrow {
+    display: none;
+  }
 }
 
 /* Placeholder holding the space of the tiles being fetched, so the shelf does

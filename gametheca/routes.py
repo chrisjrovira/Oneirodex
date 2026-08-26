@@ -676,6 +676,17 @@ def edit_game_images(game_uuid):
     )
 
 
+# Per-upload ceiling for game artwork. The global MAX_CONTENT_LENGTH in config
+# is the outer bound that stops an unbounded body being buffered at all; this is
+# the one a user actually hits, and it is the number the error message quotes.
+MAX_IMAGE_UPLOAD_BYTES = 3 * 1024 * 1024
+
+# Decompression-bomb ceiling — roughly a 60-megapixel image, comfortably above
+# any real cover or screenshot. verify() does not decode pixel data, so without
+# this the resize below is where a 40000x40000 PNG would land.
+MAX_IMAGE_PIXELS = 60_000_000
+
+
 @bp.route('/upload_image/<game_uuid>', methods=['POST'])
 @login_required
 @admin_required
@@ -709,26 +720,44 @@ def upload_image(game_uuid):
     if file_extension not in allowed_extensions:
         return api_error('Only JPG, PNG and GIF files are allowed', code='bad_request')
 
+    # Size first, before anything decodes the file. The previous version read
+    # `file.content_length`, which is 0 for an ordinary multipart upload, so the
+    # limit never applied — and it checked *after* Pillow had already opened the
+    # image twice, which is the expensive half.
+    file.seek(0, os.SEEK_END)
+    upload_bytes = file.tell()
+    file.seek(0)
+    if upload_bytes > MAX_IMAGE_UPLOAD_BYTES:
+        limit_mb = MAX_IMAGE_UPLOAD_BYTES // (1024 * 1024)
+        return api_error(f'File size exceeds the {limit_mb}MB limit', code='bad_request')
+
     # Further validate the file's data to ensure it's a valid image
     try:
         img = PILImage.open(file)
         img.verify()  # Verify that it is, in fact, an image
+        file.seek(0)
         img = PILImage.open(file)
-    except (IOError, SyntaxError):
+    except (IOError, SyntaxError, PILImage.DecompressionBombError):
         return api_error('Invalid image data', code='bad_request')
 
-    file.seek(0)
+    # A few hundred KB of PNG can declare a 40000x40000 canvas; verify() does not
+    # decode it, but the resize below would.
+    if (img.width * img.height) > MAX_IMAGE_PIXELS:
+        return api_error('Image dimensions are too large', code='bad_request')
+
+    # Resized output has to be *saved*, which is what was missing: thumbnail()
+    # mutates `img` in place and the code then wrote the original bytes back
+    # out, so oversized covers were stored at full size and the resize was dead.
+    resized = None
+    source_format = img.format
     max_width, max_height = 1200, 1600
-    if image_type == 'cover':
-        if img.width > max_width or img.height > max_height:
-            # LANCZOS, not ANTIALIAS: the latter was deprecated in Pillow 9.1
-            # and removed in 10, so this line raised AttributeError on every
-            # oversized cover upload. Same filter every other resize here uses.
-            img.thumbnail((max_width, max_height), PILImage.LANCZOS)
-    file.seek(0) 
-    # Efficient file size check
-    if file.content_length > 3 * 1024 * 1024:  # 3MB in bytes
-        return api_error('File size exceeds the 3MB limit', code='bad_request')
+    if image_type == 'cover' and (img.width > max_width or img.height > max_height):
+        # LANCZOS, not ANTIALIAS: the latter was deprecated in Pillow 9.1
+        # and removed in 10, so this line raised AttributeError on every
+        # oversized cover upload. Same filter every other resize here uses.
+        img.thumbnail((max_width, max_height), PILImage.LANCZOS)
+        resized = img
+    file.seek(0)
 
     # Singular kinds: replace existing primary of that kind
     if image_type in SINGULAR_IMAGE_KINDS:
@@ -750,7 +779,12 @@ def upload_image(game_uuid):
         short_uuid = str(uuid.uuid4())[:8]
         filename = f"{game_uuid}_{unique_identifier}_{short_uuid}.{file_extension}"
     save_path = os.path.join(current_app.config['IMAGE_SAVE_PATH'], filename)
-    file.save(save_path)
+    if resized is not None:
+        # Keep the uploaded format so a .png stays a PNG — inferring it from the
+        # path would break RGBA on a .jpg and flatten nothing correctly.
+        resized.save(save_path, format=source_format or None)
+    else:
+        file.save(save_path)
     print(f"File saved to: {save_path}")
     new_image = Image(game_uuid=game_uuid, image_type=image_type, url=filename)
     db.session.add(new_image)
@@ -1501,6 +1535,23 @@ def dist_asset_filter(_ctx, path):
         filename=f'dist/{path}',
         v=_theme_asset_version(target),
     )
+
+
+@bp.app_template_filter('avatar_url')
+@pass_context
+def avatar_url_filter(_ctx, path):
+    """`{{ current_user.avatarpath|avatar_url }}` — themed for shipped avatars.
+
+    `@pass_context` for exactly the reason `theme_asset` needs it, and it is
+    load-bearing here too: `partials/rail.html` passes `current_user.avatarpath`
+    (a variable, so safe), but a template passing a literal default would be
+    constant-folded at compile time and freeze every install on whichever theme
+    rendered it first. Marking the filter context-dependent makes the fold
+    illegal everywhere rather than relying on every call site staying dynamic.
+    """
+    from gametheca.utils.avatar import avatar_url
+
+    return avatar_url(path)
 
 
 @bp.app_template_filter('theme_asset')

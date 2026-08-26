@@ -12,6 +12,7 @@ import {
 } from '../api/updates'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { showToast } from '../utils/toast'
+import { PageStatus } from '../components/PageStatus'
 import '../styles/panelGrid.css'
 
 const INBOX_POLL_MS = 50000
@@ -225,6 +226,10 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
     }
   }
 
+  // Either half of the round trip counts as busy: the probe and the inbox
+  // re-read are one action from the member's side now.
+  const busyRefreshing = manualRefreshing || scanning
+
   return (
     <>
     {useNewChrome ? (
@@ -257,6 +262,156 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
         </div>
         </>
       )}
+
+      {/* The inbox leads, and takes the whole width.
+          "Search stores" used to be the first thing on a page called Updates,
+          which put a two-field discovery form above the list of titles you
+          actually came to see — and in the two-column panel grid that form got
+          exactly as much width as the list of rows. The inbox is the page: it
+          is a table of titles, versions and actions, and it is the only thing
+          here that benefits from width. Store search and the calendar teaser
+          are both lookups, so they pair up underneath it. */}
+      <section className="gt-updates__inbox gt-panels__wide">
+        {/* The refresh control sits on the heading of the thing it refreshes.
+            In bar two it was a word ("Refresh") a long way from the list it
+            acted on, and nothing said *what* it would refresh. As a symbol on
+            the inbox rule it is unambiguous and costs no width. The label lives
+            in the hover tooltip rather than on the button. */}
+        <div className="gt-updates__section-head">
+          <h2>Library freshness inbox</h2>
+          <div className="gt-updates__inbox-tools">
+            {/* Time first, then the glyph: the timestamp is what the button
+                changes, so it reads left-to-right as "this is how old it is,
+                here is how to fix that". */}
+            {busyRefreshing ? (
+              <span className="gt-updates__refresh-status" role="status" aria-live="polite">
+                {scanning ? 'Checking library…' : 'Refreshing…'}
+              </span>
+            ) : lastUpdatedAt ? (
+              <span className="gt-updates__refresh-status gt-updates__refresh-status--muted">
+                Updated {lastUpdatedAt.toLocaleTimeString()}
+              </span>
+            ) : null}
+            {/* One refresh control, not two.
+                This row used to carry a glyph that re-read the stored inbox and
+                a full-width button that ran a fresh probe — two controls that
+                both read as "refresh this list", sitting on the same rule, one
+                of which silently did less than the other. Nobody could be
+                expected to know which one they wanted.
+
+                They collapse into the glyph, wired to the probe, because the
+                probe was already the superset: `runLibraryScan` re-reads the
+                inbox itself once it finishes writing the freshness rows (see
+                the call at the end of it). So the surviving control does
+                everything the deleted one did and more, and "refresh" means one
+                thing on this page again. */}
+            <span className="gt-tip">
+              <button
+                type="button"
+                className="gt-iconbtn gt-updates__refresh-btn"
+                aria-label="Check the library against store versions"
+                aria-busy={busyRefreshing ? 'true' : undefined}
+                disabled={busyRefreshing}
+                onClick={() => void runLibraryScan()}
+              >
+                <RailIcon name="updates" size={16} />
+              </button>
+              <span className="gt-tip__bubble" role="tooltip">
+                {busyRefreshing
+                  ? 'Checking your library against store versions…'
+                  : 'Check your library against store versions. Runs on its own periodically; this asks now.'}
+              </span>
+            </span>
+          </div>
+        </div>
+        {scanResult ? (
+          <p className="gt-updates__scan-result" role="status">
+            Checked {scanResult.checked} title
+            {scanResult.checked === 1 ? '' : 's'} ·{' '}
+            {scanResult.behind_count > 0
+              ? `${scanResult.behind_count} behind`
+              : 'nothing behind'}
+            {scanResult.remaining > 0
+              ? ` · ${scanResult.remaining} still to check — press again to continue`
+              : ' · whole library checked'}
+            {scanResult.errors?.length
+              ? ` · ${scanResult.errors.length} could not be checked`
+              : ''}
+          </p>
+        ) : null}
+        <PageStatus
+          loading={!error && !items}
+          error={error}
+          errorMessage="Unable to load updates."
+          loadingMessage="Checking for updates…"
+          onRetry={() => setRetryCount((n) => n + 1)}
+        />
+
+        {!error && items && items.length === 0 ? (
+          <p>No outdated titles detected. Nice.</p>
+        ) : null}
+
+        {!error && items && items.length > 0 ? (
+          <ul className="gt-updates__list gt-updates__inbox-list">
+            {items.map((game) => {
+              const pack = game.latest_update || game.latest_extra
+              const applyKey = pack ? `${game.uuid}:${pack.uuid}` : null
+              return (
+                <li key={game.uuid} className="gt-updates__inbox-item">
+                  <div className="gt-updates__inbox-main">
+                    <Link to={`/game_details/${game.uuid}`}>
+                      <strong>{game.name}</strong>
+                    </Link>
+                    <span>
+                      {[
+                        game.freshness_status,
+                        `${game.local_version || 'local?'} → ${game.remote_version_summary || 'store?'}`,
+                        game.updates_count
+                          ? `${game.updates_count} local update${game.updates_count === 1 ? '' : 's'}`
+                          : null,
+                        game.dlc?.missing_count != null
+                          ? `DLC gap ${game.dlc.missing_count}`
+                          : game.dlc?.store_count != null
+                            ? `Store DLC ${game.dlc.store_count}`
+                            : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
+                    {statusByUuid[game.uuid] ? (
+                      <span className="gt-updates__status" role="status">
+                        {statusByUuid[game.uuid]}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="gt-updates__inbox-actions">
+                    {pack?.download_url ? (
+                      <a className="gt-btn" href={pack.download_url}>
+                        Download {pack.kind}
+                      </a>
+                    ) : null}
+                    {pack && game.client_connected ? (
+                      <button
+                        type="button"
+                        className="gt-btn"
+                        disabled={busyKey === applyKey}
+                        onClick={() => {
+                          void applyPack(game, pack)
+                        }}
+                      >
+                        {busyKey === applyKey ? 'Queuing…' : 'Apply with companion'}
+                      </button>
+                    ) : null}
+                    <Link className="gt-btn" to={`/game_details/${game.uuid}`}>
+                      Details
+                    </Link>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        ) : null}
+      </section>
 
       <section className="gt-updates__search">
         <div className="gt-updates__section-head">
@@ -348,154 +503,12 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
         ) : null}
       </section>
 
-      <section className="gt-updates__inbox">
-        {/* The refresh control sits on the heading of the thing it refreshes.
-            In bar two it was a word ("Refresh") a long way from the list it
-            acted on, and nothing said *what* it would refresh. As a symbol on
-            the inbox rule it is unambiguous and costs no width. The label lives
-            in the hover tooltip rather than on the button. */}
-        <div className="gt-updates__section-head">
-          <h2>Library freshness inbox</h2>
-          <div className="gt-updates__inbox-tools">
-            {/* Time first, then the glyph: the timestamp is what the button
-                changes, so it reads left-to-right as "this is how old it is,
-                here is how to fix that". */}
-            {manualRefreshing ? (
-              <span className="gt-updates__refresh-status" role="status" aria-live="polite">
-                Refreshing…
-              </span>
-            ) : lastUpdatedAt ? (
-              <span className="gt-updates__refresh-status gt-updates__refresh-status--muted">
-                Updated {lastUpdatedAt.toLocaleTimeString()}
-              </span>
-            ) : null}
-            {/* Glyph-only, so the accessible name carries what the word would
-                have said. "Refresh" on its own does not say refresh *what*, and
-                this row holds two controls that both sound like refreshing. */}
-            <span className="gt-tip">
-              <button
-                type="button"
-                className="gt-iconbtn gt-updates__refresh-btn"
-                aria-label="Refresh the freshness inbox"
-                aria-busy={manualRefreshing ? 'true' : undefined}
-                disabled={manualRefreshing || (!items && !error)}
-                onClick={() => void refreshInbox('manual')}
-              >
-                <RailIcon name="updates" size={16} />
-              </button>
-              <span className="gt-tip__bubble" role="tooltip">
-                {manualRefreshing
-                  ? 'Checking your library against store versions…'
-                  : 'Re-check your library against store versions. Runs on its own periodically; this asks now.'}
-              </span>
-            </span>
-            {/* The inbox is a readout of the last probe. This is what makes a
-                probe happen — one bounded batch per press, oldest-checked
-                first. See POST /api/updates/scan. */}
-            <button
-              type="button"
-              className="gt-btn gt-btn--sm gt-btn--accent"
-              disabled={scanning}
-              onClick={() => void runLibraryScan()}
-            >
-              {scanning ? 'Checking library…' : 'Check library for updates'}
-            </button>
-          </div>
-        </div>
-        {scanResult ? (
-          <p className="gt-updates__scan-result" role="status">
-            Checked {scanResult.checked} title
-            {scanResult.checked === 1 ? '' : 's'} ·{' '}
-            {scanResult.behind_count > 0
-              ? `${scanResult.behind_count} behind`
-              : 'nothing behind'}
-            {scanResult.remaining > 0
-              ? ` · ${scanResult.remaining} still to check — press again to continue`
-              : ' · whole library checked'}
-            {scanResult.errors?.length
-              ? ` · ${scanResult.errors.length} could not be checked`
-              : ''}
-          </p>
-        ) : null}
-        {error ? (
-          <div role="alert">
-            <p>Unable to load updates.</p>
-            <button type="button" onClick={() => setRetryCount((n) => n + 1)}>
-              Retry
-            </button>
-          </div>
-        ) : null}
-
-        {!error && !items ? <p>Loading…</p> : null}
-
-        {!error && items && items.length === 0 ? (
-          <p>No outdated titles detected. Nice.</p>
-        ) : null}
-
-        {!error && items && items.length > 0 ? (
-          <ul className="gt-updates__list gt-updates__inbox-list">
-            {items.map((game) => {
-              const pack = game.latest_update || game.latest_extra
-              const applyKey = pack ? `${game.uuid}:${pack.uuid}` : null
-              return (
-                <li key={game.uuid} className="gt-updates__inbox-item">
-                  <div className="gt-updates__inbox-main">
-                    <Link to={`/game_details/${game.uuid}`}>
-                      <strong>{game.name}</strong>
-                    </Link>
-                    <span>
-                      {[
-                        game.freshness_status,
-                        `${game.local_version || 'local?'} → ${game.remote_version_summary || 'store?'}`,
-                        game.updates_count
-                          ? `${game.updates_count} local update${game.updates_count === 1 ? '' : 's'}`
-                          : null,
-                        game.dlc?.missing_count != null
-                          ? `DLC gap ${game.dlc.missing_count}`
-                          : game.dlc?.store_count != null
-                            ? `Store DLC ${game.dlc.store_count}`
-                            : null,
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </span>
-                    {statusByUuid[game.uuid] ? (
-                      <span className="gt-updates__status" role="status">
-                        {statusByUuid[game.uuid]}
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="gt-updates__inbox-actions">
-                    {pack?.download_url ? (
-                      <a className="gt-btn" href={pack.download_url}>
-                        Download {pack.kind}
-                      </a>
-                    ) : null}
-                    {pack && game.client_connected ? (
-                      <button
-                        type="button"
-                        className="gt-btn"
-                        disabled={busyKey === applyKey}
-                        onClick={() => {
-                          void applyPack(game, pack)
-                        }}
-                      >
-                        {busyKey === applyKey ? 'Queuing…' : 'Apply with companion'}
-                      </button>
-                    ) : null}
-                    <Link className="gt-btn" to={`/game_details/${game.uuid}`}>
-                      Details
-                    </Link>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        ) : null}
-      </section>
-
       <section className="gt-updates__calendar" aria-labelledby="updates-calendar-heading">
-        <div className="gt-updates__calendar-head">
+        {/* Same head as Search stores and the inbox — it was the one section
+            with its own heading markup, so its title sat on a different
+            baseline and its link on a different line from the controls the
+            other two put there. */}
+        <div className="gt-updates__section-head">
           <h2 id="updates-calendar-heading">Upcoming releases</h2>
           <Link className="gt-updates__calendar-link" to="/calendar">
             Open calendar

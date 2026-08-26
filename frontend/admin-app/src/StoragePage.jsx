@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getJson, postJson } from './adminApi'
 import { MetricStrip } from './opsWidgets'
+import { PageStatus } from './PageStatus'
 
 const EMPTY_STATUS = {
   helpers_enabled: false,
@@ -140,11 +141,11 @@ export function StoragePage() {
         />
       ) : null}
 
-      {!statusLoaded ? (
-        <p className="gt-admin-lede" role="status">
-          Loading storage status…
-        </p>
-      ) : null}
+      {/* GT-B33: shared status block. The five `gt-admin-banner` blocks below
+          deliberately stay as they are — those disclose persistent
+          configuration (helpers off, apply gated, mount read-only), which is
+          page content, not a transient loading/error state. */}
+      <PageStatus loading={!statusLoaded} loadingMessage="Loading storage status…" />
 
       {statusError ? (
         <div className="gt-admin-banner gt-admin-banner--warn" role="status">
@@ -238,15 +239,11 @@ export function StoragePage() {
             Back to settings
           </a>
         </div>
-        {actionError ? (
-          <div className="gt-admin-alert" role="alert">
-            {actionError}
-          </div>
-        ) : null}
+        <PageStatus error={actionError} />
       </div>
 
       {result ? (
-        <div className="gt-admin-panel" style={{ marginTop: '1rem' }}>
+        <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
           <h2 className="gt-admin-panel-title">
             {resultKind === 'apply' ? 'Apply result' : 'Preview result'}
           </h2>

@@ -217,6 +217,20 @@ function TrailerPlayer({ videoId, skipFirst, settingsRef, onAdvance, title, game
        the page to one palette. Decorative parts are aria-hidden; the iframe is
        still just an iframe to a screen reader. */
     <div className="gt-trailers__set">
+      {/* The title leads the set.
+          It sat under the cabinet, below the bezel and the knobs, so on a tall
+          player you were watching something for several seconds before the page
+          told you what it was — and on a short window it fell below the fold
+          entirely. Above the frame it is the first thing read, which is the
+          order a title and its video belong in. Still a link, because "what am
+          I watching" and "take me to it" are the same question. */}
+      {title ? (
+        <p className="gt-trailers__caption">
+          <a className="gt-trailers__title-link" href={`/game_details/${gameUuid}`}>
+            {title}
+          </a>
+        </p>
+      ) : null}
       <div className="gt-trailers__video">
         <span className="gt-trailers__scanlines" aria-hidden="true" />
         <span className="gt-trailers__glare" aria-hidden="true" />
@@ -228,25 +242,20 @@ function TrailerPlayer({ videoId, skipFirst, settingsRef, onAdvance, title, game
           allowFullScreen
         />
       </div>
+      {/* Bezel without the wordmark.
+          "GameTheca" printed under the player was the product naming itself on
+          a page the member reached from a nav that already says GameTheca, on a
+          screen inside an app called GameTheca — and it sat exactly where a
+          video's title belongs, which is where the title is now. The knobs stay:
+          they are what makes the frame read as a cabinet rather than as a grey
+          bar, and they claim nothing. */}
       <div className="gt-trailers__bezel" aria-hidden="true">
-        <span className="gt-trailers__brand">GameTheca</span>
         <span className="gt-trailers__knobs">
           <span className="gt-trailers__knob" />
           <span className="gt-trailers__knob" />
           <span className="gt-trailers__led" />
         </span>
       </div>
-      {/* Caption belongs to the video, not the page (W27-F1). It sits under the
-          frame rather than over it so it never covers the picture, and it is a
-          link because "what am I watching" and "take me to it" are the same
-          question. */}
-      {title ? (
-        <p className="gt-trailers__caption">
-          <a className="gt-trailers__title-link" href={`/game_details/${gameUuid}`}>
-            {title}
-          </a>
-        </p>
-      ) : null}
     </div>
   )
 }

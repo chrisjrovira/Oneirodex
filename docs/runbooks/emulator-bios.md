@@ -67,12 +67,67 @@ is usually enough.
 | Intellivision | `exec.bin` · `grom.bin` |
 | Magnavox Odyssey 2 | `o2rom.bin` |
 | Amstrad GX4000 | `cpc6128.rom` |
+| Atari 5200 | `5200.rom` |
+| Fairchild Channel F | `sl31253.bin` · `sl31254.bin` · `sl90025.bin` |
+| VTech CreatiVision | `bioss.rom` |
+| Nintendo 3DS | `aes_keys.txt` · `boot9.bin` |
+| PlayStation Vita | `PSP2UPDAT.PUP` |
+
+### Optional — improves accuracy, not required to boot
+
+These have a slot in the panel so you can see it exists, but the system plays
+without them, so a missing file here is not reported as blocking.
+
+| System | Files | Needed for |
+|---|---|---|
+| Famicom Disk System | `disksys.rom` | FDS disk images only; carts are fine |
+| GameCube / Wii | `IPL.bin` | the GameCube boot animation |
+| SNES | `dsp1.bin` · `dsp1b.bin` · `dsp2.bin` · `dsp3.bin` · `dsp4.bin` · `cx4.bin` · `st010.bin` · `st011.bin` | a handful of co-processor carts |
+| Nintendo 64 | `64DD_IPL.n64` | 64DD disk images |
+| Master System / SG-1000 | `bios_U.sms` · `bios.col` | boot-ROM accuracy |
+| Atari Jaguar | `jagboot.rom` | the Jaguar boot logo |
+| Commodore 64 | `kernal` · `basic` · `chargen` | exact-revision accuracy; the core embeds its own |
 
 Neo Geo AES cart sets expect `neogeo.zip` alongside the ROMs rather than on the
-firmware volume — it is a MAME/FBNeo parent set, not a BIOS file.
+firmware volume — it is a MAME/FBNeo parent set, not a BIOS file. The same is
+true of the other MAME-driven systems (Astrocade, Arcadia, Advision, Studio II):
+their system files are per-romset archives, so they are deliberately absent from
+the firmware panel rather than reported as permanently missing.
+
+### Why some systems are not in the panel at all
+
+One libretro core often serves several consoles, and its firmware usually
+belongs to only one of them. `genesis_plus_gx` runs Mega Drive, Master System,
+Game Gear, SG-1000, 32X **and** Sega CD — but only the Sega CD needs a BIOS.
+
+Requirements are therefore scoped per *platform*, not per core
+(`PLATFORM_BIOS_OVERRIDES` in `gametheca/utils/emulator_bios.py`). A system that
+needs no firmware drops out of the panel rather than appearing with a
+requirement that makes no sense for it:
+
+| Core | Firmware belongs to | Absent from the panel |
+|---|---|---|
+| `genesis_plus_gx` | Sega CD | Mega Drive · Master System · Game Gear · SG-1000 · 32X |
+| `mgba` | Game Boy Advance | Game Boy · Game Boy Color |
+| `mednafen_pce*` | PC Engine CD | PC Engine (HuCard) · SuperGrafx |
+| `dolphin` | GameCube (`IPL.bin`) | Wii |
+
+Before this scoping the panel unioned every core's requirements onto every
+platform that core served, so five cartridge Sega systems claimed to need the
+Sega CD BIOS — and, once those files were present, all five reported "ready" on
+the strength of firmware irrelevant to a cartridge. The verdict was accidentally
+right and the reason shown was wrong.
+
+The **per-core** view is unaffected and still lists `genesis_plus_gx` as wanting
+the Sega CD files, which is true of the core.
 
 ## Upload guardrails
 
 Uploads are treated as untrusted: extension allowlist, and a size cap
 (`EMULATOR_BIOS_MAX_BYTES`, default 64 MB) so a stray disk image cannot fill the
 volume.
+
+Two firmware names cannot be expressed as an extension — the Commodore 64 ROMs
+(`kernal`, `basic`, `chargen`) have no suffix at all, and the 3DS key file is a
+plain `.txt`. Those four are allowed by **exact filename** instead, so the volume
+does not have to accept every extensionless or text upload to admit them.

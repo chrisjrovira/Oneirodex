@@ -126,6 +126,18 @@ def _scan_job_payload(job):
         'folders_processed': completed,
         'total_folders': total,
         'current_processing': job.current_processing,
+        # Why a job failed (GT-B38).
+        #
+        # This payload already carried every other thing an operator needs to
+        # read a scan — counts, current folder, elapsed, ETA, stalled — and
+        # dropped the one that explains a job that stopped. So the Ops console
+        # could show that a scan failed and never why, including when the
+        # ownership sweep reclaimed it. Third surface with the same gap; see
+        # ui-debt-log UID-031.
+        #
+        # Not a new disclosure: /api/scan_jobs_status has always returned this
+        # field to the same admin-only audience.
+        'error_message': job.error_message or None,
         'last_progress_update': last_update.isoformat() if last_update else None,
         # Wave 18 timing (started_at == last_run; created_at always null)
         'started_at': timing['started_at'],

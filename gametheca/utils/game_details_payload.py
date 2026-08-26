@@ -142,6 +142,44 @@ def _extra_on_server(extra) -> bool:
         return False
 
 
+# Image kinds that are wide, title-free art, best first.
+#
+# `hero` and `fanart` are made for this — 16:9 key art with no wordmark burned
+# in. `logo` and `box` are deliberately absent: both carry the title, which is
+# the thing a backdrop must not repeat. A screenshot is the fallback because
+# every title that has any art at all tends to have one, and gameplay behind
+# gameplay reads as atmosphere rather than as a mistake.
+BACKDROP_KINDS = ('hero', 'fanart')
+
+
+def _servable_image_url(img) -> str | None:
+    """A URL for an image row, or None when we cannot actually serve it.
+
+    Same rule the screenshot list follows: a row whose file was never downloaded
+    and has no remote source is not art we can show, and emitting its static
+    path only produces a 404.
+    """
+    raw = getattr(img, 'url', None) or ''
+    download_url = getattr(img, 'download_url', None) or ''
+    if download_url.startswith('//'):
+        download_url = f'https:{download_url}'
+    if raw.startswith(('http://', 'https://', '/')):
+        return raw
+    if bool(getattr(img, 'is_downloaded', False)) and raw:
+        return url_for('static', filename=f'library/images/{raw}')
+    if download_url.startswith(('http://', 'https://')):
+        return download_url
+    return None
+
+
+def _pick_backdrop(candidates: dict, screenshots: list) -> str | None:
+    """Best available wide art, or None to leave the page on its flat surface."""
+    for kind in BACKDROP_KINDS:
+        if candidates.get(kind):
+            return candidates[kind]
+    return screenshots[0] if screenshots else None
+
+
 def build_game_details_payload(game, user) -> dict:
     """JSON-safe details payload. Disk paths only for admin viewers."""
     user_id = getattr(user, 'id', None) if user is not None else None
@@ -195,8 +233,15 @@ def build_game_details_payload(game, user) -> dict:
 
     cover_image = None
     screenshots = []
+    # Wide art for the page background — see `_servable_image_url` and the
+    # BACKDROP_KINDS note below.
+    backdrop_candidates: dict[str, str] = {}
     for img in game.images.all():
         image_type = getattr(img, 'image_type', None)
+        if image_type in BACKDROP_KINDS and image_type not in backdrop_candidates:
+            url = _servable_image_url(img)
+            if url:
+                backdrop_candidates[image_type] = url
         if image_type == 'cover' and cover_image is None:
             cover_image = img
         elif image_type == 'screenshot':
@@ -212,8 +257,19 @@ def build_game_details_payload(game, user) -> dict:
             elif download_url.startswith(('http://', 'https://')):
                 # Pending / failed local download — still show remote IGDB art
                 screenshots.append(download_url)
-            elif raw:
-                screenshots.append(url_for('static', filename=f'library/images/{raw}'))
+            # No final `elif raw:` fallback.
+            #
+            # It used to emit /static/library/images/<name> for a row that is
+            # not downloaded and has no remote URL to fall back to — i.e. for a
+            # file that is not on disk. Every one of those 404s, so a title
+            # whose screenshots had failed to download rendered a Screenshots
+            # section full of broken-image glyphs, and there was no way for the
+            # page to tell that apart from a title with real art: the section is
+            # shown when the list is non-empty, and the list was non-empty.
+            #
+            # An image row we cannot serve contributes nothing, so it is not
+            # listed. A title with no servable screenshots now has an empty list
+            # and the section correctly does not render at all.
     platform_key = library_platform_key(game)
     platform_label = None
     library = getattr(game, 'library', None)
@@ -416,6 +472,10 @@ def build_game_details_payload(game, user) -> dict:
             for url in game.urls
         ],
         'screenshots': screenshots,
+        # Wide art for the page background. Never the cover: a cover carries the
+        # title, and a title rendered huge and blurred behind the same title in
+        # readable type is the page arguing with itself.
+        'backdrop_url': _pick_backdrop(backdrop_candidates, screenshots),
         'screenshot_count': len(screenshots),
         'is_favorite': is_favorite,
         'user_status': user_status,

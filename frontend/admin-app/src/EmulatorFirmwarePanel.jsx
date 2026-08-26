@@ -2,6 +2,7 @@
 // which is easy to miss when the triggering control has scrolled away.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { csrfHeaders, csrfToken } from './adminApi'
+import { PageStatus } from './PageStatus'
 import { MetricStrip } from './opsWidgets'
 import { showToast } from './utils/toast'
 
@@ -31,6 +32,36 @@ const CORE_LABELS = {
   neocd: 'Neo Geo CD',
   yabause: 'Saturn',
   genesis_plus_gx: 'Sega CD',
+  // Everything else BIOS_REQUIREMENTS covers. Without a label the panel fell
+  // back to the raw libretro id, so half the list read as `mednafen_pce_fast`
+  // rather than naming the console the operator is trying to get working.
+  flycast: 'Dreamcast',
+  pcsx2: 'PlayStation 2',
+  melonds: 'Nintendo DS',
+  mgba: 'Game Boy Advance',
+  handy: 'Atari Lynx',
+  gearcoleco: 'ColecoVision',
+  freeintv: 'Intellivision',
+  o2em: 'Odyssey²',
+  mednafen_pce: 'PC Engine CD',
+  mednafen_pce_fast: 'PC Engine',
+  mednafen_supergrafx: 'SuperGrafx',
+  puae: 'Amiga',
+  cap32: 'Amstrad CPC / GX4000',
+  prosystem: 'Atari 7800',
+  a5200: 'Atari 5200',
+  freechaf: 'Fairchild Channel F',
+  crvision: 'VTech CreatiVision',
+  citra: 'Nintendo 3DS',
+  vita3k: 'PlayStation Vita',
+  nestopia: 'NES / Famicom Disk System',
+  dolphin: 'GameCube / Wii',
+  snes9x: 'SNES',
+  mupen64plus_next: 'Nintendo 64',
+  parallel_n64: 'Nintendo 64 (ParaLLEl)',
+  gearsystem: 'Master System / SG-1000',
+  virtualjaguar: 'Atari Jaguar',
+  vice_x64: 'Commodore 64',
 }
 
 export function coreLabel(core) {
@@ -185,14 +216,10 @@ export function EmulatorFirmwarePanel() {
         ) : null}
       </div>
 
-      {error ? (
-        <div className="gt-error" role="alert">
-          <p className="gt-error__message">{error}</p>
-          <button type="button" className="gt-btn gt-btn--sm" onClick={load}>
-            Try again
-          </button>
-        </div>
-      ) : null}
+      {/* `Uploading…` and `notice` below stay hand-rolled on purpose: the
+          first is inline feedback on one control, the second is a success
+          message, and PageStatus models neither. */}
+      <PageStatus error={error} onRetry={load} />
 
       {notice ? (
         <p className="gt-adminpage-status" role="status">
@@ -200,11 +227,7 @@ export function EmulatorFirmwarePanel() {
         </p>
       ) : null}
 
-      {loading ? (
-        <p role="status" aria-busy="true">
-          Reading firmware volume…
-        </p>
-      ) : null}
+      <PageStatus loading={loading} loadingMessage="Reading firmware volume…" />
 
       {!loading && !error ? (
         <>

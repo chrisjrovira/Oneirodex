@@ -48,6 +48,25 @@ Product toggles live under **Admin → Features** (and setup → Features). Env 
 | LiveKit “on” but no voice | Flag alone is not enough — need `LIVEKIT_*` + compose `--profile livekit` |
 | OIDC button missing | `OIDC_ENABLED` stays **off** until env + Integrations toggle |
 
+## Security headers / uploads
+
+Baseline headers (`nosniff`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`) are always
+sent and need no configuration. The CSP is **report-only** on purpose — see
+[security.md](../strategy/security.md#what-phases-04-shipped).
+
+| Symptom | Check |
+|---|---|
+| Console full of “Content Security Policy … would block” | Expected. `CSP_ENFORCE=false` reports without blocking. Clear the reports first, then set `CSP_ENFORCE=true` |
+| Set `CSP_ENFORCE=true` and the newsletter editor / browser play broke | Enforcement blocks the CKEditor CDN and the WebRetro WASM cores unless the policy is widened. Set it back to `false` |
+| Site pinned to HTTPS and now unreachable by IP | HSTS. It is only sent when `SESSION_COOKIE_SECURE=true`; set `HSTS_SECONDS=0` and clear the browser's HSTS entry |
+| Large firmware upload rejected with 413 | Global ceiling is `MAX_UPLOAD_MB` (default 128). Raise it *and* `EMULATOR_BIOS_MAX_BYTES` together — the per-route firmware limit is the tighter of the two |
+| Cover uploads suddenly smaller on disk | Expected. Covers over 1200×1600 are now stored resized; previously the resize ran and the original was saved anyway |
+| Companion stopped authenticating after an upgrade | Not expiry — tokens created before `expires_at` existed are NULL, which means never. Check Admin → the token was not revoked |
+| Metadata art stopped downloading from one provider | The provider may be answering with a redirect to a private/link-local host, which is now refused. Look for `http_retry blocked` / `download_image blocked` in the log |
+| Browser play dead after upgrading; companion Play fine | The libretro cores are no longer shipped in the image — they are fetched on first boot. Give it a minute, then check the log for "Fetched N WebRetro core(s)". If the fetch is off or failed: `./scripts/fetch-webretro-cores.sh --defaults` — [webretro-cores.md](../runbooks/webretro-cores.md) |
+| Air-gapped box, browser play never works | Expected. Set `FETCH_WEBRETRO_CORES_ON_BOOT=false` and provision with `--from-dir`; boot logs a warning naming the missing cores rather than failing quietly |
+| "Get the source code" link missing from Help / admin footer | `GT_SOURCE_URL` is empty. It renders only when set, because a dead source link is worse than none. **Running a modified build? Point it at your fork** — AGPL §13 obliges you to offer your users your source, not upstream's |
+
 ## Integrations
 
 | Integration | Notes |
@@ -95,6 +114,9 @@ Expected if `SUPPORT_GITHUB_TOKEN` unset (`github_sync=skipped`). Ticket + admin
 | Size shows `0.00 KB` briefly after scan | Expected until deferred size job finishes (large Unraid trees). |
 | Progress stuck at 1 while library keeps growing | Fixed: multithreaded counter races + Stop early-exit. Redeploy app; counters use atomic bumps and Stop drains in-flight work. |
 | Stop button looks empty / Cancelled shows `-` | Fixed: Stopping shows “Stopping…”; Cancelled shows `Stopped N/total`. Hard-refresh scan management after upgrade. |
+| **Every scan says "queued" and never starts** | Fixed (2026-08-24). A scan orphaned by a restart or a crash stayed `Running` in the database, so `is_scan_busy()` reported busy and new scans queued behind a job no thread was working on — for up to **6 hours**, until the stale sweep aged it out. Scan jobs now record the process that owns them, and a job whose owner is gone is reclaimed on sight: at boot, on the scans-page status poll, and before any new scan is accepted. If you are still on an older build, restarting the app clears it. |
+| **A scan says only "Failed" with no reason** | Fixed (2026-08-25). The scan jobs table translated two specific failure messages into friendly statuses and showed every other one as a bare "Failed" — including the message the ownership sweep writes when it reclaims an orphaned job. Any failed job now shows its reason under the status. Needs a restart or **Admin → Themes → Reset Themes**, since the table's JS/CSS ship from the theme volume. |
+| Scan progress changes the moment the page refreshes | Fixed (2026-08-25). First paint counted only successful folders; the poll counts successes + failures. A job with any failed folder showed one number on load and another two seconds later. Both now count processed the same way. |
 | Stuck jobs / unmatched / freshness | [libraries-and-scans.md](libraries-and-scans.md) |
 | Scan unmatched table cramped / no Open path after deploy | Theme CSS/JS under `static/library/themes/` can lag the image. Rebuild/restart, then **Admin → Themes → Reset Themes** so `admin_manage_scanjobs` CSS/JS refresh; hard-refresh Scan management. — [themes-reset.md](themes-reset.md) · [libraries-and-scans.md#unmatched-folders](libraries-and-scans.md#unmatched-folders) |
 | Libraries & scans missing unified tabs / multi-select / Force delete after W22-1 deploy | Volume copies of `admin_manage_libs` + `admin_manage_scanjobs` lag the image. Rebuild/restart, then **Admin → Themes → Reset Themes**; hard-refresh `/libraries` and `/scan_management`. — [themes-reset.md](themes-reset.md) · [libraries-and-scans.md](libraries-and-scans.md) |

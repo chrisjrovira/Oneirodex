@@ -16,6 +16,7 @@ import {
 } from '../hooks/socialCompanionApi'
 import { useSocialCompanion } from '../hooks/useSocialCompanion'
 import { showToast } from '../utils/toast'
+import { PageStatus } from './PageStatus'
 import './SocialCompanionDock.css'
 
 function FriendRow({
@@ -332,7 +333,7 @@ export function SocialCompanionDock({
       <section className="gt-social-dock__section gt-social-dock__section--grow">
         <h3>Household</h3>
         {social.loading && social.accepted.length === 0 ? (
-          <p className="gt-social-dock__empty">Loading…</p>
+          <PageStatus loading className="gt-social-dock__empty" />
         ) : social.accepted.length === 0 ? (
           <p className="gt-social-dock__empty">No friends yet — add someone below.</p>
         ) : (

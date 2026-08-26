@@ -106,12 +106,36 @@
   line-height: 1.4;
 }
 
+/* One row per title, and each one reads as a row rather than as a paragraph
+   with buttons after it.
+   Full width means the actions can sit at a predictable right edge instead of
+   wrapping under the name at every other viewport, so the eye runs down one
+   column of names and one column of controls. */
 .gt-updates__inbox-item {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
+  padding: var(--gt-space-3) var(--gt-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--gt-radius-md);
+  transition: background-color var(--gt-motion-fast) var(--gt-motion-ease),
+    border-color var(--gt-motion-fast) var(--gt-motion-ease);
+}
+
+/* A row you are about to act on lifts out of the list. Nothing moves — only
+   the surface changes — so the buttons stay where the pointer is heading. */
+.gt-updates__inbox-list > li:hover .gt-updates__inbox-item {
+  background: color-mix(in srgb, var(--gt-text) 4%, transparent);
+  border-color: var(--gt-border);
+}
+
+/* Zebra banding at the row level rather than a divider per row: with the
+   actions pushed to the far right, a hairline between rows reads as a table
+   rule and the page starts to look like a spreadsheet. */
+.gt-updates__inbox-list > li:nth-child(even) .gt-updates__inbox-item {
+  background: color-mix(in srgb, var(--gt-text) 2.5%, transparent);
 }
 
 .gt-updates__inbox-main {
@@ -128,8 +152,20 @@
   gap: 8px;
 }
 
+/* "Behind" is the only thing on the row that decides whether you act, so it is
+   a chip rather than a coloured word lost in a line of metadata. */
 .gt-updates__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gt-space-1);
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--gt-radius-pill);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
   color: var(--gt-accent);
+  font-size: var(--gt-font-xs);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .gt-help__sections {
@@ -140,9 +176,17 @@
 
 /* Help accordion chrome lives in HelpPage.css (Wave 2c). */
 
-.gt-updates__search {
-  margin: 0 0 1.25rem;
-  padding: 0;
+/* The two lookups sit below the inbox and read as a pair: same surface, same
+   padding, same head. Neither is the point of the page, and framing them
+   together says so — previously Search stores was bare and the calendar teaser
+   was bare in a different way. */
+.gt-updates__search,
+.gt-updates__calendar {
+  margin: 0;
+  padding: var(--gt-space-4);
+  border: 1px solid var(--gt-border);
+  border-radius: var(--gt-radius-lg);
+  background: color-mix(in srgb, var(--gt-surface) 55%, transparent);
 }
 
 .gt-updates__section-head {
@@ -230,11 +274,10 @@
   color: var(--gt-text-muted);
 }
 
-.gt-updates__calendar {
-  margin: 1.35rem 0 0;
-  padding-top: 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
-}
+/* The top rule and the stacked margin are retired: the calendar teaser is a
+   framed panel beside Search stores now, not the last block of a single column,
+   so a divider above it drew a line across the middle of a two-panel row. Its
+   surface is defined with `.gt-updates__search` above. */
 
 .gt-updates__calendar-head {
   display: flex;

@@ -8,6 +8,7 @@ still subject to per-job ``scan_thread_count`` / ``worker_caps``.
 from __future__ import annotations
 
 import os
+import uuid
 from datetime import datetime, timedelta, timezone
 from threading import Thread
 
@@ -35,8 +36,84 @@ COALESCE_MESSAGE = (
 )
 
 # Stopping should finish quickly; Running without progress is likely orphaned.
+#
+# These remain the fallback for a job whose owner process is still alive but has
+# stopped making progress — a genuinely stuck thread, which no liveness check can
+# detect. A job whose owner process is *gone* no longer waits for them; see
+# owner_is_alive and reclaim_stale_busy_jobs.
 STALE_STOPPING_SECONDS = 10 * 60
 STALE_RUNNING_SECONDS = 6 * 60 * 60
+
+# Identifies this process for the lifetime of the process.
+#
+# The uuid half matters as much as the pid: pids are recycled, so "pid 4312 is
+# alive" does not mean "pid 4312 is still the process that started this scan".
+# After a restart the new process can easily be handed the old one's pid, and a
+# pid-only check would then call an orphaned job healthy and keep the queue
+# wedged — the exact failure this column exists to end.
+PROCESS_TOKEN = f'{uuid.uuid4().hex}:{os.getpid()}'
+
+
+def owner_is_alive(token: str | None, started_at=None) -> bool:
+    """Is the process that owns this job still running?
+
+    ``None``/malformed means the job predates the column (or was written by an
+    older build). There is nothing to verify, and an unverifiable row is not
+    evidence of death, so it counts as alive and the time-based sweep below
+    decides its fate exactly as it did before this column existed. Rows written
+    from now on all carry a token, so this only ever applies to the backlog
+    present at upgrade — which InitializationManager also clears at boot.
+
+    ``started_at`` is when the job went Running. It settles the recycled-pid
+    case: a process created *after* the scan began cannot be the one that
+    started it, however matching its pid looks. Without that comparison a
+    restart that happened to reuse the pid would keep the queue wedged, which is
+    the failure this whole column exists to end.
+
+    Errs toward *alive* whenever the answer is genuinely unknown (psutil
+    missing, permission denied, no timestamp to compare): a scan wrongly
+    reclaimed mid-run would leave two workers writing one job, which is worse
+    than a queue that drains late.
+    """
+    if token == PROCESS_TOKEN:
+        return True
+    if not token or ':' not in token:
+        return True
+
+    _boot_id, _, raw_pid = token.rpartition(':')
+    try:
+        pid = int(raw_pid)
+    except (TypeError, ValueError):
+        return True
+    if pid <= 0:
+        return True
+
+    try:
+        import psutil
+    except ImportError:
+        # Cannot prove death — leave it to the timeout rather than guess.
+        return True
+
+    try:
+        proc = psutil.Process(pid)
+        if not proc.is_running() or proc.status() == psutil.STATUS_ZOMBIE:
+            return False
+        created = proc.create_time()
+    except psutil.NoSuchProcess:
+        return False
+    except (psutil.AccessDenied, OSError):
+        return True
+
+    if started_at is None:
+        return True
+
+    anchor = started_at
+    if anchor.tzinfo is None:
+        anchor = anchor.replace(tzinfo=timezone.utc)
+    # A little slack: create_time and the job's clock come from different
+    # sources, and a process that started fractionally after the row was written
+    # is still plausibly the owner.
+    return created <= anchor.timestamp() + 60
 
 
 def parse_force_parallel(raw) -> bool:
@@ -155,6 +232,10 @@ def create_scan_job_row(
         setting_download_missing_images=bool(download_missing_images),
         setting_force_updates_extras=bool(force_updates_extras_scan),
         schedule=schedule if schedule in ('8_hours', '24_hours', '48_hours') else None,
+        # Only a job that starts Running has a worker in this process. A Queued
+        # row is owned by nobody yet, and stamping it here would make the queue
+        # look busy to the reclaim sweep.
+        owner_token=PROCESS_TOKEN if status == 'Running' else None,
     )
     db.session.add(job)
     db.session.commit()
@@ -228,6 +309,16 @@ def start_or_queue_scan(
         }
 
     flask_app = app or current_app._get_current_object()
+
+    # Clear orphans before deciding, so the *first* request after a restart
+    # starts instead of queueing. The admin status poll drains too, but only
+    # once the scans page is open — a scan kicked off from anywhere else would
+    # otherwise sit behind a ghost until something happened to look.
+    try:
+        reclaim_stale_busy_jobs()
+    except Exception as exc:
+        print(f'[SCAN QUEUE] Pre-start reclaim failed: {exc}')
+
     busy = is_scan_busy()
 
     if busy and not force:
@@ -284,6 +375,10 @@ def start_or_queue_scan(
         ).first()
         if other_busy:
             job.status = 'Queued'
+            # Back in the queue means back to unowned — a Queued row carrying
+            # this process's token would be reclaimed as a dead-owner job the
+            # moment the process exits, instead of simply waiting its turn.
+            job.owner_token = None
             try:
                 db.session.commit()
             except SQLAlchemyError:
@@ -368,6 +463,22 @@ def reclaim_stale_busy_jobs(
 
     reclaimed = 0
     for job in busy_jobs:
+        # Ownership first: if the process that was running this job is gone, the
+        # job is orphaned no matter how recently it reported progress, and
+        # waiting out STALE_RUNNING_SECONDS only keeps the queue wedged. This is
+        # the common case — a restart or a kill mid-scan — and it used to cost
+        # six hours of "scan queued, nothing happens".
+        if not owner_is_alive(job.owner_token, job.last_run):
+            job.status = 'Failed'
+            job.is_enabled = False
+            job.current_processing = None
+            job.error_message = (
+                (job.error_message or '').strip()
+                or 'Scan owner process is no longer running; reclaimed so queued scans can start.'
+            )
+            reclaimed += 1
+            continue
+
         anchor = job.last_progress_update or job.last_run
         if anchor is None:
             # Never progressed and no last_run — treat as immediately reclaimable Stopping,
@@ -440,6 +551,8 @@ def promote_next_queued_scan(app=None) -> ScanJob | None:
             error_message='',
             is_enabled=True,
             current_processing=None,
+            # This process is about to start the thread, so it owns the job.
+            owner_token=PROCESS_TOKEN,
         )
     )
     rowcount = claimed.rowcount or 0
@@ -467,6 +580,8 @@ def promote_next_queued_scan(app=None) -> ScanJob | None:
     ).first()
     if other_busy:
         promoted.status = 'Queued'
+        # See the matching rollback in start_or_queue_scan: unowned again.
+        promoted.owner_token = None
         try:
             db.session.commit()
         except SQLAlchemyError:

@@ -3,6 +3,9 @@ import random
 import threading
 import requests
 
+from gametheca.utils.http_safe import BlockedOutboundUrl, safe_get
+from gametheca.utils.security import validate_user_outbound_http_url
+
 _last_request_at = {}
 _lock = threading.Lock()
 _MIN_INTERVAL_SEC = {
@@ -34,7 +37,21 @@ def request_with_backoff(url, *, host_key, params=None, timeout=5, max_retries=3
             _last_request_at[host_key] = time.monotonic()
 
         try:
-            resp = requests.get(url, params=params, timeout=timeout, headers=headers)
+            # Every host_key here is a public metadata/store provider, so the
+            # never-LAN validator is the right one — and it now applies to
+            # redirect hops too, not just the URL we were handed.
+            resp = safe_get(
+                url,
+                validator=validate_user_outbound_http_url,
+                params=params,
+                timeout=timeout,
+                headers=headers,
+            )
+        except BlockedOutboundUrl as exc:
+            # A blocked hop is a policy decision, not a transient failure —
+            # retrying only repeats it.
+            print(f"http_retry blocked for {host_key}: {exc.reason}")
+            return None
         except requests.RequestException as exc:
             last_exc = exc
             time.sleep((2 ** attempt) + random.uniform(0, 0.25))

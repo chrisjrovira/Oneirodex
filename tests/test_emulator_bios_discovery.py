@@ -163,3 +163,70 @@ def test_platform_status_reports_ready_for_a_root_file(app, tmp_path):
 
     assert status['ready'] is True
     assert status['misplaced'] == []
+
+
+def test_cartridge_sega_systems_do_not_inherit_the_sega_cd_bios(app, tmp_path):
+    """One core serves many consoles; its firmware list belongs to one of them.
+
+    `genesis_plus_gx` runs Mega Drive, Master System, Game Gear, SG-1000, 32X
+    *and* Sega CD, and only the last needs a BIOS. The per-platform view used to
+    union every requirement of every core mapped to a platform, so all six
+    claimed to need `bios_CD_*.bin` — and once those files were present, all six
+    reported ready on the strength of firmware irrelevant to a cartridge. The
+    verdict happened to be right and the reason shown to the operator was wrong.
+    """
+    from gametheca.utils.emulator_bios import bios_status_for_platforms
+
+    root = tmp_path / 'bios'
+    root.mkdir(parents=True)
+    for name in ('bios_CD_U.bin', 'bios_CD_E.bin', 'bios_CD_J.bin'):
+        (root / name).write_bytes(b'\x00' * 64)
+    app.config['EMULATOR_BIOS_PATH'] = str(root)
+
+    with app.test_request_context():
+        rows = {r['platform']: r for r in bios_status_for_platforms()}
+
+    # The CD add-on is the one that needs it, and still says so.
+    assert 'SEGA_CD' in rows
+    assert rows['SEGA_CD']['ready'] is True
+
+    # The cartridge systems need no firmware, so they are absent entirely
+    # rather than listed with a requirement the operator can never make sense of.
+    for platform in ('SEGA_MD', 'SEGA_MS', 'SEGA_GG', 'SEGA_32X', 'SEGA_SG1000'):
+        assert platform not in rows, (
+            f'{platform} is a cartridge system and must not claim to need a Sega CD BIOS'
+        )
+
+
+def test_other_shared_core_platforms_are_scoped_too(app, tmp_path):
+    """The same trap on three more cores — assert the whole set, not one case."""
+    from gametheca.utils.emulator_bios import bios_status_for_platforms
+
+    root = tmp_path / 'bios'
+    root.mkdir(parents=True)
+    app.config['EMULATOR_BIOS_PATH'] = str(root)
+
+    with app.test_request_context():
+        rows = {r['platform']: r for r in bios_status_for_platforms()}
+
+    # mgba carries gba_bios.bin; Game Boy and Game Boy Color need nothing.
+    assert 'GBA' in rows and rows['GBA']['required'] == ['gba_bios.bin']
+    assert 'GB' not in rows and 'GBC' not in rows
+
+    # mednafen_pce* carry the CD system card; HuCard and SuperGrafx carts do not.
+    assert 'PCE_CD' in rows and rows['PCE_CD']['required'] == ['syscard3.pce']
+    assert 'PCE' not in rows and 'SUPERGRAFX' not in rows
+
+    # dolphin carries the GameCube IPL; the Wii does not use it.
+    assert 'NGC' in rows and rows['NGC']['required'] == ['IPL.bin']
+    assert 'WII' not in rows
+
+
+def test_every_override_names_a_real_platform(app):
+    """A typo in the override table would silently do nothing."""
+    from gametheca.platform import LibraryPlatform
+    from gametheca.utils.emulator_bios import PLATFORM_BIOS_OVERRIDES
+
+    known = {p.name for p in LibraryPlatform}
+    unknown = sorted(set(PLATFORM_BIOS_OVERRIDES) - known)
+    assert not unknown, f'PLATFORM_BIOS_OVERRIDES names unknown platforms: {unknown}'

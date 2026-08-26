@@ -2,7 +2,12 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { AccountModal } from './AccountModal'
-import { TOPBAR_LEAD_ID, TOPBAR_SLOT_ID, TOPBAR_TRAIL_ID } from './ContextBar'
+import {
+  TOPBAR_LEAD_ID,
+  TOPBAR_SLOT_ID,
+  TOPBAR_TITLE_ID,
+  TOPBAR_TRAIL_ID,
+} from './ContextBar'
 import { IconMenu, IconUser } from './icons'
 import { TileSizeControl } from './TileSizeControl'
 import { getPageTitle, hasTileSizeControl } from './navConfig'
@@ -51,7 +56,14 @@ export function TopBar({
   railState = 'expanded',
   views = null,
 }) {
-  const { username = '', showTrailers, showHelp, enableVr, enableActivity } = shellConfig
+  const {
+    username = '',
+    avatar = '',
+    showTrailers,
+    showHelp,
+    enableVr,
+    enableActivity,
+  } = shellConfig
   const { pathname } = useLocation()
   const pageTitle = getPageTitle(pathname, { showTrailers, showHelp, enableVr, enableActivity })
   const showTileSize = hasTileSizeControl(pathname)
@@ -116,23 +128,38 @@ export function TopBar({
             happened to leave. Unwrapped, every side control that appeared or
             changed width nudged the view switcher off centre. */}
         <div className="gt-topbar__start">
-          <button
-            type="button"
-            className="gt-cbtn gt-topbar__rail-toggle"
-            aria-label="Toggle navigation"
-            aria-expanded={railState !== 'collapsed'}
-            onClick={onToggleRail}
-          >
-            <IconMenu />
-          </button>
+          {/* One merged control, not two adjacent ones.
+              Open the nav, narrow the list — the same kind of job, done to the
+              same list — so they share an outline and the edge between them is
+              drawn once. They were reported as looking unlike the buttons in
+              the middle of the bar; they were already `.gt-cbtn`, but two
+              detached squares at the far left read as chrome from a different
+              app than the segmented strip beside them. `.gt-cbtn-group` is the
+              same primitive the pager and the filter actions use.
 
-          {/* Lead slot: Filters, immediately after the rail toggle.
-              The two form one control cluster — open the nav, narrow the list —
-              and they are sized and aligned as one in gt-shell.css. Nothing goes
-              between them: the page name used to, which pushed Filters to a
-              different x position on every page and put a label in the middle of
-              a pair of buttons. */}
-          <div id={TOPBAR_LEAD_ID} className="gt-topbar__lead" />
+              Nothing goes between them: the page name used to, which pushed
+              Filters to a different x position on every page and put a label in
+              the middle of a pair of buttons. */}
+          <div className="gt-cbtn-group gt-topbar__cluster">
+            <button
+              type="button"
+              className="gt-cbtn gt-topbar__rail-toggle"
+              aria-label="Toggle navigation"
+              aria-expanded={railState !== 'collapsed'}
+              onClick={onToggleRail}
+            >
+              <IconMenu />
+            </button>
+
+            {/* Lead slot: Filters, immediately after the rail toggle. */}
+            <div id={TOPBAR_LEAD_ID} className="gt-topbar__lead" />
+          </div>
+
+          {/* Where a page that knows its own name puts it — a Discover row's
+              "see all" page, whose title is data rather than a route. Outside
+              the cluster so it reads as a label beside the controls rather
+              than as a third button in the group. */}
+          <div id={TOPBAR_TITLE_ID} className="gt-topbar__title-slot" />
 
           {/* The page name, but only when the rail is collapsed, and after the
               control cluster rather than inside it.
@@ -192,16 +219,39 @@ export function TopBar({
           <div id={TOPBAR_TRAIL_ID} className="gt-topbar__trail" />
 
           <div className="gt-topnav__dropdown">
+            {/* Who you are, then your face.
+                It was a generic person glyph followed by a name — the one
+                identity control in the product, rendered identically for every
+                member, next to an avatar they had chosen and never saw. The
+                name leads and the avatar closes the button, which is the order
+                the eye reads a signed-in control in: label first, portrait at
+                the edge nearest the window corner.
+
+                Still `.gt-cbtn`, so it is the same button as everything else in
+                the bar; the avatar is sized to the control rather than the
+                other way round. */}
             <button
               type="button"
-              className="gt-cbtn"
+              className="gt-cbtn gt-topbar__account"
               aria-expanded={accountOpen}
               aria-controls={accountId}
               aria-label="Account menu"
               onClick={() => setAccountOpen((open) => !open)}
             >
-              <IconUser />
-              <span>{username || 'Account'}</span>
+              <span className="gt-topbar__account-name">
+                {username || 'Account'}
+              </span>
+              {avatar ? (
+                <img
+                  className="gt-topbar__account-avatar"
+                  src={avatar.startsWith('/') ? avatar : `/static/${avatar}`}
+                  alt=""
+                  width={22}
+                  height={22}
+                />
+              ) : (
+                <IconUser />
+              )}
             </button>
             {accountOpen ? (
               <div className="gt-topnav__dropdown-panel" id={accountId} role="menu">

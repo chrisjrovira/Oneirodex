@@ -180,6 +180,17 @@ class DatabaseManager:
         ALTER TABLE scan_jobs
         ADD COLUMN IF NOT EXISTS setting_force_updates_extras BOOLEAN DEFAULT FALSE;
 
+        -- Which process owns a Running/Stopping job's worker thread, so an
+        -- orphaned job can be reclaimed on sight instead of after a 6h timeout.
+        ALTER TABLE scan_jobs
+        ADD COLUMN IF NOT EXISTS owner_token VARCHAR(80);
+
+        -- Optional expiry for personal access tokens. NULL = never expires,
+        -- which is what every pre-existing token is, so an upgrade cannot log
+        -- out a live companion.
+        ALTER TABLE api_tokens
+        ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP;
+
         -- Add 'Cancelled' value to the status_enum for scan_jobs
         DO $$
         BEGIN
@@ -742,6 +753,8 @@ class DatabaseManager:
         ADD COLUMN IF NOT EXISTS share_activity BOOLEAN DEFAULT TRUE;
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS discover_pins TEXT;
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS discover_hidden TEXT;
         ALTER TABLE discovery_sections
         ADD COLUMN IF NOT EXISTS pin_rank INTEGER;
 

@@ -1,10 +1,20 @@
 /* News tiles sit in the same shelf rhythm as game tiles, but carry type rather
    than art — an announcement has no cover to show. */
 
+/* One size, always.
+ *
+ * `min-height` meant a news tile was as tall as its content: a card with art
+ * plus a four-line summary ran well past one with a bare headline, so the row
+ * had tiles of three different heights sitting on one baseline. The shelf item
+ * is a fixed box now (see .gt-shelf__item), so the card fills it exactly and
+ * the parts inside it absorb the difference instead — the summary clamps, the
+ * date is pinned to the bottom, and the art is the piece that gives way when
+ * there is not enough room. */
 .gt-news-card {
   display: flex;
   flex-direction: column;
   gap: var(--gt-space-2, 0.5rem);
+  height: 100%;
   min-height: var(--gt-tile-h, 280px);
   padding: var(--gt-space-3, 0.75rem);
   border: 1px solid var(--gt-border);
@@ -25,9 +35,13 @@
   outline-offset: 2px;
 }
 
+/* `flex-shrink` on purpose: when a long headline needs the room, the art gives
+   it up rather than pushing the date out of the tile. `min-height: 0` is what
+   lets a flex item shrink below its content size at all. */
 .gt-news-card__art {
   width: 100%;
   aspect-ratio: 16 / 9;
+  min-height: 0;
   object-fit: cover;
   border-radius: var(--gt-radius-sm, 6px);
 }
@@ -62,7 +76,12 @@
   overflow: hidden;
 }
 
+/* The elastic part: it takes whatever the art and headline leave and clamps to
+   it, so two tiles with very different amounts to say still end on the same
+   line. `line-clamp` is the ceiling, `flex` is the floor. */
 .gt-news-card__summary {
+  flex: 1 1 auto;
+  min-height: 0;
   font-size: var(--gt-font-sm, 0.875rem);
   color: var(--gt-text-muted);
   line-height: 1.4;

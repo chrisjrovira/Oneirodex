@@ -6,6 +6,7 @@ import {
   normalizeGamethecaToken,
 } from './auth.js'
 import { createDesktopApi } from './api.js'
+import { escapeHtml } from './html.js'
 import { kickoffDownload, pickDownloadVersion } from './download.js'
 import { kickoffInstall } from './install.js'
 import { loadInstallsFromDisk } from './install-store.js'
@@ -233,13 +234,6 @@ function renderLibrary(): void {
     .join('')
   els.library.innerHTML = `${offlineBanner}<div class="game-grid">${cards}</div>`
   renderLifecyclePanel()
-}
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
 }
 async function hydrateFromDisk(): Promise<void> {
   const stored = await loadStoredConfig()

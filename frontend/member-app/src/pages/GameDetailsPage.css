@@ -155,10 +155,19 @@
   font-size: 1.15rem;
 }
 
+/* One definition, not two.
+ *
+ * `grid-template-rows: min-content` was a second `.gt-details-page__content-grid`
+ * block further down the file overriding this one — the kind of split that
+ * makes a layout impossible to read. Merged, and stated once: the first row is
+ * sized to its content so the facts rail can run past the summary rather than
+ * inflating the row to match it. */
 .gt-details-page__content-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
-  gap: 1.25rem 2rem;
+  grid-template-rows: min-content;
+  /* The *only* thing separating sections — see the margin reset below. */
+  gap: 1.6rem 2rem;
   align-items: start;
   margin-bottom: 8px;
 }
@@ -167,29 +176,30 @@
   grid-template-columns: 1fr;
 }
 
-/* The facts list is usually taller than the summary, which left a large dead
-   area under the summary. Collapse the row to the summary's own height and let
-   the facts rail overflow past it rather than inflating the row. */
-.gt-details-page__content-grid {
-  grid-template-rows: min-content;
-}
-
-.gt-details-page__section--summary {
+/* Gap or margin, not both.
+ *
+ * Every section carries `margin-bottom: 28px` from when this page was a plain
+ * vertical stack. They are grid items now, and the grid already spaces its rows
+ * — so each row was separated by 28px of margin *plus* 20px of gap, and the
+ * last row trailed 28px into nothing. Roughly a section's worth of blank page
+ * between every pair of sections, which is the "lots of empty space" on a page
+ * whose content had not changed.
+ *
+ * The margin stays on the class for any section rendered outside this grid; it
+ * is only retired for the ones the grid is already spacing. */
+.gt-details-page__content-grid > .gt-details-page__section {
   margin-bottom: 0;
-  align-self: start;
 }
 
+.gt-details-page__section--summary,
 .gt-details-page__section--facts {
-  margin-bottom: 20px;
   align-self: start;
 }
 
-/* Below the two-column break there is no rail, so restore normal spacing. */
-@media (max-width: 900px) {
-  .gt-details-page__section--summary {
-    margin-bottom: 20px;
-  }
-}
+/* Below the two-column break the grid is a single column, and its row gap is
+   still what separates the sections — so nothing to restore. The rule that used
+   to add a margin back here now double-spaced the one layout that was never the
+   problem. */
 
 .gt-details-page__paths {
   display: flex;
@@ -431,5 +441,89 @@
   .gt-details-page__version-row {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* ---------- page backdrop ----------
+ *
+ * Key art behind the page, present but never in charge.
+ *
+ * The page was a lot of empty surface with a cover floating in the top-left,
+ * and the obvious fix — put the art behind it — is also the obvious way to make
+ * a page unreadable. So the art is degraded on every axis that competes with
+ * text and on none of the ones that carry atmosphere:
+ *
+ *   blur          removes detail, which is what the eye tries to read
+ *   saturate      drops it below the accent so nothing in it looks clickable
+ *   opacity       keeps it under the surface colour rather than over it
+ *   mask          fades it out entirely before the content column begins
+ *
+ * Fixed to the pane rather than scrolling with the content: a backdrop that
+ * scrolls is a very large image moving behind small text, which is the single
+ * most distracting thing it could do.
+ */
+
+.gt-details-page__backdrop {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  height: min(60vh, 34rem);
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.gt-details-page__backdrop img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Scaled up so the blur's soft edge falls outside the box instead of showing
+     as a pale border down each side. */
+  transform: scale(1.1);
+  filter: blur(28px) saturate(0.55);
+  opacity: 0.28;
+  /* Gone by the time the content starts. Two stops rather than one so the fade
+     is complete rather than merely faint at the bottom. */
+  mask-image: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 100%) 0%,
+    rgb(0 0 0 / 45%) 55%,
+    rgb(0 0 0 / 0%) 100%
+  );
+}
+
+/* The page's own content has to sit above it. `.gt-details-page` is the
+   positioning context; everything in it that is not the backdrop stacks over. */
+.gt-details-page {
+  position: relative;
+}
+
+.gt-details-page > *:not(.gt-details-page__backdrop) {
+  position: relative;
+  z-index: 1;
+}
+
+/* The hero sits above the sections that follow it.
+ *
+ * Everything above shares `z-index: 1`, so among equals the later sibling wins
+ * — which would paint the Versions section over anything the hero's action row
+ * opens downward (the "Add to collection…" list). One step up is enough, and it
+ * cannot reach the backdrop, which is deliberately below all of them. */
+.gt-details-page__hero {
+  z-index: 2;
+}
+
+/* A member who asked for less motion is usually also asking for less noise.
+   The art stays — it is not moving — but it steps further back. */
+@media (prefers-reduced-motion: reduce) {
+  .gt-details-page__backdrop img {
+    opacity: 0.18;
+  }
+}
+
+/* Forced colours: no decorative art at all. */
+@media (forced-colors: active) {
+  .gt-details-page__backdrop {
+    display: none;
   }
 }

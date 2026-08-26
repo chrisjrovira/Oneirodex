@@ -7,6 +7,31 @@
 
 Color themes change `--gt-*` surfaces and accents. **Icon packs** change glyph weight/style only, via `html[data-icon-pack="…"] .gt-icon` CSS. Packs use `currentColor` + theme `--gt-icon-*` tokens, so they work with **any** color theme (aurora + pixel, ember + filled, etc.).
 
+### The one thing `--gt-icon-*` may not do: erase a glyph
+
+`--gt-icon-fill` / `--gt-icon-fill-opacity` are set on `.gt-icon` — the `<svg>` —
+so they inherit into every sub-path. The five outline presets (aurora, violet,
+forest, rose, ice) set fill-opacity to `0`.
+
+A sub-path authored `fill="currentColor" stroke="none"` — 23 of the rail glyphs
+have one, and Favorites is *entirely* one — carries a `fill` presentation
+attribute that outranks the inherited `fill: none`, but no `fill-opacity`
+attribute at all. So it kept its colour, inherited alpha `0`, and had no stroke
+to fall back on. Solid glyphs rendered as nothing on five of the nine presets.
+
+`gt-primitives.css` re-asserts fill on any sub-path that explicitly opts in:
+
+```css
+.gt-icon [fill='currentColor'] { fill: currentColor; fill-opacity: 1; }
+```
+
+Writing `fill="currentColor"` on a sub-path is a statement that the piece is
+solid, and a colour preset does not get to overrule it. A declaration *on* the
+element outranks a value inherited from its parent, whatever the specificity —
+which is why the selector has to target the sub-path and not the svg. The
+reverse case needs no rule: `fill="none"` survives the filled packs for exactly
+the same reason. Guarded by `frontend/member-app/src/chrome/iconVisibility.test.js`.
+
 ## Builtin packs
 
 | Id | Style |

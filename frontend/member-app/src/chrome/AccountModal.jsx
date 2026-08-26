@@ -12,6 +12,7 @@ import {
 } from '../api/account'
 import { createToken, extractOneTimeSecret, listTokens, revokeToken } from '../api/tokens'
 import { copyText } from '../utils/copyText'
+import { PageStatus } from '../components/PageStatus'
 import './AccountModal.css'
 
 /**
@@ -42,7 +43,21 @@ function panelTitle(id) {
   return ACCOUNT_PANELS.find((panel) => panel.id === id)?.title || 'Account'
 }
 
-function staticUrl(path) {
+/**
+ * Where to load an avatar from.
+ *
+ * Prefers the server's resolved `avatar_url`, which routes the shipped avatars
+ * through the active theme — they are flat SVGs rendered as `<img>`, so they
+ * cannot pick up a theme colour on their own and stayed default-green on every
+ * preset until the server started recolouring them.
+ *
+ * `avatar_path` remains the fallback and the identity: it is what the client
+ * sends back when picking a stock avatar, and it is what an older server (or
+ * one whose theme folders predate the recoloured copies) will be sending.
+ */
+function avatarSrc(summary, path) {
+  const resolved = summary?.avatar_url
+  if (resolved && (!path || path === summary?.avatar_path)) return resolved
   if (!path) return ''
   return path.startsWith('/') ? path : `/static/${path}`
 }
@@ -82,11 +97,15 @@ function Note({ tone, children }) {
  * what the Invites panel opens with.
  */
 function ProfilePanel({ summary }) {
-  if (!summary) return <p className="gt-acct__empty">Loading…</p>
+  if (!summary) return <PageStatus loading className="gt-acct__empty" />
 
   return (
     <div className="gt-acct__avatar-row">
-      <img className="gt-acct__avatar" src={staticUrl(summary.avatar_path)} alt="" />
+      <img
+        className="gt-acct__avatar"
+        src={avatarSrc(summary, summary.avatar_path)}
+        alt=""
+      />
       <div className="gt-acct__avatar-meta">
         <p className="gt-acct__row-title">{summary.username}</p>
         <p className="gt-acct__row-sub">{summary.role}</p>
@@ -156,7 +175,7 @@ function AvatarPanel({ summary, onUpdated }) {
   }
 
   const stock = summary?.stock_avatars || []
-  const shown = previewUrl || staticUrl(summary?.avatar_path)
+  const shown = previewUrl || avatarSrc(summary, summary?.avatar_path)
 
   return (
     <form onSubmit={handleSubmit}>
@@ -382,7 +401,7 @@ function InvitesPanel() {
     return (
       <>
         <Note tone="error">{error}</Note>
-        {error ? null : <p className="gt-acct__empty">Loading…</p>}
+        {error ? null : <PageStatus loading className="gt-acct__empty" />}
       </>
     )
   }

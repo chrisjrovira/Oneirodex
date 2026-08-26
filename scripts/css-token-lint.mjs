@@ -55,6 +55,56 @@ const RULES = {
   'no-raw-color': 'hex literal outside a custom-property definition — use var(--gt-*)',
   'no-raw-radius': 'border-radius literal — use var(--gt-radius-*)',
   'no-raw-font-size': 'font-size literal — use var(--gt-font-*)',
+  'no-raw-inline-style': 'literal in a JSX inline style — use var(--gt-*)',
+}
+
+/**
+ * JSX inline styles were invisible to this lint (GT-B36).
+ *
+ * The rule this file encodes is that using a value must go through a token,
+ * but for its whole life it only ever read .css files. A style object written
+ * inline in a component was therefore a raw literal the ratchet could not see,
+ * and the report kept saying none new while they accumulated. There were 19
+ * across the two SPAs when this was added, almost all of them spacing.
+ *
+ * Only literal values count. A style built from data, where the value is an
+ * identifier rather than a quoted literal, is not a design-token decision and
+ * is skipped -- which is why the pattern below requires the quotes.
+ *
+ * Kept deliberately free of backticks and inline code samples: a richer version
+ * of this comment made vitest fail to parse the module with a SyntaxError while
+ * node and esbuild both accepted it, so something in vite transform pipeline
+ * mis-lexes certain comment content in a file that also uses template literals.
+ * Bisected to this comment, not to the code below it. Prose only here.
+ */
+const JSX_STYLE_BLOCK = new RegExp(String.raw`style=\{\{([\s\S]*?)\}\}`, 'g')
+// Built with `new RegExp` rather than a literal on purpose. As a regex literal
+// starting a line, vite's module lexer read the leading `/` as division and
+// then took the `'` inside this character class as the start of a string,
+// swallowing the rest of the file — so `vitest` failed to parse a module that
+// node and esbuild both accepted. A constructed RegExp has no such ambiguity.
+const JSX_STYLE_LITERAL = new RegExp(
+  String.raw`(['"])\s*(#[0-9a-fA-F]{3,8}|\d*\.?\d+(?:px|rem|em)|rgba?\([^)]*\))\s*\1`,
+  'g',
+)
+
+export function lintJsxInlineStyles(source, rel) {
+  const findings = []
+  for (const block of source.matchAll(JSX_STYLE_BLOCK)) {
+    const body = block[1]
+    for (const hit of body.matchAll(JSX_STYLE_LITERAL)) {
+      findings.push({
+        file: rel,
+        line: source.slice(0, block.index).split('\n').length,
+        rule: 'no-raw-inline-style',
+        // `detail`, not `value` — the CSS rules above all report under this
+        // key and the reporter reads it, so a different name here printed
+        // "undefined" next to every inline-style finding.
+        detail: hit[2],
+      })
+    }
+  }
+  return findings
 }
 
 /** Strip comments so `/* #fff *\/` and commented-out rules never count. */
@@ -119,7 +169,7 @@ export function lintCss(css, relPath) {
   return findings
 }
 
-function collectCssFiles(dir, out = []) {
+function collectCssFiles(dir, out = []) {  // also collects .jsx/.js — see below
   let entries
   try {
     entries = readdirSync(dir)
@@ -131,7 +181,10 @@ function collectCssFiles(dir, out = []) {
     const full = join(dir, entry)
     const st = statSync(full)
     if (st.isDirectory()) collectCssFiles(full, out)
+    // .jsx/.js join the walk so inline styles are linted too — see
+    // lintJsxInlineStyles. Tests are excluded: a fixture may need a literal.
     else if (entry.endsWith('.css')) out.push(full)
+    else if ((entry.endsWith('.jsx') || entry.endsWith('.js')) && !entry.includes('.test.')) out.push(full)
   }
   return out
 }
@@ -148,7 +201,10 @@ export function runLint() {
   for (const root of SCAN_ROOTS) {
     for (const full of collectCssFiles(join(REPO_ROOT, root))) {
       const rel = toRelPath(full)
-      const fileFindings = lintCss(readFileSync(full, 'utf8'), rel)
+      const source = readFileSync(full, 'utf8')
+      const fileFindings = rel.endsWith('.css')
+        ? lintCss(source, rel)
+        : lintJsxInlineStyles(source, rel)
       if (!fileFindings.length) continue
       findings.push(...fileFindings)
       counts[rel] = fileFindings.reduce((acc, f) => {
@@ -240,6 +296,7 @@ function main() {
     console.error(`\n  ${RULES['no-raw-color']}`)
     console.error(`  ${RULES['no-raw-radius']}`)
     console.error(`  ${RULES['no-raw-font-size']}`)
+    console.error(`  ${RULES['no-raw-inline-style']}`)
     process.exitCode = 1
     return
   }

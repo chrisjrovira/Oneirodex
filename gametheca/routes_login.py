@@ -5,7 +5,7 @@ from gametheca import db
 from gametheca.models import User, InviteToken, GlobalSettings, Whitelist
 from gametheca.utils.global_settings import global_settings_row
 from gametheca.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, InviteForm, UserPasswordForm
-from gametheca.utils.auth import _authenticate_and_redirect
+from gametheca.utils.auth import _authenticate_and_redirect, safe_next_url
 from gametheca.utils.smtp import send_email, send_password_reset_email, send_invite_email
 from gametheca.utils.processors import get_global_settings
 from gametheca.utils.event_logging import log_system_event
@@ -233,10 +233,7 @@ def oidc_callback():
         event_level='information',
     )
 
-    next_page = request.args.get('next')
-    if not next_page or urlparse(next_page).netloc != '':
-        next_page = url_for('discover.discover')
-    return redirect(next_page)
+    return redirect(safe_next_url(request.args.get('next')))
 
 
 @login_bp.route('/register', methods=['GET', 'POST'])

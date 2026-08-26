@@ -12,7 +12,7 @@ from gametheca.utils.discover_feed import (
     excluded_for,
     manifest_from,
 )
-from gametheca.utils.discover_pins import admin_forced, member_pins
+from gametheca.utils.discover_pins import admin_forced, hidden_rows, member_pins
 from gametheca.utils.functions import format_size
 from gametheca.utils.processors import get_global_settings
 from gametheca.utils.secondary_scrapers import game_card_flags
@@ -208,6 +208,20 @@ def _assemble_sections(user):
     Returns ``(sections, manifest)``.
     """
     rows = resolve_feed(user)
+
+    # Rows this member excluded. Applied before selection, not after, so a
+    # hidden row costs no query and — more importantly — releases the titles it
+    # would have claimed back to the rows below it. Filtering after assembly
+    # would leave the dedupe pass having already spent those titles on a row
+    # nobody was going to see, which reads as "hiding a row emptied the next
+    # one".
+    #
+    # `resolve_feed` is the source for both this and `available` in the pins
+    # endpoint, so the two agree on what a valid identifier is.
+    excluded = set(hidden_rows(user, available=[row.identifier for row in rows]))
+    if excluded:
+        rows = [row for row in rows if row.identifier not in excluded]
+
     hydration = DiscoverHydration(user)
 
     # Pass 1 - selection. One query per row. Over-fetching by one past the

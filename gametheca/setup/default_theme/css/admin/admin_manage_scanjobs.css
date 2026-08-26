@@ -2421,3 +2421,19 @@ a.unmatched-dupe-of__title:hover {
        local disk", so it wraps rather than truncating. */
     overflow-wrap: anywhere;
 }
+
+/* Why a scan failed, under the status word (GT-B37).
+ *
+ * The table translated two known error messages into friendly statuses and let
+ * every other reason fall through to a bare "Failed" — so a job reclaimed
+ * because its owner process had died showed nothing at all, and the operator
+ * saw a queue that stopped for no stated reason. Muted and small: it qualifies
+ * the status above it rather than competing with it.
+ */
+.gt-scan-fail-reason {
+  margin-top: var(--gt-space-1);
+  font-size: var(--gt-font-xs);
+  line-height: var(--gt-line-base);
+  color: var(--gt-text-muted);
+  max-width: 34ch;
+}

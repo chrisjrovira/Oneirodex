@@ -273,30 +273,24 @@
   box-sizing: border-box;
 }
 
-.library-filters .button-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.library-filters .button-group .btn,
-.library-filters .button-group button {
-  min-height: 2.35rem;
-  padding: 0.4rem 0.9rem;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--gt-accent) 16%, transparent);
-  color: var(--gt-text);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.library-filters .button-group .btn-secondary,
-.library-filters .button-group button[type='button'] {
-  background: var(--gt-surface-2);
-  border-color: var(--gt-border);
-  color: var(--gt-text-muted);
+/* Apply / Clear / Done, at the top of the panel, as one control.
+ *
+ * This block used to re-style the three buttons from scratch — its own height,
+ * its own padding, its own radius and an accent-tinted fill nothing else in the
+ * product used. That is the whole of "the filter buttons don't look like the
+ * library buttons": they were not library buttons, they were a local copy that
+ * had drifted. The markup carries `.gt-cbtn` inside `.gt-cbtn-group` now, so
+ * the shape comes from the same place the bar's does and there is nothing left
+ * to keep in sync.
+ *
+ * Sticky, because the panel scrolls and a commit control that scrolls out of
+ * reach is the reason it moved to the top in the first place. */
+.library-filters__actions {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding-block-end: var(--gt-space-3);
+  background: inherit;
 }
 
 .library-filters-mobile-toggle {
@@ -444,8 +438,10 @@
   background: none;
 }
 
-/* Done closes; Apply and Clear act. Pushed to its own end so the destructive
-   pair and the dismiss are not one undifferentiated row of three. */
-.library-filters .button-group .library-filters__done {
-  margin-left: auto;
+/* Done closes; Apply and Clear act.
+   Inside a merged group it cannot be pushed to its own end without breaking the
+   shared edge, so the separation is drawn instead: a heavier rule between the
+   two that act and the one that dismisses. */
+.gt-cbtn-group > .library-filters__done {
+  border-inline-start-color: var(--gt-text-muted);
 }

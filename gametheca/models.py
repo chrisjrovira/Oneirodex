@@ -516,11 +516,24 @@ class ApiToken(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     last_used_at = db.Column(db.DateTime, nullable=True)
     revoked_at = db.Column(db.DateTime, nullable=True)
+    # NULL means "never expires" — every token issued before this column existed
+    # is NULL, and a live companion must not be logged out by an upgrade.
+    expires_at = db.Column(db.DateTime, nullable=True)
 
     user = db.relationship('User', backref=db.backref('api_tokens', lazy='dynamic', cascade='all, delete-orphan'))
 
+    def is_expired(self, now=None):
+        if self.expires_at is None:
+            return False
+        moment = now or datetime.now(timezone.utc)
+        expires = self.expires_at
+        # Postgres hands these back naive; compare in UTC either way.
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        return expires <= moment
+
     def is_active(self):
-        return self.revoked_at is None
+        return self.revoked_at is None and not self.is_expired()
 
     def has_scope(self, scope: str) -> bool:
         scopes = self.scopes or []
@@ -537,6 +550,8 @@ class ApiToken(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_used_at': self.last_used_at.isoformat() if self.last_used_at else None,
             'revoked': self.revoked_at is not None,
+            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
+            'expired': self.is_expired(),
         }
 
 
@@ -732,6 +747,20 @@ class ScanJob(db.Model):
     setting_force_updates_extras = db.Column(db.Boolean, default=False)
     current_processing = db.Column(db.String(255), nullable=True)  # "Processing: Game Name (450/1000)"
     last_progress_update = db.Column(db.DateTime, nullable=True)
+    # Which process owns the worker thread while this job is Running/Stopping.
+    #
+    # A scan runs on a daemon Thread inside one process, so a job is only really
+    # in progress while that process is alive. Without this, a job orphaned by a
+    # restart or a kill stays 'Running' in the database and is_scan_busy() keeps
+    # returning True — every later scan queues behind a job that no thread is
+    # working on. Time alone cannot tell the two apart, which is why the stale
+    # sweep had to wait STALE_RUNNING_SECONDS (6h) before touching a Running row.
+    #
+    # Format is "<boot_id>:<pid>" (see scan_queue.PROCESS_TOKEN). The boot id is
+    # what makes a recycled pid safe to judge: same pid + different boot id is a
+    # different process, not the original owner. NULL means a job written before
+    # this column existed, which the reclaim sweep treats as unowned.
+    owner_token = db.Column(db.String(80), nullable=True)
 
 class UnmatchedFolder(db.Model):
     __tablename__ = 'unmatched_folders'
@@ -824,6 +853,15 @@ class UserPreference(db.Model):
     # stores its arrangement. Validated against the live rows on read: a pinned
     # row is allowed to stop existing, which is not an error.
     discover_pins = db.Column(JSONEncodedDict, nullable=True)
+    # Discover rows this member excluded from their own feed. Same storage and
+    # the same forgiving read as `discover_pins`: a JSON list of identifiers,
+    # validated against the live rows, and an entry that no longer resolves is
+    # dropped rather than raised.
+    #
+    # Hiding is a member preference, not an admin one — it never changes what
+    # anyone else sees, and `DiscoverySection.is_visible` remains the only thing
+    # that can remove a row for everybody.
+    discover_hidden = db.Column(JSONEncodedDict, nullable=True)
     # Opt-in: email for @mentions + DMs when SMTP is configured (default off).
     email_notify_social = db.Column(db.Boolean, default=True, nullable=False)
     # Opt-in: batched email of unread mentions/DMs/free games (default off).
