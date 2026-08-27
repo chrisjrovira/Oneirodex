@@ -16,8 +16,8 @@ from gametheca.utils.global_settings import global_settings_row
 from gametheca.utils.functions import (
     read_first_nfo_content, delete_associations_for_game,
     website_category_to_string,
-    PLATFORM_IDS, format_size, download_image,
-    get_folder_size_in_bytes_updates
+    PLATFORM_IDS, format_size, download_image, download_stored_image,
+    cover_title_for_uuid, get_folder_size_in_bytes_updates
 )
 from gametheca.utils.igdb_api import make_igdb_api_request
 from gametheca.utils.gamenames import generate_goty_variants
@@ -1039,7 +1039,12 @@ def process_and_save_image(game_uuid, image_data, image_type='cover'):
         print(f"Queued {image_type} for game {game_uuid} without download: {error}")
         return
 
-    success, error = download_image(url, save_path)
+    success, error = download_image(
+        url,
+        save_path,
+        image_type=image_type,
+        title=cover_title_for_uuid(game_uuid),
+    )
 
     image = Image(
         game_uuid=game_uuid,
@@ -2069,8 +2074,7 @@ def download_pending_images(batch_size=10, delay_between_downloads=1, app=None):
                     # Download the image
                     save_path = os.path.join(app.config['IMAGE_SAVE_PATH'], image.url)
 
-                    from gametheca.utils.functions import download_image
-                    success, error = download_image(image.download_url, save_path)
+                    success, error = download_stored_image(image, save_path)
 
                     if success:
                         image.is_downloaded = True
@@ -2155,8 +2159,7 @@ def download_images_for_game(game_uuid, app=None):
 
                     save_path = os.path.join(app.config['IMAGE_SAVE_PATH'], image.url)
 
-                    from gametheca.utils.functions import download_image
-                    success, error = download_image(image.download_url, save_path)
+                    success, error = download_stored_image(image, save_path)
 
                     if success:
                         image.is_downloaded = True
@@ -2184,7 +2187,7 @@ def download_images_for_game(game_uuid, app=None):
         return 0
 
 
-def download_single_image_worker(image, app):
+def download_single_image_worker(image, app, title=None):
     """Worker function to download a single image - designed for parallel execution."""
     try:
         if not image.download_url:
@@ -2192,8 +2195,12 @@ def download_single_image_worker(image, app):
 
         save_path = os.path.join(app.config['IMAGE_SAVE_PATH'], image.url)
 
-        from gametheca.utils.functions import download_image
-        success, error = download_image(image.download_url, save_path)
+        success, error = download_image(
+            image.download_url,
+            save_path,
+            image_type=image.image_type,
+            title=title,
+        )
 
         if not success:
             return {'success': False, 'image_id': image.id, 'error': error or 'Download failed for an unknown reason.'}
@@ -2231,11 +2238,25 @@ def turbo_download_images(batch_size=100, max_workers=5, app=None):
             failed_images = {}
             now = datetime.now(UTC)
             
+            titles = {
+                g.uuid: g.name
+                for g in db.session.execute(
+                    select(Game).filter(
+                        Game.uuid.in_({img.game_uuid for img in pending_images})
+                    )
+                ).scalars()
+            }
+
             # Create thread pool and submit all download tasks
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 # Submit all download jobs
                 future_to_image = {
-                    executor.submit(download_single_image_worker, image, app): image 
+                    executor.submit(
+                        download_single_image_worker,
+                        image,
+                        app,
+                        titles.get(image.game_uuid),
+                    ): image
                     for image in pending_images
                 }
                 

@@ -255,6 +255,7 @@ For library hero / site-wide fallback variety, use **Art studio → Backup & sto
   - `POST /admin/api/covers/batch/search` — filter `library_uuid` / `platform` / `service` / `missing_cover`
   - `POST /admin/api/covers/batch/apply` — same filters or `game_uuids` + `policy` (`sgdb_then_igdb_then_generate` | `provider:igdb` | `generate_only` | …)
 - Failures are recorded on the `Image` row (`last_error`, `last_attempt_at`) by every download path (batch, single, turbo, and the eager cover/screenshot fetch during scan/identify) so a permissions or network problem on `IMAGE_SAVE_PATH` shows up in the UI instead of silently leaving images stuck "pending".
+- A cover that HTTP-200s but is a 1×1, a tiny stub, or a near-solid wash is replaced with titled studio art on download (scan, queue, turbo, retry). Screenshots and other kinds are not inspected — a dark loading screen is real content.
 - Identify/match accepts bare IGDB image ids **or** expanded `{id, url}` objects for cover and screenshots (`store_image` normalizes int-or-dict — expanded cover dicts used to be dropped, leaving screenshots-only / branded **No cover art**). Cover is queued whenever IGDB provides one; until the local file lands, browse/details resolve the remote `download_url` instead of the branded placeholder.
 
 ## Deploy note

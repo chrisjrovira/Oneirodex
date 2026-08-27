@@ -11,7 +11,13 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select, func
 from gametheca.models import GlobalSettings
 from flask import url_for, current_app
-from gametheca.utils.security import is_safe_path, get_allowed_base_directories
+from gametheca.utils.cover_quality import qualify_downloaded_image
+from gametheca.utils.http_safe import safe_get
+from gametheca.utils.security import (
+    get_allowed_base_directories,
+    is_safe_path,
+    validate_user_outbound_http_url,
+)
 from gametheca.utils.quality_profiles import active_exclude_terms_for_scan
 from gametheca.utils.global_settings import global_settings_row
 
@@ -309,20 +315,32 @@ def read_first_nfo_content(full_disk_path):
     print("No NFO file found")
     return None
 
-def download_image(url, save_path):
+def cover_title_for_uuid(game_uuid: str | None) -> str | None:
+    """Game name for titled studio-art replacement of a blank cover."""
+    if not game_uuid:
+        return None
+    game = db.session.execute(
+        select(Game).filter_by(uuid=game_uuid)
+    ).scalars().first()
+    return game.name if game else None
+
+
+def download_image(url, save_path, *, image_type=None, title=None):
     """Download an image from a URL and save it to the specified path.
 
     Returns (success, error_message). ``error_message`` is ``None`` on
     success so callers (image queue, art studio, batch downloaders) can
     surface *why* a download failed instead of silently marking it done.
+
+    When ``image_type`` is ``cover``, a 200 that is still a 1×1, a stub, or a
+    near-solid wash is replaced with titled studio art so the library tile
+    is not an empty hole.
     """
     if not url.startswith(('http://', 'https://')):
         url = 'https:' + url
 
     url = url.replace('/t_thumb/', '/t_original/')
 
-    from gametheca.utils.http_safe import safe_get
-    from gametheca.utils.security import validate_user_outbound_http_url
     ok, result = validate_user_outbound_http_url(url)
     if not ok:
         error = f"Blocked outbound URL: {result}"
@@ -351,7 +369,9 @@ def download_image(url, save_path):
             if os.access(directory, os.W_OK):
                 with open(save_path, 'wb') as f:
                     f.write(response.content)
-                return True, None
+                return qualify_downloaded_image(
+                    save_path, image_type=image_type, title=title,
+                )
             else:
                 error = f"Directory '{directory}' is not writable by the GameTheca process."
                 print(f"Error: {error}")
@@ -372,6 +392,19 @@ def download_image(url, save_path):
         error = f"Unexpected error: {e}"
         print(f"An error occurred while saving the image to {save_path}: {e}")
         return False, error
+
+
+def download_stored_image(image, save_path, *, title=None):
+    """Download an ``Image`` row, qualifying covers with the game title."""
+    if title is None:
+        title = cover_title_for_uuid(image.game_uuid)
+    return download_image(
+        image.download_url,
+        save_path,
+        image_type=image.image_type,
+        title=title,
+    )
+
 
 def comma_separated_urls(form, field):
     """Validate comma-separated YouTube embed URLs."""

@@ -117,7 +117,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Unmatched & false duplicates | Have | Covered in libraries-and-scans.md |
 | Identify workbench | Have | Covered in libraries-and-scans.md + store-metadata-identify.md |
 | Freshness bulk & inbox | Update | |
-| Image queue / turbo downloads | Have | libraries-and-scans.md#image-queue |
+| Image queue / turbo downloads | Have | libraries-and-scans.md#image-queue — wash/1×1 covers replaced on download |
 | Users, invites, whitelist | Update | Classic Jinja + React hubs |
 | RBAC & parental controls | Update | Covered partially in security |
 | Integrations hub | Have | SMTP/IGDB/community/OIDC — **no Discord** |

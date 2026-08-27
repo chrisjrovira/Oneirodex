@@ -160,6 +160,7 @@ Work since the 1.0.0-beta tag (2026-08-06).
 
 ### Added
 
+- **Blank downloaded covers become titled studio art.** A cover that HTTP-200s as a 1×1, a stub, or a near-solid wash is replaced on download (scan, queue, turbo, retry) so the library tile is not an empty hole. Screenshots are left alone.
 - **Admin firmware collection scan.** Admin → Emulators can point at a folder of dumps you already own (subfolders included), install every name the service asks for, pick which dump to use when filenames collide, and copy a markdown list of what is still missing. Same walk as `scripts/import_bios.py`. Oneirodex still never downloads BIOS.
 - **Decade room themes.** Preferences is no longer a tiny colour-chip grid. Six era rooms (1980s wood den, 1990s teen bedroom, late-90s carpet den, 2000s media centre, arcade floor, computer desk) plus the existing colour cabinets sit in the same wallpaper/window/floor language as browser play, on member *and* admin chrome. Untitled-game placeholders and Art Studio backup packs follow the room. Needs **Reset Default Themes** (`GENERATOR_VERSION` 17) so volume copies pick up `gt-era.css`.
 - **GOG and Epic live ownership register sync.** Same shape as Steam: IDs and names into `UserOwnedTitle`, never a download. Unofficial Galaxy / launcher surfaces; paste a refresh token or Epic device-auth JSON (or household env). Fail honestly on 401. CSV still works.

@@ -11,6 +11,7 @@ from gametheca import db
 from gametheca.models import Game, Image
 from gametheca.utils.auth import admin_required
 from gametheca.utils.cover_art_studio import apply_pack_to_game, save_pack
+from gametheca.utils.functions import download_stored_image
 from gametheca.utils.cover_selection import (
     batch_apply_covers,
     batch_search_covers,
@@ -168,8 +169,6 @@ def download_images():
             downloaded = 0
             failed = 0
             errors = []
-            from gametheca.utils.functions import download_image
-
             for image in failed_images:
                 if image.is_downloaded:
                     continue
@@ -182,7 +181,7 @@ def download_images():
                 image.last_attempt_at = datetime.now(timezone.utc)
                 try:
                     save_path = os.path.join(current_app.config['IMAGE_SAVE_PATH'], image.url)
-                    success, error = download_image(image.download_url, save_path)
+                    success, error = download_stored_image(image, save_path)
                 except Exception as e:
                     success, error = False, str(e)
 

@@ -406,90 +406,97 @@ class TestReadFirstNfoContent:
 
 class TestDownloadImage:
     """Test cases for download_image function."""
-    
-    @patch('gametheca.utils.functions.requests')
-    @patch('os.makedirs')
-    @patch('os.path.exists')
-    @patch('os.access')
-    def test_download_image_success(self, mock_access, mock_exists, mock_makedirs, mock_requests):
+
+    def _allow_url(self, monkeypatch):
+        monkeypatch.setattr(
+            'gametheca.utils.functions.validate_user_outbound_http_url',
+            lambda url: (True, url),
+        )
+
+    def test_download_image_success(self, monkeypatch):
         """Test successful image download."""
-        # Mock successful HTTP response
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.content = b'fake_image_data'
-        mock_requests.get.return_value = mock_response
-        
-        # Mock directory operations
-        mock_exists.return_value = True
-        mock_access.return_value = True
-        
-        with patch('builtins.open', mock_open()) as mock_file:
-            download_image('//example.com/image.jpg', '/path/to/save/image.jpg')
-            
-            # Verify URL was corrected to HTTPS. Asserting the URL positionally
-            # and the timeout separately: a timeout tweak should not fail this,
-            # but *dropping* the timeout should — an un-timed-out fetch of a
-            # remote image can hang a scan indefinitely.
-            args, kwargs = mock_requests.get.call_args
-            assert args[0] == 'https://example.com/image.jpg'
-            assert kwargs.get('timeout')
-            
-            # Verify file was written
-            mock_file.assert_called_once_with('/path/to/save/image.jpg', 'wb')
-            mock_file().write.assert_called_once_with(b'fake_image_data')
-    
-    @patch('gametheca.utils.functions.requests')
-    def test_download_image_url_transformation(self, mock_requests):
+        mock_get = MagicMock(return_value=mock_response)
+        self._allow_url(monkeypatch)
+        monkeypatch.setattr('gametheca.utils.functions.safe_get', mock_get)
+
+        with patch('os.path.exists', return_value=True):
+            with patch('os.access', return_value=True):
+                with patch('builtins.open', mock_open()) as mock_file:
+                    download_image('//example.com/image.jpg', '/path/to/save/image.jpg')
+
+                    args, kwargs = mock_get.call_args
+                    assert args[0] == 'https://example.com/image.jpg'
+                    assert kwargs.get('timeout')
+
+                    mock_file.assert_called_once_with('/path/to/save/image.jpg', 'wb')
+                    mock_file().write.assert_called_once_with(b'fake_image_data')
+
+    def test_download_image_url_transformation(self, monkeypatch):
         """Test URL transformation from thumb to original."""
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.content = b'fake_image_data'
-        mock_requests.get.return_value = mock_response
-        
+        mock_get = MagicMock(return_value=mock_response)
+        self._allow_url(monkeypatch)
+        monkeypatch.setattr('gametheca.utils.functions.safe_get', mock_get)
+
         with patch('os.path.exists', return_value=True):
             with patch('os.access', return_value=True):
                 with patch('builtins.open', mock_open()):
-                    # Test thumb URL transformation
                     download_image('https://example.com/t_thumb/image.jpg', '/path/image.jpg')
-                    args, kwargs = mock_requests.get.call_args
+                    args, kwargs = mock_get.call_args
                     assert args[0] == 'https://example.com/t_original/image.jpg'
                     assert kwargs.get('timeout')
-    
-    @patch('gametheca.utils.functions.requests')
-    def test_download_image_http_error(self, mock_requests):
+
+    def test_download_image_http_error(self, monkeypatch):
         """Test download_image with HTTP error."""
         mock_response = MagicMock()
         mock_response.status_code = 404
-        mock_requests.get.return_value = mock_response
-        
+        self._allow_url(monkeypatch)
+        monkeypatch.setattr(
+            'gametheca.utils.functions.safe_get',
+            MagicMock(return_value=mock_response),
+        )
+
         with patch('builtins.print') as mock_print:
             download_image('https://example.com/image.jpg', '/path/image.jpg')
             mock_print.assert_called_with("Failed to download the image. Status Code: 404")
-    
-    @patch('gametheca.utils.functions.requests')
-    @patch('os.makedirs')
-    @patch('os.path.exists')
-    def test_download_image_create_directory(self, mock_exists, mock_makedirs, mock_requests):
+
+    def test_download_image_create_directory(self, monkeypatch):
         """Test download_image creates directory when it doesn't exist."""
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.content = b'fake_image_data'
-        mock_requests.get.return_value = mock_response
-        
-        # Directory doesn't exist initially
-        mock_exists.return_value = False
-        
-        with patch('os.access', return_value=True):
-            with patch('builtins.open', mock_open()):
-                with patch('builtins.print'):
-                    download_image('https://example.com/image.jpg', '/new/path/image.jpg')
-                    mock_makedirs.assert_called_once_with('/new/path', exist_ok=True)
-    
-    @patch('requests.get')
-    def test_download_image_request_exception(self, mock_get):
+        self._allow_url(monkeypatch)
+        monkeypatch.setattr(
+            'gametheca.utils.functions.safe_get',
+            MagicMock(return_value=mock_response),
+        )
+
+        with patch('os.path.exists', return_value=False):
+            with patch('os.makedirs') as mock_makedirs:
+                with patch('os.access', return_value=True):
+                    with patch('builtins.open', mock_open()):
+                        with patch('builtins.print'):
+                            download_image(
+                                'https://example.com/image.jpg',
+                                '/new/path/image.jpg',
+                            )
+                            mock_makedirs.assert_called_once_with(
+                                '/new/path', exist_ok=True,
+                            )
+
+    def test_download_image_request_exception(self, monkeypatch):
         """Test download_image handles request exceptions."""
-        mock_get.side_effect = requests.exceptions.ConnectionError("Network error")
-        
+        self._allow_url(monkeypatch)
+        monkeypatch.setattr(
+            'gametheca.utils.functions.safe_get',
+            MagicMock(side_effect=requests.exceptions.ConnectionError("Network error")),
+        )
+
         with patch('builtins.print') as mock_print:
             download_image('https://example.com/image.jpg', '/path/image.jpg')
             mock_print.assert_called()
