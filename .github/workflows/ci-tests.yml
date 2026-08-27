@@ -136,6 +136,7 @@ jobs:
           tests/test_button_contract.py
           tests/test_api_envelope_lint.py
           tests/test_w20_scan_match_api.py
+          tests/test_w34_catalog_corroborate.py
           tests/test_sse_wsgi_fallback.py
           tests/test_patch_catalog.py
           tests/test_patch_catalog_attach.py

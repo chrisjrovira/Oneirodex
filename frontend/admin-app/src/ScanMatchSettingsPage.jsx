@@ -95,7 +95,11 @@ export function ScanMatchSettingsPage() {
       <h1>Scan / match policy</h1>
       <p className="gt-admin-lede">
         Control how library scans propose vs auto-import matches. Many-leaf console libraries stay
-        leaf-only — Oneirodex does not offer mega-library or depth-3 family walk options here.
+        leaf-only — Oneirodex does not offer mega-library or depth-3 family walk options here. A
+        high-confidence IGDB hit is still checked against Steam / GOG plus unique-exact MobyGames /
+        TheGamesDB when those keys are set. A catalog disagreement (folder Doom / IGDB Doom 3) goes
+        to Review as <code>catalog_disagreement</code> — it does not auto-import or peel the name
+        down until it fits.
       </p>
 
       {/* The two `gt-admin-banner` blocks below stay as banners: they disclose

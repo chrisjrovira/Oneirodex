@@ -90,6 +90,7 @@ describe('ScanMatchSettingsPage', () => {
     global.fetch = vi.fn(async () => jsonErr(404, { error: 'not found' }))
     render(<ScanMatchSettingsPage />)
     expect(await screen.findByRole('heading', { name: 'Scan / match policy' })).toBeInTheDocument()
+    expect(screen.getByText(/catalog_disagreement/)).toBeInTheDocument()
     expect(
       await screen.findByText(/Scan\/match settings API is not available yet/i),
     ).toBeInTheDocument()

@@ -14,6 +14,7 @@ import re
 from datetime import datetime, timezone
 from uuid import uuid4
 
+from flask import current_app, has_app_context
 from sqlalchemy import func, select
 
 from gametheca import db
@@ -193,6 +194,195 @@ def exact_title_hits(query: str, hits: list[dict] | None) -> list[dict]:
         if _casefold_title(hit.get('name')) == needle:
             out.append(hit)
     return out
+
+
+_IDENTITY_NON_ALNUM = re.compile(r'[^a-z0-9]+')
+
+
+def _identity_key(value: str | None) -> str:
+    """Punctuation-tolerant title key: 'Half-Life 2' and 'Half Life 2' agree."""
+    text = _IDENTITY_NON_ALNUM.sub(' ', (value or '').casefold()).strip()
+    return ' '.join(text.split())
+
+
+def titles_identify_agree(left: str | None, right: str | None) -> bool:
+    key = _identity_key(left)
+    return bool(key) and key == _identity_key(right)
+
+
+def _catalog_http_allowed() -> bool:
+    """Skip live Steam/GOG/Moby/TGDB in pytest. Production still consults them."""
+    try:
+        if has_app_context() and current_app.config.get('TESTING'):
+            return False
+    except Exception:
+        pass
+    return True
+
+
+def gather_catalog_identify_signals(
+    cleaned_name: str,
+    library_platform: str | None = None,
+) -> dict:
+    """Exact-title rows from Steam / GOG / unique-exact Moby / TGDB.
+
+    Unique-exact only for MobyGames and TheGamesDB (ambiguous exact is skipped,
+    not a veto). Empty when keys are unset or pytest has TESTING=True.
+    """
+    query = (cleaned_name or '').strip()
+    empty = {'rows': [], 'skipped': [], 'stage_e': {}}
+    if not query:
+        return empty
+    if not _catalog_http_allowed():
+        return {**empty, 'skipped': ['testing']}
+
+    rows: list[dict] = []
+    skipped: list[str] = []
+    platform_key = (library_platform or '').strip() or None
+    is_console = bool(platform_key) and platform_key not in NATIVE_PC_PLATFORMS
+
+    try:
+        steam_hits = search_steam_games(query, limit=10, include_software=False)
+    except Exception as err:
+        print(f'⚠️ [W34] Steam search failed: {err}')
+        steam_hits = []
+        skipped.append('steam')
+    exact_steam = exact_title_hits(query, steam_hits)
+    if len(exact_steam) == 1:
+        rows.append(_candidate_from_steam_hit(exact_steam[0], match_mode='exact_title'))
+
+    try:
+        gog_hits = search_gog_games(query, limit=10)
+    except Exception as err:
+        print(f'⚠️ [W34] GOG search failed: {err}')
+        gog_hits = []
+        skipped.append('gog')
+    exact_gog = exact_title_hits(query, gog_hits)
+    if len(exact_gog) == 1:
+        rows.append(_candidate_from_gog_hit(exact_gog[0]))
+
+    try:
+        from gametheca.utils.providers.mobygames import get_mobygames_api_key
+
+        moby_key = (get_mobygames_api_key() or '').strip()
+    except Exception:
+        moby_key = ''
+    if not moby_key:
+        skipped.append('mobygames_key_unset')
+    else:
+        try:
+            moby_hits = search_mobygames_games(query, api_key=moby_key, limit=10)
+        except Exception as err:
+            print(f'⚠️ [W34] MobyGames search failed: {err}')
+            moby_hits = []
+        exact_moby = exact_title_hits(query, moby_hits)
+        if len(exact_moby) == 1:
+            hit = exact_moby[0]
+            rows.append({
+                'source': 'mobygames',
+                'name': (hit.get('name') or '').strip(),
+                'match_mode': 'moby_exact',
+                'url': (hit.get('url') or '').strip() or None,
+                'mobygames_id': hit.get('mobygames_id') or hit.get('id'),
+            })
+
+    if is_console:
+        try:
+            from gametheca.utils.providers.thegamesdb import get_thegamesdb_api_key
+
+            tgdb_key = (get_thegamesdb_api_key() or '').strip()
+        except Exception:
+            tgdb_key = ''
+        if not tgdb_key:
+            skipped.append('thegamesdb_key_unset')
+        else:
+            try:
+                tgdb_hits = search_thegamesdb_games(query, limit=10)
+            except Exception as err:
+                print(f'⚠️ [W34] TheGamesDB search failed: {err}')
+                tgdb_hits = []
+            exact_tgdb = exact_title_hits(query, tgdb_hits)
+            if len(exact_tgdb) == 1:
+                hit = exact_tgdb[0]
+                rows.append({
+                    'source': 'thegamesdb',
+                    'name': (hit.get('name') or '').strip(),
+                    'match_mode': 'tgdb_exact',
+                    'url': (hit.get('url') or '').strip() or None,
+                    'thegamesdb_id': hit.get('thegamesdb_id') or hit.get('id'),
+                })
+
+    return {'rows': rows, 'skipped': skipped, 'stage_e': {}}
+
+
+def corroborate_igdb_with_catalogs(
+    *,
+    igdb_name: str | None,
+    cleaned_name: str | None,
+    library_platform: str | None = None,
+) -> dict:
+    """Compare a high-confidence IGDB title to unique-exact catalog hits.
+
+    ``disagree``: a catalog unique-exact title identity-matches the folder but
+    not IGDB (folder Doom / IGDB Doom 3 / Moby Doom). ``agree``: a catalog
+    title identity-matches IGDB. Remaster/subtitle tails that match neither
+    identity are ``no_signal``, not a veto.
+    """
+    gathered = gather_catalog_identify_signals(
+        cleaned_name or '',
+        library_platform,
+    )
+    agreed: list[dict] = []
+    disagreed: list[dict] = []
+    for row in gathered.get('rows') or []:
+        if not isinstance(row, dict):
+            continue
+        catalog_name = row.get('name')
+        if titles_identify_agree(igdb_name, catalog_name):
+            agreed.append(row)
+        elif titles_identify_agree(cleaned_name, catalog_name):
+            disagreed.append(row)
+    if disagreed:
+        verdict = 'disagree'
+    elif agreed:
+        verdict = 'agree'
+    else:
+        verdict = 'no_signal'
+    return {
+        'verdict': verdict,
+        'agreed': agreed,
+        'disagreed': disagreed,
+        'skipped': list(gathered.get('skipped') or []),
+    }
+
+
+def apply_catalog_identity_to_game(game, rows: list[dict] | None) -> None:
+    """Fill-only Steam / Moby identity from agreeing catalog rows. Never a download URL."""
+    for row in rows or []:
+        if not isinstance(row, dict):
+            continue
+        source = (row.get('source') or '').strip().lower()
+        if source == 'steam' and not getattr(game, 'steam_app_id', None):
+            app_id = row.get('steam_app_id') or row.get('id')
+            try:
+                app_id_int = int(app_id) if app_id is not None else None
+            except (TypeError, ValueError):
+                app_id_int = None
+            if app_id_int:
+                game.steam_app_id = app_id_int
+                game.steam_url = f'https://store.steampowered.com/app/{app_id_int}/'
+        elif source == 'mobygames':
+            url = (row.get('url') or '').strip()
+            if not url:
+                continue
+            lowered = url.lower()
+            if any(token in lowered for token in ('download', 'install', 'magnet', 'torrent')):
+                continue
+            db.session.add(GameURL(
+                game_uuid=game.uuid,
+                url_type='mobygames',
+                url=url,
+            ))
 
 
 def scrub_stage_d_payload(payload: dict) -> dict:

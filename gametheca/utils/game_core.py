@@ -27,7 +27,11 @@ from gametheca.utils.fandom_alias import (
     is_fandom_soft_propose,
 )
 from gametheca.utils.match_scoring import select_best_match, rank_candidates
-from gametheca.utils.match_proposal import build_match_proposal, write_match_proposal
+from gametheca.utils.match_proposal import (
+    MATCH_REASON_CATALOG_DISAGREEMENT,
+    build_match_proposal,
+    write_match_proposal,
+)
 from gametheca.utils.game_name_parse import parse_game_label, detect_update_packaging
 from gametheca.utils.image_kinds import IGDB_DOWNLOAD_KINDS
 from gametheca.utils.rom_name_peel import (
@@ -36,6 +40,10 @@ from gametheca.utils.rom_name_peel import (
     should_use_console_rom_peel,
 )
 from gametheca.utils.scan_match_settings import resolve_scan_match_policy
+from gametheca.utils.software_identify import (
+    apply_catalog_identity_to_game,
+    corroborate_igdb_with_catalogs,
+)
 from gametheca.utils.steam_lookup import fetch_steam_title_by_app_id
 from gametheca.utils.secondary_scrapers import (
     fetch_steam_data, game_indicates_vr, normalize_perspective_name, VR_PERSPECTIVE_NAME
@@ -1501,6 +1509,64 @@ def retrieve_and_save_game(
         last_low_confidence_search = search_name
         print(f"Low-confidence / ambiguous results for '{search_name}' — not auto-importing")
 
+    if selected_game is not None:
+        try:
+            platform_key = getattr(getattr(library, 'platform', None), 'name', None)
+            catalog = corroborate_igdb_with_catalogs(
+                igdb_name=selected_game.get('name'),
+                cleaned_name=variant_base,
+                library_platform=platform_key,
+            )
+        except Exception as catalog_err:
+            print(f"⚠️ [W34] Catalog corroboration failed for {full_disk_path}: {catalog_err}")
+            catalog = {
+                'verdict': 'no_signal',
+                'agreed': [],
+                'disagreed': [],
+                'skipped': ['error'],
+            }
+        if catalog.get('verdict') == 'disagree':
+            print(
+                f"🛑 [W34] Catalog disagreement for '{game_name}' "
+                f"(IGDB {selected_game.get('name')}) — writing Review proposal, not importing."
+            )
+            try:
+                proposal = build_match_proposal(
+                    game_name,
+                    high_confidence_candidates or [selected_game],
+                    steam_title=steam_title,
+                    confidence='high',
+                )
+                body = proposal.setdefault('proposal', {})
+                body['match_reason'] = MATCH_REASON_CATALOG_DISAGREEMENT
+                body['action'] = 'review'
+                body['catalog_disagreement'] = {
+                    'igdb_name': selected_game.get('name'),
+                    'cleaned_name': variant_base,
+                    'disagreed': catalog.get('disagreed') or [],
+                    'agreed': catalog.get('agreed') or [],
+                }
+                if write_match_proposal(full_disk_path, proposal):
+                    print(
+                        f"📝 [W34] Wrote catalog-disagreement proposal for '{variant_base}' "
+                        f"→ {os.path.join(full_disk_path, 'gametheca.proposal.json')}"
+                    )
+            except Exception as proposal_err:
+                print(
+                    f"⚠️ [W34] Failed to write catalog-disagreement proposal "
+                    f"for {full_disk_path}: {proposal_err}"
+                )
+            log_unmatched_folder(
+                scan_job_id,
+                full_disk_path,
+                'Unmatched',
+                library_uuid=library.uuid,
+                match_reason=MATCH_REASON_CATALOG_DISAGREEMENT,
+            )
+            return None
+    else:
+        catalog = {'verdict': 'no_signal', 'agreed': [], 'disagreed': [], 'skipped': []}
+
     # PROPOSE-ONLY MODE / C11 bare franchise / BE-DET-9 fandom soft:
     # never auto-import. Write the proposal sidecar for admin review and stop
     # short of creating a Game. Soft alias never invents IGDB IDs alone.
@@ -1575,6 +1641,12 @@ def retrieve_and_save_game(
             if new_game is None:
                 print(f"Failed to create game instance for {game_name}. Skipping further processing.")
                 return None
+
+            if catalog.get('verdict') == 'agree' and catalog.get('agreed'):
+                try:
+                    apply_catalog_identity_to_game(new_game, catalog['agreed'])
+                except Exception as stamp_err:
+                    print(f"⚠️ [W34] Catalog identity stamp failed: {stamp_err}")
                     
             attach_igdb_taxonomy_to_game(new_game, selected_game)
 

@@ -20,6 +20,9 @@ SUGGESTED_KIND_LABELS = {
     'tool': 'Utility',
 }
 
+# W34 — folder/catalog unique-exact title disagrees with the IGDB hit.
+MATCH_REASON_CATALOG_DISAGREEMENT = 'catalog_disagreement'
+
 # Deterministic one-liners for UI "Why unmatched?" (no DB / disk I/O).
 MATCH_REASON_SUMMARIES = {
     'same_path': 'Same on-disk path as an existing library game',
@@ -32,6 +35,9 @@ MATCH_REASON_SUMMARIES = {
     ),
     'update_packaging_hint': (
         'Folder name carried update/patch packaging (peeled for search).'
+    ),
+    MATCH_REASON_CATALOG_DISAGREEMENT: (
+        'Steam or MobyGames unique-exact title matches the folder, not the IGDB hit'
     ),
 }
 

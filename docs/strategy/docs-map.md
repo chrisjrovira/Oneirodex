@@ -99,7 +99,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 
 | Guide | Status | Notes |
 |---|---|---|
-| Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — merged chrome; tools tab; batch APIs |
+| Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — merged chrome; tools tab; batch APIs; W34 catalog disagreement → Review |
 | [members-and-invites.md](../admin/members-and-invites.md) | Have | Invites as links; admin-created accounts with no email |
 | Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **17**; UID-017 token pass needs Reset Themes for classic CSS |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — OIDC opt-in; native Arr + Prowlarr/Jackett |
