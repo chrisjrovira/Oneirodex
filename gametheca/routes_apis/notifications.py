@@ -7,6 +7,7 @@ from flask_login import current_user, login_required
 
 from gametheca import db
 from gametheca.models import UserPreference
+from gametheca.utils.api_response import api_ok
 from gametheca.utils.notifications import list_notifications, mark_read, unread_count
 
 from . import apis_bp
@@ -44,7 +45,10 @@ def notifications_read():
         except (TypeError, ValueError):
             continue
     count = mark_read(current_user.id, cleaned, all_read=all_read)
-    return jsonify({'ok': True, 'marked': count, 'unread_count': unread_count(current_user.id)})
+    return api_ok({
+        'marked': count,
+        'unread_count': unread_count(current_user.id),
+    })
 
 
 @apis_bp.route('/notifications/preferences', methods=['GET', 'POST'])
@@ -83,4 +87,4 @@ def notifications_preferences():
         if key in data:
             setattr(prefs, key, bool(data[key]))
     db.session.commit()
-    return jsonify({'ok': True})
+    return api_ok()

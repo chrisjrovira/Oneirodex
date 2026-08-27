@@ -22,7 +22,7 @@
   }
 
   .gt-more-page__lede {
-    font-size: 0.88rem;
+    font-size: var(--gt-font-md);
     margin-bottom: 0.65rem;
   }
 
@@ -101,7 +101,7 @@
   }
 
   .gt-chat-composer textarea {
-    font-size: 1rem;
+    font-size: var(--gt-font-base);
   }
 }
 

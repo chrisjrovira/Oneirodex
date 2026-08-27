@@ -123,6 +123,13 @@ def test_notifications_empty_and_bad_limit(client, app, db_session, member_user)
     assert 'notify_chat' in body
     assert 'email_digest_daily' in body
 
+    marked = client.post('/api/notifications/read', json={'all': True})
+    assert marked.status_code == 200
+    marked_body = marked.get_json()
+    assert marked_body['ok'] is True
+    assert marked_body['error'] is None
+    assert marked_body['marked'] == 0
+
 
 def test_news_feeds_never_500_on_empty_or_failure(client, app, db_session, member_user, monkeypatch):
     _login(client, app, member_user)

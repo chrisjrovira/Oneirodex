@@ -79,6 +79,16 @@ def test_calendar_empty_when_igdb_off(client, admin_user, monkeypatch):
     assert body['source'] == 'igdb'
 
 
+def test_calendar_rejects_non_integer_window(client, admin_user):
+    _login(client, admin_user)
+    resp = client.get('/api/calendar?days_ahead=nope')
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['ok'] is False
+    assert body['error'] == 'Invalid query parameters'
+    assert body['error_code'] == 'bad_request'
+
+
 def test_calendar_igdb_error_dict_returns_empty_200(client, admin_user, monkeypatch):
     """make_igdb_api_request error dict must not 500/502 the hub."""
     _login(client, admin_user)

@@ -2,7 +2,7 @@
 .image-whitelist img {
     width: 100%;
     max-width: 300px;
-    border-radius: 15px;
+    border-radius: var(--gt-radius-2xl);
     transition: transform 0.3s ease;
     box-shadow: 0 8px 32px color-mix(in srgb, var(--gt-bg) 30%, transparent);
     transform: rotate(-3deg);
@@ -27,7 +27,7 @@
 .table {
     background: var(--gt-surface);
     color: var(--gt-text);
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     overflow: hidden;
 }
 
@@ -59,7 +59,7 @@
 
 .input-group {
     background: var(--gt-surface);
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     overflow: hidden;
 }
 
@@ -93,7 +93,7 @@
 
 .last-tested {
     color: var(--gt-text-muted);
-    font-size: 0.9rem;
+    font-size: var(--gt-font-md);
     margin-top: 1rem;
 }
 

@@ -11,6 +11,7 @@ Quick checks before pinging an admin.
 | Spin forever (API 401/500) | Auth / server error | Hard refresh; re-login; admin check `/readyz` + logs |
 | Theme didn’t apply | Server predates the constant-folding fix | Fixed — see [below](#a-new-theme-doesnt-appear-after-reload). On an older build only a server restart applied a theme change. |
 | Font pref changed nothing | Server predates the `fonts.css` fix | Fixed — see [below](#the-font-preference-had-no-effect). On an older build no font choice, including the default, ever reached the page. |
+| Preferences panel is blank / errors | Server predates the room-card picker Jinja fix | Fixed — see [below](#preferences-will-not-open). On an older build the theme picker crashed while rendering. |
 | Can’t find a page | Nav clutter | **Ctrl+K** / ⌘K command palette — [faq.md](faq.md) |
 | Chat cramped on phone | Old frontend build | Admin rebuild `member-app` (Chat slide-out stacks ≤900px) |
 | Huge tiles on phone | Pref L/XL before density polish | Rebuild; tiles clamp automatically under 900px |
@@ -42,6 +43,16 @@ on every request with a server error. So the `@font-face` rules were never
 delivered and `--gt-font-family` was never set: the browser fell through to its
 own defaults no matter what was chosen. It affected everyone equally, signed in
 or out, which is why it did not look preference-shaped.
+
+There is no workaround on a build from before this fix — the fix is a server
+update.
+
+### Preferences will not open
+
+**Fixed.** Opening Preferences threw a server error instead of showing the
+room-card picker, so the panel never rendered. Jinja treated each group's
+`items` list as the built-in `dict.items` method, which is not a list of
+themes. The picker now walks `group['items']`.
 
 There is no workaround on a build from before this fix — the fix is a server
 update.

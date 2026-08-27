@@ -1,11 +1,10 @@
 # /gametheca/routes_admin_ext/igdb.py
-from flask import render_template, request, jsonify
+from flask import current_app, render_template, request
 from flask_login import login_required
-from gametheca.models import GlobalSettings
 from gametheca import db
-from sqlalchemy import select
 from datetime import datetime, timezone
 from . import admin2_bp
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.igdb_api import make_igdb_api_request
 from gametheca.utils.auth import admin_required
 from gametheca.utils.global_settings import (
@@ -27,10 +26,16 @@ def igdb_settings():
         
         try:
             db.session.commit()
-            return jsonify({'status': 'success', 'message': 'IGDB settings updated successfully'})
+            # `status: 'success'` is payload: admin_manage_igdb_settings.js
+            # branches on `data.status === 'success'`.
+            return api_ok({
+                'status': 'success',
+                'message': 'IGDB settings updated successfully',
+            })
         except Exception as e:
             db.session.rollback()
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            current_app.logger.warning('IGDB settings save failed: %s', e)
+            return api_error('Could not save IGDB settings', code='internal')
     
     return render_template('admin/admin_manage_igdb_settings.html', settings=settings)
 
@@ -41,7 +46,7 @@ def test_igdb():
     print("Testing IGDB connection...")
     settings = global_settings_row()
     if not settings or not settings.igdb_client_id or not settings.igdb_client_secret:
-        return jsonify({'status': 'error', 'message': 'IGDB settings not configured'}), 400
+        return api_error('IGDB settings not configured', code='bad_request')
 
     try:
         # Test the IGDB API with a simple query
@@ -50,9 +55,12 @@ def test_igdb():
             print("IGDB API test successful")
             settings.igdb_last_tested = datetime.now(timezone.utc)
             db.session.commit()
-            return jsonify({'status': 'success', 'message': 'IGDB API test successful'})
-        else:
-            print("IGDB API test failed")
-            return jsonify({'status': 'error', 'message': 'Invalid API response'}), 500
+            return api_ok({
+                'status': 'success',
+                'message': 'IGDB API test successful',
+            })
+        print("IGDB API test failed")
+        return api_error('Invalid API response', code='internal')
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        current_app.logger.warning('IGDB API test failed: %s', e)
+        return api_error('IGDB API test failed', code='internal')

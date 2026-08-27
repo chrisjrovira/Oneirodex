@@ -5,6 +5,7 @@ from __future__ import annotations
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
+from gametheca.utils.api_response import api_error
 from gametheca.utils.auth import admin_required
 from gametheca.utils.detail_layouts import (
     clear_user_detail_layout,
@@ -35,7 +36,7 @@ def layouts_detail_put():
     try:
         saved = save_detail_layout(data)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     return jsonify(saved)
 
 
@@ -68,7 +69,7 @@ def layouts_detail_mine_put():
     try:
         saved = save_user_detail_layout(current_user.id, data)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     return jsonify({'layout': saved, 'is_override': True})
 
 
@@ -99,7 +100,7 @@ def layouts_detail_presets_post():
             data.get('layout'),
         )
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     return jsonify(saved), 201
 
 
@@ -110,5 +111,5 @@ def layouts_detail_presets_delete(preset_id: int):
     # but belongs to another member is a fact this endpoint has no reason to
     # disclose.
     if not delete_layout_preset(current_user.id, preset_id):
-        return jsonify({'error': 'Preset not found'}), 404
+        return api_error('Preset not found', code='not_found')
     return jsonify({'deleted': preset_id})

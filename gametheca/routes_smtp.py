@@ -1,5 +1,5 @@
 from gametheca.utils.api_response import api_error, api_ok
-from flask import Blueprint, current_app, render_template, request, jsonify
+from flask import Blueprint, current_app, render_template, request
 from flask_login import login_required
 from gametheca.utils.auth import admin_required
 from gametheca.utils.global_settings import (
@@ -34,24 +34,42 @@ def smtp_settings():
         # Validate required fields when SMTP is enabled
         if data.get('smtp_enabled'):
             if not data.get('smtp_server'):
-                return jsonify({'status': 'error', 'message': 'SMTP server is required when SMTP is enabled'}), 400
+                return api_error(
+                    'SMTP server is required when SMTP is enabled',
+                    code='bad_request',
+                )
             if not data.get('smtp_port'):
-                return jsonify({'status': 'error', 'message': 'SMTP port is required when SMTP is enabled'}), 400
+                return api_error(
+                    'SMTP port is required when SMTP is enabled',
+                    code='bad_request',
+                )
             if not data.get('smtp_username'):
-                return jsonify({'status': 'error', 'message': 'SMTP username is required when SMTP is enabled'}), 400
+                return api_error(
+                    'SMTP username is required when SMTP is enabled',
+                    code='bad_request',
+                )
             if not data.get('smtp_password'):
-                return jsonify({'status': 'error', 'message': 'SMTP password is required when SMTP is enabled'}), 400
+                return api_error(
+                    'SMTP password is required when SMTP is enabled',
+                    code='bad_request',
+                )
             if not data.get('smtp_default_sender'):
-                return jsonify({'status': 'error', 'message': 'Default sender email is required when SMTP is enabled'}), 400
+                return api_error(
+                    'Default sender email is required when SMTP is enabled',
+                    code='bad_request',
+                )
             
             # Validate port number
             try:
                 port = int(data.get('smtp_port', 587))
                 if port <= 0 or port > 65535:
-                    return jsonify({'status': 'error', 'message': 'Invalid port number. Must be between 1 and 65535'}), 400
+                    return api_error(
+                        'Invalid port number. Must be between 1 and 65535',
+                        code='bad_request',
+                    )
                 settings.smtp_port = port
             except ValueError:
-                return jsonify({'status': 'error', 'message': 'SMTP port must be a valid number'}), 400
+                return api_error('SMTP port must be a valid number', code='bad_request')
         
         settings.smtp_enabled = data.get('smtp_enabled', False)
         settings.smtp_server = data.get('smtp_server')
@@ -63,12 +81,17 @@ def smtp_settings():
         
         try:
             db.session.commit()
-            return jsonify({'status': 'success', 'message': 'SMTP settings updated successfully'})
+            # `status: 'success'` stays in the payload: the admin page branches
+            # on `data.status === 'success'`. api_error cannot carry a body
+            # `status` key — that argument is the HTTP code.
+            return api_ok({
+                'status': 'success',
+                'message': 'SMTP settings updated successfully',
+            })
         except Exception as e:
             db.session.rollback()
             current_app.logger.warning('SMTP settings save failed: %s', e)
-        # Stays on jsonify: admin_manage_smtp_settings.js reads `data.status`.
-        return jsonify({'status': 'error', 'message': 'Could not save SMTP settings'}), 500
+        return api_error('Could not save SMTP settings', code='internal')
     
     return render_template('admin/admin_manage_smtp_settings.html', settings=settings)
 
@@ -96,12 +119,8 @@ def smtp_test():
     if success:
         # 200 + `success`: the request worked, the connection test is what
         # failed or passed. admin_manage_smtp_settings.js reads `data.success`.
-        return jsonify({
-            'success': True,
-            'result': result
-        })
-    else:
-        return jsonify({
-            'success': False,
-            'message': result
-        })
+        return api_ok({'result': result})
+    # HTTP 200 on purpose: the save-adjacent test endpoint reports a failed
+    # connection as `success: false`, not as a 4xx. api_error still sets those
+    # mirrors when status=200.
+    return api_error(str(result or 'SMTP connection failed'), code='bad_request', status=200)

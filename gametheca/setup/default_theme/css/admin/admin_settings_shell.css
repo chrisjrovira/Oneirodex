@@ -17,7 +17,7 @@
     gap: var(--spacing-sm);
     margin: 0;
     color: var(--gt-text);
-    font-size: 2em;
+    font-size: var(--gt-font-4xl);
     font-weight: bold;
     text-shadow: 0 0 10px var(--primary-brand-50);
 }

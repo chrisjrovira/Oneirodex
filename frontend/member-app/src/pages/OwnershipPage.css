@@ -16,13 +16,13 @@
   gap: 0.25rem;
   padding: 1rem;
   border: 1px solid var(--gt-border);
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   background: var(--gt-surface);
 }
 
 .gt-ownership__meta {
   color: var(--gt-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-ownership__section {
@@ -32,7 +32,7 @@
   margin-bottom: 1.5rem;
   padding: 1rem;
   border: 1px solid var(--gt-border);
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   background: var(--gt-surface);
 }
 
@@ -55,14 +55,14 @@
   width: 100%;
   max-width: 32rem;
   color: var(--gt-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-ownership__section input[type='text'],
 .gt-ownership__section textarea {
   padding: 0.5rem;
   border: 1px solid var(--gt-border);
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   background: var(--gt-surface);
   color: var(--gt-text);
   font: inherit;

@@ -13,6 +13,7 @@ from sqlalchemy import select
 
 from gametheca import db
 from gametheca.models import Game
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.auth import admin_required
 from gametheca.utils.library_acl import user_can_access_game
 
@@ -82,9 +83,9 @@ def get_game_assists(game_uuid):
         return jsonify({'enabled': False, 'pack': None})
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     return jsonify({'enabled': True, 'pack': load_assist_pack(game_uuid)})
 
 
@@ -93,10 +94,10 @@ def get_game_assists(game_uuid):
 @admin_required
 def put_game_assists(game_uuid):
     if not assists_enabled():
-        return jsonify({'error': 'ENABLE_GAME_ASSISTS is off'}), 403
+        return api_error('ENABLE_GAME_ASSISTS is off', code='forbidden')
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     data = request.get_json(silent=True) or {}
     pack = {
         'title': data.get('title') or game.name,
@@ -106,4 +107,4 @@ def put_game_assists(game_uuid):
     path = _pack_path(game_uuid)
     with open(path, 'w', encoding='utf-8') as fh:
         json.dump(pack, fh, indent=2)
-    return jsonify({'ok': True, 'pack': load_assist_pack(game_uuid)})
+    return api_ok({'pack': load_assist_pack(game_uuid)})

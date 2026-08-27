@@ -85,6 +85,9 @@ def test_preferences_modal_renders_selectable_swatches():
     assert 'data-theme="{{ item.slug }}"' in html
     assert 'theme_picker_groups' in html
     assert 'theme-card-preview' in html
+    # Dict groups: `group.items` is the bound method, not the list.
+    assert "group['items']" in html
+    assert 'for item in group.items' not in html
     # Selection is server-rendered too, so the picker reads correctly even
     # before any JavaScript touches it.
     assert "form.theme.data == item.slug" in html

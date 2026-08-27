@@ -59,13 +59,13 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 |---|---|---|---|
 | Getting started (web) | End users | Have | [getting-started.md](../user/getting-started.md) |
 | Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) |
-| Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — decade rooms + colour cabinets, grouped room-card picker |
+| Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — decade rooms + colour cabinets, grouped room-card picker (Jinja `group['items']`) |
 | Downloading games | End users | Have | [downloads.md](../user/downloads.md) |
 | Browser / companion play matrix | End users | Have | [browser-play.md](../user/browser-play.md) |
 | Free games (News claims) | End users | Have | [free-games.md](../user/free-games.md) |
 | Social, chat & voice | End users | Have | [social-and-voice.md](../user/social-and-voice.md) |
-| FAQ | End users | Have | [faq.md](../user/faq.md) |
-| Troubleshooting | End users | Have | [troubleshooting.md](../user/troubleshooting.md) |
+| FAQ | End users | Have | [faq.md](../user/faq.md) — Preferences picker render crash documented |
+| Troubleshooting | End users | Have | [troubleshooting.md](../user/troubleshooting.md) — Preferences picker render crash fixed |
 | Game details / freshness badges | End users | Create | Tile contract already in library-and-systems.md |
 | Playing ROMs in browser | End users | Update | Platform matrix |
 | Attract mode | End users | Update | Idle timeout, filters |
@@ -101,7 +101,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 |---|---|---|
 | Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — merged chrome; tools tab; batch APIs |
 | [members-and-invites.md](../admin/members-and-invites.md) | Have | Invites as links; admin-created accounts with no email |
-| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **17** (decade rooms + `gt-era.css`) |
+| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **17**; UID-017 token pass needs Reset Themes for classic CSS |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — OIDC opt-in; native Arr + Prowlarr/Jackett |
 | Discover sections | Have | [discover-sections.md](../admin/discover-sections.md) |
 | Theme fonts & batch artwork | Have | [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md) |

@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from flask import jsonify, request
 from flask_login import login_required
 
+from gametheca.utils.api_response import api_error
 from gametheca.utils.release_calendar import fetch_release_calendar
 
 from . import apis_bp
@@ -26,7 +27,7 @@ def release_calendar():
         days_behind = int(request.args.get('days_behind') or 14)
         limit = int(request.args.get('limit') or 40)
     except (TypeError, ValueError):
-        return jsonify({'error': 'Invalid query parameters'}), 400
+        return api_error('Invalid query parameters', code='bad_request')
 
     days_ahead = max(1, min(days_ahead, 180))
     days_behind = max(0, min(days_behind, 90))

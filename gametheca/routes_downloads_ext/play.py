@@ -1,10 +1,11 @@
 import os
 import uuid
-from flask import redirect, url_for, flash, jsonify, render_template, current_app
+from flask import redirect, url_for, flash, render_template, current_app
 from flask_login import login_required, current_user
 from gametheca import db
 from gametheca.models import Game
 from sqlalchemy import select
+from gametheca.utils.api_response import api_error
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.library_acl import user_can_access_game
 from gametheca.utils.play_url import browse_play_fields
@@ -48,4 +49,4 @@ def downloadrom(guid):
     # This route should not be reached as ASGI intercepts download routes
     log_system_event(f"Flask ROM download route reached unexpectedly for UUID: {guid}", 
                     event_type='system', event_level='warning')
-    return jsonify({"error": "ROM download route should be handled by ASGI"}), 500
+    return api_error('ROM download route should be handled by ASGI', code='internal')

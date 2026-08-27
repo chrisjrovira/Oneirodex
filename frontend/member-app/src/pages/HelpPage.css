@@ -102,7 +102,7 @@
 .gt-help__support-link {
   margin-left: auto;
   color: var(--gt-accent);
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
   text-decoration: none;
 }
 
@@ -243,7 +243,7 @@
 
 .gt-help__section h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--gt-font-base);
 }
 
 .gt-help__section-toggle {
@@ -301,10 +301,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--gt-radius-xs);
   border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
   color: var(--gt-text-muted);
-  font-size: 0.95rem;
+  font-size: var(--gt-font-base);
   line-height: 1;
 }
 

@@ -180,6 +180,30 @@ class TestUpdatesScanRoute:
         assert body['limit'] == UPDATES_SCAN_MAX
 
 
+class TestUpdatesStoreSearch:
+    def test_q_required(self, client, scan_user):
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(scan_user.id)
+            sess['_fresh'] = True
+        response = client.get('/api/updates/store_search')
+        assert response.status_code == 400
+        body = response.get_json()
+        assert body['ok'] is False
+        assert body['error'] == 'q required'
+        assert body['error_code'] == 'bad_request'
+
+    def test_unknown_source(self, client, scan_user):
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(scan_user.id)
+            sess['_fresh'] = True
+        response = client.get('/api/updates/store_search?q=Celeste&source=xbox')
+        assert response.status_code == 400
+        body = response.get_json()
+        assert body['ok'] is False
+        assert body['error'] == 'source must be steam, gog, or all'
+        assert body['error_code'] == 'bad_request'
+
+
 class TestLatestGamesIsNewestReleased:
     def test_latest_orders_by_release_and_excludes_the_unreleased(
         self, app, db_session, scan_user, scan_library

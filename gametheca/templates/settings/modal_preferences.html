@@ -64,7 +64,9 @@
                                     <p class="theme-picker-group__hint">{{ group.hint }}</p>
                                     {% endif %}
                                     <div class="theme-card-grid">
-                                        {% for item in group.items %}
+                                        {# group['items'] — Jinja treats group.items on a dict as the
+                                           bound .items() method, which is not iterable as a list. #}
+                                        {% for item in group['items'] %}
                                         <button type="button"
                                                 class="theme-swatch theme-card{% if form.theme.data == item.slug %} is-selected{% endif %}"
                                                 data-theme="{{ item.slug }}"

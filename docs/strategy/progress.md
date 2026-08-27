@@ -19,7 +19,7 @@ Wave diary (W4–W28): [archive/progress-waves-2026-07-08.md](archive/progress-w
 
 ## Ship TLDR
 
-Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup/placeholder art follows the room. Cabinet playback on the WebRetro play bar. Admin Emulators can scan a local firmware collection and copy a markdown missing list. Landscape pass ticketed as INSP-* ([capability-inspiration.md](capability-inspiration.md)); named catalog stays private. Leftover admin/member chrome, GOG/Epic live register, and CSP **enforces** already on `main`. **Blank-cover replace is wired through every download path.** **Next:** README recapture on a populated instance; **Ops** Reset Themes (`gt-era.css`).
+Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup/placeholder art follows the room. Cabinet playback on the WebRetro play bar. Admin Emulators can scan a local firmware collection and copy a markdown missing list. Shared JSON envelope remainder is **41** sites (annotated keeps). CSS token ratchet reduced on Help/Trailers/VR/Ownership plus a handful of classic admin sheets. Landscape pass ticketed as INSP-* ([capability-inspiration.md](capability-inspiration.md)); named catalog stays private. Leftover admin/member chrome, GOG/Epic live register, and CSP **enforces** already on `main`. **Blank-cover replace is wired through every download path.** **Next:** README recapture on a populated instance; **Ops** Reset Themes (`gt-era.css` + UID-017 classic CSS).
 
 ## Done
 
@@ -31,7 +31,7 @@ Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup
 | **Reset Themes** | `gt-era.css` · `gt-shell.css` · `admin_manage_scanjobs.js` / `.css` · `admin-pages.css` · `chart-utils.js` · `base.css` · `sidebar.css` · `GENERATOR_VERSION` **17** |
 | **Match / detect** | BE-DET-1…10 Done (image kinds). Waves 4–28 on main. |
 | **GOW / LIGHT** | GOW-1/2 and LIGHT-1/2 **shipped** |
-| **Follow-through** | Blank-cover replace wired through `download_image` (scan, queue, turbo, retry) · Help Expand/Collapse separated by `n of m open` · six UID-018 files onto `api_error` |
+| **Follow-through** | Blank-cover replace wired through `download_image` (scan, queue, turbo, retry) · Help Expand/Collapse separated by `n of m open` · Preferences picker walks `group['items']` (Jinja `dict.items` crash) · UID-018: trailers + Ops error paths onto `api_ok` / `api_error` (ratchet **41** sites; `/healthz` kept) · UID-017: Help/Trailers/VR/Ownership/mobile-density plus eight classic sheets onto `var(--gt-*)` |
 | **Admin firmware scan** | Folder of dumps you already own → matching names on the volume, version picker, copyable missing markdown. Same walk as `scripts/import_bios.py`. Never downloads BIOS. |
 
 ## Next
@@ -40,7 +40,7 @@ Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup
 |---|---|
 | README recapture | Populated instance — empty test-DB frames are worse than stale art |
 | Icon packs | Six visually distinct packs · per-theme icon drawings (art, not code) |
-| UID-017 / UID-018 | Token migration remainder · envelope remainder |
+| UID-017 / UID-018 | Token migration remainder (large pages still on the ratchet) · envelope remainder (**41** annotated keeps) |
 | UIR-3 | Set completion / Playtime into bar two |
 | Amazon / silent DRM | Not code this cycle |
 | Rename to Oneirodex | Name locked ([ADR 0003](../adr/0003-product-name-oneirodex.md)); **not** a 1.0 gate. Public-string wave first, then ops identifiers, then `gametheca/` / `GT_*` / `gt-`. Only when asked. |

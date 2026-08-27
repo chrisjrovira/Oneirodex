@@ -3,6 +3,7 @@
 from flask import current_app, jsonify, request
 from flask_login import login_required
 
+from gametheca.utils.api_response import api_error
 from gametheca.utils.auth import admin_required
 from gametheca.utils.providers.meta_quest import (
     get_meta_quest_api_mode,
@@ -83,20 +84,21 @@ def search_metadata():
     include_software = include_software_raw not in ('0', 'false', 'no')
 
     if not name:
-        return jsonify({'error': 'No game name provided'}), 400
+        return api_error('No game name provided', code='bad_request')
     if (
         source not in SUPPORTED_SOURCES
         and source_raw not in _META_QUEST_ALIASES
         and source_raw not in _MOBYGAMES_ALIASES
         and source_raw not in _THEGAMESDB_ALIASES
     ):
-        return jsonify({
-            'error': (
+        return api_error(
+            (
                 f'Unsupported source. Use one of: {", ".join(SUPPORTED_SOURCES)} '
                 '(aliases: meta, quest, moby, tgdb)'
             ),
-            'sources': list(SUPPORTED_SOURCES),
-        }), 400
+            code='bad_request',
+            sources=list(SUPPORTED_SOURCES),
+        )
 
     mobygames_key_present = False
     thegamesdb_key_present = False

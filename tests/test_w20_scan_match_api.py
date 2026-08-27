@@ -99,7 +99,24 @@ def test_put_refuses_mega_lib_keys(client, admin_user, clean_settings, app):
         content_type='application/json',
     )
     assert response.status_code == 400
-    assert 'mega_lib' in response.get_json()['error']
+    body = response.get_json()
+    assert body['ok'] is False
+    assert 'mega_lib' in body['error']
+    assert body['error_code'] == 'bad_request'
+
+
+def test_put_scan_match_empty_body_is_400(client, admin_user, clean_settings, app):
+    _login(client, admin_user)
+    response = client.put(
+        '/api/admin/scan-match/config',
+        data='{}',
+        content_type='application/json',
+    )
+    assert response.status_code == 400
+    body = response.get_json()
+    assert body['ok'] is False
+    assert body['error'] == 'No fields to update'
+    assert body['error_code'] == 'bad_request'
 
 
 def test_scan_match_config_requires_admin(client, clean_settings, app, db_session):

@@ -188,7 +188,7 @@
   }
 
 .menu-logo-image img {
-    border-radius: 17px;    
+    border-radius: var(--gt-radius-2xl);    
 
 }
 

@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from gametheca import db
 from gametheca.models import Game
+from gametheca.utils.api_response import api_error
 from gametheca.utils.auth import admin_required
 
 from . import apis_bp
@@ -27,7 +28,7 @@ def admin_games_search():
         return jsonify([])
 
     if len(query) > 100:
-        return jsonify({'error': 'Search term too long'}), 400
+        return api_error('Search term too long', code='bad_request')
 
     search_term = f'%{query}%'
     games = db.session.execute(

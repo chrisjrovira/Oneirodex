@@ -91,6 +91,9 @@ No. Every face the Font picker lists ships with GameTheca and is copied into pla
 **I picked a theme and nothing changed after reload.**  
 Fixed. On a build from before that fix, the whole install served whichever theme was current when its templates were first rendered, so only a server restart ever applied a change — re-picking and hard refreshing did nothing because neither was the problem. See [troubleshooting](troubleshooting.md#a-new-theme-doesnt-appear-after-reload).
 
+**Preferences will not open / the page errors.**  
+Fixed. The grouped room-card picker crashed while rendering because Jinja treated each group's `items` as `dict.items`. See [troubleshooting](troubleshooting.md#preferences-will-not-open).
+
 **Theme/prefs look wrong after deploy?**  
 Ask an admin for **Reset Default Themes** if `gt-account.css` / `modal-components` lag on the library volume — [themes-reset.md](../admin/themes-reset.md).
 

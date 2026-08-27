@@ -1,11 +1,12 @@
 import uuid
-from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, current_app, abort, session
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, abort, session
 from flask_login import current_user, login_required, login_user
 from gametheca import db
 from gametheca.models import User, InviteToken, GlobalSettings, Whitelist
 from gametheca.utils.global_settings import global_settings_row
 from gametheca.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, InviteForm, UserPasswordForm
 from gametheca.utils.auth import _authenticate_and_redirect, safe_next_url
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.smtp import send_email, send_password_reset_email, send_invite_email
 from gametheca.utils.processors import get_global_settings
 from gametheca.utils.event_logging import log_system_event
@@ -476,10 +477,13 @@ def delete_invite(token):
         if invite:
             db.session.delete(invite)
             db.session.commit()
-            return jsonify({'success': True})
-        else:
-            return jsonify({'success': False, 'message': 'Invite not found or you do not have permission to delete it.'})
+            return api_ok()
+        return api_error(
+            'Invite not found or you do not have permission to delete it.',
+            code='not_found',
+            status=200,
+        )
     except Exception as e:
         db.session.rollback()
         print(f"Error deleting invite: {str(e)}")
-        return jsonify({'success': False, 'message': 'An error occurred while deleting the invite.'}), 500
+        return api_error('An error occurred while deleting the invite.', code='internal')

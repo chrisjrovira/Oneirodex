@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from gametheca import db
 from gametheca.models import Game, PlaySession, UserGameProgress
+from gametheca.utils.api_response import api_error
 from gametheca.utils.library_acl import user_can_access_game
 from gametheca.utils.playtime import end_session, heartbeat_session, start_session
 
@@ -18,13 +19,13 @@ def playtime_start():
     data = request.get_json(silent=True) or {}
     game_uuid = (data.get('game_uuid') or '').strip()
     if not game_uuid:
-        return jsonify({'error': 'game_uuid required'}), 400
+        return api_error('game_uuid required', code='bad_request')
     try:
         session = start_session(current_user.id, game_uuid, client=data.get('client'))
     except PermissionError:
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 404
+        return api_error(str(exc), code='not_found')
     return jsonify(session.to_dict()), 201
 
 
@@ -33,11 +34,11 @@ def playtime_start():
 def playtime_heartbeat(session_id: int):
     session = db.session.get(PlaySession, session_id)
     if not session or session.user_id != current_user.id:
-        return jsonify({'error': 'Session not found'}), 404
+        return api_error('Session not found', code='not_found')
     try:
         session = heartbeat_session(session)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     return jsonify(session.to_dict())
 
 
@@ -46,7 +47,7 @@ def playtime_heartbeat(session_id: int):
 def playtime_stop(session_id: int):
     session = db.session.get(PlaySession, session_id)
     if not session or session.user_id != current_user.id:
-        return jsonify({'error': 'Session not found'}), 404
+        return api_error('Session not found', code='not_found')
     session = end_session(session)
     return jsonify(session.to_dict())
 
@@ -82,7 +83,7 @@ def playtime_me():
 def playtime_for_game(game_uuid: str):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game or not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     row = db.session.execute(
         select(UserGameProgress).filter_by(user_id=current_user.id, game_uuid=game_uuid)
     ).scalars().first()

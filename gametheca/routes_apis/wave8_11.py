@@ -11,6 +11,7 @@ from sqlalchemy import select
 from gametheca import db
 from gametheca.models import Game
 from gametheca.utils.activity_feed import list_now_playing, list_recent_activity
+from gametheca.utils.api_response import api_error
 from gametheca.utils.auth import admin_required
 from gametheca.utils.frontend_export import (
     build_es_de_gamelist,
@@ -110,7 +111,7 @@ def plugins_list():
 def plugins_get(plugin_id):
     row = get_plugin(plugin_id)
     if not row:
-        return jsonify({'error': 'Not found'}), 404
+        return api_error('Not found', code='not_found')
     return jsonify(row)
 
 
@@ -138,14 +139,15 @@ def activity_stream():
     """WSGI fallback — real SSE is native ASGI (`asgi.py`) to avoid worker starvation."""
     role = normalize_role(getattr(current_user, 'role', None))
     if role == 'child':
-        return jsonify({'error': 'Restricted'}), 403
-    return jsonify({
-        'error': 'SSE requires ASGI',
-        'detail': (
+        return api_error('Restricted', code='forbidden')
+    return api_error(
+        'SSE requires ASGI',
+        code='unavailable',
+        detail=(
             'Serve GameTheca with uvicorn asgi:asgi_app. '
             '/api/activity/stream is handled natively outside WsgiToAsgi.'
         ),
-    }), 503
+    )
 
 
 @apis_bp.route('/emulator/health', methods=['GET'])

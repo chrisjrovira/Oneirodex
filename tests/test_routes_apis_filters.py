@@ -442,7 +442,8 @@ class TestFiltersAPIErrorHandling:
         assert response.status_code == 500
         
         data = response.get_json()
-        assert data['status'] == 'error'
+        assert data['ok'] is False
+        assert data['success'] is False
         assert 'Database error retrieving genres' in data['message']
     
     @patch('gametheca.routes_apis.filters.db.session.execute')
@@ -458,7 +459,8 @@ class TestFiltersAPIErrorHandling:
         assert response.status_code == 500
         
         data = response.get_json()
-        assert data['status'] == 'error'
+        assert data['ok'] is False
+        assert data['success'] is False
         assert 'Error retrieving themes' in data['message']
     
     @patch('gametheca.routes_apis.filters.db.session.execute')
@@ -474,7 +476,8 @@ class TestFiltersAPIErrorHandling:
         assert response.status_code == 500
         
         data = response.get_json()
-        assert data['status'] == 'error'
+        assert data['ok'] is False
+        assert data['success'] is False
         assert 'Database error retrieving game_modes' in data['message']
     
     @patch('gametheca.routes_apis.filters.db.session.execute')
@@ -490,7 +493,8 @@ class TestFiltersAPIErrorHandling:
         assert response.status_code == 500
         
         data = response.get_json()
-        assert data['status'] == 'error'
+        assert data['ok'] is False
+        assert data['success'] is False
         assert 'Error retrieving player_perspectives' in data['message']
 
 
@@ -560,7 +564,7 @@ class TestFiltersAPIResponseFormat:
         
         data = response.get_json()
         assert isinstance(data, dict)
-        assert 'status' in data
-        assert 'message' in data
-        assert data['status'] == 'error'
+        assert data['ok'] is False
+        assert data['success'] is False
+        assert data['error_code'] == 'internal'
         assert isinstance(data['message'], str)

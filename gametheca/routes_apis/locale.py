@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from gametheca import db
 from gametheca.models import UserPreference
+from gametheca.utils.api_response import api_error
 from gametheca.utils.i18n import SUPPORTED_LOCALES, normalize_locale
 
 from . import apis_bp
@@ -28,7 +29,7 @@ def set_locale():
     data = request.get_json(silent=True) or {}
     locale = normalize_locale(data.get('locale') or request.form.get('locale'))
     if locale not in SUPPORTED_LOCALES:
-        return jsonify({'error': 'Unsupported locale'}), 400
+        return api_error('Unsupported locale', code='bad_request')
 
     prefs = db.session.execute(
         select(UserPreference).filter_by(user_id=current_user.id),

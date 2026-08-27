@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, jsonify
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_required, current_user
 from gametheca.forms import EditProfileForm, UserPasswordForm, UserPreferencesForm
 from gametheca.models import User, InviteToken, UserPreference
 from sqlalchemy import select, func
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.avatar import DEFAULT_AVATAR, save_avatar, thumbnail_for
 from gametheca.utils.processors import get_global_settings
 from gametheca import cache
@@ -135,8 +136,7 @@ def settings_panel():
         try:
             db.session.add(current_user.preferences)
             db.session.commit()
-            return jsonify({
-                'success': True,
+            return api_ok({
                 'message': 'Preferences updated successfully!',
                 'icon_pack': current_user.preferences.icon_pack or 'outline',
                 'font': current_user.preferences.font or 'system-ui',
@@ -144,7 +144,7 @@ def settings_panel():
             })
         except Exception as e:
             db.session.rollback()
-            return jsonify({'success': False, 'message': str(e)}), 500
+            return api_error(str(e), code='internal')
     
     if request.method == 'GET':
         prefs = current_user.preferences
@@ -161,8 +161,8 @@ def settings_panel():
             )
         return render_template('settings/modal_preferences.html', form=form)
     
-    return jsonify({
-        'success': False,
-        'message': 'Form validation failed',
-        'errors': form.errors
-    }), 400
+    return api_error(
+        'Form validation failed',
+        code='bad_request',
+        errors=form.errors,
+    )

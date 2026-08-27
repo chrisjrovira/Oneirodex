@@ -59,7 +59,7 @@
     border: 1px solid var(--border-light-strong);
     color: var(--text-white);
     padding: 0.5rem;
-    border-radius: 4px;
+    border-radius: var(--gt-radius-xs);
 }
 
 .input-glass:focus {
@@ -77,7 +77,7 @@
 .btn {
     padding: 0.5rem 1rem;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--gt-radius-xs);
     cursor: pointer;
     transition: all var(--transition-normal);
 }
@@ -89,7 +89,7 @@
 
 .last-tested {
     color: var(--gt-text-muted);
-    font-size: 0.9rem;
+    font-size: var(--gt-font-md);
     margin-top: 1rem;
 }
 
@@ -99,7 +99,7 @@
 
 .alert {
     padding: 1rem;
-    border-radius: 4px;
+    border-radius: var(--gt-radius-xs);
     margin-bottom: 1rem;
 }
 
@@ -126,7 +126,7 @@
     padding: 1rem;
     border-left: 4px solid var(--gt-info);
     margin-top: 1rem;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 var(--gt-radius-xs) var(--gt-radius-xs) 0;
 }
 
 .note strong {

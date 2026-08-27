@@ -1,5 +1,5 @@
 # /gametheca/routes_admin_ext/whitelist.py
-from flask import render_template, redirect, url_for, jsonify, request, flash, abort
+from flask import render_template, redirect, url_for, request, flash, abort
 from flask_login import login_required, current_user
 from gametheca.models import Whitelist, User
 from gametheca import db
@@ -7,6 +7,7 @@ from gametheca.forms import WhitelistForm
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, select
 from . import admin2_bp
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.auth import admin_required
 
@@ -70,7 +71,7 @@ def whitelist():
 def delete_whitelist(whitelist_id):
     # Validate whitelist_id
     if whitelist_id <= 0:
-        return jsonify({'success': False, 'message': 'Invalid whitelist ID'}), 400
+        return api_error('Invalid whitelist ID', code='bad_request')
     
     whitelist_entry = db.session.get(Whitelist, whitelist_id)
     if not whitelist_entry:
@@ -80,8 +81,8 @@ def delete_whitelist(whitelist_id):
         db.session.delete(whitelist_entry)
         log_system_event(f"Admin {current_user.name} deleted whitelist entry: {whitelist_entry.email}", event_type='audit', event_level='information')
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Entry deleted successfully'})
+        return api_ok({'message': 'Entry deleted successfully'})
     except Exception as e:
         db.session.rollback()
         log_system_event(f"Error deleting whitelist entry {whitelist_id}: {str(e)}", event_type='error', event_level='error')
-        return jsonify({'success': False, 'message': 'An error occurred while deleting the entry'}), 500
+        return api_error('An error occurred while deleting the entry', code='internal')

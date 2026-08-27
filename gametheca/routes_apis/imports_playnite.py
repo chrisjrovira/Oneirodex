@@ -3,6 +3,7 @@
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
+from gametheca.utils.api_response import api_error
 from gametheca.utils.playnite_import import import_playnite_csv, import_playnite_json
 
 from . import apis_bp
@@ -25,7 +26,7 @@ def import_playnite():
         try:
             text = raw.decode('utf-8-sig')
         except UnicodeDecodeError:
-            return jsonify({'error': 'File must be UTF-8 text'}), 400
+            return api_error('File must be UTF-8 text', code='bad_request')
         if filename.endswith('.csv'):
             result = import_playnite_csv(current_user.id, text)
         else:
@@ -33,7 +34,7 @@ def import_playnite():
     else:
         data = request.get_json(silent=True)
         if data is None:
-            return jsonify({'error': 'JSON body or file upload required'}), 400
+            return api_error('JSON body or file upload required', code='bad_request')
         result = import_playnite_json(current_user.id, data)
 
     if result.errors and result.imported == 0 and result.matched == 0:

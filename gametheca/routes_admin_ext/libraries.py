@@ -1,5 +1,6 @@
-from flask import render_template, request, redirect, url_for, flash, current_app, abort, jsonify
+from flask import render_template, request, redirect, url_for, flash, current_app, abort
 from flask_login import login_required
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.auth import admin_required
 from gametheca.models import Library, LibraryPlatform
 from gametheca import db
@@ -174,7 +175,7 @@ def preview_cropped_image():
         data = request.get_json()
 
         if not data or 'image_data' not in data:
-            return jsonify({'error': 'No image data provided'}), 400
+            return api_error('No image data provided', code='bad_request')
 
         # Extract base64 image data
         image_data = data['image_data']
@@ -201,13 +202,13 @@ def preview_cropped_image():
             processed_image_data = base64.b64encode(output_buffer.getvalue()).decode()
             preview_url = f"data:image/png;base64,{processed_image_data}"
 
-            return jsonify({
+            return api_ok({
                 'status': 'success',
                 'preview_url': preview_url,
-                'message': 'Image processed successfully'
+                'message': 'Image processed successfully',
             })
 
     except Exception as e:
         print(f"Error processing cropped image: {e}")
-        return jsonify({'error': 'Failed to process image'}), 500
+        return api_error('Failed to process image', code='internal')
 

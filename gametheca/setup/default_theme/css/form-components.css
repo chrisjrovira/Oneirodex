@@ -498,7 +498,7 @@ input[type="checkbox"] {
     bottom: 6px;
     width: 18px;
     height: 18px;
-    border-radius: 50%;
+    border-radius: var(--gt-radius-circle);
     border: 2px solid var(--gt-border);
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--gt-bg) 55%, transparent);
     background: var(--gt-surface-2);
@@ -564,7 +564,7 @@ input[type="checkbox"] {
     min-width: 4rem;
     padding: 0.4rem 0.5rem;
     border: 1px solid transparent;
-    border-radius: 0.5rem;
+    border-radius: var(--gt-radius-md);
     background: color-mix(in srgb, var(--gt-surface-2) 55%, transparent);
     color: var(--gt-text);
     cursor: pointer;

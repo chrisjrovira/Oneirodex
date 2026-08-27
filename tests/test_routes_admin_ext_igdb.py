@@ -222,8 +222,9 @@ class TestIGDBSettingsRoute:
         
         assert response.status_code == 500
         response_data = response.get_json()
-        assert response_data['status'] == 'error'
-        assert 'Database error' in response_data['message']
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
+        assert response_data['message'] == 'Could not save IGDB settings'
     
     def test_igdb_settings_post_invalid_json(self, client, admin_user):
         """Test POST request with invalid JSON."""
@@ -266,7 +267,8 @@ class TestIGDBTestRoute:
         response = client.post('/admin/test_igdb')
         assert response.status_code == 400
         response_data = response.get_json()
-        assert response_data['status'] == 'error'
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
         assert 'not configured' in response_data['message']
     
     def test_test_igdb_incomplete_settings(self, client, admin_user):
@@ -288,7 +290,8 @@ class TestIGDBTestRoute:
         response = client.post('/admin/test_igdb')
         assert response.status_code == 400
         response_data = response.get_json()
-        assert response_data['status'] == 'error'
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
         assert 'not configured' in response_data['message']
     
     @patch('gametheca.routes_admin_ext.igdb.make_igdb_api_request')
@@ -330,7 +333,8 @@ class TestIGDBTestRoute:
         response = client.post('/admin/test_igdb')
         assert response.status_code == 500
         response_data = response.get_json()
-        assert response_data['status'] == 'error'
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
         assert 'Invalid API response' in response_data['message']
     
     @patch('gametheca.routes_admin_ext.igdb.make_igdb_api_request')
@@ -346,8 +350,9 @@ class TestIGDBTestRoute:
         response = client.post('/admin/test_igdb')
         assert response.status_code == 500
         response_data = response.get_json()
-        assert response_data['status'] == 'error'
-        assert 'API connection failed' in response_data['message']
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
+        assert response_data['message'] == 'IGDB API test failed'
     
     def test_test_igdb_get_method_not_allowed(self, client, admin_user):
         """Test that GET method is not allowed for IGDB test."""

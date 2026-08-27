@@ -5,6 +5,7 @@ from flask_login import current_user, login_required
 from gametheca.models import Genre, Theme, GameMode, PlayerPerspective, Library, Platform, Game
 from gametheca import cache, db
 from gametheca.platform import mapped_core_ids, play_mode_for_platform
+from gametheca.utils.api_response import api_error
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.library_acl import allowed_library_uuids, apply_game_access_filters, filter_libraries
 from gametheca.utils.set_completion import completion_summaries_by_platform
@@ -32,17 +33,11 @@ def _get_filter_data(model_class: Type[db.Model], filter_type: str) -> Tuple[Res
 
     except SQLAlchemyError as e:
         log_system_event('filters_api', f'Database error fetching {filter_type}: {str(e)}', 'error')
-        return jsonify({
-            'status': 'error',
-            'message': f'Database error retrieving {filter_type}'
-        }), 500
+        return api_error(f'Database error retrieving {filter_type}', code='internal')
 
     except Exception as e:
         log_system_event('filters_api', f'Unexpected error fetching {filter_type}: {str(e)}', 'error')
-        return jsonify({
-            'status': 'error',
-            'message': f'Error retrieving {filter_type}'
-        }), 500
+        return api_error(f'Error retrieving {filter_type}', code='internal')
 
 
 def _taxonomy_list(model_class: Type[db.Model]) -> list[dict]:
@@ -160,7 +155,7 @@ def get_library_platforms():
         return jsonify(data), 200
     except SQLAlchemyError as e:
         log_system_event('filters_api', f'Database error fetching library_platforms: {str(e)}', 'error')
-        return jsonify({'status': 'error', 'message': 'Database error retrieving library platforms'}), 500
+        return api_error('Database error retrieving library platforms', code='internal')
 
 
 @apis_bp.route('/igdb_platforms')
@@ -170,7 +165,7 @@ def get_igdb_platforms():
         return jsonify(_igdb_platforms_payload()), 200
     except SQLAlchemyError as e:
         log_system_event('filters_api', f'Database error fetching igdb_platforms: {str(e)}', 'error')
-        return jsonify({'status': 'error', 'message': 'Database error retrieving igdb platforms'}), 500
+        return api_error('Database error retrieving igdb platforms', code='internal')
 
 
 @apis_bp.route('/filters/bundle')
@@ -196,4 +191,4 @@ def filters_bundle():
         return jsonify(payload), 200
     except SQLAlchemyError as e:
         log_system_event('filters_api', f'Database error fetching filters bundle: {str(e)}', 'error')
-        return jsonify({'status': 'error', 'message': 'Database error retrieving filters'}), 500
+        return api_error('Database error retrieving filters', code='internal')

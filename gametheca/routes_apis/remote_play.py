@@ -5,6 +5,7 @@ from __future__ import annotations
 from flask import jsonify, request
 from flask_login import login_required
 
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.auth import admin_required
 from gametheca.utils.remote_play import (
     get_remote_play_config,
@@ -30,9 +31,9 @@ def remote_play_admin_config_route():
         return jsonify(get_remote_play_config(admin=True))
     data = request.get_json(silent=True) or {}
     if not data:
-        return jsonify({'error': 'No fields to update'}), 400
+        return api_error('No fields to update', code='bad_request')
     try:
         saved = save_remote_play_config(data)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'status': 'saved', **saved})
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'status': 'saved', **saved})

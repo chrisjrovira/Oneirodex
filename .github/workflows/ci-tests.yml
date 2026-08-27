@@ -122,6 +122,7 @@ jobs:
           tests/test_cover_art_text.py
           tests/test_cover_quality.py
           tests/test_preset_themes.py
+          tests/test_theme_picker_ui.py
           tests/test_global_settings_singleton.py
           tests/test_routes_info.py
           tests/test_template_icons.py
@@ -132,10 +133,13 @@ jobs:
           tests/test_sortable_tables.py
           tests/test_button_contract.py
           tests/test_api_envelope_lint.py
+          tests/test_w20_scan_match_api.py
+          tests/test_sse_wsgi_fallback.py
           tests/test_patch_catalog.py
           tests/test_patch_catalog_attach.py
           tests/test_wishlist_versions_artwork.py
           tests/test_wave2c_support_news_notifications.py
+          tests/test_wave2a_details_media.py
           tests/test_updates_scan_and_shelves.py
 
       # UID-018 ratchet. The envelope helper landed with two files migrated and
@@ -205,6 +209,10 @@ jobs:
       - name: Run classic theme JS harnesses
         working-directory: .
         run: node tests/js/preferences_modal_delegation.test.mjs
+
+      - name: Run CSS token lint
+        working-directory: .
+        run: node scripts/css-token-lint.mjs
 
   desktop-vitest:
     name: Desktop vitest

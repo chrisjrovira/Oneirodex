@@ -5,6 +5,7 @@ from __future__ import annotations
 from flask import jsonify, request
 from flask_login import login_required
 
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.auth import admin_required
 from gametheca.utils.loading_icons import (
     get_loading_icon_settings,
@@ -29,9 +30,9 @@ def loading_icon_admin_config():
         return jsonify(get_loading_icon_settings(admin=True))
     data = request.get_json(silent=True) or {}
     if not data:
-        return jsonify({'error': 'No fields to update'}), 400
+        return api_error('No fields to update', code='bad_request')
     try:
         saved = save_loading_icon_settings(data)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'status': 'saved', **saved})
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'status': 'saved', **saved})

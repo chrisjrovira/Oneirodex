@@ -6,12 +6,12 @@ from flask import (
     url_for,
     current_app,
     send_from_directory,
-    jsonify,
     request,
     make_response,
 )
 from flask_login import login_required, logout_user, current_user
 
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.member_spa import render_member_spa
 
 from sqlalchemy import func, select
@@ -165,7 +165,7 @@ def get_filter_options():
         min_year = date_range[0].year if date_range[0] else None
         max_year = date_range[1].year if date_range[1] else None
 
-        return jsonify({
+        return api_ok({
             'libraries': [{'uuid': str(lib.uuid), 'name': lib.name} for lib in libraries],
             'genres': [{'id': g.id, 'name': g.name} for g in genres],
             'themes': [{'id': t.id, 'name': t.name} for t in themes],
@@ -175,8 +175,8 @@ def get_filter_options():
             }
         })
     except Exception as e:
-        print(f"Error fetching filter options: {e}")
-        return jsonify({'error': 'Failed to fetch filter options'}), 500
+        current_app.logger.warning('Error fetching trailer filters: %s', e)
+        return api_error('Failed to fetch filter options', code='internal')
 
 
 @site_bp.route('/api/trailers/random')
@@ -230,7 +230,7 @@ def get_random_trailer():
         game_ids = db.session.execute(query.distinct()).scalars().all()
 
         if not game_ids:
-            return jsonify({
+            return api_ok({
                 'has_videos': False,
                 'empty': True,
                 'code': 'no_trailers',
@@ -240,12 +240,12 @@ def get_random_trailer():
                     'label': 'Add games to your library',
                     'href': '/admin/library/add',
                 },
-            }), 200
+            })
 
         # Select a random game
         random_game = db.session.get(Game, random.choice(game_ids))
         if not random_game or not random_game.video_urls:
-            return jsonify({
+            return api_ok({
                 'has_videos': False,
                 'empty': True,
                 'code': 'no_valid_urls',
@@ -255,14 +255,14 @@ def get_random_trailer():
                     'label': 'Add games to your library',
                     'href': '/admin/library/add',
                 },
-            }), 200
+            })
 
         # Parse video URLs (comma-separated)
         video_urls = [url.strip() for url in random_game.video_urls.split(',') if url.strip()]
 
         if not video_urls:
             # If somehow we got empty URLs, try another game
-            return jsonify({
+            return api_ok({
                 'has_videos': False,
                 'empty': True,
                 'code': 'no_valid_urls',
@@ -272,7 +272,7 @@ def get_random_trailer():
                     'label': 'Add games to your library',
                     'href': '/admin/library/add',
                 },
-            }), 200
+            })
 
         # Pick a random video if multiple exist
         selected_video = random.choice(video_urls)
@@ -281,7 +281,7 @@ def get_random_trailer():
         embed_url = convert_to_embed_url(selected_video)
 
         # Return game data and video
-        return jsonify({
+        return api_ok({
             'has_videos': True,
             'game_uuid': random_game.uuid,
             'game_name': random_game.name,
@@ -289,13 +289,13 @@ def get_random_trailer():
         })
 
     except Exception as e:
-        print(f"Error fetching random trailer: {e}")
-        return jsonify({
-            'has_videos': False,
-            'empty': False,
-            'code': 'trailer_error',
-            'message': 'Error fetching trailer',
-        }), 500
+        current_app.logger.warning('Error fetching random trailer: %s', e)
+        return api_error(
+            'Error fetching trailer',
+            code='internal',
+            has_videos=False,
+            empty=False,
+        )
 
 
 def convert_to_embed_url(video_url):

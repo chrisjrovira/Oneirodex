@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 
 from gametheca import db
 from gametheca.models import Game, Image
+from gametheca.utils.api_response import api_error
 from gametheca.utils.cover_url import resolve_cover_url
 from gametheca.utils.functions import format_size
 from gametheca.utils.library_acl import apply_game_access_filters, user_can_access_game
@@ -36,12 +37,12 @@ def _cover_url_for_uuid(game_uuid: str) -> str | None:
 @login_required
 def vr_catalog():
     if not _vr_enabled():
-        return jsonify({'error': 'VR browse is disabled'}), 403
+        return api_error('VR browse is disabled', code='forbidden')
     try:
         page = max(1, int(request.args.get('page') or 1))
         per_page = min(100, max(1, int(request.args.get('per_page') or 24)))
     except (TypeError, ValueError):
-        return jsonify({'error': 'Invalid pagination'}), 400
+        return api_error('Invalid pagination', code='bad_request')
 
     query = select(Game)
     query = apply_game_access_filters(query, current_user)
@@ -74,12 +75,12 @@ def vr_catalog():
 @login_required
 def vr_game_detail(game_uuid: str):
     if not _vr_enabled():
-        return jsonify({'error': 'VR browse is disabled'}), 403
+        return api_error('VR browse is disabled', code='forbidden')
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
-        return jsonify({'error': 'Game not found'}), 404
+        return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
-        return jsonify({'error': 'Forbidden'}), 403
+        return api_error('Forbidden', code='forbidden')
     size = format_size(game.size) if game.size is not None else None
     return jsonify({
         'uuid': game.uuid,

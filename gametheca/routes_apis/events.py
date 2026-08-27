@@ -5,6 +5,7 @@ from __future__ import annotations
 from flask import jsonify
 from flask_login import current_user, login_required
 
+from gametheca.utils.api_response import api_error
 from gametheca.utils.event_bus import event_bus
 
 from . import apis_bp
@@ -14,13 +15,14 @@ from . import apis_bp
 @login_required
 def events_stream():
     """WSGI fallback — real SSE is native ASGI (`asgi.py`) to avoid worker starvation."""
-    return jsonify({
-        'error': 'SSE requires ASGI',
-        'detail': (
+    return api_error(
+        'SSE requires ASGI',
+        code='unavailable',
+        detail=(
             'Serve GameTheca with uvicorn asgi:asgi_app. '
             '/api/events/stream is handled natively outside WsgiToAsgi.'
         ),
-    }), 503
+    )
 
 
 @apis_bp.route('/events/publish_test', methods=['POST'])
@@ -28,6 +30,6 @@ def events_stream():
 def events_publish_test():
     """Admin-only test event for verifying the bus."""
     if current_user.role != 'admin':
-        return jsonify({'error': 'Admin required'}), 403
+        return api_error('Admin required', code='forbidden')
     event = event_bus.publish('test', message='ping', user=current_user.name)
     return jsonify(event.to_dict())

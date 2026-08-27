@@ -211,9 +211,9 @@ def updates_store_search():
         limit = 8
 
     if not name:
-        return jsonify({'error': 'q required'}), 400
+        return api_error('q required', code='bad_request')
     if source not in ('steam', 'gog', 'all'):
-        return jsonify({'error': 'source must be steam, gog, or all'}), 400
+        return api_error('source must be steam, gog, or all', code='bad_request')
 
     results = []
     if source in ('steam', 'all'):

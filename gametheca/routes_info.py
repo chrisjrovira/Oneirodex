@@ -1,8 +1,9 @@
-from flask import Blueprint, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, jsonify, redirect, render_template, request, url_for
 from flask_login import login_required
 from sqlalchemy import select
 
 from gametheca import db
+from gametheca.utils.api_response import api_error
 from gametheca.utils.auth import admin_required
 from gametheca.utils.processors import get_global_settings
 from gametheca.utils.system_stats import format_bytes
@@ -20,6 +21,8 @@ info_bp = Blueprint('info', __name__)
 @info_bp.route('/healthz', methods=['GET', 'HEAD'])
 def healthz():
     """Liveness — process is up (no DB). For Docker/Unraid probes."""
+    # KEEP: probe contract is `{status: 'ok'}` for kube/compose. `api_ok`
+    # would add envelope keys probes do not read, and `status` is data here.
     return jsonify(build_liveness()), 200
 
 
@@ -110,7 +113,8 @@ def ops_system_json():
     except Exception as exc:
         # Soft-fail: the Ops console must still render its other panels when a
         # single stat source (psutil, DB) is unavailable.
-        return jsonify({'error': str(exc)}), 503
+        current_app.logger.warning('Ops system snapshot failed: %s', exc)
+        return api_error('System snapshot is unavailable', code='unavailable')
 
 
 @info_bp.route('/admin/api/ops/logs', methods=['GET'])
@@ -160,7 +164,8 @@ def ops_logs_json():
             ],
         }), 200
     except Exception as exc:
-        return jsonify({'error': str(exc)}), 503
+        current_app.logger.warning('Ops logs snapshot failed: %s', exc)
+        return api_error('Recent events are unavailable', code='unavailable')
 
 
 @info_bp.route('/admin/server_status_page')
@@ -205,7 +210,8 @@ def ops_summary_api():
     try:
         return jsonify(build_ops_summary(app_start_time))
     except Exception as exc:
-        return jsonify({'error': str(exc)}), 503
+        current_app.logger.warning('Ops summary snapshot failed: %s', exc)
+        return api_error('Ops summary is unavailable', code='unavailable')
 
 
 @info_bp.route('/admin/api/library/health')
@@ -218,4 +224,5 @@ def library_health_api():
 
         return jsonify(build_library_health_pulse())
     except Exception as exc:
-        return jsonify({'error': str(exc)}), 503
+        current_app.logger.warning('Library health pulse failed: %s', exc)
+        return api_error('Library health is unavailable', code='unavailable')

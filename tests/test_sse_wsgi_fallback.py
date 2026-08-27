@@ -53,6 +53,8 @@ def test_activity_stream_wsgi_returns_503(app, member_user):
     body = response.get_json()
     assert body['error'] == 'SSE requires ASGI'
     assert 'activity/stream' in body['detail']
+    assert body['ok'] is False
+    assert body['error_code'] == 'unavailable'
 
 
 def test_events_stream_wsgi_returns_503(app, member_user):
@@ -62,6 +64,8 @@ def test_events_stream_wsgi_returns_503(app, member_user):
     assert response.status_code == 503
     body = response.get_json()
     assert body['error'] == 'SSE requires ASGI'
+    assert body['ok'] is False
+    assert body['error_code'] == 'unavailable'
 
 
 def test_activity_stream_child_forbidden(app, child_user):
@@ -69,6 +73,21 @@ def test_activity_stream_child_forbidden(app, child_user):
     _login(client, child_user)
     response = client.get('/api/activity/stream')
     assert response.status_code == 403
+    body = response.get_json()
+    assert body['ok'] is False
+    assert body['error'] == 'Restricted'
+    assert body['error_code'] == 'forbidden'
+
+
+def test_events_publish_test_requires_admin(app, member_user):
+    client = app.test_client()
+    _login(client, member_user)
+    response = client.post('/api/events/publish_test')
+    assert response.status_code == 403
+    body = response.get_json()
+    assert body['ok'] is False
+    assert body['error'] == 'Admin required'
+    assert body['error_code'] == 'forbidden'
 
 
 def test_discover_sections_json_for_member(app, member_user):

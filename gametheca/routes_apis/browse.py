@@ -63,14 +63,14 @@ def browse_folders_ss():
         ok, err = is_safe_path(abs_path_arg, allowed_bases)
         if not ok:
             print(f'SS folder browser: Access denied for abs_path {abs_path_arg}: {err}', file=sys.stderr)
-            return jsonify({'error': 'Access denied'}), 403
+            return api_error('Access denied', code='forbidden')
 
         folder_path = os.path.abspath(abs_path_arg)
         if not os.path.isdir(folder_path):
             # Deep link may point at the game folder itself; show its parent instead.
             folder_path = os.path.dirname(folder_path)
             if not os.path.isdir(folder_path):
-                return jsonify({'error': 'SS folder browser: Folder not found'}), 404
+                return api_error('SS folder browser: Folder not found', code='not_found')
 
         resolved_path = None
         if base_directory:
@@ -103,9 +103,9 @@ def browse_folders_ss():
         ok, _err = is_safe_path(folder_path, [base_directory])
         if not ok:
             print(f'SS folder browser: Access denied: {folder_path} outside of base directory: {base_directory}', file=sys.stderr)
-            return jsonify({'error': 'Access denied'}), 403
+            return api_error('Access denied', code='forbidden')
 
     if os.path.isdir(folder_path):
         return jsonify(_list_directory(folder_path))
     else:
-        return jsonify({'error': 'SS folder browser: Folder not found'}), 404
+        return api_error('SS folder browser: Folder not found', code='not_found')

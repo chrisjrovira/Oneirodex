@@ -301,7 +301,8 @@ class TestSmtpSettings:
         assert response.status_code == 400
         
         response_data = json.loads(response.data)
-        assert response_data['status'] == 'error'
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
         assert response_data['message'] == 'SMTP server is required when SMTP is enabled'
     
     def test_post_smtp_enabled_missing_port(self, client, admin_user, db_session):
@@ -322,7 +323,8 @@ class TestSmtpSettings:
         assert response.status_code == 400
         
         response_data = json.loads(response.data)
-        assert response_data['status'] == 'error'
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
         assert response_data['message'] == 'SMTP port is required when SMTP is enabled'
     
     def test_post_smtp_enabled_missing_username(self, client, admin_user, db_session):
@@ -343,7 +345,8 @@ class TestSmtpSettings:
         assert response.status_code == 400
         
         response_data = json.loads(response.data)
-        assert response_data['status'] == 'error'
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
         assert response_data['message'] == 'SMTP username is required when SMTP is enabled'
     
     def test_post_smtp_enabled_missing_password(self, client, admin_user, db_session):
@@ -364,7 +367,8 @@ class TestSmtpSettings:
         assert response.status_code == 400
         
         response_data = json.loads(response.data)
-        assert response_data['status'] == 'error'
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
         assert response_data['message'] == 'SMTP password is required when SMTP is enabled'
     
     def test_post_smtp_enabled_missing_default_sender(self, client, admin_user, db_session):
@@ -385,7 +389,8 @@ class TestSmtpSettings:
         assert response.status_code == 400
         
         response_data = json.loads(response.data)
-        assert response_data['status'] == 'error'
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
         assert response_data['message'] == 'Default sender email is required when SMTP is enabled'
     
     def test_post_invalid_port_number_string(self, client, admin_user, db_session):
@@ -407,7 +412,8 @@ class TestSmtpSettings:
         assert response.status_code == 400
         
         response_data = json.loads(response.data)
-        assert response_data['status'] == 'error'
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
         assert response_data['message'] == 'SMTP port must be a valid number'
     
     def test_post_invalid_port_number_negative(self, client, admin_user, db_session):
@@ -429,7 +435,8 @@ class TestSmtpSettings:
         assert response.status_code == 400
         
         response_data = json.loads(response.data)
-        assert response_data['status'] == 'error'
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
         assert response_data['message'] == 'Invalid port number. Must be between 1 and 65535'
     
     def test_post_invalid_port_number_too_high(self, client, admin_user, db_session):
@@ -451,7 +458,8 @@ class TestSmtpSettings:
         assert response.status_code == 400
         
         response_data = json.loads(response.data)
-        assert response_data['status'] == 'error'
+        assert response_data['ok'] is False
+        assert response_data['success'] is False
         assert response_data['message'] == 'Invalid port number. Must be between 1 and 65535'
     
     def test_post_database_commit_error(self, client, admin_user, db_session):
@@ -470,7 +478,8 @@ class TestSmtpSettings:
             
             assert response.status_code == 500
             response_data = json.loads(response.data)
-            assert response_data['status'] == 'error'
+            assert response_data['ok'] is False
+            assert response_data['success'] is False
             # The exception text used to be handed to the browser; a DB error
             # can carry connection and schema detail. It goes to the log now.
             assert response_data['message'] == 'Could not save SMTP settings'

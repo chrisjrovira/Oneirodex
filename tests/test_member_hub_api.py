@@ -192,6 +192,13 @@ def test_playtime_profile_page_and_api(client, app, db_session, member_user, lib
         assert payload['total_seconds'] == 0
         assert payload['games'] == []
 
+        missing = client.post('/api/playtime/sessions', json={})
+        assert missing.status_code == 400
+        missing_body = missing.get_json()
+        assert missing_body['ok'] is False
+        assert missing_body['error_code'] == 'bad_request'
+        assert missing_body['error'] == 'game_uuid required'
+
         started = client.post(
             '/api/playtime/sessions',
             json={'game_uuid': game.uuid, 'client': 'web'},

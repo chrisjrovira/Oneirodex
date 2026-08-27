@@ -126,7 +126,10 @@ class TestAdminGamesSearchAPI:
         long_query = 'a' * 101
         response = client.get(f'/api/admin/games_search?q={long_query}')
         assert response.status_code == 400
-        assert 'error' in response.get_json()
+        data = response.get_json()
+        assert data['ok'] is False
+        assert data['error'] == 'Search term too long'
+        assert data['error_code'] == 'bad_request'
 
     def test_search_matches_by_name_case_insensitive(self, client, admin_user, sample_games):
         _login(client, admin_user)
