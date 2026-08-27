@@ -217,7 +217,7 @@
        was selected. A gradient in theme tokens shows through for the moment
        before a cover paints and never contradicts the rest of the page; the
        real fallback, with the title as live text, is .gt-cover-fallback. */
-    background-color: var(--gt-surface, #1a1a22);
+    background-color: var(--gt-surface);
     background-image: linear-gradient(
         160deg,
         color-mix(in srgb, var(--gt-surface-2) 92%, transparent) 0%,
@@ -613,7 +613,7 @@
 
 .freshness-badge--heuristic {
     background: rgba(255, 193, 7, 0.92);
-    color: #1a1a1a;
+    color: var(--gt-accent-contrast);
 }
 
 /* Badge layers: occupied corners only — no empty reserved slots */
@@ -838,7 +838,7 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     line-height: 1.2;
-    color: #fff;
+    color: var(--gt-text);
     text-transform: uppercase;
     font-family: ui-sans-serif, system-ui, sans-serif;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
@@ -1248,9 +1248,9 @@ a.gt-chip:focus {
 }
 
 .alert-image-refresh {
-    background-color: #0d6efd;
+    background-color: var(--gt-info);
     color: white;
-    border-color: #0d6efd;
+    border-color: var(--gt-info);
 }
 
 .gt-details-react {
@@ -1297,7 +1297,7 @@ a.gt-chip:focus {
     border: 1px solid color-mix(in srgb, var(--gt-accent) 55%, transparent);
     background: rgba(0, 0, 0, 0.78);
     backdrop-filter: blur(5px);
-    color: var(--text-white, #f2f4f8);
+    color: var(--text-white, var(--gt-text));
     font: inherit;
     font-size: clamp(0.6rem, calc(var(--gt-tile-min, 180px) * 0.055), 0.85rem);
     font-weight: 700;

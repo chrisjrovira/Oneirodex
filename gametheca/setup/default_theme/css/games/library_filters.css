@@ -181,7 +181,7 @@
 .rating-slider::-webkit-slider-runnable-track {
     width: 100%;
     height: 5px;
-    background: #ccc; 
+    background: var(--gt-border); 
     border-radius: var(--gt-radius-xs);
     margin-bottom: 15px;
 }
@@ -218,7 +218,7 @@
 
 .library-filters select.form-control:-moz-focusring {
     color: transparent;
-    text-shadow: 0 0 0 #ddd;
+    text-shadow: 0 0 0 var(--gt-text);
 }
 
 

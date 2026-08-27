@@ -61,7 +61,7 @@
     object-fit: cover;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     box-shadow: var(--shadow-box-game);
-    background-color: var(--bg-dark-secondary, #1a1a22);
+    background-color: var(--bg-dark-secondary, var(--gt-surface-2));
     background-image: linear-gradient(
         160deg,
         color-mix(in srgb, var(--gt-surface-2) 92%, transparent) 0%,
@@ -79,7 +79,7 @@
 
 .no-favorites {
     text-align: center;
-    color: #fff;
+    color: var(--gt-text);
     font-size: var(--gt-font-lg);
     padding: 20px;
     grid-column: 1 / -1;

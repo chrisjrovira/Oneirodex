@@ -505,7 +505,7 @@ pre {
     max-width: 100px;
     min-width: 20px;
     border-radius: var(--gt-radius-lg);
-    background: linear-gradient(to right, #ff4444, #ffaa44, #44ff44);
+    background: linear-gradient(to right, var(--gt-danger), var(--gt-warning), var(--gt-success));
     box-shadow: 0 2px 4px var(--container-glass-primary);
     border: 1px solid var(--border-light);
 }
@@ -1022,7 +1022,7 @@ pre {
 }
 
 .game-folder-path code {
-    color: var(--text-light, #e0e0e0);
+    color: var(--text-light, var(--gt-text));
     background: rgba(0, 0, 0, 0.35);
     padding: 0.15rem 0.4rem;
     border-radius: var(--gt-radius-xs);

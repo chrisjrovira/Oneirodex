@@ -10,8 +10,8 @@
   overflow: hidden;
   pointer-events: none;
   /* Fades out toward the bottom so long scrolls do not sit under artwork. */
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 88%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 88%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 42%, transparent 88%);
+  mask-image: linear-gradient(to bottom, black 0%, black 42%, transparent 88%);
   animation: gt-system-backdrop-in 420ms ease both;
 }
 

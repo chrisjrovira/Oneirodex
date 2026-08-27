@@ -33,14 +33,14 @@
   padding: 0 0.3rem;
   border-radius: var(--gt-radius-pill);
   background: var(--gt-accent);
-  color: #0b0d10;
+  color: var(--gt-accent-contrast);
   font-size: var(--gt-font-xs);
   font-weight: 800;
 }
 
 .gt-social-dock__badge--pending {
-  background: #c47814;
-  color: #fff;
+  background: var(--gt-warning);
+  color: var(--gt-accent-contrast);
 }
 
 .gt-social-dock {
@@ -169,7 +169,7 @@
   height: 0.55rem;
   margin-top: 0.35rem;
   border-radius: var(--gt-radius-pill);
-  background: #667;
+  background: var(--gt-text-muted);
   flex: 0 0 auto;
 }
 
@@ -179,7 +179,7 @@
 }
 
 .gt-social-dock__dot--away {
-  background: #c47814;
+  background: var(--gt-warning);
 }
 
 .gt-social-dock__friend-text {

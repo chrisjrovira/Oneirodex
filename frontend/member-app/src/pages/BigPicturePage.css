@@ -8,7 +8,7 @@
   padding: 1.5rem 1.5rem 3rem;
   overflow: auto;
   color: var(--gt-text);
-  background: #0b0d12;
+  background: var(--gt-bg);
 }
 
 .gt-bp__header {

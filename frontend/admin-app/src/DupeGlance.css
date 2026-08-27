@@ -56,7 +56,7 @@
 }
 
 .gt-dupe-glance__log.is-error {
-  background: color-mix(in srgb, #e85d5d 18%, transparent);
+  background: color-mix(in srgb, var(--gt-danger) 18%, transparent);
 }
 
 .gt-dupe-glance__empty {
@@ -422,8 +422,8 @@ a.gt-dupe-glance__stage-e-name {
   margin-top: 0.2rem;
   padding: 0.4rem 0.45rem;
   border-radius: var(--gt-radius-md);
-  border: 1px solid color-mix(in srgb, #ffc456 30%, transparent);
-  background: color-mix(in srgb, #ffc456 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-warning) 30%, transparent);
+  background: color-mix(in srgb, var(--gt-warning) 7%, transparent);
 }
 
 .gt-dupe-glance__compare {
@@ -433,8 +433,8 @@ a.gt-dupe-glance__stage-e-name {
   margin-top: 0.25rem;
   padding: 0.5rem 0.55rem;
   border-radius: var(--gt-radius-lg);
-  border: 1px solid color-mix(in srgb, #ffc456 30%, transparent);
-  background: color-mix(in srgb, #ffc456 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gt-warning) 30%, transparent);
+  background: color-mix(in srgb, var(--gt-warning) 7%, transparent);
 }
 
 .gt-dupe-glance__compare-banner {

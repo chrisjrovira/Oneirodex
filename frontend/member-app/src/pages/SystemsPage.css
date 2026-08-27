@@ -253,13 +253,13 @@
 }
 
 .gt-systems-tile__region--mid {
-  border-color: color-mix(in srgb, #c9a227 65%, transparent);
-  color: #d4b84a;
+  border-color: color-mix(in srgb, var(--gt-warning) 65%, transparent);
+  color: var(--gt-warning);
 }
 
 .gt-systems-tile__region--low {
-  border-color: color-mix(in srgb, #c45c26 65%, transparent);
-  color: #d9783a;
+  border-color: color-mix(in srgb, var(--gt-danger) 55%, transparent);
+  color: color-mix(in srgb, var(--gt-danger) 70%, var(--gt-warning));
 }
 
 .gt-systems-tile__region--empty {
@@ -297,26 +297,26 @@
 .gt-systems-tile[data-room] {
   position: relative;
   overflow: hidden;
-  border-color: color-mix(in srgb, var(--gt-room-accent, #e8c07d) 32%, transparent);
+  border-color: color-mix(in srgb, var(--gt-room-accent, var(--gt-warning)) 32%, transparent);
   background:
     linear-gradient(
       160deg,
-      color-mix(in srgb, var(--gt-room-glow, #ffb765) 14%, transparent),
+      color-mix(in srgb, var(--gt-room-glow, var(--gt-warning)) 14%, transparent),
       transparent 58%
     ),
-    color-mix(in srgb, var(--gt-room-backdrop, #1a1410) 78%, var(--gt-surface));
+    color-mix(in srgb, var(--gt-room-backdrop, var(--gt-bg)) 78%, var(--gt-surface));
 }
 
 .gt-systems-tile[data-room]:hover,
 .gt-systems-tile[data-room]:focus-within {
-  border-color: color-mix(in srgb, var(--gt-room-accent, #e8c07d) 62%, transparent);
+  border-color: color-mix(in srgb, var(--gt-room-accent, var(--gt-warning)) 62%, transparent);
   box-shadow:
     0 8px 22px rgba(0, 0, 0, 0.4),
-    0 0 16px -2px color-mix(in srgb, var(--gt-room-glow, #ffb765) 45%, transparent);
+    0 0 16px -2px color-mix(in srgb, var(--gt-room-glow, var(--gt-warning)) 45%, transparent);
 }
 
 .gt-systems-tile[data-room] .gt-systems-tile__name {
-  color: color-mix(in srgb, var(--gt-room-accent, #e8c07d) 85%, var(--gt-text));
+  color: color-mix(in srgb, var(--gt-room-accent, var(--gt-warning)) 85%, var(--gt-text));
 }
 
 /* Ambience: a light suggestion of the setting, never enough to fight the text. */
@@ -364,7 +364,7 @@
 .gt-systems-tile[data-room='arcade_cabinet']::after {
   background: radial-gradient(
     120% 60% at 50% -10%,
-    color-mix(in srgb, var(--gt-room-glow, #ff2d6f) 70%, transparent),
+    color-mix(in srgb, var(--gt-room-glow, var(--gt-danger)) 70%, transparent),
     transparent 60%
   );
   opacity: 0.28;
@@ -386,7 +386,7 @@
   opacity: 0.12;
   background: repeating-linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--gt-room-glow, #5ef08a) 55%, transparent) 0 1px,
+    color-mix(in srgb, var(--gt-room-glow, var(--gt-accent)) 55%, transparent) 0 1px,
     transparent 1px 4px
   );
 }

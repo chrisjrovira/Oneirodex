@@ -59,7 +59,7 @@
     ),
     linear-gradient(
       200deg,
-      color-mix(in srgb, var(--gt-surface-2) 92%, #0a1620) 0%,
+      color-mix(in srgb, var(--gt-surface-2) 92%, var(--gt-bg)) 0%,
       color-mix(in srgb, var(--gt-surface) 96%, transparent) 100%
     );
   border: 1px solid color-mix(in srgb, var(--gt-accent) 22%, transparent);

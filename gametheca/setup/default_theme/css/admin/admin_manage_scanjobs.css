@@ -620,9 +620,9 @@
 }
 
 .auto-scan-status[data-state="queued"] {
-    border-color: color-mix(in srgb, #d4b84a 55%, transparent);
-    background: color-mix(in srgb, #d4b84a 12%, transparent);
-    color: #e6d28a;
+    border-color: color-mix(in srgb, var(--gt-warning) 55%, transparent);
+    background: color-mix(in srgb, var(--gt-warning) 12%, transparent);
+    color: color-mix(in srgb, var(--gt-warning) 72%, var(--gt-text));
 }
 
 .auto-scan-status__timing {
@@ -1286,7 +1286,7 @@ a.unmatched-stage-e__name {
 
 .unmatched-leaf-badge {
     border: 1px solid rgba(94, 184, 255, 0.42);
-    color: color-mix(in srgb, var(--gt-info) 12%, #fff);
+    color: color-mix(in srgb, var(--gt-info) 12%, var(--gt-text));
     background: rgba(94, 184, 255, 0.1);
 }
 
@@ -1298,7 +1298,7 @@ a.unmatched-stage-e__name {
 
 .unmatched-platform-mismatch {
     border: 1px solid rgba(255, 196, 86, 0.45);
-    color: #ffd98a;
+    color: var(--gt-warning);
     background: rgba(255, 196, 86, 0.1);
     cursor: help;
 }
@@ -1911,7 +1911,7 @@ a.unmatched-dupe-of__title:hover {
     border: 1px solid color-mix(in srgb, var(--gt-border) 85%, transparent);
     border-radius: var(--gt-radius-pill);
     background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
-    box-shadow: 0 1px 0 color-mix(in srgb, #fff 6%, transparent) inset;
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--gt-text) 6%, transparent) inset;
 }
 
 .container-unmatched-buttons.unmatched-resolve-bar form {
@@ -2302,13 +2302,13 @@ a.unmatched-dupe-of__title:hover {
 }
 
 .gt-scan-filters__kind-badge--name {
-    color: color-mix(in srgb, var(--gt-accent) 18%, #fff);
+    color: color-mix(in srgb, var(--gt-accent) 18%, var(--gt-text));
     background: color-mix(in srgb, var(--gt-accent) 28%, transparent);
     border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
 }
 
 .gt-scan-filters__kind-badge--dir {
-    color: color-mix(in srgb, var(--gt-info) 15%, #fff);
+    color: color-mix(in srgb, var(--gt-info) 15%, var(--gt-text));
     background: color-mix(in srgb, var(--gt-info) 26%, transparent);
     border: 1px solid color-mix(in srgb, var(--gt-info) 42%, transparent);
 }

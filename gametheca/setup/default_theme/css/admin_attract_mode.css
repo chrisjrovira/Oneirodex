@@ -36,13 +36,13 @@
 
 .form-range::-webkit-slider-thumb {
     background: var(--bs-primary);
-    border: 2px solid #fff;
+    border: 2px solid var(--gt-text);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .form-range::-moz-range-thumb {
     background: var(--bs-primary);
-    border: 2px solid #fff;
+    border: 2px solid var(--gt-text);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 

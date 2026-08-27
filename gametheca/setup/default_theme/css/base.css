@@ -408,7 +408,7 @@ body::after {
     height: 35px;
     border-radius: var(--gt-radius-3xl);
     margin-right: 10px;
-    border: 2px solid #ecf0f1;
+    border: 2px solid var(--gt-border);
 }
 
 .user-name {
@@ -700,13 +700,13 @@ form textarea {
 }
 
 .btn-secondary {
-    background: #6c757d;
-    border-color: #6c757d;
+    background: var(--gt-surface-2);
+    border-color: var(--gt-border);
 }
 
 .btn-secondary:hover {
-    background: #5a6268;
-    border-color: #545b62;
+    background: var(--gt-surface);
+    border-color: var(--gt-text-muted);
 }
 
 .btn-success {
@@ -715,8 +715,8 @@ form textarea {
 }
 
 .btn-success:hover {
-    background: #218838;
-    border-color: #1e7e34;
+    background: color-mix(in srgb, var(--btn-success) 82%, var(--gt-bg));
+    border-color: color-mix(in srgb, var(--btn-success) 82%, var(--gt-bg));
 }
 
 .btn-danger {
@@ -725,20 +725,20 @@ form textarea {
 }
 
 .btn-danger:hover {
-    background: #c82333;
-    border-color: #bd2130;
+    background: color-mix(in srgb, var(--btn-danger) 82%, var(--gt-bg));
+    border-color: color-mix(in srgb, var(--btn-danger) 82%, var(--gt-bg));
 }
 
 .btn-warning {
     background: var(--btn-warning);
     border-color: var(--btn-warning);
-    color: #212529;
+    color: var(--gt-accent-contrast);
 }
 
 .btn-warning:hover {
-    background: #e0a800;
-    border-color: #d39e00;
-    color: #212529;
+    background: color-mix(in srgb, var(--btn-warning) 82%, var(--gt-bg));
+    border-color: color-mix(in srgb, var(--btn-warning) 82%, var(--gt-bg));
+    color: var(--gt-accent-contrast);
 }
 
 .btn-info {
@@ -751,25 +751,25 @@ form textarea {
 }
 
 .btn-light {
-    background: #f8f9fa;
-    border-color: #f8f9fa;
-    color: #212529;
+    background: var(--gt-surface);
+    border-color: var(--gt-border);
+    color: var(--gt-text);
 }
 
 .btn-light:hover {
-    background: #e2e6ea;
-    border-color: #dae0e5;
-    color: #212529;
+    background: var(--gt-surface-2);
+    border-color: var(--gt-text-muted);
+    color: var(--gt-text);
 }
 
 .btn-dark {
-    background: #343a40;
-    border-color: #343a40;
+    background: var(--gt-bg);
+    border-color: var(--gt-border);
 }
 
 .btn-dark:hover {
-    background: #23272b;
-    border-color: #1d2124;
+    background: var(--gt-surface-2);
+    border-color: var(--gt-text-muted);
 }
 
 /* Button Sizes */
@@ -827,10 +827,10 @@ form textarea {
 
 
 .status-value {
-    color: #18b2dd;
+    color: var(--gt-info);
     font-weight: bold;
-    background-color: #e8ffe8;
-    border: 2px solid #004c00;
+    background-color: color-mix(in srgb, var(--gt-success) 18%, var(--gt-surface));
+    border: 2px solid var(--gt-success);
     padding: 2px 6px;
     border-radius: var(--gt-radius-xs);
 }
@@ -1013,7 +1013,7 @@ form textarea {
 
 .dropdown-perpage:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: var(--gt-accent);
 }
 
 .dropdown-perpage option {
@@ -1040,7 +1040,7 @@ form textarea {
 .spinner {
     border: 8px solid rgba(0, 0, 0, 0.1);
     border-radius: var(--gt-radius-circle);
-    border-top: 8px solid #7389ea;
+    border-top: 8px solid var(--gt-info);
     width: 50px;
     height: 50px;
     animation: spin 1s linear infinite;
@@ -1133,11 +1133,11 @@ form textarea {
     }
 
     .container-content {
-        background-color: #161e25;
+        background-color: var(--gt-surface);
         padding-top: 20px;
         padding-left: 20px;
         border-radius: var(--gt-radius-2xl);
-        color: #ddd;
+        color: var(--gt-text);
         margin-top: 15px;
         text-align: justify;
         

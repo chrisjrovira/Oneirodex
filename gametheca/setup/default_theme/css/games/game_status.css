@@ -190,27 +190,27 @@
 
 /* Status Icon Colors (set via JavaScript) */
 .status-icon-unplayed {
-    color: #808080;
+    color: var(--gt-text-muted);
 }
 
 .status-icon-unfinished {
-    color: #4A90E2;
+    color: var(--gt-info);
 }
 
 .status-icon-beaten {
-    color: #50C878;
+    color: var(--gt-success);
 }
 
 .status-icon-completed {
-    color: #FFD700;
+    color: var(--gt-warning);
 }
 
 .status-icon-null {
-    color: #DC3545;
+    color: var(--gt-danger);
 }
 
 .status-icon-empty {
-    color: #808080;
+    color: var(--gt-text-muted);
     opacity: 0.4;
 }
 

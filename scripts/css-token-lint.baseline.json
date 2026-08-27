@@ -1,78 +1,27 @@
 {
-  "frontend/admin-app/src/DupeGlance.css": {
-    "no-raw-color": 5
-  },
-  "frontend/admin-app/src/ops.css": {
-    "no-raw-color": 17
-  },
   "frontend/admin-app/src/styles.css": {
-    "no-raw-color": 17
+    "no-raw-color": 6
   },
   "frontend/member-app/src/chrome/systemBackdrop.css": {
-    "no-raw-color": 4,
     "no-raw-font-size": 3
   },
-  "frontend/member-app/src/components/ScreenshotLightbox.css": {
-    "no-raw-color": 3
-  },
-  "frontend/member-app/src/components/SocialCompanionDock.css": {
-    "no-raw-color": 5
-  },
   "frontend/member-app/src/pages/BigPicturePage.css": {
-    "no-raw-color": 1,
     "no-raw-font-size": 2
   },
   "frontend/member-app/src/pages/GameDetailsPage.css": {
     "no-raw-font-size": 1
   },
   "frontend/member-app/src/pages/NewsPage.css": {
-    "no-raw-color": 1,
     "no-raw-font-size": 1
   },
   "frontend/member-app/src/pages/SystemsPage.css": {
-    "no-raw-color": 17
-  },
-  "frontend/ops-glance/src/ops-glance.css": {
-    "no-raw-color": 3
-  },
-  "gametheca/setup/default_theme/css/admin_attract_mode.css": {
-    "no-raw-color": 2
-  },
-  "gametheca/setup/default_theme/css/admin/admin_manage_scanjobs.css": {
-    "no-raw-color": 8
+    "no-raw-color": 5
   },
   "gametheca/setup/default_theme/css/admin/admin_manage_themes.css": {
     "no-raw-font-size": 1
   },
-  "gametheca/setup/default_theme/css/admin/admin_ops.css": {
-    "no-raw-color": 3
-  },
-  "gametheca/setup/default_theme/css/base.css": {
-    "no-raw-color": 30
-  },
-  "gametheca/setup/default_theme/css/components.css": {
-    "no-raw-color": 6
-  },
-  "gametheca/setup/default_theme/css/games/discover.css": {
-    "no-raw-color": 2
-  },
-  "gametheca/setup/default_theme/css/games/favorites.css": {
-    "no-raw-color": 2
-  },
-  "gametheca/setup/default_theme/css/games/game_details.css": {
-    "no-raw-color": 4
-  },
   "gametheca/setup/default_theme/css/games/game_edit_images.css": {
     "no-raw-font-size": 1
-  },
-  "gametheca/setup/default_theme/css/games/game_status.css": {
-    "no-raw-color": 6
-  },
-  "gametheca/setup/default_theme/css/games/library_filters.css": {
-    "no-raw-color": 2
-  },
-  "gametheca/setup/default_theme/css/settings/settings_profile_view.css": {
-    "no-raw-color": 11
   },
   "gametheca/setup/default_theme/css/setup/setup.css": {
     "no-raw-font-size": 1
