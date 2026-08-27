@@ -10,8 +10,10 @@ from __future__ import annotations
 
 from functools import wraps
 
-from flask import flash, jsonify, redirect, request, url_for
+from flask import flash, redirect, request, url_for
 from flask_login import current_user
+
+from gametheca.utils.api_response import api_error
 
 VALID_ROLES = ('admin', 'librarian', 'user', 'child')
 
@@ -59,7 +61,7 @@ def librarian_required(f):
     def decorated(*args, **kwargs):
         if not current_user.is_authenticated or not is_librarian(current_user):
             if request.path.startswith('/api/'):
-                return jsonify({'error': 'Librarian or admin required'}), 403
+                return api_error('Librarian or admin required', code='forbidden')
             flash('You need librarian or admin access for that page.', 'danger')
             return redirect(url_for('login.login'))
         return f(*args, **kwargs)

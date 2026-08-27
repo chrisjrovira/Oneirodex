@@ -55,7 +55,7 @@ stopped being recognised as one and rendered the whole site squeezed into a
 else now.
 
 `?channel=<id>` on the pop-out URL opens straight into that room.
-- No Discord bots, webhooks, or Discord branding — native GameTheca chat only.
+- No Discord bots, webhooks, or Discord branding — native Oneirodex chat only.
 
 ## Mute a channel or DM
 

@@ -2,7 +2,7 @@
 
 ## Product stance — unsigned only
 
-**Windows code-signing certificates will never be pursued.** Unsigned desktop builds are the supported distribution path for GameTheca.
+**Windows code-signing certificates will never be pursued.** Unsigned desktop builds are the supported distribution path for Oneirodex.
 
 Do **not** buy an EV (or any) code-signing cert for this product. Operators should not set signing secrets in GitHub. SmartScreen / AV noise on first run of an unknown `.exe` is an accepted tradeoff for self-hosted household use.
 
@@ -12,8 +12,8 @@ Do **not** buy an EV (or any) code-signing cert for this product. Operators shou
 
 | Flavor | Command | Output (same Cargo binary name) | Copy for distribution |
 |---|---|---|---|
-| **Full companion** | `npm run tauri:build` | `src-tauri/target/release/gametheca-desktop.exe` | Keep as `GameTheca-full.exe` |
-| **Thin client** | `npm run tauri:build:thin` | Same path (overwrites) — uses `tauri.thin.conf.json` + `VITE_CLIENT_MODE=thin` via `--mode thin` / `.env.thin` | Copy to `GameTheca-thin.exe` **before** rebuilding the other flavor |
+| **Full companion** | `npm run tauri:build` | `src-tauri/target/release/gametheca-desktop.exe` | Keep as `Oneirodex-full.exe` |
+| **Thin client** | `npm run tauri:build:thin` | Same path (overwrites) — uses `tauri.thin.conf.json` + `VITE_CLIENT_MODE=thin` via `--mode thin` / `.env.thin` | Copy to `Oneirodex-thin.exe` **before** rebuilding the other flavor |
 
 Thin build uses capabilities `thin-main` / `thin-library` / `social` (no install/FS lifecycle ACL). Full uses `default` + `social`.
 

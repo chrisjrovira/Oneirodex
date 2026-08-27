@@ -1,11 +1,11 @@
 # LiveKit on Unraid / Compose (Wave 16)
 
-Optional household voice. GameTheca mints short-lived JWTs; the browser talks to the LiveKit SFU.
+Optional household voice. Oneirodex mints short-lived JWTs; the browser talks to the LiveKit SFU.
 
 ## Compose profile
 
 ```bash
-# From repo root (keys must match GameTheca env)
+# From repo root (keys must match Oneirodex env)
 export ENABLE_LIVEKIT=true
 export LIVEKIT_URL=ws://127.0.0.1:7880   # or wss://livekit.lan behind TLS
 export LIVEKIT_API_KEY=devkey

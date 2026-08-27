@@ -243,9 +243,9 @@ function TrailerPlayer({ videoId, skipFirst, settingsRef, onAdvance, title, game
         />
       </div>
       {/* Bezel without the wordmark.
-          "GameTheca" printed under the player was the product naming itself on
-          a page the member reached from a nav that already says GameTheca, on a
-          screen inside an app called GameTheca — and it sat exactly where a
+          "Oneirodex" printed under the player was the product naming itself on
+          a page the member reached from a nav that already says Oneirodex, on a
+          screen inside an app called Oneirodex — and it sat exactly where a
           video's title belongs, which is where the title is now. The knobs stay:
           they are what makes the frame read as a cabinet rather than as a grey
           bar, and they claim nothing. */}

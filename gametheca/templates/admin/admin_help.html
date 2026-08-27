@@ -9,7 +9,7 @@
 <div class="help-content container-settings gt-adminpage gt-adminpage--xl">
     <div class="gt-adminpage-header">
         <div>
-            <h1 class="gt-adminpage-title">GameTheca Administrator Guide</h1>
+            <h1 class="gt-adminpage-title">Oneirodex Administrator Guide</h1>
             <p class="gt-adminpage-lede">Operator reference for libraries, users, scanning, email, and maintenance.</p>
         </div>
     </div>
@@ -55,7 +55,7 @@
     <div class="admin-section gt-adminpage-panel" id="system-overview">
         <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}System Overview</h2>
         <div class="collapsible-content">
-            <p>GameTheca is a comprehensive game library management system that allows you to organize, catalog, and share your game collection.</p>
+            <p>Oneirodex is a comprehensive game library management system that allows you to organize, catalog, and share your game collection.</p>
             
             <div class="help-subsection">
                 <h3>Key Features</h3>
@@ -127,6 +127,11 @@
     <div class="admin-section gt-adminpage-panel" id="scanning">
         <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}Scanning & Content Management</h2>
         <div class="collapsible-content">
+            <div class="help-subsection">
+                <h3>Four-source corroboration</h3>
+                <p>A high-confidence IGDB hit is still checked against Steam / GOG exact title plus unique-exact MobyGames / TheGamesDB when those keys are set. If another catalog has a unique exact title that matches the folder but not IGDB (folder Doom / IGDB Doom 3), the scan writes a Review proposal (<code>match_reason=catalog_disagreement</code>) and does not auto-create the game or peel the name down until it fits. Agreeing catalogs fill store IDs and GameURL rows — never a DRM download.</p>
+            </div>
+
             <div class="help-subsection">
                 <h3>Scan Management</h3>
                 <ul>

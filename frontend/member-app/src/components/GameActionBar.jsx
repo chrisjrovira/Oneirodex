@@ -95,20 +95,20 @@ export function GameActionBar({
     clientConnected && lifecycleState !== 'not_downloaded' && busyAction == null
 
   const installTitle = !clientConnected
-    ? 'Open the GameTheca companion while browsing to install'
+    ? 'Open the Oneirodex companion while browsing to install'
     : lifecycleState === 'installed' || lifecycleState === 'update_available'
       ? 'Already installed on this device'
       : lifecycleState === 'downloaded'
-        ? 'Install with GameTheca companion'
+        ? 'Install with Oneirodex companion'
         : 'Queue companion download, then install'
   const updateTitle =
     lifecycleState === 'update_available'
       ? clientConnected
-        ? 'Apply update with GameTheca companion'
+        ? 'Apply update with Oneirodex companion'
         : 'Companion needed to apply — link opens version list'
       : 'No update flagged for this title'
   const uninstallTitle = !clientConnected
-    ? 'Open the GameTheca companion to uninstall locally'
+    ? 'Open the Oneirodex companion to uninstall locally'
     : lifecycleState === 'not_downloaded'
       ? 'Nothing local to uninstall yet'
       : 'Remove local install only (server library kept)'
@@ -149,7 +149,7 @@ export function GameActionBar({
   function onInstallClick() {
     if (busyAction) return
     if (!clientConnected) {
-      explain('Start the GameTheca companion and keep it signed in, then try again.')
+      explain('Start the Oneirodex companion and keep it signed in, then try again.')
       return
     }
     if (lifecycleState === 'downloaded') {
@@ -186,7 +186,7 @@ export function GameActionBar({
   function onUninstallClick() {
     if (busyAction) return
     if (!clientConnected) {
-      explain('Start the GameTheca companion to uninstall the local copy.')
+      explain('Start the Oneirodex companion to uninstall the local copy.')
       return
     }
     if (lifecycleState === 'not_downloaded') {
@@ -340,7 +340,7 @@ export function GameActionBar({
           title={
             clientConnected
               ? 'Open single-player assists in the companion'
-              : 'Assists require the GameTheca companion (single-player / offline only)'
+              : 'Assists require the Oneirodex companion (single-player / offline only)'
           }
           onClick={() => {
             const label = clientConnected

@@ -23,7 +23,7 @@ By design — thin is connect-only (browse / social / Big Picture). Use the **fu
 Parental ACL / library allowlists filter the library. That’s intentional. Child accounts also cannot search Acquire or use companion download/install commands.
 
 **Where is account data stored?**  
-On the machine that runs GameTheca (self-hosted). Operators: [privacy-data-handling.md](../admin/privacy-data-handling.md).
+On the machine that runs Oneirodex (self-hosted). Operators: [privacy-data-handling.md](../admin/privacy-data-handling.md).
 
 ## Library & downloads
 
@@ -74,6 +74,9 @@ Open path uses **OpenPathModal** → companion `open_path` (or clipboard fallbac
 **Where are pause, reset, mute, save, and rewind in the browser player?**  
 On the play bar above the screen: Pause, Reset, Mute, volume, Save, Load, Rewind, FF, Picture, and Power. Power leaves the game, same as **← Library**. **?** opens the shortcut list (F2/F3 save/load, hold Right Shift to rewind, F5 fast-forward). An overlay repeats the in-game controls on touch, or when you move the pointer over the play stage. See [browser-play.md](browser-play.md).
 
+**Which systems play in the browser?**  
+NES, SNES, N64, Game Boy family, DS, Virtual Boy, PS1, the Genesis family including SG-1000, Saturn, the Atari line, Lynx, Jaguar, WonderSwan, Neo Geo Pocket / Color, Coleco, Vectrex, 3DO, Neo Geo CD, Intellivision, Channel F, and Odyssey 2. Switch, Wii, GameCube, Xbox, and arcade boards stay companion or catalog. Oneirodex never fetches BIOS. Full matrix: [browser-play.md](browser-play.md).
+
 ## Themes & icons
 
 **Theme vs icon pack?**  
@@ -82,11 +85,11 @@ On the play bar above the screen: Pause, Reset, Mute, volume, Save, Load, Rewind
 **Loading spinners look wrong / stuck on ring?**  
 Household mode is Admin → Themes → **Loading icons** (rotate catalogue or lock one). Motif CSS needs **Reset Default Themes** after Wave 2d deploy — [themes-reset.md](../admin/themes-reset.md).
 
-**Why do some games show a GameTheca placeholder cover?**  
+**Why do some games show a Oneirodex placeholder cover?**  
 Titles without downloaded artwork get a branded placeholder painted in your **active decade room** (wood planks, posters, carpet, marquee, phosphor — cached per theme). The generic `default_cover.jpg` is only the last fallback if rendering fails. Admins can generate decade-room / platform / stock packs in **Admin → Settings → Art studio** and attach them to games or set a site-wide fallback pack.
 
 **Do I need an admin to install fonts?**  
-No. Every face the Font picker lists ships with GameTheca and is copied into place on each server start — no download, no admin step, works air-gapped. "Not installed" now means a real filesystem problem on the server, not the normal state. What is *not* bundled is console manufacturers' own typefaces; those are trademarked, so the bundled faces evoke each era instead — [preferences-themes.md](preferences-themes.md).
+No. Every face the Font picker lists ships with Oneirodex and is copied into place on each server start — no download, no admin step, works air-gapped. "Not installed" now means a real filesystem problem on the server, not the normal state. What is *not* bundled is console manufacturers' own typefaces; those are trademarked, so the bundled faces evoke each era instead — [preferences-themes.md](preferences-themes.md).
 
 **I picked a theme and nothing changed after reload.**  
 Fixed. On a build from before that fix, the whole install served whichever theme was current when its templates were first rendered, so only a server restart ever applied a change — re-picking and hard refreshing did nothing because neither was the problem. See [troubleshooting](troubleshooting.md#a-new-theme-doesnt-appear-after-reload).
@@ -112,13 +115,13 @@ The rail beside chat. **Household** is everyone on the box; **invite-only** spac
 LiveKit is optional. If off, Activity shows “LiveKit is off.” Admins enable `ENABLE_LIVEKIT` + compose profile — [social-and-voice.md](social-and-voice.md).
 
 **Play via Moonlight on game details?**  
-Optional. When the admin enables remote play and registers a BYO Sunshine or Wolf host, game details show **Play via Moonlight** — it copies the host and app/PIN hints for your Moonlight client. GameTheca does not stream in the browser.
+Optional. When the admin enables remote play and registers a BYO Sunshine or Wolf host, game details show **Play via Moonlight** — it copies the host and app/PIN hints for your Moonlight client. Oneirodex does not stream in the browser.
 
 **Can I use Discord webhooks?**  
-No. GameTheca does not integrate Discord (bots or webhooks). Use in-app notifications, chat, optional email for mentions/DMs, or optional LiveKit / BYO community link.
+No. Oneirodex does not integrate Discord (bots or webhooks). Use in-app notifications, chat, optional email for mentions/DMs, or optional LiveKit / BYO community link.
 
-**Does GameTheca ship peer “we’re not Product X” catalogs?**  
-No — public docs use GameTheca capability language only. Competitive intel stays in the private vault (`docs/_private/`, gitignored).
+**Does Oneirodex ship peer “we’re not Product X” catalogs?**  
+No — public docs use Oneirodex capability language only. Competitive intel stays in the private vault (`docs/_private/`, gitignored).
 
 ## Updates & calendar
 
@@ -134,7 +137,7 @@ Press **Check library for updates** beside Refresh. The two do different things:
 Each press does one bounded batch (25 titles, 50 max) because every title is a live request to Steam / GOG — an unbounded sweep would hang for minutes and get you rate-limited. The line under the heading reports what it found and **how many titles are still to check**, so pressing again picks up where it left off. Librarians and admins still have the library-wide `POST /api/admin/freshness/refresh`.
 
 **Where is the release calendar?**  
-**More → Calendar** — IGDB releases (metadata only) with Ahead/Behind window controls and a **List / Month** view switcher (choice remembered in the browser). Month shows each day's **cover art**; when more than one title lands on a day the tile cycles through them every ten seconds and a `+N` badge says how many more there are. Click a day for the full list beneath the grid. GameTheca does not download those titles.
+**More → Calendar** — IGDB releases (metadata only) with Ahead/Behind window controls and a **List / Month** view switcher (choice remembered in the browser). Month shows each day's **cover art**; when more than one title lands on a day the tile cycles through them every ten seconds and a `+N` badge says how many more there are. Click a day for the full list beneath the grid. Oneirodex does not download those titles.
 
 > The old **Agenda** view is gone. It was the List view with week headings between the rows — the same titles in the same order — so it was a third tab that never showed anything List did not. A browser still holding `agenda` as its remembered choice falls back to List.
 
@@ -146,7 +149,7 @@ Each press does one bounded batch (25 titles, 50 max) because every title is a l
 **Where do free Steam/Epic/GOG offers show up?**  
 **News → Free now.** Claim opens the store page (or launcher if that account is linked under Ownership). Details: [free-games.md](free-games.md).
 
-**Will GameTheca add the game to my DRM library automatically?**  
+**Will Oneirodex add the game to my DRM library automatically?**  
 No — claim on the store, then sync Ownership for badges. Steam / GOG / Epic live-sync the register when a token is saved; they still never download the game. Local DRM-free library folders are separate.
 
 **How do I keep GOG or Epic ownership current?**  
@@ -175,6 +178,6 @@ Gamepad-friendly browse at **More → Big Picture**. Esc exits; Attract opens tr
 
 ## Licence
 
-**What licence is GameTheca?**  
+**What licence is Oneirodex?**  
 GNU AGPL v3. Help → About has the licence link. If you run a *modified* copy as a network service, AGPL §13 means you owe your users that modified source — admins set `GT_SOURCE_URL` to their fork so the Help/About source link is honest.
 

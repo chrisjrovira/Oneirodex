@@ -52,7 +52,7 @@ Baseline is slightly slower but avoids Bun runtime crashes on older kernels.
 
 ---
 
-## Enable in GameTheca
+## Enable in Oneirodex
 
 1. Start profile **`challenge`** (above).
 2. In `.env` (or Unraid Compose env file):
@@ -78,7 +78,7 @@ With `ENABLE_CHALLENGE_SOLVER=false` (default), acquire behavior is unchanged ev
 If Prowlarr already uses FlareSolverr / TRAWL:
 
 - Prowlarr → Settings → Indexers → FlareSolverr URL: often `http://host:8191` from Prowlarr's network namespace.
-- GameTheca (inside Compose) uses the **service name**: `http://trawl:8191` — not `localhost`.
+- Oneirodex (inside Compose) uses the **service name**: `http://trawl:8191` — not `localhost`.
 - Same sidecar can serve both when TRAWL is on the shared Compose network; do not duplicate solvers unless you isolate networks.
 
 External solver (already on LAN): set `CHALLENGE_SOLVER_URL=http://192.168.x.x:8191` and keep `ALLOW_PRIVATE_LAN_URLS=true`.
@@ -118,7 +118,7 @@ Fetch CA (LAN only, from a container on the network):
 docker compose exec app curl -sf http://trawl:8191/proxy-ca.crt -o trawl-proxy-ca.crt
 ```
 
-Install per OS/browser docs, then point Prowlarr/qBit **only** at `http://trawl:8192` as HTTP proxy when MITM is enabled. GameTheca Compose **does not** publish 8192 to the host — configure proxy clients inside Compose or via internal DNS.
+Install per OS/browser docs, then point Prowlarr/qBit **only** at `http://trawl:8192` as HTTP proxy when MITM is enabled. Oneirodex Compose **does not** publish 8192 to the host — configure proxy clients inside Compose or via internal DNS.
 
 Default Compose keeps `TRAWL_MITM_PROXY_ENABLED=false`.
 

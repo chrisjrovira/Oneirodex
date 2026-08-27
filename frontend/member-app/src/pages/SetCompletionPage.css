@@ -10,7 +10,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -18,12 +18,12 @@
   background: var(--gt-glass-bg);
   color: var(--gt-text);
   border: 1px solid var(--gt-glass-border);
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   padding: 0.25rem 0.4rem;
 }
 
 .gt-set-completion-msg {
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
   color: var(--gt-accent);
 }
 
@@ -45,10 +45,10 @@
   padding: 0.55rem 0.7rem;
   background: var(--gt-glass-bg);
   border: 1px solid var(--gt-glass-border);
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
 }
 
 .gt-set-completion-missing li span {
   flex: 1 1 12rem;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to GameTheca are documented in this file.
+All notable changes to Oneirodex are documented in this file. Historical entries keep the former public string GameTheca.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -162,6 +162,10 @@ Work since the 1.0.0-beta tag (2026-08-06).
 
 - **Blank downloaded covers become titled studio art.** A cover that HTTP-200s as a 1×1, a stub, or a near-solid wash is replaced on download (scan, queue, turbo, retry) so the library tile is not an empty hole. Screenshots are left alone.
 - **Admin firmware collection scan.** Admin → Emulators can point at a folder of dumps you already own (subfolders included), install every name the service asks for, pick which dump to use when filenames collide, and copy a markdown list of what is still missing. Same walk as `scripts/import_bios.py`. Oneirodex still never downloads BIOS.
+- **Set completion and Playtime use bar two.** Platform/region identity, owned count, **Systems** / **Browse library**, and the region filter live in the context bar; Playtime totals (`duration · n games`) sit in the trail instead of a page title card.
+- **Admin Users roster is the editor.** Invites / Support sit in the top bar; **Edit** saves role through the existing user API. The classic second editor is gone.
+- **Oneirodex public string (ADR 0003 phase 1).** UI, Help, README, user/admin docs, and the desktop window title say **Oneirodex**. Package path, Docker image, GitHub repo, `GT_*`, and `gt-` CSS stay `gametheca`. Danger-zone confirm is `RESET ONEIRODEX`; `RESET GAMETHECA` still works.
+- **Play-mode matrix for every platform.** Tests and play-skins cover the full `LibraryPlatform` enum — not only NES and Game Boy. SG-1000 and Neo Geo Pocket Color browser-play via already-shipped WASM. Legal sample fetch adds Game Boy Color (`cgb-acid2`) and SNES (`SuperBossGaiden.sfc`). Remaining browser systems stay documented as skipped until a licensed URL exists.
 - **Trailers and Ops failures use the shared envelope.** Empty trailer results stay HTTP 200 with `code` / `message` as data. Trailer 500s and Ops/library-health 503s no longer return `str(exc)`. `/healthz` is still `{status: 'ok'}` for probes. Ratchet **50 → 41**.
 - **Thirteen small stylesheets use radius and type tokens.** Help, Trailers, VR, Ownership, mobile density, plus form-components, sidebar, table-components, settings shell, system logs, integrations tabs, whitelist, and IGDB settings. Classic CSS needs **Reset Default Themes**; member SPA pages need an image rebuild.
 - **Preferences opens again.** The grouped room-card picker crashed because Jinja treated `group.items` as `dict.items`. It now walks `group['items']`.

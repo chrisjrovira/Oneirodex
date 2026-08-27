@@ -1,8 +1,8 @@
 # Privacy & data handling (operator notes)
 
 This is **not** a public privacy policy, **not** a terms-of-service, and **not** legal advice.
-GameTheca is self-hosted: the machine you run it on holds the data, and **you** decide what to tell
-the household. Use this as a fact sheet to adapt, not as something to publish as if GameTheca Inc.
+Oneirodex is self-hosted: the machine you run it on holds the data, and **you** decide what to tell
+the household. Use this as a fact sheet to adapt, not as something to publish as if Oneirodex Inc.
 were the controller.
 
 The product used to serve WebRetro's upstream ToS / privacy / cookie pages from every deployment
@@ -27,7 +27,7 @@ Related: [members-and-invites.md](members-and-invites.md) · [settings-modules.m
 | Support reports | Title, body, optional logs, client/url hints | Stays local unless you configured GitHub issue sync |
 | Companion devices | Heartbeat / last-seen | Desktop client stores its token in the OS credential store, not plaintext config |
 
-There is no GameTheca cloud account, no product analytics SaaS, and no Discord.
+There is no Oneirodex cloud account, no product analytics SaaS, and no Discord.
 
 ## What can leave the machine (only if you turn it on)
 
@@ -41,7 +41,7 @@ There is no GameTheca cloud account, no product analytics SaaS, and no Discord.
 | GitHub support | `SUPPORT_GITHUB_*` | Report titles/bodies you chose to file upstream |
 | WebRetro cores | First boot fetch | WASM cores from the operator-provisioned install path — [webretro-cores.md](../runbooks/webretro-cores.md) |
 
-ROM files, BIOS, and artwork you pointed the library at never upload to a GameTheca service — there isn't one.
+ROM files, BIOS, and artwork you pointed the library at never upload to a Oneirodex service — there isn't one.
 
 ## Child accounts
 

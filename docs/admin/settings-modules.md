@@ -29,7 +29,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 
 **Stays off by default:** `OIDC_ENABLED` (SSO/auth).  
 **Safety locks (also off):** `ENABLE_AI_AUTO_APPLY`, `ALLOW_HARDLINK_APPLY`.  
-**Patch catalog:** operator YAML/JSON at `PATCH_CATALOG_PATH` — GameTheca does not scrape romhacking.net or similar sites.
+**Patch catalog:** operator YAML/JSON at `PATCH_CATALOG_PATH` — Oneirodex does not scrape romhacking.net or similar sites.
 
 | Env / module | Default | Notes |
 |---|---|---|
@@ -56,7 +56,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - APIs: `GET/POST /api/arr/indexers`, `POST /api/arr/indexers/bulk`, `POST /api/arr/indexers/enable-presets`, `PUT|PATCH|DELETE /api/arr/indexers/<id>`.
 - Native indexer URLs use outbound SSRF checks (no LAN); hub URLs still respect `ALLOW_PRIVATE_LAN_URLS`.
 - Preset pack: `gametheca/data/indexer_presets.json` (no secrets; admin-only display names).
-- **Remote path mapping (`ARR_REMOTE_PATH_MAP`)** — set this whenever your download client runs in a **different container** than GameTheca, which is the normal Unraid/Compose layout. qBittorrent reports paths from *its* mounts (`/downloads/…`), GameTheca sees the same bytes somewhere else (`/storage/downloads/…`), and without a mapping the hardlink pipeline stats a path that does not exist here. The preview then says *"no source file found"* — true, but baffling when the file is plainly on disk.
+- **Remote path mapping (`ARR_REMOTE_PATH_MAP`)** — set this whenever your download client runs in a **different container** than Oneirodex, which is the normal Unraid/Compose layout. qBittorrent reports paths from *its* mounts (`/downloads/…`), Oneirodex sees the same bytes somewhere else (`/storage/downloads/…`), and without a mapping the hardlink pipeline stats a path that does not exist here. The preview then says *"no source file found"* — true, but baffling when the file is plainly on disk.
   - Format: `remote=>local` pairs joined by `|`. `=>` because Windows paths contain colons; `|` because paths can contain commas.
   - Example: `ARR_REMOTE_PATH_MAP=/downloads=>/storage/downloads|/data/torrents=>/mnt/user/torrents`
   - Longest remote prefix wins, so a specific mapping beats a general one. A prefix only matches at a path separator, so `/downloads` never matches `/downloads-old`.
@@ -89,7 +89,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - Env: `ENABLE_REMOTE_PLAY` (**off** by default), optional `SUNSHINE_BASE_URL` / `WOLF_BASE_URL`, hint vars — see `.env.example`.
 - Admin: **Settings → Remote play** (`/admin/remote_play`) or `PUT /api/admin/remote-play/config`.
 - Members: `GET /api/remote-play/status`; game details **Play via Moonlight** copies host + hints.
-- **No Wolf/GOW in GameTheca image** — operator runs Sunshine/Wolf on a GPU host; LAN URLs need `ALLOW_PRIVATE_LAN_URLS=true`.
+- **No Wolf/GOW in Oneirodex image** — operator runs Sunshine/Wolf on a GPU host; LAN URLs need `ALLOW_PRIVATE_LAN_URLS=true`.
 - Plugin registry: `remote_play.moonlight`.
 - Guide: [gow-remote-play.md](../strategy/gow-remote-play.md).
 

@@ -58,11 +58,11 @@ export function AdminSideRail({ railState = 'expanded', onCloseDrawer }) {
             in an <img> cannot read the page's custom properties, which is why
             the mark stayed default green on every preset. */}
         <span className="gt-rail__mark gt-brand-mark" aria-hidden="true" />
-        {/* Product name *and* role. Dropping "GameTheca" here would make admin
+        {/* Product name *and* role. Dropping "Oneirodex" here would make admin
             the only surface that does not identify the product, and the role
             badge is what tells you which half you are in. */}
         <span className="gt-rail__brand-text">
-          GameTheca
+          Oneirodex
           <span className="gt-rail__brand-role">Admin</span>
         </span>
       </a>

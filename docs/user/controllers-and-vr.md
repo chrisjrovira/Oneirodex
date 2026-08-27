@@ -16,7 +16,7 @@ Open **More → Big Picture** for a gamepad-first library rail.
 
 Kid mode uses the same browse controls; parental ACL already filters the list. Download may be unavailable for child accounts.
 
-**Steam Deck / Steam Input:** If you launch the browser from Steam, Steam can remap controls. GameTheca uses the browser Gamepad API — it does not ship a separate Steam Input profile yet.
+**Steam Deck / Steam Input:** If you launch the browser from Steam, Steam can remap controls. Oneirodex uses the browser Gamepad API — it does not ship a separate Steam Input profile yet.
 
 **WebRetro / native emulators** use each core’s own binds — see [browser-play.md](browser-play.md).
 
@@ -26,7 +26,7 @@ Kid mode uses the same browse controls; parental ACL already filters the list. D
 
 | You have… | Do this |
 |---|---|
-| **PSVR2 / Index / Vive via SteamVR** (PC VR) | On the **same PC**, open GameTheca in Chrome/Edge (desktop window or SteamVR overlay browser) → `/vr` or Library. Use **Big Picture** with a normal gamepad for couch control. Sense controllers are for SteamVR games, not for driving the website. DRM-free Install/Play needs the **full** companion — thin is browse/social only. |
+| **PSVR2 / Index / Vive via SteamVR** (PC VR) | On the **same PC**, open Oneirodex in Chrome/Edge (desktop window or SteamVR overlay browser) → `/vr` or Library. Use **Big Picture** with a normal gamepad for couch control. Sense controllers are for SteamVR games, not for driving the website. DRM-free Install/Play needs the **full** companion — thin is browse/social only. |
 | **Quest / standalone** (friend seat) | Headset browser → `https://<server>/vr` → optional Add to Home (PWA). Play heavy titles via **Moonlight** to the household PC, or ask someone on the companion PC. No local install pipeline on the headset. |
 | **No headset** | Normal Library + Big Picture on TV. |
 

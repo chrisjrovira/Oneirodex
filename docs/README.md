@@ -1,8 +1,8 @@
-# GameTheca documentation
+# Oneirodex documentation
 
 **Product version:** 1.0.0-beta — see root [CHANGELOG.md](../CHANGELOG.md) and [VERSION](../VERSION).
 
-Hub for product, ops, and developer docs. Naming: **GameTheca** until cutover (package `gametheca/`, Docker `chrisjrovira/gametheca`). Chosen public name **Oneirodex** — [ADR 0003](adr/0003-product-name-oneirodex.md); do not mix it into guides until a rename wave.
+Hub for product, ops, and developer docs. Public name **Oneirodex** (phase 1) — package `gametheca/`, Docker `chrisjrovira/gametheca`. [ADR 0003](adr/0003-product-name-oneirodex.md).
 
 Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs/assets/readme/`), quick start, and troubleshooting.
 
@@ -63,8 +63,8 @@ docs/
 
 | Surface | Value |
 |---|---|
-| Product (shipped today) | GameTheca |
-| Product (chosen, not cut over) | Oneirodex — [ADR 0003](adr/0003-product-name-oneirodex.md) |
+| Product (shipped today) | Oneirodex (public string) |
+| Ops / code identifiers | Still `gametheca` — [ADR 0003](adr/0003-product-name-oneirodex.md) phase 2/3 not started |
 | Version | 1.0.0-beta |
 | GitHub | chrisjrovira/gametheca |
 | App / DB containers | gametheca-app · gametheca-db |

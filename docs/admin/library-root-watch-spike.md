@@ -5,7 +5,7 @@
 
 ## Today
 
-When `GT_LIBRARY_WATCH=1`, GameTheca starts a watchdog Observer over each library’s `last_scan_folder` **except** libraries with `watch_enabled=false` (per-library opt-out). Events are scan-depth–aware (game-leaf + one immediate child only — not deep arcade ROM trees), debounced (2–5s, default 3), and **only enqueue** FIFO `ScanJob`s via `scan_queue` (cooperative with `worker_caps`; watcher never runs scan threads itself).
+When `GT_LIBRARY_WATCH=1`, Oneirodex starts a watchdog Observer over each library’s `last_scan_folder` **except** libraries with `watch_enabled=false` (per-library opt-out). Events are scan-depth–aware (game-leaf + one immediate child only — not deep arcade ROM trees), debounced (2–5s, default 3), and **only enqueue** FIFO `ScanJob`s via `scan_queue` (cooperative with `worker_caps`; watcher never runs scan threads itself).
 
 Unset / `0` → no watcher (scan-driven discovery only: manual / scheduled / refresh-all). Per-library `watch_enabled=true` does **not** bypass the env master switch (Unraid FUSE safety).
 

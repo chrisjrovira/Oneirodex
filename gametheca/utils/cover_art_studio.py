@@ -761,7 +761,7 @@ def _draw_title_motif(
 def _wrap_title(title: str, font: ImageFont.ImageFont, max_width: int) -> list[str]:
     words = title.split()
     if not words:
-        return ['GameTheca']
+        return ['Oneirodex']
     lines: list[str] = []
     current = words[0]
     for word in words[1:]:
@@ -1117,7 +1117,7 @@ def render_cover_art(
             draw,
             width,
             height,
-            title=title or 'GameTheca',
+            title=title or 'Oneirodex',
             seed=seed,
             accent=accent,
             secondary=secondary,
@@ -1174,14 +1174,14 @@ def render_cover_art(
         _draw_system_glyph(draw, gx, gy, mark_scale, glyph, accent)
 
     if not title:
-        headline = 'GameTheca'
+        headline = 'Oneirodex'
         if is_wide:
             subtitle = system or 'Library'
         else:
             subtitle = system or 'Vault cover'
     else:
         headline = title
-        subtitle = system or ('Stock' if motif else 'GameTheca')
+        subtitle = system or ('Stock' if motif else 'Oneirodex')
 
     # FEAT-D4: the operator can override the derived text. An explicit empty
     # subtitle means "no subtitle", which is different from "not supplied" —

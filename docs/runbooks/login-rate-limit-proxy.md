@@ -1,6 +1,6 @@
 # Login rate limiting (proxy + app)
 
-GameTheca already rate-limits `/login` and password-reset in-process when `ENABLE_LOGIN_RATE_LIMIT=true` (default). That protects a **single worker**. Behind multiple Gunicorn/uWSGI workers or a reverse proxy, add a **proxy** limit so shared IPs cannot fan out across workers.
+Oneirodex already rate-limits `/login` and password-reset in-process when `ENABLE_LOGIN_RATE_LIMIT=true` (default). That protects a **single worker**. Behind multiple Gunicorn/uWSGI workers or a reverse proxy, add a **proxy** limit so shared IPs cannot fan out across workers.
 
 ## App-level (already on)
 

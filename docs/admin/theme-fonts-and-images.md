@@ -12,7 +12,7 @@ Related: [Preferences & themes](../user/preferences-themes.md) (what members see
 
 ### What ships, and what does not
 
-GameTheca does **not** bundle console manufacturers' typefaces. The real
+Oneirodex does **not** bundle console manufacturers' typefaces. The real
 Nintendo, Sega and Sony faces are trademarked and not licensed for
 redistribution, so shipping them would put an infringing asset in every install.
 
@@ -28,7 +28,7 @@ faces chosen to *evoke* each era:
 | `share-tech-mono` | Share Tech Mono | arcade cabinet | SIL OFL 1.1 |
 | `orbitron` | Orbitron | 32-bit / disc era | SIL OFL 1.1 |
 
-> ✅ **All five ship with GameTheca — you do not install them.** The `.ttf`
+> ✅ **All five ship with Oneirodex — you do not install them.** The `.ttf`
 > files are vendored in `gametheca/setup/fonts/` (with `OFL.txt`) and copied
 > into the runtime fonts folder on **every** startup, so a fresh volume
 > repopulates itself. No network, no admin step, works air-gapped.
@@ -189,6 +189,6 @@ Nothing is committed unless at least one file stored successfully.
 ## Generated cover art (optional)
 
 If you would rather generate art than source it, `ENABLE_AI_ARTWORK` points
-GameTheca at **your own** A1111-compatible endpoint — see
+Oneirodex at **your own** A1111-compatible endpoint — see
 [settings-modules.md](settings-modules.md#generated-cover-art). It is off by
 default and nothing leaves your network.

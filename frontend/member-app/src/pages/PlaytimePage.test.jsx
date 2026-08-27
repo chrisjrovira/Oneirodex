@@ -56,3 +56,11 @@ test('Retry reloads after error', async () => {
     expect(screen.getByText(/No playtime recorded yet/i)).toBeInTheDocument()
   })
 })
+
+test('new chrome retires the title and puts totals in the bar', async () => {
+  render(<PlaytimePage shellConfig={{ enableNewChrome: true }} />)
+  expect(await screen.findByText('Hades')).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Playtime' })).toBeNull()
+  expect(screen.queryByLabelText('Playtime summary')).toBeNull()
+  expect(screen.getByText('1h 01m · 1 game')).toBeInTheDocument()
+})

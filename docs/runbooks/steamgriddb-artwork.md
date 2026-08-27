@@ -1,6 +1,6 @@
 # SteamGridDB artwork provider
 
-Enable community artwork from [SteamGridDB](https://www.steamgriddb.com/) for admin artwork search. GameTheca uses SteamGridDB for **artwork only** — it never downloads games or DRM payloads.
+Enable community artwork from [SteamGridDB](https://www.steamgriddb.com/) for admin artwork search. Oneirodex uses SteamGridDB for **artwork only** — it never downloads games or DRM payloads.
 
 Supported **search** image types (SteamGridDB API): **cover** (grids), **logo**, **hero**.
 
@@ -15,7 +15,7 @@ Persisted **kinds** (BE-DET-10, `Image.image_type`): `cover` · `screenshot` · 
    STEAMGRIDDB_API_KEY=your_key_here
    ```
 
-3. Restart GameTheca (or recreate the Docker container so env vars reload).
+3. Restart Oneirodex (or recreate the Docker container so env vars reload).
 
 Optional: the key can also be stored in `global_settings.steamgriddb_api_key` (env takes precedence), matching the `steam_web_api_key` pattern.
 

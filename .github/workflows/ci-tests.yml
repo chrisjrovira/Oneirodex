@@ -101,6 +101,8 @@ jobs:
           tests/test_theme_js_guards.py
           tests/test_vendor_licensing.py
           tests/test_webretro_player_chrome.py
+          tests/test_emulator_play_matrix.py
+          tests/test_product_name.py
           tests/test_gt_toast.py
           tests/test_browse_path_status.py
           tests/test_legal_surface.py

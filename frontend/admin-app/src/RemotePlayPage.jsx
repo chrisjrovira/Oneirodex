@@ -93,7 +93,7 @@ export function RemotePlayPage() {
     <div className="gt-admin-page">
       <h1>Remote play</h1>
       <p className="gt-admin-lede">
-        Register a BYO Sunshine or Wolf host. GameTheca does not bundle Wolf/GOW — members use
+        Register a BYO Sunshine or Wolf host. Oneirodex does not bundle Wolf/GOW — members use
         Moonlight clients with the hints you set.
       </p>
       {loading ? (
@@ -173,7 +173,7 @@ export function RemotePlayPage() {
             />
           </label>
           <p className="gt-admin-hint">
-            LAN URLs require <code>ALLOW_PRIVATE_LAN_URLS=true</code>. GameTheca only stores connection
+            LAN URLs require <code>ALLOW_PRIVATE_LAN_URLS=true</code>. Oneirodex only stores connection
             hints — it does not run Sunshine/Wolf in the app container.
           </p>
           <div className="gt-admin-actions-row">

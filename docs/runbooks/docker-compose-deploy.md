@@ -1,4 +1,4 @@
-# Docker Compose deploy — GameTheca
+# Docker Compose deploy — Oneirodex
 
 Concise local/NAS path using the repo `docker-compose.yml` (`gametheca-app` + `gametheca-db`).
 
@@ -68,7 +68,7 @@ Then Reset Default Themes if the library volume still has stale CSS.
 ### LiveKit voice
 
 ```bash
-# Match keys with GameTheca app env
+# Match keys with Oneirodex app env
 export ENABLE_LIVEKIT=true
 export LIVEKIT_URL=ws://127.0.0.1:7880   # LAN hostname for real browsers
 export LIVEKIT_API_KEY=devkey

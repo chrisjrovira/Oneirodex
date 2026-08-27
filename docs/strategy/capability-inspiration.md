@@ -5,7 +5,7 @@
 **Companion:** named peer catalog stays in `docs/_private/` (gitignored) — see [competitive.md](competitive.md) · [external-facing-scrub.md](external-facing-scrub.md)  
 **Re-score sheet:** [competitor-rescore.md](competitor-rescore.md)
 
-GameTheca-language opportunities pulled from a 2026-08-26 landscape pass (≥50 net-new services beyond integrations already named in-tree). This file does **not** rank us against other products. It records capabilities we should add, deepen, or explicitly leave unscheduled.
+Oneirodex-language opportunities pulled from a 2026-08-26 landscape pass (≥50 net-new services beyond integrations already named in-tree). This file does **not** rank us against other products. It records capabilities we should add, deepen, or explicitly leave unscheduled.
 
 Locks unchanged: no Discord product surface · no DRM store download queues · no bundled torrent marketplace · Unraid/household first.
 

@@ -61,7 +61,7 @@ export async function uploadAvatar(file) {
 }
 
 /**
- * Pick one of the avatars GameTheca ships. Takes the id, never a path.
+ * Pick one of the avatars Oneirodex ships. Takes the id, never a path.
  *
  * @param {string} id
  * @returns {Promise<{ avatar_path: string, avatar_url: string }>}

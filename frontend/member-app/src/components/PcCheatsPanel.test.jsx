@@ -4,7 +4,7 @@ import { PcCheatsPanel } from './PcCheatsPanel'
 
 const PAYLOAD = {
   ok: true,
-  stance: 'Notes only — GameTheca never modifies game files.',
+  stance: 'Notes only — Oneirodex never modifies game files.',
   methods: [
     { id: 'console', label: 'In-game console command' },
     { id: 'config', label: 'Config / ini file edit' },

@@ -1,6 +1,6 @@
 # ROM reference sets (No-Intro / Redump DAT)
 
-GameTheca can report **set completeness** per library platform + region after you upload a DAT you obtained yourself. The app does **not** ship or download copyrighted DAT files.
+Oneirodex can report **set completeness** per library platform + region after you upload a DAT you obtained yourself. The app does **not** ship or download copyrighted DAT files.
 
 Related: [library-and-systems.md](../user/library-and-systems.md)
 
@@ -18,7 +18,7 @@ owned / total · percent
 
 1. Get a No-Intro (cartridge) or Redump (optical) `.dat` from the project’s official channels.
 2. Prefer the regional DAT that matches the set you care about (e.g. USA NES).
-3. Do not redistribute DAT files via GameTheca images or git.
+3. Do not redistribute DAT files via Oneirodex images or git.
 
 ## Upload
 
@@ -59,7 +59,7 @@ curl -sS -b cookies.txt \
 - Title match can false-positive (shared names) or miss (IGDB-renamed library titles vs No-Intro names).
 - **Hash match** (CRC/MD5/SHA1) wins when both the DAT entry and the library file have hashes. New scans hash single-file ROM paths automatically; use **Rehash platform** on the admin page (or `POST /api/reference-sets/rehash`) for existing libraries.
 - **First-scan identify:** a **unique** hash hit against uploaded DATs for the library platform can auto-create a custom Game after IGDB miss (before TheGamesDB propose). Ambiguous hashes and title-only DAT names never auto-import.
-- Hashes prefer the on-disk file (or the single ROM-like file inside a folder). For **zip/7z/rar**, when the outer archive digest misses DAT, GameTheca may open the archive and hash **inner** primary dump candidate(s) (`DAT_HASH_INNER_ARCHIVE`, default ON; set `0` to disable). Exactly one unique DAT title identifies; zero or multiple distinct titles → skip (no invent). Multi-disc / cue+bin / overcrowded set archives stay skip-safe.
+- Hashes prefer the on-disk file (or the single ROM-like file inside a folder). For **zip/7z/rar**, when the outer archive digest misses DAT, Oneirodex may open the archive and hash **inner** primary dump candidate(s) (`DAT_HASH_INNER_ARCHIVE`, default ON; set `0` to disable). Exactly one unique DAT title identifies; zero or multiple distinct titles → skip (no invent). Multi-disc / cue+bin / overcrowded set archives stay skip-safe.
 - Home-brew / unlicensed / proto entries may appear in some DATs — filter upstream if you want “retail only.”
 - PC Windows / store libraries are a poor fit; this feature targets ROM console libraries.
 

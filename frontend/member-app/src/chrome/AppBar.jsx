@@ -15,7 +15,7 @@ import { Link, NavLink } from 'react-router-dom'
 export function AppBar({
   links = [],
   brandTo = '/discover',
-  brandLabel = 'GameTheca',
+  brandLabel = 'Oneirodex',
   tools = null,
   onNavigate,
 }) {

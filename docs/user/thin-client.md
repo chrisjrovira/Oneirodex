@@ -19,13 +19,13 @@ npm install
 npm run tauri:build:thin
 ```
 
-Produces unsigned `gametheca-desktop.exe` via `tauri.thin.conf.json` (capabilities: `thin-main` / `thin-library` / `social` only). Copy to `GameTheca-thin.exe` **before** rebuilding the full companion — both flavors share the same Cargo output path. Details: [desktop-code-signing.md](../runbooks/desktop-code-signing.md) · strategy [thin-client.md](../strategy/thin-client.md).
+Produces unsigned `gametheca-desktop.exe` via `tauri.thin.conf.json` (capabilities: `thin-main` / `thin-library` / `social` only). Copy to `Oneirodex-thin.exe` **before** rebuilding the full companion — both flavors share the same Cargo output path. Details: [desktop-code-signing.md](../runbooks/desktop-code-signing.md) · strategy [thin-client.md](../strategy/thin-client.md).
 
 ## Connect
 
 1. **Account → API tokens** → create with the **Thin client** preset (`read:library` + `read:social` + `write:presence`; **no** `write:download`).
 2. Copy the one-time secret with **Copy secret** (or select the secret field). Format is `gt_<prefix>_<urlsafe-secret>` — **hyphens and underscores in the secret are normal**. Paste the **entire** string; truncating after a `-` always fails auth.
-3. Enter GameTheca base URL. Optional API token uses the same paste normalize / shape checks as the full companion. **Save** stores URL + token; **Validate token** runs the collections check (same as companion Connect).
+3. Enter Oneirodex base URL. Optional API token uses the same paste normalize / shape checks as the full companion. **Save** stores URL + token; **Validate token** runs the collections check (same as companion Connect).
 4. Open library / Friends only — lifecycle CTAs are out of scope.
 
 Token lives in the OS credential store (same pattern as the full companion), not plaintext `config.json`. Credential-store failures surface in status (not opaque “Bad data”).

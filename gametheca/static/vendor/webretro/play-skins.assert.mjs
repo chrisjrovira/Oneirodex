@@ -23,12 +23,34 @@ function assert(cond, msg) {
 }
 
 const cases = [
+  { platform: 'NES', family: 'nintendo', aspect: [4, 3], label: 'NES' },
   { platform: 'SNES', family: 'nintendo', aspect: [4, 3], label: 'Super NES' },
-  { platform: 'PSX', family: 'sony', aspect: [4, 3], label: 'PlayStation' },
+  { platform: 'N64', family: 'nintendo', aspect: [4, 3], label: 'Nintendo 64' },
   { platform: 'GB', family: 'nintendo', aspect: [10, 9], label: 'Game Boy' },
+  { platform: 'GBC', family: 'nintendo', aspect: [10, 9], label: 'Game Boy Color' },
+  { platform: 'GBA', family: 'nintendo', aspect: [3, 2], label: 'Game Boy Advance' },
+  { platform: 'NDS', family: 'nintendo', aspect: [2, 3], label: 'Nintendo DS' },
+  { platform: 'VB', family: 'nintendo', aspect: [4, 3], label: 'Virtual Boy' },
+  { platform: 'PSX', family: 'sony', aspect: [4, 3], label: 'PlayStation' },
   { platform: 'SEGA_MD', family: 'sega', aspect: [4, 3], label: 'Genesis / Mega Drive' },
+  { platform: 'SEGA_MS', family: 'sega', aspect: [4, 3], label: 'Master System' },
+  { platform: 'SEGA_SATURN', family: 'sega', aspect: [4, 3], label: 'Sega Saturn' },
+  { platform: 'ATARI_2600', family: 'atari', aspect: [4, 3], label: 'Atari 2600' },
+  { platform: 'LYNX', family: 'atari', aspect: [8, 5], label: 'Atari Lynx' },
+  { platform: 'WS', family: 'atari', aspect: [10, 9], label: 'WonderSwan' },
+  { platform: 'NGP', family: 'atari', aspect: [10, 9], label: 'Neo Geo Pocket' },
+  { platform: 'COLECO', family: 'atari', aspect: [4, 3], label: 'ColecoVision' },
+  { platform: 'VECTREX', family: 'atari', aspect: [4, 3], label: 'Vectrex' },
+  { platform: 'INTV', family: 'atari', aspect: [4, 3], label: 'Intellivision' },
+  { platform: 'THREEDO', family: 'atari', aspect: [4, 3], label: '3DO' },
+  { platform: 'SEGA_SG1000', family: 'sega', aspect: [4, 3], label: 'SG-1000' },
+  { platform: 'SEGA_GG', family: 'sega', aspect: [10, 9], label: 'Game Gear' },
+  { platform: 'ATARI_7800', family: 'atari', aspect: [4, 3], label: 'Atari 7800' },
+  { platform: 'NGPC', family: 'atari', aspect: [10, 9], label: 'Neo Geo Pocket Color' },
   { platform: 'ARCADE', family: 'arcade', aspect: [4, 3], label: 'Arcade' },
   { platform: 'PCWIN', family: 'pc', aspect: [4, 3], label: 'PC' },
+  { platform: 'WII', family: 'nintendo', aspect: [4, 3], label: 'Wii' },
+  { platform: 'XBOX', family: 'xbox', aspect: [4, 3], label: 'Xbox' },
 ];
 
 for (const c of cases) {
@@ -42,6 +64,16 @@ for (const c of cases) {
 assert(skins.resolvePlatform('', 'snes9x') === 'SNES', 'core→platform snes9x');
 assert(skins.resolvePlatform('', 'mednafen_psx_hw') === 'PSX', 'core→platform psx');
 assert(skins.resolvePlatform('', 'gambatte') === 'GB', 'core→platform gambatte');
+assert(skins.resolvePlatform('', 'nestopia') === 'NES', 'core→platform nestopia');
+assert(skins.resolvePlatform('', 'genesis_plus_gx') === 'SEGA_MD', 'core→platform genesis');
+assert(skins.resolvePlatform('SEGA_SG1000', 'genesis_plus_gx') === 'SEGA_SG1000', 'platform query wins over core');
+assert(skins.resolvePlatform('', 'gearsystem') === 'SEGA_SG1000', 'core→platform gearsystem');
+assert(skins.resolvePlatform('', 'mednafen_ngp') === 'NGP', 'core→platform ngp');
+assert(skins.resolvePlatform('', 'stella2014') === 'ATARI_2600', 'core→platform stella');
+assert(skins.resolvePlatform('', 'yabause') === 'SEGA_SATURN', 'core→platform yabause');
+assert(skins.resolvePlatform('', 'mednafen_wswan') === 'WS', 'core→platform wswan');
+assert(skins.resolvePlatform('', 'gearcoleco') === 'COLECO', 'core→platform coleco');
+assert(skins.resolvePlatform('', 'vecx') === 'VECTREX', 'core→platform vecx');
 
 assert(css.includes('#gt-play-atmosphere'), 'atmosphere stack');
 assert(css.includes('gt-play-wall-drift'), 'wall drift motion');

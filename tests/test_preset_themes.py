@@ -57,8 +57,8 @@ def source_tree(tmp_path):
     root = tmp_path / 'default_theme'
     write(str(root / 'theme.json'), json.dumps({
         'name': 'Default Theme',
-        'author': 'GameTheca',
-        'description': 'Darker default theme for GameTheca',
+        'author': 'Oneirodex',
+        'description': 'Darker default theme for Oneirodex',
         'version': '2.1.0',
         'release_date': '2026-07-23',
     }))
@@ -210,13 +210,14 @@ class TestStalenessDetection:
         assert accent_of(themes_root, 'violet') == '#a78bfa'
         assert '--btn-primary: #a78bfa;' in read(str(themes_root / 'violet' / 'css' / 'base.css'))
 
-    def test_legacy_preset_without_marker_is_rebuilt(self, source_tree, themes_root):
-        """The presets already on disk predate the provenance marker."""
+    @pytest.mark.parametrize('author', ['Oneirodex', 'GameTheca'])
+    def test_legacy_preset_without_marker_is_rebuilt(self, source_tree, themes_root, author):
+        """Presets on disk from before the provenance marker — both public strings."""
         preset = PRESET_THEMES[0]
         legacy = themes_root / preset['slug']
         write(str(legacy / 'theme.json'), json.dumps({
             'name': preset['name'],
-            'author': 'GameTheca',
+            'author': author,
             'description': preset['description'],
             'version': '1.0.0',
             'release_date': '2026-07-23',

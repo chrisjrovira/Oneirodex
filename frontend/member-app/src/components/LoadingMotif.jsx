@@ -1,5 +1,5 @@
 /**
- * Loading motifs — consoles and controllers from the systems GameTheca supports
+ * Loading motifs — consoles and controllers from the systems Oneirodex supports
  * (GT-B23 · UID-008).
  *
  * The previous set was six abstract shapes: ring, orbit, pulse, blocks, scan,

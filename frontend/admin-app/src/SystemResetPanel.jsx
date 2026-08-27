@@ -4,7 +4,8 @@ import { adminError, csrfHeaders } from './adminApi'
 import { PageStatus } from './PageStatus'
 
 const ENDPOINT = '/admin/api/system/reset'
-const CONFIRM_PHRASE = 'RESET GAMETHECA'
+const CONFIRM_PHRASE = 'RESET ONEIRODEX'
+const CONFIRM_ALIASES = new Set(['RESET ONEIRODEX', 'RESET GAMETHECA'])
 
 /**
  * What each scope means, in the operator's terms rather than the schema's.
@@ -166,13 +167,13 @@ export function SystemResetPanel() {
   }
 
   const chosen = selected.size > 0
-  const confirmed = confirm === CONFIRM_PHRASE
+  const confirmed = CONFIRM_ALIASES.has(confirm)
 
   return (
     <section className="gt-ops-panel gt-ops-panel--wide gt-danger-zone">
       <h2>Danger zone — reset this install</h2>
       <p className="gt-danger-zone__lede">
-        Clears GameTheca&rsquo;s database. <strong>No files are deleted.</strong>{' '}
+        Clears Oneirodex&rsquo;s database. <strong>No files are deleted.</strong>{' '}
         Everything on disk — your scanned games, artwork you supplied and BIOS
         files — is left exactly as it is, so a rescan rebuilds the catalog.
       </p>

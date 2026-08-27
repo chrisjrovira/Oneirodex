@@ -39,7 +39,7 @@ export const SETTINGS_GROUPS = [
         // Was an "Export packs" card in Integrations, labelled with the bare
         // tool names (GT-B8). "ES-DE export" and "Pegasus" mean nothing unless
         // you already run those launchers, and Integrations is for services
-        // GameTheca talks *to* — this writes a file for another emulator
+        // Oneirodex talks *to* — this writes a file for another emulator
         // frontend to read, which is emulation, not an integration.
         to: '/admin/plugins',
         title: 'Export to emulator frontends',

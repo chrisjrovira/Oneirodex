@@ -90,10 +90,10 @@ def maybe_email_social_notify(
         html = (
             f'<p><strong>{escape(title)}</strong></p>'
             f'<p>{snippet}</p>'
-            f'<p><a href="{escape(href)}">Open in GameTheca</a></p>'
+            f'<p><a href="{escape(href)}">Open in Oneirodex</a></p>'
         )
 
-    subject = title[:180] or 'GameTheca notification'
+    subject = title[:180] or 'Oneirodex notification'
     return bool(send_email_quiet(user.email.strip(), subject, html))
 
 

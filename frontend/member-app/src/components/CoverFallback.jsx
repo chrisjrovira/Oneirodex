@@ -2,7 +2,7 @@
  * What a tile shows when there is no cover art.
  *
  * Drawn, never fetched. The previous fallback was `default_cover.jpg` — one
- * raster with the GameTheca mark and the words baked into it. Two things were
+ * raster with the Oneirodex mark and the words baked into it. Two things were
  * wrong with that and neither could be fixed in the file: the baked text was
  * set for a fixed tile size and became unreadable once the size slider went
  * continuous (120px … 300px), and the baked mark stayed the default green on

@@ -361,7 +361,7 @@ export function NewsPage({ shellConfig = {} }) {
             <span className="gt-news__count">{freeGames.length}</span>
           </div>
           <p className="gt-news__hint">
-            Claim on the store. GameTheca does not download DRM titles — sync Ownership after claiming.
+            Claim on the store. Oneirodex does not download DRM titles — sync Ownership after claiming.
           </p>
           {freeGames.length === 0 ? (
             <p className="gt-news__empty">No free offers cached yet. Check back after the next refresh.</p>

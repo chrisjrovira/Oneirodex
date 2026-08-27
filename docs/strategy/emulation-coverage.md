@@ -22,7 +22,7 @@
 
 ## Already browser-covered
 
-NES · SNES · N64 · GB/GBC/GBA · NDS · VB · PS1 · Genesis family · Saturn · Atari line · Lynx · Jaguar · WonderSwan · NGP · Coleco · Vectrex · 3DO · Neo Geo CD · Intellivision · Channel F · Odyssey 2
+NES · SNES · N64 · GB/GBC/GBA · NDS · VB · PS1 · Genesis family (MD / MS / CD / 32X / GG / **SG-1000**) · Saturn · Atari line · Lynx · Jaguar · WonderSwan · NGP / **NGPC** · Coleco · Vectrex · 3DO · Neo Geo CD · Intellivision · Channel F · Odyssey 2
 
 ## Wave 19 slices
 
@@ -47,7 +47,7 @@ NES · SNES · N64 · GB/GBC/GBA · NDS · VB · PS1 · Genesis family · Saturn
 
 ## Sample free ROMs
 
-Legal homebrew / test ROMs for operator smoke tests: [samples/free-roms/](../../samples/free-roms/README.md) + `scripts/fetch-free-roms.py`. Only freely licensed / public-domain / author-redistributable titles with verified GitHub URLs; binaries gitignored. GBC / SMS / SNES skipped until a clear licensed fetch URL exists.
+Legal homebrew / test ROMs for operator smoke tests: [samples/free-roms/](../../samples/free-roms/README.md) + `scripts/fetch-free-roms.py`. Only freely licensed / public-domain / author-redistributable titles with verified GitHub URLs; binaries gitignored. Fetched today: NES, SNES, GB, GBC, GBA, Genesis, Atari 2600. Master System / N64 and BIOS-gated systems stay skipped until a clear licensed URL exists.
 
 ## Acceptance
 

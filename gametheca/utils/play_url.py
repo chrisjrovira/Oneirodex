@@ -22,6 +22,7 @@ WEBRETRO_PLATFORMS = frozenset({
     'LYNX', 'JAGUAR', 'WS', 'NGP', 'COLECO', 'VECTREX',
     'THREEDO', 'NEOGEO_CD', 'INTV', 'CHAF', 'O2EM',
     'PCE', 'VICE_X64SC', 'VICE_X128', 'VICE_XVIC', 'VICE_XPLUS4', 'VICE_XPET',
+    'SEGA_SG1000', 'NGPC',
     'PCDOS',
 })
 
@@ -81,7 +82,7 @@ BIOS_UPLOAD_HINT = (
     'Upload legally obtained firmware via Admin → emulator BIOS (POST /api/emulator-bios), '
     'or mount a private host BIOS directory and set EMULATOR_BIOS_PATH '
     '(see bios_root() / Compose volume). '
-    'GameTheca does not ship copyrighted BIOS files.'
+    'Oneirodex does not ship copyrighted BIOS files.'
 )
 
 

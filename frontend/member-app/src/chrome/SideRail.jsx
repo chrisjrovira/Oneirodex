@@ -166,7 +166,7 @@ export function SideRail({
       <a className="gt-rail__brand gt-rail__brand--mark-only" href="/discover">
         {/* Painted from a mask so it follows the theme — see .gt-brand-mark. */}
         <span className="gt-rail__mark gt-brand-mark" aria-hidden="true" />
-        <span className="gt-rail__brand-text">GameTheca</span>
+        <span className="gt-rail__brand-text">Oneirodex</span>
       </a>
 
       <nav className="gt-rail__nav" aria-label="Primary">

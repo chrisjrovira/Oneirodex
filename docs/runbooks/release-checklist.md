@@ -1,4 +1,4 @@
-# Release checklist (GameTheca)
+# Release checklist (Oneirodex)
 
 Use before tagging a release (example: **v0.1.0**).
 

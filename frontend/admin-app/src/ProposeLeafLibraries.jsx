@@ -14,7 +14,7 @@ import './ProposeLeafLibraries.css'
  */
 export function ProposeLeafLibraries({
   heading = 'Propose leaf libraries',
-  lede = 'Point at a console or platform tree root. Review candidates, then confirm — GameTheca never auto-creates libraries or family mega-libs.',
+  lede = 'Point at a console or platform tree root. Review candidates, then confirm — Oneirodex never auto-creates libraries or family mega-libs.',
 } = {}) {
   const [root, setRoot] = useState('')
   const [candidates, setCandidates] = useState([])

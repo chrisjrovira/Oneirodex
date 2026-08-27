@@ -80,7 +80,7 @@ nvidia-container-cli: initialization error: nvml error: driver not loaded
 ```
 
 Only the optional `sdnext` artwork sidecar ever asks for a GPU, but the failed
-create aborts the whole `compose up` / stack update, so it reads as "GameTheca
+create aborts the whole `compose up` / stack update, so it reads as "Oneirodex
 is broken" when the app container is fine.
 
 Despite naming a driver, this is almost always a **placement** error rather than

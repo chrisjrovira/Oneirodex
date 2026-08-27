@@ -38,7 +38,7 @@ const STORES = [
   {
     key: 'gog',
     label: 'GOG',
-    meta: 'Live register sync via the unofficial GOG Galaxy client when a refresh token is saved. CSV still works. GameTheca never downloads GOG titles.',
+    meta: 'Live register sync via the unofficial GOG Galaxy client when a refresh token is saved. CSV still works. Oneirodex never downloads GOG titles.',
     fieldLabel: 'GOG user ID or note (optional)',
     fieldPlaceholder: 'Optional label for your GOG link',
     tokenLabel: 'GOG refresh token (from Heroic / Galaxy)',
@@ -58,7 +58,7 @@ const STORES = [
   {
     key: 'epic',
     label: 'Epic Games',
-    meta: 'Live register sync via unofficial Epic device auth (Legendary / Heroic) when saved. CSV still works. GameTheca never downloads Epic titles.',
+    meta: 'Live register sync via unofficial Epic device auth (Legendary / Heroic) when saved. CSV still works. Oneirodex never downloads Epic titles.',
     fieldLabel: 'Epic account ID or note (optional)',
     fieldPlaceholder: 'Optional label for your Epic link',
     tokenLabel: 'Epic device auth JSON',
@@ -271,7 +271,7 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
           </div>
           <p className="gt-more-page__lede">
             Link store accounts and import owned-title lists to show which library games you
-            also own elsewhere. Register-only sync — GameTheca never downloads games or DRM
+            also own elsewhere. Register-only sync — Oneirodex never downloads games or DRM
             from stores.
           </p>
         </>

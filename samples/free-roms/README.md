@@ -1,6 +1,6 @@
 # Free / open-source sample ROMs
 
-Legal **sample** ROMs for GameTheca browser play and desktop companion smoke tests.
+Legal **sample** ROMs for Oneirodex browser play and desktop companion smoke tests.
 
 ## Rules
 
@@ -37,9 +37,11 @@ samples/free-roms/library/
   nes/nestest.nes
   nes/nestest.nes.LICENSE.txt
   gb/dmg-acid2.gb
+  gbc/cgb-acid2.gbc
   gba/CASCADE7.gba
   genesis/genmddj-v0.17.bin
   atari2600/atari2600-4paddle-tester.a26
+  snes/SuperBossGaiden.sfc
 ```
 
 Suggested Unraid / Compose library folders (gamesTheca games mount is `/storage`):
@@ -47,16 +49,18 @@ Suggested Unraid / Compose library folders (gamesTheca games mount is `/storage`
 ```text
 /storage/nes/
 /storage/gb/
+/storage/gbc/
 /storage/gba/
 /storage/genesis/
 /storage/atari2600/
+/storage/snes/
 ```
 
 Copy or symlink fetched files into those platform folders, then add libraries under Admin → Libraries pointing at `/storage/<platform>/`.
 
 ## Honesty
 
-`manifest.yaml` only lists systems with a **verified** legal fetch URL. Genesis is included (MIT homebrew). GBC / SMS / SNES are documented as skipped until a clear licensed URL exists — do not guess.
+`manifest.yaml` only lists systems with a **verified** legal fetch URL. Genesis is included (MIT homebrew). GBC is included (`cgb-acid2`). SNES is included (`SuperBossGaiden.sfc`, author-released freeware). Master System / N64 and BIOS-gated systems are documented as skipped until a clear licensed URL exists — do not guess.
 
 Optional manual (not auto-fetched): [Tobu Tobu Girl](https://tangramgames.itch.io/tobutobugirl) (MIT / CC-BY) from itch.io.
 

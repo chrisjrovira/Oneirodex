@@ -1,4 +1,4 @@
-# GameTheca agent locks
+# Oneirodex agent locks
 
 Canonical product and engineering defaults. Apply them unless the user **explicitly** overrides in the same message — never re-ask what is settled here.
 
@@ -6,7 +6,7 @@ This file replaces the old `.cursor/skills/prompt-brief/defaults.md` and the dup
 
 ## Product mission
 
-**GameTheca is the self-hosted household gaming sphere** — one Unraid-friendly service that turns a family's **already-owned** PC and console libraries into a shared, honest catalog: scan and match with real metadata, browse Systems and Discover, play where the platform allows (browser · companion · catalog), stay present with household social, and **BYO acquire** for content they choose to add.
+**Oneirodex is the self-hosted household gaming sphere** — one Unraid-friendly service that turns a family's **already-owned** PC and console libraries into a shared, honest catalog: scan and match with real metadata, browse Systems and Discover, play where the platform allows (browser · companion · catalog), stay present with household social, and **BYO acquire** for content they choose to add.
 
 It is **not** a DRM store client, a Discord clone, or a pirate marketplace.
 
@@ -36,17 +36,19 @@ Prioritize against this — every backlog item should advance at least one row, 
 6. **Ops reliability** — Unraid deploy, volumes, themes reset, readiness, ship gates
 7. **Acquire BYO** — indexer registry + hubs; never DRM install queues
 
-## Product name (chosen, cutover not started)
+## Product name (Phase 1 landed 2026-08-26)
 
-**Chosen public name: Oneirodex** (oh-NY-roh-dex) · slug `oneirodex` · [ADR 0003](../adr/0003-product-name-oneirodex.md).
+**Public name: Oneirodex** (oh-NY-roh-dex) · slug `oneirodex` · [ADR 0003](../adr/0003-product-name-oneirodex.md).
 
-Until an explicit rename wave, **keep writing GameTheca** in UI, Help, README, and operator docs. Package path stays `gametheca/`. Docker, Compose, Unraid, GitHub, `GT_*`, and `--gt-*` / `.gt-*` stay as they are. Do not mix Oneirodex into copy except this lock, the ADR, and the progress / docs-hub naming rows.
+Write **Oneirodex** in UI, Help, README, and operator docs. Package path stays `gametheca/`. Docker, Compose, Unraid, GitHub, `GT_*`, and `--gt-*` / `.gt-*` stay as they are until an identifier wave. Do not mix OneiroDex / ONEIRODEX into copy.
 
 | Default | Value |
 |---|---|
 | Spelling | Oneirodex — one word, capital O. Not OneiroDex, not ONEIRODEX in UI |
-| Until cutover | GameTheca everywhere user-facing; identifiers unchanged |
-| Env / CSS | Keep `GT_*` and `gt-` until an identifier wave. No `OD_*` aliases yet |
+| Phase 1 | Oneirodex everywhere user-facing |
+| Identifiers | `gametheca/` · `chrisjrovira/gametheca` · `GT_*` · `gt-` until phase 2/3 |
+| Danger zone | `RESET ONEIRODEX` (legacy `RESET GAMETHECA` still accepted) |
+| Env / CSS | Keep `GT_*` and `gt-`. No `OD_*` aliases yet |
 
 ## Product locks
 
@@ -84,7 +86,7 @@ Before committing or writing docs/UI copy:
 
 1. **Never** commit `docs/_private/` or peer competitive catalogs to public remotes.
 2. **Never** introduce Class A / warez-adjacent brand names in code, docs, Help, README, CHANGELOG, or CI artifacts.
-3. **Never** add "steal from Product X" / peer teardown matrices in tracked files — use GameTheca capability language for non-goals.
+3. **Never** add "steal from Product X" / peer teardown matrices in tracked files — use Oneirodex capability language for non-goals.
 4. **Allowed (Class D):** real integrations — Playnite import, ES-DE/Pegasus export, Prowlarr/Jackett/qBit, LiveKit, OIDC/Authentik, store ownership register-only.
 
 Policy: [../strategy/external-facing-scrub.md](../strategy/external-facing-scrub.md). Private vault: `docs/_private/` (gitignored).

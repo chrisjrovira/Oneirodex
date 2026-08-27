@@ -11,7 +11,7 @@ import './PcCheatsPanel.css'
  * never appear beside the RetroArch `.cht` panel — the two surfaces stay
  * separate by construction rather than by convention.
  *
- * These are *notes*: what to type, what to edit, which launch flag. GameTheca
+ * These are *notes*: what to type, what to edit, which launch flag. Oneirodex
  * does not modify game files or touch a running game, and the panel says so
  * rather than leaving the reader to assume a trainer.
  */

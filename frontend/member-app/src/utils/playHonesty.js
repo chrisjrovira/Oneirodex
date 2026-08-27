@@ -4,7 +4,7 @@ export const FIRMWARE_HELP_HREF = '/help#browser-play'
 export const FIRMWARE_ADMIN_HREF = '/admin/emulator_profiles'
 
 const DEFAULT_FIRMWARE_MESSAGE =
-  'Required BIOS/firmware is missing. Ask an admin to upload it under Emulator profiles — GameTheca does not download BIOS files.'
+  'Required BIOS/firmware is missing. Ask an admin to upload it under Emulator profiles — Oneirodex does not download BIOS files.'
 
 const DEFAULT_MISSING_EXTRACTOR =
   'No archive extractor on the host — prefer .zip, or install 7z / bsdtar / unrar tools.'

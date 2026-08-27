@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/assets/readme/app-icon.png" alt="GameTheca" width="96" height="96" />
+  <img src="docs/assets/readme/app-icon.png" alt="Oneirodex" width="96" height="96" />
 </p>
 
-<h1 align="center">GameTheca</h1>
+<h1 align="center">Oneirodex</h1>
 
 <p align="center">
   <strong>Self-hosted multi-user game library</strong> for households &amp; small communities.<br/>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/readme/hero-banner.png" alt="GameTheca — self-hosted multi-user game library" width="920" />
+  <img src="docs/assets/readme/hero-banner.png" alt="Oneirodex — self-hosted multi-user game library" width="920" />
 </p>
 
 <p align="center">
@@ -34,9 +34,9 @@
 
 ---
 
-## ✨ What is GameTheca?
+## ✨ What is Oneirodex?
 
-GameTheca is a **Flask + React** game library server you run at home (or on a NAS). Point it at folders of DRM-free games, identify them with IGDB / Steam / GOG / RAWG, then give household members a modern browser UI to browse, download, play in-browser (where supported), and hang out.
+Oneirodex is a **Flask + React** game library server you run at home (or on a NAS). Point it at folders of DRM-free games, identify them with IGDB / Steam / GOG / RAWG, then give household members a modern browser UI to browse, download, play in-browser (where supported), and hang out.
 
 | | |
 |---|---|
@@ -46,7 +46,7 @@ GameTheca is a **Flask + React** game library server you run at home (or on a NA
 | 🌐 **Default URL** | http://localhost:5006 |
 | 🖼️ **Image** | Local Compose build `gametheca:1.0.0-beta` (Hub publish optional) |
 
-> **Legal:** Use only with software you are authorized to share. GameTheca does **not** include Discord bots, pirate marketplaces, or DRM store download queues. **Authentik / OIDC is optional** — local username/password works for home installs.
+> **Legal:** Use only with software you are authorized to share. Oneirodex does **not** include Discord bots, pirate marketplaces, or DRM store download queues. **Authentik / OIDC is optional** — local username/password works for home installs.
 
 ---
 
@@ -64,7 +64,7 @@ GameTheca is a **Flask + React** game library server you run at home (or on a NA
 ### 👥 Household access
 - ✉️ Invite-based membership + parental / library ACL
 - 🎨 Color themes **and** independent icon packs (Outline · Filled · Duotone · Pixel · Soft · Mono)
-- 🔤 **Themeable fonts** with era-appropriate faces per system — the OFL faces ship with GameTheca and install themselves on boot, no admin step and no network ([theme-fonts-and-images.md](docs/admin/theme-fonts-and-images.md))
+- 🔤 **Themeable fonts** with era-appropriate faces per system — the OFL faces ship with Oneirodex and install themselves on boot, no admin step and no network ([theme-fonts-and-images.md](docs/admin/theme-fonts-and-images.md))
 - 📱 Mobile density polish (hamburger nav · stacked filters · Chat touch targets ≤900px)
 
 ### 🎮 Play & companion
@@ -130,7 +130,7 @@ Three ways in. Pick one — you do not need the others.
 | 💻 **Native installer** | Bare metal Linux · macOS · Windows | [below](#-native-installers) · [install-native.md](docs/runbooks/install-native.md) |
 | 🔧 **Manual** | You want every step yourself | [below](#-manual-install) |
 
-Whichever you choose, GameTheca can scan **more than the disk it runs on** — NAS
+Whichever you choose, Oneirodex can scan **more than the disk it runs on** — NAS
 shares, second disks, extra mounts — see [scan locations](#-scan-locations-nas-shares-extra-disks).
 
 ### 💻 Native installers
@@ -228,14 +228,14 @@ Full walkthrough, service units and upgrade notes: [install-native.md](docs/runb
 
 ## 📂 Scan locations (NAS shares, extra disks)
 
-GameTheca scans **any path the service can open** — which is not limited to the
+Oneirodex scans **any path the service can open** — which is not limited to the
 machine it runs on. A NAS share, a second internal disk, an external drive: all
 scannable once the host has mounted them.
 
 Two steps, in this order:
 
 1. **Mount it** — `fstab` on Linux, autofs on macOS, a UNC path on Windows, a
-   bind mount in Docker. GameTheca does not speak SMB or NFS; the OS does.
+   bind mount in Docker. Oneirodex does not speak SMB or NFS; the OS does.
 2. **Declare it** — list the mount in `GT_LIBRARY_ROOTS` so the admin folder
    browser and the path allowlist know about it.
 
@@ -406,7 +406,7 @@ Product version is tracked in [`VERSION`](VERSION). Desktop, member-app, and rel
 
 ## ⚖️ License / legal
 
-GameTheca is licensed under the **[GNU Affero General Public License v3.0](LICENSE)**.
+Oneirodex is licensed under the **[GNU Affero General Public License v3.0](LICENSE)**.
 
 In practice: you may run, study, modify and share it freely, and if you run a
 modified version **as a network service** you must offer those modifications to
@@ -414,7 +414,7 @@ its users (AGPL §13). That last clause is the reason for AGPL over GPL here —
 this is a server people host for others.
 
 ```
-Copyright (C) 2026 GameTheca contributors
+Copyright (C) 2026 Oneirodex contributors
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU Affero General Public License as published by the Free
@@ -430,9 +430,9 @@ is how §13 is actually discharged rather than merely stated here. It defaults t
 this repository, which is wrong the moment you modify anything, because §13
 obliges you to offer *your* users *your* source.
 
-**Content is separate from code.** The licence above covers GameTheca itself. It
+**Content is separate from code.** The licence above covers Oneirodex itself. It
 says nothing about the games, ROMs, BIOS or artwork you point it at — use
-GameTheca only with software you are authorized to share. Unauthorized
+Oneirodex only with software you are authorized to share. Unauthorized
 distribution of copyrighted material is not supported.
 
 **Third-party code.** The browser libraries under

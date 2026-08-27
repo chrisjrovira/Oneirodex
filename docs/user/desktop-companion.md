@@ -7,7 +7,7 @@ Optional **Tauri** client under `clients/desktop/` for Install / Update / Uninst
 1. Open **Account → API tokens** (`/tokens`) — or create via `POST /api/tokens` if you prefer the API.
 2. Create a token with the **Desktop companion** preset (`read:library` + `write:download`), or **Thin client** for connect-only seats.
 3. Copy the one-time secret (`gt_<hexprefix>_<urlsafe-secret>`) — it is shown only once. The secret uses URL-safe base64 (`A–Z`, `a–z`, `0–9`, `_`, `-`), so **hyphens and underscores in the secret are normal**. Paste the **entire** `gt_…` string into Connect. Truncating at a `-` (or any earlier character) always fails auth. On plain HTTP LAN, browser clipboard may be limited — use **Copy secret** (copies the raw token only) or select the one-time secret field and Ctrl+C / ⌘C.
-4. Open the companion, enter your GameTheca **base URL** and token, Connect. Paste is normalized (whitespace/newlines, BOM/zero-width, wrapping quotes, first `gt_…` match from labeled/HTML junk) — hyphens inside the secret are kept. Status distinguishes invalid shape, 401 (wrong/truncated secret), network/TLS/CORS, and OS credential-store failures. Companion console logs `[GameTheca:connect]` / `[GameTheca:keyring]` (prefix only, never the secret) when the server log is empty.
+4. Open the companion, enter your Oneirodex **base URL** and token, Connect. Paste is normalized (whitespace/newlines, BOM/zero-width, wrapping quotes, first `gt_…` match from labeled/HTML junk) — hyphens inside the secret are kept. Status distinguishes invalid shape, 401 (wrong/truncated secret), network/TLS/CORS, and OS credential-store failures. Companion console logs `[Oneirodex:connect]` / `[Oneirodex:keyring]` (prefix only, never the secret) when the server log is empty.
 5. Library preview loads via search; local lifecycle syncs with the server when available.
 6. Status shows **Online** / **Offline (server unreachable)** / **Not connected**. After two failed heartbeats, Download and Update are disabled; Play, Install, and Uninstall still run locally. Web-queued Install/Update commands stay pending until heartbeat recovers (nack → retry).
 
@@ -23,7 +23,7 @@ Optional **Tauri** client under `clients/desktop/` for Install / Update / Uninst
 
 | Window | How you authenticate |
 |---|---|
-| **Main companion** | GameTheca **API token** stored in the **OS keyring** (Credential Manager / Keychain) after Connect — used for library, download, and lifecycle APIs |
+| **Main companion** | Oneirodex **API token** stored in the **OS keyring** (Credential Manager / Keychain) after Connect — used for library, download, and lifecycle APIs |
 | **Friends window** | Ordinary **site session cookies** in that webview — sign in with your household **site account** (same as the browser). The companion API token is **not** injected into Friends |
 
 Signing in on Friends does not replace Connect on the main window, and Connect does not log you into Friends.
@@ -88,8 +88,8 @@ The browser cannot open Unraid/host paths. When the companion is Online:
 |---|---|---|
 | Connect 401 / 403 | Bad token, missing scopes, or truncated paste | Recreate token; need `read:library` (+ `write:download`). Paste the **full** `gt_<prefix>_<secret>` — hyphens/`_` inside the secret are normal; truncating after `-` always fails. Server logs `api_token_auth_failed reason=… prefix=…` (never the secret) when Bearer verify fails |
 | Connect “invalid token” / bad shape | Extra chars copied with the secret, or cut at `-` | Use **Copy secret** on Account → API tokens (raw string only), or select the one-time secret field. Do not copy the name/prefix label line |
-| Connect network / “failed to load” | Wrong URL, TLS/CORS, or server down | Check base URL (origin only); open companion DevTools for `[GameTheca:connect]` — server may log nothing |
-| Connect “Bad data” / credential store | OS keyring persist failed after validate | Check Windows Credential Manager; retry Connect; see `[GameTheca:keyring]` in console |
+| Connect network / “failed to load” | Wrong URL, TLS/CORS, or server down | Check base URL (origin only); open companion DevTools for `[Oneirodex:connect]` — server may log nothing |
+| Connect “Bad data” / credential store | OS keyring persist failed after validate | Check Windows Credential Manager; retry Connect; see `[Oneirodex:keyring]` in console |
 | Connect 404 | Wrong base URL | Use origin only (no `/api` suffix) |
 | Download / update fails with permission | Missing Tauri ACL for append/rename | Rebuild companion from this repo |
 | Download / Update buttons disabled | Companion Offline banner | Re-Connect or wait for heartbeat; Play/Install/Uninstall still work |

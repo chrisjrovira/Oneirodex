@@ -275,6 +275,7 @@ COMPANION_PREFERRED_PLATFORMS = frozenset({
 
 # Keys that currently have WebRetro WASM (mirrors play_url.WEBRETRO_PLATFORMS).
 # PCE / VICE listed so browser unlocks automatically once their WASM is vendored.
+# SG-1000 / NGPC share shipped cores (genesis_plus_gx / mednafen_ngp).
 WEBRETRO_BROWSER_KEYS = frozenset({
     'NES', 'SNES', 'N64', 'GB', 'GBA', 'GBC', 'NDS', 'VB',
     'PSX', 'SEGA_MD', 'SEGA_MS', 'SEGA_CD', 'SEGA_32X', 'SEGA_GG',
@@ -282,6 +283,7 @@ WEBRETRO_BROWSER_KEYS = frozenset({
     'LYNX', 'JAGUAR', 'WS', 'NGP', 'COLECO', 'VECTREX',
     'THREEDO', 'NEOGEO_CD', 'INTV', 'CHAF', 'O2EM',
     'PCE', 'VICE_X64SC', 'VICE_X128', 'VICE_XVIC', 'VICE_XPLUS4', 'VICE_XPET',
+    'SEGA_SG1000', 'NGPC',
 })
 
 

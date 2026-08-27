@@ -23,6 +23,8 @@ import re
 import shutil
 from datetime import date
 
+from gametheca.product import LEGACY_NAME, PRODUCT_NAME
+
 # Bump when the generator's output format changes so existing presets rebuild.
 # 11 (GT-A1): gt-tokens gained radius / spacing / type / shadow / motion scales
 # and the tree gained gt-primitives.css. source_fingerprint() would catch the
@@ -1060,7 +1062,7 @@ def is_managed_preset(target: str, preset: dict) -> bool:
         return marker.get('slug') == preset['slug']
 
     return (
-        data.get('author') == 'GameTheca'
+        data.get('author') in {PRODUCT_NAME, LEGACY_NAME}
         and data.get('name') == preset['name']
         and data.get('description') == preset['description']
     )
@@ -1126,7 +1128,7 @@ def _write_theme_json(
 ) -> None:
     payload = {
         'name': name,
-        'author': 'GameTheca',
+        'author': PRODUCT_NAME,
         'description': description,
         'version': '1.0.0',
         'release_date': date.today().isoformat(),

@@ -1,6 +1,6 @@
 # Native install — Linux · macOS · Windows
 
-Running GameTheca directly on the machine, without Docker. Pick this when you
+Running Oneirodex directly on the machine, without Docker. Pick this when you
 want the server to see the host's own disks and mounts with no bind-mount layer
 in between, or when Docker is not available.
 
@@ -18,7 +18,7 @@ For containers, use [docker-compose-deploy.md](docker-compose-deploy.md) or
 
 The installers below check these, create a virtual environment, create the
 databases, and write a `.env` with a generated `SECRET_KEY`. None of them
-install Docker, and none of them expose GameTheca to the internet — put a
+install Docker, and none of them expose Oneirodex to the internet — put a
 reverse proxy in front for that ([login-rate-limit-proxy.md](login-rate-limit-proxy.md)).
 
 ---
@@ -57,7 +57,7 @@ Start it: `./startweb.sh` — then open http://localhost:5006
 ```ini
 # /etc/systemd/system/gametheca.service
 [Unit]
-Description=GameTheca
+Description=Oneirodex
 After=network-online.target postgresql.service
 Wants=network-online.target
 # Wait for the share, or the first scan after a reboot finds an empty folder
@@ -83,7 +83,7 @@ journalctl -u gametheca -f
 ```
 
 `RequiresMountsFor` is the line people leave out. Without it systemd starts
-GameTheca before the NAS mount is ready and the first scheduled scan sees
+Oneirodex before the NAS mount is ready and the first scheduled scan sees
 nothing.
 
 ---
@@ -199,10 +199,10 @@ authenticate to a network share, so a NAS library goes unreachable.
 **NSSM** for a proper service entry:
 
 ```powershell
-nssm install GameTheca "C:\gametheca\startweb_windows.cmd"
-nssm set GameTheca AppDirectory "C:\gametheca"
-nssm set GameTheca ObjectName ".\gametheca-svc" "PASSWORD"
-nssm start GameTheca
+nssm install Oneirodex "C:\gametheca\startweb_windows.cmd"
+nssm set Oneirodex AppDirectory "C:\gametheca"
+nssm set Oneirodex ObjectName ".\gametheca-svc" "PASSWORD"
+nssm start Oneirodex
 ```
 
 Either way, mapped drive letters are per-user and will not resolve — use UNC

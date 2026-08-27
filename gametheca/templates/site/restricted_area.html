@@ -9,10 +9,10 @@
 </div>
 {% if current_user.is_authenticated %}
 <div class="content-restricted">
-    <img src="{{ url_for('static', filename='newstyle/gametheca_gamer.png') }}" alt="GameTheca Logo" class="login-logo">
+    <img src="{{ url_for('static', filename='newstyle/gametheca_gamer.png') }}" alt="Oneirodex Logo" class="login-logo">
 
     <div class="content-restricted-textblock">
-        {{ current_user.name }}, welcome to GameTheca!<br>
+        {{ current_user.name }}, welcome to Oneirodex!<br>
         <br>
         Step into a vast gaming universe where endless adventures await at every turn. 
         Here, you can easily browse through extensive libraries packed with the best games, each complete with screenshots and detailed descriptions.
@@ -22,9 +22,9 @@
     </div>
     {% else %}
     <div class="content-restricted">
-        <img src="{{ url_for('static', filename='newstyle/gametheca_gamer.png') }}" alt="GameTheca Logo" class="login-logo">
+        <img src="{{ url_for('static', filename='newstyle/gametheca_gamer.png') }}" alt="Oneirodex Logo" class="login-logo">
         <div class="content-restricted-textblock">
-        Welcome to GameTheca!<br>
+        Welcome to Oneirodex!<br>
         Please login or register.
     </div>
 </div>

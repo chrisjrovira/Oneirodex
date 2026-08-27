@@ -1,15 +1,15 @@
-# Scan locations beyond the server — GameTheca
+# Scan locations beyond the server — Oneirodex
 
-GameTheca scans **any path the service process can open**. That is not the same
-thing as "a path on the machine GameTheca runs on": an SMB or NFS share, a
+Oneirodex scans **any path the service process can open**. That is not the same
+thing as "a path on the machine Oneirodex runs on": an SMB or NFS share, a
 second internal disk, an external drive, an Unraid user share — all of them are
 scannable the moment the host (or the container) has mounted them.
 
 Two jobs, in this order:
 
-1. **Mount it.** GameTheca does not speak SMB or NFS. The host does. This is an
+1. **Mount it.** Oneirodex does not speak SMB or NFS. The host does. This is an
    OS-level step and it is the same step you would take for any other app.
-2. **Declare it.** Tell GameTheca which mounts are libraries, with
+2. **Declare it.** Tell Oneirodex which mounts are libraries, with
    `GT_LIBRARY_ROOTS`. Until you do, the admin folder browser and the path
    allowlist only know about the single base folder.
 
@@ -32,7 +32,7 @@ GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games|/srv/extra
 |---|---|
 | Separator | `\|` (pipe) — same convention as `ARR_REMOTE_PATH_MAP` |
 | Label | Optional `Label=` prefix; cosmetic, names the root in the folder browser. Without one the last path segment is used |
-| Path | What **GameTheca** sees. Inside Docker that is the *container* path, not the host path |
+| Path | What **Oneirodex** sees. Inside Docker that is the *container* path, not the host path |
 | Limit | 32 roots; entries over 4096 chars are dropped |
 | Duplicates | Folded — declaring a path that is already `DATA_FOLDER_GAMES` changes nothing |
 | Typos | Dropped, not fatal. A malformed entry never stops the app booting |
@@ -130,7 +130,7 @@ EOF
 ```
 
 - `uid=`/`gid=` — SMB has no shared user database, so ownership is assigned at
-  mount time. Set it to the account GameTheca runs as or every file reads as
+  mount time. Set it to the account Oneirodex runs as or every file reads as
   `root` and the scan gets permission denied.
 - `_netdev` + `nofail` — boot does not hang when the NAS is down.
 - `x-systemd.automount` — mounts on first access, so a NAS that boots slower
@@ -152,7 +152,7 @@ sudo mkdir -p /mnt/nas/games
 nas.lan:/export/games  /mnt/nas/games  nfs  ro,_netdev,nofail,x-systemd.automount,soft,timeo=100  0  0
 ```
 
-NFS maps the *numeric* uid/gid, so the account GameTheca runs as needs a uid the
+NFS maps the *numeric* uid/gid, so the account Oneirodex runs as needs a uid the
 export grants. `soft,timeo=` matters: a hard mount on a NAS that goes away
 blocks the scan thread indefinitely instead of failing.
 
@@ -163,7 +163,7 @@ blocks the scan thread indefinitely instead of failing.
 GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|NAS Games=/mnt/nas/games
 ```
 
-Restart GameTheca (`./startweb.sh`, or `systemctl restart gametheca`).
+Restart Oneirodex (`./startweb.sh`, or `systemctl restart gametheca`).
 
 ---
 
@@ -177,7 +177,7 @@ GT_LIBRARY_ROOTS=NAS ROMs=/Volumes/roms
 ```
 
 **Finder mounts are per-login-session.** They disappear when you log out, and a
-GameTheca started by `launchd` at boot cannot see them at all. For anything
+Oneirodex started by `launchd` at boot cannot see them at all. For anything
 other than "I'm sitting at this Mac right now", mount from the command line or
 via autofs.
 
@@ -223,7 +223,7 @@ GT_LIBRARY_ROOTS=NAS ROMs=\\nas\roms|Archive=E:\archive
 ```
 
 **Prefer UNC over a mapped drive letter.** A mapped drive belongs to one
-interactive user session. Run GameTheca as a service or scheduled task and `Z:\`
+interactive user session. Run Oneirodex as a service or scheduled task and `Z:\`
 simply does not exist for it, which shows up as a root that is configured and
 never mounted. `install-windows.ps1` warns when it spots a mapped drive in
 `-LibraryRoots`.
@@ -234,8 +234,8 @@ If the share needs credentials, give the service account persistent access:
 cmdkey /add:nas /user:nas\gametheca /pass
 ```
 
-Run that **as the account GameTheca runs under** — credentials stored this way
-are per-user. Running GameTheca under `LocalSystem` cannot reach an
+Run that **as the account Oneirodex runs under** — credentials stored this way
+are per-user. Running Oneirodex under `LocalSystem` cannot reach an
 authenticated share at all; use a real account instead.
 
 ---
@@ -275,7 +275,7 @@ curl -s -b cookies.txt http://localhost:5006/api/library_roots | python -m json.
 | Root listed as "not mounted" | Nothing is mounted at that path | Mount it on the host; in Docker, add the bind and use the **container** path |
 | Root missing from the picker | Only one location exists — the picker hides itself | Check `GT_LIBRARY_ROOTS` reached the process: Ops → path health |
 | "Access denied — path outside allowed directories" | Scanning a path under no root | Add its root to `GT_LIBRARY_ROOTS` and restart |
-| Scan finds zero games in a full folder | Wrong owner on an SMB mount | Set `uid=`/`gid=` to the GameTheca account and remount |
+| Scan finds zero games in a full folder | Wrong owner on an SMB mount | Set `uid=`/`gid=` to the Oneirodex account and remount |
 | Scan hangs, no progress | Hard NFS mount on an unreachable server | Remount `soft,timeo=100` |
 | Works interactively, empty as a service | Mapped drive (Windows) or Finder mount (macOS) | Use UNC / autofs — both are per-session otherwise |
 | Root vanished after a reboot | Mount was not persisted | `/etc/fstab` with `nofail,x-systemd.automount`, or autofs |

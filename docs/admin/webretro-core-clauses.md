@@ -1,13 +1,13 @@
 # snes9x / genesis_plus_gx — operator notes (not counsel)
 
-This is **not legal advice**. GameTheca’s authors are not your lawyer. These notes collect
+This is **not legal advice**. Oneirodex’s authors are not your lawyer. These notes collect
 **quotes from the upstream licences** (as published on the projects’ own repositories) and
-**questions to take to a lawyer** if you host GameTheca in a setting that might be commercial.
+**questions to take to a lawyer** if you host Oneirodex in a setting that might be commercial.
 
 Related: [webretro-cores.md](../runbooks/webretro-cores.md) ·
 [security-legal-playbook.md](../strategy/security-legal-playbook.md) (L1).
 
-## What GameTheca does
+## What Oneirodex does
 
 The 24 WebRetro libretro cores are **not in the git tree**. First boot fetches them onto **this
 host** (`FETCH_WEBRETRO_CORES_ON_BOOT`, default on). Removal from the repo does **not** settle
@@ -54,7 +54,7 @@ plain description of *your* deployment. Typical questions:
 
 1. Is a **household Unraid box** used only by family “personal use” / non-commercial under these
    clauses?
-2. Does **charging for a managed GameTheca host** (SaaS, paid NAS appliance, paid remote play)
+2. Does **charging for a managed Oneirodex host** (SaaS, paid NAS appliance, paid remote play)
    make the fetched WASM a “commercial product or activity”?
 3. Does **first-boot fetch onto the operator’s disk** change who is the distributor versus
    shipping the WASM inside the Docker image?
@@ -68,5 +68,5 @@ Do not treat a GitHub issue, a Discord anecdote, or this file as the answer.
 ## What this file is not
 
 - Permission from the copyright holders
-- A GameTheca warranty that household use is fine
+- A Oneirodex warranty that household use is fine
 - Advice to strip the cores and assume the legal question vanished

@@ -7,7 +7,7 @@
 
 ## Behavior
 
-- Download is server-side streaming; large titles depend on disk and network to the GameTheca host.
+- Download is server-side streaming; large titles depend on disk and network to the Oneirodex host.
 - Version list honesty: `path_missing` / `downloadable` / measured `size` · **Default** chip on the base install · librarians/admins can **Remove missing versions** (orphan cleanup).
 - Web UI does not install/extract on your PC — that needs the optional desktop companion (**Install / Update / Uninstall**). See [desktop-companion.md](desktop-companion.md).
 - History lists past downloads for your account; queue shows in-progress work when the client/server reports it.

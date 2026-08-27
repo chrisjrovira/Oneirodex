@@ -1,4 +1,4 @@
-# Legal free / public-domain / author-redistributable sample ROMs for GameTheca.
+# Legal free / public-domain / author-redistributable sample ROMs for Oneirodex.
 # Binaries are NOT in git — operators run: python scripts/fetch-free-roms.py
 # Never add commercial dumps or warez-adjacent titles here.
 # Keep notes on one line (quoted) so the stdlib YAML subset parser stays reliable.
@@ -30,6 +30,14 @@ roms:
     source: https://github.com/mick-schroeder/gba-cascade7
     notes: "Open-source GBA puzzle homebrew with a clear GitHub Releases ROM."
 
+  - id: cgb-acid2
+    platform: gbc
+    filename: cgb-acid2.gbc
+    url: https://github.com/mattcurrie/cgb-acid2/releases/download/v1.1/cgb-acid2.gbc
+    license: MIT
+    source: https://github.com/mattcurrie/cgb-acid2
+    notes: "Game Boy Color PPU test ROM; the GBC counterpart of dmg-acid2."
+
   - id: genmddj
     platform: genesis
     filename: genmddj-v0.17.bin
@@ -46,11 +54,57 @@ roms:
     source: https://github.com/alijani1/atari2600-4paddle-tester
     notes: "Atari 2600 paddle diagnostic homebrew; Stella-compatible."
 
-# Platforms GameTheca can browser/companion-play, but no clear legal GitHub URL yet.
+  - id: superbossgaiden
+    platform: snes
+    filename: SuperBossGaiden.sfc
+    url: https://github.com/snesdev0815/SNES-SuperBossGaiden/releases/download/v1.2/SuperBossGaiden.sfc
+    license: "Author-released freeware SNES homebrew (Dieter von Laser / ChronoMoogle); GitHub release by the author"
+    source: https://github.com/snesdev0815/SNES-SuperBossGaiden
+    notes: "Not a commercial dump. ROM is the author-published GitHub release asset."
+
+# Platforms Oneirodex can browser/companion-play, but no clear legal GitHub URL yet.
 skipped:
-  - platform: gbc
-    note: "Companion/browser ready -- place ROM after fetch when available. Tobu Tobu Girl Deluxe (MIT/CC-BY) is itch.io-only."
-  - platform: sms
-    note: "Companion/browser ready -- place ROM after fetch when available. No clearly licensed SMS homebrew ROM URL verified."
-  - platform: snes
-    note: "Companion/browser ready -- place ROM after fetch when available. No clearly licensed SNES homebrew ROM URL verified."
+  - platform: sega_ms
+    note: "Companion/browser ready -- place ROM after fetch when available. No clearly licensed Master System homebrew ROM URL verified."
+  - platform: sega_gg
+    note: "Browser core ships (genesis_plus_gx); no clearly licensed Game Gear homebrew ROM URL verified."
+  - platform: sega_sg1000
+    note: "Browser-playable via genesis_plus_gx; no clearly licensed SG-1000 homebrew ROM URL verified."
+  - platform: ngpc
+    note: "Browser-playable via mednafen_ngp (same WASM as NGP); no clearly licensed NGPC homebrew ROM URL verified."
+  - platform: n64
+    note: "Browser core ships; no clearly licensed N64 homebrew ROM URL verified."
+  - platform: nds
+    note: "Browser core ships; no clearly licensed NDS homebrew ROM URL verified."
+  - platform: vb
+    note: "Browser core ships; no clearly licensed Virtual Boy homebrew ROM URL verified."
+  - platform: psx
+    note: "Needs operator BIOS; no legal PS1 game dump. Homebrew ISOs are not auto-fetched."
+  - platform: sega_saturn
+    note: "Needs operator BIOS; no legal Saturn dump auto-fetched."
+  - platform: lynx
+    note: "Browser core ships; Lynx boot ROM is operator BIOS, not a sample game."
+  - platform: jaguar
+    note: "Browser core ships; no clearly licensed Jaguar homebrew ROM URL verified."
+  - platform: ws
+    note: "Browser core ships; no clearly licensed WonderSwan homebrew ROM URL verified."
+  - platform: ngp
+    note: "Browser core ships; no clearly licensed Neo Geo Pocket homebrew ROM URL verified."
+  - platform: coleco
+    note: "Needs operator BIOS (colecovision.rom); no clearly licensed Coleco homebrew ROM URL verified."
+  - platform: vectrex
+    note: "Browser core ships; no clearly licensed Vectrex homebrew ROM URL verified."
+  - platform: threedo
+    note: "Needs operator BIOS; no legal 3DO dump auto-fetched."
+  - platform: neogeo_cd
+    note: "Needs operator BIOS; no legal Neo Geo CD dump auto-fetched."
+  - platform: intv
+    note: "Needs operator BIOS; no clearly licensed Intellivision homebrew ROM URL verified."
+  - platform: chaf
+    note: "Needs operator BIOS; no clearly licensed Channel F homebrew ROM URL verified."
+  - platform: o2em
+    note: "Needs operator BIOS; no clearly licensed Odyssey 2 homebrew ROM URL verified."
+  - platform: atari_5200
+    note: "Needs operator BIOS (5200.rom); 2600 paddle tester is the Atari sample we do fetch."
+  - platform: atari_7800
+    note: "Needs operator BIOS; no clearly licensed 7800 homebrew ROM URL verified."

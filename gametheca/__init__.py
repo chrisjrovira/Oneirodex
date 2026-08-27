@@ -15,6 +15,7 @@ from gametheca.utils.db import check_postgres_port_open
 from gametheca.utils.proxy import apply_proxy_fix
 from gametheca.utils.security_headers import apply_security_headers
 from gametheca.utils.icon_themes import icon_pack_css_url
+from gametheca.product import PRODUCT_NAME
 from gametheca.utils.preset_themes import era_for_theme, theme_picker_groups
 
 db = SQLAlchemy()
@@ -152,6 +153,7 @@ def create_app():
             # admin can both surface it without threading it through each view.
             'source_url': app.config.get('GT_SOURCE_URL', ''),
             'app_version': app_version,
+            'product_name': PRODUCT_NAME,
         }
 
     @app.before_request

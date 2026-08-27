@@ -257,7 +257,7 @@ export function ArtStudioPage() {
   }, [packId])
 
   const regenerateDefaults = useCallback(async () => {
-    const seed = title.trim() || 'GameTheca'
+    const seed = title.trim() || 'Oneirodex'
     setBusy('regen-fallback')
     setError('')
     try {

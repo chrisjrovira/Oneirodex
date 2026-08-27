@@ -1,15 +1,15 @@
 # Browser & companion play — platform matrix
 
-GameTheca play modes for systems **below PS5 / Xbox Series**. Those two stay **catalog + download only**.
+Oneirodex play modes for systems **below PS5 / Xbox Series**. Those two stay **catalog + download only**.
 
 | Platform | Browser (WebRetro) | Companion | Notes |
 |---|---|---|---|
 | NES · SNES · N64 | Yes | Yes | N64: try alternate core if a title fails |
 | GB · GBC · GBA · NDS · VB | Yes | Yes | |
 | PS1 | Yes | Yes | Needs SCPH BIOS files |
-| Genesis / MS / CD / 32X / GG | Yes | Yes | CD needs region BIOS |
+| Genesis / MS / CD / 32X / GG / SG-1000 | Yes | Yes | CD needs region BIOS. SG-1000 uses the same `genesis_plus_gx` WASM as Genesis. |
 | Saturn | Yes | Yes | Needs `saturn_bios.bin` |
-| Atari · Lynx · Jaguar · WS · NGP · Coleco · Vectrex · 3DO · Neo Geo CD · INTV · CHAF · O2 | Yes | Yes | BIOS where listed in Admin → emulator BIOS |
+| Atari · Lynx · Jaguar · WS · NGP / NGPC · Coleco · Vectrex · 3DO · Neo Geo CD · INTV · CHAF · O2 | Yes | Yes | BIOS where listed in Admin → emulator BIOS. NGPC uses the same `mednafen_ngp` WASM as NGP. |
 | PC Engine · Commodore | Companion now (browser when WASM vendored) | Yes (RetroArch cores) | Drop cores via [webretro-cores.md](../runbooks/webretro-cores.md) (`fetch-webretro-cores --from-dir`); auto-unlocks from disk |
 | PC DOS | When flag + WASM | Preferred | Companion default; `ENABLE_PCDOS_BROWSER` (default on) still needs vendored `dosbox_pure` WASM — see runbook |
 | GameCube · Wii | No (WASM) | Preferred | Dolphin mapped; companion_hint on browse; no browser Play |
@@ -21,7 +21,7 @@ Admin: upload BIOS via Admin → Emulators, **Scan collection** on a folder of d
 
 ## BIOS / firmware (filenames only)
 
-GameTheca **does not ship** copyrighted BIOS binaries in git, CI artifacts, or the public Docker image. Operators supply legally obtained firmware they already own.
+Oneirodex **does not ship** copyrighted BIOS binaries in git, CI artifacts, or the public Docker image. Operators supply legally obtained firmware they already own.
 
 | How | When | Notes |
 |---|---|---|
@@ -61,8 +61,8 @@ Browser play opens `webretro.html` with a per-system **artistic room** — multi
 
 Browser Play runs RetroArch compiled to WebAssembly inside the tab — there's no native audio thread or GPU passthrough, so a few defaults are tuned to reduce common WASM artifacts:
 
-- **Audio is clocked to the emulated system, not the browser's refresh.** `audio_sync` and `audio_rate_control` are on, with a small `audio_rate_control_delta` (0.005) that nudges the resampler by fractions of a percent, and `audio_max_timing_skew` left at the standard `0.05`. A larger buffer (`audio_latency = 96`) absorbs brief main-thread hiccups so they resample instead of crackling.
-  - *If you played before this changed:* audio that ran slightly **fast and glitchy** was the known cause — skew was set three times the usual value with no `audio_sync`, so audio chased the browser's 60Hz vsync against NTSC's actual 60.098Hz and got yanked back. Rebuild/redeploy to pick up the fix, and hard-refresh so the cached player reloads.
+- **Audio is clocked to the emulated system, not the browser's refresh.** `audio_sync` and `audio_rate_control` are on, with a small `audio_rate_control_delta` (0.005) that nudges the resampler by fractions of a percent, and `audio_max_timing_skew` at **`0.15`** (wider than desktop RetroArch's 0.05). WASM on the browser main thread stalls longer than a native frame loop; the extra headroom absorbs GC/layout hiccups so the buffer does not underrun. A larger buffer (`audio_latency = 96`) does the same for brief stalls. Do not "correct" skew back to 0.05 without measuring on a real browser first.
+  - *If audio runs fast and glitchy on a 120/144/165Hz monitor:* that is the refresh-rate clock below, not this skew. Hard-refresh the play tab so the cached player reloads.
 - **`video_vsync`** is explicit so WASM frame delivery paces to the browser's `requestAnimationFrame` instead of free-running.
 - **The player now measures your display's refresh rate.** RetroArch assumes a 60Hz screen unless told otherwise, and with vsync on it paces frames to the browser. On a 120Hz, 144Hz or 165Hz monitor that meant the core advanced **two to nearly three times too fast**, with audio rate-control permanently chasing a gap it could not close — fast, pitch-shifted, crackling sound. The player samples the real refresh rate over ~32 frames on load and writes it to `video_refresh_rate`.
   - *If you played before this changed:* speed and audio were wrong on any monitor above 60Hz, and the earlier audio tuning could not fix it — resampling headroom cannot correct a clock that is a whole multiple out. Hard-refresh the play tab so the cached player reloads.
@@ -109,7 +109,7 @@ If a deferred core is still warming, status may say to sync again after **Start*
 
 Browse/details payloads include **`cheat_surface`**: `retroarch` | `pc_wand` | `none`. Only `retroarch` exposes the `.cht` library (`GET/POST/DELETE /api/games/{uuid}/cheats`); create/upload/download/delete return **403** otherwise. Create with name + code rows + dialect hint (Raw / GG-style / AR-style / GS-style — capability labels only), or upload a prebuilt `.cht`. The WebRetro play bar loads the same list for **Apply cheat**; companion stages files under `app_data/cheats/{uuid}/` before RetroArch. Quick Menu may still be required to enable codes. PC / native (`PCWIN` / `PCDOS` / `MAC` / `OTHER`) report `pc_wand` — RetroArch `.cht` tooling stays hidden there; no memory injection.
 
-**PC cheat notes.** Rather than a trainer, PC titles get **notes**: what to change and how. Each entry records a `method` — `console` (an in-game console command), `config` (an ini/cfg edit), `save` (a save-editor field), `launch_flag` (a startup argument), or a plain `note` — plus the value and any caveat. GameTheca never writes to a game binary and never injects into a running process, which keeps this on the right side of the anti-cheat line and matches the operator-owned patch-catalog stance (nothing scraped from trainer sites). Librarians and admins author entries; members read them. API: `GET`/`POST /api/games/<uuid>/pc_cheats` · `DELETE /api/games/<uuid>/pc_cheats/<id>`.
+**PC cheat notes.** Rather than a trainer, PC titles get **notes**: what to change and how. Each entry records a `method` — `console` (an in-game console command), `config` (an ini/cfg edit), `save` (a save-editor field), `launch_flag` (a startup argument), or a plain `note` — plus the value and any caveat. Oneirodex never writes to a game binary and never injects into a running process, which keeps this on the right side of the anti-cheat line and matches the operator-owned patch-catalog stance (nothing scraped from trainer sites). Librarians and admins author entries; members read them. API: `GET`/`POST /api/games/<uuid>/pc_cheats` · `DELETE /api/games/<uuid>/pc_cheats/<id>`.
 
 Stance: [cheats.md](../strategy/cheats.md) · companion: [desktop-companion.md](desktop-companion.md).
 

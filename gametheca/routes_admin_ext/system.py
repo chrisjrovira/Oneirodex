@@ -1,6 +1,7 @@
 from gametheca.utils.api_response import api_error, api_ok
 from flask import current_app, render_template, request, jsonify, session
 from flask_login import login_required, current_user
+from gametheca.product import RESET_CONFIRM_PHRASE, is_reset_confirm
 from gametheca.utils.auth import admin_required
 from gametheca.models import SystemEvents, DiscoverySection, Game, Genre, Library, user_favorites
 from gametheca import db
@@ -675,8 +676,8 @@ def clear_permission_errors() -> tuple[Dict[str, Any], int]:
 # The confirmation phrase is required in the request body rather than being a
 # UI-only guard. A destructive endpoint that any authenticated admin can fire
 # with an empty POST is one stray fetch away from an accident, and "the button
-# asks first" is not a property of the API.
-RESET_CONFIRM_PHRASE = 'RESET GAMETHECA'
+# asks first" is not a property of the API. Phrase lives in gametheca.product
+# (RESET ONEIRODEX, with RESET GAMETHECA still accepted).
 
 
 @admin2_bp.route('/admin/api/system/reset', methods=['POST'])
@@ -688,7 +689,8 @@ def system_reset_plan_or_perform():
     ``POST {"scopes": [...]}`` returns the plan — every table that would be
     emptied, including those reached by cascade — and changes nothing.
 
-    ``POST {"scopes": [...], "confirm": "RESET GAMETHECA"}`` performs it.
+    ``POST {"scopes": [...], "confirm": "RESET ONEIRODEX"}`` performs it.
+    ``RESET GAMETHECA`` remains accepted so existing runbooks keep working.
 
     Never deletes files. See gametheca/utils/system_reset.py.
     """
@@ -717,7 +719,7 @@ def system_reset_plan_or_perform():
         # gets a description of the damage, not the damage.
         return api_ok(plan_reset(requested), performed=False)
 
-    if confirm != RESET_CONFIRM_PHRASE:
+    if not is_reset_confirm(confirm):
         return api_error(
             f'Type "{RESET_CONFIRM_PHRASE}" exactly to confirm.',
             code='unprocessable',

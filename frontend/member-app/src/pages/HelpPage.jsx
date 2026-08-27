@@ -34,6 +34,7 @@ const FAQ_SECTIONS = [
     items: [
       'Top nav: Discover, Library, Systems, Downloads, Favorites.',
       'Ctrl+K / ⌘K (or Search) opens the command palette. On Library it searches titles first.',
+      'Discover shelves can be pinned or hidden per account (Rows in the top bar). A shelf with nothing honest to show is hidden rather than padded.',
       'On long scrollable pages, Jump to top / Jump to bottom controls appear bottom-left (hide when the page does not scroll).',
       'More hubs Collections, Wishlist, Ownership, Big Picture, and related tools.',
       'Ownership registers Steam / GOG / Epic titles you already own. Live sync when a token is saved (GOG refresh token, Epic device-auth JSON). Never a store download.',
@@ -52,6 +53,8 @@ const FAQ_SECTIONS = [
     summary: 'Favorites, chips, tiles, trailers',
     items: [
       'Heart a cover; open Favorites from top nav.',
+      'One tile per title, not per copy. A game you hold on NES and SNES is one tile; Preview → Available on lists the other systems.',
+      'A greyed-out Play button still opens: it explains why (missing BIOS, companion-only, catalog-only) instead of sitting dead.',
       'Library multi-select: checkbox / long-press / Shift+click → Select page · Favorite · Unfavorite · Add to wishlist · Play status · Refresh freshness / Refresh covers (More; librarian+ · max 20) · Clear; Esc clears. Batch toasts report updated/queued / skipped / failed counts.',
       'Kind chips: Games · Soft titles · Emulators · Utilities (multi-select → item_kind; none = all). Tile badges EXP / TOOL stay short; tooltips Soft title / Utility.',
       'Desktop filters: chevron collapses the aside to a slim rail so covers reclaim the width (preference saved); chevron again restores. Narrow screens still use the Filters drawer.',
@@ -72,7 +75,8 @@ const FAQ_SECTIONS = [
     short: 'Systems',
     summary: 'Platform browse and accents',
     items: [
-      'Systems tiles filter the library by console/PC.',
+      'Systems tiles filter the library by console/PC. Each tile carries a Browser / Companion / Catalog badge that matches what Play can actually do.',
+      'Set completeness (after an admin uploads a No-Intro/Redump DAT) opens from a Systems tile into the missing list. Region, Systems, and Browse library sit in the top bar.',
       'Tile badges use four corners only (occupied corners; no empty reserved slots) with rounded-square chrome. Signals: VR, UPDATE, MISSING, NEW, LANG (vs Preferences → Preferred game language). No OUT/~ / RELEASE on tiles.',
       'Inside a system, accents follow that family; global search keeps default glass.',
       'Export packs (bottom of Systems): ES-DE gamelist.xml and Pegasus metadata for other frontends — optional; paths stay portable.',
@@ -119,7 +123,7 @@ const FAQ_SECTIONS = [
     items: [
       'More → Updates: freshness inbox auto-refreshes while the tab is visible; use Refresh for an immediate pull. Search stores and apply packs stay as before (dense rows, less glass card clutter).',
       'Updates also teases upcoming releases; open the full Release calendar for List or Month views (remembered in-browser) plus Ahead/Behind window controls. Month shows each day’s cover art and cycles through them when more than one title lands that day.',
-      'More → Calendar is IGDB metadata only (no downloads). Wishlist and Playtime use the same dense More-page rhythm (honest empty/error).',
+      'More → Calendar is IGDB metadata only (no downloads). Wishlist and Playtime use the same dense More-page rhythm (honest empty/error). Playtime totals sit in the top bar.',
     ],
   },
   {
@@ -132,7 +136,7 @@ const FAQ_SECTIONS = [
     summary: 'News claims and ownership sync',
     items: [
       'News (All · Admins · Free now · Headlines) leads with a featured strip, then densified sections. Free claims live under Free now (and `#free-games`). Claim on the store; Sync ownership if linked (Steam / GOG / Epic live when a token is saved).',
-      'GameTheca never downloads DRM titles for you.',
+      'Oneirodex never downloads DRM titles for you.',
       'Opt out under Notifications → Alert preferences.',
     ],
   },
@@ -176,7 +180,9 @@ const FAQ_SECTIONS = [
     summary: 'Firmware honesty, extractors, missing paths',
     items: [
       'Some systems need BIOS/firmware on the host before Play in browser works. Details and tiles show a quiet blocker with the server hint - no Download BIOS button.',
-      'Admins upload legally obtained firmware under Admin → Emulators, scan a folder of dumps they already hold, or mount a private host BIOS folder. GameTheca never ships copyrighted BIOS files.',
+      'Admins upload legally obtained firmware under Admin → Emulators, scan a folder of dumps they already hold, or mount a private host BIOS folder. Oneirodex never ships or downloads copyrighted BIOS files.',
+      'Browser Play covers NES, SNES, N64, Game Boy family, DS, Virtual Boy, PS1, Genesis family (including SG-1000), Saturn, Atari line, Lynx, Jaguar, WonderSwan, Neo Geo Pocket / Color, Coleco, Vectrex, 3DO, Neo Geo CD, Intellivision, Channel F, and Odyssey 2 — when the operator has provisioned that core. GameCube / Wii / Dreamcast / 3DS / PS2 / Vita play on the desktop companion. PS5 and Xbox Series stay catalog-only. No fake Play button for a core that is not there.',
+      'Rewind stays off on heavy cores (N64, PS1, Saturn, Dreamcast, PSP). Picture cycles CRT · Sharp · Soft. Audio is clocked to the emulated system; the player measures your display refresh so 120/144Hz monitors do not run fast.',
       'Compressed ROMs extract on play. Prefer .zip when possible; .rar/.7z need host tools. Failures show the server hint (missing extractor) in the play shell.',
       'The play bar has Pause, Reset, Mute, volume, Save, Load, Rewind, FF, Picture, and Power (Power leaves the game, same as ← Library). ? opens shortcuts (F2/F3 save/load, hold Right Shift to rewind, F5 fast-forward). An overlay repeats the in-game controls on touch; on a mouse it appears when you move over the play stage.',
       'If a version is Missing on disk, Download is hidden; a 410 path_missing response toasts the backend hint (remove missing versions or restore files).',
@@ -228,11 +234,11 @@ const FAQ_SECTIONS = [
     short: 'About',
     summary: 'Source code, licence, data credits',
     items: [
-      'GameTheca is free software under the GNU Affero General Public License v3.0. You may run, study, modify and share it.',
+      'Oneirodex (oh-NY-roh-dex) is free software under the GNU Affero General Public License v3.0. You may run, study, modify and share it.',
       'Running a modified copy as a network service? AGPL §13 means you owe your users that modified source. Admins set GT_SOURCE_URL to point here at their own fork.',
-      'The licence covers GameTheca itself — not the games, ROMs, BIOS or artwork you point it at.',
+      'The licence covers Oneirodex itself — not the games, ROMs, BIOS or artwork you point it at. The Python package, Docker image, and GitHub repo still use gametheca until the identifier wave.',
       'Game metadata and artwork come from IGDB (an Amazon company), Giant Bomb, SteamGridDB and store pages, depending on what your admin configured.',
-      'Browser play uses WebRetro with libretro emulator cores, provisioned by your admin rather than shipped with GameTheca.',
+      'Browser play uses WebRetro with libretro emulator cores, provisioned by your admin rather than shipped with Oneirodex.',
     ],
     links: [
       { key: 'source', label: 'Source code (AGPL §13)', href: null, fromConfig: 'sourceUrl' },
@@ -394,7 +400,7 @@ export function HelpPage({ shellConfig = {} }) {
           <RailIcon name="help" size={26} />
         </span>
         <div className="gt-help__hero-copy">
-          <h1 className="gt-help__hero-title">How GameTheca works</h1>
+          <h1 className="gt-help__hero-title">How Oneirodex works</h1>
           <p className="gt-help__hero-lede">
             Twelve short sections, colour-coded by topic. Open one for detail, or
             use Expand all in the bar above to read straight through.
@@ -522,7 +528,7 @@ export function HelpPage({ shellConfig = {} }) {
           URL is configuration: a modified deployment must point at its own. */}
       {shellConfig.sourceUrl ? (
         <p className="gt-help__footer">
-          GameTheca{shellConfig.appVersion ? ` ${shellConfig.appVersion}` : ''} — free software under
+          Oneirodex{shellConfig.appVersion ? ` ${shellConfig.appVersion}` : ''} — free software under
           the{' '}
           <a
             href="https://www.gnu.org/licenses/agpl-3.0.html"

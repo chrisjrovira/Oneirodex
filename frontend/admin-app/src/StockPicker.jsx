@@ -73,7 +73,7 @@ async function fetchStockCatalog() {
 export function StockPicker({
   onApplied,
   heading = 'Platform & stock art',
-  lede = 'Original GameTheca packs — pick a decade room, platform look, or stock motif, then set as library default / fallback.',
+  lede = 'Original Oneirodex packs — pick a decade room, platform look, or stock motif, then set as library default / fallback.',
   showLibraryUuid = false,
 } = {}) {
   const [items, setItems] = useState([])

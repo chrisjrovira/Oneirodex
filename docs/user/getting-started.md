@@ -1,6 +1,6 @@
 # Getting started (web)
 
-GameTheca is a self-hosted multi-user game library. Members browse and download DRM-free titles your admin has scanned.
+Oneirodex is a self-hosted multi-user game library. Members browse and download DRM-free titles your admin has scanned.
 
 **Defaults (operators):** Most product modules ship **on** (`ENABLE_*` in `.env.example`). **OIDC / SSO stays off** until you set `OIDC_ENABLED=true` and enable it under Admin → Integrations. Optional ClamAV: `docker compose --profile clamav up -d` when you want daemon scans in addition to filename heuristics — [settings-modules.md](../admin/settings-modules.md).
 
@@ -15,12 +15,12 @@ GameTheca is a self-hosted multi-user game library. Members browse and download 
 After login you land in the **member SPA**: a **left rail** of destinations and a slim **top bar**
 for whatever the page you are on can do.
 
-The rail is grouped, and every group folds away — including **GameTheca**, which holds the five
+The rail is grouped, and every group folds away — including **Oneirodex**, which holds the five
 core destinations:
 
 | Group | Destinations |
 |---|---|
-| **GameTheca** | Discover · Library · Systems · Downloads · Favorites |
+| **Oneirodex** | Discover · Library · Systems · Downloads · Favorites |
 | Library | Collections · Wishlist · Updates · Acquire · Ownership · Release calendar |
 | Social | Friends (dock) · Chat (slide-out) · Notifications · Activity · News |
 | Play | Big Picture · Playtime · VR · Trailers |
@@ -65,6 +65,8 @@ If you are an admin and the new member has no email at all — a child's console
 **Command palette:** press **Ctrl+K** (⌘K on Mac) or the top-nav **Search** hint to jump to any primary/More page, Preferences, Admin, or Help. On **Library**, Ctrl+K searches **library titles** first. Screenshot backlog for palette / Ops / health probes: [CAPTURE.md](../assets/readme/CAPTURE.md).
 
 Library **page size** options go up through **200–1000** (full allowlist 20/50/100/200/250/300/400/500/1000) — [preferences-themes.md](preferences-themes.md). Library Filters include **Signals** chips (UPDATE · MISSING · NEW · LANG). On desktop, a chevron collapses Filters to a slim rail so the grid reflows (preference saved); ≤900px still uses the Filters drawer.
+
+**Discover shelves** can be pinned or hidden per account (**Rows** in the top bar). A shelf with nothing honest to show is hidden rather than padded. **Library** shows one tile per title, not per copy — Preview → Available on lists the other systems. A grey Play button still opens and explains why.
 
 If Discover/Library look unstyled, the deploy is missing **`member-app.css`** — ask an admin to rebuild the image.
 

@@ -113,3 +113,22 @@ test('every section carries a theme tone and a glyph', async () => {
     expect(section.querySelector('.gt-help__section-mark svg')).not.toBeNull()
   }
 })
+
+test('names Oneirodex and documents every play mode, not only NES', async () => {
+  const user = userEvent.setup()
+  render(
+    <MemoryRouter>
+      <HelpPage shellConfig={{ enableNewChrome: true }} />
+    </MemoryRouter>,
+  )
+
+  expect(screen.getByRole('heading', { name: 'How Oneirodex works' })).toBeInTheDocument()
+  expect(screen.queryByText(/How GameTheca works/)).toBeNull()
+
+  await user.click(screen.getByRole('button', { name: 'Expand all' }))
+  expect(screen.getByText(/oh-NY-roh-dex/)).toBeInTheDocument()
+  expect(screen.getByText(/Genesis family \(including SG-1000\)/)).toBeInTheDocument()
+  expect(screen.getByText(/PS5 and Xbox Series stay catalog-only/)).toBeInTheDocument()
+  expect(screen.getByText(/one tile per title/i)).toBeInTheDocument()
+  expect(screen.getByText(/Set completeness/)).toBeInTheDocument()
+})

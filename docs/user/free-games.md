@@ -1,6 +1,6 @@
 # Free games (News)
 
-GameTheca polls major stores and a public giveaway aggregator so household members can **see what’s free right now**, get an in-app notification when something new appears, and **claim via store deeplinks**.
+Oneirodex polls major stores and a public giveaway aggregator so household members can **see what’s free right now**, get an in-app notification when something new appears, and **claim via store deeplinks**.
 
 This is **not** a DRM download client. Claiming always happens on Steam / Epic / GOG / Amazon / itch / Humble (browser or launcher).
 
@@ -19,7 +19,7 @@ This is **not** a DRM download client. Claiming always happens on Steam / Epic /
 | **A — Deeplink** | Always | **Claim** (HTTPS) or **Open in app** (`steam://` / Epic launcher URI when that store is linked) |
 | **B — Connected assist** | Store linked under Ownership | **Sync ownership** registers the title. Steam / GOG / Epic re-run live library sync when a token is saved |
 
-GameTheca never silently redeems DRM. Claim on the store first (A), then Sync ownership (B) so badges update.
+Oneirodex never silently redeems DRM. Claim on the store first (A), then Sync ownership (B) so badges update.
 
 ## Stores
 
@@ -47,5 +47,5 @@ Outbound HTTP must reach Epic / Steam / GamerPower from the container host.
 ## Non-goals
 
 - Silent DRM redeem / OAuth claim without opening the store
-- DRM install queues inside GameTheca
+- DRM install queues inside Oneirodex
 - Email digests of free games alone (included in the optional daily notification digest instead)

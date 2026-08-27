@@ -226,7 +226,7 @@ export function AcquirePage() {
 
       <p className="gt-more-page__lede">
 
-        BYO acquisition via admin-configured native indexers / hubs / debrid. GameTheca does not host
+        BYO acquisition via admin-configured native indexers / hubs / debrid. Oneirodex does not host
 
         torrents. Results are ranked by score (seeders, repack/quality cues).
 

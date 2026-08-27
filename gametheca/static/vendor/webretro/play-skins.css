@@ -942,7 +942,8 @@ body.gt-play-shell {
   --gt-play-chrome: linear-gradient(180deg, #c0c8ff, #5b6ee1);
 }
 
-[data-platform="NDS"] {
+[data-platform="NDS"],
+[data-platform="N3DS"] {
   --gt-play-accent: #c0c0c8;
   --gt-play-bezel-bg: #e8e8ec;
   --gt-play-bezel-border: 4px solid #a0a0a8;
@@ -1010,7 +1011,8 @@ body.gt-play-shell {
   --gt-play-grain-opacity: 0.05;
 }
 
-[data-platform="SEGA_MS"] {
+[data-platform="SEGA_MS"],
+[data-platform="SEGA_SG1000"] {
   --gt-play-accent: #c0c0c0;
   --gt-play-room-bg: #101018;
   --gt-play-wallpaper: linear-gradient(180deg, #181820, #0c0c12);
@@ -1167,7 +1169,10 @@ body.gt-play-shell {
   --gt-play-grain-opacity: 0.055;
 }
 
-[data-platform="PS2"] {
+[data-platform="PS2"],
+[data-platform="PS3"],
+[data-platform="PS4"],
+[data-platform="PS5"] {
   --gt-play-accent: #0070d1;
   --gt-play-room-bg: #060a12;
   --gt-play-bezel-bg: linear-gradient(160deg, #1a2030, #0c1018);
@@ -1195,7 +1200,8 @@ body.gt-play-shell {
 }
 
 /* PSP sleek black handheld */
-[data-platform="PSP"] {
+[data-platform="PSP"],
+[data-platform="PSVITA"] {
   --gt-play-accent: #6e7a8a;
   --gt-play-room-bg: #0c0c0e;
   --gt-play-wallpaper: linear-gradient(180deg, #141418, #08080a);
@@ -1220,10 +1226,28 @@ body.gt-play-shell {
   --gt-play-font: "Segoe UI", system-ui, sans-serif;
 }
 
+/* Xbox family — companion / catalog skins, same room language as play */
+[data-platform="XBOX"],
+[data-platform="X360"],
+[data-platform="XONE"],
+[data-platform="XSX"] {
+  --gt-play-accent: #2fd67b;
+  --gt-play-room-bg: #0a120c;
+  --gt-play-bezel-bg: linear-gradient(180deg, #1a2a1e, #0c1410);
+  --gt-play-bezel-border: 3px solid #2fd67b;
+  --gt-play-wallpaper: linear-gradient(180deg, #101810, #080c08);
+  --gt-play-scanline-opacity: 0.06;
+  --gt-play-font: "Segoe UI", system-ui, sans-serif;
+}
+
 /* Arcade cabinet marquee */
 [data-platform="ARCADE"],
 [data-platform="MAME"],
-[data-platform="FBNEO"] {
+[data-platform="FBNEO"],
+[data-platform="NEOGEO"],
+[data-platform="DAPHNE"],
+[data-platform="PINBALL"],
+[data-platform="ACTIONMAX"] {
   --gt-play-accent: #ffcc00;
   --gt-play-room-bg: #100808;
   --gt-play-wallpaper:
@@ -1267,7 +1291,14 @@ body.gt-play-shell {
 [data-platform="PCWIN"],
 [data-platform="PCDOS"],
 [data-platform="PC"],
-[data-platform="MAC"] {
+[data-platform="MAC"],
+[data-platform="OTHER"],
+[data-platform="AMIGA"],
+[data-platform="VICE_X64SC"],
+[data-platform="VICE_X128"],
+[data-platform="VICE_XVIC"],
+[data-platform="VICE_XPLUS4"],
+[data-platform="VICE_XPET"] {
   --gt-play-accent: #2fd67b;
   --gt-play-room-bg: #0a0a0c;
   --gt-play-wallpaper:
@@ -1306,7 +1337,9 @@ body.gt-play-shell {
   --gt-play-fg: #33ff66;
 }
 
-[data-platform="NGC"] {
+[data-platform="NGC"],
+[data-platform="WII"],
+[data-platform="SWITCH"] {
   --gt-play-accent: #6a5acd;
   --gt-play-room-bg: #0c0a16;
   --gt-play-bezel-bg: linear-gradient(180deg, #4a3a8a, #2a1a5a);
@@ -1331,9 +1364,21 @@ body.gt-play-shell {
   --gt-play-font: Impact, "Arial Black", sans-serif;
 }
 
+[data-platform="WII"] {
+  --gt-play-bezel-label: "Wii";
+}
+
+[data-platform="SWITCH"] {
+  --gt-play-bezel-label: "Switch";
+}
+
 [data-platform="ATARI_2600"],
 [data-platform="ATARI_5200"],
-[data-platform="ATARI_7800"] {
+[data-platform="ATARI_7800"],
+[data-platform="PCE"],
+[data-platform="PCFX"],
+[data-platform="SUPERGRAFX"],
+[data-platform="PCE_CD"] {
   --gt-play-accent: #f5a623;
   --gt-play-bezel-bg: linear-gradient(180deg, #8b4513, #3e2723);
   --gt-play-bezel-border: 6px solid #5d4037;
@@ -1385,7 +1430,8 @@ body.gt-play-shell {
 }
 
 [data-platform="NEOGEO_CD"],
-[data-platform="NGP"] {
+[data-platform="NGP"],
+[data-platform="NGPC"] {
   --gt-play-accent: #ffcc00;
   --gt-play-room-bg: #14100a;
   --gt-play-bezel-bg: linear-gradient(160deg, #262626, #141414);
@@ -1411,7 +1457,8 @@ body.gt-play-shell {
   --gt-play-scanline-opacity: 0.08;
 }
 
-[data-platform="COLECO"] {
+[data-platform="COLECO"],
+[data-platform="GX4000"] {
   --gt-play-accent: #c00;
   --gt-play-room-bg: #140808;
   --gt-play-bezel-bg: linear-gradient(180deg, #2e2e2e, #161616);
@@ -1444,7 +1491,13 @@ body.gt-play-shell {
 }
 
 [data-platform="O2EM"],
-[data-platform="CHAF"] {
+[data-platform="CHAF"],
+[data-platform="ASTROCADE"],
+[data-platform="ARCADIA"],
+[data-platform="CREATIVISION"],
+[data-platform="ADVISION"],
+[data-platform="STUDIO2"],
+[data-platform="SUPERVISION"] {
   --gt-play-accent: #f5a623;
   --gt-play-room-bg: #14100a;
   --gt-play-bezel-bg: linear-gradient(180deg, #3a3018, #2a2010);

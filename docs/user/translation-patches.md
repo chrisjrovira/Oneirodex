@@ -1,6 +1,6 @@
 # Translation patches (IPS / BPS / UPS)
 
-Some ROMs ship in a region or language that does not match your preferred game language (Preferences → **Preferred game language**, default `en-US`). GameTheca can detect No-Intro-style tags from filenames and catalog patch files in the game’s **extras** folder.
+Some ROMs ship in a region or language that does not match your preferred game language (Preferences → **Preferred game language**, default `en-US`). Oneirodex can detect No-Intro-style tags from filenames and catalog patch files in the game’s **extras** folder.
 
 ## Library filter
 
@@ -10,7 +10,7 @@ On Library, the **LANG** badge chip (in the left filter column) filters to title
 
 - Keep a **backup** of the original ROM before applying any patch.
 - Prefer patches from a source you trust (operator-curated URLs or your own files).
-- GameTheca does **not** scrape third-party patch databases.
+- Oneirodex does **not** scrape third-party patch databases.
 - Operators may enable a **local YAML/JSON catalog** (`ENABLE_PATCH_CATALOG` + `PATCH_CATALOG_PATH`) to attach guide URLs — see [`data/patch_catalog.example.json`](../../data/patch_catalog.example.json).
 
 ## Live translate (no fan patch)
@@ -24,7 +24,7 @@ Offline dump→rebuild is **stubbed** per system — [rom-auto-translate.md](../
 [Flips](https://github.com/Alcaro/Flips) applies IPS and BPS patches on Windows / Linux / macOS.
 
 1. Install Flips and note the binary path (`flips.exe` or `flips`).
-2. Download the base ROM from GameTheca (or use your local copy).
+2. Download the base ROM from Oneirodex (or use your local copy).
 3. Download the `.ips` / `.bps` patch from **Translations & patches** on the game details page (or from extras).
 4. Open Flips → **Apply patch** → select patch + base ROM → choose an output path.
 5. Play the patched ROM; leave the original untouched.
@@ -39,7 +39,7 @@ Companion stages files under `app_data/patches/{gameUuid}/` (ACL-safe like cheat
 
 ## Operator: catalog patches
 
-Place `.ips` / `.bps` / `.ups` under the game’s extras folder (same pattern as other extras). On scan, GameTheca sets `extra_kind=translation_patch` and optional `target_language` from the filename. Optionally set `source_url` on the `GameExtra` row to a patch guide URL you host or trust.
+Place `.ips` / `.bps` / `.ups` under the game’s extras folder (same pattern as other extras). On scan, Oneirodex sets `extra_kind=translation_patch` and optional `target_language` from the filename. Optionally set `source_url` on the `GameExtra` row to a patch guide URL you host or trust.
 
 ## Related
 

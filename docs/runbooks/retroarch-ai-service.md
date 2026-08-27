@@ -1,6 +1,6 @@
 # RetroArch AI Service (live OCR / MT overlay)
 
-**Status:** Operator-hosted · GameTheca hints only (`ENABLE_ROM_AI_TRANSLATE`)  
+**Status:** Operator-hosted · Oneirodex hints only (`ENABLE_ROM_AI_TRANSLATE`)  
 **Not:** a permanent ROM patch, browser WebRetro feature, or bundled OCR server
 
 ## What it does
@@ -15,9 +15,9 @@ Supported when playing via **companion / native RetroArch**. Browser WebRetro ca
 2. In RetroArch: **Settings → AI Service**
    - Enable AI Service
    - Output: **Image mode** (recommended for overlays)
-   - AI Service URL: your local server (GameTheca may hint `RETROARCH_AI_SERVICE_URL`)
+   - AI Service URL: your local server (Oneirodex may hint `RETROARCH_AI_SERVICE_URL`)
    - Source / target languages to match the ROM and Preferences → Preferred game language
-3. In GameTheca `.env`:
+3. In Oneirodex `.env`:
    ```bash
    ENABLE_ROM_AI_TRANSLATE=true
    RETROARCH_AI_SERVICE_URL=http://127.0.0.1:4404
@@ -26,7 +26,7 @@ Supported when playing via **companion / native RetroArch**. Browser WebRetro ca
 
 ## Companion behavior
 
-The desktop companion logs a setup note when launching RetroArch with AI hints enabled. RetroArch stores the AI Service URL in **its own config** — GameTheca does not invent fragile CLI flags for the service URL.
+The desktop companion logs a setup note when launching RetroArch with AI hints enabled. RetroArch stores the AI Service URL in **its own config** — Oneirodex does not invent fragile CLI flags for the service URL.
 
 ## Limits
 
@@ -35,7 +35,7 @@ The desktop companion logs a setup note when launching RetroArch with AI hints e
 | Overlay only | Does not rewrite the ROM or create `.bps` |
 | Per-frame / hotkey | Depends on RetroArch + service latency |
 | Core pixel formats | RGB565/RGB888 cores; some HW-rendered cores unsupported |
-| No cloud keys in GameTheca | Operator brings their own local service |
+| No cloud keys in Oneirodex | Operator brings their own local service |
 
 ## Related
 

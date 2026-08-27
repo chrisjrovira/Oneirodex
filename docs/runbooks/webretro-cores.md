@@ -68,7 +68,7 @@ These IDs return **404** on the webretro@6.5 CDN — build via RetroArch emscrip
 ## Steps (end-to-end)
 
 1. Fetch defaults and/or copy deferred pairs into `cores/` (script above).
-2. **No `base.js` edit** — GameTheca serves `GET /api/emulator/installed-cores.js` from disk discovery; `standalone.html` loads WASM from `/static/vendor/webretro/` (not CDN).
+2. **No `base.js` edit** — Oneirodex serves `GET /api/emulator/installed-cores.js` from disk discovery; `standalone.html` loads WASM from `/static/vendor/webretro/` (not CDN).
 3. Restart the app if cores live only in the image layer (bind-mounts are live).
 4. Check health:
    ```bash
@@ -78,7 +78,7 @@ These IDs return **404** on the webretro@6.5 CDN — build via RetroArch emscrip
 5. For DOS only: set `ENABLE_PCDOS_BROWSER=true`.
 6. Confirm Systems badge flips to **Browser** and game details shows **Play in browser** when `can_play_in_browser` is true.
 
-## Cold start (GameTheca embed)
+## Cold start (Oneirodex embed)
 
 Play opens `webretro.html` → iframe `standalone.html?core=&rom=&nobundle=1`.
 

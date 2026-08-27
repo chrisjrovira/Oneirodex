@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="">
-    <title>Playing - GameTheca</title>
+    <title>Playing - Oneirodex</title>
     <link rel="stylesheet" href="./play-skins.css">
     <script src="./play-skins.js"></script>
 </head>
@@ -22,7 +22,7 @@
     <div id="gt-emu-bar">
         <button type="button" id="gt-emu-back" class="gt-emu-back" title="Back to library" aria-label="Back to library">← Library</button>
         <div class="gt-play-bar-identity">
-            <strong class="gt-play-brand">GameTheca</strong>
+            <strong class="gt-play-brand">Oneirodex</strong>
             <span class="gt-play-system" id="gt-play-system" hidden></span>
         </div>
         <div class="gt-play-chrome" role="toolbar" aria-label="Playback">
@@ -164,7 +164,7 @@
                 systemEl.hidden = false;
                 systemEl.textContent = skin.systemLabel;
             }
-            document.title = (skin.systemLabel ? skin.systemLabel + ' - ' : '') + 'GameTheca Play';
+            document.title = (skin.systemLabel ? skin.systemLabel + ' - ' : '') + 'Oneirodex Play';
 
             function sameOriginReferrer() {
                 var ref = document.referrer;
@@ -669,7 +669,7 @@
                                 systemEl.hidden = false;
                                 systemEl.textContent = skin.systemLabel;
                             }
-                            document.title = skin.systemLabel + ' - GameTheca Play';
+                            document.title = skin.systemLabel + ' - Oneirodex Play';
                         }
                     })
                     .catch(function () {});

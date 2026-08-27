@@ -1,12 +1,12 @@
 # ADR: Product name Oneirodex
 
 **Date:** 2026-08-26  
-**Status:** Accepted — **name chosen**; cutover **not started**  
+**Status:** Accepted — **Phase 1 (public string) landed 2026-08-26**. Ops identifiers (Docker Hub, containers, GitHub) and code identifiers (`gametheca/`, `GT_*`, `gt-`) are **not** started.  
 **Owners:** `maintainer` · `agent-docs`
 
 ## Context
 
-The public product string is **GameTheca**. The Python package, Docker image, GitHub repo, Compose/Unraid names, env prefix `GT_*`, and CSS `--gt-*` / `.gt-*` all follow that root. A rename was requested; twenty cosmic-horror-register options were checked against game libraries, launchers, ROM managers, *arr / Unraid-adjacent tools, Steam/itch, and exact GitHub / PyPI / npm slugs. **Oneirodex** was selected.
+The public product string used to be **GameTheca**. The Python package, Docker image, GitHub repo, Compose/Unraid names, env prefix `GT_*`, and CSS `--gt-*` / `.gt-*` still follow that root. A rename was requested; twenty cosmic-horror-register options were checked against game libraries, launchers, ROM managers, *arr / Unraid-adjacent tools, Steam/itch, and exact GitHub / PyPI / npm slugs. **Oneirodex** was selected.
 
 ## Decision
 
@@ -19,14 +19,14 @@ The public product string is **GameTheca**. The Python package, Docker image, Gi
 | Slug | `oneirodex` |
 | Sense | Catalog of dreams / household catalog against the vast. Coined from *oneiros* + dex. No Cthulhu / Arkham / Carcosa proper nouns |
 
-Until an explicit rename wave:
+Phase 1 (this wave):
 
-- User-facing copy, Help, README, and operator docs keep saying **GameTheca**.
+- User-facing copy, Help, README, user/admin docs, and CHANGELOG going forward say **Oneirodex**.
 - Package path stays `gametheca/`. Docker, Compose, Unraid, and GitHub stay `gametheca` / `chrisjrovira/gametheca`.
 - Env stays `GT_*`. CSS stays `--gt-*` / `.gt-*`. Do not invent `OD_*` aliases in this ADR.
-- Danger-zone confirm stays `"RESET GAMETHECA"` until that wave changes it.
+- Danger-zone confirm is `"RESET ONEIRODEX"`. `"RESET GAMETHECA"` remains accepted so existing runbooks cannot lock an operator out.
 
-Do not mix Oneirodex into UI or docs prose except this ADR, [agent-locks.md](../dev/agent-locks.md), [progress.md](../strategy/progress.md), and [docs/README.md](../README.md) naming.
+Do not mix **OneiroDex** or **ONEIRODEX** into UI. Historical CHANGELOG entries and git history keep the old public string.
 
 ## Snapshot (2026-08-26, not counsel)
 
@@ -49,11 +49,11 @@ Adjacent, not the same mark:
 
 Web search found no USPTO / EUIPO hit for Oneirodex as a live software mark. That is **not** a clearance opinion.
 
-## Cutover (only when asked)
+## Cutover
 
-1. **Public string** — UI, Help, README, user/admin docs, CHANGELOG going forward. Package and Docker unchanged.
-2. **Ops identifiers** — image `chrisjrovira/oneirodex`, containers, Unraid template, GitHub repo. Keep redirects / dual names for existing installs.
-3. **Code identifiers** — Python package, `GT_*` → new prefix, CSS `gt-` tokens. Longest and last.
+1. **Public string** — UI, Help, README, user/admin docs, CHANGELOG going forward. Package and Docker unchanged. **Done 2026-08-26.**
+2. **Ops identifiers** — image `chrisjrovira/oneirodex`, containers, Unraid template, GitHub repo. Keep redirects / dual names for existing installs. **Not started.**
+3. **Code identifiers** — Python package, `GT_*` → new prefix, CSS `gt-` tokens. Longest and last. **Not started.**
 
 Existing installs must keep working through (2) and (3). Do not rewrite git history for the old name.
 

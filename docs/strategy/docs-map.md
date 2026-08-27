@@ -1,6 +1,6 @@
 # Documentation map (runbooks, SOPs, assets)
 
-**Date:** 2026-08-26 · **Product version:** 1.0.0-beta  
+**Date:** 2026-08-27 · **Product version:** 1.0.0-beta  
 **Purpose:** Inventory of docs, ops, and communications.  
 **Sync rule:** `.cursor/skills/docs-sync/` (mirrored under `.claude/skills/docs-sync/`).
 
@@ -32,7 +32,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs; decade rooms at `GENERATOR_VERSION` **17** |
 | Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
-| Emulation coverage (Wave 19) | `docs/strategy/emulation-coverage.md` | Have |
+| Emulation coverage (Wave 19) | `docs/strategy/emulation-coverage.md` | Have — play-mode matrix for every `LibraryPlatform`; SG-1000 / NGPC browser-play via shipped WASM |
 | Cheats | `docs/strategy/cheats.md` | Have — `.cht` canonical; RetroArch-only surface; no scrapes |
 | UI rebuild plan | `docs/strategy/ui.md` | Have |
 | Product roadmap | `docs/strategy/roadmap.md` | Have |
@@ -47,7 +47,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Store metadata identify · ownership | `docs/strategy/store-metadata-identify.md` | Have — DRM register-only; no LibraryPlatform.QUEST |
 | Console / emulator library layout | `docs/strategy/console-gaming-libraries.md` | Have — per-leaf libs; skip-dir; no depth-3 walker |
 | Docs map (this file) | `docs/strategy/docs-map.md` | Have |
-| Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) · [0003 Oneirodex name](../adr/0003-product-name-oneirodex.md) (chosen; cutover not started) |
+| Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) · [0003 Oneirodex name](../adr/0003-product-name-oneirodex.md) (phase 1 public string landed; ops/code identifiers not started) |
 | Competitive re-score template | `docs/strategy/competitor-rescore.md` | **Have** — 2026-08-26; named scores stay in `docs/_private/peer-notes/` |
 | Cloud vs Unraid TCO ballpark | `docs/strategy/cloud-tco-ballpark.md` | Have — Unraid-first; worksheet in private vault |
 
@@ -58,16 +58,16 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Guide | Audience | Status | Notes |
 |---|---|---|---|
 | Getting started (web) | End users | Have | [getting-started.md](../user/getting-started.md) |
-| Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) |
+| Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) — set completeness identity lives in bar two |
 | Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — decade rooms + colour cabinets, grouped room-card picker (Jinja `group['items']`) |
 | Downloading games | End users | Have | [downloads.md](../user/downloads.md) |
-| Browser / companion play matrix | End users | Have | [browser-play.md](../user/browser-play.md) |
+| Browser / companion play matrix | End users | Have | [browser-play.md](../user/browser-play.md) — full `LibraryPlatform` matrix |
 | Free games (News claims) | End users | Have | [free-games.md](../user/free-games.md) |
 | Social, chat & voice | End users | Have | [social-and-voice.md](../user/social-and-voice.md) |
-| FAQ | End users | Have | [faq.md](../user/faq.md) — Preferences picker render crash documented |
+| FAQ | End users | Have | [faq.md](../user/faq.md) — Oneirodex public string · Preferences picker · which systems play |
 | Troubleshooting | End users | Have | [troubleshooting.md](../user/troubleshooting.md) — Preferences picker render crash fixed |
 | Game details / freshness badges | End users | Create | Tile contract already in library-and-systems.md |
-| Playing ROMs in browser | End users | Update | Platform matrix |
+| Playing ROMs in browser | End users | Have | Covered in [browser-play.md](../user/browser-play.md) |
 | Attract mode | End users | Update | Idle timeout, filters |
 | Wishlist / requests | End users | Create | |
 | Desktop client guide | End users | Have | [desktop-companion.md](../user/desktop-companion.md) |

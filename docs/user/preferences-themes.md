@@ -17,7 +17,7 @@ opens fully expanded until you change that.
 - **Default (system)** is the built-in theme id `default` (saved explicitly — not `None`). It uses the 1980s wood-den scenery with the green glass accent.
 - Default brand accent is green **`#2fd67b`** (Style B+C glass). Colour cabinets (Aurora, Ember, Violet, Forest, Ocean, Rose, Mono, Sunset, Ice) plus six decade rooms recolour accent, surfaces, glass/CRT, typography, spacing, radius, paired icon geometry, **and** the era room (`GENERATOR_VERSION` 17). Ask an admin to **Reset Default Themes** after that bump or presets stay on the previous generator and miss `gt-era.css`.
 - Picking a room card also selects that preset’s paired icon pack (still changeable before Save). The live preview repaints the accent **and** switches the room scenery before you save.
-- The chosen theme applies on the **next page load** — every stylesheet, the brand mark, the tile chrome, the **stock avatars**, and **backup/placeholder covers** follow it. Untitled games get a Pillow placeholder painted in the active decade room (cached per theme). The seven avatars GameTheca ships are recoloured into each preset's palette. An avatar you uploaded yourself is your picture and is never recoloured.
+- The chosen theme applies on the **next page load** — every stylesheet, the brand mark, the tile chrome, the **stock avatars**, and **backup/placeholder covers** follow it. Untitled games get a Pillow placeholder painted in the active decade room (cached per theme). The seven avatars Oneirodex ships are recoloured into each preset's palette. An avatar you uploaded yourself is your picture and is never recoloured.
 - If cards do nothing, accents look wrong, rooms stay flat, or presets still look accent-only, the library volume may have stale theme files — ask an admin to **Reset Default Themes** after a rebuild.
 
 > **Fixed:** themes used to appear not to save at all — the page came back with
@@ -45,7 +45,7 @@ opens fully expanded until you change that.
   automatically (a Game Boy title gets the compact pixel face, a PS1 title the
   disc-era one).
 
-- **Every listed face ships with GameTheca.** The open-licence (OFL 1.1) faces
+- **Every listed face ships with Oneirodex.** The open-licence (OFL 1.1) faces
   are bundled in the release and copied into place on every server start — no
   download, no admin step, and nothing to do on an air-gapped install. If the
   picker ever shows *not installed*, that is a genuine file problem on the

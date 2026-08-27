@@ -1,7 +1,7 @@
 # Observability profile (optional)
 
 **Audience:** Unraid / Compose operators who want Prometheus later  
-**Status:** Stub — **not required** for GameTheca 1.0
+**Status:** Stub — **not required** for Oneirodex 1.0
 
 ## Default ops path (use this first)
 
@@ -22,7 +22,7 @@ Repo `docker-compose.yml` keeps a **commented** `# profile: observability` stub 
 Typical operator steps when you opt in:
 
 1. Uncomment (or copy) the stub services under the observability note in `docker-compose.yml`.
-2. Point Prometheus at GameTheca only after a scrape endpoint exists (future `/metrics` — admin or token-gated; never open library paths on an unauthenticated scrape).
+2. Point Prometheus at Oneirodex only after a scrape endpoint exists (future `/metrics` — admin or token-gated; never open library paths on an unauthenticated scrape).
 3. Start with: `docker compose --profile observability up -d` (same pattern as `livekit` / `clamav`).
 4. Keep Admin → Ops as the primary glance; treat Grafana as optional dashboards on top.
 

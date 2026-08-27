@@ -1,7 +1,7 @@
 ---
 name: docs-sync
 description: >-
-  Keeps GameTheca documentation in sync with the current change. Use when
+  Keeps Oneirodex documentation in sync with the current change. Use when
   finishing a coding task, marking work done, or when the user asks to update
   docs. Covers README, docs-map, the living progress board, user/admin guides,
   FAQ, troubleshooting, runbooks, HelpPage, and strategy docs.
@@ -34,7 +34,7 @@ Read [checklist.md](checklist.md) for the inventory map. Prefer **updating an ex
 - Concise; tables over prose.
 - Match `progress.md` — do not claim more than the code does.
 - Do not invent screenshots; mark Capture needed in docs-map if the UI is new **and** capture cannot run this turn.
-- Until the Oneirodex cutover ([ADR 0003](../../../docs/adr/0003-product-name-oneirodex.md)), keep writing **GameTheca** in user/admin docs; the package path stays `gametheca/`. Do not mix Oneirodex into guides except the ADR, agent-locks, progress, and the docs-hub naming table.
+- Write **Oneirodex** in user/admin docs ([ADR 0003](../../../docs/adr/0003-product-name-oneirodex.md) phase 1). The package path stays `gametheca/`. Docker / GitHub / `GT_*` / `gt-` stay as they are until an identifier wave. Do not mix OneiroDex or ONEIRODEX into guides.
 
 ## Anti-patterns
 

@@ -14,7 +14,7 @@ import './ProposeLeafLibraries.css'
  */
 export function ImportLeafLibraries({
   heading = 'Import leaf libraries (CSV / JSON)',
-  lede = 'Upload or paste leaf definitions, preview candidates and row errors, then confirm create — GameTheca never auto-creates libraries or family mega-libs.',
+  lede = 'Upload or paste leaf definitions, preview candidates and row errors, then confirm create — Oneirodex never auto-creates libraries or family mega-libs.',
 } = {}) {
   const [inputMode, setInputMode] = useState('json')
   const [pasteText, setPasteText] = useState('')

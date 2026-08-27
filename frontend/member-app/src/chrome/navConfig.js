@@ -6,7 +6,7 @@
  * name nowhere in the navigation once the brand mark shrank to a glyph. Naming
  * the block is what lets it collapse like every other group.
  */
-export const PRIMARY_GROUP = { id: 'gametheca', label: 'GameTheca' }
+export const PRIMARY_GROUP = { id: 'gametheca', label: 'Oneirodex' }
 
 /** Section-aware crumbs for the member top nav. */
 export function getPrimaryLinks() {

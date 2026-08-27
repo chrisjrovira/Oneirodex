@@ -7,21 +7,28 @@
 
   var NINTENDO = {
     NES: 1, SNES: 1, NGC: 1, N64: 1, GB: 1, GBA: 1, GBC: 1, NDS: 1, VB: 1,
-    WII: 1, N3DS: 1,
+    WII: 1, N3DS: 1, SWITCH: 1,
   };
   var SONY = { PSX: 1, PS2: 1, PS3: 1, PS4: 1, PS5: 1, PSP: 1, PSVITA: 1 };
   var XBOX = { XBOX: 1, X360: 1, XONE: 1, XSX: 1 };
   var SEGA = {
     SEGA_MD: 1, SEGA_MS: 1, SEGA_CD: 1, SEGA_32X: 1, SEGA_GG: 1, SEGA_SATURN: 1,
-    SEGA_DC: 1,
+    SEGA_DC: 1, SEGA_SG1000: 1,
   };
-  var ARCADE = { ARCADE: 1, MAME: 1, FBNEO: 1 };
+  var ARCADE = {
+    ARCADE: 1, MAME: 1, FBNEO: 1, NEOGEO: 1, DAPHNE: 1, PINBALL: 1, ACTIONMAX: 1,
+  };
   var ATARI = {
     ATARI_7800: 1, ATARI_5200: 1, ATARI_2600: 1, LYNX: 1, JAGUAR: 1,
-    PCE: 1, PCFX: 1, NGP: 1, WS: 1, COLECO: 1, THREEDO: 1, VECTREX: 1,
-    NEOGEO_CD: 1, INTV: 1, CHAF: 1, O2EM: 1,
+    PCE: 1, PCFX: 1, NGP: 1, NGPC: 1, WS: 1, COLECO: 1, THREEDO: 1, VECTREX: 1,
+    NEOGEO_CD: 1, INTV: 1, CHAF: 1, O2EM: 1, SUPERGRAFX: 1, PCE_CD: 1,
+    SUPERVISION: 1, GX4000: 1, ASTROCADE: 1, ARCADIA: 1, CREATIVISION: 1,
+    ADVISION: 1, STUDIO2: 1,
   };
-  var PC = { PCWIN: 1, PCDOS: 1, PC: 1, MAC: 1, OTHER: 1 };
+  var PC = {
+    PCWIN: 1, PCDOS: 1, PC: 1, MAC: 1, OTHER: 1, AMIGA: 1,
+    VICE_X64SC: 1, VICE_X128: 1, VICE_XVIC: 1, VICE_XPLUS4: 1, VICE_XPET: 1,
+  };
 
   var FAMILY_META = {
     nintendo: { family: 'nintendo', accent: '#e60012', label: 'Nintendo' },
@@ -45,8 +52,12 @@
     VB: 'Virtual Boy',
     WII: 'Wii',
     N3DS: 'Nintendo 3DS',
+    SWITCH: 'Nintendo Switch',
     PSX: 'PlayStation',
     PS2: 'PlayStation 2',
+    PS3: 'PlayStation 3',
+    PS4: 'PlayStation 4',
+    PS5: 'PlayStation 5',
     PSP: 'PSP',
     PSVITA: 'PS Vita',
     SEGA_MD: 'Genesis / Mega Drive',
@@ -56,6 +67,7 @@
     SEGA_GG: 'Game Gear',
     SEGA_SATURN: 'Sega Saturn',
     SEGA_DC: 'Dreamcast',
+    SEGA_SG1000: 'SG-1000',
     ARCADE: 'Arcade',
     MAME: 'Arcade',
     FBNEO: 'Arcade',
@@ -65,18 +77,45 @@
     LYNX: 'Atari Lynx',
     JAGUAR: 'Atari Jaguar',
     THREEDO: '3DO',
+    NEOGEO: 'Neo Geo AES',
     NEOGEO_CD: 'Neo Geo CD',
     NGP: 'Neo Geo Pocket',
+    NGPC: 'Neo Geo Pocket Color',
     WS: 'WonderSwan',
     COLECO: 'ColecoVision',
     VECTREX: 'Vectrex',
     INTV: 'Intellivision',
     O2EM: 'Odyssey²',
     CHAF: 'Channel F',
+    PCE: 'PC Engine',
+    PCFX: 'PC-FX',
+    SUPERGRAFX: 'SuperGrafx',
+    PCE_CD: 'PC Engine CD',
     PCWIN: 'PC',
     PCDOS: 'DOS',
     PC: 'PC',
     MAC: 'Mac',
+    OTHER: 'Other',
+    AMIGA: 'Amiga',
+    VICE_X64SC: 'Commodore 64',
+    VICE_X128: 'Commodore 128',
+    VICE_XVIC: 'VIC-20',
+    VICE_XPLUS4: 'Plus/4',
+    VICE_XPET: 'PET',
+    XBOX: 'Xbox',
+    X360: 'Xbox 360',
+    XONE: 'Xbox One',
+    XSX: 'Xbox Series',
+    SUPERVISION: 'Supervision',
+    GX4000: 'GX4000',
+    ASTROCADE: 'Astrocade',
+    ARCADIA: 'Arcadia 2001',
+    CREATIVISION: 'CreatiVision',
+    ADVISION: 'Adventure Vision',
+    STUDIO2: 'Studio II',
+    ACTIONMAX: 'Action Max',
+    DAPHNE: 'Daphne',
+    PINBALL: 'Pinball',
   };
 
   /**
@@ -87,17 +126,26 @@
    */
   var ASPECT_RATIOS = {
     NES: [4, 3], SNES: [4, 3], N64: [4, 3], NGC: [4, 3], WII: [4, 3], N3DS: [5, 3],
+    SWITCH: [16, 9],
     // NDS cores render both screens stacked into one portrait framebuffer.
     GB: [10, 9], GBC: [10, 9], GBA: [3, 2], NDS: [2, 3], VB: [4, 3],
-    PSX: [4, 3], PS2: [4, 3], PS3: [16, 9], PSP: [16, 9], PSVITA: [16, 9],
+    PSX: [4, 3], PS2: [4, 3], PS3: [16, 9], PS4: [16, 9], PS5: [16, 9],
+    PSP: [16, 9], PSVITA: [16, 9],
     SEGA_MD: [4, 3], SEGA_MS: [4, 3], SEGA_CD: [4, 3], SEGA_32X: [4, 3],
-    SEGA_GG: [10, 9], SEGA_SATURN: [4, 3], SEGA_DC: [4, 3],
-    ARCADE: [4, 3], MAME: [4, 3], FBNEO: [4, 3],
+    SEGA_GG: [10, 9], SEGA_SATURN: [4, 3], SEGA_DC: [4, 3], SEGA_SG1000: [4, 3],
+    ARCADE: [4, 3], MAME: [4, 3], FBNEO: [4, 3], DAPHNE: [4, 3], PINBALL: [4, 3],
+    ACTIONMAX: [4, 3],
     ATARI_2600: [4, 3], ATARI_5200: [4, 3], ATARI_7800: [4, 3],
-    LYNX: [8, 5], JAGUAR: [4, 3], PCE: [4, 3], PCFX: [4, 3],
-    NGP: [10, 9], WS: [10, 9], COLECO: [4, 3], THREEDO: [4, 3], VECTREX: [4, 3],
-    NEOGEO_CD: [4, 3], INTV: [4, 3], O2EM: [4, 3], CHAF: [4, 3],
+    LYNX: [8, 5], JAGUAR: [4, 3], PCE: [4, 3], PCFX: [4, 3], SUPERGRAFX: [4, 3],
+    PCE_CD: [4, 3],
+    NGP: [10, 9], NGPC: [10, 9], WS: [10, 9], COLECO: [4, 3], THREEDO: [4, 3],
+    VECTREX: [4, 3], NEOGEO: [4, 3], NEOGEO_CD: [4, 3], INTV: [4, 3], O2EM: [4, 3],
+    CHAF: [4, 3], SUPERVISION: [10, 9], GX4000: [4, 3], ASTROCADE: [4, 3],
+    ARCADIA: [4, 3], CREATIVISION: [4, 3], ADVISION: [4, 3], STUDIO2: [4, 3],
+    XBOX: [4, 3], X360: [16, 9], XONE: [16, 9], XSX: [16, 9],
     PCWIN: [4, 3], PCDOS: [4, 3], PC: [4, 3], MAC: [4, 3], OTHER: [4, 3],
+    AMIGA: [4, 3], VICE_X64SC: [4, 3], VICE_X128: [4, 3], VICE_XVIC: [4, 3],
+    VICE_XPLUS4: [4, 3], VICE_XPET: [4, 3],
   };
   var DEFAULT_ASPECT = [4, 3];
 
@@ -121,6 +169,7 @@
     ppsspp: 'PSP',
     genesis_plus_gx: 'SEGA_MD',
     picodrive: 'SEGA_MD',
+    gearsystem: 'SEGA_SG1000',
     yabause: 'SEGA_SATURN',
     flycast: 'SEGA_DC',
     mame: 'ARCADE',
@@ -142,6 +191,16 @@
     freeintv: 'INTV',
     freechaf: 'CHAF',
     dosbox_pure: 'PCDOS',
+    vice_x64: 'VICE_X64SC',
+    mednafen_pce_fast: 'PCE',
+    mednafen_pce: 'PCE',
+    mednafen_supergrafx: 'SUPERGRAFX',
+    puae: 'AMIGA',
+    potator: 'SUPERVISION',
+    cap32: 'GX4000',
+    dolphin: 'NGC',
+    citra: 'N3DS',
+    pcsx2: 'PS2',
   };
 
   function familyForPlatform(platformId) {
@@ -179,8 +238,8 @@
     teen_bedroom_90s: 'ADVISION GB GBC LYNX NGP NGPC SEGA_32X SEGA_GG SEGA_MD SNES SUPERVISION VB WS',
     carpet_den_late_90s: 'JAGUAR N64 PCE_CD PCFX PSX SEGA_CD SEGA_SATURN THREEDO',
     media_center_00s: 'GBA N3DS NDS NGC PS2 PS3 PSP PSVITA SEGA_DC SWITCH WII X360 XBOX XONE XSX',
-    arcade_cabinet: 'ARCADE DAPHNE NEOGEO NEOGEO_CD PINBALL',
-    desk: 'AMIGA MAC PCDOS PCWIN VICE_X128 VICE_X64SC VICE_XPET VICE_XPLUS4 VICE_XVIC'
+    arcade_cabinet: 'ARCADE DAPHNE NEOGEO NEOGEO_CD PINBALL ACTIONMAX',
+    desk: 'AMIGA MAC OTHER PCDOS PCWIN VICE_X128 VICE_X64SC VICE_XPET VICE_XPLUS4 VICE_XVIC'
   };
 
   // LCD / handheld panels never had CRT scanlines — even when the room is a

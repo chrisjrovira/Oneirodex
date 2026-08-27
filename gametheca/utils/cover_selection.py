@@ -80,7 +80,7 @@ def image_save_path_status() -> dict[str, Any]:
     if exists_on_disk:
         writable = os.access(path, os.W_OK)
         if not writable:
-            error = f"IMAGE_SAVE_PATH '{path}' is not writable by the GameTheca process"
+            error = f"IMAGE_SAVE_PATH '{path}' is not writable by the Oneirodex process"
     return {
         'path': path,
         'exists': exists_on_disk,

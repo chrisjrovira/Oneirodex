@@ -98,7 +98,7 @@ No Discord / webhook sinks — alerts stay in-app SystemEvents / optional SMTP d
 
 ## Danger zone — reset this install
 
-Bottom of **Admin → System (Ops)**. Clears GameTheca's *database* and returns the
+Bottom of **Admin → System (Ops)**. Clears Oneirodex's *database* and returns the
 install toward first-boot state.
 
 **It never deletes files.** Scanned games, artwork you supplied, firmware on the
@@ -120,7 +120,7 @@ Two steps, enforced by the API rather than by the UI:
    every table it would empty, including those reached by cascade — and changes
    nothing. This is the default: a call that omits the phrase gets a description
    of the damage, not the damage.
-2. Repeat with `"confirm": "RESET GAMETHECA"` to perform it.
+2. Repeat with `"confirm": "RESET ONEIRODEX"` to perform it. `"RESET GAMETHECA"` still works.
 
 Tables are emptied in one `TRUNCATE ... RESTART IDENTITY CASCADE`, so the reset
 is a single transaction — it lands whole or not at all, with no half-cleared

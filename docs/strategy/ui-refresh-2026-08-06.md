@@ -186,6 +186,8 @@ list would drift the moment a section is added.
 | Updates | — | Refresh, with the refresh status as the summary. That status is the only thing distinguishing a stale inbox from a fresh one, so it moves rather than being dropped |
 | Wishlist | — | Request form behind a **Request a title** popover; the librarian "show everyone's requests" checkbox becomes a bar-two toggle that still reports state via `aria-pressed` — a librarian who cannot tell whose requests they are reading is worse off than before the move |
 | Collections | — | The create form moves behind a **New collection** popover. A permanently visible three-field form above the list is exactly the furniture bar two exists to absorb — and the empty state had to change with it, since "create your first shelf with the form above" stops being true |
+| Set completion | — | Platform · region is the bar title (it is data, not a routed name). Owned count in the trail. **Systems** / **Browse library** as actions. Region select in Filters, badged off USA |
+| Playtime | — | Title retired; total duration · game count in the trail. No header actions to move |
 
 Counts are omitted while a feed is still loading. A "0" beside *Free now* reads
 as "there is nothing free" when the truth is that the request has not returned.

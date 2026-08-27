@@ -95,7 +95,7 @@ export function ScanMatchSettingsPage() {
       <h1>Scan / match policy</h1>
       <p className="gt-admin-lede">
         Control how library scans propose vs auto-import matches. Many-leaf console libraries stay
-        leaf-only — GameTheca does not offer mega-library or depth-3 family walk options here.
+        leaf-only — Oneirodex does not offer mega-library or depth-3 family walk options here.
       </p>
 
       {/* The two `gt-admin-banner` blocks below stay as banners: they disclose
