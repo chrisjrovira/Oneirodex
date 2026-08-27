@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createToken, listTokens, revokeToken } from '../api/tokens'
+import { PageStatus } from '../components/PageStatus'
 import { copyText } from '../utils/copyText'
 import { showToast } from '../utils/toast'
 import '../styles/panelGrid.css'
@@ -157,12 +158,12 @@ export function TokensPage() {
       </p>
 
       {error ? (
-        <p role="alert">
-          {error.message || 'Unable to load tokens.'}{' '}
-          <button type="button" className="gt-btn" onClick={() => setRetryCount((n) => n + 1)}>
-            Retry
-          </button>
-        </p>
+        <PageStatus
+          error={error}
+          errorMessage={error.message || 'Unable to load tokens.'}
+          onRetry={() => setRetryCount((n) => n + 1)}
+          retryLabel="Retry"
+        />
       ) : null}
 
       {createdSecret ? (

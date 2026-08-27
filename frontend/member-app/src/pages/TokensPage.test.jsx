@@ -241,3 +241,37 @@ test('revokes a token after confirm', async () => {
   })
   expect(await screen.findByText(/no active tokens yet/i)).toBeInTheDocument()
 })
+
+test('failed list uses PageStatus with Retry', async () => {
+  const user = userEvent.setup()
+  let failList = true
+  tokensApi.listTokens.mockImplementation(() => {
+    if (failList) {
+      return Promise.reject(new Error('Unable to load tokens.'))
+    }
+    return Promise.resolve({
+      tokens: [
+        {
+          id: 7,
+          name: 'Living room PC',
+          token_prefix: 'gt_abcd',
+          scopes: ['read:library', 'write:download'],
+          created_at: '2026-07-01T12:00:00+00:00',
+          last_used_at: null,
+          revoked: false,
+        },
+      ],
+      scope_presets: {},
+    })
+  })
+
+  render(<TokensPage />)
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load tokens.')
+  expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+
+  failList = false
+  await user.click(screen.getByRole('button', { name: 'Retry' }))
+  expect(await screen.findByText('Living room PC')).toBeInTheDocument()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})

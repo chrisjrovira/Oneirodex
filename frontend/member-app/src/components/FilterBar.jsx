@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchFilterOptions } from '../api/filters'
+import { PageStatus } from './PageStatus'
 import { BADGE_FILTER_CHIPS, toggleBadgeFilter } from './BadgeFilterChips'
 import {
   ITEM_KIND_FILTER_CHIPS,
@@ -280,7 +281,9 @@ export function FilterBar({
       </div>
 
       <div id="library-filters-body" className="library-filters__body">
-        {loadError && <p role="alert">{t('Unable to load filter options.')}</p>}
+        {loadError ? (
+          <PageStatus error errorMessage={t('Unable to load filter options.')} />
+        ) : null}
         {selects.map(([name, label, emptyLabel, source, valueField, textField]) => (
           <label key={name}>
             {label}

@@ -29,6 +29,7 @@ import './components/libraryFilters.css'
 import { GameGrid } from './components/GameGrid'
 import { GameGridSkeleton } from './components/GameGridSkeleton'
 import { LibrarySelectionBar } from './components/LibrarySelectionBar'
+import { PageStatus } from './components/PageStatus'
 import { PaginationBar } from './components/PaginationBar'
 import { createTranslator } from './i18n'
 import { batchItemUuids, summarizeBatchOutcome } from './utils/batchOutcome'
@@ -529,12 +530,12 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   let content
   if (error && !result) {
     content = (
-      <div role="alert">
-        <p>{t('Unable to load games.')}</p>
-        <button type="button" className="gt-btn" onClick={retry}>
-          {t('Retry')}
-        </button>
-      </div>
+      <PageStatus
+        error={error}
+        errorMessage={t('Unable to load games.')}
+        onRetry={retry}
+        retryLabel={t('Retry')}
+      />
     )
   } else if (showSkeleton) {
     content = (
@@ -561,12 +562,12 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     content = (
       <>
         {error && (
-          <div role="alert">
-            <p>{t('Unable to refresh games.')}</p>
-            <button type="button" className="gt-btn" onClick={retry}>
-              {t('Retry')}
-            </button>
-          </div>
+          <PageStatus
+            error={error}
+            errorMessage={t('Unable to refresh games.')}
+            onRetry={retry}
+            retryLabel={t('Retry')}
+          />
         )}
         <LibrarySelectionBar
           count={selectedIds.size}

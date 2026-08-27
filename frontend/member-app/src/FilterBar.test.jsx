@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import * as filtersApi from './api/filters'
 import {
   FilterBar,
   FILTERS_VISIBLE_KEY,
@@ -11,17 +12,18 @@ import {
 } from './components/FilterBar'
 
 vi.mock('./api/filters', () => ({
-  fetchFilterOptions: () =>
-    Promise.resolve({
-      libraries: [],
-      libraryPlatforms: [],
-      igdbPlatforms: [],
-      genres: [{ id: 1, name: 'Action' }],
-      themes: [],
-      gameModes: [],
-      playerPerspectives: [],
-    }),
+  fetchFilterOptions: vi.fn(),
 }))
+
+const FILTER_OPTIONS = {
+  libraries: [],
+  libraryPlatforms: [],
+  igdbPlatforms: [],
+  genres: [{ id: 1, name: 'Action' }],
+  themes: [],
+  gameModes: [],
+  playerPerspectives: [],
+}
 
 function clearFiltersVisibleFlag() {
   try {
@@ -33,6 +35,8 @@ function clearFiltersVisibleFlag() {
 
 beforeEach(() => {
   clearFiltersVisibleFlag()
+  filtersApi.fetchFilterOptions.mockReset()
+  filtersApi.fetchFilterOptions.mockResolvedValue(FILTER_OPTIONS)
 })
 
 afterEach(() => {
@@ -272,4 +276,14 @@ test('FilterBar kind chips drive item_kind browse param', async () => {
   )
   await user.click(screen.getByRole('button', { name: 'Soft titles' }))
   expect(onApply).toHaveBeenLastCalledWith({})
+})
+
+test('shows a page status when filter options fail to load', async () => {
+  filtersApi.fetchFilterOptions.mockRejectedValue(new Error('bundle failed'))
+
+  render(<FilterBar filters={{}} onApply={() => {}} onClear={() => {}} />)
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Unable to load filter options.',
+  )
 })

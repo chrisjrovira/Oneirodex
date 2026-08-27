@@ -417,3 +417,59 @@ test('sort defaults do not inflate the filter badge', async () => {
   expect(trigger).not.toHaveClass('is-on')
   expect(trigger.textContent).not.toMatch(/\d/)
 })
+
+test('failed first browse uses PageStatus with Retry', async () => {
+  const user = userEvent.setup()
+  let failBrowse = true
+  const fetchMock = vi.fn((url) => {
+    if (typeof url === 'string' && url.startsWith('/browse_games?')) {
+      if (failBrowse) {
+        return Promise.resolve({
+          ok: false,
+          status: 500,
+          json: () => Promise.resolve({ error: 'Unable to load games.' }),
+        })
+      }
+      return jsonResponse({
+        games: [
+          {
+            uuid: 'a',
+            name: 'Game A',
+            cover_url: '/static/x',
+            is_favorite: false,
+            has_local_override: false,
+            is_vr: false,
+            genres: [],
+          },
+        ],
+        pages: 1,
+        current_page: 1,
+        total: 1,
+      })
+    }
+    return jsonResponse([])
+  })
+  vi.stubGlobal('fetch', fetchMock)
+
+  renderLibrary(
+    <LibraryApp
+      initialConfig={{
+        perPage: 20,
+        showPlayStatus: false,
+        isAdmin: false,
+        libraryCount: 1,
+        gamesCount: 1,
+      }}
+    />,
+  )
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load games.')
+  expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+
+  failBrowse = false
+  await user.click(screen.getByRole('button', { name: 'Retry' }))
+  expect(await screen.findByText('Game A')).toBeInTheDocument()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+
+  vi.unstubAllGlobals()
+})
