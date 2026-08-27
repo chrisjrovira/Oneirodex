@@ -1,9 +1,10 @@
 from gametheca.utils.member_spa import render_member_spa
-from flask import render_template, redirect, url_for, flash, jsonify, current_app, abort
+from flask import render_template, redirect, url_for, flash, current_app, abort
 from flask_login import login_required, current_user
 from gametheca.forms import CsrfProtectForm
 from gametheca.models import DownloadRequest
 from sqlalchemy import select
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.functions import format_size
 from gametheca.utils.event_logging import log_system_event
 from . import download_bp
@@ -53,28 +54,31 @@ def check_download_status(download_id):
     except (ValueError, TypeError):
         log_system_event(f"Invalid download_id parameter in status check: {download_id}", 
                         event_type='security', event_level='warning')
-        return jsonify({
-            'status': 'invalid',
-            'downloadId': download_id,
-            'found': False,
-            'error': 'Invalid download ID'
-        }), 400
+        return api_error(
+            'Invalid download ID',
+            code='bad_request',
+            body_status='invalid',
+            downloadId=download_id,
+            found=False,
+        )
     
     download_request = db.session.execute(select(DownloadRequest).filter_by(id=download_id, user_id=current_user.id)).scalars().first()
     
     if download_request:
-        return jsonify({
+        return api_ok({
             'status': download_request.status,
             'downloadId': download_request.id,
-            'found': True
+            'found': True,
         })
     
     # Log unauthorized access attempt
     log_system_event(f"Unauthorized download status check: user {current_user.id} tried to check download {download_id}", 
                     event_type='security', event_level='warning')
     
-    return jsonify({
-        'status': 'not_found',
-        'downloadId': download_id,
-        'found': False
-    }), 404
+    return api_error(
+        'Download request not found',
+        code='not_found',
+        body_status='not_found',
+        downloadId=download_id,
+        found=False,
+    )

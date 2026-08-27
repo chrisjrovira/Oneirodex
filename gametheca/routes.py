@@ -927,11 +927,6 @@ def update_unmatched_folder_status():
 @admin_required
 def clear_unmatched_entry(folder_id):
     """Clear a single unmatched folder entry from the database."""
-    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
-    # admin_manage_scanjobs.js drive a state machine off `data.status`
-    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
-    # 'not_found'), and api_error takes `status` for the HTTP code so it
-    # cannot carry one. Recorded in the envelope baseline deliberately.
     try:
         folder = db.session.get(UnmatchedFolder, folder_id) or abort(404)
         db.session.delete(folder)
@@ -943,7 +938,11 @@ def clear_unmatched_entry(folder_id):
         db.session.rollback()
         current_app.logger.warning('clear unmatched entry failed: %s', e)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'status': 'error', 'message': 'Could not clear the entry'}), 500
+            return api_error(
+                'Could not clear the entry',
+                code='internal',
+                body_status='error',
+            )
         flash('Error clearing unmatched folder entry.', 'error')
     return redirect(url_for('main.scan_management'))
 
@@ -952,11 +951,6 @@ def clear_unmatched_entry(folder_id):
 @admin_required
 def toggle_ignore_status(folder_id):
     """Toggle the ignore status of an unmatched folder."""
-    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
-    # admin_manage_scanjobs.js drive a state machine off `data.status`
-    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
-    # 'not_found'), and api_error takes `status` for the HTTP code so it
-    # cannot carry one. Recorded in the envelope baseline deliberately.
     try:
         folder = db.session.get(UnmatchedFolder, folder_id) or abort(404)
         # Toggle between 'Ignore' and the original status (likely 'Unmatched' or 'Duplicate')
@@ -979,7 +973,11 @@ def toggle_ignore_status(folder_id):
         db.session.rollback()
         current_app.logger.warning('toggle ignore status failed: %s', e)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'status': 'error', 'message': 'Could not change the folder status'}), 500
+            return api_error(
+                'Could not change the folder status',
+                code='internal',
+                body_status='error',
+            )
         flash('Error toggling ignore status.', 'error')
 
     return redirect(url_for('main.scan_management'))
@@ -1018,15 +1016,13 @@ def refresh_game_images(game_uuid):
 @admin_required
 def check_image_refresh_progress(game_uuid):
     """Check the progress of an image refresh operation."""
-    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
-    # admin_manage_scanjobs.js drive a state machine off `data.status`
-    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
-    # 'not_found'), and api_error takes `status` for the HTTP code so it
-    # cannot carry one. Recorded in the envelope baseline deliberately.
+    # `status` on the cached dict is job progress (`complete` / `error` /
+    # `in_progress`), not an envelope marker. Wrapping with api_ok would stamp
+    # ok=True onto a failed refresh. image_refresh_progress.js branches on it.
     progress_data = cache.get(f'image_refresh_progress_{game_uuid}')
 
     if progress_data is None:
-        return jsonify({'status': 'not_found', 'progress': 0})
+        return api_ok({'status': 'not_found', 'progress': 0})
 
     return jsonify(progress_data)
 
@@ -1056,22 +1052,17 @@ def delete_game_route(game_uuid):
 @login_required
 @admin_required
 def delete_folder():
-    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
-    # admin_manage_scanjobs.js drive a state machine off `data.status`
-    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
-    # 'not_found'), and api_error takes `status` for the HTTP code so it
-    # cannot carry one. Recorded in the envelope baseline deliberately.
     data = request.get_json()
     folder_path = data.get('folder_path') if data else None
 
     if not folder_path:
-        return jsonify({'status': 'error', 'message': 'Path is required.'}), 400
+        return api_error('Path is required.', code='bad_request', body_status='error')
 
     allowed_bases = get_allowed_base_directories(current_app)
     is_safe, error_message = is_safe_path(folder_path, allowed_bases)
     if not is_safe:
         print(f"Security error: delete_folder path validation failed for {folder_path}: {error_message}")
-        return jsonify({'status': 'error', 'message': 'Access denied.'}), 403
+        return api_error('Access denied.', code='forbidden', body_status='error')
 
     full_path = os.path.abspath(folder_path)
 
@@ -1081,7 +1072,11 @@ def delete_folder():
         if folder_entry:
             db.session.delete(folder_entry)
             db.session.commit()
-        return jsonify({'status': 'error', 'message': 'The specified path does not exist. Entry removed if it was in the database.'}), 404
+        return api_error(
+            'The specified path does not exist. Entry removed if it was in the database.',
+            code='not_found',
+            body_status='error',
+        )
 
     try:
         if os.path.isfile(full_path):
@@ -1095,13 +1090,18 @@ def delete_folder():
                 db.session.commit()
             return api_ok({'status': 'success', 'message': 'Item deleted successfully. Database entry removed.'})
     except PermissionError:
-        return jsonify({'status': 'error', 'message': 'Failed to delete the item due to insufficient permissions. Database entry retained.'}), 403
+        return api_error(
+            'Failed to delete the item due to insufficient permissions. Database entry retained.',
+            code='forbidden',
+            body_status='error',
+        )
     except Exception as e:
         current_app.logger.warning('delete unmatched item failed: %s', e)
-        return jsonify({
-            'status': 'error',
-            'message': 'Could not delete the item. Database entry retained.',
-        }), 500
+        return api_error(
+            'Could not delete the item. Database entry retained.',
+            code='internal',
+            body_status='error',
+        )
 
 
 @bp.route('/delete_full_game', methods=['POST'])
@@ -1369,20 +1369,15 @@ def delete_library_background(library_uuid, job_id):
 @login_required
 @admin_required
 def delete_full_library(library_uuid=None):
-    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
-    # admin_manage_scanjobs.js drive a state machine off `data.status`
-    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
-    # 'not_found'), and api_error takes `status` for the HTTP code so it
-    # cannot carry one. Recorded in the envelope baseline deliberately.
     print(f"Route: /delete_full_library - {current_user.name} - {current_user.role} method: {request.method} UUID: {library_uuid}")
     
     if not library_uuid:
-        return jsonify({'status': 'error', 'message': 'No library specified'}), 400
+        return api_error('No library specified', code='bad_request', body_status='error')
     
     # Get library info immediately for progress tracking
     library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalar_one_or_none()
     if not library:
-        return jsonify({'status': 'error', 'message': 'Library not found'}), 404
+        return api_error('Library not found', code='not_found', body_status='error')
 
     # Optional server-side typed confirm (W22-1). Legacy Jinja clients omit these
     # and keep client-only typing. When confirm_name/force are present, enforce.
@@ -1413,17 +1408,19 @@ def delete_full_library(library_uuid=None):
             single_confirm_name=str(confirm_raw) if confirm_raw is not None else None,
         )
         if confirm_err:
-            return jsonify({
-                'status': 'error',
-                'error': confirm_err,
-                'message': (
-                    'Type the exact library name to confirm, or pass force=true '
-                    '(admin + CSRF still required).'
-                    if confirm_err == 'confirm_name_required'
-                    else 'confirm_name does not match library name.'
-                ),
-                'expected_name': library.name if confirm_err == 'confirm_name_mismatch' else None,
-            }), 400
+            confirm_message = (
+                'Type the exact library name to confirm, or pass force=true '
+                '(admin + CSRF still required).'
+                if confirm_err == 'confirm_name_required'
+                else 'confirm_name does not match library name.'
+            )
+            return api_error(
+                confirm_message,
+                code='bad_request',
+                body_status='error',
+                body_error=confirm_err,
+                expected_name=library.name if confirm_err == 'confirm_name_mismatch' else None,
+            )
 
     # Generate a unique job ID
     job_id = str(uuid.uuid4())
@@ -1440,23 +1437,22 @@ def delete_full_library(library_uuid=None):
     # Start background deletion
     delete_library_background(library_uuid, job_id)
     
-    # Return job ID for progress tracking
-    return jsonify({'status': 'started', 'job_id': job_id})
+    # Return job ID for progress tracking. admin_manage_libs.js reads
+    # `data.status === 'started'` (job state, kept as data on api_ok).
+    return api_ok({'status': 'started', 'job_id': job_id})
 
 @bp.route('/check_deletion_progress/<job_id>')
 @login_required
 @admin_required
 def check_deletion_progress(job_id):
     """Simple progress check endpoint as fallback for SSE"""
-    # Answers the legacy `status` shape on purpose: admin_manage_libs.js and
-    # admin_manage_scanjobs.js drive a state machine off `data.status`
-    # ('error' | 'success' | 'started' | 'connected' | 'completed' |
-    # 'not_found'), and api_error takes `status` for the HTTP code so it
-    # cannot carry one. Recorded in the envelope baseline deliberately.
+    # `status` on the live dict is job progress (`initializing` / `connected` /
+    # `completed` / `error`), not an envelope marker. Wrapping with api_ok
+    # would stamp ok=True onto a failed delete. admin_manage_libs.js branches
+    # on it. Recorded in the envelope baseline on purpose.
     if job_id in deletion_progress:
         return jsonify(deletion_progress[job_id])
-    else:
-        return jsonify({'status': 'not_found', 'message': 'Job not found'}), 404
+    return api_error('Job not found', code='not_found', body_status='not_found')
 
     
 @bp.add_app_template_global

@@ -82,8 +82,8 @@ def smtp_settings():
         try:
             db.session.commit()
             # `status: 'success'` stays in the payload: the admin page branches
-            # on `data.status === 'success'`. api_error cannot carry a body
-            # `status` key — that argument is the HTTP code.
+            # on `data.status === 'success'`. Failures that need a body status
+            # use api_error(..., body_status=...).
             return api_ok({
                 'status': 'success',
                 'message': 'SMTP settings updated successfully',

@@ -10,6 +10,8 @@ Return JSON through `api_ok` / `api_error` from `gametheca/utils/api_response.py
 
 Pick `error_code` from `ERROR_CODES`. Do not invent a token at the call site. `detail` is passed to the browser as given — no secrets, tokens, raw `.env`, or filesystem paths.
 
+HTTP `status=` is the response code. Classic JS that still reads a body `status` (or honesty `code`) needs `body_status=` / `body_code=` — passing `status='error'` binds to HTTP.
+
 A file may never exceed its count in `scripts/api_envelope_lint.baseline.json`. `--update` only after a genuine reduction.
 
 ```python
@@ -17,5 +19,8 @@ A file may never exceed its count in `scripts/api_envelope_lint.baseline.json`. 
 return jsonify({"error": "not found"}), 404
 
 # ✅
-return api_error("not found", "not_found", status=404)
+return api_error("not found", code="not_found")
+
+# ✅ body `status` for classic admin JS
+return api_error("library_uuid is required", code="bad_request", body_status="rejected")
 ```

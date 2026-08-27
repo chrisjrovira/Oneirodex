@@ -1275,8 +1275,21 @@ def backfill_unmatched_suggested_kind_route():
     dry_run = bool(data.get('dry_run', False))
     limit = data.get('limit')
     result = backfill_unmatched_suggested_kind(limit=limit, dry_run=dry_run)
-    status_code = 200 if result.get('ok', True) else 500
-    return jsonify({'status': 'ok' if result.get('ok') else 'error', **result}), status_code
+    if result.get('ok', True):
+        return api_ok({**result, 'status': 'ok'})
+    return api_error(
+        'Could not backfill suggested kinds',
+        code='internal',
+        status=500,
+        body_status='error',
+        body_error=result.get('error') or 'commit_failed',
+        scanned=result.get('scanned'),
+        updated=result.get('updated'),
+        skipped_no_sidecar=result.get('skipped_no_sidecar'),
+        skipped_empty_hint=result.get('skipped_empty_hint'),
+        dry_run=result.get('dry_run'),
+        committed=result.get('committed'),
+    )
 
 
 @apis_bp.route('/admin/libraries/scan', methods=['POST'])
@@ -1306,31 +1319,25 @@ def start_library_scan():
         or request.args.get('library_uuid')
     )
     if not library_uuid:
-        # Deliberately not api_error/api_ok: `status` here is the scan-queue
-        # contract, not the legacy envelope marker. scanQueuePolicy.js documents
-        # it as 'queued' | 'started' | 'rejected', and admin_manage_scanjobs.js
-        # branches on `status === 'rejected'`. Baselined on purpose.
-        return jsonify({
-            'status': 'rejected',
-            'job_id': None,
-            'position': None,
-            'message': 'library_uuid is required',
-        }), 400
+        return api_error(
+            'library_uuid is required',
+            code='bad_request',
+            body_status='rejected',
+            job_id=None,
+            position=None,
+        )
 
     library = db.session.execute(
         select(Library).filter_by(uuid=library_uuid)
     ).scalars().first()
     if not library:
-        # Deliberately not api_error/api_ok: `status` here is the scan-queue
-        # contract, not the legacy envelope marker. scanQueuePolicy.js documents
-        # it as 'queued' | 'started' | 'rejected', and admin_manage_scanjobs.js
-        # branches on `status === 'rejected'`. Baselined on purpose.
-        return jsonify({
-            'status': 'rejected',
-            'job_id': None,
-            'position': None,
-            'message': 'Library not found',
-        }), 404
+        return api_error(
+            'Library not found',
+            code='not_found',
+            body_status='rejected',
+            job_id=None,
+            position=None,
+        )
 
     folder = (
         data.get('folder')
@@ -1339,19 +1346,16 @@ def start_library_scan():
         or library.last_scan_folder
     )
     if not folder:
-        # Deliberately not api_error/api_ok: `status` here is the scan-queue
-        # contract, not the legacy envelope marker. scanQueuePolicy.js documents
-        # it as 'queued' | 'started' | 'rejected', and admin_manage_scanjobs.js
-        # branches on `status === 'rejected'`. Baselined on purpose.
-        return jsonify({
-            'status': 'rejected',
-            'job_id': None,
-            'position': None,
-            'message': (
+        return api_error(
+            (
                 'No folder provided and library has no last_scan_folder. '
                 'Run one Auto Scan first or pass folder.'
             ),
-        }), 400
+            code='bad_request',
+            body_status='rejected',
+            job_id=None,
+            position=None,
+        )
 
     scan_mode = (
         data.get('scan_mode')
@@ -1394,7 +1398,19 @@ def start_library_scan():
     if result['status'] == 'started' and parse_force_parallel(force_raw):
         result = dict(result)
         result.setdefault('risk', FORCE_PARALLEL_RISK)
-    return jsonify(result), http
+    if result['status'] in ('started', 'queued'):
+        return api_ok(result, status=http)
+    extras = {
+        key: value for key, value in result.items()
+        if key not in ('ok', 'error', 'error_code', 'message', 'status')
+    }
+    return api_error(
+        result.get('message') or 'Scan rejected',
+        code='conflict',
+        status=http,
+        body_status='rejected',
+        **extras,
+    )
 
 
 @apis_bp.route('/admin/libraries/refresh_all', methods=['POST'])
@@ -1437,16 +1453,16 @@ def refresh_all_libraries():
         if lib.last_scan_folder
     ]
     if not queue:
-        # Deliberately not api_error/api_ok: `status` here is the scan-queue
-        # contract, not the legacy envelope marker. scanQueuePolicy.js documents
-        # it as 'queued' | 'started' | 'rejected', and admin_manage_scanjobs.js
-        # branches on `status === 'rejected'`. Baselined on purpose.
-        return jsonify({
-            'status': 'rejected',
-            'error': 'No libraries have a remembered scan folder yet. Run one Auto Scan per library first.',
-            'queued': [],
-            'message': 'No libraries have a remembered scan folder yet.',
-        }), 400
+        return api_error(
+            'No libraries have a remembered scan folder yet.',
+            code='bad_request',
+            body_status='rejected',
+            body_error=(
+                'No libraries have a remembered scan folder yet. '
+                'Run one Auto Scan per library first.'
+            ),
+            queued=[],
+        )
 
     busy = is_scan_busy()
 
@@ -1473,17 +1489,13 @@ def refresh_all_libraries():
             f'Refresh-all started for {len(queue)} libraries '
             f'(sequential worker, force_parallel). {FORCE_PARALLEL_RISK}'
         )
-        # Deliberately not api_error/api_ok: `status` here is the scan-queue
-        # contract, not the legacy envelope marker. scanQueuePolicy.js documents
-        # it as 'queued' | 'started' | 'rejected', and admin_manage_scanjobs.js
-        # branches on `status === 'rejected'`. Baselined on purpose.
-        return jsonify({
+        return api_ok({
             'status': 'started',
             'queued': queue,
             'count': len(queue),
             'message': message,
             'risk': FORCE_PARALLEL_RISK,
-        }), 200
+        })
 
     # Default: persist FIFO Queued jobs; promote first when idle.
     payload = enqueue_library_refresh_jobs(queue)
@@ -1503,7 +1515,7 @@ def refresh_all_libraries():
                     item['status'] = 'started'
                 elif item.get('position'):
                     item['position'] = max(1, int(item['position']) - 1)
-    return jsonify(payload), 200
+    return api_ok(payload)
 
 
 # UX-C5 — why an operator says a proposed match is wrong. A controlled list

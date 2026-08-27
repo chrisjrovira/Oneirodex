@@ -115,6 +115,9 @@ def api_error(
     code: str = 'bad_request',
     status: int | None = None,
     detail: Any = None,
+    body_status: str | None = None,
+    body_code: str | None = None,
+    body_error: str | None = None,
     **extra,
 ):
     """Failure envelope.
@@ -127,6 +130,13 @@ def api_error(
     An explicit ``status`` still wins, for routes that must keep a specific code
     for backwards compatibility (there are existing 403-vs-503 contracts in the
     AI triage tests that must not shift silently).
+
+    Classic admin JS still branches on a body ``status`` (``error`` /
+    ``rejected`` / ``not_found``) and, in a few honesty paths, on body ``code``
+    (``path_missing``). Those keys collide with this function's HTTP ``status``
+    and envelope ``code`` (``error_code``), so they go through ``body_status``
+    / ``body_code``. ``body_error`` is for the handful of callers that put a
+    machine token in ``error`` and a human sentence in ``message``.
     """
     resolved_status = status if status is not None else ERROR_CODES.get(code, 400)
     text = str(message or '').strip() or 'Request failed'
@@ -138,12 +148,16 @@ def api_error(
     body['ok'] = False
     # `error` stays a string on purpose — see module docstring. Turning it into
     # an object would render as "[object Object]" in every unmigrated caller.
-    body['error'] = text
+    body['error'] = body_error if body_error is not None else text
     body['error_code'] = code
     if detail is not None:
         body['detail'] = detail
     # Legacy mirrors.
     body['message'] = text
     body['success'] = False
+    if body_status is not None:
+        body['status'] = body_status
+    if body_code is not None:
+        body['code'] = body_code
 
     return jsonify(body), resolved_status

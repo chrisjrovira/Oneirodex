@@ -62,16 +62,43 @@ def _library_public_fields(library: Library) -> dict:
     }
 
 
+def _rejected_body(payload: dict, http_status: int):
+    """Turn a batch-refusal dict into the shared envelope.
+
+    Classic scan/library JS still reads `status: 'rejected'` and, for typed
+    confirm, a machine token in `error` with the sentence in `message`.
+    """
+    message = payload.get('message') or payload.get('error') or 'Rejected'
+    token = payload.get('error')
+    extras = {
+        key: value for key, value in payload.items()
+        if key not in ('ok', 'error', 'message', 'status', 'success', 'error_code')
+    }
+    if token and token != message:
+        extras['body_error'] = token
+    code = {
+        400: 'bad_request',
+        403: 'forbidden',
+        404: 'not_found',
+        409: 'conflict',
+        500: 'internal',
+    }.get(http_status, 'bad_request')
+    return api_error(
+        message,
+        code=code,
+        status=http_status,
+        body_status=payload.get('status', 'rejected'),
+        **extras,
+    )
+
+
 def _cap_error(cap: int):
-    # Not api_error: these batch refusals carry `status: 'rejected'`, the
-    # scan-queue contract admin_manage_libs.js branches on, and api_error takes
-    # `status` for the HTTP code so it cannot pass one through.
-    return jsonify({
-        'ok': False,
-        'error': f'library_uuids cap is {cap}',
-        'cap': cap,
-        'status': 'rejected',
-    }), 400
+    return api_error(
+        f'library_uuids cap is {cap}',
+        code='bad_request',
+        body_status='rejected',
+        cap=cap,
+    )
 
 
 def _start_library_delete_job(library: Library) -> str:
@@ -126,11 +153,15 @@ def reorder_libraries():
                 library.display_order = index
         db.session.commit()
         # admin_manage_libs.js reads `data.status === 'success'` here.
-        return jsonify({'status': 'success'})
+        return api_ok({'status': 'success'})
     except Exception as e:
         db.session.rollback()
         current_app.logger.warning('library update failed: %s', e)
-        return jsonify({'status': 'error', 'message': 'Could not update the library'}), 500
+        return api_error(
+            'Could not update the library',
+            code='internal',
+            body_status='error',
+        )
 
 @apis_bp.route('/library/<string:library_uuid>', methods=['GET'])
 @login_required
@@ -213,7 +244,7 @@ def batch_scan_libraries():
     uuids, err = parse_library_uuids(data)
     if err:
         payload, status = err
-        return jsonify(payload), status
+        return _rejected_body(payload, status)
     if len(uuids) > LIBRARY_BATCH_UUID_CAP:
         return _cap_error(LIBRARY_BATCH_UUID_CAP)
 
@@ -346,7 +377,7 @@ def batch_edit_libraries():
     uuids, err = parse_library_uuids(data)
     if err:
         payload, status = err
-        return jsonify(payload), status
+        return _rejected_body(payload, status)
     if len(uuids) > LIBRARY_BATCH_UUID_CAP:
         return _cap_error(LIBRARY_BATCH_UUID_CAP)
 
@@ -363,11 +394,11 @@ def batch_edit_libraries():
     shared_keys = ('scan_depth', 'watch_enabled', 'platform')
     has_shared = any(k in data for k in shared_keys)
     if not has_shared and not items_by_uuid:
-        return jsonify({
-            'ok': False,
-            'error': 'Provide scan_depth and/or watch_enabled and/or platform (or items[])',
-            'status': 'rejected',
-        }), 400
+        return api_error(
+            'Provide scan_depth and/or watch_enabled and/or platform (or items[])',
+            code='bad_request',
+            body_status='rejected',
+        )
 
     results = []
     updated = 0
@@ -512,7 +543,7 @@ def batch_delete_libraries():
     uuids, err = parse_library_uuids(data)
     if err:
         payload, status = err
-        return jsonify(payload), status
+        return _rejected_body(payload, status)
     if len(uuids) > LIBRARY_BATCH_DELETE_CAP:
         return _cap_error(LIBRARY_BATCH_DELETE_CAP)
 
@@ -528,16 +559,16 @@ def batch_delete_libraries():
     if not force and not confirm_names and (
         single_confirm is None or not str(single_confirm).strip()
     ):
-        return jsonify({
-            'ok': False,
-            'status': 'rejected',
-            'error': 'confirm_name_required',
-            'message': (
+        return api_error(
+            (
                 'Provide confirm_names {uuid: exact library name} for each '
                 'selection, or force=true to skip typed confirmation '
                 '(admin + CSRF still required).'
             ),
-        }), 400
+            code='bad_request',
+            body_status='rejected',
+            body_error='confirm_name_required',
+        )
 
     results = []
     started = 0

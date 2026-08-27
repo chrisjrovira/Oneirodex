@@ -365,7 +365,9 @@ class TestReorderLibraries:
         
         data = response.get_json()
         assert data['status'] == 'error'
-        assert 'Database error' in data['message']
+        assert data['ok'] is False
+        assert data['message'] == 'Could not update the library'
+        assert 'Database error' not in data['message']
 
 
 class TestGetLibrary:

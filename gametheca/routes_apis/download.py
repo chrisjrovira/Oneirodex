@@ -218,19 +218,18 @@ def api_initiate_game_download(game_uuid: str) -> Tuple[dict, int]:
         or not str(file_location).strip()
         or not (os.path.isfile(file_location) or os.path.isdir(file_location))
     ):
-        # Deliberately not api_error: this carries `code: 'path_missing'`, which
-        # api/downloads.js reads off the body, and api_error's own signature
-        # takes `code` for the error_code. Baselined on purpose.
-        return jsonify({
-            'error': 'Version file is missing on disk',
-            'code': 'path_missing',
-            'hint': (
+        return api_error(
+            'Version file is missing on disk',
+            code='not_found',
+            status=410,
+            body_code='path_missing',
+            hint=(
                 'This install path is gone. Use game details → Remove missing versions '
                 '(librarian+) or re-scan after restoring files.'
             ),
-            'path_missing': True,
-            'downloadable': False,
-        }), 410
+            path_missing=True,
+            downloadable=False,
+        )
 
     allowed_bases = get_allowed_base_directories(current_app)
     if not allowed_bases:
@@ -248,17 +247,13 @@ def api_initiate_game_download(game_uuid: str) -> Tuple[dict, int]:
             file_location=file_location,
             zip_file_path=zip_file_path,
         )
-        # `status` here is the download request's own state, not an envelope
-        # marker — data, so it stays.
-        return jsonify(
-            {
-                'download_id': download_request.id,
-                'status': download_request.status,
-                'stream_url': f'/download_zip/{download_request.id}',
-                'kind': kind if kind in ('base', 'update', 'extra') else 'base',
-                'version_uuid': resolved_version,
-            }
-        ), 200
+        return api_ok({
+            'download_id': download_request.id,
+            'status': download_request.status,
+            'stream_url': f'/download_zip/{download_request.id}',
+            'kind': kind if kind in ('base', 'update', 'extra') else 'base',
+            'version_uuid': resolved_version,
+        })
     except Exception as exc:
         db.session.rollback()
         log_system_event(

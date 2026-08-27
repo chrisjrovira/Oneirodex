@@ -83,6 +83,52 @@ def test_api_error_unknown_code_defaults_to_400(app):
     assert status == 400
 
 
+def test_api_error_body_status_does_not_shift_http(app):
+    """Classic JS reads `data.status`; HTTP `status=` must stay the code."""
+    with app.test_request_context():
+        body, status = _body(app, api_error(
+            'Could not clear the entry',
+            code='internal',
+            body_status='error',
+        ))
+
+    assert status == 500
+    assert body['ok'] is False
+    assert body['status'] == 'error'
+    assert body['error'] == 'Could not clear the entry'
+    assert body['message'] == 'Could not clear the entry'
+
+
+def test_api_error_body_code_keeps_honesty_markers(app):
+    with app.test_request_context():
+        body, status = _body(app, api_error(
+            'Version file is missing on disk',
+            code='not_found',
+            status=410,
+            body_code='path_missing',
+            path_missing=True,
+        ))
+
+    assert status == 410
+    assert body['error_code'] == 'not_found'
+    assert body['code'] == 'path_missing'
+    assert body['path_missing'] is True
+
+
+def test_api_error_body_error_keeps_machine_token(app):
+    with app.test_request_context():
+        body, _ = _body(app, api_error(
+            'Type the exact library name to confirm.',
+            code='bad_request',
+            body_status='rejected',
+            body_error='confirm_name_required',
+        ))
+
+    assert body['error'] == 'confirm_name_required'
+    assert body['message'] == 'Type the exact library name to confirm.'
+    assert body['status'] == 'rejected'
+
+
 # ---------------------------------------------------------------------------
 # Success
 # ---------------------------------------------------------------------------
