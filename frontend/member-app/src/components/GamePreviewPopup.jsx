@@ -131,6 +131,10 @@ export function GamePreviewPopup({ game, onClose }) {
   // are different on screen: a spinner versus no section at all.
   const [editions, setEditions] = useState(null)
   const [editionsFailed, setEditionsFailed] = useState(false)
+  // GOG / Epic / the rest live on Game.urls, which browse does not send per
+  // tile. The editions request is the one that already joins copies; store
+  // marks ride along so the preview matches details without bloating the grid.
+  const [editionUrls, setEditionUrls] = useState([])
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -161,9 +165,9 @@ export function GamePreviewPopup({ game, onClose }) {
     return () => window.removeEventListener(PREVIEW_OPENED, onOther)
   }, [onClose])
 
-  // Availability across systems is a second request on purpose: it is a join
-  // across libraries that the browse payload has no business carrying for every
-  // tile on the page, and the preview is the only surface that asks for it.
+  // Availability across systems — and the store marks browse cannot carry —
+  // is a second request on purpose: both are a join the grid has no business
+  // repeating for every tile, and the preview is the only surface that asks.
   useEffect(() => {
     const uuid = game?.uuid
     if (!uuid) {
@@ -172,14 +176,21 @@ export function GamePreviewPopup({ game, onClose }) {
     const controller = new AbortController()
     setEditions(null)
     setEditionsFailed(false)
+    setEditionUrls([])
     fetchGameEditions(uuid, { signal: controller.signal })
-      .then((data) => setEditions(data.editions || []))
+      .then((data) => {
+        if (controller.signal.aborted) return
+        setEditions(data.editions || [])
+        setEditionUrls(data.urls || [])
+      })
       .catch((error) => {
         if (error?.name !== 'AbortError') {
           // A failed lookup costs the systems list and nothing else — the
-          // preview is still a preview without it.
+          // preview is still a preview without it. Steam / IGDB from the
+          // browse row still render.
           setEditionsFailed(true)
           setEditions([])
+          setEditionUrls([])
         }
       })
     return () => controller.abort()
@@ -292,12 +303,8 @@ export function GamePreviewPopup({ game, onClose }) {
               </p>
             )}
 
-            {/* Store and catalog marks, from the fields browse already sends.
-                Steam and the catalog page are on every browse row; GOG / Epic
-                and the rest live in `game.urls`, which browse does not carry
-                per tile — see the handoff note in the preview docs. */}
             <ExternalStoreLinks
-              urls={game.urls}
+              urls={[...(game.urls || []), ...editionUrls]}
               steamUrl={game.steam_url}
               igdbUrl={game.url_igdb || game.url}
             />

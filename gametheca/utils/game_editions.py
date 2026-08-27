@@ -25,6 +25,7 @@ from __future__ import annotations
 import re
 
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload, selectinload
 
 from gametheca import db
 from gametheca.models import Game
@@ -91,17 +92,54 @@ def _edition_play(game) -> dict:
     }
 
 
-def editions_for_game(game, user) -> list[dict]:
-    """Every copy of *game*'s title the *user* may see, current copy first.
+def _http_store_url(value: str | None) -> str | None:
+    href = (value or '').strip()
+    if not href or href.casefold() == 'not available':
+        return None
+    lowered = href.casefold()
+    if not (lowered.startswith('http://') or lowered.startswith('https://')):
+        return None
+    return href
 
-    Always returns at least the game itself, so a caller never has to special
-    case "only one system" — the preview renders the same list either way.
+
+def store_links_for_games(games) -> list[dict]:
+    """Store and catalog links for a title, merged across every visible copy.
+
+    Browse cannot carry ``Game.urls`` on every tile — GOG / Epic live there,
+    while Steam is a column. The preview already asks for editions once per
+    title; wrapping those links on that payload is how the popup shows the
+    same marks the details page does without inflating the grid.
     """
+    rows: list[dict] = []
+    seen: set[str] = set()
+
+    def push(url_type: str, url: str | None) -> None:
+        href = _http_store_url(url)
+        if not href or href in seen:
+            return
+        seen.add(href)
+        rows.append({'type': url_type or '', 'url': href})
+
+    for copy in games:
+        steam = getattr(copy, 'steam_url', None)
+        steam_app_id = getattr(copy, 'steam_app_id', None)
+        if _http_store_url(steam):
+            push('steam', steam)
+        elif steam_app_id:
+            push('steam', f'https://store.steampowered.com/app/{int(steam_app_id)}')
+        push('igdb', getattr(copy, 'url_igdb', None) or getattr(copy, 'url', None))
+        for row in getattr(copy, 'urls', None) or []:
+            push(getattr(row, 'url_type', None) or '', getattr(row, 'url', None))
+    return rows
+
+
+def _edition_games(game, user) -> list:
+    """Game rows the preview may name, current copy first, ACL-filtered."""
     from gametheca.utils.library_acl import apply_game_access_filters
 
     key = normalize_title(getattr(game, 'name', None))
     if not key:
-        return [_edition_row(game, game)]
+        return [game]
 
     # Narrow in SQL on the raw name, then confirm on the normalised one in
     # Python. A functional index on the normalisation does not exist, and the
@@ -109,6 +147,7 @@ def editions_for_game(game, user) -> list[dict]:
     # check is both correct and honest about what the database can do.
     stmt = (
         select(Game)
+        .options(selectinload(Game.urls), joinedload(Game.library))
         .where(Game.name.ilike(f'%{game.name.strip()[:60]}%'))
         .limit(MAX_EDITIONS * 8)
     )
@@ -117,7 +156,7 @@ def editions_for_game(game, user) -> list[dict]:
     # clauses on Game, so it composes with the prefilter above without a join.
     stmt = apply_game_access_filters(stmt, user)
 
-    candidates = db.session.execute(stmt).scalars().all()
+    candidates = db.session.execute(stmt).unique().scalars().all()
 
     rows = [other for other in candidates if normalize_title(other.name) == key]
     if not any(other.uuid == game.uuid for other in rows):
@@ -126,7 +165,33 @@ def editions_for_game(game, user) -> list[dict]:
     # Current copy first, then by system label so the list is stable between
     # loads rather than following whatever order the query happened to return.
     rows.sort(key=lambda g: (g.uuid != game.uuid, _platform_key(g), g.uuid))
-    return [_edition_row(other, game) for other in rows[:MAX_EDITIONS]]
+    return rows[:MAX_EDITIONS]
+
+
+def editions_for_game(game, user) -> list[dict]:
+    """Every copy of *game*'s title the *user* may see, current copy first.
+
+    Always returns at least the game itself, so a caller never has to special
+    case "only one system" — the preview renders the same list either way.
+    """
+    return [_edition_row(other, game) for other in _edition_games(game, user)]
+
+
+def editions_preview_payload(game, user) -> dict:
+    """Editions list plus the store links the preview cannot get from browse."""
+    copies = _edition_games(game, user)
+    editions = [_edition_row(other, game) for other in copies]
+    return {
+        'uuid': game.uuid,
+        'name': game.name,
+        'editions': editions,
+        # Distinct systems rather than distinct rows: two copies of one game in
+        # two SNES libraries is one system, and the preview says "SNES" once.
+        'system_count': len({
+            row['library_platform'] for row in editions if row['library_platform']
+        }),
+        'urls': store_links_for_games(copies),
+    }
 
 
 def _platform_key(game) -> str:

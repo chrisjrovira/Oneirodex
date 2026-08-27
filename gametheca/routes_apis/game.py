@@ -716,19 +716,9 @@ def game_editions_api(game_uuid):
     if refusal:
         return refusal
 
-    from gametheca.utils.game_editions import editions_for_game
+    from gametheca.utils.game_editions import editions_preview_payload
 
-    editions = editions_for_game(game, current_user)
-    return api_ok({
-        'uuid': game.uuid,
-        'name': game.name,
-        'editions': editions,
-        # Distinct systems rather than distinct rows: two copies of one game in
-        # two SNES libraries is one system, and the preview says "SNES" once.
-        'system_count': len({
-            row['library_platform'] for row in editions if row['library_platform']
-        }),
-    })
+    return api_ok(editions_preview_payload(game, current_user))
 
 
 @apis_bp.route('/game_screenshots/<game_uuid>')

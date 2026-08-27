@@ -113,6 +113,7 @@ jobs:
           tests/test_static_svg.py
           tests/test_platform_recency.py
           tests/test_browse_title_grouping.py
+          tests/test_game_editions.py
           tests/test_setup_no_redirect_loop.py
           tests/test_integrations_inventory_sources.py
           tests/test_cascade_default_behaviour.py

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ContextBar } from '../chrome/ContextBar'
 import { RailIcon } from '../chrome/railIcons'
 import './HelpPage.css'
@@ -53,7 +53,7 @@ const FAQ_SECTIONS = [
     summary: 'Favorites, chips, tiles, trailers',
     items: [
       'Heart a cover; open Favorites from top nav.',
-      'One tile per title, not per copy. A game you hold on NES and SNES is one tile; Preview → Available on lists the other systems.',
+      'One tile per title, not per copy. A game you hold on NES and SNES is one tile; Preview → Available on lists the other systems, and store marks (Steam / GOG / Epic) when the title has them.',
       'A greyed-out Play button still opens: it explains why (missing BIOS, companion-only, catalog-only) instead of sitting dead.',
       'Library multi-select: checkbox / long-press / Shift+click → Select page · Favorite · Unfavorite · Add to wishlist · Play status · Refresh freshness / Refresh covers (More; librarian+ · max 20) · Clear; Esc clears. Batch toasts report updated/queued / skipped / failed counts.',
       'Kind chips: Games · Soft titles · Emulators · Utilities (multi-select → item_kind; none = all). Tile badges EXP / TOOL stay short; tooltips Soft title / Utility.',

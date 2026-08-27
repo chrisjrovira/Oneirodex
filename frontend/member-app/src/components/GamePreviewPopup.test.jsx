@@ -259,15 +259,45 @@ test('a copy that cannot be launched says why instead of being hidden', async ()
   )
 })
 
-test('a failed lookup costs the systems list and nothing else', async () => {
-  fetchGameEditions.mockRejectedValue(new Error('boom'))
-  renderPopup()
+test('surfaces GOG and Epic from the editions payload, not only Steam from browse', async () => {
+  // Browse never sends game.urls per tile. The preview already asks for
+  // editions once; that is where GOG / Epic ride, so the popup matches details.
+  fetchGameEditions.mockResolvedValue({
+    editions: [SNES_EDITION],
+    urls: [
+      { type: 'gog', url: 'https://www.gog.com/game/portal_2' },
+      { type: 'epic', url: 'https://store.epicgames.com/p/portal-2' },
+    ],
+  })
+  renderPopup({
+    game: {
+      ...GAME,
+      steam_url: 'https://store.steampowered.com/app/620',
+    },
+  })
 
+  expect(screen.getByRole('link', { name: 'Steam' })).toHaveAttribute(
+    'href',
+    'https://store.steampowered.com/app/620',
+  )
+  await waitFor(() => expect(screen.getByRole('link', { name: 'GOG' })).toBeInTheDocument())
+  expect(screen.getByRole('link', { name: 'Epic' })).toBeInTheDocument()
+})
+
+test('a failed editions lookup keeps Steam from browse and does not invent stores', async () => {
+  fetchGameEditions.mockRejectedValue(new Error('boom'))
+  renderPopup({
+    game: {
+      ...GAME,
+      steam_url: 'https://store.steampowered.com/app/620',
+    },
+  })
+
+  expect(screen.getByRole('link', { name: 'Steam' })).toBeInTheDocument()
   await waitFor(() =>
     expect(screen.getByText(/Could not check which systems/i)).toBeInTheDocument(),
   )
-  // The preview is still a preview.
-  expect(screen.getByText('A first-person puzzle game.')).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'GOG' })).toBeNull()
 })
 
 test('editionBlockerText names the blocker a member can act on', () => {
