@@ -1,4 +1,4 @@
-﻿"""Member-facing pages: collections, news, wishlist, updates inbox."""
+"""Member-facing pages: collections, news, wishlist, updates inbox."""
 
 from pathlib import Path
 

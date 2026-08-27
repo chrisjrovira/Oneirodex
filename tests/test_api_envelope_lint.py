@@ -89,6 +89,16 @@ def test_an_envelope_returned_by_a_helper_is_caught(tmp_path):
     assert _count(tmp_path, source) == 1
 
 
+def test_utf8_bom_does_not_hide_violations(tmp_path):
+    """A leading BOM used to make ast.parse raise, and this script counted
+    that as zero — which is how ``routes_arr.py`` stayed off the ratchet."""
+    target = tmp_path / 'routes_probe.py'
+    target.write_bytes(
+        b"\xef\xbb\xbfdef v():\n    return jsonify({'error': 'x'})\n"
+    )
+    assert lint.count_violations(target) == 1
+
+
 def test_a_helper_returning_plain_data_is_not_a_violation(tmp_path):
     """Resolution must not turn every helper-backed response into noise."""
     source = (

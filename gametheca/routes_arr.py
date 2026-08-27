@@ -1,4 +1,4 @@
-﻿"""Optional *arr automation module (feature-flagged connectors)."""
+"""Optional *arr automation module (feature-flagged connectors)."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required
 
 from gametheca import db
+from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.arr_connectors import (
     connector_status,
     get_arr_config,
@@ -38,11 +39,16 @@ from gametheca.utils.module_status import (
     env_flag,
 )
 from gametheca.utils.quality_profiles import score_release_title
+from gametheca.utils.security import validate_user_outbound_http_url
 arr_bp = Blueprint('arr', __name__)
 
 
 def arr_module_enabled() -> bool:
     return arr_module_on()
+
+
+def _arr_disabled():
+    return api_error('Arr module is disabled', code='forbidden')
 
 
 @arr_bp.route('/api/arr/status', methods=['GET'])
@@ -53,7 +59,7 @@ def arr_status():
     enabled = arr_module_enabled()
     connectors = connector_status() if enabled else []
     configured = any(c.get('configured') for c in connectors)
-    return jsonify({
+    return api_ok({
         'enabled': enabled,
         'module': 'arr',
         'status': (
@@ -89,12 +95,12 @@ def arr_module_flag():
         })
     data = request.get_json(silent=True) or {}
     if 'enabled' not in data and 'enable_arr_module' not in data:
-        return jsonify({'error': 'enabled is required'}), 400
+        return api_error('enabled is required', code='bad_request')
     enabled = bool(data.get('enabled', data.get('enable_arr_module')))
     settings = ensure_global_settings()
     settings.enable_arr_module = enabled
     db.session.commit()
-    return jsonify({
+    return api_ok({
         'status': 'saved',
         'enabled': arr_module_enabled(),
         'db_enabled': bool(settings.enable_arr_module),
@@ -107,7 +113,7 @@ def arr_module_flag():
 @admin_required
 def arr_config():
     if not arr_module_enabled():
-        return jsonify({'error': 'Arr module is disabled'}), 403
+        return _arr_disabled()
     if request.method == 'GET':
         cfg = get_arr_config()
         return jsonify({
@@ -131,8 +137,8 @@ def arr_config():
     try:
         saved = save_arr_config(data)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'status': 'saved', 'config': saved})
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'status': 'saved', 'config': saved})
 
 
 @arr_bp.route('/api/arr/indexers', methods=['GET', 'POST'])
@@ -141,7 +147,7 @@ def arr_config():
 def arr_indexers():
     """List native indexers + read-only presets catalog, or add one indexer."""
     if not arr_module_enabled():
-        return jsonify({'error': 'Arr module is disabled'}), 403
+        return _arr_disabled()
     if request.method == 'GET':
         return jsonify({
             'indexers': [indexer_public_view(row) for row in list_indexers()],
@@ -151,8 +157,8 @@ def arr_indexers():
     try:
         row = add_indexer(data)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'status': 'created', 'indexer': indexer_public_view(row)}), 201
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'status': 'created', 'indexer': indexer_public_view(row)}, status=201)
 
 
 @arr_bp.route('/api/arr/indexers/bulk', methods=['POST'])
@@ -160,7 +166,7 @@ def arr_indexers():
 @admin_required
 def arr_indexers_bulk():
     if not arr_module_enabled():
-        return jsonify({'error': 'Arr module is disabled'}), 403
+        return _arr_disabled()
     data = request.get_json(silent=True)
     if data is None:
         raw = (request.get_data(as_text=True) or '').strip()
@@ -168,14 +174,14 @@ def arr_indexers_bulk():
     try:
         created = bulk_import_indexers(data)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    except Exception as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({
+        return api_error(str(exc), code='bad_request')
+    except Exception:
+        return api_error('Could not import indexers', code='bad_request')
+    return api_ok({
         'status': 'imported',
         'count': len(created),
         'indexers': [indexer_public_view(row) for row in created],
-    }), 201
+    }, status=201)
 
 
 @arr_bp.route('/api/arr/indexers/enable-presets', methods=['POST'])
@@ -183,22 +189,22 @@ def arr_indexers_bulk():
 @admin_required
 def arr_indexers_enable_presets():
     if not arr_module_enabled():
-        return jsonify({'error': 'Arr module is disabled'}), 403
+        return _arr_disabled()
     data = request.get_json(silent=True) or {}
     preset_ids = data.get('preset_ids') or data.get('ids') or []
     if not isinstance(preset_ids, list):
-        return jsonify({'error': 'preset_ids must be an array'}), 400
+        return api_error('preset_ids must be an array', code='bad_request')
     try:
         created = enable_presets(preset_ids)
     except KeyError as exc:
-        return jsonify({'error': f'Unknown preset_id: {exc.args[0]}'}), 404
+        return api_error(f'Unknown preset_id: {exc.args[0]}', code='not_found')
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({
+        return api_error(str(exc), code='bad_request')
+    return api_ok({
         'status': 'enabled',
         'count': len(created),
         'indexers': [indexer_public_view(row) for row in created],
-    }), 201
+    }, status=201)
 
 
 @arr_bp.route('/api/arr/indexers/<indexer_id>', methods=['GET', 'PUT', 'PATCH', 'DELETE'])
@@ -206,24 +212,24 @@ def arr_indexers_enable_presets():
 @admin_required
 def arr_indexer_one(indexer_id: str):
     if not arr_module_enabled():
-        return jsonify({'error': 'Arr module is disabled'}), 403
+        return _arr_disabled()
     if request.method == 'GET':
         row = get_indexer(indexer_id)
         if not row:
-            return jsonify({'error': 'Indexer not found'}), 404
+            return api_error('Indexer not found', code='not_found')
         return jsonify({'indexer': indexer_public_view(row)})
     if request.method == 'DELETE':
         if not delete_indexer(indexer_id):
-            return jsonify({'error': 'Indexer not found'}), 404
-        return jsonify({'status': 'deleted', 'id': indexer_id})
+            return api_error('Indexer not found', code='not_found')
+        return api_ok({'status': 'deleted', 'id': indexer_id})
     data = request.get_json(silent=True) or {}
     try:
         row = update_indexer(indexer_id, data)
     except KeyError:
-        return jsonify({'error': 'Indexer not found'}), 404
+        return api_error('Indexer not found', code='not_found')
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
-    return jsonify({'status': 'saved', 'indexer': indexer_public_view(row)})
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'status': 'saved', 'indexer': indexer_public_view(row)})
 
 
 @arr_bp.route('/api/arr/search', methods=['GET'])
@@ -231,10 +237,10 @@ def arr_indexer_one(indexer_id: str):
 @admin_required
 def arr_search():
     if not arr_module_enabled():
-        return jsonify({'error': 'Arr module is disabled'}), 403
+        return _arr_disabled()
     query = (request.args.get('q') or request.args.get('query') or '').strip()
     if not query:
-        return jsonify({'error': 'Query parameter q is required'}), 400
+        return api_error('Query parameter q is required', code='bad_request')
     try:
         limit = min(int(request.args.get('limit') or 25), 50)
     except (TypeError, ValueError):
@@ -242,7 +248,7 @@ def arr_search():
     try:
         hits = search_indexers(query, limit=limit)
     except RuntimeError as exc:
-        return jsonify({'error': str(exc)}), 502
+        return api_error(str(exc), code='bad_gateway')
     # Prefer active profile scores; drop hard-blocked / excluded hits unless
     # ``include_disallowed=1`` (operators still see prefer-order for allowed).
     include_disallowed = str(request.args.get('include_disallowed') or '').strip().lower() in {
@@ -272,24 +278,23 @@ def arr_search():
 @admin_required
 def arr_download():
     if not arr_module_enabled():
-        return jsonify({'error': 'Arr module is disabled'}), 403
+        return _arr_disabled()
     data = request.get_json(silent=True) or {}
     url = (data.get('download_url') or data.get('url') or '').strip()
     if not url:
-        return jsonify({'error': 'download_url is required'}), 400
+        return api_error('download_url is required', code='bad_request')
     if url.lower().startswith('http://') or url.lower().startswith('https://'):
-        from gametheca.utils.security import validate_user_outbound_http_url
         ok, result = validate_user_outbound_http_url(url)
         if not ok:
-            return jsonify({'error': result}), 400
+            return api_error(result, code='bad_request')
         url = result
     try:
         result = qbittorrent_add_url(url)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except RuntimeError as exc:
-        return jsonify({'error': str(exc)}), 502
-    return jsonify(result), 202
+        return api_error(str(exc), code='bad_gateway')
+    return api_ok(result, status=202)
 
 
 @arr_bp.route('/api/arr/hardlink/preview', methods=['POST'])
@@ -297,15 +302,16 @@ def arr_download():
 @admin_required
 def arr_hardlink_preview():
     if not arr_module_enabled():
-        return jsonify({'error': 'Arr module is disabled'}), 403
+        return _arr_disabled()
     if not pipeline_enabled():
-        return jsonify({
-            'error': 'Arr-hardlink pipeline is disabled. Set ENABLE_ARR_HARDLINK_PIPELINE=true.',
-        }), 403
+        return api_error(
+            'Arr-hardlink pipeline is disabled. Set ENABLE_ARR_HARDLINK_PIPELINE=true.',
+            code='forbidden',
+        )
     data = request.get_json(silent=True) or {}
     dest = (data.get('library_dest_dir') or data.get('dest_dir') or '').strip()
     if not dest:
-        return jsonify({'error': 'library_dest_dir is required'}), 400
+        return api_error('library_dest_dir is required', code='bad_request')
     try:
         limit = min(int(data.get('limit') or 50), 200)
     except (TypeError, ValueError):
@@ -313,11 +319,11 @@ def arr_hardlink_preview():
     try:
         result = propose_hardlinks(dest, limit=limit)
     except ValueError as exc:
-        return jsonify({'error': str(exc)}), 400
+        return api_error(str(exc), code='bad_request')
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     except RuntimeError as exc:
-        return jsonify({'error': str(exc)}), 502
+        return api_error(str(exc), code='bad_gateway')
     return jsonify(result)
 
 
@@ -326,30 +332,31 @@ def arr_hardlink_preview():
 @admin_required
 def arr_hardlink_apply():
     if not arr_module_enabled():
-        return jsonify({'error': 'Arr module is disabled'}), 403
+        return _arr_disabled()
     if not pipeline_enabled():
-        return jsonify({
-            'error': 'Arr-hardlink pipeline is disabled. Set ENABLE_ARR_HARDLINK_PIPELINE=true.',
-        }), 403
+        return api_error(
+            'Arr-hardlink pipeline is disabled. Set ENABLE_ARR_HARDLINK_PIPELINE=true.',
+            code='forbidden',
+        )
     data = request.get_json(silent=True) or {}
     proposals = data.get('proposals')
     if not isinstance(proposals, list) or not proposals:
         dest = (data.get('library_dest_dir') or data.get('dest_dir') or '').strip()
         if not dest:
-            return jsonify({'error': 'proposals or library_dest_dir required'}), 400
+            return api_error('proposals or library_dest_dir required', code='bad_request')
         try:
             preview = propose_hardlinks(dest, limit=int(data.get('limit') or 50))
             proposals = preview.get('proposals') or []
         except ValueError as exc:
-            return jsonify({'error': str(exc)}), 400
+            return api_error(str(exc), code='bad_request')
         except PermissionError as exc:
-            return jsonify({'error': str(exc)}), 403
+            return api_error(str(exc), code='forbidden')
         except RuntimeError as exc:
-            return jsonify({'error': str(exc)}), 502
+            return api_error(str(exc), code='bad_gateway')
     try:
         result = apply_proposals(proposals, only_ok=bool(data.get('only_ok', True)))
     except PermissionError as exc:
-        return jsonify({'error': str(exc)}), 403
+        return api_error(str(exc), code='forbidden')
     return jsonify(result), 201
 
 
@@ -367,4 +374,3 @@ def arr_admin_page():
         connectors=connector_status() if enabled else [],
         hardlink_pipeline=pipeline_enabled(),
     )
-

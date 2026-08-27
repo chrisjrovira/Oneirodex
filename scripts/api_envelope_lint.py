@@ -90,6 +90,14 @@ EXEMPT = {
 LEGACY_KEYS = {'error', 'message', 'status', 'success', 'ok'}
 
 
+def _read_source(path: Path) -> str:
+    """Read Python as text. ``utf-8-sig`` drops a BOM so a notepad-saved
+    route file cannot vanish from the ratchet (``utf-8`` raises SyntaxError
+    on ``\\ufeff``, which this script used to swallow as count 0).
+    """
+    return path.read_text(encoding='utf-8-sig')
+
+
 def iter_python_files(root: Path):
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [
@@ -210,7 +218,7 @@ def _load_modules() -> dict[str, tuple[str, ast.Module]]:
         for path in iter_python_files(REPO_ROOT / root):
             rel = path.relative_to(REPO_ROOT).as_posix()
             try:
-                tree = ast.parse(path.read_text(encoding='utf-8'))
+                tree = ast.parse(_read_source(path))
             except (SyntaxError, UnicodeDecodeError):
                 continue
             dotted = rel[:-3].replace('/', '.')
@@ -301,7 +309,7 @@ def count_violations(path: Path) -> int:
     cross-module resolution is unavailable here; same-file forms still count.
     """
     try:
-        tree = ast.parse(path.read_text(encoding='utf-8'))
+        tree = ast.parse(_read_source(path))
     except (SyntaxError, UnicodeDecodeError):
         return 0
     return len(_find_violations(tree, {}))

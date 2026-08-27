@@ -1,4 +1,4 @@
-﻿"""Shared render helper for the member React SPA shell."""
+"""Shared render helper for the member React SPA shell."""
 
 from flask import render_template
 
