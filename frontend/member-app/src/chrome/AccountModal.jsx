@@ -223,7 +223,7 @@ function AvatarPanel({ summary, onUpdated }) {
           review — the tile you clicked is exactly what you get. */}
       {stock.length > 0 ? (
         <>
-          <p className="gt-acct__label" style={{ marginTop: '1.2rem' }}>
+          <p className="gt-acct__label gt-acct__label--follow">
             Or pick one
           </p>
           <ul className="gt-acct__stock">
@@ -449,7 +449,7 @@ function InvitesPanel() {
         </div>
       </form>
 
-      <ul className="gt-acct__list" style={{ marginTop: '1.1rem' }}>
+      <ul className="gt-acct__list gt-acct__list--follow">
         {state.invites.length === 0 ? (
           <p className="gt-acct__empty">No open invites.</p>
         ) : (
@@ -583,7 +583,7 @@ function TokensPanel() {
         </div>
       </form>
 
-      <ul className="gt-acct__list" style={{ marginTop: '1.1rem' }}>
+      <ul className="gt-acct__list gt-acct__list--follow">
         {tokens.length === 0 ? (
           <p className="gt-acct__empty">No tokens yet.</p>
         ) : (

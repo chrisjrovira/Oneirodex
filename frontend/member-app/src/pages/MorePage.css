@@ -16,14 +16,14 @@
 }
 
 .gt-more-page .gt-page-header h1 {
-  font-size: 1.3rem;
+  font-size: var(--gt-font-xl);
 }
 
 .gt-more-page__lede {
   margin: 0 0 1rem;
   max-width: 42rem;
   color: var(--gt-text-muted);
-  font-size: 0.95rem;
+  font-size: var(--gt-font-base);
   line-height: 1.45;
 }
 
@@ -31,7 +31,7 @@
   margin-bottom: 1rem;
   padding: 0.65rem 0.85rem;
   border: 1px solid color-mix(in srgb, var(--gt-danger) 45%, transparent);
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   background: color-mix(in srgb, var(--gt-danger) 10%, transparent);
   color: var(--gt-text);
 }
@@ -62,7 +62,7 @@
   padding: 0.65rem 0.8rem;
   background: var(--gt-surface);
   border: 1px solid var(--gt-border);
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   color: var(--gt-text);
 }
 
@@ -102,7 +102,7 @@
 .gt-news__card time,
 .gt-updates__list span {
   color: var(--gt-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
   line-height: 1.4;
 }
 
@@ -229,7 +229,7 @@
 .gt-updates__section-head h2,
 .gt-updates__inbox > .gt-updates__section-head h2 {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -256,7 +256,7 @@
 }
 
 .gt-updates__refresh-status {
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text);
 }
 
@@ -267,7 +267,7 @@
 .gt-updates__inbox > h2,
 .gt-updates__calendar h2 {
   margin: 0 0 0.55rem;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -293,7 +293,7 @@
 }
 
 .gt-updates__calendar-link {
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-accent);
   text-decoration: none;
 }
@@ -306,7 +306,7 @@
 
 .gt-updates__calendar-empty {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
   color: var(--gt-text-muted);
 }
 
@@ -326,12 +326,12 @@
   padding: 0.45rem 0;
   border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 60%, transparent);
   background: transparent;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-updates__calendar-list time {
   color: var(--gt-text-muted);
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   white-space: nowrap;
 }
 
@@ -347,14 +347,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   min-width: 10rem;
 }
 
 .gt-updates__search-form input,
 .gt-updates__search-form select {
   padding: 0.4rem 0.55rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 90%, transparent);
   color: inherit;

@@ -347,21 +347,20 @@ export function GameCard({
             </button>
             {statusOpen && (
               <div
-                className="status-dropdown"
+                className={`status-dropdown${statusOpen ? ' is-open' : ''}`}
                 data-game-uuid={game.uuid}
-                style={{ display: 'block' }}
               >
                 {STATUS_OPTIONS.map((option) => (
                   <button
                     key={option.value || 'clear'}
                     type="button"
-                    className="status-dropdown-option"
+                    className={`status-dropdown-option${option.value ? '' : ' is-clear'}`}
                     data-status={option.value}
                     style={{
                       background: 'none',
                       borderLeft: 0,
                       borderRight: 0,
-                      borderTop: option.value ? 0 : '1px solid rgba(255, 255, 255, 0.2)',
+                      borderTop: 0,
                       width: '100%',
                       textAlign: 'left',
                     }}
@@ -373,7 +372,7 @@ export function GameCard({
                   >
                     <span
                       className="gt-status-dot"
-                      style={{ background: option.color, marginRight: '0.45rem' }}
+                      style={{ background: option.color }}
                       aria-hidden="true"
                     />
                     <span className="status-label">{option.label}</span>

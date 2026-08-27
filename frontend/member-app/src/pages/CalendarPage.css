@@ -24,7 +24,7 @@
   display: inline-flex;
   flex-wrap: wrap;
   border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   overflow: hidden;
 }
 
@@ -34,7 +34,7 @@
   background: transparent;
   color: var(--gt-text-muted);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   cursor: pointer;
 }
 
@@ -61,7 +61,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -71,12 +71,12 @@
 .gt-calendar__window select {
   min-width: 6.5rem;
   padding: 0.35rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid color-mix(in srgb, var(--gt-border) 85%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 90%, transparent);
   color: var(--gt-text);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   font-weight: 400;
   letter-spacing: normal;
   text-transform: none;
@@ -97,7 +97,7 @@
 
 .gt-calendar__section-head h2 {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -105,7 +105,7 @@
 }
 
 .gt-calendar__count {
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
   opacity: 0.85;
 }
@@ -113,7 +113,7 @@
 .gt-calendar__empty {
   margin: 0;
   color: var(--gt-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-calendar__list {
@@ -137,7 +137,7 @@
 }
 
 .gt-calendar__row time {
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
   white-space: nowrap;
 }
@@ -162,7 +162,7 @@
 }
 
 .gt-calendar__meta {
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--gt-text-muted);
@@ -184,7 +184,7 @@
 
 .gt-calendar__month-label {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--gt-font-base);
   font-weight: 650;
   letter-spacing: 0.01em;
   color: var(--gt-text);
@@ -193,12 +193,12 @@
 .gt-calendar__nav-btn {
   width: 2rem;
   height: 2rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid color-mix(in srgb, var(--gt-border) 85%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
   color: var(--gt-text);
   font: inherit;
-  font-size: 1.15rem;
+  font-size: var(--gt-font-lg);
   line-height: 1;
   cursor: pointer;
 }
@@ -270,7 +270,7 @@
 .gt-calendar__weekday {
   padding: 0.25rem 0.15rem;
   text-align: center;
-  font-size: 0.68rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -289,7 +289,7 @@
   min-height: 6.4rem;
   padding: 0.35rem 0.2rem 0.4rem;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   background: transparent;
   color: var(--gt-text);
   font: inherit;
@@ -357,7 +357,7 @@
 }
 
 .gt-calendar__day-num {
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   font-weight: 600;
   line-height: 1;
 }
@@ -434,7 +434,7 @@
 
 .gt-calendar__day-panel-title {
   margin: 0 0 0.45rem;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -481,7 +481,7 @@
   }
 
   .gt-calendar__day-num {
-    font-size: 0.78rem;
+    font-size: var(--gt-font-xs);
   }
 
   .gt-calendar__day-art {

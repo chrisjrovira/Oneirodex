@@ -1,7 +1,7 @@
 .gt-dupe-glance {
   margin-top: 1.25rem;
   padding: 1rem;
-  border-radius: 12px;
+  border-radius: var(--gt-radius-xl);
   border: 1px solid var(--gt-border);
   background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
 }
@@ -17,13 +17,13 @@
 
 .gt-dupe-glance__header h2 {
   margin: 0 0 0.35rem;
-  font-size: 1.1rem;
+  font-size: var(--gt-font-lg);
 }
 
 .gt-dupe-glance__lede {
   margin: 0;
   max-width: 42rem;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
   color: var(--gt-text-muted);
 }
 
@@ -37,7 +37,7 @@
 .gt-dupe-glance__toolbar select {
   min-height: 2.2rem;
   margin-left: 0.35rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: var(--gt-text);
@@ -47,8 +47,8 @@
 .gt-dupe-glance__log {
   margin: 0 0 0.75rem;
   padding: 0.7rem 0.85rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  border-radius: var(--gt-radius-md);
+  font-size: var(--gt-font-md);
 }
 
 .gt-dupe-glance__log.is-ok {
@@ -66,7 +66,7 @@
 
 .gt-dupe-glance__group h3 {
   margin: 0.85rem 0 0.45rem;
-  font-size: 0.95rem;
+  font-size: var(--gt-font-base);
 }
 
 .gt-dupe-glance__list {
@@ -85,7 +85,7 @@
   gap: 0.55rem;
   align-items: stretch;
   padding: 0.8rem 0.9rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
 }
@@ -100,7 +100,7 @@
 
 .gt-dupe-glance__meta code {
   word-break: break-all;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
 }
 
 .gt-dupe-glance__chips {
@@ -112,21 +112,21 @@
 
 .gt-dupe-glance__status {
   width: fit-content;
-  font-size: 0.84rem;
+  font-size: var(--gt-font-sm);
   font-weight: 650;
   letter-spacing: 0.03em;
   padding: 0.28rem 0.55rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
 }
 
 .gt-dupe-glance__suggested {
   width: fit-content;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   font-weight: 650;
   letter-spacing: 0.03em;
   padding: 0.28rem 0.55rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   color: var(--gt-text);
   border: 1px dashed color-mix(in srgb, var(--gt-accent) 45%, transparent);
   background: color-mix(in srgb, var(--gt-accent) 8%, transparent);
@@ -145,7 +145,7 @@
 }
 
 .gt-dupe-glance__badmatch-label {
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   font-weight: 650;
   letter-spacing: 0.02em;
   color: var(--gt-text-muted);
@@ -169,11 +169,11 @@
    got it wrong, and should not read like a healthy state chip. */
 .gt-dupe-glance__badmatch-chip {
   width: fit-content;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   font-weight: 650;
   letter-spacing: 0.03em;
   padding: 0.28rem 0.55rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   color: var(--gt-text);
   border: 1px solid color-mix(in srgb, var(--gt-warning) 55%, transparent);
   background: color-mix(in srgb, var(--gt-warning) 14%, transparent);
@@ -188,7 +188,7 @@
 
 .gt-dupe-glance__reason {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
   line-height: 1.35;
 }
@@ -200,7 +200,7 @@
 
 .gt-dupe-glance__transforms {
   margin: 0;
-  font-size: 0.86rem;
+  font-size: var(--gt-font-md);
   color: var(--gt-text-muted);
 }
 
@@ -228,7 +228,7 @@
 .gt-dupe-glance__transform-list {
   margin: 0.35rem 0 0;
   padding: 0.45rem 0.62rem 0.35rem 1.15rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 55%, transparent);
   display: flex;
@@ -250,14 +250,14 @@
 }
 
 .gt-dupe-glance__transform-pair code {
-  font-size: 0.83rem;
+  font-size: var(--gt-font-sm);
   word-break: break-word;
 }
 
 .gt-dupe-glance__transform-reason {
   display: inline-block;
   margin-left: 0.35rem;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -274,11 +274,11 @@
 
 .gt-dupe-glance__stage-e-chip {
   width: fit-content;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   font-weight: 650;
   letter-spacing: 0.03em;
   padding: 0.28rem 0.55rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   color: var(--gt-text);
   border: 1px dashed color-mix(in srgb, var(--gt-info) 50%, transparent);
   background: color-mix(in srgb, var(--gt-info) 10%, transparent);
@@ -286,7 +286,7 @@
 
 .gt-dupe-glance__stage-e-details {
   margin: 0;
-  font-size: 0.86rem;
+  font-size: var(--gt-font-md);
   color: var(--gt-text-muted);
 }
 
@@ -313,7 +313,7 @@
 
 .gt-dupe-glance__stage-e-note {
   margin: 0.3rem 0 0;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -321,7 +321,7 @@
   list-style: none;
   margin: 0.35rem 0 0;
   padding: 0.45rem 0.62rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 55%, transparent);
   display: flex;
@@ -339,7 +339,7 @@
 
 .gt-dupe-glance__stage-e-source {
   font-weight: 650;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text);
 }
 
@@ -354,7 +354,7 @@ a.gt-dupe-glance__stage-e-name {
 }
 
 .gt-dupe-glance__stage-e-mode {
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -364,7 +364,7 @@ a.gt-dupe-glance__stage-e-name {
 
 .gt-dupe-glance__stage-e-meta {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -372,8 +372,8 @@ a.gt-dupe-glance__stage-e-name {
   display: inline-block;
   margin-right: 0.35rem;
   padding: 0.12rem 0.45rem;
-  border-radius: 4px;
-  font-size: 0.82rem;
+  border-radius: var(--gt-radius-xs);
+  font-size: var(--gt-font-sm);
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
@@ -391,7 +391,7 @@ a.gt-dupe-glance__stage-e-name {
   justify-content: flex-start;
   margin: 0;
   padding: 0.4rem 0.45rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 55%, transparent);
 }
@@ -404,7 +404,7 @@ a.gt-dupe-glance__stage-e-name {
 }
 
 .gt-dupe-glance__sort-label {
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   font-weight: 650;
   color: var(--gt-text-muted);
   margin-right: 0.15rem;
@@ -421,7 +421,7 @@ a.gt-dupe-glance__stage-e-name {
   align-items: flex-start;
   margin-top: 0.2rem;
   padding: 0.4rem 0.45rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid color-mix(in srgb, #ffc456 30%, transparent);
   background: color-mix(in srgb, #ffc456 7%, transparent);
 }
@@ -432,7 +432,7 @@ a.gt-dupe-glance__stage-e-name {
   gap: 0.58rem;
   margin-top: 0.25rem;
   padding: 0.5rem 0.55rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid color-mix(in srgb, #ffc456 30%, transparent);
   background: color-mix(in srgb, #ffc456 7%, transparent);
 }
@@ -445,7 +445,7 @@ a.gt-dupe-glance__stage-e-name {
 }
 
 .gt-dupe-glance__compare-banner-text {
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -470,7 +470,7 @@ a.gt-dupe-glance__stage-e-name {
   flex-direction: column;
   gap: 0.52rem;
   padding: 0.6rem 0.7rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 55%, transparent);
 }
@@ -483,7 +483,7 @@ a.gt-dupe-glance__stage-e-name {
 
 .gt-dupe-glance__compare-missing {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -502,7 +502,7 @@ a.gt-dupe-glance__stage-e-name {
 }
 
 .gt-dupe-glance__compare-role {
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -534,7 +534,7 @@ a.gt-dupe-glance__stage-e-name {
 
 .gt-dupe-glance__compare-field dt {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   font-weight: 650;
   color: var(--gt-text-muted);
   padding-top: 0.1rem;
@@ -543,7 +543,7 @@ a.gt-dupe-glance__stage-e-name {
 .gt-dupe-glance__compare-field dd {
   margin: 0;
   min-width: 0;
-  font-size: 0.84rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text);
   word-break: break-word;
 }
@@ -555,7 +555,7 @@ a.gt-dupe-glance__stage-e-name {
 
 .gt-dupe-glance__dupe-label {
   flex: 0 0 auto;
-  font-size: 0.86rem;
+  font-size: var(--gt-font-md);
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -567,7 +567,7 @@ a.gt-dupe-glance__stage-e-name {
   width: 28px;
   height: 36px;
   object-fit: cover;
-  border-radius: 3px;
+  border-radius: var(--gt-radius-xs);
   border: 1px solid var(--gt-border);
   flex: 0 0 auto;
   background: rgba(0, 0, 0, 0.25);
@@ -593,7 +593,7 @@ a.gt-dupe-glance__stage-e-name {
 }
 
 .gt-dupe-glance__dupe-title {
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   font-weight: 650;
   color: var(--gt-text);
   text-decoration: none;
@@ -606,7 +606,7 @@ a.gt-dupe-glance__dupe-title:hover {
 }
 
 .gt-dupe-glance__dupe-uuid {
-  font-size: 0.86rem;
+  font-size: var(--gt-font-md);
   word-break: break-all;
   color: var(--gt-text-muted);
 }
@@ -621,7 +621,7 @@ a.gt-dupe-glance__dupe-title:hover {
   background: transparent;
   color: var(--gt-text-muted);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   word-break: break-word;
   cursor: pointer;
@@ -634,7 +634,7 @@ a.gt-dupe-glance__dupe-title:hover {
 
 .gt-dupe-glance__amend {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text);
 }
 
@@ -645,6 +645,6 @@ a.gt-dupe-glance__dupe-title:hover {
 
 .gt-dupe-glance__ondisk {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }

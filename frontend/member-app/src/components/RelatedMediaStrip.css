@@ -8,18 +8,18 @@
   gap: 0.5rem;
 }
 
-.gt-relmedia__head h2 { margin: 0; font-size: 1.05rem; }
+.gt-relmedia__head h2 { margin: 0; font-size: var(--gt-font-base); }
 
 .gt-relmedia__count {
   padding: 0.05rem 0.4rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   background: color-mix(in srgb, var(--gt-accent) 18%, transparent);
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
 }
 
 .gt-relmedia__lede {
   margin: 0.2rem 0 0.6rem;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -46,7 +46,7 @@
   height: 100%;
   padding: 0;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-border);
   background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
   color: inherit;
@@ -75,7 +75,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: var(--gt-font-4xl);
 }
 
 .gt-relmedia__card-body {
@@ -86,17 +86,17 @@
 }
 
 .gt-relmedia__kind {
-  font-size: 0.7rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--gt-text-muted);
 }
 
-.gt-relmedia__title { font-size: 0.88rem; line-height: 1.3; }
+.gt-relmedia__title { font-size: var(--gt-font-md); line-height: 1.3; }
 
 .gt-relmedia__year {
-  font-size: 0.76rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -120,7 +120,7 @@
   max-height: min(84vh, 32rem);
   overflow-y: auto;
   padding: 1rem 1.15rem;
-  border-radius: 14px;
+  border-radius: var(--gt-radius-xl);
   border: 1px solid color-mix(in srgb, var(--gt-accent) 32%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
@@ -133,10 +133,10 @@
   width: 2rem;
   height: 2rem;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   background: transparent;
   color: var(--gt-text-muted);
-  font-size: 1.35rem;
+  font-size: var(--gt-font-xl);
   cursor: pointer;
 }
 
@@ -156,7 +156,7 @@
   flex: 0 0 auto;
   width: 9rem;
   max-width: 34%;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-border);
 }
 
@@ -164,19 +164,19 @@
 
 .gt-relmedia__modal-text h3 {
   margin: 0.25rem 2rem 0.3rem 0;
-  font-size: 1.15rem;
+  font-size: var(--gt-font-lg);
   line-height: 1.25;
 }
 
 .gt-relmedia__meta {
   margin: 0 0 0.5rem;
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
 .gt-relmedia__summary {
   margin: 0 0 0.9rem;
-  font-size: 0.88rem;
+  font-size: var(--gt-font-md);
   line-height: 1.5;
 }
 

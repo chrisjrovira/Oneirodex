@@ -17,7 +17,7 @@
   flex-direction: column;
   gap: 0.65rem;
   padding: 0.75rem;
-  border-radius: 14px;
+  border-radius: var(--gt-radius-xl);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
@@ -38,7 +38,7 @@
 
 .gt-lightbox__title {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--gt-font-base);
   color: var(--gt-text-muted);
   font-weight: 600;
 }
@@ -46,30 +46,30 @@
 .gt-lightbox__fs {
   min-height: 2.2rem;
   padding: 0.35rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
   background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
   color: var(--gt-accent);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   font-weight: 600;
   cursor: pointer;
 }
 
 .gt-lightbox__fs-error {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
 .gt-lightbox__close {
   width: 2.2rem;
   height: 2.2rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: var(--gt-text);
-  font-size: 1.35rem;
+  font-size: var(--gt-font-xl);
   line-height: 1;
   cursor: pointer;
 }
@@ -81,7 +81,7 @@
   min-height: 0;
   flex: 1;
   background: #0b0d10;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
 }
 
 .gt-lightbox__img {
@@ -89,7 +89,7 @@
   width: 100%;
   max-height: min(78vh, 780px);
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   background: #0b0d10;
   cursor: zoom-in;
 }
@@ -100,7 +100,7 @@
   aspect-ratio: 16 / 9;
   max-height: min(78vh, 780px);
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   background: #0b0d10;
 }
 
@@ -108,11 +108,11 @@
   flex: 0 0 auto;
   width: 2.4rem;
   height: 2.4rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
   background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
   color: var(--gt-accent);
-  font-size: 1.5rem;
+  font-size: var(--gt-font-2xl);
   cursor: pointer;
 }
 

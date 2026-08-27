@@ -15,7 +15,7 @@
 }
 
 .gt-ops-refresh__status {
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-accent);
 }
 
@@ -29,7 +29,7 @@
   gap: 0.55rem;
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface);
 }
@@ -44,7 +44,7 @@
 
 .gt-ops-status__asof {
   color: var(--gt-text-muted);
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
 }
 
 .gt-ops-status--good {
@@ -68,7 +68,7 @@
 
 .gt-ops-issues-fold__title {
   margin: 0 0 0.35rem;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -93,11 +93,11 @@
 
 .gt-ops-issues__item {
   padding: 0.35rem 0.55rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid var(--gt-border);
   background: color-mix(in srgb, var(--gt-surface-2) 80%, transparent);
   color: var(--gt-text);
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-ops-issues__item--warn {
@@ -132,7 +132,7 @@
 
 .gt-ops-metric {
   padding: 0.55rem 0.65rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: color-mix(in srgb, var(--gt-surface) 92%, var(--gt-bg));
   min-width: 0;
@@ -168,7 +168,7 @@
 }
 
 .gt-ops-metric__label {
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--gt-text-muted);
@@ -176,7 +176,7 @@
 
 .gt-ops-metric__value {
   margin-top: 0.2rem;
-  font-size: 1.05rem;
+  font-size: var(--gt-font-base);
   font-weight: 700;
   color: var(--gt-accent);
   font-variant-numeric: tabular-nums;
@@ -229,7 +229,7 @@
 
 .gt-ops-metric__hint {
   margin-top: 0.15rem;
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -273,7 +273,7 @@
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
   padding: 0.2rem 0;
   border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
@@ -306,7 +306,7 @@
   display: flex;
   flex-direction: column;
   padding: 0.85rem 1rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface);
   min-width: 0;
@@ -352,7 +352,7 @@
 
 .gt-ops-panel h2 {
   margin: 0 0 0.55rem;
-  font-size: 0.95rem;
+  font-size: var(--gt-font-base);
 }
 
 /* Heading row with its reorder controls (task #6). */
@@ -401,7 +401,7 @@
 .gt-ops-panel__lede {
   margin: 0 0 0.65rem;
   color: var(--gt-text-muted);
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
 }
 
 .gt-ops-meters {
@@ -413,14 +413,14 @@
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
 .gt-ops-meter__track {
   margin-top: 0.25rem;
   height: 0.45rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   background: color-mix(in srgb, var(--gt-text) 10%, transparent);
   overflow: hidden;
 }
@@ -446,7 +446,7 @@
 
 .gt-ops-meter__detail {
   margin-top: 0.2rem;
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -472,7 +472,7 @@
 .gt-admin-alert {
   margin-bottom: 0.85rem;
   padding: 0.65rem 0.85rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid color-mix(in srgb, var(--gt-danger) 45%, transparent);
   background: color-mix(in srgb, var(--gt-danger) 12%, transparent);
   color: #ffd0d0;

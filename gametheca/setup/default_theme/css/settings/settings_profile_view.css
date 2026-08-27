@@ -1,5 +1,5 @@
  .content-restricted-textblock {
-     border-radius: 20px;
+     border-radius: var(--gt-radius-3xl);
      padding: 30px;
      color: #ffffff;
      background: rgba(33, 37, 41, 0.95);
@@ -13,7 +13,7 @@
  .content-restricted-textblock h2 {
      text-align: center;
      color: #ffffff;
-     font-size: 2.5em;
+     font-size: var(--gt-font-5xl);
      margin-bottom: 30px;
      font-weight: 600;
      letter-spacing: 2px;
@@ -38,7 +38,7 @@
      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
      display: flex;
      align-items: center;
-     font-size: 1.1em;
+     font-size: var(--gt-font-lg);
      color: #ffffff;
  }
  
@@ -50,7 +50,7 @@
  .settings_profile_view-user-avatar {
      display: block;
      margin: 0 auto 30px;
-     border-radius: 50%;
+     border-radius: var(--gt-radius-circle);
      width: 180px;
      height: 180px;
      object-fit: cover;
@@ -70,8 +70,8 @@
  
  .settings_profile_view-edit-button .btn-primary {
      padding: 12px 30px;
-     font-size: 1.1em;
-     border-radius: 25px;
+     font-size: var(--gt-font-lg);
+     border-radius: var(--gt-radius-3xl);
      background: linear-gradient(145deg, #3498db, #2980b9);
      border: none;
      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
@@ -107,13 +107,13 @@
 .settings_profile_view-welcome {
 	background-color: #f8f9fa;
 	padding: var(--spacing-md);
-	border-radius: 10px;
+	border-radius: var(--gt-radius-lg);
 }
 
 .settings_profile_view-user-avatar {
 	display: block; 
 	margin: auto; 
-	border-radius: 50%; 
+	border-radius: var(--gt-radius-circle); 
 	width: 150px; 
 	height: 150px; 
 	object-fit: cover;

@@ -152,6 +152,10 @@
   color: var(--gt-text-muted);
 }
 
+.gt-acct__label--follow {
+  margin-top: 1.2rem;
+}
+
 .gt-acct__input {
   width: 100%;
   min-height: var(--gt-control-h);
@@ -300,6 +304,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.gt-acct__list--follow {
+  margin-top: 1.1rem;
 }
 
 .gt-acct__row {

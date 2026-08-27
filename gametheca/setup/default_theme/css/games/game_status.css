@@ -8,7 +8,7 @@
     width: 35px;
     height: 35px;
     background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 6px;
+    border-radius: var(--gt-radius-sm);
     border: 2px solid var(--color-black-pure);
     cursor: pointer;
     opacity: 0;
@@ -31,7 +31,7 @@
 }
 
 .game-status-btn-cover i {
-    font-size: 18px;
+    font-size: var(--gt-font-lg);
     transition: color 0.3s ease, opacity 0.3s ease;
 }
 
@@ -115,7 +115,7 @@
     height: 30px;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(5px);
-    border-radius: 6px;
+    border-radius: var(--gt-radius-sm);
     border: 1px solid rgba(255, 255, 255, 0.3);
     z-index: 10;
     display: flex;
@@ -126,7 +126,7 @@
 }
 
 .game-status-badge i {
-    font-size: 14px;
+    font-size: var(--gt-font-md);
 }
 
 /* Status Dropdown Menu — opens below the right-side status control.
@@ -143,11 +143,15 @@
     background: var(--pagination-bg);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 100;
     display: none;
     overflow: hidden;
+}
+
+.status-dropdown.is-open {
+    display: block;
 }
 
 .status-dropdown-option {
@@ -158,12 +162,16 @@
     align-items: center;
     gap: 12px;
     color: var(--text-white);
-    font-size: 14px;
+    font-size: var(--gt-font-md);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .status-dropdown-option:last-child {
     border-bottom: none;
+}
+
+.status-dropdown-option.is-clear {
+    border-top: 1px solid color-mix(in srgb, var(--gt-text) 20%, transparent);
 }
 
 .status-dropdown-option:hover {
@@ -172,7 +180,7 @@
 
 .status-dropdown-option i {
     width: 20px;
-    font-size: 16px;
+    font-size: var(--gt-font-base);
     text-align: center;
 }
 
@@ -233,7 +241,7 @@
 
     .status-dropdown-option {
         padding: 10px 14px;
-        font-size: 13px;
+        font-size: var(--gt-font-sm);
     }
 
     /* No size override here any more: --gt-tile-btn is derived from

@@ -5,7 +5,7 @@
 
 .card {
     background: var(--gt-surface);
-    border-radius: 15px;
+    border-radius: var(--gt-radius-2xl);
     margin-top: 20px;
     border: 1px solid var(--gt-border);
 }
@@ -14,13 +14,13 @@
     background: var(--gt-bg);
     border-bottom: 1px solid var(--gt-border);
     padding: 15px 20px;
-    border-radius: 15px 15px 0 0;
+    border-radius: var(--gt-radius-2xl) var(--gt-radius-2xl) 0 0;
 }
 
 .card-header h2 {
     color: var(--gt-text);
     margin: 0;
-    font-size: 1.5em;
+    font-size: var(--gt-font-2xl);
 }
 
 .card-header h2 i {
@@ -66,7 +66,7 @@
 .section-item {
     background: var(--gt-surface-2);
     border: 1px solid var(--gt-border);
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     margin: 10px 0;
     padding: 15px;
     cursor: move;
@@ -101,7 +101,7 @@
 
 .section-count {
     color: var(--gt-text-muted);
-    font-size: 0.9em;
+    font-size: var(--gt-font-md);
     margin-left: 10px;
     font-style: italic;
 }
@@ -114,12 +114,12 @@
 }
 
 .section-badge {
-    font-size: 0.75em;
+    font-size: var(--gt-font-xs);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: var(--gt-radius-pill);
     margin-left: 4px;
 }
 

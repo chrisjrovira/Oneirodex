@@ -89,7 +89,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: clip;
-  color: var(--gt-backdrop-tint, #2fd67b);
+  color: var(--gt-backdrop-tint, var(--gt-accent));
   opacity: 0.085;
   /* Outlined rather than solid: a filled slab of type at this size reads as a
      watermark smear behind tiles, an outline stays legible but recedes. */

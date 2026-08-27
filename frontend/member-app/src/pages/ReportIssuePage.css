@@ -3,10 +3,10 @@
 .gt-report__result {
   margin: 0 0 1rem;
   padding: 0.65rem 0.8rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
   background: color-mix(in srgb, var(--gt-accent) 10%, transparent);
-  font-size: 0.92rem;
+  font-size: var(--gt-font-md);
   line-height: 1.4;
 }
 
@@ -41,7 +41,7 @@
 
 .gt-report__section-title {
   margin: 0 0 0.65rem;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -59,13 +59,13 @@
   flex-direction: column;
   gap: 0.3rem;
   margin-bottom: 0.65rem;
-  font-size: 0.88rem;
+  font-size: var(--gt-font-md);
   min-width: 0;
 }
 
 .gt-report__field span {
   color: var(--gt-text-muted);
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   font-weight: 600;
 }
 
@@ -74,7 +74,7 @@
 .gt-report__field textarea {
   font: inherit;
   padding: 0.45rem 0.6rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid var(--gt-border);
   background: color-mix(in srgb, var(--gt-surface-2) 90%, transparent);
   color: var(--gt-text);
@@ -95,14 +95,14 @@
 
 .gt-report__fold {
   border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   background: transparent;
 }
 
 .gt-report__fold summary {
   cursor: pointer;
   padding: 0.55rem 0.75rem;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
   font-weight: 600;
   color: var(--gt-text);
   list-style: none;
@@ -148,7 +148,7 @@
 
 .gt-report__help-link {
   color: var(--gt-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
   text-decoration: none;
 }
 

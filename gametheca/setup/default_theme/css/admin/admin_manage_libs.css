@@ -21,7 +21,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.65rem 0.85rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
   backdrop-filter: blur(10px);
@@ -29,7 +29,7 @@
 }
 
 .gt-libraries-batch-bar__count {
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
   margin-right: 0.25rem;
 }
@@ -56,7 +56,7 @@
 #deleteSpinner .spinner-container {
   text-align: center;
   padding: 1.25rem 1.5rem;
-  border-radius: 12px;
+  border-radius: var(--gt-radius-xl);
   background: color-mix(in srgb, var(--gt-surface) 95%, transparent);
   border: 1px solid var(--gt-border);
   min-width: 240px;
@@ -66,7 +66,7 @@
   position: relative;
   height: 8px;
   margin-top: 0.75rem;
-  border-radius: 4px;
+  border-radius: var(--gt-radius-xs);
   background: color-mix(in srgb, var(--gt-bg) 40%, transparent);
   overflow: hidden;
 }
@@ -80,7 +80,7 @@
 
 #deleteSpinner .progress-counter {
   margin-top: 0.35rem;
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -100,13 +100,13 @@
 .gt-toast {
   pointer-events: auto;
   padding: 0.7rem 0.95rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 94%, transparent);
   color: var(--gt-text);
   box-shadow: 0 6px 18px color-mix(in srgb, var(--gt-bg) 40%, transparent);
   backdrop-filter: blur(10px);
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
   animation: gt-toast-in 0.18s ease-out;
 }
 

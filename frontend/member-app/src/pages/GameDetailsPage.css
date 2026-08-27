@@ -22,7 +22,7 @@
 
 .gt-details-page__cover-wrap {
   position: relative;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   overflow: hidden;
   background: color-mix(in srgb, var(--gt-surface) 80%, transparent);
 }
@@ -38,7 +38,7 @@
   height: auto;
   aspect-ratio: 3 / 4;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
 }
 
 .gt-details-page__hero-main h1 {
@@ -84,11 +84,11 @@
   height: 2.25rem;
   min-width: 2.25rem;
   padding: 0;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   border: 1px solid color-mix(in srgb, var(--gt-border) 100%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 78%, transparent);
   color: var(--gt-text);
-  font-size: 1.15rem;
+  font-size: var(--gt-font-lg);
   line-height: 1;
   letter-spacing: 0.05em;
   cursor: pointer;
@@ -113,7 +113,7 @@
   display: flex;
   flex-direction: column;
   padding: 0.35rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
@@ -125,7 +125,7 @@
   text-align: left;
   padding: 0.55rem 0.7rem;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   background: transparent;
   color: var(--gt-text);
   font: inherit;
@@ -152,7 +152,7 @@
 
 .gt-details-page__section h2 {
   margin: 0 0 10px;
-  font-size: 1.15rem;
+  font-size: var(--gt-font-lg);
 }
 
 /* Two-column body (UX-B4).
@@ -229,7 +229,7 @@
 }
 
 .gt-details-page__path-label {
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   opacity: 0.7;
 }
 
@@ -239,10 +239,10 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   line-height: 1.4;
   padding: 0.35rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   background: var(--gt-surface-2);
 }
 
@@ -329,7 +329,7 @@
 .gt-details-page__version-meta .chip,
 .gt-details-page__version-meta .gt-chip {
   min-height: 1.4rem;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   padding: 0.15rem 0.55rem;
 }
 
@@ -346,7 +346,7 @@
 .gt-details-page__play-honesty {
   margin: 10px 0 0;
   max-width: 42rem;
-  font-size: 0.92rem;
+  font-size: var(--gt-font-md);
   line-height: 1.45;
   opacity: 0.92;
 }
@@ -372,7 +372,7 @@
   width: 100%;
   padding: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   background: transparent;
   cursor: zoom-in;
   overflow: hidden;
@@ -387,7 +387,7 @@
   width: 100%;
   height: 140px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   display: block;
 }
 
@@ -407,7 +407,7 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
 }
 
 .gt-details-page__video-actions {

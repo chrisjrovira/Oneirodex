@@ -115,14 +115,14 @@
 
 .hackplanet_titles h1 {
     color: var(--text-white);
-    font-size: 2.5em;
+    font-size: var(--gt-font-5xl);
     font-weight: bold;
     text-shadow: 0 0 10px color-mix(in srgb, var(--gt-accent) 50%, transparent);
 }
 
 .admin-section h3 {
     color: var(--text-white);
-    font-size: 1.3em;
+    font-size: var(--gt-font-xl);
     margin-bottom: var(--spacing-lg);
     border-bottom: 1px solid var(--border-light);
     padding-bottom: var(--spacing-sm);
@@ -164,7 +164,7 @@
     padding: 0;
     border-radius: var(--border-radius-round);
     text-align: center;
-    font-size: 24px;
+    font-size: var(--gt-font-2xl);
     line-height: 60px;
     background: color-mix(in srgb, var(--gt-accent) 20%, transparent);
     color: var(--gt-text);
@@ -182,7 +182,7 @@
 
 .button-label {
     margin-top: var(--spacing-xs);
-    font-size: 0.9em;
+    font-size: var(--gt-font-md);
     color: var(--text-white);
     text-align: center;
 }
@@ -242,7 +242,7 @@
 /* === PROGRESS COMPONENTS === */
 
 .progress-text {
-    font-size: 14px;
+    font-size: var(--gt-font-md);
     margin-bottom: var(--spacing-sm);
     color: var(--gt-text);
     font-weight: 500;
@@ -277,7 +277,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 12px;
+    font-size: var(--gt-font-xs);
     font-weight: bold;
     color: var(--gt-text);
     text-shadow: 0 0 3px var(--gt-bg);
@@ -445,7 +445,7 @@
 
 .info-block h3 {
     color: var(--text-white);
-    font-size: 1.3em;
+    font-size: var(--gt-font-xl);
     margin-bottom: var(--spacing-lg);
     border-bottom: 1px solid var(--border-light);
     padding-bottom: var(--spacing-sm);
@@ -476,12 +476,12 @@
     .btn-circle {
         width: 50px;
         height: 50px;
-        font-size: 20px;
+        font-size: var(--gt-font-xl);
         line-height: 50px;
     }
 
     .button-label {
-        font-size: 0.8em;
+        font-size: var(--gt-font-sm);
     }
 
     .smtp-settings-container,
@@ -525,7 +525,7 @@
 }
 
 .badge {
-    font-size: 0.875rem;
+    font-size: var(--gt-font-md);
     padding: 0.4em 0.8em;
 }
 
@@ -550,7 +550,7 @@
 /* Last Tested Info */
 .last-tested {
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: var(--gt-font-md);
     margin-top: var(--spacing-md);
 }
 
@@ -566,7 +566,7 @@
 
 /* Admin Help Modal */
 .smtp-settings-container h2 .btn-info {
-    font-size: 0.8em;
+    font-size: var(--gt-font-sm);
     padding: 0.3em 0.6em;
     margin-left: var(--spacing-md);
     background-color: var(--btn-info);
@@ -588,13 +588,13 @@
     color: var(--text-light) !important;
     background: var(--bg-light-overlay) !important;
     border: 1px solid var(--border-light-strong) !important;
-    border-radius: 0 0 5px 5px;
+    border-radius: 0 0 var(--gt-radius-xs) var(--gt-radius-xs);
 }
 
 .ck.ck-toolbar {
     background: var(--bg-light-overlay) !important;
     border: 1px solid var(--border-light-strong) !important;
-    border-radius: 5px 5px 0 0;
+    border-radius: var(--gt-radius-xs) var(--gt-radius-xs) 0 0;
 }
 
 .ck.ck-button,

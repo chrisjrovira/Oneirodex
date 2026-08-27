@@ -8,7 +8,7 @@
   gap: 0.35rem;
   min-height: 2.6rem;
   padding: 0.45rem 0.85rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
   color: var(--gt-text);
@@ -31,10 +31,10 @@
   min-width: 1.25rem;
   height: 1.25rem;
   padding: 0 0.3rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   background: var(--gt-accent);
   color: #0b0d10;
-  font-size: 0.7rem;
+  font-size: var(--gt-font-xs);
   font-weight: 800;
 }
 
@@ -93,12 +93,12 @@
 
 .gt-social-dock__title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--gt-font-base);
 }
 
 .gt-social-dock__sub {
   margin: 0.15rem 0 0;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -112,11 +112,11 @@
 .gt-social-dock__icon-btn {
   min-height: 1.8rem;
   padding: 0.2rem 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: transparent;
   color: inherit;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   cursor: pointer;
 }
@@ -132,7 +132,7 @@
 
 .gt-social-dock__section h3 {
   margin: 0 0 0.35rem;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--gt-text-muted);
@@ -153,7 +153,7 @@
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.45rem 0.5rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -168,7 +168,7 @@
   width: 0.55rem;
   height: 0.55rem;
   margin-top: 0.35rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   background: #667;
   flex: 0 0 auto;
 }
@@ -193,11 +193,11 @@
   color: inherit;
   text-decoration: none;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-social-dock__presence {
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -216,11 +216,11 @@
   justify-content: center;
   min-height: 1.55rem;
   padding: 0.15rem 0.45rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: transparent;
   color: inherit;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
@@ -233,7 +233,7 @@
 
 .gt-social-dock__empty {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -248,7 +248,7 @@
   min-width: 0;
   min-height: 2.2rem;
   padding: 0.35rem 0.55rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(0, 0, 0, 0.25);
   color: inherit;
@@ -265,7 +265,7 @@
 }
 
 .gt-social-dock__footer-link {
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   color: var(--gt-accent);
   background: none;
@@ -277,7 +277,7 @@
 
 .gt-social-dock__toast {
   flex: 1 1 100%;
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 

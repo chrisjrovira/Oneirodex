@@ -102,7 +102,7 @@
     right: var(--spacing-lg);
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: var(--gt-font-2xl);
     color: var(--text-muted);
     cursor: pointer;
     transition: all var(--transition-fast);
@@ -205,7 +205,7 @@
 .modal .btn {
     padding: var(--spacing-sm) var(--spacing-lg);
     border-radius: var(--border-radius-sm);
-    font-size: 0.95rem;
+    font-size: var(--gt-font-base);
     font-weight: 500;
     border: 1px solid transparent;
     cursor: pointer;
@@ -287,7 +287,7 @@
 .gt-prefs-modal .gt-prefs-modal__panel {
     background: var(--gt-surface);
     border: 1px solid var(--gt-border);
-    border-radius: 10px;
+    border-radius: var(--gt-radius-lg);
     color: var(--gt-text);
     box-shadow: 0 16px 40px color-mix(in srgb, var(--gt-bg) 50%, transparent);
     overflow: hidden;
@@ -301,7 +301,7 @@
 
 .gt-prefs-modal .gt-prefs-modal__title {
     margin: 0;
-    font-size: 1rem;
+    font-size: var(--gt-font-base);
     font-weight: 700;
     color: var(--gt-text);
     display: inline-flex;
@@ -388,7 +388,7 @@
 
 .gt-prefs-modal .gt-prefs-section__title {
     margin: 0 0 0.2rem;
-    font-size: 0.72rem;
+    font-size: var(--gt-font-xs);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -403,7 +403,7 @@
 
 .gt-prefs-modal .gt-prefs-section__hint {
     margin: 0 0 0.55rem;
-    font-size: 0.8rem;
+    font-size: var(--gt-font-sm);
     line-height: 1.35;
     color: var(--gt-text-muted);
 }
@@ -430,14 +430,14 @@
 
 .gt-prefs-modal .gt-prefs-range__value {
     min-width: 2.75rem;
-    font-size: 0.82rem;
+    font-size: var(--gt-font-sm);
     color: var(--gt-text-muted);
 }
 
 .gt-prefs-modal .gt-prefs-modal__body .form-label {
     color: var(--gt-text);
     font-weight: 500;
-    font-size: 0.88rem;
+    font-size: var(--gt-font-md);
     margin-bottom: 0.3rem;
 }
 
@@ -446,7 +446,7 @@
     background: color-mix(in srgb, var(--gt-surface-2) 90%, transparent);
     border: 1px solid var(--gt-border);
     color: var(--gt-text);
-    border-radius: 6px;
+    border-radius: var(--gt-radius-sm);
 }
 
 .gt-prefs-modal .gt-prefs-modal__body .form-control:focus,
@@ -472,7 +472,7 @@
     border-color: var(--gt-accent);
     color: var(--gt-accent-contrast);
     font-weight: 600;
-    border-radius: 6px;
+    border-radius: var(--gt-radius-sm);
 }
 
 .gt-prefs-modal .gt-prefs-modal__footer .btn-secondary {
@@ -480,5 +480,5 @@
     border: 1px solid var(--gt-border);
     color: var(--gt-text);
     font-weight: 600;
-    border-radius: 6px;
+    border-radius: var(--gt-radius-sm);
 }

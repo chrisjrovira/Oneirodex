@@ -11,7 +11,7 @@
     gap: 1.25rem;
     background: var(--gt-surface);
     border: 1px solid var(--gt-border);
-    border-radius: 14px;
+    border-radius: var(--gt-radius-xl);
     box-shadow: 0 16px 48px color-mix(in srgb, var(--gt-bg) 55%, transparent);
     color: var(--gt-text);
 }
@@ -27,7 +27,7 @@
 .gt-setup__mark {
     width: 3.5rem;
     height: 3.5rem;
-    border-radius: 12px;
+    border-radius: var(--gt-radius-xl);
     display: block;
 }
 
@@ -45,13 +45,13 @@
     margin: 0;
     color: var(--gt-text-muted);
     text-align: center;
-    font-size: 0.95rem;
+    font-size: var(--gt-font-base);
     line-height: 1.45;
 }
 
 .gt-setup__lede--muted,
 .setup-info.text-muted {
-    font-size: 0.875rem;
+    font-size: var(--gt-font-md);
     opacity: 0.92;
 }
 
@@ -71,7 +71,7 @@
 .gt-setup label,
 .gt-setup .form-group > label {
     color: var(--gt-text);
-    font-size: 0.92rem;
+    font-size: var(--gt-font-md);
     font-weight: 500;
 }
 
@@ -86,7 +86,7 @@
     margin: 0 !important;
     height: 2.5rem;
     padding: 0.5rem 0.75rem;
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     border: 1px solid var(--gt-border);
     background: var(--gt-surface-2);
     color: var(--gt-text);
@@ -110,14 +110,14 @@
     margin: 0;
     padding: 0.85rem 1rem;
     border: 1px solid var(--gt-border);
-    border-radius: 10px;
+    border-radius: var(--gt-radius-lg);
     background: color-mix(in srgb, var(--gt-surface-2) 70%, transparent);
 }
 
 .gt-setup legend {
     padding: 0 0.35rem;
     color: var(--gt-accent);
-    font-size: 0.85rem;
+    font-size: var(--gt-font-sm);
     font-weight: 600;
 }
 
@@ -141,7 +141,7 @@
     width: 100%;
     margin-top: 0.35rem;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     background: var(--gt-accent);
     color: var(--gt-accent-contrast);
     font-weight: 600;
@@ -168,7 +168,7 @@
 .gt-setup .btn-secondary {
     width: 100%;
     margin-top: 0;
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     border: 1px solid var(--gt-border);
     background: var(--gt-surface-2);
     color: var(--gt-text);
@@ -190,7 +190,7 @@
 .gt-setup .error,
 .gt-setup .error-message {
     color: var(--gt-danger);
-    font-size: 0.875rem;
+    font-size: var(--gt-font-md);
     margin-top: 0.15rem;
     display: block;
 }
@@ -198,7 +198,7 @@
 .gt-setup .alert {
     margin: 0;
     padding: 0.65rem 0.85rem;
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
 }
 
 .gt-setup .alert-success {
@@ -263,7 +263,7 @@
     background: var(--gt-surface);
     backdrop-filter: none;
     padding: clamp(1.25rem, 4vw, 2rem);
-    border-radius: 14px;
+    border-radius: var(--gt-radius-xl);
     border: 1px solid var(--gt-border);
 }
 

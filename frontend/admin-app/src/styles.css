@@ -97,7 +97,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-admin-brand img {
   width: 1.4rem;
   height: 1.4rem;
-  border-radius: 4px;
+  border-radius: var(--gt-radius-xs);
 }
 
 .gt-admin-brand-text {
@@ -109,12 +109,12 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-admin-brand-name {
   font-family: var(--font-display);
-  font-size: 0.92rem;
+  font-size: var(--gt-font-md);
   letter-spacing: 0.01em;
 }
 
 .gt-admin-brand-role {
-  font-size: 0.68rem;
+  font-size: var(--gt-font-xs);
   font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -138,9 +138,9 @@ body.admin-shell.modal-open > .modal-backdrop {
   color: var(--gt-text-muted);
   text-decoration: none;
   padding: 0.28rem 0.5rem;
-  border-radius: 5px;
+  border-radius: var(--gt-radius-xs);
   border: 1px solid transparent;
-  font-size: 0.8125rem;
+  font-size: var(--gt-font-sm);
   font-weight: 550;
   line-height: 1.2;
   white-space: nowrap;
@@ -168,9 +168,9 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-admin-actions .gt-btn,
 .gt-admin-actions .gt-btn--quiet {
   padding: 0.28rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   font-weight: 550;
-  border-radius: 5px;
+  border-radius: var(--gt-radius-xs);
   border: 1px solid transparent;
   background: transparent;
   color: var(--gt-text-muted);
@@ -192,7 +192,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-admin-metric {
   margin: 0.15rem 0;
-  font-size: 1.65rem;
+  font-size: var(--gt-font-2xl);
   font-weight: 700;
   color: var(--gt-accent);
   line-height: 1.1;
@@ -212,7 +212,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   background: var(--gt-surface);
   color: var(--gt-text);
   border: 1px solid var(--gt-border);
-  border-radius: 12px;
+  border-radius: var(--gt-radius-xl);
 }
 
 .gt-admin-legacy .table,
@@ -239,7 +239,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-admin-legacy .btn-primary,
 .gt-admin-legacy .btn-secondary,
 .gt-admin-legacy .btn-info {
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
   background: color-mix(in srgb, var(--gt-accent) 16%, transparent);
   color: var(--gt-text);
@@ -270,7 +270,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-admin-page h1 {
   margin: 0 0 0.25rem;
   font-family: var(--font-display);
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -281,7 +281,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   margin: 0 0 0.75rem;
   color: var(--gt-text-muted);
   max-width: 42rem;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 /* auto-fit, not auto-fill: auto-fill keeps empty columns alive, so a row with
@@ -301,7 +301,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.3rem;
   height: 100%;
   padding: 0.7rem 0.8rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface);
   color: inherit;
@@ -314,12 +314,12 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-admin-card h2 {
   margin: 0 0 0.35rem;
-  font-size: 1rem;
+  font-size: var(--gt-font-base);
 }
 
 .gt-admin-card p {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -354,7 +354,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-admin-card__links a {
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text);
   text-decoration: none;
   border-bottom: 1px solid transparent;
@@ -376,7 +376,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-admin-inventory__category {
   margin: 0 0 0.35rem;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -393,7 +393,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-admin-inventory__list a {
-  font-size: 0.88rem;
+  font-size: var(--gt-font-md);
   color: var(--gt-accent);
   text-decoration: none;
 }
@@ -405,11 +405,11 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-admin-inventory__status {
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
 }
 
 .gt-admin-inventory__notes {
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -419,7 +419,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-admin-panel {
   padding: 1rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-glass-border);
   background: var(--gt-glass-bg);
 }
@@ -452,7 +452,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   width: 100%;
   margin: 0.35rem 0 0.85rem;
   padding: 0.45rem 0.65rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: var(--gt-text);
@@ -469,13 +469,13 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-admin-panel label {
   display: block;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
   color: var(--gt-text-muted);
 }
 
 .gt-admin-field {
   display: block;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
   color: var(--gt-text-muted);
   margin-bottom: 0.65rem;
 }
@@ -495,7 +495,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-art-studio-kicker {
   margin: 0 0 0.2rem;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--gt-accent) 75%, var(--gt-text-muted));
@@ -511,11 +511,11 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.35rem;
   margin-top: 0.35rem;
   padding: 0.35rem 0.7rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   border: 1px solid var(--gt-border);
   background: color-mix(in srgb, var(--gt-surface-2) 80%, transparent);
   color: var(--gt-text-muted);
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   white-space: nowrap;
 }
 
@@ -540,7 +540,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-art-studio--workspace {
   margin: 0 0 1rem;
   padding: 1rem;
-  border-radius: 14px;
+  border-radius: var(--gt-radius-xl);
   border: 1px solid var(--gt-glass-border);
   background:
     radial-gradient(120% 80% at 12% 0%, color-mix(in srgb, var(--gt-accent) 14%, transparent), transparent 55%),
@@ -557,7 +557,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   justify-content: center;
   gap: 0.85rem;
   padding: 1rem;
-  border-radius: 14px;
+  border-radius: var(--gt-radius-xl);
   border: 2px solid var(--gt-border);
   background:
     radial-gradient(ellipse 70% 50% at 50% 20%, color-mix(in srgb, var(--gt-accent) 10%, transparent), transparent),
@@ -581,8 +581,8 @@ body.admin-shell.modal-open > .modal-backdrop {
   left: 0.35rem;
   z-index: 1;
   padding: 0.2rem 0.45rem;
-  border-radius: 6px;
-  font-size: 0.65rem;
+  border-radius: var(--gt-radius-sm);
+  font-size: var(--gt-font-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--gt-accent-contrast);
@@ -594,12 +594,12 @@ body.admin-shell.modal-open > .modal-backdrop {
   display: block;
   max-width: min(100%, 400px);
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
 .gt-art-studio__hero figcaption {
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--gt-text-muted);
@@ -630,7 +630,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   position: relative;
   margin: 0 0 0.45rem;
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: var(--gt-font-lg);
   letter-spacing: 0.02em;
   color: var(--gt-text);
 }
@@ -638,7 +638,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-art-studio__empty-hint {
   position: relative;
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
   line-height: 1.45;
 }
@@ -654,13 +654,13 @@ body.admin-shell.modal-open > .modal-backdrop {
   appearance: none;
   margin: 0;
   padding: 0.25rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: var(--gt-text-muted);
   cursor: pointer;
   font: inherit;
-  font-size: 0.7rem;
+  font-size: var(--gt-font-xs);
   min-width: 72px;
   min-height: 56px;
   display: grid;
@@ -671,7 +671,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   display: block;
   max-height: 72px;
   width: auto;
-  border-radius: 4px;
+  border-radius: var(--gt-radius-xs);
 }
 
 .gt-art-studio__thumb:hover {
@@ -686,7 +686,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-art-studio__label {
   display: block;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--gt-text-muted);
@@ -694,7 +694,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-art-studio__title-field input {
-  font-size: 1.15rem;
+  font-size: var(--gt-font-lg);
   font-weight: 600;
   letter-spacing: 0.01em;
   padding: 0.65rem 0.8rem;
@@ -704,7 +704,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-art-studio__hint {
   margin: -0.15rem 0 0.55rem;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -721,7 +721,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   width: 100%;
   margin: 0.15rem 0 0.65rem;
   padding: 0.45rem 0.65rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: var(--gt-text);
@@ -747,17 +747,17 @@ body.admin-shell.modal-open > .modal-backdrop {
   align-items: flex-start;
   gap: 0.1rem;
   padding: 0.4rem 0.65rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: transparent;
   color: var(--gt-text-muted);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   cursor: pointer;
 }
 
 .gt-art-studio__variant-kind {
-  font-size: 0.65rem;
+  font-size: var(--gt-font-xs);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   opacity: 0.75;
@@ -782,7 +782,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-art-studio__pack-meta {
   margin: 0.5rem 0 0;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -791,7 +791,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   align-items: center;
   justify-content: center;
   min-height: 320px;
-  border-radius: 12px;
+  border-radius: var(--gt-radius-xl);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface);
   padding: 0.75rem;
@@ -800,7 +800,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-art-studio__preview img {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
@@ -814,13 +814,13 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-art-studio__tile {
   margin: 0;
   padding: 0.5rem;
-  border-radius: 12px;
+  border-radius: var(--gt-radius-xl);
   border: 2px solid var(--gt-border);
   background: var(--gt-surface);
 }
 
 .gt-art-studio__tile figcaption {
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
   margin-bottom: 0.4rem;
   letter-spacing: 0.02em;
@@ -829,18 +829,18 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-art-studio__tile img {
   display: block;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   image-rendering: auto;
 }
 
 .gt-art-studio__tile-placeholder {
   display: grid;
   place-items: center;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   border: 1px dashed var(--gt-border);
   background: color-mix(in srgb, var(--gt-surface-2) 80%, transparent);
   color: var(--gt-text-muted);
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
 }
 
 .gt-art-studio-fallbacks {
@@ -869,7 +869,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-art-studio-fallbacks__card {
   margin: 0;
   padding: 0.55rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
 }
@@ -880,7 +880,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   height: auto;
   max-height: 180px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   background: var(--gt-bg);
 }
 
@@ -889,7 +889,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   flex-direction: column;
   gap: 0.15rem;
   margin-top: 0.45rem;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -960,10 +960,10 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-art-studio__batch-log {
   margin-top: 0.75rem;
   padding: 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   background: var(--gt-surface-2);
   border: 1px solid var(--gt-border);
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   white-space: pre-wrap;
   max-height: 200px;
   overflow: auto;
@@ -974,7 +974,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.35rem;
   margin: 0 0 1rem;
   padding: 0.25rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   background: var(--gt-surface);
   border: 1px solid var(--gt-border);
   width: fit-content;
@@ -988,7 +988,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   color: var(--gt-text-muted);
   font: inherit;
   padding: 0.45rem 0.9rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   cursor: pointer;
 }
 
@@ -1017,7 +1017,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-stock-picker {
   padding: 1rem 1.1rem;
-  border-radius: 12px;
+  border-radius: var(--gt-radius-xl);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface);
 }
@@ -1048,9 +1048,9 @@ body.admin-shell.modal-open > .modal-backdrop {
   background: transparent;
   color: var(--gt-text-muted);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   padding: 0.35rem 0.7rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   cursor: pointer;
 }
 
@@ -1073,7 +1073,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.4rem;
   margin: 0;
   padding: 0.45rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: inherit;
@@ -1105,7 +1105,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-stock-picker__thumb {
   display: block;
   aspect-ratio: 2 / 3;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   overflow: hidden;
   background: color-mix(in srgb, var(--gt-bg) 80%, #1a2a2e);
 }
@@ -1124,16 +1124,16 @@ body.admin-shell.modal-open > .modal-backdrop {
   height: 100%;
   min-height: 96px;
   color: var(--gt-text-muted);
-  font-size: 1.25rem;
+  font-size: var(--gt-font-xl);
   letter-spacing: 0.04em;
 }
 
 .gt-stock-picker__thumb-ph--lg {
   min-height: 220px;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px dashed var(--gt-border);
   background: var(--gt-surface-2);
-  font-size: 1rem;
+  font-size: var(--gt-font-base);
   padding: 1rem;
   text-align: center;
 }
@@ -1146,7 +1146,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-stock-picker__meta strong {
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   font-weight: 600;
   color: var(--gt-text);
   white-space: nowrap;
@@ -1155,7 +1155,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-stock-picker__kind {
-  font-size: 0.68rem;
+  font-size: var(--gt-font-xs);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--gt-text-muted);
@@ -1164,11 +1164,11 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-stock-picker__empty {
   margin: 0.5rem 0 0;
   padding: 1.1rem 1rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px dashed var(--gt-border);
   background: color-mix(in srgb, var(--gt-surface-2) 70%, transparent);
   color: var(--gt-text-muted);
-  font-size: 0.88rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-stock-picker__empty-title {
@@ -1195,7 +1195,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: var(--gt-bg);
 }
@@ -1205,7 +1205,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   flex-direction: column;
   gap: 0.15rem;
   margin-top: 0.45rem;
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -1226,7 +1226,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.2rem;
   min-width: 220px;
   flex: 1 1 220px;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -1234,7 +1234,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   display: block;
   width: 100%;
   padding: 0.45rem 0.65rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: var(--gt-text);
@@ -1275,7 +1275,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.8em;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -1283,8 +1283,8 @@ body.admin-shell.modal-open > .modal-backdrop {
   display: inline-block;
   margin-left: 0.35rem;
   padding: 0.1rem 0.4rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
+  border-radius: var(--gt-radius-pill);
+  font-size: var(--gt-font-xs);
   vertical-align: middle;
 }
 
@@ -1300,7 +1300,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-admin-panel-title {
   margin: 0 0 0.5rem;
-  font-size: 1.05rem;
+  font-size: var(--gt-font-base);
 }
 
 .gt-admin-lede--warn {
@@ -1310,11 +1310,11 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-admin-banner {
   margin-bottom: 0.75rem;
   padding: 0.65rem 0.85rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: var(--gt-text);
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-admin-banner--warn {
@@ -1339,7 +1339,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   margin: 0 0 0.75rem;
   padding-left: 1.15rem;
   color: var(--gt-text);
-  font-size: 0.92rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-storage-result-list li {
@@ -1348,7 +1348,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-storage-raw {
   margin-top: 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -1356,11 +1356,11 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-admin-output {
   margin: 0.5rem 0 0;
   padding: 0.65rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   overflow: auto;
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   max-height: 18rem;
 }
 
@@ -1381,7 +1381,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-artwork-picker__chips-label {
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   opacity: 0.75;
   margin-right: 0.25rem;
 }
@@ -1391,10 +1391,10 @@ body.admin-shell.modal-open > .modal-backdrop {
   border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
   color: inherit;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   padding: 0.2rem 0.7rem;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   cursor: pointer;
 }
 
@@ -1428,7 +1428,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.35rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: var(--gt-text);
@@ -1449,7 +1449,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   width: 100%;
   aspect-ratio: 2 / 3;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   background: var(--gt-bg);
 }
 
@@ -1463,7 +1463,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-artwork-picker__caption {
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1524,7 +1524,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 .gt-images-group {
   border: 1px solid var(--gt-border);
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   background: var(--gt-surface);
   overflow: hidden;
 }
@@ -1559,7 +1559,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   width: 48px;
   height: 64px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--gt-radius-xs);
   background: var(--gt-bg);
 }
 
@@ -1578,7 +1578,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
 }
 
 .gt-images-row__error {
@@ -1710,11 +1710,11 @@ body.admin-shell.modal-open > .modal-backdrop {
   align-items: center;
   gap: 0.25rem;
   padding: 0.2rem 0.35rem 0.2rem 0.55rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid color-mix(in srgb, var(--gt-accent) 28%, var(--gt-border));
   background: color-mix(in srgb, var(--gt-surface) 82%, transparent);
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   line-height: 1.2;
   color: inherit;
 }
@@ -1724,7 +1724,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   appearance: none;
   font: inherit;
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   border-style: dashed;
   opacity: 0.85;
 }
@@ -1762,10 +1762,10 @@ body.admin-shell.modal-open > .modal-backdrop {
   color: var(--gt-text-muted);
   cursor: pointer;
   font: inherit;
-  font-size: 1rem;
+  font-size: var(--gt-font-base);
   line-height: 1;
   padding: 0.1rem 0.3rem;
-  border-radius: 4px;
+  border-radius: var(--gt-radius-xs);
 }
 
 .gt-ext-chip__remove:hover:not(:disabled),
@@ -1793,12 +1793,12 @@ body.admin-shell.modal-open > .modal-backdrop {
   align-items: flex-start;
   gap: 0.5rem;
   padding: 0.7rem 0.6rem 0.7rem 0.95rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface);
   color: var(--gt-text);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-  font-size: 0.92rem;
+  font-size: var(--gt-font-md);
   line-height: 1.35;
   animation: gt-toast-in 0.18s ease-out;
 }
@@ -1891,7 +1891,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   align-items: baseline;
   gap: 0.2rem 0.75rem;
   padding: 0.5rem 0.4rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   color: inherit;
   text-decoration: none;
 }
@@ -1909,7 +1909,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-settings-row__blurb {
   flex: 1 1 16rem;
   min-width: 0;
-  font-size: 0.84rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -1952,7 +1952,7 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-provider-row__title {
   margin: 0;
   flex: 0 0 auto;
-  font-size: 0.95rem;
+  font-size: var(--gt-font-base);
   font-weight: 650;
 }
 
@@ -1960,7 +1960,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   margin: 0;
   flex: 1 1 14rem;
   min-width: 0;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -1972,7 +1972,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
 }
 
 .gt-provider-row__links li + li::before {

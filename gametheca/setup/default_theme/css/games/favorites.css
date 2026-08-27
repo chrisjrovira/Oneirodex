@@ -29,22 +29,22 @@
 }
 
 .favorite-count i {
-    color: #ff69b4;
-    font-size: 2.5em; /* Larger heart icon */
+    color: var(--gt-favorite, var(--gt-accent));
+    font-size: var(--gt-font-5xl); /* Larger heart icon */
     position: absolute; /* To allow text to be placed on top */
 }
 
 .favorite-count span {
     position: relative; /* To appear above the icon */
     z-index: 1;
-    font-size: 1em;
+    font-size: var(--gt-font-base);
     font-weight: bold;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .game-card {
     position: relative;
-    border-radius: 10px;
+    border-radius: var(--gt-radius-lg);
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     background: rgba(255, 255, 255, 0.1);
@@ -80,12 +80,12 @@
 .no-favorites {
     text-align: center;
     color: #fff;
-    font-size: 1.2em;
+    font-size: var(--gt-font-lg);
     padding: 20px;
     grid-column: 1 / -1;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(5px);
-    border-radius: 10px;
+    border-radius: var(--gt-radius-lg);
     margin: 20px 0;
 }
 
@@ -101,7 +101,7 @@
     padding: 8px 16px;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(5px);
-    border-radius: 5px;
+    border-radius: var(--gt-radius-xs);
     color: white;
     text-decoration: none;
     transition: background-color 0.3s ease;

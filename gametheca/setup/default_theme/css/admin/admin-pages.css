@@ -97,7 +97,7 @@
     margin: 0 0 0.35rem;
     color: var(--gt-text-muted);
     font-family: var(--font-ui);
-    font-size: 0.8rem;
+    font-size: var(--gt-font-sm);
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -108,7 +108,7 @@
 .gt-adminpage-title i {
     margin-right: 0.4rem;
     color: var(--gt-accent);
-    font-size: 1rem;
+    font-size: var(--gt-font-base);
 }
 
 /* A few legacy pages (Integrations) put their page title in a plain
@@ -121,7 +121,7 @@
     margin: 0 0 0.35rem;
     color: var(--gt-text-muted);
     font-family: var(--font-ui);
-    font-size: 0.8rem;
+    font-size: var(--gt-font-sm);
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -132,7 +132,7 @@
     margin: 0;
     max-width: 68ch;
     color: var(--gt-text-muted);
-    font-size: 0.95rem;
+    font-size: var(--gt-font-base);
 }
 
 .gt-adminpage-header-actions {
@@ -191,16 +191,16 @@
 }
 
 .gt-adminpage-panel h2 {
-    font-size: 1.3rem;
+    font-size: var(--gt-font-xl);
 }
 
 .gt-adminpage-panel h3 {
-    font-size: 1.12rem;
+    font-size: var(--gt-font-lg);
 }
 
 .gt-adminpage-panel h4,
 .gt-adminpage-panel h5 {
-    font-size: 1rem;
+    font-size: var(--gt-font-base);
 }
 
 /* Sub-blocks inside a panel — used by the settings-style pages. */
@@ -223,7 +223,7 @@
     padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--gt-border);
     color: var(--gt-text);
-    font-size: 1rem;
+    font-size: var(--gt-font-base);
     font-weight: 600;
 }
 
@@ -277,16 +277,16 @@
 .gt-adminpage :focus-visible {
     outline: 2px solid var(--gt-focus-ring);
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: var(--gt-radius-xs);
 }
 
 .gt-adminpage code,
 .gt-adminpage kbd {
     padding: 0.1em 0.4em;
-    border-radius: 4px;
+    border-radius: var(--gt-radius-xs);
     background: color-mix(in srgb, var(--gt-accent) 14%, var(--gt-surface-2));
     color: var(--gt-accent);
-    font-size: 0.9em;
+    font-size: var(--gt-font-md);
 }
 
 .gt-adminpage hr {
@@ -313,7 +313,7 @@
     gap: 0.45rem;
     min-height: 1.6rem;
     color: var(--gt-text-muted);
-    font-size: 0.9rem;
+    font-size: var(--gt-font-md);
 }
 
 .gt-adminpage-empty {
@@ -330,7 +330,7 @@
 }
 
 .gt-adminpage-empty i {
-    font-size: 1.8rem;
+    font-size: var(--gt-font-3xl);
     color: color-mix(in srgb, var(--gt-accent) 70%, var(--gt-text-muted));
 }
 
@@ -346,7 +346,7 @@
     border: 1px solid var(--gt-border);
     border-radius: var(--gt-adminpage-radius-sm);
     color: var(--gt-text);
-    font-size: 0.85rem;
+    font-size: var(--gt-font-sm);
     white-space: pre-wrap;
     word-break: break-word;
 }
@@ -361,7 +361,7 @@
 .gt-adminpage .form-label,
 .gt-adminpage label {
     color: var(--gt-text);
-    font-size: 0.92rem;
+    font-size: var(--gt-font-md);
     font-weight: 500;
 }
 
@@ -484,7 +484,7 @@
     gap: 0.4rem;
     margin-top: var(--gt-adminpage-gap);
     color: var(--gt-text-muted);
-    font-size: 0.92rem;
+    font-size: var(--gt-font-md);
 }
 
 .gt-adminpage-backlink:hover {
@@ -517,7 +517,7 @@
     background: var(--gt-surface-2);
     border-bottom: 1px solid var(--gt-border);
     color: var(--gt-text-muted);
-    font-size: 0.78rem;
+    font-size: var(--gt-font-xs);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -774,7 +774,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: var(--gt-font-xs);
     font-weight: 600;
     color: var(--gt-text);
     text-shadow: 0 0 3px var(--gt-bg);
@@ -821,13 +821,13 @@
     flex-direction: column;
     gap: 0.15rem;
     padding: 0.6rem 0.75rem;
-    border-radius: 10px;
+    border-radius: var(--gt-radius-lg);
     border: 1px solid var(--gt-border);
     background: var(--gt-surface);
 }
 
 .gt-stat-tile__label {
-    font-size: 0.72rem;
+    font-size: var(--gt-font-xs);
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -835,14 +835,14 @@
 }
 
 .gt-stat-tile__value {
-    font-size: 1.5rem;
+    font-size: var(--gt-font-2xl);
     font-weight: 700;
     line-height: 1.1;
     color: var(--gt-accent);
 }
 
 .gt-stat-table {
-    font-size: 0.88rem;
+    font-size: var(--gt-font-md);
 }
 
 .gt-stat-table .text-end {
@@ -851,6 +851,6 @@
 
 .gt-adminpage-subtitle {
     margin: 0 0 0.6rem;
-    font-size: 1rem;
+    font-size: var(--gt-font-base);
     font-weight: 650;
 }

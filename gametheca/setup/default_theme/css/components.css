@@ -581,10 +581,10 @@
     left: 8px;
     background: rgba(0, 123, 255, 0.9);
     color: white;
-    font-size: 12px;
+    font-size: var(--gt-font-xs);
     font-weight: bold;
     padding: 4px 8px;
-    border-radius: 4px;
+    border-radius: var(--gt-radius-xs);
     z-index: 10;
     pointer-events: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -596,10 +596,10 @@
     bottom: 8px;
     right: 8px;
     color: white;
-    font-size: 11px;
+    font-size: var(--gt-font-xs);
     font-weight: bold;
     padding: 4px 7px;
-    border-radius: 4px;
+    border-radius: var(--gt-radius-xs);
     z-index: 10;
     pointer-events: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -708,7 +708,7 @@
     height: 1em;
     border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
     border-top-color: currentColor;
-    border-radius: 50%;
+    border-radius: var(--gt-radius-circle);
     vertical-align: -0.125em;
     animation: gt-spin 0.7s linear infinite;
 }
@@ -777,7 +777,7 @@
     background: var(--gt-surface);
     color: var(--gt-text);
     border: 1px solid var(--gt-border);
-    border-radius: 12px;
+    border-radius: var(--gt-radius-xl);
     box-shadow: 0 12px 40px color-mix(in srgb, var(--gt-bg) 55%, transparent);
 }
 
@@ -806,7 +806,7 @@
     display: inline-block;
     width: 0.7em;
     height: 0.7em;
-    border-radius: 50%;
+    border-radius: var(--gt-radius-circle);
     vertical-align: middle;
 }
 
@@ -1010,11 +1010,11 @@
     justify-content: center;
     min-height: 32px;
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: var(--gt-radius-sm);
     border: 1px solid rgba(255, 255, 255, 0.18);
     background: rgba(255, 255, 255, 0.08);
     color: inherit;
-    font-size: 13px;
+    font-size: var(--gt-font-sm);
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
@@ -1038,12 +1038,12 @@
 }
 
 .gt-action-bar__presence {
-    font-size: 0.72rem;
+    font-size: var(--gt-font-xs);
     font-weight: 600;
     letter-spacing: 0.02em;
     color: var(--gt-text-muted);
     padding: 0.2rem 0.45rem;
-    border-radius: 999px;
+    border-radius: var(--gt-radius-pill);
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
@@ -1054,7 +1054,7 @@
 
 .gt-action-bar__status {
     flex: 1 1 100%;
-    font-size: 0.85rem;
+    font-size: var(--gt-font-sm);
     opacity: 0.9;
 }
 
@@ -1099,7 +1099,7 @@
     padding: var(--spacing-md);
     animation: fadein 0.5s;
     display: none;
-    border-radius: 5px;
+    border-radius: var(--gt-radius-xs);
     box-sizing: content-box;
 }
 
@@ -1122,7 +1122,7 @@
 }
 
 .game-name {
-    font-size: 1.2rem;
+    font-size: var(--gt-font-lg);
     color: var(--text-white);
 }
 
@@ -1142,11 +1142,11 @@ a.gt-chip {
     min-height: 1.55rem;
     padding: 0.2rem 0.65rem;
     margin: 2px;
-    font-size: 0.72rem;
+    font-size: var(--gt-font-xs);
     font-weight: 650;
     letter-spacing: 0.03em;
     line-height: 1.2;
-    border-radius: 999px;
+    border-radius: var(--gt-radius-pill);
     border: 1px solid color-mix(in srgb, var(--gt-border) 85%, transparent);
     background-color: var(--chip-bg-dark, color-mix(in srgb, var(--gt-surface-2) 88%, transparent));
     color: var(--text-white, var(--gt-text-muted));

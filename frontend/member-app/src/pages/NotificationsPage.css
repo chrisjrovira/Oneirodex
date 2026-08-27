@@ -22,10 +22,10 @@
   min-width: 1.35rem;
   height: 1.35rem;
   padding: 0 0.35rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   background: color-mix(in srgb, var(--gt-accent) 22%, transparent);
   color: var(--gt-accent);
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
 }
 
@@ -39,7 +39,7 @@
 .gt-notifications__filters {
   display: inline-flex;
   border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   overflow: hidden;
 }
 
@@ -49,7 +49,7 @@
   background: transparent;
   color: var(--gt-text-muted);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   cursor: pointer;
 }
 
@@ -68,13 +68,13 @@
 .gt-notifications__prefs {
   margin: 0.85rem 0 1rem;
   border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
 }
 
 .gt-notifications__prefs summary {
   cursor: pointer;
   padding: 0.55rem 0.75rem;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
   font-weight: 600;
   list-style: none;
 }
@@ -108,7 +108,7 @@
   gap: 0.5rem;
   padding: 0.35rem 0;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-notifications__pref strong {
@@ -118,7 +118,7 @@
 
 .gt-notifications__pref-kind {
   display: block;
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -127,7 +127,7 @@
 .gt-notifications__pref-note {
   margin: 0;
   padding: 0 0.75rem 0.65rem;
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
@@ -145,7 +145,7 @@
 
 .gt-notifications__section-title {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -182,7 +182,7 @@
   margin: 0 -0.35rem;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--gt-radius-xs);
 }
 
 .gt-notifications__item-main {
@@ -198,19 +198,19 @@
 }
 
 .gt-notifications__item-head strong {
-  font-size: 0.95rem;
+  font-size: var(--gt-font-base);
 }
 
 .gt-notifications__item-head time {
   margin-left: auto;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
 .gt-notifications__dot {
   width: 0.45rem;
   height: 0.45rem;
-  border-radius: 50%;
+  border-radius: var(--gt-radius-circle);
   background: var(--gt-accent);
   flex-shrink: 0;
   align-self: center;
@@ -223,7 +223,7 @@
 
 .gt-notifications__body {
   margin: 0.25rem 0 0 0.95rem;
-  font-size: 0.88rem;
+  font-size: var(--gt-font-md);
   line-height: 1.4;
   color: var(--gt-text-muted);
 }
@@ -238,7 +238,7 @@
 .gt-notifications__item-actions a,
 .gt-notifications__item-actions button {
   font: inherit;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-accent);
   background: transparent;
   border: none;

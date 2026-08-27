@@ -51,7 +51,7 @@
 
 .gt-chat-channels h2 {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -61,7 +61,7 @@
 .gt-chat-channel-label {
   margin: 0.45rem 0 0.15rem;
   padding: 0 0.35rem;
-  font-size: 0.68rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -85,11 +85,11 @@
   border: 1px solid transparent;
   background: transparent;
   color: inherit;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   padding: 0.32rem 0.4rem;
   cursor: pointer;
   font: inherit;
-  font-size: 0.86rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-chat-channel:hover {
@@ -120,7 +120,7 @@
 }
 
 .gt-chat-channel__muted {
-  font-size: 0.65rem;
+  font-size: var(--gt-font-xs);
   opacity: 0.7;
 }
 
@@ -128,8 +128,8 @@
   flex-shrink: 0;
   min-width: 1.15rem;
   padding: 0.05rem 0.3rem;
-  border-radius: 999px;
-  font-size: 0.65rem;
+  border-radius: var(--gt-radius-pill);
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   text-align: center;
   background: color-mix(in srgb, var(--gt-accent) 28%, transparent);
@@ -157,19 +157,19 @@
   min-width: 0;
   min-height: 1.9rem;
   padding: 0.25rem 0.45rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: inherit;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
 }
 
 .gt-chat-tool-form .gt-btn,
 .gt-chat-create-room .gt-btn {
   padding: 0.25rem 0.5rem;
   min-height: 1.9rem;
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
 }
 
 .gt-chat-create-room {
@@ -180,7 +180,7 @@
 
 .gt-chat-create-hint {
   margin: 0.35rem 0.25rem 0;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
   line-height: 1.3;
 }
@@ -197,13 +197,13 @@
   width: 100%;
   text-align: left;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   background: rgba(255, 255, 255, 0.03);
   color: inherit;
   padding: 0.35rem 0.45rem;
   cursor: pointer;
   font: inherit;
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
 }
 
 .gt-chat-search-hit:hover {
@@ -248,11 +248,11 @@
 }
 
 .gt-chat-thread__title strong {
-  font-size: 0.98rem;
+  font-size: var(--gt-font-base);
 }
 
 .gt-chat-thread__subtitle {
-  font-size: 0.68rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
   letter-spacing: 0.02em;
 }
@@ -268,11 +268,11 @@
 .gt-chat-icon-btn {
   min-height: 1.7rem;
   padding: 0.15rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: transparent;
   color: inherit;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   cursor: pointer;
 }
@@ -296,14 +296,14 @@
 .gt-chat-status {
   margin: 0;
   padding: 0.35rem 0.75rem;
-  font-size: 0.8rem;
-  color: color-mix(in srgb, var(--gt-accent) 70%, #f2f4f8);
+  font-size: var(--gt-font-sm);
+  color: color-mix(in srgb, var(--gt-accent) 70%, var(--gt-text));
   background: color-mix(in srgb, var(--gt-accent) 8%, transparent);
 }
 
 .gt-chat-status.is-error {
-  color: color-mix(in srgb, #f07178 85%, #f2f4f8);
-  background: color-mix(in srgb, #f07178 12%, transparent);
+  color: color-mix(in srgb, var(--gt-danger) 85%, var(--gt-text));
+  background: color-mix(in srgb, var(--gt-danger) 12%, transparent);
 }
 
 .gt-chat-messages {
@@ -318,7 +318,7 @@
 
 .gt-chat-msg {
   padding: 0.2rem 0.35rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
 }
 
 .gt-chat-msg:hover {
@@ -347,12 +347,12 @@
 
 .gt-chat-msg__user {
   font-weight: 700;
-  font-size: 0.84rem;
-  color: color-mix(in srgb, var(--gt-accent) 55%, #f2f4f8);
+  font-size: var(--gt-font-sm);
+  color: color-mix(in srgb, var(--gt-accent) 55%, var(--gt-text));
 }
 
 .gt-chat-msg__time {
-  font-size: 0.68rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -361,7 +361,7 @@
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.4;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-chat-attachments {
@@ -383,7 +383,7 @@
 .gt-chat-attachment__thumb {
   display: block;
   max-width: 220px;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
 }
@@ -396,8 +396,8 @@
 }
 
 .gt-chat-attachment__link {
-  font-size: 0.8rem;
-  color: color-mix(in srgb, var(--gt-accent) 70%, #f2f4f8);
+  font-size: var(--gt-font-sm);
+  color: color-mix(in srgb, var(--gt-accent) 70%, var(--gt-text));
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -413,11 +413,11 @@
 .gt-chat-msg__actions button {
   min-height: 1.45rem;
   padding: 0.1rem 0.35rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: transparent;
   color: inherit;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   cursor: pointer;
 }
 
@@ -432,7 +432,7 @@
 
 .gt-chat-reply-ref {
   opacity: 0.65;
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   margin-bottom: 0.15rem;
   padding-left: 0.35rem;
   border-left: 2px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
@@ -445,7 +445,7 @@
   gap: 0.5rem;
   margin: 0;
   padding: 0.35rem 0.75rem;
-  font-size: 0.8rem;
+  font-size: var(--gt-font-sm);
   background: color-mix(in srgb, var(--gt-accent) 8%, transparent);
   border-top: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
 }
@@ -472,11 +472,11 @@
   min-width: 2rem;
   min-height: 2rem;
   padding: 0;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: transparent;
   color: inherit;
-  font-size: 1rem;
+  font-size: var(--gt-font-base);
   cursor: pointer;
   line-height: 1;
 }
@@ -498,12 +498,12 @@
   max-height: 6.5rem;
   resize: vertical;
   padding: 0.45rem 0.6rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: inherit;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-chat-emoji-picker {
@@ -520,11 +520,11 @@
 .gt-chat-emoji-picker__btn {
   min-width: 2rem;
   min-height: 2rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
-  font-size: 1.05rem;
+  font-size: var(--gt-font-base);
 }
 
 .gt-chat-emoji-picker__btn:hover,
@@ -549,22 +549,22 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.15rem 0.35rem 0.15rem 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
 }
 
 .gt-chat-attach-hint {
   margin: 0;
   padding: 0.3rem 0.75rem;
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
   border-top: 1px solid color-mix(in srgb, var(--gt-border) 50%, transparent);
 }
 
 .gt-chat-empty {
   opacity: 0.7;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   padding: 1.25rem 0.25rem;
 }
 
@@ -584,7 +584,7 @@
 }
 
 .gt-chat-voice__label {
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -593,7 +593,7 @@
 
 .gt-voice-lobby__hint {
   margin: 0 0 0.45rem;
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
   line-height: 1.35;
 }
@@ -602,12 +602,12 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
 }
 
 .gt-voice-lobby--compact h3 {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
 }
 
 .gt-voice-lobby--compact label {
@@ -623,7 +623,7 @@
   min-width: 8rem;
   min-height: 1.8rem;
   padding: 0.2rem 0.45rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: inherit;
@@ -696,10 +696,10 @@
   width: 100%;
   padding: 0.3rem 0.35rem;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   background: transparent;
   color: var(--gt-text);
-  font-size: 0.76rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -712,7 +712,7 @@
 }
 
 .gt-space-rail__chevron {
-  font-size: 0.7rem;
+  font-size: var(--gt-font-xs);
   opacity: 0.75;
 }
 
@@ -725,9 +725,9 @@
 
 .gt-space-rail__tag {
   padding: 0.05rem 0.3rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   background: color-mix(in srgb, var(--gt-accent) 22%, transparent);
-  font-size: 0.58rem;
+  font-size: var(--gt-font-xs);
   letter-spacing: 0.04em;
 }
 
@@ -738,7 +738,7 @@
 .gt-space-rail__group {
   margin: 0.3rem 0 0.1rem;
   padding: 0 0.35rem;
-  font-size: 0.62rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -758,10 +758,10 @@
   width: 100%;
   padding: 0.26rem 0.4rem;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   background: transparent;
   color: var(--gt-text);
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   text-align: left;
   cursor: pointer;
 }
@@ -778,7 +778,7 @@
 .gt-space-rail__hint,
 .gt-space-rail__error {
   margin: 0.3rem 0.35rem;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   line-height: 1.35;
   color: var(--gt-text-muted);
 }
@@ -798,7 +798,7 @@
 
 .gt-space-rail__join-label {
   width: 100%;
-  font-size: 0.62rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -813,14 +813,14 @@
 /* Voice honesty: the lobby is shared, a voice channel is not. */
 .gt-chat-voice__hint {
   margin: 0.3rem 0 0;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   line-height: 1.35;
   color: var(--gt-text-muted);
 }
 
 .gt-voice-lobby__room {
   margin: 0.2rem 0;
-  font-size: 0.76rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 

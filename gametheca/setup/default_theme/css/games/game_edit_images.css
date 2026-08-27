@@ -16,7 +16,7 @@
 .gt-edit-images__header {
   margin-bottom: 1.25rem;
   padding: 1rem 1.15rem;
-  border-radius: 12px;
+  border-radius: var(--gt-radius-xl);
   border: 1px solid color-mix(in srgb, var(--gt-edit-border) 90%, transparent);
   background:
     linear-gradient(
@@ -30,7 +30,7 @@
 
 .gt-edit-images__eyebrow {
   margin: 0 0 0.35rem;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -46,7 +46,7 @@
 
 .gt-edit-images__game-name {
   margin: 0 0 0.55rem;
-  font-size: 1.1rem;
+  font-size: var(--gt-font-lg);
   font-weight: 600;
   color: var(--gt-edit-accent);
 }
@@ -54,7 +54,7 @@
 .gt-edit-images__lede {
   margin: 0 0 0.85rem;
   max-width: 42rem;
-  font-size: 0.92rem;
+  font-size: var(--gt-font-md);
   line-height: 1.45;
   color: var(--gt-edit-muted);
 }
@@ -71,7 +71,7 @@
   gap: 0.85rem;
   margin: 0 0 1.1rem;
   padding: 1rem 1.1rem 1.15rem;
-  border-radius: 12px;
+  border-radius: var(--gt-radius-xl);
   border: 1px solid color-mix(in srgb, var(--gt-edit-border) 90%, transparent);
   background: color-mix(in srgb, var(--gt-edit-surface) 82%, transparent);
   backdrop-filter: blur(8px);
@@ -79,20 +79,20 @@
 
 .gt-edit-images__panel h2 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--gt-font-base);
   font-weight: 650;
 }
 
 .gt-edit-images__panel h3 {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--gt-font-base);
   font-weight: 650;
 }
 
 .gt-edit-images__hint,
 .gt-edit-images__status {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--gt-font-sm);
   line-height: 1.4;
   color: var(--gt-edit-muted);
 }
@@ -100,7 +100,7 @@
 .gt-edit-images__label {
   display: block;
   margin-bottom: 0.35rem;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-xs);
   letter-spacing: 0.02em;
   color: var(--gt-edit-muted);
 }
@@ -110,7 +110,7 @@
   flex-direction: column;
   gap: 0.45rem;
   padding: 0.75rem 0.85rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px dashed color-mix(in srgb, var(--gt-edit-accent) 28%, transparent);
   background: color-mix(in srgb, var(--gt-edit-surface-2) 70%, transparent);
 }
@@ -137,7 +137,7 @@
   width: 100%;
   min-height: 7rem;
   border: 2px dashed color-mix(in srgb, var(--gt-edit-border) 100%, transparent);
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   padding: 1.25rem;
   text-align: center;
   color: var(--gt-edit-muted);
@@ -181,7 +181,7 @@
   width: 300px;
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid color-mix(in srgb, var(--gt-edit-border) 80%, transparent);
 }
 
@@ -218,7 +218,7 @@
   height: 50px;
   border: 5px solid color-mix(in srgb, var(--gt-edit-border) 100%, transparent);
   border-top: 5px solid var(--gt-edit-accent);
-  border-radius: 50%;
+  border-radius: var(--gt-radius-circle);
   animation: gt-edit-spin 1s linear infinite;
   z-index: 1000;
 }

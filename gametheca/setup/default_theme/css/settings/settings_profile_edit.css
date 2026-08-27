@@ -22,7 +22,7 @@
 .profile-edit-container {
     background: var(--container-dark-primary);
     padding: 2rem;
-    border-radius: 10px;
+    border-radius: var(--gt-radius-lg);
     box-shadow: 0 0 20px var(--container-glass-primary);
 }
 
@@ -37,7 +37,7 @@
 .avatar-section {
     background: var(--bg-dark-tertiary);
     padding: 1.5rem;
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     margin-bottom: 1rem;
 }
 
@@ -49,14 +49,14 @@
 .current-avatar h4, .avatar-thumbnail h4 {
     color: var(--text-white);
     margin-bottom: 1rem;
-    font-size: 1.1rem;
+    font-size: var(--gt-font-lg);
 }
 
 .avatar-preview {
     width: 200px;
     height: 200px;
     object-fit: cover;
-    border-radius: 50%;
+    border-radius: var(--gt-radius-circle);
     border: 3px solid var(--btn-primary);
     box-shadow: 0 0 15px var(--primary-brand-30);
     transition: transform 0.3s ease;
@@ -70,7 +70,7 @@
     width: 100px;
     height: 100px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     border: 2px solid var(--color-gray-666);
 }
 
@@ -78,7 +78,7 @@
 .upload-section {
     background: var(--bg-dark-tertiary);
     padding: 1.5rem;
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
 }
 
 .upload-section h4 {
@@ -88,7 +88,7 @@
 
 .upload-zone {
     border: 2px dashed var(--bg-light-overlay-hover);
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     padding: 2rem;
     text-align: center;
     transition: all 0.3s ease;
@@ -101,7 +101,7 @@
 }
 
 .upload-icon {
-    font-size: 3rem;
+    font-size: var(--gt-font-6xl);
     color: var(--btn-primary);
     margin-bottom: 1rem;
 }
@@ -113,7 +113,7 @@
 
 .upload-requirements {
     color: var(--color-gray-888);
-    font-size: 0.9rem;
+    font-size: var(--gt-font-md);
     margin: 0;
 }
 
@@ -131,7 +131,7 @@
     background: var(--btn-primary);
     border: none;
     padding: 0.8rem 2rem;
-    font-size: 1.1rem;
+    font-size: var(--gt-font-lg);
     transition: all 0.3s ease;
     width: 100%;
     margin-top: 1rem;

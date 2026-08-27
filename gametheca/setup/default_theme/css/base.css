@@ -406,7 +406,7 @@ body::after {
 .user-avatar {
     width: 35px;
     height: 35px;
-    border-radius: 20px;
+    border-radius: var(--gt-radius-3xl);
     margin-right: 10px;
     border: 2px solid #ecf0f1;
 }
@@ -431,12 +431,12 @@ body::after {
     backdrop-filter: var(--backdrop-blur);
     background: var(--bg-light-overlay);
     border-bottom: 1px solid var(--border-light-strong);
-    font-size: 1.3rem;
+    font-size: var(--gt-font-xl);
     text-align: center;
 }
 
 .button-login {
-font-size: large;   
+font-size: var(--gt-font-lg);   
 }
 
 .button-login:hover {
@@ -455,7 +455,7 @@ font-size: large;
     flex-wrap: wrap;
     margin: 5px;
     padding: 5px;
-    border-radius: 10px;
+    border-radius: var(--gt-radius-lg);
 }
 
 .container-login {
@@ -474,12 +474,12 @@ font-size: large;
 
 
 .label-large-text {
-    font-size: 22px;
+    font-size: var(--gt-font-xl);
 }
 
 .login-logo {
     width: 400px;
-    border-radius: 15px;
+    border-radius: var(--gt-radius-2xl);
     box-shadow: 0 0 20px rgb(0, 0, 0);
     align-self: center;
     
@@ -487,7 +487,7 @@ font-size: large;
 
 .flash {
     color: white;
-    font-size: 16px;
+    font-size: var(--gt-font-base);
     animation: flash-color 1s linear infinite;
 }
 
@@ -517,7 +517,7 @@ font-size: large;
     width: 95%;
     border: none;
     padding: 10px;
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     color: black;
     margin: 3px;
     margin-left: 3px !important;
@@ -811,7 +811,7 @@ form textarea {
     background-color: hsl(207, 19%, 55%);
     display: flex;
     flex-direction: column;
-    border-radius: 15px;
+    border-radius: var(--gt-radius-2xl);
     padding: 15px;
     
     max-width: 700px;
@@ -832,7 +832,7 @@ form textarea {
     background-color: #e8ffe8;
     border: 2px solid #004c00;
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: var(--gt-radius-xs);
 }
 
 
@@ -875,7 +875,7 @@ form textarea {
 }
 
 .breadcrumbs {
-    font-size: 35px;
+    font-size: var(--gt-font-4xl);
     font-weight: bold;
 }
 
@@ -994,8 +994,8 @@ form textarea {
 
 
 .table-userlist {  
-    font-size: 16px;
-    border-radius: 15px;
+    font-size: var(--gt-font-base);
+    border-radius: var(--gt-radius-2xl);
 }
 
 .dropdown-perpage {
@@ -1003,7 +1003,7 @@ form textarea {
     min-width: 40px;
     max-width: 75px;
     padding: 8px;
-    border-radius: 15px;
+    border-radius: var(--gt-radius-2xl);
     background-color: rgb(14, 21, 39);
     cursor: pointer;
     margin-left: 5px;
@@ -1039,7 +1039,7 @@ form textarea {
 
 .spinner {
     border: 8px solid rgba(0, 0, 0, 0.1);
-    border-radius: 50%;
+    border-radius: var(--gt-radius-circle);
     border-top: 8px solid #7389ea;
     width: 50px;
     height: 50px;
@@ -1079,7 +1079,7 @@ form textarea {
         flex-direction: column;
     }
     .button-glass {
-        font-size: 12px;
+        font-size: var(--gt-font-xs);
         margin-bottom: 10px;
         width: auto;
         min-width: 80px;
@@ -1118,7 +1118,7 @@ form textarea {
        flex-direction: column;
     }
     .button-login {
-        font-size: medium;
+        font-size: var(--gt-font-base);
         height: 45px;
     }
     .input-glass {
@@ -1136,7 +1136,7 @@ form textarea {
         background-color: #161e25;
         padding-top: 20px;
         padding-left: 20px;
-        border-radius: 15px;
+        border-radius: var(--gt-radius-2xl);
         color: #ddd;
         margin-top: 15px;
         text-align: justify;
@@ -1154,7 +1154,7 @@ form textarea {
     .sidebar-link {
         margin: 0px;
         padding: 0px 0px;
-        font-size: 14px;
+        font-size: var(--gt-font-md);
     }
 
     .sidebar-link .link-text {

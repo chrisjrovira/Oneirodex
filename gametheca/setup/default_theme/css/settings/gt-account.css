@@ -35,12 +35,12 @@
     align-items: center;
     gap: 0.3rem;
     padding: 0.35rem 0.65rem;
-    border-radius: 6px;
+    border-radius: var(--gt-radius-sm);
     border: 1px solid transparent;
     background: transparent;
     color: var(--gt-text-muted);
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: var(--gt-font-sm);
     font-weight: 600;
 }
 
@@ -66,7 +66,7 @@
 
 .gt-account-title {
     margin: 0 0 0.25rem;
-    font-size: 1.25rem;
+    font-size: var(--gt-font-xl);
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--gt-text);
@@ -75,7 +75,7 @@
 .gt-account-lede {
     margin: 0;
     color: var(--gt-text-muted);
-    font-size: 0.9rem;
+    font-size: var(--gt-font-md);
     line-height: 1.4;
 }
 
@@ -97,7 +97,7 @@
 
 .gt-account-section__title {
     margin: 0 0 0.55rem;
-    font-size: 0.78rem;
+    font-size: var(--gt-font-xs);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -106,7 +106,7 @@
 
 .gt-account-section__hint {
     margin: -0.25rem 0 0.65rem;
-    font-size: 0.82rem;
+    font-size: var(--gt-font-sm);
     line-height: 1.35;
     color: var(--gt-text-muted);
 }
@@ -130,7 +130,7 @@
     display: block;
     margin-bottom: 0.3rem;
     color: var(--gt-text);
-    font-size: 0.88rem;
+    font-size: var(--gt-font-md);
     font-weight: 500;
 }
 
@@ -143,7 +143,7 @@
     width: 100%;
     height: 2.35rem;
     padding: 0.4rem 0.65rem;
-    border-radius: 6px;
+    border-radius: var(--gt-radius-sm);
     border: 1px solid var(--gt-border);
     background: color-mix(in srgb, var(--gt-surface-2) 88%, transparent);
     color: var(--gt-text);
@@ -169,7 +169,7 @@
 .gt-account .btn-primary,
 .gt-account input[type='submit'].btn-primary {
     border: 1px solid transparent;
-    border-radius: 6px;
+    border-radius: var(--gt-radius-sm);
     background: var(--gt-accent);
     color: var(--gt-accent-contrast);
     font-weight: 600;
@@ -186,7 +186,7 @@
 .gt-account .btn-outline-secondary,
 .gt-account .btn-danger,
 .gt-account .btn-outline-danger {
-    border-radius: 6px;
+    border-radius: var(--gt-radius-sm);
     border: 1px solid var(--gt-border);
     background: transparent;
     color: var(--gt-text);
@@ -209,7 +209,7 @@
 .gt-account-avatar {
     width: 6.5rem;
     height: 6.5rem;
-    border-radius: 50%;
+    border-radius: var(--gt-radius-circle);
     object-fit: cover;
     border: 2px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
     display: block;
@@ -238,7 +238,7 @@
     align-items: baseline;
     padding: 0.4rem 0;
     border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
-    font-size: 0.92rem;
+    font-size: var(--gt-font-md);
 }
 
 .gt-account-meta p:last-child {
@@ -248,7 +248,7 @@
 .gt-account-meta strong {
     color: var(--gt-text-muted);
     font-weight: 600;
-    font-size: 0.82rem;
+    font-size: var(--gt-font-sm);
     letter-spacing: 0.02em;
 }
 
@@ -274,7 +274,7 @@
 .gt-account-invite__meta {
     flex: 1 1 16rem;
     min-width: 0;
-    font-size: 0.9rem;
+    font-size: var(--gt-font-md);
     line-height: 1.4;
 }
 
@@ -286,7 +286,7 @@
 }
 
 .gt-account .alert {
-    border-radius: 6px;
+    border-radius: var(--gt-radius-sm);
     padding: 0.55rem 0.75rem;
     margin-bottom: 0.85rem;
 }

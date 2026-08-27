@@ -32,7 +32,7 @@ body.modal-open {
     width: 40px;
     height: 40px;
     background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 50%;
+    border-radius: var(--gt-radius-circle);
     border: 2px solid var(--color-black-pure);
     padding: 0;
     display: flex;
@@ -81,7 +81,7 @@ body.modal-open {
     right: var(--spacing-sm);
     width: 40px;
     height: 40px;
-    border-radius: 50%;
+    border-radius: var(--gt-radius-circle);
     background: var(--shadow-dark-strong);
     border: 2px solid var(--color-black-pure);
     cursor: pointer;
@@ -90,7 +90,7 @@ body.modal-open {
 }
 
 .favorite-btn i {
-    font-size: 20px;
+    font-size: var(--gt-font-xl);
     color: var(--text-white);
     transition: color var(--transition-normal);
 }
@@ -122,7 +122,7 @@ body.modal-open {
     right: 10px;
     width: 40px;
     height: 40px;
-    border-radius: 50%;
+    border-radius: var(--gt-radius-circle);
     background: rgba(0, 0, 0, 0.7);
     border: 2px solid var(--color-black-pure);
     cursor: pointer;
@@ -141,7 +141,7 @@ body.modal-open {
 }
 
 .favorite-btn-cover i {
-    font-size: 20px;
+    font-size: var(--gt-font-xl);
     color: var(--text-white);
     transition: color var(--transition-normal);
 }
@@ -198,7 +198,7 @@ body.modal-open {
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     transition: transform var(--transition-normal);
-    font-size: 1rem;
+    font-size: var(--gt-font-base);
     color: var(--text-white);
     border: 1px solid var(--border-light-strong);
     margin: var(--spacing-xs);
@@ -213,7 +213,7 @@ body.modal-open {
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     transition: transform var(--transition-normal);
-    font-size: 1rem;
+    font-size: var(--gt-font-base);
     color: var(--text-white);
     border: 1px solid var(--border-light-strong);
     margin: var(--spacing-xs);
@@ -229,7 +229,7 @@ body.modal-open {
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     transition: all var(--transition-normal);
-    font-size: 12px;
+    font-size: var(--gt-font-xs);
     color: var(--text-light);
     font-weight: 500;
     text-transform: uppercase;
@@ -341,8 +341,8 @@ pre {
 
 .game-card-size {
     border: 1px solid var(--color-gray-ccc);
-    font-size: small;
-    border-radius: 10px;
+    font-size: var(--gt-font-xs);
+    border-radius: var(--gt-radius-lg);
 }
 
 .game-card-q1 {
@@ -381,7 +381,7 @@ pre {
     padding-bottom: 20px;
     padding-left: 20px;
     padding-right: 20px;
-    font-size: 17px;
+    font-size: var(--gt-font-base);
     line-height: 1.2;
     border: 1px solid var(--color-black-pure);
     box-shadow: 4px 4px 8px 0 var(--bg-dark-tertiary), var(--game-shadow-standard);
@@ -391,7 +391,7 @@ pre {
 .game-card-labels {
     color: var(--text-light);
     text-shadow: 5px 5px 5px var(--bg-dark-strong);
-    font-size: 18px;
+    font-size: var(--gt-font-lg);
     margin-bottom: 5px;
     margin-top: 5px;
     margin-right: 15px;
@@ -400,7 +400,7 @@ pre {
 .game-card-labels-rating {
     color: var(--text-light);
     text-shadow: 5px 5px 5px var(--bg-dark-strong);
-    font-size: 18px;
+    font-size: var(--gt-font-lg);
     margin-bottom: 5px;
     margin-top: 5px;
 }
@@ -432,7 +432,7 @@ pre {
 .summary-close {
     color: var(--text-muted);
     float: right;
-    font-size: 28px;
+    font-size: var(--gt-font-3xl);
     font-weight: bold;
 }
 
@@ -474,7 +474,7 @@ pre {
 .game-card-coverimage .popup-menu {
     top: 55px;
     left: 10px;
-    border-radius: 8px;
+    border-radius: var(--gt-radius-md);
     min-width: 200px;
 }
 
@@ -483,7 +483,7 @@ pre {
     flex-direction: row;
     width: 100%;
     margin-bottom: var(--spacing-sm);
-    border-radius: 5px;
+    border-radius: var(--gt-radius-xs);
     gap: 15px;
 }
 
@@ -504,7 +504,7 @@ pre {
     height: 20px;
     max-width: 100px;
     min-width: 20px;
-    border-radius: 10px;
+    border-radius: var(--gt-radius-lg);
     background: linear-gradient(to right, #ff4444, #ffaa44, #44ff44);
     box-shadow: 0 2px 4px var(--container-glass-primary);
     border: 1px solid var(--border-light);
@@ -512,7 +512,7 @@ pre {
 
 .rating-value {
     color: var(--text-light);
-    font-size: 14px;
+    font-size: var(--gt-font-md);
     font-weight: bold;
     text-shadow: var(--shadow-text-light);
     min-width: 50px;
@@ -521,7 +521,7 @@ pre {
 .emptyrating {
     color: var(--text-muted);
     font-style: italic;
-    font-size: 14px;
+    font-size: var(--gt-font-md);
     text-shadow: var(--shadow-text-light);
 }
 
@@ -537,7 +537,7 @@ pre {
     margin-top: 5px;
     margin-right: 5px;
     background-color: var(--game-card-brown-dark);
-    border-radius: 25px;
+    border-radius: var(--gt-radius-3xl);
     text-shadow: 5px 5px 5px var(--bg-dark-strong);
     border: 1px solid var(--color-black-pure);
     text-decoration: none;
@@ -631,7 +631,7 @@ pre {
     position: absolute;
     top: 20px;
     right: 25px;
-    font-size: 40px;
+    font-size: var(--gt-font-5xl);
     font-weight: bold;
     z-index: 1052;
     cursor: pointer;
@@ -654,8 +654,8 @@ pre {
     margin-top: -50px;
     color: var(--text-white);
     font-weight: bold;
-    font-size: 20px;
-    border-radius: 0 3px 3px 0;
+    font-size: var(--gt-font-xl);
+    border-radius: 0 var(--gt-radius-xs) var(--gt-radius-xs) 0;
     user-select: none;
     background-color: var(--shadow-dark);
     text-shadow: 0 0 5px var(--color-black-pure);
@@ -665,7 +665,7 @@ pre {
 /* Position the "next button" to the right */
 .next {
     right: 0;
-    border-radius: 3px 0 0 3px;
+    border-radius: var(--gt-radius-xs) 0 0 var(--gt-radius-xs);
 }
 
 /* On hover, add a black background color with a little bit see-through */
@@ -697,7 +697,7 @@ pre {
 }
 
 .nfo-button .nfo-icon {
-    font-size: 18px;
+    font-size: var(--gt-font-lg);
     color: var(--text-light);
     margin-bottom: 4px;
     transition: color var(--transition-normal);
@@ -708,7 +708,7 @@ pre {
 }
 
 .nfo-button .nfo-text {
-    font-size: 12px;
+    font-size: var(--gt-font-xs);
     color: var(--text-light);
     font-weight: 500;
     text-transform: uppercase;
@@ -742,7 +742,7 @@ pre {
 .modal-nfo-content {
     background: var(--bg-light-overlay);
     backdrop-filter: blur(10px);
-    border-radius: 10px;
+    border-radius: var(--gt-radius-lg);
     padding: 0;
     margin: 2rem auto;
     box-shadow: 4px 4px 8px 0 var(--bg-dark-tertiary), var(--game-shadow-standard);
@@ -758,7 +758,7 @@ pre {
     background-color: var(--game-card-brown);
     color: var(--text-light);
     padding: 15px 20px;
-    border-radius: 10px 10px 0 0;
+    border-radius: var(--gt-radius-lg) var(--gt-radius-lg) 0 0;
     border-bottom: 1px solid var(--color-dark-333);
 }
 
@@ -773,7 +773,7 @@ pre {
     flex: 1;
     color: var(--text-white);
     background: var(--bg-dark-40);
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 var(--gt-radius-lg) var(--gt-radius-lg);
 }
 
 .modal-nfo-body pre {
@@ -789,7 +789,7 @@ pre {
     top: var(--spacing-sm);
     right: 15px;
     color: var(--text-white);
-    font-size: 28px;
+    font-size: var(--gt-font-3xl);
     font-weight: bold;
     z-index: 1052;
     cursor: pointer;
@@ -819,7 +819,7 @@ pre {
 .modal-extras-content {
     background: var(--bg-light-overlay);
     backdrop-filter: blur(10px);
-    border-radius: 10px;
+    border-radius: var(--gt-radius-lg);
     padding: 0;
     margin: 2rem auto;
     box-shadow: 4px 4px 8px 0 var(--bg-dark-tertiary), var(--game-shadow-standard);
@@ -835,7 +835,7 @@ pre {
     background-color: var(--game-card-brown);
     color: var(--text-light);
     padding: 15px 20px;
-    border-radius: 10px 10px 0 0;
+    border-radius: var(--gt-radius-lg) var(--gt-radius-lg) 0 0;
     border-bottom: 1px solid var(--color-dark-333);
 }
 
@@ -850,7 +850,7 @@ pre {
     flex: 1;
     color: var(--text-white);
     background: var(--bg-dark-40);
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 var(--gt-radius-lg) var(--gt-radius-lg);
 }
 
 .extras-tabs {
@@ -865,7 +865,7 @@ pre {
     color: var(--color-gray-ccc);
     padding: 12px 20px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: var(--gt-font-base);
     transition: all var(--transition-normal);
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
@@ -894,7 +894,7 @@ pre {
     margin: 0 0 20px 0;
     color: var(--text-white);
     text-shadow: var(--shadow-text);
-    font-size: 24px;
+    font-size: var(--gt-font-2xl);
 }
 
 .extras-tab-content.single-tab {
@@ -923,7 +923,7 @@ pre {
 
 .extras-table .file-size {
     color: var(--text-muted);
-    font-size: 0.9em;
+    font-size: var(--gt-font-md);
     margin-left: 10px;
 }
 
@@ -966,7 +966,7 @@ pre {
     top: var(--spacing-sm);
     right: 15px;
     color: var(--text-white);
-    font-size: 28px;
+    font-size: var(--gt-font-3xl);
     font-weight: bold;
     z-index: 1052;
     cursor: pointer;
@@ -1016,7 +1016,7 @@ pre {
 
 .game-folder-path {
     margin: 0.35rem 0 0.75rem;
-    font-size: 0.9rem;
+    font-size: var(--gt-font-md);
     opacity: 0.85;
     word-break: break-all;
 }
@@ -1025,7 +1025,7 @@ pre {
     color: var(--text-light, #e0e0e0);
     background: rgba(0, 0, 0, 0.35);
     padding: 0.15rem 0.4rem;
-    border-radius: 4px;
+    border-radius: var(--gt-radius-xs);
 }
 
 .game-freshness-panel {
@@ -1046,19 +1046,19 @@ pre {
 
 .game-freshness-header h3 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: var(--gt-font-lg);
 }
 
 .game-freshness-hint {
     margin: 0 0 var(--spacing-sm);
     opacity: 0.8;
-    font-size: 0.9rem;
+    font-size: var(--gt-font-md);
 }
 
 .game-freshness-details {
     max-height: 240px;
     overflow: auto;
-    font-size: 0.8rem;
+    font-size: var(--gt-font-sm);
     background: rgba(0, 0, 0, 0.35);
     padding: var(--spacing-sm);
     border-radius: var(--border-radius-sm);
