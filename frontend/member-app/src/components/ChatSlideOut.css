@@ -14,7 +14,7 @@
   gap: 0.35rem;
   min-height: 2.6rem;
   padding: 0.45rem 0.85rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
   color: var(--gt-text);
@@ -55,7 +55,7 @@
   flex-direction: column;
   gap: 0;
   padding: 0;
-  border-radius: 0 12px 0 0;
+  border-radius: 0 var(--gt-radius-xl) 0 0;
   border-left: none;
   box-shadow: 12px 0 40px rgba(0, 0, 0, 0.45);
   transform: translateX(0);
@@ -81,13 +81,13 @@
 .gt-chat-slide__title {
   margin: 0;
   font-family: var(--font-display, inherit);
-  font-size: 1.05rem;
+  font-size: var(--gt-font-lg);
   letter-spacing: 0.01em;
 }
 
 .gt-chat-slide__sub {
   margin: 0.1rem 0 0;
-  font-size: 0.75rem;
+  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
 }
 
@@ -100,7 +100,7 @@
 .gt-chat-slide__expand,
 .gt-chat-slide__close {
   min-height: 2rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: transparent;
   color: inherit;
@@ -110,14 +110,14 @@
 
 .gt-chat-slide__expand {
   padding: 0.2rem 0.55rem;
-  font-size: 0.72rem;
+  font-size: var(--gt-font-xs);
   font-weight: 700;
 }
 
 .gt-chat-slide__close {
   min-width: 2rem;
   padding: 0;
-  font-size: 1.25rem;
+  font-size: var(--gt-font-xl);
   line-height: 1;
 }
 

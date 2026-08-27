@@ -1,29 +1,13 @@
 {
-  "frontend/admin-app/src/DataTable.css": {
-    "no-raw-font-size": 6,
-    "no-raw-radius": 1
-  },
   "frontend/admin-app/src/DupeGlance.css": {
     "no-raw-radius": 16,
     "no-raw-font-size": 32,
     "no-raw-color": 5
   },
-  "frontend/admin-app/src/OpenPathModal.css": {
-    "no-raw-radius": 3,
-    "no-raw-font-size": 4
-  },
   "frontend/admin-app/src/ops.css": {
     "no-raw-font-size": 12,
     "no-raw-radius": 6,
     "no-raw-color": 17
-  },
-  "frontend/admin-app/src/ProposeLeafLibraries.css": {
-    "no-raw-radius": 3,
-    "no-raw-font-size": 4
-  },
-  "frontend/admin-app/src/ScanConflictModal.css": {
-    "no-raw-radius": 2,
-    "no-raw-font-size": 5
   },
   "frontend/admin-app/src/styles.css": {
     "no-raw-radius": 47,
@@ -33,15 +17,6 @@
   "frontend/member-app/src/chrome/AccountModal.jsx": {
     "no-raw-inline-style": 3
   },
-  "frontend/member-app/src/chrome/CommandPalette.css": {
-    "no-raw-radius": 2,
-    "no-raw-font-size": 5
-  },
-  "frontend/member-app/src/chrome/glass.css": {
-    "no-raw-radius": 5,
-    "no-raw-font-size": 4,
-    "no-raw-color": 2
-  },
   "frontend/member-app/src/chrome/systemBackdrop.css": {
     "no-raw-color": 5,
     "no-raw-font-size": 3
@@ -50,33 +25,17 @@
     "no-raw-radius": 9,
     "no-raw-font-size": 10
   },
-  "frontend/member-app/src/components/ChatSlideOut.css": {
-    "no-raw-radius": 3,
-    "no-raw-font-size": 4
-  },
   "frontend/member-app/src/components/CheatsPanel.css": {
     "no-raw-font-size": 5,
     "no-raw-color": 1,
     "no-raw-radius": 3
   },
-  "frontend/member-app/src/components/ExternalStoreLinks.css": {
-    "no-raw-radius": 1,
-    "no-raw-color": 5,
-    "no-raw-font-size": 1
-  },
   "frontend/member-app/src/components/GameCard.jsx": {
     "no-raw-inline-style": 1
-  },
-  "frontend/member-app/src/components/GamePreviewPopup.css": {
-    "no-raw-radius": 5
   },
   "frontend/member-app/src/components/libraryFilters.css": {
     "no-raw-radius": 5,
     "no-raw-font-size": 4
-  },
-  "frontend/member-app/src/components/LibrarySelectionBar.css": {
-    "no-raw-radius": 3,
-    "no-raw-font-size": 3
   },
   "frontend/member-app/src/components/LoadingOverlay.css": {
     "no-raw-radius": 2,

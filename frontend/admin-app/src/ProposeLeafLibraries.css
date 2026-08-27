@@ -31,7 +31,7 @@
   min-width: 12rem;
   padding: 0.45rem 0.65rem;
   border: 1px solid var(--gt-border);
-  border-radius: 0.35rem;
+  border-radius: var(--gt-radius-sm);
   background: var(--gt-surface-2);
   color: var(--gt-text);
   font-family: var(--font-ui);
@@ -41,12 +41,12 @@
 .gt-propose-leaf__muted {
   margin: 0;
   color: var(--gt-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-propose-leaf__banner {
   padding: 0.65rem 0.85rem;
-  border-radius: 0.35rem;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid var(--gt-border);
 }
 
@@ -95,19 +95,19 @@
 
 .gt-propose-leaf__path {
   word-break: break-all;
-  font-size: 0.85em;
+  font-size: var(--gt-font-sm);
 }
 
 .gt-propose-leaf__reason {
   max-width: 18rem;
   color: var(--gt-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-propose-leaf__log {
   padding: 0.75rem;
   border: 1px solid var(--gt-border);
-  border-radius: 0.4rem;
+  border-radius: var(--gt-radius-sm);
   background: var(--gt-surface);
 }
 
@@ -135,7 +135,7 @@
   min-height: 10rem;
   resize: vertical;
   font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
-  font-size: 0.85rem;
+  font-size: var(--gt-font-md);
   line-height: 1.4;
 }
 

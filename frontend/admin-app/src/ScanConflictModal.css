@@ -16,7 +16,7 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem 1.1rem 1.15rem;
-  border-radius: 14px;
+  border-radius: var(--gt-radius-2xl);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
@@ -32,17 +32,17 @@
 
 .gt-scan-conflict__title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--gt-font-lg);
 }
 
 .gt-scan-conflict__close {
   width: 2.2rem;
   height: 2.2rem;
-  border-radius: 999px;
+  border-radius: var(--gt-radius-pill);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: var(--gt-text);
-  font-size: 1.35rem;
+  font-size: var(--gt-font-xl);
   line-height: 1;
   cursor: pointer;
 }
@@ -54,7 +54,7 @@
 
 .gt-scan-conflict__lede {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--gt-font-base);
   color: var(--gt-text-muted);
 }
 
@@ -75,13 +75,13 @@
 
 .gt-scan-conflict__hint {
   margin: 0 0 0.55rem;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
 }
 
 .gt-scan-conflict__warn {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--gt-font-sm);
   line-height: 1.35;
   color: color-mix(in srgb, var(--gt-warning) 85%, var(--gt-text));
 }

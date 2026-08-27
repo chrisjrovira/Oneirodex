@@ -19,7 +19,7 @@ Wave diary (W4–W28): [archive/progress-waves-2026-07-08.md](archive/progress-w
 
 ## Ship TLDR
 
-Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup/placeholder art follows the room. Cabinet playback on the WebRetro play bar. **Oneirodex** is the public product string (package still `gametheca`). Play-mode matrix covers every `LibraryPlatform`, not only NES/GB. Set completion and Playtime use bar two. High-confidence IGDB hits that unique-exact-disagree with other catalogs go to Review. Admin Emulators can scan a local firmware collection and copy a markdown missing list. Shared JSON envelope remainder is **41** sites (annotated keeps). CSS token ratchet reduced on Help/Trailers/VR/Ownership plus a handful of classic admin sheets. Landscape pass ticketed as INSP-* ([capability-inspiration.md](capability-inspiration.md)); named catalog stays private. Leftover admin/member chrome, GOG/Epic live register, and CSP **enforces** already on `main`. **Blank-cover replace is wired through every download path.** **Next:** README recapture on a populated instance; **Ops** Reset Themes (`gt-era.css` + UID-017 classic CSS); ops/code identifier waves.
+Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup/placeholder art follows the room. Cabinet playback on the WebRetro play bar. **Oneirodex** is the public product string (package still `gametheca`). Play-mode matrix covers every `LibraryPlatform`, not only NES/GB. Set completion and Playtime use bar two. High-confidence IGDB hits that unique-exact-disagree with other catalogs go to Review. Admin Emulators can scan a local firmware collection and copy a markdown missing list. Shared JSON envelope remainder is **41** sites (annotated keeps). CSS token ratchet **1124**. Landscape pass ticketed as INSP-* ([capability-inspiration.md](capability-inspiration.md)); named catalog stays private. Leftover admin/member chrome, GOG/Epic live register, and CSP **enforces** already on `main`. **Blank-cover replace is wired through every download path.** **Next:** README recapture on a populated instance; **Ops** Reset Themes (`gt-era.css` + UID-017 classic CSS); ops/code identifier waves.
 
 ## Done
 
@@ -31,7 +31,7 @@ Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup
 | **Reset Themes** | `gt-era.css` · `gt-shell.css` · `admin_manage_scanjobs.js` / `.css` · `admin-pages.css` · `chart-utils.js` · `base.css` · `sidebar.css` · `GENERATOR_VERSION` **17** |
 | **Match / detect** | BE-DET-1…10 Done (image kinds). Waves 4–28 on main. |
 | **GOW / LIGHT** | GOW-1/2 and LIGHT-1/2 **shipped** |
-| **Follow-through** | Blank-cover replace wired through `download_image` (scan, queue, turbo, retry) · Help Expand/Collapse separated by `n of m open` · Preferences picker walks `group['items']` (Jinja `dict.items` crash) · UID-018: trailers + Ops error paths onto `api_ok` / `api_error` (ratchet **41** sites; `/healthz` kept) · UID-017: Help/Trailers/VR/Ownership/mobile-density plus eight classic sheets onto `var(--gt-*)` |
+| **Follow-through** | Blank-cover replace wired through `download_image` (scan, queue, turbo, retry) · Help Expand/Collapse separated by `n of m open` · Preferences picker walks `group['items']` (Jinja `dict.items` crash) · UID-018: trailers + Ops error paths onto `api_ok` / `api_error` (ratchet **41** sites; `/healthz` kept) · UID-017: Help/Trailers/VR/Ownership/mobile-density plus eight classic sheets, then Scan conflict / Open path / Propose leaves / Command palette / Chat / store links / selection bar / DataTable / preview / glass (**1195 → 1124**) |
 | **UIR-3 leftover** | Set completion + Playtime identity and actions live in bar two (region filter, owned count, Systems / Browse library). Admin Users Invites/Support sit in the top bar; the roster is the editor |
 | **Play matrix** | Every `LibraryPlatform` has browser / companion / catalog honesty. SG-1000 and NGPC browser-play via already-shipped WASM (`genesis_plus_gx` / `mednafen_ngp`). Legal sample ROMs: NES, SNES, GB, GBC, GBA, Genesis, Atari 2600 |
 | **W34 catalog corroboration** | High-confidence IGDB hits that unique-exact-disagree with Steam/GOG/Moby/TGDB go to Review (`catalog_disagreement`). Remaster tails are no-signal. Agreeing catalogs fill-only store IDs. |
@@ -44,7 +44,7 @@ Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup
 |---|---|
 | README recapture | Populated instance — empty test-DB frames are worse than stale art |
 | Icon packs | Six visually distinct packs · per-theme icon drawings (art, not code) |
-| UID-017 / UID-018 | Token migration remainder (large pages still on the ratchet) · envelope remainder (**41** annotated keeps) |
+| UID-017 / UID-018 | Token migration remainder (**1124** on the ratchet; large admin `styles.css` / DupeGlance / ops still heavy) · envelope remainder (**41** annotated keeps) |
 | Amazon / silent DRM | Not code this cycle |
 | Rename ops / code identifiers | Phase 1 (public string) **landed**. Image `chrisjrovira/oneirodex`, containers, GitHub, `gametheca/` / `GT_*` / `gt-` wait for a later ask. Dual names required. |
 

@@ -17,20 +17,20 @@
   gap: 0.4rem;
   min-height: 2.1rem;
   padding: 0.3rem 0.7rem 0.3rem 0.5rem;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--gt-store-color, #2fd67b) 50%, transparent);
-  background: color-mix(in srgb, var(--gt-store-color, #2fd67b) 14%, var(--gt-surface));
+  border-radius: var(--gt-radius-md);
+  border: 1px solid color-mix(in srgb, var(--gt-store-color, var(--gt-accent)) 50%, transparent);
+  background: color-mix(in srgb, var(--gt-store-color, var(--gt-accent)) 14%, var(--gt-surface));
   color: var(--gt-text);
   text-decoration: none;
-  font-size: 0.78rem;
+  font-size: var(--gt-font-sm);
   font-weight: 600;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .gt-store-link:hover,
 .gt-store-link:focus-visible {
-  border-color: var(--gt-store-color, #2fd67b);
-  background: color-mix(in srgb, var(--gt-store-color, #2fd67b) 22%, var(--gt-surface));
+  border-color: var(--gt-store-color, var(--gt-accent));
+  background: color-mix(in srgb, var(--gt-store-color, var(--gt-accent)) 22%, var(--gt-surface));
   outline: none;
 }
 
@@ -38,7 +38,7 @@
   width: 1.15rem;
   height: 1.15rem;
   flex: 0 0 auto;
-  color: var(--gt-store-color, #2fd67b);
+  color: var(--gt-store-color, var(--gt-accent));
 }
 
 /* PNG silhouettes: recolor with theme text via mask + currentColor */
