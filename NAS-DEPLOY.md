@@ -1,50 +1,40 @@
-# Copy GameTheca to Unraid (Compose + built-in Postgres)
+# Unraid Compose — live checkout
 
-Desktop repo: `C:\Users\cephyrix_zyth\Desktop\gametheca`
+The Unraid stack **is** this git tree. Do not copy files to `/mnt/user/isos/gametheca/` (retired).
 
-## 1. Prepare .env on the PC
+| Role | Path |
+|---|---|
+| Unraid compose / env | `/mnt/user/infernal-data-streams/_projects/Gametheca` |
+| Windows mapping | `Z:\_projects\Gametheca` |
+| Games scan root (RO) | `/mnt/user/infernal-data-streams/_software/_games` |
+| Library / uploads (RW) | `/mnt/cache/appdata/gametheca/library` |
 
-```powershell
-cd C:\Users\cephyrix_zyth\Desktop\gametheca
-# Prefer Unraid template (volume sectioning + Compose Manager paths):
-copy .env.unraid.example .env
-# or: copy .env.nas.example .env
-# set SECRET_KEY + DATA_FOLDER_GAMES / LIBRARY_HOST_PATH in .env
-```
+Full operator runbook: [docs/runbooks/unraid-deploy.md](docs/runbooks/unraid-deploy.md).
 
-`.env` must **not** contain `DATABASE_URL=...@localhost...`.
+## Compose Manager
 
-## 2. SMB-copy to NAS
-
-Overwrite `/mnt/user/isos/gametheca/` with at least:
-
-- `docker-compose.yml` (forces `@db`)
-- `entrypoint.sh` (rewrites localhost → db)
-- `Dockerfile`, `requirements.txt`, `gametheca/`, `frontend/`, scripts
-- `.env` (from this PC)
-
-## 3. Unraid Compose Manager
-
-- External ENV File Path: `/mnt/user/isos/gametheca/.env`
-- Indirect Compose File: `/mnt/user/isos/gametheca/docker-compose.yml`
+- External ENV File Path: `/mnt/user/infernal-data-streams/_projects/Gametheca/.env`
+- Indirect Compose File: `/mnt/user/infernal-data-streams/_projects/Gametheca/docker-compose.yml`
 - Indirect Path: leave empty
 
-## 4. Start
+`.env` must **not** contain `DATABASE_URL=...@localhost...`. Compose builds the URL with host `db`. Prefer `.env.unraid.example` (or `.env.nas.example`) if you are creating `.env` from scratch — set `SECRET_KEY`, `DATA_FOLDER_GAMES`, and `LIBRARY_HOST_PATH`. Do not overwrite a live `.env`.
+
+`docker-compose.override.yml` in this tree requests an NVIDIA GPU for Windows Docker Desktop. Unraid has no GPU: leave `--profile artwork` off, or set `COMPOSE_FILE=docker-compose.yml` in the Unraid `.env` if a stack update dies with `nvml error: driver not loaded`.
+
+## Start / rebuild
 
 ```bash
-cd /mnt/user/isos/gametheca
+cd /mnt/user/infernal-data-streams/_projects/Gametheca
 docker compose down
 docker compose up -d --build
 docker compose exec app printenv DATABASE_URL DATABASE_HOST
 ```
 
-Expected: `...@db:5432/...` and `DATABASE_HOST=db`.
-
-Postgres service logs should show ready; app should stop looping on localhost.
+Expected: `...@db:5432/...` and `DATABASE_HOST=db`. Confirm readiness with `curl -f http://<unraid-ip>:5006/readyz`.
 
 ## Frontend (member SPA)
 
-Docker image build runs `frontend/member-app` (Vite) and copies `member-app.js` to `/app/gametheca/static/dist/member-app/`. After `docker compose up -d --build`, confirm the file exists if the member UI fails to load:
+The image build runs `frontend/member-app` (Vite) and copies the bundle into `/app/gametheca/static/dist/member-app/`. After rebuild:
 
 ```bash
 docker compose exec app test -f /app/gametheca/static/dist/member-app/member-app.js && echo ok

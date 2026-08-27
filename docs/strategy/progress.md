@@ -37,6 +37,7 @@ Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup
 | **W34 catalog corroboration** | High-confidence IGDB hits that unique-exact-disagree with Steam/GOG/Moby/TGDB go to Review (`catalog_disagreement`). Remaster tails are no-signal. Agreeing catalogs fill-only store IDs. |
 | **Oneirodex phase 1** | Public string in UI, Help, README, user/admin docs. `RESET ONEIRODEX` (legacy `RESET GAMETHECA` still accepted). Package / Docker unchanged |
 | **Admin firmware scan** | Folder of dumps you already own → matching names on the volume, version picker, copyable missing markdown. Same walk as `scripts/import_bios.py`. Never downloads BIOS. |
+| **Unraid stack path** | Compose Manager tree is `/mnt/user/infernal-data-streams/_projects/Gametheca`. `/mnt/user/isos/gametheca/` is retired. |
 
 ## Next
 

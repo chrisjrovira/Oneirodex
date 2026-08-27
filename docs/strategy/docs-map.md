@@ -133,7 +133,8 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 
 | Runbook | Status | Trigger |
 |---|---|---|
-| [unraid-deploy.md](../runbooks/unraid-deploy.md) | Have | New Unraid container · volume sectioning |
+| [unraid-deploy.md](../runbooks/unraid-deploy.md) | Have | Live stack `_projects` (isos retired) · volume sectioning |
+| [NAS-DEPLOY.md](../../NAS-DEPLOY.md) | Have | Same live checkout as unraid-deploy; no copy-to-isos |
 | [docker-compose-deploy.md](../runbooks/docker-compose-deploy.md) | Have | Compose · LiveKit + ClamAV + challenge profiles |
 | [install-native.md](../runbooks/install-native.md) | Have | Linux · macOS · Windows |
 | [remote-scan-locations.md](../runbooks/remote-scan-locations.md) | Have | `GT_LIBRARY_ROOTS` |

@@ -13,3 +13,5 @@ App port in Compose is 5006. This Windows host uses `GT_PORT=6120` (Windows rese
 Sidecars are profiles: `livekit`, `clamav`, `challenge`. Observability is optional and never required. Default `UVICORN_WORKERS=1`. Never require Grafana for the product to be ops-ready.
 
 Do not overwrite the live root `.env`; templates are `.env.example`, `.env.docker.example`, `.env.unraid.example`, `.env.nas.example`.
+
+This household’s Unraid stack **is** `/mnt/user/infernal-data-streams/_projects/Gametheca` (Windows `Z:\_projects\Gametheca`). `/mnt/user/isos/gametheca/` is retired. Games scan root is `/mnt/user/infernal-data-streams/_software/_games`.

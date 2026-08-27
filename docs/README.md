@@ -15,7 +15,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | End users | [user/getting-started.md](user/getting-started.md) · [faq.md](user/faq.md) · [troubleshooting.md](user/troubleshooting.md) · [browser-play.md](user/browser-play.md) · [desktop-companion.md](user/desktop-companion.md) · [controllers-and-vr.md](user/controllers-and-vr.md) · [translation-patches.md](user/translation-patches.md) · [free-games.md](user/free-games.md) · [social-and-voice.md](user/social-and-voice.md) · [library-and-systems.md](user/library-and-systems.md) · [preferences-themes.md](user/preferences-themes.md) · [downloads.md](user/downloads.md) |
 | Operators / native install | [runbooks/install-native.md](runbooks/install-native.md) — Linux · macOS · Windows installers, service units, upgrade |
 | Operators / scan locations | [runbooks/remote-scan-locations.md](runbooks/remote-scan-locations.md) — `GT_LIBRARY_ROOTS`: NAS shares and extra disks, not just the server's own disk |
-| Operators / Unraid | [runbooks/unraid-deploy.md](runbooks/unraid-deploy.md) |
+| Operators / Unraid | [runbooks/unraid-deploy.md](runbooks/unraid-deploy.md) · [NAS-DEPLOY.md](../NAS-DEPLOY.md) (live `_projects` checkout; `isos/` retired) |
 | Operators / Docker Compose | [runbooks/docker-compose-deploy.md](runbooks/docker-compose-deploy.md) — optional `--profile livekit` · `--profile clamav` |
 | Operators / observability (optional) | [runbooks/observability-profile.md](runbooks/observability-profile.md) — Prometheus stub; Admin Ops is default |
 | Operators / LiveKit voice | [runbooks/livekit-unraid.md](runbooks/livekit-unraid.md) |

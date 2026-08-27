@@ -12,7 +12,9 @@ Concise local/NAS path using the repo `docker-compose.yml` (`gametheca-app` + `g
 
 ```bash
 cp .env.docker.example .env          # local/NAS
-# Unraid: prefer cp .env.unraid.example .env  (Compose Manager paths in that file)
+# Unraid: this checkout IS the stack — cp .env.unraid.example .env
+#   Compose Manager: /mnt/user/infernal-data-streams/_projects/Gametheca
+#   (not /mnt/user/isos/gametheca/ — retired). See unraid-deploy.md
 # Set SECRET_KEY (required — container refuses the placeholder)
 # Set DATA_FOLDER_GAMES = HOST games path
 # Set LIBRARY_HOST_PATH = HOST library/appdata path (default ./data/library)

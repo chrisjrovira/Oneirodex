@@ -9,7 +9,7 @@ Do these **before** and **after** every Unraid `git pull` / image rebuild. Agent
 | Gate | Operator step | Why |
 |---|---|---|
 | **Free host disk** | Unraid Main / Shares: free space until the array is **well under ~99% full** (target: tens of GB free on the cache/array used by Docker) | Pull + `docker compose build` fail or evict other containers when the host is full |
-| **Workspace path** | Clone / edit from **UNC** (`\\<nas>\isos\gametheca`) or mapped **`Y:`** (repo share). **Never remap `Z:`** | `Z:` is the NAS **games** share. Remapping it breaks library scan roots and Ops path truth |
+| **Workspace path** | Edit the live checkout: Unraid `/mnt/user/infernal-data-streams/_projects/Gametheca`, Windows `Z:\_projects\Gametheca` | This tree **is** the Compose Manager stack. `/mnt/user/isos/gametheca/` is retired. Games stay on `/mnt/user/infernal-data-streams/_software/_games` (scan root), not the repo |
 | **Disk hygiene (dev caches)** | Optional: wipe regenerable local caches only — [workspace-disk-hygiene.md](workspace-disk-hygiene.md) | Shrinks build context; does **not** free Unraid array capacity by itself |
 
 ### After deploy (every code image)
@@ -131,15 +131,30 @@ Operator map: [console-gaming-libraries.md](../strategy/console-gaming-libraries
 
 ## Compose Manager paths
 
-- External ENV File Path: `/mnt/user/isos/gametheca/.env`
-- Indirect Compose File: `/mnt/user/isos/gametheca/docker-compose.yml`
-- Indirect Path: leave empty
+This household’s Unraid stack **is** the git checkout (not a copy under `isos`):
 
-Copy template:
+| Field | Path |
+|---|---|
+| External ENV File Path | `/mnt/user/infernal-data-streams/_projects/Gametheca/.env` |
+| Indirect Compose File | `/mnt/user/infernal-data-streams/_projects/Gametheca/docker-compose.yml` |
+| Indirect Path | leave empty |
+
+Windows mapping of the same tree: `Z:\_projects\Gametheca`. Short copy notes: [NAS-DEPLOY.md](../../NAS-DEPLOY.md).
+
+`/mnt/user/isos/gametheca/` is **retired** — do not point Compose Manager there.
+
+Copy template (only if `.env` is missing):
 
 ```bash
-cp .env.unraid.example /mnt/user/isos/gametheca/.env
+cp .env.unraid.example /mnt/user/infernal-data-streams/_projects/Gametheca/.env
 # set SECRET_KEY + host volume paths, then Compose Manager → Update Stack
+```
+
+This household’s volume binds (inside `.env`, not as the compose-file path):
+
+```bash
+DATA_FOLDER_GAMES=/mnt/user/infernal-data-streams/_software/_games
+LIBRARY_HOST_PATH=/mnt/cache/appdata/gametheca/library
 ```
 
 ## Optional profiles (full-stack test)
@@ -155,10 +170,11 @@ Sidecars are **opt-in** — not started with bare `app` + `db`.
 
 **`artwork` has no GPU on this box.** The SD.Next sidecar runs on CPU, which is
 extremely slow rather than broken — usually a reason not to enable the profile
-here at all. Never copy a `docker-compose.override.yml` carrying an NVIDIA
-`deploy.resources.reservations` block to `/mnt/user/isos/gametheca/`: Compose
-Manager reads it automatically, and the stack update then dies with
-`nvml error: driver not loaded` while every other service starts fine. See
+here at all. `docker-compose.override.yml` in this checkout requests an NVIDIA
+GPU for Windows Docker Desktop. Compose Manager’s working dir **is** this
+checkout, so it will merge that override automatically. If a stack update dies
+with `nvml error: driver not loaded`, set `COMPOSE_FILE=docker-compose.yml` in
+the Unraid `.env` (or do not start `--profile artwork`). See
 [container-wont-start.md](container-wont-start.md) 7.
 
 Full stack in one shot:

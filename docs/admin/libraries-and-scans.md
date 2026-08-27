@@ -208,7 +208,7 @@ Skip-dir is **defense-in-depth only** — still create per-leaf libraries; do no
 
 **Library:** Library A — platform **PCWIN**, folder = letter-bucket PC root under the games mount (container path under `/storage/.../_pc` with children `_a`…`_z` / `_#`).
 
-**Path rule:** Operators and agents edit the repo via **UNC** or **`Y:`**. **Never remap `Z:`** (NAS game share) — library `folder` paths and host mounts stay as configured.
+**Path rule:** Operators and agents edit the live checkout (`Z:\_projects\Gametheca` / `/mnt/user/infernal-data-streams/_projects/Gametheca`). Games stay on `/mnt/user/infernal-data-streams/_software/_games` — library `folder` paths and host mounts stay as configured. `/mnt/user/isos/gametheca/` is retired.
 
 ### Exact operator steps
 

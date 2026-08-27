@@ -101,12 +101,12 @@ No output means there is no GPU to reserve, and no driver work will help.
 | Does your deployed stack file carry its own `deploy: … driver: nvidia` or `runtime: nvidia`? | Delete it. `docker-compose.yml` never requests a GPU; a copy edited on the host may |
 | Unraid after an OS upgrade | The Nvidia Driver plugin must be reinstalled for the new kernel and the box rebooted — until then `nvidia-smi` fails and so will every GPU container |
 
-Unraid's Compose Manager keeps its own copy of the stack files, so check what
-actually landed there rather than what is in the repo:
+Unraid Compose Manager’s working dir **is** this checkout (not a separate `isos` copy). Check the live tree, including the Windows GPU override:
 
 ```bash
-grep -n -A6 reservations /mnt/user/isos/gametheca/docker-compose.yml
-grep -n COMPOSE_FILE /mnt/user/isos/gametheca/.env
+STACK=/mnt/user/infernal-data-streams/_projects/Gametheca
+grep -n -A6 reservations "$STACK/docker-compose.yml" "$STACK/docker-compose.override.yml"
+grep -n COMPOSE_FILE "$STACK/.env"
 ```
 
 The sidecar runs on **CPU** with no reservation at all — slow, not broken. If the
