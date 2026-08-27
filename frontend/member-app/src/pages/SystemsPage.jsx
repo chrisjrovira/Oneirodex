@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { errorFromResponse } from '../api/envelopeError'
 import { familyForPlatform } from '../chrome/platformSkins'
 import { roomIdForPlatform, roomStyle } from '../chrome/playRooms'
+import { PageStatus } from '../components/PageStatus'
 import { SystemGlyph } from '../components/systemMotifArt'
 import './SystemsPage.css'
 
@@ -94,12 +95,12 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
   if (error && !platforms) {
     return (
       <div className="gt-more-page gt-systems-page">
-        <div role="alert">
-          <p>Unable to load systems.</p>
-          <button type="button" className="gt-btn" onClick={() => setRetryCount((n) => n + 1)}>
-            Retry
-          </button>
-        </div>
+        <PageStatus
+          error={error}
+          errorMessage="Unable to load systems."
+          onRetry={() => setRetryCount((n) => n + 1)}
+          retryLabel="Retry"
+        />
       </div>
     )
   }
@@ -107,7 +108,7 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
   if (platforms === null) {
     return (
       <div className="gt-more-page gt-systems-page">
-        <p className="gt-more-page__lede">Loading systems…</p>
+        <PageStatus loading loadingMessage="Loading systems…" />
       </div>
     )
   }
@@ -115,12 +116,11 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
   if (platforms.length === 0) {
     return (
       <div className="gt-more-page gt-systems-page">
-        <p className="gt-more-page__lede">
-          No library platforms yet. Add a library with a console or PC platform to see it here.
-        </p>
-        <Link className="gt-btn" to="/library">
-          Browse all library
-        </Link>
+        <PageStatus emptyMessage="No library platforms yet. Add a library with a console or PC platform to see it here.">
+          <Link className="gt-btn" to="/library">
+            Browse all library
+          </Link>
+        </PageStatus>
         <ExportPacksSection />
       </div>
     )

@@ -389,13 +389,11 @@ export function LibrariesPage() {
             <strong>Queue</strong> (default) or <strong>Force run now</strong>.
           </p>
         </div>
-        {!rows ? (
-          <p>Loading…</p>
-        ) : (
-          // Loading and empty are different states, so only the first stays a
-          // bare paragraph: DataTable owns "no rows" itself, and routing it
-          // through emptyMessage keeps the toolbar and frame in place instead
-          // of collapsing the table to a sentence.
+        {!rows && !error ? (
+          <PageStatus loading loadingMessage="Loading libraries…" />
+        ) : rows ? (
+          // Loading and empty stay distinct: PageStatus owns "still fetching";
+          // DataTable owns "no rows" so the toolbar and frame stay in place.
           <DataTable
             rows={rows}
             getRowKey={(lib) => lib.uuid}
@@ -447,7 +445,7 @@ export function LibrariesPage() {
               },
             ]}
           />
-        )}
+        ) : null}
       </div>
       <div id="propose-leaf">
         <ProposeLeafLibraries />
@@ -683,7 +681,7 @@ export function IntegrationsPage() {
 
       {!inventory && !inventoryError ? (
         <div className="gt-admin-panel gt-admin-inventory" style={{ marginTop: 'var(--gt-space-5)' }}>
-          <p>Loading provider inventory…</p>
+          <PageStatus loading loadingMessage="Loading provider inventory…" />
         </div>
       ) : null}
 
@@ -724,7 +722,7 @@ export function IntegrationsPage() {
 
       {inventoryError ? (
         <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
-          <p>Provider inventory unavailable — use the cards above.</p>
+          <PageStatus emptyMessage="Provider inventory unavailable — use the cards above." />
         </div>
       ) : null}
 

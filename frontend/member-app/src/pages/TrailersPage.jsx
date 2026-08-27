@@ -6,6 +6,9 @@ import {
   fetchTrailerFilters,
   saveAttractModePreferences,
 } from '../api/trailers'
+import { PageStatus } from '../components/PageStatus'
+import { LoadingOverlay } from '../components/LoadingOverlay'
+import { showToast } from '../utils/toast'
 import './TrailersPage.css'
 
 const SETTINGS_STORAGE_KEY = 'trailerAutoplaySettings'
@@ -459,7 +462,8 @@ export function TrailersPage({ shellConfig = {} } = {}) {
     setError(null)
     setEmptyMessage(null)
     setEmptyCta(null)
-    setTrailer(null)
+    // Keep the last trailer on screen until a replacement arrives so
+    // "Another one" does not collapse the player (UX-B6).
 
     fetchRandomTrailer({ signal: controller.signal, filters: request.filters })
       .then((data) => {
@@ -469,6 +473,7 @@ export function TrailersPage({ shellConfig = {} } = {}) {
         if (data?.has_videos) {
           setTrailer(data)
         } else {
+          setTrailer(null)
           const cta = data?.cta && typeof data.cta === 'object' ? data.cta : null
           setEmptyMessage(
             data?.message ||
@@ -494,6 +499,9 @@ export function TrailersPage({ shellConfig = {} } = {}) {
         }
         setError(err)
         setLoading(false)
+        if (trailerRef.current) {
+          showToast('Unable to load trailers.', 'error')
+        }
       })
 
     return () => {
@@ -776,37 +784,38 @@ export function TrailersPage({ shellConfig = {} } = {}) {
         </div>
       )}
 
-      {loading ? <p>Loading random trailer…</p> : null}
+      <LoadingOverlay
+        active={loading && Boolean(trailer)}
+        delayMs={250}
+        label="Loading random trailer…"
+      />
 
-      {!loading && error ? (
-        <div role="alert">
-          <p>Unable to load trailers.</p>
-          <button type="button" className="gt-btn" onClick={requestTrailer}>
-            Retry
-          </button>
-        </div>
+      {loading && !trailer ? (
+        <PageStatus loading loadingMessage="Loading random trailer…" />
+      ) : null}
+
+      {!loading && error && !trailer ? (
+        <PageStatus
+          error={error}
+          errorMessage="Unable to load trailers."
+          onRetry={requestTrailer}
+          retryLabel="Retry"
+        />
       ) : null}
 
       {!loading && !error && emptyMessage ? (
-        <div className="gt-trailers__empty" role="status">
-          <p>{emptyMessage}</p>
-          {emptyCta?.href ? (
-            <a className="gt-btn" href={emptyCta.href}>
-              {emptyCta.label || 'Go to Library'}
-            </a>
-          ) : (
-            <a className="gt-btn" href="/library">
-              Go to Library
-            </a>
-          )}
-        </div>
+        <PageStatus emptyMessage={emptyMessage} className="gt-trailers__empty">
+          <a className="gt-btn" href={emptyCta?.href || '/library'}>
+            {emptyCta?.label || 'Go to Library'}
+          </a>
+        </PageStatus>
       ) : null}
 
       {!loading && !error && trailer && !videoId ? (
         <p role="alert">Invalid video URL format</p>
       ) : null}
 
-      {!loading && !error && videoId ? (
+      {trailer && videoId ? (
         <TrailerPlayer
           key={videoId}
           videoId={videoId}

@@ -247,7 +247,11 @@ export function StockPicker({
       </div>
 
       {loading ? (
-        <p className="gt-stock-picker__empty">Loading catalog…</p>
+        <PageStatus
+          loading
+          loadingMessage="Loading catalog…"
+          className="gt-stock-picker__empty"
+        />
       ) : unavailable ? (
         <div className="gt-stock-picker__empty" data-testid="stock-picker-unavailable">
           <p className="gt-stock-picker__empty-title">Stock catalog coming online</p>

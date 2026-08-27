@@ -4,6 +4,7 @@ import { fetchBrowseGames } from '../api/browse'
 import { queueClientCommand } from '../api/clientCommands'
 import { VoiceLobby } from '../components/VoiceLobby'
 import { SocialCompanionDock } from '../components/SocialCompanionDock'
+import { PageStatus } from '../components/PageStatus'
 import { coverUrl } from '../utils/coverUrl'
 import { showToast } from '../utils/toast'
 import './BigPicturePage.css'
@@ -294,16 +295,13 @@ export function BigPicturePage({ shellConfig = {} }) {
       </header>
 
       {error ? (
-        <div className="gt-bp__alert" role="alert">
-          <p>Unable to load Big Picture.</p>
-          <button
-            type="button"
-            className="gt-bp__btn"
-            onClick={() => setRetryCount((n) => n + 1)}
-          >
-            Retry
-          </button>
-        </div>
+        <PageStatus
+          error={error}
+          errorMessage="Unable to load Big Picture."
+          onRetry={() => setRetryCount((n) => n + 1)}
+          retryLabel="Retry"
+          className="gt-bp__alert"
+        />
       ) : null}
 
       {!error ? (
@@ -352,10 +350,12 @@ export function BigPicturePage({ shellConfig = {} }) {
 
       {!error ? (
         <div className="gt-bp__rail-wrap">
-          {loading ? <p className="gt-bp__empty">Loading games…</p> : null}
+          {loading ? (
+            <PageStatus loading loadingMessage="Loading games…" className="gt-bp__empty" />
+          ) : null}
 
           {!loading && list.length === 0 ? (
-            <p className="gt-bp__empty">No games in your library yet.</p>
+            <PageStatus emptyMessage="No games in your library yet." className="gt-bp__empty" />
           ) : null}
 
           {!loading && list.length > 0 ? (

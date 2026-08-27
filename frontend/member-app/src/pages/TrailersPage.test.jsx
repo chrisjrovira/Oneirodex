@@ -138,6 +138,43 @@ test('applies selected filters when asking for another trailer', async () => {
   )
 })
 
+test('another trailer keeps the player up while the next one loads', async () => {
+  // UX-B6: "Another one" used to null the trailer, swap in a loading
+  // paragraph, and shove the player off the page. The overlay sits on top
+  // of the current frame instead (and is delayed, so this assertion is the
+  // player staying, not a flash of overlay).
+  const user = userEvent.setup()
+  let releaseSecond
+  trailersApi.fetchRandomTrailer
+    .mockResolvedValueOnce({
+      has_videos: true,
+      game_uuid: 'game-uuid-1',
+      game_name: 'Doom',
+      video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0',
+    })
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          releaseSecond = resolve
+        }),
+    )
+
+  render(<TrailersPage />)
+  await screen.findByRole('heading', { name: 'Doom' })
+  await user.click(screen.getByRole('button', { name: 'Another one' }))
+
+  expect(screen.getByRole('heading', { name: 'Doom' })).toBeInTheDocument()
+  expect(screen.queryByText('Loading random trailer…')).not.toBeInTheDocument()
+
+  releaseSecond({
+    has_videos: true,
+    game_uuid: 'game-uuid-3',
+    game_name: 'Quake',
+    video_url: 'https://www.youtube.com/embed/abc12345678?autoplay=1&rel=0',
+  })
+  expect(await screen.findByRole('heading', { name: 'Quake' })).toBeInTheDocument()
+})
+
 test('new chrome keeps the playing title as content, not as a page heading', async () => {
   // The h1 here was never page identity — it names the trailer now playing and
   // links to that game. Retiring it as a "page title" would delete real

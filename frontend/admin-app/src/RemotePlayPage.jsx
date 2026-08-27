@@ -3,6 +3,7 @@
 // it has scrolled away — and invisible when the save happens from the bottom
 // of a long form.
 import { useEffect, useState } from 'react'
+import { PageStatus } from './PageStatus'
 import { showToast } from './utils/toast'
 
 const EMPTY = {
@@ -97,7 +98,7 @@ export function RemotePlayPage() {
         Moonlight clients with the hints you set.
       </p>
       {loading ? (
-        <p>Loading…</p>
+        <PageStatus loading loadingMessage="Loading remote play settings…" />
       ) : (
         <form className="gt-admin-panel" onSubmit={save}>
           <label className="gt-admin-field">

@@ -9,6 +9,7 @@ import {
 } from '../api/cheats'
 import { showsRetroarchCheats } from '../utils/detailsMedia'
 import { showToast } from '../utils/toast'
+import { PageStatus } from './PageStatus'
 import './CheatsPanel.css'
 
 function emptyCodeRow() {
@@ -166,11 +167,11 @@ export function CheatsPanel({
         be required to enable codes. See <Link to="/help#cheats">Help → Cheats</Link>.
       </p>
 
-      {loading ? <p className="gt-cheats-panel__status">Loading cheats…</p> : null}
+      {loading ? (
+        <PageStatus loading loadingMessage="Loading cheats…" className="gt-cheats-panel__status" />
+      ) : null}
       {error ? (
-        <p className="gt-cheats-panel__status" role="alert">
-          Unable to load cheats: {String(error.message || error)}
-        </p>
+        <PageStatus error={error} className="gt-cheats-panel__status" />
       ) : null}
       {status ? (
         <p
@@ -182,7 +183,10 @@ export function CheatsPanel({
       ) : null}
 
       {!loading && !error && cheats.length === 0 ? (
-        <p className="gt-cheats-panel__status">No <code>.cht</code> files yet - create one or upload.</p>
+        <PageStatus
+          emptyMessage="No .cht files yet - create one or upload."
+          className="gt-cheats-panel__status"
+        />
       ) : null}
 
       {cheats.length > 0 ? (
