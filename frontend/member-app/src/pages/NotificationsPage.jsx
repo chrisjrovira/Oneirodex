@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { csrfHeaders } from '../api/csrf'
 import { errorFromResponse } from '../api/envelopeError'
 import { ContextBar } from '../chrome/ContextBar'
+import { PageStatus } from '../components/PageStatus'
 import './NotificationsPage.css'
 
 const PREF_ROWS = [
@@ -144,10 +145,12 @@ export function NotificationsPage({ shellConfig = {} }) {
   if (error) {
     return (
       <div className="gt-more-page gt-notifications">
-        <p role="alert">Unable to load notifications.</p>
-        <button type="button" className="gt-btn" onClick={() => void load()}>
-          Retry
-        </button>
+        <PageStatus
+          error={error}
+          errorMessage="Unable to load notifications."
+          onRetry={() => void load()}
+          retryLabel="Retry"
+        />
       </div>
     )
   }

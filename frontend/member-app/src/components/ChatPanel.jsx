@@ -580,8 +580,8 @@ export function ChatPanel({
 
   if (error) {
     return (
-      <div className="gt-chat-panel gt-chat-panel--error" role="alert">
-        <p>Unable to load chat.</p>
+      <div className="gt-chat-panel gt-chat-panel--error">
+        <PageStatus error={error} errorMessage="Unable to load chat." />
       </div>
     )
   }

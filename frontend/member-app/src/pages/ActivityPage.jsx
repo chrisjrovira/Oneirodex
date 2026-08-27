@@ -304,7 +304,12 @@ export function ActivityPage({ shellConfig = {} } = {}) {
 
       <VoiceLobby />
       {error ? (
-        <p role="alert">Unable to load activity.</p>
+        <PageStatus
+          error={error}
+          errorMessage="Unable to load activity."
+          onRetry={reload}
+          retryLabel="Retry"
+        />
       ) : !data ? (
         <PageStatus loading loadingMessage="Loading activity…" />
       ) : data.restricted ? (
