@@ -145,9 +145,11 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
               {creating ? 'Creating…' : 'Create shelf'}
             </button>
             {createError ? (
-              <p className="gt-collections__error" role="alert">
-                {createError.message || 'Unable to create collection.'}
-              </p>
+              <PageStatus
+                error={createError}
+                errorMessage={createError.message || 'Unable to create collection.'}
+                className="gt-collections__error"
+              />
             ) : null}
           </form>
             </Popover>
@@ -198,9 +200,11 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
             {creating ? 'Creating…' : 'Create shelf'}
           </button>
           {createError ? (
-            <p className="gt-collections__error" role="alert">
-              {createError.message || 'Unable to create collection.'}
-            </p>
+            <PageStatus
+              error={createError}
+              errorMessage={createError.message || 'Unable to create collection.'}
+              className="gt-collections__error"
+            />
           ) : null}
         </form>
         </>

@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { VoiceLobby } from './VoiceLobby'
 
 beforeEach(() => {
@@ -37,4 +38,25 @@ test('compact mode hides disabled lobby entirely', async () => {
     expect(vi.mocked(fetch)).toHaveBeenCalled()
   })
   expect(container).toBeEmptyDOMElement()
+})
+
+test('token failure uses PageStatus', async () => {
+  const user = userEvent.setup()
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input) => {
+      const url = String(input)
+      if (url.includes('/api/rtc/status')) {
+        return { ok: true, json: async () => ({ enabled: true }) }
+      }
+      if (url.includes('/api/rtc/token')) {
+        return { ok: false, status: 500, json: async () => ({ error: 'Token failed' }) }
+      }
+      return { ok: true, json: async () => ({}) }
+    }),
+  )
+
+  render(<VoiceLobby />)
+  await user.click(await screen.findByRole('button', { name: /get voice token/i }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Token failed')
 })

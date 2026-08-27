@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { addCollectionItem, fetchCollections } from '../api/collections'
 import { showToast } from '../utils/toast'
+import { PageStatus } from './PageStatus'
 import './AddToCollection.css'
 
 /**
@@ -112,9 +113,11 @@ export function AddToCollection({
       {open ? (
         <div className="gt-add-collection__list" role="group" aria-label="Collections">
           {error ? (
-            <p className="gt-add-collection__note" role="alert">
-              Could not load your shelves.
-            </p>
+            <PageStatus
+              error={error}
+              errorMessage="Could not load your shelves."
+              className="gt-add-collection__note"
+            />
           ) : null}
 
           {!error && collections === null ? (

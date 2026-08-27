@@ -74,6 +74,18 @@ test('Edit saves role through the existing user API', async () => {
   )
 })
 
+test('failed save uses PageStatus', async () => {
+  mockFetch([ADA], false)
+  const user = userEvent.setup()
+  render(<UsersPage />)
+  await screen.findByText('Ada')
+
+  await user.click(screen.getByRole('button', { name: 'Edit' }))
+  await user.click(screen.getByRole('button', { name: 'Save' }))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Cannot modify your own role')
+})
+
 test('Invites and Support sit in the top bar when the slot exists (W33-9)', async () => {
   const slot = document.createElement('div')
   slot.id = 'gt-admin-topbar-slot'

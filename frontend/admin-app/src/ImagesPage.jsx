@@ -455,15 +455,14 @@ export function ImagesPage({ embedded = false }) {
         </p>
 
         {pathStatus?.error ? (
-          <div role="alert" className="gt-admin-alert">
-            IMAGE_SAVE_PATH: {pathStatus.error}
-            {pathStatus.path ? (
-              <>
-                {' '}
-                (<code className="gt-mono">{pathStatus.path}</code>)
-              </>
-            ) : null}
-          </div>
+          <PageStatus
+            error={pathStatus.error}
+            errorMessage={
+              pathStatus.path
+                ? `IMAGE_SAVE_PATH: ${pathStatus.error} (${pathStatus.path})`
+                : `IMAGE_SAVE_PATH: ${pathStatus.error}`
+            }
+          />
         ) : null}
         <PageStatus error={queueError} />
         {queueMsg ? (

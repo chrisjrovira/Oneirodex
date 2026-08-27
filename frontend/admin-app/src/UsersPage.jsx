@@ -43,7 +43,7 @@ function UserEditor({ user, onClose, onSaved }) {
   return (
     <form className="gt-admin-panel" onSubmit={handleSubmit}>
       <h2>Edit {user.name}</h2>
-      {error ? <p className="gt-error">{error}</p> : null}
+      {error ? <PageStatus error={error} /> : null}
       <label>
         Role
         <select value={role} onChange={(event) => setRole(event.target.value)}>

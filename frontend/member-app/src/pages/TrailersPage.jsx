@@ -812,7 +812,7 @@ export function TrailersPage({ shellConfig = {} } = {}) {
       ) : null}
 
       {!loading && !error && trailer && !videoId ? (
-        <p role="alert">Invalid video URL format</p>
+        <PageStatus error errorMessage="Invalid video URL format" />
       ) : null}
 
       {trailer && videoId ? (

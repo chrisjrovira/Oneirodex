@@ -122,3 +122,26 @@ test('invite redemption posts the token and refreshes', async () => {
     expect(JSON.parse(join.opts.body)).toEqual({ token: 'tok-123' })
   })
 })
+
+test('failed spaces load uses PageStatus with Retry', async () => {
+  const user = userEvent.setup()
+  let failSpaces = true
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => {
+      if (failSpaces) {
+        return { ok: false, status: 500, json: async () => ({ error: 'Could not load spaces' }) }
+      }
+      return { ok: true, json: async () => SPACES }
+    }),
+  )
+
+  render(<SpaceRail />)
+  expect(await screen.findByRole('alert')).toHaveTextContent('Could not load spaces')
+  expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+
+  failSpaces = false
+  await user.click(screen.getByRole('button', { name: 'Retry' }))
+  expect(await screen.findByText('Household')).toBeInTheDocument()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})

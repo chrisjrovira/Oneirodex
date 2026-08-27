@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { csrfHeaders } from '../api/csrf'
 import { errorFromBody } from '../api/envelopeError'
+import { PageStatus } from './PageStatus'
 
 /**
  * Space rail — the spaces ("servers") a member belongs to, each expanding into
@@ -23,25 +24,34 @@ export function SpaceRail({
   const [inviteToken, setInviteToken] = useState('')
   const [joinBusy, setJoinBusy] = useState(false)
   const [joinMsg, setJoinMsg] = useState('')
+  const loadAbortRef = useRef(null)
 
   const loadSpaces = useCallback(async () => {
+    loadAbortRef.current?.abort()
+    const controller = new AbortController()
+    loadAbortRef.current = controller
     setLoading(true)
     setError('')
     try {
-      const response = await fetch('/api/chat/spaces', { credentials: 'same-origin' })
+      const response = await fetch('/api/chat/spaces', {
+        credentials: 'same-origin',
+        signal: controller.signal,
+      })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw errorFromBody(data, response.status, 'Could not load spaces')
       setSpaces(Array.isArray(data.spaces) ? data.spaces : [])
     } catch (err) {
+      if (err.name === 'AbortError') return
       setError(err.message || 'Could not load spaces')
       setSpaces([])
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     void loadSpaces()
+    return () => loadAbortRef.current?.abort()
   }, [loadSpaces])
 
   async function redeemInvite(event) {
@@ -85,9 +95,12 @@ export function SpaceRail({
   return (
     <nav className="gt-space-rail" aria-label="Spaces">
       {error ? (
-        <p className="gt-space-rail__error" role="alert">
-          {error}
-        </p>
+        <PageStatus
+          error={error}
+          onRetry={() => void loadSpaces()}
+          retryLabel="Retry"
+          className="gt-space-rail__error"
+        />
       ) : null}
 
       {!spaces.length && !error ? (

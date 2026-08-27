@@ -578,9 +578,11 @@ export function GameDetailsPage() {
             </p>
           ) : null}
           {freshnessError ? (
-            <p className="gt-details-page__muted" role="alert">
-              Update check failed: {String(freshnessError.message || freshnessError)}
-            </p>
+            <PageStatus
+              error={freshnessError}
+              errorMessage={`Update check failed: ${String(freshnessError.message || freshnessError)}`}
+              className="gt-details-page__muted"
+            />
           ) : null}
         </div>
       </div>

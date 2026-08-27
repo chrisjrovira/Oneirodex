@@ -173,9 +173,10 @@ export function WishlistPage({ shellConfig = {} } = {}) {
                   onChange={(event) => setNotes(event.target.value)}
                 />
                 {createError ? (
-                  <p className="gt-wishlist__action-error" role="alert">
-                    {createError.message}
-                  </p>
+                  <PageStatus
+                    error={createError}
+                    className="gt-wishlist__action-error"
+                  />
                 ) : null}
                 <button
                   type="submit"
@@ -225,9 +226,10 @@ export function WishlistPage({ shellConfig = {} } = {}) {
             {submitting ? 'Requesting…' : 'Request'}
           </button>
           {createError ? (
-            <p className="gt-wishlist__action-error" role="alert">
-              {createError.message}
-            </p>
+            <PageStatus
+              error={createError}
+              className="gt-wishlist__action-error"
+            />
           ) : null}
         </form>
         </>
@@ -245,9 +247,7 @@ export function WishlistPage({ shellConfig = {} } = {}) {
       ) : null}
 
       {actionError ? (
-        <p className="gt-wishlist__action-error" role="alert">
-          {actionError.message}
-        </p>
+        <PageStatus error={actionError} className="gt-wishlist__action-error" />
       ) : null}
 
       <PageStatus

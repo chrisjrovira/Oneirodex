@@ -256,3 +256,22 @@ test('the one refresh control probes the library and refills the inbox', async (
     expect(updatesApi.fetchUpdatesInbox.mock.calls.length).toBeGreaterThan(before),
   )
 })
+
+test('store search failure uses PageStatus', async () => {
+  const user = userEvent.setup()
+  updatesApi.fetchStoreSearch.mockRejectedValue(new Error('upstream down'))
+
+  render(
+    <MemoryRouter>
+      <UpdatesPage />
+    </MemoryRouter>,
+  )
+
+  await screen.findByText('Behind Game')
+  await user.type(screen.getByLabelText(/Game name/i), 'Hades')
+  await user.click(screen.getByRole('button', { name: /^Search$/i }))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Store search failed: upstream down',
+  )
+})

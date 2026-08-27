@@ -55,7 +55,6 @@ const STATUS_BASELINE = {
   'ArtworkPicker.jsx': 1,
   'DupeGlance.jsx': 1,
   'EmulatorFirmwarePanel.jsx': 2,
-  'ImagesPage.jsx': 1,
   'ImportLeafLibraries.jsx': 2,
   'InvitesPage.jsx': 1,
   'OpenPathModal.jsx': 1,

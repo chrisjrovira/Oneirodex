@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { csrfHeaders } from '../api/csrf'
 import { errorFromBody } from '../api/envelopeError'
+import { PageStatus } from './PageStatus'
 
 function partyRoomForGame(gameUuid) {
   const id = (gameUuid || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64)
@@ -126,7 +127,7 @@ export function VoiceLobby({
       <button type="button" className="gt-btn" disabled={busy} onClick={() => void joinLobby()}>
         {busy ? 'Connecting…' : screenshare ? 'Get voice + screenshare token' : 'Get voice token'}
       </button>
-      {error ? <p role="alert">{error}</p> : null}
+      {error ? <PageStatus error={error} /> : null}
       {tokenInfo ? (
         <p>
           Token ready for room <code>{tokenInfo.room}</code> at <code>{tokenInfo.url}</code>.

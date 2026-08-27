@@ -336,9 +336,11 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
             {saving ? 'Saving…' : 'Save changes'}
           </button>
           {saveError ? (
-            <p className="gt-collections__error" role="alert">
-              {saveError.message || 'Unable to save changes.'}
-            </p>
+            <PageStatus
+              error={saveError}
+              errorMessage={saveError.message || 'Unable to save changes.'}
+              className="gt-collections__error"
+            />
           ) : null}
         </form>
       ) : null}
@@ -445,9 +447,11 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
             </ul>
           ) : null}
           {addError ? (
-            <p className="gt-collections__error" role="alert">
-              {addError.message || 'Unable to add that game.'}
-            </p>
+            <PageStatus
+              error={addError}
+              errorMessage={addError.message || 'Unable to add that game.'}
+              className="gt-collections__error"
+            />
           ) : null}
         </details>
       ) : null}

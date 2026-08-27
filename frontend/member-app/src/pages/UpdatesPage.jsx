@@ -440,7 +440,10 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
           </button>
         </form>
         {searchError ? (
-          <p role="alert">Store search failed: {String(searchError.message || searchError)}</p>
+          <PageStatus
+            error={searchError}
+            errorMessage={`Store search failed: ${String(searchError.message || searchError)}`}
+          />
         ) : null}
         {hits && hits.length === 0 ? <p>No store hits.</p> : null}
         {hits && hits.length > 0 ? (
