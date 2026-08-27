@@ -117,6 +117,7 @@ jobs:
           tests/test_ownership_poller.py
           tests/test_store_ownership.py
           tests/test_emulator_bios_discovery.py
+          tests/test_emulator_bios_import.py
           tests/test_cover_art_variety.py
           tests/test_cover_art_text.py
           tests/test_preset_themes.py

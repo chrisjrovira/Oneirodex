@@ -20,7 +20,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Operators / observability (optional) | [runbooks/observability-profile.md](runbooks/observability-profile.md) — Prometheus stub; Admin Ops is default |
 | Operators / LiveKit voice | [runbooks/livekit-unraid.md](runbooks/livekit-unraid.md) |
 | Operators / WebRetro cores | [runbooks/webretro-cores.md](runbooks/webretro-cores.md) · [admin/webretro-core-clauses.md](admin/webretro-core-clauses.md) (non-commercial clauses — not counsel) |
-| Operators / emulator BIOS | [runbooks/emulator-bios.md](runbooks/emulator-bios.md) — operator-supplied firmware, filenames only |
+| Operators / emulator BIOS | [runbooks/emulator-bios.md](runbooks/emulator-bios.md) — operator-supplied firmware; Admin scan/install, filenames only |
 | Operators / ROM reference sets | [runbooks/reference-sets.md](runbooks/reference-sets.md) |
 | Operators / login rate limit (proxy) | [runbooks/login-rate-limit-proxy.md](runbooks/login-rate-limit-proxy.md) |
 | Operators / break-glass | [runbooks/container-wont-start.md](runbooks/container-wont-start.md) |

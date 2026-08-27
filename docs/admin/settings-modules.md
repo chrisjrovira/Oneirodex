@@ -44,6 +44,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 | `ENABLE_EMAIL_DIGEST` | on | Scheduler on; members still opt in |
 | `ENABLE_LOGIN_RATE_LIMIT` | on | In-process login / password-reset rate limit |
 | `OIDC_ENABLED` | **off** | Also requires Admin → Integrations toggle |
+| `BIOS_IMPORT_SOURCE` | unset | Folder of dumps you already own. Boot copies missing names (never overwrites). Admin → Emulators **Scan collection** uses the same path. [emulator-bios.md](../runbooks/emulator-bios.md) |
 
 ## Arr
 

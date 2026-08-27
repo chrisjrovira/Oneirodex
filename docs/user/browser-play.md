@@ -17,7 +17,7 @@ GameTheca play modes for systems **below PS5 / Xbox Series**. Those two stay **c
 | Xbox · 360 · One · PS3 · PS4 | Catalog | Optional BYO | `play_mode=companion` + hints; no fake Play |
 | PS5 · Xbox Series | Catalog only | — | `play_mode=catalog` |
 
-Admin: upload BIOS via `/api/emulator-bios` (Settings / storage path), or on household Unraid optionally mount a private appdata BIOS folder — see [BIOS / firmware](#bios--firmware-filenames-only). Browse API returns `bios` + `n64_note` on playable titles. Systems hub badges show **Browser** / **Companion** / **Catalog** per platform. Operator core drops: [webretro-cores.md](../runbooks/webretro-cores.md) · health: `GET /api/emulator/health` (`deferred_cores`) · JS allowlist: `GET /api/emulator/installed-cores.js`.
+Admin: upload BIOS via Admin → Emulators, **Scan collection** on a folder of dumps you already own, or on household Unraid optionally mount a private appdata BIOS folder — see [BIOS / firmware](#bios--firmware-filenames-only). Browse API returns `bios` + `n64_note` on playable titles. Systems hub badges show **Browser** / **Companion** / **Catalog** per platform. Operator core drops: [webretro-cores.md](../runbooks/webretro-cores.md) · health: `GET /api/emulator/health` (`deferred_cores`) · JS allowlist: `GET /api/emulator/installed-cores.js`.
 
 ## BIOS / firmware (filenames only)
 
@@ -26,6 +26,7 @@ GameTheca **does not ship** copyrighted BIOS binaries in git, CI artifacts, or t
 | How | When | Notes |
 |---|---|---|
 | **Admin upload** (public / default) | Always available | `POST /api/emulator-bios` → container `…/static/library/bios/` (WebRetro `biosCdn`) |
+| **Scan a collection** | Admin → Emulators | Point at a folder of dumps you already own (subfolders included). Scan, pick versions when names collide, install matching firmware. Missing names open as copyable markdown. Same path can be `BIOS_IMPORT_SOURCE` for boot import. |
 | **Local private mount** (household Unraid) | Optional | Bind host `/mnt/user/appdata/gametheca/bios` → `/app/gametheca/static/library/bios` — [unraid-deploy.md](../runbooks/unraid-deploy.md#local-private-bios-mount-vs-public-upload). Not the games share. |
 
 **Expected filenames** (checklist — no download links):

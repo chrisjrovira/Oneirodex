@@ -4,12 +4,8 @@
 GameTheca never downloads or bundles BIOS. This script does not fetch anything:
 it looks through firmware *you already have* and copies the specific files the
 libretro cores ask for into the BIOS volume, flattened, under the exact names
-the cores look up.
-
-That flattening is the point. `list_bios_files()` reads the top level of the
-BIOS root only and skips directories, so a nested collection — a downloaded
-BIOS pack, a per-console tree — is invisible to the admin panel no matter how
-complete it is.
+the cores look up. Admin → Emulators **Scan collection** / **Install matching
+firmware** is the same walk with a version picker and a copyable missing report.
 
 Preview by default, like the storage helpers and leaf-library proposer; nothing
 is written until you pass --apply.

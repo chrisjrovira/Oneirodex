@@ -147,6 +147,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | [steamgriddb-artwork.md](../runbooks/steamgriddb-artwork.md) | Have | Artwork key |
 | [desktop-code-signing.md](../runbooks/desktop-code-signing.md) | Have | Unsigned-only product stance |
 | [webretro-cores.md](../runbooks/webretro-cores.md) | Have | Operator-vendor WASM fetch |
+| [emulator-bios.md](../runbooks/emulator-bios.md) | Have | Operator-supplied firmware; Admin scan/install + copyable missing markdown |
 | [reference-sets.md](../runbooks/reference-sets.md) | Have | DAT set completeness |
 | [login-rate-limit-proxy.md](../runbooks/login-rate-limit-proxy.md) | Have | Proxy + app login rate limits |
 | [release-checklist.md](../runbooks/release-checklist.md) | Have | Release SOP |

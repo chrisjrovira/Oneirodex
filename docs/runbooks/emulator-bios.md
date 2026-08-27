@@ -2,9 +2,9 @@
 
 **Audience:** Operator · **Stance:** LOCKED
 
-## What GameTheca does and does not do
+## What Oneirodex does and does not do
 
-GameTheca **never downloads, bundles, or ships console BIOS**. Those files are
+Oneirodex **never downloads, bundles, or ships console BIOS**. Those files are
 proprietary console firmware — Sony, Sega, Nintendo, Panasonic, SNK and friends
 still own them. The application only ever:
 
@@ -26,6 +26,22 @@ public repository even by accident.
 
 Drop files in flat — no per-system subfolders. Names are matched
 case-insensitively, so `SCPH5501.BIN` and `scph5501.bin` both count.
+
+## Filling the volume
+
+Operator-supplied only. There is no download button.
+
+| How | When |
+|---|---|
+| **Upload one file** | Admin → Emulation → Firmware file input (`POST /api/emulator-bios`) |
+| **Scan a collection** | Same page: set a folder (and its subfolders). **Scan collection** previews matches; **Install matching firmware** copies the names this service asks for, flattened onto the volume. If several dumps share a filename, pick which one that system should use before installing. A popup lists what is still missing as **copyable markdown**. |
+| **Boot import** | Set `BIOS_IMPORT_SOURCE` to that folder. Missing names are copied on startup; existing files are never replaced. |
+| **CLI** | `python scripts/import_bios.py --source /path/to/dumps` (preview) then `--apply` |
+| **Volume mount** | Bind a private host folder at `EMULATOR_BIOS_PATH` |
+
+The folder must sit under a library root (`GT_LIBRARY_ROOTS` / `BASE_FOLDER_*`) or be the path named by `BIOS_IMPORT_SOURCE`.
+
+`GET /api/emulator-bios` includes `import_source` (the configured default) and `missing_markdown`. Preview/apply are `POST /api/emulator-bios/scan` and `POST /api/emulator-bios/install`.
 
 ## Checking coverage
 

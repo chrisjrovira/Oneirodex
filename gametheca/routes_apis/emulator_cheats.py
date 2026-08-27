@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import os
 from io import BytesIO
 
-from flask import jsonify, request, send_file
+from flask import current_app, jsonify, request, send_file
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -13,6 +14,12 @@ from gametheca.models import Game
 from gametheca.platform import cheat_surface_for_platform
 from gametheca.utils.api_response import api_error, api_ok
 from gametheca.utils.auth import admin_required
+from gametheca.utils.bios_install import (
+    apply_firmware_import,
+    firmware_import_allowed_bases,
+    plan_firmware_import,
+    volume_missing_markdown,
+)
 from gametheca.utils.emulator_bios import (
     bios_status_for_cores,
     bios_status_for_platforms,
@@ -29,6 +36,7 @@ from gametheca.utils.emulator_cheats import (
 from gametheca.utils.library_acl import user_can_access_game
 from gametheca.utils.play_url import library_platform_key
 from gametheca.utils.rbac import librarian_required
+from gametheca.utils.security import is_safe_path
 
 from . import apis_bp
 
@@ -158,6 +166,36 @@ def remove_game_cheat(game_uuid, filename):
     return api_ok()
 
 
+def _firmware_collection_source():
+    """Resolve the operator's collection folder, or an envelope error.
+
+    Allowed bases are library roots plus ``BIOS_IMPORT_SOURCE``. The error
+    sentence does not echo the path.
+    """
+    payload = request.get_json(silent=True) or {}
+    raw = (payload.get('source') or '').strip()
+    if not raw:
+        raw = (current_app.config.get('BIOS_IMPORT_SOURCE') or '').strip()
+    if not raw:
+        return None, api_error(
+            'Set a firmware collection folder, or configure BIOS_IMPORT_SOURCE.',
+            code='bad_request',
+        )
+    if not os.path.isdir(raw):
+        return None, api_error(
+            'That folder does not exist on the server.',
+            code='not_found',
+        )
+    allowed, _reason = is_safe_path(raw, firmware_import_allowed_bases(current_app))
+    if not allowed:
+        return None, api_error(
+            'That folder is outside the allowed directories. Point '
+            'BIOS_IMPORT_SOURCE at it, or use a path under a library root.',
+            code='forbidden',
+        )
+    return raw, None
+
+
 @apis_bp.route('/emulator-bios', methods=['GET'])
 @login_required
 @admin_required
@@ -167,7 +205,55 @@ def emulator_bios_list():
         'cores': bios_status_for_cores(),
         # Per-system view: which consoles can actually boot, and what is missing.
         'platforms': bios_status_for_platforms(),
+        'import_source': current_app.config.get('BIOS_IMPORT_SOURCE') or '',
+        'missing_markdown': volume_missing_markdown(),
     })
+
+
+@apis_bp.route('/emulator-bios/scan', methods=['POST'])
+@login_required
+@admin_required
+def emulator_bios_scan():
+    source, err = _firmware_collection_source()
+    if err is not None:
+        return err
+    try:
+        plan = plan_firmware_import(source)
+    except OSError:
+        return api_error(
+            'Could not read that firmware collection.',
+            code='internal',
+        )
+    return api_ok(plan)
+
+
+@apis_bp.route('/emulator-bios/install', methods=['POST'])
+@login_required
+@admin_required
+def emulator_bios_install():
+    source, err = _firmware_collection_source()
+    if err is not None:
+        return err
+    payload = request.get_json(silent=True) or {}
+    selections = payload.get('selections') or {}
+    if selections and not isinstance(selections, dict):
+        return api_error('selections must be a map of filename to dump.', code='bad_request')
+    skipped = payload.get('skipped') or []
+    if skipped and not isinstance(skipped, list):
+        return api_error('skipped must be a list of filenames.', code='bad_request')
+    try:
+        result = apply_firmware_import(
+            source,
+            selections={str(k): str(v) for k, v in selections.items()},
+            skipped=[str(name) for name in skipped],
+            overwrite=bool(payload.get('overwrite')),
+        )
+    except OSError:
+        return api_error(
+            'Could not write to the firmware volume. Check the mount is present and writable.',
+            code='internal',
+        )
+    return api_ok(result)
 
 
 @apis_bp.route('/emulator-bios', methods=['POST'])

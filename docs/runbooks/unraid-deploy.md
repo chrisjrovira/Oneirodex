@@ -1,4 +1,4 @@
-# Unraid deploy — GameTheca
+# Unraid deploy — Oneirodex
 
 ## Deploy gates (operator checklist)
 
@@ -88,10 +88,10 @@ App libraries in Admin should point at paths under `/storage/...` (inside the co
 **Local mount steps (optional)**
 
 1. On the host: `mkdir -p /mnt/user/appdata/gametheca/bios`
-2. Place legally obtained firmware files you already own (names only — see [browser-play.md](../user/browser-play.md#bios--firmware-filenames-only)). No download links; GameTheca does not distribute BIOS packs.
+2. Place legally obtained firmware files you already own (names only — see [browser-play.md](../user/browser-play.md#bios--firmware-filenames-only)). No download links; Oneirodex does not distribute BIOS packs.
 3. In `.env`: set `EMULATOR_BIOS_HOST_PATH=/mnt/user/appdata/gametheca/bios` and keep `EMULATOR_BIOS_PATH=/app/gametheca/static/library/bios` (Compose default).
 4. Uncomment the bios volume line in `docker-compose.yml`, then recreate the app container.
-5. Confirm Admin → emulator BIOS lists the files (or upload remaining names through the UI into the same folder).
+5. Confirm Admin → emulator BIOS lists the files. Remaining names can be uploaded one at a time, or **Scan collection** / **Install matching firmware** if the dumps live in a folder the container can see (`BIOS_IMPORT_SOURCE` or a library root).
 
 Without the optional bind, Admin upload still writes under the library volume at `…/library/bios` on the host. The dedicated appdata folder is for operators who keep firmware separate from covers/themes.
 

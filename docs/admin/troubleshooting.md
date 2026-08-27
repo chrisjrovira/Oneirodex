@@ -61,6 +61,7 @@ sent and need no configuration. CSP **enforces** by default (`CSP_ENFORCE=true`)
 | Classic button does nothing after upgrade | `onclick=` was removed. Confirm `gt_dom_actions.js` loads from `base.html` / `base_admin.html` |
 | Site pinned to HTTPS and now unreachable by IP | HSTS. It is only sent when `SESSION_COOKIE_SECURE=true`; set `HSTS_SECONDS=0` and clear the browser's HSTS entry |
 | Large firmware upload rejected with 413 | Global ceiling is `MAX_UPLOAD_MB` (default 128). Raise it *and* `EMULATOR_BIOS_MAX_BYTES` together — the per-route firmware limit is the tighter of the two |
+| Firmware folder scan says the path is outside allowed directories | The folder must be under a library root or the path in `BIOS_IMPORT_SOURCE`. Set that env to the dump pack (and its subfolders) then Scan collection again — [emulator-bios.md](../runbooks/emulator-bios.md) |
 | Cover uploads suddenly smaller on disk | Expected. Covers over 1200×1600 are now stored resized; previously the resize ran and the original was saved anyway |
 | Companion stopped authenticating after an upgrade | Not expiry — tokens created before `expires_at` existed are NULL, which means never. Check Admin → the token was not revoked |
 | Metadata art stopped downloading from one provider | The provider may be answering with a redirect to a private/link-local host, which is now refused. Look for `http_retry blocked` / `download_image blocked` in the log |

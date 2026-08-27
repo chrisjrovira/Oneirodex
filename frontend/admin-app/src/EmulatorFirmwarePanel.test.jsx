@@ -140,3 +140,133 @@ test('read failure offers a retry rather than an empty page', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
   await waitFor(() => expect(screen.getByText('PlayStation')).toBeInTheDocument())
 })
+
+const SATURN_A = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+const SATURN_B = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+const SCAN_PLAN = {
+  matches: [
+    {
+      name: 'saturn_bios.bin',
+      already: false,
+      chosen: SATURN_A,
+      note: '2 candidates, 2 differ — default is the 1-copy majority',
+      systems: [{ label: 'Saturn', platform: 'SATURN', hard: true }],
+      versions: [
+        {
+          digest: SATURN_A,
+          size: 512,
+          count: 1,
+          paths: ['pack-a/saturn_bios.bin'],
+        },
+        {
+          digest: SATURN_B,
+          size: 640,
+          count: 1,
+          paths: ['pack-b/saturn_bios.bin'],
+        },
+      ],
+    },
+  ],
+  missing: [{ name: 'scph5501.bin', blocking: true }],
+  conflicts: [{ name: 'saturn_bios.bin', versions: [{ digest: SATURN_A }, { digest: SATURN_B }] }],
+  missing_markdown:
+    '# Firmware still needed\n\n- **PlayStation** — `scph5501.bin`\n',
+  copy_count: 1,
+  already_count: 0,
+  conflict_count: 1,
+  copied_count: 1,
+}
+
+function mockApi({ get = SUMMARY, scan = SCAN_PLAN, install = SCAN_PLAN } = {}) {
+  global.fetch = vi.fn(async (url, init = {}) => {
+    const method = (init.method || 'GET').toUpperCase()
+    const path = String(url)
+    if (method === 'POST' && path.includes('/scan')) {
+      return { ok: true, status: 200, json: async () => ({ ok: true, ...scan }) }
+    }
+    if (method === 'POST' && path.includes('/install')) {
+      return { ok: true, status: 200, json: async () => ({ ok: true, ...install }) }
+    }
+    if (method === 'POST') {
+      return {
+        ok: true,
+        status: 201,
+        json: async () => ({ ok: true, name: 'scph5500.bin', size: 524288 }),
+      }
+    }
+    return { ok: true, status: 200, json: async () => get }
+  })
+}
+
+test('offers scan, install, and a copyable missing report — never a download', async () => {
+  mockApi({ get: { ...SUMMARY, missing_markdown: SCAN_PLAN.missing_markdown } })
+  render(<EmulatorFirmwarePanel />)
+  await screen.findByText('PlayStation')
+
+  expect(screen.getByRole('button', { name: 'Scan collection' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Install matching firmware' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Show missing report' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /download/i })).not.toBeInTheDocument()
+})
+
+test('scan posts the folder and opens markdown the operator can copy', async () => {
+  const writeText = vi.fn(async () => {})
+  Object.assign(navigator, { clipboard: { writeText } })
+  document.head.innerHTML = '<meta name="csrf-token" content="test-csrf">'
+  mockApi()
+  render(<EmulatorFirmwarePanel />)
+  await screen.findByText('PlayStation')
+
+  await userEvent.type(
+    screen.getByLabelText('Firmware collection folder'),
+    'E:\\_bios',
+  )
+  await userEvent.click(screen.getByRole('button', { name: 'Scan collection' }))
+
+  expect(await screen.findByRole('dialog', { name: 'Missing firmware' })).toBeInTheDocument()
+  expect(screen.getByLabelText('Missing firmware report (markdown)')).toHaveValue(
+    SCAN_PLAN.missing_markdown,
+  )
+  expect(screen.getByText('Which dump for saturn_bios.bin')).toBeInTheDocument()
+  expect(screen.getByLabelText(/pack-a\/saturn_bios.bin/)).toBeInTheDocument()
+
+  const scanCall = global.fetch.mock.calls.find(
+    ([url, init]) => String(url).includes('/scan') && init?.method === 'POST',
+  )
+  expect(scanCall).toBeTruthy()
+  expect(JSON.parse(scanCall[1].body)).toEqual({ source: 'E:\\_bios' })
+  expect(scanCall[1].headers['X-CSRFToken']).toBe('test-csrf')
+
+  await userEvent.click(screen.getByRole('button', { name: 'Copy markdown' }))
+  await waitFor(() => {
+    expect(writeText).toHaveBeenCalledWith(SCAN_PLAN.missing_markdown)
+  })
+})
+
+test('install sends the dump the operator picked', async () => {
+  document.head.innerHTML = '<meta name="csrf-token" content="test-csrf">'
+  mockApi()
+  render(<EmulatorFirmwarePanel />)
+  await screen.findByText('PlayStation')
+  await userEvent.type(screen.getByLabelText('Firmware collection folder'), '/bios')
+  await userEvent.click(screen.getByRole('button', { name: 'Scan collection' }))
+  await screen.findByRole('dialog', { name: 'Missing firmware' })
+  await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+  await userEvent.click(screen.getByLabelText(/pack-b\/saturn_bios.bin/))
+  await userEvent.click(screen.getByRole('button', { name: 'Install matching firmware' }))
+
+  await waitFor(() => {
+    const installCall = global.fetch.mock.calls.find(
+      ([url, init]) => String(url).includes('/install') && init?.method === 'POST',
+    )
+    expect(installCall).toBeTruthy()
+    expect(JSON.parse(installCall[1].body)).toEqual({
+      source: '/bios',
+      selections: { 'saturn_bios.bin': SATURN_B },
+      skipped: [],
+      overwrite: false,
+    })
+  })
+})
