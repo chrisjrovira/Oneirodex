@@ -133,23 +133,23 @@
 }
 
 .gt-systems-group[data-family='nintendo'] .gt-systems-tile__mark {
-  color: #e60012;
+  color: var(--gt-family-nintendo);
 }
 
 .gt-systems-group[data-family='sony'] .gt-systems-tile__mark {
-  color: #0070d1;
+  color: var(--gt-family-sony);
 }
 
 .gt-systems-group[data-family='xbox'] .gt-systems-tile__mark {
-  color: #2fd67b;
+  color: var(--gt-family-xbox);
 }
 
 .gt-systems-group[data-family='sega'] .gt-systems-tile__mark {
-  color: #1a66ff;
+  color: var(--gt-family-sega);
 }
 
 .gt-systems-group[data-family='atari'] .gt-systems-tile__mark {
-  color: #f5a623;
+  color: var(--gt-family-atari);
 }
 
 .gt-systems-group[data-family='pc'] .gt-systems-tile__mark {

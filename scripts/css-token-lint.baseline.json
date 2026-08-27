@@ -1,8 +1,1 @@
-{
-  "frontend/admin-app/src/styles.css": {
-    "no-raw-color": 6
-  },
-  "frontend/member-app/src/pages/SystemsPage.css": {
-    "no-raw-color": 5
-  }
-}
+{}

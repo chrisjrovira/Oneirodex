@@ -20,6 +20,11 @@
   --gt-accent: #2fd67b;
   --gt-accent-contrast: #0b0d10;
   --gt-danger: #ff6b6b;
+  --gt-family-nintendo: #e60012;
+  --gt-family-sony: #0070d1;
+  --gt-family-xbox: #2fd67b;
+  --gt-family-sega: #1a66ff;
+  --gt-family-atari: #f5a623;
   --gt-border: rgba(255, 255, 255, 0.12);
   --gt-glass-bg: rgba(20, 24, 32, 0.72);
   --gt-glass-border: rgba(255, 255, 255, 0.14);
@@ -1248,27 +1253,27 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-art-studio__tile--nintendo {
-  border-color: #e60012;
+  border-color: var(--gt-family-nintendo);
 }
 
 .gt-art-studio__tile--sony {
-  border-color: #0070d1;
+  border-color: var(--gt-family-sony);
 }
 
 .gt-art-studio__tile--xbox {
-  border-color: #2fd67b;
+  border-color: var(--gt-family-xbox);
 }
 
 .gt-art-studio__tile--sega {
-  border-color: #1a66ff;
+  border-color: var(--gt-family-sega);
 }
 
 .gt-art-studio__tile--atari {
-  border-color: #f5a623;
+  border-color: var(--gt-family-atari);
 }
 
 .gt-art-studio__tile--pc {
-  border-color: color-mix(in srgb, var(--gt-accent) 80%, #2fd67b);
+  border-color: color-mix(in srgb, var(--gt-accent) 80%, var(--gt-family-xbox));
 }
 
 /* .gt-btn--ghost moved to gt-primitives.css (GT-A4). */

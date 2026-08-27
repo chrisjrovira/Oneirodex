@@ -101,7 +101,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 |---|---|---|
 | Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — merged chrome; tools tab; batch APIs; W34 catalog disagreement → Review |
 | [members-and-invites.md](../admin/members-and-invites.md) | Have | Invites as links; admin-created accounts with no email |
-| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **17**; UID-017 radius/type pass needs Reset Themes for classic CSS |
+| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **17**; UID-017 token pass (ratchet **0**) needs Reset Themes for classic CSS |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — OIDC opt-in; native Arr + Prowlarr/Jackett |
 | Discover sections | Have | [discover-sections.md](../admin/discover-sections.md) |
 | Theme fonts & batch artwork | Have | [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md) |

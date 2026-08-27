@@ -18,6 +18,11 @@ Import after theme base.css or use as a reference when migrating React islands /
   --gt-danger: #ff6b6b;
   --gt-warning: #ffc94a;
   --gt-info: #5ac8fa;
+  --gt-family-nintendo: #e60012;
+  --gt-family-sony: #0070d1;
+  --gt-family-xbox: #2fd67b;
+  --gt-family-sega: #1a66ff;
+  --gt-family-atari: #f5a623;
   --gt-border: rgba(255, 255, 255, 0.12);
   --gt-focus-ring: color-mix(in srgb, var(--gt-accent) 70%, white);
   --gt-tile-min: 180px;
