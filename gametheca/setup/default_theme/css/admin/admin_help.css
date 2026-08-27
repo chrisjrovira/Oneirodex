@@ -46,7 +46,7 @@
 .admin-section h2::before {
     content: '►';
     margin-right: var(--spacing-sm);
-    font-size: 0.8em;
+    font-size: var(--gt-font-sm);
     color: var(--gt-accent);
 }
 
@@ -58,7 +58,7 @@
 
 .help-subsection h3 {
     color: var(--text-white);
-    font-size: 1.3em;
+    font-size: var(--gt-font-xl);
     margin-bottom: 1rem;
 }
 
@@ -67,7 +67,7 @@
     border: 1px solid color-mix(in srgb, var(--gt-warning) 35%, transparent);
     padding: 15px;
     margin: 15px 0;
-    border-radius: 5px;
+    border-radius: var(--gt-radius-xs);
 }
 
 .note.important ul {
@@ -91,7 +91,7 @@
     color: var(--gt-accent);
     position: absolute;
     left: -1.2rem;
-    font-size: 1.2em;
+    font-size: var(--gt-font-lg);
 }
 
 .help-image {
@@ -101,7 +101,7 @@
 
 .help-logo {
     max-width: 200px;
-    border-radius: 10px;
+    border-radius: var(--gt-radius-lg);
     box-shadow: 0 0 20px color-mix(in srgb, var(--gt-accent) 20%, transparent);
 }
 
@@ -137,7 +137,7 @@
     height: 1.8rem;
     background: var(--gt-accent);
     color: var(--gt-accent-contrast);
-    border-radius: 50%;
+    border-radius: var(--gt-radius-circle);
     display: flex;
     align-items: center;
     justify-content: center;

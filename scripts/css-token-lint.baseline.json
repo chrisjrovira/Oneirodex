@@ -25,25 +25,12 @@
     "no-raw-radius": 9,
     "no-raw-font-size": 10
   },
-  "frontend/member-app/src/components/CheatsPanel.css": {
-    "no-raw-font-size": 5,
-    "no-raw-color": 1,
-    "no-raw-radius": 3
-  },
   "frontend/member-app/src/components/GameCard.jsx": {
     "no-raw-inline-style": 1
   },
   "frontend/member-app/src/components/libraryFilters.css": {
     "no-raw-radius": 5,
     "no-raw-font-size": 4
-  },
-  "frontend/member-app/src/components/LoadingOverlay.css": {
-    "no-raw-radius": 2,
-    "no-raw-font-size": 2
-  },
-  "frontend/member-app/src/components/OpenPathModal.css": {
-    "no-raw-radius": 3,
-    "no-raw-font-size": 5
   },
   "frontend/member-app/src/components/PcCheatsPanel.css": {
     "no-raw-font-size": 13,
@@ -127,21 +114,9 @@
     "no-raw-font-size": 12,
     "no-raw-radius": 2
   },
-  "gametheca/setup/default_theme/css/admin/admin_dashboard.css": {
-    "no-raw-font-size": 6,
-    "no-raw-radius": 1
-  },
   "gametheca/setup/default_theme/css/admin/admin_discovery_sections.css": {
     "no-raw-radius": 4,
     "no-raw-font-size": 3
-  },
-  "gametheca/setup/default_theme/css/admin/admin_game_identify.css": {
-    "no-raw-font-size": 5,
-    "no-raw-radius": 1
-  },
-  "gametheca/setup/default_theme/css/admin/admin_help.css": {
-    "no-raw-font-size": 3,
-    "no-raw-radius": 3
   },
   "gametheca/setup/default_theme/css/admin/admin_manage_library_create.css": {
     "no-raw-radius": 7,
@@ -164,17 +139,9 @@
     "no-raw-color": 3,
     "no-raw-font-size": 7
   },
-  "gametheca/setup/default_theme/css/admin/admin_server_status.css": {
-    "no-raw-font-size": 4,
-    "no-raw-radius": 1
-  },
   "gametheca/setup/default_theme/css/admin/admin-pages.css": {
     "no-raw-font-size": 20,
     "no-raw-radius": 3
-  },
-  "gametheca/setup/default_theme/css/admin/admin-shell.css": {
-    "no-raw-font-size": 3,
-    "no-raw-radius": 2
   },
   "gametheca/setup/default_theme/css/base.css": {
     "no-raw-radius": 10,

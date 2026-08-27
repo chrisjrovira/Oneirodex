@@ -37,7 +37,7 @@ body.admin-shell .text-muted,
   color: var(--gt-text);
   font-weight: 700;
   letter-spacing: 0.02em;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .admin-topbar-brand:hover,
@@ -51,10 +51,10 @@ body.admin-shell .text-muted,
   justify-content: center;
   width: 1.55rem;
   height: 1.55rem;
-  border-radius: 4px;
+  border-radius: var(--gt-radius-xs);
   background: var(--gt-accent);
   color: var(--gt-accent-contrast);
-  font-size: 0.68rem;
+  font-size: var(--gt-font-xs);
   font-weight: 800;
   line-height: 1;
 }
@@ -85,10 +85,10 @@ body.admin-shell .text-muted,
   align-items: center;
   gap: 0.35rem;
   padding: 0.35rem 0.55rem;
-  border-radius: 6px;
+  border-radius: var(--gt-radius-sm);
   color: var(--gt-text-muted);
   text-decoration: none;
-  font-size: 0.8125rem;
+  font-size: var(--gt-font-sm);
   font-weight: 550;
   line-height: 1.2;
   white-space: nowrap;

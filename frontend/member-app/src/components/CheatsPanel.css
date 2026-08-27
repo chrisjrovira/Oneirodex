@@ -8,7 +8,7 @@
   margin: 0;
   line-height: 1.45;
   opacity: 0.78;
-  font-size: 0.92rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-cheats-panel__lede a {
@@ -17,11 +17,11 @@
 
 .gt-cheats-panel__status {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 .gt-cheats-panel__status[role='alert'] {
-  color: color-mix(in srgb, #f07178 80%, var(--gt-text));
+  color: color-mix(in srgb, var(--gt-danger) 80%, var(--gt-text));
 }
 
 .gt-cheats-panel__list {
@@ -40,7 +40,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.55rem 0.65rem;
-  border-radius: 8px;
+  border-radius: var(--gt-radius-md);
   border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
   background: color-mix(in srgb, var(--gt-surface-2) 70%, transparent);
 }
@@ -70,7 +70,7 @@
   flex-direction: column;
   gap: 0.65rem;
   padding: 0.75rem 0.85rem;
-  border-radius: 10px;
+  border-radius: var(--gt-radius-lg);
   border: 1px dashed color-mix(in srgb, var(--gt-accent) 28%, transparent);
   background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
 }
@@ -78,7 +78,7 @@
 .gt-cheats-panel__form h3,
 .gt-cheats-panel__upload h3 {
   margin: 0;
-  font-size: 0.98rem;
+  font-size: var(--gt-font-base);
   font-weight: 600;
 }
 
@@ -90,7 +90,7 @@
 }
 
 .gt-cheats-panel__field > span {
-  font-size: 0.78rem;
+  font-size: var(--gt-font-sm);
   letter-spacing: 0.02em;
   opacity: 0.72;
 }
@@ -101,7 +101,7 @@
   width: 100%;
   min-height: 2.1rem;
   padding: 0.4rem 0.55rem;
-  border-radius: 7px;
+  border-radius: var(--gt-radius-sm);
   border: 1px solid var(--gt-border);
   background: var(--gt-surface-2);
   color: var(--gt-text);
@@ -142,7 +142,7 @@
 }
 
 .gt-cheats-panel__file {
-  font-size: 0.9rem;
+  font-size: var(--gt-font-md);
 }
 
 @media (max-width: 900px) {

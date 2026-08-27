@@ -12,7 +12,7 @@ body {
 
 .hackplanet_titles h1 {
     color: var(--text-white);
-    font-size: 2.5em;
+    font-size: var(--gt-font-5xl);
     font-weight: bold;
     text-shadow: 0 0 10px var(--primary-brand-50);
 }
@@ -22,7 +22,7 @@ body {
     align-items: center;
     gap: var(--spacing-sm);
     color: var(--text-white);
-    font-size: 1.3em;
+    font-size: var(--gt-font-xl);
     margin-bottom: var(--spacing-lg);
     border-bottom: 1px solid var(--border-light);
     padding-bottom: var(--spacing-sm);
@@ -54,9 +54,9 @@ body {
     width: 60px;
     height: 60px;
     padding: 0;
-    border-radius: 50%;
+    border-radius: var(--gt-radius-circle);
     text-align: center;
-    font-size: 24px;
+    font-size: var(--gt-font-2xl);
     line-height: 1;
     background: var(--primary-brand-20);
     color: var(--text-white);
@@ -73,7 +73,7 @@ body {
 
 .button-label {
     margin-top: 8px;
-    font-size: 0.9em;
+    font-size: var(--gt-font-md);
     color: var(--text-white);
     text-align: center;
 }
@@ -95,11 +95,11 @@ body {
     .btn-circle {
         width: 50px;
         height: 50px;
-        font-size: 20px;
+        font-size: var(--gt-font-xl);
         line-height: 1;
     }
 
     .button-label {
-        font-size: 0.8em;
+        font-size: var(--gt-font-sm);
     }
 }
