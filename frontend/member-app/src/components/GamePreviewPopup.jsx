@@ -131,9 +131,10 @@ export function GamePreviewPopup({ game, onClose }) {
   // are different on screen: a spinner versus no section at all.
   const [editions, setEditions] = useState(null)
   const [editionsFailed, setEditionsFailed] = useState(false)
-  // GOG / Epic / the rest live on Game.urls, which browse does not send per
-  // tile. The editions request is the one that already joins copies; store
-  // marks ride along so the preview matches details without bloating the grid.
+  // GOG / Epic / trailer live on Game.urls and video_urls, which browse does
+  // not send per tile. The editions request is the one that already joins
+  // copies; those marks ride along so the preview matches details without
+  // bloating the grid or becoming a second player.
   const [editionUrls, setEditionUrls] = useState([])
 
   useEffect(() => {

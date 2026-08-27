@@ -58,7 +58,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Guide | Audience | Status | Notes |
 |---|---|---|---|
 | Getting started (web) | End users | Have | [getting-started.md](../user/getting-started.md) |
-| Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) — preview store marks include GOG / Epic from editions |
+| Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) — preview store marks include GOG / Epic / YouTube |
 | Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — decade rooms + colour cabinets, grouped room-card picker (Jinja `group['items']`) |
 | Downloading games | End users | Have | [downloads.md](../user/downloads.md) |
 | Browser / companion play matrix | End users | Have | [browser-play.md](../user/browser-play.md) — full `LibraryPlatform` matrix |

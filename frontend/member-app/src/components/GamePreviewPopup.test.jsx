@@ -259,14 +259,16 @@ test('a copy that cannot be launched says why instead of being hidden', async ()
   )
 })
 
-test('surfaces GOG and Epic from the editions payload, not only Steam from browse', async () => {
-  // Browse never sends game.urls per tile. The preview already asks for
-  // editions once; that is where GOG / Epic ride, so the popup matches details.
+test('surfaces GOG, Epic, and a trailer from the editions payload, not only Steam from browse', async () => {
+  // Browse never sends game.urls or video_urls per tile. The preview already
+  // asks for editions once; that is where GOG / Epic / YouTube ride, so the
+  // popup matches details without becoming a second player.
   fetchGameEditions.mockResolvedValue({
     editions: [SNES_EDITION],
     urls: [
       { type: 'gog', url: 'https://www.gog.com/game/portal_2' },
       { type: 'epic', url: 'https://store.epicgames.com/p/portal-2' },
+      { type: 'youtube', url: 'https://www.youtube.com/watch?v=tax4e4hBBZc' },
     ],
   })
   renderPopup({
@@ -282,6 +284,10 @@ test('surfaces GOG and Epic from the editions payload, not only Steam from brows
   )
   await waitFor(() => expect(screen.getByRole('link', { name: 'GOG' })).toBeInTheDocument())
   expect(screen.getByRole('link', { name: 'Epic' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'YouTube' })).toHaveAttribute(
+    'href',
+    'https://www.youtube.com/watch?v=tax4e4hBBZc',
+  )
 })
 
 test('a failed editions lookup keeps Steam from browse and does not invent stores', async () => {

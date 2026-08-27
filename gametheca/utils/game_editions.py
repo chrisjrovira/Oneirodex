@@ -102,13 +102,27 @@ def _http_store_url(value: str | None) -> str | None:
     return href
 
 
-def store_links_for_games(games) -> list[dict]:
-    """Store and catalog links for a title, merged across every visible copy.
+def _iter_video_urls(game) -> list[str]:
+    """Game.video_urls is a CSV string or a list; browse never sends it per tile."""
+    raw = getattr(game, 'video_urls', None)
+    if raw is None or raw == '':
+        return []
+    if isinstance(raw, list):
+        return [str(part).strip() for part in raw if str(part).strip()]
+    if isinstance(raw, str):
+        return [part.strip() for part in raw.split(',') if part.strip()]
+    return []
 
-    Browse cannot carry ``Game.urls`` on every tile — GOG / Epic live there,
-    while Steam is a column. The preview already asks for editions once per
-    title; wrapping those links on that payload is how the popup shows the
-    same marks the details page does without inflating the grid.
+
+def store_links_for_games(games) -> list[dict]:
+    """Store, catalog, and trailer links for a title, merged across copies.
+
+    Browse cannot carry ``Game.urls`` or ``video_urls`` on every tile — GOG /
+    Epic and the trailer live there, while Steam is a column. The preview
+    already asks for editions once; wrapping those links on that payload is
+    how the popup shows the same marks the details page does without
+    inflating the grid. The preview stays a summary: a YouTube mark, not a
+    second player.
     """
     rows: list[dict] = []
     seen: set[str] = set()
@@ -130,6 +144,13 @@ def store_links_for_games(games) -> list[dict]:
         push('igdb', getattr(copy, 'url_igdb', None) or getattr(copy, 'url', None))
         for row in getattr(copy, 'urls', None) or []:
             push(getattr(row, 'url_type', None) or '', getattr(row, 'url', None))
+        # One trailer source is enough for a preview. Extra videos stay on
+        # the details / Trailers surfaces.
+        for href in _iter_video_urls(copy):
+            lowered = href.casefold()
+            if 'youtube.com' in lowered or 'youtu.be' in lowered:
+                push('youtube', href)
+                break
     return rows
 
 

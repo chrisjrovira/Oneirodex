@@ -1,8 +1,8 @@
-"""Preview editions payload: systems plus store links browse cannot carry.
+"""Preview editions payload: systems plus store and trailer links browse cannot carry.
 
-GOG / Epic live on Game.urls, which the grid never sends per tile. The preview
-already asks for editions once; wrapping those links there is how the popup
-shows the same marks the details page does.
+GOG / Epic live on Game.urls and the trailer on Game.video_urls, which the grid
+never sends per tile. The preview already asks for editions once; wrapping those
+links there is how the popup shows the same marks the details page does.
 """
 
 from types import SimpleNamespace
@@ -75,6 +75,25 @@ def test_store_links_build_steam_from_app_id_when_url_missing():
     assert links == [{
         'type': 'steam',
         'url': 'https://store.steampowered.com/app/620',
+    }]
+
+
+def test_store_links_include_one_youtube_from_video_urls():
+    copy = SimpleNamespace(
+        steam_url=None,
+        steam_app_id=None,
+        url_igdb=None,
+        url=None,
+        urls=[],
+        video_urls=(
+            'https://www.youtube.com/watch?v=70N5mY4iNAw,'
+            'https://www.youtube.com/watch?v=second'
+        ),
+    )
+    links = store_links_for_games([copy])
+    assert links == [{
+        'type': 'youtube',
+        'url': 'https://www.youtube.com/watch?v=70N5mY4iNAw',
     }]
 
 
