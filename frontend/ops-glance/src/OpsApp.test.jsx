@@ -57,6 +57,26 @@ describe('OpsApp', () => {
     expect(screen.queryByText('ops-host')).not.toBeInTheDocument()
   })
 
+  test('announces the first load as a polite status', () => {
+    fetchOpsSummary.mockImplementationOnce(() => new Promise(() => {}))
+
+    render(<OpsApp pollMs={15000} />)
+
+    expect(screen.getByRole('status')).toHaveTextContent('Loading operations summary…')
+    expect(screen.queryByText('Host data unavailable.')).not.toBeInTheDocument()
+  })
+
+  test('first failed load uses the shared error status instead of empty panels', async () => {
+    fetchOpsSummary.mockRejectedValueOnce(new Error('offline'))
+
+    render(<OpsApp pollMs={15000} />)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('offline')
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+    expect(screen.queryByText('Host data unavailable.')).not.toBeInTheDocument()
+    expect(screen.queryByText('ops-host')).not.toBeInTheDocument()
+  })
+
   test('keeps the previous snapshot and offers Retry after a failed refresh', async () => {
     fetchOpsSummary.mockResolvedValueOnce(snapshot).mockRejectedValueOnce(new Error('offline'))
     const user = userEvent.setup()

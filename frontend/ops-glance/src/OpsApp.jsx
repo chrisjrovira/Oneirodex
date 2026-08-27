@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchOpsSummary } from './api/summary'
+import { PageStatus } from './PageStatus'
 import { DeepLinks } from './components/DeepLinks'
 import { HostPanel } from './components/HostPanel'
 import { IssuesList } from './components/IssuesList'
@@ -25,6 +26,7 @@ export function OpsApp({ pollMs = 15000 }) {
     const id = requestRef.current.id + 1
     requestRef.current = { id, controller }
     setLoading(true)
+    setError(null)
 
     fetchOpsSummary({ signal: controller.signal })
       .then((nextSnapshot) => {
@@ -65,23 +67,28 @@ export function OpsApp({ pollMs = 15000 }) {
         </button>
       </header>
 
-      {error && (
-        <div role="alert">
-          <p>Unable to refresh operations summary: {error.message}</p>
-          <button type="button" onClick={refresh}>Retry</button>
-        </div>
-      )}
+      {error && snapshot ? (
+        <PageStatus error={error} onRetry={refresh} retryLabel="Retry" />
+      ) : null}
 
-      {!snapshot && loading ? <p>Loading operations summary…</p> : (
+      {!snapshot ? (
+        <PageStatus
+          loading={loading}
+          error={error}
+          onRetry={refresh}
+          retryLabel="Retry"
+          loadingMessage="Loading operations summary…"
+        />
+      ) : (
         <>
-          <StatusBanner issues={snapshot?.issues} asOf={snapshot?.as_of} />
+          <StatusBanner issues={snapshot.issues} asOf={snapshot.as_of} />
           <div className="ops-glance__grid">
-            <HostPanel host={snapshot?.host} />
-            <NetworkPanel network={snapshot?.network} />
-            <IssuesList issues={snapshot?.issues} />
-            <ScansPanel scans={snapshot?.scans} />
-            <LibraryPulse library={snapshot?.library} />
-            <RecentErrors errors={snapshot?.recent_errors} />
+            <HostPanel host={snapshot.host} />
+            <NetworkPanel network={snapshot.network} />
+            <IssuesList issues={snapshot.issues} />
+            <ScansPanel scans={snapshot.scans} />
+            <LibraryPulse library={snapshot.library} />
+            <RecentErrors errors={snapshot.recent_errors} />
           </div>
         </>
       )}

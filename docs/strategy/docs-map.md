@@ -122,7 +122,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | RBAC & parental controls | Update | Covered partially in security |
 | Integrations hub | Have | SMTP/IGDB/community/OIDC — **no Discord** |
 | Newsletter | Update | |
-| Ops glance & server status | Have | `/healthz` · `/readyz`; server-status URL redirects to Ops |
+| Ops glance & server status | Have | `/healthz` · `/readyz`; server-status URL redirects to Ops; glance first poll uses `PageStatus` |
 | Backups & restore | Create | |
 | Plugin management | Have | Includes `rtc.livekit` |
 | React admin SPA migration | Update | Shell + some bodies; forms still hybrid |
@@ -167,7 +167,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 |---|---|
 | Issue assess / fix workflow | Have — [dev/issue-assess-agent.md](../dev/issue-assess-agent.md) |
 | Agent skills + agents index | Have — [dev/agent-skills.md](../dev/agent-skills.md) |
-| UI debt log | Have — [dev/ui-debt-log.md](../dev/ui-debt-log.md) — UID-017 token ratchet **0**; UID-018 envelope remainder **11** annotated keeps; UX-B6 PageStatus/`LoadingOverlay` leftover closed; older changelog in [dev/archive/ui-debt-changelog-2026-08.md](../dev/archive/ui-debt-changelog-2026-08.md) |
+| UI debt log | Have — [dev/ui-debt-log.md](../dev/ui-debt-log.md) — UID-017 token ratchet **0**; UID-018 envelope remainder **11** annotated keeps; UX-B6 PageStatus leftover closed (Ops glance included); older changelog in [dev/archive/ui-debt-changelog-2026-08.md](../dev/archive/ui-debt-changelog-2026-08.md) |
 | Docs-sync skill | Have — `.cursor/skills/docs-sync/` |
 | Agent locks | Have — [dev/agent-locks.md](../dev/agent-locks.md) |
 | W31 commit attribution | Have — [dev/w31-commit-attribution.md](../dev/w31-commit-attribution.md) |
