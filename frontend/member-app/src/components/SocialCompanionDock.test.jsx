@@ -125,3 +125,57 @@ test('open dock connects activity EventSource after defer', async () => {
     { timeout: 2500 },
   )
 })
+
+test('failed friends load uses PageStatus with Retry', async () => {
+  const user = userEvent.setup()
+  let failFriends = true
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input) => {
+      const url = String(input)
+      if (url.includes('/api/social/friends')) {
+        if (failFriends) {
+          throw new Error('network')
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            friends: [
+              {
+                id: 1,
+                status: 'accepted',
+                direction: 'outgoing',
+                user: {
+                  id: 9,
+                  name: 'Alex',
+                  presence: { status: 'online', game_uuid: null, game_name: null },
+                },
+              },
+            ],
+          }),
+        }
+      }
+      if (url.includes('/api/social/status')) {
+        return {
+          ok: true,
+          json: async () => ({ friend_count: 1, pending_incoming: 0, now_playing: [], presence: [] }),
+        }
+      }
+      return { ok: false, json: async () => ({}) }
+    }),
+  )
+
+  render(
+    <MemoryRouter>
+      <SocialCompanionDock mode="dock" defaultOpen />
+    </MemoryRouter>,
+  )
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load friends.')
+  expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+
+  failFriends = false
+  await user.click(screen.getByRole('button', { name: 'Retry' }))
+  expect(await screen.findByText('Alex')).toBeInTheDocument()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})

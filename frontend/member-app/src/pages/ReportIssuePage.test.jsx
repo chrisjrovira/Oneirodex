@@ -42,3 +42,28 @@ test('expands logs fold when opened', async () => {
   await user.click(screen.getByText('Logs & extras (optional)'))
   expect(screen.getByPlaceholderText('Paste only the relevant lines')).toBeInTheDocument()
 })
+
+test('submit failure uses PageStatus', async () => {
+  const user = userEvent.setup()
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => ({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: 'Submit failed' }),
+    })),
+  )
+
+  render(
+    <MemoryRouter>
+      <ReportIssuePage />
+    </MemoryRouter>,
+  )
+
+  await user.type(screen.getByLabelText('Title'), 'Broken tiles')
+  await user.type(screen.getByLabelText('Symptom'), 'Covers are blank')
+  await user.click(screen.getByRole('button', { name: /submit ticket/i }))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Submit failed')
+  vi.unstubAllGlobals()
+})

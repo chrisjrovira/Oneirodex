@@ -290,9 +290,13 @@ export function SocialCompanionDock({
       </header>
 
       {social.error ? (
-        <p className="gt-social-dock__empty" role="alert">
-          Unable to load friends.
-        </p>
+        <PageStatus
+          error={social.error}
+          errorMessage="Unable to load friends."
+          onRetry={() => void social.reload()}
+          retryLabel="Retry"
+          className="gt-social-dock__empty"
+        />
       ) : null}
 
       {social.pendingIncoming.length > 0 ? (

@@ -52,6 +52,7 @@ Status: `open` | `in_progress` | `done` | `deferred` | `wontfix`
 
 | Date | Seat / Task | Debt IDs | What changed | Verify |
 |---|---|---|---|---|
+| 2026-08-27 | UX-B6 leftover | UX-B6 | **Acquire, Report, and Friends errors use `PageStatus`.** Failed Acquire status no longer looks like Arr/debrid is off. Friends Retry reloads. Report submit stays on the form. Doubled blank lines in AcquirePage collapsed. | member vitest AcquirePage · ReportIssuePage · SocialCompanionDock |
 | 2026-08-27 | UX-B6 leftover | UX-B6 | **Library, FilterBar, and Tokens errors use `PageStatus`.** First browse / refresh keep their i18n sentences and Retry. Filter options failure stays in the panel. Tokens list/create/revoke still surface `error.message`; clipboard-unavailable copy stays an inline alert. | member vitest LibraryApp · FilterBar · TokensPage |
 | 2026-08-27 | UX-B6 leftover | UX-B6 | **Chat, Notifications, and Activity errors use `PageStatus`.** Chat already loaded rooms through it; the page-level failure was still a bare alert. Notifications Retry stays. | member vitest ChatPanel · NotificationsPage · ActivityPage |
 | 2026-08-27 | UX-B6 leftover | UX-B6 | **Ops glance uses `PageStatus`.** First poll is a polite status; a failed first poll no longer paints empty host panels. Failed refresh still keeps the last snapshot. CSS is the Ops shell's `gt-page-status` (not bundled — Docker Node has no Flask theme tree). | ops-glance vitest OpsApp |

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { csrfHeaders } from '../api/csrf'
 import { errorFromBody } from '../api/envelopeError'
+import { PageStatus } from '../components/PageStatus'
 import './ReportIssuePage.css'
 
 const AREAS = [
@@ -94,7 +95,7 @@ export function ReportIssuePage() {
         Files a ticket for maintainers. Syncs to GitHub when configured; admins see it in-app.
       </p>
 
-      {error ? <p role="alert">{error}</p> : null}
+      {error ? <PageStatus error={error} /> : null}
       {result ? (
         <div className="gt-report__result" role="status">
           <strong>Ticket #{result.id} saved</strong>
