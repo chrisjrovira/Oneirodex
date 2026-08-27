@@ -33,7 +33,7 @@
 
 .gt-setup__title {
     margin: 0;
-    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    font-size: clamp(var(--gt-font-xl), 2.5vw, var(--gt-font-2xl));
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--gt-text);

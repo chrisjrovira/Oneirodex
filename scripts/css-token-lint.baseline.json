@@ -2,28 +2,7 @@
   "frontend/admin-app/src/styles.css": {
     "no-raw-color": 6
   },
-  "frontend/member-app/src/chrome/systemBackdrop.css": {
-    "no-raw-font-size": 3
-  },
-  "frontend/member-app/src/pages/BigPicturePage.css": {
-    "no-raw-font-size": 2
-  },
-  "frontend/member-app/src/pages/GameDetailsPage.css": {
-    "no-raw-font-size": 1
-  },
-  "frontend/member-app/src/pages/NewsPage.css": {
-    "no-raw-font-size": 1
-  },
   "frontend/member-app/src/pages/SystemsPage.css": {
     "no-raw-color": 5
-  },
-  "gametheca/setup/default_theme/css/admin/admin_manage_themes.css": {
-    "no-raw-font-size": 1
-  },
-  "gametheca/setup/default_theme/css/games/game_edit_images.css": {
-    "no-raw-font-size": 1
-  },
-  "gametheca/setup/default_theme/css/setup/setup.css": {
-    "no-raw-font-size": 1
   }
 }

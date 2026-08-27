@@ -80,7 +80,7 @@
   right: 2.5vw;
   top: 4.5vh;
   max-width: 92vw;
-  font-size: clamp(3rem, 11vw, 13rem);
+  font-size: clamp(var(--gt-font-6xl), 11vw, 13rem);
   font-weight: 800;
   line-height: 0.92;
   letter-spacing: -0.01em;
@@ -101,7 +101,7 @@
    overflow badly, so give them room. */
 .gt-system-backdrop[data-backdrop-family='nintendo'] .gt-system-backdrop__name,
 .gt-system-backdrop[data-backdrop-family='atari'] .gt-system-backdrop__name {
-  font-size: clamp(1.75rem, 5.5vw, 6rem);
+  font-size: clamp(var(--gt-font-3xl), 5.5vw, 6rem);
   letter-spacing: 0.02em;
   -webkit-text-stroke-width: 1px;
 }
@@ -132,7 +132,7 @@
 @media (max-width: 900px) {
   /* Small screens are all content; a full-bleed wordmark just costs contrast. */
   .gt-system-backdrop__name {
-    font-size: clamp(2rem, 13vw, 4.5rem);
+    font-size: clamp(var(--gt-font-4xl), 13vw, 4.5rem);
     opacity: 0.06;
   }
   .gt-system-backdrop {

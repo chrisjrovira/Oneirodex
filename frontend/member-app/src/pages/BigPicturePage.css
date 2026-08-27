@@ -21,7 +21,7 @@
 
 .gt-bp__title {
   margin: 0 0 0.5rem;
-  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-size: clamp(var(--gt-font-4xl), 3.5vw, var(--gt-font-6xl));
   line-height: 1.1;
 }
 
@@ -101,7 +101,7 @@
 
 .gt-bp__hero-title {
   margin: 0 0 0.75rem;
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-size: clamp(var(--gt-font-3xl), 3vw, var(--gt-font-5xl));
   line-height: 1.15;
 }
 

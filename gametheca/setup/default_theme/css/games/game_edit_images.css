@@ -39,7 +39,7 @@
 
 .gt-edit-images__title {
   margin: 0 0 0.25rem;
-  font-size: clamp(1.45rem, 2.2vw, 1.9rem);
+  font-size: clamp(var(--gt-font-2xl), 2.2vw, var(--gt-font-3xl));
   font-weight: 700;
   color: var(--gt-edit-text);
 }
