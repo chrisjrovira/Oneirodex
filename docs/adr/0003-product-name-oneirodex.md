@@ -69,5 +69,5 @@ Existing installs must keep working through (2) and (3). Do not rewrite git hist
 ## Related
 
 - [agent-locks.md](../dev/agent-locks.md) (cutover lock)
-- [progress.md](../strategy/progress.md)
+- Living progress board (local strategy notes)
 - [docs/README.md](../README.md) naming table

@@ -67,4 +67,5 @@ Optional manual (not auto-fetched): [Tobu Tobu Girl](https://tangramgames.itch.i
 ## Related docs
 
 - [Browser & companion play](../../docs/user/browser-play.md)
-- [Emulation coverage](../../docs/strategy/emulation-coverage.md)
+- [Browser & companion play matrix](../../docs/user/browser-play.md)
+- [Browser play engines](../../docs/dev/browser-play-engines.md)

@@ -18,7 +18,7 @@ def rom_translate_capabilities():
             'offline_enabled': False,
             'note': (
                 'Offline dump→MT→rebuild is stubbed. Prefer RetroArch AI Service overlay '
-                'or curated translation patches. See docs/strategy/rom-auto-translate.md'
+                'or curated translation patches. See docs/user/translation-patches.md'
             ),
             'platforms': list_rom_translate_capabilities(),
         }

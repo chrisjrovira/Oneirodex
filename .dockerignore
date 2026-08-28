@@ -29,15 +29,18 @@ instance/
 logs/
 *.log
 
-# Development
+# Development / local-only (not in the image)
 .git/
 .gitignore
 .github/
+.cursor/
 .claude/
 .codebuddy/
 .superpowers/
 .worktrees/
 CLAUDE.md
+AGENTS.md
+docs/strategy/
 letsrebuild.md
 *.md
 !README.md

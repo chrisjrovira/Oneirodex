@@ -32,7 +32,7 @@ class BaseOfflineStub:
     id = 'generic_stub'
     platform = '*'
     status = 'unsupported'
-    docs_url = '/docs/strategy/rom-auto-translate.md'
+    docs_url = '/docs/user/translation-patches.md'
 
     def supports(self, platform: str | None) -> bool:
         return False
@@ -40,7 +40,7 @@ class BaseOfflineStub:
     def extract(self, rom_path: str) -> dict[str, Any]:
         raise NotImplementedError(
             'Offline extract is not implemented. Use RetroArch AI Service overlay '
-            'or a curated translation patch. See docs/strategy/rom-auto-translate.md'
+            'or a curated translation patch. See docs/user/translation-patches.md'
         )
 
     def translate(self, extracted: dict[str, Any], *, target_lang: str) -> dict[str, Any]:
@@ -70,4 +70,4 @@ class GbaOfflineStub(BaseOfflineStub):
     id = 'gba_stub'
     platform = 'GBA'
     status = 'stub'
-    docs_url = '/docs/strategy/rom-auto-translate.md#gba'
+    docs_url = '/docs/user/translation-patches.md'

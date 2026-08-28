@@ -26,5 +26,4 @@ Package `@gametheca/api-client` exists for typed fetches. Mid-polish 0.2 → 1.0
 
 ## Related
 
-- [pm-miss-backlog.md](../strategy/pm-miss-backlog.md) (MISS-UI-4)  
-- [v1-readiness.md](../strategy/v1-readiness.md)  
+- Local strategy notes (MISS-UI-4 / v1 readiness)

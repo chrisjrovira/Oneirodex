@@ -41,5 +41,5 @@ For 1.0:
 
 ## Related
 
-- [v1-readiness.md](../strategy/v1-readiness.md)
+- Local strategy notes (v1 readiness)
 - `gametheca/updateschema.py`, `gametheca/init_manager.py`

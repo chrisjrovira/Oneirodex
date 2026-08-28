@@ -25,7 +25,7 @@ See [controllers-and-vr.md](../../docs/user/controllers-and-vr.md).
 
 1. Open `/vr` while logged in.
 2. Use the browser **Add to Home** / install prompt when available.
-3. Large-tap browse only in this view (**no downloads**). For real PC games, use **Moonlight → household host** ([gow-remote-play.md](../../docs/strategy/gow-remote-play.md)).
+3. Large-tap browse only in this view (**no downloads**). For real PC games, use **Moonlight → household host** (see [controllers-and-vr.md](../../docs/user/controllers-and-vr.md)).
 
 ## Assets
 
@@ -37,4 +37,4 @@ See [controllers-and-vr.md](../../docs/user/controllers-and-vr.md).
 
 ## Native APK / OpenXR app
 
-Deferred. Phone/tablet thin APK: [android-apk-vr.md](../../docs/strategy/android-apk-vr.md). Full headset matrix: [headset-vr.md](../../docs/strategy/headset-vr.md).
+Deferred. Phone/tablet thin APK and full headset matrix: local strategy notes; member guide [controllers-and-vr.md](../../docs/user/controllers-and-vr.md).

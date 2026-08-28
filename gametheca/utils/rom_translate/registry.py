@@ -44,7 +44,7 @@ def list_rom_translate_capabilities() -> list[dict]:
                 'id': f'{platform.lower()}_unsupported',
                 'platform': platform,
                 'status': 'unsupported',
-                'docs_url': '/docs/strategy/rom-auto-translate.md',
+                'docs_url': '/docs/user/translation-patches.md',
                 'supports_offline': False,
             }
         )

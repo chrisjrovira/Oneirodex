@@ -7,7 +7,7 @@ Windows-first Tauri client with **two build flavors** against a GameTheca server
 | **Full companion** (default) | `npm run tauri:build` | **Download · Install · Update · Uninstall · Play** |
 | **Thin client** | `npm run tauri:build:thin` | Connect + Open library / Friends only — **no** install pipeline |
 
-Thin is not “coming later”: TC-2 shell is buildable today. See [thin-client.md](../../docs/user/thin-client.md) · strategy [thin-client.md](../../docs/strategy/thin-client.md).
+Thin is not “coming later”: TC-2 shell is buildable today. See [thin-client.md](../../docs/user/thin-client.md).
 
 ## Stack
 
@@ -149,8 +149,8 @@ Unit tests mock `fetch`, Tauri `invoke`, and the download initiate API — no li
 - Store publishing / Apple notarization
 - Bundled torrent/debrid acquisition (BYO connectors only)
 - OIDC / Authentik setup (see server runbooks separately)
-- **Android APK** — spike notes only ([android-apk-vr.md](../../docs/strategy/android-apk-vr.md)); not built from this README
-- Native OpenXR / Quest-store GameTheca shell — headset path is browser `/vr` + Big Picture ([headset-vr.md](../../docs/strategy/headset-vr.md))
+- **Android APK** — spike notes only (local strategy); not built from this README
+- Native OpenXR / Quest-store GameTheca shell — headset path is browser `/vr` + Big Picture ([controllers-and-vr.md](../../docs/user/controllers-and-vr.md))
 
 ## Distribution (unsigned only)
 

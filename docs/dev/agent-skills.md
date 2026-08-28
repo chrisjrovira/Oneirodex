@@ -9,9 +9,9 @@ Token-efficient workflows for maintainers.
 | **Rules** — glob-scoped | `.cursor/rules/*.mdc` | *(none — Cursor only)* | When matching files are in context |
 | **Locks** — product + engineering defaults | [agent-locks.md](agent-locks.md) | same | Always apply; never re-ask |
 
-**Edit `.cursor/` only.** Run `python scripts/sync_prompt_trees.py` (or let `ship-ready` do it) so `.claude/` stays identical. CI runs `--check`. If a session lists a skill twice, treat `.cursor/skills/` as canonical.
+**Edit `.cursor/` only.** Run `python scripts/sync_prompt_trees.py` (or let `ship-ready` do it) so `.claude/` stays identical. That check is **local** — CI no longer runs `--check`. If a session lists a skill twice, treat `.cursor/skills/` as canonical.
 
-Product mission, non-goals, and the attainment checklist: [agent-locks.md](agent-locks.md). Root pointers: [AGENTS.md](../../AGENTS.md) · [CLAUDE.md](../../CLAUDE.md).
+Product mission, non-goals, and the attainment checklist: [agent-locks.md](agent-locks.md). Root `AGENTS.md` / `CLAUDE.md` stay on the workstation (gitignored).
 
 ## Context tiers
 
@@ -19,7 +19,7 @@ Load the smallest set that covers the turn. Do not follow archive or diary links
 
 | Tier | Load |
 |---|---|
-| **Always-on** | [CLAUDE.md](../../CLAUDE.md); glob `.mdc` rules when those files are in context; [agent-locks.md](agent-locks.md) when a lock applies |
+| **Always-on** | Local `CLAUDE.md`; glob `.mdc` rules when those files are in context; [agent-locks.md](agent-locks.md) when a lock applies |
 | **On skill / seat** | The matching SKILL.md or agent file — not the whole catalog |
 | **On task** | Living head of local strategy notes; the one user/admin/runbook that matches; [ui-debt-log.md](ui-debt-log.md) **open table only** for UI work |
 | **Never auto-load** | local strategy archive (including July superpowers); wave diaries; ui-debt changelog |
@@ -36,7 +36,7 @@ Load the smallest set that covers the turn. Do not follow archive or diary links
 | **issue-fix** | "fix #N" after triage | Smallest fix + focused test; never auto-merges |
 | **run-gametheca** | "run it", "does this work in the real app?" | Launches uvicorn against the test DB, logs in, calls the JSON API |
 
-`docs-sync` is mandatory on every code change — the rule lives in `CLAUDE.md`.
+`docs-sync` is mandatory on every code change — the rule lives in local `CLAUDE.md`.
 
 ## Agents (domain seats)
 
