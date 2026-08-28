@@ -18,6 +18,8 @@ from gametheca.utils.library_roots import (
     root_availability,
 )
 from gametheca.utils.security import get_allowed_base_directories
+import gametheca.utils.status as status_mod
+from gametheca.utils.status import LIBRARY_ROOT_KEY_PREFIX, get_config_values
 
 BASE_KEY = 'BASE_FOLDER_WINDOWS' if os.name == 'nt' else 'BASE_FOLDER_POSIX'
 
@@ -171,11 +173,8 @@ class TestOpsPathRows:
         # `Archive=/mnt/a|Archive=/mnt/b` is a plausible typo, and keying the
         # health rows by label alone silently dropped one of them — from the
         # one view whose job is to report a root that stopped being mounted.
-        from config import Config
-        from gametheca.utils.status import LIBRARY_ROOT_KEY_PREFIX, get_config_values
-
         monkeypatch.setattr(
-            Config,
+            status_mod.Config,
             'LIBRARY_ROOTS',
             [
                 {'label': 'Archive', 'path': _norm('/mnt/a')},
@@ -190,11 +189,10 @@ class TestOpsPathRows:
         assert {row['path'] for row in rows.values()} == {_norm('/mnt/a'), _norm('/mnt/b')}
 
     def test_a_single_root_keeps_a_clean_label(self, monkeypatch):
-        from config import Config
-        from gametheca.utils.status import LIBRARY_ROOT_KEY_PREFIX, get_config_values
-
         monkeypatch.setattr(
-            Config, 'LIBRARY_ROOTS', [{'label': 'Archive', 'path': _norm('/mnt/a')}],
+            status_mod.Config,
+            'LIBRARY_ROOTS',
+            [{'label': 'Archive', 'path': _norm('/mnt/a')}],
             raising=False,
         )
 

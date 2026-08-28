@@ -26,8 +26,8 @@ reverse proxy in front for that ([login-rate-limit-proxy.md](login-rate-limit-pr
 ## Linux
 
 ```bash
-git clone --depth 1 https://github.com/chrisjrovira/gametheca.git
-cd gametheca
+git clone --depth 1 https://github.com/chrisjrovira/oneirodex.git
+cd oneirodex
 chmod +x install-linux.sh
 ./install-linux.sh
 ```
@@ -91,8 +91,8 @@ nothing.
 ## macOS
 
 ```bash
-git clone --depth 1 https://github.com/chrisjrovira/gametheca.git
-cd gametheca
+git clone --depth 1 https://github.com/chrisjrovira/oneirodex.git
+cd oneirodex
 chmod +x install-macos.sh
 ./install-macos.sh
 ```
@@ -149,8 +149,8 @@ the launchd job in System Settings → Privacy & Security.
 ## Windows
 
 ```powershell
-git clone --depth 1 https://github.com/chrisjrovira/gametheca.git
-cd gametheca
+git clone --depth 1 https://github.com/chrisjrovira/oneirodex.git
+cd oneirodex
 .\install-windows.ps1
 ```
 

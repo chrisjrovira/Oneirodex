@@ -1,4 +1,4 @@
-"""Optional library root-folder incremental watch (``GT_LIBRARY_WATCH``).
+"""Optional library root-folder incremental watch (``GT_LIBRARY_WATCH`` / ``ONEIRODEX_LIBRARY_WATCH``).
 
 Default **off**. When enabled, watches each library ``last_scan_folder`` with
 scan-depth–aware event filtering (game-leaf / one level inside only — not deep
@@ -16,6 +16,7 @@ from typing import Callable
 
 from sqlalchemy import or_, select
 
+from product_env import getenv_product
 from gametheca.utils.gamenames import LETTER_BUCKET_RE, should_skip_scan_dir
 
 _watch_started = False
@@ -28,8 +29,8 @@ _ROOT_REFRESH_SEC = 60.0
 
 
 def is_library_watch_enabled() -> bool:
-    """True when ``GT_LIBRARY_WATCH`` is truthy (1/true/yes/on). Default off."""
-    raw = os.environ.get('GT_LIBRARY_WATCH')
+    """True when ``ONEIRODEX_LIBRARY_WATCH`` / ``GT_LIBRARY_WATCH`` is truthy. Default off."""
+    raw = getenv_product('LIBRARY_WATCH')
     if raw is None or str(raw).strip() == '':
         return False
     return str(raw).strip().lower() in ('1', 'true', 'yes', 'on')
@@ -37,7 +38,7 @@ def is_library_watch_enabled() -> bool:
 
 def library_watch_debounce_seconds() -> float:
     """Debounce window; default 3s, clamped to 2–5. Override via env."""
-    raw = os.environ.get('GT_LIBRARY_WATCH_DEBOUNCE_SEC')
+    raw = getenv_product('LIBRARY_WATCH_DEBOUNCE_SEC')
     if raw is None or str(raw).strip() == '':
         return _DEFAULT_DEBOUNCE_SEC
     try:

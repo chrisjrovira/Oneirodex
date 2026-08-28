@@ -110,8 +110,10 @@ grep -n COMPOSE_FILE "$STACK/.env"
 ```
 
 The sidecar runs on **CPU** with no reservation at all — slow, not broken. If the
-GPU is on a different machine, do not start the profile here: run SD.Next /
-AUTOMATIC1111 / Forge there and set `AI_ARTWORK_URL=http://<gpu-host>:7860`.
+GPU is on a different machine, do not start the profile here: run
+[`docker-compose.artwork-local.yml`](../../docker-compose.artwork-local.yml) on
+the GPU PC ([artwork-gpu-workstation.md](artwork-gpu-workstation.md)) and set
+`AI_ARTWORK_URL=http://<gpu-host>:7860`.
 
 ### 8. Healthcheck names a binary the image does not ship
 

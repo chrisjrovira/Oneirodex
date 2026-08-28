@@ -1,4 +1,4 @@
-/* Outline — default GameTheca stroke icons; theme --gt-icon-* may refine. */
+/* Outline — default Oneirodex stroke icons; theme --gt-icon-* may refine. */
 html[data-icon-pack="outline"] .gt-icon {
   stroke-width: var(--gt-icon-stroke, 2);
   stroke-linecap: var(--gt-icon-linecap, round);

@@ -183,8 +183,8 @@ def _truncate_all_tables():
     `GT_KEEP_TEST_DATA=1` skips it, for when the leftover rows *are* the thing
     being investigated.
     """
-    if os.getenv('GT_KEEP_TEST_DATA') == '1':
-        print('PYTEST: GT_KEEP_TEST_DATA=1 — leaving existing rows in place')
+    if os.getenv('GT_KEEP_TEST_DATA') == '1' or os.getenv('ONEIRODEX_KEEP_TEST_DATA') == '1':
+        print('PYTEST: KEEP_TEST_DATA=1 — leaving existing rows in place')
         return
 
     from sqlalchemy import text

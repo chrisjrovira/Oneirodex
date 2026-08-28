@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from gametheca.utils.github_issues import build_issue_body, create_github_issue
+from gametheca.utils.github_issues import build_issue_body, create_github_issue, support_github_config
 
 
 def test_build_issue_body_includes_fields():
@@ -21,6 +21,12 @@ def test_build_issue_body_includes_fields():
     assert 'Ticket ID:** 7' in body
     assert 'Queue stuck' in body
     assert '@issue-assess' in body
+
+
+def test_support_github_repo_defaults_to_oneirodex(monkeypatch):
+    monkeypatch.delenv('SUPPORT_GITHUB_REPO', raising=False)
+    _token, repo = support_github_config()
+    assert repo == 'chrisjrovira/oneirodex'
 
 
 def test_create_github_issue_skipped_without_token(monkeypatch):

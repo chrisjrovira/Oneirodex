@@ -16,6 +16,7 @@ from gametheca.utils.gaming_news import (
 class TestFeedUrls:
     def test_defaults_when_unset(self, monkeypatch):
         monkeypatch.delenv('GT_NEWS_FEEDS', raising=False)
+        monkeypatch.delenv('ONEIRODEX_NEWS_FEEDS', raising=False)
         assert feed_urls() == DEFAULT_FEED_URLS
 
     def test_blank_falls_back_rather_than_disabling_news(self, monkeypatch):
@@ -23,11 +24,17 @@ class TestFeedUrls:
         assert feed_urls() == DEFAULT_FEED_URLS
 
     def test_the_env_replaces_the_list_entirely(self, monkeypatch):
+        monkeypatch.delenv('ONEIRODEX_NEWS_FEEDS', raising=False)
         monkeypatch.setenv(
             'GT_NEWS_FEEDS',
             'https://example.com/rss, https://two.example/feed',
         )
         assert feed_urls() == ('https://example.com/rss', 'https://two.example/feed')
+
+    def test_oneirodex_prefix_wins(self, monkeypatch):
+        monkeypatch.setenv('GT_NEWS_FEEDS', 'https://legacy.example/f')
+        monkeypatch.setenv('ONEIRODEX_NEWS_FEEDS', 'https://new.example/f')
+        assert feed_urls() == ('https://new.example/f',)
 
     def test_pipes_work_like_commas(self, monkeypatch):
         monkeypatch.setenv('GT_NEWS_FEEDS', 'https://a.example/f|https://b.example/f')

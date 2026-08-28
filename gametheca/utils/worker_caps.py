@@ -3,18 +3,19 @@
 Prevents admin misconfiguration or legacy high defaults from pinning the host
 CPU. Env overrides are optional; defaults stay conservative for Unraid NAS.
 
-Env knobs (all optional ints):
-- ``GT_SCAN_THREAD_CAP`` — hard max scan workers (default 4)
-- ``GT_IMAGE_DOWNLOAD_THREAD_CAP`` — hard max turbo image workers (default 4)
-- ``GT_IMAGE_DOWNLOAD_BATCH_CAP`` — hard max turbo batch size (default 100)
-- ``GT_WORKER_YIELD_MS`` — cooperative sleep between scan completions (default 5)
+Env knobs (all optional ints). ``ONEIRODEX_*`` wins over ``GT_*`` (ADR 0003 phase 3a):
+- ``SCAN_THREAD_CAP`` — hard max scan workers (default 4)
+- ``IMAGE_DOWNLOAD_THREAD_CAP`` — hard max turbo image workers (default 4)
+- ``IMAGE_DOWNLOAD_BATCH_CAP`` — hard max turbo batch size (default 100)
+- ``WORKER_YIELD_MS`` — cooperative sleep between scan completions (default 5)
 """
 
 from __future__ import annotations
 
-import os
 import time
 from typing import Iterable, Iterator, TypeVar
+
+from product_env import getenv_product_int
 
 T = TypeVar('T')
 
@@ -24,24 +25,17 @@ _DEFAULT_IMAGE_BATCH_CAP = 100
 _DEFAULT_YIELD_MS = 5
 
 
-def _env_int(name: str, default: int, *, minimum: int = 1, maximum: int = 64) -> int:
-    raw = os.environ.get(name)
-    if raw is None or str(raw).strip() == '':
-        return default
-    try:
-        value = int(str(raw).strip())
-    except (TypeError, ValueError):
-        return default
-    return max(minimum, min(maximum, value))
+def _env_int(suffix: str, default: int, *, minimum: int = 1, maximum: int = 64) -> int:
+    return getenv_product_int(suffix, default, minimum=minimum, maximum=maximum)
 
 
 def scan_thread_cap() -> int:
-    return _env_int('GT_SCAN_THREAD_CAP', _DEFAULT_SCAN_CAP, minimum=1, maximum=8)
+    return _env_int('SCAN_THREAD_CAP', _DEFAULT_SCAN_CAP, minimum=1, maximum=8)
 
 
 def image_download_thread_cap() -> int:
     return _env_int(
-        'GT_IMAGE_DOWNLOAD_THREAD_CAP',
+        'IMAGE_DOWNLOAD_THREAD_CAP',
         _DEFAULT_IMAGE_THREAD_CAP,
         minimum=1,
         maximum=8,
@@ -50,7 +44,7 @@ def image_download_thread_cap() -> int:
 
 def image_download_batch_cap() -> int:
     return _env_int(
-        'GT_IMAGE_DOWNLOAD_BATCH_CAP',
+        'IMAGE_DOWNLOAD_BATCH_CAP',
         _DEFAULT_IMAGE_BATCH_CAP,
         minimum=10,
         maximum=500,
@@ -58,7 +52,7 @@ def image_download_batch_cap() -> int:
 
 
 def worker_yield_seconds() -> float:
-    ms = _env_int('GT_WORKER_YIELD_MS', _DEFAULT_YIELD_MS, minimum=0, maximum=250)
+    ms = _env_int('WORKER_YIELD_MS', _DEFAULT_YIELD_MS, minimum=0, maximum=250)
     return ms / 1000.0
 
 

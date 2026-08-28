@@ -5,7 +5,12 @@
 
 ## Idea
 
-Color themes change `--gt-*` surfaces and accents. **Icon packs** change glyph weight/style only, via `html[data-icon-pack="…"] .gt-icon` CSS. Packs use `currentColor` + theme `--gt-icon-*` tokens, so they work with **any** color theme (aurora + pixel, ember + filled, etc.).
+Color themes change `--gt-*` surfaces and accents. **Icon packs** change glyph
+weight/style via `html[data-icon-pack="…"] .gt-icon` CSS, **and** (phase 3a)
+ship distinct SVG drawings for **library**, **discover**, and **systems** on the
+five drawing packs. Outline keeps the inline stroke glyphs. Packs use
+`currentColor` + theme `--gt-icon-*` tokens, so they work with **any** color
+theme (aurora + pixel, ember + filled, etc.).
 
 ### The one thing `--gt-icon-*` may not do: erase a glyph
 
@@ -45,7 +50,11 @@ the same reason. Guarded by `frontend/member-app/src/chrome/iconVisibility.test.
 
 Source: `gametheca/setup/icon_themes/{id}/` → installed to `static/library/icon-themes/{id}/` on boot (`install_icon_themes`).
 
-Each pack: `manifest.json` + `pack.css` (+ optional `icons/`, `images/` for future glyph/image overrides).
+Each pack: `manifest.json` + `pack.css` + optional `icons/*.svg` (black-on-transparent, used as CSS masks) + optional `preview.png` (art-direction raster; chips still use SVG).
+
+Drawing packs (`filled`, `duotone`, `pixel`, `soft`, `mono`) ship **library**, **discover**, and **systems**. Remaining CORE keys still restyle the shared inline SVG via stroke/fill tokens. `RailIcon` and Jinja `icons.icon` set `data-icon`. Preferences chips load `previews.css` so unselected packs still show their drawing.
+
+Workstation SD.Next for **covers** (not rail glyphs): [artwork-gpu-workstation.md](../runbooks/artwork-gpu-workstation.md).
 
 ## Wave 2d — preset colour + icon pairing
 

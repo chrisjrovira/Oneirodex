@@ -170,11 +170,12 @@ Sidecars are **opt-in** — not started with bare `app` + `db`.
 
 **`artwork` has no GPU on this box.** The SD.Next sidecar runs on CPU, which is
 extremely slow rather than broken — usually a reason not to enable the profile
-here at all. `docker-compose.override.yml` in this checkout requests an NVIDIA
-GPU for Windows Docker Desktop. Compose Manager’s working dir **is** this
-checkout, so it will merge that override automatically. If a stack update dies
-with `nvml error: driver not loaded`, set `COMPOSE_FILE=docker-compose.yml` in
-the Unraid `.env` (or do not start `--profile artwork`). See
+here at all. Put the generator on the Windows 2080 workstation with
+[`docker-compose.artwork-local.yml`](../../docker-compose.artwork-local.yml)
+and point `AI_ARTWORK_URL` at that LAN IP — [artwork-gpu-workstation.md](artwork-gpu-workstation.md).
+Do **not** merge `docker-compose.gpu.yml` into Unraid `COMPOSE_FILE`. If a stack
+update dies with `nvml error: driver not loaded`, set `COMPOSE_FILE=docker-compose.yml`
+in the Unraid `.env` (or do not start `--profile artwork`). See
 [container-wont-start.md](container-wont-start.md) 7.
 
 Full stack in one shot:

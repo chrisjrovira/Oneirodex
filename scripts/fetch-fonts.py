@@ -35,7 +35,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "gametheca" / "static" / "library" / "fonts"
 
-USER_AGENT = "GameTheca-fetch-fonts/1.0 (+https://github.com/chrisjrovira/gametheca)"
+USER_AGENT = "Oneirodex-fetch-fonts/1.0 (+https://github.com/chrisjrovira/oneirodex)"
 
 # Leading bytes for each accepted container — mirrors theme_fonts._FONT_MAGIC.
 # A 404 HTML page saved as .ttf would otherwise sit there looking installed.

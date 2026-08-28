@@ -69,6 +69,7 @@ class TestSourceOffer:
 
     def test_source_url_is_configurable(self, monkeypatch):
         """A modified deployment owes its users *its* source, not upstream's."""
+        monkeypatch.delenv('ONEIRODEX_SOURCE_URL', raising=False)
         monkeypatch.setenv('GT_SOURCE_URL', 'https://git.example.com/my/fork')
         import importlib
 
@@ -79,6 +80,22 @@ class TestSourceOffer:
             assert config_module.Config.GT_SOURCE_URL == 'https://git.example.com/my/fork'
         finally:
             monkeypatch.delenv('GT_SOURCE_URL', raising=False)
+            monkeypatch.delenv('ONEIRODEX_SOURCE_URL', raising=False)
+            importlib.reload(config_module)
+
+    def test_oneirodex_source_url_wins(self, monkeypatch):
+        monkeypatch.setenv('GT_SOURCE_URL', 'https://git.example.com/legacy')
+        monkeypatch.setenv('ONEIRODEX_SOURCE_URL', 'https://git.example.com/new')
+        import importlib
+
+        import config as config_module
+
+        importlib.reload(config_module)
+        try:
+            assert config_module.Config.GT_SOURCE_URL == 'https://git.example.com/new'
+        finally:
+            monkeypatch.delenv('GT_SOURCE_URL', raising=False)
+            monkeypatch.delenv('ONEIRODEX_SOURCE_URL', raising=False)
             importlib.reload(config_module)
 
     def test_templates_receive_the_offer(self, app):
@@ -130,5 +147,6 @@ class TestAttribution:
     def test_source_link_comes_from_config_not_a_constant(self):
         page = self._help_page()
         assert 'sourceUrl' in page
-        # The old hardcoded repo link must not be the source offer any more.
+        # The source offer must come from config, not a baked GitHub URL.
         assert 'href="https://github.com/chrisjrovira/gametheca"' not in page
+        assert 'href="https://github.com/chrisjrovira/oneirodex"' not in page

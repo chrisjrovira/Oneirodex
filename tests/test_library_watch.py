@@ -31,6 +31,8 @@ from gametheca.utils.library_watch import (
 def _reset_watch_env(monkeypatch):
     monkeypatch.delenv('GT_LIBRARY_WATCH', raising=False)
     monkeypatch.delenv('GT_LIBRARY_WATCH_DEBOUNCE_SEC', raising=False)
+    monkeypatch.delenv('ONEIRODEX_LIBRARY_WATCH', raising=False)
+    monkeypatch.delenv('ONEIRODEX_LIBRARY_WATCH_DEBOUNCE_SEC', raising=False)
     _reset_library_watch_for_tests()
     yield
     _reset_library_watch_for_tests()

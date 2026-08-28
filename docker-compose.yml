@@ -103,7 +103,7 @@ services:
       - ENABLE_PATCH_CATALOG=${ENABLE_PATCH_CATALOG:-true}
       - ENABLE_ROM_AI_TRANSLATE=${ENABLE_ROM_AI_TRANSLATE:-true}
       - SUPPORT_GITHUB_TOKEN=${SUPPORT_GITHUB_TOKEN:-}
-      - SUPPORT_GITHUB_REPO=${SUPPORT_GITHUB_REPO:-chrisjrovira/gametheca}
+      - SUPPORT_GITHUB_REPO=${SUPPORT_GITHUB_REPO:-chrisjrovira/oneirodex}
       # Challenge / captcha solver (opt-in — set ENABLE_CHALLENGE_SOLVER=true + URL)
       - ENABLE_CHALLENGE_SOLVER=${ENABLE_CHALLENGE_SOLVER:-false}
       - CHALLENGE_SOLVER_URL=${CHALLENGE_SOLVER_URL:-}
@@ -268,7 +268,9 @@ services:
   # to this file:
   #
   #   GPU in the Docker host   → docker-compose.gpu.yml, via COMPOSE_FILE
-  #   GPU on another machine   → run SD.Next/A1111/Forge there, set
+  #   GPU on another machine   → docker-compose.artwork-local.yml on that box
+  #                              (Windows 2080 workstation: see
+  #                              docs/runbooks/artwork-gpu-workstation.md), then
   #                              AI_ARTWORK_URL=http://<that-host>:7860 and do
   #                              not start this profile at all
   # ---------------------------------------------------------------------------

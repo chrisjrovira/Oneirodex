@@ -8,3 +8,29 @@ html[data-icon-pack="duotone"] .gt-icon {
 html[data-icon-pack="duotone"] .gt-icon [fill="currentColor"] {
   fill-opacity: 0.55;
 }
+
+/* pack glyph drawings */
+html[data-icon-pack="duotone"] .gt-icon[data-icon="library"] {
+  background-color: currentColor;
+  -webkit-mask: url("icons/library.svg") center / contain no-repeat;
+  mask: url("icons/library.svg") center / contain no-repeat;
+}
+html[data-icon-pack="duotone"] .gt-icon[data-icon="library"] > * {
+  opacity: 0;
+}
+html[data-icon-pack="duotone"] .gt-icon[data-icon="discover"] {
+  background-color: currentColor;
+  -webkit-mask: url("icons/discover.svg") center / contain no-repeat;
+  mask: url("icons/discover.svg") center / contain no-repeat;
+}
+html[data-icon-pack="duotone"] .gt-icon[data-icon="discover"] > * {
+  opacity: 0;
+}
+html[data-icon-pack="duotone"] .gt-icon[data-icon="systems"] {
+  background-color: currentColor;
+  -webkit-mask: url("icons/systems.svg") center / contain no-repeat;
+  mask: url("icons/systems.svg") center / contain no-repeat;
+}
+html[data-icon-pack="duotone"] .gt-icon[data-icon="systems"] > * {
+  opacity: 0;
+}

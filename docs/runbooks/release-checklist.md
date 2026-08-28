@@ -8,7 +8,7 @@ Use before tagging a release (example: **v0.1.0**).
 - [ ] [`CHANGELOG.md`](../../CHANGELOG.md) has a dated section for this release
 - [ ] `clients/desktop/package.json`, `src-tauri/tauri.conf.json`, `Cargo.toml`
 - [ ] `frontend/member-app`, `frontend/ops-glance`, `frontend/api-client` package versions
-- [ ] `docker-compose.yml` image tag (`chrisjrovira/gametheca:X.Y.Z`)
+- [ ] `docker-compose.yml` image tag (`APP_IMAGE`, preferred Hub `chrisjrovira/oneirodex:X.Y.Z`; local default `gametheca:1.0.0-beta`)
 - [ ] Root `README.md` and `docs/README.md` version references
 
 ## CI (PR gate)

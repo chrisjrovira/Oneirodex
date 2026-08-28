@@ -29,7 +29,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Social + A/V waves | `docs/strategy/social-av.md` | Have (W16 shipped) · post-1.0 → [native-rtc.md](native-rtc.md) |
 | Security suite | `docs/strategy/security.md` | Have · post-1.0 → [native-malware-scan.md](native-malware-scan.md) |
 | Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have — Phases 0–6 shipped; CSP **enforces**; remaining core-clause notes are not counsel |
-| Icon / image packs | `docs/strategy/icon-themes.md` | Have — Wave 2d paired packs; decade rooms at `GENERATOR_VERSION` **17** |
+| Icon / image packs | `docs/strategy/icon-themes.md` | Have — library/discover/systems drawings on five packs; outline stays stroke |
 | Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
 | Emulation coverage (Wave 19) | `docs/strategy/emulation-coverage.md` | Have — play-mode matrix for every `LibraryPlatform`; SG-1000 / NGPC browser-play via shipped WASM |
@@ -47,7 +47,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Store metadata identify · ownership | `docs/strategy/store-metadata-identify.md` | Have — DRM register-only; no LibraryPlatform.QUEST |
 | Console / emulator library layout | `docs/strategy/console-gaming-libraries.md` | Have — per-leaf libs; skip-dir; no depth-3 walker |
 | Docs map (this file) | `docs/strategy/docs-map.md` | Have |
-| Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) · [0003 Oneirodex name](../adr/0003-product-name-oneirodex.md) (phase 1 landed; phase 2 ops dual names started; code identifiers not started) |
+| Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) · [0003 Oneirodex name](../adr/0003-product-name-oneirodex.md) (phase 1–2 landed; GitHub `oneirodex`; phase 3a dual env + `--od-*`; package path not moved) |
 | Competitive re-score template | `docs/strategy/competitor-rescore.md` | **Have** — 2026-08-26; named scores stay in `docs/_private/peer-notes/` |
 | Cloud vs Unraid TCO ballpark | `docs/strategy/cloud-tco-ballpark.md` | Have — Unraid-first; worksheet in private vault |
 
@@ -136,8 +136,9 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | [unraid-deploy.md](../runbooks/unraid-deploy.md) | Have | Live stack `_projects` (isos retired) · volume sectioning |
 | [NAS-DEPLOY.md](../../NAS-DEPLOY.md) | Have | Same live checkout as unraid-deploy; no copy-to-isos |
 | [docker-compose-deploy.md](../runbooks/docker-compose-deploy.md) | Have | Compose · LiveKit + ClamAV + challenge profiles |
+| [artwork-gpu-workstation.md](../runbooks/artwork-gpu-workstation.md) | Have | Windows 2080 SD.Next-only; not the NAS stack |
 | [install-native.md](../runbooks/install-native.md) | Have | Linux · macOS · Windows |
-| [remote-scan-locations.md](../runbooks/remote-scan-locations.md) | Have | `GT_LIBRARY_ROOTS` |
+| [remote-scan-locations.md](../runbooks/remote-scan-locations.md) | Have | `GT_LIBRARY_ROOTS` / `ONEIRODEX_LIBRARY_ROOTS` |
 | [observability-profile.md](../runbooks/observability-profile.md) | Have | Optional Prometheus stub |
 | [container-wont-start.md](../runbooks/container-wont-start.md) | Have | Crash loops |
 | [livekit-unraid.md](../runbooks/livekit-unraid.md) | Have | Optional voice SFU |
@@ -171,6 +172,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | UI debt log | Have — [dev/ui-debt-log.md](../dev/ui-debt-log.md) — UID-017 token ratchet **0**; UID-018 envelope remainder **11** annotated keeps; UX-B6 PageStatus leftover closed; older changelog in [dev/archive/ui-debt-changelog-2026-08.md](../dev/archive/ui-debt-changelog-2026-08.md) |
 | Docs-sync skill | Have — `.cursor/skills/docs-sync/` |
 | Agent locks | Have — [dev/agent-locks.md](../dev/agent-locks.md) |
+| API envelope keeps | Have — [dev/api-envelope-keeps.md](../dev/api-envelope-keeps.md) — why 11 sites stay off `api_ok` |
 | W31 commit attribution | Have — [dev/w31-commit-attribution.md](../dev/w31-commit-attribution.md) |
 | UI tokens (Wave 0 / B+C) | Have — [dev/ui-wave0-tokens.md](../dev/ui-wave0-tokens.md) |
 | Architecture overview | Create |

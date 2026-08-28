@@ -14,7 +14,7 @@ from flask_caching import Cache
 from gametheca.utils.db import check_postgres_port_open
 from gametheca.utils.proxy import apply_proxy_fix
 from gametheca.utils.security_headers import apply_security_headers
-from gametheca.utils.icon_themes import icon_pack_css_url
+from gametheca.utils.icon_themes import icon_pack_css_url, icon_pack_previews_css_url
 from gametheca.product import PRODUCT_NAME
 from gametheca.utils.preset_themes import era_for_theme, theme_picker_groups
 
@@ -107,18 +107,22 @@ def create_app():
         current_theme = 'default'
         current_icon_pack = 'outline'
         icon_pack_css = None
+        icon_pack_previews_css = None
         if current_user.is_authenticated and hasattr(current_user, 'preferences') and current_user.preferences:
             current_theme = current_user.preferences.theme or 'default'
             current_icon_pack = getattr(current_user.preferences, 'icon_pack', None) or 'outline'
         try:
             icon_pack_css = icon_pack_css_url(current_icon_pack)
+            icon_pack_previews_css = icon_pack_previews_css_url()
         except Exception:
             icon_pack_css = None
+            icon_pack_previews_css = None
         return dict(
             current_theme=current_theme,
             current_era=era_for_theme(current_theme),
             current_icon_pack=current_icon_pack,
             icon_pack_css=icon_pack_css,
+            icon_pack_previews_css=icon_pack_previews_css,
         )
 
     @app.template_filter('theme_picker_groups')

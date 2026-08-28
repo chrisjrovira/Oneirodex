@@ -125,6 +125,27 @@
   --gt-motion-base: 200ms;
   --gt-motion-slow: 320ms;
   --gt-motion-ease: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* Phase 3 dual names (ADR 0003). New sheets may use --od-*; .gt-* classes stay. */
+  --od-bg: var(--gt-bg);
+  --od-surface: var(--gt-surface);
+  --od-surface-2: var(--gt-surface-2);
+  --od-text: var(--gt-text);
+  --od-text-muted: var(--gt-text-muted);
+  --od-accent: var(--gt-accent);
+  --od-accent-contrast: var(--gt-accent-contrast);
+  --od-accent-2: var(--gt-accent-2);
+  --od-success: var(--gt-success);
+  --od-danger: var(--gt-danger);
+  --od-warning: var(--gt-warning);
+  --od-info: var(--gt-info);
+  --od-border: var(--gt-border);
+  --od-focus-ring: var(--gt-focus-ring);
+  --od-icon-stroke: var(--gt-icon-stroke);
+  --od-icon-fill: var(--gt-icon-fill);
+  --od-motion-fast: var(--gt-motion-fast);
+  --od-motion-base: var(--gt-motion-base);
+  --od-motion-slow: var(--gt-motion-slow);
 }
 
 /* Single global motion-safe guard (GT-C3).

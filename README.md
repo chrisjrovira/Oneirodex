@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.0.0--beta-2fd67b?style=flat-square" alt="Version 1.0.0-beta" /></a>
-  <a href="https://github.com/chrisjrovira/gametheca"><img src="https://img.shields.io/badge/github-chrisjrovira%2Fgametheca-181717?style=flat-square&logo=github" alt="GitHub" /></a>
+  <a href="https://github.com/chrisjrovira/oneirodex"><img src="https://img.shields.io/badge/github-chrisjrovira%2Foneirodex-181717?style=flat-square&logo=github" alt="GitHub" /></a>
   <a href="#-quick-start"><img src="https://img.shields.io/badge/port-5006-0b0d10?style=flat-square" alt="Port 5006" /></a>
   <a href="#-docker-compose"><img src="https://img.shields.io/badge/docker-compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose" /></a>
   <a href="docs/README.md"><img src="https://img.shields.io/badge/docs-index-555?style=flat-square" alt="Docs" /></a>
@@ -41,7 +41,8 @@ Oneirodex is a **Flask + React** game library server you run at home (or on a NA
 | | |
 |---|---|
 | 🏷️ **Release** | [1.0.0-beta](CHANGELOG.md) · [`VERSION`](VERSION) |
-| 📦 **Package** | `gametheca/` |
+| 📦 **Package** | `gametheca/` (identifier phase 3b still to move) |
+| 🐙 **GitHub** | [chrisjrovira/oneirodex](https://github.com/chrisjrovira/oneirodex) (old `gametheca` URL redirects) |
 | 🐳 **Containers** | `gametheca-app` · `gametheca-db` · optional `gametheca-livekit` |
 | 🌐 **Default URL** | http://localhost:5006 |
 | 🖼️ **Image** | Local Compose build `gametheca:1.0.0-beta` (Hub publish optional) |
@@ -63,7 +64,7 @@ Oneirodex is a **Flask + React** game library server you run at home (or on a NA
 
 ### 👥 Household access
 - ✉️ Invite-based membership + parental / library ACL
-- 🎨 Color themes **and** independent icon packs (Outline · Filled · Duotone · Pixel · Soft · Mono)
+- 🎨 Color themes **and** independent icon packs (Outline · Filled · Duotone · Pixel · Soft · Mono) — five packs ship distinct **library / discover / systems** drawings; outline stays the stroke set
 - 🔤 **Themeable fonts** with era-appropriate faces per system — the OFL faces ship with Oneirodex and install themselves on boot, no admin step and no network ([theme-fonts-and-images.md](docs/admin/theme-fonts-and-images.md))
 - 📱 Mobile density polish (hamburger nav · stacked filters · Chat touch targets ≤900px)
 
@@ -83,7 +84,7 @@ Oneirodex is a **Flask + React** game library server you run at home (or on a NA
 
 ### 🧩 Optional modules
 - 📡 *arr + hardlink pipeline · 🤖 Ollama AI assist · 🥽 VR / Quest PWA · 🔐 OIDC / Authentik SSO (opt-in)
-- 🖌️ **Generated cover art** against your own self-hosted A1111-compatible endpoint (AUTOMATIC1111 · SD.Next · Forge) — **off by default**, nothing leaves your network
+- 🖌️ **Generated cover art** against your own self-hosted A1111-compatible endpoint (AUTOMATIC1111 · SD.Next · Forge) — **off by default**, nothing leaves your network. GPU-less NAS: run SD.Next on a Windows box with a card via [`docker-compose.artwork-local.yml`](docker-compose.artwork-local.yml) — [artwork-gpu-workstation.md](docs/runbooks/artwork-gpu-workstation.md)
 - 🛡️ Login rate limit (app + [proxy runbook](docs/runbooks/login-rate-limit-proxy.md)) · malware scan (heuristics on by default; optional [ClamAV profile](docs/runbooks/docker-compose-deploy.md#clamav-malware-scan))
 - ⚙️ Most `ENABLE_*` modules **on** by default — OIDC, AI auto-apply, and hardlink apply stay off until you opt in ([settings-modules.md](docs/admin/settings-modules.md))
 
@@ -136,8 +137,8 @@ shares, second disks, extra mounts — see [scan locations](#-scan-locations-nas
 ### 💻 Native installers
 
 ```bash
-git clone --depth 1 https://github.com/chrisjrovira/gametheca.git
-cd gametheca
+git clone --depth 1 https://github.com/chrisjrovira/oneirodex.git
+cd oneirodex
 ```
 
 <table>
@@ -424,10 +425,10 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Affero General Public License for more details.
 ```
 
-**Running a modified copy? Set `GT_SOURCE_URL` to your fork.** The app surfaces
+**Running a modified copy? Set `GT_SOURCE_URL` or `ONEIRODEX_SOURCE_URL` to your fork.** The app surfaces
 a "Get the source code" link on member **Help** and in the admin footer — that
 is how §13 is actually discharged rather than merely stated here. It defaults to
-this repository, which is wrong the moment you modify anything, because §13
+this repository (`https://github.com/chrisjrovira/oneirodex`), which is wrong the moment you modify anything, because §13
 obliges you to offer *your* users *your* source.
 
 **Content is separate from code.** The licence above covers Oneirodex itself. It

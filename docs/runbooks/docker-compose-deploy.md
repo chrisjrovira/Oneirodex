@@ -118,9 +118,11 @@ docker compose --profile artwork up -d
   ```
 
 - **GPU on another machine** (the usual case for a GPU-less NAS): skip the
-  profile entirely. Run SD.Next / AUTOMATIC1111 / Forge over there and point
-  `AI_ARTWORK_URL` at it — the backend only makes an HTTP call. Turnkey pairing
-  for that shape is backlog **GPU-N**, [gpu-worker-node.md](../strategy/gpu-worker-node.md).
+  profile entirely. On a Windows box with a card, use
+  [`docker-compose.artwork-local.yml`](../../docker-compose.artwork-local.yml)
+  — [artwork-gpu-workstation.md](artwork-gpu-workstation.md) — then point
+  `AI_ARTWORK_URL` at it. Turnkey pairing for that shape is backlog **GPU-N**,
+  [gpu-worker-node.md](../strategy/gpu-worker-node.md).
 
 ### Challenge / captcha solver (TRAWL)
 

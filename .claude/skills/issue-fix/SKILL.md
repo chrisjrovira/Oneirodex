@@ -12,7 +12,7 @@ Fix only. Prefer the smallest change that closes the report.
 
 ## Input
 
-- GitHub issue URL or number (repo `chrisjrovira/gametheca`)
+- GitHub issue URL or number (repo `chrisjrovira/oneirodex`)
 - Optional: `issue-assess` triage output
 - Optional: an Unraid/Compose/native deploy hint from the ticket
 

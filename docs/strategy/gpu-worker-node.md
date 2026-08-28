@@ -4,7 +4,7 @@
 **Status:** Nice-to-have · post-1.0 backlog (**not started**)  
 **Priority:** backlog / sprint nice-to-have  
 **Audience:** PM · Backend · Ops · Desktop · QA · Docs  
-**Shipped path today:** `AI_ARTWORK_URL` → any A1111-compatible endpoint (`gametheca/utils/ai_artwork.py`) · Compose profile `artwork` (CPU) · GPU reservation opt-in via `docker-compose.gpu.yml`  
+**Shipped path today:** `AI_ARTWORK_URL` → any A1111-compatible endpoint (`gametheca/utils/ai_artwork.py`) · Compose profile `artwork` (CPU) · GPU reservation opt-in via `docker-compose.gpu.yml` (only when the *app* Docker host has the card) · **Windows GPU box:** [`docker-compose.artwork-local.yml`](../../docker-compose.artwork-local.yml) — [artwork-gpu-workstation.md](../runbooks/artwork-gpu-workstation.md)  
 **Related:** [cover-art-studio.md](cover-art-studio.md) · [thin-client.md](thin-client.md) · [native-challenge-solver.md](native-challenge-solver.md) · [pm-miss-backlog.md](pm-miss-backlog.md) · `gametheca/routes_apis/client.py`
 
 ---

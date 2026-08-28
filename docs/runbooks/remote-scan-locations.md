@@ -10,7 +10,8 @@ Two jobs, in this order:
 1. **Mount it.** Oneirodex does not speak SMB or NFS. The host does. This is an
    OS-level step and it is the same step you would take for any other app.
 2. **Declare it.** Tell Oneirodex which mounts are libraries, with
-   `GT_LIBRARY_ROOTS`. Until you do, the admin folder browser and the path
+   `GT_LIBRARY_ROOTS` (or `ONEIRODEX_LIBRARY_ROOTS` — the new key wins if both
+   are set). Until you do, the admin folder browser and the path
    allowlist only know about the single base folder.
 
 > If a scan finds nothing, check step 1 before step 2. An unmounted share is an
@@ -19,7 +20,7 @@ Two jobs, in this order:
 
 ---
 
-## `GT_LIBRARY_ROOTS`
+## `GT_LIBRARY_ROOTS` / `ONEIRODEX_LIBRARY_ROOTS`
 
 Pipe-separated list. Each entry is a path, optionally prefixed with a display
 label and `=`:

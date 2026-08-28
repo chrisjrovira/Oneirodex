@@ -40,7 +40,7 @@ WORKDIR /app
 
 LABEL org.opencontainers.image.title="Oneirodex" \
       org.opencontainers.image.description="Self-hosted household game library" \
-      org.opencontainers.image.source="https://github.com/chrisjrovira/gametheca"
+      org.opencontainers.image.source="https://github.com/chrisjrovira/oneirodex"
 
 # Install system dependencies (bash required by entrypoint/start scripts).
 # libarchive-tools (bsdtar) and p7zip-full (7z) give rarfile a working

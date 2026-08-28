@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "samples" / "free-roms" / "manifest.yaml"
 DEFAULT_OUT = ROOT / "samples" / "free-roms" / "library"
 
-USER_AGENT = "GameTheca-fetch-free-roms/1.0 (+https://github.com/chrisjrovira/gametheca)"
+USER_AGENT = "Oneirodex-fetch-free-roms/1.0 (+https://github.com/chrisjrovira/oneirodex)"
 
 
 def _strip_comment(line: str) -> str:

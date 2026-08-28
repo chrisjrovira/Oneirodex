@@ -49,6 +49,12 @@ def default_accent() -> str:
     return match.group(1).strip().lower()
 
 
+def test_od_token_aliases_core_tokens():
+    css = read(GT_TOKENS_CSS)
+    assert '--od-accent: var(--gt-accent)' in css
+    assert '--od-bg: var(--gt-bg)' in css
+
+
 @pytest.mark.parametrize('preset', PRESET_THEMES, ids=[p['slug'] for p in PRESET_THEMES])
 def test_preset_swatch_matches_the_generated_accent(preset):
     """A swatch must be painted the accent its theme is generated with."""

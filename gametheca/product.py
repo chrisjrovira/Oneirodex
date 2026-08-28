@@ -1,7 +1,8 @@
-"""Public product string for Oneirodex (ADR 0003 phase 1).
+"""Public product string for Oneirodex (ADR 0003).
 
-Package path, Docker image, GitHub repo, ``GT_*`` env, and ``gt-`` CSS stay
-``gametheca`` until a later identifier wave. Do not invent ``OD_*`` aliases here.
+Phase 3a dual names: ``ONEIRODEX_*`` env wins over ``GT_*``; CSS ``--od-*``
+aliases ``--gt-*``. Package path stays ``gametheca/`` (phase 3b). Do not invent
+``OD_*`` env aliases — that prefix was reserved against.
 """
 
 from __future__ import annotations

@@ -53,6 +53,7 @@
     <link rel="stylesheet" href="{{ 'css/games/game_status.css'|theme_asset }}">
     {# After shell/page CSS so the translucent canvas beats opaque fills. #}
     <link rel="stylesheet" href="{{ 'css/gt-era.css'|theme_asset }}">
+    {% if icon_pack_previews_css %}<link rel="stylesheet" id="gt-icon-pack-previews-css" href="{{ icon_pack_previews_css }}">{% endif %}
     {% if icon_pack_css %}<link rel="stylesheet" id="gt-icon-pack-css" href="{{ icon_pack_css }}">{% endif %}
     {# Declares @font-face for every installed theme face and applies the
        member's chosen family. Without it the font picker cannot do anything. #}

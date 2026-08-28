@@ -229,7 +229,7 @@ export function RailIcon({ name, size = 18, ...rest }) {
   // invisible, not a mark the eye reads as a real category.
   if (!glyph) return null
   return (
-    <svg {...base} width={size} height={size} aria-hidden="true" focusable="false" {...rest}>
+    <svg {...base} width={size} height={size} aria-hidden="true" focusable="false" data-icon={name} {...rest}>
       {glyph}
     </svg>
   )

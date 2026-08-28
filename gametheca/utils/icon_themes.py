@@ -20,11 +20,15 @@ CORE_ICON_KEYS = (
     'updates', 'playtime', 'calendar', 'ownership',
 )
 
+# Packs that ship their own SVG drawings (outline keeps the inline stroke glyphs).
+DRAWING_PACKS = ('filled', 'duotone', 'pixel', 'soft', 'mono')
+PACK_GLYPH_KEYS = ('library', 'discover', 'systems')
+
 BUILTIN_PACKS: list[dict[str, Any]] = [
     {
         'id': 'outline',
         'name': 'Outline',
-        'description': 'Default 2px stroke icons (matches GameTheca chrome).',
+        'description': 'Default 2px stroke icons (matches Oneirodex chrome).',
         'style': 'stroke',
     },
     {
@@ -120,6 +124,14 @@ def icon_pack_css_url(pack_id: str | None) -> str:
     return url_for('static', filename='library/icon-themes/outline/pack.css')
 
 
+def icon_pack_previews_css_url() -> str | None:
+    """Always-on sheet so Preferences chips show each pack's drawing without swapping html[data-icon-pack]."""
+    path = icon_themes_root() / 'previews.css'
+    if path.is_file():
+        return url_for('static', filename='library/icon-themes/previews.css')
+    return None
+
+
 def icon_pack_image_url(pack_id: str | None, key: str) -> str | None:
     """Optional branded image override (logo, default_cover)."""
     pack = get_icon_pack(pack_id)
@@ -131,6 +143,66 @@ def icon_pack_image_url(pack_id: str | None, key: str) -> str | None:
     if path.is_file():
         return url_for('static', filename=f"library/icon-themes/{pack['id']}/{rel}")
     return None
+
+
+def pack_glyph_override_css(pack_id: str, *, url_prefix: str = 'icons/') -> str:
+    """Mask the inline glyph with a pack SVG so packs are drawings, not stroke tints."""
+    if pack_id not in DRAWING_PACKS:
+        return ''
+    blocks = []
+    for key in PACK_GLYPH_KEYS:
+        url = f'{url_prefix}{key}.svg'
+        blocks.append(
+            f'html[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{key}"] {{\n'
+            f'  background-color: currentColor;\n'
+            f'  -webkit-mask: url("{url}") center / contain no-repeat;\n'
+            f'  mask: url("{url}") center / contain no-repeat;\n'
+            f'}}\n'
+            f'html[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{key}"] > * {{\n'
+            f'  opacity: 0;\n'
+            f'}}'
+        )
+    return '\n'.join(blocks)
+
+
+def icon_pack_previews_css() -> str:
+    """Chip-scoped masks; urls are relative to ``icon-themes/previews.css``."""
+    chunks = [
+        '/* Chip previews — always loaded so unselected packs still show their drawing. */'
+    ]
+    for pack_id in DRAWING_PACKS:
+        for key in PACK_GLYPH_KEYS:
+            url = f'{pack_id}/icons/{key}.svg'
+            chunks.append(
+                f'.icon-pack-chip[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{key}"] {{\n'
+                f'  background-color: currentColor;\n'
+                f'  -webkit-mask: url("{url}") center / contain no-repeat;\n'
+                f'  mask: url("{url}") center / contain no-repeat;\n'
+                f'}}\n'
+                f'.icon-pack-chip[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{key}"] > * {{\n'
+                f'  opacity: 0;\n'
+                f'}}'
+            )
+    return '\n'.join(chunks) + '\n'
+
+
+def _sync_pack_drawings(src: Path, dest: Path) -> None:
+    """Refresh shipped SVGs and pack.css without wiping a customized pack folder."""
+    src_icons = src / 'icons'
+    if src_icons.is_dir():
+        dest_icons = dest / 'icons'
+        dest_icons.mkdir(exist_ok=True)
+        for svg in src_icons.glob('*.svg'):
+            shutil.copy2(svg, dest_icons / svg.name)
+    src_css = src / 'pack.css'
+    if src_css.is_file():
+        shutil.copy2(src_css, dest / 'pack.css')
+    src_manifest = src / 'manifest.json'
+    if src_manifest.is_file():
+        shutil.copy2(src_manifest, dest / 'manifest.json')
+    src_preview = src / 'preview.png'
+    if src_preview.is_file():
+        shutil.copy2(src_preview, dest / 'preview.png')
 
 
 def _write_pack(dest: Path, meta: dict[str, Any], css: str) -> None:
@@ -151,7 +223,7 @@ def _write_pack(dest: Path, meta: dict[str, Any], css: str) -> None:
 
 PACK_CSS: dict[str, str] = {
     'outline': """
-/* Outline — default GameTheca stroke icons; works with any --gt-* color theme */
+/* Outline — default Oneirodex stroke icons; works with any --gt-* color theme */
 html[data-icon-pack="outline"] .gt-icon {
   stroke-width: 2;
   fill: none;
@@ -210,6 +282,15 @@ html[data-icon-pack="mono"] .gt-icon [fill="none"] {
 """,
 }
 
+PACK_CSS = {
+    pack_id: (
+        css.strip()
+        + ('\n' + pack_glyph_override_css(pack_id) if pack_id in DRAWING_PACKS else '')
+        + '\n'
+    )
+    for pack_id, css in PACK_CSS.items()
+}
+
 
 def install_icon_themes(*, force: bool = False, package_root: str | Path | None = None) -> list[str]:
     """Install builtin icon packs into static/library/icon-themes."""
@@ -218,11 +299,15 @@ def install_icon_themes(*, force: bool = False, package_root: str | Path | None 
     installed: list[str] = []
     source = setup_icon_themes_source(package_root)
     if source.is_dir():
+        src_previews = source / 'previews.css'
+        if src_previews.is_file():
+            shutil.copy2(src_previews, root / 'previews.css')
         for child in source.iterdir():
             if not child.is_dir():
                 continue
             dest = root / child.name
             if dest.exists() and not force:
+                _sync_pack_drawings(child, dest)
                 installed.append(child.name)
                 continue
             if dest.exists() and force:

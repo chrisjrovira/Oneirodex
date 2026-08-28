@@ -7,6 +7,8 @@ import xml.etree.ElementTree as ET
 from typing import Any
 from urllib.request import Request, urlopen
 
+from product_env import getenv_product
+
 DEFAULT_FEED_URLS = (
     'https://www.polygon.com/rss/index.xml',
     'https://www.pcgamer.com/rss/',
@@ -19,13 +21,12 @@ def feed_urls() -> tuple[str, ...]:
 
     Was a hardcoded tuple, so a household that did not care for one of these
     three — or wanted a site of its own — had no say at all. ``GT_NEWS_FEEDS``
-    replaces the list entirely (comma or pipe separated); unset keeps the
-    defaults. Only http(s) entries are accepted: this list is fetched by the
-    server, so a `file://` in it would be a read of the server's own disk.
+    (or ``ONEIRODEX_NEWS_FEEDS``) replaces the list entirely (comma or pipe
+    separated); unset keeps the defaults. Only http(s) entries are accepted:
+    this list is fetched by the server, so a `file://` in it would be a read
+    of the server's own disk.
     """
-    import os
-
-    raw = (os.getenv('GT_NEWS_FEEDS') or '').strip()
+    raw = (getenv_product('NEWS_FEEDS') or '').strip()
     if not raw:
         return DEFAULT_FEED_URLS
 

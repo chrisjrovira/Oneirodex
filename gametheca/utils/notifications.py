@@ -11,6 +11,7 @@ from flask import has_request_context, render_template, request
 from markupsafe import escape
 from sqlalchemy import func, select
 
+from product_env import getenv_product
 from gametheca import db
 from gametheca.models import (
     Game,
@@ -288,7 +289,7 @@ def library_scan_is_active(library_uuid: str) -> bool:
 
 
 def library_add_digest_seconds() -> float:
-    raw = os.environ.get('GT_LIBRARY_ADD_NOTIFY_DEBOUNCE_SEC')
+    raw = getenv_product('LIBRARY_ADD_NOTIFY_DEBOUNCE_SEC')
     if raw is None or str(raw).strip() == '':
         return _LIBRARY_ADD_DIGEST_SEC
     try:

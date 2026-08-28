@@ -5,6 +5,17 @@ All notable changes to Oneirodex are documented in this file. Historical entries
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- GitHub default is **`chrisjrovira/oneirodex`** (the old `chrisjrovira/gametheca` URL still redirects). `SUPPORT_GITHUB_REPO` and `GT_SOURCE_URL` / `ONEIRODEX_SOURCE_URL` follow.
+- Identifier **phase 3a** ([ADR 0003](docs/adr/0003-product-name-oneirodex.md)): `ONEIRODEX_*` env wins over `GT_*`; CSS `--od-*` aliases `--gt-*`. Package path `gametheca/` and `.gt-*` classes stay.
+- Icon packs: **library / discover / systems** ship distinct SVGs on Filled, Duotone, Pixel, Soft, and Mono. Outline stays the inline stroke set.
+
+### Added
+- `docker-compose.artwork-local.yml` — SD.Next + GPU only, for a Windows workstation (not the NAS stack). Runbook: [artwork-gpu-workstation.md](docs/runbooks/artwork-gpu-workstation.md).
+- [api-envelope-keeps.md](docs/dev/api-envelope-keeps.md) — why eleven JSON sites stay off `api_ok`.
+
 ## [0.1.0] — 2026-07-24
 
 First milestone release on the `feature/roadmap-q1-foundation` track (GameTheca rebrand + gap close).
@@ -803,5 +814,5 @@ Work since the 1.0.0-beta tag (2026-08-06).
   file was rendered by nothing while holding a third copy of the theme picker, element ids and all
 - The last SharewareZ-era leftover in code (`get_warez_folder_usage()`)
 
-[1.0.0-beta]: https://github.com/chrisjrovira/gametheca/releases/tag/v1.0.0-beta
-[0.1.0]: https://github.com/chrisjrovira/gametheca/releases/tag/v0.1.0
+[1.0.0-beta]: https://github.com/chrisjrovira/oneirodex/releases/tag/v1.0.0-beta
+[0.1.0]: https://github.com/chrisjrovira/oneirodex/releases/tag/v0.1.0

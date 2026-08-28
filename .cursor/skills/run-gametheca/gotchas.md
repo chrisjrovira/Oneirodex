@@ -20,7 +20,7 @@ when `serve.sh` or `drive.py` misbehaves; do not load it on a clean launch.
   `InvalidURL`. Prefix with `MSYS_NO_PATHCONV=1`, or pass `api/collections`.
   `drive.py` also recovers from the mangled form.
 - **`.env` sets `PORT=5006`,** which wins over a shell default if you export
-  `PORT` before loading it. `serve.sh` uses `GT_PORT` and applies it *after*
+  `PORT` before loading it. `serve.sh` uses `ONEIRODEX_PORT` / `GT_PORT` and applies it *after*
   the load, so it cannot collide with a real instance.
 - **Stopping the launching shell leaves uvicorn orphaned** holding the port —
   a later launch then appears to work while you are talking to the old build.

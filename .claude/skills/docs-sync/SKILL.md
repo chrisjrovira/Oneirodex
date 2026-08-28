@@ -34,7 +34,7 @@ Read [checklist.md](checklist.md) for the inventory map. Prefer **updating an ex
 - Concise; tables over prose.
 - Match `progress.md` — do not claim more than the code does.
 - Do not invent screenshots; mark Capture needed in docs-map if the UI is new **and** capture cannot run this turn.
-- Write **Oneirodex** in user/admin docs ([ADR 0003](../../../docs/adr/0003-product-name-oneirodex.md) phase 1). The package path stays `gametheca/`. Docker / GitHub / `GT_*` / `gt-` stay as they are until an identifier wave. Do not mix OneiroDex or ONEIRODEX into guides.
+- Write **Oneirodex** in user/admin docs ([ADR 0003](../../../docs/adr/0003-product-name-oneirodex.md)). Package path stays `gametheca/` until phase 3b. GitHub is `chrisjrovira/oneirodex`. Env: `ONEIRODEX_*` wins over `GT_*`. CSS `--od-*` aliases `--gt-*`. `.gt-*` classes stay. Do not mix OneiroDex into UI copy. Operator env tables may list `ONEIRODEX_*`.
 
 ## Anti-patterns
 

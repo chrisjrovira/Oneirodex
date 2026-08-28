@@ -267,6 +267,7 @@ export function RailIcon({ name, size = 18, ...rest }) {
       height={size}
       aria-hidden="true"
       focusable="false"
+      data-icon={name}
       {...rest}
     >
       {glyph}

@@ -12,6 +12,7 @@
 #   * runs one worker on a spare port, so it does not fight a real instance.
 #
 # Usage:  bash .cursor/skills/run-gametheca/serve.sh              # test DB, port 5099
+#         ONEIRODEX_PORT=5150 bash .cursor/skills/run-gametheca/serve.sh
 #         GT_PORT=5150 bash .cursor/skills/run-gametheca/serve.sh
 #         GT_DB_URL=postgresql://... bash .cursor/skills/run-gametheca/serve.sh
 #
@@ -19,7 +20,7 @@
 # shell that launched this leaves uvicorn orphaned and still holding the port.
 set -euo pipefail
 
-GT_PORT="${GT_PORT:-5099}"
+GT_PORT="${ONEIRODEX_PORT:-${GT_PORT:-5099}}"
 
 if [ "${1:-}" = "--stop" ]; then
   pid=$(netstat -ano 2>/dev/null | awk -v p=":$GT_PORT" '$2 ~ p"$" && $4=="LISTENING" {print $5; exit}')

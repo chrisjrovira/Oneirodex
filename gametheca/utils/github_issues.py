@@ -11,16 +11,16 @@ from typing import Any
 
 def support_github_config() -> tuple[str | None, str]:
     token = (os.getenv('SUPPORT_GITHUB_TOKEN') or '').strip() or None
-    # Dual names (ADR 0003 phase 2): default stays chrisjrovira/gametheca until
-    # the GitHub rename exists. Set SUPPORT_GITHUB_REPO=chrisjrovira/oneirodex
-    # after that cutover; both values are accepted.
-    repo = (os.getenv('SUPPORT_GITHUB_REPO') or 'chrisjrovira/gametheca').strip()
+    # GitHub rename landed: default is chrisjrovira/oneirodex. The old
+    # chrisjrovira/gametheca URL still redirects; set SUPPORT_GITHUB_REPO if
+    # this install files issues against a fork.
+    repo = (os.getenv('SUPPORT_GITHUB_REPO') or 'chrisjrovira/oneirodex').strip()
     return token, repo
 
 
 def build_issue_body(ticket: dict[str, Any]) -> str:
     lines = [
-        '## Support ticket (GameTheca)',
+        '## Support ticket (Oneirodex)',
         '',
         f"**Ticket ID:** {ticket.get('id')}",
         f"**Reporter user_id:** {ticket.get('user_id')}",

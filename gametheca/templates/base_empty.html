@@ -36,6 +36,7 @@
     <link rel="stylesheet" href="{{ 'css/gt-loading-motifs.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/games/library_browser.css'|theme_asset }}">
     <link rel="stylesheet" href="{{ 'css/games/game_status.css'|theme_asset }}">
+    {% if icon_pack_previews_css %}<link rel="stylesheet" id="gt-icon-pack-previews-css" href="{{ icon_pack_previews_css }}">{% endif %}
     {% if icon_pack_css %}<link rel="stylesheet" id="gt-icon-pack-css" href="{{ icon_pack_css }}">{% endif %}
     <link rel="stylesheet" id="gt-theme-fonts-css" href="{{ url_for('apis.theme_fonts_css') }}">
     <link rel="stylesheet" href="{{ 'member-app/member-app.css'|dist_asset }}">

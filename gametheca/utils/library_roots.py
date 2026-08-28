@@ -7,8 +7,9 @@ scannable the moment the host — or the container — mounts them. What was
 missing was a way to *declare* those mounts, because the folder browser and the
 path allowlist both keyed off a single ``BASE_FOLDER_*``.
 
-``GT_LIBRARY_ROOTS`` is that declaration. Entries are separated by ``|`` and
-each one is an optional ``Label=`` followed by the path GameTheca sees:
+``GT_LIBRARY_ROOTS`` / ``ONEIRODEX_LIBRARY_ROOTS`` is that declaration. Entries
+are separated by ``|`` and each one is an optional ``Label=`` followed by the
+path Oneirodex sees:
 
     GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games
 
@@ -69,7 +70,7 @@ def same_path(left: str, right: str) -> bool:
 
 
 def parse_library_roots(raw: str | None) -> list[dict]:
-    """Parse ``GT_LIBRARY_ROOTS`` into ``[{'label': str, 'path': str}, …]``.
+    """Parse ``GT_LIBRARY_ROOTS`` / ``ONEIRODEX_LIBRARY_ROOTS`` into ``[{'label', 'path'}, …]``.
 
     Unlabelled entries take the last path segment as their label so the picker
     always has something to show. Blank and over-long entries are dropped

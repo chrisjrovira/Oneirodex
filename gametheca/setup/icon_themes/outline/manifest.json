@@ -1,7 +1,7 @@
 {
   "id": "outline",
   "name": "Outline",
-  "description": "Default 2px stroke icons (matches GameTheca chrome).",
+  "description": "Default 2px stroke icons (matches Oneirodex chrome).",
   "version": "1.0.0",
   "style": "stroke",
   "icons": {
@@ -23,5 +23,7 @@
     "calendar": "icons/calendar.svg",
     "ownership": "icons/ownership.svg"
   },
-  "images": {}
+  "images": {
+    "preview": "preview.png"
+  }
 }

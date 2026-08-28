@@ -188,10 +188,11 @@ talks to an endpoint outside the process, so it stays opt-in.
   container create (`nvml error: driver not loaded`) and takes the whole stack
   update with it. If the *Docker host* has the driver and the NVIDIA Container
   Toolkit, opt in with `COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml`.
-- **GPU on a different machine?** Do not start the profile. Run SD.Next /
-  AUTOMATIC1111 / Forge on that box and set `AI_ARTWORK_URL=http://<host>:7860`
-  — the backend only makes an HTTP call, so the generator can live anywhere on
-  the LAN. Making that turnkey (pairing, health, queueing) is backlog **GPU-N**,
+- **GPU on a different machine?** Do not start the profile. On a Windows GPU
+  box use [`docker-compose.artwork-local.yml`](../../docker-compose.artwork-local.yml)
+  ([artwork-gpu-workstation.md](../runbooks/artwork-gpu-workstation.md)) and set
+  `AI_ARTWORK_URL=http://<host>:7860` — the backend only makes an HTTP call.
+  Making that turnkey (pairing, health, queueing) is backlog **GPU-N**,
   [gpu-worker-node.md](../strategy/gpu-worker-node.md).
 
 Prefer to supply your own art instead? See

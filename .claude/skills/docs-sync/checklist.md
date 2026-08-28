@@ -53,6 +53,7 @@ Canonical map: [docs/strategy/docs-map.md](../../../docs/strategy/docs-map.md).
 |---|---|
 | Agent skills + agents index | `docs/dev/agent-skills.md` |
 | Agent locks (product/engineering defaults) | `docs/dev/agent-locks.md` |
+| API envelope keeps (why 11 sites stay off `api_ok`) | `docs/dev/api-envelope-keeps.md` |
 | Support / GitHub issues | `docs/dev/issue-assess-agent.md` |
 | UI debt log | `docs/dev/ui-debt-log.md` |
 

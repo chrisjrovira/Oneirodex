@@ -1,5 +1,7 @@
 import os, sys
 
+from product_env import getenv_product
+
 def _load_secret_key():
     """Load SECRET_KEY from env. Fail loudly if unset outside of test runs."""
     key = os.getenv('SECRET_KEY')
@@ -48,7 +50,7 @@ class Config(object):
     #   GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games
     # Mounting the share stays the operator's job — this only tells GameTheca
     # which mounts are libraries. See docs/runbooks/remote-scan-locations.md.
-    LIBRARY_ROOTS = _parse_library_roots(os.getenv('GT_LIBRARY_ROOTS'))
+    LIBRARY_ROOTS = _parse_library_roots(getenv_product('LIBRARY_ROOTS'))
 
     # YOU CAN LEAVE ALL THESE SETTINGS AT DEFAULT:
     UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'gametheca/static/library')
@@ -286,15 +288,15 @@ class Config(object):
     # discharges it in the running app.
     #
     # Configurable precisely because §13 is about *this* deployment: if you
-    # modify GameTheca and run it for others, you owe them **your** source, not
+    # modify Oneirodex and run it for others, you owe them **your** source, not
     # upstream's. Point this at your fork before you deploy a modified build.
-    GT_SOURCE_URL = os.getenv(
-        'GT_SOURCE_URL', 'https://github.com/chrisjrovira/gametheca'
+    GT_SOURCE_URL = getenv_product(
+        'SOURCE_URL', 'https://github.com/chrisjrovira/oneirodex'
     )
 
     # In-app support → GitHub Issues (optional; tickets still save without a token)
     SUPPORT_GITHUB_TOKEN = os.getenv('SUPPORT_GITHUB_TOKEN', '')
-    SUPPORT_GITHUB_REPO = os.getenv('SUPPORT_GITHUB_REPO', 'chrisjrovira/gametheca')
+    SUPPORT_GITHUB_REPO = os.getenv('SUPPORT_GITHUB_REPO', 'chrisjrovira/oneirodex')
 
     # Optional *arr connector defaults (overridden by Admin → Arr config)
     PROWLARR_URL = os.getenv('PROWLARR_URL', '')
