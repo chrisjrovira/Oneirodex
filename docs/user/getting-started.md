@@ -33,7 +33,7 @@ vanished with no visible way back.
 
 Rail details worth knowing:
 
-- Icons are **large** in the expanded rail, so a destination is recognisable without reading it.
+- The **logo** is large at the top of the expanded rail. Destination **icons and labels are small**, so the column is a list of names rather than a stack of marks.
 - Each icon **animates in its own way** on hover — the heart beats, the download arrow falls, the
   calendar page turns, the refresh mark spins — so motion tells you *which* row you found, not
   merely that you found one. All of it is suppressed under OS reduced-motion.

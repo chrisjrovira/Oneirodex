@@ -4,7 +4,7 @@
 
 **Release:** **1.0.0-beta** — see the root [CHANGELOG.md](../../CHANGELOG.md). Waves **4–28** are on `origin/main`.
 
-**Updated:** 2026-08-28 — Member/admin chrome: atmosphere behind UI, mark-only rail, flattened admin LHN, smaller rail icons, library two-bar default, loading takeover. Household scan/match: propose from the games root walks `_console-gaming` and `_pc` (skip-dir names); MAME zip dump → Arcade files; PC peel P2/P2P + Fisherman's. Package path still `gametheca/`. Standing constraints: **no** Discord · **no Class A** intel in public docs · **no store downloads**.
+**Updated:** 2026-08-28 — Expanded rail logo is its own size (`5.5rem`), not a multiple of the destination glyphs. LHN icons/labels are smaller (`0.7rem` / `gt-font-xs`). Household scan/match: propose from the games root walks `_console-gaming` and `_pc`. Package path still `gametheca/`. Standing constraints: **no** Discord · **no Class A** intel in public docs · **no store downloads**.
 
 Wave diary (W4–W28): [archive/progress-waves-2026-07-08.md](archive/progress-waves-2026-07-08.md). Open set: [carryover-w28.md](carryover-w28.md). UI register: [ui-debt-log.md](../dev/ui-debt-log.md) (open table only). Name lock: [ADR 0003](../adr/0003-product-name-oneirodex.md).
 
@@ -19,7 +19,7 @@ Wave diary (W4–W28): [archive/progress-waves-2026-07-08.md](archive/progress-w
 
 ## Ship TLDR
 
-Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; atmosphere sits **behind** the UI. Loading is a full-viewport takeover. Library two-bar chrome is the default. Household matching: propose from `/storage` walks `_console-gaming` and proposes `_pc` as PCWIN depth 2; MAME zips are an Arcade files leaf; ROM peel on every console enum; PC peel FitGirl / Steam IDs / `v3 2 9` / `1.13.06` / `P2`/`P2P`. **Oneirodex** is the public product string (package still `gametheca`). GitHub is **`chrisjrovira/oneirodex`**. Shared JSON envelope remainder is **11** annotated keeps. CSS token ratchet **0**. **Next:** Unraid app image rebuild + Reset Default Themes; Hub image publish; package rename (phase 3b) last.
+Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; atmosphere sits **behind** the UI. Expanded rail logo is **`5.5rem`** (`--gt-rail-mark-expanded`); destination glyphs **`0.7rem`** with `gt-font-xs` labels. Loading is a full-viewport takeover. Library two-bar chrome is the default. Household matching: propose from `/storage` walks `_console-gaming` and proposes `_pc` as PCWIN depth 2; MAME zips are an Arcade files leaf. **Oneirodex** is the public product string (package still `gametheca`). Shared JSON envelope remainder is **11** annotated keeps. CSS token ratchet **0**. **Next:** Hub image publish; package rename (phase 3b) last.
 
 ## Done
 
@@ -44,7 +44,7 @@ Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; atmosp
 | **Envelope keeps** | [api-envelope-keeps.md](../dev/api-envelope-keeps.md) — why 11 sites stay off `api_ok`. |
 | **Admin firmware scan** | Folder of dumps you already own → matching names on the volume, version picker, copyable missing markdown. Same walk as `scripts/import_bios.py`. Never downloads BIOS. |
 | **Unraid stack path** | Compose Manager tree is `/mnt/user/infernal-data-streams/_projects/Oneirodex`. `/mnt/user/isos/gametheca/` is retired. |
-| **Member chrome** | Rail icons 1× with matching labels; expanded mark 3× the icon column; Library/Favorites pager in-flow at the grid foot, no glass; account / hamburger / Filters have no resting outline |
+| **Member chrome** | Rail destination glyphs `0.7rem` with `gt-font-xs` labels; expanded brand mark `5.5rem` (own token, not 3× the icon column); Library/Favorites pager in-flow at the grid foot, no glass; account / hamburger / Filters have no resting outline |
 | **Compose library roots** | `docker-compose.yml` interpolates `ONEIRODEX_LIBRARY_ROOTS` and `GT_LIBRARY_ROOTS` (no `env_file:`; host-only new key never reached the container) |
 | **Admin era stacking** | Decade-room wallpaper no longer covers admin chrome. Atmosphere is `z-index: -1`; `.gt-rail` / `.gt-topbar` stack at 2; main at 1. Flattened `#admin-app-root` cannot. |
 | **Scan / match (household tree)** | Propose from the games root walks `_console-gaming` (skip-dir + family) and proposes `_pc` as PCWIN `folders`/`2`. `MAME` zip dump → Arcade files (not a family). `PC Engine` HuCard leaf. `AAE` → Arcade. ROM peel on every console enum (`.pce` / `.ngc` / `.wsc`). PC peel: backtick, `x.y.z`, `P2`/`P2P`, Fisherman's. |

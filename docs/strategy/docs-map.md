@@ -57,7 +57,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 
 | Guide | Audience | Status | Notes |
 |---|---|---|---|
-| Getting started (web) | End users | Have | [getting-started.md](../user/getting-started.md) |
+| Getting started (web) | End users | Have — rail logo independent of destination glyphs | [getting-started.md](../user/getting-started.md) |
 | Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) — pager sits at the grid foot, not sticky |
 | Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — chips preview five; drawing packs cover all CORE glyphs |
 | Downloading games | End users | Have | [downloads.md](../user/downloads.md) |

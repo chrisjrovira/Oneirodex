@@ -24,20 +24,24 @@ def _rule(css: str, selector: str) -> str:
 
 
 def test_expanded_rail_icons_are_unscaled_with_matching_labels():
-    """Icons were 1.8x the label; they drop to 1x and the row type follows."""
+    """Icons stay 1x the column; the column itself is small; labels match."""
     density = _read('gt-density.css')
     shell = _read('gt-shell.css')
     assert '--gt-rail-icon-scale: 1;' in density
-    assert '--gt-rail-icon-w: 1rem;' in density
-    assert 'font-size: var(--gt-font-sm)' in _rule(shell, '.gt-rail__link')
+    assert '--gt-rail-icon-w: 0.7rem;' in density
+    assert 'font-size: var(--gt-font-xs)' in _rule(shell, '.gt-rail__link')
     assert 'var(--gt-rail-icon-scale, 1)' in shell
     assert 'var(--gt-rail-icon-scale, 1.8)' not in shell
 
 
-def test_expanded_brand_mark_is_three_times_the_icon_column():
+def test_expanded_brand_mark_is_independent_of_the_icon_column():
+    """Shrinking destination glyphs must not shrink the logo."""
+    density = _read('gt-density.css')
     shell = _read('gt-shell.css')
+    assert '--gt-rail-mark-expanded: 5.5rem;' in density
     body = _rule(shell, '.gt-rail__brand--mark-only .gt-rail__mark')
-    assert 'calc(var(--gt-rail-icon-w) * 3)' in body
+    assert '--gt-rail-mark-expanded' in body
+    assert 'var(--gt-rail-icon-w)' not in body
 
 
 def test_library_pager_stays_at_the_foot_without_following_or_a_surface():

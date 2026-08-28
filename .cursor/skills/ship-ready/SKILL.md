@@ -54,6 +54,27 @@ Open a PR with `gh pr create` only if the user asked for one. Never auto-merge; 
 
 If the push fails (auth or network), report the error and the local commit hash — do not describe the ship as complete.
 
+## Merge
+
+If the user said **merge** and the ship is on a feature branch, open/merge the PR (or merge to `main` when they asked to commit on `main` directly). Do not force-push `main`.
+
+## Unraid update (always on ship)
+
+**Hard rule:** after a successful push, update the live Unraid app stack. Ship is not done while `gametheca-app` still runs the previous image/checkout.
+
+On HellfireNAS (`root@192.168.50.116`), app-stack only — never touch Unraid OS / arrays / pools:
+
+```bash
+cd /mnt/user/infernal-data-streams/_projects/Oneirodex
+git pull --ff-only
+docker compose up -d --build
+curl -f http://127.0.0.1:5006/readyz
+```
+
+Then **Reset Default Themes** when the ship touched theme CSS/JS under `gametheca/setup/default_theme/` (library volume copies stay stale otherwise) — Admin → Themes, or the admin reset API with a session. Confirm rail/pages on `http://192.168.50.116:5006` after.
+
+Working tree edits on the NAS share already match the checkout before `git pull`; still pull so the container build sees a clean committed tree, and so the host matches `origin/main`.
+
 ## Output
 
 ```
@@ -61,7 +82,10 @@ If the push fails (auth or network), report the error and the local commit hash 
 **Commit:** <hash> <subject>
 **Remote:** pushed | failed (<reason>) — local <hash>
 **PR:** <url or n/a>
+**Unraid:** rebuilt + readyz | failed (<reason>)
+**Themes reset:** done | n/a | needed
 **Docs touched:** …
+**Capture:** refreshed | skipped (why) | needed
 ```
 
 Locked defaults: [docs/dev/agent-locks.md](../../../docs/dev/agent-locks.md).

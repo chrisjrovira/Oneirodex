@@ -187,15 +187,11 @@ body.gt-shell-host > #admin-legacy-content:empty {
   overflow: hidden;
 }
 
-/* Brand sits on the same two columns as every nav row beneath it.
+/* Brand sits on the same inset as every nav row beneath it.
  *
- * It had its own `padding-inline: var(--gt-space-4)` while a nav row's icon
- * starts at the nav's own `--gt-space-2` plus the link's `--gt-space-3`, and
- * the mark was 1.4rem against the rows' 1.15rem icon column. So neither the
- * mark nor the word "GameTheca" lined up with anything under them — three
- * different left edges in the first 3rem of the rail. Both now use
- * `--gt-rail-inset` and `--gt-rail-icon-w`, so mark-over-icon and
- * wordmark-over-label are one column each. */
+ * Nav glyphs use `--gt-rail-icon-w`. The mark-only brand uses
+ * `--gt-rail-mark-expanded` when the rail is open so the logo can be large
+ * while the destination rows stay small. */
 .gt-rail__brand {
   display: flex;
   align-items: center;
@@ -272,18 +268,19 @@ body.gt-shell-host > #admin-legacy-content:empty {
 }
 
 .gt-rail__brand--mark-only .gt-rail__mark {
-  /* Three times the nav icon column when the rail is open. Collapsed still
-     shrinks to the icon column so the mark does not overflow the 3.25rem rail. */
-  width: calc(var(--gt-rail-icon-w) * 3);
-  height: calc(var(--gt-rail-icon-w) * 3);
+  /* Own token, not a multiple of the icon column. Tying the two together made
+     every icon shrink also shrink the logo, which is the opposite of what
+     the expanded rail needs. */
+  width: var(--gt-rail-mark-expanded, 5.5rem);
+  height: var(--gt-rail-mark-expanded, 5.5rem);
   transition: width var(--gt-motion-base) var(--gt-motion-ease),
     height var(--gt-motion-base) var(--gt-motion-ease);
 }
 
-/* Collapsed: shrink to fit the icon column, as it did before. */
+/* Collapsed: shrink to fit the 3.25rem rail, not the destination glyph. */
 [data-rail='collapsed'] .gt-rail__brand--mark-only .gt-rail__mark {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: var(--gt-rail-mark-collapsed, 1.6rem);
+  height: var(--gt-rail-mark-collapsed, 1.6rem);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -399,7 +396,7 @@ body.gt-shell-host > #admin-legacy-content:empty {
 .gt-rail__link {
   display: flex;
   align-items: center;
-  gap: var(--gt-space-3);
+  gap: var(--gt-space-2);
   /* Full width and left-aligned so a <button> lays out like an <a>. */
   width: 100%;
   min-height: var(--gt-rail-item-h);
@@ -407,7 +404,7 @@ body.gt-shell-host > #admin-legacy-content:empty {
   border-radius: var(--gt-radius-sm);
   color: var(--gt-text-muted);
   text-decoration: none;
-  font-size: var(--gt-font-sm);
+  font-size: var(--gt-font-xs);
   white-space: nowrap;
   /* Chat and Friends open panels rather than routing, so they are <button>
      elements in a list of <a> elements. Without these four resets they took the
@@ -467,9 +464,9 @@ body.gt-shell-host > #admin-legacy-content:empty {
  *
  * Expanded glyphs used to scale to 1.8x the column, which made the label
  * beside them look like a caption. `--gt-rail-icon-scale` is 1 so the glyph
- * and the type stay in one size. The brand mark is the thing that grows
- * (3x the column). Collapsed keeps the unscaled column: scaling there crops
- * the glyph in a 3.25rem rail. */
+ * and the type stay in one size. The brand mark grows on its own token.
+ * Collapsed keeps the unscaled column: scaling there crops the glyph in a
+ * 3.25rem rail. */
 .gt-rail__icon {
   flex: 0 0 auto;
   width: var(--gt-rail-icon-w);
@@ -691,7 +688,7 @@ body.gt-shell-host > #admin-legacy-content:empty {
 .gt-rail__link--sub {
   padding-left: var(--gt-space-6);
   min-height: calc(var(--gt-rail-item-h) - 0.2rem);
-  font-size: var(--gt-font-sm);
+  font-size: var(--gt-font-xs);
 }
 
 .gt-rail__link--sub.is-active {

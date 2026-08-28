@@ -6,8 +6,8 @@ Live pixels from local Playwright capture (`scripts/capture_docs_media.py`). Pre
 
 | Shot | README slot | `docs/media/` source | Status |
 |---|---|---|---|
-| **Hero strip** | `hero-banner.png` | `/library` (same session) | **Recaptured 2026-08-28** — review stack, 7 AI covers |
-| **Library + free ROMs** | `screenshot-library.png` | `library-free-roms.png` | **Recaptured 2026-08-28** |
+| **Hero strip** | `hero-banner.png` | `/library` (same session) | **Recaptured 2026-08-28** — review stack; LHN logo `5.5rem` / icons `0.7rem` |
+| **Library + free ROMs** | `screenshot-library.png` | `library-free-roms.png` | **Recaptured 2026-08-28** — rail sizing |
 | **Systems** | `screenshot-systems.png` | `systems-platforms.png` | **Recaptured 2026-08-28** |
 | **Chat / Activity / Friends** | `screenshot-chat.png` | `/chat` (`chat-channels.png` in media) | **Recaptured 2026-08-28** — slide-over with seeded #general messages |
 
