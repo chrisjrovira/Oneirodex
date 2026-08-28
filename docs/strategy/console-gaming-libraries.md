@@ -95,7 +95,7 @@ Skip these as library `folder` values. Names are patterns from the evidence tree
 
 **Skip-dir (shipped):** folder listing ignores built-in emu/FE/tool **prefix** globs (`_Emulators`, `yuzu*`, `ryujinx*`, `dolphin*`, `bsnes*`, `pegasus*`, `cru-*`, `GOD v*`, `mame0*`, …), scaffolding dirs (`Config`, `Lang`, `Plugin`, `ROMs`, `docs`), scan-root leaks (`_console-gaming`, `_pc`, walkthrough trees), mod/VR-mod markers, and generic `[… Repack]` bracket-tag folder names (regex). Operators add extras via Admin Scanning filters prefixed `dir:` (fnmatch) or `re:` (regex). This is **defense-in-depth only** — **correct leaf paths** remain the control; do not point a lib at a family root and rely on skips.
 
-**Propose from the games root:** Admin **Add many: scan a folder** pointed at `/storage` (the games mount) walks `_console-gaming` even though that name is a skip-dir, and proposes `_pc` as **PCWIN** `folders` / `scan_depth=2`. A host folder named `games` that contains those lanes is walked the same way (not treated as a nested `games` dump). Walkthroughs and emu installs stay out. Pointing at `_console-gaming` itself still works.
+**Propose from the games root:** Admin **Add many: scan a folder** pointed at `/storage` (the games mount) walks `_console-gaming` even though that name is a skip-dir, and proposes `_pc` as **PCWIN** `folders` / `scan_depth=2`. A host folder named `games` that contains those lanes is walked the same way (not treated as a nested `games` dump). Title folders that merely contain a platform word (Pinball tables, `Switch NSP` dumps) are not extra libraries. Walkthroughs and emu installs stay out. Pointing at `_console-gaming` itself still works.
 
 ---
 

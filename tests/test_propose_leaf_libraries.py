@@ -318,3 +318,32 @@ def test_mame_zip_dump_is_arcade_files(tmp_path):
     assert len(candidates) == 1
     assert candidates[0]['platform'] == 'ARCADE'
     assert candidates[0]['scan_mode'] == 'files'
+
+
+def test_platform_leaf_does_not_propose_title_folders(tmp_path):
+    """Game titles that contain a platform word are not extra libraries."""
+    root = tmp_path / '_console-gaming'
+    pin = root / 'Future Pinball'
+    pin.mkdir(parents=True)
+    (pin / 'Scooby Doo (Roney Pinball) (3.0b)').mkdir()
+    (pin / 'War of the Worlds (Roney Pinball) (1.0)').mkdir()
+    nes = root / 'NINTENDO' / 'Ninentdo Entertainment System'
+    nes.mkdir(parents=True)
+    (nes / 'Mario').mkdir()
+    (nes / 'Pinball Quest').mkdir()
+    (nes / 'Quattro Arcade').mkdir()
+    nsw = root / 'NINTENDO' / 'Nintendo Switch'
+    nsw.mkdir(parents=True)
+    (nsw / 'Cadence of Hyrule').mkdir()
+    (nsw / 'Stars In The Trash Switch NSP BASE GAME').mkdir()
+
+    candidates = propose_leaf_libraries(str(root))
+    paths = _paths(candidates)
+
+    assert _by_suffix(candidates, 'Future Pinball') is not None
+    assert all('scooby' not in c['path'].casefold() for c in candidates)
+    assert _by_suffix(candidates, 'Ninentdo Entertainment System') is not None
+    assert os.path.normcase(str(nes / 'Pinball Quest')) not in paths
+    assert os.path.normcase(str(nes / 'Quattro Arcade')) not in paths
+    assert _by_suffix(candidates, 'Nintendo Switch') is not None
+    assert all('stars in the trash' not in c['path'].casefold() for c in candidates)

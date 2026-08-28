@@ -439,7 +439,9 @@ def propose_leaf_libraries(
             else:
                 plat = infer_platform_from_name(basename)
                 add(path, platform=plat, reason=f'platform leaf ({basename})')
-            # Still walk non-dump children in case of mixed trees (rare).
+            # Nested dumps and skip-dir/family children only. Do not walk
+            # title folders that happen to contain a platform word
+            # (Future Pinball tables, "Switch NSP" dumps, NES "Pinball Quest").
             for name in _list_children(path):
                 child = _child_path(path, name)
                 if not os.path.isdir(child):
@@ -447,10 +449,6 @@ def propose_leaf_libraries(
                 if name.casefold() in NESTED_DUMP_DIR_NAMES:
                     continue
                 if should_skip_scan_dir(name, patterns) or is_family_parent_name(name):
-                    walk(child, depth + 1)
-                    continue
-                # Sibling platform leaves under a platform folder are unusual; walk.
-                if _looks_like_platform_leaf(name):
                     walk(child, depth + 1)
             return
 
