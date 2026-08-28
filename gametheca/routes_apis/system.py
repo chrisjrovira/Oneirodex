@@ -9,6 +9,10 @@ from gametheca import db
 from gametheca.models import AllowedFileType, IgnoredFileType
 from gametheca.platform import Emulator, LibraryPlatform, platform_emulator_mapping
 from gametheca.utils.auth import admin_required
+from gametheca.utils.browser_player import (
+    get_browser_player_settings,
+    set_browser_player_settings,
+)
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -253,3 +257,26 @@ def emulator_profiles_save():
         if platform_emulator_mapping.get(p)
     }
     return jsonify({'profiles': saved, 'catalog': catalog})
+
+
+@apis_bp.route('/browser-player-settings', methods=['GET'])
+@login_required
+@admin_required
+def browser_player_settings_get():
+    """Admin: browser play engine defaults (BP-0). Only shipped engines are selectable."""
+    return api_ok(get_browser_player_settings())
+
+
+@apis_bp.route('/browser-player-settings', methods=['PUT', 'POST'])
+@login_required
+@admin_required
+def browser_player_settings_save():
+    """Admin: persist browser play engine keys. Unwired engines are rejected."""
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict):
+        return api_error('JSON object required', code='bad_request')
+    try:
+        saved = set_browser_player_settings(data)
+    except ValueError as exc:
+        return api_error(str(exc), code='bad_request')
+    return api_ok(saved)

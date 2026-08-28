@@ -2,7 +2,7 @@
 
 Oneirodex play modes for systems **below PS5 / Xbox Series**. Those two stay **catalog + download only**.
 
-**Browser engines (direction):** Play today uses **WebRetro** (RetroArch WASM). The planned dual-engine path modernizes that launch via **Nostalgist.js / koin.js**, adds **EmulatorJS** as a second engine (admin default + member choice), and optionally a **webЯcade** Docker sidecar — see [browser-play-engines.md](../dev/browser-play-engines.md). SaaS hosts that require uploading household ROMs (e.g. Afterplay) are out of scope.
+**Browser engines (direction):** Play today uses **WebRetro** (RetroArch WASM). Browse payloads include `browser_player` / `browser_players_available` (always `webretro` until a second engine is wired). Admin stub: `GET`/`PUT /api/browser-player-settings`. Planned dual-engine path modernizes that launch via **Nostalgist.js / koin.js**, adds **EmulatorJS** as a second engine, and optionally a **webЯcade** Docker sidecar — see [browser-play-engines.md](../dev/browser-play-engines.md). SaaS hosts that require uploading household ROMs (e.g. Afterplay) are out of scope.
 
 | Platform | Browser (WebRetro) | Companion | Notes |
 |---|---|---|---|

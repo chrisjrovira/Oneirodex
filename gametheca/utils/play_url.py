@@ -11,6 +11,7 @@ from gametheca.platform import (
     pcdos_browser_enabled,
     play_mode_for_platform,
 )
+from gametheca.utils.browser_player import play_engine_fields
 from gametheca.utils.rom_archive import path_supports_browser_extract
 from gametheca.utils.webretro_cores import get_effective_installed_cores
 
@@ -114,6 +115,7 @@ def browse_play_fields(game) -> dict[str, Any]:
 
     def finish(payload: dict[str, Any]) -> dict[str, Any]:
         payload['cheat_surface'] = surface
+        payload.update(play_engine_fields())
         # FEAT-D5: per-system room treatment so the play surface can dress
         # itself for the era. Data only — the caller decides scope.
         try:
@@ -287,15 +289,13 @@ def browse_play_fields(game) -> dict[str, Any]:
         n64_note = 'N64 WebRetro cores can be flaky on some titles — try the other core in Emulator profiles if play fails.'
 
     platform_q = f'&platform={key}' if key else ''
-    # BP-0: single engine today. Dual-engine resolver (WebRetro/Nostalgist ·
-    # EmulatorJS · optional webЯcade) lands in docs/dev/browser-play-engines.md.
+    # Engine id on the payload comes from play_engine_fields() in finish().
+    # Launch URL stays WebRetro until Nostalgist / EmulatorJS shells ship.
     return finish({
         'play_url': (
             f'/static/vendor/webretro/webretro.html?guid={game.uuid}&core={core}{platform_q}'
         ),
         'can_play_in_browser': True,
-        'browser_player': 'webretro',
-        'browser_players_available': ['webretro'],
         'emulator_cores': cores,
         'emulator_core': core,
         'library_platform': key,

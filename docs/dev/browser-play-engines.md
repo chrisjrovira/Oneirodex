@@ -96,7 +96,7 @@ Honesty badges stay per-platform × **capability**, not per-engine marketing. If
 
 | Wave | Deliverable |
 |---|---|
-| **BP-0** | This note + settings keys stub + `browser_player` on play payload (default `webretro`) |
+| **BP-0** | **Landed 2026-08-28.** This note + `GET`/`PUT /api/browser-player-settings` + `browser_player` / `browser_players_available` on every play payload. Default and available list are `webretro` only — EmulatorJS is a recognized name but rejected as default until that shell ships. |
 | **BP-1** | Nostalgist launch path for one pilot system (NES) behind flag; parity with WebRetro saves/BIOS |
 | **BP-2** | EmulatorJS shell for the same pilot; admin default + member choice |
 | **BP-3** | Expand matrix; koin.js optional React chrome |

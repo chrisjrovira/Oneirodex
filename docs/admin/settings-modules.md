@@ -4,6 +4,8 @@ Admin settings use a **card grid** at `/admin/settings` (whole card → destinat
 
 **Integrations inventory API:** `GET /api/admin/integrations/inventory` (admin) returns `{integrations[{id,name,category,status,configured,enabled,admin_href,settings_href,notes}], count, hub_href}` covering IGDB, SteamGridDB, Giant Bomb, HLTB, Meta/Quest, SMTP, OIDC, Support, community chat, LiveKit, Arr connectors, and ownership register links — so the hub is not IGDB-only. The React Integrations page renders a **Provider inventory** grouped by category (with status + notes) under the hub cards. Classic `/admin/integrations` artwork tab anchors (`#steamgriddb`, `#giantbomb`, `#hltb`, `#meta_quest`, `#ownership`, `#livekit`, `#support`, `#indexers`, `#community`, `#email`, `#igdb`) deep-link the same surfaces.
 
+**Browser play engine (BP-0):** `GET`/`PUT /api/browser-player-settings` stores admin defaults under `GlobalSettings.settings.browser_player`. The only selectable engine today is `webretro`; `emulatorjs` is a reserved name and is rejected as default until that shell ships. Browse play payloads include `browser_player` / `browser_players_available`. See [browser-play.md](../user/browser-play.md) and [browser-play-engines.md](../dev/browser-play-engines.md).
+
 **Export packs:** Admin → Integrations → **Export packs** (and member Systems secondary section) download ES-DE `gamelist.xml` (`/api/export/esde`) and Pegasus metadata (`/api/export/pegasus`). Paths are portable under library roots — NAS/home mounts are not leaked.
 
 **Server logs alias:** Admin server logs/status is also at **`/admin/server_logs`**.
