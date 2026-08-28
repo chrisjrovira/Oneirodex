@@ -16,8 +16,8 @@ Scope
 Register-only, exactly as the sync itself is: this records which titles an
 account owns. It downloads nothing and changes nothing on disk.
 
-Only stores with a real live API are polled. GOG and Epic use unofficial
-Galaxy / launcher surfaces (operator-supplied tokens); Amazon stays CSV-only.
+Only stores with a real live API are polled. GOG, Epic, and Amazon use unofficial
+launcher surfaces (operator-supplied tokens); CSV still works for all of them.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ _scheduler_started = False
 #: Stores that can actually be re-synced live today. Derived from the handler
 #: registry below — see _live_sync_handlers for why this must not be edited
 #: on its own.
-LIVE_SYNC_STORES = ('steam', 'gog', 'epic')
+LIVE_SYNC_STORES = ('steam', 'gog', 'epic', 'amazon')
 
 
 def _live_sync_handlers() -> dict:
@@ -64,6 +64,11 @@ def _live_sync_handlers() -> dict:
             'credential': store_ownership.epic_live_ready,
             'sync': store_ownership.sync_epic_owned_games,
             'missing': 'no Epic device auth configured',
+        },
+        'amazon': {
+            'credential': store_ownership.amazon_live_ready,
+            'sync': store_ownership.sync_amazon_owned_games,
+            'missing': 'no Amazon Nile/Heroic token configured',
         },
     }
 
@@ -167,6 +172,10 @@ def sync_all_linked_accounts() -> dict:
             continue
         if store == 'epic' and not (
             getattr(account, 'credential', None) or store_ownership.get_epic_api_token()
+        ):
+            continue
+        if store == 'amazon' and not (
+            getattr(account, 'credential', None) or store_ownership.get_amazon_api_token()
         ):
             continue
         try:

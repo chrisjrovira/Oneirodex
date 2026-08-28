@@ -87,6 +87,9 @@ def test_skips_cleanly_without_an_api_key(app, monkeypatch):
     monkeypatch.setattr(
         'gametheca.utils.store_ownership.epic_live_ready', lambda: False
     )
+    monkeypatch.setattr(
+        'gametheca.utils.store_ownership.amazon_live_ready', lambda: False
+    )
 
     with app.app_context():
         result = ownership_poller.sync_all_linked_accounts()
@@ -127,6 +130,9 @@ def test_one_broken_account_does_not_stop_the_rest(app, db_session, member, monk
     monkeypatch.setattr(
         'gametheca.utils.store_ownership.epic_live_ready', lambda: False
     )
+    monkeypatch.setattr(
+        'gametheca.utils.store_ownership.amazon_live_ready', lambda: False
+    )
 
     calls = []
 
@@ -157,10 +163,10 @@ def test_one_broken_account_does_not_stop_the_rest(app, db_session, member, monk
 
 
 def test_only_stores_with_a_live_api_are_polled():
-    """Amazon stays CSV-only; Steam / GOG / Epic are enrolled."""
+    """Amazon is live register now; Steam / GOG / Epic / Amazon are enrolled."""
     from gametheca.utils.ownership_poller import LIVE_SYNC_STORES
 
-    assert set(LIVE_SYNC_STORES) == {'steam', 'gog', 'epic'}
+    assert set(LIVE_SYNC_STORES) == {'steam', 'gog', 'epic', 'amazon'}
 
 
 class TestSyncModeHonesty:
@@ -180,8 +186,8 @@ class TestSyncModeHonesty:
         from gametheca.utils.store_ownership import STORE_SYNC_MODE, store_sync_mode
 
         live = [s for s in STORE_SYNC_MODE if store_sync_mode(s) == 'live']
-        assert live == ['steam', 'gog', 'epic']
-        assert store_sync_mode('amazon') == 'snapshot'
+        assert live == ['steam', 'gog', 'epic', 'amazon']
+        assert store_sync_mode('playnite') == 'snapshot'
 
     def test_unknown_stores_default_to_snapshot(self):
         """The safe direction to be wrong in — claiming less, never more."""
@@ -197,7 +203,7 @@ class TestSyncModeHonesty:
         """The guard that stops the UI over-claiming again."""
         from gametheca.utils import ownership_poller, store_ownership
 
-        monkeypatch.setitem(store_ownership.STORE_SYNC_MODE, 'amazon', 'live')
+        monkeypatch.setitem(store_ownership.STORE_SYNC_MODE, 'playnite', 'live')
 
         with app.app_context():
             with pytest.raises(RuntimeError, match='advertises'):
@@ -213,6 +219,8 @@ class TestSyncModeHonesty:
             assert summary['stores']['steam']['live_sync'] is True
             assert summary['stores']['gog']['live_sync'] is True
             assert summary['stores']['gog']['sync_mode'] == 'live'
+            assert summary['stores']['amazon']['live_sync'] is True
+            assert summary['stores']['amazon']['sync_mode'] == 'live'
             # Present even when never synced, so the UI does not have to guess
             # whether the key is missing or the value is genuinely unknown.
             assert 'last_synced_at' in summary['stores']['gog']
@@ -230,7 +238,7 @@ class TestSyncModeHonesty:
         from gametheca.utils import ownership_poller, store_ownership
 
         monkeypatch.setattr(ownership_poller, '_scheduler_started', False)
-        monkeypatch.setitem(store_ownership.STORE_SYNC_MODE, 'amazon', 'live')
+        monkeypatch.setitem(store_ownership.STORE_SYNC_MODE, 'playnite', 'live')
         app.config['ENABLE_OWNERSHIP_POLL'] = True
 
         # Must not raise — the app keeps booting.

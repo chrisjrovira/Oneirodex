@@ -84,6 +84,25 @@ export async function syncEpic() {
   return mutate('/api/ownership/epic/sync', 'sync_epic', { json: {} })
 }
 
+export async function connectAmazon(amazonUserId, { credential, refreshToken, deviceSerial } = {}) {
+  return mutate('/api/ownership/amazon', 'connect_amazon', {
+    json: {
+      amazon_user_id: amazonUserId,
+      ...(credential ? { credential } : {}),
+      ...(refreshToken ? { refresh_token: refreshToken } : {}),
+      ...(deviceSerial ? { device_serial: deviceSerial } : {}),
+    },
+  })
+}
+
+export async function disconnectAmazon() {
+  return mutate('/api/ownership/amazon', 'disconnect_amazon', { method: 'DELETE' })
+}
+
+export async function syncAmazon() {
+  return mutate('/api/ownership/amazon/sync', 'sync_amazon', { json: {} })
+}
+
 /**
  * The CSV endpoints accept either a JSON `csv` string or a multipart upload
  * under the `file` field, so pass whichever the member supplied.

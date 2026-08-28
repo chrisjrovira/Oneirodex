@@ -1,7 +1,7 @@
 # ADR: Product name Oneirodex
 
 **Date:** 2026-08-26  
-**Status:** Accepted — **Phase 1 (public string) landed 2026-08-26**. Ops identifiers (Docker Hub, containers, GitHub) and code identifiers (`gametheca/`, `GT_*`, `gt-`) are **not** started.  
+**Status:** Accepted — **Phase 1 (public string) landed 2026-08-26**. **Phase 2 (ops identifiers) started 2026-08-27** — dual names only; existing installs keep `gametheca-*` containers and the local `gametheca:1.0.0-beta` tag. Preferred Hub image once published: `chrisjrovira/oneirodex`. Code identifiers (`gametheca/`, `GT_*`, `gt-`) are **not** started.  
 **Owners:** `maintainer` · `agent-docs`
 
 ## Context
@@ -52,7 +52,7 @@ Web search found no USPTO / EUIPO hit for Oneirodex as a live software mark. Tha
 ## Cutover
 
 1. **Public string** — UI, Help, README, user/admin docs, CHANGELOG going forward. Package and Docker unchanged. **Done 2026-08-26.**
-2. **Ops identifiers** — image `chrisjrovira/oneirodex`, containers, Unraid template, GitHub repo. Keep redirects / dual names for existing installs. **Not started.**
+2. **Ops identifiers** — image `chrisjrovira/oneirodex`, containers, Unraid template, GitHub repo. Keep redirects / dual names for existing installs. **Started 2026-08-27:** Compose `APP_IMAGE` / `APP_CONTAINER_NAME` (defaults still `gametheca:1.0.0-beta` / `gametheca-app`); OCI title label **Oneirodex**; `SUPPORT_GITHUB_REPO` still defaults to `chrisjrovira/gametheca` until the GitHub rename exists. Do not rename running Unraid containers in this slice.
 3. **Code identifiers** — Python package, `GT_*` → new prefix, CSS `gt-` tokens. Longest and last. **Not started.**
 
 Existing installs must keep working through (2) and (3). Do not rewrite git history for the old name.

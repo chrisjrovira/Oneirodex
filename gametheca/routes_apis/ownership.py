@@ -5,18 +5,22 @@ from flask import jsonify, request
 from flask_login import current_user, login_required
 
 from gametheca.utils.store_ownership import (
+    connect_amazon_account,
     connect_epic_account,
     connect_gog_account,
     connect_steam_account,
+    disconnect_amazon_account,
     disconnect_epic_account,
     disconnect_gog_account,
     disconnect_steam_account,
     get_ownership_summary,
+    import_amazon_csv,
     import_epic_csv,
     import_gog_csv,
     import_meta_quest_csv,
     import_steam_csv,
     is_ownership_sync_enabled,
+    sync_amazon_owned_games,
     sync_epic_owned_games,
     sync_gog_owned_games,
     sync_steam_owned_games,
@@ -237,6 +241,88 @@ def import_epic_csv_route():
         return api_error('csv content required', code='bad_request')
     try:
         result = import_epic_csv(current_user.id, csv_text)
+    except PermissionError as exc:
+        return api_error(str(exc), code='forbidden')
+    return jsonify({
+        **result,
+        'summary': get_ownership_summary(current_user.id),
+    })
+
+
+@apis_bp.route('/ownership/amazon', methods=['POST'])
+@login_required
+def connect_amazon():
+    if not is_ownership_sync_enabled():
+        return _feature_disabled_response()
+    data = request.get_json(silent=True) or {}
+    amazon_user_id = (
+        data.get('amazon_user_id') or data.get('user_id') or ''
+    ).strip() or None
+    note = (data.get('note') or '').strip() or None
+    credential = (
+        data.get('credential')
+        or data.get('token')
+        or data.get('nile_json')
+        or None
+    )
+    refresh_token = (data.get('refresh_token') or '').strip() or None
+    access_token = (data.get('access_token') or '').strip() or None
+    device_serial = (
+        data.get('device_serial') or data.get('device_serial_number') or ''
+    ).strip() or None
+    account = connect_amazon_account(
+        current_user.id,
+        amazon_user_id,
+        note,
+        credential=credential,
+        refresh_token=refresh_token,
+        access_token=access_token,
+        device_serial=device_serial,
+    )
+    return jsonify({
+        'account': account.to_dict(),
+        'summary': get_ownership_summary(current_user.id),
+    }), 201
+
+
+@apis_bp.route('/ownership/amazon', methods=['DELETE'])
+@login_required
+def disconnect_amazon():
+    if not is_ownership_sync_enabled():
+        return _feature_disabled_response()
+    disconnect_amazon_account(current_user.id)
+    return jsonify({'summary': get_ownership_summary(current_user.id)})
+
+
+@apis_bp.route('/ownership/amazon/sync', methods=['POST'])
+@login_required
+def sync_amazon():
+    if not is_ownership_sync_enabled():
+        return _feature_disabled_response()
+    try:
+        result = sync_amazon_owned_games(current_user.id)
+    except PermissionError as exc:
+        return api_error(str(exc), code='forbidden')
+    except ValueError as exc:
+        return api_error(str(exc), code='bad_request')
+    except Exception as exc:
+        return api_error(f'Amazon sync failed: {exc}', code='bad_gateway')
+    return jsonify({
+        **result,
+        'summary': get_ownership_summary(current_user.id),
+    })
+
+
+@apis_bp.route('/ownership/amazon/csv', methods=['POST'])
+@login_required
+def import_amazon_csv_route():
+    if not is_ownership_sync_enabled():
+        return _feature_disabled_response()
+    csv_text = _read_csv_payload()
+    if not csv_text.strip():
+        return api_error('csv content required', code='bad_request')
+    try:
+        result = import_amazon_csv(current_user.id, csv_text)
     except PermissionError as exc:
         return api_error(str(exc), code='forbidden')
     return jsonify({

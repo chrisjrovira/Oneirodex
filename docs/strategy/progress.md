@@ -4,7 +4,7 @@
 
 **Release:** **1.0.0-beta** — see the root [CHANGELOG.md](../../CHANGELOG.md). Waves **4–28** are on `origin/main`.
 
-**Updated:** 2026-08-27 — **Oneirodex phase 1 (public string) landed.** Package / Docker / `GT_*` / `gt-` unchanged. Standing constraints: **no** Discord · **no Class A** intel in public docs.
+**Updated:** 2026-08-27 — **Amazon live register** + **details disc chips** + **Oneirodex ops dual names started.** Package / `GT_*` / `gt-` unchanged. Standing constraints: **no** Discord · **no Class A** intel in public docs. · **no store downloads**.
 
 Wave diary (W4–W28): [archive/progress-waves-2026-07-08.md](archive/progress-waves-2026-07-08.md). Open set: [carryover-w28.md](carryover-w28.md). UI register: [ui-debt-log.md](../dev/ui-debt-log.md) (open table only). Name lock: [ADR 0003](../adr/0003-product-name-oneirodex.md).
 
@@ -13,13 +13,13 @@ Wave diary (W4–W28): [archive/progress-waves-2026-07-08.md](archive/progress-w
 | | |
 |---|---|
 | **Chosen** | **Oneirodex** (oh-NY-roh-dex) · slug `oneirodex` · [ADR 0003](../adr/0003-product-name-oneirodex.md) |
-| **Shipped surface** | **Oneirodex** in UI, Help, README, user/admin docs. Package `gametheca/`, Docker, GitHub, `GT_*`, `--gt-*` unchanged |
-| **Do not** | Mix OneiroDex / ONEIRODEX into UI. Do not rename the package or Docker image in this wave |
+| **Shipped surface** | **Oneirodex** in UI, Help, README, user/admin docs. Package `gametheca/`, `GT_*`, `--gt-*` unchanged. Phase 2 dual names: `APP_IMAGE` / `APP_CONTAINER_NAME` default to existing `gametheca-*` |
+| **Do not** | Mix OneiroDex / ONEIRODEX into UI. Do not rename the Python package or `GT_*` / `gt-` in this wave. Do not rename running Unraid containers. |
 | **Claim soon (human)** | GitHub user/org `oneirodex` · PyPI/npm slugs · `oneirodex.com` / `.dev` / `.app` (RDAP 404 on 26 Aug 2026). `.io` not confirmed |
 
 ## Ship TLDR
 
-Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup/placeholder art follows the room. Cabinet playback on the WebRetro play bar. **Oneirodex** is the public product string (package still `gametheca`). Play-mode matrix covers every `LibraryPlatform`, not only NES/GB. Set completion and Playtime use bar two. High-confidence IGDB hits that unique-exact-disagree with other catalogs go to Review. Admin Emulators can scan a local firmware collection and copy a markdown missing list. Shared JSON envelope remainder is **11** annotated keeps (`/healthz`, batch `ok`, `ollama_status`, hardlink preview, game-details play status, OIDC report). CSS token ratchet **0**. Page-owning SPA loads and remaining action/section errors use `PageStatus` (including Ops glance, Library, FilterBar, Tokens, Acquire, Report, Friends, space rail, voice, store search, wishlist/collections, Users save, Images path). Trailers **Another one** uses `LoadingOverlay` so the player does not collapse. Landscape pass ticketed as INSP-* ([capability-inspiration.md](capability-inspiration.md)); named catalog stays private. Leftover admin/member chrome, GOG/Epic live register, and CSP **enforces** already on `main`. **Blank-cover replace is wired through every download path.** Tile preview store marks include GOG / Epic and a YouTube trailer source from the editions request. **Next:** README recapture on a populated instance; **Ops** Reset Themes (`gt-era.css` + UID-017 classic CSS); ops/code identifier waves.
+Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup/placeholder art follows the room. Cabinet playback on the WebRetro play bar. **Oneirodex** is the public product string (package still `gametheca`). Play-mode matrix covers every `LibraryPlatform`, not only NES/GB. Set completion and Playtime use bar two. High-confidence IGDB hits that unique-exact-disagree with other catalogs go to Review. Admin Emulators can scan a local firmware collection and copy a markdown missing list. Shared JSON envelope remainder is **11** annotated keeps (`/healthz`, batch `ok`, `ollama_status`, hardlink preview, game-details play status, OIDC report). CSS token ratchet **0**. Page-owning SPA loads and remaining action/section errors use `PageStatus` (including Ops glance, Library, FilterBar, Tokens, Acquire, Report, Friends, space rail, voice, store search, wishlist/collections, Users save, Images path). Trailers **Another one** uses `LoadingOverlay` so the player does not collapse. Landscape pass ticketed as INSP-* ([capability-inspiration.md](capability-inspiration.md)); named catalog stays private. Leftover admin/member chrome, GOG/Epic live register, and CSP **enforces** already on `main`. **Blank-cover replace is wired through every download path.** Tile preview store marks include GOG / Epic and a YouTube trailer source from the editions request. **Next:** README recapture on a populated instance; **Ops** Reset Themes (`gt-era.css` + UID-017 classic CSS); GitHub/Hub rename (operator click) then `SUPPORT_GITHUB_REPO` / image publish; code identifier wave last.
 
 ## Done
 
@@ -36,6 +36,9 @@ Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup
 | **Play matrix** | Every `LibraryPlatform` has browser / companion / catalog honesty. SG-1000 and NGPC browser-play via already-shipped WASM (`genesis_plus_gx` / `mednafen_ngp`). Legal sample ROMs: NES, SNES, GB, GBC, GBA, Genesis, Atari 2600 |
 | **W34 catalog corroboration** | High-confidence IGDB hits that unique-exact-disagree with Steam/GOG/Moby/TGDB go to Review (`catalog_disagreement`). Remaster tails are no-signal. Agreeing catalogs fill-only store IDs. |
 | **Oneirodex phase 1** | Public string in UI, Help, README, user/admin docs. `RESET ONEIRODEX` (legacy `RESET GAMETHECA` still accepted). Package / Docker unchanged |
+| **Amazon live register** | Nile/Heroic entitlements → `UserOwnedTitle`. Never downloads. CSV still works. Poller enrolled. |
+| **Details disc chips** | Multi-disc count + Disc N on game details. Not on tiles. |
+| **Oneirodex phase 2 (ops dual names)** | `APP_IMAGE` / `APP_CONTAINER_NAME` / `DB_CONTAINER_NAME`; OCI title **Oneirodex**. Defaults keep `gametheca-*`. GitHub default still `chrisjrovira/gametheca` until the rename exists. |
 | **Admin firmware scan** | Folder of dumps you already own → matching names on the volume, version picker, copyable missing markdown. Same walk as `scripts/import_bios.py`. Never downloads BIOS. |
 | **Unraid stack path** | Compose Manager tree is `/mnt/user/infernal-data-streams/_projects/Gametheca`. `/mnt/user/isos/gametheca/` is retired. |
 
@@ -46,8 +49,8 @@ Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup
 | README recapture | Populated instance — empty test-DB frames are worse than stale art |
 | Icon packs | Six visually distinct packs · per-theme icon drawings (art, not code) |
 | UID-017 / UID-018 | Token ratchet **0** (UID-017) · envelope remainder (**11** annotated keeps) |
-| Amazon / silent DRM | Not code this cycle |
-| Rename ops / code identifiers | Phase 1 (public string) **landed**. Image `chrisjrovira/oneirodex`, containers, GitHub, `gametheca/` / `GT_*` / `gt-` wait for a later ask. Dual names required. |
+| GitHub / Hub rename | Operator click — then `SUPPORT_GITHUB_REPO=chrisjrovira/oneirodex` and publish `chrisjrovira/oneirodex` |
+| Code identifiers | `gametheca/` · `GT_*` · `gt-` — phase 3, last. Dual names required. |
 
 ## Blocked
 

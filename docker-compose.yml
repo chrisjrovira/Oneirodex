@@ -25,6 +25,13 @@
 # Unraid path examples: .env.unraid.example
 # Profiles (opt-in): livekit | clamav | challenge
 # Observability: commented stub only — see docs/runbooks/observability-profile.md
+#
+# Dual names (ADR 0003 phase 2): existing installs keep gametheca-* container
+# names and the local build tag gametheca:1.0.0-beta. Preferred Hub image once
+# published is chrisjrovira/oneirodex:1.0.0-beta; chrisjrovira/gametheca remains
+# accepted. Override without editing this file:
+#   APP_IMAGE=chrisjrovira/oneirodex:1.0.0-beta
+#   APP_CONTAINER_NAME=gametheca-app
 # ---------------------------------------------------------------------------
 
 services:
@@ -32,8 +39,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: gametheca:1.0.0-beta
-    container_name: gametheca-app
+    image: ${APP_IMAGE:-gametheca:1.0.0-beta}
+    container_name: ${APP_CONTAINER_NAME:-gametheca-app}
     restart: unless-stopped
     ports:
       - "5006:5006"
@@ -148,7 +155,7 @@ services:
 
   db:
     image: postgres:17.6
-    container_name: gametheca-db
+    container_name: ${DB_CONTAINER_NAME:-gametheca-db}
     restart: unless-stopped
     shm_size: 128mb
     environment:

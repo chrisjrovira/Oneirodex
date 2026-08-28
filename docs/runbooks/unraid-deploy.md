@@ -127,7 +127,7 @@ Operator map: [console-gaming-libraries.md](../strategy/console-gaming-libraries
 
 ## Image
 
-`chrisjrovira/gametheca:latest` (or build from this repo). The image includes `bash` for `entrypoint.sh`.
+Local build tag `gametheca:1.0.0-beta` (Compose default). Preferred Hub image once published: `chrisjrovira/oneirodex` — set `APP_IMAGE`. `chrisjrovira/gametheca` remains accepted. The image includes `bash` for `entrypoint.sh`.
 
 ## Compose Manager paths
 

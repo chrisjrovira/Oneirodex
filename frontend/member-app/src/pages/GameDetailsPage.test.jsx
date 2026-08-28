@@ -128,6 +128,39 @@ test('shows Cheats panel only when cheat_surface is retroarch', async () => {
   expect(playLinks[0]).toHaveAttribute('href', expect.stringContaining('cheat_surface=retroarch'))
 })
 
+test('shows disc chips on details, not as a tile badge', async () => {
+  global.fetch = vi.fn((url) => {
+    if (String(url).includes('/details')) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ...detailsPayload,
+            is_multi_disc: true,
+            disc_count: 2,
+            discs: [
+              { disc_index: 1, is_primary: true },
+              { disc_index: 2, is_primary: false },
+            ],
+          }),
+      })
+    }
+    if (String(url).includes('/versions')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ versions: [] }),
+      })
+    }
+    return Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) })
+  })
+
+  renderDetails()
+  expect(await screen.findByRole('heading', { name: 'Celeste' })).toBeInTheDocument()
+  expect(screen.getByText('2 discs')).toBeInTheDocument()
+  expect(screen.getByText('Disc 1')).toBeInTheDocument()
+  expect(screen.getByText('Disc 2')).toBeInTheDocument()
+})
+
 test('admin path rows show the full library folder string', async () => {
   const fullPath = '/mnt/user/games/PCWIN/Indie Puzzle/Very Long Folder Name/Celeste'
   global.fetch = vi.fn((url) => {

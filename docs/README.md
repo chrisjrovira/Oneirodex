@@ -2,7 +2,7 @@
 
 **Product version:** 1.0.0-beta — see root [CHANGELOG.md](../CHANGELOG.md) and [VERSION](../VERSION).
 
-Hub for product, ops, and developer docs. Public name **Oneirodex** (phase 1) — package `gametheca/`, Docker `chrisjrovira/gametheca`. [ADR 0003](adr/0003-product-name-oneirodex.md).
+Hub for product, ops, and developer docs. Public name **Oneirodex** (phase 1 landed; phase 2 dual names started) — package `gametheca/`, Compose defaults `gametheca-*`, preferred Hub image `chrisjrovira/oneirodex` once published. [ADR 0003](adr/0003-product-name-oneirodex.md).
 
 Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs/assets/readme/`), quick start, and troubleshooting.
 
@@ -64,7 +64,7 @@ docs/
 | Surface | Value |
 |---|---|
 | Product (shipped today) | Oneirodex (public string) |
-| Ops / code identifiers | Still `gametheca` — [ADR 0003](adr/0003-product-name-oneirodex.md) phase 2/3 not started |
+| Ops / code identifiers | Phase 2 dual names started (`APP_IMAGE`); package / `GT_*` / `gt-` still `gametheca` — [ADR 0003](adr/0003-product-name-oneirodex.md) |
 | Version | 1.0.0-beta |
 | GitHub | chrisjrovira/gametheca |
 | App / DB containers | gametheca-app · gametheca-db |

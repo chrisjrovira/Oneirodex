@@ -73,8 +73,8 @@ sent and need no configuration. CSP **enforces** by default (`CSP_ENFORCE=true`)
 
 | Integration | Notes |
 |---|---|
-| GOG / Epic sync 401 | Token expired or unofficial API changed | Re-paste a refresh token / device-auth JSON. CSV still works. Oneirodex does not download those stores |
-| Ownership poller skipped GOG or Epic | No per-account credential and no household env | Save a token on Ownership, or set `GOG_REFRESH_TOKEN` / `EPIC_DEVICE_AUTH` |
+| GOG / Epic / Amazon sync 401 | Token expired or unofficial API changed | Re-paste a refresh token / device-auth / Nile JSON. CSV still works. Oneirodex does not download those stores |
+| Ownership poller skipped GOG, Epic, or Amazon | No per-account credential and no household env | Save a token on Ownership, or set `GOG_REFRESH_TOKEN` / `EPIC_DEVICE_AUTH` / `AMAZON_REFRESH_TOKEN` |
 | Community chat | BYO Stoat/Matrix URL only |
 | Discord | **Removed** — use Support inbox + in-app admin alerts |
 | LiveKit | [livekit-unraid.md](../runbooks/livekit-unraid.md) · Plugins → `rtc.livekit` |

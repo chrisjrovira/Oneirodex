@@ -38,6 +38,10 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+LABEL org.opencontainers.image.title="Oneirodex" \
+      org.opencontainers.image.description="Self-hosted household game library" \
+      org.opencontainers.image.source="https://github.com/chrisjrovira/gametheca"
+
 # Install system dependencies (bash required by entrypoint/start scripts).
 # libarchive-tools (bsdtar) and p7zip-full (7z) give rarfile a working
 # extraction backend for .rar ROMs without needing Debian's non-free repo

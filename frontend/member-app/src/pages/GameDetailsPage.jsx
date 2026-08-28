@@ -22,6 +22,7 @@ import { ScreenshotLightbox } from '../components/ScreenshotLightbox'
 import { coverUrl } from '../utils/coverUrl'
 import {
   adminPathRows,
+  detailsDiscChips,
   extrasPanelModel,
   formatVersionSize,
   isVersionDownloadable,
@@ -192,6 +193,7 @@ export function GameDetailsPage() {
     () => extrasPanelModel(game, versions, { loading: versionsLoading }),
     [game, versions, versionsLoading],
   )
+  const discChips = useMemo(() => detailsDiscChips(game), [game])
   const baseAndUpdates = useMemo(
     () => versions.filter((row) => row.kind === 'base' || row.kind === 'update'),
     [versions],
@@ -443,6 +445,11 @@ export function GameDetailsPage() {
               </span>
             ) : null}
             {game.size ? <span className="chip gt-chip">{game.size}</span> : null}
+            {discChips.map((chip) => (
+              <span key={chip.key} className="chip gt-chip" title={chip.title}>
+                {chip.text}
+              </span>
+            ))}
             {game.status_label ? <span className="chip gt-chip">{game.status_label}</span> : null}
             {game.rom_region || game.rom_languages ? (
               <span className="chip gt-chip" title="ROM region / languages from filename">
@@ -1062,6 +1069,9 @@ export function GameDetailsPage() {
                       <span className="gt-details-page__muted">
                         {' '}
                         · {row.kind}
+                        {row.kind === 'disc' && row.disc_index != null
+                          ? ` ${row.disc_index}`
+                          : ''}
                         {sizeLabel ? ` · ${sizeLabel}` : ''}
                         {onServer ? ` · ${onServer}` : ''}
                       </span>

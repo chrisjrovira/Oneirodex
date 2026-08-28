@@ -154,7 +154,7 @@ export const railIconPaths = {
   ),
   // A key, not a shopping bag (W28). The bag was the `store` glyph doing double
   // duty, and it said "buy something" on the one page that is about what you
-  // already have. Ownership here is licences held across Steam / GOG / Epic —
+  // already have. Ownership here is licences held across Steam / GOG / Epic / Amazon —
   // and a game licence has been called a key for as long as it has existed, so
   // the metaphor needs no learning.
   'ownership': (

@@ -352,7 +352,7 @@ def try_attach_multi_disc_sibling(
 
 
 def disc_browse_fields(game, extras=None) -> dict[str, Any]:
-    """JSON field map for browse/details (UI disc chip later)."""
+    """JSON field map for browse/details (disc chips on the details page)."""
     primary_idx = getattr(game, 'disc_index', None)
     disc_count = getattr(game, 'disc_count', None)
     discs: list[dict[str, Any]] = []

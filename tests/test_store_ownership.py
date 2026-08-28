@@ -525,3 +525,104 @@ def test_gog_401_fails_honestly(mock_out, db_session, user):
     mock_out.return_value = Resp()
     with pytest.raises(ValueError, match='rejected'):
         sync_gog_owned_games(user.id)
+
+
+def test_flatten_amazon_nile_user_json():
+    from gametheca.utils.store_ownership import _flatten_amazon_credential
+
+    nested = {
+        'tokens': {
+            'bearer': {
+                'access_token': 'acc',
+                'refresh_token': 'ref',
+            }
+        },
+        'extensions': {
+            'device_info': {'device_serial_number': 'SERIAL1'},
+            'customer_info': {'user_id': 'amzn1.account.x'},
+        },
+    }
+    flat = _flatten_amazon_credential(nested)
+    assert flat['refresh_token'] == 'ref'
+    assert flat['access_token'] == 'acc'
+    assert flat['device_serial'] == 'SERIAL1'
+    assert flat['user_id'] == 'amzn1.account.x'
+
+
+@patch('gametheca.utils.store_ownership._outbound')
+def test_amazon_live_sync_register_only(mock_out, db_session, user):
+    from gametheca.utils.store_ownership import connect_amazon_account, sync_amazon_owned_games
+
+    _ensure_global_settings(db_session, enable_store_ownership_sync=True)
+    connect_amazon_account(
+        user.id,
+        credential={
+            'refresh_token': 'amzn-refresh',
+            'device_serial': 'DEVSERIAL',
+        },
+    )
+
+    def fake_out(method, url, **kwargs):
+        class Resp:
+            status_code = 200
+            content = b'{}'
+
+            def json(self):
+                if 'auth/token' in url:
+                    return {'access_token': 'amzn-access', 'expires_in': 3600}
+                if 'entitlements' in url:
+                    return {
+                        'entitlements': [
+                            {'product': {'id': 'prod-a', 'title': 'Amazon Game A'}},
+                            {'product': {'id': 'prod-b', 'title': 'Amazon Game B'}},
+                        ]
+                    }
+                return {}
+
+            def raise_for_status(self):
+                return None
+
+        return Resp()
+
+    mock_out.side_effect = fake_out
+    result = sync_amazon_owned_games(user.id)
+    assert result['synced'] == 2
+    assert result['store'] == 'amazon'
+    called_urls = [call.args[1] for call in mock_out.call_args_list]
+    assert any('auth/token' in url for url in called_urls)
+    assert any('entitlements' in url for url in called_urls)
+    assert all('GetGameDownload' not in url for url in called_urls)
+    rows = db_session.execute(
+        select(UserOwnedTitle).filter_by(user_id=user.id, store='amazon')
+    ).scalars().all()
+    assert {row.external_app_id for row in rows} == {'prod-a', 'prod-b'}
+    account = db_session.execute(
+        select(StoreAccount).filter_by(user_id=user.id, store='amazon')
+    ).scalars().one()
+    assert 'refresh_token' in account.credential
+    assert 'access_token' not in account.to_dict()
+
+
+@patch('gametheca.utils.store_ownership._outbound')
+def test_amazon_401_fails_honestly(mock_out, db_session, user):
+    from gametheca.utils.store_ownership import connect_amazon_account, sync_amazon_owned_games
+
+    _ensure_global_settings(db_session, enable_store_ownership_sync=True)
+    connect_amazon_account(
+        user.id,
+        credential={'refresh_token': 'dead-token', 'device_serial': 'DEVSERIAL'},
+    )
+
+    class Resp:
+        status_code = 401
+        content = b'{}'
+
+        def json(self):
+            return {}
+
+        def raise_for_status(self):
+            raise AssertionError('401 must not be treated as success')
+
+    mock_out.return_value = Resp()
+    with pytest.raises(ValueError, match='rejected'):
+        sync_amazon_owned_games(user.id)

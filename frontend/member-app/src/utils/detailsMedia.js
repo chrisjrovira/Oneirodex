@@ -180,6 +180,48 @@ export function formatVersionSize(size) {
 }
 
 /**
+ * Disc chips for game details (not tiles — UID-001 cap=2 already fills corners).
+ * @param {object} game
+ * @returns {{ key: string, text: string, title: string }[]}
+ */
+export function detailsDiscChips(game) {
+  if (!game) return []
+  const discs = Array.isArray(game.discs) ? game.discs : []
+  const parsedCount = Number(game.disc_count)
+  const count = Number.isFinite(parsedCount) && parsedCount > 0
+    ? parsedCount
+    : discs.length
+  const multi = Boolean(game.is_multi_disc) || count > 1
+  const chips = []
+  if (multi || count > 1) {
+    chips.push({
+      key: 'count',
+      text: `${count} discs`,
+      title: 'This library title is a multi-disc set',
+    })
+  } else if (game.disc_index != null && game.disc_index !== '') {
+    chips.push({
+      key: 'one',
+      text: `Disc ${game.disc_index}`,
+      title: 'Disc index from the dump name',
+    })
+  }
+  const seen = new Set()
+  for (const disc of discs) {
+    const idx = disc?.disc_index
+    if (idx == null || idx === '') continue
+    if (seen.has(idx)) continue
+    seen.add(idx)
+    chips.push({
+      key: `disc-${idx}`,
+      text: `Disc ${idx}`,
+      title: disc.is_primary ? 'Primary dump' : 'Companion disc',
+    })
+  }
+  return chips
+}
+
+/**
  * Extras / DLC rows — prefer Backend `extras` contract; else versions kind=extra.
  * @param {object} game
  * @param {object[]} versions
@@ -202,6 +244,7 @@ export function extrasPanelModel(game, versions, { loading = false } = {}) {
       download_url: isVersionDownloadable(row) ? row.download_url : null,
       path_missing: row.path_missing === true || row.downloadable === false,
       downloadable: isVersionDownloadable(row),
+      disc_index: row.disc_index ?? null,
     }))
     return { rows, source: 'extras', loading: false }
   }
@@ -221,6 +264,7 @@ export function extrasPanelModel(game, versions, { loading = false } = {}) {
         : null,
       path_missing: isVersionPathMissing(row),
       downloadable: isVersionDownloadable(row),
+      disc_index: row.disc_index ?? null,
     }))
 
   return {

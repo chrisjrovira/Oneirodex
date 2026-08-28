@@ -11,6 +11,9 @@ from typing import Any
 
 def support_github_config() -> tuple[str | None, str]:
     token = (os.getenv('SUPPORT_GITHUB_TOKEN') or '').strip() or None
+    # Dual names (ADR 0003 phase 2): default stays chrisjrovira/gametheca until
+    # the GitHub rename exists. Set SUPPORT_GITHUB_REPO=chrisjrovira/oneirodex
+    # after that cutover; both values are accepted.
     repo = (os.getenv('SUPPORT_GITHUB_REPO') or 'chrisjrovira/gametheca').strip()
     return token, repo
 

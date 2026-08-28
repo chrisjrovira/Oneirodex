@@ -47,7 +47,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Store metadata identify · ownership | `docs/strategy/store-metadata-identify.md` | Have — DRM register-only; no LibraryPlatform.QUEST |
 | Console / emulator library layout | `docs/strategy/console-gaming-libraries.md` | Have — per-leaf libs; skip-dir; no depth-3 walker |
 | Docs map (this file) | `docs/strategy/docs-map.md` | Have |
-| Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) · [0003 Oneirodex name](../adr/0003-product-name-oneirodex.md) (phase 1 public string landed; ops/code identifiers not started) |
+| Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) · [0003 Oneirodex name](../adr/0003-product-name-oneirodex.md) (phase 1 landed; phase 2 ops dual names started; code identifiers not started) |
 | Competitive re-score template | `docs/strategy/competitor-rescore.md` | **Have** — 2026-08-26; named scores stay in `docs/_private/peer-notes/` |
 | Cloud vs Unraid TCO ballpark | `docs/strategy/cloud-tco-ballpark.md` | Have — Unraid-first; worksheet in private vault |
 

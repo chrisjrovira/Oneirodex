@@ -1,5 +1,6 @@
 import {
   adminPathRows,
+  detailsDiscChips,
   extrasPanelModel,
   formatVersionSize,
   isVersionDownloadable,
@@ -180,4 +181,34 @@ test('extrasPanelModel prefers Backend extras and falls back to versions', () =>
   )
   expect(missingExtra.rows[0].download_url).toBeNull()
   expect(missingExtra.rows[0].path_missing).toBe(true)
+
+  const discExtra = extrasPanelModel({
+    extras: [
+      {
+        uuid: 'd1',
+        name: 'Disc 2 dump',
+        extra_kind: 'disc',
+        disc_index: 2,
+      },
+    ],
+  })
+  expect(discExtra.rows[0]).toMatchObject({
+    kind: 'disc',
+    disc_index: 2,
+    label: 'Disc 2 dump',
+  })
+})
+
+test('detailsDiscChips lists count and per-disc chips', () => {
+  expect(detailsDiscChips(null)).toEqual([])
+  expect(detailsDiscChips({})).toEqual([])
+  const chips = detailsDiscChips({
+    is_multi_disc: true,
+    disc_count: 2,
+    discs: [
+      { disc_index: 1, is_primary: true },
+      { disc_index: 2, is_primary: false },
+    ],
+  })
+  expect(chips.map((chip) => chip.text)).toEqual(['2 discs', 'Disc 1', 'Disc 2'])
 })

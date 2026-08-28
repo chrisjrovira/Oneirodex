@@ -11,6 +11,7 @@ function summaryPayload(overrides = {}) {
     total_owned: 12,
     total_matched: 5,
     stores: {
+      amazon: { connected: false, external_account_id: null, owned_count: 0, matched_count: 0 },
       epic: { connected: false, external_account_id: null, owned_count: 0, matched_count: 0 },
       gog: { connected: false, external_account_id: null, owned_count: 2, matched_count: 1 },
       steam: {
@@ -54,7 +55,7 @@ test('renders ownership summary after loading', async () => {
   expect(screen.getByText(/GOG: not connected · 2 titles · 1 matched/)).toBeInTheDocument()
   expect(screen.getByText('Steam API key configured')).toBeInTheDocument()
   expect(
-    screen.getByText(/GOG\/Epic: live register when a token is saved/),
+    screen.getByText(/GOG \/ Epic \/ Amazon: live register when a token is saved/),
   ).toBeInTheDocument()
   expect(global.fetch).toHaveBeenCalledWith(
     '/api/ownership',
@@ -72,6 +73,7 @@ test('shows empty state when nothing is synced yet', async () => {
         total_owned: 0,
         total_matched: 0,
         stores: {
+          amazon: { connected: false, external_account_id: null, owned_count: 0, matched_count: 0 },
           epic: { connected: false, external_account_id: null, owned_count: 0, matched_count: 0 },
           gog: { connected: false, external_account_id: null, owned_count: 0, matched_count: 0 },
           steam: { connected: false, external_account_id: null, owned_count: 0, matched_count: 0 },

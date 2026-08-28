@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+  connectAmazon,
   connectEpic,
   connectGog,
   connectSteam,
+  disconnectAmazon,
   disconnectEpic,
   disconnectGog,
   disconnectSteam,
   fetchOwnership,
   importCsv,
+  syncAmazon,
   syncEpic,
   syncGog,
   syncSteam,
@@ -75,10 +78,30 @@ const STORES = [
     csvNoun: 'Epic titles',
     canSync: true,
   },
+  {
+    key: 'amazon',
+    label: 'Amazon Games',
+    meta: 'Live register sync via unofficial Nile / Heroic when a token blob is saved. CSV still works. Oneirodex never downloads Amazon titles.',
+    fieldLabel: 'Amazon user ID or note (optional)',
+    fieldPlaceholder: 'Optional label for your Amazon link',
+    tokenLabel: 'Nile / Heroic token JSON',
+    tokenPlaceholder:
+      '{"refresh_token":"…","device_serial":"…"} or paste Heroic/Nile user.json',
+    tokenKind: 'textarea',
+    numericField: false,
+    saveLabel: 'Save Amazon link',
+    connect: (id, extras) => connectAmazon(id, extras),
+    sync: syncAmazon,
+    disconnect: disconnectAmazon,
+    disconnectPrompt: 'Remove Amazon link and clear imported Amazon ownership?',
+    csvLabel: 'Import owned Amazon titles (CSV: product ID or id,name per line)',
+    csvNoun: 'Amazon titles',
+    canSync: true,
+  },
 ]
 
-const EMPTY_DRAFTS = { steam: '', gog: '', epic: '' }
-const EMPTY_TOKENS = { steam: '', gog: '', epic: '' }
+const EMPTY_DRAFTS = { steam: '', gog: '', epic: '', amazon: '' }
+const EMPTY_TOKENS = { steam: '', gog: '', epic: '', amazon: '' }
 
 function accountDraftsFrom(summary, current) {
   const stores = summary?.stores || {}
@@ -162,6 +185,9 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
     }
     if (store.key === 'epic' && tokenDrafts.epic.trim()) {
       extras.deviceAuth = tokenDrafts.epic.trim()
+    }
+    if (store.key === 'amazon' && tokenDrafts.amazon.trim()) {
+      extras.credential = tokenDrafts.amazon.trim()
     }
     const result = await runAction(`${store.key}:connect`, store.key, () =>
       store.connect(accountDrafts[store.key], extras),
@@ -318,7 +344,7 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
                 : 'Steam: no API key — use CSV import'}
             </span>
             <span className="gt-ownership__meta">
-              GOG/Epic: live register when a token is saved — still no store downloads
+              GOG / Epic / Amazon: live register when a token is saved — still no store downloads
             </span>
           </article>
         ) : null}

@@ -40,13 +40,14 @@ Prioritize against this — every backlog item should advance at least one row, 
 
 **Public name: Oneirodex** (oh-NY-roh-dex) · slug `oneirodex` · [ADR 0003](../adr/0003-product-name-oneirodex.md).
 
-Write **Oneirodex** in UI, Help, README, and operator docs. Package path stays `gametheca/`. Docker, Compose, Unraid, GitHub, `GT_*`, and `--gt-*` / `.gt-*` stay as they are until an identifier wave. Do not mix OneiroDex / ONEIRODEX into copy.
+Write **Oneirodex** in UI, Help, README, and operator docs. Package path stays `gametheca/`. Compose/Unraid keep `gametheca-*` container names so existing installs keep working. Preferred Hub image once published: `chrisjrovira/oneirodex` (`chrisjrovira/gametheca` still accepted). `GT_*` and `--gt-*` / `.gt-*` stay until identifier phase 3. Do not mix OneiroDex / ONEIRODEX into copy.
 
 | Default | Value |
 |---|---|
 | Spelling | Oneirodex — one word, capital O. Not OneiroDex, not ONEIRODEX in UI |
-| Phase 1 | Oneirodex everywhere user-facing |
-| Identifiers | `gametheca/` · `chrisjrovira/gametheca` · `GT_*` · `gt-` until phase 2/3 |
+| Phase 1 | Oneirodex everywhere user-facing — **landed** |
+| Phase 2 | Ops dual names — `APP_IMAGE` / `APP_CONTAINER_NAME`; Hub `chrisjrovira/oneirodex` preferred; existing `gametheca-*` names still work |
+| Identifiers | `gametheca/` · `GT_*` · `gt-` until phase 3 |
 | Danger zone | `RESET ONEIRODEX` (legacy `RESET GAMETHECA` still accepted) |
 | Env / CSS | Keep `GT_*` and `gt-`. No `OD_*` aliases yet |
 
@@ -61,7 +62,7 @@ Write **Oneirodex** in UI, Help, README, and operator docs. Package path stays `
 | Dangerous apply | AI auto-apply + hardlink apply stay **off** |
 | Scrape | No romhacking.net (or similar) scrape |
 | Acquire | Native Torznab/Newznab registry (add one / bulk) + optional admin preset pack + BYO Prowlarr/Jackett/debrid hubs; no DRM store download queues; no magnet scrapers that bypass Torznab |
-| DRM stores | Ownership register-only; no download queues |
+| DRM stores | Ownership register-only; live sync for Steam / GOG / Epic / Amazon; no download queues |
 | Support | In-app Report → GitHub Issues + admin inbox |
 | LLM | On-demand agent skills; no paid keys in Flask |
 | Auto-merge | Never |
@@ -98,7 +99,7 @@ Policy: [../strategy/external-facing-scrub.md](../strategy/external-facing-scrub
 | Primary ops | Unraid + Docker Compose |
 | DB | Postgres (`db` service or local Docker) |
 | App port | 5006 |
-| Support repo | `chrisjrovira/gametheca` |
+| Support repo | `chrisjrovira/gametheca` (accepted) · `chrisjrovira/oneirodex` once the GitHub rename exists (`SUPPORT_GITHUB_REPO`) |
 
 ## This host (Windows)
 

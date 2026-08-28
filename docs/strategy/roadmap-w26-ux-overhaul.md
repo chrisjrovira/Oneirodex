@@ -120,7 +120,7 @@ as open and, worse, taken EMU-1's superseded root cause as current. Reconciled a
 | **Emulator player chrome** — volume · power · reset · pause, per-system UI | **Done 2026-08-25** — UID-007 · FEAT-D5 (clock + BIOS earlier; bar/overlay chrome now) |
 | **Libraries & Scans overhaul** — auto-scan / library-maker unification, library tools incorporated | **Done 2026-08-26** — Tools tab on `/scan_management`; old URL redirects |
 | **Card layout redesign** — surfaces are unified, individual layouts untouched | extends UX-B5 |
-| **GOG / Epic live sync** | **Done 2026-08-26.** Unofficial Galaxy / launcher surfaces; register-only (IDs and names, never a download). Product decision: unofficial is acceptable here; fail honestly on 401. CSV still works. Amazon remains snapshot. The poller still **refuses to start** if a store is advertised live without a working handler. |
+| **GOG / Epic live sync** | **Done 2026-08-26.** Unofficial Galaxy / launcher surfaces; register-only (IDs and names, never a download). Product decision: unofficial is acceptable here; fail honestly on 401. CSV still works. Amazon is live register as of 2026-08-27 (Nile/Heroic). The poller still **refuses to start** if a store is advertised live without a working handler. |
 
 **Smaller, still open** — these are easy to lose behind the big rocks, which is exactly what the
 grouping at the top of this file was meant to prevent:
