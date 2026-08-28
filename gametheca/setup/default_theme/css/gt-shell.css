@@ -815,31 +815,27 @@ body.gt-shell-host > #admin-legacy-content:empty {
   border-bottom: 1px solid var(--gt-border);
 }
 
-/* Rail toggle + Filters as one control. The cluster must not be squeezed or
-   stretched by the flexible `__start` group around it. */
+/* Rail toggle + Filters as adjacent chromeless controls. The cluster must not
+   be squeezed or stretched by the flexible `__start` group around it. */
 .gt-topbar__cluster {
   flex: 0 0 auto;
 }
 
 /* The lead slot and ContextBar's portal host are plumbing, not layout: without
-   this they sit between the two buttons as flex items of their own and the
-   shared edge never collapses. `.gt-pop` deliberately keeps its box — it is the
-   Filters popover's positioning context, and dissolving it would re-anchor the
-   panel to the cluster's left edge, i.e. under the burger. */
+   this they sit between the two buttons as flex items of their own. `.gt-pop`
+   deliberately keeps its box — it is the Filters popover's positioning
+   context, and dissolving it would re-anchor the panel under the burger. */
 .gt-topbar__cluster > .gt-topbar__lead,
 .gt-topbar__cluster .gt-contextbar__host {
   display: contents;
 }
 
-/* `.gt-cbtn-group > .gt-cbtn` cannot see the Filters trigger, which is one box
-   further down inside `.gt-pop`. These re-state the group's edge rules for the
-   two buttons that actually exist here, keeping the shape identical to every
-   other merged cluster in the product. */
+/* Filters lives one box down inside `.gt-pop`, so the group's `> .gt-cbtn`
+   rules never see it. Keep it an independent button — no shared edge, no
+   squared inner corner — matching the hamburger beside it. */
 .gt-topbar__cluster .gt-pop > .gt-cbtn {
-  border-radius: 0;
-  margin-inline-start: -1px;
-  border-start-end-radius: var(--gt-radius-sm);
-  border-end-end-radius: var(--gt-radius-sm);
+  border-radius: var(--gt-radius-sm);
+  margin-inline-start: 0;
 }
 
 .gt-topbar__cluster .gt-pop > .gt-cbtn:hover,
@@ -847,17 +843,6 @@ body.gt-shell-host > #admin-legacy-content:empty {
 .gt-topbar__cluster .gt-pop > .gt-cbtn.is-on {
   position: relative;
   z-index: 1;
-}
-
-/* Alone, the toggle is a whole button again.
- *
- * `.gt-cbtn-group > .gt-cbtn` squares every corner and `:first-child` restores
- * only the leading pair — right while Filters is beside it, wrong on the pages
- * that render no filter popover at all (Help, Notifications, Calendar…), where
- * it left a lone button with two square corners on its right. `:has()` on the
- * *absence* of the popover is what tells the two cases apart. */
-.gt-topbar__cluster:not(:has(.gt-pop)) > .gt-topbar__rail-toggle {
-  border-radius: var(--gt-radius-sm);
 }
 
 /* A page-supplied title sits beside the cluster, with the same breathing room
@@ -868,7 +853,7 @@ body.gt-shell-host > #admin-legacy-content:empty {
   min-width: 0;
 }
 
-/* Rail toggle and Filters are one cluster: open the nav, narrow the list.
+/* Rail toggle and Filters sit together: open the nav, narrow the list.
    Sizing lives on `.gt-cbtn` in gt-appbar.css so both land on `--gt-control-h`;
    this only keeps them from being squeezed. */
 .gt-topbar__rail-toggle {
@@ -1026,7 +1011,7 @@ body.gt-shell-host > #admin-legacy-content:empty {
 
 .gt-topbar__account[aria-expanded='true'] {
   color: var(--gt-text);
-  border-color: transparent;
+  border: 0;
 }
 
 .gt-topbar__account[aria-expanded='true'] .gt-topbar__account-avatar {

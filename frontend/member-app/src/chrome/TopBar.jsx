@@ -128,18 +128,13 @@ export function TopBar({
             happened to leave. Unwrapped, every side control that appeared or
             changed width nudged the view switcher off centre. */}
         <div className="gt-topbar__start">
-          {/* One merged control, not two adjacent ones.
+          {/* Adjacent chromeless controls, not one outlined cluster.
               Open the nav, narrow the list — the same kind of job, done to the
-              same list — so they share an outline and the edge between them is
-              drawn once. They were reported as looking unlike the buttons in
-              the middle of the bar; they were already `.gt-cbtn`, but two
-              detached squares at the far left read as chrome from a different
-              app than the segmented strip beside them. `.gt-cbtn-group` is the
-              same primitive the pager and the filter actions use.
-
-              Nothing goes between them: the page name used to, which pushed
-              Filters to a different x position on every page and put a label in
-              the middle of a pair of buttons. */}
+              same list — so they sit together at the start of the bar. They
+              were reported as a shared outline around hamburger + Filters;
+              `.gt-cbtn-group` stays for slot plumbing, but the pair no longer
+              shares an edge. Nothing goes between them: the page name used to,
+              which pushed Filters to a different x position on every page. */}
           <div className="gt-cbtn-group gt-topbar__cluster">
             <button
               type="button"

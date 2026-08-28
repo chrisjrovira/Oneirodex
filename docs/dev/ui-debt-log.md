@@ -52,6 +52,7 @@ Status: `open` | `in_progress` | `done` | `deferred` | `wontfix`
 
 | Date | Seat / Task | Debt IDs | What changed | Verify |
 |---|---|---|---|---|
+| 2026-08-28 | Chrome | UID-017 | **Account / hamburger / Filters: `border: 0` at rest** (transparent stroke still boxed); cluster is not one outlined group. **Pager:** no `.gt-seg` / per-page frame; still in-flow at the grid foot. Reset Themes (`gt-appbar.css` · `gt-shell.css` · `library_browser.css`). | pytest test_member_chrome_css |
 | 2026-08-28 | Chrome | UID-017 | **Expanded rail logo `5.5rem` on `--gt-rail-mark-expanded`; destination icons `0.7rem` and labels `gt-font-xs`.** Logo no longer scales with the icon column. Reset Themes to pick up `gt-density.css` / `gt-shell.css`. | pytest test_member_chrome_css |
 | 2026-08-28 | Chrome + match | UID-017 | **Atmosphere behind UI; mark-only rail; flattened admin LHN; 1rem rail icons; Library two-bar default; loading takeover; scan-filter buttons on `gt-btn`.** Household match: games-root propose walks `_console-gaming` + `_pc`; MAME → Arcade files; PC Engine leaf; ROM peel `.ngc`; PC peel P2/P2P + Fisherman's. | pytest test_propose_leaf_libraries · test_console_rom_peel · test_utils_gamenames · test_skip_dir_patterns · test_theme_eras · test_member_chrome_css |
 | 2026-08-27 | Preview leftover | UID-001 | **Tile preview shows a YouTube mark when the title has a trailer.** `video_urls` rides on the editions payload with GOG / Epic; the popup links out rather than embedding a player. | pytest test_game_editions · member vitest GamePreviewPopup |

@@ -380,15 +380,16 @@
   outline-offset: 2px;
 }
 
-/* Account, hamburger, Filters: no resting box. The count badge still marks
-   active filters; a second outline around the name/avatar/hamburger was the
-   chrome that read as a button sitting on a button. Hover is a wash, not a
-   border. Keyboard still gets :focus-visible. */
+/* Account, hamburger, Filters: no resting box. `border-color: transparent`
+   still paints a 1px stroke (hairline on glass, shared edge in a group).
+   `border: 0` is the rest state. The count badge still marks active filters.
+   Hover is a wash. Keyboard still gets :focus-visible. */
 .gt-cbtn.gt-topbar__account,
 .gt-cbtn.gt-topbar__rail-toggle,
 .gt-topbar__cluster .gt-pop > .gt-cbtn {
-  border-color: transparent;
+  border: 0;
   background: transparent;
+  box-shadow: none;
 }
 
 .gt-cbtn.gt-topbar__account:hover:not(:disabled):not([aria-disabled='true']),
@@ -397,7 +398,7 @@
 .gt-cbtn.gt-topbar__account.is-on,
 .gt-topbar__cluster .gt-pop > .gt-cbtn.is-on,
 .gt-cbtn.gt-topbar__account[aria-expanded='true'] {
-  border-color: transparent;
+  border: 0;
   background: color-mix(in srgb, var(--gt-text) 8%, transparent);
 }
 
@@ -449,9 +450,8 @@
  * outer corners round, the inner ones square, and the shared edges collapse to
  * a single rule rather than two borders sitting 1px apart.
  *
- * This is the shape the top bar's rail-toggle + Filters pair always wanted, and
- * the shape a filter panel's Apply / Clear / Done row wants — three verbs about
- * one panel, not three unrelated buttons that happen to be adjacent.
+ * Apply / Clear / Done in the Filters panel is this shape. The top-bar
+ * hamburger + Filters pair is not — that cluster opts out below.
  */
 .gt-cbtn-group {
   display: inline-flex;
@@ -496,6 +496,21 @@
 
 .gt-cbtn-group--fill > .gt-cbtn {
   flex: 1 1 0;
+}
+
+/* Hamburger + Filters sit next to each other; they are not one outlined
+   cluster. `.gt-cbtn-group` still owns Apply/Clear/Done elsewhere — only this
+   top-bar pair drops the shared edge, the -1px overlap, and the squared inner
+   corners that read as a single box. */
+.gt-cbtn-group.gt-topbar__cluster {
+  gap: var(--gt-space-2);
+}
+
+.gt-cbtn-group.gt-topbar__cluster > .gt-cbtn,
+.gt-cbtn-group.gt-topbar__cluster > .gt-cbtn:first-child,
+.gt-cbtn-group.gt-topbar__cluster > .gt-cbtn:last-child {
+  margin-inline-start: 0;
+  border-radius: var(--gt-radius-sm);
 }
 
 /* Active filters must stay visible from the collapsed state. Without this

@@ -13,11 +13,10 @@ import { createPortal } from 'react-dom'
 export const TOPBAR_SLOT_ID = 'gt-topbar-slot'
 export const TOPBAR_LEAD_ID = 'gt-topbar-lead'
 export const TOPBAR_TRAIL_ID = 'gt-topbar-trail'
-/* Four, now. The lead slot sits *inside* the merged toggle/Filters control, so
-   anything portalled there is styled as a member of that group — correct for
-   Filters, wrong for a page title, which would acquire a button's border and a
-   squared-off inner edge. The title gets its own slot immediately after the
-   cluster instead. */
+/* Four, now. The lead slot sits *inside* the toggle/Filters cluster, so
+   anything portalled there is a sibling of the hamburger — correct for
+   Filters, wrong for a page title. The title gets its own slot immediately
+   after the cluster instead. */
 export const TOPBAR_TITLE_ID = 'gt-topbar-title'
 
 /** Marks a host div as belonging to one ContextBar instance. */

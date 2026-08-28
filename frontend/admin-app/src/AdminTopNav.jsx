@@ -71,6 +71,7 @@ function readAdminIdentity() {
  *     visible mismatch between the two bars.
  *   - The rail toggle now sits in a `.gt-cbtn-group` cluster rather than
  *     floating as a lone square, which is the primitive the member bar uses.
+ *     The pair is chromeless at rest — not one outlined box.
  *   - There is an account control. Admin had none, so the top-right corner —
  *     the one place every other surface puts identity — was empty.
  *
@@ -110,8 +111,9 @@ export function AdminTopNav({ onToggleRail, railState = 'expanded' }) {
       {/* Brand and the seven section links live in the rail (GT-B2). Repeating
           them here was the duplication that made admin feel like two navs. */}
       <div className="gt-topbar__start">
-        {/* One merged control, as on the member bar: opening the nav and
-            narrowing it are the same kind of job, so they share an outline. */}
+        {/* Adjacent chromeless controls, as on the member bar: opening the
+            nav sits beside Filters when that page has them, with no shared
+            outline. */}
         <div className="gt-cbtn-group gt-topbar__cluster">
           {/* 'open' is the mobile drawer only, so testing for it left
               aria-expanded permanently false on desktop, where this button

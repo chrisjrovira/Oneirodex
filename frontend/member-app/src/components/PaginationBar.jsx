@@ -6,10 +6,10 @@ const PER_PAGE_OPTIONS = [20, 50, 100, 200, 300, 400, 500, 1000]
  * The four page controls used to be four separate buttons with the page
  * indicator wedged between Previous and Next — the navigation split in two by a
  * label, four detached buttons claiming more attention than the one sentence
- * that says where you are. The four moves are one segmented control now
- * (`gt-seg`, the same primitive as the view strips in bar two), and First/Last
- * stay next to Previous/Next rather than at the ends of the group: the pair you
- * reach for repeatedly should not be separated by the pair you use once.
+ * that says where you are. First/Last stay next to Previous/Next rather than at
+ * the ends of the group: the pair you reach for repeatedly should not be
+ * separated by the pair you use once. The four moves share one ARIA group
+ * (`gt-seg`) but are not a boxed segmented control.
  *
  * Per page and the indicator swapped ends. The setting leads because it is the
  * thing you reach for deliberately, and `Page 3 of 12` reads as the closing

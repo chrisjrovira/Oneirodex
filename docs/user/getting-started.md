@@ -40,8 +40,9 @@ Rail details worth knowing:
 - The section you are in takes your **theme's accent colour**, icon and label together, so "where I
   am" looks different from "where the pointer is".
 
-The **top bar** carries, left to right: the rail toggle and **Filters** as one merged control, the
-page's own view switcher, the tile-size slider, a count, and your account.
+The **top bar** carries, left to right: the rail toggle and **Filters** as adjacent chromeless
+controls (no shared outline), the page's own view switcher, the tile-size slider, a count, and your
+account.
 
 **Profile / account** is the button at the right of the top bar. It shows **your name and your
 chosen avatar** rather than a generic person glyph, and opens the account menu (not a full-page
