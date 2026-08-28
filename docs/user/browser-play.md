@@ -2,6 +2,8 @@
 
 Oneirodex play modes for systems **below PS5 / Xbox Series**. Those two stay **catalog + download only**.
 
+**Browser engines (direction):** Play today uses **WebRetro** (RetroArch WASM). The planned dual-engine path modernizes that launch via **Nostalgist.js / koin.js**, adds **EmulatorJS** as a second engine (admin default + member choice), and optionally a **webЯcade** Docker sidecar — see [browser-play-engines.md](../dev/browser-play-engines.md). SaaS hosts that require uploading household ROMs (e.g. Afterplay) are out of scope.
+
 | Platform | Browser (WebRetro) | Companion | Notes |
 |---|---|---|---|
 | NES · SNES · N64 | Yes | Yes | N64: try alternate core if a title fails |
@@ -111,9 +113,7 @@ Browse/details payloads include **`cheat_surface`**: `retroarch` | `pc_wand` | `
 
 **PC cheat notes.** Rather than a trainer, PC titles get **notes**: what to change and how. Each entry records a `method` — `console` (an in-game console command), `config` (an ini/cfg edit), `save` (a save-editor field), `launch_flag` (a startup argument), or a plain `note` — plus the value and any caveat. Oneirodex never writes to a game binary and never injects into a running process, which keeps this on the right side of the anti-cheat line and matches the operator-owned patch-catalog stance (nothing scraped from trainer sites). Librarians and admins author entries; members read them. API: `GET`/`POST /api/games/<uuid>/pc_cheats` · `DELETE /api/games/<uuid>/pc_cheats/<id>`.
 
-Stance: [cheats.md](../strategy/cheats.md) · companion: [desktop-companion.md](desktop-companion.md).
-
-Full plan: [emulation-coverage.md](../strategy/emulation-coverage.md).
+Companion: [desktop-companion.md](desktop-companion.md).
 
 ## Sample free ROMs (legal only)
 

@@ -19,7 +19,7 @@ npm install
 npm run tauri:build:thin
 ```
 
-Produces unsigned `gametheca-desktop.exe` via `tauri.thin.conf.json` (capabilities: `thin-main` / `thin-library` / `social` only). Copy to `Oneirodex-thin.exe` **before** rebuilding the full companion — both flavors share the same Cargo output path. Details: [desktop-code-signing.md](../runbooks/desktop-code-signing.md) · strategy [thin-client.md](../strategy/thin-client.md).
+Produces unsigned `gametheca-desktop.exe` via `tauri.thin.conf.json` (capabilities: `thin-main` / `thin-library` / `social` only). Copy to `Oneirodex-thin.exe` **before** rebuilding the full companion — both flavors share the same Cargo output path. Details: [desktop-code-signing.md](../runbooks/desktop-code-signing.md).
 
 ## Connect
 
@@ -33,5 +33,5 @@ Token lives in the OS credential store (same pattern as the full companion), not
 ## Honesty
 
 - **Unsigned only** — no Windows code-signing cert.
-- Thin ≠ Android APK. Phone/tablet / Quest sideload is a future spike only — [android-apk-vr.md](../strategy/android-apk-vr.md).
-- Headset `/vr` is browse-first (SteamVR / PSVR2 on the PC; Quest = friend PWA) — [controllers-and-vr.md](controllers-and-vr.md) · [headset-vr.md](../strategy/headset-vr.md).
+- Thin ≠ Android APK. Phone/tablet / Quest sideload is a future spike only.
+- Headset `/vr` is browse-first (SteamVR / PSVR2 on the PC; Quest = friend PWA) — [controllers-and-vr.md](controllers-and-vr.md).

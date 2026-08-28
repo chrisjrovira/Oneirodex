@@ -73,22 +73,20 @@ clients/desktop/src-tauri/target/
 .eggs/
 
 # Development / scratch (do not ignore real project docs or CI)
-# Agent system: .claude/skills + .claude/agents (Claude Code) and
-# .cursor/skills + .cursor/agents + .cursor/rules (Cursor). Keep both tracked.
-# Everything else under .claude/ is local session state.
-.claude/*
-!.claude/skills/
-!.claude/agents/
+# Agent kit + strategy/wave docs stay on the workstation / NAS only — not GitHub.
+.cursor/
+.claude/
+/AGENTS.md
+/CLAUDE.md
+/docs/strategy/
 .codebuddy/
 letsrebuild.md
-# Root-only scratch markdown; keep README, CHANGELOG, agent entry, and all docs/
+# Root-only scratch markdown; keep README, CHANGELOG, deploy notes
 /*.md
 !/README.md
 !/CHANGELOG.md
 !/NAS-DEPLOY.md
 !/VERSION
-!/AGENTS.md
-!/CLAUDE.md
 
 # IDE
 .vscode/

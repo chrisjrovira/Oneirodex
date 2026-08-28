@@ -83,7 +83,7 @@ Icon / image packs live under `static/library/icon-themes/{id}/` and are install
 
 - **Reset Default Themes does not wipe icon packs.**
 - Members pick a pack in Preferences → Icon pack (same modal as color swatches).
-- Details: [icon-themes.md](../strategy/icon-themes.md) · [preferences-themes.md](../user/preferences-themes.md)
+- Details: [preferences-themes.md](../user/preferences-themes.md)
 
 ## Loading icons (admin)
 
@@ -92,6 +92,6 @@ Household spinner mode is **DB settings**, not theme volume files — Reset Them
 - Admin UI: **Admin → Themes → Loading icons** (rotate catalogue vs lock to one).
 - Admin API: `PUT /api/admin/loading-icon/config` (`loading_icon_mode` = `rotate` \| `lock`, optional `loading_icon_id`).
 - Public bootstrap: `GET /api/loading-icon`.
-- Details: [icon-themes.md](../strategy/icon-themes.md) · [settings-modules.md](settings-modules.md#loading-icons-admin-lock--rotate).
+- Details: [settings-modules.md](settings-modules.md#loading-icons-admin-lock--rotate).
 
 Related: [preferences-themes.md](../user/preferences-themes.md) · [ui-wave0-tokens.md](../dev/ui-wave0-tokens.md) · [unraid-deploy.md](../runbooks/unraid-deploy.md#deploy-gates-operator-checklist)

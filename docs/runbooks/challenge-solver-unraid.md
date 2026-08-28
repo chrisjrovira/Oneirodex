@@ -2,8 +2,6 @@
 
 Optional BYO browser/captcha solver for household acquire (Prowlarr / Jackett / debrid HTTP). **Off by default** — enable only when indexers return Cloudflare or captcha challenge pages.
 
-Strategy contract: [challenge-bypass.md](../strategy/challenge-bypass.md).
-
 ## Security stance
 
 | Rule | Why |

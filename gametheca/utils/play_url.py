@@ -287,11 +287,15 @@ def browse_play_fields(game) -> dict[str, Any]:
         n64_note = 'N64 WebRetro cores can be flaky on some titles — try the other core in Emulator profiles if play fails.'
 
     platform_q = f'&platform={key}' if key else ''
+    # BP-0: single engine today. Dual-engine resolver (WebRetro/Nostalgist ·
+    # EmulatorJS · optional webЯcade) lands in docs/dev/browser-play-engines.md.
     return finish({
         'play_url': (
             f'/static/vendor/webretro/webretro.html?guid={game.uuid}&core={core}{platform_q}'
         ),
         'can_play_in_browser': True,
+        'browser_player': 'webretro',
+        'browser_players_available': ['webretro'],
         'emulator_cores': cores,
         'emulator_core': core,
         'library_platform': key,

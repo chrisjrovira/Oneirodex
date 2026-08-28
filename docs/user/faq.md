@@ -174,7 +174,7 @@ Gamepad-friendly browse at **More → Big Picture**. Esc exits; Attract opens tr
 
 ## VR / headsets
 
-`/vr` is headset-friendly browse (admin flag), **not Quest-only** — PSVR2/SteamVR use a desktop browser on the PC; Quest friends use the headset browser/PWA. Thin / headset seats have **no** install pipeline. See [controllers-and-vr.md](controllers-and-vr.md) · [headset-vr.md](../strategy/headset-vr.md).
+`/vr` is headset-friendly browse (admin flag), **not Quest-only** — PSVR2/SteamVR use a desktop browser on the PC; Quest friends use the headset browser/PWA. Thin / headset seats have **no** install pipeline. See [controllers-and-vr.md](controllers-and-vr.md).
 
 ## Licence
 

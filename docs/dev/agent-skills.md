@@ -21,8 +21,8 @@ Load the smallest set that covers the turn. Do not follow archive or diary links
 |---|---|
 | **Always-on** | [CLAUDE.md](../../CLAUDE.md); glob `.mdc` rules when those files are in context; [agent-locks.md](agent-locks.md) when a lock applies |
 | **On skill / seat** | The matching SKILL.md or agent file — not the whole catalog |
-| **On task** | Living head of [progress.md](../strategy/progress.md); the one user/admin/runbook that matches; [ui-debt-log.md](ui-debt-log.md) **open table only** for UI work |
-| **Never auto-load** | `docs/strategy/archive/` (including July superpowers); wave diaries; ui-debt changelog |
+| **On task** | Living head of local strategy notes; the one user/admin/runbook that matches; [ui-debt-log.md](ui-debt-log.md) **open table only** for UI work |
+| **Never auto-load** | local strategy archive (including July superpowers); wave diaries; ui-debt changelog |
 
 ## Skills
 
@@ -104,6 +104,5 @@ Ops sections games RO vs library RW; backend keeps Ops/scan honest; QA smokes `/
 
 - Locks / defaults: [agent-locks.md](agent-locks.md)
 - Support triage: [issue-assess-agent.md](issue-assess-agent.md)
-- Docs inventory: [../strategy/docs-map.md](../strategy/docs-map.md)
+- Docs inventory: [docs/README.md](../README.md)
 - UI debt register: [ui-debt-log.md](ui-debt-log.md)
-- v1 gate: [../strategy/v1-readiness.md](../strategy/v1-readiness.md)

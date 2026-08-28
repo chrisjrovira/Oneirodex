@@ -135,7 +135,7 @@ space voice needs membership of that space, a party room needs access to that
 game, and the household lobby is closed to child accounts. An unrecognised room
 name is **denied**, not allowed through.
 
-Ops detail: [livekit-unraid.md](../runbooks/livekit-unraid.md) · plan: [social-av.md](../strategy/social-av.md).
+Ops detail: [livekit-unraid.md](../runbooks/livekit-unraid.md).
 
 ## What we don’t do
 

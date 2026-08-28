@@ -60,4 +60,4 @@ IGDB remains available as a second provider for **covers only**. Queue filter: `
 | Empty results | Query spelling; game may not exist on SteamGridDB |
 | IGDB + logo/hero | IGDB only supports covers — switch provider or image type |
 
-See also: `.env.example`, `docs/strategy/features.md` (P0-7 plugin framework).
+See also: `.env.example`.

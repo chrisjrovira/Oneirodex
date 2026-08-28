@@ -9,7 +9,6 @@ The product used to serve WebRetro's upstream ToS / privacy / cookie pages from 
 (finding L3). Those files are gone so this host does not impersonate another site's operator.
 
 Related: [members-and-invites.md](members-and-invites.md) · [settings-modules.md](settings-modules.md) ·
-[../strategy/security.md](../strategy/security.md) ·
 [webretro-core-clauses.md](webretro-core-clauses.md) (snes9x / genesis_plus_gx — not counsel)
 
 ## What stays on your server
@@ -52,7 +51,7 @@ ROM files, BIOS, and artwork you pointed the library at never upload to a Oneiro
 - `GET /api/acquire/search` returns 403
 - Companion download / install / update / uninstall / patch / mod-pack commands are denied
 
-Thin-client tokens (browse / social) still work. Details: [security.md](../strategy/security.md) (S10).
+Thin-client tokens (browse / social) still work.
 
 ## Backups and deletion
 

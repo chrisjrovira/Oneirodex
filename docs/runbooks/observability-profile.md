@@ -38,5 +38,4 @@ Until `/metrics` ships, scrape configs that assume it will fail — prefer healt
 
 - [ops-summary.md](../admin/ops-summary.md) — `services` key contract  
 - [docker-compose-deploy.md](docker-compose-deploy.md)  
-- [unraid-deploy.md](unraid-deploy.md)  
-- [v1-readiness.md](../strategy/v1-readiness.md)
+- [unraid-deploy.md](unraid-deploy.md)

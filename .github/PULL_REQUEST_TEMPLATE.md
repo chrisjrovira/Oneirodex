@@ -10,4 +10,4 @@
 - [ ] Non-goals use capability language (e.g. no bundled torrent marketplace, no DRM store download queues, no Discord webhooks)
 - [ ] Class D integrations OK when they are real features (Playnite import, ES-DE/Pegasus export, Prowlarr/Jackett/qBit, LiveKit, OIDC)
 
-See `docs/strategy/external-facing-scrub.md`. Peer catalogs belong in `docs/_private/` (gitignored) only.
+Keep public text free of peer catalogs and Class A / warez-adjacent brand names.

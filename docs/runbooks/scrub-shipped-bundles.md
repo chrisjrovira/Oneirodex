@@ -31,5 +31,5 @@ Empty match set = pass. Any hit → rebuild from scrubbed source, re-grep, then 
 
 ## Related
 
-- Policy: [external-facing-scrub.md](../strategy/external-facing-scrub.md) (SCRUB-7)
+- Policy: SCRUB-7 (local strategy notes).
 - Release SOP: [release-checklist.md](release-checklist.md)

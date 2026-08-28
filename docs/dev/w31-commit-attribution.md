@@ -39,7 +39,7 @@ Both sides touched these, additively and in distinct regions:
 | `gametheca/templates/base_admin.html` | admin identity attributes for the account control | AGPL source-offer footer |
 | `gametheca/templates/site/member_spa.html` | W29 shell config | AGPL / source URL |
 | `gametheca/setup/default_theme/css/gt-shell.css` | W29/W30 rail + shell | — (minor) |
-| `docs/strategy/progress.md` | W29/W30 wave rows | security wave rows |
+| local strategy notes (`progress.md`, that commit) | W29/W30 wave rows | security wave rows |
 
 ## UI pass (W29 + W30) — 130 files
 
@@ -64,8 +64,8 @@ Both sides touched these, additively and in distinct regions:
 - `docs/admin/ops-summary.md`
 - `docs/dev/ui-debt-log.md`
 - `docs/runbooks/emulator-bios.md`
-- `docs/strategy/docs-map.md`
-- `docs/strategy/icon-themes.md`
+- local strategy notes (`docs-map.md`, that commit)
+- local strategy notes (`icon-themes.md`, that commit)
 - `docs/user/getting-started.md`
 - `docs/user/library-and-systems.md`
 - `docs/user/preferences-themes.md`
@@ -233,8 +233,8 @@ Both sides touched these, additively and in distinct regions:
 
 - `docs/README.md`
 - `docs/admin/troubleshooting.md`
-- `docs/strategy/security-legal-playbook.md`
-- `docs/strategy/security.md`
+- local strategy notes (`security-legal-playbook.md`, that commit)
+- local strategy notes (`security.md`, that commit)
 
 **frontend/member-app** (3)
 

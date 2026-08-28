@@ -91,7 +91,6 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - Members: `GET /api/remote-play/status`; game details **Play via Moonlight** copies host + hints.
 - **No Wolf/GOW in Oneirodex image** — operator runs Sunshine/Wolf on a GPU host; LAN URLs need `ALLOW_PRIVATE_LAN_URLS=true`.
 - Plugin registry: `remote_play.moonlight`.
-- Guide: [gow-remote-play.md](../strategy/gow-remote-play.md).
 
 ## Loading icons (admin lock / rotate)
 
@@ -99,7 +98,6 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - Public bootstrap: `GET /api/loading-icon` (no admin auth — member/admin loading UIs).
 - Admin: `GET`/`PUT /api/admin/loading-icon/config` — lock requires a catalogue id; rotate clears id.
 - Catalogue ids: `ring`, `orbit`, `pulse`, `blocks`, `scan`, `arcade` — visuals are SPA/theme-owned.
-- Details: [icon-themes.md](../strategy/icon-themes.md).
 
 ## Malware scan
 
@@ -145,10 +143,9 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - Queue rows show `failure_reason` (and `last_error` fallback); list responses surface `image_save_path.error` when the images volume is not writable.
 - API: `POST /admin/api/art-studio/preview|generate|apply|apply-batch`, `GET /admin/api/art-studio/download/<pack_id>`, `POST /admin/api/art-studio/batch-generate`, `GET /admin/api/art-studio/stock`, `POST /admin/api/art-studio/stock/generate`; covers mass tools under `/admin/api/covers/*`.
 - **System templates:** generated covers use per-system palette + glyph (NES/SNES/PS1/Switch/PC/…) so 200×300 tiles stay readable — not a generic subtitle-only placeholder.
-- **Meta Quest Store:** identify `GET /api/search_metadata?source=meta_quest|meta|quest` · ownership CSV `POST /api/ownership/meta_quest/csv` · `META_QUEST_API_MODE` / `META_QUEST_UNOFFICIAL_GRAPHQL` (off by default) — [store-metadata-identify.md](../strategy/store-metadata-identify.md).
+- **Meta Quest Store:** identify `GET /api/search_metadata?source=meta_quest|meta|quest` · ownership CSV `POST /api/ownership/meta_quest/csv` · `META_QUEST_API_MODE` / `META_QUEST_UNOFFICIAL_GRAPHQL` (off by default) (local strategy notes).
 - **Ownership register:** members link Steam / GOG / Epic / Amazon under **More → Ownership**. Steam Web API, unofficial GOG Galaxy refresh token, unofficial Epic device auth, unofficial Amazon Nile/Heroic token — IDs and names only, never a download. Household env: `STEAM_WEB_API_KEY`, `GOG_REFRESH_TOKEN`, `EPIC_DEVICE_AUTH`, `AMAZON_REFRESH_TOKEN` / `AMAZON_DEVICE_SERIAL` / `AMAZON_NILE_JSON`.
 - Disk failures (read-only `IMAGE_SAVE_PATH` / generated-pack folder, out of space) surface as a JSON `error` and show in the red alert banner instead of a bare 500 — check the message for the exact path/permission problem. If applying a pack to a game fails partway (DB error after the file was written), the orphaned file is cleaned up automatically.
-- Guide: [cover-art-studio.md](../strategy/cover-art-studio.md).
 - Artwork picker: [steamgriddb-artwork.md](../runbooks/steamgriddb-artwork.md) · [libraries-and-scans.md](libraries-and-scans.md#image-queue).
 
 ## Generated cover art
@@ -192,8 +189,7 @@ talks to an endpoint outside the process, so it stays opt-in.
   box use [`docker-compose.artwork-local.yml`](../../docker-compose.artwork-local.yml)
   ([artwork-gpu-workstation.md](../runbooks/artwork-gpu-workstation.md)) and set
   `AI_ARTWORK_URL=http://<host>:7860` — the backend only makes an HTTP call.
-  Making that turnkey (pairing, health, queueing) is backlog **GPU-N**,
-  [gpu-worker-node.md](../strategy/gpu-worker-node.md).
+  Making that turnkey (pairing, health, queueing) is backlog **GPU-N**.
 
 Prefer to supply your own art instead? See
 [theme-fonts-and-images.md](theme-fonts-and-images.md#batch-artwork-upload).
@@ -252,4 +248,4 @@ Related: [libraries-and-scans.md](libraries-and-scans.md) · [docker-compose-dep
 - **API:** `GET/POST /api/tokens`, `DELETE /api/tokens/{id}` — any logged-in member.
 - **Presets:** `POST` body `"preset": "companion"` (`read:library` + `write:download`) or `"preset": "thin"` (`read:library` + `read:social` + `write:presence`; **no** download). List response includes `scope_presets`.
 - **Thin protocol:** heartbeat accepts `device_kind` (`companion` | `thin` | `browser`); `GET /api/client/capabilities` advertises allows/denies. Install/update command queue delivers only to `companion` + download/lifecycle scopes.
-- **UI:** member SPA **Account → API tokens** (`/tokens`) — create with companion/thin presets, copy one-time secret, revoke. API / `@gametheca/api-client` / OpenAPI still work. See [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](../strategy/thin-client.md).
+- **UI:** member SPA **Account → API tokens** (`/tokens`) — create with companion/thin presets, copy one-time secret, revoke. API / `@gametheca/api-client` / OpenAPI still work. See [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](../user/thin-client.md).

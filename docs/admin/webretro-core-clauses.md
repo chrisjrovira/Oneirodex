@@ -4,8 +4,7 @@ This is **not legal advice**. Oneirodex’s authors are not your lawyer. These n
 **quotes from the upstream licences** (as published on the projects’ own repositories) and
 **questions to take to a lawyer** if you host Oneirodex in a setting that might be commercial.
 
-Related: [webretro-cores.md](../runbooks/webretro-cores.md) ·
-[security-legal-playbook.md](../strategy/security-legal-playbook.md) (L1).
+Related: [webretro-cores.md](../runbooks/webretro-cores.md).
 
 ## What Oneirodex does
 

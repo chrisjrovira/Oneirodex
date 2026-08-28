@@ -17,7 +17,7 @@ On Library, the **LANG** badge chip (in the left filter column) filters to title
 
 When `ENABLE_ROM_AI_TRANSLATE=true`, game details can show **Live translate (RetroArch AI)** for mismatched ROMs without patches. This is an OCR/MT **overlay** in companion/native RetroArch — not a permanent patch. Setup: [retroarch-ai-service.md](../runbooks/retroarch-ai-service.md). Browser WebRetro cannot use it.
 
-Offline dump→rebuild is **stubbed** per system — [rom-auto-translate.md](../strategy/rom-auto-translate.md).
+Offline dump→rebuild is **stubbed** per system (local strategy notes).
 
 ## Apply with Flips (recommended)
 

@@ -12,13 +12,12 @@ directory as "operator-owned" all along and `tests/test_webretro_cores.py` opens
 WASM in repo"; the tree simply did not match. Fetching them onto the operator's own box makes the
 operator the party provisioning them. Operator notes on the `snes9x` / `genesis_plus_gx`
 non-commercial clauses (quotes + questions for a lawyer, **not counsel**):
-[webretro-core-clauses.md](../admin/webretro-core-clauses.md). See also
-[security-legal-playbook.md](../strategy/security-legal-playbook.md) (L1).
+[webretro-core-clauses.md](../admin/webretro-core-clauses.md).
 
 **Air-gapped installs:** set `FETCH_WEBRETRO_CORES_ON_BOOT=false` and use `--from-dir`. Boot logs a
 warning naming the missing cores rather than letting browser play fail silently.
 
-Related: [browser-play.md](../user/browser-play.md) · [emulation-coverage.md](../strategy/emulation-coverage.md) · [webretro-core-clauses.md](../admin/webretro-core-clauses.md)
+Related: [browser-play.md](../user/browser-play.md) · [browser-play-engines.md](../dev/browser-play-engines.md) · [webretro-core-clauses.md](../admin/webretro-core-clauses.md)
 
 ## Storage path
 

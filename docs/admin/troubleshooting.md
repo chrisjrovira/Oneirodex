@@ -51,8 +51,7 @@ Product toggles live under **Admin → Features** (and setup → Features). Env 
 ## Security headers / uploads
 
 Baseline headers (`nosniff`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`) are always
-sent and need no configuration. CSP **enforces** by default (`CSP_ENFORCE=true`) — see
-[security.md](../strategy/security.md).
+sent and need no configuration. CSP **enforces** by default (`CSP_ENFORCE=true`).
 
 | Symptom | Check |
 |---|---|

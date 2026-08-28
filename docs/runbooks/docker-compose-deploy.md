@@ -123,8 +123,7 @@ docker compose --profile artwork up -d
   — [artwork-gpu-workstation.md](artwork-gpu-workstation.md) — then set
   `ENABLE_AI_ARTWORK` / `AI_ARTWORK_URL` / `AI_ARTWORK_ENGINE` in `.env` and
   recreate **app** (those keys are mapped in `docker-compose.yml`). Turnkey
-  pairing for that shape is backlog **GPU-N**,
-  [gpu-worker-node.md](../strategy/gpu-worker-node.md).
+  pairing for that shape is backlog **GPU-N**.
 
 ### Challenge / captcha solver (TRAWL)
 

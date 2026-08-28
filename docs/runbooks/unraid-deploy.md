@@ -32,7 +32,7 @@ Only when the human has **shipped** the name-resolution code and the image is ru
 2. Run a **propose-only** scan first; review Unmatched / proposals
 3. Then a **full** rescan at `scan_depth=2` — do **not** start overlapping full scans on the same tree
 
-Exact steps: [libraries-and-scans.md — After A0–A14](../admin/libraries-and-scans.md#after-a0a14-ship--library-a-pcwin-rescan). Strategy context: [name-resolution.md](../strategy/name-resolution.md).
+Exact steps: [libraries-and-scans.md — After A0–A14](../admin/libraries-and-scans.md#after-a0a14-ship--library-a-pcwin-rescan).
 
 ## Prerequisites
 
@@ -123,7 +123,7 @@ If the games share includes a mixed `_console-gaming` tree (families + emu insta
 4. **Skip-dir** (built-in globs + Admin → Scanning filters `dir:…`) is defense-in-depth only — it does **not** replace per-leaf libs. Do not rely on skips to “fix” a family-root library.
 5. Test-scan NES / Genesis / PS1 leaves first; Arcade ~6k dirs last. Games mount stays `:ro`.
 
-Operator map: [console-gaming-libraries.md](../strategy/console-gaming-libraries.md) · admin short form: [libraries-and-scans.md](../admin/libraries-and-scans.md#console--emulator-trees-_console-gaming).
+Admin short form: [libraries-and-scans.md](../admin/libraries-and-scans.md#console--emulator-trees-_console-gaming).
 
 ## Image
 
@@ -317,7 +317,7 @@ Full matrix: [themes-reset.md](../admin/themes-reset.md).
 18. **Social**: `/activity`, `/chat`, `/notifications`, `/report` load; admin `/admin/support` inbox
 19. **LiveKit** (optional): `ENABLE_LIVEKIT` + `--profile livekit` — Activity voice lobby mints token ([livekit-unraid.md](livekit-unraid.md))
 
-Operator sign-off: tick the list above after `build --no-cache` + Reset Default Themes, then mark Unraid smoke done in `docs/strategy/progress.md`.
+Operator sign-off: tick the list above after `build --no-cache` + Reset Default Themes, then mark Unraid smoke done (local strategy notes).
 
 See also [docker-compose-deploy.md](docker-compose-deploy.md) · [observability-profile.md](observability-profile.md) · [themes-reset.md](../admin/themes-reset.md) · [support-inbox.md](../admin/support-inbox.md).
 

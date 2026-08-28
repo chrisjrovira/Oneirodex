@@ -51,4 +51,4 @@ Use a WAF or rate-limit rule for path `/login` (and `/reset` / forgot-password i
 2. With proxy limit: confirm `429` / challenge before hitting the app under a multi-worker soak.
 3. Legitimate users behind NAT: raise burst slightly; never disable both layers.
 
-Related: [security.md](../strategy/security.md) · [settings-modules.md](../admin/settings-modules.md)
+Related: [settings-modules.md](../admin/settings-modules.md) · [privacy-data-handling.md](../admin/privacy-data-handling.md)

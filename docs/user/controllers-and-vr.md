@@ -30,4 +30,4 @@ Kid mode uses the same browse controls; parental ACL already filters the list. D
 | **Quest / standalone** (friend seat) | Headset browser → `https://<server>/vr` → optional Add to Home (PWA). Play heavy titles via **Moonlight** to the household PC, or ask someone on the companion PC. No local install pipeline on the headset. |
 | **No headset** | Normal Library + Big Picture on TV. |
 
-Details and strategy: [headset-vr.md](../strategy/headset-vr.md) · [controller-input.md](../strategy/controller-input.md). Android APK is a spike only — [android-apk-vr.md](../strategy/android-apk-vr.md).
+Android APK is a spike only.

@@ -91,7 +91,7 @@ Before committing or writing docs/UI copy:
 3. **Never** add "steal from Product X" / peer teardown matrices in tracked files — use Oneirodex capability language for non-goals.
 4. **Allowed (Class D):** real integrations — Playnite import, ES-DE/Pegasus export, Prowlarr/Jackett/qBit, LiveKit, OIDC/Authentik, store ownership register-only.
 
-Policy: [../strategy/external-facing-scrub.md](../strategy/external-facing-scrub.md). Private vault: `docs/_private/` (gitignored).
+Policy: [scrub-shipped-bundles.md](../runbooks/scrub-shipped-bundles.md) (SCRUB-7). Private vault: `docs/_private/` (gitignored).
 
 ## Deploy assumptions
 

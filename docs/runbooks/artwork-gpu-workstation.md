@@ -118,4 +118,4 @@ README live screenshots stay captured from a populated instance. Do not invent t
 docker compose -f docker-compose.artwork-local.yml down
 ```
 
-Related: [gpu-worker-node.md](../strategy/gpu-worker-node.md) (outbound pairing is still backlog). [docker-compose-deploy.md](docker-compose-deploy.md) § Generated cover art. [container-wont-start.md](container-wont-start.md) § 7.
+Related: outbound pairing is still backlog. [docker-compose-deploy.md](docker-compose-deploy.md) § Generated cover art. [container-wont-start.md](container-wont-start.md) § 7.

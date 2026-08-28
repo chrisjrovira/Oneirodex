@@ -40,5 +40,4 @@ The desktop companion logs a setup note when launching RetroArch with AI hints e
 ## Related
 
 - [translation-patches.md](../user/translation-patches.md)
-- [rom-auto-translate.md](../strategy/rom-auto-translate.md)
 - [desktop-companion.md](../user/desktop-companion.md)

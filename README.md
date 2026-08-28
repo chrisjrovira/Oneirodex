@@ -377,7 +377,7 @@ Still stuck? **More → Report issue** (members) or open a GitHub issue with dep
 | 🎨 Look & feel | [Preferences & themes](docs/user/preferences-themes.md) · [Fonts & image uploads](docs/admin/theme-fonts-and-images.md) |
 | 🛡️ Admins | [Libraries & scans](docs/admin/libraries-and-scans.md) · [Discover sections](docs/admin/discover-sections.md) · [Support inbox](docs/admin/support-inbox.md) · [Settings modules](docs/admin/settings-modules.md) |
 | 🚢 Operators | [Native install](docs/runbooks/install-native.md) · [Scan locations](docs/runbooks/remote-scan-locations.md) · [Unraid](docs/runbooks/unraid-deploy.md) · [Compose](docs/runbooks/docker-compose-deploy.md) · [LiveKit](docs/runbooks/livekit-unraid.md) · [OIDC](docs/runbooks/oidc-sso.md) · [WebRetro cores](docs/runbooks/webretro-cores.md) · [Emulator BIOS](docs/runbooks/emulator-bios.md) · [Reference sets](docs/runbooks/reference-sets.md) · [Building installers](docs/runbooks/local-installers.md) |
-| 🗺️ Roadmap | [Strategy](docs/strategy/README.md) · [Progress](docs/strategy/progress.md) · [Docs index](docs/README.md) |
+| 🗺️ Changelog | [CHANGELOG.md](CHANGELOG.md) · [Docs index](docs/README.md) |
 | 🔌 API | [openapi.json](docs/openapi/openapi.json) |
 
 ---
@@ -396,8 +396,6 @@ pytest tests/test_security_suite.py tests/test_set_completion.py tests/test_logi
 ```
 
 Set `TEST_DATABASE_URL` (DB name must contain `test`, default `gamethecatest`) for DB-backed tests — [local-postgres-pytest.md](docs/runbooks/local-postgres-pytest.md).
-
-**Agent workflow:** docs sync on every change (`.claude/skills/docs-sync/`) · locked defaults ([agent-locks.md](docs/dev/agent-locks.md)) — [agent-skills.md](docs/dev/agent-skills.md).
 
 ### Versioning
 

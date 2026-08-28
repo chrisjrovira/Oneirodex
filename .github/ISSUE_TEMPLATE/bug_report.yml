@@ -9,7 +9,7 @@ body:
       value: |
         **External-facing scrub:** Do **not** paste competitor catalogs, peer teardown matrices, or warez / scene brand lists.
         Describe the problem in GameTheca capability language. Class D integrations (Playnite, Pegasus/ES-DE, Prowlarr) are fine when relevant.
-        See `docs/strategy/external-facing-scrub.md`.
+        Keep public text free of peer catalogs and Class A / warez-adjacent brand names.
   - type: textarea
     id: what-happened
     attributes:

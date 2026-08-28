@@ -1,8 +1,1 @@
 blank_issues_enabled: true
-contact_links:
-  - name: External-facing scrub reminder
-    url: https://github.com/chrisjrovira/oneirodex/blob/main/docs/strategy/external-facing-scrub.md
-    about: >-
-      Do not paste competitor catalogs, peer teardown matrices, or warez / scene
-      brand lists into Issues or PRs. Describe problems in Oneirodex product
-      language. Class D integrations (Playnite, Pegasus/ES-DE, Prowlarr) are fine.
