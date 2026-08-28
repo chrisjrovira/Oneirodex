@@ -6,10 +6,10 @@ Live pixels from local Playwright capture (`scripts/capture_docs_media.py`). Pre
 
 | Shot | README slot | `docs/media/` source | Status |
 |---|---|---|---|
-| **Hero strip** | `hero-banner.png` | `/library` (same session) | Captured |
-| **Library + free ROMs** | `screenshot-library.png` | `library-free-roms.png` | Captured |
-| **Systems** | `screenshot-systems.png` | `systems-platforms.png` | Captured |
-| **Chat / Activity / Friends** | `screenshot-chat.png` | `/chat` (`chat-channels.png` in media) | **Captured 2026-08-05** — Wave 16 full-room (Expand · channels · reactions · unread badge · Voice/Screenshare/Mute/Leave/Archive · emoji + attach composer) **and** W23 spaces (HOUSEHOLD text channels · Join with invite) |
+| **Hero strip** | `hero-banner.png` | `/library` (same session) | **Recaptured 2026-08-28** — review stack, 7 AI covers |
+| **Library + free ROMs** | `screenshot-library.png` | `library-free-roms.png` | **Recaptured 2026-08-28** |
+| **Systems** | `screenshot-systems.png` | `systems-platforms.png` | **Recaptured 2026-08-28** |
+| **Chat / Activity / Friends** | `screenshot-chat.png` | `/chat` (`chat-channels.png` in media) | **Recaptured 2026-08-28** — slide-over with seeded #general messages |
 
 Retired: `hero-banner.jpg`, `screenshot-*.jpg` — illustrative mock previews; do not restore to README.
 

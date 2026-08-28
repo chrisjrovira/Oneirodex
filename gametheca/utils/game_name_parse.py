@@ -30,8 +30,14 @@ _GLUED_TRAILING_VR_RE = re.compile(r'(?<=[A-Za-z0-9])VR\s*$', re.IGNORECASE)
 _STEAM_ID_RE = re.compile(r'\(\s*(\d{4,7})\s*\)\s*$')
 # A6 — trailing spaced/dotted version tails (v0 4, v1.188, v1.1.0a); not mid-title "v".
 _SPACED_VERSION_TAIL_RE = re.compile(
-    r'\s+\bv\d+(?:[.\s_]\d+)+[a-zA-Z]?\s*$',
+    r'\s+\bv\d+(?:[.\s_]\d+)+[a-zA-Z]?(?:\s+P2P?)?\s*$',
     re.IGNORECASE,
+)
+# A6 — trailing dotted x.y.z (no ``v``) e.g. Satellite Reign 1.13.06.
+# Three+ numeric segments so sequels like "Quake 2" / years stay put.
+# Do not peel the right-hand side of an A12 update range (`update 1.24.01 - 1.25.01`).
+_DOTTED_VERSION_TAIL_RE = re.compile(
+    r'\s+(?<!- )\d+\.\d+\.\d+(?:\.\d+)*\s*$',
 )
 # A6 — trailing Early Access / EA tokens only.
 _EARLY_ACCESS_TAIL_RE = re.compile(
@@ -68,6 +74,7 @@ _UNBRACKETED_SCENE_ALIASES = frozenset({
     'empress',
     'flt',
     'dodi',
+    'goldberg',
 })
 _UNBRACKETED_SCENE_TAIL_RE = re.compile(
     r'(?:\s+-\s*|\s+|-)('
@@ -109,12 +116,13 @@ _ADDON_JUNK_TAIL_RE = re.compile(
     r'\s+(?:4K\s+Videos?\s+Add-?ons?(?:\s+Repack)?|\bHV)\s*$',
     re.IGNORECASE,
 )
-# A8 — smart quotes → ASCII apostrophe.
-_SMART_APOSTROPHE_RE = re.compile(r"[’‘ʼ´]")
+# A8 — smart quotes + household backtick typos → ASCII apostrophe.
+_SMART_APOSTROPHE_RE = re.compile(r"[’‘ʼ´`]")
 # A8 — franchise heads missing apostrophe on disk (inject before Stage C colon match).
 _FRANCHISE_APOSTROPHE_INJECT = (
     (re.compile(r'^Assassins(\s+Creed\b)', re.IGNORECASE), "Assassin's"),
     (re.compile(r'^Baldurs(\s+Gate\b)', re.IGNORECASE), "Baldur's"),
+    (re.compile(r'^A Fishermans(\s+Tale\b)', re.IGNORECASE), "A Fisherman's"),
 )
 # C11 — bare franchise / one-token ambiguous labels → propose only (no auto-import).
 _BARE_FRANCHISE_LABELS = frozenset({
@@ -197,13 +205,14 @@ def detect_vr_suffix(raw: str) -> bool:
 
 
 def strip_version_access_tails(raw: str) -> str:
-    """A6 — strip trailing spaced/dotted v… versions and Early Access / EA."""
+    """A6 — strip trailing spaced/dotted v… versions, x.y.z tails, and Early Access / EA."""
     if not raw:
         return ''
     working = raw
     # Repeat lightly: "Title v0 4 Early Access" → strip version then EA.
     for _ in range(3):
         next_pass = _SPACED_VERSION_TAIL_RE.sub('', working).strip()
+        next_pass = _DOTTED_VERSION_TAIL_RE.sub('', next_pass).strip()
         next_pass = _EARLY_ACCESS_TAIL_RE.sub('', next_pass).strip()
         if next_pass == working:
             break

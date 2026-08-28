@@ -6,9 +6,8 @@
 ## Idea
 
 Color themes change `--gt-*` surfaces and accents. **Icon packs** change glyph
-weight/style via `html[data-icon-pack="…"] .gt-icon` CSS, **and** (phase 3a)
-ship distinct SVG drawings for **library**, **discover**, and **systems** on the
-five drawing packs. Outline keeps the inline stroke glyphs. Packs use
+weight/style via `html[data-icon-pack="…"] .gt-icon` CSS, **and** (drawing packs)
+ship distinct SVG drawings for every `CORE_ICON_KEYS` glyph. Outline keeps the inline stroke glyphs. Packs use
 `currentColor` + theme `--gt-icon-*` tokens, so they work with **any** color
 theme (aurora + pixel, ember + filled, etc.).
 
@@ -52,7 +51,7 @@ Source: `gametheca/setup/icon_themes/{id}/` → installed to `static/library/ico
 
 Each pack: `manifest.json` + `pack.css` + optional `icons/*.svg` (black-on-transparent, used as CSS masks) + optional `preview.png` (art-direction raster; chips still use SVG).
 
-Drawing packs (`filled`, `duotone`, `pixel`, `soft`, `mono`) ship **library**, **discover**, and **systems**. Remaining CORE keys still restyle the shared inline SVG via stroke/fill tokens. `RailIcon` and Jinja `icons.icon` set `data-icon`. Preferences chips load `previews.css` so unselected packs still show their drawing.
+Drawing packs (`filled`, `duotone`, `pixel`, `soft`, `mono`) ship `PACK_DRAWING_KEYS` equal to every `CORE_ICON_KEYS` glyph (17), including **user**, **menu**, **more**, and **play**. The download SVG also masks SPA `data-icon="downloads"`. Preferences chips still preview only the five primary-rail keys (`PACK_GLYPH_KEYS`) via `previews.css`.
 
 Workstation SD.Next for **covers** (not rail glyphs): [artwork-gpu-workstation.md](../runbooks/artwork-gpu-workstation.md).
 

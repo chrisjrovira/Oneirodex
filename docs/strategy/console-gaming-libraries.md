@@ -30,7 +30,11 @@ Manage this tree as **many platform libraries**, not one mega-library. Goal is c
 
 Top of `_console-gaming` (~46 entries) mixes:
 
-- **Family folders:** `ATARI`, `NINTENDO`, `Sega`, `Sony`, `MAME`, `Arcade`, `Neo Geo*`, `PC Engine`, …
+- **Family folders:** `ATARI`, `NINTENDO`, `Sega`, `Sony`, `Arcade`, `Neo Geo`, … (`MAME` on this share is a zip dump leaf, not a family)
+- **HuCard / TG dump leaves at tree root (not families):** `PC Engine` (flat `.pce`), `TurboGrafx-16`, `TurboGrafx CD`, `SuperGrafx`, `PCFX`
+- **Vector-arcade set leaf:** `AAE` (Asteroids-class folders) → `ARCADE`
+- **Glued spelling:** `Adventurevision` (no space) → `ADVISION`
+- **Emulator app installs** at root and under families: `duckstation-…`, `YUZU`, `xenia_master`, `virtualjaguar-…`, `_Emulators`, `bsnes_…`, `mGBA-…`, `ryujinx-…`, `snes9x-…`, `Zinc`, …
 - **Emulator app installs** at root and under families: `duckstation-…`, `YUZU`, `xenia_master`, `virtualjaguar-…`, `_Emulators`, `bsnes_…`, `mGBA-…`, `ryujinx-…`, `snes9x-…`, …
 - **Stray tools:** `cru-1.4.1`, `pegasus-fe_…`, `GOD v1.0`
 - Under `NINTENDO`: platform leaves (incl. typo `Ninentdo Entertainment System` ~1243 children) **plus** emu installs **plus** stray PC titles (e.g. Mario Kart 8, scene-tagged Switch/PC folders)
@@ -89,7 +93,9 @@ Skip these as library `folder` values. Names are patterns from the evidence tree
 | Archive-only parents (multipart rar packs with no extracted sets) | Scanner will invent junk titles or stall on archives |
 | Root `_console-gaming` itself | Same failure mode as depth-1/2 on the mix |
 
-**Skip-dir (shipped):** folder listing ignores built-in emu/FE/tool **prefix** globs (`_Emulators`, `yuzu*`, `ryujinx*`, `dolphin*`, `bsnes*`, `pegasus*`, `cru-*`, `GOD v*`, …), scaffolding dirs (`Config`, `Lang`, `Plugin`, `ROMs`, `docs`), scan-root leaks (`_console-gaming`, `_pc`, walkthrough trees), mod/VR-mod markers, and generic `[… Repack]` bracket-tag folder names (regex). Operators add extras via Admin Scanning filters prefixed `dir:` (fnmatch) or `re:` (regex). This is **defense-in-depth only** — **correct leaf paths** remain the control; do not point a lib at a family root and rely on skips.
+**Skip-dir (shipped):** folder listing ignores built-in emu/FE/tool **prefix** globs (`_Emulators`, `yuzu*`, `ryujinx*`, `dolphin*`, `bsnes*`, `pegasus*`, `cru-*`, `GOD v*`, `mame0*`, …), scaffolding dirs (`Config`, `Lang`, `Plugin`, `ROMs`, `docs`), scan-root leaks (`_console-gaming`, `_pc`, walkthrough trees), mod/VR-mod markers, and generic `[… Repack]` bracket-tag folder names (regex). Operators add extras via Admin Scanning filters prefixed `dir:` (fnmatch) or `re:` (regex). This is **defense-in-depth only** — **correct leaf paths** remain the control; do not point a lib at a family root and rely on skips.
+
+**Propose from the games root:** Admin **Add many: scan a folder** pointed at `/storage` (the games mount) walks `_console-gaming` even though that name is a skip-dir, and proposes `_pc` as **PCWIN** `folders` / `scan_depth=2`. A host folder named `games` that contains those lanes is walked the same way (not treated as a nested `games` dump). Walkthroughs and emu installs stay out. Pointing at `_console-gaming` itself still works.
 
 ---
 
@@ -160,13 +166,15 @@ Skip: `virtualjaguar-*` app dirs.
 
 | Disk area | `LibraryPlatform` | Mode | Depth | Notes |
 |---|---|---|---|---|
-| `PC Engine` / TG-16 leaf | `PCE` | files / folders | 1 | Companion-first until WASM vendored |
+| `PC Engine` HuCard dump (flat `.pce` at tree root) | `PCE` | **files** | 1 | Not a family parent — proposing it as a leaf is required |
 | `PC-FX` (if any) | `PCFX` | files / folders | 1 | |
+| `AAE` (vector-arcade set dirs) | `ARCADE` | **folders** | 1 | Emulator-named folder whose children *are* the dumps |
+| `Adventurevision` (glued) | `ADVISION` | files / folders | 1 | Household spelling; `Adventure Vision` also maps |
 | `Neo Geo/ROMs` (~182) | **`NEOGEO`** · **catalog**; **never** `NEOGEO_CD` for cart sets | **folders** (dir-per-set) | 1 | Cart AES only; CD stays on `NEOGEO_CD` |
 | `Neo Geo CD` leaf (if separate) | `NEOGEO_CD` | files / folders | 1 | |
 | `Neo Geo Pocket` | `NGP` | files | 1 | |
 | `Arcade/ROMs` (~6891 dirs) | **`ARCADE`** · **catalog** | **folders** | 1 | Huge; test-scan a slice first; no browser Play CTA in 1.0 |
-| `MAME` (multipart rar + emu) | — | **skip** until extracted ROM tree exists | — | Do not library the archive pack parent |
+| `MAME` zip dump (~8650 `.zip` + one `mame0*` emu build) | `ARCADE` | **files** | 1 | Propose the dump folder; skip `mame0274b_64bit`. Not a family parent. Companion/catalog honesty — no browser Play CTA |
 | WonderSwan / Coleco / 3DO / Vectrex / Intellivision / Channel F / Odyssey 2 / Commodore leaves | Matching enum (`WS`, `COLECO`, …) | files / folders | 1 | Only if a dedicated leaf exists |
 | Xbox family leaves | `XBOX` / `X360` / `XONE` / `XSX` | folders | 1 | Catalog / companion honesty per Wave 19 |
 

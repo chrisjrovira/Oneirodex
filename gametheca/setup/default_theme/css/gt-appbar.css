@@ -380,6 +380,27 @@
   outline-offset: 2px;
 }
 
+/* Account, hamburger, Filters: no resting box. The count badge still marks
+   active filters; a second outline around the name/avatar/hamburger was the
+   chrome that read as a button sitting on a button. Hover is a wash, not a
+   border. Keyboard still gets :focus-visible. */
+.gt-cbtn.gt-topbar__account,
+.gt-cbtn.gt-topbar__rail-toggle,
+.gt-topbar__cluster .gt-pop > .gt-cbtn {
+  border-color: transparent;
+  background: transparent;
+}
+
+.gt-cbtn.gt-topbar__account:hover:not(:disabled):not([aria-disabled='true']),
+.gt-cbtn.gt-topbar__rail-toggle:hover:not(:disabled):not([aria-disabled='true']),
+.gt-topbar__cluster .gt-pop > .gt-cbtn:hover:not(:disabled):not([aria-disabled='true']),
+.gt-cbtn.gt-topbar__account.is-on,
+.gt-topbar__cluster .gt-pop > .gt-cbtn.is-on,
+.gt-cbtn.gt-topbar__account[aria-expanded='true'] {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--gt-text) 8%, transparent);
+}
+
 /* The disabled state .gt-btn has always had. Its absence was not cosmetic:
    Notifications disables "Mark all read" when nothing is unread, Updates
    disables refresh while refreshing, and Collection detail disables delete

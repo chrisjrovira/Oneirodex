@@ -1,6 +1,10 @@
 """Dual product env names (ADR 0003 phase 3a)."""
 
+from pathlib import Path
+
 from product_env import LEGACY_PREFIX, NEW_PREFIX, getenv_product, getenv_product_int
+
+REPO = Path(__file__).resolve().parents[1]
 
 
 def test_prefixes():
@@ -36,3 +40,10 @@ def test_int_new_prefix_wins(monkeypatch):
     monkeypatch.setenv('GT_SCAN_THREAD_CAP', '8')
     monkeypatch.setenv('ONEIRODEX_SCAN_THREAD_CAP', '2')
     assert getenv_product_int('SCAN_THREAD_CAP', 4, minimum=1, maximum=8) == 2
+
+
+def test_compose_interpolates_both_library_roots_prefixes():
+    """Compose has no env_file; host-only ONEIRODEX_LIBRARY_ROOTS never reached the container."""
+    text = (REPO / 'docker-compose.yml').read_text(encoding='utf-8')
+    assert '- ONEIRODEX_LIBRARY_ROOTS=${ONEIRODEX_LIBRARY_ROOTS:-}' in text
+    assert '- GT_LIBRARY_ROOTS=${GT_LIBRARY_ROOTS:-}' in text

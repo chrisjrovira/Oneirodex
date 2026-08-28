@@ -4,7 +4,7 @@
 
 **Release:** **1.0.0-beta** — see the root [CHANGELOG.md](../../CHANGELOG.md). Waves **4–28** are on `origin/main`.
 
-**Updated:** 2026-08-27 — **GitHub rename** `chrisjrovira/oneirodex` · **identifier phase 3a** (`ONEIRODEX_*` / `--od-*`) · **Amazon live register** + **details disc chips** + ops dual names. Package path still `gametheca/`. Standing constraints: **no** Discord · **no Class A** intel in public docs. · **no store downloads**.
+**Updated:** 2026-08-28 — Member/admin chrome: atmosphere behind UI, mark-only rail, flattened admin LHN, smaller rail icons, library two-bar default, loading takeover. Household scan/match: propose from the games root walks `_console-gaming` and `_pc` (skip-dir names); MAME zip dump → Arcade files; PC peel P2/P2P + Fisherman's. Package path still `gametheca/`. Standing constraints: **no** Discord · **no Class A** intel in public docs · **no store downloads**.
 
 Wave diary (W4–W28): [archive/progress-waves-2026-07-08.md](archive/progress-waves-2026-07-08.md). Open set: [carryover-w28.md](carryover-w28.md). UI register: [ui-debt-log.md](../dev/ui-debt-log.md) (open table only). Name lock: [ADR 0003](../adr/0003-product-name-oneirodex.md).
 
@@ -19,7 +19,7 @@ Wave diary (W4–W28): [archive/progress-waves-2026-07-08.md](archive/progress-w
 
 ## Ship TLDR
 
-Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup/placeholder art follows the room. Cabinet playback on the WebRetro play bar. **Oneirodex** is the public product string (package still `gametheca`). GitHub is **`chrisjrovira/oneirodex`**. Phase 3a dual env (`ONEIRODEX_*` / `GT_*`) and CSS `--od-*` aliases. Play-mode matrix covers every `LibraryPlatform`, not only NES/GB. Shared JSON envelope remainder is **11** annotated keeps — wrapping would lie; see [api-envelope-keeps.md](../dev/api-envelope-keeps.md). CSS token ratchet **0**. **Blank-cover replace is wired through every download path.** Tile preview store marks include GOG / Epic and a YouTube trailer source from the editions request. Icon packs: **library / discover / systems** ship distinct SVGs on five drawing packs (outline stays stroke). **Next:** remaining pack glyphs; README recapture on a populated instance; Hub image publish; package rename (phase 3b) last.
+Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; atmosphere sits **behind** the UI. Loading is a full-viewport takeover. Library two-bar chrome is the default. Household matching: propose from `/storage` walks `_console-gaming` and proposes `_pc` as PCWIN depth 2; MAME zips are an Arcade files leaf; ROM peel on every console enum; PC peel FitGirl / Steam IDs / `v3 2 9` / `1.13.06` / `P2`/`P2P`. **Oneirodex** is the public product string (package still `gametheca`). GitHub is **`chrisjrovira/oneirodex`**. Shared JSON envelope remainder is **11** annotated keeps. CSS token ratchet **0**. **Next:** Unraid app image rebuild + Reset Default Themes; Hub image publish; package rename (phase 3b) last.
 
 ## Done
 
@@ -40,22 +40,28 @@ Decade room themes (`GENERATOR_VERSION` **17**) on member + admin chrome; backup
 | **Details disc chips** | Multi-disc count + Disc N on game details. Not on tiles. |
 | **Oneirodex phase 2 (ops dual names)** | `APP_IMAGE` / `APP_CONTAINER_NAME` / `DB_CONTAINER_NAME`; OCI title **Oneirodex**. Defaults keep `gametheca-*`. GitHub default **`chrisjrovira/oneirodex`**. |
 | **Oneirodex phase 3a** | `ONEIRODEX_*` wins over `GT_*`. CSS `--od-*` aliases `--gt-*`. Package path unchanged. |
-| **Icon pack drawings** | Five packs ship distinct **library / discover / systems** SVGs (`data-icon` + mask). Outline stays the inline stroke set. Remaining CORE keys still stroke-tint. |
+| **Icon pack drawings** | Five packs ship all **17** `PACK_DRAWING_KEYS` SVGs (`PACK_DRAWING_KEYS` == `CORE_ICON_KEYS`). Chips still preview five. Outline stays the inline stroke set. SPA `IconMenu` / `IconUser` / `IconMore` expose `data-icon` so those masks apply. |
 | **Envelope keeps** | [api-envelope-keeps.md](../dev/api-envelope-keeps.md) — why 11 sites stay off `api_ok`. |
 | **Admin firmware scan** | Folder of dumps you already own → matching names on the volume, version picker, copyable missing markdown. Same walk as `scripts/import_bios.py`. Never downloads BIOS. |
-| **Unraid stack path** | Compose Manager tree is `/mnt/user/infernal-data-streams/_projects/Gametheca`. `/mnt/user/isos/gametheca/` is retired. |
+| **Unraid stack path** | Compose Manager tree is `/mnt/user/infernal-data-streams/_projects/Oneirodex`. `/mnt/user/isos/gametheca/` is retired. |
+| **Member chrome** | Rail icons 1× with matching labels; expanded mark 3× the icon column; Library/Favorites pager in-flow at the grid foot, no glass; account / hamburger / Filters have no resting outline |
+| **Compose library roots** | `docker-compose.yml` interpolates `ONEIRODEX_LIBRARY_ROOTS` and `GT_LIBRARY_ROOTS` (no `env_file:`; host-only new key never reached the container) |
+| **Admin era stacking** | Decade-room wallpaper no longer covers admin chrome. Atmosphere is `z-index: -1`; `.gt-rail` / `.gt-topbar` stack at 2; main at 1. Flattened `#admin-app-root` cannot. |
+| **Scan / match (household tree)** | Propose from the games root walks `_console-gaming` (skip-dir + family) and proposes `_pc` as PCWIN `folders`/`2`. `MAME` zip dump → Arcade files (not a family). `PC Engine` HuCard leaf. `AAE` → Arcade. ROM peel on every console enum (`.pce` / `.ngc` / `.wsc`). PC peel: backtick, `x.y.z`, `P2`/`P2P`, Fisherman's. |
+| **Local GPU AI** | `docker-compose.artwork-local.yml` → `oneirodex-sdnext-local` on :7860 (RTX 2080). SD 1.5 `v1-5-pruned-emaonly` in volume. Review app: `ENABLE_AI_ARTWORK` → `host.docker.internal:7860`. Free-ROM sample libraries scanned + **7 AI covers** via `POST /admin/api/artwork/generate`. Runbook: [artwork-gpu-workstation.md](../runbooks/artwork-gpu-workstation.md). |
+| **Art Studio stock** | Review instance generated **40** platform/motif/era packs under `static/library/stock/` (Pillow size matrix; includes 6 decade rooms). |
+| **README capture** | Recaptured from review `:5006` (7 AI-covered free ROMs). Slots under `docs/assets/readme/` + docs media. |
 
 ## Next
 
 | | |
 |---|---|
-| README recapture | Populated instance — empty test-DB frames are worse than stale art |
-| Icon packs | Remaining CORE keys (download, favorites, …) still need per-pack drawings |
+| Batch AI covers (NAS) | App env live on GPU URL — run `POST /admin/api/artwork/generate/batch` (or Images → Generate) on the real library |
 | UID-018 | Envelope remainder (**11** annotated keeps) — do not wrap; see [api-envelope-keeps.md](../dev/api-envelope-keeps.md) |
 | Hub image | Operator publish `chrisjrovira/oneirodex` |
 | Code identifiers 3b | Package path `gametheca/` · `.gt-*` classes — last. Dual names required. |
-| GPU art on this PC | `docker compose -f docker-compose.artwork-local.yml up -d` after `nvidia-smi` in Docker — [artwork-gpu-workstation.md](../runbooks/artwork-gpu-workstation.md) |
+| NAS → this GPU | Done: Portmaster inbound · Compose Manager → Oneirodex · `AI_ARTWORK_*` in compose app env · Unraid app reaches `192.168.50.42:7860` |
 
 ## Blocked
 
-None for code. Capture needs a populated instance (`CAPTURE_BASE_URL`).
+None for the NAS→GPU path. Optional sidecars (LiveKit / ClamAV / challenge) still stopped until an operator starts those profiles.

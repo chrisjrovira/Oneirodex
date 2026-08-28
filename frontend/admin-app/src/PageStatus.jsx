@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom'
+
 /**
  * Shared loading / error / empty status for admin pages (GT-B33).
  *
@@ -80,6 +82,7 @@ export function PageStatus({
   loadingMessage = 'Loading…',
   children = null,
   className = '',
+  inline = false,
 }) {
   if (error) {
     const message = errorMessage || resolveErrorMessage(error)
@@ -104,10 +107,11 @@ export function PageStatus({
   }
 
   if (loading) {
-    return (
+    const node = (
       <div
-        className={`gt-page-status gt-page-status--loading${className ? ` ${className}` : ''}`}
-        // Polite: progress should not interrupt what the operator is reading.
+        className={`gt-page-status gt-page-status--loading${
+          inline ? '' : ' gt-page-status--takeover'
+        }${className ? ` ${className}` : ''}`}
         role="status"
         aria-busy="true"
         aria-live="polite"
@@ -115,6 +119,8 @@ export function PageStatus({
         <p className="gt-page-status__message">{loadingMessage}</p>
       </div>
     )
+    if (inline || typeof document === 'undefined') return node
+    return createPortal(node, document.body)
   }
 
   if (emptyMessage) {

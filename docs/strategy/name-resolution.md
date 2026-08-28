@@ -6,7 +6,7 @@
 
 ## Detection coverage (peel gate)
 
-Console ROM peel gates identify to **GB / GBC / GBA / NES / SNES / N64 / NDS / NGC / WII / PSX / PSP / SEGA_MD / SEGA_MS / SEGA_GG / SEGA_CD / SEGA_SATURN / SEGA_DC / ATARI_2600 / NEOGEO / NEOGEO_CD / ARCADE / SWITCH** — files-mode always; folders-mode when the leaf looks like a dump. Threshold **0.92**. Soft alias paths stay propose-first. Image kinds: cover / screenshot / box / cart / disc / logo / hero / fanart. Wave-status diary: [archive/progress-waves-2026-07-08.md](archive/progress-waves-2026-07-08.md).
+Console ROM peel gates identify for **every `LibraryPlatform` except PCWIN / PCDOS / Mac / Other** — files-mode always; folders-mode when the leaf looks like a dump. PC folders stay on `parse_game_label`. Threshold **0.92**. Soft alias paths stay propose-first. Image kinds: cover / screenshot / box / cart / disc / logo / hero / fanart. Wave-status diary: [archive/progress-waves-2026-07-08.md](archive/progress-waves-2026-07-08.md).
 
 
 ## Gap (evidence) — historical pre-A9; A9–A14 now shipped
@@ -19,7 +19,7 @@ Household PC tree `…/_pc/_a…_z` (Library A, **PCWIN**) still yields large **
 | Steam App ID in trailing parens | `Title (81735)`, lowercase `title (88323)` | Peel OK (A5); unmatched → Stage B / score (see below) |
 | VR suffixes / mod tails | `… VR`, `… VR MOD - … 0 8 1` | Covered when `VR` is **final** token |
 | **VR then version** | `… VR v1 2`, `… VR v0.8.1` | **Shipped** A14 (VR re-pass after A6) |
-| Version / build junk | `v0 4`, `v1 188`, `(build 18 05 2023)`, `Early Access` | Covered (A3/A6) when shapes match |
+| Version / build junk | `v0 4`, `v1 188`, `(build 18 05 2023)`, `Early Access`, trailing `1.13.06`, `v1 2 2 1 P2` | Covered (A3/A6) when shapes match; dotted **x.y.z** (3+ segments, no `v`) peels too; optional trailing `P2`/`P2P` after spaced `v…` |
 | **Incl Update parentheticals** | `Title (Incl Update 3)`, `… (Incl Update)` | **Shipped** A9 |
 | **Unbracketed scene/repack suffixes** | `Title - GROUP`, `Title GROUP` (hyphen or space before group token) | **Shipped** A10 |
 | **Date-stamp / compact V tails** | `… 2022093001`, `… V21 02 2023`, `… V16092671` | **Shipped** A11 (+ A6 multi-seg) |
@@ -64,9 +64,9 @@ Run once per folder label. Deduplicate case-insensitively; **stop early** on hig
 | **A3** | Strip trailing `(build …)` parenthetical | Spaced or dotted dates OK; **not** a Steam App ID |
 | **A4** | Strip VR / mod tails | Order: `VR MOD…` → vendor-mod tails → bare trailing `VR` |
 | **A5** | Extract trailing `(digits)` → `steam_app_id` | 4–7 digits only; strip from title. Prefer Steam store title as variant #0 (Stage B) |
-| **A6** | Strip trailing version / access junk | Spaced or dotted: `\bv\d+(?:[.\s_]\d+)+\b` tails (+ optional letter e.g. `v1.1.0a`); bare `Early Access` / `EA` as **trailing** tokens only. Do **not** strip mid-title `v` letters (`Avowed`) |
+| **A6** | Strip trailing version / access junk | Spaced or dotted: `\bv\d+(?:[.\s_]\d+)+\b` tails (+ optional letter e.g. `v1.1.0a`, + optional trailing `P2`/`P2P`); trailing **x.y.z** with 3+ numeric segments and no `v` (`Satellite Reign 1.13.06`); bare `Early Access` / `EA` as **trailing** tokens only. Do **not** strip mid-title `v` letters (`Avowed`) or sequels (`Quake 2`) |
 | **A7** | Normalize whitespace / casing | `_`→space; collapse spaces; title-case all-lowercase dumps; preserve intentional ALLCAPS tokens with digits |
-| **A8** | Apostrophe / smart-quote normalize | Map `’` `‘` `ʼ` `´` → ASCII `'`. Keep one **de-apostrophized** copy later (Stage C). Add **franchise apostrophe inject** for known heads missing `'` (e.g. `Assassins Creed …` → `Assassin's Creed …`) as a search variant (prefer inject before colon-head match) |
+| **A8** | Apostrophe / smart-quote normalize | Map `’` `‘` `ʼ` `´` **and household backtick** `` ` `` → ASCII `'`. Keep one **de-apostrophized** copy later (Stage C). Add **franchise apostrophe inject** for known heads missing `'` (e.g. `Assassins Creed …` → `Assassin's Creed …`, `A Fishermans Tale` → `A Fisherman's Tale`) as a search variant (prefer inject before colon-head match) |
 
 Tiny stylized aliases (`ADR1FT`→`Adrift`) may live in `_ALIAS_MAP` after A7.
 
@@ -107,7 +107,7 @@ A9–A13 may run before A7 as long as Steam ID extract (A5) still sees a trailin
 ### Stage B15–B20 — Console ROM file-leaf peel (**Done** 2026-07-31)
 
 **Audience:** Backend (scan identify · files + folders dump leaves) · Ops (console leaf libraries)  
-**Pilot / gate:** `CONSOLE_ROM_PEEL_PILOT_PLATFORMS` = **GB · GBC · GBA · NES · SNES · N64 · NDS · NGC · WII · PSX · PSP · SEGA_MD · SEGA_MS · SEGA_GG · SEGA_CD · SEGA_SATURN · SEGA_DC · ATARI_2600 · NEOGEO · NEOGEO_CD · ARCADE · SWITCH** with `scan_mode=files` (or file path when mode unset) — **BE-DET-1…3 + BE-DET-7 Done**. **BE-DET-2:** folders when leaf basename or primary dump inside looks No-Intro/GoodTools (`looks_like_console_rom_dump_label` via B16–B19 transform reasons); plain folder names stay on `parse_game_label`. **BE-DET-3:** P1 platforms + `ROM_EXT_RE` / AllowedFileType defaults for `.nds` `.gcm` `.rvz` `.wbfs` `.pbp` `.cso` `.nsp` `.xci` `.nsz` `.xcz` `.a26` `.cia` `.3ds` (+ prior cart/disc forms). **BE-DET-7:** gate += Saturn / Dreamcast / Neo Geo CD · Redump paren fixtures · SWITCH title-dir A1∪B16 · `.gdi`/`.cdi` · **QA PASS 140/140**. Enum aliases: PS1 → `PSX`; Genesis → `SEGA_MD`; GameCube → `NGC`; Neo Geo AES → `NEOGEO`; Dreamcast → `SEGA_DC`. Helper works cross-platform; identify wires gate via `should_use_console_rom_peel`. Threshold stays **0.92**.  
+**Pilot / gate:** `CONSOLE_ROM_PEEL_PILOT_PLATFORMS` = **every `LibraryPlatform` except PCWIN / PCDOS / Mac / Other** with `scan_mode=files` (or file path when mode unset). PC folders stay on `parse_game_label`. **BE-DET-2:** folders when leaf basename or primary dump inside looks No-Intro/GoodTools (`looks_like_console_rom_dump_label` via B16–B19 transform reasons); plain folder names stay on `parse_game_label`. **B15** also strips `.pce` `.sgx` `.ws` `.wsc` `.adf` `.ngp`. Enum aliases: PS1 → `PSX`; Genesis → `SEGA_MD`; GameCube → `NGC`; Neo Geo AES → `NEOGEO`; Dreamcast → `SEGA_DC`. Helper works cross-platform; identify wires gate via `should_use_console_rom_peel`. Threshold stays **0.92**.  
 **Entry point:** `parse_console_rom_label` in `gametheca/utils/rom_name_peel.py` (shared peel regex also powers DAT `normalize_set_title` via `normalize_rom_peel_core`).  
 **Hard rule:** Match-only — strip tags for IGDB search quality; **no** mass rename · **no** new HTTP routes.  
 **Naming conventions:** GoodTools / No-Intro bracket and parenthetical shapes are documented as **dump-set naming conventions** — not pirate-index brands. Alias token lists stay **in code only**.
@@ -116,7 +116,7 @@ When identify selects console ROM peel (gate: pilot platforms + files mode, or f
 
 | # | Rule | Notes |
 |---|---|---|
-| **B15** | Strip known ROM/archive extensions | `.gb` `.gbc` `.gba` `.nes` `.sfc` `.z64` `.nds` `.md` `.sms` `.gg` `.bin` `.iso` `.gcm` `.rvz` `.wbfs` `.pbp` `.cso` `.gdi` `.cdi` `.nsp` `.xci` `.a26` `.zip` `.7z` … |
+| **B15** | Strip known ROM/archive extensions | `.gb` `.gbc` `.gba` `.nes` `.sfc` `.z64` `.nds` `.md` `.sms` `.gg` `.bin` `.iso` `.gcm` `.rvz` `.wbfs` `.pbp` `.cso` `.gdi` `.cdi` `.nsp` `.xci` `.a26` `.pce` `.sgx` `.ws` `.wsc` `.adf` `.zip` `.7z` … |
 | **B16** | Strip GoodTools / dump **bracket** tags | `[!]` `[S]` `[b1]` … — iterative until stable |
 | **A1 / A10 (SWITCH only)** | Scene/repack brackets + unbracketed suffixes | BE-DET-7 title-dir peel — A1 before B16; A10 after remaining parens; aliases stay code-only |
 | **B17** | Strip No-Intro **region** and **language-list** parentheticals | `(USA)` `(Europe, Japan)` `(En,Fr,De)` … |

@@ -4,9 +4,11 @@
    dense grid before keeping the change. */
 
 .gt-system-backdrop {
-  position: fixed;
-  inset: 3.25rem 0 0 0;
-  z-index: 0;
+  position: absolute;
+  inset: 0;
+  /* Must sit behind in-flow tiles. position:fixed + z-index:0 painted after
+     ordinary blocks and covered the rail; stay in the content column instead. */
+  z-index: -1;
   overflow: hidden;
   pointer-events: none;
   /* Fades out toward the bottom so long scrolls do not sit under artwork. */
@@ -136,7 +138,7 @@
     opacity: 0.06;
   }
   .gt-system-backdrop {
-    inset: 3rem 0 0 0;
+    inset: 0;
   }
 }
 

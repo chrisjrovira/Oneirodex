@@ -605,7 +605,7 @@ export function ImagesPage({ embedded = false }) {
         </div>
 
         {loadingQueue ? (
-          <PageStatus loading loadingMessage="Loading queue…" />
+          <PageStatus loading inline loadingMessage="Loading queue…" />
         ) : images.length === 0 ? (
           <p className="gt-admin-lede">No images match these filters.</p>
         ) : groups ? (

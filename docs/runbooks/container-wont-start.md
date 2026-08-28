@@ -104,7 +104,7 @@ No output means there is no GPU to reserve, and no driver work will help.
 Unraid Compose Manager’s working dir **is** this checkout (not a separate `isos` copy). Check the live tree, including the Windows GPU override:
 
 ```bash
-STACK=/mnt/user/infernal-data-streams/_projects/Gametheca
+STACK=/mnt/user/infernal-data-streams/_projects/Oneirodex
 grep -n -A6 reservations "$STACK/docker-compose.yml" "$STACK/docker-compose.override.yml"
 grep -n COMPOSE_FILE "$STACK/.env"
 ```

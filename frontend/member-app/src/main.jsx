@@ -58,9 +58,8 @@ export function parseShellConfig(rootElement) {
     // Absent attribute means an older shell render — default on rather than
     // hiding a surface that has always been there.
     enableActivity: rootElement.dataset.enableActivity !== 'false',
-    // UIR-1: two-bar chrome. Opt-in until every page has adopted it, so an
-    // unset attribute keeps the existing TopNav and filter rail.
-    enableNewChrome: rootElement.dataset.enableNewChrome === 'true',
+    // Two-bar chrome is on unless an operator explicitly sets false.
+    enableNewChrome: rootElement.dataset.enableNewChrome !== 'false',
     showPlayStatus: rootElement.dataset.showPlayStatus === 'true',
     // AGPL §13 source offer — see config.GT_SOURCE_URL. A modified deployment
     // owes its users *its* source, so this is configuration, not a constant.
@@ -84,7 +83,7 @@ if (memberAppRoot) {
   // UIR-3: mark the document so shared CSS can retire page titles without every
   // page needing an edit. On <html> rather than the SPA root so Jinja admin can
   // set the same attribute server-side and get the identical treatment.
-  if (memberAppRoot.dataset.enableNewChrome === 'true') {
+  if (memberAppRoot.dataset.enableNewChrome !== 'false') {
     document.documentElement.dataset.chrome = 'v2'
   }
   createRoot(memberAppRoot).render(

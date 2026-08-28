@@ -23,6 +23,30 @@
 .icon-pack-chip[data-icon-pack="filled"] .gt-icon[data-icon="systems"] > * {
   opacity: 0;
 }
+.icon-pack-chip[data-icon-pack="filled"] .gt-icon[data-icon="download"] {
+  background-color: currentColor;
+  -webkit-mask: url("filled/icons/download.svg") center / contain no-repeat;
+  mask: url("filled/icons/download.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="filled"] .gt-icon[data-icon="download"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="filled"] .gt-icon[data-icon="downloads"] {
+  background-color: currentColor;
+  -webkit-mask: url("filled/icons/download.svg") center / contain no-repeat;
+  mask: url("filled/icons/download.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="filled"] .gt-icon[data-icon="downloads"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="filled"] .gt-icon[data-icon="favorites"] {
+  background-color: currentColor;
+  -webkit-mask: url("filled/icons/favorites.svg") center / contain no-repeat;
+  mask: url("filled/icons/favorites.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="filled"] .gt-icon[data-icon="favorites"] > * {
+  opacity: 0;
+}
 .icon-pack-chip[data-icon-pack="duotone"] .gt-icon[data-icon="library"] {
   background-color: currentColor;
   -webkit-mask: url("duotone/icons/library.svg") center / contain no-repeat;
@@ -45,6 +69,30 @@
   mask: url("duotone/icons/systems.svg") center / contain no-repeat;
 }
 .icon-pack-chip[data-icon-pack="duotone"] .gt-icon[data-icon="systems"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="duotone"] .gt-icon[data-icon="download"] {
+  background-color: currentColor;
+  -webkit-mask: url("duotone/icons/download.svg") center / contain no-repeat;
+  mask: url("duotone/icons/download.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="duotone"] .gt-icon[data-icon="download"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="duotone"] .gt-icon[data-icon="downloads"] {
+  background-color: currentColor;
+  -webkit-mask: url("duotone/icons/download.svg") center / contain no-repeat;
+  mask: url("duotone/icons/download.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="duotone"] .gt-icon[data-icon="downloads"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="duotone"] .gt-icon[data-icon="favorites"] {
+  background-color: currentColor;
+  -webkit-mask: url("duotone/icons/favorites.svg") center / contain no-repeat;
+  mask: url("duotone/icons/favorites.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="duotone"] .gt-icon[data-icon="favorites"] > * {
   opacity: 0;
 }
 .icon-pack-chip[data-icon-pack="pixel"] .gt-icon[data-icon="library"] {
@@ -71,6 +119,30 @@
 .icon-pack-chip[data-icon-pack="pixel"] .gt-icon[data-icon="systems"] > * {
   opacity: 0;
 }
+.icon-pack-chip[data-icon-pack="pixel"] .gt-icon[data-icon="download"] {
+  background-color: currentColor;
+  -webkit-mask: url("pixel/icons/download.svg") center / contain no-repeat;
+  mask: url("pixel/icons/download.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="pixel"] .gt-icon[data-icon="download"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="pixel"] .gt-icon[data-icon="downloads"] {
+  background-color: currentColor;
+  -webkit-mask: url("pixel/icons/download.svg") center / contain no-repeat;
+  mask: url("pixel/icons/download.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="pixel"] .gt-icon[data-icon="downloads"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="pixel"] .gt-icon[data-icon="favorites"] {
+  background-color: currentColor;
+  -webkit-mask: url("pixel/icons/favorites.svg") center / contain no-repeat;
+  mask: url("pixel/icons/favorites.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="pixel"] .gt-icon[data-icon="favorites"] > * {
+  opacity: 0;
+}
 .icon-pack-chip[data-icon-pack="soft"] .gt-icon[data-icon="library"] {
   background-color: currentColor;
   -webkit-mask: url("soft/icons/library.svg") center / contain no-repeat;
@@ -95,6 +167,30 @@
 .icon-pack-chip[data-icon-pack="soft"] .gt-icon[data-icon="systems"] > * {
   opacity: 0;
 }
+.icon-pack-chip[data-icon-pack="soft"] .gt-icon[data-icon="download"] {
+  background-color: currentColor;
+  -webkit-mask: url("soft/icons/download.svg") center / contain no-repeat;
+  mask: url("soft/icons/download.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="soft"] .gt-icon[data-icon="download"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="soft"] .gt-icon[data-icon="downloads"] {
+  background-color: currentColor;
+  -webkit-mask: url("soft/icons/download.svg") center / contain no-repeat;
+  mask: url("soft/icons/download.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="soft"] .gt-icon[data-icon="downloads"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="soft"] .gt-icon[data-icon="favorites"] {
+  background-color: currentColor;
+  -webkit-mask: url("soft/icons/favorites.svg") center / contain no-repeat;
+  mask: url("soft/icons/favorites.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="soft"] .gt-icon[data-icon="favorites"] > * {
+  opacity: 0;
+}
 .icon-pack-chip[data-icon-pack="mono"] .gt-icon[data-icon="library"] {
   background-color: currentColor;
   -webkit-mask: url("mono/icons/library.svg") center / contain no-repeat;
@@ -117,5 +213,29 @@
   mask: url("mono/icons/systems.svg") center / contain no-repeat;
 }
 .icon-pack-chip[data-icon-pack="mono"] .gt-icon[data-icon="systems"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="mono"] .gt-icon[data-icon="download"] {
+  background-color: currentColor;
+  -webkit-mask: url("mono/icons/download.svg") center / contain no-repeat;
+  mask: url("mono/icons/download.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="mono"] .gt-icon[data-icon="download"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="mono"] .gt-icon[data-icon="downloads"] {
+  background-color: currentColor;
+  -webkit-mask: url("mono/icons/download.svg") center / contain no-repeat;
+  mask: url("mono/icons/download.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="mono"] .gt-icon[data-icon="downloads"] > * {
+  opacity: 0;
+}
+.icon-pack-chip[data-icon-pack="mono"] .gt-icon[data-icon="favorites"] {
+  background-color: currentColor;
+  -webkit-mask: url("mono/icons/favorites.svg") center / contain no-repeat;
+  mask: url("mono/icons/favorites.svg") center / contain no-repeat;
+}
+.icon-pack-chip[data-icon-pack="mono"] .gt-icon[data-icon="favorites"] > * {
   opacity: 0;
 }

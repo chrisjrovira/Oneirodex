@@ -15,11 +15,19 @@ test('loading state sets aria-busy and shows loading message', () => {
   render(<PageStatus loading loadingMessage="Loading Discover…" />)
   const status = screen.getByRole('status')
   expect(status).toHaveAttribute('aria-busy', 'true')
+  expect(status).toHaveClass('gt-page-status--takeover')
   expect(screen.getByText('Loading Discover…')).toBeInTheDocument()
   // 'disc', not 'orbit': the retired id resolves forward rather than rendering
   // a motif that no longer exists. This assertion used to expect the stored
   // value and was left behind when the catalogue changed.
   expect(screen.getByRole('img', { name: 'Loading Discover…' })).toHaveAttribute('data-motif', 'disc')
+})
+
+test('nested loading stays inline instead of taking over the page', () => {
+  render(<PageStatus loading inline loadingMessage="Loading rooms…" />)
+  const status = screen.getByRole('status')
+  expect(status).not.toHaveClass('gt-page-status--takeover')
+  expect(screen.getByText('Loading rooms…')).toBeInTheDocument()
 })
 
 test('emptyMessage renders polite empty status', () => {

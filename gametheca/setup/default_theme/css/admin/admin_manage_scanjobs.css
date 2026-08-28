@@ -2218,11 +2218,30 @@ a.unmatched-dupe-of__title:hover {
 }
 
 /* —— Scan Filters explain + quick-add (Wave 3) —— */
+.gt-scan-filters__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--gt-space-4);
+    margin-bottom: var(--gt-space-4);
+}
+
+.gt-scan-filters__header h3,
+.gt-scan-filters__header .gt-adminpage-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--gt-font-sm);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--gt-text-muted);
+}
+
 .gt-scan-filters__header .gt-adminpage-lede {
     max-width: 42rem;
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
+    margin: 0.25rem 0 0;
+    text-align: left;
     opacity: 0.92;
 }
 

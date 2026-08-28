@@ -29,7 +29,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Social + A/V waves | `docs/strategy/social-av.md` | Have (W16 shipped) · post-1.0 → [native-rtc.md](native-rtc.md) |
 | Security suite | `docs/strategy/security.md` | Have · post-1.0 → [native-malware-scan.md](native-malware-scan.md) |
 | Security + legal remediation | `docs/strategy/security-legal-playbook.md` | Have — Phases 0–6 shipped; CSP **enforces**; remaining core-clause notes are not counsel |
-| Icon / image packs | `docs/strategy/icon-themes.md` | Have — library/discover/systems drawings on five packs; outline stays stroke |
+| Icon / image packs | `docs/strategy/icon-themes.md` | Have — 17 CORE drawing keys; chips preview five primary-rail glyphs |
 | Bug scrub triage | `docs/strategy/bug-triage.md` | Have |
 | EmulatorJS eval | `docs/strategy/emulatorjs-eval.md` | Have |
 | Emulation coverage (Wave 19) | `docs/strategy/emulation-coverage.md` | Have — play-mode matrix for every `LibraryPlatform`; SG-1000 / NGPC browser-play via shipped WASM |
@@ -43,9 +43,9 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Admin hybrid inventory | `docs/strategy/admin-hybrid.md` | Have |
 | Upgrade notes (0.2 → 1.0) | `docs/strategy/upgrade-notes-1.0.md` | Have |
 | Game Master 1.0 domain sign-off | `docs/strategy/v1-gamemaster-signoff.md` | Have (gate 7) |
-| Folder → IGDB name-resolution rules | `docs/strategy/name-resolution.md` | Have — A0–A14 · B15–B20 · BE-DET-1…10 **Done**; threshold 0.92 |
+| Folder → IGDB name-resolution rules | `docs/strategy/name-resolution.md` | Have — A0–A14 · B15–B20; ROM peel every console enum; A6 P2/P2P; A8 Fisherman's |
 | Store metadata identify · ownership | `docs/strategy/store-metadata-identify.md` | Have — DRM register-only; no LibraryPlatform.QUEST |
-| Console / emulator library layout | `docs/strategy/console-gaming-libraries.md` | Have — per-leaf libs; skip-dir; no depth-3 walker |
+| Console / emulator library layout | `docs/strategy/console-gaming-libraries.md` | Have — per-leaf libs; games-root propose walks `_console-gaming` + `_pc`; MAME is Arcade files |
 | Docs map (this file) | `docs/strategy/docs-map.md` | Have |
 | Decision log (ADRs) | `docs/adr/NNNN-*.md` | Have — [0001 Alembic defer](../adr/0001-schema-migrations-defer-alembic.md) · [0002 api-client SPA defer](../adr/0002-defer-api-client-spa.md) · [0003 Oneirodex name](../adr/0003-product-name-oneirodex.md) (phase 1–2 landed; GitHub `oneirodex`; phase 3a dual env + `--od-*`; package path not moved) |
 | Competitive re-score template | `docs/strategy/competitor-rescore.md` | **Have** — 2026-08-26; named scores stay in `docs/_private/peer-notes/` |
@@ -58,8 +58,8 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Guide | Audience | Status | Notes |
 |---|---|---|---|
 | Getting started (web) | End users | Have | [getting-started.md](../user/getting-started.md) |
-| Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) — preview store marks include GOG / Epic / YouTube |
-| Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — decade rooms + colour cabinets, grouped room-card picker (Jinja `group['items']`) |
+| Library browsing & Systems | End users | Have | [library-and-systems.md](../user/library-and-systems.md) — pager sits at the grid foot, not sticky |
+| Preferences & themes / icons / fonts | End users | Have | [preferences-themes.md](../user/preferences-themes.md) — chips preview five; drawing packs cover all CORE glyphs |
 | Downloading games | End users | Have | [downloads.md](../user/downloads.md) |
 | Browser / companion play matrix | End users | Have | [browser-play.md](../user/browser-play.md) — full `LibraryPlatform` matrix |
 | Free games (News claims) | End users | Have | [free-games.md](../user/free-games.md) |
@@ -101,14 +101,14 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 |---|---|---|
 | Libraries & scans | Have | [libraries-and-scans.md](../admin/libraries-and-scans.md) — merged chrome; tools tab; batch APIs; W34 catalog disagreement → Review |
 | [members-and-invites.md](../admin/members-and-invites.md) | Have | Invites as links; admin-created accounts with no email |
-| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **17**; UID-017 token pass (ratchet **0**) needs Reset Themes for classic CSS |
+| Themes & reset | Have | [themes-reset.md](../admin/themes-reset.md) — `GENERATOR_VERSION` **17**; atmosphere `z-index: -1` |
 | Settings & modules | Have | [settings-modules.md](../admin/settings-modules.md) — OIDC opt-in; native Arr + Prowlarr/Jackett |
 | Discover sections | Have | [discover-sections.md](../admin/discover-sections.md) |
 | Theme fonts & batch artwork | Have | [theme-fonts-and-images.md](../admin/theme-fonts-and-images.md) |
 | Support inbox | Have | [support-inbox.md](../admin/support-inbox.md) |
 | Ops summary | Have | [ops-summary.md](../admin/ops-summary.md) — disk issues = **info** |
 | Library root watch | Have | [library-root-watch-spike.md](../admin/library-root-watch-spike.md) |
-| Troubleshooting | Have | [troubleshooting.md](../admin/troubleshooting.md) |
+| Troubleshooting | Have | [troubleshooting.md](../admin/troubleshooting.md) — admin chrome hidden under decade-room wallpaper |
 | Privacy & data handling | Have | [privacy-data-handling.md](../admin/privacy-data-handling.md) — not a public ToS |
 | WebRetro core clauses | Have | [webretro-core-clauses.md](../admin/webretro-core-clauses.md) — **not counsel** |
 | First-run setup wizard | Update | `gt-setup` chrome · SECRET_KEY, IGDB, SMTP · `GENERATOR_VERSION` 17 |
@@ -133,12 +133,12 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 
 | Runbook | Status | Trigger |
 |---|---|---|
-| [unraid-deploy.md](../runbooks/unraid-deploy.md) | Have | Live stack `_projects` (isos retired) · volume sectioning |
-| [NAS-DEPLOY.md](../../NAS-DEPLOY.md) | Have | Same live checkout as unraid-deploy; no copy-to-isos |
+| [unraid-deploy.md](../runbooks/unraid-deploy.md) | Have | Live stack `_projects/Oneirodex` · Compose Manager must not point at empty `Gametheca` stub |
+| [NAS-DEPLOY.md](../../NAS-DEPLOY.md) | Have | Same live checkout (`_projects/Oneirodex`); no copy-to-isos |
 | [docker-compose-deploy.md](../runbooks/docker-compose-deploy.md) | Have | Compose · LiveKit + ClamAV + challenge profiles |
-| [artwork-gpu-workstation.md](../runbooks/artwork-gpu-workstation.md) | Have | Windows 2080 SD.Next-only; not the NAS stack |
+| [artwork-gpu-workstation.md](../runbooks/artwork-gpu-workstation.md) | Have | Windows 2080 SD.Next; Unraid app env maps `AI_ARTWORK_*` to LAN GPU |
 | [install-native.md](../runbooks/install-native.md) | Have | Linux · macOS · Windows |
-| [remote-scan-locations.md](../runbooks/remote-scan-locations.md) | Have | `GT_LIBRARY_ROOTS` / `ONEIRODEX_LIBRARY_ROOTS` |
+| [remote-scan-locations.md](../runbooks/remote-scan-locations.md) | Have | Compose interpolates both `ONEIRODEX_LIBRARY_ROOTS` and `GT_LIBRARY_ROOTS` |
 | [observability-profile.md](../runbooks/observability-profile.md) | Have | Optional Prometheus stub |
 | [container-wont-start.md](../runbooks/container-wont-start.md) | Have | Crash loops |
 | [livekit-unraid.md](../runbooks/livekit-unraid.md) | Have | Optional voice SFU |
@@ -171,7 +171,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 | Agent skills + agents index | Have — [dev/agent-skills.md](../dev/agent-skills.md) |
 | UI debt log | Have — [dev/ui-debt-log.md](../dev/ui-debt-log.md) — UID-017 token ratchet **0**; UID-018 envelope remainder **11** annotated keeps; UX-B6 PageStatus leftover closed; older changelog in [dev/archive/ui-debt-changelog-2026-08.md](../dev/archive/ui-debt-changelog-2026-08.md) |
 | Docs-sync skill | Have — `.cursor/skills/docs-sync/` |
-| Agent locks | Have — [dev/agent-locks.md](../dev/agent-locks.md) |
+| Agent locks | Have — [dev/agent-locks.md](../dev/agent-locks.md) checkout `Z:\_projects\Oneirodex` |
 | API envelope keeps | Have — [dev/api-envelope-keeps.md](../dev/api-envelope-keeps.md) — why 11 sites stay off `api_ok` |
 | W31 commit attribution | Have — [dev/w31-commit-attribution.md](../dev/w31-commit-attribution.md) |
 | UI tokens (Wave 0 / B+C) | Have — [dev/ui-wave0-tokens.md](../dev/ui-wave0-tokens.md) |
@@ -187,7 +187,7 @@ Status cells are `Have` / `Update` / `Create` / `Archived` plus one short freshn
 
 Capture at **1920×1080** and **1280×800**; dark default + one alternate preset. Store under `docs/media/screenshots/`; sync README slots under `docs/assets/readme/` (live PNG only).
 
-Checklist: [../assets/readme/CAPTURE.md](../assets/readme/CAPTURE.md). README **live** for hero, Library, Systems. **Capture needed:** Chat on a populated instance.
+Checklist: [../assets/readme/CAPTURE.md](../assets/readme/CAPTURE.md). README **live** for hero, Library, Systems, Chat (2026-08-28 review recapture). Chat still thin without seeded messages.
 
 **Refresh rule:** Re-run `scripts/capture_docs_media.py` on every commit/ship pass that touches member/admin UI. Empty test-DB frames are worse than stale art.
 

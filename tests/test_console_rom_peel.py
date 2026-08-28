@@ -227,6 +227,16 @@ def test_should_use_console_rom_peel_pilot():
     assert should_use_console_rom_peel(saturn_lib, '/roms/panzer.cue', files)
     assert should_use_console_rom_peel(dc_lib, '/roms/sonic.gdi', files)
     assert should_use_console_rom_peel(neogeo_cd_lib, '/roms/kof.chd', files)
+    assert should_use_console_rom_peel(
+        _Lib(LibraryPlatform.PCE), '/roms/bomberman.pce', files
+    )
+    assert should_use_console_rom_peel(
+        _Lib(LibraryPlatform.SEGA_32X), '/roms/knuckles.32x', files
+    )
+    assert should_use_console_rom_peel(
+        _Lib(LibraryPlatform.AMIGA), '/roms/lemmings.adf', files
+    )
+    assert parse_console_rom_label('Bomberman (Japan).pce')['cleaned_name'] == 'Bomberman'
     assert not should_use_console_rom_peel(pc_lib, '/roms/tetris.gb', files)
     # Folders-mode without dump tags stays off (plain / non-dump leaf).
     folders = {'scan_mode': 'folders'}
@@ -507,6 +517,13 @@ def test_be_det3_rom_ext_strips_new_forms():
         ('Title (USA).a26', 'Title'),
         ('Title (USA).cia', 'Title'),
         ('Title (USA).3ds', 'Title'),
+        ('Title (Japan).pce', 'Title'),
+        ('Title (Japan).sgx', 'Title'),
+        ('Title (World).ws', 'Title'),
+        ('Title (World).wsc', 'Title'),
+        ('Title (World) (En,Ja).ngc', 'Title'),
+        ('Title (Japan, Europe) (En,Ja).ngp', 'Title'),
+        ('Title (USA).adf', 'Title'),
     ]
     for raw, expected in cases:
         assert parse_console_rom_label(raw)['cleaned_name'] == expected

@@ -122,12 +122,14 @@ test('top bar exposes the rail toggle and wires it up', async () => {
   expect(onToggleRail).toHaveBeenCalledTimes(1)
 })
 
-test('rail lists every admin section', () => {
+test('rail lists every admin section and no hub subsections', () => {
   const { container } = renderRail()
 
   for (const link of ADMIN_NAV) {
     expect(container.querySelector(`a[href="${link.path}"]`)).toBeTruthy()
   }
+  expect(container.querySelector('.gt-rail__sublist')).toBeNull()
+  expect(container.querySelector('.gt-rail__footer')).toBeNull()
 })
 
 test('rail marks the active section', () => {
@@ -138,30 +140,14 @@ test('rail marks the active section', () => {
   expect(active.getAttribute('href')).toBe('/admin/ops')
 })
 
-test('rail expands only the active section, not all sixty destinations', () => {
+test('rail does not expand hub links that already live on the section page', () => {
   const { container } = renderRail({ at: '/admin/ops' })
 
-  // System's hub links are present because System is the active section…
-  for (const child of HUB_LINKS.system) {
-    expect(container.querySelector(`a[href="${child.href}"]`)).toBeTruthy()
-  }
-
-  // …while an inactive section's are not. Listing all of them permanently
-  // would trade the overflow menu for a wall of text.
-  //
-  // Two exclusions, both real rather than convenient: a link shared with the
-  // active section is legitimately shown, and a hub link that is *also* an
-  // ADMIN_NAV section path (Content's hub lists /admin/discovery_sections,
-  // which is Content's own destination) appears as a section link regardless.
-  const sectionPaths = new Set(ADMIN_NAV.map((l) => l.path.split('?')[0]))
-  const contentOnly = HUB_LINKS.content.filter(
-    (c) =>
-      !HUB_LINKS.system.some((s) => s.href === c.href) &&
-      !sectionPaths.has(c.href.split('?')[0]),
+  expect(container.querySelector('.gt-rail__link.is-active')?.getAttribute('href')).toBe(
+    '/admin/ops',
   )
-
-  expect(contentOnly.length).toBeGreaterThan(0)
-  for (const child of contentOnly) {
+  for (const child of HUB_LINKS.system) {
+    if (child.href === '/admin/ops') continue
     expect(container.querySelector(`a[href="${child.href}"]`)).toBeNull()
   }
 })
@@ -178,11 +164,14 @@ test('the ways out of admin survive, and live in exactly one place', () => {
   expect(container.querySelector('a[href="/logout"]')).toBeNull()
 })
 
-test('collapsed rail keeps accessible names and drops sub-links', () => {
-  const { container } = renderRail({ at: '/admin/ops', railState: 'collapsed' })
+test('the rail brand is the mark only', () => {
+  const { container } = renderRail()
+  const brand = container.querySelector('.gt-rail__brand')
+  expect(brand).toHaveClass('gt-rail__brand--mark-only')
+  expect(brand.querySelector('.gt-rail__brand-role')).toBeNull()
+})
 
-  // Labels stay in the DOM — the stylesheet hides them visually — or the rail
-  // becomes a column of unlabelled icons to a screen reader.
+test('collapsed rail keeps accessible names', () => {
+  renderRail({ at: '/admin/ops', railState: 'collapsed' })
   expect(screen.getByRole('link', { name: 'System' })).toBeInTheDocument()
-  expect(container.querySelector('.gt-rail__sublist')).toBeNull()
 })

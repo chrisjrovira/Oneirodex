@@ -168,7 +168,7 @@ export function CheatsPanel({
       </p>
 
       {loading ? (
-        <PageStatus loading loadingMessage="Loading cheats…" className="gt-cheats-panel__status" />
+        <PageStatus loading inline loadingMessage="Loading cheats…" className="gt-cheats-panel__status" />
       ) : null}
       {error ? (
         <PageStatus error={error} className="gt-cheats-panel__status" />

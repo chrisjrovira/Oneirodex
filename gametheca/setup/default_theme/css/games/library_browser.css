@@ -121,51 +121,21 @@
    positions whatever the labels translate to — a fixed gap put the outer two
    wherever the button widths happened to leave them.
 
-   No frame around the three. The glass panel and its border drew a box at the
-   foot of every library page containing one select, one segmented control and
-   one sentence — each of which already carries its own shape. The box was a
-   fourth outline around three things that did not need grouping, and it was the
-   heaviest edge on the page. Padding stays: the parts still need room to sit
-   off the last row of tiles. */
-/* Pinned to the foot of the pane, not to the end of the grid.
- *
- * With 500 tiles on a page the pager was a screen and a half below the fold, so
- * "next page" meant scrolling to the bottom of a page you had just decided you
- * were done with — and per-page, the control that would have made the page
- * shorter, was behind the same scroll.
- *
- * `position: sticky` with `bottom: 0` keeps it in flow: it sits under the last
- * row of tiles as before, and only detaches from the end of the content while
- * the content is taller than the pane. The container it sticks inside is the
- * shell's scrolling main, so no other page has to know about this.
- *
- * It gains a surface here — the transparent version was readable against the
- * page background but not against a grid of cover art scrolling under it. */
+   This is the library footer, not a following overlay. Sticky+glass kept the
+   pager on screen while tiles scrolled under it; it also painted a bar with a
+   top edge across the grid. It now sits under the last row, in flow, with no
+   surface of its own. */
 .pagination-controls {
-    position: sticky;
-    bottom: 0;
-    z-index: 5;
+    position: static;
     display: flex;
     align-items: center;
     gap: var(--gt-space-4, 12px);
     width: 100%;
-    padding: var(--gt-space-3, 8px) var(--gt-space-4, 12px);
+    padding: var(--gt-space-3, 8px) 0;
     border: 0;
     border-radius: 0;
-    /* Reaches past the pane's padding so the bar spans the full width rather
-       than floating with a strip of scrolling tiles either side of it. */
-    margin-inline: calc(var(--gt-gutter) * -1);
-    padding-inline: var(--gt-gutter);
-    background: color-mix(in srgb, var(--gt-surface) 92%, var(--gt-bg));
-    border-top: 1px solid var(--gt-border);
-    backdrop-filter: blur(8px);
-}
-
-/* Nothing behind glass on a machine that would rather not composite one. */
-@supports not (backdrop-filter: blur(1px)) {
-    .pagination-controls {
-        background: var(--gt-surface);
-    }
+    margin-inline: 0;
+    background: transparent;
 }
 
 .gt-pagination__page {
@@ -174,6 +144,17 @@
 
 .gt-pagination__perpage {
     margin-right: auto;
+}
+
+/* Moves are a row of words, not a boxed segmented control. */
+.gt-pagination__moves.gt-seg {
+    border: 0;
+    background: transparent;
+    overflow: visible;
+}
+
+.gt-pagination__moves .gt-seg__item + .gt-seg__item {
+    border-left: 0;
 }
 
 /* The four moves are one control, so the segmented primitive owns their shape.

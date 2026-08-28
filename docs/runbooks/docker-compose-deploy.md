@@ -13,7 +13,7 @@ Concise local/NAS path using the repo `docker-compose.yml` (`gametheca-app` + `g
 ```bash
 cp .env.docker.example .env          # local/NAS
 # Unraid: this checkout IS the stack — cp .env.unraid.example .env
-#   Compose Manager: /mnt/user/infernal-data-streams/_projects/Gametheca
+#   Compose Manager: /mnt/user/infernal-data-streams/_projects/Oneirodex
 #   (not /mnt/user/isos/gametheca/ — retired). See unraid-deploy.md
 # Set SECRET_KEY (required — container refuses the placeholder)
 # Set DATA_FOLDER_GAMES = HOST games path
@@ -120,8 +120,10 @@ docker compose --profile artwork up -d
 - **GPU on another machine** (the usual case for a GPU-less NAS): skip the
   profile entirely. On a Windows box with a card, use
   [`docker-compose.artwork-local.yml`](../../docker-compose.artwork-local.yml)
-  — [artwork-gpu-workstation.md](artwork-gpu-workstation.md) — then point
-  `AI_ARTWORK_URL` at it. Turnkey pairing for that shape is backlog **GPU-N**,
+  — [artwork-gpu-workstation.md](artwork-gpu-workstation.md) — then set
+  `ENABLE_AI_ARTWORK` / `AI_ARTWORK_URL` / `AI_ARTWORK_ENGINE` in `.env` and
+  recreate **app** (those keys are mapped in `docker-compose.yml`). Turnkey
+  pairing for that shape is backlog **GPU-N**,
   [gpu-worker-node.md](../strategy/gpu-worker-node.md).
 
 ### Challenge / captcha solver (TRAWL)

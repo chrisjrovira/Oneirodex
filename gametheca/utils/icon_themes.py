@@ -22,7 +22,23 @@ CORE_ICON_KEYS = (
 
 # Packs that ship their own SVG drawings (outline keeps the inline stroke glyphs).
 DRAWING_PACKS = ('filled', 'duotone', 'pixel', 'soft', 'mono')
-PACK_GLYPH_KEYS = ('library', 'discover', 'systems')
+# Preferences chip preview set (keep small — chips are dense).
+PACK_GLYPH_KEYS = ('library', 'discover', 'systems', 'download', 'favorites')
+# Every key that ships a pack SVG + mask CSS. ``download`` also masks ``downloads``.
+PACK_DRAWING_KEYS = PACK_GLYPH_KEYS + (
+    'settings',
+    'collections',
+    'wishlist',
+    'updates',
+    'ownership',
+    'calendar',
+    'news',
+    'playtime',
+    'user',
+    'menu',
+    'more',
+    'play',
+)
 
 BUILTIN_PACKS: list[dict[str, Any]] = [
     {
@@ -145,23 +161,38 @@ def icon_pack_image_url(pack_id: str | None, key: str) -> str | None:
     return None
 
 
-def pack_glyph_override_css(pack_id: str, *, url_prefix: str = 'icons/') -> str:
-    """Mask the inline glyph with a pack SVG so packs are drawings, not stroke tints."""
+def _pack_glyph_data_icons(key: str) -> tuple[str, ...]:
+    """data-icon values that use this pack SVG (rail aliases included)."""
+    if key == 'download':
+        return ('download', 'downloads')
+    return (key,)
+
+
+def pack_glyph_override_css(pack_id: str, *, url_prefix: str | None = None) -> str:
+    """Mask the inline glyph with a pack SVG so packs are drawings, not stroke tints.
+
+    Default URLs are root-absolute under ``/static/library/icon-themes/`` so masks
+    still resolve when the pack sheet is swapped at runtime (relative ``icons/``
+    URLs were resolving against the document and 404ing).
+    """
     if pack_id not in DRAWING_PACKS:
         return ''
+    if url_prefix is None:
+        url_prefix = f'/static/library/icon-themes/{pack_id}/icons/'
     blocks = []
-    for key in PACK_GLYPH_KEYS:
+    for key in PACK_DRAWING_KEYS:
         url = f'{url_prefix}{key}.svg'
-        blocks.append(
-            f'html[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{key}"] {{\n'
-            f'  background-color: currentColor;\n'
-            f'  -webkit-mask: url("{url}") center / contain no-repeat;\n'
-            f'  mask: url("{url}") center / contain no-repeat;\n'
-            f'}}\n'
-            f'html[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{key}"] > * {{\n'
-            f'  opacity: 0;\n'
-            f'}}'
-        )
+        for data_icon in _pack_glyph_data_icons(key):
+            blocks.append(
+                f'html[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{data_icon}"] {{\n'
+                f'  background-color: currentColor;\n'
+                f'  -webkit-mask: url("{url}") center / contain no-repeat;\n'
+                f'  mask: url("{url}") center / contain no-repeat;\n'
+                f'}}\n'
+                f'html[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{data_icon}"] > * {{\n'
+                f'  opacity: 0;\n'
+                f'}}'
+            )
     return '\n'.join(blocks)
 
 
@@ -173,16 +204,17 @@ def icon_pack_previews_css() -> str:
     for pack_id in DRAWING_PACKS:
         for key in PACK_GLYPH_KEYS:
             url = f'{pack_id}/icons/{key}.svg'
-            chunks.append(
-                f'.icon-pack-chip[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{key}"] {{\n'
-                f'  background-color: currentColor;\n'
-                f'  -webkit-mask: url("{url}") center / contain no-repeat;\n'
-                f'  mask: url("{url}") center / contain no-repeat;\n'
-                f'}}\n'
-                f'.icon-pack-chip[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{key}"] > * {{\n'
-                f'  opacity: 0;\n'
-                f'}}'
-            )
+            for data_icon in _pack_glyph_data_icons(key):
+                chunks.append(
+                    f'.icon-pack-chip[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{data_icon}"] {{\n'
+                    f'  background-color: currentColor;\n'
+                    f'  -webkit-mask: url("{url}") center / contain no-repeat;\n'
+                    f'  mask: url("{url}") center / contain no-repeat;\n'
+                    f'}}\n'
+                    f'.icon-pack-chip[data-icon-pack="{pack_id}"] .gt-icon[data-icon="{data_icon}"] > * {{\n'
+                    f'  opacity: 0;\n'
+                    f'}}'
+                )
     return '\n'.join(chunks) + '\n'
 
 

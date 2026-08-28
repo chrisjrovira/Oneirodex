@@ -12,7 +12,10 @@
 #gt-era-atmosphere {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  /* Behind every painted surface. z-index:0 tied with in-flow chrome and let
+     lamp/grain mix-blend sample the UI as if the room sat on top of it. */
+  z-index: -1;
+  isolation: isolate;
   pointer-events: none;
   overflow: hidden;
 }
@@ -123,20 +126,27 @@
   50% { opacity: calc(var(--gt-era-lamp-opacity, 1) * 1.08); }
 }
 
-html[data-era] body {
-  background: transparent;
+/* Canvas colour lives on <html> so #gt-era-atmosphere at z-index:-1 still
+   shows the room colour behind it (body stays transparent). */
+html[data-era] {
   background-color: var(--gt-era-bg, var(--gt-bg));
 }
 
-/* Let the room show through the app canvas. Chrome (rail, cards, tables)
-   keeps opaque/glass surfaces so type stays readable. */
+html[data-era] body {
+  background: transparent;
+  background-color: transparent;
+}
+
+/* Room peeks through, but the canvas stays readable — earlier 32%/48% washes
+   made rail + library look like the wallpaper was painted over the UI. */
 html[data-era] .gt-shell {
-  background: color-mix(in srgb, var(--gt-bg) 32%, transparent);
+  background: color-mix(in srgb, var(--gt-bg) 78%, transparent);
+  isolation: isolate;
 }
 
 html[data-era] .gt-shell__main,
 html[data-era] .gt-shell > #content {
-  background: color-mix(in srgb, var(--gt-bg) 48%, transparent);
+  background: color-mix(in srgb, var(--gt-bg) 88%, transparent);
 }
 
 html[data-era] body.admin-shell,
@@ -144,6 +154,7 @@ html[data-era] body.admin-spa,
 html[data-era] body.gt-shell-host {
   background: transparent;
   background-color: transparent;
+  isolation: isolate;
 }
 
 html[data-era] .gt-admin-shell,
@@ -152,16 +163,27 @@ html[data-era] #admin-legacy-content,
 html[data-era] #admin-app-root,
 html[data-era] #member-app-root,
 html[data-era] #content.member-spa-content {
-  background: color-mix(in srgb, var(--gt-bg) 48%, transparent);
+  background: color-mix(in srgb, var(--gt-bg) 88%, transparent);
 }
 
+/* Belt-and-suspenders: chrome stacking contexts above the room. Admin
+   #admin-app-root / .gt-admin-shell are display:contents, so z-index on those
+   wrappers is a no-op — lift the painted grid items instead. Rail and top bar
+   sit above the library system-backdrop (absolute, z-index -1 in the content
+   column). */
 html[data-era] .gt-shell,
 html[data-era] #content,
-html[data-era] #admin-app-root,
 html[data-era] #member-app-root,
-html[data-era] .gt-admin-shell {
+html[data-era] .gt-admin-main,
+html[data-era] #admin-legacy-content {
   position: relative;
   z-index: 1;
+}
+
+html[data-era] .gt-rail,
+html[data-era] .gt-topbar {
+  position: relative;
+  z-index: 2;
 }
 
 /* ---- Room recipes (setting / decade). No manufacturer names. ---- */

@@ -83,6 +83,7 @@ test('filters fall back in place when no rail slot exists', async () => {
         libraryCount: 1,
         gamesCount: 1,
       }}
+      shellConfig={{ enableNewChrome: false }}
     />,
   )
 
@@ -125,6 +126,7 @@ test('filters render into the rail slot when the shell provides one', async () =
         libraryCount: 1,
         gamesCount: 1,
       }}
+      shellConfig={{ enableNewChrome: false }}
     />,
   )
 
@@ -305,6 +307,8 @@ test('live title search sends name browse param after debounce', async () => {
 
   await waitFor(() => expect(screen.getByText('Celeste')).toBeInTheDocument())
 
+  // Title search lives in the Filters popover under two-bar chrome.
+  await user.click(screen.getByRole('button', { name: 'Filters' }))
   const input = screen.getByRole('searchbox', { name: /search library by title/i })
   await user.type(input, 'cel')
 

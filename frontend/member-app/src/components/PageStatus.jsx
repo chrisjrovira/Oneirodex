@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom'
+
 import './PageStatus.css'
 import { LoadingMotif } from './LoadingMotif'
 import { useLoadingMotifId } from './loadingMotifApi'
@@ -48,11 +50,39 @@ export function resolveErrorDetail(error) {
   return parts.length ? parts.join(' · ') : null
 }
 
+function LoadingStatus({
+  inline,
+  className,
+  resolvedMotif,
+  loadingMessage,
+}) {
+  return (
+    <div
+      className={`gt-page-status gt-page-status--loading${
+        inline ? '' : ' gt-page-status--takeover'
+      }${className ? ` ${className}` : ''}`}
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <LoadingMotif
+        motifId={resolvedMotif}
+        size={inline ? 'md' : 'lg'}
+        title={loadingMessage}
+      />
+      <p className="gt-page-status__message">{loadingMessage}</p>
+    </div>
+  )
+}
+
 /**
  * Shared loading / error / empty status for SPA pages.
  *
  * Precedence is error → loading → empty → children. Error outranks loading so a
  * failed refresh of already-rendered data does not sit spinning forever.
+ *
+ * Page-level loading is a full-viewport takeover (motif + label). Nested
+ * panels pass `inline` so they keep a compact status inside their own frame.
  *
  * Error uses role="alert" (assertive) because it is an interruption the user
  * must act on; loading and empty stay role="status" (polite).
@@ -68,6 +98,7 @@ export function PageStatus({
   children = null,
   className = '',
   motifId = null,
+  inline = false,
 }) {
   const resolvedMotif = useLoadingMotifId(motifId)
 
@@ -93,17 +124,16 @@ export function PageStatus({
   }
 
   if (loading) {
-    return (
-      <div
-        className={`gt-page-status gt-page-status--loading${className ? ` ${className}` : ''}`}
-        role="status"
-        aria-busy="true"
-        aria-live="polite"
-      >
-        <LoadingMotif motifId={resolvedMotif} size="md" title={loadingMessage} />
-        <p className="gt-page-status__message">{loadingMessage}</p>
-      </div>
+    const node = (
+      <LoadingStatus
+        inline={inline}
+        className={className}
+        resolvedMotif={resolvedMotif}
+        loadingMessage={loadingMessage}
+      />
     )
+    if (inline || typeof document === 'undefined') return node
+    return createPortal(node, document.body)
   }
 
   if (emptyMessage) {

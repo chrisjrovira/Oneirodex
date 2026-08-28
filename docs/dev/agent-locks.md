@@ -106,8 +106,8 @@ Policy: [../strategy/external-facing-scrub.md](../strategy/external-facing-scrub
 
 | Fact | Value |
 |---|---|
-| Repo | `Z:\_projects\Gametheca` — a NAS mapping, so filesystem work is slow |
-| Unraid Compose | Same tree: `/mnt/user/infernal-data-streams/_projects/Gametheca`. `/mnt/user/isos/gametheca/` is retired |
+| Repo | `Z:\_projects\Oneirodex` — a NAS mapping, so filesystem work is slow |
+| Unraid Compose | Same tree: `/mnt/user/infernal-data-streams/_projects/Oneirodex`. `/mnt/user/isos/gametheca/` is retired |
 | Games scan root | `/mnt/user/infernal-data-streams/_software/_games` (not the repo) |
 | Test database | `gametheca-review-db` (postgres:17.6, published on 5432) |
 | Local dev port | `GT_PORT=6120` or `ONEIRODEX_PORT` — Windows reserves 5041–5140, so 5099 will not bind |

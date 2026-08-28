@@ -529,6 +529,8 @@ DEFAULT_SKIP_DIR_GLOBS = (
     'yuzu*',
     'ryujinx*',
     'xenia*',
+    'zinc*',
+    'mame0*',
     'bsnes*',
     'mgba*',
     'snes9x*',

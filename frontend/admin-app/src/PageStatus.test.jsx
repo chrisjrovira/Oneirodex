@@ -49,6 +49,7 @@ test('error is assertive, loading is polite', () => {
   const status = screen.getByRole('status')
   expect(status).toHaveAttribute('aria-busy', 'true')
   expect(status).toHaveAttribute('aria-live', 'polite')
+  expect(status).toHaveClass('gt-page-status--takeover')
 })
 
 test('retry is offered only when there is something to retry', () => {

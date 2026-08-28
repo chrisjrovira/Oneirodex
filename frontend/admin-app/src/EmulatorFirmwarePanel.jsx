@@ -439,7 +439,7 @@ export function EmulatorFirmwarePanel() {
         </p>
       ) : null}
 
-      <PageStatus loading={loading} loadingMessage="Reading firmware volume…" />
+      <PageStatus loading={loading} inline loadingMessage="Reading firmware volume…" />
 
       {!loading && !error && plan ? (
         <>

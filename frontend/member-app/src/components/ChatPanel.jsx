@@ -680,7 +680,7 @@ export function ChatPanel({
           ) : null}
 
           {channelsLoading ? (
-            <PageStatus loading loadingMessage="Loading rooms…" />
+            <PageStatus loading inline loadingMessage="Loading rooms…" />
           ) : channels.length === 0 ? (
             <PageStatus emptyMessage="No rooms yet — #general appears after first visit when chat is seeded." />
           ) : (

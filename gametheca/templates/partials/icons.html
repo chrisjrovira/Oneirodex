@@ -35,6 +35,10 @@
 {%- if name in ('discover', 'compass') -%}
     <circle cx="12" cy="12" r="10"/>
     <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" stroke="none"/>
+{%- elif name == 'systems' -%}
+    <rect x="6.5" y="6.5" width="11" height="11" rx="2"/>
+    <rect x="10" y="10" width="4" height="4" rx="1" fill="currentColor" stroke="none"/>
+    <path d="M9.5 2v3M14.5 2v3M9.5 19v3M14.5 19v3M2 9.5h3M2 14.5h3M19 9.5h3M19 14.5h3"/>
 {%- elif name in ('library', 'gamepad', 'emulators') -%}
     <rect x="2" y="6" width="20" height="12" rx="3"/>
     <path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/>

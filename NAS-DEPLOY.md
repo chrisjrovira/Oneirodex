@@ -4,8 +4,8 @@ The Unraid stack **is** this git tree. Do not copy files to `/mnt/user/isos/game
 
 | Role | Path |
 |---|---|
-| Unraid compose / env | `/mnt/user/infernal-data-streams/_projects/Gametheca` |
-| Windows mapping | `Z:\_projects\Gametheca` |
+| Unraid compose / env | `/mnt/user/infernal-data-streams/_projects/Oneirodex` |
+| Windows mapping | `Z:\_projects\Oneirodex` |
 | Games scan root (RO) | `/mnt/user/infernal-data-streams/_software/_games` |
 | Library / uploads (RW) | `/mnt/cache/appdata/gametheca/library` |
 
@@ -13,8 +13,8 @@ Full operator runbook: [docs/runbooks/unraid-deploy.md](docs/runbooks/unraid-dep
 
 ## Compose Manager
 
-- External ENV File Path: `/mnt/user/infernal-data-streams/_projects/Gametheca/.env`
-- Indirect Compose File: `/mnt/user/infernal-data-streams/_projects/Gametheca/docker-compose.yml`
+- External ENV File Path: `/mnt/user/infernal-data-streams/_projects/Oneirodex/.env`
+- Indirect Compose File: `/mnt/user/infernal-data-streams/_projects/Oneirodex/docker-compose.yml`
 - Indirect Path: leave empty
 
 `.env` must **not** contain `DATABASE_URL=...@localhost...`. Compose builds the URL with host `db`. Prefer `.env.unraid.example` (or `.env.nas.example`) if you are creating `.env` from scratch — set `SECRET_KEY`, `DATA_FOLDER_GAMES`, and `LIBRARY_HOST_PATH`. Do not overwrite a live `.env`.
@@ -24,7 +24,7 @@ Full operator runbook: [docs/runbooks/unraid-deploy.md](docs/runbooks/unraid-dep
 ## Start / rebuild
 
 ```bash
-cd /mnt/user/infernal-data-streams/_projects/Gametheca
+cd /mnt/user/infernal-data-streams/_projects/Oneirodex
 docker compose down
 docker compose up -d --build
 docker compose exec app printenv DATABASE_URL DATABASE_HOST

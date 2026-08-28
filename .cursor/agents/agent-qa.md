@@ -34,7 +34,7 @@ description: >-
 - Smallest relevant pytest/vitest first; then builds if UI touched
 - Truncate logs; cite paths and status codes
 - Note **BLOCKED (env)** when Postgres/login/Unraid unavailable — do not fake pass
-- **This host:** the repo lives on `Z:\_projects\Gametheca`, a slow NAS mapping — scope vitest runs, background long ones, and read the output file rather than trusting a backgrounded exit code
+- **This host:** the repo lives on `Z:\_projects\Oneirodex`, a slow NAS mapping — scope vitest runs, background long ones, and read the output file rather than trusting a backgrounded exit code
 
 ## Locked out
 

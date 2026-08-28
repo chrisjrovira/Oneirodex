@@ -13,38 +13,20 @@
   pointer-events: none;
 }
 
-/* Long, page-owning work takes the content pane and blurs what is behind it;
-   routine requests must not (GT-B9).
- *
- * `absolute`, not `fixed`, and anchored to .gt-shell: the rail and top bar stay
- * sharp and usable while the page you are waiting on is clearly busy. Blurring
- * the navigation as well would make the whole app look frozen.
- *
- * 2px of blur was not enough to read as deliberate — it looked like a rendering
- * fault rather than a state. */
+/* Long, page-owning work is a full-viewport takeover (same contract as
+   `.gt-page-status--takeover`). A banner at the top of a section read as a
+   toast, not as "this page is busy". Corner overlay above stays for routine
+   non-blocking requests. */
 .gt-loading-overlay--blocking {
-  position: absolute;
-  grid-area: main;
-  inset: var(--gt-topbar-h) 0 0 var(--gt-rail-w);
-  right: auto;
-  bottom: auto;
+  position: fixed;
+  inset: 0;
+  z-index: 400;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--gt-bg) 55%, transparent);
-  backdrop-filter: blur(7px);
+  background: color-mix(in srgb, var(--gt-bg) 82%, transparent);
+  backdrop-filter: blur(12px);
   pointer-events: auto;
-}
-
-[data-rail='collapsed'] .gt-loading-overlay--blocking {
-  inset: var(--gt-topbar-h) 0 0 var(--gt-rail-w-collapsed);
-}
-
-@media (max-width: 900px) {
-  .gt-loading-overlay--blocking,
-  [data-rail='collapsed'] .gt-loading-overlay--blocking {
-    inset: var(--gt-topbar-h) 0 0 0;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -67,7 +67,7 @@ export function IconCogs(props) {
 
 export function IconMore(props) {
   return (
-    <svg viewBox="0 0 24 24" {...base} {...props}>
+    <svg viewBox="0 0 24 24" {...base} data-icon="more" {...props}>
       <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
       <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
       <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none" />
@@ -77,7 +77,7 @@ export function IconMore(props) {
 
 export function IconMenu(props) {
   return (
-    <svg viewBox="0 0 24 24" {...base} {...props}>
+    <svg viewBox="0 0 24 24" {...base} data-icon="menu" {...props}>
       <path d="M4 6h16M4 12h16M4 18h16" />
     </svg>
   )
@@ -85,7 +85,7 @@ export function IconMenu(props) {
 
 export function IconUser(props) {
   return (
-    <svg viewBox="0 0 24 24" {...base} {...props}>
+    <svg viewBox="0 0 24 24" {...base} data-icon="user" {...props}>
       <circle cx="12" cy="8" r="4" />
       <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
     </svg>

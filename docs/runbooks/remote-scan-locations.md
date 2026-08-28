@@ -76,7 +76,9 @@ LIBRARY_ROOT_2_HOST_PATH=/mnt/user/roms
 LIBRARY_ROOT_3_HOST_PATH=/mnt/nas/archive
 
 # Container paths — /storage2, not /mnt/user/roms
-GT_LIBRARY_ROOTS=NAS ROMs=/storage2|Archive=/storage3
+# Compose interpolates both keys; ONEIRODEX_ wins inside the app if both are set.
+ONEIRODEX_LIBRARY_ROOTS=NAS ROMs=/storage2|Archive=/storage3
+GT_LIBRARY_ROOTS=
 ```
 
 ```bash

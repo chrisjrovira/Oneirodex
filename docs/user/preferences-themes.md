@@ -29,7 +29,7 @@ opens fully expanded until you change that.
 ## Icon packs (independent of color)
 
 - Preferences → **Icon pack**: Outline, Filled, Duotone, Pixel, Soft, Mono block.
-- Outline is the default stroke set. The other five packs draw **library**, **discover**, and **systems** as their own SVGs; other rail glyphs still change weight/fill only.
+- Outline is the default stroke set. The other five packs draw their own SVGs for every CORE glyph (primary rail, settings, More-menu set, plus user / menu / more / play). Preferences chips still preview the five primary-rail glyphs.
 - Packs use `currentColor`, so they work with **any** color theme (e.g. Aurora + Pixel).
 - A preset can also set the icon *silhouette* — stroke weight, corner style, and whether glyphs are outlined or solid. A glyph drawn as a solid shape (the Favorites heart, the play triangle) stays visible under the outline presets rather than being erased by them.
 - Details: [icon-themes.md](../strategy/icon-themes.md).

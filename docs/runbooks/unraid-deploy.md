@@ -9,7 +9,7 @@ Do these **before** and **after** every Unraid `git pull` / image rebuild. Agent
 | Gate | Operator step | Why |
 |---|---|---|
 | **Free host disk** | Unraid Main / Shares: free space until the array is **well under ~99% full** (target: tens of GB free on the cache/array used by Docker) | Pull + `docker compose build` fail or evict other containers when the host is full |
-| **Workspace path** | Edit the live checkout: Unraid `/mnt/user/infernal-data-streams/_projects/Gametheca`, Windows `Z:\_projects\Gametheca` | This tree **is** the Compose Manager stack. `/mnt/user/isos/gametheca/` is retired. Games stay on `/mnt/user/infernal-data-streams/_software/_games` (scan root), not the repo |
+| **Workspace path** | Edit the live checkout: Unraid `/mnt/user/infernal-data-streams/_projects/Oneirodex`, Windows `Z:\_projects\Oneirodex` | This tree **is** the Compose Manager stack. `/mnt/user/isos/gametheca/` is retired. Games stay on `/mnt/user/infernal-data-streams/_software/_games` (scan root), not the repo |
 | **Disk hygiene (dev caches)** | Optional: wipe regenerable local caches only — [workspace-disk-hygiene.md](workspace-disk-hygiene.md) | Shrinks build context; does **not** free Unraid array capacity by itself |
 
 ### After deploy (every code image)
@@ -135,18 +135,18 @@ This household’s Unraid stack **is** the git checkout (not a copy under `isos`
 
 | Field | Path |
 |---|---|
-| External ENV File Path | `/mnt/user/infernal-data-streams/_projects/Gametheca/.env` |
-| Indirect Compose File | `/mnt/user/infernal-data-streams/_projects/Gametheca/docker-compose.yml` |
+| External ENV File Path | `/mnt/user/infernal-data-streams/_projects/Oneirodex/.env` |
+| Indirect Compose File | `/mnt/user/infernal-data-streams/_projects/Oneirodex/docker-compose.yml` |
 | Indirect Path | leave empty |
 
-Windows mapping of the same tree: `Z:\_projects\Gametheca`. Short copy notes: [NAS-DEPLOY.md](../../NAS-DEPLOY.md).
+Windows mapping of the same tree: `Z:\_projects\Oneirodex`. Short copy notes: [NAS-DEPLOY.md](../../NAS-DEPLOY.md).
 
 `/mnt/user/isos/gametheca/` is **retired** — do not point Compose Manager there.
 
 Copy template (only if `.env` is missing):
 
 ```bash
-cp .env.unraid.example /mnt/user/infernal-data-streams/_projects/Gametheca/.env
+cp .env.unraid.example /mnt/user/infernal-data-streams/_projects/Oneirodex/.env
 # set SECRET_KEY + host volume paths, then Compose Manager → Update Stack
 ```
 

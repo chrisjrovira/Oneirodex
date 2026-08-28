@@ -3,6 +3,7 @@
 Filesystem-only — no app, no database.
 """
 
+import re
 from pathlib import Path
 
 from gametheca.utils.play_rooms import ROOMS
@@ -78,6 +79,59 @@ def test_era_css_and_atmosphere_are_wired_into_every_shell():
         assert 'css/gt-era.css' in html
         assert "partials/era_atmosphere.html" in html
         assert html.index('css/gt-shell.css') < html.index('css/gt-era.css')
+
+
+def test_admin_chrome_stacks_above_era_atmosphere():
+    """Admin #admin-app-root / .gt-admin-shell are display:contents.
+
+    #gt-era-atmosphere is position:fixed behind the UI (z-index:-1). Chrome
+    still gets its own stacking context; z-index on a flattened wrapper is a
+    no-op so rail / topbar / main must be named explicitly.
+    """
+    era = (THEME_SOURCE / 'css' / 'gt-era.css').read_text(encoding='utf-8')
+    shell = (THEME_SOURCE / 'css' / 'gt-shell.css').read_text(encoding='utf-8')
+    assert 'display: contents' in shell
+    assert re.search(r'#gt-era-atmosphere\s*\{[^}]*z-index:\s*-1', era, re.S)
+    assert re.search(r'html\[data-era\]\s*\{[^}]*background-color:', era, re.S)
+
+    match = re.search(
+        r'(html\[data-era\][^{]+)\{[^}]*z-index:\s*1',
+        era,
+        re.S,
+    )
+    assert match, 'era stacking rule with z-index: 1 is missing'
+    selectors = match.group(1)
+    for needed in ('.gt-admin-main', '#admin-legacy-content'):
+        assert needed in selectors, f'{needed} must stack above the atmosphere'
+    chrome = re.search(
+        r'(html\[data-era\][^{]+)\{[^}]*z-index:\s*2',
+        era,
+        re.S,
+    )
+    assert chrome, 'rail/topbar stacking rule with z-index: 2 is missing'
+    for needed in ('.gt-rail', '.gt-topbar'):
+        assert needed in chrome.group(1), f'{needed} must stack above the atmosphere'
+    for flattened in ('#admin-app-root', '.gt-admin-shell'):
+        assert flattened not in selectors, (
+            f'{flattened} is display:contents; z-index there cannot lift chrome'
+        )
+    assert re.search(r'isolation:\s*isolate', era)
+
+
+def test_system_backdrop_sits_behind_library_tiles():
+    css = (
+        REPO_ROOT
+        / 'frontend'
+        / 'member-app'
+        / 'src'
+        / 'chrome'
+        / 'systemBackdrop.css'
+    ).read_text(encoding='utf-8')
+    match = re.search(r'\.gt-system-backdrop\s*\{([^}]*)\}', css, re.S)
+    assert match, 'system backdrop rule missing'
+    body = match.group(1)
+    assert re.search(r'z-index:\s*-1', body)
+    assert re.search(r'position:\s*absolute', body)
 
 
 def test_decade_accents_are_unique():

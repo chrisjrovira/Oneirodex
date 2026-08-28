@@ -332,7 +332,7 @@ export function SocialCompanionDock({
       <section className="gt-social-dock__section gt-social-dock__section--grow">
         <h3>Household</h3>
         {social.loading && social.accepted.length === 0 ? (
-          <PageStatus loading className="gt-social-dock__empty" />
+          <PageStatus loading inline className="gt-social-dock__empty" />
         ) : social.accepted.length === 0 ? (
           <p className="gt-social-dock__empty">No friends yet — add someone below.</p>
         ) : (

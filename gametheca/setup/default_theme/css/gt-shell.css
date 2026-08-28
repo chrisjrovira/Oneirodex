@@ -250,9 +250,8 @@ body.gt-shell-host > #admin-legacy-content:empty {
  * The text is *hidden, not removed*: it is the link's accessible name, and a
  * link whose only content is an aria-hidden decoration has no name at all.
  *
- * Scoped to a modifier rather than applied to `.gt-rail__brand` so the admin
- * rail keeps its wordmark and its "Admin" role badge — admin chrome has to name
- * which half of the product you are in, and a bare glyph cannot.
+ * Scoped to a modifier rather than applied to `.gt-rail__brand` so a rail that
+ * still needs a wordmark (none of the product shells, today) can opt out.
  */
 .gt-rail__brand--mark-only {
   justify-content: center;
@@ -273,10 +272,10 @@ body.gt-shell-host > #admin-legacy-content:empty {
 }
 
 .gt-rail__brand--mark-only .gt-rail__mark {
-  /* Sized against the collapsed rail width so the same rule can shrink it
-     below without a second magic number — see the collapsed block. */
-  width: 2.6rem;
-  height: 2.6rem;
+  /* Three times the nav icon column when the rail is open. Collapsed still
+     shrinks to the icon column so the mark does not overflow the 3.25rem rail. */
+  width: calc(var(--gt-rail-icon-w) * 3);
+  height: calc(var(--gt-rail-icon-w) * 3);
   transition: width var(--gt-motion-base) var(--gt-motion-ease),
     height var(--gt-motion-base) var(--gt-motion-ease);
 }
@@ -408,7 +407,7 @@ body.gt-shell-host > #admin-legacy-content:empty {
   border-radius: var(--gt-radius-sm);
   color: var(--gt-text-muted);
   text-decoration: none;
-  font-size: var(--gt-font-md);
+  font-size: var(--gt-font-sm);
   white-space: nowrap;
   /* Chat and Friends open panels rather than routing, so they are <button>
      elements in a list of <a> elements. Without these four resets they took the
@@ -466,20 +465,11 @@ body.gt-shell-host > #admin-legacy-content:empty {
 
 /* The icon column.
  *
- * Expanded, the glyph was 1.25rem — smaller than the label beside it, in a rail
- * whose whole job is to be recognised at a glance. It scales up by
- * `--gt-rail-icon-scale` here, and the row grows to hold it.
- *
- * The scale is a token so an install can push it further. 3 is the value the
- * request asked for and is supported, with a caveat worth knowing before you
- * set it: at 3 the glyph is ~60px and each row is ~68px, so the member rail's
- * twenty-three destinations run about 1500px — past the fold on most screens,
- * which turns a rail you scan into a rail you scroll. 1.8 is the largest value
- * that keeps every group visible on a 1080p screen, so that is the default.
- *
- * Collapsed keeps the original size deliberately: there the rail is 3.25rem
- * wide and the glyph is the only thing in it, so it is already at its
- * proportional maximum — scaling there just crops it. */
+ * Expanded glyphs used to scale to 1.8x the column, which made the label
+ * beside them look like a caption. `--gt-rail-icon-scale` is 1 so the glyph
+ * and the type stay in one size. The brand mark is the thing that grows
+ * (3x the column). Collapsed keeps the unscaled column: scaling there crops
+ * the glyph in a 3.25rem rail. */
 .gt-rail__icon {
   flex: 0 0 auto;
   width: var(--gt-rail-icon-w);
@@ -494,15 +484,15 @@ body.gt-shell-host > #admin-legacy-content:empty {
 }
 
 .gt-shell:not([data-rail='collapsed']) .gt-rail__icon {
-  width: calc(var(--gt-rail-icon-w) * var(--gt-rail-icon-scale, 1.8));
-  height: calc(var(--gt-rail-icon-w) * var(--gt-rail-icon-scale, 1.8));
+  width: calc(var(--gt-rail-icon-w) * var(--gt-rail-icon-scale, 1));
+  height: calc(var(--gt-rail-icon-w) * var(--gt-rail-icon-scale, 1));
 }
 
 /* The row has to grow with the glyph or the icons collide top and bottom. */
 .gt-shell:not([data-rail='collapsed']) .gt-rail__link {
   min-height: max(
     var(--gt-rail-item-h),
-    calc(var(--gt-rail-icon-w) * var(--gt-rail-icon-scale, 1.8) + var(--gt-space-3))
+    calc(var(--gt-rail-icon-w) * var(--gt-rail-icon-scale, 1) + var(--gt-space-3))
   );
 }
 
@@ -1034,18 +1024,16 @@ body.gt-shell-host > #admin-legacy-content:empty {
   height: calc(var(--gt-control-h) - var(--gt-space-3));
   border-radius: var(--gt-radius-sm);
   object-fit: cover;
-  /* A 1px inset keeps a dark avatar off a dark bar edge without a full border,
-     which at this size reads as a box around a box. */
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gt-text) 12%, transparent);
+  box-shadow: none;
 }
 
 .gt-topbar__account[aria-expanded='true'] {
   color: var(--gt-text);
-  border-color: var(--gt-accent);
+  border-color: transparent;
 }
 
 .gt-topbar__account[aria-expanded='true'] .gt-topbar__account-avatar {
-  box-shadow: 0 0 0 1px var(--gt-accent);
+  box-shadow: none;
 }
 
 /* Below the tablet breakpoint the bar is tight; the avatar identifies the

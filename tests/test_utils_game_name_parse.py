@@ -134,7 +134,7 @@ def test_gm_05_angeline_era_steam_id():
 
 def test_gm_06_fishermans_tale_vr():
     r = parse_game_label("A Fishermans Tale VR")
-    assert r['cleaned_name'] == "A Fishermans Tale"
+    assert r['cleaned_name'] == "A Fisherman's Tale"
     assert "VR" not in r['cleaned_name']
 
 
@@ -228,6 +228,7 @@ def test_strip_version_access_tails_alone():
 def test_inject_franchise_apostrophes_alone():
     assert inject_franchise_apostrophes("Assassins Creed Rogue") == "Assassin's Creed Rogue"
     assert inject_franchise_apostrophes("Assassin's Creed Rogue") == "Assassin's Creed Rogue"
+    assert inject_franchise_apostrophes("A Fishermans Tale") == "A Fisherman's Tale"
     assert inject_franchise_apostrophes("Baldurs Gate Dark Alliance") == "Baldur's Gate Dark Alliance"
 
 

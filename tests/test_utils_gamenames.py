@@ -845,9 +845,9 @@ class TestRealFolderPipeline:
     def test_gm_06_fishermans_tale_no_colon(self):
         """Heuristic colon requires >=4 tokens; 3-token titles stay as-is."""
         cleaned = parse_game_label("A Fishermans Tale VR")['cleaned_name']
-        assert cleaned == "A Fishermans Tale"
+        assert cleaned == "A Fisherman's Tale"
         variants = generate_goty_variants(cleaned)
-        assert variants == ["A Fishermans Tale"]
+        assert "A Fisherman's Tale" in variants
         assert not any(':' in v for v in variants)
 
     def test_gm_07_alien_isolation_vr_mod(self):
@@ -968,11 +968,34 @@ class TestRealFolderPipeline:
         assert parsed['bare_franchise'] is True
         assert generate_goty_variants(parsed['cleaned_name']) == ["Final Fantasy"]
 
-    def test_lettered_version_and_steam_lowercase(self):
+    def test_household_pc_folder_peels(self):
+        """Shapes from …/_pc/_s — FitGirl, Steam IDs, spaced v…, x.y.z, backtick VR."""
+        assert parse_game_label('Sail the Seas [FitGirl Repack]')['cleaned_name'] == 'Sail The Seas'
+        parsed = parse_game_label('sacred 2 remaster (87880)')
+        assert parsed['steam_app_id'] == 87880
+        assert parsed['cleaned_name'] == 'Sacred 2 Remaster'
+        assert parse_game_label('Sable v3 2 9')['cleaned_name'] == 'Sable'
+        assert parse_game_label('Satellite Reign 1.13.06')['cleaned_name'] == 'Satellite Reign'
+        assert parse_game_label('Samorost 3 1.467.0')['cleaned_name'] == 'Samorost 3'
+        assert parse_game_label('Some Game update 1.24.01 - 1.25.01')['cleaned_name'] == 'Some Game'
+        sacralith = parse_game_label("SACRALITH The Archer`s Tale VR")
+        assert sacralith['had_vr_suffix'] is True
+        assert sacralith['cleaned_name'] == "SACRALITH The Archer's Tale"
+        sao = parse_game_label(
+            'SWORD ART ONLINE Fractured Daydream Update v1 7 0 0 RUNE'
+        )
+        assert sao['cleaned_name'] == 'SWORD ART ONLINE Fractured Daydream'
+        assert parse_game_label('SHINOBI Art of Vengeance [FitGirl HV Repack]')[
+            'cleaned_name'
+        ] == 'SHINOBI Art Of Vengeance'
         assert parse_game_label("3 Minutes to Midnight v1.1.0a")['cleaned_name'] == "3 Minutes To Midnight"
         parsed = parse_game_label("49 keys (87117)")
         assert parsed['steam_app_id'] == 87117
         assert parsed['cleaned_name'] == "49 Keys"
+        assert parse_game_label('Sengoku Dynasty v1 2 2 1 P2')['cleaned_name'] == 'Sengoku Dynasty'
+        assert parse_game_label('Ferocious v1 08 P2P')['cleaned_name'] == 'Ferocious'
+        assert parse_game_label('Scary Cave Diving GoldBerg')['cleaned_name'] == 'Scary Cave Diving'
+        assert parse_game_label("A Fishermans Tale VR")['cleaned_name'] == "A Fisherman's Tale"
 
     def test_beachhead_hyphen_scene_alias(self):
         cleaned = parse_game_label("BeachHead-SKIDROW")['cleaned_name']

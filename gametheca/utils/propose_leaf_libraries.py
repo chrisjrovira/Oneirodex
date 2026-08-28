@@ -23,13 +23,21 @@ FAMILY_PARENT_NAMES = frozenset({
     'sega',
     'sony',
     'atari',
-    'mame',
+    # Not 'mame': the household MAME folder is a zip dump leaf (+ one emu
+    # build dir), not a family with platform children.
     'arcade',
     'neo geo',
     'neogeo',
-    'pc engine',
-    'pc-engine',
+    # Not 'pc engine': this household (and many No-Intro trees) keep HuCard
+    # dumps in a folder literally named PC Engine. Treating that as a family
+    # parent skipped the leaf. TurboGrafx-16 / CD / SuperGrafx / PC-FX sit
+    # beside it as their own leaves.
 })
+
+# Letter-bucket PC lane. Same token is a scan-root skip glob so a library
+# pointed too high does not treat `_pc` as a game — propose still wants it
+# as the PCWIN library when the operator scans the games root.
+_PC_LANE_NAMES = frozenset({'_pc'})
 
 # Prefer nested dump leaf under these parents when present.
 NESTED_DUMP_DIR_NAMES = frozenset({
@@ -55,14 +63,21 @@ _ROM_FILE_EXTS = frozenset({
 })
 
 # (compiled regex, LibraryPlatform.name) — first match wins; order matters.
+# More specific leaves before family-ish substrings (32X before Genesis, SNES
+# before NES, Pocket Color before Pocket, TurboGrafx CD before TurboGrafx-16).
+_NIN_TYPO = r'nin(?:ten|ent)do'
 _PLATFORM_NAME_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r'neo\s*geo\s*cd', re.I), 'NEOGEO_CD'),
+    (re.compile(r'neo\s*geo\s*pocket\s*color', re.I), 'NGPC'),
     (re.compile(r'neo\s*geo\s*pocket', re.I), 'NGP'),
     (re.compile(r'neo\s*geo', re.I), 'NEOGEO'),
     (re.compile(r'\barcade\b', re.I), 'ARCADE'),
+    # AAE (Arcade Architecture Emulator) — vector-arcade set folders, not a family.
+    (re.compile(r'^\s*aae\s*$', re.I), 'ARCADE'),
+    (re.compile(r'^\s*mame\s*$', re.I), 'ARCADE'),
     (re.compile(r'\bswitch\b', re.I), 'SWITCH'),
-    (re.compile(r'ninentdo|nintendo\s*entertainment|^\s*nes\s*$', re.I), 'NES'),
-    (re.compile(r'super\s*nintendo|\bsnes\b', re.I), 'SNES'),
+    (re.compile(rf'super\s*{_NIN_TYPO}|\bsnes\b', re.I), 'SNES'),
+    (re.compile(rf'{_NIN_TYPO}\s*entertainment|^\s*nes\s*$', re.I), 'NES'),
     (re.compile(r'nintendo\s*64|\bn64\b', re.I), 'N64'),
     (re.compile(r'game\s*boy\s*advance|\bgba\b', re.I), 'GBA'),
     (re.compile(r'game\s*boy\s*color|\bgbc\b', re.I), 'GBC'),
@@ -72,10 +87,11 @@ _PLATFORM_NAME_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r'game\s*cube|\bngc\b', re.I), 'NGC'),
     (re.compile(r'\bwii\b', re.I), 'WII'),
     (re.compile(r'virtual\s*boy|\bvb\b', re.I), 'VB'),
+    (re.compile(r'\b32x\b', re.I), 'SEGA_32X'),
+    (re.compile(r'sg-?1000', re.I), 'SEGA_SG1000'),
     (re.compile(r'mega\s*drive|genesis|\bsega\s*md\b', re.I), 'SEGA_MD'),
     (re.compile(r'master\s*system|\bsega\s*ms\b|\bsms\b', re.I), 'SEGA_MS'),
     (re.compile(r'sega\s*cd|mega[- ]?cd', re.I), 'SEGA_CD'),
-    (re.compile(r'\b32x\b', re.I), 'SEGA_32X'),
     (re.compile(r'game\s*gear|\bsega\s*gg\b', re.I), 'SEGA_GG'),
     (re.compile(r'\bsaturn\b', re.I), 'SEGA_SATURN'),
     (re.compile(r'\bdreamcast\b', re.I), 'SEGA_DC'),
@@ -91,6 +107,8 @@ _PLATFORM_NAME_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r'atari\s*7800|\b7800\b', re.I), 'ATARI_7800'),
     (re.compile(r'\blynx\b', re.I), 'LYNX'),
     (re.compile(r'\bjaguar\b', re.I), 'JAGUAR'),
+    (re.compile(r'super\s*grafx', re.I), 'SUPERGRAFX'),
+    (re.compile(r'turbo\s*grafx\s*cd|pc[- ]?engine\s*cd|\btg[- ]?cd\b', re.I), 'PCE_CD'),
     (re.compile(r'pc[- ]?engine|turbo\s*grafx|\btg[- ]?16\b', re.I), 'PCE'),
     (re.compile(r'\bpc[- ]?fx\b', re.I), 'PCFX'),
     (re.compile(r'xbox\s*series|\bxsx\b', re.I), 'XSX'),
@@ -102,6 +120,19 @@ _PLATFORM_NAME_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r'\b3do\b', re.I), 'THREEDO'),
     (re.compile(r'vectrex', re.I), 'VECTREX'),
     (re.compile(r'intellivision', re.I), 'INTV'),
+    (re.compile(r'commodore\s*amiga|\bamiga\b', re.I), 'AMIGA'),
+    (re.compile(r'channel\s*f|fairchild', re.I), 'CHAF'),
+    (re.compile(r'odyssey\s*2|\bo2em\b', re.I), 'O2EM'),
+    (re.compile(r'arcadia', re.I), 'ARCADIA'),
+    (re.compile(r'astrocade', re.I), 'ASTROCADE'),
+    (re.compile(r'creativision', re.I), 'CREATIVISION'),
+    (re.compile(r'adventure\s*vision|adventurevision', re.I), 'ADVISION'),
+    (re.compile(r'studio\s*ii|\bstudio\s*2\b', re.I), 'STUDIO2'),
+    (re.compile(r'action\s*max', re.I), 'ACTIONMAX'),
+    (re.compile(r'\bdaphne\b', re.I), 'DAPHNE'),
+    (re.compile(r'pinball', re.I), 'PINBALL'),
+    (re.compile(r'supervision', re.I), 'SUPERVISION'),
+    (re.compile(r'gx4000', re.I), 'GX4000'),
 )
 
 _MAX_WALK_DEPTH = 5
@@ -276,6 +307,24 @@ def _looks_like_platform_leaf(name: str) -> bool:
     return infer_platform_from_name(name) is not None
 
 
+def _looks_like_pc_lane(path: str, basename: str) -> bool:
+    """True when this folder is the `_pc` letter-bucket library root."""
+    if basename.casefold() not in _PC_LANE_NAMES:
+        return False
+    layout = _sample_layout(path)
+    return int(layout.get('letter_buckets') or 0) >= 3
+
+
+def _looks_like_games_scan_root(path: str) -> bool:
+    """True when children include the household console and/or PC lanes.
+
+    A folder named ``games`` is also a dump-leaf token. The household scan
+    root must walk, not propose itself as one ROMs-style library.
+    """
+    names = {name.casefold() for name in _list_children(path)}
+    return bool(names & {'_console-gaming', 'console-gaming', '_pc'})
+
+
 def propose_leaf_libraries(
     root_path: str,
     *,
@@ -310,7 +359,13 @@ def propose_leaf_libraries(
         # DEFAULT_SKIP_DIR_GLOBS so that a library pointed too high does not
         # treat it as a game folder — the opposite job from proposing it as a
         # library of its own, which every dump-leaf branch below relies on.
-        if base.casefold() not in NESTED_DUMP_DIR_NAMES and should_skip_scan_dir(base, patterns):
+        # `_pc` is the same dual-use token: skip-dir during a game listing,
+        # propose-as-library when walking the games root.
+        if (
+            base.casefold() not in NESTED_DUMP_DIR_NAMES
+            and base.casefold() not in _PC_LANE_NAMES
+            and should_skip_scan_dir(base, patterns)
+        ):
             return
         seen.add(key)
         candidates.append(_candidate(path, platform=platform, reason=reason))
@@ -320,6 +375,27 @@ def propose_leaf_libraries(
             return
         basename = os.path.basename(path.rstrip('\\/')) or path
 
+        # Family / mega-lib parents: never propose; always recurse.
+        # Must run before skip-dir: `_console-gaming` is BOTH a family parent
+        # and a scan-root skip glob. Propose-from-games-root has to walk it.
+        if is_family_parent_name(basename):
+            for name in _list_children(path):
+                child = _child_path(path, name)
+                if os.path.isdir(child):
+                    walk(child, depth + 1)
+            return
+
+        # PC letter-bucket lane: propose as PCWIN. Same skip-dir name is a
+        # lane leak when scanning a library pointed too high — here it is
+        # the library we want to suggest.
+        if _looks_like_pc_lane(path, basename):
+            add(
+                path,
+                platform='PCWIN',
+                reason=f'PC letter-bucket lane ({basename})',
+            )
+            return
+
         # Emulator / FE / tool install: never propose self; peek for nested dumps.
         # Dump names are exempt for the same reason as in `add`: otherwise a
         # directory literally called ROMs is treated as an emu install and
@@ -328,6 +404,7 @@ def propose_leaf_libraries(
         if (
             depth > 0
             and basename.casefold() not in NESTED_DUMP_DIR_NAMES
+            and basename.casefold() not in _PC_LANE_NAMES
             and should_skip_scan_dir(basename, patterns)
         ):
             dump = _find_nested_dump_dir(path)
@@ -341,14 +418,6 @@ def propose_leaf_libraries(
                     platform=plat,
                     reason=f'nested dump under emu/tool install ({basename})',
                 )
-            return
-
-        # Family / mega-lib parents: never propose; always recurse.
-        if is_family_parent_name(basename):
-            for name in _list_children(path):
-                child = _child_path(path, name)
-                if os.path.isdir(child):
-                    walk(child, depth + 1)
             return
 
         # Nested ROMs (or iso/games) dump leaf.
@@ -394,9 +463,10 @@ def propose_leaf_libraries(
     # If the operator points directly at a platform leaf (not a family root),
     # still propose it — unless it is a rejected family / emu name.
     root_base = os.path.basename(root.rstrip('\\/'))
-    if (
-        not is_family_parent_name(root_base)
-        and not should_skip_scan_dir(root_base, patterns)
+    if _looks_like_games_scan_root(root) or is_family_parent_name(root_base):
+        walk(root, 0)
+    elif (
+        not should_skip_scan_dir(root_base, patterns)
         and (_looks_like_platform_leaf(root_base) or root_base.casefold() in NESTED_DUMP_DIR_NAMES)
     ):
         dump = _find_nested_dump_dir(root) if _looks_like_platform_leaf(root_base) else None

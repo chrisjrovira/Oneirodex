@@ -68,11 +68,11 @@
      by both the brand mark and every row, so labels line up under the wordmark. */
   --gt-rail-inset: 0.9rem;
   --gt-rail-gutter: 0.4rem;
-  --gt-rail-icon-w: 1.25rem;
-  /* Multiplier applied to the glyph in the *expanded* rail only — see the note
-     on .gt-rail__icon in gt-shell.css for why 3 is available but not the
-     default. */
-  --gt-rail-icon-scale: 1.8;
+  --gt-rail-icon-w: 1rem;
+  /* Expanded rail glyphs match the icon column. 1.8 was a previous enlargement
+     that made the labels look small beside them; 1 keeps icon and type in step.
+     The brand mark scales separately (3x the column when expanded). */
+  --gt-rail-icon-scale: 1;
 }
 
 [data-density='compact'] {
@@ -99,7 +99,7 @@
   --gt-rail-item-h: 1.8rem;
   --gt-rail-inset: 0.75rem;
   --gt-rail-gutter: 0.35rem;
-  --gt-rail-icon-w: 1.15rem;
+  --gt-rail-icon-w: 0.9rem;
 }
 
 /* Touch targets win over density below the tablet breakpoint. A 1.85rem control

@@ -97,7 +97,7 @@ function Note({ tone, children }) {
  * what the Invites panel opens with.
  */
 function ProfilePanel({ summary }) {
-  if (!summary) return <PageStatus loading className="gt-acct__empty" />
+  if (!summary) return <PageStatus loading inline className="gt-acct__empty" />
 
   return (
     <div className="gt-acct__avatar-row">
@@ -401,7 +401,7 @@ function InvitesPanel() {
     return (
       <>
         <Note tone="error">{error}</Note>
-        {error ? null : <PageStatus loading className="gt-acct__empty" />}
+        {error ? null : <PageStatus loading inline className="gt-acct__empty" />}
       </>
     )
   }

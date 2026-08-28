@@ -22,6 +22,7 @@ ROM_EXT_RE = re.compile(
     r'md|smd|gen|sms|gg|32x|'
     r'iso|gcm|rvz|wbfs|wad|cue|bin|chd|img|pbp|cso|gdi|cdi|'
     r'nsp|xci|nsz|xcz|a26|a52|a78|lnx|jag|j64|'
+    r'pce|sgx|ngp|ngc|ws|wsc|adf|d64|tap|'
     r'rom|zip|7z|rar)$',
     re.IGNORECASE,
 )
@@ -77,41 +78,19 @@ _METADATA_REGION_SHORTHAND_RE = re.compile(
 _METADATA_PUBLISHER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 .&'\-]{0,30}$")
 
 # Identify wire — helper itself works for any console platform.
-# W22: GB/GBC → N64 → SNES/GBA; BE-DET-1: NES · PSX · SEGA_MD (files-mode);
-# BE-DET-2: folders-mode when leaf/primary dump looks No-Intro/GoodTools;
-# BE-DET-3: P1 gate — NDS · NGC · WII · PSP · SEGA_MS/GG/CD · ATARI_2600 ·
-# NEOGEO · ARCADE · SWITCH (existing LibraryPlatform enums only);
-# BE-DET-7: disc/late — SEGA_DC · SEGA_SATURN · NEOGEO_CD (+ Redump fixtures;
-# SWITCH title-dir A1∪B16 scene peel).
-# BE-DET-8: ARCADE / Neo Geo AES folder-set peel + propose-first on large
-# ARCADE libs; NEOGEO (AES) stays distinct from NEOGEO_CD (never remap).
-# Enum note: PS1 → LibraryPlatform.PSX; Genesis → LibraryPlatform.SEGA_MD;
-# GameCube → LibraryPlatform.NGC; Neo Geo AES → LibraryPlatform.NEOGEO;
-# Dreamcast → LibraryPlatform.SEGA_DC; Saturn → LibraryPlatform.SEGA_SATURN.
-CONSOLE_ROM_PEEL_PILOT_PLATFORMS = frozenset({
-    LibraryPlatform.GB,
-    LibraryPlatform.GBC,
-    LibraryPlatform.GBA,
-    LibraryPlatform.NES,
-    LibraryPlatform.SNES,
-    LibraryPlatform.N64,
-    LibraryPlatform.NDS,
-    LibraryPlatform.NGC,
-    LibraryPlatform.WII,
-    LibraryPlatform.PSX,
-    LibraryPlatform.PSP,
-    LibraryPlatform.SEGA_MD,
-    LibraryPlatform.SEGA_MS,
-    LibraryPlatform.SEGA_GG,
-    LibraryPlatform.SEGA_CD,
-    LibraryPlatform.SEGA_SATURN,
-    LibraryPlatform.SEGA_DC,
-    LibraryPlatform.ATARI_2600,
-    LibraryPlatform.NEOGEO,
-    LibraryPlatform.NEOGEO_CD,
-    LibraryPlatform.ARCADE,
-    LibraryPlatform.SWITCH,
+# PC / Mac / Other keep parse_game_label (FitGirl, Steam IDs, VR tails).
+# Every other LibraryPlatform peels No-Intro / Redump / GoodTools names so a
+# HuCard dump named ``Bomberman (Japan).pce`` searches IGDB as Bomberman, not
+# the filename. Folders-mode still requires dump-shaped labels (BE-DET-2).
+_PC_LABEL_PLATFORMS = frozenset({
+    LibraryPlatform.OTHER,
+    LibraryPlatform.PCWIN,
+    LibraryPlatform.PCDOS,
+    LibraryPlatform.MAC,
 })
+CONSOLE_ROM_PEEL_PILOT_PLATFORMS = frozenset(
+    p for p in LibraryPlatform if p not in _PC_LABEL_PLATFORMS
+)
 
 # BE-DET-8 — MAME/FBNeo-style set folders (AES cart sets share this shape).
 # NEOGEO_CD is intentionally excluded (disc Redump forms, not set dirs).

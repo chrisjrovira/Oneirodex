@@ -30,6 +30,10 @@ def test_family_parent_names_locked():
     assert 'nintendo' in FAMILY_PARENT_NAMES
     assert not is_family_parent_name('Switch')
     assert not is_family_parent_name('PlayStation')
+    assert not is_family_parent_name('MAME')
+    # HuCard dumps live in a folder named PC Engine — not a family parent.
+    assert not is_family_parent_name('PC Engine')
+    assert not is_family_parent_name('PC-Engine')
 
 
 def test_infer_platform_switch_and_psx():
@@ -37,6 +41,45 @@ def test_infer_platform_switch_and_psx():
     assert infer_platform_from_name('Nintendo Switch') == 'SWITCH'
     assert infer_platform_from_name('PlayStation') == 'PSX'
     assert infer_platform_from_name('Ninentdo Entertainment System') == 'NES'
+
+
+def test_infer_platform_household_leaves():
+    """Household `_console-gaming` basenames, including the NES/SNES typo."""
+    assert infer_platform_from_name('Super Ninentdo Entertainment System') == 'SNES'
+    assert infer_platform_from_name('Super Nintendo Entertainment System') == 'SNES'
+    assert infer_platform_from_name('Sega Genesis 32X') == 'SEGA_32X'
+    assert infer_platform_from_name('Sega Genesis') == 'SEGA_MD'
+    assert infer_platform_from_name('Sega SG-1000') == 'SEGA_SG1000'
+    assert infer_platform_from_name('Neo Geo Pocket Color') == 'NGPC'
+    assert infer_platform_from_name('Neo Geo Pocket') == 'NGP'
+    assert infer_platform_from_name('TurboGrafx CD') == 'PCE_CD'
+    assert infer_platform_from_name('TurboGrafx-16') == 'PCE'
+    assert infer_platform_from_name('SuperGrafx') == 'SUPERGRAFX'
+    assert infer_platform_from_name('Commodore Amiga') == 'AMIGA'
+    assert infer_platform_from_name('Future Pinball') == 'PINBALL'
+    assert infer_platform_from_name('Actionmax') == 'ACTIONMAX'
+    assert infer_platform_from_name('Magnavox Odyssey 2') == 'O2EM'
+    assert infer_platform_from_name('Channel F') == 'CHAF'
+    assert infer_platform_from_name('Atari - 7800 [Headered]') == 'ATARI_7800'
+    assert infer_platform_from_name('Sony PlayStation 2') == 'PS2'
+    assert infer_platform_from_name('Adventurevision') == 'ADVISION'
+    assert infer_platform_from_name('AAE') == 'ARCADE'
+    assert infer_platform_from_name('MAME') == 'ARCADE'
+    assert infer_platform_from_name('PC Engine') == 'PCE'
+    assert infer_platform_from_name('Wonderswan Color') == 'WS'
+    assert infer_platform_from_name('Wonderswan Mono') == 'WS'
+    assert infer_platform_from_name('Nintendo Game Boy') == 'GB'
+    assert infer_platform_from_name('Nintendo Game Boy Color') == 'GBC'
+    assert infer_platform_from_name('Nintendo Game Boy Advance') == 'GBA'
+    assert infer_platform_from_name('Nintendo GameCube') == 'NGC'
+    assert infer_platform_from_name('Nintendo Switch') == 'SWITCH'
+    assert infer_platform_from_name('GCE Vectrex') == 'VECTREX'
+    assert infer_platform_from_name('Panasonic 3DO') == 'THREEDO'
+    assert infer_platform_from_name('RCA Studio II') == 'STUDIO2'
+    assert infer_platform_from_name('Atari - Jaguar') == 'JAGUAR'
+    assert infer_platform_from_name('Atari - Lynx [Headered]') == 'LYNX'
+    assert infer_platform_from_name('Sony PSP') == 'PSP'
+    assert infer_platform_from_name('PCFX') == 'PCFX'
 
 
 def test_family_parent_rejected_as_candidate(tmp_path):
@@ -162,3 +205,116 @@ def test_nested_roms_under_emu_install(tmp_path):
     assert os.path.normcase(str(emu)) not in _paths(candidates)
     roms_c = _by_suffix(candidates, 'epsxe_portable', 'ROMs')
     assert roms_c is not None
+
+
+def test_pc_engine_hucard_dump_is_a_leaf(tmp_path):
+    """Household PC Engine folder is a .pce dump, not a skipped family parent."""
+    root = tmp_path / '_console-gaming'
+    leaf = root / 'PC Engine'
+    leaf.mkdir(parents=True)
+    (leaf / 'Bomberman (Japan).pce').write_bytes(b'x')
+    (leaf / 'Gradius (Japan).pce').write_bytes(b'x')
+    (root / 'NINTENDO').mkdir()
+
+    candidates = propose_leaf_libraries(str(root))
+    pce = _by_suffix(candidates, 'PC Engine')
+    assert pce is not None
+    assert pce['platform'] == 'PCE'
+    assert pce['scan_mode'] == 'files'
+
+
+def test_aae_vector_sets_propose_as_arcade(tmp_path):
+    leaf = tmp_path / 'AAE'
+    leaf.mkdir()
+    (leaf / 'asteroid').mkdir()
+    (leaf / 'llander').mkdir()
+
+    candidates = propose_leaf_libraries(str(leaf))
+    assert len(candidates) == 1
+    assert candidates[0]['platform'] == 'ARCADE'
+    assert candidates[0]['scan_mode'] == 'folders'
+
+
+def test_propose_from_games_root_walks_console_lane_and_pc(tmp_path):
+    """Household games root: `_console-gaming` + `_pc` are skip-dir names
+    but still the trees to propose from — walkthroughs and emu installs are not.
+    """
+    root = tmp_path / 'games'
+    console = root / '_console-gaming'
+    nes = console / 'NINTENDO' / 'Ninentdo Entertainment System'
+    nes.mkdir(parents=True)
+    (nes / 'Mario').mkdir()
+    snes = console / 'NINTENDO' / 'Super Ninentdo Entertainment System'
+    snes_roms = snes / 'ROMs'
+    snes_roms.mkdir(parents=True)
+    (snes_roms / 'Zelda').mkdir()
+    pce = console / 'PC Engine'
+    pce.mkdir()
+    (pce / 'Bomberman (Japan).pce').write_bytes(b'x')
+    mame = console / 'MAME'
+    mame.mkdir()
+    (mame / '1942.zip').write_bytes(b'x')
+    (mame / 'mslug.zip').write_bytes(b'x')
+    (mame / 'mame0274b_64bit').mkdir()
+    (console / 'Zinc').mkdir()
+    (console / 'xenia_master').mkdir()
+    arcade_roms = console / 'Arcade' / 'ROMs'
+    arcade_roms.mkdir(parents=True)
+    (arcade_roms / 'pacman').mkdir()
+    pc = root / '_pc'
+    for bucket in ('_a', '_b', '_c', '_s'):
+        (pc / bucket).mkdir(parents=True)
+        (pc / bucket / 'Some Title').mkdir()
+    (root / '_walkthroughs' / 'A Guide').mkdir(parents=True)
+
+    candidates = propose_leaf_libraries(str(root))
+    paths = _paths(candidates)
+
+    nes_c = _by_suffix(candidates, 'Ninentdo Entertainment System')
+    assert nes_c is not None
+    assert nes_c['platform'] == 'NES'
+
+    snes_c = _by_suffix(candidates, 'Super Ninentdo Entertainment System', 'ROMs')
+    assert snes_c is not None
+    assert snes_c['platform'] == 'SNES'
+
+    pce_c = _by_suffix(candidates, 'PC Engine')
+    assert pce_c is not None
+    assert pce_c['platform'] == 'PCE'
+    assert pce_c['scan_mode'] == 'files'
+
+    mame_c = _by_suffix(candidates, 'MAME')
+    assert mame_c is not None
+    assert mame_c['platform'] == 'ARCADE'
+    assert mame_c['scan_mode'] == 'files'
+    assert all('mame0274' not in c['path'].casefold() for c in candidates)
+
+    arcade_c = _by_suffix(candidates, 'Arcade', 'ROMs')
+    assert arcade_c is not None
+    assert arcade_c['platform'] == 'ARCADE'
+
+    pc_c = _by_suffix(candidates, '_pc')
+    assert pc_c is not None
+    assert pc_c['platform'] == 'PCWIN'
+    assert pc_c['scan_mode'] == 'folders'
+    assert pc_c['scan_depth'] == 2
+
+    assert os.path.normcase(str(root / '_walkthroughs')) not in paths
+    assert all('zinc' not in c['path'].casefold() for c in candidates)
+    assert all('xenia' not in c['path'].casefold() for c in candidates)
+    assert os.path.normcase(str(console)) not in paths
+    assert os.path.normcase(str(console / 'NINTENDO')) not in paths
+    assert os.path.normcase(str(console / 'Arcade')) not in paths
+
+
+def test_mame_zip_dump_is_arcade_files(tmp_path):
+    leaf = tmp_path / 'MAME'
+    leaf.mkdir()
+    (leaf / '1942.zip').write_bytes(b'x')
+    (leaf / 'mslug.zip').write_bytes(b'x')
+    (leaf / 'pacman.zip').write_bytes(b'x')
+
+    candidates = propose_leaf_libraries(str(leaf))
+    assert len(candidates) == 1
+    assert candidates[0]['platform'] == 'ARCADE'
+    assert candidates[0]['scan_mode'] == 'files'

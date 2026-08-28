@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from gametheca.utils.icon_themes import (
@@ -9,6 +10,7 @@ from gametheca.utils.icon_themes import (
     CORE_ICON_KEYS,
     DRAWING_PACKS,
     PACK_CSS,
+    PACK_DRAWING_KEYS,
     PACK_GLYPH_KEYS,
     pack_glyph_override_css,
 )
@@ -36,9 +38,11 @@ def test_setup_icon_themes_seeded():
     assert (SETUP / 'previews.css').is_file()
 
 
-def test_drawing_packs_ship_library_discover_systems_svgs():
+def test_drawing_packs_ship_pack_drawing_key_svgs():
+    assert set(PACK_GLYPH_KEYS).issubset(PACK_DRAWING_KEYS)
+    assert set(PACK_DRAWING_KEYS) == set(CORE_ICON_KEYS)
     for pack_id in DRAWING_PACKS:
-        for key in PACK_GLYPH_KEYS:
+        for key in PACK_DRAWING_KEYS:
             svg = SETUP / pack_id / 'icons' / f'{key}.svg'
             assert svg.is_file(), svg
             text = svg.read_text(encoding='utf-8')
@@ -46,6 +50,7 @@ def test_drawing_packs_ship_library_discover_systems_svgs():
         css = SETUP / pack_id / 'pack.css'
         body = css.read_text(encoding='utf-8')
         assert f'[data-icon="library"]' in body
+        assert f'[data-icon="settings"]' in body
         assert pack_glyph_override_css(pack_id) in PACK_CSS[pack_id]
 
 
@@ -54,3 +59,23 @@ def test_member_rail_icon_exposes_data_icon():
         encoding='utf-8'
     )
     assert 'data-icon={name}' in text
+
+
+def test_chrome_icon_components_expose_leftover_data_icons():
+    text = (REPO / 'frontend' / 'member-app' / 'src' / 'chrome' / 'icons.jsx').read_text(
+        encoding='utf-8'
+    )
+    for key in ('user', 'menu', 'more'):
+        assert f'data-icon="{key}"' in text
+
+
+def test_preferences_pack_chips_preview_pack_glyph_keys():
+    html = (
+        REPO / 'gametheca' / 'templates' / 'settings' / 'modal_preferences.html'
+    ).read_text(encoding='utf-8')
+    chip = html.split('id="iconPackPreview"', 1)[1].split('icon-pack-chip-label', 1)[0]
+    keys = tuple(
+        match.group(1)
+        for match in re.finditer(r"icons\.icon\('([a-z]+)'", chip)
+    )
+    assert keys == PACK_GLYPH_KEYS

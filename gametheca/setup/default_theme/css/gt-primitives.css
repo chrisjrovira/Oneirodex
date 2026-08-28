@@ -544,6 +544,33 @@
   color: var(--gt-accent);
 }
 
+/* Page-owning wait: cover the viewport so loading is not a banner at the top
+   of a section. Nested panels keep the compact .gt-page-status--loading row. */
+.gt-page-status--takeover {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  margin: 0;
+  border-radius: 0;
+  border: 0;
+  flex-direction: column;
+  justify-content: center;
+  background: color-mix(in srgb, var(--gt-bg) 82%, transparent);
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
+}
+
+.gt-page-status--takeover .gt-loading-motif {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.gt-page-status--takeover .gt-page-status__message {
+  font-size: var(--gt-font-lg);
+  font-weight: 600;
+  color: var(--gt-text);
+}
+
 .gt-page-status--empty {
   border-style: dashed;
 }

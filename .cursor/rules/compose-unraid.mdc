@@ -14,4 +14,4 @@ Sidecars are profiles: `livekit`, `clamav`, `challenge`. Observability is option
 
 Do not overwrite the live root `.env`; templates are `.env.example`, `.env.docker.example`, `.env.unraid.example`, `.env.nas.example`.
 
-This household’s Unraid stack **is** `/mnt/user/infernal-data-streams/_projects/Gametheca` (Windows `Z:\_projects\Gametheca`). `/mnt/user/isos/gametheca/` is retired. Games scan root is `/mnt/user/infernal-data-streams/_software/_games`.
+This household’s Unraid stack **is** `/mnt/user/infernal-data-streams/_projects/Oneirodex` (Windows `Z:\_projects\Oneirodex`). `/mnt/user/isos/gametheca/` is retired. Games scan root is `/mnt/user/infernal-data-streams/_software/_games`.

@@ -11,6 +11,7 @@ import {
 import { fetchBrowseGames } from './api/browse'
 import { applyPlatformSkin, clearPlatformSkin } from './chrome/platformSkins'
 import { SystemBackdrop } from './chrome/SystemBackdrop'
+import { usesNewChrome } from './chrome/usesNewChrome'
 import {
   BADGE_FILTER_PARAMS,
   badgeFiltersFromSearchParams,
@@ -623,7 +624,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
       (game) => game.library_platform === filters.library_platform,
     )?.library_platform_label || filters.library_platform || ''
 
-  const useNewChrome = Boolean(shellConfig.enableNewChrome)
+  const useNewChrome = usesNewChrome(shellConfig)
 
   // Kind becomes the segmented control. A URL may still carry several kinds —
   // that keeps working, it just lights no segment, which is honest: the
