@@ -20,9 +20,8 @@ function whenLabel(value) {
 /**
  * A tile on the Discover news row.
  *
- * Sized like a game tile so the row keeps the page's vertical rhythm, but it is
- * type rather than art — an announcement has no cover, and a free-game offer's
- * image is the store's, not ours.
+ * Image fills the art frame; store/News badge bottom-left and date bottom-right
+ * sit on the art. The title stays under the image (game-tile caption rhythm).
  */
 export function NewsCard({ item }) {
   const isOffer = item.kind === 'free_game'
@@ -31,17 +30,18 @@ export function NewsCard({ item }) {
 
   return (
     <Link className="gt-news-card" to={item.href || '/news'}>
-      {item.image_url ? (
-        <img className="gt-news-card__art" src={item.image_url} alt="" loading="lazy" />
-      ) : null}
-      <span className="gt-news-card__badge" data-kind={item.kind}>
-        {badge}
+      <span className="gt-news-card__art-wrap">
+        {item.image_url ? (
+          <img className="gt-news-card__art" src={item.image_url} alt="" loading="lazy" />
+        ) : (
+          <span className="gt-news-card__art gt-news-card__art--empty" aria-hidden="true" />
+        )}
+        <span className="gt-news-card__badge" data-kind={item.kind}>
+          {badge}
+        </span>
+        {when ? <span className="gt-news-card__when">{when}</span> : null}
       </span>
       <span className="gt-news-card__title">{item.title}</span>
-      {item.summary ? (
-        <span className="gt-news-card__summary">{item.summary}</span>
-      ) : null}
-      {when ? <span className="gt-news-card__when">{when}</span> : null}
     </Link>
   )
 }

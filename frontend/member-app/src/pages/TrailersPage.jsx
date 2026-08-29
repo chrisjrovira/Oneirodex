@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ContextBar } from '../chrome/ContextBar'
+import { ContextBar, Popover } from '../chrome/ContextBar'
 import {
   fetchAttractModeSettings,
   fetchRandomTrailer,
@@ -429,7 +429,6 @@ export function TrailersPage({ shellConfig = {} } = {}) {
   const [request, setRequest] = useState({ id: 0, filters: EMPTY_FILTERS })
   const [trailer, setTrailer] = useState(null)
   const [emptyMessage, setEmptyMessage] = useState(null)
-  const [emptyCta, setEmptyCta] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
   const [settings, setSettings] = useState(DEFAULT_SETTINGS)
@@ -461,7 +460,6 @@ export function TrailersPage({ shellConfig = {} } = {}) {
     setLoading(true)
     setError(null)
     setEmptyMessage(null)
-    setEmptyCta(null)
     // Keep the last trailer on screen until a replacement arrives so
     // "Another one" does not collapse the player (UX-B6).
 
@@ -474,21 +472,11 @@ export function TrailersPage({ shellConfig = {} } = {}) {
           setTrailer(data)
         } else {
           setTrailer(null)
-          const cta = data?.cta && typeof data.cta === 'object' ? data.cta : null
           setEmptyMessage(
             data?.message ||
               (data?.code === 'no_trailers'
                 ? 'No trailers in your library yet.'
-                : 'No games with trailers found'),
-          )
-          setEmptyCta(
-            cta?.href
-              ? {
-                  id: cta.id || 'library',
-                  label: cta.label || 'Go to Library',
-                  href: cta.href,
-                }
-              : { id: 'library', label: 'Go to Library', href: '/library' },
+                : 'No games with trailers found matching your filters'),
           )
         }
         setLoading(false)
@@ -662,48 +650,46 @@ export function TrailersPage({ shellConfig = {} } = {}) {
            grouped on Calendar: one Filters popover per page, in the same place
            on every page. */
         <ContextBar
-          filters={
-            <FilterPanel
-              options={options}
-              optionsError={optionsError}
-              filters={filters}
-              onChange={handleFilterChange}
-              onClear={handleClear}
-              onApply={handleApply}
-            />
-          }
-          filterCount={activeFilterBadges.length}
-          /* One visible action, the rest behind the overflow — the shape
-             every other page's bar already has. Four peer buttons in a row was
-             the trailers page inventing its own toolbar: "Another one" is what
-             you press over and over, and Settings, Big Picture and Exit are
-             each pressed once a session at most. Ranking them by how often they
-             are used is what the two-bar design calls for; showing them as
-             equals was what made this bar look unlike the others. */
+          /* Filters · Another one · More are one outlined cluster (Library
+             Apply/Clear shape). Leaving Filters in the lead slot and the other
+             two in the centre left three peer pills that did not read as the
+             same control. */
           actions={
-            <button type="button" className="gt-cbtn" onClick={requestTrailer}>
-              Another one
-            </button>
-          }
-          overflow={
-            <div className="gt-trailers__overflow">
-              <button
-                type="button"
-                className="menu-button"
-                onClick={() => setSettingsOpen(true)}
-              >
-                Settings
+            <div className="gt-cbtn-group" role="group" aria-label="Trailers">
+              <Popover label="Filters" count={activeFilterBadges.length} align="start">
+                <FilterPanel
+                  options={options}
+                  optionsError={optionsError}
+                  filters={filters}
+                  onChange={handleFilterChange}
+                  onClear={handleClear}
+                  onApply={handleApply}
+                />
+              </Popover>
+              <button type="button" className="gt-cbtn" onClick={requestTrailer}>
+                Another one
               </button>
-              {attractMode ? (
-                <>
-                  <button type="button" className="menu-button" onClick={openBigPicture}>
-                    Big Picture
+              <Popover label="More" align="end">
+                <div className="gt-trailers__overflow">
+                  <button
+                    type="button"
+                    className="menu-button"
+                    onClick={() => setSettingsOpen(true)}
+                  >
+                    Settings
                   </button>
-                  <button type="button" className="menu-button" onClick={exitAttractMode}>
-                    Exit Attract Mode
-                  </button>
-                </>
-              ) : null}
+                  {attractMode ? (
+                    <>
+                      <button type="button" className="menu-button" onClick={openBigPicture}>
+                        Big Picture
+                      </button>
+                      <button type="button" className="menu-button" onClick={exitAttractMode}>
+                        Exit Attract Mode
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              </Popover>
             </div>
           }
         />
@@ -804,11 +790,9 @@ export function TrailersPage({ shellConfig = {} } = {}) {
       ) : null}
 
       {!loading && !error && emptyMessage ? (
-        <PageStatus emptyMessage={emptyMessage} className="gt-trailers__empty">
-          <a className="gt-btn" href={emptyCta?.href || '/library'}>
-            {emptyCta?.label || 'Go to Library'}
-          </a>
-        </PageStatus>
+        <p className="gt-trailers__empty" role="status">
+          {emptyMessage}
+        </p>
       ) : null}
 
       {!loading && !error && trailer && !videoId ? (

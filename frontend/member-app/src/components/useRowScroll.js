@@ -11,9 +11,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  *
  *   arrows      an explicit control, and the only one that is keyboard- and
  *               screen-reader-reachable
- *   edge hover  park the pointer at either end and the row moves — the pattern
- *               every TV and store front-end uses, and the fastest one once you
- *               know it is there
+ *   arrow hover park on the left/right control and the row eases along — the
+ *               mid-row auto-scroll from an edge zone was fighting tile hover
  *   wheel       a vertical wheel over a horizontal list means "move the list";
  *               this is the one people try first and the one that used to
  *               scroll the whole page instead
@@ -24,12 +23,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * @param {object} [options]
  * @param {number} [options.step] Fraction of the visible width one arrow press
  *   moves. Just under a full page, so a tile stays on screen as an anchor.
- * @param {number} [options.edgeWidth] Width in px of the hover zone at each end.
  * @param {number} [options.edgeSpeed] Pixels per animation frame while hovering
- *   an edge. Roughly 360px/s at 60fps.
+ *   an arrow. ~240px/s at 60fps — slow enough to read, fast enough to traverse.
  */
-export function useRowScroll({ step = 0.85, edgeWidth = 64, edgeSpeed = 6 } = {}) {
+export function useRowScroll({ step = 0.85, edgeSpeed = 4 } = {}) {
   const ref = useRef(null)
+  /** Optional outer hover zone (viewport). Wheel binds here so the gesture
+   *  works over arrows, padding, and the scrollbar lane — not only the tiles. */
+  const viewportRef = useRef(null)
   const frameRef = useRef(0)
   const directionRef = useRef(0)
   const [overflow, setOverflow] = useState({ start: false, end: false })
@@ -114,7 +115,7 @@ export function useRowScroll({ step = 0.85, edgeWidth = 64, edgeSpeed = 6 } = {}
   )
 
   /**
-   * Vertical wheel over the row moves the row.
+   * Vertical wheel over the row moves the row left/right.
    *
    * Only when the row can actually move that way — otherwise a row scrolled to
    * its end would swallow the gesture and the page would stop scrolling, which
@@ -126,58 +127,50 @@ export function useRowScroll({ step = 0.85, edgeWidth = 64, edgeSpeed = 6 } = {}
     (event) => {
       const node = ref.current
       if (!node) return
+      // Shift+wheel is already horizontal in most browsers; don't double-apply.
+      if (event.shiftKey) return
       if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
 
+      let delta = event.deltaY
+      // DOM_DELTA_LINE (1): normalize so a notch moves more than a fraction of
+      // a pixel; DOM_DELTA_PAGE (2) is rare for mice but treat as a page step.
+      if (event.deltaMode === 1) delta *= 16
+      else if (event.deltaMode === 2) delta *= node.clientWidth * step
+
       const max = node.scrollWidth - node.clientWidth
-      if (max <= 0) return
-      const next = node.scrollLeft + event.deltaY
-      if ((event.deltaY < 0 && node.scrollLeft <= 0) || (event.deltaY > 0 && node.scrollLeft >= max)) {
+      if (max <= 1) return
+      const atStart = node.scrollLeft <= 1
+      const atEnd = node.scrollLeft >= max - 1
+      if ((delta < 0 && atStart) || (delta > 0 && atEnd)) {
         return
       }
 
       event.preventDefault()
-      node.scrollLeft = Math.max(0, Math.min(max, next))
+      node.scrollLeft = Math.max(0, Math.min(max, node.scrollLeft + delta))
       measure()
     },
-    [measure],
+    [measure, step],
   )
 
   // React attaches wheel handlers passively, so `preventDefault()` inside an
-  // onWheel prop is ignored and the page scrolls anyway. The listener has to be
-  // registered by hand with `passive: false`.
+  // onWheel prop is ignored and the page scrolls anyway. Bind on the viewport
+  // (capture) when present so hovering the scrollbar lane / arrows still maps
+  // vertical wheel → horizontal scroll.
   useEffect(() => {
-    const node = ref.current
-    if (!node) return undefined
-    node.addEventListener('wheel', onWheel, { passive: false })
-    return () => node.removeEventListener('wheel', onWheel)
+    const listenNode = viewportRef.current || ref.current
+    if (!listenNode) return undefined
+    listenNode.addEventListener('wheel', onWheel, { passive: false, capture: true })
+    return () => listenNode.removeEventListener('wheel', onWheel, { capture: true })
   }, [onWheel])
-
-  /** Pointer moved over the row: are we in an edge zone, and which one? */
-  const onPointerMove = useCallback(
-    (event) => {
-      const node = ref.current
-      if (!node) return
-      // Touch drives the row directly; an auto-scrolling edge under a finger
-      // fights the drag it is already doing.
-      if (event.pointerType && event.pointerType !== 'mouse') return
-
-      const box = node.getBoundingClientRect()
-      const fromStart = event.clientX - box.left
-      const fromEnd = box.right - event.clientX
-
-      if (fromStart <= edgeWidth) startEdgeScroll(-1)
-      else if (fromEnd <= edgeWidth) startEdgeScroll(1)
-      else stopEdgeScroll()
-    },
-    [edgeWidth, startEdgeScroll, stopEdgeScroll],
-  )
 
   return {
     ref,
+    viewportRef,
     overflow,
     measure,
     scrollByPage,
-    onPointerMove,
-    onPointerLeave: stopEdgeScroll,
+    /** Hover the left/right arrow controls — continuous scroll while held. */
+    startEdgeScroll,
+    stopEdgeScroll,
   }
 }

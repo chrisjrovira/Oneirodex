@@ -27,6 +27,7 @@ beforeEach(() => {
   freeGamesApi.fetchFreeGames.mockResolvedValue({ items: [] })
   gamingNewsApi.fetchGamingNews.mockResolvedValue({ items: [] })
   window.location.hash = ''
+  window.localStorage.removeItem('gt.news.layout')
 })
 
 test('lists announcement cards from API', async () => {
@@ -235,4 +236,71 @@ test('section counts stay hidden until the feeds have actually answered', async 
   render(<NewsPage shellConfig={{ enableNewChrome: true }} />, { wrapper: MemoryRouter })
 
   expect(screen.getByRole('button', { name: /Free now/ }).textContent).not.toMatch(/\d/)
+})
+
+test('new chrome puts Card Grid RSS after the section views', async () => {
+  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
+  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+    items: [{ title: 'Studio ships patch', url: 'https://example.com/a', source: 'Example' }],
+  })
+
+  render(<NewsPage shellConfig={{ enableNewChrome: true }} />, { wrapper: MemoryRouter })
+  await screen.findByRole('heading', { name: 'Gaming headlines' })
+
+  expect(screen.getByRole('button', { name: 'Card' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Grid' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'RSS' })).toBeInTheDocument()
+})
+
+test('RSS layout renders headline magazine rows instead of cards', async () => {
+  const user = userEvent.setup()
+  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
+  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+    items: [
+      {
+        title: 'Studio ships patch',
+        url: 'https://example.com/a',
+        source: 'Example',
+        summary: 'Notes from the floor.',
+      },
+    ],
+  })
+
+  const { container } = render(<NewsPage shellConfig={{ enableNewChrome: true }} />, {
+    wrapper: MemoryRouter,
+  })
+  await screen.findByText('Studio ships patch')
+  await user.click(screen.getByRole('button', { name: /Headlines/ }))
+  await user.click(screen.getByRole('button', { name: 'RSS' }))
+
+  expect(container.querySelector('.gt-news__magazine')).toBeTruthy()
+  expect(container.querySelector('.gt-news__cards')).toBeNull()
+  expect(window.localStorage.getItem('gt.news.layout')).toBe('rss')
+})
+
+test('the Free now tab fills the stage rather than a half column', async () => {
+  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
+  freeGamesApi.fetchFreeGames.mockResolvedValue({
+    items: [
+      {
+        id: 9,
+        store: 'steam',
+        external_id: 'abc',
+        title: 'Free Space Adventure',
+        links: { https: 'https://example.test/claim' },
+      },
+    ],
+  })
+
+  const user = userEvent.setup()
+  const { container } = render(<NewsPage shellConfig={{ enableNewChrome: true }} />, {
+    wrapper: MemoryRouter,
+  })
+  await screen.findByText('Free Space Adventure')
+  await user.click(screen.getByRole('button', { name: /Free now/ }))
+
+  expect(container.querySelector('.gt-news--fill')).toBeTruthy()
+  expect(container.querySelector('.gt-news--fill')?.getAttribute('data-tab')).toBe('free')
+  expect(container.querySelector('.gt-news__stage')).toBeTruthy()
+  expect(container.querySelector('.gt-news__headlines')).toBeNull()
 })

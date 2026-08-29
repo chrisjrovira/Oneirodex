@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createRequest, deleteRequest, fetchRequests, resolveRequest } from '../api/wishlist'
 import { ContextBar, Popover } from '../chrome/ContextBar'
-import { RailIcon } from '../chrome/railIcons'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './WishlistPage.css'
@@ -118,77 +117,78 @@ export function WishlistPage({ shellConfig = {} } = {}) {
     <>
     {useNewChrome ? (
         <ContextBar
-          /* Whose requests you are looking at is a *view* of this page, not an
-             action on it — the same relationship Library's All/Games/Soft
-             titles strip encodes. As a lone toggle button it read as a third
-             action sitting beside "Request a title", and nothing said what the
-             unpressed state was showing. Two segments name both states.
-
-             Librarians only: everyone else has exactly one view, and a
-             one-segment switcher is a label pretending to be a control. */
-          views={
-            isLibrarian
-              ? [
-                  { id: 'mine', label: 'My requests' },
-                  { id: 'all', label: 'Everyone’s' },
-                ]
-              : []
-          }
-          activeView={showAll ? 'all' : 'mine'}
-          onSelectView={(view) => setShowAll(view === 'all')}
+          /* Views + Request a title share one fused gt-cbtn-group (Library
+             Apply/Clear shape). SegmentedViews would leave Request as a peer
+             pill with a star; librarians need My requests | Everyone’s |
+             Request a title as one outlined control. Members only get Request. */
           summary={requests ? `${requests.length} requests` : null}
           actions={
-            <>
-              {/* No scope toggle here: the librarian switch is the two-segment
-                  `views` strip above. A button beside it would be the same
-                  control twice, and the one-button version is exactly what the
-                  segments replaced — an unpressed toggle cannot say which of
-                  the two states you are looking at. */}
+            <div className="gt-cbtn-group" role="group" aria-label="Wishlist">
+              {isLibrarian ? (
+                <>
+                  <button
+                    type="button"
+                    className={`gt-cbtn${!showAll ? ' is-on' : ''}`}
+                    aria-pressed={!showAll}
+                    onClick={() => setShowAll(false)}
+                  >
+                    My requests
+                  </button>
+                  <button
+                    type="button"
+                    className={`gt-cbtn${showAll ? ' is-on' : ''}`}
+                    aria-pressed={showAll}
+                    onClick={() => setShowAll(true)}
+                  >
+                    Everyone’s
+                  </button>
+                </>
+              ) : null}
               <Popover
                 label="Request a title"
-                icon={<RailIcon name="wishlist" size={16} />}
+                triggerClassName="gt-cbtn--primary"
               >
-              {({ close }) => (
-              <form
-                className="gt-wishlist__form"
-                onSubmit={(event) => handleCreate(event, close)}
-              >
-                <label htmlFor="gt-wishlist-title">Title</label>
-                <input
-                  id="gt-wishlist-title"
-                  type="text"
-                  maxLength={255}
-                  required
-                  placeholder="Game title"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                />
-                <label htmlFor="gt-wishlist-notes">Notes</label>
-                <input
-                  id="gt-wishlist-notes"
-                  type="text"
-                  maxLength={400}
-                  placeholder="Optional details"
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                />
-                {createError ? (
-                  <PageStatus
-                    error={createError}
-                    className="gt-wishlist__action-error"
-                  />
-                ) : null}
-                <button
-                  type="submit"
-                  className="gt-cbtn gt-cbtn--primary"
-                  disabled={submitting}
-                >
-                  {submitting ? 'Requesting…' : 'Request'}
-                </button>
-              </form>
-              )}
+                {({ close }) => (
+                  <form
+                    className="gt-wishlist__form"
+                    onSubmit={(event) => handleCreate(event, close)}
+                  >
+                    <label htmlFor="gt-wishlist-title">Title</label>
+                    <input
+                      id="gt-wishlist-title"
+                      type="text"
+                      maxLength={255}
+                      required
+                      placeholder="Game title"
+                      value={title}
+                      onChange={(event) => setTitle(event.target.value)}
+                    />
+                    <label htmlFor="gt-wishlist-notes">Notes</label>
+                    <input
+                      id="gt-wishlist-notes"
+                      type="text"
+                      maxLength={400}
+                      placeholder="Optional details"
+                      value={notes}
+                      onChange={(event) => setNotes(event.target.value)}
+                    />
+                    {createError ? (
+                      <PageStatus
+                        error={createError}
+                        className="gt-wishlist__action-error"
+                      />
+                    ) : null}
+                    <button
+                      type="submit"
+                      className="gt-cbtn gt-cbtn--primary"
+                      disabled={submitting}
+                    >
+                      {submitting ? 'Requesting…' : 'Request'}
+                    </button>
+                  </form>
+                )}
               </Popover>
-            </>
+            </div>
           }
         />
       ) : null}

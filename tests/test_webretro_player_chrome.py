@@ -78,3 +78,37 @@ def test_overlay_css_auto_hides_on_fine_pointers():
     assert '[data-picture="crt"]' in css
     assert '[data-picture="sharp"]' in css
     assert '.gt-play-help' in css
+
+
+def test_leave_play_never_uses_history_back():
+    """Iframe navigations poison history.back(); leave must always navigate away."""
+    html = (WEBRETRO / 'webretro.html').read_text(encoding='utf-8')
+    assert 'function goBackToLibrary()' in html
+    assert 'function clearLeaveGuards()' in html
+    assert 'history.back(' not in html
+    assert "window.location.assign('/library')" in html
+    assert 'onbeforeunload = null' in html
+    assert 'gt-allow-leave' in html
+    assert 'leave-guard-1' in html
+
+
+def test_embedded_webretro_skips_beforeunload_trap():
+    """ROM start must not install onbeforeunload inside the play iframe."""
+    base = (WEBRETRO / 'assets' / 'base.js').read_text(encoding='utf-8')
+    assert 'window.self === window.top' in base
+    assert 'window.onbeforeunload = function() { return true; }' in base
+    bridge = (WEBRETRO / 'gt-bridge.js').read_text(encoding='utf-8')
+    assert "type === 'gt-allow-leave'" in bridge
+    standalone = (WEBRETRO / 'standalone.html').read_text(encoding='utf-8')
+    assert 'base.js?v=leave-guard-1' in standalone
+
+
+def test_overlay_shell_stays_click_through():
+    """Visible overlay must not cover Start; only .gt-play-ctrl takes pointers."""
+    css = (WEBRETRO / 'play-skins.css').read_text(encoding='utf-8')
+    assert '.gt-play-overlay .gt-play-ctrl' in css
+    assert 'pointer-events: auto' in css
+    # The always-on touch rule must not re-arm the full shell as a hit target.
+    touch = css.split('@media (hover: none)')[1].split('@media')[0]
+    assert 'pointer-events: none' in touch
+    assert 'pointer-events: auto' not in touch

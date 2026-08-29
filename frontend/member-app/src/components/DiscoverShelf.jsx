@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { fetchDiscoverRow } from '../api/discover'
 import { GameCard } from './GameCard'
 import { NewsCard } from './NewsCard'
+import { isShelfItemFullyVisible } from './shelfItemVisibility'
 import { useRowScroll } from './useRowScroll'
 import './DiscoverShelf.css'
 
@@ -58,16 +59,31 @@ export function DiscoverShelf({
   const [games, setGames] = useState(() => rowItems(section))
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState(false)
+  /** Custom bar metrics — native scrollbar is hidden so hover bleed can stay. */
+  const [hbar, setHbar] = useState({ max: 0, left: 0, thumbPct: 100 })
   const abortRef = useRef(null)
-  // Arrows, edge-hover and wheel, shared with every other horizontal row.
+  const hbarDragRef = useRef(null)
+  // Arrows (hover + click) and wheel — no mid-row edge auto-scroll.
   const {
     ref: trackRef,
+    viewportRef,
     overflow,
     measure,
     scrollByPage,
-    onPointerMove,
-    onPointerLeave,
+    startEdgeScroll,
+    stopEdgeScroll,
   } = useRowScroll()
+
+  const syncHbar = useCallback(() => {
+    const track = trackRef.current
+    if (!track) return
+    const max = Math.max(0, track.scrollWidth - track.clientWidth)
+    const thumbPct =
+      track.scrollWidth > 0
+        ? Math.min(100, Math.max(8, (track.clientWidth / track.scrollWidth) * 100))
+        : 100
+    setHbar({ max, left: track.scrollLeft, thumbPct })
+  }, [trackRef])
 
   // A fresh feed replaces the row wholesale rather than appending to whatever
   // the previous one had scrolled to.
@@ -78,7 +94,44 @@ export function DiscoverShelf({
 
   useEffect(() => () => abortRef.current?.abort(), [])
 
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track) {
+      syncHbar()
+      return undefined
+    }
+    syncHbar()
+    if (typeof ResizeObserver === 'undefined') return undefined
+    const observer = new ResizeObserver(syncHbar)
+    observer.observe(track)
+    return () => observer.disconnect()
+  }, [games.length, syncHbar, trackRef])
+
   const complete = games.length >= totalCount
+
+  /* Mark which tiles are fully inside the track. Clipped edge tiles must not
+     enlarge on hover — the scale would grow into (and be cut by) the scroll
+     clip, which is the broken half-cover the member sees at the row end. */
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track || typeof IntersectionObserver === 'undefined') return undefined
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          entry.target.toggleAttribute(
+            'data-fully-visible',
+            isShelfItemFullyVisible(entry.intersectionRatio),
+          )
+        }
+      },
+      { root: track, threshold: [0, 0.5, 0.99, 1] },
+    )
+
+    const items = track.querySelectorAll('.gt-shelf__item')
+    items.forEach((node) => observer.observe(node))
+    return () => observer.disconnect()
+  }, [games.length, loading, complete, trackRef])
 
   const loadMore = useCallback(() => {
     if (loading || loadError || complete || !identifier) {
@@ -118,11 +171,45 @@ export function DiscoverShelf({
     const track = trackRef.current
     if (!track) return
     measure()
+    syncHbar()
     const remaining = track.scrollWidth - track.scrollLeft - track.clientWidth
     if (remaining <= LOAD_AHEAD_PX) {
       loadMore()
     }
-  }, [loadMore, measure, trackRef])
+  }, [loadMore, measure, syncHbar, trackRef])
+
+  const onHbarPointerDown = useCallback(
+    (event) => {
+      const track = trackRef.current
+      const rail = event.currentTarget
+      if (!track || hbar.max <= 1) return
+      event.preventDefault()
+      const railBox = rail.getBoundingClientRect()
+      const thumbRatio = hbar.thumbPct / 100
+      const usable = railBox.width * (1 - thumbRatio)
+
+      const scrollFromClientX = (clientX) => {
+        if (usable <= 0) return
+        const x = clientX - railBox.left - (railBox.width * thumbRatio) / 2
+        const t = Math.min(1, Math.max(0, x / usable))
+        track.scrollLeft = t * hbar.max
+        measure()
+        syncHbar()
+      }
+
+      scrollFromClientX(event.clientX)
+      hbarDragRef.current = { scrollFromClientX }
+      const onMove = (ev) => hbarDragRef.current?.scrollFromClientX(ev.clientX)
+      const onUp = () => {
+        hbarDragRef.current = null
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onUp)
+      }
+      window.addEventListener('pointermove', onMove)
+      window.addEventListener('pointerup', onUp)
+    },
+    [hbar.max, hbar.thumbPct, measure, syncHbar, trackRef],
+  )
 
   if (!games.length) {
     return null
@@ -192,73 +279,103 @@ export function DiscoverShelf({
         ) : null}
       </div>
 
-      <div
-        className="gt-shelf__viewport"
-        onPointerMove={onPointerMove}
-        onPointerLeave={onPointerLeave}
-      >
-        {/* Rendered whether or not they are usable, and disabled when they are
-            not: arrows that appear and disappear as a row fills itself in move
-            the tiles under the pointer mid-reach. */}
-        <button
-          type="button"
-          className="gt-shelf__arrow gt-shelf__arrow--start"
-          aria-label={`Scroll ${section.title} left`}
-          disabled={!overflow.start}
-          onClick={() => scrollByPage(-1)}
-        >
-          <span aria-hidden="true">‹</span>
-        </button>
+      <div className="gt-shelf__scroller" ref={viewportRef}>
+        <div className="gt-shelf__viewport">
+          {/* Rendered whether or not they are usable, and disabled when they are
+              not: arrows that appear and disappear as a row fills itself in move
+              the tiles under the pointer mid-reach. Hover holds a slow scroll. */}
+          <button
+            type="button"
+            className="gt-shelf__arrow gt-shelf__arrow--start"
+            aria-label={`Scroll ${section.title} left`}
+            disabled={!overflow.start}
+            onClick={() => scrollByPage(-1)}
+            onPointerEnter={() => {
+              if (overflow.start) startEdgeScroll(-1)
+            }}
+            onPointerLeave={stopEdgeScroll}
+          >
+            <span aria-hidden="true">‹</span>
+          </button>
 
-        <div
-          className="gt-shelf__track"
-          ref={trackRef}
-          onScroll={handleScroll}
-          role="list"
-          aria-label={section.title}
-        >
-          {games.map((item, index) => (
-            <div className="gt-shelf__item" role="listitem" key={itemKey(item, index)}>
-              {itemKind === 'articles' ? (
-                <NewsCard item={item} />
-              ) : (
-                <GameCard
-                  game={item}
-                  isAdmin={isAdmin}
-                  showPlayStatus={showPlayStatus}
-                  enableDeleteOnDisk={enableDeleteOnDisk}
-                />
-              )}
-            </div>
-          ))}
+          <div
+            className="gt-shelf__track"
+            ref={trackRef}
+            onScroll={handleScroll}
+            role="list"
+            aria-label={section.title}
+          >
+            {games.map((item, index) => (
+              <div className="gt-shelf__item" role="listitem" key={itemKey(item, index)}>
+                {itemKind === 'articles' ? (
+                  <NewsCard item={item} />
+                ) : (
+                  <GameCard
+                    game={item}
+                    isAdmin={isAdmin}
+                    showPlayStatus={showPlayStatus}
+                    enableDeleteOnDisk={enableDeleteOnDisk}
+                  />
+                )}
+              </div>
+            ))}
 
-          {loading ? (
-            <div className="gt-shelf__item gt-shelf__pending" aria-hidden="true" />
-          ) : null}
+            {loading ? (
+              <div className="gt-shelf__item gt-shelf__pending" aria-hidden="true" />
+            ) : null}
 
-          {showSeeAll && complete ? (
-            <Link
-              className="gt-shelf__item gt-shelf__more"
-              to={section.more_href}
-              aria-label={`See all in ${section.title}`}
-            >
-              <span className="gt-shelf__more-mark" aria-hidden="true">
-                +
-              </span>
-              <span className="gt-shelf__more-label">See all</span>
-            </Link>
-          ) : null}
+            {showSeeAll && complete ? (
+              <Link
+                className="gt-shelf__item gt-shelf__more"
+                to={section.more_href}
+                aria-label={`See all in ${section.title}`}
+              >
+                <span className="gt-shelf__more-mark" aria-hidden="true">
+                  +
+                </span>
+                <span className="gt-shelf__more-label">See all</span>
+              </Link>
+            ) : null}
+          </div>
+
+          <button
+            type="button"
+            className="gt-shelf__arrow gt-shelf__arrow--end"
+            aria-label={`Scroll ${section.title} right`}
+            disabled={!overflow.end}
+            onClick={() => scrollByPage(1)}
+            onPointerEnter={() => {
+              if (overflow.end) startEdgeScroll(1)
+            }}
+            onPointerLeave={stopEdgeScroll}
+          >
+            <span aria-hidden="true">›</span>
+          </button>
         </div>
 
-        <button
-          type="button"
-          className="gt-shelf__arrow gt-shelf__arrow--end"
-          aria-label={`Scroll ${section.title} right`}
-          disabled={!overflow.end}
-          onClick={() => scrollByPage(1)}
-        >
-          <span aria-hidden="true">›</span>
-        </button>
+        {hbar.max > 1 ? (
+          <div
+            className="gt-shelf__hbar"
+            role="scrollbar"
+            aria-label={`Scroll ${section.title}`}
+            aria-orientation="horizontal"
+            aria-valuemin={0}
+            aria-valuemax={Math.round(hbar.max)}
+            aria-valuenow={Math.round(hbar.left)}
+            onPointerDown={onHbarPointerDown}
+          >
+            <div
+              className="gt-shelf__hbar-thumb"
+              style={{
+                width: `${hbar.thumbPct}%`,
+                left:
+                  hbar.max > 0
+                    ? `${(hbar.left / hbar.max) * (100 - hbar.thumbPct)}%`
+                    : '0%',
+              }}
+            />
+          </div>
+        ) : null}
       </div>
     </section>
   )

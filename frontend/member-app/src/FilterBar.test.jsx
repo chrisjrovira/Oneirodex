@@ -156,13 +156,13 @@ test('FilterBar hosts signal chips in the filter section', async () => {
   render(<FilterBar filters={{}} onApply={onApply} onClear={() => {}} />)
 
   expect(screen.getByRole('group', { name: 'Badge filters' })).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'UPDATE' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Update' })).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'OUT/~' })).toBeNull()
-  expect(screen.getByRole('button', { name: 'NEW' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'New' })).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'RELEASE' })).toBeNull()
-  expect(screen.getByRole('button', { name: 'LANG' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Lang' })).toBeInTheDocument()
 
-  await user.click(screen.getByRole('button', { name: 'UPDATE' }))
+  await user.click(screen.getByRole('button', { name: 'Update' }))
   expect(onApply).toHaveBeenCalledWith({ has_updates: '1' })
 })
 
@@ -170,22 +170,22 @@ test('FilterBar hosts signal chips in the filter section', async () => {
  * Apply now *leads* the panel. This test asserted the opposite, deliberately,
  * so the reversal is worth stating.
  *
- * The old order put the three actions at the foot, below every select and chip.
+ * The old order put the actions at the foot, below every select and chip.
  * That reads fine on a short panel and fails on a real one: inside the popover
  * the form scrolls, so committing a filter meant scrolling back past everything
- * you had just set, and "Done" — the control that closes the thing you are
- * looking at — ended up the furthest point in it from the trigger that opened
- * it. Leading with the actions keeps them one movement from the trigger at any
- * panel height, and they are sticky so they stay reachable while the body
- * scrolls under them.
+ * you had just set. Leading with Apply/Clear keeps them one movement from the
+ * trigger at any panel height, and they are sticky so they stay reachable while
+ * the body scrolls under them.
  *
- * Kind still precedes Signals, and the body still stays mounted; both of those
- * were the rest of this test's job and neither changed.
+ * Signals sit immediately under Apply/Clear as one fused compact row;
+ * Kind stays in the scrollable body. The body still stays mounted.
  */
-test('FilterBar leads with Apply; Kind precedes Signals; body stays mounted', async () => {
+test('FilterBar leads with Apply; Signals under actions; Kind in body', async () => {
   const { container } = render(
     <FilterBar filters={{}} onApply={() => {}} onClear={() => {}} />,
   )
+
+  expect(screen.queryByRole('button', { name: 'Done' })).toBeNull()
 
   const body = container.querySelector('#library-filters-body')
   expect(body).toBeTruthy()
@@ -193,11 +193,13 @@ test('FilterBar leads with Apply; Kind precedes Signals; body stays mounted', as
   const signals = screen.getByRole('group', { name: 'Badge filters' })
   const apply = screen.getByRole('button', { name: 'Apply' })
   expect(
-    kind.compareDocumentPosition(signals) & Node.DOCUMENT_POSITION_FOLLOWING,
+    apply.compareDocumentPosition(signals) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy()
   expect(
-    apply.compareDocumentPosition(kind) & Node.DOCUMENT_POSITION_FOLLOWING,
+    signals.compareDocumentPosition(kind) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy()
+  expect(body.contains(kind)).toBe(true)
+  expect(body.contains(signals)).toBe(false)
   expect(screen.queryByRole('button', { name: 'Hide filters' })).toBeNull()
 })
 

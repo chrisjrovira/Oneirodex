@@ -1252,6 +1252,92 @@ body.admin-shell.modal-open > .modal-backdrop {
   }
 }
 
+/* Systems hub AI marks — theme progress list in Art Studio. */
+.gt-system-marks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.gt-system-marks__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: min(28rem, 55vh);
+  overflow: auto;
+  padding: 0.15rem;
+}
+
+.gt-system-marks__row {
+  appearance: none;
+  display: grid;
+  grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 0.75rem;
+  row-gap: 0.25rem;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--gt-border);
+  border-radius: var(--gt-radius-md);
+  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
+  color: var(--gt-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.gt-system-marks__row:hover {
+  border-color: color-mix(in srgb, var(--gt-accent) 45%, var(--gt-border));
+}
+
+.gt-system-marks__row.is-selected {
+  border-color: var(--gt-accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gt-accent) 35%, transparent);
+}
+
+.gt-system-marks__row.is-complete .gt-system-marks__theme {
+  color: var(--gt-accent);
+}
+
+.gt-system-marks__theme {
+  font-weight: 650;
+  font-family: var(--gt-font-mono, ui-monospace, monospace);
+  font-size: var(--gt-font-sm);
+}
+
+.gt-system-marks__meta {
+  font-size: var(--gt-font-xs);
+  color: var(--gt-text-muted);
+}
+
+.gt-system-marks__bar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 0.28rem;
+  border-radius: var(--gt-radius-pill);
+  background: color-mix(in srgb, var(--gt-border) 70%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+.gt-system-marks__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--gt-marks-pct, 0%);
+  background: var(--gt-accent);
+  border-radius: inherit;
+}
+
+.gt-system-marks__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .gt-art-studio__tile--nintendo {
   border-color: var(--gt-family-nintendo);
 }

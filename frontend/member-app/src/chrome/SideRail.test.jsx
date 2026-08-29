@@ -77,7 +77,7 @@ test('collapsed rail keeps labels in the accessibility tree', () => {
   // stylesheet clips them visually instead, so the names must still be here.
   renderRail({ railState: 'collapsed' })
 
-  expect(screen.getByRole('link', { name: 'Library' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Game Catalog' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Wishlist' })).toBeInTheDocument()
 })
 
@@ -110,7 +110,7 @@ describe('rail groups fold away', () => {
     renderRail()
 
     expect(screen.getByRole('link', { name: 'Wishlist' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /Library/i }))
+    await user.click(screen.getByRole('button', { name: /Game Catalog/i }))
 
     expect(screen.queryByRole('link', { name: 'Wishlist' })).toBeNull()
     expect(window.localStorage.getItem('gt.rail.collapsedGroups')).toContain('library')

@@ -61,16 +61,24 @@ const THEME_DUPLICATE_BUDGET = 85
  *
  * gt-bootstrap-bridge repoints Bootstrap's `.btn-*` at the GT scales, and
  * gt-density gives `.gt-btn` / `.card` / `.form-control` density-aware metrics
- * without either primitive file needing to know densities exist. Counting them
- * conflates a deliberate cascade layer with the thing this budget exists to
- * catch — a per-page stylesheet quietly reinventing a shared component.
+ * without either primitive file needing to know densities exist. gt-era loads
+ * after member-app.css (base_empty.html) so decade rooms can show through
+ * opaque shell fills — and so a handful of grid/chrome rules can beat the SPA
+ * bundle without a rebuild. Counting those files conflates a deliberate
+ * cascade layer with the thing this budget exists to catch — a per-page
+ * stylesheet quietly reinventing a shared component.
  *
  * Excluding them is not a loophole: a layer that stopped overriding anything
  * would have no reason to exist, whereas admin_dashboard.css redefining `.card`
  * is a defect either way. Adding a file here is a claim that it is a layer, and
  * should be as hard to justify as adding to ALLOWED above.
  */
-const OVERRIDE_LAYERS = ['gt-bootstrap-bridge.css', 'gt-density.css', 'gt-shell.css']
+const OVERRIDE_LAYERS = [
+  'gt-bootstrap-bridge.css',
+  'gt-density.css',
+  'gt-shell.css',
+  'gt-era.css',
+]
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'vendor', '__pycache__', '.git'])
 

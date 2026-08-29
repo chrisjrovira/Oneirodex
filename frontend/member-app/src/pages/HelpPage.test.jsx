@@ -16,7 +16,7 @@ test('starts with Getting started open and other sections collapsed', () => {
     'aria-expanded',
     'true',
   )
-  expect(screen.getByRole('button', { name: /Library & signals/i })).toHaveAttribute(
+  expect(screen.getByRole('button', { name: /Game Catalog & signals/i })).toHaveAttribute(
     'aria-expanded',
     'false',
   )
@@ -55,7 +55,7 @@ test('new chrome moves the fold controls into bar two and keeps all three', asyn
   expect(screen.getByRole('button', { name: /translation|patch/i })).toBeInTheDocument()
 
   await user.click(screen.getByRole('button', { name: 'Expand all' }))
-  expect(screen.getByRole('button', { name: /Library & signals/i })).toHaveAttribute(
+  expect(screen.getByRole('button', { name: /Game Catalog & signals/i })).toHaveAttribute(
     'aria-expanded',
     'true',
   )

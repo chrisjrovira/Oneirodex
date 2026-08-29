@@ -7,6 +7,37 @@ import { PageStatus } from '../components/PageStatus'
 import { SystemGlyph } from '../components/systemMotifArt'
 import './SystemsPage.css'
 
+function activeThemeSlug() {
+  if (typeof document === 'undefined') return 'default'
+  return document.documentElement.getAttribute('data-theme') || 'default'
+}
+
+/** AI mark when present for the active theme; otherwise the SVG motif. */
+function SystemMark({ platformValue, family }) {
+  const platformId = String(platformValue || '').toLowerCase()
+  const theme = activeThemeSlug()
+  const [failed, setFailed] = useState(false)
+  const src = platformId
+    ? `/static/library/system-marks/${encodeURIComponent(theme)}/${encodeURIComponent(platformId)}.webp`
+    : null
+
+  if (!src || failed) {
+    return <SystemGlyph platformValue={platformValue} family={family} />
+  }
+
+  return (
+    <img
+      className="gt-systems-tile__mark-img"
+      src={src}
+      alt=""
+      width={88}
+      height={88}
+      decoding="async"
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
 async function fetchLibraryPlatforms({ signal } = {}) {
   const response = await fetch('/api/library_platforms?include_completion=1', {
     signal,
@@ -156,13 +187,9 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
                     className="gt-systems-tile__main"
                     to={`/library?library_platform=${encodeURIComponent(value)}`}
                   >
-                    {/* The system itself, not its manufacturer (W28). One
-                        Nintendo mark stood in for NES, SNES, N64, GameCube,
-                        Wii and Switch, on a coloured plate that made the tile
-                        about the plate. SystemGlyph draws the per-system motif
-                        the loading states already use. */}
+                    {/* Prefer a themed AI mark when generated; else SystemGlyph. */}
                     <span className="gt-systems-tile__mark" aria-hidden="true">
-                      <SystemGlyph platformValue={value} family={group.id} />
+                      <SystemMark platformValue={value} family={group.id} />
                     </span>
                     <span className="gt-systems-tile__body">
                       <span className="gt-systems-tile__name">{platform.name || value}</span>

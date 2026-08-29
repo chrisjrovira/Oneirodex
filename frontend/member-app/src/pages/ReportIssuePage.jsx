@@ -91,9 +91,6 @@ export function ReportIssuePage() {
       <div className="gt-page-header">
         <h1>Report</h1>
       </div>
-      <p className="gt-more-page__lede">
-        Files a ticket for maintainers. Syncs to GitHub when configured; admins see it in-app.
-      </p>
 
       {error ? <PageStatus error={error} /> : null}
       {result ? (
@@ -115,11 +112,7 @@ export function ReportIssuePage() {
       ) : null}
 
       <form className="gt-report__form" onSubmit={submit}>
-        <section className="gt-report__primary" aria-labelledby="report-primary-heading">
-          <h2 className="gt-report__section-title" id="report-primary-heading">
-            What happened
-          </h2>
-
+        <section className="gt-report__primary" aria-label="Report details">
           {/* Asked first, because it changes what the rest of the form means.
               The page was headed "Report issue" and collected feature requests
               into the same pile, so triage had to read every title to sort

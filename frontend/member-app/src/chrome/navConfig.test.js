@@ -1,6 +1,14 @@
 ﻿import { describe, expect, it, test } from 'vitest'
 import { getContextLinks, getMoreGroups, getMoreLinks, getPrimaryLinks } from './navConfig'
 
+test('primary catalog destination is labeled Game Catalog', () => {
+  expect(getPrimaryLinks().find((l) => l.id === 'library')?.label).toBe('Game Catalog')
+  expect(getMoreGroups().find((g) => g.id === 'library')?.label).toBe('Game Catalog')
+  expect(getContextLinks('/library').find((l) => l.id === 'section')?.label).toBe(
+    'Game Catalog home',
+  )
+})
+
 test('primary links are locked set without Admin', () => {
   expect(getPrimaryLinks().map((l) => l.id)).toEqual([
     'discover', 'library', 'systems', 'downloads', 'favorites',

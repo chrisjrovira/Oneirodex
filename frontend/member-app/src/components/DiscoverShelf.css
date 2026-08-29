@@ -20,12 +20,21 @@
   --gt-tile-w: var(--gt-tile-min, 200px);
   --gt-tile-h: calc(var(--gt-tile-w) * 1.4);
 
-  /* How far a hovered tile grows past its box, per side. The track has to
-     reserve exactly this much and then take it back as negative margin — see
-     .gt-shelf__track. */
+  /* How far a hovered tile grows past its box, per side. The track reserves
+     this inside its padding box (so overflow does not clip the scale) and
+     takes it back with negative margin so the row rhythm stays tight. */
   --gt-shelf-bleed: calc(
-    var(--gt-tile-h) * (var(--gt-tile-hover-scale, 1.15) - 1) / 2
+    var(--gt-tile-h) * (var(--gt-tile-hover-scale, 1.25) - 1) / 2
   );
+  --gt-shelf-bleed-x: calc(
+    var(--gt-tile-w) * (var(--gt-tile-hover-scale, 1.25) - 1) / 2
+  );
+
+  /* Custom bar under the tiles (native scrollbar is hidden — it cannot sit
+     tight under the resting boxes while the track still has bottom bleed).
+     Lane is half the earlier thickness so the strip reads as chrome, not a slab. */
+  --gt-shelf-scrollbar-gap: 0.25rem;
+  --gt-shelf-scrollbar-lane: 0.32rem;
 }
 
 /* Every head is the same height whether or not the row has a reason line, an
@@ -40,7 +49,10 @@
   align-items: center;
   min-height: var(--gt-control-h, 2.25rem);
   gap: var(--gt-space-3, 0.75rem);
-  padding-inline: var(--gt-gutter, 1rem);
+  /* Title sits closer to the content edge than the tile gutter; trailing
+     padding stays so pin / hide / see-all don't kiss the pane edge. */
+  padding-inline-start: var(--gt-space-2, 0.5rem);
+  padding-inline-end: var(--gt-gutter, 1rem);
 }
 
 /* Row titles carry the section, so they get a treatment rather than a rule.
@@ -54,7 +66,7 @@
   display: flex;
   align-items: center;
   gap: var(--gt-space-3, 0.75rem);
-  font-size: var(--gt-font-lg, 1.125rem);
+  font-size: var(--gt-font-xl, 1.25rem);
   font-weight: 700;
   letter-spacing: -0.01em;
   margin: 0;
@@ -193,41 +205,118 @@
   color: var(--gt-accent);
 }
 
-/* Holds the track and the two arrows, and owns the pointer zone that drives
-   edge-hover scrolling. */
+/* Wheel + edge-hover zone: wraps the tile viewport and the custom bar so a
+   vertical wheel over the scrollbar lane still scrolls the row. */
+.gt-shelf__scroller {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Holds the track and the two arrows. */
 .gt-shelf__viewport {
   position: relative;
 }
 
 .gt-shelf__track {
+  position: relative;
+  z-index: 1;
   display: flex;
   gap: var(--gt-tile-gap, 0.75rem);
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
-  padding-inline: var(--gt-gutter, 1rem);
-  scrollbar-width: thin;
+  /* Edge columns need the same per-side growth room as the library shell, or
+     badges on the first/last visible tile clip against the gutter. */
+  padding-inline: max(var(--gt-gutter, 1rem), var(--gt-shelf-bleed-x, 0px));
+  /* Native bar stays hidden: with bottom bleed restored for hover, a native
+     bar would sit under that pad again. .gt-shelf__hbar is the visible control. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 
-  /* A hovered tile grows, and this is a scroll container, so the growth was
-     being cut off top and bottom.
-     `overflow-x: auto` forces the other axis to clip too — per spec, `visible`
-     computes to `auto` when its partner is not `visible` — so there is no way
-     to let the tile spill out. The fix is to make the box big enough and then
-     take the extra space back: pad by exactly the overshoot, and pull the same
-     amount off as negative margin. The row occupies the same height it always
-     did, the gap between rows does not change by a pixel, and the scaled tile
-     has somewhere to go. */
-  padding-block: calc(var(--gt-space-2, 0.5rem) + var(--gt-shelf-bleed, 0px));
-  margin-block: calc(var(--gt-shelf-bleed, 0px) * -1);
+  /* Pad by the overshoot on both axes so scale(+badges) stays inside the
+     padding box, then pull the space back so the next shelf title is not
+     pushed down by empty hover room. */
+  padding-block-start: calc(var(--gt-space-2, 0.5rem) + var(--gt-shelf-bleed, 0px));
+  padding-block-end: var(--gt-shelf-bleed, 0px);
+  margin-block-start: calc(var(--gt-shelf-bleed, 0px) * -1);
+  /* At rest the bar sits tight under the tiles (negative margin collapses the
+     bleed). While a card is enlarged, drop the collapse so the bar stays under
+     the expanded tile instead of sitting inside its growth. */
+  margin-block-end: calc(var(--gt-shelf-bleed, 0px) * -1);
+}
+
+.gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card:hover) .gt-shelf__track,
+.gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card:focus-visible) .gt-shelf__track,
+.gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card:has(:focus-visible)) .gt-shelf__track {
+  margin-block-end: 0;
+}
+
+.gt-shelf__track::-webkit-scrollbar {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+/* Custom horizontal bar — sibling of the track viewport, so it can sit a short
+   gap under the resting tiles while the track keeps full hover bleed. */
+.gt-shelf__hbar {
+  position: relative;
+  z-index: 1;
+  height: var(--gt-shelf-scrollbar-lane);
+  margin-block-start: var(--gt-shelf-scrollbar-gap);
+  margin-inline: max(var(--gt-gutter, 1rem), var(--gt-shelf-bleed-x, 0px));
+  border-radius: var(--gt-radius-pill);
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.gt-shelf__hbar-thumb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 2rem;
+  border-radius: var(--gt-radius-pill);
+  background: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  pointer-events: none;
 }
 
 /* Every tile is the same box in every row, so rows line up with each other and
    a tile with no cover cannot make its row taller than its neighbours. */
 .gt-shelf__item {
+  position: relative;
+  z-index: 0;
   flex: 0 0 auto;
   width: var(--gt-tile-w, 200px);
   height: var(--gt-tile-h, 280px);
   scroll-snap-align: start;
+}
+
+/* Clipped edge tiles stay at rest size — enlarging a half-visible cover only
+   makes the scrollport crop it harder. Fully-visible is set by the shelf's
+   IntersectionObserver (data-fully-visible). */
+.gt-shelf__item:not([data-fully-visible]) .game-card:hover,
+.gt-shelf__item:not([data-fully-visible]) .game-card:focus-visible,
+.gt-shelf__item:not([data-fully-visible]) .game-card:has(:focus-visible) {
+  transform: none;
+  box-shadow: none;
+  z-index: auto;
+}
+
+/* Same stacking fix as the library grid: a later shelf (or a later item in
+   this row) would otherwise paint over the grown tile and its badges.
+   Only fully-visible tiles enlarge, so only those need the lift. */
+.gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card:hover),
+.gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card:focus-visible),
+.gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card:has(:focus-visible)) {
+  position: relative;
+  z-index: 25;
+}
+
+.gt-shelf__item[data-fully-visible]:has(.game-card:hover),
+.gt-shelf__item[data-fully-visible]:has(.game-card:focus-visible),
+.gt-shelf__item[data-fully-visible]:has(.game-card:has(:focus-visible)) {
+  z-index: 25;
 }
 
 /* ---------- scroll controls ----------
@@ -268,7 +357,13 @@
 
 .gt-shelf__arrow--end {
   inset-inline-end: 0;
-  transform: scaleX(-1);
+  /* Fade from the trailing edge. Do not scaleX the whole control — that also
+     mirrored the › glyph so the right arrow pointed left. */
+  background: linear-gradient(
+    to left,
+    var(--gt-bg) 35%,
+    color-mix(in srgb, var(--gt-bg) 0%, transparent)
+  );
 }
 
 /* Present on hover, and always present for the keyboard — a control that only
@@ -276,6 +371,20 @@
 .gt-shelf__viewport:hover .gt-shelf__arrow:not(:disabled),
 .gt-shelf__arrow:focus-visible {
   opacity: 1;
+}
+
+/* Arrows sit above the track so they stay clickable, which also means they
+   paint over a tile that grows toward the edge. While a fully-visible card is
+   enlarged, drop them under the track and ignore hits. */
+.gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible] .game-card:hover) .gt-shelf__arrow,
+.gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible] .game-card:focus-visible) .gt-shelf__arrow,
+.gt-shelf__viewport:has(
+    .gt-shelf__item[data-fully-visible] .game-card:has(:focus-visible)
+  )
+  .gt-shelf__arrow {
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .gt-shelf__arrow:focus-visible {

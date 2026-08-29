@@ -263,7 +263,7 @@ def emulator_profiles_save():
 @login_required
 @admin_required
 def browser_player_settings_get():
-    """Admin: browser play engine defaults (BP-0). Only shipped engines are selectable."""
+    """Admin: browser play engine defaults (BP-0 / BP-1). Only shipped engines are selectable."""
     return api_ok(get_browser_player_settings())
 
 

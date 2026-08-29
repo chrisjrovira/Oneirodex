@@ -324,28 +324,45 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
 
         {summary && enabled ? (
           <article className="gt-ownership__card">
-            <strong>Owned titles (register-only)</strong>
-            <span>
-              {summary.total_owned ?? 0} synced · {summary.total_matched ?? 0} matched to
-              library
-            </span>
-            {STORES.map((store) => {
-              const state = stores[store.key] || {}
-              return (
-                <span key={store.key} className="gt-ownership__meta">
-                  {store.label}: {state.connected ? 'connected' : 'not connected'} ·{' '}
-                  {state.owned_count ?? 0} titles · {state.matched_count ?? 0} matched
-                </span>
-              )
-            })}
-            <span className="gt-ownership__meta">
+            <header className="gt-ownership__card-head">
+              <div className="gt-ownership__card-title">
+                <strong>Owned titles</strong>
+                <span className="gt-ownership__pill">register-only</span>
+              </div>
+              <span className="gt-ownership__card-counts">
+                {summary.total_owned ?? 0} synced · {summary.total_matched ?? 0} matched
+              </span>
+            </header>
+            <ul className="gt-ownership__store-grid">
+              {STORES.map((store) => {
+                const state = stores[store.key] || {}
+                const connected = !!state.connected
+                const owned = state.owned_count ?? 0
+                const matched = state.matched_count ?? 0
+                return (
+                  <li
+                    key={store.key}
+                    className="gt-ownership__store-row"
+                    data-connected={connected ? '1' : '0'}
+                  >
+                    <span className="gt-ownership__store-label">{store.label}</span>
+                    <span className="gt-ownership__store-state">
+                      {connected ? 'connected' : 'not connected'}
+                    </span>
+                    <span className="gt-ownership__store-counts">
+                      {owned} titles · {matched} matched
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+            <p className="gt-ownership__card-note">
               {summary.has_steam_api_key
                 ? 'Steam API key configured'
                 : 'Steam: no API key — use CSV import'}
-            </span>
-            <span className="gt-ownership__meta">
-              GOG / Epic / Amazon: live register when a token is saved — still no store downloads
-            </span>
+              {' · '}
+              GOG / Epic / Amazon: live register when a token is saved — no store downloads
+            </p>
           </article>
         ) : null}
       </div>

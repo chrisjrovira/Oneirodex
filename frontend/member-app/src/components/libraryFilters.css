@@ -91,6 +91,34 @@
   color: var(--gt-text-muted);
 }
 
+/* Compact fused Signals row under Apply/Clear — one control, half height.
+   Vertical rhythm matches the actions↔toolbar gap (`--gt-space-3` on
+   `.library-filters__actions`), so the strip is not pinched under Apply. */
+.library-filters__signals--bar {
+  margin-block: 0;
+}
+
+.library-filters__signals--bar .gt-cbtn-group {
+  width: 100%;
+}
+
+.library-filters__signals--bar .gt-cbtn {
+  min-height: calc(var(--gt-control-h) / 2);
+  padding-inline: var(--gt-space-2);
+  font-size: var(--gt-font-xs);
+  font-weight: 650;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.library-filters__signals--bar .gt-cbtn.is-on,
+.library-filters__signals--bar .gt-cbtn[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--gt-accent) 18%, transparent);
+  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  color: var(--gt-accent);
+}
+
+/* Kind chips (still in the filter body) keep the wrap-friendly chip language. */
 .gt-badge-filter-chips {
   display: flex;
   flex-wrap: wrap;
@@ -258,6 +286,21 @@
   color: var(--gt-text-muted);
 }
 
+/* Rating label + live value share one row; slider owns the line below. */
+.library-filters__rating-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gt-space-2);
+  width: 100%;
+}
+
+.library-filters__rating-value {
+  color: var(--gt-text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
 .library-filters .form-control,
 .library-filters select,
 .library-filters input[type='range'] {
@@ -273,7 +316,7 @@
   box-sizing: border-box;
 }
 
-/* Apply / Clear / Done, at the top of the panel, as one control.
+/* Apply / Clear, at the top of the panel, as one control.
  *
  * This block used to re-style the three buttons from scratch — its own height,
  * its own padding, its own radius and an accent-tinted fill nothing else in the
@@ -289,7 +332,13 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  padding-block-end: var(--gt-space-3);
+  display: flex;
+  flex-direction: column;
+  /* Match the form's row gap (`.library-filters` → 0.65rem) so Apply/Clear →
+     signals and signals → Search use the same air. No padding-block-end here —
+     that used to stack on the form gap and pinch the chips under Apply. */
+  gap: 0.65rem;
+  padding-block-end: 0;
   background: inherit;
 }
 
@@ -403,9 +452,9 @@
   grid-template-columns: none;
   gap: 0;
   /* Keep a gutter. Zeroing it entirely ran the first tile off the left edge —
-     the reclaimed width comes from dropping the rail, not from the margin. */
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
+     the reclaimed width comes from dropping the rail, not from the margin.
+     At least the per-side hover grow so edge-column badges stay on screen. */
+  padding-inline: max(0.75rem, var(--gt-tile-hover-bleed-x, 0px));
 }
 
 .library-layout.is-chrome-v2 .library-layout__main {
@@ -436,12 +485,4 @@
   border: 0;
   border-radius: 0;
   background: none;
-}
-
-/* Done closes; Apply and Clear act.
-   Inside a merged group it cannot be pushed to its own end without breaking the
-   shared edge, so the separation is drawn instead: a heavier rule between the
-   two that act and the one that dismisses. */
-.gt-cbtn-group > .library-filters__done {
-  border-inline-start-color: var(--gt-text-muted);
 }

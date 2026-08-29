@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchDiscoverSections } from './api/discover'
 import { fetchDiscoverPins, saveDiscoverPins } from './api/discoverPins'
-import { ContextBar, Popover } from './chrome/ContextBar'
+import { ContextBar } from './chrome/ContextBar'
 import { DiscoverShelf, formatEventEnds, rowItems } from './components/DiscoverShelf'
 import { DiscoverRowSettings } from './components/DiscoverRowSettings'
 import { PageStatus } from './components/PageStatus'
@@ -179,18 +179,18 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
   const bar = settingsRows.length ? (
     <ContextBar
       summary={`${visible.length} rows`}
-      actions={
-        <Popover label="Rows" count={hidden.length}>
-          <DiscoverRowSettings
-            rows={settingsRows}
-            pins={pins}
-            hidden={hidden}
-            maxPins={maxPins}
-            onTogglePin={togglePin}
-            onToggleHidden={toggleHidden}
-            onMovePin={movePin}
-          />
-        </Popover>
+      filterCount={hidden.length}
+      filtersOnSummary
+      filters={
+        <DiscoverRowSettings
+          rows={settingsRows}
+          pins={pins}
+          hidden={hidden}
+          maxPins={maxPins}
+          onTogglePin={togglePin}
+          onToggleHidden={toggleHidden}
+          onMovePin={movePin}
+        />
       }
     />
   ) : null

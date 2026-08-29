@@ -29,6 +29,8 @@ from sqlalchemy.orm import joinedload, selectinload
 
 from gametheca import db
 from gametheca.models import Game
+from gametheca.utils.browser_player import browser_play_href
+from gametheca.utils.play_url import browse_play_fields
 from gametheca.utils.title_grouping import TITLE_KEY_PATTERN
 
 # Imported, not restated. The browse grid groups tiles with the same key
@@ -60,8 +62,6 @@ def _edition_play(game) -> dict:
     own URL here — same query shape as the one webretro is handed from the
     tile, with the core swapped.
     """
-    from gametheca.utils.play_url import browse_play_fields
-
     fields = browse_play_fields(game)
     platform_key = fields.get('library_platform') or ''
     cores = list(fields.get('emulator_cores') or [])
@@ -69,14 +69,14 @@ def _edition_play(game) -> dict:
 
     launchers = []
     for core in cores:
-        suffix = f'&platform={platform_key}' if platform_key else ''
         launchers.append({
             'core': core,
             'label': _core_label(core),
             'is_default': core == default_core,
-            'play_url': (
-                f'/static/vendor/webretro/webretro.html'
-                f'?guid={game.uuid}&core={core}{suffix}'
+            'play_url': browser_play_href(
+                game_uuid=str(game.uuid),
+                core=core,
+                platform_key=platform_key or None,
             ),
         })
 

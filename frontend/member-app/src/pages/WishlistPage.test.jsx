@@ -179,7 +179,14 @@ test('new chrome moves the request form and the librarian toggle into bar two', 
   // A permanently open request form above the list is furniture, not an action.
   expect(screen.queryByPlaceholderText('Game title')).toBeNull()
 
-  await user.click(screen.getByRole('button', { name: /Request a title/ }))
+  const request = screen.getByRole('button', { name: 'Request a title' })
+  // Fused with My requests / Everyone’s — Library Apply/Clear shape, not a
+  // lone starred pill beside a separate segment strip.
+  expect(request.closest('.gt-cbtn-group')).toBeTruthy()
+  expect(request.className).toContain('gt-cbtn--primary')
+  expect(request.querySelector('svg')).toBeNull()
+
+  await user.click(request)
   expect(screen.getByPlaceholderText('Game title')).toBeInTheDocument()
 })
 
@@ -194,6 +201,9 @@ test('the librarian scope toggle stays a real toggle after the move', async () =
 
   const toggle = screen.getByRole('button', { name: /Everyone/ })
   expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  expect(toggle.closest('.gt-cbtn-group')).toContainElement(
+    screen.getByRole('button', { name: 'Request a title' }),
+  )
   await user.click(toggle)
   expect(toggle).toHaveAttribute('aria-pressed', 'true')
 })

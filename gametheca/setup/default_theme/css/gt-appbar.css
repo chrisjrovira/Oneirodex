@@ -151,6 +151,27 @@
   white-space: nowrap;
 }
 
+/* Summary that doubles as a filters trigger (Discover "N rows"): keep the
+   muted count look, not a second boxed Rows button beside the tile slider. */
+.gt-cbtn.gt-contextbar__count {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  min-height: 0;
+  padding: 0.2rem 0.35rem;
+  font-size: var(--gt-font-xs);
+  color: var(--gt-text-muted);
+  gap: 0.35rem;
+}
+
+.gt-cbtn.gt-contextbar__count:hover:not(:disabled):not([aria-disabled='true']),
+.gt-cbtn.gt-contextbar__count.is-on,
+.gt-cbtn.gt-contextbar__count[aria-expanded='true'] {
+  border: 0;
+  color: var(--gt-text);
+  background: color-mix(in srgb, var(--gt-text) 8%, transparent);
+}
+
 /* ---------- segmented control (sibling views) ---------- */
 
 .gt-seg {
@@ -460,19 +481,24 @@
   gap: 0;
 }
 
-.gt-cbtn-group > .gt-cbtn {
+/* Direct `.gt-cbtn` or a Popover wrapper (`.gt-pop > .gt-cbtn`) — Wishlist
+   fuses view toggles with a Request popover trigger in one outline. */
+.gt-cbtn-group > .gt-cbtn,
+.gt-cbtn-group > .gt-pop > .gt-cbtn {
   border-radius: 0;
   /* The button to the right owns the shared edge, so only one is painted. */
   margin-inline-start: -1px;
 }
 
-.gt-cbtn-group > .gt-cbtn:first-child {
+.gt-cbtn-group > .gt-cbtn:first-child,
+.gt-cbtn-group > .gt-pop:first-child > .gt-cbtn {
   margin-inline-start: 0;
   border-start-start-radius: var(--gt-radius-sm);
   border-end-start-radius: var(--gt-radius-sm);
 }
 
-.gt-cbtn-group > .gt-cbtn:last-child {
+.gt-cbtn-group > .gt-cbtn:last-child,
+.gt-cbtn-group > .gt-pop:last-child > .gt-cbtn {
   border-start-end-radius: var(--gt-radius-sm);
   border-end-end-radius: var(--gt-radius-sm);
 }
@@ -482,7 +508,11 @@
 .gt-cbtn-group > .gt-cbtn:hover,
 .gt-cbtn-group > .gt-cbtn:focus-visible,
 .gt-cbtn-group > .gt-cbtn.is-on,
-.gt-cbtn-group > .gt-cbtn--primary {
+.gt-cbtn-group > .gt-cbtn--primary,
+.gt-cbtn-group > .gt-pop > .gt-cbtn:hover,
+.gt-cbtn-group > .gt-pop > .gt-cbtn:focus-visible,
+.gt-cbtn-group > .gt-pop > .gt-cbtn.is-on,
+.gt-cbtn-group > .gt-pop > .gt-cbtn--primary {
   position: relative;
   z-index: 1;
 }
@@ -494,8 +524,13 @@
   width: 100%;
 }
 
-.gt-cbtn-group--fill > .gt-cbtn {
+.gt-cbtn-group--fill > .gt-cbtn,
+.gt-cbtn-group--fill > .gt-pop {
   flex: 1 1 0;
+}
+
+.gt-cbtn-group--fill > .gt-pop > .gt-cbtn {
+  width: 100%;
 }
 
 /* Hamburger + Filters sit next to each other; they are not one outlined

@@ -50,12 +50,16 @@ test('renders ownership summary after loading', async () => {
 
   expect(screen.getByText('Loading ownership status…')).toBeInTheDocument()
 
-  expect(await screen.findByText(/12 synced · 5 matched to library/)).toBeInTheDocument()
-  expect(screen.getByText(/Steam: connected · 10 titles · 4 matched/)).toBeInTheDocument()
-  expect(screen.getByText(/GOG: not connected · 2 titles · 1 matched/)).toBeInTheDocument()
-  expect(screen.getByText('Steam API key configured')).toBeInTheDocument()
+  expect(await screen.findByText(/12 synced · 5 matched/)).toBeInTheDocument()
+  const storeRows = screen.getAllByRole('listitem')
+  const steamRow = storeRows.find((row) => /Steam/.test(row.textContent || ''))
+  const gogRow = storeRows.find((row) => /^GOG/.test((row.textContent || '').trim()) || /\bGOG\b/.test(row.textContent || ''))
+  expect(steamRow).toHaveTextContent(/connected/)
+  expect(steamRow).toHaveTextContent(/10 titles · 4 matched/)
+  expect(gogRow).toHaveTextContent(/not connected/)
+  expect(gogRow).toHaveTextContent(/2 titles · 1 matched/)
   expect(
-    screen.getByText(/GOG \/ Epic \/ Amazon: live register when a token is saved/),
+    screen.getByText(/Steam API key configured.*GOG \/ Epic \/ Amazon: live register/),
   ).toBeInTheDocument()
   expect(global.fetch).toHaveBeenCalledWith(
     '/api/ownership',

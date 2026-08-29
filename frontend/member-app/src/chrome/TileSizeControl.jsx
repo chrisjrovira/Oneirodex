@@ -113,7 +113,7 @@ export function TileSizeControl({
   const displayPercent = Math.round(percent)
 
   return (
-    <div className="gt-tile-size" role="group" aria-label="Library tile size">
+    <div className="gt-tile-size" role="group" aria-label="Game Catalog tile size">
       {/* The resting affordance. The slider collapses to nothing until you are
           on it, so without this the control would be an invisible gap in the
           bar — you cannot hover what you cannot see. Drawn in CSS as a 2x2 dot
@@ -133,7 +133,7 @@ export function TileSizeControl({
         aria-valuemax={TILE_PERCENT_MAX}
         aria-valuenow={displayPercent}
         aria-valuetext={`${displayPercent} percent`}
-        aria-label="Library tile size percent"
+        aria-label="Game Catalog tile size percent"
         onChange={(event) => handleChange(Number(event.target.value))}
       />
     </div>

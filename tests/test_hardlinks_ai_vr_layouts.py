@@ -6,11 +6,13 @@ from uuid import uuid4
 
 import pytest
 from flask_login import login_user
+from sqlalchemy import select
 
-from gametheca.models import Game, Library, User
+from gametheca.models import Game, Library, PlayerPerspective, User
 from gametheca.platform import LibraryPlatform
 from gametheca.utils.detail_layouts import DEFAULT_SECTIONS, merge_with_defaults, validate_layout_payload
 from gametheca.utils.hardlinks import apply_hardlink, preview_hardlink
+from gametheca.utils.secondary_scrapers import VR_PERSPECTIVE_NAME
 
 
 @pytest.fixture
@@ -151,22 +153,39 @@ def test_vr_catalog_flag_on(client, app, admin, db_session, tmp_path):
     _login(client, app, admin)
     app.config['ENABLE_VR_BROWSE'] = True
     unique = f'VR Game {uuid4().hex[:8]}'
+    plain = f'Flat Game {uuid4().hex[:8]}'
     lib = Library(name=f'VRLib_{uuid4().hex[:6]}', platform=LibraryPlatform.PCWIN)
     db_session.add(lib)
     db_session.flush()
+    vr_perspective = db_session.execute(
+        select(PlayerPerspective).filter_by(name=VR_PERSPECTIVE_NAME).limit(1),
+    ).scalars().first()
+    if vr_perspective is None:
+        vr_perspective = PlayerPerspective(name=VR_PERSPECTIVE_NAME)
+        db_session.add(vr_perspective)
+        db_session.flush()
     game = Game(
         uuid=str(uuid4()),
         name=unique,
         library_uuid=lib.uuid,
         full_disk_path=str(tmp_path / 'g'),
     )
-    db_session.add(game)
+    other = Game(
+        uuid=str(uuid4()),
+        name=plain,
+        library_uuid=lib.uuid,
+        full_disk_path=str(tmp_path / 'h'),
+    )
+    game.player_perspectives.append(vr_perspective)
+    db_session.add_all([game, other])
     db_session.commit()
     detail = client.get(f'/api/vr/games/{game.uuid}')
     assert detail.status_code == 200
     assert detail.get_json()['name'] == unique
+    assert client.get(f'/api/vr/games/{other.uuid}').status_code == 404
     resp = client.get('/api/vr/catalog?per_page=100')
     assert resp.status_code == 200
     body = resp.get_json()
-    assert body['total'] >= 1
-    assert any(g['uuid'] == game.uuid for g in body['games']) or body['total'] > len(body['games'])
+    uuids = {g['uuid'] for g in body['games']}
+    assert game.uuid in uuids
+    assert other.uuid not in uuids

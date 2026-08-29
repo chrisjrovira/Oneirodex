@@ -128,6 +128,46 @@ test('shows Cheats panel only when cheat_surface is retroarch', async () => {
   expect(playLinks[0]).toHaveAttribute('href', expect.stringContaining('cheat_surface=retroarch'))
 })
 
+test('Play link keeps the Nostalgist NES host from play_url', async () => {
+  global.fetch = vi.fn((url) => {
+    if (String(url).includes('/details')) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ...detailsPayload,
+            library_platform: 'NES',
+            library_platform_label: 'NES',
+            can_play_in_browser: true,
+            play_url:
+              '/static/vendor/nostalgist/play.html?guid=11111111-1111-4111-8111-111111111111&core=nestopia&platform=NES',
+            emulator_core: 'nestopia',
+            emulator_cores: ['nestopia', 'fceumm'],
+          }),
+      })
+    }
+    if (String(url).includes('/versions')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ versions: [] }),
+      })
+    }
+    if (String(url).includes('/cheats')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ game_uuid: detailsPayload.uuid, cheats: [] }),
+      })
+    }
+    return Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) })
+  })
+
+  renderDetails()
+  const play = await screen.findByRole('link', { name: /Play in browser/i })
+  expect(play.getAttribute('href')).toContain('/static/vendor/nostalgist/play.html')
+  expect(play.getAttribute('href')).toContain('core=nestopia')
+  expect(play.getAttribute('href')).not.toContain('webretro.html')
+})
+
 test('shows disc chips on details, not as a tile badge', async () => {
   global.fetch = vi.fn((url) => {
     if (String(url).includes('/details')) {

@@ -49,13 +49,14 @@ browse / details Play
         └─► Sidecar C: webЯcade feed item / Docker app (separate origin)
 ```
 
-### Settings (planned)
+### Settings
 
 | Setting | Scope | Values |
 |---|---|---|
-| `browser_player_default` | Admin (GlobalSettings) | `webretro` · `emulatorjs` |
-| `browser_player_allow_member_choice` | Admin | bool |
-| `browser_player_preference` | Member prefs | `webretro` · `emulatorjs` · `default` |
+| `browser_player_default` | Admin (GlobalSettings) | `webretro` only until EmulatorJS ships |
+| `browser_player_allow_member_choice` | Admin | bool (no UI yet; ignored until two engines ship) |
+| `nostalgist_nes_pilot` | Admin | bool — **landed**, default **off**. NES `play_url` → `/static/vendor/nostalgist/play.html` |
+| `browser_player_preference` | Member prefs | planned: `webretro` · `emulatorjs` · `default` |
 | `webrcade_sidecar_url` | Admin | empty = off; else base URL of private webЯcade |
 | `webrcade_feed_export` | Admin | bool — expose generated feed for that instance |
 
@@ -97,7 +98,7 @@ Honesty badges stay per-platform × **capability**, not per-engine marketing. If
 | Wave | Deliverable |
 |---|---|
 | **BP-0** | **Landed 2026-08-28.** This note + `GET`/`PUT /api/browser-player-settings` + `browser_player` / `browser_players_available` on every play payload. Default and available list are `webretro` only — EmulatorJS is a recognized name but rejected as default until that shell ships. |
-| **BP-1** | Nostalgist launch path for one pilot system (NES) behind flag; parity with WebRetro saves/BIOS |
+| **BP-1** | **Landed 2026-08-28 (scaffold).** Vendored `nostalgist@0.21.1` + `play.html`. Flag `nostalgist_nes_pilot` (default **off**) under `settings.browser_player` swaps NES `play_url` to `/static/vendor/nostalgist/play.html` using WebRetro `nestopia` WASM + `/api/downloadrom`. Save-bridge / rooms / EmulatorJS still WebRetro-only. |
 | **BP-2** | EmulatorJS shell for the same pilot; admin default + member choice |
 | **BP-3** | Expand matrix; koin.js optional React chrome |
 | **BP-4** | webЯcade feed export + sidecar runbook |

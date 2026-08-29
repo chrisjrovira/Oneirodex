@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TrailersPage } from './TrailersPage'
 import * as trailersApi from '../api/trailers'
@@ -60,11 +60,12 @@ test('shows the no-results state when nothing matches', async () => {
     await screen.findByText('No games with trailers found matching your filters'),
   ).toBeInTheDocument()
   expect(screen.queryByTitle('Game trailer')).not.toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Go to Library' })).toBeInTheDocument()
+  // Empty copy only — no admin “Add games” / Library CTA (Wishlist/Collections rhythm).
+  expect(screen.queryByRole('link', { name: /library/i })).not.toBeInTheDocument()
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
 })
 
-test('shows structured empty + CTA for Backend no_trailers contract', async () => {
+test('shows structured empty for Backend no_trailers contract without a CTA', async () => {
   trailersApi.fetchRandomTrailer.mockResolvedValue({
     has_videos: false,
     empty: true,
@@ -77,7 +78,7 @@ test('shows structured empty + CTA for Backend no_trailers contract', async () =
 
   expect(await screen.findByText('No trailers in your library yet.')).toBeInTheDocument()
   expect(screen.getByRole('status')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Browse Library' })).toHaveAttribute('href', '/library')
+  expect(screen.queryByRole('link', { name: /Browse Library/i })).not.toBeInTheDocument()
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   expect(screen.queryByText(/unable to load/i)).not.toBeInTheDocument()
 })
@@ -236,6 +237,24 @@ test('trailers shows exactly one Filters control under the new chrome', async ()
 
   await screen.findByRole('button', { name: /^filters$/i })
   expect(screen.getAllByRole('button', { name: /^filters$/i })).toHaveLength(1)
+})
+
+test('new chrome fuses Filters, Another one, and More into one cluster', async () => {
+  trailersApi.fetchRandomTrailer.mockResolvedValue({
+    has_videos: true,
+    game_uuid: 'game-uuid-1',
+    game_name: 'Doom',
+    video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0',
+  })
+
+  const { container } = render(<TrailersPage shellConfig={{ enableNewChrome: true }} />)
+  await screen.findByRole('button', { name: /^filters$/i })
+
+  const group = container.querySelector('.gt-cbtn-group')
+  expect(group).toBeTruthy()
+  expect(within(group).getByRole('button', { name: /^filters$/i })).toBeInTheDocument()
+  expect(within(group).getByRole('button', { name: 'Another one' })).toBeInTheDocument()
+  expect(within(group).getByRole('button', { name: /^more$/i })).toBeInTheDocument()
 })
 
 test('trailers keeps its own Filters toggle on the old chrome', async () => {

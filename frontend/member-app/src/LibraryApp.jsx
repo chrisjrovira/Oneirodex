@@ -675,7 +675,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
           activeView={activeView}
           onSelectView={selectKindView}
           filterCount={activeFilterCount}
-          filters={({ close }) => (
+          filters={() => (
             <div className="library-filters-stack">
               <FilterBar
                 filters={filters}
@@ -684,7 +684,6 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
                 onClear={clearFilters}
                 t={t}
                 hideKind
-                onDone={close}
               />
             </div>
           )}

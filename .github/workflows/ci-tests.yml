@@ -131,6 +131,8 @@ jobs:
           tests/test_wave2c_support_news_notifications.py
           tests/test_wave2a_details_media.py
           tests/test_updates_scan_and_shelves.py
+          tests/test_browser_player.py
+          tests/test_nostalgist_pilot.py
 
       # UID-018 ratchet. The envelope helper landed with two files migrated and
       # the problem then grew from ~699 call sites to 1194 — new routes reached

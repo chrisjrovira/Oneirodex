@@ -95,6 +95,31 @@
   padding: var(--gt-stack) var(--gt-gutter) var(--gt-section-gap);
 }
 
+/* Library (and any page with the cover grid): centred hover scale needs paint
+   room inside this scrollport on every side. Vertical bleed uses cover height
+   (3:4); horizontal uses tile width — badges and platform chips live on the
+   cover corners, so a short side pad clips those labels on the edge columns.
+   Virtual rows cannot take this padding themselves (absolute, padding edge). */
+.gt-shell__main:has([data-library-grid]),
+.gt-shell > #content:has([data-library-grid]) {
+  --gt-tile-hover-bleed-y: calc(
+    var(--gt-tile-min, 180px) * 4 / 3 * (var(--gt-tile-hover-scale, 1.25) - 1) / 2
+  );
+  --gt-tile-hover-bleed-x: calc(
+    var(--gt-tile-min, 180px) * (var(--gt-tile-hover-scale, 1.25) - 1) / 2
+  );
+  padding-block-start: max(var(--gt-stack), var(--gt-tile-hover-bleed-y));
+  padding-inline: max(var(--gt-gutter), var(--gt-tile-hover-bleed-x));
+}
+
+/* News owns the remaining pane: lists scroll inside panels, the shell does not. */
+.gt-shell__main:has(.gt-news--fill),
+.gt-shell > #content:has(.gt-news--fill) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 /* sidebar.css still ships `#content { margin-left: 180px }` for the retired
    layout, and base.html still loads it. Inside the shell the grid owns
    placement, so that offset has to go or every Jinja page sits 180px right of

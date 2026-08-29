@@ -95,7 +95,7 @@ test('filters fall back in place when no rail slot exists', async () => {
   expect(container.querySelector('.library-layout')).not.toBeNull()
   expect(container.querySelector('.library-layout__main')).not.toBeNull()
   expect(screen.queryByRole('button', { name: 'VR' })).toBeNull()
-  expect(screen.getByRole('button', { name: 'UPDATE' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Update' })).toBeInTheDocument()
 
   vi.unstubAllGlobals()
 })

@@ -47,6 +47,7 @@ test('Art studio tabs switch Studio and Pick & queue', async () => {
   global.fetch = mockFetch({
     '/admin/api/image_queue_list': { images: [], pagination: {} },
     '/admin/api/art-studio/stock': { items: [] },
+    '/admin/api/art-studio/system-marks': { items: [], count: 0 },
     '/api/get_libraries': [],
     '/api/library_platforms': [],
     '/api/health/library': { worst: [] },
@@ -65,6 +66,13 @@ test('Art studio tabs switch Studio and Pick & queue', async () => {
     expect(screen.getByRole('button', { name: /400×600/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /Library default covers/i })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /Backup & stock/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /System marks/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: /System marks/i }))
+    await waitFor(() => {
+      expect(screen.getByTestId('system-marks-panel')).toBeInTheDocument()
+    })
+    expect(screen.getByRole('heading', { name: /Systems hub marks/i })).toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: /Pick & queue/i }))
     await waitFor(() => {

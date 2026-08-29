@@ -12,7 +12,7 @@ export const PRIMARY_GROUP = { id: 'gametheca', label: 'Oneirodex' }
 export function getPrimaryLinks() {
   return [
     { id: 'discover', to: '/discover', label: 'Discover' },
-    { id: 'library', to: '/library', label: 'Library' },
+    { id: 'library', to: '/library', label: 'Game Catalog' },
     { id: 'systems', to: '/systems', label: 'Systems' },
     { id: 'downloads', to: '/downloads', label: 'Downloads' },
     { id: 'favorites', to: '/favorites', label: 'Favorites' },
@@ -71,7 +71,7 @@ export function getMoreLinks({ showTrailers, showHelp, enableVr, enableActivity 
 export function getMoreGroups(options = {}) {
   const byId = new Map(getMoreLinks(options).map((link) => [link.id, link]))
   const groups = [
-    { id: 'library', label: 'Library', ids: ['collections', 'wishlist', 'updates', 'acquire', 'ownership', 'calendar'] },
+    { id: 'library', label: 'Game Catalog', ids: ['collections', 'wishlist', 'updates', 'acquire', 'ownership', 'calendar'] },
     { id: 'social', label: 'Social', ids: ['friends', 'chat', 'notifications', 'activity', 'news'] },
     { id: 'play', label: 'Play', ids: ['big-picture', 'playtime', 'vr', 'trailers'] },
     { id: 'support', label: 'Support', ids: ['report', 'help'] },
@@ -121,7 +121,7 @@ export function hasTileSizeControl(pathname) {
 
 const SECTION_HOME = {
   '/discover': { to: '/discover', label: 'Home' },
-  '/library': { to: '/library', label: 'Library home' },
+  '/library': { to: '/library', label: 'Game Catalog home' },
   '/systems': { to: '/systems', label: 'Systems home' },
   '/downloads': { to: '/downloads', label: 'Downloads' },
   '/favorites': { to: '/favorites', label: 'Favorites' },

@@ -360,3 +360,22 @@ html[data-era='desk'],
     animation: none !important;
   }
 }
+
+/* After member-app.css (see base_empty.html). Beats GameGrid.css edge-pinned
+   hover origins in the SPA bundle so enlarge stays centred on the resting box.
+   First/last-column selectors must match the bundle's higher-specificity
+   edge pins or those tiles still grow from a corner. */
+.game-library-row .game-card:hover,
+.game-library-row .game-card:has(:focus-visible),
+.game-library-container[data-library-grid] .game-card:hover,
+.game-library-container[data-library-grid] .game-card:has(:focus-visible),
+.game-library-row > .game-card-container:first-child .game-card:hover,
+.game-library-row > .game-card-container:first-child .game-card:has(:focus-visible),
+.game-library-container[data-library-grid] > .game-card-container:first-child .game-card:hover,
+.game-library-container[data-library-grid] > .game-card-container:first-child .game-card:has(:focus-visible),
+.game-library-row > .game-card-container:last-child .game-card:hover,
+.game-library-row > .game-card-container:last-child .game-card:has(:focus-visible),
+.game-library-container[data-library-grid] > .game-card-container:last-child .game-card:hover,
+.game-library-container[data-library-grid] > .game-card-container:last-child .game-card:has(:focus-visible) {
+  transform-origin: center center;
+}

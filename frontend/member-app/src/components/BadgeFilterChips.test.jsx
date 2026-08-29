@@ -30,7 +30,7 @@ test('toggleBadgeFilter sets and clears param', () => {
   expect(applied[1]).toEqual({ sort_by: 'name' })
 })
 
-test('BadgeFilterChips omits VR / OUT/~ / RELEASE and toggles UPDATE / LANG', async () => {
+test('BadgeFilterChips omits VR / OUT/~ / RELEASE and toggles Update / Lang', async () => {
   const user = userEvent.setup()
   const applied = []
   const filters = { sort_by: 'name' }
@@ -55,9 +55,9 @@ test('BadgeFilterChips omits VR / OUT/~ / RELEASE and toggles UPDATE / LANG', as
   expect(screen.queryByRole('button', { name: 'VR' })).toBeNull()
   expect(screen.queryByRole('button', { name: 'OUT/~' })).toBeNull()
   expect(screen.queryByRole('button', { name: 'RELEASE' })).toBeNull()
-  expect(screen.getByRole('button', { name: 'MISSING' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Missing' })).toBeInTheDocument()
 
-  await user.click(screen.getByRole('button', { name: 'UPDATE' }))
+  await user.click(screen.getByRole('button', { name: 'Update' }))
   expect(applied[0]).toEqual({ sort_by: 'name', has_updates: '1' })
 
   rerender(
@@ -67,9 +67,9 @@ test('BadgeFilterChips omits VR / OUT/~ / RELEASE and toggles UPDATE / LANG', as
       cleanFilters={cleanFilters}
     />,
   )
-  expect(screen.getByRole('button', { name: 'UPDATE' })).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByRole('button', { name: 'Update' })).toHaveAttribute('aria-pressed', 'true')
 
-  await user.click(screen.getByRole('button', { name: 'LANG' }))
+  await user.click(screen.getByRole('button', { name: 'Lang' }))
   expect(applied[1]).toEqual({
     sort_by: 'name',
     has_updates: '1',

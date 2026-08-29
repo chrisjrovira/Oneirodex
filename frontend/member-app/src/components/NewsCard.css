@@ -1,22 +1,13 @@
-/* News tiles sit in the same shelf rhythm as game tiles, but carry type rather
-   than art — an announcement has no cover to show. */
+/* Discover news tiles: cover fills the art frame; badge + date overlay the
+   image; the title captions under it like a game tile. */
 
-/* One size, always.
- *
- * `min-height` meant a news tile was as tall as its content: a card with art
- * plus a four-line summary ran well past one with a bare headline, so the row
- * had tiles of three different heights sitting on one baseline. The shelf item
- * is a fixed box now (see .gt-shelf__item), so the card fills it exactly and
- * the parts inside it absorb the difference instead — the summary clamps, the
- * date is pinned to the bottom, and the art is the piece that gives way when
- * there is not enough room. */
 .gt-news-card {
   display: flex;
   flex-direction: column;
   gap: var(--gt-space-2, 0.5rem);
   height: 100%;
   min-height: var(--gt-tile-h, 280px);
-  padding: var(--gt-space-3, 0.75rem);
+  padding: 0;
   border: 1px solid var(--gt-border);
   border-radius: var(--gt-radius-lg, 10px);
   background: var(--gt-surface);
@@ -35,65 +26,83 @@
   outline-offset: 2px;
 }
 
-/* `flex-shrink` on purpose: when a long headline needs the room, the art gives
-   it up rather than pushing the date out of the tile. `min-height: 0` is what
-   lets a flex item shrink below its content size at all. */
-.gt-news-card__art {
-  width: 100%;
-  aspect-ratio: 16 / 9;
+.gt-news-card__art-wrap {
+  position: relative;
+  flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
+}
+
+.gt-news-card__art {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+}
+
+.gt-news-card__art--empty {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 8rem;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--gt-accent) 14%, transparent),
+      transparent 60%
+    ),
+    color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
+}
+
+.gt-news-card__badge,
+.gt-news-card__when {
+  position: absolute;
+  bottom: 0.4rem;
+  z-index: 1;
+  font-size: var(--gt-font-xs, 0.75rem);
+  font-weight: 650;
+  line-height: 1.2;
+  padding: 0.15rem 0.4rem;
   border-radius: var(--gt-radius-sm, 6px);
+  color: var(--gt-text);
+  background: color-mix(in srgb, var(--gt-bg) 72%, transparent);
+  backdrop-filter: blur(4px);
+  max-width: calc(50% - 0.5rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gt-news-card__badge {
-  align-self: flex-start;
-  font-size: var(--gt-font-xs, 0.75rem);
-  font-weight: 600;
+  left: 0.4rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--gt-radius-sm, 6px);
-  border: 1px solid var(--gt-border);
-  color: var(--gt-text-muted);
 }
 
 .gt-news-card__badge[data-kind='free_game'] {
   color: var(--gt-accent);
-  border-color: var(--gt-accent);
+  border: 1px solid color-mix(in srgb, var(--gt-accent) 55%, transparent);
+}
+
+.gt-news-card__when {
+  right: 0.4rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--gt-text) 92%, transparent);
 }
 
 .gt-news-card__title {
-  font-size: var(--gt-font-md, 1rem);
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 var(--gt-space-2, 0.5rem) var(--gt-space-2, 0.5rem);
+  font-size: var(--gt-font-sm, 0.875rem);
   font-weight: 600;
   line-height: 1.25;
-  /* Two lines, then ellipsis: a long announcement title must not push the
-     summary and date out of a fixed-height tile. */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-/* The elastic part: it takes whatever the art and headline leave and clamps to
-   it, so two tiles with very different amounts to say still end on the same
-   line. `line-clamp` is the ceiling, `flex` is the floor. */
-.gt-news-card__summary {
-  flex: 1 1 auto;
-  min-height: 0;
-  font-size: var(--gt-font-sm, 0.875rem);
-  color: var(--gt-text-muted);
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.gt-news-card__when {
-  margin-block-start: auto;
-  font-size: var(--gt-font-xs, 0.75rem);
-  color: var(--gt-text-muted);
+  min-height: calc(2 * 1.25em);
 }

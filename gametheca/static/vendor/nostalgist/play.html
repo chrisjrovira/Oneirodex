@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oneirodex · Nostalgist (NES pilot)</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; height: 100%; background: #0b0f14; color: #e8edf5; font: 14px/1.4 system-ui, sans-serif; }
+    #bar { display: flex; gap: 12px; align-items: center; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    #bar a { color: #9ecbff; text-decoration: none; }
+    #status { color: #9aa7b8; }
+    #stage { position: absolute; inset: 48px 0 0 0; display: grid; place-items: center; }
+    #canvas { width: min(96vw, 960px); height: auto; image-rendering: pixelated; background: #000; }
+    #err { color: #ffb4b4; white-space: pre-wrap; max-width: 40rem; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <div id="bar">
+    <a href="/library">← Game Catalog</a>
+    <strong>Nostalgist NES pilot</strong>
+    <span id="status">Starting…</span>
+  </div>
+  <div id="stage">
+    <canvas id="canvas"></canvas>
+    <div id="err" hidden></div>
+  </div>
+  <script src="./nostalgist.umd.js"></script>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var guid = params.get('guid') || '';
+      var core = params.get('core') || 'nestopia';
+      var statusEl = document.getElementById('status');
+      var errEl = document.getElementById('err');
+      var canvas = document.getElementById('canvas');
+
+      function fail(msg) {
+        statusEl.textContent = 'Failed';
+        errEl.hidden = false;
+        errEl.textContent = msg;
+        canvas.hidden = true;
+      }
+
+      if (!guid) {
+        fail('Missing guid query parameter.');
+        return;
+      }
+      if (typeof Nostalgist === 'undefined' || !Nostalgist.launch) {
+        fail('Nostalgist UMD failed to load.');
+        return;
+      }
+
+      statusEl.textContent = 'Loading ' + core + '…';
+      // Absolute same-origin ROM URL: Nostalgist otherwise treats relative
+      // names as CDN sample ROMs. Cores stay on this box (WebRetro WASM).
+      var romUrl = new URL(
+        '/api/downloadrom/' + encodeURIComponent(guid),
+        window.location.origin
+      ).href;
+      Nostalgist.launch({
+        core: core,
+        rom: romUrl,
+        element: canvas,
+        resolveCoreJs: function (name) {
+          return '/static/vendor/webretro/cores/' + name + '_libretro.js';
+        },
+        resolveCoreWasm: function (name) {
+          return '/static/vendor/webretro/cores/' + name + '_libretro.wasm';
+        },
+        resolveRom: function (file) {
+          return file;
+        },
+        resolveBios: function (file) {
+          return file;
+        },
+      }).then(function () {
+        statusEl.textContent = 'Playing · ' + core;
+      }).catch(function (err) {
+        fail((err && err.message) ? err.message : String(err));
+      });
+    })();
+  </script>
+</body>
+</html>

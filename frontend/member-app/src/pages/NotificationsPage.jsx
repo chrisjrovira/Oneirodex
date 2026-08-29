@@ -203,57 +203,68 @@ export function NotificationsPage({ shellConfig = {} }) {
         </div>
       )}
 
-      {prefs ? (
-        <details
-          className="gt-notifications__prefs"
-          open={prefsOpen}
-          onToggle={(e) => setPrefsOpen(e.currentTarget.open)}
-        >
-          <summary>Preferences</summary>
-          <ul className="gt-notifications__pref-list">
-            {PREF_ROWS.map(([key, label, kind]) => (
-              <li key={key}>
-                <label className="gt-notifications__pref">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(prefs[key])}
-                    onChange={() => void togglePref(key)}
-                  />
-                  <span>
-                    <strong>{label}</strong>
-                    <span className="gt-notifications__pref-kind">{kind}</span>
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
-          <p className="gt-notifications__pref-note">
-            Email options need SMTP configured by an admin. Activity sharing is
-            limited to accepted friends and is never server-wide.
-          </p>
-        </details>
-      ) : null}
-
       <section className="gt-notifications__inbox" aria-labelledby="notifications-inbox-heading">
-        {/* Mark all read sits on the Inbox heading row, not in the top bar
-            (W28). It acts on the list directly below it, and the bar is where
-            controls that act on the *page* live — so up there it was a long
-            reach from the thing it changes, and it was the only page action in
-            the bar competing with the view segments. On the heading row it
-            reads as part of the list it empties. */}
+        {/* Inbox row owns list-scoped chrome: Preferences (inline expand) and
+            Mark all read. Preferences used to be a full-width fold above the
+            list — too much vertical chrome for a settings toggle. */}
         <div className="gt-notifications__inbox-head">
           <h2 className="gt-notifications__section-title" id="notifications-inbox-heading">
             Inbox
           </h2>
-          <button
-            type="button"
-            className="gt-btn gt-btn--ghost gt-btn--sm gt-notifications__mark-all"
-            disabled={busy || unread === 0}
-            onClick={() => void markAll()}
-          >
-            Mark all read
-          </button>
+          <div className="gt-notifications__inbox-actions">
+            {prefs ? (
+              <button
+                type="button"
+                className={`gt-btn gt-btn--ghost gt-btn--sm gt-notifications__prefs-toggle${
+                  prefsOpen ? ' is-on' : ''
+                }`}
+                aria-expanded={prefsOpen}
+                aria-controls="notifications-prefs"
+                onClick={() => setPrefsOpen((open) => !open)}
+              >
+                Preferences
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="gt-btn gt-btn--ghost gt-btn--sm gt-notifications__mark-all"
+              disabled={busy || unread === 0}
+              onClick={() => void markAll()}
+            >
+              Mark all read
+            </button>
+          </div>
         </div>
+        {prefs && prefsOpen ? (
+          <div
+            id="notifications-prefs"
+            className="gt-notifications__prefs"
+            role="region"
+            aria-label="Notification preferences"
+          >
+            <ul className="gt-notifications__pref-list">
+              {PREF_ROWS.map(([key, label, kind]) => (
+                <li key={key}>
+                  <label className="gt-notifications__pref">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(prefs[key])}
+                      onChange={() => void togglePref(key)}
+                    />
+                    <span className="gt-notifications__pref-text">
+                      <strong>{label}</strong>
+                      <span className="gt-notifications__pref-kind">{kind}</span>
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <p className="gt-notifications__pref-note">
+              Email options need SMTP configured by an admin. Activity sharing is
+              limited to accepted friends and is never server-wide.
+            </p>
+          </div>
+        ) : null}
         {visible.length === 0 ? (
           <p className="gt-more-page__lede">
             {filter === 'archive'

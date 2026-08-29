@@ -105,6 +105,8 @@ export function Popover({
   children,
   align = 'end',
   chromeless = false,
+  /** Extra classes on the trigger — e.g. count readout that opens a panel. */
+  triggerClassName = '',
 }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef(null)
@@ -115,13 +117,20 @@ export function Popover({
   useDismiss(open, close, [triggerRef, panelRef])
 
   const active = count > 0
+  const triggerClass = [
+    'gt-cbtn',
+    active ? 'is-on' : '',
+    triggerClassName,
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <div className="gt-pop" data-align={align}>
       <button
         type="button"
         ref={triggerRef}
-        className={`gt-cbtn${active ? ' is-on' : ''}`}
+        className={triggerClass}
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-controls={open ? panelId : undefined}
@@ -162,6 +171,13 @@ export function ContextBar({
   title = null,
   filters = null,
   filterCount = 0,
+  /** Lead-slot popover label. Defaults to Filters. */
+  filtersLabel = null,
+  /**
+   * Open filters from the trail summary ("2 rows") instead of a separate lead
+   * button. Discover uses this so the bar does not say Rows twice.
+   */
+  filtersOnSummary = false,
   summary = null,
   actions = null,
   overflow = null,
@@ -224,19 +240,23 @@ export function ContextBar({
   // a box and repeated the word between them. Pages still passing a plain node
   // (Calendar, Trailers) keep the head, because it holds their only Done.
   const ownsDismiss = typeof filters === 'function'
-  const filterControl = filters ? (
-    /* Left-anchored: this trigger sits at the *left* end of the bar now, and a
-       right-anchored panel there opens over the rail — or off the window edge
-       once the rail is collapsed. */
-    <Popover
-      label={t('Filters')}
-      count={filterCount}
-      chromeless={ownsDismiss}
-      align="start"
-    >
-      {filters}
-    </Popover>
-  ) : null
+  const summaryIsFilterTrigger = Boolean(
+    filters && filtersOnSummary && summary,
+  )
+  const leadLabel = filtersLabel || t('Filters')
+  /* Lead Filters (Library): left-anchored so the panel does not open over the
+     rail. Trail summary-as-filters (Discover): end-anchored beside tile size. */
+  const filterControl =
+    filters && !summaryIsFilterTrigger ? (
+      <Popover
+        label={leadLabel}
+        count={filterCount}
+        chromeless={ownsDismiss}
+        align="start"
+      >
+        {filters}
+      </Popover>
+    ) : null
 
   const viewControl = (
     <>
@@ -251,7 +271,17 @@ export function ContextBar({
     </>
   )
 
-  const countControl = summary ? (
+  const countControl = summaryIsFilterTrigger ? (
+    <Popover
+      label={summary}
+      count={filterCount}
+      chromeless={ownsDismiss}
+      align="end"
+      triggerClassName="gt-contextbar__count"
+    >
+      {filters}
+    </Popover>
+  ) : summary ? (
     <span className="gt-contextbar__count">{summary}</span>
   ) : null
 

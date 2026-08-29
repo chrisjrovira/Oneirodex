@@ -3,7 +3,7 @@
 ## Navigation
 
 **How do I jump around quickly?**  
-**Ctrl+K** (⌘K on Mac) or the top-nav **Search** hint opens the command palette — pages, Preferences, Help, Admin. On **Library**, Ctrl+K searches **library titles** first (Search library group); Navigate / More / Account stay listed.
+**Ctrl+K** (⌘K on Mac) or the top-nav **Search** hint opens the command palette — pages, Preferences, Help, Admin. On **Game Catalog**, Ctrl+K searches **library titles** first (Search library group); Navigate / More / Account stay listed.
 
 **How do I jump to the top or bottom of a long page?**  
 When the member page is scrollable, aurora glass **Jump to top** / **Jump to bottom** controls appear (bottom-left, clear of the Friends/Chat dock). They hide on short pages that don’t scroll.
@@ -25,9 +25,9 @@ Parental ACL / library allowlists filter the library. That’s intentional. Chil
 **Where is account data stored?**  
 On the machine that runs Oneirodex (self-hosted). Operators: [privacy-data-handling.md](../admin/privacy-data-handling.md).
 
-## Library & downloads
+## Game Catalog & downloads
 
-**Library looks unstyled.**  
+**Game Catalog looks unstyled.**  
 Missing `member-app.css` — admin must rebuild the Docker image / frontend dist.
 
 **Download stuck or empty zip.**  
@@ -36,7 +36,7 @@ Confirm the game path exists on the games mount and you’re not a child blocked
 **Why is Download hidden / “Missing on disk” on a version?**  
 Game details lists installs with honest presence: a version marked **Missing on disk** (`path_missing`) is not downloadable — Download is hidden for that row. The **Default** chip marks the base install. Measured **size** shows when known. Librarians/admins can **Remove missing versions** (orphan cleanup) when stale version rows linger after files moved. See [library-and-systems.md](library-and-systems.md) · [downloads.md](downloads.md).
 
-**How many games per Library page?**  
+**How many games per Game Catalog page?**  
 Preferences → items per page: **20 / 50 / 100 / 200 / 250 / 300 / 400 / 500 / 1000**.
 
 **What are Signals chips?**  
@@ -45,14 +45,14 @@ Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params 
 **When do “N games added” toasts show?**  
 When a library scan **finishes** (or is cancelled after titles landed), not while it is still running. Watch/import still group into a short digest. Toasts are dismissible (×) on member and admin, including classic admin pages.
 
-**Can I hide the Library Filters column?**  
+**Can I hide the Game Catalog Filters column?**  
 On desktop, the chevron collapses Filters to a slim rail so covers reclaim the width (saved in the browser). On phones/narrow tablets (≤900px), Filters still open as a drawer — collapse rail does not apply.
 
 **What are Kind chips?**
 Inside Library Filters: Games · Soft titles · Emulators · Utilities — multi-select sets `item_kind` on browse (comma list; API tokens stay `experience` / `tool`). None selected = all kinds. Persist with other library filters. Tile badges stay short (**EXP** / **TOOL**) with tooltips **Soft title** / **Utility**.
 
-**Can I favorite, set play status, wishlist, or re-check freshness on many Library titles at once?**  
-Yes via Library multi-select (checkbox / long-press / Shift+click · **Select page** for visible tiles): sticky Favorite / Unfavorite / **Add to wishlist** / **Play status** / Refresh freshness / **Refresh covers** (More; librarian+ · max 20) / Clear. Batch APIs: favorite set/clear (`POST /api/games/batch/favorite`, ≤100) · play status (`POST /api/games/batch/status`, ≤100; empty status clears) · wishlist queue (`POST /api/games/batch/wishlist`, ≤50; accounts that can request) · freshness re-probe (`POST /api/games/batch/freshness/check`, ≤50) · cover refresh (`POST /api/games/batch/refresh_images`, ≤20; 202 queued). Sticky **Refresh freshness** always re-probes the selection. Only titles you can see; partial-success toasts report updated/queued/skipped/failed. Admins still use library-wide `POST /api/admin/freshness/refresh`. No DRM download queues.
+**Can I favorite, set play status, wishlist, or re-check freshness on many Game Catalog titles at once?**  
+Yes via Game Catalog multi-select (checkbox / long-press / Shift+click · **Select page** for visible tiles): sticky Favorite / Unfavorite / **Add to wishlist** / **Play status** / Refresh freshness / **Refresh covers** (More; librarian+ · max 20) / Clear. Batch APIs: favorite set/clear (`POST /api/games/batch/favorite`, ≤100) · play status (`POST /api/games/batch/status`, ≤100; empty status clears) · wishlist queue (`POST /api/games/batch/wishlist`, ≤50; accounts that can request) · freshness re-probe (`POST /api/games/batch/freshness/check`, ≤50) · cover refresh (`POST /api/games/batch/refresh_images`, ≤20; 202 queued). Sticky **Refresh freshness** always re-probes the selection. Only titles you can see; partial-success toasts report updated/queued/skipped/failed. Admins still use library-wide `POST /api/admin/freshness/refresh`. No DRM download queues.
 
 **A folder didn’t show up after a scan?**  
 Librarians triage it under Admin → Scan management → Unmatched Folders (and Dupe glance). Each Unmatched row shows a **Why unmatched?** line (and a **Name transform trail** expander when Backend sends peel steps) so they can Identify as game or Mark as Soft title / Emulator / Utility. Bare folders named **UPDATE** / **Updates** stay Unmatched with an update-package why note — they are **not** auto-marked Soft title.
@@ -72,10 +72,10 @@ Open path uses **OpenPathModal** → companion `open_path` (or clipboard fallbac
 ## Browser play
 
 **Where are pause, reset, mute, save, and rewind in the browser player?**  
-On the play bar above the screen: Pause, Reset, Mute, volume, Save, Load, Rewind, FF, Picture, and Power. Power leaves the game, same as **← Library**. **?** opens the shortcut list (F2/F3 save/load, hold Right Shift to rewind, F5 fast-forward). An overlay repeats the in-game controls on touch, or when you move the pointer over the play stage. See [browser-play.md](browser-play.md).
+On the play bar above the screen: Pause, Reset, Mute, volume, Save, Load, Rewind, FF, Picture, and Power. Power leaves the game, same as **← Game Catalog**. **?** opens the shortcut list (F2/F3 save/load, hold Right Shift to rewind, F5 fast-forward). An overlay repeats the in-game controls on touch, or when you move the pointer over the play stage. See [browser-play.md](browser-play.md).
 
 **Which systems play in the browser?**  
-NES, SNES, N64, Game Boy family, DS, Virtual Boy, PS1, the Genesis family including SG-1000, Saturn, the Atari line, Lynx, Jaguar, WonderSwan, Neo Geo Pocket / Color, Coleco, Vectrex, 3DO, Neo Geo CD, Intellivision, Channel F, and Odyssey 2. Switch, Wii, GameCube, Xbox, and arcade boards stay companion or catalog. Oneirodex never fetches BIOS. Full matrix: [browser-play.md](browser-play.md).
+NES, SNES, N64, Game Boy family, DS, Virtual Boy, PS1, the Genesis family including SG-1000, Saturn, the Atari line, Lynx, Jaguar, WonderSwan, Neo Geo Pocket / Color, Coleco, Vectrex, 3DO, Neo Geo CD, Intellivision, Channel F, and Odyssey 2. Switch, Wii, GameCube, Xbox, and arcade boards stay companion or catalog. Oneirodex never fetches BIOS. Full matrix: [browser-play.md](browser-play.md). An optional NES Nostalgist host (admin flag, off by default) does not have the play bar yet.
 
 ## Themes & icons
 

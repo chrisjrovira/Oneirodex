@@ -69,3 +69,29 @@ test('shows error retry instead of empty state when fetch fails', async () => {
   expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
   expect(screen.queryByText(/No library platforms yet/i)).not.toBeInTheDocument()
 })
+
+test('prefers themed system-mark WebP for the active data-theme', async () => {
+  document.documentElement.setAttribute('data-theme', 'aurora')
+  mockFetch([
+    {
+      id: 'NES',
+      value: 'NES',
+      name: 'Nintendo Entertainment System (NES)',
+      game_count: 3,
+    },
+  ])
+
+  try {
+    const { container } = render(
+      <MemoryRouter>
+        <SystemsPage />
+      </MemoryRouter>,
+    )
+    await screen.findByRole('link', { name: /Nintendo Entertainment System/i })
+    const img = container.querySelector('img.gt-systems-tile__mark-img')
+    expect(img).toBeTruthy()
+    expect(img.getAttribute('src')).toBe('/static/library/system-marks/aurora/nes.webp')
+  } finally {
+    document.documentElement.removeAttribute('data-theme')
+  }
+})

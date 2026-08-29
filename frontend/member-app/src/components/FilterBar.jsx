@@ -131,11 +131,6 @@ export function FilterBar({
   // context bar. Rendering it here as well would give one filter two controls,
   // so the panel yields ownership rather than duplicating it.
   hideKind = false,
-  // Supplied by the popover host. The panel owns its own dismiss control so the
-  // popover does not have to draw a head row around it — see Popover's
-  // `chromeless` prop. Absent in the rail layout, where the panel is not a
-  // popover and there is nothing to close.
-  onDone = null,
 }) {
   const [draft, setDraft] = useState(filters)
   const [options, setOptions] = useState(EMPTY_OPTIONS)
@@ -237,13 +232,12 @@ export function FilterBar({
 
   return (
     <form className="container-filtersandsort library-filters" onSubmit={submit}>
-      {/* Apply / Clear / Done lead the panel, as one control.
-          At the foot they were three detached buttons below every select and
-          chip in the form — so on a filter panel taller than the popover you
-          scrolled past everything you had just set in order to commit it, and
-          "Done" was the furthest thing from the trigger that opened it. They
-          are one decision about one panel, so they read as one segmented
-          control in the same shape the pager and the bar cluster use. */}
+      {/* Apply / Clear lead the panel as one control.
+          At the foot they were detached buttons below every select and chip —
+          so on a tall popover you scrolled past everything you had just set in
+          order to commit it. They are one decision about one panel, so they
+          read as one segmented control. Dismiss is click-outside / Escape /
+          the Filters trigger — a third Done in this cluster was redundant. */}
       <div className="library-filters__actions">
         <div className="gt-cbtn-group gt-cbtn-group--fill">
           <button className="gt-cbtn gt-cbtn--primary" type="submit">
@@ -252,16 +246,36 @@ export function FilterBar({
           <button className="gt-cbtn" type="button" onClick={clear}>
             {t('Clear')}
           </button>
-          {onDone ? (
-            <button
-              className="gt-cbtn library-filters__done"
-              type="button"
-              onClick={onDone}
-            >
-              {t('Done')}
-            </button>
-          ) : null}
         </div>
+
+        {/* Signals sit under Apply/Clear as one compact fused row — half the
+            control height so the commit cluster stays the loudest thing at the top. */}
+        <fieldset className="library-filters__signals library-filters__signals--bar">
+          <legend className="visually-hidden">{t('Signals')}</legend>
+          <div
+            className="gt-cbtn-group gt-cbtn-group--fill"
+            role="group"
+            aria-label={t('Badge filters')}
+          >
+            {BADGE_FILTER_CHIPS.map((chip) => {
+              const active = (filters[chip.param] ?? draft[chip.param]) === '1'
+              return (
+                <button
+                  key={chip.param}
+                  type="button"
+                  className={`gt-cbtn${active ? ' is-on' : ''}`}
+                  aria-pressed={active}
+                  title={t(chip.title)}
+                  onClick={() =>
+                    toggleBadgeFilter(filters, chip.param, applyBadgeToggle, cleanFilters)
+                  }
+                >
+                  {t(chip.label)}
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
       </div>
 
       <div className="library-filters__toolbar">
@@ -318,19 +332,6 @@ export function FilterBar({
           </select>
         </label>
         <label>
-          {t('Rating')}
-          <input
-            type="range"
-            className="form-control-range rating-slider"
-            name="rating"
-            min="0"
-            max="100"
-            value={draft.rating ?? '0'}
-            onChange={update}
-          />
-          <span>{draft.rating ?? '0'}</span>
-        </label>
-        <label>
           {t('Sort by')}
           <select
             className="form-control"
@@ -384,29 +385,25 @@ export function FilterBar({
           </div>
         </fieldset>
         )}
-        <fieldset className="library-filters__signals">
-          <legend>{t('Signals')}</legend>
-          <div className="gt-badge-filter-chips" role="group" aria-label={t('Badge filters')}>
-            {BADGE_FILTER_CHIPS.map((chip) => {
-              const active = (filters[chip.param] ?? draft[chip.param]) === '1'
-              return (
-                <button
-                  key={chip.param}
-                  type="button"
-                  className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
-                  aria-pressed={active}
-                  title={t(chip.title)}
-                  onClick={() =>
-                    toggleBadgeFilter(filters, chip.param, applyBadgeToggle, cleanFilters)
-                  }
-                >
-                  {t(chip.label)}
-                </button>
-              )
-            })}
-          </div>
-        </fieldset>
 
+        <label className="library-filters__rating">
+          <span className="library-filters__rating-head">
+            <span>{t('Rating')}</span>
+            <span className="library-filters__rating-value" aria-live="polite">
+              {draft.rating ?? '0'}
+            </span>
+          </span>
+          <input
+            type="range"
+            className="form-control-range rating-slider"
+            name="rating"
+            min="0"
+            max="100"
+            value={draft.rating ?? '0'}
+            onChange={update}
+            aria-valuetext={String(draft.rating ?? '0')}
+          />
+        </label>
       </div>
     </form>
   )

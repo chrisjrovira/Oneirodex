@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PageStatus } from './PageStatus'
 import { ImagesPage } from './ImagesPage'
 import { StockPicker } from './StockPicker'
+import { SystemMarksPanel } from './SystemMarksPanel'
 import { getJson, postJson } from './adminApi'
 import { ART_STUDIO_SYSTEMS, skinForPlatform, systemLabel } from './platformSkins'
 import { showToast } from './utils/toast'
@@ -38,12 +39,14 @@ function initialTab() {
   const hash = (window.location.hash || '').replace('#', '')
   if (hash === 'images' || hash === 'queue' || hash === 'picker') return 'images'
   if (hash === 'stock' || hash === 'backup') return 'stock'
+  if (hash === 'marks' || hash === 'system-marks') return 'marks'
   return 'studio'
 }
 
 function tabHash(tab) {
   if (tab === 'images') return '#images'
   if (tab === 'stock') return '#stock'
+  if (tab === 'marks') return '#marks'
   return '#studio'
 }
 
@@ -454,6 +457,15 @@ export function ArtStudioPage() {
         <button
           type="button"
           role="tab"
+          aria-selected={tab === 'marks'}
+          className={`gt-art-tabs__btn${tab === 'marks' ? ' is-active' : ''}`}
+          onClick={() => selectTab('marks')}
+        >
+          System marks
+        </button>
+        <button
+          type="button"
+          role="tab"
           aria-selected={tab === 'images'}
           className={`gt-art-tabs__btn${tab === 'images' ? ' is-active' : ''}`}
           onClick={() => selectTab('images')}
@@ -463,6 +475,12 @@ export function ArtStudioPage() {
       </div>
 
       {tab === 'images' ? <ImagesPage embedded /> : null}
+
+      {tab === 'marks' ? (
+        <div className="gt-art-stock-tab">
+          <SystemMarksPanel />
+        </div>
+      ) : null}
 
       {tab === 'stock' ? (
         <div className="gt-art-stock-tab">

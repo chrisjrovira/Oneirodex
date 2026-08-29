@@ -119,6 +119,37 @@ describe('ContextBar', () => {
     expect(screen.queryByRole('button', { name: /Filters/ })).not.toBeInTheDocument()
   })
 
+  it('opens Discover row settings from the summary count, not a second Rows button', async () => {
+    const user = userEvent.setup()
+    render(
+      <ContextBar
+        filtersOnSummary
+        filterCount={1}
+        filters={<p>row settings</p>}
+        summary="2 rows"
+      />,
+    )
+    expect(screen.queryByRole('button', { name: /^Rows$/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Filters/ })).not.toBeInTheDocument()
+    const trigger = screen.getByRole('button', { name: /2 rows/ })
+    expect(trigger).toHaveClass('gt-contextbar__count')
+    await user.click(trigger)
+    expect(screen.getByText('row settings')).toBeInTheDocument()
+  })
+
+  it('keeps a plain summary when filters stay in the lead slot', () => {
+    render(
+      <ContextBar
+        filtersLabel="Rows"
+        filterCount={1}
+        filters={<p>row settings</p>}
+        summary="2 rows"
+      />,
+    )
+    expect(screen.getByRole('button', { name: /Rows/ })).toBeInTheDocument()
+    expect(screen.getByText('2 rows').tagName).toBe('SPAN')
+  })
+
   it('shows the summary count', () => {
     render(<ContextBar views={VIEWS} activeView="all" summary="12 libraries" />)
     expect(screen.getByText('12 libraries')).toBeInTheDocument()

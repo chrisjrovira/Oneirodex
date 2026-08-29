@@ -1911,7 +1911,11 @@ function afterStart() {
 
 // start
 function initFromData(data) {
-	window.onbeforeunload = function() { return true; }
+	// Standalone webretro warns on tab close. Inside the GameTheca play shell
+	// (iframe) that trap blocks ← Library / Power with a Leave-site dialog.
+	if (window.self === window.top) {
+		window.onbeforeunload = function() { return true; }
+	}
 	async function waitForReady() {
 		if (wasmReady && bundleReady && biosReady) {
 			setStatus("Waiting for emulator");

@@ -63,6 +63,7 @@ const STATUS_BASELINE = {
   'RemotePlayPage.jsx': 1,
   'ScanMatchSettingsPage.jsx': 3,
   'StockPicker.jsx': 1,
+  'SystemMarksPanel.jsx': 1,
   'StoragePage.jsx': 5,
   'SystemResetPanel.jsx': 2,
   'pages.jsx': 2,

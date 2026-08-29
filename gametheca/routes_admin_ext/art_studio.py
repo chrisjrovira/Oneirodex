@@ -320,3 +320,67 @@ def _art_studio_apply_batch_impl():
         'errors': failed,
     })
 
+
+@admin2_bp.route('/admin/api/art-studio/system-marks', methods=['GET'])
+@login_required
+@admin_required
+def art_studio_system_marks_catalog():
+    """Per-theme progress for AI Systems hub marks."""
+    from gametheca.utils.system_marks import list_system_marks_catalog
+
+    try:
+        items = list_system_marks_catalog()
+        return api_ok({'items': items, 'count': len(items)})
+    except Exception as exc:  # noqa: BLE001
+        return api_error(f'Failed to list system marks: {exc}', code='internal')
+
+
+@admin2_bp.route('/admin/api/art-studio/system-marks/generate', methods=['POST'])
+@login_required
+@admin_required
+def art_studio_system_marks_generate():
+    """Idempotent AI generation of system marks (ENABLE_AI_ARTWORK required)."""
+    from gametheca.utils.ai_artwork import ArtworkGenerationError
+    from gametheca.utils.system_marks import generate_system_marks
+
+    data = _json_body()
+    themes = data.get('themes')
+    if isinstance(themes, str):
+        themes = [t.strip() for t in themes.split(',') if t.strip()]
+    elif isinstance(themes, list):
+        themes = [str(t).strip() for t in themes if str(t).strip()]
+    else:
+        themes = None
+    platforms = data.get('platforms')
+    if isinstance(platforms, str):
+        platforms = [p.strip() for p in platforms.split(',') if p.strip()]
+    elif isinstance(platforms, list):
+        platforms = [str(p).strip() for p in platforms if str(p).strip()]
+    else:
+        platforms = None
+    force = bool(data.get('force'))
+    limit = data.get('limit')
+    try:
+        limit_n = int(limit) if limit is not None else None
+    except (TypeError, ValueError):
+        return api_error('limit must be an integer', code='bad_request')
+    try:
+        result = generate_system_marks(
+            themes=themes,
+            platforms=platforms,
+            force=force,
+            limit=limit_n,
+        )
+        log_system_event(
+            f"Art studio system-marks generate generated={result['generated']} "
+            f"skipped={result['skipped']} errors={len(result['errors'])}"
+        )
+        return api_ok(result, status=201)
+    except ValueError as exc:
+        return api_error(str(exc), code='bad_request')
+    except ArtworkGenerationError as exc:
+        # Match cover generate: AI/backend failure is a gateway problem, not bad input.
+        return api_error(str(exc), code='bad_gateway')
+    except OSError as exc:
+        return api_error(f'Failed to write system marks: {exc}', code='internal')
+

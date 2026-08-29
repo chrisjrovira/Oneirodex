@@ -310,7 +310,9 @@ test('new chrome puts the create form behind one button', async () => {
   expect(screen.queryByRole('heading', { name: 'Collections' })).toBeNull()
   expect(screen.queryByPlaceholderText('Cozy co-op nights')).toBeNull()
 
-  await user.click(screen.getByRole('button', { name: /New shelf/ }))
+  const newShelf = screen.getByRole('button', { name: /New shelf/ })
+  expect(newShelf.className).toContain('gt-cbtn--primary')
+  await user.click(newShelf)
   expect(screen.getByPlaceholderText('Cozy co-op nights')).toBeInTheDocument()
 })
 

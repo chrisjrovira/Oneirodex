@@ -29,13 +29,13 @@
      * `position: relative` with `z-index: auto` is *not* one, so a resting
      * card's overlays escaped it: the badge layers (12), the VR stack (13) and
      * the control stack (15) all resolved against the row instead. A hovered
-     * card only lifts to 6, so the neighbours' badges kept painting over the
+     * card only lifts to 40, so the neighbours' badges kept painting over the
      * enlarged tile — the reported "badges from nearby tiles still overlap the
      * tile you hover on". Raising the hover value would have been an arms race
      * against every overlay z-index in the file.
      *
      * With `isolation`, card-to-card order is decided by the card's own
-     * z-index alone (hover 6, overlay-open 20) and everything inside stays
+     * z-index alone (hover 40, overlay-open 50) and everything inside stays
      * inside. */
     isolation: isolate;
 }
@@ -60,20 +60,18 @@
     border-radius: var(--gt-radius-md, 8px);
 }
 
-/* Tile hover: one rule, one lift, no ring.
+/* Tile hover: scale only — no accent glow, no hard ring.
  *
- * There used to be two `.game-card:hover` blocks in this file — this one, and a
- * second under "Tile hover preview" near the end that hardcoded
- * `translateY(-6px) scale(1.08)` plus a `0 0 0 2px` accent ring. Same
- * specificity, later in the file, so the second one won: `--gt-tile-hover-scale`
- * was computed, shipped and then ignored, and the ring it added is the hard
- * outline reported on the glow edge. The two are merged here and the ring is
- * gone — the glow alone marks the hovered tile.
+ * The enlarge itself marks the hovered tile. An accent bloom around the cover
+ * read as a glow on every enlarge and fought bright art; it is gone. A soft
+ * dark drop shadow stays so the grown tile still lifts off the grid without
+ * colouring the edge.
  *
- * `--gt-tile-hover-scale` is a flat 1.15 from tileSize.js. `transform: scale`
+ * `--gt-tile-hover-scale` is a flat 1.25 from tileSize.js. `transform: scale`
  * does not reflow, so the grid keeps its flow while the tile grows over its
- * neighbours. The fallback covers classic Jinja pages, which never run the
- * SPA's tile-size code. */
+ * neighbours. Growth is centred on the resting box (see GameGrid.css). The
+ * fallback covers classic Jinja pages, which never run the SPA's tile-size
+ * code. */
 /* `:has(:focus-visible)` rather than `:focus-within`.
  *
  * `:focus-within` matches focus from any source, and clicking a tile — or any
@@ -89,27 +87,27 @@
 .game-card:hover,
 .game-card:focus-visible,
 .game-card:has(:focus-visible) {
-    /* No `translateY(-4px)` any more, and the origin is pinned to the top edge
-       in GameGrid.css: a tile may not grow upward. `.gt-shell__main` is the
-       scroll container, so anything rising past its top edge is painted over by
-       the bar — reported as "the top row is painted under the top nav". Growing
-       down and sideways costs nothing, because below is scrollable. */
     transform: scale(var(--gt-tile-hover-scale, 1.25));
-    z-index: 6;
-    /* Glow is 25% stronger than the 53%/26px/4px it shipped at: the hovered
-       tile is the only thing marking where the pointer is now that the ring is
-       gone, and at the old strength it lost that argument against a bright
-       cover. Opacity, blur and spread all move together — raising opacity alone
-       reads as a harder edge rather than as more light. */
-    box-shadow:
-        0 16px 34px var(--shadow-dark-strong),
-        0 0 33px 5px color-mix(in srgb, var(--gt-accent) 66%, transparent);
+    transform-origin: center center;
+    z-index: 40;
+    box-shadow: 0 14px 28px var(--shadow-dark-strong);
     transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
+/* Lift the wrapper too: a later sibling container would otherwise paint over
+   the grown tile even when the card itself is at 40. Overlay-open stays above. */
+.game-card-container:has(.game-card:hover),
+.game-card-container:has(.game-card:focus-visible),
+.game-card-container:has(.game-card:has(:focus-visible)) {
+    z-index: 25;
+}
+
+.game-card-container:has(.game-card[data-overlay-open='true']) {
+    z-index: 30;
+}
+
 /* Resting ring — themed, and rounded to match the tile it outlines.
-   Only at rest: on hover the accent glow above is the marker, and keeping a
-   hard ring underneath it is the outline-on-the-glow-edge problem again. */
+   On hover the scale is the marker; keep a quiet border rather than a glow. */
 .game-card .game-cover,
 .game-card .gt-cover-fallback {
     border-color: color-mix(in srgb, var(--gt-accent) 34%, var(--gt-border));
@@ -120,7 +118,7 @@
 .game-card:has(:focus-visible) .game-cover,
 .game-card:hover .gt-cover-fallback,
 .game-card:has(:focus-visible) .gt-cover-fallback {
-    border-color: transparent;
+    border-color: color-mix(in srgb, var(--gt-accent) 55%, var(--gt-border));
 }
 
 /* Menu open beats hover: the pointer has to leave the tile to reach the menu,
@@ -128,7 +126,7 @@
    Higher than the hover value so a hovered neighbour cannot cover an open
    menu either. */
 .game-card[data-overlay-open='true'] {
-    z-index: 20;
+    z-index: 50;
 }
 
 /* Overlays undo the tile's scale rather than the tile undoing it for them.

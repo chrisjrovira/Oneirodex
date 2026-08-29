@@ -148,3 +148,15 @@ test('an open tile menu raises its whole virtual row, not just the card', () => 
   expect(source).toContain('transform: `translateY(')
   expect(source).toContain("position: 'absolute'")
 })
+
+test('hovered tiles grow from the centre, not an edge', () => {
+  const css = readFileSync(join(HERE, 'GameGrid.css'), 'utf8')
+  expect(css).toMatch(/transform-origin:\s*center center/)
+  expect(css).not.toMatch(/transform-origin:\s*center top/)
+  expect(css).not.toMatch(/transform-origin:\s*left top/)
+  expect(css).not.toMatch(/transform-origin:\s*right top/)
+  // Padding the virtual container would not move absolute rows and would
+  // throw getTotalSize off; bleed lives on the shell instead.
+  const virtual = css.slice(css.indexOf('.game-library-container[data-library-virtual] {'))
+  expect(virtual.slice(0, virtual.indexOf('}'))).not.toMatch(/padding-block-start/)
+})

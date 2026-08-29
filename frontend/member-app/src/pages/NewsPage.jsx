@@ -3,10 +3,9 @@ import { Link } from 'react-router-dom'
 import { fetchAnnouncements } from '../api/announcements'
 import { claimFreeGameAssist, fetchFreeGames } from '../api/freeGames'
 import { fetchGamingNews } from '../api/gamingNews'
-import { ContextBar } from '../chrome/ContextBar'
+import { ContextBar, SegmentedViews } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
-import '../styles/panelGrid.css'
 import './NewsPage.css'
 
 function formatEndsAt(value) {
@@ -53,6 +52,31 @@ const NEWS_VIEWS = [
   { id: 'headlines', label: 'Headlines' },
 ]
 
+const LAYOUT_STORAGE_KEY = 'gt.news.layout'
+const NEWS_LAYOUTS = [
+  { id: 'card', label: 'Card' },
+  { id: 'grid', label: 'Grid' },
+  { id: 'rss', label: 'RSS' },
+]
+
+function readNewsLayout() {
+  try {
+    const value = window.localStorage.getItem(LAYOUT_STORAGE_KEY)
+    if (value === 'card' || value === 'grid' || value === 'rss') return value
+  } catch {
+    // View preference only — Card is the honest default.
+  }
+  return 'card'
+}
+
+function persistNewsLayout(value) {
+  try {
+    window.localStorage.setItem(LAYOUT_STORAGE_KEY, value)
+  } catch {
+    // View preference only.
+  }
+}
+
 export function NewsPage({ shellConfig = {} }) {
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [announcements, setAnnouncements] = useState(null)
@@ -74,6 +98,12 @@ export function NewsPage({ shellConfig = {} }) {
   const [retryCount, setRetryCount] = useState(0)
   const [assistMsg, setAssistMsg] = useState({})
   const [activeTab, setActiveTab] = useState(() => tabFromHash() || 'all')
+  const [layout, setLayout] = useState(readNewsLayout)
+
+  function handleLayout(next) {
+    setLayout(next)
+    persistNewsLayout(next)
+  }
 
   async function claimAssist(item) {
     if (!item?.id) {
@@ -216,6 +246,9 @@ export function NewsPage({ shellConfig = {} }) {
     return NEWS_VIEWS.map((view) => ({ ...view, count: counts[view.id] }))
   }, [loading, error, announcements, freeGames, visibleHeadlines])
 
+  const freeItems = activeTab === 'free' ? freeGames : freeRest
+  const headlineItems = activeTab === 'headlines' ? visibleHeadlines : headlineRest
+
   return (
     <>
     {useNewChrome ? (
@@ -223,9 +256,21 @@ export function NewsPage({ shellConfig = {} }) {
           views={viewsWithCounts}
           activeView={activeTab}
           onSelectView={setActiveTab}
+          actions={
+            <SegmentedViews
+              views={NEWS_LAYOUTS}
+              active={layout}
+              onSelect={handleLayout}
+              label="Layout"
+            />
+          }
         />
       ) : null}
-    <div className="gt-more-page gt-news gt-panels">
+    <div
+      className="gt-more-page gt-news gt-news--fill"
+      data-layout={layout}
+      data-tab={activeTab}
+    >
       {useNewChrome ? null : (
         <div className="gt-page-header gt-news__header gt-panels__full">
           <div>
@@ -318,6 +363,7 @@ export function NewsPage({ shellConfig = {} }) {
         </section>
       ) : null}
 
+      <div className="gt-news__stage">
       {/* Admin notes lead, full width, and only when there are any.
           `announcements` is an array, so the old `announcements &&` was true
           even when empty and rendered a heading, a zero count and "No
@@ -326,11 +372,12 @@ export function NewsPage({ shellConfig = {} }) {
           empty state still shows, because there the section *is* the page and
           silence would read as a failed load. */}
       {!error && announcements && showAdmins && (announcements.length > 0 || activeTab === 'admins') ? (
-        <section className="gt-news__section gt-panels__full" aria-labelledby="news-admins-heading">
+        <section className="gt-news__section gt-news__admins" aria-labelledby="news-admins-heading">
           <div className="gt-news__section-head">
             <h2 id="news-admins-heading">From your admins</h2>
             <span className="gt-news__count">{announcements.length}</span>
           </div>
+          <div className="gt-news__panel-body">
           {announcements.length === 0 ? <p className="gt-news__empty">No announcements yet.</p> : null}
           {adminRest.length > 0 ? (
             <ul className="gt-news__rail">
@@ -351,6 +398,7 @@ export function NewsPage({ shellConfig = {} }) {
               ))}
             </ul>
           ) : null}
+          </div>
         </section>
       ) : null}
 
@@ -365,9 +413,59 @@ export function NewsPage({ shellConfig = {} }) {
           </p>
           {freeGames.length === 0 ? (
             <p className="gt-news__empty">No free offers cached yet. Check back after the next refresh.</p>
+          ) : layout === 'rss' ? (
+            <div className="gt-news__panel-body">
+            <ul className="gt-news__magazine">
+              {freeItems.map((item) => {
+                const https = item.links?.https || item.claim_url || item.store_url
+                const protocol = item.links?.protocol
+                const ends = formatEndsAt(item.ends_at)
+                return (
+                  <li key={`${item.store}-${item.external_id}`} className="gt-news__mag-row">
+                    <article>
+                      <header className="gt-news__rail-head">
+                        <span className="gt-news__store">{storeLabel(item.store)}</span>
+                        <strong>{item.title}</strong>
+                        {ends ? <time dateTime={item.ends_at}>Ends {ends}</time> : null}
+                      </header>
+                      <p className="gt-news__actions">
+                        {item.connected && item.id ? (
+                          <button
+                            type="button"
+                            className="gt-btn gt-btn--primary"
+                            onClick={() => void claimAssist(item)}
+                          >
+                            Claim &amp; sync
+                          </button>
+                        ) : https ? (
+                          <a
+                            className="gt-btn gt-btn--primary"
+                            href={https}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Claim on {storeLabel(item.store)}
+                          </a>
+                        ) : null}
+                        {protocol ? (
+                          <a className="gt-btn gt-btn--ghost" href={protocol}>
+                            Open in app
+                          </a>
+                        ) : null}
+                      </p>
+                      {assistMsg[item.id] ? (
+                        <p className="gt-news__assist-msg">{assistMsg[item.id]}</p>
+                      ) : null}
+                    </article>
+                  </li>
+                )
+              })}
+            </ul>
+            </div>
           ) : (
+            <div className="gt-news__panel-body">
             <ul className="gt-news__free-strip">
-              {(activeTab === 'free' ? freeGames : freeRest).map((item) => {
+              {freeItems.map((item) => {
                 const https = item.links?.https || item.claim_url || item.store_url
                 const protocol = item.links?.protocol
                 const ends = formatEndsAt(item.ends_at)
@@ -442,6 +540,7 @@ export function NewsPage({ shellConfig = {} }) {
                 )
               })}
             </ul>
+            </div>
           )}
         </section>
       ) : null}
@@ -486,12 +585,41 @@ export function NewsPage({ shellConfig = {} }) {
                 ? 'Every source is switched off — turn one back on above.'
                 : 'No external headlines available right now.'}
             </p>
+          ) : layout === 'rss' ? (
+            <div className="gt-news__panel-body">
+            <ul className="gt-news__magazine">
+              {headlineItems.map((item) => (
+                <li key={item.url} className="gt-news__mag-row">
+                  <article>
+                    <a
+                      className="gt-news__mag-link"
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <strong>{item.title}</strong>
+                    </a>
+                    {item.summary ? <p>{truncate(item.summary, 180)}</p> : null}
+                    <p className="gt-news__meta">
+                      <span className="gt-news__source">{item.source}</span>
+                      {item.published_at ? (
+                        <time dateTime={item.published_at}>
+                          {formatLocaleDate(item.published_at)}
+                        </time>
+                      ) : null}
+                    </p>
+                  </article>
+                </li>
+              ))}
+            </ul>
+            </div>
           ) : (
             /* Image-forward cards (UX-C14) — the way Steam/Epic present news.
                Feeds that carry no artwork fall back to a text card rather than
-               a broken frame. */
+               a broken frame. Grid mode keeps this markup and densifies in CSS. */
+            <div className="gt-news__panel-body">
             <ul className="gt-news__cards">
-              {(activeTab === 'headlines' ? visibleHeadlines : headlineRest).map((item) => (
+              {headlineItems.map((item) => (
                 <li key={item.url} className="gt-news__card">
                   <a
                     className="gt-news__card-link"
@@ -530,9 +658,11 @@ export function NewsPage({ shellConfig = {} }) {
                 </li>
               ))}
             </ul>
+            </div>
           )}
         </section>
       ) : null}
+      </div>
     </div>
     </>
   )

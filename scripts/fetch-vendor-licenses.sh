@@ -27,6 +27,7 @@ jquery/3.7.1	https://raw.githubusercontent.com/jquery/jquery/3.7.1/LICENSE.txt
 notify/0.4.2	https://raw.githubusercontent.com/mouse0270/bootstrap-notify/master/LICENSE
 sortablejs/1.15.2	https://raw.githubusercontent.com/SortableJS/Sortable/1.15.2/LICENSE
 webretro	https://raw.githubusercontent.com/BinBashBanana/webretro/master/LICENSE
+nostalgist	https://raw.githubusercontent.com/arianrhodsandlot/nostalgist/v0.21.1/LICENSE
 "
 
 failed=0

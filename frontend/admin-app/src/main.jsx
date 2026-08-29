@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { App } from './App'
 import { EmulatorFirmwarePanel } from './EmulatorFirmwarePanel'
+import { BrowserPlayerPilot } from './BrowserPlayerPilot'
 import { ImportLeafLibraries } from './ImportLeafLibraries'
 import { ProposeLeafLibraries } from './ProposeLeafLibraries'
 import './styles.css'
@@ -34,5 +35,10 @@ if (importLeafMount && !importLeafMount.dataset.reactMounted) {
 const firmwareMount = document.getElementById('emulator-firmware-mount')
 if (firmwareMount && !firmwareMount.dataset.reactMounted) {
   firmwareMount.dataset.reactMounted = '1'
-  createRoot(firmwareMount).render(<EmulatorFirmwarePanel />)
+  createRoot(firmwareMount).render(
+    <>
+      <BrowserPlayerPilot />
+      <EmulatorFirmwarePanel />
+    </>,
+  )
 }

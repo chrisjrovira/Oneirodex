@@ -65,82 +65,90 @@
   outline: none;
 }
 
+/* Prefs open under the Inbox head — not a full-width fold above the list. */
 .gt-notifications__prefs {
-  margin: 0.85rem 0 1rem;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+  margin: 0 0 0.55rem;
+  padding: 0.35rem 0.5rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
   border-radius: var(--gt-radius-sm);
-}
-
-.gt-notifications__prefs summary {
-  cursor: pointer;
-  padding: 0.55rem 0.75rem;
-  font-size: var(--gt-font-md);
-  font-weight: 600;
-  list-style: none;
-}
-
-.gt-notifications__prefs summary::-webkit-details-marker {
-  display: none;
-}
-
-.gt-notifications__prefs summary::after {
-  content: '+';
-  float: right;
-  color: var(--gt-text-muted);
-}
-
-.gt-notifications__prefs[open] summary::after {
-  content: '−';
+  background: color-mix(in srgb, var(--gt-surface) 80%, transparent);
 }
 
 .gt-notifications__pref-list {
   list-style: none;
   margin: 0;
-  padding: 0 0.75rem 0.35rem;
+  padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 0.25rem 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
+  gap: 0.1rem 0.65rem;
 }
 
 .gt-notifications__pref {
   display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.35rem 0;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.15rem 0;
   cursor: pointer;
-  font-size: var(--gt-font-md);
+  font-size: var(--gt-font-sm);
+  line-height: 1.25;
+}
+
+.gt-notifications__pref input {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.gt-notifications__pref-text {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.4rem;
+  min-width: 0;
 }
 
 .gt-notifications__pref strong {
-  display: block;
   font-weight: 600;
+  color: var(--gt-text);
 }
 
 .gt-notifications__pref-kind {
-  display: block;
-  font-size: var(--gt-font-xs);
   color: var(--gt-text-muted);
+  font-size: var(--gt-font-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .gt-notifications__pref-note {
-  margin: 0;
-  padding: 0 0.75rem 0.65rem;
-  font-size: var(--gt-font-sm);
+  margin: 0.35rem 0 0;
+  padding: 0.25rem 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--gt-border) 45%, transparent);
+  font-size: var(--gt-font-xs);
+  line-height: 1.3;
   color: var(--gt-text-muted);
 }
 
-/* INBOX on the left, Mark all read on the right, sharing one baseline (W28).
-   The button used to live in the top bar; it belongs on the row that heads the
-   list it empties. `baseline` rather than `center` so the button's text sits on
-   the same line as the label, which is what "aligned to it" means here. */
+/* Inbox | Preferences · Mark all read — one baseline. Prefs expand under this
+   row when toggled; they are not a second full-width section. */
 .gt-notifications__inbox-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--gt-space-4);
   margin: 0 0 0.55rem;
+}
+
+.gt-notifications__inbox-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.gt-notifications__prefs-toggle.is-on {
+  color: var(--gt-accent);
 }
 
 .gt-notifications__section-title {

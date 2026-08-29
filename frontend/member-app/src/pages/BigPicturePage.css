@@ -158,6 +158,28 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--gt-text) 22%, transparent) transparent;
+}
+
+.gt-bp__rail::-webkit-scrollbar {
+  width: var(--gt-scrollbar-w, 9px);
+  height: var(--gt-scrollbar-w, 9px);
+}
+
+.gt-bp__rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gt-bp__rail::-webkit-scrollbar-thumb {
+  border-radius: var(--gt-radius-pill);
+  background: color-mix(in srgb, var(--gt-text) 20%, transparent);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.gt-bp__rail::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  background-clip: padding-box;
 }
 
 .gt-bp__tile {

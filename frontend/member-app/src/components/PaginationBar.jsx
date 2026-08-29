@@ -40,7 +40,7 @@ export function PaginationBar({
   ]
 
   return (
-    <nav className="pagination-controls gt-pagination" aria-label="Library pagination">
+    <nav className="pagination-controls gt-pagination" aria-label="Game Catalog pagination">
       {/* Control first, label after — "50 per page" is how the setting reads
           aloud, and the number is the part you look for when scanning the bar.
           Label-then-control put a word where the eye expects the value. */}

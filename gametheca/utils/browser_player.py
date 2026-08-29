@@ -24,6 +24,9 @@ SHIPPED_ENGINES = ('webretro',)
 DEFAULTS: dict[str, Any] = {
     'browser_player_default': 'webretro',
     'browser_player_allow_member_choice': False,
+    # BP-1: NES-only Nostalgist host. Off by default; does not advertise a
+    # second shipped engine until EmulatorJS lands (BP-2).
+    'nostalgist_nes_pilot': False,
     'webrcade_sidecar_url': '',
     'webrcade_feed_export': False,
 }
@@ -84,9 +87,15 @@ def normalize_browser_player_settings(raw: dict[str, Any] | None) -> dict[str, A
         export = export.strip().lower() in ('1', 'true', 'yes', 'on')
     else:
         export = bool(export)
+    pilot = src.get('nostalgist_nes_pilot', DEFAULTS['nostalgist_nes_pilot'])
+    if isinstance(pilot, str):
+        pilot = pilot.strip().lower() in ('1', 'true', 'yes', 'on')
+    else:
+        pilot = bool(pilot)
     return {
         'browser_player_default': default,
         'browser_player_allow_member_choice': allow,
+        'nostalgist_nes_pilot': pilot,
         'webrcade_sidecar_url': _clean_url(src.get('webrcade_sidecar_url')),
         'webrcade_feed_export': export,
         'browser_players_available': list(SHIPPED_ENGINES),
@@ -117,6 +126,7 @@ def set_browser_player_settings(payload: dict[str, Any] | None) -> dict[str, Any
     stored = {
         'browser_player_default': cleaned['browser_player_default'],
         'browser_player_allow_member_choice': cleaned['browser_player_allow_member_choice'],
+        'nostalgist_nes_pilot': cleaned['nostalgist_nes_pilot'],
         'webrcade_sidecar_url': cleaned['webrcade_sidecar_url'],
         'webrcade_feed_export': cleaned['webrcade_feed_export'],
     }
@@ -133,11 +143,46 @@ def play_engine_fields() -> dict[str, Any]:
     try:
         settings = get_browser_player_settings()
         default = settings['browser_player_default']
+        pilot = bool(settings.get('nostalgist_nes_pilot'))
     except Exception:
         default = 'webretro'
+        pilot = False
     if default not in SHIPPED_ENGINES:
         default = 'webretro'
     return {
         'browser_player': default,
         'browser_players_available': list(SHIPPED_ENGINES),
+        'nostalgist_nes_pilot': pilot,
     }
+
+
+def nostalgist_nes_pilot_enabled() -> bool:
+    """True when the BP-1 NES Nostalgist host may replace WebRetro for NES."""
+    try:
+        return bool(get_browser_player_settings().get('nostalgist_nes_pilot'))
+    except Exception:
+        return False
+
+
+def browser_play_href(
+    *,
+    game_uuid: str,
+    core: str,
+    platform_key: str | None = None,
+    cheat_surface: str | None = None,
+) -> str:
+    """Build the member Play href for a guid/core (WebRetro or NES pilot)."""
+    guid = str(game_uuid or '').strip()
+    core_id = str(core or '').strip()
+    key = str(platform_key or '').strip().upper() or None
+    if not guid or not core_id:
+        return ''
+    params = [f'guid={guid}', f'core={core_id}']
+    if key:
+        params.append(f'platform={key}')
+    if cheat_surface:
+        params.append(f'cheat_surface={cheat_surface}')
+    query = '&'.join(params)
+    if key == 'NES' and nostalgist_nes_pilot_enabled():
+        return f'/static/vendor/nostalgist/play.html?{query}'
+    return f'/static/vendor/webretro/webretro.html?{query}'

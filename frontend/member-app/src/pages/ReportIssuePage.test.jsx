@@ -15,6 +15,8 @@ test('keeps logs and context collapsed by default', () => {
 
   // "Report", not "Report issue": the form takes ideas as well as defects now.
   expect(screen.getByRole('heading', { name: 'Report' })).toBeInTheDocument()
+  expect(screen.queryByText(/Files a ticket for maintainers/i)).not.toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: /What happened/i })).not.toBeInTheDocument()
   expect(screen.getByRole('radio', { name: /Something is broken/ })).toBeChecked()
   expect(screen.getByRole('radio', { name: /An idea/ })).not.toBeChecked()
   expect(screen.getByLabelText('Title')).toBeInTheDocument()

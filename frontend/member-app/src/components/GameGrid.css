@@ -100,70 +100,35 @@ html.is-tile-resizing .game-library-row {
 /* Same reasoning for hover, which had the same defect and was not covered.
  *
  * A row is absolutely positioned *and transformed*, so it is its own stacking
- * context: `.game-card:hover { z-index: 6 }` can only lift a tile above its
+ * context: `.game-card:hover { z-index: 40 }` can only lift a tile above its
  * siblings *within* that row. The next row is a later sibling at the row level,
  * so it painted over the enlarged tile — the grown tile was clipped by the tiles
  * below and to the side of it, badges included.
  *
  * Lifting the row is the level the problem lives at. Below the overlay-open
  * value (30) on purpose: an open menu must still beat a merely hovered
- * neighbour. */
+ * neighbour. Hovered cards themselves use z-index 40 (theme); the row is the
+ * context those numbers live in. */
 .game-library-container[data-library-virtual] .game-library-row:has(.game-card:hover),
 .game-library-container[data-library-virtual] .game-library-row:has(.game-card:focus-visible),
 .game-library-container[data-library-virtual] .game-library-row:has(.game-card :focus-visible) {
   z-index: 25;
 }
 
-/* A hovered tile grows down and inward — never up, never past a side edge.
+/* Hovered tiles grow equally around the resting box — not down, not inward.
  *
- * `.gt-shell__main` is the only scroll container in the shell, and CSS computes
- * the unset axis of a scroller to `auto`, so it clips on all four sides. A tile
- * scaled from its centre pushes ~12.5% of its size past every edge; the top bar
- * then paints over whatever rose above the container ("the top row is painted
- * under the top nav") and the badges in the tile's corners are the first thing
- * lost on the sides.
- *
- * Pinning the Y origin to `top` for every tile means growth is always downward,
- * where the container scrolls and nothing is clipped. The scale is unchanged,
- * so the affordance is identical.
+ * Edge-pinned origins made the enlarge look like the tile slid toward empty
+ * space. Room to grow without clipping the top bar is on `.gt-shell__main`
+ * (padding uses the existing stack, bumped only if the 12.5% per-side growth
+ * needs more than `--gt-stack`). Do not pad this container: virtual rows are
+ * absolutely positioned against its padding edge, so padding here would not
+ * move the first row and would throw off getTotalSize().
  */
 .game-library-row .game-card:hover,
 .game-library-row .game-card:has(:focus-visible),
 .game-library-container[data-library-grid] .game-card:hover,
 .game-library-container[data-library-grid] .game-card:has(:focus-visible) {
-  transform-origin: center top;
-}
-
-/* Edge columns grow inward, so a hovered tile stays inside the scroller.
- *
- * `.gt-shell__main` sets `overflow-y: auto`, and CSS computes the other axis to
- * `auto` too — a scroll container clips horizontally whether or not it was
- * asked to. A tile scaled to 1.25 from its centre pushes ~12.5% of its width
- * past each edge, and on the start side that overflow is not even scrollable:
- * it is simply cut. The badges live in the tile's corners, so they are the
- * first thing to go — the reported "when a tile is enlarged the badges get cut
- * off".
- *
- * Anchoring the first column's origin to its left edge and the last column's
- * to its right edge makes those tiles grow entirely inward. The scale is
- * unchanged, so the affordance is identical; only the direction of growth
- * differs, and only for the two columns where growing outward was invisible
- * anyway. Middle columns keep growing from the centre.
- *
- * `:first-child` / `:last-child` are the column positions here because a row
- * holds exactly one card per column — see GameGrid's row render. */
-.game-library-row > .game-card-container:first-child .game-card:hover,
-.game-library-row > .game-card-container:first-child .game-card:has(:focus-visible),
-.game-library-container[data-library-grid] > .game-card-container:first-child .game-card:hover,
-.game-library-container[data-library-grid] > .game-card-container:first-child .game-card:has(:focus-visible) {
-  transform-origin: left top;
-}
-
-.game-library-row > .game-card-container:last-child .game-card:hover,
-.game-library-row > .game-card-container:last-child .game-card:has(:focus-visible),
-.game-library-container[data-library-grid] > .game-card-container:last-child .game-card:hover,
-.game-library-container[data-library-grid] > .game-card-container:last-child .game-card:has(:focus-visible) {
-  transform-origin: right top;
+  transform-origin: center center;
 }
 
 @media (prefers-reduced-motion: reduce) {

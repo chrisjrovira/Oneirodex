@@ -522,41 +522,6 @@
   color: var(--gt-accent);
 }
 
-/* Side-by-side panels (>=1120px): "From your admins" and "Free now" sit next to
-   each other instead of stacking, with headlines spanning beneath. Sections
-   already carry a bottom margin for the stacked case; the grid supplies its own
-   gap, so drop it to avoid a double gutter. */
-@media (min-width: 1120px) {
-  .gt-news.gt-panels .gt-news__section {
-    margin-bottom: 0;
-  }
-
-  /* Inside a half-width panel the offers read better as a single column than
-     as a cramped two-up. */
-  .gt-news.gt-panels .gt-news__free-strip {
-    grid-template-columns: 1fr;
-  }
-
-  /* Admin notes span the row above, so their rail can use the width. */
-  .gt-news.gt-panels .gt-panels__full .gt-news__rail {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
-    column-gap: 1.25rem;
-  }
-
-  /* Row separators read as a list in one column; in a grid they would draw
-     mid-row borders, so scope them back to the single-column case. */
-  .gt-news.gt-panels .gt-panels__full .gt-news__rail-item {
-    border-bottom: none;
-  }
-
-  /* Headlines share the row with Free, so their cards stay a single column
-     inside that half rather than trying to be a gallery in a narrow box. */
-  .gt-news.gt-panels .gt-news__headlines .gt-news__cards {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Source filter — one chip per configured site, pressed when it is showing. */
 .gt-news__sources {
   display: flex;
@@ -579,20 +544,130 @@
  * past everything else on it. Capping them keeps the two sections and the rest
  * of the page reachable without a long scroll, and puts the growth inside the
  * section that owns it. */
-.gt-news__cards,
-.gt-news__free-strip {
+/* Classic (non-fill) pages still cap the two feeds so News cannot grow past
+   the rest of the page. Fill mode lets `.gt-news__panel-body` own the scroll. */
+.gt-news:not(.gt-news--fill) .gt-news__cards,
+.gt-news:not(.gt-news--fill) .gt-news__free-strip {
   max-height: min(58vh, 32rem);
   overflow-y: auto;
   overscroll-behavior: contain;
-  /* Room for the scrollbar so the last card is not sliced by it. */
   padding-right: 0.25rem;
 }
 
 @media (max-width: 900px) {
-  /* On a phone the page is the scroll surface and a nested one fights it. */
-  .gt-news__cards,
-  .gt-news__free-strip {
+  .gt-news:not(.gt-news--fill) .gt-news__cards,
+  .gt-news:not(.gt-news--fill) .gt-news__free-strip {
     max-height: none;
     overflow-y: visible;
+  }
+}
+
+/* --- Fill pane + Card / Grid / RSS -------------------------------------- */
+
+.gt-more-page.gt-news--fill {
+  max-width: none;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0.5rem;
+}
+
+.gt-news--fill .gt-news__hero,
+.gt-news--fill .gt-news__header {
+  flex: 0 0 auto;
+}
+
+.gt-news__stage {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 1.1rem 1.4rem;
+  overflow: hidden;
+}
+
+.gt-news__stage .gt-news__section {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.gt-news__panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.25rem;
+}
+
+@media (min-width: 1120px) {
+  .gt-news--fill[data-tab='all'] .gt-news__stage {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .gt-news--fill[data-tab='all'] .gt-news__admins {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    max-height: 10.5rem;
+  }
+
+  .gt-news--fill[data-tab='all'] .gt-news__free {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  .gt-news--fill[data-tab='all'] .gt-news__headlines {
+    grid-row: 2;
+    grid-column: 2;
+  }
+
+  .gt-news--fill[data-tab='all'] .gt-news__headlines .gt-news__cards {
+    grid-template-columns: 1fr;
+  }
+
+  .gt-news--fill[data-tab='all'] .gt-news__free .gt-news__free-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Grid: denser auto-fill, shorter cards. */
+.gt-news--fill[data-layout='grid'] .gt-news__cards {
+  grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  gap: 0.55rem;
+}
+
+.gt-news--fill[data-layout='grid'] .gt-news__card {
+  min-height: 16rem;
+}
+
+.gt-news--fill[data-layout='grid'] .gt-news__card-title {
+  min-height: calc(2 * 1.25em);
+  font-size: var(--gt-font-sm);
+}
+
+.gt-news--fill[data-layout='grid'] .gt-news__card-summary {
+  -webkit-line-clamp: 2;
+}
+
+.gt-news--fill[data-layout='grid'] .gt-news__free-strip {
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.5rem;
+}
+
+.gt-news--fill[data-layout='grid'] .gt-news__free-tile {
+  padding: 0.5rem 0.6rem;
+}
+
+@media (min-width: 1120px) {
+  .gt-news--fill[data-tab='all'][data-layout='grid'] .gt-news__headlines .gt-news__cards,
+  .gt-news--fill[data-tab='all'][data-layout='grid'] .gt-news__free .gt-news__free-strip {
+    grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
   }
 }

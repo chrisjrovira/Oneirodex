@@ -95,7 +95,15 @@ def build_prompt(*, name: str, platform: str | None = None, genres=None) -> str:
 class ArtworkGenerator(Protocol):
     """One method: prompt in, PNG/JPEG bytes out."""
 
-    def generate(self, prompt: str, *, width: int, height: int, timeout: float) -> bytes:
+    def generate(
+        self,
+        prompt: str,
+        *,
+        width: int,
+        height: int,
+        timeout: float,
+        negative_prompt: str | None = None,
+    ) -> bytes:
         ...
 
 
@@ -105,10 +113,18 @@ class A1111Generator:
     def __init__(self, base_url: str):
         self.base_url = base_url.rstrip('/')
 
-    def generate(self, prompt: str, *, width: int, height: int, timeout: float) -> bytes:
+    def generate(
+        self,
+        prompt: str,
+        *,
+        width: int,
+        height: int,
+        timeout: float,
+        negative_prompt: str | None = None,
+    ) -> bytes:
         payload = {
             'prompt': prompt,
-            'negative_prompt': _NEGATIVE,
+            'negative_prompt': negative_prompt if negative_prompt is not None else _NEGATIVE,
             'steps': DEFAULT_STEPS,
             'width': width,
             'height': height,
@@ -155,7 +171,15 @@ class ComfyUIGenerator:
     def __init__(self, base_url: str):
         self.base_url = base_url.rstrip('/')
 
-    def generate(self, prompt: str, *, width: int, height: int, timeout: float) -> bytes:
+    def generate(
+        self,
+        prompt: str,
+        *,
+        width: int,
+        height: int,
+        timeout: float,
+        negative_prompt: str | None = None,
+    ) -> bytes:
         raise ArtworkGenerationError(
             'ComfyUI support needs an operator-supplied workflow JSON '
             '(AI_ARTWORK_WORKFLOW). Use AI_ARTWORK_ENGINE=a1111 for now.',

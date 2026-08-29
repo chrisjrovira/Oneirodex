@@ -2,12 +2,12 @@
 
 /** Chips shown in the Library LHN panel. VR is tile badge-only — not a filter chip. */
 export const BADGE_FILTER_CHIPS = [
-  { param: 'has_updates', label: 'UPDATE', title: 'Updates available' },
-  { param: 'path_missing', label: 'MISSING', title: 'Removed from disk' },
-  { param: 'new_import', label: 'NEW', title: 'Newly added to library' },
+  { param: 'has_updates', label: 'Update', title: 'Updates available' },
+  { param: 'path_missing', label: 'Missing', title: 'Removed from disk' },
+  { param: 'new_import', label: 'New', title: 'Newly added to library' },
   {
     param: 'needs_translation',
-    label: 'LANG',
+    label: 'Lang',
     title: 'ROM language may not match your preferred game language',
   },
 ]

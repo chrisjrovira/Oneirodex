@@ -15,13 +15,13 @@ afterEach(() => {
 test('shows percent label for legacy letter value', () => {
   render(<TileSizeControl value="M" />)
   expect(screen.getByText('50%')).toBeInTheDocument()
-  expect(screen.getByLabelText('Library tile size percent')).toHaveValue('50')
+  expect(screen.getByLabelText('Game Catalog tile size percent')).toHaveValue('50')
 })
 
 test('calls onChange with percent string', () => {
   const onChange = vi.fn()
   render(<TileSizeControl value="50" onChange={onChange} shellConfig={{ perPage: 20 }} />)
-  const slider = screen.getByLabelText('Library tile size percent')
+  const slider = screen.getByLabelText('Game Catalog tile size percent')
   fireEvent.change(slider, { target: { value: '72' } })
   expect(onChange).toHaveBeenCalledWith('72')
 })
@@ -32,7 +32,7 @@ test('unmounting mid-drag takes the resize class off <html>', () => {
   // the rest of the session.
   vi.useFakeTimers()
   const { unmount } = render(<TileSizeControl value="50" shellConfig={{ perPage: 20 }} />)
-  fireEvent.change(screen.getByLabelText('Library tile size percent'), {
+  fireEvent.change(screen.getByLabelText('Game Catalog tile size percent'), {
     target: { value: '72' },
   })
   expect(document.documentElement.classList.contains('is-tile-resizing')).toBe(true)
@@ -48,7 +48,7 @@ test('unmounting mid-drag still saves the pending tile size', () => {
   vi.useFakeTimers()
   preferencesApi.savePreferences.mockClear()
   const { unmount } = render(<TileSizeControl value="50" shellConfig={{ perPage: 20 }} />)
-  fireEvent.change(screen.getByLabelText('Library tile size percent'), {
+  fireEvent.change(screen.getByLabelText('Game Catalog tile size percent'), {
     target: { value: '72' },
   })
   expect(preferencesApi.savePreferences).not.toHaveBeenCalled()

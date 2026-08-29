@@ -50,7 +50,7 @@ const KEYWORDS = {
   '/admin/whitelist': 'allowlist signup registration',
   '/admin/invites': 'invitation signup',
   '/admin/reference_sets': 'dat no-intro redump rom completeness',
-  '/admin/emulator_profiles': 'webretro bios cores saves',
+  '/admin/emulator_profiles': 'webretro bios cores saves nostalgist nes',
   '/admin/remote_play': 'sunshine wolf moonlight streaming',
   '/admin/arr': 'prowlarr jackett qbittorrent torrent indexer acquire',
   '/admin/plugins': 'export esde pegasus connector',

@@ -20,8 +20,8 @@ core destinations:
 
 | Group | Destinations |
 |---|---|
-| **Oneirodex** | Discover · Library · Systems · Downloads · Favorites |
-| Library | Collections · Wishlist · Updates · Acquire · Ownership · Release calendar |
+| **Oneirodex** | Discover · Game Catalog · Systems · Downloads · Favorites |
+| Game Catalog | Collections · Wishlist · Updates · Acquire · Ownership · Release calendar |
 | Social | Friends (dock) · Chat (slide-out) · Notifications · Activity · News |
 | Play | Big Picture · Playtime · VR · Trailers |
 | Support | Report · Help |
@@ -63,19 +63,19 @@ If you are an admin and the new member has no email at all — a child's console
 
 **Keyboard:** Tab to **Skip to main content** (first focusable control) to jump past the top nav into `#main-content`. Top nav and the **Ctrl/Cmd+K** command palette show a visible focus ring on keyboard focus. On long scrollable pages, **Jump to top** / **Jump to bottom** controls appear bottom-left (hide when the page doesn’t scroll).
 
-**Command palette:** press **Ctrl+K** (⌘K on Mac) or the top-nav **Search** hint to jump to any primary/More page, Preferences, Admin, or Help. On **Library**, Ctrl+K searches **library titles** first. Screenshot backlog for palette / Ops / health probes: [CAPTURE.md](../assets/readme/CAPTURE.md).
+**Command palette:** press **Ctrl+K** (⌘K on Mac) or the top-nav **Search** hint to jump to any primary/More page, Preferences, Admin, or Help. On **Game Catalog**, Ctrl+K searches **library titles** first. Screenshot backlog for palette / Ops / health probes: [CAPTURE.md](../assets/readme/CAPTURE.md).
 
-Library **page size** options go up through **200–1000** (full allowlist 20/50/100/200/250/300/400/500/1000) — [preferences-themes.md](preferences-themes.md). Library Filters include **Signals** chips (UPDATE · MISSING · NEW · LANG). On desktop, a chevron collapses Filters to a slim rail so the grid reflows (preference saved); ≤900px still uses the Filters drawer.
+Game Catalog **page size** options go up through **200–1000** (full allowlist 20/50/100/200/250/300/400/500/1000) — [preferences-themes.md](preferences-themes.md). Game Catalog Filters include **Signals** chips (UPDATE · MISSING · NEW · LANG). On desktop, a chevron collapses Filters to a slim rail so the grid reflows (preference saved); ≤900px still uses the Filters drawer.
 
-**Discover shelves** can be pinned or hidden per account (**Rows** in the top bar). A shelf with nothing honest to show is hidden rather than padded. **Library** shows one tile per title, not per copy — Preview → Available on lists the other systems. A grey Play button still opens and explains why.
+**Discover shelves** can be pinned or hidden per account (**Rows** in the top bar). A shelf with nothing honest to show is hidden rather than padded. **Game Catalog** shows one tile per title, not per copy — Preview → Available on lists the other systems. A grey Play button still opens and explains why.
 
-If Discover/Library look unstyled, the deploy is missing **`member-app.css`** — ask an admin to rebuild the image.
+If Discover/Game Catalog look unstyled, the deploy is missing **`member-app.css`** — ask an admin to rebuild the image.
 
-On phones and narrow tablets (≤900px), the top nav becomes a **hamburger** menu, Library **filters** open as a left drawer/sheet (desktop collapse rail does not apply), Chat slide-out goes full-width with channels stacked above messages, library tiles clamp denser, and pagination wraps full-width (your saved tile preference still applies on desktop).
+On phones and narrow tablets (≤900px), the top nav becomes a **hamburger** menu, Game Catalog **filters** open as a left drawer/sheet (desktop collapse rail does not apply), Chat slide-out goes full-width with channels stacked above messages, library tiles clamp denser, and pagination wraps full-width (your saved tile preference still applies on desktop).
 
 ## First things to try
 
-1. Open **Library** and filter by platform or Signals (sticky Filters on desktop; drawer ≤900px). Tile size is the TopNav percent slider. Ctrl+K to search titles.
+1. Open **Game Catalog** and filter by platform or Signals (sticky Filters on desktop; drawer ≤900px). Tile size is the TopNav percent slider. Ctrl+K to search titles.
 2. Open **Systems** and pick a console family.
 3. Open a game → details (trailers / YouTube demo when present, Extras & DLC with on-server honesty, screenshot fullscreen, store marks) → **Download** (streaming zip).
 4. Open preferences (account menu) → sectioned Preferences (decade-room cards + icon pack + tile size; no heavy cards).

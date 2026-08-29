@@ -110,7 +110,11 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
                a button labelled "New collection" was the only place the word
                changed — which is why there appeared to be "no way to make
                shelves". A Collection *is* a shelf; see models.Collection. */
-            <Popover label="New shelf" icon={<RailIcon name="collections" size={16} />}>
+            <Popover
+              label="New shelf"
+              icon={<RailIcon name="collections" size={16} />}
+              triggerClassName="gt-cbtn--primary"
+            >
           <form className="gt-collections__form" onSubmit={handleCreate}>
             <label className="gt-collections__field">
               Name

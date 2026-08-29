@@ -3,26 +3,129 @@
 }
 
 .gt-ownership__status {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--gt-space-3, 0.75rem);
 }
 
 .gt-ownership__empty {
+  margin: 0 0 var(--gt-space-2, 0.5rem);
   color: var(--gt-text-muted);
+  font-size: var(--gt-font-sm);
 }
 
+/* Compact status strip: one tight card, stores as a dense grid, one footnote. */
 .gt-ownership__card {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 1rem;
+  gap: var(--gt-space-2, 0.5rem);
+  padding: 0.55rem 0.7rem;
   border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-md);
-  background: var(--gt-surface);
+  border-radius: var(--gt-radius-sm);
+  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
+}
+
+.gt-ownership__card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+}
+
+.gt-ownership__card-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--gt-font-sm);
+  line-height: 1.2;
+}
+
+.gt-ownership__card-title strong {
+  font-weight: 600;
+}
+
+.gt-ownership__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.05rem 0.35rem;
+  border-radius: var(--gt-radius-pill, 999px);
+  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+  color: var(--gt-text-muted);
+  font-size: var(--gt-font-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.gt-ownership__card-counts {
+  color: var(--gt-text-muted);
+  font-size: var(--gt-font-xs);
+  white-space: nowrap;
+}
+
+.gt-ownership__store-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.2rem 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 640px) {
+  .gt-ownership__store-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gt-ownership__store-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 0.5rem;
+  row-gap: 0.05rem;
+  min-width: 0;
+  padding: 0.2rem 0;
+  font-size: var(--gt-font-xs);
+  line-height: 1.25;
+}
+
+.gt-ownership__store-label {
+  grid-column: 1;
+  font-weight: 600;
+  color: var(--gt-text);
+}
+
+.gt-ownership__store-state {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--gt-text-muted);
+  text-align: end;
+  white-space: nowrap;
+}
+
+.gt-ownership__store-row[data-connected='1'] .gt-ownership__store-state {
+  color: var(--gt-accent);
+}
+
+.gt-ownership__store-counts {
+  grid-column: 1;
+  color: var(--gt-text-muted);
+}
+
+.gt-ownership__card-note {
+  margin: 0;
+  padding-top: 0.15rem;
+  border-top: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
+  color: var(--gt-text-muted);
+  font-size: var(--gt-font-xs);
+  line-height: 1.35;
 }
 
 .gt-ownership__meta {
   color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+  font-size: var(--gt-font-sm);
 }
 
 .gt-ownership__section {

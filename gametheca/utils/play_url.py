@@ -11,7 +11,7 @@ from gametheca.platform import (
     pcdos_browser_enabled,
     play_mode_for_platform,
 )
-from gametheca.utils.browser_player import play_engine_fields
+from gametheca.utils.browser_player import browser_play_href, play_engine_fields
 from gametheca.utils.rom_archive import path_supports_browser_extract
 from gametheca.utils.webretro_cores import get_effective_installed_cores
 
@@ -288,12 +288,13 @@ def browse_play_fields(game) -> dict[str, Any]:
     if key == 'N64':
         n64_note = 'N64 WebRetro cores can be flaky on some titles — try the other core in Emulator profiles if play fails.'
 
-    platform_q = f'&platform={key}' if key else ''
     # Engine id on the payload comes from play_engine_fields() in finish().
-    # Launch URL stays WebRetro until Nostalgist / EmulatorJS shells ship.
+    # NES may launch the Nostalgist host when nostalgist_nes_pilot is on (BP-1).
     return finish({
-        'play_url': (
-            f'/static/vendor/webretro/webretro.html?guid={game.uuid}&core={core}{platform_q}'
+        'play_url': browser_play_href(
+            game_uuid=str(game.uuid),
+            core=core,
+            platform_key=key,
         ),
         'can_play_in_browser': True,
         'emulator_cores': cores,

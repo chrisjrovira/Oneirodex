@@ -1,7 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Arcade stick">
   <title>Arcade stick</title>
-  <rect width="128" height="128" rx="28" fill="#12161c"/>
-  <rect x="1.5" y="1.5" width="125" height="125" rx="26.5" fill="none" stroke="#2fd67b" stroke-opacity="0.35" stroke-width="3"/>
   <g fill="none" stroke="#2fd67b" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
     <path d="M64 40v34"/>
     <path d="M34 96c0-9 13-16 30-16s30 7 30 16"/>

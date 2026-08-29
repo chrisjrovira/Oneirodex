@@ -110,12 +110,12 @@ test('opens when open prop is true and filters by typeahead', async () => {
   renderPalette({ isAdmin: true, showHelp: true }, { open: true }, ['/discover'])
 
   const dialog = screen.getByRole('dialog')
-  expect(within(dialog).getByText('Library')).toBeInTheDocument()
+  expect(within(dialog).getByText('Game Catalog')).toBeInTheDocument()
   expect(within(dialog).getByText('Discover')).toBeInTheDocument()
 
   await user.type(screen.getByPlaceholderText(/search pages/i), 'chat')
   expect(within(dialog).getByText('Chat')).toBeInTheDocument()
-  expect(within(dialog).queryByText('Library')).toBeNull()
+  expect(within(dialog).queryByText('Game Catalog')).toBeNull()
 })
 
 test('Library mode searches titles via /api/search and navigates to details', async () => {

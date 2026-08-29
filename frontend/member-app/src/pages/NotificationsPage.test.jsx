@@ -115,7 +115,8 @@ test('new chrome moves the filter into bar two and keeps mark-all by the list', 
   expect(screen.getByText('Welcome')).toBeInTheDocument()
 })
 
-test('keeps preferences collapsed by default', async () => {
+test('keeps preferences on the Inbox row and collapsed by default', async () => {
+  const user = userEvent.setup()
   render(
     <MemoryRouter>
       <NotificationsPage />
@@ -123,8 +124,13 @@ test('keeps preferences collapsed by default', async () => {
   )
 
   await screen.findByText('Friend request')
-  const prefs = screen.getByText('Preferences').closest('details')
-  expect(prefs.open).toBe(false)
+  const prefsToggle = screen.getByRole('button', { name: 'Preferences' })
+  expect(prefsToggle.closest('.gt-notifications__inbox-head')).not.toBeNull()
+  expect(screen.queryByRole('region', { name: 'Notification preferences' })).toBeNull()
+
+  await user.click(prefsToggle)
+  expect(screen.getByRole('region', { name: 'Notification preferences' })).toBeInTheDocument()
+  expect(prefsToggle).toHaveAttribute('aria-expanded', 'true')
 })
 
 test('shows retry when notifications fail to load', async () => {

@@ -290,6 +290,8 @@ body.gt-play-shell {
   padding: 12px 14px 16px;
   background: linear-gradient(transparent, color-mix(in srgb, #000 78%, transparent));
   opacity: 0;
+  /* Shell stays click-through so WebRetro's Start (bottom of the iframe) and
+     the core list remain reachable. Only the buttons capture the pointer. */
   pointer-events: none;
   transition: opacity 0.18s ease;
 }
@@ -297,10 +299,11 @@ body.gt-play-shell {
 .gt-play-overlay.is-visible,
 .gt-play-overlay:focus-within {
   opacity: 1;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .gt-play-overlay .gt-play-ctrl {
+  pointer-events: auto;
   background: color-mix(in srgb, var(--gt-play-accent, #2fd67b) 82%, #111);
   color: var(--gt-play-btn-fg, #111);
   border: 0;
@@ -317,12 +320,13 @@ body.gt-play-shell {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
+  pointer-events: none;
 }
 
 @media (hover: none) {
   .gt-play-overlay {
     opacity: 1;
-    pointer-events: auto;
+    pointer-events: none;
   }
 }
 

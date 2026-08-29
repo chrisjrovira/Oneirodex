@@ -21,6 +21,7 @@ project's canonical `LICENSE` file next to its code as well.
 | [bootstrap-notify](https://github.com/mouse0270/bootstrap-notify) | 0.4.2 | MIT | **No banner** in the vendored copy; identifier from upstream |
 | [Sortable](https://github.com/SortableJS/Sortable) | 1.15.2 | MIT | All contributors to Sortable |
 | [WebRetro](https://github.com/BinBashBanana/webretro) | 6.5 | MIT | Copyright (c) 2021 BinBashBanana — from [upstream LICENSE](https://github.com/BinBashBanana/webretro/blob/master/LICENSE); the vendored JS has no banner |
+| [Nostalgist.js](https://github.com/arianrhodsandlot/nostalgist) | 0.21.1 | MIT | Copyright (c) 2023 arianrhodsandlot — from [upstream LICENSE](https://github.com/arianrhodsandlot/nostalgist/blob/v0.21.1/LICENSE) |
 
 ## The MIT licence
 
@@ -66,6 +67,13 @@ and this Website operator", named a different website as the service, linked to 
 `http://privacy.html`, and carried Discord links that GameTheca's own non-goals rule out. Every
 deployment was serving them from its own domain. Nothing in GameTheca linked to them; only the
 unreferenced `Info` link in `standalone.html` did, and that link is gone.
+
+## Nostalgist.js
+
+`nostalgist/` is the optional NES launch host (BP-1). The UMD is MIT, Copyright (c) 2023
+arianrhodsandlot; a copy sits at [nostalgist/LICENSE](nostalgist/LICENSE). It does **not** fetch
+sample ROMs or cores from a CDN in our host: `play.html` points `rom` at same-origin
+`/api/downloadrom/<uuid>` and cores at the operator-provisioned WebRetro WASM tree.
 
 ## Not covered here
 

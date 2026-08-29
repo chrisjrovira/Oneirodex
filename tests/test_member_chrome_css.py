@@ -43,11 +43,11 @@ def _blocks_for(css: str, selector: str) -> str:
 
 
 def test_expanded_rail_icons_are_unscaled_with_matching_labels():
-    """Icons stay 1x the column; the column itself is small; labels match."""
+    """Icons stay 1x the column; the column is readable; labels match."""
     density = _read('gt-density.css')
     shell = _read('gt-shell.css')
     assert '--gt-rail-icon-scale: 1;' in density
-    assert '--gt-rail-icon-w: 0.7rem;' in density
+    assert '--gt-rail-icon-w: 1.125rem;' in density
     assert 'font-size: var(--gt-font-xs)' in _rule(shell, '.gt-rail__link')
     assert 'var(--gt-rail-icon-scale, 1)' in shell
     assert 'var(--gt-rail-icon-scale, 1.8)' not in shell
@@ -139,3 +139,32 @@ def test_topbar_cluster_is_not_a_shared_outline():
     assert 'margin-inline-start: -1px' not in filters
     assert 'margin-inline-start: 0' in filters
     assert 'border-radius: 0' not in filters
+
+
+def test_tile_hover_has_no_accent_glow_and_grows_from_center():
+    """Enlarge is scale + drop shadow; no coloured bloom; origin is the tile centre."""
+    components = _strip_comments(_read('components.css'))
+    hover = _blocks_for(components, '.game-card:hover')
+    assert 'transform: scale(var(--gt-tile-hover-scale, 1.25))' in hover
+    assert 'transform-origin: center center' in hover
+    assert 'z-index: 40' in hover
+    assert '0 0 33px' not in hover
+    shadow = ';'.join(
+        part for part in hover.split(';') if 'box-shadow' in part
+    )
+    assert 'var(--shadow-dark-strong)' in shadow
+    assert 'var(--gt-accent)' not in shadow
+
+    overlay = _rule(components, ".game-card[data-overlay-open='true']")
+    assert 'z-index: 50' in overlay
+
+    shell = _read('gt-shell.css')
+    assert 'padding-block-start: max(var(--gt-stack), var(--gt-tile-hover-bleed-y))' in shell
+    assert 'padding-inline: max(var(--gt-gutter), var(--gt-tile-hover-bleed-x))' in shell
+    # Cover is 3:4 — upward growth tracks height; side growth tracks width.
+    assert '* 4 / 3 *' in shell
+    assert '--gt-tile-hover-bleed-y:' in shell
+    assert '--gt-tile-hover-bleed-x:' in shell
+
+    era = _read('gt-era.css')
+    assert 'transform-origin: center center' in era

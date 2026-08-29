@@ -4,16 +4,46 @@ from __future__ import annotations
 
 from flask import current_app, jsonify, request
 from flask_login import current_user, login_required
-from sqlalchemy import func, select
+from sqlalchemy import exists, func, select
 
 from gametheca import db
-from gametheca.models import Game, Image
+from gametheca.models import Game, Image, PlayerPerspective, game_player_perspective_association
 from gametheca.utils.api_response import api_error
 from gametheca.utils.cover_url import resolve_cover_url
 from gametheca.utils.functions import format_size
 from gametheca.utils.library_acl import apply_game_access_filters, user_can_access_game
+from gametheca.utils.secondary_scrapers import VR_PERSPECTIVE_NAME, game_indicates_vr
 
 from . import apis_bp
+
+_VR_PERSPECTIVE_NAMES = (
+    VR_PERSPECTIVE_NAME.lower(),
+    'vr',
+    'vr / virtual reality',
+)
+
+
+def _vr_games_query():
+    """Games tagged with a Virtual Reality player perspective — not the whole library.
+
+    Uses EXISTS (not DISTINCT on Game) so Postgres JSON columns on ``games``
+    do not break equality for DISTINCT.
+    """
+    assoc = game_player_perspective_association
+    vr_link = (
+        select(1)
+        .select_from(
+            assoc.join(
+                PlayerPerspective,
+                PlayerPerspective.id == assoc.c.player_perspective_id,
+            )
+        )
+        .where(
+            assoc.c.game_id == Game.id,
+            func.lower(PlayerPerspective.name).in_(_VR_PERSPECTIVE_NAMES),
+        )
+    )
+    return select(Game).where(exists(vr_link))
 
 
 def _vr_enabled() -> bool:
@@ -44,8 +74,7 @@ def vr_catalog():
     except (TypeError, ValueError):
         return api_error('Invalid pagination', code='bad_request')
 
-    query = select(Game)
-    query = apply_game_access_filters(query, current_user)
+    query = apply_game_access_filters(_vr_games_query(), current_user)
     query = query.order_by(Game.name.asc())
 
     total = db.session.execute(
@@ -81,6 +110,9 @@ def vr_game_detail(game_uuid: str):
         return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
         return api_error('Forbidden', code='forbidden')
+    # Detail matches the catalog: non-VR titles are not part of this hub.
+    if not game_indicates_vr(game):
+        return api_error('Game not found', code='not_found')
     size = format_size(game.size) if game.size is not None else None
     return jsonify({
         'uuid': game.uuid,

@@ -87,9 +87,12 @@
   transition: transform var(--gt-motion-base) var(--gt-motion-ease);
 }
 
-.gt-systems-tile__mark svg {
+.gt-systems-tile__mark svg,
+.gt-systems-tile__mark-img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 /* The glyph holds still here.
@@ -161,20 +164,28 @@
   flex-direction: column;
   align-items: center;
   gap: 0.15rem;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
 }
 
 .gt-systems-tile__name {
   /* Scales with the card — the system name is the label for a hero mark now,
-     not a row title. */
+     not a row title. Width capped so long names clamp inside the tile. */
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   font-size: var(--gt-font-lg);
   font-weight: 600;
   line-height: var(--gt-line-tight);
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
 }
 
 .gt-systems-tile__count {

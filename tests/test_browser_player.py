@@ -1,4 +1,4 @@
-"""BP-0 browser player settings — defaults, honesty (no unwired engines), API."""
+"""BP-0/BP-1 browser player settings — defaults, honesty (no unwired engines), NES pilot."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from gametheca.models import GlobalSettings, User
 from gametheca.utils.browser_player import (
     DEFAULTS,
     SHIPPED_ENGINES,
+    browser_play_href,
     get_browser_player_settings,
     normalize_browser_player_settings,
     play_engine_fields,
@@ -63,6 +64,7 @@ def test_normalize_defaults():
     assert cleaned['webrcade_sidecar_url'] == ''
     assert cleaned['webrcade_feed_export'] is False
     assert cleaned['browser_player_allow_member_choice'] is False
+    assert cleaned['nostalgist_nes_pilot'] is False
 
 
 def test_normalize_rejects_unwired_engine():
@@ -88,6 +90,7 @@ def test_play_engine_fields_without_app():
     fields = play_engine_fields()
     assert fields['browser_player'] == 'webretro'
     assert fields['browser_players_available'] == ['webretro']
+    assert fields['nostalgist_nes_pilot'] is False
 
 
 def test_browse_play_fields_include_engine(monkeypatch):
@@ -100,7 +103,46 @@ def test_browse_play_fields_include_engine(monkeypatch):
     fields = browse_play_fields(game)
     assert fields['browser_player'] == 'webretro'
     assert fields['browser_players_available'] == ['webretro']
+    assert fields['nostalgist_nes_pilot'] is False
     assert 'webretro.html' in fields['play_url']
+
+
+def test_browser_play_href_nes_pilot(monkeypatch):
+    monkeypatch.setattr(
+        'gametheca.utils.browser_player.nostalgist_nes_pilot_enabled',
+        lambda: True,
+    )
+    href = browser_play_href(
+        game_uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+        core='nestopia',
+        platform_key='NES',
+    )
+    assert href.startswith('/static/vendor/nostalgist/play.html?')
+    assert 'core=nestopia' in href
+    assert 'platform=NES' in href
+    snes = browser_play_href(
+        game_uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+        core='snes9x',
+        platform_key='SNES',
+    )
+    assert 'webretro.html' in snes
+
+
+def test_browse_play_fields_nes_pilot_url(monkeypatch):
+    library = SimpleNamespace(platform=SimpleNamespace(name='NES'))
+    game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
+    monkeypatch.setattr(
+        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        lambda _p: {'emulators': ['nestopia'], 'preferred': 'nestopia'},
+    )
+    monkeypatch.setattr(
+        'gametheca.utils.browser_player.nostalgist_nes_pilot_enabled',
+        lambda: True,
+    )
+    fields = browse_play_fields(game)
+    assert 'nostalgist/play.html' in fields['play_url']
+    # Honesty: available engines stay webretro-only until EmulatorJS ships.
+    assert fields['browser_players_available'] == ['webretro']
 
 
 def test_get_and_set_browser_player_settings(app, db_session):
@@ -130,6 +172,7 @@ def test_browser_player_settings_api(client, app, db_session, admin_user):
     assert body['ok'] is True
     assert body['browser_player_default'] == 'webretro'
     assert body['browser_players_available'] == ['webretro']
+    assert body['nostalgist_nes_pilot'] is False
 
     put_resp = client.put(
         '/api/browser-player-settings',
@@ -139,6 +182,15 @@ def test_browser_player_settings_api(client, app, db_session, admin_user):
     put_body = put_resp.get_json()
     assert put_body['ok'] is True
     assert put_body['browser_player_allow_member_choice'] is True
+
+    pilot = client.put(
+        '/api/browser-player-settings',
+        json={'nostalgist_nes_pilot': True},
+    )
+    assert pilot.status_code == 200
+    assert pilot.get_json()['nostalgist_nes_pilot'] is True
+    again = client.get('/api/browser-player-settings')
+    assert again.get_json()['nostalgist_nes_pilot'] is True
 
     bad = client.put(
         '/api/browser-player-settings',

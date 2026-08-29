@@ -356,6 +356,13 @@
     }
 
     try {
+      if (type === 'gt-allow-leave') {
+        try {
+          window.onbeforeunload = null;
+        } catch (eAllow) {}
+        return;
+      }
+
       if (type === 'gt-ping') {
         done({
           ok: true,

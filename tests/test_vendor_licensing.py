@@ -19,8 +19,10 @@ NOTICES = VENDOR / 'THIRD-PARTY-NOTICES.md'
 
 
 def _tracked(pattern: str) -> list[str]:
+    # Per-command only — this checkout can sit on a UNC share where git
+    # refuses ls-files as "dubious ownership" unless safe.directory is set.
     out = subprocess.run(
-        ['git', 'ls-files', pattern],
+        ['git', '-c', 'safe.directory=*', 'ls-files', pattern],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -121,9 +123,10 @@ class TestNotices:
         script = REPO_ROOT / 'scripts' / 'fetch-vendor-licenses.sh'
         assert script.is_file()
         body = script.read_text(encoding='utf-8')
-        for name in ('bootstrap', 'jquery', 'sortablejs', 'datatables', 'cropperjs', 'webretro'):
+        for name in ('bootstrap', 'jquery', 'sortablejs', 'datatables', 'cropperjs', 'webretro', 'nostalgist'):
             assert name in body
         assert 'BinBashBanana/webretro' in body
+        assert 'arianrhodsandlot/nostalgist' in body
 
 
 # --- Load sites: heavy vendor JS stays off the member shell ---------------

@@ -209,16 +209,28 @@ export function GameDetailsPage() {
     }
     const cores = Array.isArray(game.emulator_cores) ? game.emulator_cores : []
     const core = selectedCore || game.emulator_core || cores[0]
+    // Prefer the server play_url (WebRetro or BP-1 Nostalgist NES host) and
+    // only rewrite query params when the member picks another core.
+    const base = game.play_url || null
     if (!core || !game.uuid) {
-      return game.play_url || null
+      return base
     }
-    const platform = game.library_platform
-      ? `&platform=${encodeURIComponent(game.library_platform)}`
-      : ''
-    const cheatSurface = showsRetroarchCheats(game)
-      ? `&cheat_surface=${encodeURIComponent('retroarch')}`
-      : ''
-    return `/static/vendor/webretro/webretro.html?guid=${encodeURIComponent(game.uuid)}&core=${encodeURIComponent(core)}${platform}${cheatSurface}`
+    try {
+      const url = new URL(base || '/static/vendor/webretro/webretro.html', window.location.origin)
+      url.searchParams.set('guid', game.uuid)
+      url.searchParams.set('core', core)
+      if (game.library_platform) {
+        url.searchParams.set('platform', game.library_platform)
+      }
+      if (showsRetroarchCheats(game)) {
+        url.searchParams.set('cheat_surface', 'retroarch')
+      } else {
+        url.searchParams.delete('cheat_surface')
+      }
+      return `${url.pathname}${url.search}`
+    } catch {
+      return base
+    }
   }, [game, selectedCore])
 
   const firmwareBlocked = isFirmwarePlayBlocked(game)
@@ -337,7 +349,7 @@ export function GameDetailsPage() {
       ) : null}
       <div className="gt-details-page__nav">
         <Link className="gt-btn" to="/library">
-          ← Library
+          ← Game Catalog
         </Link>
         {game.library_platform ? (
           <Link

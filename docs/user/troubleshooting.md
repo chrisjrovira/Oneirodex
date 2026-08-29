@@ -76,9 +76,12 @@ update.
 | No browser Play button on a scanned `.gz` | Non-ROM gzip (e.g. `.tar.gz`) | Repack as `.zip` / raw ROM; Play is suppressed for unsupported archives |
 | No sound on Start | Browser autoplay policy suspends audio until a page gesture | Click once into the play screen, then press Start |
 | Pause / Reset / Mute / Save do nothing | Core still booting, or a cached player shell | Wait until the game is running; hard-refresh (Ctrl+F5). Controls are on the **play bar** — the overlay cannot see hover over the iframe canvas |
+| ← Game Catalog / Power does nothing | Leave-site dialog from the emulator iframe, or a cached play shell | Confirm Leave if the browser asks, then hard-refresh (Ctrl+F5). Current shells clear that guard and always go to `/library` — [browser-play.md](browser-play.md) |
+| Cannot reach Start under the bottom controls | Old overlay captured the whole gradient | Hard-refresh. Only the overlay buttons take clicks; the rest of the stage stays click-through |
 | Rewind button is disabled | Heavy core (N64, PS1, Saturn, Dreamcast, PSP) | Expected — a rewind buffer stutters those cores in the browser. Use save states, or the desktop companion |
 | Picture looks too sharp / too CRT | Picture mode | Cycle **Picture** on the play bar: CRT · Sharp · Soft. Soft turns on RetroArch smoothing. Hard-refresh if the bar is missing the control |
 | SNES game crackles / audio pitch shifts on busy scenes | WASM CPU pressure causing emulation slowdown | Pre-start gear → **Reduce Slowdown (Overclock)**; still choppy → use desktop companion for that title — [browser-play.md](browser-play.md#audiovideo-tuning--wasm-limits-snes-and-friends) |
+| NES opened a chromeless Nostalgist page (no Save/Load bar) | Admin enabled `nostalgist_nes_pilot` | Expected for the NES pilot. Turn the flag off via `PUT /api/browser-player-settings` to use the WebRetro room — [browser-play.md](browser-play.md) |
 
 ## Social / voice
 

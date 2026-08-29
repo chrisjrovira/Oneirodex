@@ -77,6 +77,7 @@ describe('filterAdminCommands', () => {
     ['moonlight', /remote play/i],
     ['prowlarr', /arr|acquire/i],
     ['no-intro', /reference set/i],
+    ['nostalgist', /emulator/i],
   ])('finds a destination for %s', (query, expected) => {
     const results = filterAdminCommands(commands, query)
     expect(results.length).toBeGreaterThan(0)

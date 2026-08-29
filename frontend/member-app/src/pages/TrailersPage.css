@@ -275,8 +275,11 @@
   text-decoration: underline;
 }
 
-.gt-trailers__empty a {
-  color: var(--gt-accent);
+/* Wishlist/Collections-style empty: muted sentence, no CTA button. */
+.gt-trailers__empty {
+  margin: 0;
+  color: var(--gt-text-muted);
+  font-size: var(--gt-font-md);
 }
 
 .gt-trailers__modal-overlay {

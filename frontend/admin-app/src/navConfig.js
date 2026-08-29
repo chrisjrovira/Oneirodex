@@ -32,7 +32,7 @@ export const SETTINGS_GROUPS = [
     id: 'play',
     title: 'Play & emulation',
     items: [
-      { to: '/admin/emulator_profiles', title: 'Emulators', blurb: 'WebRetro cores, BIOS, cloud saves.' },
+      { to: '/admin/emulator_profiles', title: 'Emulators', blurb: 'WebRetro cores, BIOS, NES Nostalgist pilot, cloud saves.' },
       { to: '/admin/remote_play', title: 'Remote play', blurb: 'BYO Sunshine/Wolf Moonlight host — off by default.' },
       { to: '/admin/arr', title: 'Arr module', blurb: 'BYO Prowlarr/Jackett + qBittorrent (no bundled indexers).', statusKey: 'arr' },
       {
