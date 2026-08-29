@@ -75,7 +75,7 @@ On phones and narrow tablets (≤900px), the top nav becomes a **hamburger** men
 
 ## First things to try
 
-1. Open **Game Catalog** and filter by platform or Signals (sticky Filters on desktop; drawer ≤900px). Tile size is the TopNav percent slider. Ctrl+K to search titles.
+1. Open **Game Catalog** and filter by platform or Signals (sticky Filters on desktop; drawer ≤900px). **Tile / Rows / Grid** in the top bar changes the layout (remembered in this browser). Tile size is the TopNav percent slider (Tile and Grid). Ctrl+K to search titles.
 2. Open **Systems** and pick a console family.
 3. Open a game → details (trailers / YouTube demo when present, Extras & DLC with on-server honesty, screenshot fullscreen, store marks) → **Download** (streaming zip).
 4. Open preferences (account menu) → sectioned Preferences (decade-room cards + icon pack + tile size; no heavy cards).

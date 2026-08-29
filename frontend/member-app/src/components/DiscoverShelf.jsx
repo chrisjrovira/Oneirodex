@@ -63,7 +63,7 @@ export function DiscoverShelf({
   const [hbar, setHbar] = useState({ max: 0, left: 0, thumbPct: 100 })
   const abortRef = useRef(null)
   const hbarDragRef = useRef(null)
-  // Arrows (hover + click) and wheel — no mid-row edge auto-scroll.
+  // Arrows (hover + click) and the bottom slider — wheel scrolls the page.
   const {
     ref: trackRef,
     viewportRef,
@@ -72,7 +72,7 @@ export function DiscoverShelf({
     scrollByPage,
     startEdgeScroll,
     stopEdgeScroll,
-  } = useRowScroll()
+  } = useRowScroll({ bindKey: games.length })
 
   const syncHbar = useCallback(() => {
     const track = trackRef.current
@@ -225,15 +225,16 @@ export function DiscoverShelf({
       className={`gt-shelf gt-shelf--${layout}`}
     >
       <div className="gt-shelf__head">
-        {/* The rule is drawn by the heading itself (see .gt-shelf__title in the
-            stylesheet) rather than by a border under the whole head row, so it
-            stops at the words instead of running the width of the page. */}
-        <h2 className="gt-shelf__title">
-          <span className="gt-shelf__title-text">{section.title}</span>
-        </h2>
-        {section.reason ? (
-          <span className="gt-shelf__reason">{section.reason}</span>
-        ) : null}
+        {/* Title mark + reason share a baseline row; the h2 keeps only the
+            section name so screen readers still hear "News", not the lede. */}
+        <div className="gt-shelf__heading">
+          <h2 className="gt-shelf__title">
+            <span className="gt-shelf__title-text">{section.title}</span>
+          </h2>
+          {section.reason ? (
+            <span className="gt-shelf__reason">{section.reason}</span>
+          ) : null}
+        </div>
         {section.is_event ? (
           <span className="gt-shelf__event" title="Limited-time shelf">
             Event{formatEventEnds(section.ends_at)}

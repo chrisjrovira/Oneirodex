@@ -32,6 +32,13 @@ from gametheca.utils.cover_art_stock import (
 )
 from gametheca.utils.cover_selection import list_games_for_cover_batch
 from gametheca.utils.event_logging import log_system_event
+from gametheca.utils.ai_artwork import ArtworkGenerationError
+from gametheca.utils.system_marks import (
+    generate_system_marks,
+    list_system_marks_catalog,
+    platform_choices,
+    system_mark_lab_spec,
+)
 from . import admin2_bp
 
 
@@ -326,13 +333,31 @@ def _art_studio_apply_batch_impl():
 @admin_required
 def art_studio_system_marks_catalog():
     """Per-theme progress for AI Systems hub marks."""
-    from gametheca.utils.system_marks import list_system_marks_catalog
-
     try:
         items = list_system_marks_catalog()
-        return api_ok({'items': items, 'count': len(items)})
+        return api_ok({
+            'items': items,
+            'count': len(items),
+            'all_platforms': platform_choices(),
+        })
     except Exception as exc:  # noqa: BLE001
         return api_error(f'Failed to list system marks: {exc}', code='internal')
+
+
+@admin2_bp.route('/admin/api/art-studio/system-marks/lab', methods=['GET'])
+@login_required
+@admin_required
+def art_studio_system_marks_lab():
+    """Default prompt + whether a mark file already exists (one pair)."""
+    theme = (request.args.get('theme') or '').strip()
+    platform = (request.args.get('platform') or '').strip()
+    if not theme or not platform:
+        return api_error('theme and platform are required', code='bad_request')
+    try:
+        spec = system_mark_lab_spec(theme=theme, platform=platform)
+    except ValueError as exc:
+        return api_error(str(exc), code='bad_request')
+    return api_ok(spec)
 
 
 @admin2_bp.route('/admin/api/art-studio/system-marks/generate', methods=['POST'])
@@ -340,9 +365,6 @@ def art_studio_system_marks_catalog():
 @admin_required
 def art_studio_system_marks_generate():
     """Idempotent AI generation of system marks (ENABLE_AI_ARTWORK required)."""
-    from gametheca.utils.ai_artwork import ArtworkGenerationError
-    from gametheca.utils.system_marks import generate_system_marks
-
     data = _json_body()
     themes = data.get('themes')
     if isinstance(themes, str):
@@ -364,16 +386,25 @@ def art_studio_system_marks_generate():
         limit_n = int(limit) if limit is not None else None
     except (TypeError, ValueError):
         return api_error('limit must be an integer', code='bad_request')
+    prompt = data.get('prompt')
+    prompt_text = str(prompt).strip() if prompt is not None and str(prompt).strip() else None
+    if prompt_text and (not themes or not platforms or len(themes) != 1 or len(platforms) != 1):
+        return api_error(
+            'prompt override requires exactly one theme and one platform',
+            code='bad_request',
+        )
     try:
         result = generate_system_marks(
             themes=themes,
             platforms=platforms,
             force=force,
             limit=limit_n,
+            prompt=prompt_text,
         )
         log_system_event(
             f"Art studio system-marks generate generated={result['generated']} "
             f"skipped={result['skipped']} errors={len(result['errors'])}"
+            + (f" lab={themes[0]}/{platforms[0]}" if prompt_text else '')
         )
         return api_ok(result, status=201)
     except ValueError as exc:

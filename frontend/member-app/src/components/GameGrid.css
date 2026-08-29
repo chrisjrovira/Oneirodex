@@ -47,7 +47,10 @@ html.is-tile-resizing .game-library-row {
  * offset, gutters, max-width) rather than at the track-repeat mode. */
 .game-library-container[data-library-grid]:not([data-library-virtual]) {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min), 1fr));
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--gt-catalog-col-min, var(--gt-tile-min)), 1fr)
+  );
   gap: var(--gt-tile-gap);
   align-items: start;
   transition: gap 0.22s ease;
@@ -73,7 +76,10 @@ html.is-tile-resizing .game-library-row {
  * end flush with its final row — see gameGridLayout.js. */
 .game-library-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--gt-tile-min), 1fr));
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--gt-catalog-col-min, var(--gt-tile-min)), 1fr)
+  );
   gap: var(--gt-tile-gap);
   align-items: start;
   box-sizing: border-box;
@@ -135,5 +141,113 @@ html.is-tile-resizing .game-library-row {
   .game-library-container[data-library-grid]:not([data-library-virtual]),
   .game-library-row {
     transition: none;
+  }
+}
+
+/* Grid: denser columns. The live virtual grid also writes --gt-catalog-col-min
+   in pixels so JS column math and CSS auto-fill stay on the same number. */
+.game-library-container[data-layout='grid'] {
+  --gt-catalog-col-min: max(6.75rem, calc(var(--gt-tile-min) * 0.58));
+}
+
+/* Rows: one title per line. Cover is a thumb; the name sits beside it.
+   Hover scale is a tile affordance and would shove the list. */
+.game-library-container[data-layout='rows'] .game-library-row {
+  display: block;
+}
+
+.game-library-container[data-library-grid][data-layout='rows']:not([data-library-virtual]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-2, 0.5rem);
+}
+
+.game-library-container[data-layout='rows'] .game-card-skeleton {
+  display: flex;
+  height: 4.75rem;
+}
+
+.game-library-container[data-layout='rows'] .game-card-skeleton__cover {
+  width: 3.55rem;
+  height: 4.75rem;
+  aspect-ratio: auto;
+  flex: 0 0 3.55rem;
+}
+
+.game-library-container[data-layout='rows'] .game-card {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  height: 4.75rem;
+  min-height: 4.75rem;
+  overflow: hidden;
+  border: 1px solid var(--gt-border);
+  border-radius: var(--gt-radius-md);
+  background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
+}
+
+.game-library-container[data-layout='rows'] .game-card:hover,
+.game-library-container[data-layout='rows'] .game-card:focus-visible,
+.game-library-container[data-layout='rows'] .game-card:has(:focus-visible) {
+  transform: none;
+  box-shadow: none;
+  border-color: color-mix(in srgb, var(--gt-accent) 50%, transparent);
+}
+
+.game-library-container[data-layout='rows'] .game-card__cover-link {
+  flex: 0 0 3.55rem;
+  width: 3.55rem;
+  height: 4.75rem;
+  border-radius: 0;
+}
+
+.game-library-container[data-layout='rows'] .game-cover,
+.game-library-container[data-layout='rows'] .gt-cover-fallback {
+  width: 3.55rem;
+  height: 4.75rem;
+  object-fit: cover;
+}
+
+.game-library-container[data-layout='rows'] .game-card__row-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.35rem 6.5rem 0.35rem 0.7rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.game-library-container[data-layout='rows'] .game-card__row-title {
+  font-size: var(--gt-font-base);
+  font-weight: 650;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-library-container[data-layout='rows'] .game-card__row-detail {
+  font-size: var(--gt-font-xs);
+  color: var(--gt-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-library-container[data-layout='rows'] .gt-platform-chip,
+.game-library-container[data-layout='rows'] .gt-badge-stack,
+.game-library-container[data-layout='rows'] .gt-tile-preview-hint,
+.game-library-container[data-layout='rows'] .gt-tile-play {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-library-container[data-layout='rows'] .game-card:hover,
+  .game-library-container[data-layout='rows'] .game-card:focus-visible,
+  .game-library-container[data-layout='rows'] .game-card:has(:focus-visible) {
+    transform: none;
   }
 }

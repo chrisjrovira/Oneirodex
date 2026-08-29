@@ -181,14 +181,20 @@ test('headline cards show artwork when the feed supplies it', async () => {
         source: 'Example',
         summary: 'Notes',
         image_url: 'https://cdn.example.com/art.jpg',
+        published_at: '2026-08-12T12:00:00+00:00',
       },
     ],
   })
   const { container } = render(<NewsPage />, { wrapper: MemoryRouter })
   await screen.findByText('Studio ships patch')
-  const art = container.querySelector('img.gt-news__card-art')
+  const wrap = container.querySelector('.gt-news__card-art-wrap')
+  expect(wrap).toBeTruthy()
+  const art = wrap.querySelector('img.gt-news__card-art')
   expect(art).toBeTruthy()
   expect(art).toHaveAttribute('src', 'https://cdn.example.com/art.jpg')
+  expect(wrap.querySelector('.gt-news__card-badge')).toHaveTextContent('Example')
+  expect(wrap.querySelector('time.gt-news__card-when')).toBeTruthy()
+  expect(container.querySelector('.gt-news__card-body .gt-news__meta')).toBeNull()
 })
 
 test('a feed with no artwork gets a placeholder, never a broken frame', async () => {
@@ -238,7 +244,8 @@ test('section counts stay hidden until the feeds have actually answered', async 
   expect(screen.getByRole('button', { name: /Free now/ }).textContent).not.toMatch(/\d/)
 })
 
-test('new chrome puts Card Grid RSS after the section views', async () => {
+test('new chrome unfurls Card Grid RSS under View on the section bar', async () => {
+  const user = userEvent.setup()
   announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
   gamingNewsApi.fetchGamingNews.mockResolvedValue({
     items: [{ title: 'Studio ships patch', url: 'https://example.com/a', source: 'Example' }],
@@ -247,6 +254,10 @@ test('new chrome puts Card Grid RSS after the section views', async () => {
   render(<NewsPage shellConfig={{ enableNewChrome: true }} />, { wrapper: MemoryRouter })
   await screen.findByRole('heading', { name: 'Gaming headlines' })
 
+  expect(screen.getByRole('button', { name: 'View' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Card' })).not.toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: 'View' }))
   expect(screen.getByRole('button', { name: 'Card' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Grid' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'RSS' })).toBeInTheDocument()
@@ -271,6 +282,7 @@ test('RSS layout renders headline magazine rows instead of cards', async () => {
   })
   await screen.findByText('Studio ships patch')
   await user.click(screen.getByRole('button', { name: /Headlines/ }))
+  await user.click(screen.getByRole('button', { name: 'View' }))
   await user.click(screen.getByRole('button', { name: 'RSS' }))
 
   expect(container.querySelector('.gt-news__magazine')).toBeTruthy()

@@ -39,6 +39,9 @@ Game details lists installs with honest presence: a version marked **Missing on 
 **How many games per Game Catalog page?**  
 Preferences → items per page: **20 / 50 / 100 / 200 / 250 / 300 / 400 / 500 / 1000**.
 
+**Can I switch Game Catalog off the cover grid?**  
+**Tile / Rows / Grid** in the top bar. Tile is the cover grid, Rows is one title per line, Grid packs smaller covers. The choice is remembered in this browser. Favorites uses the same switcher. The tile-size slider still applies to Tile and Grid.
+
 **What are Signals chips?**  
 Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params as the badges; they persist with other filters. VR is a tile badge / More → VR, not a Signals chip. MISSING means files were removed from disk. Tile badges sit in four corners only (occupied corners; rounded-square chrome). No OUT / ~ / RELEASE on tiles or Signals chips (UPDATE alone covers freshness-behind).
 
@@ -144,7 +147,7 @@ Each press does one bounded batch (25 titles, 50 max) because every title is a l
 ## News & notifications
 
 **Where is News?**  
-**More → News** — tabbed feed (All · Admins · Free now · Headlines) with a featured strip and magazine densify (truncated body · readable dates). Empty tabs return an honest empty state (HTTP 200), not an error.
+**More → News** — tabbed feed (All · Admins · Free now · Headlines) that fills the pane. **Card / Grid / RSS** in the top bar changes how Free now and Headlines look: Card and Grid overlay source and date on the artwork with the title under the image; RSS is magazine rows. Empty tabs return an honest empty state (HTTP 200), not an error.
 
 **Where do free Steam/Epic/GOG offers show up?**  
 **News → Free now.** Claim opens the store page (or launcher if that account is linked under Ownership). Details: [free-games.md](free-games.md).

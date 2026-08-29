@@ -60,29 +60,104 @@ function useDismiss(open, onClose, refs) {
   }, [open, onClose, refs])
 }
 
-export function SegmentedViews({ views, active, onSelect, label = 'Views' }) {
-  if (!Array.isArray(views) || views.length === 0) return null
+/**
+ * One unified segmented bar. Optional `unfurl` adds a trailing trigger (default
+ * label "View") that drops a vertical stack of same-width options attached
+ * under that button — only while open. Used so Tile/Rows/Grid (or News
+ * Card/Grid/RSS) do not sit as a second always-on bar beside the kind chips.
+ *
+ * @param {object} [props.unfurl]
+ * @param {{ id: string, label: string }[]} props.unfurl.views
+ * @param {string} props.unfurl.active
+ * @param {(id: string) => void} props.unfurl.onSelect
+ * @param {string} [props.unfurl.triggerLabel='View']
+ */
+export function SegmentedViews({
+  views,
+  active,
+  onSelect,
+  label = 'Views',
+  unfurl = null,
+}) {
+  const [unfurlOpen, setUnfurlOpen] = useState(false)
+  const rootRef = useRef(null)
+  const closeUnfurl = useCallback(() => setUnfurlOpen(false), [])
+  useDismiss(unfurlOpen, closeUnfurl, [rootRef])
+
+  const hasViews = Array.isArray(views) && views.length > 0
+  const hasUnfurl =
+    unfurl && Array.isArray(unfurl.views) && unfurl.views.length > 0
+  if (!hasViews && !hasUnfurl) return null
+
+  const triggerLabel = unfurl?.triggerLabel || 'View'
 
   return (
-    <div className="gt-contextbar__views">
-      <div className="gt-seg" role="group" aria-label={label}>
-        {views.map((view) => {
-          const selected = view.id === active
-          return (
+    <div
+      className={`gt-contextbar__views${unfurlOpen ? ' is-unfurled' : ''}`}
+      ref={rootRef}
+    >
+      <div
+        className={`gt-seg${unfurlOpen ? ' is-unfurled' : ''}`}
+        role="group"
+        aria-label={label}
+      >
+        {hasViews
+          ? views.map((view) => {
+              const selected = view.id === active
+              return (
+                <button
+                  key={view.id}
+                  type="button"
+                  className={`gt-seg__item${selected ? ' is-active' : ''}`}
+                  aria-pressed={selected}
+                  onClick={() => onSelect?.(view.id)}
+                >
+                  {view.label}
+                  {typeof view.count === 'number' ? (
+                    <span className="gt-seg__count"> {view.count}</span>
+                  ) : null}
+                </button>
+              )
+            })
+          : null}
+        {hasUnfurl ? (
+          <span className="gt-seg__unfurl-anchor">
             <button
-              key={view.id}
               type="button"
-              className={`gt-seg__item${selected ? ' is-active' : ''}`}
-              aria-pressed={selected}
-              onClick={() => onSelect?.(view.id)}
+              className={`gt-seg__item${unfurlOpen ? ' is-active' : ''}`}
+              aria-expanded={unfurlOpen}
+              aria-haspopup="true"
+              onClick={() => setUnfurlOpen((value) => !value)}
             >
-              {view.label}
-              {typeof view.count === 'number' ? (
-                <span className="gt-seg__count"> {view.count}</span>
-              ) : null}
+              {triggerLabel}
             </button>
-          )
-        })}
+            {unfurlOpen ? (
+              <div
+                className="gt-seg gt-contextbar__views-unfurl"
+                role="group"
+                aria-label={triggerLabel}
+              >
+                {unfurl.views.map((view) => {
+                  const selected = view.id === unfurl.active
+                  return (
+                    <button
+                      key={view.id}
+                      type="button"
+                      className={`gt-seg__item${selected ? ' is-active' : ''}`}
+                      aria-pressed={selected}
+                      onClick={() => {
+                        unfurl.onSelect?.(view.id)
+                        setUnfurlOpen(false)
+                      }}
+                    >
+                      {view.label}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : null}
+          </span>
+        ) : null}
       </div>
     </div>
   )
@@ -179,6 +254,12 @@ export function ContextBar({
    */
   filtersOnSummary = false,
   summary = null,
+  /**
+   * Layout / density options that unfurl under a trailing "View" segment on
+   * the same bar — not a second always-visible `.gt-seg` beside the kinds.
+   * Shape matches `SegmentedViews` `unfurl`.
+   */
+  viewUnfurl = null,
   actions = null,
   overflow = null,
   t = (key) => key,
@@ -258,6 +339,13 @@ export function ContextBar({
       </Popover>
     ) : null
 
+  const resolvedUnfurl = viewUnfurl
+    ? {
+        ...viewUnfurl,
+        triggerLabel: viewUnfurl.triggerLabel || t('View'),
+      }
+    : null
+
   const viewControl = (
     <>
       <SegmentedViews
@@ -265,6 +353,7 @@ export function ContextBar({
         active={activeView}
         onSelect={onSelectView}
         label={t('Views')}
+        unfurl={resolvedUnfurl}
       />
       {actions}
       {overflow ? <Popover label={t('More')}>{overflow}</Popover> : null}

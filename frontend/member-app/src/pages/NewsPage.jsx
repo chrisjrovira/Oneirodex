@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { fetchAnnouncements } from '../api/announcements'
 import { claimFreeGameAssist, fetchFreeGames } from '../api/freeGames'
 import { fetchGamingNews } from '../api/gamingNews'
-import { ContextBar, SegmentedViews } from '../chrome/ContextBar'
+import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './NewsPage.css'
@@ -256,14 +256,12 @@ export function NewsPage({ shellConfig = {} }) {
           views={viewsWithCounts}
           activeView={activeTab}
           onSelectView={setActiveTab}
-          actions={
-            <SegmentedViews
-              views={NEWS_LAYOUTS}
-              active={layout}
-              onSelect={handleLayout}
-              label="Layout"
-            />
-          }
+          viewUnfurl={{
+            views: NEWS_LAYOUTS,
+            active: layout,
+            onSelect: handleLayout,
+            triggerLabel: 'View',
+          }}
         />
       ) : null}
     <div
@@ -627,32 +625,37 @@ export function NewsPage({ shellConfig = {} }) {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    {item.image_url ? (
-                      <img
-                        className="gt-news__card-art"
-                        src={item.image_url}
-                        alt=""
-                        loading="lazy"
-                        onError={(event) => {
-                          event.currentTarget.classList.add('is-broken')
-                        }}
-                      />
-                    ) : (
-                      <span className="gt-news__card-art gt-news__card-art--empty" aria-hidden="true" />
-                    )}
+                    <span className="gt-news__card-art-wrap">
+                      {item.image_url ? (
+                        <img
+                          className="gt-news__card-art"
+                          src={item.image_url}
+                          alt=""
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.classList.add('is-broken')
+                          }}
+                        />
+                      ) : (
+                        <span className="gt-news__card-art gt-news__card-art--empty" aria-hidden="true" />
+                      )}
+                      {item.source ? (
+                        <span className="gt-news__card-badge">{item.source}</span>
+                      ) : null}
+                      {item.published_at ? (
+                        <time className="gt-news__card-when" dateTime={item.published_at}>
+                          {formatLocaleDate(item.published_at, {
+                            compact: true,
+                            fallback: null,
+                          })}
+                        </time>
+                      ) : null}
+                    </span>
                     <span className="gt-news__card-body">
                       <strong className="gt-news__card-title">{item.title}</strong>
                       {item.summary ? (
                         <span className="gt-news__card-summary">{truncate(item.summary, 140)}</span>
                       ) : null}
-                      <span className="gt-news__meta">
-                        <span className="gt-news__source">{item.source}</span>
-                        {item.published_at ? (
-                          <time dateTime={item.published_at}>
-                            {formatLocaleDate(item.published_at)}
-                          </time>
-                        ) : null}
-                      </span>
                     </span>
                   </a>
                 </li>

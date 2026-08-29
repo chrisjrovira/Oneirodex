@@ -56,6 +56,12 @@ const LONG_PRESS_MS = 480
  */
 const TILE_OVERLAY_OPENED = 'gt-tile-overlay-opened'
 
+function releaseYear(value) {
+  if (!value) return ''
+  const match = String(value).match(/^(\d{4})/)
+  return match ? match[1] : ''
+}
+
 export function GameCard({
   game,
   showPlayStatus = false,
@@ -70,6 +76,7 @@ export function GameCard({
   // you are looking at rather than the newest one the title exists on — see
   // editionChipLabels.
   activePlatform = '',
+  layout = 'tile',
 }) {
   const cardRef = useRef(null)
   const longPressTimer = useRef(0)
@@ -263,7 +270,9 @@ export function GameCard({
       onPointerCancel={clearLongPress}
       onClickCapture={handleSelectClick}
     >
-      <span className="visually-hidden">{game.name}</span>
+      {layout === 'rows' ? null : (
+        <span className="visually-hidden">{game.name}</span>
+      )}
       <div
         className="game-card"
         // Raises the card above its neighbours while a menu is open.
@@ -582,6 +591,21 @@ export function GameCard({
             <CoverFallback name={game.name} />
           )}
         </a>
+
+        {layout === 'rows' ? (
+          <a className="game-card__row-meta" href={`/game_details/${game.uuid}`}>
+            <strong className="game-card__row-title">{game.name}</strong>
+            <span className="game-card__row-detail">
+              {[
+                platformChip?.full || game.library_platform_label,
+                releaseYear(game.first_release_date),
+                showPlayStatus ? currentStatus.label : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </span>
+          </a>
+        ) : null}
 
         {platformChip ? (
           <span

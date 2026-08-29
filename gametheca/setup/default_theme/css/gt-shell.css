@@ -112,6 +112,27 @@
   padding-inline: max(var(--gt-gutter), var(--gt-tile-hover-bleed-x));
 }
 
+/* Selection toolbar: drop the hover-bleed pad so the strip sits just under
+   the thin top bar. Put that bleed on the grid instead — first-row tiles
+   still enlarge upward, into the gap under the strip rather than into the
+   chrome. #main-content beats the comma-list ID on `.gt-shell > #content`
+   so this cannot lose to the rule above. Physical padding-top is set too:
+   the base `padding` shorthand writes the physical longhands, and those
+   can win a logical-only override. */
+#main-content.gt-shell__main:has(.gt-library-selection),
+.gt-shell > #content:has(.gt-library-selection) {
+  /* !important: the base `.gt-shell__main` `padding` shorthand writes
+     physical longhands; without this they keep winning over a later
+     padding-block-start, even with an ID + :has() selector. */
+  padding-block-start: 0.15rem !important;
+  padding-top: 0.15rem !important;
+}
+
+#main-content.gt-shell__main:has(.gt-library-selection) .game-library-container,
+.gt-shell > #content:has(.gt-library-selection) .game-library-container {
+  padding-block-start: var(--gt-tile-hover-bleed-y, 0px);
+}
+
 /* News owns the remaining pane: lists scroll inside panels, the shell does not. */
 .gt-shell__main:has(.gt-news--fill),
 .gt-shell > #content:has(.gt-news--fill) {

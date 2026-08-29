@@ -161,6 +161,8 @@ def test_tile_hover_has_no_accent_glow_and_grows_from_center():
     shell = _read('gt-shell.css')
     assert 'padding-block-start: max(var(--gt-stack), var(--gt-tile-hover-bleed-y))' in shell
     assert 'padding-inline: max(var(--gt-gutter), var(--gt-tile-hover-bleed-x))' in shell
+    assert '#main-content.gt-shell__main:has(.gt-library-selection)' in shell
+    assert 'padding-top: 0.15rem !important' in shell
     # Cover is 3:4 — upward growth tracks height; side growth tracks width.
     assert '* 4 / 3 *' in shell
     assert '--gt-tile-hover-bleed-y:' in shell

@@ -226,3 +226,22 @@ test('the stored placeholder path counts as no art, not as art', () => {
   expect(document.querySelector('[data-cover-fallback]')).not.toBeNull()
   expect(document.querySelector('img.game-cover')).toBeNull()
 })
+
+test('rows layout captions the title beside the cover', () => {
+  render(
+    <GameCard
+      game={{
+        ...baseGame,
+        first_release_date: '1998-11-21',
+        library_platform_label: 'Nintendo 64',
+      }}
+      layout="rows"
+      showPlayStatus={false}
+      isAdmin={false}
+    />,
+  )
+  const meta = document.querySelector('.game-card__row-meta')
+  expect(meta).toHaveTextContent('Archery Kings VR')
+  expect(meta).toHaveTextContent('Nintendo 64')
+  expect(meta).toHaveTextContent('1998')
+})

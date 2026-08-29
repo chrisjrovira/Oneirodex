@@ -34,6 +34,7 @@ import { PageStatus } from './components/PageStatus'
 import { PaginationBar } from './components/PaginationBar'
 import { createTranslator } from './i18n'
 import { batchItemUuids, summarizeBatchOutcome } from './utils/batchOutcome'
+import { CATALOG_LAYOUTS, useCatalogLayout } from './utils/catalogLayout'
 import { readLibraryFilters, writeLibraryFilters } from './utils/cookies'
 import { showToast } from './utils/toast'
 
@@ -113,6 +114,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(initialConfig.perPage)
+  const [layout, setLayout] = useCatalogLayout()
   const defaultFilters = {
     sort_by: initialConfig.defaultSort,
     sort_order: initialConfig.defaultSortOrder,
@@ -526,6 +528,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     // Filtered to a system, a grouped tile names *that* system rather than the
     // newest one the title exists on — you are looking at that copy.
     activePlatform: filters.library_platform || '',
+    layout,
   }
 
   let content
@@ -541,7 +544,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   } else if (showSkeleton) {
     content = (
       <>
-        <GameGridSkeleton count={perPage} />
+          <GameGridSkeleton count={perPage} layout={layout} />
         <PaginationBar
           page={page}
           pages={1}
@@ -693,6 +696,15 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
               : null
           }
           t={t}
+          viewUnfurl={{
+            views: CATALOG_LAYOUTS.map((view) => ({
+              ...view,
+              label: t(view.label),
+            })),
+            active: layout,
+            onSelect: setLayout,
+            triggerLabel: t('View'),
+          }}
         />
         {/* No aside, no collapse rail, no page header — the grid gets the
             whole width, which is the visible payoff of the refresh. */}

@@ -2,6 +2,10 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FavoritesApp } from './FavoritesApp'
 
+afterEach(() => {
+  window.localStorage.removeItem('gt.library.layout')
+})
+
 test('fetches favorite games and renders them with the shared grid', async () => {
   const fetchMock = vi.fn().mockResolvedValue({
     ok: true,

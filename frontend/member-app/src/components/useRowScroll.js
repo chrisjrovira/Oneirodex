@@ -1,35 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 /**
- * Horizontal scrolling for a shelf, by every means a pointer expects.
+ * Horizontal scrolling for a shelf.
  *
- * A row that only scrolls by dragging its scrollbar is a row most people never
- * scroll: the bar is thin, it is at the bottom of a 280px tile, and on a
- * trackpad it is not there at all until you touch it. Discover shipped with
- * exactly that, so the shelves read as "the first six games" rather than as
- * lists. Three affordances, because different people reach for different ones:
- *
- *   arrows      an explicit control, and the only one that is keyboard- and
- *               screen-reader-reachable
- *   arrow hover park on the left/right control and the row eases along — the
- *               mid-row auto-scroll from an edge zone was fighting tile hover
- *   wheel       a vertical wheel over a horizontal list means "move the list";
- *               this is the one people try first and the one that used to
- *               scroll the whole page instead
- *
- * Shared rather than written into DiscoverShelf, because "this should be for
- * all rows" is the actual requirement and a second copy is how the two drift.
+ * Discover rows scroll by the bottom slider and the hover arrows — not by the
+ * mouse wheel or trackpad. Any wheel gesture over the row is cancelled; a
+ * vertical-dominant delta is handed to the nearest page scroller so Discover
+ * keeps moving. Horizontal-dominant deltas are discarded (slider / arrows only).
  *
  * @param {object} [options]
  * @param {number} [options.step] Fraction of the visible width one arrow press
  *   moves. Just under a full page, so a tile stays on screen as an anchor.
  * @param {number} [options.edgeSpeed] Pixels per animation frame while hovering
  *   an arrow. ~240px/s at 60fps — slow enough to read, fast enough to traverse.
+ * @param {unknown} [options.bindKey] Change this when the track node mounts or
+ *   is replaced so the non-passive wheel listener rebinds (refs alone do not
+ *   re-run an effect).
  */
-export function useRowScroll({ step = 0.85, edgeSpeed = 4 } = {}) {
+export function useRowScroll({ step = 0.85, edgeSpeed = 4, bindKey = 0 } = {}) {
   const ref = useRef(null)
-  /** Optional outer hover zone (viewport). Wheel binds here so the gesture
-   *  works over arrows, padding, and the scrollbar lane — not only the tiles. */
+  /** Outer hover zone (viewport / scroller). Wheel binds here so the lane under
+   *  the custom scrollbar and the arrow fades do not become accidental row scroll. */
   const viewportRef = useRef(null)
   const frameRef = useRef(0)
   const directionRef = useRef(0)
@@ -64,7 +55,7 @@ export function useRowScroll({ step = 0.85, edgeSpeed = 4 } = {}) {
       observer?.disconnect()
       window.removeEventListener('resize', measure)
     }
-  }, [measure])
+  }, [measure, bindKey])
 
   const stopEdgeScroll = useCallback(() => {
     directionRef.current = 0
@@ -89,8 +80,17 @@ export function useRowScroll({ step = 0.85, edgeSpeed = 4 } = {}) {
           frameRef.current = 0
           return
         }
-        node.scrollLeft += directionRef.current * edgeSpeed
+        const max = node.scrollWidth - node.clientWidth
+        node.scrollLeft = Math.max(
+          0,
+          Math.min(max, node.scrollLeft + directionRef.current * edgeSpeed),
+        )
         measure()
+        if (node.scrollLeft <= 0 || node.scrollLeft >= max - 1) {
+          directionRef.current = 0
+          frameRef.current = 0
+          return
+        }
         frameRef.current = requestAnimationFrame(tick)
       }
       frameRef.current = requestAnimationFrame(tick)
@@ -101,6 +101,7 @@ export function useRowScroll({ step = 0.85, edgeSpeed = 4 } = {}) {
   /** Arrow press: one near-page, animated unless the member asked for less. */
   const scrollByPage = useCallback(
     (direction) => {
+      stopEdgeScroll()
       const node = ref.current
       if (!node) return
       const reduced =
@@ -111,57 +112,62 @@ export function useRowScroll({ step = 0.85, edgeSpeed = 4 } = {}) {
         behavior: reduced ? 'auto' : 'smooth',
       })
     },
-    [step],
+    [step, stopEdgeScroll],
   )
 
   /**
-   * Vertical wheel over the row moves the row left/right.
-   *
-   * Only when the row can actually move that way — otherwise a row scrolled to
-   * its end would swallow the gesture and the page would stop scrolling, which
-   * is a far worse bug than the one this fixes. A horizontal-dominant delta
-   * (trackpad swipe, tilt wheel) is left to the browser, which already handles
-   * it correctly.
+   * No wheel / trackpad pans the row. Vertical-dominant deltas scroll the page;
+   * sideways gestures are discarded (slider + arrows own horizontal motion).
    */
-  const onWheel = useCallback(
-    (event) => {
-      const node = ref.current
-      if (!node) return
-      // Shift+wheel is already horizontal in most browsers; don't double-apply.
-      if (event.shiftKey) return
-      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
+  const onWheel = useCallback((event) => {
+    const node = ref.current
+    if (!node) return
+    if (node.scrollWidth <= node.clientWidth + 1) return
 
-      let delta = event.deltaY
-      // DOM_DELTA_LINE (1): normalize so a notch moves more than a fraction of
-      // a pixel; DOM_DELTA_PAGE (2) is rare for mice but treat as a page step.
-      if (event.deltaMode === 1) delta *= 16
-      else if (event.deltaMode === 2) delta *= node.clientWidth * step
+    event.preventDefault()
+    event.stopPropagation()
 
-      const max = node.scrollWidth - node.clientWidth
-      if (max <= 1) return
-      const atStart = node.scrollLeft <= 1
-      const atEnd = node.scrollLeft >= max - 1
-      if ((delta < 0 && atStart) || (delta > 0 && atEnd)) {
+    const vertical = !event.shiftKey && Math.abs(event.deltaY) >= Math.abs(event.deltaX)
+    if (!vertical) return
+
+    let delta = event.deltaY
+    if (event.deltaMode === 1) delta *= 16
+    else if (event.deltaMode === 2) {
+      delta *=
+        typeof window !== 'undefined' ? window.innerHeight * 0.85 : node.clientWidth * step
+    }
+
+    let target = node.parentElement
+    while (target && target !== document.documentElement) {
+      const style = window.getComputedStyle(target)
+      const oy = style.overflowY
+      if (
+        (oy === 'auto' || oy === 'scroll' || oy === 'overlay') &&
+        target.scrollHeight > target.clientHeight + 1
+      ) {
+        target.scrollTop += delta
         return
       }
-
-      event.preventDefault()
-      node.scrollLeft = Math.max(0, Math.min(max, node.scrollLeft + delta))
-      measure()
-    },
-    [measure, step],
-  )
+      target = target.parentElement
+    }
+    window.scrollBy(0, delta)
+  }, [step])
 
   // React attaches wheel handlers passively, so `preventDefault()` inside an
-  // onWheel prop is ignored and the page scrolls anyway. Bind on the viewport
-  // (capture) when present so hovering the scrollbar lane / arrows still maps
-  // vertical wheel → horizontal scroll.
-  useEffect(() => {
-    const listenNode = viewportRef.current || ref.current
-    if (!listenNode) return undefined
-    listenNode.addEventListener('wheel', onWheel, { passive: false, capture: true })
-    return () => listenNode.removeEventListener('wheel', onWheel, { capture: true })
-  }, [onWheel])
+  // onWheel prop is ignored. Bind on the viewport and the track (capture).
+  // bindKey re-runs when the shelf mounts its track after a null first paint.
+  useLayoutEffect(() => {
+    const nodes = [...new Set([viewportRef.current, ref.current].filter(Boolean))]
+    if (!nodes.length) return undefined
+    for (const listenNode of nodes) {
+      listenNode.addEventListener('wheel', onWheel, { passive: false, capture: true })
+    }
+    return () => {
+      for (const listenNode of nodes) {
+        listenNode.removeEventListener('wheel', onWheel, { capture: true })
+      }
+    }
+  }, [onWheel, bindKey])
 
   return {
     ref,

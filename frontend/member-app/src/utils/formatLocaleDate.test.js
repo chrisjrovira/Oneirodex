@@ -22,4 +22,10 @@ describe('formatLocaleDate', () => {
   test('returns fallback for invalid input', () => {
     expect(formatLocaleDate('not-a-date')).toBe('—')
   })
+
+  test('compact omits the year so overlay chips stay short', () => {
+    const result = formatLocaleDate('2024-01-15', { compact: true })
+    expect(result).not.toMatch(/2024/)
+    expect(result).toMatch(/15|Jan/)
+  })
 })

@@ -1,4 +1,4 @@
-export function GameGridSkeleton({ count = 12 }) {
+export function GameGridSkeleton({ count = 12, layout = 'tile' }) {
   const placeholders = Array.from({ length: Math.max(count, 1) }, (_, index) => index)
 
   return (
@@ -6,6 +6,7 @@ export function GameGridSkeleton({ count = 12 }) {
       className="game-library-container"
       data-library-grid
       data-library-skeleton
+      data-layout={layout}
       aria-busy="true"
       aria-label="Loading games"
     >

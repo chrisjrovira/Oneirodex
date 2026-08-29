@@ -61,6 +61,7 @@ const FAQ_SECTIONS = [
       'Signals chips: UPDATE · MISSING · NEW · LANG.',
       'MISSING tile badge (top-left) means files were removed from disk - tooltip explains. Filter with the MISSING Signals chip when available.',
       'Tile size: header or top-nav control. Preferences (sectioned: Library · Look · Language) → items per page (20–1000).',
+      'Game Catalog layout: open View on the kind bar for Tile (covers) · Rows (list lines) · Grid (denser covers). The choice is remembered in this browser. Favorites and News use the same View control.',
       'Trailers empty state is normal without metadata. Details use embeds; YouTube demo when no trailers.',
       'Extras & DLC lists on-server sidecars only - missing folders stay off-server.',
       'When watch/scan adds titles, a short toast may appear (Notifications inbox keeps the row).',
@@ -135,7 +136,7 @@ const FAQ_SECTIONS = [
     short: 'Free games',
     summary: 'News claims and ownership sync',
     items: [
-      'News (All · Admins · Free now · Headlines) fills the pane; lists scroll inside. Card / Grid / RSS in the top bar changes how Free now and Headlines look. Free claims live under Free now (and `#free-games`). Claim on the store; Sync ownership if linked (Steam / GOG / Epic / Amazon live when a token is saved).',
+      'News (All · Admins · Free now · Headlines) fills the pane; lists scroll inside. Card / Grid / RSS in the top bar changes how Free now and Headlines look. Card and Grid overlay source (bottom-left) and date (bottom-right) on the art, with the title under the image; RSS stays magazine rows. Free claims live under Free now (and `#free-games`). Claim on the store; Sync ownership if linked (Steam / GOG / Epic / Amazon live when a token is saved).',
       'Oneirodex never downloads DRM titles for you.',
       'Opt out under Notifications → Alert preferences.',
     ],

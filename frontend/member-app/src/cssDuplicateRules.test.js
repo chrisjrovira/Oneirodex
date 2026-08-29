@@ -91,7 +91,6 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', 'vendor', '__pycache__', '.gi
  */
 const ALLOWED = new Map([
   ['.gt-chat-layout', 'mobile-density.css owns the responsive override'],
-  ['.gt-news__card', 'MorePage reuses the News card rhythm via a shared selector'],
   ['.gt-help__sections', 'MorePage reuses the Help section grid'],
   ['.library-layout', 'systemBackdrop.css layers the backdrop onto the filter layout'],
 ])

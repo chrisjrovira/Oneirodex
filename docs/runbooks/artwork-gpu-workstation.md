@@ -109,7 +109,7 @@ python scripts/fetch-free-roms.py --out $env:TEMP\oneirodex-free-roms
 | Rail / Preferences **glyphs** | SVG under `gametheca/setup/icon_themes/{pack}/icons/` — `currentColor`, not photos |
 | Pack **preview** rasters | `preview.png` in each pack (art-direction samples; chips still use SVG) |
 | Game **covers** | Art Studio → this SD.Next URL |
-| **Systems hub marks** | Art Studio → **System marks** tab (`#marks`), or `python scripts/generate_system_marks.py --all` / `POST /admin/api/art-studio/system-marks/generate` → `static/library/system-marks/<theme>/<platform>.webp`. Full-color, one per platform × preset theme. Prompts name distinctive hardware (console/handheld shape); generates at 512 then saves 256 WebP. Idempotent; use `--force` (or the tab’s force redo) to overwrite weak/abstract runs. Prefer `--limit` until quality is accepted. |
+| **Systems hub marks** | Art Studio → **System marks** tab (`#marks`) **Lab** (one platform, editable prompt, preview + attempt log), or `python scripts/generate_system_marks.py --theme default --platform nes`. Batch: `POST /admin/api/art-studio/system-marks/generate`. Files: `static/library/system-marks/<theme>/<platform>.webp`. Prefer the lab until quality is accepted; do not `--all --force`. |
 
 Smoke one mark:
 
