@@ -17,9 +17,13 @@ Oneirodex play modes for systems **below PS5 / Xbox Series**. Those two stay **c
 | GameCube · Wii | No (WASM) | Preferred | Dolphin mapped; companion_hint on browse; no browser Play |
 | Dreamcast · 3DS · PS Vita · PS2 | No | Preferred | flycast / citra / vita3k / pcsx2 companion cores + hints |
 | Xbox · 360 · One · PS3 · PS4 | Catalog | Optional BYO | `play_mode=companion` + hints; no fake Play |
+| Wii U · Switch | Catalog | — | Enums shipped; no Dolphin / no browser Play |
+| Pokémon Mini · CD-i · Sega Pico · Jaguar CD | No | Preferred | Companion; Jaguar CD never shares cart `virtualjaguar` |
+| Amiga · Amiga CD32 | No | Preferred | PUAE companion; CD32 is distinct from Amiga |
+| MSX · ZX Spectrum · Amstrad CPC · Atari ST · Apple II · Atari 8-bit · X68000 · PC-98 | No | Preferred | `bluemsx` / Fuse / cap32 / Hatari / AppleWin BYO / atari800 / PX68K / np2kai. GX4000 stays the Amstrad *console* (Retro family). No WebRetro WASM. |
 | PS5 · Xbox Series | Catalog only | — | `play_mode=catalog` |
 
-Admin: upload BIOS via Admin → Emulators, **Scan collection** on a folder of dumps you already own, or on household Unraid optionally mount a private appdata BIOS folder — see [BIOS / firmware](#bios--firmware-filenames-only). Browse API returns `bios` + `n64_note` on playable titles. Systems hub badges show **Browser** / **Companion** / **Catalog** per platform. Operator core drops: [webretro-cores.md](../runbooks/webretro-cores.md) · health: `GET /api/emulator/health` (`deferred_cores`) · JS allowlist: `GET /api/emulator/installed-cores.js`.
+Admin: upload BIOS via Admin → Emulators, **Scan collection** on a folder of dumps you already own, or on household Unraid optionally mount a private appdata BIOS folder — see [BIOS / firmware](#bios--firmware-filenames-only). Browse API returns `bios` + `n64_note` on playable titles. Systems hub badges show **Browser** / **Companion** / **Catalog** per platform. **More → Ways to Play** and Game Catalog `play_mode=` filter the catalog by that same honesty. Operator core drops: [webretro-cores.md](../runbooks/webretro-cores.md) · health: `GET /api/emulator/health` (`deferred_cores`) · JS allowlist: `GET /api/emulator/installed-cores.js`.
 
 ## BIOS / firmware (filenames only)
 
@@ -88,7 +92,7 @@ Browser Play streams via `GET /api/downloadrom/<uuid>` (ASGI). Server extracts a
 
 Failures return JSON: `{"error": "…", "code": "…", "hint": "…"}` (`error` always present). The play shell (`webretro.html`) surfaces non-2xx `/api/downloadrom/` responses in an accessible `#gt-play-alert` region (`error` plus optional `hint`) instead of a silent `.catch` — including `missing_extractor` (prefer `.zip` / host tools). Browse may set `play_blocker=unsupported_archive`; GameCard / Game Details show a disabled Play control with tooltip when that blocker is present.
 
-When `firmware_missing` is true, browse/details also return `bios_required`, `bios.message`, and `bios.hint`. Member SPA blocks Play (quiet honesty + Help / Admin → Emulators for librarians) — **never** a Download BIOS CTA. Version Download uses `POST /api/downloads/games/<uuid>` and toasts Backend `hint` on **410** `path_missing`.
+When `firmware_missing` is true, browse/details also return `bios_required`, `bios.message`, and `bios.hint`. Member SPA blocks Play (quiet honesty + Help / Admin → Emulators for librarians) — **never** a Download BIOS CTA. Optional accuracy files do **not** set `firmware_missing`: NES carts play without `disksys.rom`, SNES without DSP/CX4 ROMs, N64 without 64DD IPL, Genesis carts without Sega CD BIOS. Sega CD and other hard-required systems still grey Play until a matching dump is on the firmware volume. Version Download uses `POST /api/downloads/games/<uuid>` and toasts Backend `hint` on **410** `path_missing`.
 
 ### PS1 (and other disc/`.cue`) downloads are bundled as a zip
 

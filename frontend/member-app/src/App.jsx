@@ -54,8 +54,14 @@ const CollectionDetailPage = lazy(() =>
 const CollectionsPage = lazy(() =>
   import('./pages/CollectionsPage').then((m) => ({ default: m.CollectionsPage })),
 )
+const DiscoverHubPage = lazy(() =>
+  import('./pages/DiscoverHubPage').then((m) => ({ default: m.DiscoverHubPage })),
+)
 const DiscoverRowPage = lazy(() =>
   import('./pages/DiscoverRowPage').then((m) => ({ default: m.DiscoverRowPage })),
+)
+const WaysToPlayPage = lazy(() =>
+  import('./pages/WaysToPlayPage').then((m) => ({ default: m.WaysToPlayPage })),
 )
 const DownloadsPage = lazy(() =>
   import('./pages/DownloadsPage').then((m) => ({ default: m.DownloadsPage })),
@@ -80,6 +86,9 @@ const WishlistPage = lazy(() =>
 )
 const TokensPage = lazy(() =>
   import('./pages/TokensPage').then((m) => ({ default: m.TokensPage })),
+)
+const LicensedCatalogPage = lazy(() =>
+  import('./pages/LicensedCatalogPage').then((m) => ({ default: m.LicensedCatalogPage })),
 )
 const SetCompletionPage = lazy(() =>
   import('./pages/SetCompletionPage').then((m) => ({ default: m.SetCompletionPage })),
@@ -294,6 +303,17 @@ export function App({ shellConfig = {} }) {
           }
         />
         <Route
+          path="/discover/hub/genre/:genre"
+          element={
+            <LazyPage>
+              <DiscoverHubPage
+                isAdmin={Boolean(shellConfig.isAdmin)}
+                shellConfig={shellConfig}
+              />
+            </LazyPage>
+          }
+        />
+        <Route
           path="/discover/:identifier"
           element={
             <DiscoverRowPage
@@ -313,10 +333,26 @@ export function App({ shellConfig = {} }) {
         />
         <Route path="/systems" element={<SystemsPage shellConfig={shellConfig} />} />
         <Route
+          path="/ways-to-play"
+          element={
+            <LazyPage>
+              <WaysToPlayPage shellConfig={shellConfig} />
+            </LazyPage>
+          }
+        />
+        <Route
           path="/systems/completion"
           element={
             <LazyPage>
               <SetCompletionPage shellConfig={shellConfig} />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/systems/catalog"
+          element={
+            <LazyPage>
+              <LicensedCatalogPage shellConfig={shellConfig} />
             </LazyPage>
           }
         />

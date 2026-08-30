@@ -1,9 +1,16 @@
 ﻿import { describe, expect, it, test } from 'vitest'
-import { getContextLinks, getMoreGroups, getMoreLinks, getPrimaryLinks } from './navConfig'
+import {
+  getContextLinks,
+  getMoreGroups,
+  getMoreLinks,
+  getPrimaryLinks,
+  hasTileSizeControl,
+} from './navConfig'
 
 test('primary catalog destination is labeled Game Catalog', () => {
   expect(getPrimaryLinks().find((l) => l.id === 'library')?.label).toBe('Game Catalog')
-  expect(getMoreGroups().find((g) => g.id === 'library')?.label).toBe('Game Catalog')
+  // Rail group heading under Favorites — not the /library destination link.
+  expect(getMoreGroups().find((g) => g.id === 'library')?.label).toBe('Library')
   expect(getContextLinks('/library').find((l) => l.id === 'section')?.label).toBe(
     'Game Catalog home',
   )
@@ -35,6 +42,7 @@ test('more links use SPA paths via to', () => {
   expect(byId.calendar).toBe('/calendar')
   expect(byId.ownership).toBe('/ownership')
   expect(byId['big-picture']).toBe('/big-picture')
+  expect(byId['ways-to-play']).toBe('/ways-to-play')
   expect(byId.vr).toBe('/vr')
   expect(byId.trailers).toBe('/trailers')
   expect(byId.help).toBe('/help')
@@ -113,6 +121,11 @@ describe('getMoreGroups', () => {
     expect(minimal.some((g) => g.id === 'support' && g.links.some((l) => l.id === 'help'))).toBe(false)
   })
 
+  it('puts Ways to Play in the Play group', () => {
+    const play = getMoreGroups(ALL).find((g) => g.id === 'play')
+    expect(play.links.some((l) => l.id === 'ways-to-play')).toBe(true)
+  })
+
   it('respects enableActivity, which the nav previously ignored', () => {
     const on = getMoreGroups({ ...ALL, enableActivity: true })
       .flatMap((g) => g.links.map((l) => l.id))
@@ -121,4 +134,15 @@ describe('getMoreGroups', () => {
     expect(on).toContain('activity')
     expect(off).not.toContain('activity')
   })
+})
+
+test('tile-size slider stays off genre hubs', () => {
+  expect(hasTileSizeControl('/discover')).toBe(true)
+  expect(hasTileSizeControl('/discover/latest_games')).toBe(true)
+  expect(hasTileSizeControl('/discover/hub/genre/Roguelike')).toBe(false)
+})
+
+test('context links name Ways to Play', () => {
+  const links = getContextLinks('/ways-to-play')
+  expect(links.find((l) => l.id === 'section')?.to).toBe('/ways-to-play')
 })

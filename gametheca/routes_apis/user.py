@@ -19,6 +19,7 @@ from gametheca.utils.browse_filters import apply_item_kind_filter, apply_name_fi
 from gametheca.utils.client_lifecycle import load_lifecycle_map
 from gametheca.utils.local_metadata import has_local_images, has_local_metadata
 from gametheca.utils.lifecycle import web_lifecycle_fields
+from gametheca.utils.game_details_payload import browse_trailer_fields
 from gametheca.utils.play_url import browse_play_fields, library_platform_key
 from gametheca.utils.secondary_scrapers import game_card_flags
 from gametheca.utils.cover_url import resolve_game_cover_url
@@ -273,6 +274,7 @@ def favorites():
             'badge_title_collision': bool(platform_key),
             'freshness_status': getattr(game, 'freshness_status', None),
             **browse_play_fields(game),
+            **browse_trailer_fields(game),
             **game_card_flags(game),
             **web_lifecycle_fields(
                 game,

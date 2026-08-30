@@ -32,6 +32,58 @@ export function youtubeEmbed(url) {
 }
 
 /**
+ * @param {string} url
+ * @returns {boolean}
+ */
+export function isDirectVideoUrl(url) {
+  if (!url || typeof url !== 'string') return false
+  const path = url.split('?')[0].toLowerCase()
+  return /\.(mp4|webm|ogv|ogg)$/.test(path)
+}
+
+/**
+ * Mute + autoplay query params for a YouTube embed. Direct files are unchanged.
+ * Never sets volume or unmute — hover trailers have no user-gesture audio.
+ * @param {string} url
+ * @returns {string | null}
+ */
+export function mutedHoverTrailerSrc(url) {
+  if (!url || typeof url !== 'string') return null
+  const trimmed = url.trim()
+  if (!trimmed) return null
+  if (isDirectVideoUrl(trimmed)) return trimmed
+  const embed = youtubeEmbed(trimmed)
+  if (!embed) return null
+  try {
+    const parsed = new URL(embed)
+    parsed.searchParams.set('autoplay', '1')
+    parsed.searchParams.set('mute', '1')
+    parsed.searchParams.set('controls', '0')
+    parsed.searchParams.set('playsinline', '1')
+    parsed.searchParams.set('rel', '0')
+    parsed.searchParams.set('modestbranding', '1')
+    const videoId = parsed.pathname.split('/').filter(Boolean).pop()
+    if (videoId) {
+      parsed.searchParams.set('loop', '1')
+      parsed.searchParams.set('playlist', videoId)
+    }
+    return parsed.toString()
+  } catch {
+    return null
+  }
+}
+
+/**
+ * @returns {boolean}
+ */
+export function prefersReducedMotion() {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false
+  }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+/**
  * Prefer structured `game.trailers[].embed_url` (and has_trailers) before video_urls CSV/list.
  * @param {object} game
  * @returns {string[]} Embeddable iframe src URLs

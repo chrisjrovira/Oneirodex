@@ -3,10 +3,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 /**
  * Horizontal scrolling for a shelf.
  *
- * Discover rows scroll by the bottom slider and the hover arrows — not by the
- * mouse wheel or trackpad. Any wheel gesture over the row is cancelled; a
- * vertical-dominant delta is handed to the nearest page scroller so Discover
- * keeps moving. Horizontal-dominant deltas are discarded (slider / arrows only).
+ * Wheel over the tiles or the row title scrolls the page (not the track).
+ * Wheel over the bottom slider pans the track. Hover arrows still page/hold.
  *
  * @param {object} [options]
  * @param {number} [options.step] Fraction of the visible width one arrow press
@@ -22,6 +20,8 @@ export function useRowScroll({ step = 0.85, edgeSpeed = 4, bindKey = 0 } = {}) {
   /** Outer hover zone (viewport / scroller). Wheel binds here so the lane under
    *  the custom scrollbar and the arrow fades do not become accidental row scroll. */
   const viewportRef = useRef(null)
+  /** Custom horizontal scrollbar — wheel here pans the track. */
+  const hbarRef = useRef(null)
   const frameRef = useRef(0)
   const directionRef = useRef(0)
   const [overflow, setOverflow] = useState({ start: false, end: false })
@@ -115,13 +115,70 @@ export function useRowScroll({ step = 0.85, edgeSpeed = 4, bindKey = 0 } = {}) {
     [step, stopEdgeScroll],
   )
 
+  const wheelDeltaPx = useCallback(
+    (event, fallbackPage) => {
+      let delta =
+        event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)
+          ? event.deltaX || event.deltaY
+          : event.deltaY
+      if (event.deltaMode === 1) delta *= 16
+      else if (event.deltaMode === 2) {
+        delta *=
+          typeof window !== 'undefined' ? window.innerHeight * 0.85 : fallbackPage
+      }
+      return delta
+    },
+    [],
+  )
+
+  /** Wheel over the bottom slider pans the shelf track. */
+  const panTrackByWheel = useCallback(
+    (event) => {
+      const node = ref.current
+      if (!node) return false
+      if (node.scrollWidth <= node.clientWidth + 1) return false
+
+      event.preventDefault()
+      event.stopPropagation()
+
+      const delta = wheelDeltaPx(event, node.clientWidth * step)
+      const max = node.scrollWidth - node.clientWidth
+      node.scrollLeft = Math.max(0, Math.min(max, node.scrollLeft + delta))
+      measure()
+      return true
+    },
+    [measure, step, wheelDeltaPx],
+  )
+
+  const wheelOverHbar = useCallback((event) => {
+    const bar = hbarRef.current
+    if (!bar) return false
+    if (bar === event.target || bar.contains(event.target)) return true
+    // Geometry fallback: the track's bottom padding used to paint above the
+    // bar (higher z-index) so the event target was the track, not the rail.
+    const pad = 8
+    const box = bar.getBoundingClientRect()
+    return (
+      event.clientX >= box.left &&
+      event.clientX <= box.right &&
+      event.clientY >= box.top - pad &&
+      event.clientY <= box.bottom + pad
+    )
+  }, [])
+
   /**
-   * No wheel / trackpad pans the row. Vertical-dominant deltas scroll the page;
-   * sideways gestures are discarded (slider + arrows own horizontal motion).
+   * Wheel over the slider pans the row. Wheel over tiles / title scrolls the
+   * page. Capture on the scroller so the track padding cannot steal the bar.
    */
   const onWheel = useCallback((event) => {
     const node = ref.current
     if (!node) return
+
+    if (wheelOverHbar(event)) {
+      panTrackByWheel(event)
+      return
+    }
+
     if (node.scrollWidth <= node.clientWidth + 1) return
 
     event.preventDefault()
@@ -130,12 +187,10 @@ export function useRowScroll({ step = 0.85, edgeSpeed = 4, bindKey = 0 } = {}) {
     const vertical = !event.shiftKey && Math.abs(event.deltaY) >= Math.abs(event.deltaX)
     if (!vertical) return
 
-    let delta = event.deltaY
-    if (event.deltaMode === 1) delta *= 16
-    else if (event.deltaMode === 2) {
-      delta *=
-        typeof window !== 'undefined' ? window.innerHeight * 0.85 : node.clientWidth * step
-    }
+    const delta = wheelDeltaPx(
+      event,
+      typeof window !== 'undefined' ? window.innerHeight * 0.85 : node.clientWidth * step,
+    )
 
     let target = node.parentElement
     while (target && target !== document.documentElement) {
@@ -151,13 +206,15 @@ export function useRowScroll({ step = 0.85, edgeSpeed = 4, bindKey = 0 } = {}) {
       target = target.parentElement
     }
     window.scrollBy(0, delta)
-  }, [step])
+  }, [panTrackByWheel, step, wheelDeltaPx, wheelOverHbar])
 
   // React attaches wheel handlers passively, so `preventDefault()` inside an
-  // onWheel prop is ignored. Bind on the viewport and the track (capture).
+  // onWheel prop is ignored. Bind on the scroller (viewportRef) in capture.
   // bindKey re-runs when the shelf mounts its track after a null first paint.
   useLayoutEffect(() => {
-    const nodes = [...new Set([viewportRef.current, ref.current].filter(Boolean))]
+    const scroller = viewportRef.current
+    const track = ref.current
+    const nodes = [...new Set([scroller, track].filter(Boolean))]
     if (!nodes.length) return undefined
     for (const listenNode of nodes) {
       listenNode.addEventListener('wheel', onWheel, { passive: false, capture: true })
@@ -172,6 +229,7 @@ export function useRowScroll({ step = 0.85, edgeSpeed = 4, bindKey = 0 } = {}) {
   return {
     ref,
     viewportRef,
+    hbarRef,
     overflow,
     measure,
     scrollByPage,

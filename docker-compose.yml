@@ -26,12 +26,16 @@
 # Profiles (opt-in): livekit | clamav | challenge
 # Observability: commented stub only — see docs/runbooks/observability-profile.md
 #
-# Dual names (ADR 0003 phase 2): existing installs keep gametheca-* container
-# names and the local build tag gametheca:1.0.0-beta. Preferred Hub image once
-# published is chrisjrovira/oneirodex:1.0.0-beta; chrisjrovira/gametheca remains
-# accepted. Override without editing this file:
-#   APP_IMAGE=chrisjrovira/oneirodex:1.0.0-beta
-#   APP_CONTAINER_NAME=gametheca-app
+# P3b (ADR 0003): new installs default to oneirodex-* names. Live Unraid stacks
+# that still run gametheca-app / gametheca-db should pin those names in .env
+# until the scan FIFO is idle, then drop the pins so Compose recreates:
+#   APP_IMAGE=oneirodex:1.0.0-beta
+#   APP_CONTAINER_NAME=oneirodex-app
+#   DB_CONTAINER_NAME=oneirodex-db
+# Preferred Hub image once published: chrisjrovira/oneirodex:1.0.0-beta
+# (chrisjrovira/gametheca remains accepted). Postgres *database* name stays
+# POSTGRES_DB (default gametheca) so existing volumes keep their catalog.
+# Sidecar profile container names (livekit / clamav / …) are unchanged.
 # ---------------------------------------------------------------------------
 
 services:
@@ -39,8 +43,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${APP_IMAGE:-gametheca:1.0.0-beta}
-    container_name: ${APP_CONTAINER_NAME:-gametheca-app}
+    image: ${APP_IMAGE:-oneirodex:1.0.0-beta}
+    container_name: ${APP_CONTAINER_NAME:-oneirodex-app}
     restart: unless-stopped
     ports:
       - "5006:5006"
@@ -164,7 +168,7 @@ services:
 
   db:
     image: postgres:17.6
-    container_name: ${DB_CONTAINER_NAME:-gametheca-db}
+    container_name: ${DB_CONTAINER_NAME:-oneirodex-db}
     restart: unless-stopped
     shm_size: 128mb
     environment:

@@ -12,6 +12,7 @@ from gametheca.platform import (
     play_mode_for_platform,
 )
 from gametheca.utils.browser_player import browser_play_href, play_engine_fields
+from gametheca.utils.emulator_bios import firmware_play_state
 from gametheca.utils.rom_archive import path_supports_browser_extract
 from gametheca.utils.webretro_cores import get_effective_installed_cores
 
@@ -70,6 +71,50 @@ COMPANION_HINTS = {
     ),
     'PSP': (
         'PSP: use PPSSPP or a RetroArch PPSSPP profile via the desktop companion. '
+        'Not browser-playable.'
+    ),
+    'POKE_MINI': (
+        'Pokémon Mini: use a RetroArch pokemini profile via the desktop companion. '
+        'Not browser-playable.'
+    ),
+    'CD_I': (
+        'Philips CD-i: use a BYO / RetroArch companion. Not browser-playable.'
+    ),
+    'SEGA_PICO': (
+        'Sega Pico: optional BYO companion. No browser Play.'
+    ),
+    'JAGUAR_CD': (
+        'Jaguar CD is distinct from cart Jaguar. Use a companion CD path — '
+        'virtualjaguar is the cart core. Not browser-playable.'
+    ),
+    'AMIGA_CD32': (
+        'Amiga CD32: use PUAE / a CD32-capable companion. Not browser-playable.'
+    ),
+    'MSX': (
+        'MSX: use blueMSX / fMSX via the desktop companion. Not browser-playable.'
+    ),
+    'ZX_SPECTRUM': (
+        'ZX Spectrum: use Fuse via the desktop companion. Not browser-playable.'
+    ),
+    'CPC': (
+        'Amstrad CPC: use Caprice32 (cap32) via the desktop companion. '
+        'Not browser-playable. GX4000 is a separate console leaf.'
+    ),
+    'ATARI_ST': (
+        'Atari ST: use Hatari via the desktop companion. Not browser-playable.'
+    ),
+    'APPLE_II': (
+        'Apple II: use AppleWin / a BYO companion. Not browser-playable.'
+    ),
+    'ATARI_8BIT': (
+        'Atari 8-bit: use atari800 via the desktop companion. '
+        'Not the 5200 a5200 core. Not browser-playable.'
+    ),
+    'X68000': (
+        'Sharp X68000: use PX68K / a BYO companion. Not browser-playable.'
+    ),
+    'PC_98': (
+        'NEC PC-98: use Neko Project II (np2kai) via the desktop companion. '
         'Not browser-playable.'
     ),
 }
@@ -228,61 +273,37 @@ def browse_play_fields(game) -> dict[str, Any]:
         })
 
     core = cores[0]
+    state = firmware_play_state(key, core)
+    bios_required = bool(state['bios_required'])
+    firmware_missing = bool(state['firmware_missing'])
     bios_hint = None
-    bios_required = False
-    firmware_missing = False
-    try:
-        from gametheca.utils.emulator_bios import BIOS_REQUIREMENTS, list_bios_files
-
-        required = list(BIOS_REQUIREMENTS.get(core) or [])
-        bios_required = bool(required)
-        if required:
-            # Only files the core can actually load count as present.
-            # list_bios_files() walks subdirectories now, and libretro reads the
-            # system root only — counting a nested file would hand the member an
-            # enabled Play button for a core that then fails to boot, which is
-            # worse than the honest block.
-            present = {
-                row['name'].lower()
-                for row in list_bios_files()
-                # Default True: a row without the flag is a flat root-level
-                # listing, which is what every row was before subdirectories
-                # were walked. Reading it as a hard key would turn a shape
-                # mismatch into a KeyError that the broad `except` below
-                # swallows — silently disabling the BIOS check altogether,
-                # which is the failure this block is meant to prevent.
-                if row.get('loadable', True)
+    if bios_required:
+        # Only loadable (firmware-root) files count as present — a nested
+        # dump is on disk and still will not boot.
+        if firmware_missing:
+            bios_hint = {
+                'core': core,
+                'ready': False,
+                'missing': list(state['required']),
+                'bios_required': True,
+                'firmware_missing': True,
+                'message': (
+                    f'{core} needs BIOS under Admin → emulator BIOS '
+                    f'(missing: {", ".join(state["required"])})'
+                ),
+                'hint': BIOS_UPLOAD_HINT,
             }
-            found = [name for name in required if name.lower() in present]
-            firmware_missing = len(found) == 0
-            if firmware_missing:
-                bios_hint = {
-                    'core': core,
-                    'ready': False,
-                    'missing': required,
-                    'bios_required': True,
-                    'firmware_missing': True,
-                    'message': (
-                        f'{core} needs BIOS under Admin → emulator BIOS '
-                        f'(missing: {", ".join(required)})'
-                    ),
-                    'hint': BIOS_UPLOAD_HINT,
-                }
-            else:
-                bios_hint = {
-                    'core': core,
-                    'ready': True,
-                    'present': found,
-                    'missing': [name for name in required if name not in found],
-                    'bios_required': True,
-                    'firmware_missing': False,
-                    'message': None,
-                    'hint': None,
-                }
-    except Exception:
-        bios_hint = None
-        bios_required = False
-        firmware_missing = False
+        else:
+            bios_hint = {
+                'core': core,
+                'ready': True,
+                'present': list(state['present']),
+                'missing': list(state['missing']),
+                'bios_required': True,
+                'firmware_missing': False,
+                'message': None,
+                'hint': None,
+            }
 
     n64_note = None
     if key == 'N64':

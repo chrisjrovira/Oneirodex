@@ -5,8 +5,10 @@
 .gt-shelf {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  margin-block-end: var(--gt-space-6, 1.75rem);
+  gap: 0.15rem;
+  /* Pull the next shelf into most of this row's bottom hover bleed so the
+     resting gap reads tight; enlarged tiles still paint over the title below. */
+  margin-block-end: calc(var(--gt-space-2, 0.5rem) - var(--gt-shelf-bleed, 0px) * 0.55);
 
   /* Shelf tiles are sized from the same custom property as the library grid.
      `--gt-tile-w` and `--gt-tile-h` were only ever read here and never defined
@@ -30,10 +32,10 @@
     var(--gt-tile-w) * (var(--gt-tile-hover-scale, 1.25) - 1) / 2
   );
 
-  /* Custom bar sits in the track's bottom hover bleed — a hair under resting
-     tiles, fully under an enlarged cover. */
-  --gt-shelf-scrollbar-gap: 0.1rem;
-  --gt-shelf-scrollbar-lane: 0.3rem;
+  /* Custom bar sits in the track's bottom hover bleed, with a clear air gap
+     under resting covers so News matches Latest Games (0.1rem read as glued). */
+  --gt-shelf-scrollbar-gap: 0.45rem;
+  --gt-shelf-scrollbar-lane: 0.35rem;
 }
 
 /* Head chrome shares the tile gutter so the accent mark lines up with the
@@ -47,19 +49,13 @@
   padding-inline-end: var(--gt-gutter, 1rem);
 }
 
-/* Title + reason share one letter-bottom line; h2 stays name-only for a11y. */
+/* Title + reason share one letter-bottom line (pure baseline — no optical
+   nudge; a prior 0.22em top offset overshot). h2 stays name-only for a11y. */
 .gt-shelf__heading {
   display: flex;
   align-items: baseline;
   gap: var(--gt-space-3, 0.75rem);
   min-width: 0;
-}
-
-/* Small optical nudge: xs muted reason sits high against xl title glyphs
-   under pure baseline alignment. */
-.gt-shelf__heading .gt-shelf__reason {
-  position: relative;
-  top: 0.22em;
 }
 
 /* Row titles carry the section, so they get a treatment rather than a rule.
@@ -287,27 +283,36 @@
   width: 0;
 }
 
-/* Custom horizontal bar — absolutely parked just under the resting tile
-   baseline inside the track's bottom bleed. Enlarged covers (viewport z-index
-   2) paint over it; the lane stays clickable in the gap between tiles. */
+/* Custom horizontal bar — under resting tiles inside the bottom bleed.
+   z-index above the viewport: the track's bottom padding used to sit on top
+   (viewport z-index 2) and steal wheel / drag from this lane. */
 .gt-shelf__hbar {
   position: absolute;
-  z-index: 1;
+  z-index: 3;
   left: max(var(--gt-gutter, 1rem), var(--gt-shelf-bleed-x, 0px));
   right: max(var(--gt-gutter, 1rem), var(--gt-shelf-bleed-x, 0px));
   /* Resting tile bottom sits `bleed` above the scroller foot; park the bar
-     a hair under that line so the grow-down of a hover covers it. */
+     `gap` below that line so every row shares the same air under covers. */
   bottom: calc(
     var(--gt-shelf-bleed, 0px) - var(--gt-shelf-scrollbar-lane) -
       var(--gt-shelf-scrollbar-gap)
   );
   height: var(--gt-shelf-scrollbar-lane);
-  margin: 0;
   border-radius: var(--gt-radius-pill);
   background: color-mix(in srgb, var(--gt-text) 10%, transparent);
   cursor: pointer;
   touch-action: none;
   pointer-events: auto;
+}
+
+/* Invisible hit pad — the visible lane is thin; wheel/drag need a taller target. */
+.gt-shelf__hbar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -0.45rem;
+  bottom: -0.45rem;
 }
 
 .gt-shelf__hbar-thumb {
@@ -332,18 +337,20 @@
 }
 
 /* News tiles share the library hover scale on shelves (theme CSS only styles
-   `.game-card`). Transition matches the cover enlarge. */
+   `.game-card`). Same pattern as game tiles: always enlarge, then cancel when
+   the IntersectionObserver leaves the item without `data-fully-visible` —
+   requiring the attribute for the positive case left News mute when IO lagged. */
 .gt-shelf__item .gt-news-card {
   position: relative;
   transform-origin: center center;
   transition:
     transform 0.18s ease,
-    border-color 0.16s ease,
-    box-shadow 0.18s ease;
+    box-shadow 0.18s ease,
+    outline-color 0.16s ease;
 }
 
-.gt-shelf__item[data-fully-visible] .gt-news-card:hover,
-.gt-shelf__item[data-fully-visible] .gt-news-card:focus-visible {
+.gt-shelf__item .gt-news-card:hover,
+.gt-shelf__item .gt-news-card:focus-visible {
   transform: scale(var(--gt-tile-hover-scale, 1.25));
   z-index: 40;
   box-shadow: var(--gt-shadow-lg, 0 12px 28px color-mix(in srgb, var(--gt-bg) 55%, transparent));
@@ -359,6 +366,7 @@
 .gt-shelf__item:not([data-fully-visible]) .gt-news-card:focus-visible {
   transform: none;
   box-shadow: none;
+  outline: none;
   z-index: auto;
 }
 
@@ -367,7 +375,7 @@
    Only fully-visible tiles enlarge, so only those need the lift. */
 .gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card:hover),
 .gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card:focus-visible),
-.gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card:has(:focus-visible)),
+.gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card :focus-visible),
 .gt-shelf:has(.gt-shelf__item[data-fully-visible] .gt-news-card:hover),
 .gt-shelf:has(.gt-shelf__item[data-fully-visible] .gt-news-card:focus-visible) {
   position: relative;
@@ -376,7 +384,7 @@
 
 .gt-shelf__item[data-fully-visible]:has(.game-card:hover),
 .gt-shelf__item[data-fully-visible]:has(.game-card:focus-visible),
-.gt-shelf__item[data-fully-visible]:has(.game-card:has(:focus-visible)),
+.gt-shelf__item[data-fully-visible]:has(.game-card :focus-visible),
 .gt-shelf__item[data-fully-visible]:has(.gt-news-card:hover),
 .gt-shelf__item[data-fully-visible]:has(.gt-news-card:focus-visible) {
   z-index: 25;
@@ -443,17 +451,13 @@
   z-index: 3;
 }
 
-/* While a fully-visible card is enlarged, hide the arrows entirely — they
-   must not paint over the grown cover. */
-.gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible] .game-card:hover) .gt-shelf__arrow,
-.gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible] .game-card:focus-visible) .gt-shelf__arrow,
-.gt-shelf__viewport:has(
-    .gt-shelf__item[data-fully-visible] .game-card:has(:focus-visible)
-  )
-  .gt-shelf__arrow,
-.gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible] .gt-news-card:hover) .gt-shelf__arrow,
-.gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible] .gt-news-card:focus-visible)
-  .gt-shelf__arrow {
+/* While a fully-visible tile is enlarged, hide arrows and the bottom slider.
+   Key off the *item* (not the inner card): card:hover misses caption/badge
+   gaps and lost to the shelf-hover arrow rule in practice. */
+.gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible]:hover) .gt-shelf__arrow,
+.gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible]:focus-within) .gt-shelf__arrow,
+.gt-shelf__scroller:has(.gt-shelf__item[data-fully-visible]:hover) .gt-shelf__hbar,
+.gt-shelf__scroller:has(.gt-shelf__item[data-fully-visible]:focus-within) .gt-shelf__hbar {
   z-index: 0;
   opacity: 0;
   pointer-events: none;
@@ -527,13 +531,21 @@
     scroll-behavior: auto;
   }
 
+  /* Match theme `.game-card`: keep the hover scale (it marks the pointer target),
+     drop only the animated travel. The old `transform: none` here is why News
+     tiles stayed flat while Latest Games still grew under reduced-motion. */
   .gt-shelf__item .gt-news-card {
     transition: none;
   }
 
-  .gt-shelf__item[data-fully-visible] .gt-news-card:hover,
-  .gt-shelf__item[data-fully-visible] .gt-news-card:focus-visible {
+  .gt-shelf__item .gt-news-card:hover,
+  .gt-shelf__item .gt-news-card:focus-visible {
+    transform: scale(var(--gt-tile-hover-scale, 1.25));
+    transition: none;
+  }
+
+  .gt-shelf__item:not([data-fully-visible]) .gt-news-card:hover,
+  .gt-shelf__item:not([data-fully-visible]) .gt-news-card:focus-visible {
     transform: none;
-    box-shadow: none;
   }
 }

@@ -142,12 +142,13 @@ def test_topbar_cluster_is_not_a_shared_outline():
 
 
 def test_tile_hover_has_no_accent_glow_and_grows_from_center():
-    """Enlarge is scale + drop shadow; no coloured bloom; origin is the tile centre."""
+    """Enlarge is scale + drop shadow + hover-only outline; origin is the tile centre."""
     components = _strip_comments(_read('components.css'))
     hover = _blocks_for(components, '.game-card:hover')
     assert 'transform: scale(var(--gt-tile-hover-scale, 1.25))' in hover
     assert 'transform-origin: center center' in hover
     assert 'z-index: 40' in hover
+    assert 'outline: 2px solid' in hover
     assert '0 0 33px' not in hover
     shadow = ';'.join(
         part for part in hover.split(';') if 'box-shadow' in part
@@ -158,11 +159,23 @@ def test_tile_hover_has_no_accent_glow_and_grows_from_center():
     overlay = _rule(components, ".game-card[data-overlay-open='true']")
     assert 'z-index: 50' in overlay
 
+    # Resting covers are quiet — no accent ring on every tile.
+    rest = _blocks_for(components, '.game-card .game-cover')
+    assert 'var(--gt-border' in rest
+    assert '34%' not in rest
+
     shell = _read('gt-shell.css')
-    assert 'padding-block-start: max(var(--gt-stack), var(--gt-tile-hover-bleed-y))' in shell
+    assert 'grid-template-areas: \'rail main\'' in shell
+    assert 'grid-area: main' in _rule(shell, '.gt-topbar')
+    assert 'z-index: 30' in _rule(shell, '.gt-topbar')
+    assert '.gt-shell:has(.game-card:hover) .gt-topbar' in shell
+    # Nested :has() invalidates the whole selector list in Chromium — use a
+    # descendant focus check instead.
+    assert '.gt-shell:has(.game-card:has(:focus-visible))' not in shell
+    assert '.gt-shell:has(.game-card :focus-visible) .gt-topbar' in shell
     assert 'padding-inline: max(var(--gt-gutter), var(--gt-tile-hover-bleed-x))' in shell
     assert '#main-content.gt-shell__main:has(.gt-library-selection)' in shell
-    assert 'padding-top: 0.15rem !important' in shell
+    assert 'calc(var(--gt-topbar-h) + 0.15rem)' in shell
     # Cover is 3:4 — upward growth tracks height; side growth tracks width.
     assert '* 4 / 3 *' in shell
     assert '--gt-tile-hover-bleed-y:' in shell

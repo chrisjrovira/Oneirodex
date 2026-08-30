@@ -41,7 +41,9 @@ def get_global_settings():
         settings.update(settings_record.settings)
         return {
             'show_logo': settings.get('showSystemLogo'),
-            'show_help_button': settings.get('showHelpButton'),
+            # Explicit True defaults: a missing JSON key must not hide Help /
+            # Trailers (dataset.showX === 'true' is false when the attr is absent).
+            'show_help_button': settings.get('showHelpButton', True),
             'enable_web_links': settings.get('enableWebLinksOnDetailsPage'),
             'enable_server_status': settings_record.settings.get('enableServerStatusFeature', False),
             'enable_newsletter': settings_record.settings.get('enableNewsletterFeature', False),

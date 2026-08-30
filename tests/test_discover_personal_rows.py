@@ -12,12 +12,14 @@ from gametheca.models import (
     DiscoverySection,
     FreeGameOffer,
     Game,
+    GameExtra,
     GameUpdate,
     Library,
     User,
     UserFriendship,
     UserGameProgress,
     UserPreference,
+    user_favorites,
 )
 from gametheca.platform import LibraryPlatform
 
@@ -524,3 +526,104 @@ class TestSharingPreference:
 
         again = client.get('/api/notifications/preferences')
         assert again.get_json()['share_activity'] is False
+
+
+def _seed_extras_missing(db_session):
+    section = db.session.execute(
+        select(DiscoverySection).filter_by(identifier='extras_missing')
+    ).scalar_one_or_none()
+    if section is None:
+        section = DiscoverySection(
+            identifier='extras_missing',
+            name='Extras not on the vault',
+            display_order=-15,
+        )
+        db_session.add(section)
+    section.is_visible = True
+    section.starts_at = None
+    section.ends_at = None
+    db_session.commit()
+    return section
+
+
+class TestExtrasMissing:
+    def test_hidden_when_empty(self, app, db_session, member):
+        from gametheca.routes_discover import build_discover_sections
+
+        _seed_extras_missing(db_session)
+        with app.app_context():
+            ids = [row['identifier'] for row in build_discover_sections(member)]
+        assert 'extras_missing' not in ids
+
+    def test_shows_engaged_title_with_absent_file(
+        self, app, db_session, member, personal_library, global_settings,
+    ):
+        from gametheca.routes_discover import build_discover_sections
+
+        _seed_extras_missing(db_session)
+        engaged = Game(
+            name=f'Engaged Extra {uuid4().hex[:6]}',
+            summary='s',
+            library_uuid=personal_library.uuid,
+        )
+        stranger = Game(
+            name=f'Stranger Extra {uuid4().hex[:6]}',
+            summary='s',
+            library_uuid=personal_library.uuid,
+        )
+        db_session.add_all([engaged, stranger])
+        db_session.flush()
+        db_session.add(
+            GameExtra(
+                game_uuid=engaged.uuid,
+                file_path=f'/no/such/extra/{uuid4().hex}',
+            )
+        )
+        db_session.add(
+            GameExtra(
+                game_uuid=stranger.uuid,
+                file_path=f'/also/missing/{uuid4().hex}',
+            )
+        )
+        db_session.execute(
+            user_favorites.insert().values(user_id=member.id, game_uuid=engaged.uuid)
+        )
+        db_session.commit()
+
+        with app.app_context():
+            sections = build_discover_sections(member)
+        row = next(s for s in sections if s['identifier'] == 'extras_missing')
+        names = [game['name'] for game in row['games']]
+        assert engaged.name in names
+        assert stranger.name not in names
+        assert 'sale' not in (row.get('reason') or '').lower()
+        assert '%' not in (row.get('reason') or '')
+
+    def test_disc_extras_are_not_acquire_nags(
+        self, app, db_session, member, personal_library, global_settings,
+    ):
+        from gametheca.routes_discover import build_discover_sections
+
+        _seed_extras_missing(db_session)
+        game = Game(
+            name=f'Disc Extra {uuid4().hex[:6]}',
+            summary='s',
+            library_uuid=personal_library.uuid,
+        )
+        db_session.add(game)
+        db_session.flush()
+        db_session.add(
+            GameExtra(
+                game_uuid=game.uuid,
+                extra_kind='disc',
+                file_path=f'/missing/disc/{uuid4().hex}',
+            )
+        )
+        db_session.execute(
+            user_favorites.insert().values(user_id=member.id, game_uuid=game.uuid)
+        )
+        db_session.commit()
+
+        with app.app_context():
+            ids = [row['identifier'] for row in build_discover_sections(member)]
+        assert 'extras_missing' not in ids

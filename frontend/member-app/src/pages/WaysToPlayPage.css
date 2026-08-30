@@ -1,0 +1,45 @@
+.gt-ways-to-play .gt-systems-group {
+  margin-bottom: 1.5rem;
+}
+
+.gt-ways-to-play .gt-systems-group__title {
+  margin: 0 0 0.65rem;
+  font-size: var(--gt-font-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
+}
+
+.gt-ways-to-play__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--gt-tile-gap);
+}
+
+.gt-ways-to-play__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gt-space-2, 0.5rem);
+  min-height: 8rem;
+  padding: var(--gt-card-pad);
+  text-align: left;
+  text-decoration: none;
+  color: var(--gt-text);
+  background: var(--gt-card-bg);
+  border: 1px solid var(--gt-card-border);
+  border-radius: var(--gt-tile-radius);
+}
+
+.gt-ways-to-play__card h2 {
+  margin: 0;
+  font-size: var(--gt-font-lg);
+}
+
+.gt-ways-to-play__card p {
+  margin: 0;
+  color: var(--gt-text-muted);
+  font-size: var(--gt-font-sm);
+  line-height: 1.4;
+}

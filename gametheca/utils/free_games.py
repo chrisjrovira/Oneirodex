@@ -36,6 +36,53 @@ _GP_PLATFORM_MAP = {
     'humble bundle': 'humble',
 }
 
+# Discover / News tiles are 2×3 cover frames. Prefer tall store keys so the art
+# is not a wide banner cropped through the middle of a landscape key art.
+_EPIC_TALL_IMAGE_TYPES = (
+    'OfferImageTall',
+    'DieselGameBoxTall',
+    'DieselGameBox',
+    'Thumbnail',
+)
+_EPIC_WIDE_IMAGE_TYPES = (
+    'OfferImageWide',
+    'DieselStoreFrontWide',
+    'DieselGameBoxWide',
+)
+
+
+def _epic_cover_image_url(images: Any) -> str | None:
+    """Pick a portrait-leaning Epic keyImage URL when the catalog offers one."""
+    if not isinstance(images, list):
+        return None
+    by_type: dict[str, str] = {}
+    fallback: str | None = None
+    for img in images:
+        if not isinstance(img, dict):
+            continue
+        url = (img.get('url') or '').strip()
+        if not url:
+            continue
+        kind = str(img.get('type') or '')
+        if kind:
+            by_type[kind] = url
+        if fallback is None:
+            fallback = url
+    for kind in _EPIC_TALL_IMAGE_TYPES:
+        if kind in by_type:
+            return by_type[kind]
+    for kind in _EPIC_WIDE_IMAGE_TYPES:
+        if kind in by_type:
+            return by_type[kind]
+    return fallback
+
+
+def _steam_portrait_capsule_url(appid: str) -> str:
+    """Steam's 600×900 library capsule — the 2×3 shape Discover tiles use."""
+    return (
+        f'https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/library_600x900.jpg'
+    )
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -290,13 +337,7 @@ def fetch_epic_free_games() -> list[dict[str, Any]]:
         if not path_slug:
             continue
         claim = f'https://store.epicgames.com/en-US/p/{path_slug}'
-        images = el.get('keyImages') or []
-        image_url = None
-        for img in images:
-            if isinstance(img, dict) and img.get('url'):
-                image_url = img['url']
-                if img.get('type') in ('OfferImageWide', 'Thumbnail', 'DieselStoreFrontWide'):
-                    break
+        image_url = _epic_cover_image_url(el.get('keyImages') or [])
         eid = str(el.get('id') or _stable_id('epic', path_slug, title))
         out.append({
             'store': 'epic',
@@ -357,13 +398,14 @@ def fetch_steam_free_games() -> list[dict[str, Any]]:
             seen_ids.add(eid)
             name = (item.get('name') or f'Steam app {eid}').strip()
             claim = f'https://store.steampowered.com/app/{eid}/'
-            header = item.get('header_image') or item.get('small_capsule_image') or item.get('large_capsule_image')
+            # Portrait library capsule — Discover tiles are 2×3 cover frames.
+            image_url = _steam_portrait_capsule_url(eid)
             out.append({
                 'store': 'steam',
                 'external_id': eid,
                 'title': name[:255],
                 'description': None,
-                'image_url': header,
+                'image_url': image_url,
                 'claim_url': claim,
                 'store_url': claim,
                 'worth': None,
@@ -414,7 +456,9 @@ def fetch_gamerpower_giveaways() -> list[dict[str, Any]]:
             'external_id': f'gp-{eid}',
             'title': title[:255],
             'description': (item.get('description') or '')[:500] or None,
-            'image_url': item.get('thumbnail') or item.get('image'),
+            # Prefer the larger `image` when present — thumbnails are often wide
+            # banners that crop poorly into Discover's 2×3 tile frame.
+            'image_url': item.get('image') or item.get('thumbnail'),
             'claim_url': claim,
             'store_url': claim,
             'worth': (str(item.get('worth')).strip() if item.get('worth') else None),

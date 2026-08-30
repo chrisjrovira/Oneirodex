@@ -25,15 +25,20 @@ def _by_suffix(candidates, *parts):
 
 
 def test_family_parent_names_locked():
-    for name in ('NINTENDO', 'Sega', 'Sony', 'ATARI', '_console-gaming', 'Arcade'):
+    for name in ('NINTENDO', 'Sega', 'Sony', 'ATARI', '_console-gaming', 'Arcade', 'Commodore'):
         assert is_family_parent_name(name)
     assert 'nintendo' in FAMILY_PARENT_NAMES
+    assert 'commodore' in FAMILY_PARENT_NAMES
     assert not is_family_parent_name('Switch')
     assert not is_family_parent_name('PlayStation')
     assert not is_family_parent_name('MAME')
     # HuCard dumps live in a folder named PC Engine — not a family parent.
     assert not is_family_parent_name('PC Engine')
     assert not is_family_parent_name('PC-Engine')
+    # C64-family leaves sit under Commodore; the leaf name is not a parent.
+    assert not is_family_parent_name('Commodore 64')
+    # Xbox siblings (Xbox / 360 / One / Series) — never a family parent.
+    assert not is_family_parent_name('Xbox')
 
 
 def test_infer_platform_switch_and_psx():
@@ -80,6 +85,69 @@ def test_infer_platform_household_leaves():
     assert infer_platform_from_name('Atari - Lynx [Headered]') == 'LYNX'
     assert infer_platform_from_name('Sony PSP') == 'PSP'
     assert infer_platform_from_name('PCFX') == 'PCFX'
+
+
+def test_infer_platform_locked_console_wave():
+    """Wii U / Jaguar CD / CD32 beat the shorter family names."""
+    assert infer_platform_from_name('Nintendo Wii U') == 'WII_U'
+    assert infer_platform_from_name('Wii U') == 'WII_U'
+    assert infer_platform_from_name('Nintendo Wii') == 'WII'
+    assert infer_platform_from_name('Pokemon Mini') == 'POKE_MINI'
+    assert infer_platform_from_name('Pokémon Mini') == 'POKE_MINI'
+    assert infer_platform_from_name('Philips CD-i') == 'CD_I'
+    assert infer_platform_from_name('CD-i') == 'CD_I'
+    assert infer_platform_from_name('Sega Pico') == 'SEGA_PICO'
+    assert infer_platform_from_name('Pico') is None
+    assert infer_platform_from_name('Atari Jaguar CD') == 'JAGUAR_CD'
+    assert infer_platform_from_name('Atari Jaguar') == 'JAGUAR'
+    assert infer_platform_from_name('Commodore Amiga CD32') == 'AMIGA_CD32'
+    assert infer_platform_from_name('Amiga CD32') == 'AMIGA_CD32'
+    assert infer_platform_from_name('CD32') == 'AMIGA_CD32'
+    assert infer_platform_from_name('Commodore Amiga') == 'AMIGA'
+
+
+def test_infer_platform_home_computers():
+    """Home computers after GX4000 so the Amstrad console is not stolen by CPC."""
+    assert infer_platform_from_name('MSX') == 'MSX'
+    assert infer_platform_from_name('ZX Spectrum') == 'ZX_SPECTRUM'
+    assert infer_platform_from_name('Spectrum') == 'ZX_SPECTRUM'
+    assert infer_platform_from_name('Speccy') == 'ZX_SPECTRUM'
+    assert infer_platform_from_name('Amstrad CPC') == 'CPC'
+    assert infer_platform_from_name('CPC') == 'CPC'
+    assert infer_platform_from_name('CPC 464') == 'CPC'
+    assert infer_platform_from_name('GX4000') == 'GX4000'
+    assert infer_platform_from_name('Amstrad GX4000') == 'GX4000'
+    assert infer_platform_from_name('Atari ST') == 'ATARI_ST'
+    assert infer_platform_from_name('Atari STE') == 'ATARI_ST'
+    assert infer_platform_from_name('Atari 2600') == 'ATARI_2600'
+    assert infer_platform_from_name('Apple II') == 'APPLE_II'
+    assert infer_platform_from_name('Apple 2') == 'APPLE_II'
+    assert infer_platform_from_name('Studio II') == 'STUDIO2'
+    assert infer_platform_from_name('Atari 8-bit') == 'ATARI_8BIT'
+    assert infer_platform_from_name('Atari 800') == 'ATARI_8BIT'
+    assert infer_platform_from_name('Atari 5200') == 'ATARI_5200'
+    assert infer_platform_from_name('Atari ST') == 'ATARI_ST'
+    assert infer_platform_from_name('Sharp X68000') == 'X68000'
+    assert infer_platform_from_name('X68000') == 'X68000'
+    assert infer_platform_from_name('NEC PC-98') == 'PC_98'
+    assert infer_platform_from_name('PC-98') == 'PC_98'
+
+
+def test_infer_platform_commodore_8bit():
+    """VICE folder names before Amiga; Commodore alone is not a platform."""
+    assert infer_platform_from_name('Commodore 64') == 'VICE_X64SC'
+    assert infer_platform_from_name('C64') == 'VICE_X64SC'
+    assert infer_platform_from_name('CBM 64') == 'VICE_X64SC'
+    assert infer_platform_from_name('Commodore 128') == 'VICE_X128'
+    assert infer_platform_from_name('C128') == 'VICE_X128'
+    assert infer_platform_from_name('VIC-20') == 'VICE_XVIC'
+    assert infer_platform_from_name('VIC20') == 'VICE_XVIC'
+    assert infer_platform_from_name('Commodore Plus/4') == 'VICE_XPLUS4'
+    assert infer_platform_from_name('Plus-4') == 'VICE_XPLUS4'
+    assert infer_platform_from_name('Commodore PET') == 'VICE_XPET'
+    assert infer_platform_from_name('Commodore Amiga') == 'AMIGA'
+    assert infer_platform_from_name('Amiga') == 'AMIGA'
+    assert infer_platform_from_name('Commodore') is None
 
 
 def test_family_parent_rejected_as_candidate(tmp_path):
@@ -347,3 +415,19 @@ def test_platform_leaf_does_not_propose_title_folders(tmp_path):
     assert os.path.normcase(str(nes / 'Quattro Arcade')) not in paths
     assert _by_suffix(candidates, 'Nintendo Switch') is not None
     assert all('stars in the trash' not in c['path'].casefold() for c in candidates)
+
+
+def test_commodore_family_proposes_c64_leaf_not_parent(tmp_path):
+    """Empty Commodore/Commodore 64 leaf is propose-only; parent is skipped."""
+    root = tmp_path / '_console-gaming'
+    leaf = root / 'Commodore' / 'Commodore 64'
+    leaf.mkdir(parents=True)
+
+    candidates = propose_leaf_libraries(str(root))
+    paths = _paths(candidates)
+
+    assert os.path.normcase(str(root / 'Commodore')) not in paths
+    c64 = _by_suffix(candidates, 'Commodore', 'Commodore 64')
+    assert c64 is not None
+    assert c64['platform'] == 'VICE_X64SC'
+    assert all(not is_family_parent_name(os.path.basename(c['path'])) for c in candidates)

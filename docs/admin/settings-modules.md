@@ -29,6 +29,8 @@ Settings hub shows On/Off (and Storage “Apply off”) for optional modules so 
 
 Product modules default **on**. Disable during **setup → Features**, under **Admin → Features**, or via `.env` / Compose.
 
+**Member chrome (Server Settings):** `showHelpButton` and `showTrailers` default **on**. They are baked into every member SPA shell on load (`data-show-help` / `data-show-trailers`), including Systems / Chat / Collections — not only Discover and Favorites. A missing JSON key must not hide those More destinations.
+
 **Stays off by default:** `OIDC_ENABLED` (SSO/auth).  
 **Safety locks (also off):** `ENABLE_AI_AUTO_APPLY`, `ALLOW_HARDLINK_APPLY`.  
 **Patch catalog:** operator YAML/JSON at `PATCH_CATALOG_PATH` — Oneirodex does not scrape romhacking.net or similar sites.
@@ -251,4 +253,4 @@ Related: [libraries-and-scans.md](libraries-and-scans.md) · [docker-compose-dep
 - **API:** `GET/POST /api/tokens`, `DELETE /api/tokens/{id}` — any logged-in member.
 - **Presets:** `POST` body `"preset": "companion"` (`read:library` + `write:download`) or `"preset": "thin"` (`read:library` + `read:social` + `write:presence`; **no** download). List response includes `scope_presets`.
 - **Thin protocol:** heartbeat accepts `device_kind` (`companion` | `thin` | `browser`); `GET /api/client/capabilities` advertises allows/denies. Install/update command queue delivers only to `companion` + download/lifecycle scopes.
-- **UI:** member SPA **Account → API tokens** (`/tokens`) — create with companion/thin presets, copy one-time secret, revoke. API / `@gametheca/api-client` / OpenAPI still work. See [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](../user/thin-client.md).
+- **UI:** member SPA **Account → API tokens** (`/tokens`) — create with companion/thin presets, copy one-time secret, revoke. API / `@oneirodex/api-client` / OpenAPI still work. See [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](../user/thin-client.md).

@@ -189,13 +189,15 @@
   background-position: center;
 }
 
+/* Selection is the checkbox, not a sticky outline. Outline belongs to hover /
+   keyboard focus only (theme `.game-card:hover`). A selected-but-idle tile
+   must look like every other resting tile. */
 .game-card-container.is-selected .game-card {
-  outline: 2px solid color-mix(in srgb, var(--gt-accent) 80%, transparent);
-  outline-offset: 2px;
+  outline: none;
 }
 
 .game-card-container.is-selected .game-cover {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gt-accent) 40%, transparent);
+  box-shadow: 0 4px 12px var(--shadow-dark-strong, rgba(0, 0, 0, 0.55));
 }
 
 @media (max-width: 900px) {

@@ -1,6 +1,6 @@
 # Docker Compose deploy — Oneirodex
 
-Concise local/NAS path using the repo `docker-compose.yml` (`gametheca-app` + `gametheca-db` by default; override with `APP_CONTAINER_NAME` / `DB_CONTAINER_NAME`). Preferred Hub image once published: `chrisjrovira/oneirodex` via `APP_IMAGE`.
+Concise local/NAS path using the repo `docker-compose.yml` (`oneirodex-app` + `oneirodex-db` by default; override with `APP_CONTAINER_NAME` / `DB_CONTAINER_NAME`). Preferred Hub image once published: `chrisjrovira/oneirodex` via `APP_IMAGE`. Live Unraid stacks that still run `gametheca-app` should pin that name until the scan FIFO is idle.
 
 ## Prerequisites
 

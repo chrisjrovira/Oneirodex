@@ -430,10 +430,10 @@ class TestUnmatchedFolders:
         assert folder['platform_id'] == PLATFORM_IDS.get('PCWIN')  # Should be 6
         assert folder['platform_id'] == 6
     
-    @patch('gametheca.routes_apis.scan.PLATFORM_IDS', {})  # Mock empty PLATFORM_IDS in the route module
-    def test_unmatched_folders_no_platform_mapping(self, client, admin_user, db_session):
+    @patch('gametheca.routes_apis.scan.igdb_platform_id_for', return_value=None)
+    def test_unmatched_folders_no_platform_mapping(self, _mock_igdb, client, admin_user, db_session):
         """Test unmatched_folders when platform exists but has no ID mapping."""
-        # Create library with a platform that won't be in PLATFORM_IDS
+        # Create library with a platform; lookup is stubbed to None.
         library = Library(
             name='Test Library Unknown Platform',
             platform=LibraryPlatform.PCWIN  # Valid platform but we'll mock empty PLATFORM_IDS
@@ -473,7 +473,7 @@ class TestUnmatchedFolders:
         
         # Platform name should still be available from the platform enum
         assert folder['platform_name'] == 'PCWIN'
-        # But platform_id should be None because PLATFORM_IDS is mocked as empty
+        # platform_id is None because igdb_platform_id_for is stubbed
         assert folder['platform_id'] is None
     
     def test_unmatched_folders_handles_none_platform_in_query(self, client, admin_user, db_session, sample_library, sample_scan_job):

@@ -875,7 +875,8 @@ body.gt-play-shell {
 
 /* Game Boy handheld — portrait olive slab */
 [data-platform="GB"],
-[data-platform="GBC"] {
+[data-platform="GBC"],
+[data-platform="POKE_MINI"] {
   --gt-play-accent: #9bbc0f;
   --gt-play-room-bg: #1a1a14;
   --gt-play-wallpaper:
@@ -922,6 +923,10 @@ body.gt-play-shell {
     radial-gradient(circle at 20% 30%, rgba(123, 104, 238, 0.2), transparent 40%),
     radial-gradient(circle at 80% 70%, rgba(255, 100, 180, 0.12), transparent 35%),
     linear-gradient(180deg, #1a1428, #0c0814);
+}
+
+[data-platform="POKE_MINI"] {
+  --gt-play-bezel-label: "Pokémon Mini";
 }
 
 [data-platform="GBA"] {
@@ -1016,7 +1021,8 @@ body.gt-play-shell {
 }
 
 [data-platform="SEGA_MS"],
-[data-platform="SEGA_SG1000"] {
+[data-platform="SEGA_SG1000"],
+[data-platform="SEGA_PICO"] {
   --gt-play-accent: #c0c0c0;
   --gt-play-room-bg: #101018;
   --gt-play-wallpaper: linear-gradient(180deg, #181820, #0c0c12);
@@ -1031,6 +1037,14 @@ body.gt-play-shell {
   --gt-play-chrome-w: 36px;
   --gt-play-chrome-h: 8px;
   --gt-play-chrome: linear-gradient(90deg, #0000aa, #c0c0c0);
+}
+
+[data-platform="SEGA_SG1000"] {
+  --gt-play-bezel-label: "SG-1000";
+}
+
+[data-platform="SEGA_PICO"] {
+  --gt-play-bezel-label: "Pico";
 }
 
 [data-platform="SEGA_CD"] {
@@ -1298,6 +1312,15 @@ body.gt-play-shell {
 [data-platform="MAC"],
 [data-platform="OTHER"],
 [data-platform="AMIGA"],
+[data-platform="AMIGA_CD32"],
+[data-platform="MSX"],
+[data-platform="ZX_SPECTRUM"],
+[data-platform="CPC"],
+[data-platform="ATARI_ST"],
+[data-platform="APPLE_II"],
+[data-platform="ATARI_8BIT"],
+[data-platform="X68000"],
+[data-platform="PC_98"],
 [data-platform="VICE_X64SC"],
 [data-platform="VICE_X128"],
 [data-platform="VICE_XVIC"],
@@ -1341,8 +1364,49 @@ body.gt-play-shell {
   --gt-play-fg: #33ff66;
 }
 
+[data-platform="AMIGA"] {
+  --gt-play-bezel-label: "Amiga";
+}
+
+[data-platform="AMIGA_CD32"] {
+  --gt-play-bezel-label: "CD32";
+}
+
+[data-platform="MSX"] {
+  --gt-play-bezel-label: "MSX";
+}
+
+[data-platform="ZX_SPECTRUM"] {
+  --gt-play-bezel-label: "Spectrum";
+}
+
+[data-platform="CPC"] {
+  --gt-play-bezel-label: "CPC";
+}
+
+[data-platform="ATARI_ST"] {
+  --gt-play-bezel-label: "Atari ST";
+}
+
+[data-platform="APPLE_II"] {
+  --gt-play-bezel-label: "Apple II";
+}
+
+[data-platform="ATARI_8BIT"] {
+  --gt-play-bezel-label: "Atari 8-bit";
+}
+
+[data-platform="X68000"] {
+  --gt-play-bezel-label: "X68000";
+}
+
+[data-platform="PC_98"] {
+  --gt-play-bezel-label: "PC-98";
+}
+
 [data-platform="NGC"],
 [data-platform="WII"],
+[data-platform="WII_U"],
 [data-platform="SWITCH"] {
   --gt-play-accent: #6a5acd;
   --gt-play-room-bg: #0c0a16;
@@ -1376,6 +1440,10 @@ body.gt-play-shell {
   --gt-play-bezel-label: "Switch";
 }
 
+[data-platform="WII_U"] {
+  --gt-play-bezel-label: "Wii U";
+}
+
 [data-platform="ATARI_2600"],
 [data-platform="ATARI_5200"],
 [data-platform="ATARI_7800"],
@@ -1406,7 +1474,8 @@ body.gt-play-shell {
   --gt-play-scanline-opacity: 0.15;
 }
 
-[data-platform="JAGUAR"] {
+[data-platform="JAGUAR"],
+[data-platform="JAGUAR_CD"] {
   --gt-play-accent: #ff0000;
   --gt-play-room-bg: #120404;
   --gt-play-bezel-bg: linear-gradient(160deg, #1c1c1c, #0a0a0a);
@@ -1420,7 +1489,12 @@ body.gt-play-shell {
   --gt-play-scanline-opacity: 0.1;
 }
 
-[data-platform="THREEDO"] {
+[data-platform="JAGUAR_CD"] {
+  --gt-play-bezel-label: "Jaguar CD";
+}
+
+[data-platform="THREEDO"],
+[data-platform="CD_I"] {
   --gt-play-accent: #ffcc00;
   --gt-play-room-bg: #14140c;
   --gt-play-bezel-bg: linear-gradient(160deg, #fafafa, #d8d8d8);
@@ -1431,6 +1505,10 @@ body.gt-play-shell {
     radial-gradient(ellipse 55% 35% at 50% 0%, rgba(255, 204, 0, 0.14), transparent 55%),
     linear-gradient(180deg, #16160e, #0a0a06);
   --gt-play-scanline-opacity: 0.05;
+}
+
+[data-platform="CD_I"] {
+  --gt-play-bezel-label: "CD-i";
 }
 
 [data-platform="NEOGEO_CD"],

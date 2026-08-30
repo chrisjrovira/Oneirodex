@@ -12,6 +12,102 @@
   margin-bottom: 16px;
 }
 
+.gt-details-page__crumbs {
+  margin-bottom: var(--gt-space-5);
+}
+
+.gt-details-page__crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gt-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--gt-font-sm);
+}
+
+.gt-details-page__crumbs li:not(:last-child)::after {
+  content: '›';
+  margin-inline-start: var(--gt-space-2);
+  opacity: 0.65;
+}
+
+.gt-details-page__crumbs [aria-current='page'] {
+  opacity: 0.8;
+}
+
+.gt-details-page__features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gt-space-2);
+  margin-bottom: var(--gt-space-4);
+}
+
+.gt-details-page__fold--media {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: var(--gt-space-6);
+  align-items: start;
+  margin-bottom: var(--gt-space-5);
+}
+
+.gt-details-page__fold--media .gt-details-page__content-grid {
+  grid-template-columns: 1fr;
+  margin-bottom: 0;
+}
+
+.gt-details-page__fold--media .gt-details-page__section--summary,
+.gt-details-page__fold--media .gt-details-page__section--facts,
+.gt-details-page__fold--media .gt-details-page__flow {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.gt-details-page__about,
+.gt-details-page__req-text {
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.gt-details-page__reqs {
+  display: grid;
+  gap: var(--gt-space-5);
+}
+
+.gt-details-page__req-os h3 {
+  margin: 0 0 var(--gt-space-3);
+  font-size: var(--gt-font-lg);
+}
+
+.gt-details-page__req-os h4 {
+  margin: var(--gt-space-3) 0 var(--gt-space-2);
+  font-size: var(--gt-font-sm);
+  opacity: 0.8;
+}
+
+.gt-details-page__langs-wrap {
+  overflow-x: auto;
+}
+
+.gt-details-page__langs {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--gt-font-sm);
+}
+
+.gt-details-page__langs th,
+.gt-details-page__langs td {
+  text-align: start;
+  padding: var(--gt-space-2) var(--gt-space-3);
+  border-bottom: 1px solid color-mix(in srgb, var(--gt-text) 12%, transparent);
+}
+
+.gt-details-page__more-from {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-6);
+}
+
 .gt-details-page__hero {
   display: grid;
   grid-template-columns: minmax(140px, 220px) 1fr;
@@ -417,6 +513,10 @@
 }
 
 @media (max-width: 900px) {
+  .gt-details-page__fold--media {
+    grid-template-columns: 1fr;
+  }
+
   .gt-details-page__hero {
     grid-template-columns: 1fr;
   }

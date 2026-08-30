@@ -29,8 +29,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: gametheca:review
-    container_name: gametheca-review-app
+    image: oneirodex:review
+    container_name: oneirodex-review-app
     depends_on:
       db:
         condition: service_healthy
@@ -64,7 +64,7 @@ services:
 
   db:
     image: postgres:17.6
-    container_name: gametheca-review-db
+    container_name: oneirodex-review-db
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres

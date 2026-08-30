@@ -110,7 +110,7 @@ describe('rail groups fold away', () => {
     renderRail()
 
     expect(screen.getByRole('link', { name: 'Wishlist' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /Game Catalog/i }))
+    await user.click(screen.getByRole('button', { name: /^Library$/i }))
 
     expect(screen.queryByRole('link', { name: 'Wishlist' })).toBeNull()
     expect(window.localStorage.getItem('gt.rail.collapsedGroups')).toContain('library')

@@ -35,6 +35,7 @@ export function getMoreLinks({ showTrailers, showHelp, enableVr, enableActivity 
     { id: 'calendar', to: '/calendar', label: 'Release calendar' },
     { id: 'ownership', to: '/ownership', label: 'Ownership' },
     { id: 'big-picture', to: '/big-picture', label: 'Big Picture' },
+    { id: 'ways-to-play', to: '/ways-to-play', label: 'Ways to Play' },
   ]
   if (enableActivity) {
     // Keep its original position in the list rather than appending.
@@ -71,9 +72,10 @@ export function getMoreLinks({ showTrailers, showHelp, enableVr, enableActivity 
 export function getMoreGroups(options = {}) {
   const byId = new Map(getMoreLinks(options).map((link) => [link.id, link]))
   const groups = [
-    { id: 'library', label: 'Game Catalog', ids: ['collections', 'wishlist', 'updates', 'acquire', 'ownership', 'calendar'] },
+    // Group heading only — the primary /library link stays "Game Catalog".
+    { id: 'library', label: 'Library', ids: ['collections', 'wishlist', 'updates', 'acquire', 'ownership', 'calendar'] },
     { id: 'social', label: 'Social', ids: ['friends', 'chat', 'notifications', 'activity', 'news'] },
-    { id: 'play', label: 'Play', ids: ['big-picture', 'playtime', 'vr', 'trailers'] },
+    { id: 'play', label: 'Play', ids: ['ways-to-play', 'big-picture', 'playtime', 'vr', 'trailers'] },
     { id: 'support', label: 'Support', ids: ['report', 'help'] },
   ]
 
@@ -114,6 +116,7 @@ export const TILE_SIZE_PATHS = ['/discover', '/library', '/favorites']
 /** @param {string} pathname */
 export function hasTileSizeControl(pathname) {
   const path = (pathname || '/').replace(/\/+$/, '') || '/'
+  if (path.startsWith('/discover/hub')) return false
   return TILE_SIZE_PATHS.some(
     (base) => path === base || path.startsWith(`${base}/`),
   )
@@ -123,6 +126,7 @@ const SECTION_HOME = {
   '/discover': { to: '/discover', label: 'Home' },
   '/library': { to: '/library', label: 'Game Catalog home' },
   '/systems': { to: '/systems', label: 'Systems home' },
+  '/ways-to-play': { to: '/ways-to-play', label: 'Ways to Play' },
   '/downloads': { to: '/downloads', label: 'Downloads' },
   '/favorites': { to: '/favorites', label: 'Favorites' },
   '/collections': { to: '/collections', label: 'Collections' },

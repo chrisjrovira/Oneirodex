@@ -133,7 +133,7 @@ export function SegmentedViews({
             </button>
             {unfurlOpen ? (
               <div
-                className="gt-seg gt-contextbar__views-unfurl"
+                className="gt-contextbar__views-unfurl"
                 role="group"
                 aria-label={triggerLabel}
               >

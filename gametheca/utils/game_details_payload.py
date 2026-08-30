@@ -26,6 +26,7 @@ from gametheca.utils.rbac import normalize_role, role_at_least
 from gametheca.utils.rom_language import preferred_locale_matches
 from gametheca.utils.multi_disc import disc_browse_fields
 from gametheca.utils.secondary_scrapers import game_card_flags
+from gametheca.utils.steam_store_specs import public_store_specs
 
 
 def _rom_patch_apply_enabled() -> bool:
@@ -94,6 +95,14 @@ def _ai_target_lang_hint(preferred_locale: str | None) -> str:
     return pref.split('-')[0] or 'en'
 
 
+_YOUTUBE_ID_PATTERNS = (
+    r'youtube\.com/watch\?v=([a-zA-Z0-9_-]{6,})',
+    r'youtube\.com/embed/([a-zA-Z0-9_-]{6,})',
+    r'youtu\.be/([a-zA-Z0-9_-]{6,})',
+)
+_DIRECT_VIDEO_SUFFIXES = ('.mp4', '.webm', '.ogv', '.ogg')
+
+
 def _parse_video_urls(raw) -> list[str]:
     """Normalize Game.video_urls (CSV string or list) into a clean URL list."""
     if raw is None or raw == '':
@@ -105,19 +114,67 @@ def _parse_video_urls(raw) -> list[str]:
     return []
 
 
-def _youtube_embed_url(video_url: str) -> str | None:
-    patterns = [
-        r'youtube\.com/watch\?v=([a-zA-Z0-9_-]+)',
-        r'youtube\.com/embed/([a-zA-Z0-9_-]+)',
-        r'youtu\.be/([a-zA-Z0-9_-]+)',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, video_url or '')
+def _is_honest_http_url(url: str) -> bool:
+    """True for http(s) URLs that are not markup (no Steam widget HTML)."""
+    if not url or '<' in url or '>' in url:
+        return False
+    lowered = url.strip().casefold()
+    return lowered.startswith('http://') or lowered.startswith('https://')
+
+
+def _is_direct_video_url(url: str) -> bool:
+    path = url.split('?', 1)[0].casefold()
+    return path.endswith(_DIRECT_VIDEO_SUFFIXES)
+
+
+def youtube_embed_url(video_url: str) -> str | None:
+    """YouTube watch/short/embed → ``https://www.youtube.com/embed/<id>``.
+
+    Returns None when the string is not a YouTube watch/embed URL. Does not
+    invent a trailer from a Steam App ID, and does not pass through widget HTML.
+    """
+    if not _is_honest_http_url(video_url or ''):
+        return None
+    for pattern in _YOUTUBE_ID_PATTERNS:
+        match = re.search(pattern, video_url, flags=re.IGNORECASE)
         if match:
             return f'https://www.youtube.com/embed/{match.group(1)}'
+    return None
+
+
+def _youtube_embed_url(video_url: str) -> str | None:
+    embed = youtube_embed_url(video_url)
+    if embed:
+        return embed
     if video_url and ('youtube.com' in video_url or 'youtu.be' in video_url):
         return video_url
     return None
+
+
+def first_trailer_embed_url(game) -> str | None:
+    """First honest trailer URL for a browse tile, or None.
+
+    Prefers a YouTube embed. Direct ``.mp4`` / ``.webm`` files are accepted so
+    the tile can play a muted ``<video>``. Steam widget HTML and unknown pages
+    are skipped. Fill-only: never synthesised from ``steam_app_id``.
+    """
+    for url in _parse_video_urls(getattr(game, 'video_urls', None)):
+        if not _is_honest_http_url(url):
+            continue
+        embed = youtube_embed_url(url)
+        if embed:
+            return embed
+        if _is_direct_video_url(url):
+            return url
+    return None
+
+
+def browse_trailer_fields(game) -> dict:
+    """Fill-only trailer signal for GameCard hover. Omit when there is none."""
+    embed = first_trailer_embed_url(game)
+    if not embed:
+        return {}
+    return {'trailer_embed_url': embed}
 
 
 def _classify_extra_type(extra) -> str:
@@ -428,6 +485,7 @@ def build_game_details_payload(game, user) -> dict:
         'freshness_confidence': getattr(game, 'freshness_confidence', None),
         'rom_region': rom_region,
         'rom_languages': getattr(game, 'rom_languages', None),
+        'store_specs': public_store_specs(getattr(game, 'store_specs', None)),
         'has_english': getattr(game, 'has_english', None),
         'disc_index': disc_fields.get('disc_index'),
         'disc_count': disc_fields.get('disc_count'),

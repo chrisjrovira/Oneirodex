@@ -2,7 +2,7 @@ import {
   createGamethecaClient,
   type GamethecaClient,
   type GamethecaClientConfig,
-} from '@gametheca/api-client'
+} from '@oneirodex/api-client'
 import type { AuthStore } from './auth.js'
 
 export function createDesktopApi(auth: AuthStore): GamethecaClient {

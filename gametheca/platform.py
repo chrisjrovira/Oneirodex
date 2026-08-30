@@ -75,6 +75,23 @@ class LibraryPlatform(PyEnum):
     ACTIONMAX = "WoW Action Max"
     DAPHNE = "Daphne (laserdisc)"
     PINBALL = "Pinball (Future Pinball / VP)"
+    # Locked console wave (do not OTHER). Catalog/companion honesty only —
+    # none of these ship a WebRetro WASM core in this build.
+    WII_U = "Nintendo Wii U"
+    POKE_MINI = "Pokémon Mini"
+    CD_I = "Philips CD-i"
+    SEGA_PICO = "Sega Pico"
+    JAGUAR_CD = "Atari Jaguar CD"
+    AMIGA_CD32 = "Commodore Amiga CD32"
+    # Home-computer follow-on (ever-made report). Companion; no WebRetro WASM.
+    MSX = "MSX"
+    ZX_SPECTRUM = "ZX Spectrum"
+    CPC = "Amstrad CPC"
+    ATARI_ST = "Atari ST"
+    APPLE_II = "Apple II"
+    ATARI_8BIT = "Atari 8-bit"
+    X68000 = "Sharp X68000"
+    PC_98 = "NEC PC-98"
 
 
 class Emulator(PyEnum):
@@ -130,6 +147,12 @@ class Emulator(PyEnum):
     GEARSYSTEM = "gearsystem"           # Sega SG-1000 / MS / GG
     POTATOR = "potator"                 # Watara Supervision
     CAP32 = "cap32"                     # Amstrad CPC / GX4000
+    FUSE = "fuse"                       # ZX Spectrum
+    BLUEMSX = "bluemsx"                 # MSX
+    HATARI = "hatari"                   # Atari ST
+    ATARI800 = "atari800"               # Atari 8-bit (400/800/XL/XE) — not 5200 a5200
+    PX68K = "px68k"                     # Sharp X68000
+    NP2KAI = "np2kai"                   # NEC PC-98
     MAME2003_PLUS = "mame2003_plus"     # Astrocade / Arcadia / misc arcade
     CRVISION = "crvision"               # VTech CreatiVision
     DAPHNE = "daphne"                   # Laserdisc
@@ -247,6 +270,22 @@ platform_emulator_mapping = {
     LibraryPlatform.ACTIONMAX: [],   # no emulation path — catalog only
     LibraryPlatform.DAPHNE: [Emulator.DAPHNE],
     LibraryPlatform.PINBALL: [],     # Future Pinball / VP are native Windows apps
+    # Locked console wave — no WebRetro. Wii U is Cemu-class, not Dolphin.
+    # Jaguar CD must not share the cart virtualjaguar core.
+    LibraryPlatform.WII_U: [],
+    LibraryPlatform.POKE_MINI: [],
+    LibraryPlatform.CD_I: [],
+    LibraryPlatform.SEGA_PICO: [],
+    LibraryPlatform.JAGUAR_CD: [],
+    LibraryPlatform.AMIGA_CD32: [Emulator.PUAE],
+    LibraryPlatform.MSX: [Emulator.BLUEMSX],
+    LibraryPlatform.ZX_SPECTRUM: [Emulator.FUSE],
+    LibraryPlatform.CPC: [Emulator.CAP32],
+    LibraryPlatform.ATARI_ST: [Emulator.HATARI],
+    LibraryPlatform.APPLE_II: [],  # AppleWin / linapple BYO — no libretro in this build
+    LibraryPlatform.ATARI_8BIT: [Emulator.ATARI800],
+    LibraryPlatform.X68000: [Emulator.PX68K],
+    LibraryPlatform.PC_98: [Emulator.NP2KAI],
 }
 
 
@@ -261,6 +300,7 @@ CATALOG_ONLY_PLATFORMS = frozenset({
     'PS5', 'XSX',
     'SWITCH', 'ARCADE', 'NEOGEO',
     'ACTIONMAX', 'PINBALL',
+    'WII_U',
 })
 
 # Prefer companion / native; browser cores not shipped (or not suitable).
@@ -271,6 +311,9 @@ COMPANION_PREFERRED_PLATFORMS = frozenset({
     'AMIGA', 'SEGA_SG1000', 'SUPERGRAFX', 'PCE_CD', 'NGPC', 'SUPERVISION',
     'GX4000', 'ASTROCADE', 'ARCADIA', 'CREATIVISION', 'ADVISION', 'STUDIO2',
     'DAPHNE',
+    'POKE_MINI', 'CD_I', 'SEGA_PICO', 'JAGUAR_CD', 'AMIGA_CD32',
+    'MSX', 'ZX_SPECTRUM', 'CPC', 'ATARI_ST', 'APPLE_II',
+    'ATARI_8BIT', 'X68000', 'PC_98',
 })
 
 # Keys that currently have WebRetro WASM (mirrors play_url.WEBRETRO_PLATFORMS).
@@ -360,3 +403,11 @@ def play_mode_for_platform(key: str | None) -> str:
     if key in WEBRETRO_BROWSER_KEYS:
         return 'browser'
     return 'companion'
+
+
+def platforms_for_play_mode(mode: str) -> list[LibraryPlatform]:
+    """LibraryPlatform values whose honest play path matches ``mode``."""
+    wanted = (mode or '').strip().lower()
+    if wanted not in ('browser', 'companion', 'catalog'):
+        return []
+    return [plat for plat in LibraryPlatform if play_mode_for_platform(plat.name) == wanted]

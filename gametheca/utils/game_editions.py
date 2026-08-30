@@ -28,9 +28,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload
 
 from gametheca import db
-from gametheca.models import Game
+from gametheca.models import Game, User, UserGameProgress, UserPreference, user_favorites
 from gametheca.utils.browser_player import browser_play_href
 from gametheca.utils.play_url import browse_play_fields
+from gametheca.utils.presence import accepted_friend_ids
 from gametheca.utils.title_grouping import TITLE_KEY_PATTERN
 
 # Imported, not restated. The browse grid groups tiles with the same key
@@ -42,6 +43,10 @@ _NON_ALNUM = re.compile(TITLE_KEY_PATTERN)
 #: Cap on rows considered for one lookup. A library with thousands of copies of
 #: one name is a scan fault, not a use case, and the preview shows a handful.
 MAX_EDITIONS = 12
+
+#: Tags and household friends on the preview — enough to scan, not a dump.
+MAX_PREVIEW_TAGS = 8
+MAX_PREVIEW_FRIENDS = 5
 
 
 def normalize_title(value: str | None) -> str:
@@ -103,7 +108,7 @@ def _http_store_url(value: str | None) -> str | None:
 
 
 def _iter_video_urls(game) -> list[str]:
-    """Game.video_urls is a CSV string or a list; browse never sends it per tile."""
+    """Game.video_urls is a CSV string or a list."""
     raw = getattr(game, 'video_urls', None)
     if raw is None or raw == '':
         return []
@@ -117,12 +122,12 @@ def _iter_video_urls(game) -> list[str]:
 def store_links_for_games(games) -> list[dict]:
     """Store, catalog, and trailer links for a title, merged across copies.
 
-    Browse cannot carry ``Game.urls`` or ``video_urls`` on every tile — GOG /
-    Epic and the trailer live there, while Steam is a column. The preview
-    already asks for editions once; wrapping those links on that payload is
-    how the popup shows the same marks the details page does without
-    inflating the grid. The preview stays a summary: a YouTube mark, not a
-    second player.
+    Browse tiles send one ``trailer_embed_url`` for muted hover, not the full
+    ``Game.urls`` list — GOG / Epic still live there, while Steam is a column.
+    The preview already asks for editions once; wrapping those store links on
+    that payload is how the popup shows the same marks the details page does
+    without inflating the grid. The preview stays a summary: a YouTube mark,
+    not a second player.
     """
     rows: list[dict] = []
     seen: set[str] = set()
@@ -198,6 +203,104 @@ def editions_for_game(game, user) -> list[dict]:
     return [_edition_row(other, game) for other in _edition_games(game, user)]
 
 
+def preview_tags(game, *, limit: int = MAX_PREVIEW_TAGS) -> list[dict]:
+    """Facet labels already on the title — modes, genres, themes, perspective.
+
+    Browse often sends genres; the rest live on relationships the grid does not
+    carry. The preview already pays for a second request, so the tags ride here
+    rather than inflating every tile.
+    """
+    rows: list[dict] = []
+    seen: set[str] = set()
+    groups = (
+        ('mode', getattr(game, 'game_modes', None) or ()),
+        ('genre', getattr(game, 'genres', None) or ()),
+        ('theme', getattr(game, 'themes', None) or ()),
+        ('perspective', getattr(game, 'player_perspectives', None) or ()),
+    )
+    for kind, items in groups:
+        for item in items:
+            name = (getattr(item, 'name', None) or '').strip()
+            key = name.casefold()
+            if not name or key in seen:
+                continue
+            seen.add(key)
+            rows.append({'label': name, 'kind': kind})
+            if len(rows) >= limit:
+                return rows
+    return rows
+
+
+def preview_friends(game_uuids, viewer, *, limit: int = MAX_PREVIEW_FRIENDS) -> list[dict]:
+    """Accepted friends who played or favourited any copy of this title.
+
+    Same share_activity gate as Discover's friends-playing row: opted-out
+    friends stay off this overlay. The current member is never listed.
+    """
+    uuids = [str(value) for value in (game_uuids or []) if value]
+    if not uuids or viewer is None:
+        return []
+
+    friend_ids = accepted_friend_ids(viewer.id)
+    friend_ids.discard(viewer.id)
+    if not friend_ids:
+        return []
+
+    opted_out = {
+        row[0]
+        for row in db.session.execute(
+            select(UserPreference.user_id).where(
+                UserPreference.user_id.in_(friend_ids),
+                UserPreference.share_activity.is_(False),
+            )
+        ).all()
+    }
+    sharing = friend_ids - opted_out
+    if not sharing:
+        return []
+
+    played_ids = {
+        row[0]
+        for row in db.session.execute(
+            select(UserGameProgress.user_id).where(
+                UserGameProgress.user_id.in_(sharing),
+                UserGameProgress.game_uuid.in_(uuids),
+            )
+        ).all()
+    }
+    favorited_ids = {
+        row[0]
+        for row in db.session.execute(
+            select(user_favorites.c.user_id).where(
+                user_favorites.c.user_id.in_(sharing),
+                user_favorites.c.game_uuid.in_(uuids),
+            )
+        ).all()
+    }
+    # Played first — a session is a stronger signal than a favourite heart.
+    ordered = [user_id for user_id in sorted(played_ids)]
+    ordered.extend(user_id for user_id in sorted(favorited_ids) if user_id not in played_ids)
+    chosen = ordered[:limit]
+    if not chosen:
+        return []
+
+    names = {
+        row.id: row.name
+        for row in db.session.execute(select(User).where(User.id.in_(chosen))).scalars().all()
+    }
+    rows = []
+    for user_id in chosen:
+        name = (names.get(user_id) or '').strip()
+        if not name:
+            continue
+        rows.append({
+            'id': user_id,
+            'name': name,
+            'kind': 'played' if user_id in played_ids else 'favorited',
+        })
+    return rows
+
+
 def editions_preview_payload(game, user) -> dict:
     """Editions list plus the store links the preview cannot get from browse."""
     copies = _edition_games(game, user)
@@ -212,6 +315,8 @@ def editions_preview_payload(game, user) -> dict:
             row['library_platform'] for row in editions if row['library_platform']
         }),
         'urls': store_links_for_games(copies),
+        'tags': preview_tags(game),
+        'friends': preview_friends([copy.uuid for copy in copies], user),
     }
 
 

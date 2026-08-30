@@ -224,6 +224,10 @@ class Game(db.Model):
     disc_index = db.Column(db.Integer, nullable=True)
     disc_count = db.Column(db.Integer, nullable=True)
 
+    # Fill-only Steam extras: system requirements + languages matrix.
+    # Never prices. Never invented for ROM-only titles.
+    store_specs = db.Column(db.JSON, nullable=True)
+
     # Library item kind (orthogonal to LibraryPlatform / IGDB Category):
     # game | experience | emulator | tool — default game for existing rows.
     item_kind = db.Column(db.String(16), nullable=False, default='game', server_default='game')
@@ -1717,6 +1721,51 @@ class ReferenceSetEntry(db.Model):
             'sha1': self.sha1,
             'size': self.size,
             'serial': self.serial,
+        }
+
+
+class IgdbPlatformRelease(db.Model):
+    """Cached IGDB release_dates row for a library platform + region."""
+
+    __tablename__ = 'igdb_platform_releases'
+    __table_args__ = (
+        db.UniqueConstraint(
+            'library_platform',
+            'igdb_game_id',
+            'region_code',
+            name='uq_igdb_platform_release',
+        ),
+        db.Index(
+            'ix_igdb_platform_releases_platform_region',
+            'library_platform',
+            'region_code',
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    library_platform = db.Column(db.String(32), nullable=False, index=True)
+    igdb_game_id = db.Column(db.Integer, nullable=False, index=True)
+    igdb_platform_id = db.Column(db.Integer, nullable=True)
+    region_code = db.Column(db.String(16), nullable=False)
+    igdb_region = db.Column(db.Integer, nullable=True)
+    name = db.Column(db.String(512), nullable=False, default='')
+    released_at = db.Column(db.DateTime, nullable=True)
+    fetched_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            'library_platform': self.library_platform,
+            'igdb_game_id': self.igdb_game_id,
+            'igdb_platform_id': self.igdb_platform_id,
+            'region_code': self.region_code,
+            'igdb_region': self.igdb_region,
+            'name': self.name,
+            'released_at': self.released_at.isoformat() if self.released_at else None,
+            'fetched_at': self.fetched_at.isoformat() if self.fetched_at else None,
         }
 
 

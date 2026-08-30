@@ -3,7 +3,7 @@
 ## Navigation
 
 **How do I jump around quickly?**  
-**Ctrl+K** (⌘K on Mac) or the top-nav **Search** hint opens the command palette — pages, Preferences, Help, Admin. On **Game Catalog**, Ctrl+K searches **library titles** first (Search library group); Navigate / More / Account stay listed.
+**Ctrl+K** (⌘K on Mac) or the top-nav **Search** hint opens the command palette — pages, Preferences, Help, Admin. Type two letters to search **library titles** from any page. An empty box shows titles you recently played or opened, plus household favourites (on this server, not store trends). Navigate / More / Account stay listed.
 
 **How do I jump to the top or bottom of a long page?**  
 When the member page is scrollable, aurora glass **Jump to top** / **Jump to bottom** controls appear (bottom-left, clear of the Friends/Chat dock). They hide on short pages that don’t scroll.
@@ -63,11 +63,26 @@ Librarians triage it under Admin → Scan management → Unmatched Folders (and 
 **Where are ES-DE / Pegasus export packs?**  
 On **Systems**, scroll to the secondary **Export packs** section (below the platform grid) — optional downloads of ES-DE `gamelist.xml` and Pegasus metadata for other frontends. Admins also find them under Integrations → Export packs. Paths stay portable (no NAS mount leaks). See [library-and-systems.md](library-and-systems.md).
 
+**What is Licensed catalog on a Systems tile?**  
+It opens `/systems/catalog` for that console or computer. Counts come from an IGDB `release_dates` cache (main games only), not Wikipedia. An empty table means an admin has not refreshed that platform yet. Windows/Steam libraries are not in the report. Set completeness (DAT missing list) is a separate **Missing** link after a DAT upload.
+
 **Trailers page is empty.**  
-That’s OK (HTTP 200 + CTA) when no trailer metadata is available yet — open a title that has video, or ask an admin to enrich metadata. On **game details**, trailers play from `trailers[].embed_url` (or a YouTube demo when no trailers).
+That’s OK (HTTP 200 + CTA) when no trailer metadata is available yet — open a title that has video, or ask an admin to enrich metadata. On **game details**, a trailer or first screenshot leads the fold when media exists; the full **Trailers & videos** section still sits below. Trailers play from `trailers[].embed_url` (or a YouTube demo when no trailers). **Theater** expands the lightbox. Embeds do not autoplay if you asked the OS for reduced motion.
+
+**Why doesn’t every title show system requirements or store languages?**  
+Those blocks are fill-only from Steam `appdetails` when a title was identified that way. ROM-only copies keep filename language chips and do not invent a PC spec sheet.
 
 **Where are Extras / DLC on a game?**  
-Game details → **Extras & DLC**. Rows show honest **on-server** when the vault has the folder; PC libraries pick up common `DLC`/`extras` sidecars on scan — console DLC ingest is deferred.
+Game details → **Extras & DLC**. Rows show honest **on-server** when the vault has the folder; PC libraries pick up common `DLC`/`extras` sidecars on scan — console DLC ingest is deferred. Discover may show **Extras not on the vault** for titles you already play or favourite when a catalogued extra is missing on disk. That row is an acquire hint, not a sale.
+
+**What is a genre hub?**  
+A Discover **See all** on a genre zone opens `/discover/hub/genre/…` — unplayed, newly added, and loved-here shelves for that genre. **Browse the catalog** is the full filtered list. It is not a store genre storefront.
+
+**What is on a game details page besides Play and Download?**  
+A breadcrumb (Catalog or Systems › genre › title), a media stage when a trailer or screenshot exists, capability chips that filter the catalog, **About** when a storyline was stored, and — only if Steam filled them — system requirements and a store-language matrix. ROM region chips stay filename truth. **More from** this developer or publisher lists other vault titles you can already see (hidden when there are fewer than two). No cart, price, or Deck Verified.
+
+**What is Ways to Play?**  
+**More → Ways to Play** (`/ways-to-play`) links Game Catalog filters for **Browser**, **Companion**, and **Catalog**, plus Systems and VR when enabled. Same honesty as the Systems badges — not Deck Verified or sale chrome. Filters also have a **Play path** select.
 
 **Open path does nothing / doesn’t open Auto Scan.**  
 Open path uses **OpenPathModal** → companion `open_path` (or clipboard fallback). It never jumps to Auto Scan. Pair the desktop companion Online and send a path your PC can see — [desktop-companion.md](desktop-companion.md).
@@ -78,7 +93,7 @@ Open path uses **OpenPathModal** → companion `open_path` (or clipboard fallbac
 On the play bar above the screen: Pause, Reset, Mute, volume, Save, Load, Rewind, FF, Picture, and Power. Power leaves the game, same as **← Game Catalog**. **?** opens the shortcut list (F2/F3 save/load, hold Right Shift to rewind, F5 fast-forward). An overlay repeats the in-game controls on touch, or when you move the pointer over the play stage. See [browser-play.md](browser-play.md).
 
 **Which systems play in the browser?**  
-NES, SNES, N64, Game Boy family, DS, Virtual Boy, PS1, the Genesis family including SG-1000, Saturn, the Atari line, Lynx, Jaguar, WonderSwan, Neo Geo Pocket / Color, Coleco, Vectrex, 3DO, Neo Geo CD, Intellivision, Channel F, and Odyssey 2. Switch, Wii, GameCube, Xbox, and arcade boards stay companion or catalog. Oneirodex never fetches BIOS. Full matrix: [browser-play.md](browser-play.md). An optional NES Nostalgist host (admin flag, off by default) does not have the play bar yet.
+NES, SNES, N64, Game Boy family, DS, Virtual Boy, PS1, the Genesis family including SG-1000, Saturn, the Atari line, Lynx, Jaguar, WonderSwan, Neo Geo Pocket / Color, Coleco, Vectrex, 3DO, Neo Geo CD, Intellivision, Channel F, and Odyssey 2. Switch, Wii, GameCube, Xbox, and arcade boards stay companion or catalog. Cartridge NES / SNES / N64 / Genesis do **not** wait on optional add-on firmware (FDS `disksys`, DSP chips, 64DD IPL, Sega CD BIOS). Play greys only when that system cannot boot without a file — PS1, Sega CD, Saturn, and the other hard rows in Admin → Emulators. Oneirodex never fetches BIOS. Full matrix: [browser-play.md](browser-play.md). An optional NES Nostalgist host (admin flag, off by default) does not have the play bar yet.
 
 ## Themes & icons
 

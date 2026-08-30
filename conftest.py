@@ -78,8 +78,8 @@ def app():
         )
     
     # Enhanced safety checks: ensure we're not using production database
-    production_indicators = ['gametheca', 'prod', 'production']
-    test_indicators = ['test', 'testing', 'gamethecatest']
+    production_indicators = ['gametheca', 'oneirodex', 'prod', 'production']
+    test_indicators = ['test', 'testing', 'gamethecatest', 'oneirodextest']
     
     # Check if URL contains production indicators without test indicators
     contains_production = any(indicator in test_db_url.lower() for indicator in production_indicators)
@@ -88,7 +88,7 @@ def app():
     if contains_production and not contains_test:
         pytest.fail(
             f"CRITICAL: TEST_DATABASE_URL appears to point to production database: {test_db_url}. "
-            "Test database MUST contain 'test' in the name (e.g., 'gamethecatest'). "
+            "Test database MUST contain 'test' in the name (e.g., 'gamethecatest' or 'oneirodextest'). "
             "Tests will NOT run against production database for safety."
         )
     

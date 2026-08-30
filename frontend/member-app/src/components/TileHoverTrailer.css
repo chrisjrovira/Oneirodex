@@ -1,0 +1,22 @@
+/* Hover trailer sits on the cover, clipped by .game-card__cover-link. */
+.game-card__cover-link {
+  position: relative;
+}
+
+.gt-tile-hover-trailer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none;
+  object-fit: cover;
+  z-index: 1;
+  background: var(--gt-surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-tile-hover-trailer {
+    display: none;
+  }
+}

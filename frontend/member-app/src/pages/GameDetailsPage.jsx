@@ -10,6 +10,9 @@ import { attachPatchCatalogGuide, searchPatchCatalog } from '../api/patchCatalog
 import { initiateGameDownload } from '../api/downloads'
 import { queueClientCommand } from '../api/clientCommands'
 import { BadgeStack } from '../components/BadgeStack'
+import { DetailsMediaStage } from '../components/DetailsMediaStage'
+import { DetailsMoreFrom } from '../components/DetailsMoreFrom'
+import { DetailsStoreSpecs } from '../components/DetailsStoreSpecs'
 import { CheatsPanel } from '../components/CheatsPanel'
 import { PcCheatsPanel } from '../components/PcCheatsPanel'
 import { RelatedMediaStrip } from '../components/RelatedMediaStrip'
@@ -41,6 +44,12 @@ import {
   honestyApiErrorMessage,
   isFirmwarePlayBlocked,
 } from '../utils/playHonesty'
+import { recordRecentTitle } from '../utils/recentTitles'
+import {
+  detailsRootCrumb,
+  primaryGenreName,
+  taxonomyHref,
+} from '../utils/detailsTaxonomy'
 import { showToast } from '../utils/toast'
 import './GameDetailsPage.css'
 
@@ -55,6 +64,14 @@ function formatPlaytime(seconds) {
     return `${minutes}m`
   }
   return `${hours}h ${minutes}m`
+}
+
+function TaxonomyChip({ kind, name }) {
+  return (
+    <Link className="chip gt-chip" to={taxonomyHref(kind, name)}>
+      {name}
+    </Link>
+  )
 }
 
 export function GameDetailsPage() {
@@ -146,6 +163,7 @@ export function GameDetailsPage() {
           return
         }
         setGame(details)
+        recordRecentTitle({ uuid: details.uuid || gameUuid, name: details.name })
         setVersions(Array.isArray(versionData.versions) ? versionData.versions : [])
         setVersionsLoading(false)
       })
@@ -329,6 +347,9 @@ export function GameDetailsPage() {
   }
 
   const itemKind = resolveItemKind(game)
+  const rootCrumb = detailsRootCrumb(game)
+  const genreName = primaryGenreName(game)
+  const hasMedia = videoEmbeds.length > 0 || shownShots.length > 0
 
   return (
     <div className="gt-more-page gt-details-page">
@@ -347,19 +368,21 @@ export function GameDetailsPage() {
           <img src={game.backdrop_url} alt="" loading="lazy" />
         </div>
       ) : null}
-      <div className="gt-details-page__nav">
-        <Link className="gt-btn" to="/library">
-          ← Game Catalog
-        </Link>
-        {game.library_platform ? (
-          <Link
-            className="gt-btn"
-            to={`/library?library_platform=${encodeURIComponent(game.library_platform)}`}
-          >
-            {game.library_platform_label || game.library_platform}
-          </Link>
-        ) : null}
-      </div>
+      <nav className="gt-details-page__crumbs" aria-label="Breadcrumb">
+        <ol>
+          <li>
+            <Link to={rootCrumb.to}>{rootCrumb.label}</Link>
+          </li>
+          {genreName ? (
+            <li>
+              <Link to={taxonomyHref('genre', genreName)}>{genreName}</Link>
+            </li>
+          ) : null}
+          <li aria-current="page">
+            <span>{game.name}</span>
+          </li>
+        </ol>
+      </nav>
 
       <div className="gt-details-page__hero">
         <div
@@ -437,6 +460,16 @@ export function GameDetailsPage() {
               .filter(Boolean)
               .join(' · ')}
           </p>
+          {game.game_modes?.length || game.player_perspectives?.length ? (
+            <div className="gt-details-page__features" aria-label="How this plays">
+              {(game.game_modes || []).map((name) => (
+                <TaxonomyChip key={`mode:${name}`} kind="game_mode" name={name} />
+              ))}
+              {(game.player_perspectives || []).map((name) => (
+                <TaxonomyChip key={`persp:${name}`} kind="player_perspective" name={name} />
+              ))}
+            </div>
+          ) : null}
           <div className="gt-details-page__chips">
             {itemKind !== 'game' ? (
               <span
@@ -606,6 +639,16 @@ export function GameDetailsPage() {
         </div>
       </div>
 
+      <div className={`gt-details-page__fold${hasMedia ? ' gt-details-page__fold--media' : ''}`}>
+        {hasMedia ? (
+          <DetailsMediaStage
+            videoEmbeds={videoEmbeds}
+            shownShots={shownShots}
+            onTheater={setVideoIndex}
+            onFullscreen={setShotIndex}
+            onShotBroken={markShotBroken}
+          />
+        ) : null}
       <div className="gt-details-page__content-grid">
         {game.summary ? (
           <section className="gt-details-page__section gt-details-page__section--summary">
@@ -664,13 +707,7 @@ export function GameDetailsPage() {
                 <dt>Genres</dt>
                 <dd>
                   {game.genres.map((name) => (
-                    <Link
-                      key={name}
-                      className="chip gt-chip"
-                      to={`/library?genre=${encodeURIComponent(name)}`}
-                    >
-                      {name}
-                    </Link>
+                    <TaxonomyChip key={name} kind="genre" name={name} />
                   ))}
                 </dd>
               </>
@@ -678,7 +715,11 @@ export function GameDetailsPage() {
             {game.themes?.length ? (
               <>
                 <dt>Themes</dt>
-                <dd>{game.themes.join(', ')}</dd>
+                <dd>
+                  {game.themes.map((name) => (
+                    <TaxonomyChip key={name} kind="theme" name={name} />
+                  ))}
+                </dd>
               </>
             ) : null}
             {game.platforms?.length ? (
@@ -690,7 +731,21 @@ export function GameDetailsPage() {
             {game.game_modes?.length ? (
               <>
                 <dt>Modes</dt>
-                <dd>{game.game_modes.join(', ')}</dd>
+                <dd>
+                  {game.game_modes.map((name) => (
+                    <TaxonomyChip key={name} kind="game_mode" name={name} />
+                  ))}
+                </dd>
+              </>
+            ) : null}
+            {game.player_perspectives?.length ? (
+              <>
+                <dt>Perspectives</dt>
+                <dd>
+                  {game.player_perspectives.map((name) => (
+                    <TaxonomyChip key={name} kind="player_perspective" name={name} />
+                  ))}
+                </dd>
               </>
             ) : null}
             <dt>Playtime</dt>
@@ -710,6 +765,15 @@ export function GameDetailsPage() {
         </section>
 
         <div className="gt-details-page__flow">
+      {game.storyline ? (
+        <section className="gt-details-page__section">
+          <h2>About</h2>
+          <p className="gt-details-page__about">{game.storyline}</p>
+        </section>
+      ) : null}
+
+      <DetailsStoreSpecs storeSpecs={game.store_specs} />
+
       {game.show_translations_block ? (
         <section className="gt-details-page__section" id="translations">
           <h2>Translations &amp; patches</h2>
@@ -1154,6 +1218,7 @@ export function GameDetailsPage() {
           context about the game, so it reads before the gallery. Renders
           nothing when a title has none. */}
       <RelatedMediaStrip gameUuid={game.uuid} />
+      <DetailsMoreFrom gameUuid={game.uuid} />
 
       {shownShots.length ? (
         <section className="gt-details-page__section">
@@ -1199,7 +1264,7 @@ export function GameDetailsPage() {
                     className="gt-btn"
                     onClick={() => setVideoIndex(index)}
                   >
-                    Fullscreen
+                    Theater
                   </button>
                 </div>
               </div>
@@ -1219,6 +1284,7 @@ export function GameDetailsPage() {
         )}
       </section>
         </div>
+      </div>
       </div>
 
       <ScreenshotLightbox

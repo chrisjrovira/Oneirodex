@@ -1,6 +1,7 @@
 """W20-1b: CSV/JSON leaf library import preview (never auto-creates)."""
 
 import os
+from pathlib import Path
 
 from gametheca.utils.import_leaf_libraries import (
     preview_from_csv,
@@ -132,3 +133,26 @@ def test_csv_switch_and_family_mixed(tmp_path):
     codes = {e['code'] for e in result['errors']}
     assert 'family_parent_rejected' in codes
     assert 'invalid_platform' in codes
+
+
+def test_empty_shelf_import_csv_preview_only():
+    csv_path = Path(__file__).resolve().parents[1] / 'docs' / 'strategy' / 'empty-shelf-import.csv'
+    text = csv_path.read_text(encoding='utf-8')
+    result = preview_from_csv(text, allowed_bases=None)
+    assert result['auto_create'] is False
+    assert result['error_count'] == 0
+    assert result['count'] == 27
+    platforms = {row['platform'] for row in result['candidates']}
+    assert platforms == {
+        'VB', 'WII', 'N3DS', 'PSVITA',
+        'XBOX', 'X360', 'XONE', 'XSX',
+        'VICE_X64SC', 'VICE_X128', 'VICE_XVIC', 'VICE_XPLUS4', 'VICE_XPET',
+        'WII_U', 'POKE_MINI', 'CD_I', 'SEGA_PICO', 'JAGUAR_CD', 'AMIGA_CD32',
+        'MSX', 'ZX_SPECTRUM', 'CPC', 'ATARI_ST', 'APPLE_II',
+        'ATARI_8BIT', 'X68000', 'PC_98',
+    }
+    assert all(row['path'].replace('\\', '/').startswith('/storage/_console-gaming/') for row in result['candidates'])
+    wii = next(row for row in result['candidates'] if row['platform'] == 'WII')
+    wii_u = next(row for row in result['candidates'] if row['platform'] == 'WII_U')
+    assert wii['suggested_name'] == 'Nintendo Wii'
+    assert wii_u['suggested_name'] == 'Nintendo Wii U'

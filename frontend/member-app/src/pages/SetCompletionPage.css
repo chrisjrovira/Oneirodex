@@ -52,3 +52,21 @@
   flex: 1 1 12rem;
   font-size: var(--gt-font-md);
 }
+
+.gt-licensed-catalog-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--gt-font-sm);
+}
+
+.gt-licensed-catalog-table th,
+.gt-licensed-catalog-table td {
+  text-align: left;
+  padding: 0.4rem 0.55rem;
+  border-bottom: 1px solid var(--gt-glass-border);
+}
+
+.gt-licensed-catalog-table thead th {
+  color: var(--gt-text-muted);
+  font-weight: 600;
+}

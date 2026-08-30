@@ -63,16 +63,19 @@ export function DiscoverShelf({
   const [hbar, setHbar] = useState({ max: 0, left: 0, thumbPct: 100 })
   const abortRef = useRef(null)
   const hbarDragRef = useRef(null)
-  // Arrows (hover + click) and the bottom slider — wheel scrolls the page.
+  // Arrows + bottom slider. Wheel on tiles/title scrolls the page; wheel on
+  // the slider pans the track. bindKey includes hbar presence so the slider
+  // wheel listener rebinds when the bar first appears.
   const {
     ref: trackRef,
     viewportRef,
+    hbarRef,
     overflow,
     measure,
     scrollByPage,
     startEdgeScroll,
     stopEdgeScroll,
-  } = useRowScroll({ bindKey: games.length })
+  } = useRowScroll({ bindKey: `${games.length}:${hbar.max > 1 ? 1 : 0}` })
 
   const syncHbar = useCallback(() => {
     const track = trackRef.current
@@ -129,7 +132,13 @@ export function DiscoverShelf({
     )
 
     const items = track.querySelectorAll('.gt-shelf__item')
-    items.forEach((node) => observer.observe(node))
+    // Assume fully visible until the observer reports otherwise so News tiles
+    // (which only cancel enlarge when the attribute is absent) can hover-scale
+    // on the first paint the way game tiles do via theme CSS.
+    items.forEach((node) => {
+      node.toggleAttribute('data-fully-visible', true)
+      observer.observe(node)
+    })
     return () => observer.disconnect()
   }, [games.length, loading, complete, trackRef])
 
@@ -313,6 +322,7 @@ export function DiscoverShelf({
                 ) : (
                   <GameCard
                     game={item}
+                    discoverReason={section.reason}
                     isAdmin={isAdmin}
                     showPlayStatus={showPlayStatus}
                     enableDeleteOnDisk={enableDeleteOnDisk}
@@ -356,6 +366,7 @@ export function DiscoverShelf({
 
         {hbar.max > 1 ? (
           <div
+            ref={hbarRef}
             className="gt-shelf__hbar"
             role="scrollbar"
             aria-label={`Scroll ${section.title}`}

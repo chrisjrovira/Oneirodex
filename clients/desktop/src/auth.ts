@@ -1,4 +1,4 @@
-import { formatBearerAuthorization } from '@gametheca/api-client'
+import { formatBearerAuthorization } from '@oneirodex/api-client'
 
 /** OS / secure-store persistence for the API token. */
 export interface KeychainAdapter {

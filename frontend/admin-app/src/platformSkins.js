@@ -2,19 +2,28 @@
 
 const NINTENDO = new Set([
   'NES', 'SNES', 'NGC', 'N64', 'GB', 'GBA', 'GBC', 'NDS', 'VB', 'WII', 'N3DS', 'SWITCH',
+  'WII_U', 'POKE_MINI',
 ])
 const SONY = new Set(['PSX', 'PS2', 'PS3', 'PS4', 'PS5', 'PSP', 'PSVITA'])
 const XBOX = new Set(['XBOX', 'X360', 'XONE', 'XSX'])
 const SEGA = new Set([
   'SEGA_MD', 'SEGA_MS', 'SEGA_CD', 'SEGA_32X', 'SEGA_GG', 'SEGA_SATURN', 'SEGA_DC',
+  'SEGA_SG1000', 'SEGA_PICO',
 ])
 const ATARI = new Set([
   'ATARI_7800', 'ATARI_5200', 'ATARI_2600', 'LYNX', 'JAGUAR',
   'PCE', 'PCFX', 'NGP', 'WS', 'COLECO', 'THREEDO', 'VECTREX',
   'VICE_X64SC', 'VICE_X128', 'VICE_XVIC', 'VICE_XPLUS4', 'VICE_XPET',
   'NEOGEO_CD', 'NEOGEO', 'INTV', 'CHAF', 'O2EM', 'ARCADE',
+  'SUPERGRAFX', 'PCE_CD', 'NGPC', 'SUPERVISION', 'GX4000', 'ASTROCADE',
+  'ARCADIA', 'CREATIVISION', 'ADVISION', 'STUDIO2', 'ACTIONMAX', 'DAPHNE', 'PINBALL',
+  'CD_I', 'JAGUAR_CD',
 ])
-const PC = new Set(['PCWIN', 'PCDOS', 'MAC', 'OTHER'])
+const PC = new Set([
+  'PCWIN', 'PCDOS', 'MAC', 'OTHER', 'AMIGA', 'AMIGA_CD32',
+  'MSX', 'ZX_SPECTRUM', 'CPC', 'ATARI_ST', 'APPLE_II',
+  'ATARI_8BIT', 'X68000', 'PC_98',
+])
 
 const FAMILY_BY_PLATFORM = {
   nintendo: NINTENDO,
@@ -48,9 +57,12 @@ export const ART_STUDIO_SYSTEMS = [
   { id: 'NDS', label: 'Nintendo DS' },
   { id: 'N3DS', label: '3DS' },
   { id: 'SWITCH', label: 'Switch' },
+  { id: 'WII_U', label: 'Wii U' },
+  { id: 'POKE_MINI', label: 'Pokémon Mini' },
   { id: 'SEGA_MD', label: 'Genesis / Mega Drive' },
   { id: 'SEGA_SATURN', label: 'Saturn' },
   { id: 'SEGA_DC', label: 'Dreamcast' },
+  { id: 'SEGA_PICO', label: 'Sega Pico' },
   { id: 'PSX', label: 'PlayStation' },
   { id: 'PS2', label: 'PS2' },
   { id: 'PS3', label: 'PS3' },
@@ -60,6 +72,17 @@ export const ART_STUDIO_SYSTEMS = [
   { id: 'PCWIN', label: 'PC Windows' },
   { id: 'ARCADE', label: 'Arcade' },
   { id: 'ATARI_2600', label: 'Atari 2600' },
+  { id: 'CD_I', label: 'Philips CD-i' },
+  { id: 'JAGUAR_CD', label: 'Jaguar CD' },
+  { id: 'AMIGA_CD32', label: 'Amiga CD32' },
+  { id: 'MSX', label: 'MSX' },
+  { id: 'ZX_SPECTRUM', label: 'ZX Spectrum' },
+  { id: 'CPC', label: 'Amstrad CPC' },
+  { id: 'ATARI_ST', label: 'Atari ST' },
+  { id: 'APPLE_II', label: 'Apple II' },
+  { id: 'ATARI_8BIT', label: 'Atari 8-bit' },
+  { id: 'X68000', label: 'Sharp X68000' },
+  { id: 'PC_98', label: 'NEC PC-98' },
 ]
 
 export function platformFamily(platformId) {

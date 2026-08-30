@@ -1058,6 +1058,25 @@ class DatabaseManager:
         CREATE INDEX IF NOT EXISTS ix_reference_set_entries_set_id ON reference_set_entries(set_id);
         CREATE INDEX IF NOT EXISTS ix_reference_set_entries_set_norm ON reference_set_entries(set_id, normalized_name);
 
+        CREATE TABLE IF NOT EXISTS igdb_platform_releases (
+            id SERIAL PRIMARY KEY,
+            library_platform VARCHAR(32) NOT NULL,
+            igdb_game_id INTEGER NOT NULL,
+            igdb_platform_id INTEGER,
+            region_code VARCHAR(16) NOT NULL,
+            igdb_region INTEGER,
+            name VARCHAR(512) NOT NULL DEFAULT '',
+            released_at TIMESTAMP,
+            fetched_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT uq_igdb_platform_release UNIQUE (library_platform, igdb_game_id, region_code)
+        );
+        CREATE INDEX IF NOT EXISTS ix_igdb_platform_releases_library_platform
+            ON igdb_platform_releases(library_platform);
+        CREATE INDEX IF NOT EXISTS ix_igdb_platform_releases_igdb_game_id
+            ON igdb_platform_releases(igdb_game_id);
+        CREATE INDEX IF NOT EXISTS ix_igdb_platform_releases_platform_region
+            ON igdb_platform_releases(library_platform, region_code);
+
         CREATE TABLE IF NOT EXISTS game_servers (
             id SERIAL PRIMARY KEY,
             uuid VARCHAR(36) NOT NULL UNIQUE,
@@ -1083,6 +1102,7 @@ class DatabaseManager:
         ALTER TABLE games ADD COLUMN IF NOT EXISTS has_english BOOLEAN;
         ALTER TABLE games ADD COLUMN IF NOT EXISTS disc_index INTEGER;
         ALTER TABLE games ADD COLUMN IF NOT EXISTS disc_count INTEGER;
+        ALTER TABLE games ADD COLUMN IF NOT EXISTS store_specs JSON;
         ALTER TABLE game_extras ADD COLUMN IF NOT EXISTS extra_kind VARCHAR(32);
         ALTER TABLE game_extras ADD COLUMN IF NOT EXISTS patch_format VARCHAR(8);
         ALTER TABLE game_extras ADD COLUMN IF NOT EXISTS target_language VARCHAR(16);
@@ -1307,6 +1327,104 @@ class DatabaseManager:
                       AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
                 ) THEN
                     ALTER TYPE libraryplatform ADD VALUE 'PINBALL';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'WII_U'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'WII_U';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'POKE_MINI'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'POKE_MINI';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'CD_I'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'CD_I';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'SEGA_PICO'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'SEGA_PICO';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'JAGUAR_CD'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'JAGUAR_CD';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'AMIGA_CD32'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'AMIGA_CD32';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'MSX'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'MSX';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'ZX_SPECTRUM'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'ZX_SPECTRUM';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'CPC'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'CPC';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'ATARI_ST'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'ATARI_ST';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'APPLE_II'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'APPLE_II';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'ATARI_8BIT'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'ATARI_8BIT';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'X68000'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'X68000';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumlabel = 'PC_98'
+                      AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'libraryplatform')
+                ) THEN
+                    ALTER TYPE libraryplatform ADD VALUE 'PC_98';
                 END IF;
             END IF;
         END

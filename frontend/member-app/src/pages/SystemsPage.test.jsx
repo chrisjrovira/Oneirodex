@@ -43,6 +43,10 @@ test('renders system tiles linking into library platform filter', async () => {
     'href',
     '/library?library_platform=PCWIN',
   )
+  expect(screen.getByRole('link', { name: 'Catalog' })).toHaveAttribute(
+    'href',
+    '/systems/catalog?library_platform=NES',
+  )
   // Export packs live in a secondary section — not buried in the intro lede.
   expect(screen.getByRole('heading', { name: 'Export packs' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: /ES-DE gamelist/i })).toHaveAttribute(

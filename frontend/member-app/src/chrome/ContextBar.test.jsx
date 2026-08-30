@@ -65,6 +65,9 @@ describe('SegmentedViews', () => {
       'aria-expanded',
       'true',
     )
+    const unfurl = screen.getByRole('group', { name: 'View' })
+    expect(unfurl.className).toBe('gt-contextbar__views-unfurl')
+    expect(unfurl.className).not.toMatch(/\bgt-seg\b/)
     await user.click(screen.getByRole('button', { name: 'Rows' }))
     expect(onSelect).toHaveBeenCalledWith('rows')
     expect(screen.queryByRole('button', { name: 'Rows' })).not.toBeInTheDocument()

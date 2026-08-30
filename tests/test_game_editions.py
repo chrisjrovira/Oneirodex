@@ -1,17 +1,27 @@
-"""Preview editions payload: systems plus store and trailer links browse cannot carry.
+"""Preview editions payload: systems plus store and trailer links.
 
-GOG / Epic live on Game.urls and the trailer on Game.video_urls, which the grid
-never sends per tile. The preview already asks for editions once; wrapping those
-links there is how the popup shows the same marks the details page does.
+GOG / Epic live on Game.urls. Browse tiles send one ``trailer_embed_url`` for
+muted hover, not the full urls list. The preview still merges store marks from
+editions so the popup matches details.
 """
 
 from types import SimpleNamespace
 from uuid import uuid4
 
-from gametheca.models import Game, GameURL, Library, User
+from gametheca.models import (
+    Game,
+    GameURL,
+    Genre,
+    Library,
+    User,
+    UserFriendship,
+    UserGameProgress,
+    UserPreference,
+)
 from gametheca.platform import LibraryPlatform
 from gametheca.utils.game_editions import (
     editions_preview_payload,
+    preview_tags,
     store_links_for_games,
 )
 from gametheca.utils.library_acl import set_user_library_allowlist
@@ -216,3 +226,58 @@ def test_editions_payload_does_not_leak_restricted_copy_urls(db_session):
     assert adult_types == {'gog', 'epic'}
     assert child_types == {'gog'}
     assert {row['uuid'] for row in child_body['editions']} == {pc_copy.uuid}
+
+
+def test_preview_tags_orders_modes_then_genres_and_dedupes():
+    game = SimpleNamespace(
+        game_modes=[SimpleNamespace(name='Co-op')],
+        genres=[SimpleNamespace(name='Roguelike'), SimpleNamespace(name='co-op')],
+        themes=[SimpleNamespace(name='Fantasy')],
+        player_perspectives=[SimpleNamespace(name='Bird view')],
+    )
+    assert [row['label'] for row in preview_tags(game)] == [
+        'Co-op',
+        'Roguelike',
+        'Fantasy',
+        'Bird view',
+    ]
+
+
+def test_editions_payload_includes_tags_and_sharing_friends(db_session):
+    viewer = _user(db_session)
+    friend = _user(db_session)
+    quiet = _user(db_session)
+    library = _library(db_session, LibraryPlatform.PCWIN)
+    game = _game(db_session, library, f'Tags {uuid4().hex[:8]}')
+    genre = Genre(name=f'Puzzle-{uuid4().hex[:6]}')
+    db_session.add(genre)
+    game.genres.append(genre)
+    db_session.add(
+        UserFriendship(user_id=viewer.id, friend_user_id=friend.id, status='accepted')
+    )
+    db_session.add(
+        UserFriendship(user_id=viewer.id, friend_user_id=quiet.id, status='accepted')
+    )
+    db_session.add(
+        UserGameProgress(
+            user_id=friend.id,
+            game_uuid=game.uuid,
+            total_seconds=120,
+            session_count=1,
+        )
+    )
+    db_session.add(UserPreference(user_id=quiet.id, share_activity=False))
+    db_session.add(
+        UserGameProgress(
+            user_id=quiet.id,
+            game_uuid=game.uuid,
+            total_seconds=90,
+            session_count=1,
+        )
+    )
+    db_session.commit()
+
+    body = editions_preview_payload(game, viewer)
+    assert genre.name in {row['label'] for row in body['tags']}
+    assert {row['name'] for row in body['friends']} == {friend.name}
+    assert body['friends'][0]['kind'] == 'played'

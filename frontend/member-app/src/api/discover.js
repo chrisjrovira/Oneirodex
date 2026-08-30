@@ -76,3 +76,31 @@ export async function fetchDiscoverRow(
     moreHref: data.more_href || '',
   }
 }
+
+/**
+ * Virtual Discover shelves for one genre (unplayed / newest / loved).
+ */
+export async function fetchGenreHub(genre, { signal } = {}) {
+  const response = await fetch(
+    `/api/discover/hubs/genre/${encodeURIComponent(genre)}`,
+    {
+      credentials: 'same-origin',
+      signal,
+      headers: { Accept: 'application/json' },
+    },
+  )
+  if (!response.ok) {
+    throw await errorFromResponse(response, 'genre hub')
+  }
+  const contentType = response.headers.get('content-type') || ''
+  if (!contentType.includes('application/json')) {
+    throw new Error('genre hub returned non-JSON (session expired or server error)')
+  }
+  const data = await response.json()
+  return {
+    genre: data.genre || genre,
+    title: data.title || data.genre || 'Genre',
+    catalogHref: data.catalog_href || '',
+    sections: Array.isArray(data.sections) ? data.sections : [],
+  }
+}

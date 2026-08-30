@@ -1,14 +1,16 @@
-# @gametheca/api-client
+# @oneirodex/api-client
 
-Hand-written TypeScript client for GameTheca REST endpoints described in `docs/openapi/openapi.json`. No OpenAPI codegen or network-dependent tooling.
+Hand-written TypeScript client for Oneirodex REST endpoints described in `docs/openapi/openapi.json`. No OpenAPI codegen or network-dependent tooling.
+
+`createGamethecaClient` remains a same-factory alias of `createOneirodexClient`.
 
 ## Usage
 
 ```typescript
-import { createGamethecaClient } from '@gametheca/api-client'
+import { createOneirodexClient } from '@oneirodex/api-client'
 
-const client = createGamethecaClient({
-  baseUrl: 'https://gametheca.example.com',
+const client = createOneirodexClient({
+  baseUrl: 'https://oneirodex.example.com',
   getToken: () => 'gt_abc123_secret',
 })
 

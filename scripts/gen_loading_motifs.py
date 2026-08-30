@@ -41,10 +41,11 @@ OUT_JS = REPO / 'frontend' / 'member-app' / 'src' / 'components' / 'systemMotifC
 # picker; a flat 117-row list is unusable.
 FAMILY_RULES: list[tuple[str, str, str]] = [
     # (regex over the enum name, family, archetype)
+    (r'^(AMIGA_CD32|JAGUAR_CD|CD_I)$', 'Disc era', 'disc'),
     (r'^(PCWIN|PCDOS|MAC|LINUX)$', 'Computer', 'computer'),
-    (r'^(AMIGA|VICE_|ATARI_ST|MSX|ZX|C16|CPC|GX4000)', 'Home computer', 'computer'),
-    (r'^(NES|SNES|N64|NGC|WII|WIIU|SWITCH|FDS|SUFAMI)', 'Nintendo', 'pad'),
-    (r'^(GB|GBA|GBC|NDS|N3DS|VB|POKEMINI)', 'Nintendo handheld', 'handheld'),
+    (r'^(AMIGA|VICE_|ATARI_ST|ATARI_8BIT|MSX|ZX|C16|CPC|GX4000|APPLE_II|X68000|PC_98)', 'Home computer', 'computer'),
+    (r'^(NES|SNES|N64|NGC|WII|WII_U|SWITCH|FDS|SUFAMI)', 'Nintendo', 'pad'),
+    (r'^(GB|GBA|GBC|NDS|N3DS|VB|POKE_MINI)', 'Nintendo handheld', 'handheld'),
     (r'^(PSX|PS2|PS3|PS4|PS5)$', 'PlayStation', 'pad'),
     (r'^(PSP|PSVITA)$', 'PlayStation handheld', 'handheld'),
     (r'^(XBOX|X360|XONE|XSX)$', 'Xbox', 'pad'),
@@ -56,7 +57,7 @@ FAMILY_RULES: list[tuple[str, str, str]] = [
     (r'^(NEOGEO)', 'SNK', 'console'),
     (r'^(ARCADE|MAME|FBNEO|CPS)', 'Arcade', 'cabinet'),
     (r'^(VECTREX)$', 'Vector', 'cabinet'),
-    (r'^(THREEDO|CDI|CDTV|SEGA_CD|PCE_CD|NEOGEO_CD)', 'Disc era', 'disc'),
+    (r'^(THREEDO|CD_I|CDI|CDTV|SEGA_CD|PCE_CD|NEOGEO_CD|JAGUAR_CD|AMIGA_CD32)', 'Disc era', 'disc'),
     (r'^(INTV|COLECO|CHAF|O2EM|ASTROCADE|ARCADIA|VC4000|ELEKTOR)', 'Early console', 'console'),
 ]
 

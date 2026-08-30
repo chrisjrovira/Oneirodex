@@ -149,29 +149,40 @@
   text-align: center;
 }
 
-/* Let the stack escape the pill's overflow clip while open. */
+/* Let the stack escape the pill's overflow clip while open. Square the
+   trailing corner so the View trigger reads as one piece with the drop. */
 .gt-seg.is-unfurled {
   overflow: visible;
   border-bottom-right-radius: 0;
 }
 
-/* Vertical stack attached under View — same segment chrome, same width. */
+.gt-seg.is-unfurled .gt-seg__unfurl-anchor > .gt-seg__item {
+  border-bottom-right-radius: 0;
+}
+
+/* Vertical stack attached under View — continuation of the parent seg chrome,
+   not a second nested `.gt-seg` pill floating over the page. */
 .gt-contextbar__views-unfurl {
   position: absolute;
   top: 100%;
-  left: 0;
-  right: 0;
+  /* Overlap the parent seg border so the drop shares one outline. */
+  left: -1px;
+  right: -1px;
   z-index: 40;
   display: flex;
   flex-direction: column;
+  background: var(--gt-surface-2);
+  border: 1px solid var(--gt-border);
   border-top: 0;
   border-radius: 0 0 var(--gt-radius-sm) var(--gt-radius-sm);
   box-shadow: var(--gt-shadow-md, 0 8px 20px color-mix(in srgb, var(--gt-bg) 55%, transparent));
+  overflow: hidden;
 }
 
 .gt-contextbar__views-unfurl .gt-seg__item {
   width: 100%;
   text-align: center;
+  border-radius: 0;
 }
 
 .gt-contextbar__views-unfurl .gt-seg__item + .gt-seg__item {

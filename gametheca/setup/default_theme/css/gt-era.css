@@ -180,10 +180,40 @@ html[data-era] #admin-legacy-content {
   z-index: 1;
 }
 
-html[data-era] .gt-rail,
-html[data-era] .gt-topbar {
+/* Rail stays above the atmosphere. Top bar shares the main grid cell as an
+   overlay (see gt-shell.css) at z-index 30 so resting chrome still sits over
+   the scroll pane; era used to pin it at 2 and beat the shell rule. */
+html[data-era] .gt-rail {
   position: relative;
   z-index: 2;
+}
+
+html[data-era] .gt-topbar {
+  position: relative;
+  z-index: 30;
+}
+
+/* Era also pins #content at z-index 1; mirror the shell hover stack with
+   matching specificity so enlarged tiles can paint over the thin top bar. */
+html[data-era] .gt-shell:has(.game-card:hover) .gt-topbar,
+html[data-era] .gt-shell:has(.game-card:focus-visible) .gt-topbar,
+html[data-era] .gt-shell:has(.game-card :focus-visible) .gt-topbar,
+html[data-era] .gt-shell:has(.gt-news-card:hover) .gt-topbar,
+html[data-era] .gt-shell:has(.gt-news-card:focus-visible) .gt-topbar {
+  z-index: 5;
+}
+
+html[data-era] .gt-shell:has(.game-card:hover) .gt-shell__main,
+html[data-era] .gt-shell:has(.game-card:focus-visible) .gt-shell__main,
+html[data-era] .gt-shell:has(.game-card :focus-visible) .gt-shell__main,
+html[data-era] .gt-shell:has(.gt-news-card:hover) .gt-shell__main,
+html[data-era] .gt-shell:has(.gt-news-card:focus-visible) .gt-shell__main,
+html[data-era] .gt-shell:has(.game-card:hover) > #content,
+html[data-era] .gt-shell:has(.game-card:focus-visible) > #content,
+html[data-era] .gt-shell:has(.game-card :focus-visible) > #content,
+html[data-era] .gt-shell:has(.gt-news-card:hover) > #content,
+html[data-era] .gt-shell:has(.gt-news-card:focus-visible) > #content {
+  z-index: 40;
 }
 
 /* ---- Room recipes (setting / decade). No manufacturer names. ---- */

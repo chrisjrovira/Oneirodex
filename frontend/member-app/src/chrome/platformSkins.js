@@ -2,19 +2,28 @@
 
 const NINTENDO = new Set([
   'NES', 'SNES', 'NGC', 'N64', 'GB', 'GBA', 'GBC', 'NDS', 'VB', 'WII', 'N3DS', 'SWITCH',
+  'WII_U', 'POKE_MINI',
 ])
 const SONY = new Set(['PSX', 'PS2', 'PS3', 'PS4', 'PS5', 'PSP', 'PSVITA'])
 const XBOX = new Set(['XBOX', 'X360', 'XONE', 'XSX'])
 const SEGA = new Set([
   'SEGA_MD', 'SEGA_MS', 'SEGA_CD', 'SEGA_32X', 'SEGA_GG', 'SEGA_SATURN', 'SEGA_DC',
+  'SEGA_SG1000', 'SEGA_PICO',
 ])
 const ATARI = new Set([
   'ATARI_7800', 'ATARI_5200', 'ATARI_2600', 'LYNX', 'JAGUAR',
   'PCE', 'PCFX', 'NGP', 'WS', 'COLECO', 'THREEDO', 'VECTREX',
   'VICE_X64SC', 'VICE_X128', 'VICE_XVIC', 'VICE_XPLUS4', 'VICE_XPET',
   'NEOGEO_CD', 'NEOGEO', 'INTV', 'CHAF', 'O2EM', 'ARCADE',
+  'SUPERGRAFX', 'PCE_CD', 'NGPC', 'SUPERVISION', 'GX4000', 'ASTROCADE',
+  'ARCADIA', 'CREATIVISION', 'ADVISION', 'STUDIO2', 'ACTIONMAX', 'DAPHNE', 'PINBALL',
+  'CD_I', 'JAGUAR_CD',
 ])
-const PC = new Set(['PCWIN', 'PCDOS', 'MAC', 'OTHER'])
+const PC = new Set([
+  'PCWIN', 'PCDOS', 'MAC', 'OTHER', 'AMIGA', 'AMIGA_CD32',
+  'MSX', 'ZX_SPECTRUM', 'CPC', 'ATARI_ST', 'APPLE_II',
+  'ATARI_8BIT', 'X68000', 'PC_98',
+])
 
 const FAMILY_BY_PLATFORM = {
   nintendo: NINTENDO,

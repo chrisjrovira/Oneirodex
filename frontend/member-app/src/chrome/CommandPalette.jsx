@@ -2,7 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Command } from 'cmdk'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { searchGames } from '../api/collections'
+import { fetchPaletteSuggest } from '../api/palette'
 import { openPreferencesModal } from '../api/preferences'
+import {
+  mergeSuggestRecent,
+  readRecentTitles,
+  recordRecentTitle,
+} from '../utils/recentTitles'
 import { requestOpenChatPanel } from '../hooks/chatPanelApi'
 import { requestOpenSocialCompanion } from '../hooks/socialCompanionApi'
 import { getMoreLinks, getPrimaryLinks } from './navConfig'
@@ -89,7 +95,8 @@ export function isLibrarySearchRoute(pathname = '') {
 
 /**
  * Ctrl/Cmd+K command palette for primary + More nav jumps and Preferences.
- * On Library routes, title search is primary; nav categories remain available.
+ * Title search runs on every page once two characters are in the box.
+ * An empty box shows recently played / opened titles and household favourites.
  */
 /**
  * Should this keystroke open the palette and become its first character?
@@ -137,6 +144,7 @@ export function CommandPalette({
   const [query, setQuery] = useState('')
   const [libraryHits, setLibraryHits] = useState([])
   const [libraryStatus, setLibraryStatus] = useState('idle') // idle | loading | ready | error
+  const [suggest, setSuggest] = useState({ recent: [], popular: [] })
 
   const setOpen = useCallback(
     (next) => {
@@ -178,7 +186,30 @@ export function CommandPalette({
   }, [open])
 
   useEffect(() => {
-    if (!open || !libraryMode) {
+    if (!open) {
+      return undefined
+    }
+    const controller = new AbortController()
+    fetchPaletteSuggest({ signal: controller.signal })
+      .then((data) => {
+        if (controller.signal.aborted) return
+        setSuggest({
+          recent: mergeSuggestRecent(data.recent, readRecentTitles()),
+          popular: Array.isArray(data.popular) ? data.popular : [],
+        })
+      })
+      .catch((err) => {
+        if (err?.name === 'AbortError') return
+        setSuggest({
+          recent: mergeSuggestRecent([], readRecentTitles()),
+          popular: [],
+        })
+      })
+    return () => controller.abort()
+  }, [open])
+
+  useEffect(() => {
+    if (!open) {
       return undefined
     }
     const trimmed = query.trim()
@@ -207,7 +238,7 @@ export function CommandPalette({
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [open, libraryMode, query])
+  }, [open, query])
 
   async function runCommand(cmd) {
     setOpen(false)
@@ -246,7 +277,22 @@ export function CommandPalette({
     return [...map.entries()]
   }, [commands])
 
-  const showLibraryGroup = libraryMode && query.trim().length >= 2
+  const showLibraryGroup = query.trim().length >= 2
+  const showSuggest = query.trim().length < 2
+  const recentTiles = showSuggest ? suggest.recent : []
+  const popularTiles = showSuggest
+    ? suggest.popular.filter(
+        (row) => !recentTiles.some((recent) => recent.uuid === row.uuid),
+      )
+    : []
+
+  function openTitle(hit) {
+    const uuid = hit?.uuid || hit?.id
+    if (!uuid) return
+    recordRecentTitle({ uuid, name: hit.name || 'Untitled' })
+    setOpen(false)
+    navigate(`/game_details/${encodeURIComponent(uuid)}`)
+  }
 
   return (
     <Command.Dialog
@@ -260,21 +306,63 @@ export function CommandPalette({
     >
       <Command.Input
         className="gt-cmdk__input"
-        placeholder={libraryMode ? 'Search library…' : 'Search pages…'}
+        placeholder={libraryMode ? 'Search library…' : 'Search titles or pages…'}
         value={query}
         onValueChange={setQuery}
         autoFocus
       />
       <Command.List className="gt-cmdk__list">
         <Command.Empty className="gt-cmdk__empty">
-          {libraryMode && libraryStatus === 'loading'
+          {libraryStatus === 'loading'
             ? 'Searching library…'
-            : libraryMode && libraryStatus === 'error'
+            : libraryStatus === 'error'
               ? 'Library search failed.'
-              : libraryMode && showLibraryGroup && libraryHits.length === 0
+              : showLibraryGroup && libraryHits.length === 0
                 ? 'No matching library titles.'
                 : 'No matching commands.'}
         </Command.Empty>
+
+        {recentTiles.length > 0 ? (
+          <Command.Group heading="Recent titles" className="gt-cmdk__group">
+            {recentTiles.map((hit) => {
+              const uuid = hit.uuid
+              const name = hit.name || 'Untitled'
+              return (
+                <Command.Item
+                  key={`recent-${uuid}`}
+                  value={`recent ${name} ${uuid}`}
+                  keywords={[name, String(uuid)]}
+                  className="gt-cmdk__item"
+                  onSelect={() => openTitle(hit)}
+                >
+                  <span className="gt-cmdk__item-label">{name}</span>
+                  <span className="gt-cmdk__item-hint">{hit.hint || 'Played recently'}</span>
+                </Command.Item>
+              )
+            })}
+          </Command.Group>
+        ) : null}
+
+        {popularTiles.length > 0 ? (
+          <Command.Group heading="Popular here" className="gt-cmdk__group">
+            {popularTiles.map((hit) => {
+              const uuid = hit.uuid
+              const name = hit.name || 'Untitled'
+              return (
+                <Command.Item
+                  key={`popular-${uuid}`}
+                  value={`popular ${name} ${uuid}`}
+                  keywords={[name, String(uuid)]}
+                  className="gt-cmdk__item"
+                  onSelect={() => openTitle(hit)}
+                >
+                  <span className="gt-cmdk__item-label">{name}</span>
+                  <span className="gt-cmdk__item-hint">{hit.hint || 'Favorited here'}</span>
+                </Command.Item>
+              )
+            })}
+          </Command.Group>
+        ) : null}
 
         {showLibraryGroup && libraryHits.length > 0 ? (
           <Command.Group heading="Search library" className="gt-cmdk__group">
@@ -287,10 +375,7 @@ export function CommandPalette({
                   value={`library ${name} ${uuid}`}
                   keywords={[name, String(uuid)]}
                   className="gt-cmdk__item"
-                  onSelect={() => {
-                    setOpen(false)
-                    navigate(`/game_details/${encodeURIComponent(uuid)}`)
-                  }}
+                  onSelect={() => openTitle({ uuid, name })}
                 >
                   <span className="gt-cmdk__item-label">{name}</span>
                   <span className="gt-cmdk__item-hint">Open details</span>

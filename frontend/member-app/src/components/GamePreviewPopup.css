@@ -154,10 +154,22 @@
   font-size: var(--gt-font-xs);
 }
 
+.gt-preview__reason {
+  margin: 0 0 0.45rem;
+  font-size: var(--gt-font-sm);
+  color: var(--gt-text-muted);
+}
+
 .gt-preview__genres {
   margin: 0 0 0.5rem;
   font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);
+}
+
+.gt-preview__friends {
+  margin: 0 0 0.5rem;
+  font-size: var(--gt-font-sm);
+  color: var(--gt-text);
 }
 
 /* Shortened on purpose — this previews the page, it does not replace it. */

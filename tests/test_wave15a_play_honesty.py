@@ -176,10 +176,58 @@ def test_browse_play_fields_no_bios_for_nes(monkeypatch):
         'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['nestopia'], 'preferred': 'nestopia'},
     )
+    monkeypatch.setattr(
+        'gametheca.utils.play_url.core_is_browser_playable',
+        lambda c: c == 'nestopia',
+    )
+    monkeypatch.setattr(
+        'gametheca.utils.emulator_bios.list_bios_files',
+        lambda: [],
+    )
     fields = browse_play_fields(game)
     assert fields['can_play_in_browser'] is True
     assert fields.get('bios_required') is False
     assert fields.get('firmware_missing') is False
+
+
+def _play_fields(monkeypatch, platform: str, core: str):
+    library = SimpleNamespace(platform=SimpleNamespace(name=platform))
+    game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
+    monkeypatch.setattr(
+        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        lambda _p: {'emulators': [core], 'preferred': core},
+    )
+    monkeypatch.setattr(
+        'gametheca.utils.play_url.core_is_browser_playable',
+        lambda c: c == core,
+    )
+    monkeypatch.setattr(
+        'gametheca.utils.emulator_bios.list_bios_files',
+        lambda: [],
+    )
+    return browse_play_fields(game)
+
+
+def test_browse_play_fields_snes_optional_dsp_does_not_block(monkeypatch):
+    fields = _play_fields(monkeypatch, 'SNES', 'snes9x')
+    assert fields['can_play_in_browser'] is True
+    assert fields.get('firmware_missing') is False
+    assert fields.get('bios_required') is False
+
+
+def test_browse_play_fields_genesis_cart_does_not_need_sega_cd_bios(monkeypatch):
+    fields = _play_fields(monkeypatch, 'SEGA_MD', 'genesis_plus_gx')
+    assert fields['can_play_in_browser'] is True
+    assert fields.get('firmware_missing') is False
+    assert fields.get('bios_required') is False
+
+
+def test_browse_play_fields_sega_cd_still_blocks_without_bios(monkeypatch):
+    fields = _play_fields(monkeypatch, 'SEGA_CD', 'genesis_plus_gx')
+    assert fields['can_play_in_browser'] is True
+    assert fields['bios_required'] is True
+    assert fields['firmware_missing'] is True
+    assert 'bios_CD_U.bin' in fields['bios']['missing']
 
 
 def test_download_refuses_path_missing(client, app, db_session, admin, tmp_path):

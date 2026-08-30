@@ -50,7 +50,7 @@ import {
   resolveFriendsBaseUrl,
   type ConnectionMode,
 } from './connection-ux.js'
-import type { SearchResultItem } from '@gametheca/api-client'
+import type { SearchResultItem } from '@oneirodex/api-client'
 const auth = createAuthStore()
 let lifecycle: LifecycleRegistry | null = null
 /** True after a successful Connect that loaded library preview (kept through offline). */

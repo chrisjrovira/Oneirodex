@@ -43,7 +43,7 @@ describe('useRowScroll wheel', () => {
     expect(page.scrollTop).toBe(80)
   })
 
-  test('horizontal-dominant wheel does not pan the track', () => {
+  test('horizontal-dominant wheel over tiles does not pan the track', () => {
     renderHook(() => {
       const scroll = useRowScroll({ bindKey: 1 })
       scroll.ref.current = track
@@ -65,7 +65,7 @@ describe('useRowScroll wheel', () => {
     expect(page.scrollTop).toBe(0)
   })
 
-  test('wheel over the track itself is also cancelled', () => {
+  test('wheel over the track itself scrolls the page, not the track', () => {
     renderHook(() => {
       const scroll = useRowScroll({ bindKey: 1 })
       scroll.ref.current = track
@@ -79,6 +79,65 @@ describe('useRowScroll wheel', () => {
     expect(blocked).toBe(true)
     expect(track.scrollLeft).toBe(0)
     expect(page.scrollTop).toBe(40)
+  })
+
+  test('wheel over the slider pans the track', () => {
+    const hbar = document.createElement('div')
+    viewport.append(hbar)
+    hbar.getBoundingClientRect = () =>
+      ({ left: 0, right: 400, top: 200, bottom: 208, width: 400, height: 8 })
+
+    renderHook(() => {
+      const scroll = useRowScroll({ bindKey: 1 })
+      scroll.ref.current = track
+      scroll.viewportRef.current = viewport
+      scroll.hbarRef.current = hbar
+      return scroll
+    })
+
+    const blocked = !hbar.dispatchEvent(
+      new WheelEvent('wheel', {
+        deltaY: 50,
+        deltaMode: 0,
+        bubbles: true,
+        cancelable: true,
+        clientX: 40,
+        clientY: 204,
+      }),
+    )
+    expect(blocked).toBe(true)
+    expect(track.scrollLeft).toBe(50)
+    expect(page.scrollTop).toBe(0)
+  })
+
+  test('wheel over the track padding that covers the slider still pans', () => {
+    const hbar = document.createElement('div')
+    viewport.append(hbar)
+    hbar.getBoundingClientRect = () =>
+      ({ left: 0, right: 400, top: 200, bottom: 208, width: 400, height: 8 })
+
+    renderHook(() => {
+      const scroll = useRowScroll({ bindKey: 1 })
+      scroll.ref.current = track
+      scroll.viewportRef.current = viewport
+      scroll.hbarRef.current = hbar
+      return scroll
+    })
+
+    // Target is the track (old stacking bug), but the pointer is on the bar.
+    const blocked = !track.dispatchEvent(
+      new WheelEvent('wheel', {
+        deltaY: 40,
+        deltaMode: 0,
+        bubbles: true,
+        cancelable: true,
+        clientX: 40,
+        clientY: 204,
+      }),
+    )
+    expect(blocked).toBe(true)
+    expect(track.scrollLeft).toBe(40)
+    expect(page.scrollTop).toBe(0)
   })
 })
 

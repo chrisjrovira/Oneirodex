@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, abort, cur
 from flask_login import login_required, current_user
 from gametheca.forms import AddGameForm
 from gametheca.models import Game, Library, Category, Developer, Publisher, Status
-from gametheca.utils.functions import read_first_nfo_content, get_folder_size_in_bytes_updates, format_size, PLATFORM_IDS
+from gametheca.utils.functions import read_first_nfo_content, get_folder_size_in_bytes_updates, format_size, igdb_platform_id_for
 from gametheca.utils.auth import admin_required
 from gametheca.utils.scanning import refresh_images_in_background, is_scan_job_running
 from gametheca.utils.security import is_safe_path, get_allowed_base_directories, sanitize_path_for_logging
@@ -26,7 +26,7 @@ def game_edit(game_uuid):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first() or abort(404)
     form = AddGameForm(obj=game)
     form.library_uuid.choices = [(str(lib.uuid), lib.name) for lib in db.session.execute(select(Library).order_by(Library.name)).scalars().all()]
-    platform_id = PLATFORM_IDS.get(game.library.platform.value.upper(), None)
+    platform_id = igdb_platform_id_for(game.library.platform)
     platform_name = game.library.platform.value
     library_name = game.library.name
     current_app.logger.debug(f"game_edit1 Platform ID: {platform_id}, Platform Name: {platform_name} Library Name: {library_name}")

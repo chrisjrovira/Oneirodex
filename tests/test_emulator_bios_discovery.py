@@ -230,3 +230,21 @@ def test_every_override_names_a_real_platform(app):
     known = {p.name for p in LibraryPlatform}
     unknown = sorted(set(PLATFORM_BIOS_OVERRIDES) - known)
     assert not unknown, f'PLATFORM_BIOS_OVERRIDES names unknown platforms: {unknown}'
+
+
+def test_optional_cart_systems_drop_out_of_the_platform_panel(app, tmp_path):
+    """NES/SNES/N64 optional files must not look like a missing-BIOS row."""
+    from gametheca.utils.emulator_bios import bios_status_for_platforms
+
+    root = tmp_path / 'bios'
+    root.mkdir(parents=True)
+    app.config['EMULATOR_BIOS_PATH'] = str(root)
+
+    with app.test_request_context():
+        rows = {r['platform']: r for r in bios_status_for_platforms()}
+
+    for platform in ('NES', 'SNES', 'N64'):
+        assert platform not in rows, (
+            f'{platform} carts boot without the optional add-on ROM and must not '
+            'appear as an unready firmware row'
+        )

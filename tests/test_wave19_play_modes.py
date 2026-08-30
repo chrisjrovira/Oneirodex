@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from gametheca.platform import (
     LibraryPlatform,
     cheat_surface_for_platform,
+    platforms_for_play_mode,
     play_mode_for_platform,
 )
 from gametheca.utils.play_url import browse_play_fields
@@ -30,6 +31,14 @@ def test_play_mode_matrix():
     assert play_mode_for_platform('PSVITA') == 'companion'
     assert play_mode_for_platform('PS2') == 'companion'
     assert play_mode_for_platform(None) == 'none'
+
+
+def test_platforms_for_play_mode_matches_matrix():
+    catalog = {plat.name for plat in platforms_for_play_mode('catalog')}
+    assert 'SWITCH' in catalog
+    assert 'PS5' in catalog
+    assert 'NES' not in catalog
+    assert platforms_for_play_mode('nope') == []
 
 
 def test_browse_play_fields_catalog_only():

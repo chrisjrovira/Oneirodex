@@ -344,22 +344,14 @@ class InitializationManager:
 
     def _init_allowed_file_types(self, session):
         """Initialize default allowed file types."""
+        # Circular: init_data imports InitManager at module load.
+        from gametheca.init_data import DEFAULT_ALLOWED_FILE_TYPES
         from gametheca.models import AllowedFileType
-
-        default_types = [
-            'zip', 'rar', '7z', 'iso', 'nfo', 'nes', 'sfc', 'smc', 'sms', '32x',
-            'gen', 'gg', 'gba', 'gb', 'gbc', 'nds', 'ndc', 'prg', 'dat', 'tap',
-            'z64', 'n64', 'md', 'd64', 'dsk', 'img', 'bin', 'cue', 'chd', 'st',
-            'stx', 'j64', 'jag', 'lnx', 'adf', 'ngc', 'gcm', 'rvz', 'wbfs',
-            'wad', 'gz', 'm2v', 'ogg', 'fpt', 'fpl', 'vec', 'pce', 'a26', 'a52',
-            'a78', 'rom', 'pbp', 'cso', 'cia', '3ds', 'nsp', 'xci', 'nsz', 'xcz',
-            'gdi', 'cdi',
-        ]
 
         existing_types = {ft.value for ft in session.execute(select(AllowedFileType)).scalars().all()}
 
         added_count = 0
-        for file_type in default_types:
+        for file_type in DEFAULT_ALLOWED_FILE_TYPES:
             if file_type not in existing_types:
                 new_type = AllowedFileType(value=file_type)
                 session.add(new_type)
@@ -401,6 +393,7 @@ class InitializationManager:
             {'name': 'Continue Playing', 'identifier': 'continue_playing', 'is_visible': True, 'display_order': -40},
             {'name': 'Friends Are Playing', 'identifier': 'friends_playing', 'is_visible': True, 'display_order': -30},
             {'name': 'Recently Updated Files', 'identifier': 'game_updates', 'is_visible': True, 'display_order': -20},
+            {'name': 'Extras not on the vault', 'identifier': 'extras_missing', 'is_visible': True, 'display_order': -15},
             {'name': 'News', 'identifier': 'news', 'is_visible': True, 'display_order': -10},
             # A template rather than a shelf: it renders nothing itself and
             # carries the visibility switch for the rows the recommender

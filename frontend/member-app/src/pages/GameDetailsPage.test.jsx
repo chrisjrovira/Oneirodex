@@ -356,6 +356,7 @@ test('prefers trailers[].embed_url and shows extras from details payload', async
     'src',
     'https://www.youtube.com/embed/abc123DEF',
   )
+  expect(screen.getAllByRole('button', { name: 'Theater' }).length).toBeGreaterThanOrEqual(1)
   expect(screen.getByText('Artbook PDF')).toBeInTheDocument()
   expect(screen.getByText(/On server/i)).toBeInTheDocument()
   expect(screen.queryByText(/Backend extras/i)).toBeNull()
@@ -725,3 +726,95 @@ test('facts rail stays in the grid when there is no summary', async () => {
   expect(grid.querySelector('.gt-details-page__section--facts')).toBeTruthy()
   expect(within(grid.querySelector('.gt-details-page__flow')).getByRole('heading', { name: 'Versions' })).toBeInTheDocument()
 })
+
+test('breadcrumb is Catalog then primary genre then title', async () => {
+  renderDetails()
+
+  const crumbs = await screen.findByRole('navigation', { name: 'Breadcrumb' })
+  expect(within(crumbs).getByRole('link', { name: 'Game Catalog' })).toHaveAttribute('href', '/library')
+  expect(within(crumbs).getByRole('link', { name: 'Platform' })).toHaveAttribute(
+    'href',
+    '/discover/hub/genre/Platform',
+  )
+  expect(within(crumbs).getByText('Celeste')).toBeInTheDocument()
+})
+
+test('console leaf breadcrumb starts at Systems', async () => {
+  global.fetch = vi.fn((url) => {
+    if (String(url).includes('/details')) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ...detailsPayload,
+            library_platform: 'NES',
+            library_platform_label: 'NES',
+          }),
+      })
+    }
+    return Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) })
+  })
+
+  renderDetails()
+
+  const crumbs = await screen.findByRole('navigation', { name: 'Breadcrumb' })
+  expect(within(crumbs).getByRole('link', { name: 'Systems' })).toHaveAttribute('href', '/systems')
+})
+
+test('renders About, capability chips, and store specs when present', async () => {
+  global.fetch = vi.fn((url) => {
+    if (String(url).includes('/details')) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ...detailsPayload,
+            storyline: 'A mountain, a bird, and a lot of climbing.',
+            game_modes: ['Single-player'],
+            player_perspectives: ['Side view'],
+            themes: ['Action'],
+            store_specs: {
+              system_requirements: { windows: { minimum: 'Windows 7' } },
+              languages: [
+                { name: 'English', interface: true, audio: true, subtitles: true },
+              ],
+            },
+          }),
+      })
+    }
+    return Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) })
+  })
+
+  renderDetails()
+
+  expect(await screen.findByRole('heading', { name: 'About' })).toBeInTheDocument()
+  expect(screen.getByText('A mountain, a bird, and a lot of climbing.')).toBeInTheDocument()
+  expect(screen.getAllByRole('link', { name: 'Single-player' })[0]).toHaveAttribute(
+    'href',
+    '/library?game_mode=Single-player',
+  )
+  expect(screen.getAllByRole('link', { name: 'Side view' })[0]).toHaveAttribute(
+    'href',
+    '/library?player_perspective=Side%20view',
+  )
+  expect(screen.getAllByRole('link', { name: 'Action' })[0]).toHaveAttribute(
+    'href',
+    '/library?theme=Action',
+  )
+  expect(screen.getByRole('heading', { name: 'System requirements' })).toBeInTheDocument()
+  expect(screen.getByText('Windows 7')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Store languages' })).toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: 'Audio' })).toBeInTheDocument()
+})
+
+test('media stage sits beside the summary when trailers exist', async () => {
+  renderDetails()
+
+  expect(await screen.findByTitle('Primary trailer')).toHaveAttribute(
+    'src',
+    'https://www.youtube.com/embed/abc123DEF',
+  )
+  expect(document.querySelector('.gt-details-page__fold--media')).toBeTruthy()
+  expect(document.querySelector('.gt-details-page__content-grid')).toBeTruthy()
+})
+

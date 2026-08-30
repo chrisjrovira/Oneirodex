@@ -33,6 +33,7 @@ from gametheca.utils.secondary_scrapers import (
     steam_perspective_names,
 )
 from gametheca.utils.steam_lookup import fetch_steam_app_details
+from gametheca.utils.steam_store_specs import merge_store_specs, store_specs_from_steam_details
 
 # Steam prints dates as "12 Nov, 2020", "Nov 12, 2020" or just "2020".
 _DATE_FORMATS = ('%d %b, %Y', '%b %d, %Y', '%d %B, %Y', '%B %d, %Y', '%Y')
@@ -69,6 +70,7 @@ def steam_details_to_metadata(details: dict | None) -> dict:
         'player_perspectives': steam_perspective_names(categories),
         'is_vr': categories_indicate_vr(categories),
         'metacritic': details.get('metacritic'),
+        'store_specs': store_specs_from_steam_details(details),
     }
 
 
@@ -123,6 +125,7 @@ def apply_steam_metadata_to_game(game, metadata: dict) -> dict:
         'game_modes': [],
         'player_perspectives': [],
         'steam_app_id': False,
+        'store_specs': False,
     }
     if not game or not metadata:
         return report
@@ -161,6 +164,14 @@ def apply_steam_metadata_to_game(game, metadata: dict) -> dict:
     report['player_perspectives'] = _union_relation(
         game, 'player_perspectives', PlayerPerspective, metadata.get('player_perspectives')
     )
+
+    incoming_specs = metadata.get('store_specs')
+    if incoming_specs:
+        merged = merge_store_specs(getattr(game, 'store_specs', None), incoming_specs)
+        if merged and merged != getattr(game, 'store_specs', None):
+            game.store_specs = merged
+            report['store_specs'] = True
+
     return report
 
 

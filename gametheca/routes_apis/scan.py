@@ -13,7 +13,7 @@ from gametheca.utils.auth import admin_required, librarian_required
 from gametheca.utils.cover_url import resolve_game_cover_url
 from gametheca.utils.duplicate_check import explain_duplicate_match, folder_basename, should_mark_as_duplicate
 from gametheca.utils.event_logging import log_system_event
-from gametheca.utils.functions import PLATFORM_IDS
+from gametheca.utils.functions import igdb_platform_id_for
 from gametheca.utils.scan_job_timing import (
     compute_scan_job_timing,
     parse_scan_job_status_filter,
@@ -248,7 +248,7 @@ def _unmatched_list_row(
         'library_uuid': getattr(folder, 'library_uuid', None),
         'library_name': library_name,
         'platform_name': platform.name if platform else '',
-        'platform_id': PLATFORM_IDS.get(platform.name) if platform else None,
+        'platform_id': igdb_platform_id_for(platform),
         'matched_game_uuid': matched_uuid,
         'match_reason': getattr(folder, 'match_reason', None),
         'match_score': getattr(folder, 'match_score', None),

@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { searchGames } from '../api/collections'
+import { fetchPaletteSuggest } from '../api/palette'
 import { openPreferencesModal } from '../api/preferences'
 import {
   buildPaletteCommands,
@@ -36,6 +37,10 @@ vi.mock('../api/collections', async () => {
   }
 })
 
+vi.mock('../api/palette', () => ({
+  fetchPaletteSuggest: vi.fn(() => Promise.resolve({ recent: [], popular: [] })),
+}))
+
 function renderPalette(shellConfig = {}, props = {}, initialEntries = ['/library']) {
   return render(
     <MemoryRouter initialEntries={initialEntries}>
@@ -49,6 +54,8 @@ beforeEach(() => {
   openPreferencesModal.mockClear()
   searchGames.mockReset()
   searchGames.mockResolvedValue([])
+  fetchPaletteSuggest.mockReset()
+  fetchPaletteSuggest.mockResolvedValue({ recent: [], popular: [] })
 })
 
 test('isLibrarySearchRoute matches library paths', () => {
@@ -88,13 +95,13 @@ test('opens with Ctrl+K and closes with Escape', async () => {
   const user = userEvent.setup()
   renderPalette({ isAdmin: false }, {}, ['/discover'])
 
-  expect(screen.queryByPlaceholderText(/search pages/i)).toBeNull()
+  expect(screen.queryByPlaceholderText(/search titles or pages/i)).toBeNull()
 
   await user.keyboard('{Control>}k{/Control}')
-  expect(screen.getByPlaceholderText(/search pages/i)).toBeInTheDocument()
+  expect(screen.getByPlaceholderText(/search titles or pages/i)).toBeInTheDocument()
 
   await user.keyboard('{Escape}')
-  expect(screen.queryByPlaceholderText(/search pages/i)).toBeNull()
+  expect(screen.queryByPlaceholderText(/search titles or pages/i)).toBeNull()
 })
 
 test('on Library route uses Search library placeholder', async () => {
@@ -113,7 +120,7 @@ test('opens when open prop is true and filters by typeahead', async () => {
   expect(within(dialog).getByText('Game Catalog')).toBeInTheDocument()
   expect(within(dialog).getByText('Discover')).toBeInTheDocument()
 
-  await user.type(screen.getByPlaceholderText(/search pages/i), 'chat')
+  await user.type(screen.getByPlaceholderText(/search titles or pages/i), 'chat')
   expect(within(dialog).getByText('Chat')).toBeInTheDocument()
   expect(within(dialog).queryByText('Game Catalog')).toBeNull()
 })
@@ -141,6 +148,35 @@ test('Library mode searches titles via /api/search and navigates to details', as
 
   await user.click(within(dialog).getByText('Celeste'))
   expect(navigateMock).toHaveBeenCalledWith('/game_details/game-1')
+})
+
+test('empty palette shows recent titles and household favourites', async () => {
+  fetchPaletteSuggest.mockResolvedValue({
+    recent: [{ uuid: 'r1', name: 'Hades', hint: 'Played recently' }],
+    popular: [{ uuid: 'p1', name: 'Celeste', hint: 'Favorited here' }],
+  })
+  renderPalette({}, { open: true }, ['/discover'])
+
+  const dialog = await screen.findByRole('dialog')
+  expect(await within(dialog).findByText('Hades')).toBeInTheDocument()
+  expect(within(dialog).getByText('Played recently')).toBeInTheDocument()
+  expect(within(dialog).getAllByText('Celeste').length).toBeGreaterThanOrEqual(1)
+  expect(within(dialog).getByText('Favorited here')).toBeInTheDocument()
+  expect(within(dialog).getByText('Recent titles')).toBeInTheDocument()
+  expect(within(dialog).getByText('Popular here')).toBeInTheDocument()
+})
+
+test('title search runs from Discover, not only Game Catalog', async () => {
+  searchGames.mockResolvedValue([{ uuid: 'game-9', name: 'Outer Wilds' }])
+  const user = userEvent.setup()
+  renderPalette({}, { open: true }, ['/discover'])
+
+  await user.type(screen.getByPlaceholderText(/search titles or pages/i), 'out')
+  await waitFor(() => {
+    expect(searchGames).toHaveBeenCalled()
+  })
+  expect(searchGames.mock.calls.at(-1)[0]).toBe('out')
+  expect(await screen.findByText('Outer Wilds')).toBeInTheDocument()
 })
 
 test('selecting a nav command navigates via useNavigate', async () => {

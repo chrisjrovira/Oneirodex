@@ -127,7 +127,7 @@ Admin short form: [libraries-and-scans.md](../admin/libraries-and-scans.md#conso
 
 ## Image
 
-Local build tag `gametheca:1.0.0-beta` (Compose default). Preferred Hub image once published: `chrisjrovira/oneirodex` — set `APP_IMAGE`. `chrisjrovira/gametheca` remains accepted. The image includes `bash` for `entrypoint.sh`.
+Local build tag `oneirodex:1.0.0-beta` (Compose default). Preferred Hub image once published: `chrisjrovira/oneirodex` — set `APP_IMAGE`. `chrisjrovira/gametheca` remains accepted. The image includes `bash` for `entrypoint.sh`. Live stacks still named `gametheca-app` pin `APP_CONTAINER_NAME` until the scan FIFO is idle.
 
 ## Compose Manager paths
 
@@ -206,9 +206,10 @@ docker compose --profile livekit --profile clamav --profile challenge up -d --bu
 1. **Identify the live project** (container names + `com.docker.compose.project`):
 
 ```bash
-docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' | grep -i gametheca
-docker inspect gametheca-db --format '{{index .Config.Labels "com.docker.compose.project"}} → {{index .Config.Labels "com.docker.compose.project.working_dir"}}'
-docker inspect gametheca-app --format '{{index .Config.Labels "com.docker.compose.project"}} → {{index .Config.Labels "com.docker.compose.project.working_dir"}}'
+docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' | grep -Ei 'oneirodex|gametheca'
+docker inspect oneirodex-db --format '{{index .Config.Labels "com.docker.compose.project"}} → {{index .Config.Labels "com.docker.compose.project.working_dir"}}'
+docker inspect oneirodex-app --format '{{index .Config.Labels "com.docker.compose.project"}} → {{index .Config.Labels "com.docker.compose.project.working_dir"}}'
+# Live Unraid until FIFO-idle recreate may still be gametheca-db / gametheca-app.
 ```
 
 2. **Identify the volume mounted on live Postgres:**

@@ -57,6 +57,10 @@ def fetch_steam_app_details(app_id: int, *, timeout: float = 5.0) -> dict | None
             'coming_soon': bool(release.get('coming_soon')) if isinstance(release, dict) else False,
             'metacritic': ((data.get('metacritic') or {}).get('score')
                            if isinstance(data.get('metacritic'), dict) else None),
+            'pc_requirements': data.get('pc_requirements'),
+            'mac_requirements': data.get('mac_requirements'),
+            'linux_requirements': data.get('linux_requirements'),
+            'supported_languages': data.get('supported_languages'),
         }
     except (requests.RequestException, ValueError, TypeError, AttributeError):
         return None

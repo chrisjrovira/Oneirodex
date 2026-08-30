@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createGamethecaClient } from '@gametheca/api-client'
+import { createGamethecaClient } from '@oneirodex/api-client'
 
 import { watchPlaySession } from './playtime-session.js'
 

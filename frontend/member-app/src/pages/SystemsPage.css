@@ -234,6 +234,20 @@
   text-underline-offset: 2px;
 }
 
+.gt-systems-tile__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.gt-systems-tile__set-link {
+  font-size: var(--gt-font-xs);
+  color: var(--gt-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .gt-systems-tile__regions {
   display: flex;
   flex-wrap: wrap;
@@ -351,17 +365,14 @@
   );
 }
 
+/* Soft 90s wash only — hard “poster” rectangles read as broken UI chrome
+   beside the system glyph. */
 .gt-systems-tile[data-room='teen_bedroom_90s']::after {
-  --gt-poster-a: #c45c6a;
-  --gt-poster-b: #3a6a9a;
-  background:
-    linear-gradient(var(--gt-poster-a), var(--gt-poster-a)) 8% 12% / 12% 22% no-repeat,
-    linear-gradient(var(--gt-poster-b), var(--gt-poster-b)) 24% 8% / 10% 26% no-repeat,
-    repeating-linear-gradient(
-      180deg,
-      rgba(80, 50, 90, 0.35) 0 10px,
-      transparent 10px 12px
-    );
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(80, 50, 90, 0.28) 0 10px,
+    transparent 10px 12px
+  );
 }
 
 .gt-systems-tile[data-room='carpet_den_late_90s']::after {

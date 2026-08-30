@@ -32,6 +32,9 @@ FAMILY_PARENT_NAMES = frozenset({
     # dumps in a folder literally named PC Engine. Treating that as a family
     # parent skipped the leaf. TurboGrafx-16 / CD / SuperGrafx / PC-FX sit
     # beside it as their own leaves.
+    'commodore',
+    # Not 'xbox': original Xbox / 360 / One / Series sit as siblings. Treating
+    # Xbox as a family parent would skip the original Xbox leaf.
 })
 
 # Letter-bucket PC lane. Same token is a scan-root skip glob so a library
@@ -59,7 +62,9 @@ _ROM_FILE_EXTS = frozenset({
     'cso', 'img', 'raw', 'cdi', 'gdi', 'toc', 'nrg',
     'a26', 'a52', 'a78', 'lnx', 'j64', 'jag',
     'pce', 'sgx', 'ngp', 'ngc', 'ws', 'wsc',
-    'zip', '7z', 'rar', 'rom', 'adf', 'd64', 'tap',
+    'zip', '7z', 'rar', 'rom', 'adf', 'd64', 'tap', 'min', 'wud', 'wux', 'wua',
+    'tzx', 'z80', 'mx1', 'mx2', 'cas', 'sna', 'dsk', 'st', 'stx',
+    'atr', 'xfd', 'atx', 'xex', 'dim', 'xdf', 'hdm', 'fdi', 'hdi', 'nhd', 'd88',
 })
 
 # (compiled regex, LibraryPlatform.name) — first match wins; order matters.
@@ -85,10 +90,15 @@ _PLATFORM_NAME_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r'nintendo\s*3ds|\b3ds\b', re.I), 'N3DS'),
     (re.compile(r'nintendo\s*ds|\bnds\b', re.I), 'NDS'),
     (re.compile(r'game\s*cube|\bngc\b', re.I), 'NGC'),
+    # Wii U before \bwii\b so "Nintendo Wii U" never lands on WII.
+    (re.compile(r'wii\s*u', re.I), 'WII_U'),
     (re.compile(r'\bwii\b', re.I), 'WII'),
+    (re.compile(r'pok[eé](?:mon)?\s*mini', re.I), 'POKE_MINI'),
     (re.compile(r'virtual\s*boy|\bvb\b', re.I), 'VB'),
     (re.compile(r'\b32x\b', re.I), 'SEGA_32X'),
     (re.compile(r'sg-?1000', re.I), 'SEGA_SG1000'),
+    # Sega Pico before generic Sega names; do not match bare "pico" (PICO-8).
+    (re.compile(r'sega\s*pico', re.I), 'SEGA_PICO'),
     (re.compile(r'mega\s*drive|genesis|\bsega\s*md\b', re.I), 'SEGA_MD'),
     (re.compile(r'master\s*system|\bsega\s*ms\b|\bsms\b', re.I), 'SEGA_MS'),
     (re.compile(r'sega\s*cd|mega[- ]?cd', re.I), 'SEGA_CD'),
@@ -106,6 +116,7 @@ _PLATFORM_NAME_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r'atari\s*5200|\b5200\b', re.I), 'ATARI_5200'),
     (re.compile(r'atari\s*7800|\b7800\b', re.I), 'ATARI_7800'),
     (re.compile(r'\blynx\b', re.I), 'LYNX'),
+    (re.compile(r'jaguar\s*cd', re.I), 'JAGUAR_CD'),
     (re.compile(r'\bjaguar\b', re.I), 'JAGUAR'),
     (re.compile(r'super\s*grafx', re.I), 'SUPERGRAFX'),
     (re.compile(r'turbo\s*grafx\s*cd|pc[- ]?engine\s*cd|\btg[- ]?cd\b', re.I), 'PCE_CD'),
@@ -120,7 +131,17 @@ _PLATFORM_NAME_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r'\b3do\b', re.I), 'THREEDO'),
     (re.compile(r'vectrex', re.I), 'VECTREX'),
     (re.compile(r'intellivision', re.I), 'INTV'),
+    # Commodore 8-bit (VICE) before Amiga so "Commodore 64" never hits AMIGA.
+    # First match wins. Do not add a bare ``commodore`` rule — that is a family
+    # parent, not a leaf. ``\bc64\b`` is a whole-token C64 name, not a substring.
+    (re.compile(r'commodore\s*128|\bc128\b|\bx128\b', re.I), 'VICE_X128'),
+    (re.compile(r'commodore\s*64|\bc64\b|\bcbm.?64\b', re.I), 'VICE_X64SC'),
+    (re.compile(r'vic[- ]?20|\bxvic\b', re.I), 'VICE_XVIC'),
+    (re.compile(r'plus[- /]?4|\bxplus4\b', re.I), 'VICE_XPLUS4'),
+    (re.compile(r'commodore\s*pet|\bxpet\b', re.I), 'VICE_XPET'),
+    (re.compile(r'amiga\s*cd32|\bcd32\b', re.I), 'AMIGA_CD32'),
     (re.compile(r'commodore\s*amiga|\bamiga\b', re.I), 'AMIGA'),
+    (re.compile(r'philips\s*cd[- ]?i|\bcd[- ]?i\b', re.I), 'CD_I'),
     (re.compile(r'channel\s*f|fairchild', re.I), 'CHAF'),
     (re.compile(r'odyssey\s*2|\bo2em\b', re.I), 'O2EM'),
     (re.compile(r'arcadia', re.I), 'ARCADIA'),
@@ -133,6 +154,19 @@ _PLATFORM_NAME_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r'pinball', re.I), 'PINBALL'),
     (re.compile(r'supervision', re.I), 'SUPERVISION'),
     (re.compile(r'gx4000', re.I), 'GX4000'),
+    # Home computers after GX4000 so the Amstrad console is not stolen by CPC.
+    (re.compile(r'amstrad\s*cpc|\bcpc\s*464|\bcpc\s*6128|\bcpc\b', re.I), 'CPC'),
+    (re.compile(r'\bmsx\b', re.I), 'MSX'),
+    (re.compile(r'zx\s*spectrum|\bspectrum\b|\bspeccy\b', re.I), 'ZX_SPECTRUM'),
+    (re.compile(r'atari\s*st|\batari\s*ste\b', re.I), 'ATARI_ST'),
+    (re.compile(r'apple\s*(?:ii|2)|appleii', re.I), 'APPLE_II'),
+    # Remainder computers after ST / 5200 / Jaguar so those leaves are not stolen.
+    (re.compile(
+        r'atari\s*8[- ]?bit|\batari\s*800\b|\batari\s*400\b|\batari\s*xl\b|\batari\s*xe\b',
+        re.I,
+    ), 'ATARI_8BIT'),
+    (re.compile(r'x68000|\bx68k\b|sharp\s*x68', re.I), 'X68000'),
+    (re.compile(r'pc[- ]?98|\bpc98\b|nec\s*pc[- ]?98', re.I), 'PC_98'),
 )
 
 _MAX_WALK_DEPTH = 5

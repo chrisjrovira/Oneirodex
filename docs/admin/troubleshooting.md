@@ -47,6 +47,7 @@ Product toggles live under **Admin → Features** (and setup → Features). Env 
 | ClamAV unreachable | Start `docker compose --profile clamav up -d` or set `CLAMAV_SOCKET` for host clamd — heuristics still apply when scan module is on |
 | LiveKit “on” but no voice | Flag alone is not enough — need `LIVEKIT_*` + compose `--profile livekit` |
 | OIDC button missing | `OIDC_ENABLED` stays **off** until env + Integrations toggle |
+| Help / Trailers missing on Systems (or Chat / Collections) after a full reload | Older build: `member_bp` never injected Server Settings into the SPA shell, so Jinja treated the flags as off. Current tree bakes `showHelpButton` / `showTrailers` into every `render_member_spa()` page. Restart the app after the Python hotfix. |
 
 ## Security headers / uploads
 

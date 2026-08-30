@@ -9,6 +9,8 @@ export interface GamethecaClientConfig {
   fetchImpl?: typeof fetch
 }
 
+export type OneirodexClientConfig = GamethecaClientConfig
+
 export class GamethecaApiError extends Error {
   readonly status: number
   readonly body: ApiError | string | null

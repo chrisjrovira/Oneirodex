@@ -15,6 +15,9 @@ DEFAULT_ALLOWED_FILE_TYPES = [
     'jag', 'lnx', 'adf', 'ngc', 'gcm', 'rvz', 'wbfs', 'wad', 'gz', 'm2v', 'ogg',
     'fpt', 'fpl', 'vec', 'pce', 'a26', 'a52', 'a78', 'rom', 'pbp', 'cso',
     'cia', '3ds', 'nsp', 'xci', 'nsz', 'xcz', 'gdi', 'cdi',
+    'min', 'wud', 'wux', 'wua', 'tzx', 'z80', 'mx1', 'mx2', 'cas', 'sna',
+    'atr', 'xfd', 'atx', 'xex', 'dim', 'xdf', 'hdm',     'fdi', 'hdi', 'nhd', 'd88',
+    'sg', 'sgx', 'sv', 'cpr', 'int', 'chf', 'ipf', 'crt', 'cdt', 'msa',
 ]
 
 from gametheca.models import ReleaseGroup
@@ -385,6 +388,12 @@ def initialize_discovery_sections():
             'identifier': 'game_updates',
             'is_visible': True,
             'display_order': -20
+        },
+        {
+            'name': 'Extras not on the vault',
+            'identifier': 'extras_missing',
+            'is_visible': True,
+            'display_order': -15
         },
         {
             'name': 'News',

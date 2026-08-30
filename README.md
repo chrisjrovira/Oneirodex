@@ -41,11 +41,11 @@ Oneirodex is a **Flask + React** game library server you run at home (or on a NA
 | | |
 |---|---|
 | 🏷️ **Release** | [1.0.0-beta](CHANGELOG.md) · [`VERSION`](VERSION) |
-| 📦 **Package** | `gametheca/` (identifier phase 3b still to move) |
+| 📦 **Package** | `gametheca/` (class/package rename still exclusive-last) |
 | 🐙 **GitHub** | [chrisjrovira/oneirodex](https://github.com/chrisjrovira/oneirodex) (old `gametheca` URL redirects) |
-| 🐳 **Containers** | `gametheca-app` · `gametheca-db` · optional `gametheca-livekit` |
+| 🐳 **Containers** | `oneirodex-app` · `oneirodex-db` (pin `APP_CONTAINER_NAME=gametheca-app` on live Unraid until FIFO idle) · optional `gametheca-livekit` |
 | 🌐 **Default URL** | http://localhost:5006 |
-| 🖼️ **Image** | Local Compose build `gametheca:1.0.0-beta` (Hub publish optional) |
+| 🖼️ **Image** | Local Compose build `oneirodex:1.0.0-beta` (Hub publish optional) |
 
 > **Legal:** Use only with software you are authorized to share. Oneirodex does **not** include Discord bots, pirate marketplaces, or DRM store download queues. **Authentik / OIDC is optional** — local username/password works for home installs.
 

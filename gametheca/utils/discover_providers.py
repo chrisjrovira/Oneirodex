@@ -20,11 +20,12 @@ meantime already answers the questions those stages will ask.
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Callable, Iterable, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 
 from gametheca import db
 from gametheca.models import (
@@ -32,6 +33,7 @@ from gametheca.models import (
     DiscoverySection,
     FreeGameOffer,
     Game,
+    GameExtra,
     GameUpdate,
     UserFriendship,
     UserGameProgress,
@@ -294,6 +296,87 @@ def _friends_playing(user, limit):
     )
 
 
+#: How many engaged titles we will inspect for missing extras. A full-vault
+#: ``os.path.exists`` walk is the thing this shelf must not do.
+EXTRAS_MISSING_ENGAGED_CAP = 80
+
+
+def _extra_file_present(extra) -> bool:
+    path = getattr(extra, 'file_path', None) or ''
+    if not path:
+        return False
+    try:
+        return os.path.exists(path)
+    except OSError:
+        return False
+
+
+def _engaged_game_uuids(user, cap: int = EXTRAS_MISSING_ENGAGED_CAP) -> list[str]:
+    user_id = getattr(user, 'id', None)
+    if user_id is None:
+        return []
+    played = db.session.execute(
+        select(UserGameProgress.game_uuid)
+        .where(UserGameProgress.user_id == user_id)
+        .order_by(UserGameProgress.last_played_at.desc().nullslast())
+        .limit(cap)
+    ).scalars().all()
+    fav = db.session.execute(
+        select(user_favorites.c.game_uuid)
+        .where(user_favorites.c.user_id == user_id)
+        .limit(cap)
+    ).scalars().all()
+    seen: list[str] = []
+    for uuid in list(played) + list(fav):
+        if uuid in seen:
+            continue
+        seen.append(uuid)
+        if len(seen) >= cap:
+            break
+    return seen
+
+
+def _extras_missing(user, limit):
+    """Engaged titles whose catalogued extras are not on the vault.
+
+    Disc siblings are the multi-disc set, not extras to acquire. Unplayed and
+    unfavourited titles are skipped so a long scan never stats the whole box.
+    """
+    engaged = _engaged_game_uuids(user)
+    if not engaged:
+        return []
+
+    extras = db.session.execute(
+        select(GameExtra).where(
+            GameExtra.game_uuid.in_(engaged),
+            or_(GameExtra.extra_kind.is_(None), GameExtra.extra_kind != 'disc'),
+        )
+    ).scalars().all()
+
+    missing: list[str] = []
+    seen: set[str] = set()
+    for extra in extras:
+        uuid = extra.game_uuid
+        if uuid in seen:
+            continue
+        if _extra_file_present(extra):
+            continue
+        seen.add(uuid)
+        missing.append(uuid)
+        if len(missing) >= limit:
+            break
+
+    if not missing:
+        return []
+
+    order = {uuid: index for index, uuid in enumerate(engaged)}
+    games = _access_filtered(
+        select(Game).where(Game.uuid.in_(missing)), user, limit
+    )
+    games.sort(key=lambda game: order.get(game.uuid, len(order)))
+    return games
+
+
 def _game_updates(user, limit):
     """Titles whose update files landed recently.
 
@@ -403,6 +486,15 @@ register(
         reason='New update files landed',
     ),
     _game_updates,
+)
+register(
+    RowSpec(
+        'extras_missing',
+        family='personal',
+        priority=0.88,
+        reason='Extras for games you play that are not on the vault',
+    ),
+    _extras_missing,
 )
 register(
     RowSpec(

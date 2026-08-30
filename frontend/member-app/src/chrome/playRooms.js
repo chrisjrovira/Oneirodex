@@ -80,6 +80,7 @@ export const LCD_PLATFORMS = {
   SUPERVISION: 1,
   ADVISION: 1,
   SEGA_GG: 1,
+  POKE_MINI: 1,
 }
 
 const PLATFORM_ROOMS = {
@@ -115,6 +116,7 @@ const PLATFORM_ROOMS = {
   SUPERVISION: 'teen_bedroom_90s',
   ADVISION: 'teen_bedroom_90s',
   VB: 'teen_bedroom_90s',
+  SEGA_PICO: 'teen_bedroom_90s',
 
   N64: 'carpet_den_late_90s',
   PSX: 'carpet_den_late_90s',
@@ -124,6 +126,9 @@ const PLATFORM_ROOMS = {
   THREEDO: 'carpet_den_late_90s',
   PCFX: 'carpet_den_late_90s',
   PCE_CD: 'carpet_den_late_90s',
+  JAGUAR_CD: 'carpet_den_late_90s',
+  CD_I: 'carpet_den_late_90s',
+  AMIGA_CD32: 'carpet_den_late_90s',
 
   PS2: 'media_center_00s',
   PS3: 'media_center_00s',
@@ -131,6 +136,7 @@ const PLATFORM_ROOMS = {
   WII: 'media_center_00s',
   SEGA_DC: 'media_center_00s',
   SWITCH: 'media_center_00s',
+  WII_U: 'media_center_00s',
   XBOX: 'media_center_00s',
   X360: 'media_center_00s',
   XONE: 'media_center_00s',
@@ -140,6 +146,7 @@ const PLATFORM_ROOMS = {
   N3DS: 'media_center_00s',
   PSP: 'media_center_00s',
   PSVITA: 'media_center_00s',
+  POKE_MINI: 'media_center_00s',
 
   ARCADE: 'arcade_cabinet',
   NEOGEO: 'arcade_cabinet',
@@ -156,6 +163,14 @@ const PLATFORM_ROOMS = {
   VICE_XVIC: 'desk',
   VICE_XPLUS4: 'desk',
   VICE_XPET: 'desk',
+  MSX: 'desk',
+  ZX_SPECTRUM: 'desk',
+  CPC: 'desk',
+  ATARI_ST: 'desk',
+  APPLE_II: 'desk',
+  ATARI_8BIT: 'desk',
+  X68000: 'desk',
+  PC_98: 'desk',
 }
 
 export function roomIdForPlatform(platformId) {

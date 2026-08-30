@@ -13,6 +13,7 @@ Quick checks before pinging an admin.
 | Font pref changed nothing | Server predates the `fonts.css` fix | Fixed — see [below](#the-font-preference-had-no-effect). On an older build no font choice, including the default, ever reached the page. |
 | Preferences panel is blank / errors | Server predates the room-card picker Jinja fix | Fixed — see [below](#preferences-will-not-open). On an older build the theme picker crashed while rendering. |
 | Can’t find a page | Nav clutter | **Ctrl+K** / ⌘K command palette — [faq.md](faq.md) |
+| Help / Trailers missing after a refresh on Systems, Chat, or Collections | Older build hid those More items on `member_bp` pages | Update the server. They follow Admin → Server Settings (`showHelpButton` / `showTrailers`) on every member page. In-app clicks from Discover could still show them while a hard refresh hid them. |
 | Chat cramped on phone | Old frontend build | Admin rebuild `member-app` (Chat slide-out stacks ≤900px) |
 | Huge tiles on phone | Pref L/XL before density polish | Rebuild; tiles clamp automatically under 900px |
 | Some store links on details look like plain text | Logo assets not shipped yet for that store | Expected for itch · Humble · EA · Ubisoft · Xbox · PSN · Amazon · wikia/fandom · unknown — link still works; Steam/GOG/Epic/IGDB/YouTube/Wikipedia/official have marks |

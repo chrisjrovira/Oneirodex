@@ -6,11 +6,11 @@
 
 ## Context
 
-Package `@gametheca/api-client` exists for typed fetches. Mid-polish 0.2 → 1.0 member SPA still uses direct `fetch` / existing helpers. Forcing a one-path cutover before 1.0 adds merge risk without user-facing gain.
+Package `@oneirodex/api-client` (formerly `@gametheca/api-client`) exists for typed fetches. Mid-polish 0.2 → 1.0 member SPA still uses direct `fetch` / existing helpers. Forcing a one-path cutover before 1.0 adds merge risk without user-facing gain.
 
 ## Decision
 
-**Defer** wiring `@gametheca/api-client` into the member SPA until after official 1.0.0 (or a dedicated post-1.0 API client wave). Keep current fetch paths stable.
+**Defer** wiring `@oneirodex/api-client` into the member SPA until after official 1.0.0 (or a dedicated post-1.0 API client wave). Keep current fetch paths stable.
 
 ## Consequences
 

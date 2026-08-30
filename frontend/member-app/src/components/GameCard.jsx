@@ -6,10 +6,12 @@ import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
 import { CoverFallback } from './CoverFallback'
 import { safeHttpUrl } from '../utils/safeUrl'
 import { editionChipLabels } from '../utils/platformAbbrev'
+import { trailerEmbedUrls, prefersReducedMotion } from '../utils/detailsMedia'
 import { BadgeStack } from './BadgeStack'
 import { AddToCollection } from './AddToCollection'
 import { GameActionBar } from './GameActionBar'
 import { GamePreviewPopup } from './GamePreviewPopup'
+import { HOVER_TRAILER_MS, TileHoverTrailer } from './TileHoverTrailer'
 import {
   FIRMWARE_ADMIN_HREF,
   FIRMWARE_HELP_HREF,
@@ -77,10 +79,12 @@ export function GameCard({
   // editionChipLabels.
   activePlatform = '',
   layout = 'tile',
+  discoverReason = '',
 }) {
   const cardRef = useRef(null)
   const longPressTimer = useRef(0)
   const longPressFired = useRef(false)
+  const trailerTimer = useRef(0)
   const [isFavorite, setIsFavorite] = useState(Boolean(game.is_favorite))
   const [favoritePending, setFavoritePending] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -96,6 +100,7 @@ export function GameCard({
   const [imgSrc, setImgSrc] = useState(() => coverUrl(game.cover_url))
   // A cover that never arrives is drawn, not fetched — see CoverFallback.
   const [coverFailed, setCoverFailed] = useState(false)
+  const [trailerArmed, setTrailerArmed] = useState(false)
   const currentStatus = statusConfig(status)
   const igdbUrl = safeHttpUrl(game.url)
   const steamAppId = game.steam_app_id ? Number(game.steam_app_id) : null
@@ -126,6 +131,10 @@ export function GameCard({
   // fetched carry it as a real `cover_url`, so treating it as an image would
   // put the old baked-in logo back on the tile it was removed from.
   const hasCover = !coverFailed && Boolean(imgSrc) && imgSrc !== DEFAULT_COVER
+  const trailerSrc =
+    (typeof game.trailer_embed_url === 'string' && game.trailer_embed_url.trim()) ||
+    trailerEmbedUrls(game)[0] ||
+    null
   useEffect(() => {
     setImgSrc(coverUrl(game.cover_url))
     setCoverFailed(false)
@@ -134,11 +143,14 @@ export function GameCard({
     setMenuOpen(false)
     setStatusOpen(false)
     setPlayInfoOpen(false)
-  }, [game.uuid, game.cover_url, game.is_favorite, game.user_status])
+    setTrailerArmed(false)
+    window.clearTimeout(trailerTimer.current)
+  }, [game.uuid, game.cover_url, game.is_favorite, game.user_status, game.trailer_embed_url])
 
   useEffect(() => {
     return () => {
       window.clearTimeout(longPressTimer.current)
+      window.clearTimeout(trailerTimer.current)
     }
   }, [])
 
@@ -215,6 +227,33 @@ export function GameCard({
     longPressTimer.current = 0
   }
 
+  const armTrailer = () => {
+    if (!trailerSrc || prefersReducedMotion()) {
+      return
+    }
+    window.clearTimeout(trailerTimer.current)
+    trailerTimer.current = window.setTimeout(() => {
+      setTrailerArmed(true)
+    }, HOVER_TRAILER_MS)
+  }
+
+  const disarmTrailer = () => {
+    window.clearTimeout(trailerTimer.current)
+    trailerTimer.current = 0
+    setTrailerArmed(false)
+  }
+
+  const handlePointerLeave = () => {
+    clearLongPress()
+    disarmTrailer()
+  }
+
+  const handleBlurCapture = (event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      disarmTrailer()
+    }
+  }
+
   const handleSelectPointerDown = (event) => {
     if (!selectionEnabled || !onSelectionToggle) {
       return
@@ -266,8 +305,11 @@ export function GameCard({
       data-selected={selected ? 'true' : 'false'}
       onPointerDown={handleSelectPointerDown}
       onPointerUp={clearLongPress}
-      onPointerLeave={clearLongPress}
-      onPointerCancel={clearLongPress}
+      onPointerEnter={armTrailer}
+      onPointerLeave={handlePointerLeave}
+      onPointerCancel={handlePointerLeave}
+      onFocusCapture={armTrailer}
+      onBlurCapture={handleBlurCapture}
       onClickCapture={handleSelectClick}
     >
       {layout === 'rows' ? null : (
@@ -590,6 +632,7 @@ export function GameCard({
           ) : (
             <CoverFallback name={game.name} />
           )}
+          <TileHoverTrailer src={trailerSrc} active={trailerArmed} />
         </a>
 
         {layout === 'rows' ? (
@@ -710,7 +753,11 @@ export function GameCard({
       </div>
 
       {previewOpen ? (
-        <GamePreviewPopup game={game} onClose={() => setPreviewOpen(false)} />
+        <GamePreviewPopup
+          game={game}
+          reason={discoverReason || game.discover_reason || game.reason || ''}
+          onClose={() => setPreviewOpen(false)}
+        />
       ) : null}
     </div>
   )

@@ -332,6 +332,20 @@ export function FilterBar({
           </select>
         </label>
         <label>
+          {t('Play path')}
+          <select
+            className="form-control"
+            name="play_mode"
+            value={draft.play_mode ?? ''}
+            onChange={update}
+          >
+            <option value="">{t('Any path')}</option>
+            <option value="browser">{t('Browser')}</option>
+            <option value="companion">{t('Companion')}</option>
+            <option value="catalog">{t('Catalog')}</option>
+          </select>
+        </label>
+        <label>
           {t('Sort by')}
           <select
             className="form-control"

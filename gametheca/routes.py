@@ -30,7 +30,7 @@ from gametheca.models import (
     ReleaseGroup, AllowedFileType, GlobalSettings, user_game_status,
     GameUpdate, user_favorites, GameExtra,
 )
-from gametheca.platform import LibraryPlatform
+from gametheca.platform import LibraryPlatform, platforms_for_play_mode
 from gametheca.utils.game_editions import normalize_title
 from gametheca.utils.title_grouping import (
     editions_by_title_key,
@@ -42,7 +42,7 @@ from gametheca.utils.store_ownership import get_matched_owned_game_uuids, owners
 from gametheca.utils.functions import (
     load_scanning_filter_patterns,
     format_size,
-    PLATFORM_IDS,
+    igdb_platform_id_for,
     normalize_case_sensitive,
 )
 from gametheca.utils.local_metadata import has_local_metadata, has_local_images
@@ -66,6 +66,7 @@ from gametheca.utils.processors import get_global_settings
 from gametheca.utils.library_acl import apply_game_access_filters, user_can_access_library
 from gametheca.utils.lifecycle import web_client_connected, web_lifecycle_fields
 from gametheca.utils.client_lifecycle import installed_game_uuids, load_lifecycle_map
+from gametheca.utils.game_details_payload import browse_trailer_fields
 from gametheca.utils.play_url import browse_play_fields
 from gametheca.utils.browse_filters import apply_badge_filters
 from gametheca.utils.browse_pagination import normalize_page_size
@@ -130,6 +131,12 @@ def browse_games():
         except KeyError:
             return jsonify({'games': [], 'total': 0, 'pages': 0, 'current_page': page}), 200
         query = query.filter(Game.library.has(Library.platform == platform_enum))
+    play_mode = (request.args.get('play_mode') or '').strip().lower()
+    if play_mode in ('browser', 'companion', 'catalog'):
+        matching = platforms_for_play_mode(play_mode)
+        if not matching:
+            return jsonify({'games': [], 'total': 0, 'pages': 0, 'current_page': page}), 200
+        query = query.filter(Game.library.has(Library.platform.in_(matching)))
     if igdb_platform:
         query = query.filter(Game.platforms.any(Platform.name == igdb_platform))
     if category:
@@ -355,6 +362,7 @@ def browse_games():
             'edition_platforms': edition_platforms,
             'edition_count': len(edition_platforms),
             **browse_play_fields(game),
+            **browse_trailer_fields(game),
             **game_card_flags(game),
             **rom_browse_flags(
                 game,
@@ -488,7 +496,7 @@ def scan_management():
     # Packaging data with platform details
     unmatched_folders_with_platform = []
     for unmatched, lib_name, lib_platform in unmatched_folders:
-        platform_id = PLATFORM_IDS.get(lib_platform.name) if lib_platform else None
+        platform_id = igdb_platform_id_for(lib_platform)
         unmatched_folders_with_platform.append({
             "folder": unmatched,
             "library_name": lib_name,

@@ -7,6 +7,8 @@ import {
   GamePreviewPopup,
   formatAdded,
   formatReleased,
+  friendsSentence,
+  mergePreviewTags,
   previewBadges,
   systemCountLabel,
 } from './GamePreviewPopup'
@@ -328,4 +330,34 @@ test('the systems count counts systems, not copies', () => {
   expect(systemCountLabel([pc, { library_platform: 'GBA' }])).toBe('2 systems')
   // A row with no platform at all must not inflate the count.
   expect(systemCountLabel([pc, { library_platform: null }])).toBeNull()
+})
+
+test('mergePreviewTags prefers editions tags and dedupes browse genres', () => {
+  expect(
+    mergePreviewTags(['Puzzle', 'Adventure'], [
+      { label: 'Co-op', kind: 'mode' },
+      { label: 'puzzle', kind: 'genre' },
+    ]),
+  ).toEqual(['Co-op', 'puzzle', 'Adventure'])
+})
+
+test('friendsSentence names household members without a store crowd', () => {
+  expect(friendsSentence([])).toBeNull()
+  expect(friendsSentence([{ name: 'Alex' }])).toBe('Alex in this house')
+  expect(friendsSentence([{ name: 'Alex' }, { name: 'Sam' }])).toBe(
+    'Alex and Sam in this house',
+  )
+})
+
+test('shows the shelf reason, extra tags, and household friends from editions', async () => {
+  fetchGameEditions.mockResolvedValue({
+    editions: [SNES_EDITION],
+    tags: [{ label: 'Co-op', kind: 'mode' }],
+    friends: [{ id: 2, name: 'Alex', kind: 'played' }],
+  })
+  renderPopup({ reason: 'Because you played Half-Life' })
+
+  expect(screen.getByText('Because you played Half-Life')).toBeInTheDocument()
+  await waitFor(() => expect(screen.getByText(/Co-op · Puzzle · Adventure/)).toBeInTheDocument())
+  expect(screen.getByText('Alex in this house')).toBeInTheDocument()
 })

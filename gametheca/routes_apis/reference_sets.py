@@ -9,7 +9,7 @@ from flask_login import current_user, login_required
 from gametheca.utils.auth import admin_required
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.set_completion import (
-    VALID_REGIONS,
+    REGION_PREF_ORDER,
     VALID_SOURCES,
     compute_set_completion,
     delete_reference_set,
@@ -143,7 +143,7 @@ def api_set_completion():
             code='not_found',
             library_platform=platform,
             region=region,
-            valid_regions=sorted(VALID_REGIONS),
+            valid_regions=list(REGION_PREF_ORDER),
             valid_sources=sorted(VALID_SOURCES),
         )
 

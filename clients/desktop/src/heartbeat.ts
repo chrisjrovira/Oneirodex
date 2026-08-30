@@ -1,4 +1,4 @@
-import { formatBearerAuthorization } from '@gametheca/api-client'
+import { formatBearerAuthorization } from '@oneirodex/api-client'
 
 import type { AuthStore } from './auth.js'
 import type { LifecycleAction } from './lifecycle.js'

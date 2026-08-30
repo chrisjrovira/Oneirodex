@@ -1,5 +1,5 @@
-import type { GamethecaClient, SearchResultItem } from '@gametheca/api-client'
-import { GamethecaApiError } from '@gametheca/api-client'
+import type { GamethecaClient, SearchResultItem } from '@oneirodex/api-client'
+import { GamethecaApiError } from '@oneirodex/api-client'
 
 import type { LifecycleRegistry } from './lifecycle.js'
 
