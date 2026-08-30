@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { errorFromResponse } from '../api/envelopeError'
 import { familyForPlatform } from '../chrome/platformSkins'
 import { roomIdForPlatform, roomStyle } from '../chrome/playRooms'
+import { isNativePcPlatform } from '../chrome/regions'
 import { PageStatus } from '../components/PageStatus'
 import { SystemGlyph } from '../components/systemMotifArt'
 import './SystemsPage.css'
@@ -160,7 +161,9 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
   return (
     <div className="gt-more-page gt-systems-page">
       <p className="gt-more-page__lede">
-        Browse your library by console or PC. Open a system to filter the grid and apply that era&apos;s chrome.
+        Browse your library by console or PC. Open a system to filter the grid and apply that era&apos;s chrome.{' '}
+        <Link to="/ways-to-play">Ways to Play</Link> lists Browser / Companion / Catalog across the catalog.
+        Console tiles also open a licensed catalog of IGDB regional releases.
       </p>
       {groups.map((group) => (
         <section key={group.id} className="gt-systems-group" data-family={group.id}>
@@ -229,13 +232,25 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
                       ) : null}
                     </span>
                   </Link>
-                  {completion ? (
-                    <Link
-                      className="gt-systems-tile__set-link"
-                      to={`/systems/completion?library_platform=${encodeURIComponent(value)}&region=${encodeURIComponent(completion.region)}`}
-                    >
-                      Missing
-                    </Link>
+                  {(!isNativePcPlatform(value) || completion) ? (
+                    <div className="gt-systems-tile__links">
+                      {isNativePcPlatform(value) ? null : (
+                        <Link
+                          className="gt-systems-tile__set-link"
+                          to={`/systems/catalog?library_platform=${encodeURIComponent(value)}`}
+                        >
+                          Catalog
+                        </Link>
+                      )}
+                      {completion ? (
+                        <Link
+                          className="gt-systems-tile__set-link"
+                          to={`/systems/completion?library_platform=${encodeURIComponent(value)}&region=${encodeURIComponent(completion.region)}`}
+                        >
+                          Missing
+                        </Link>
+                      ) : null}
+                    </div>
                   ) : null}
                 </div>
               )

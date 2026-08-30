@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { fetchGameEditions } from '../api/gameEditions'
+import { recordRecentTitle } from '../utils/recentTitles'
 import { ExternalStoreLinks } from './ExternalStoreLinks'
 import './GamePreviewPopup.css'
 
@@ -86,6 +87,31 @@ export function previewBadges(game) {
   return badges
 }
 
+/** Facet labels from the editions payload, falling back to browse genres. */
+export function mergePreviewTags(gameGenres, editionTags, limit = 8) {
+  const labels = []
+  const seen = new Set()
+  const push = (raw) => {
+    const label = typeof raw === 'string' ? raw.trim() : String(raw?.label || '').trim()
+    const key = label.toLowerCase()
+    if (!label || seen.has(key) || labels.length >= limit) return
+    seen.add(key)
+    labels.push(label)
+  }
+  for (const tag of editionTags || []) push(tag)
+  for (const genre of gameGenres || []) push(genre)
+  return labels
+}
+
+/** Household friends who played or favourited a copy — never a store social graph. */
+export function friendsSentence(friends) {
+  const names = (friends || []).map((row) => String(row?.name || '').trim()).filter(Boolean)
+  if (!names.length) return null
+  if (names.length === 1) return `${names[0]} in this house`
+  if (names.length === 2) return `${names[0]} and ${names[1]} in this house`
+  return `${names[0]}, ${names[1]}, and ${names.length - 2} more in this house`
+}
+
 /**
  * How the "Available on" heading counts.
  *
@@ -124,18 +150,20 @@ export function editionBlockerText(edition) {
   }
 }
 
-export function GamePreviewPopup({ game, onClose }) {
+export function GamePreviewPopup({ game, reason = '', onClose }) {
   const panelRef = useRef(null)
   const closeRef = useRef(null)
   // `null` while loading; `[]` once we know there is nothing to add. The two
   // are different on screen: a spinner versus no section at all.
   const [editions, setEditions] = useState(null)
   const [editionsFailed, setEditionsFailed] = useState(false)
-  // GOG / Epic / trailer live on Game.urls and video_urls, which browse does
-  // not send per tile. The editions request is the one that already joins
-  // copies; those marks ride along so the preview matches details without
-  // bloating the grid or becoming a second player.
+  // GOG / Epic live on Game.urls, which browse still does not send per tile.
+  // Browse may send one `trailer_embed_url` for muted tile hover; the YouTube
+  // mark here still rides the editions request so the popup matches details
+  // without becoming a second player.
   const [editionUrls, setEditionUrls] = useState([])
+  const [editionTags, setEditionTags] = useState([])
+  const [editionFriends, setEditionFriends] = useState([])
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -178,11 +206,15 @@ export function GamePreviewPopup({ game, onClose }) {
     setEditions(null)
     setEditionsFailed(false)
     setEditionUrls([])
+    setEditionTags([])
+    setEditionFriends([])
     fetchGameEditions(uuid, { signal: controller.signal })
       .then((data) => {
         if (controller.signal.aborted) return
         setEditions(data.editions || [])
         setEditionUrls(data.urls || [])
+        setEditionTags(Array.isArray(data.tags) ? data.tags : [])
+        setEditionFriends(Array.isArray(data.friends) ? data.friends : [])
       })
       .catch((error) => {
         if (error?.name !== 'AbortError') {
@@ -192,6 +224,8 @@ export function GamePreviewPopup({ game, onClose }) {
           setEditionsFailed(true)
           setEditions([])
           setEditionUrls([])
+          setEditionTags([])
+          setEditionFriends([])
         }
       })
     return () => controller.abort()
@@ -223,7 +257,9 @@ export function GamePreviewPopup({ game, onClose }) {
     formatAdded(game.date_identified || game.date_created),
   ].filter(Boolean)
 
-  const genres = Array.isArray(game.genres) ? game.genres.slice(0, 6) : []
+  const genres = mergePreviewTags(game.genres, editionTags)
+  const household = friendsSentence(editionFriends)
+  const why = String(reason || game.discover_reason || game.reason || '').trim()
   const badges = previewBadges(game)
 
   // Portalled to <body>, not left inside the card.
@@ -269,6 +305,8 @@ export function GamePreviewPopup({ game, onClose }) {
           <div className="gt-preview__text">
             <h2 className="gt-preview__title">{game.name}</h2>
 
+            {why ? <p className="gt-preview__reason">{why}</p> : null}
+
             {badges.length ? (
               <p className="gt-preview__badges">
                 {badges.map((badge) => (
@@ -296,6 +334,8 @@ export function GamePreviewPopup({ game, onClose }) {
               <p className="gt-preview__genres">{genres.join(' · ')}</p>
             ) : null}
 
+            {household ? <p className="gt-preview__friends">{household}</p> : null}
+
             {game.summary ? (
               <p className="gt-preview__summary">{game.summary}</p>
             ) : (
@@ -311,7 +351,11 @@ export function GamePreviewPopup({ game, onClose }) {
             />
 
             <div className="gt-preview__actions">
-              <Link className="gt-btn gt-btn--primary" to={`/game_details/${game.uuid}`}>
+              <Link
+                className="gt-btn gt-btn--primary"
+                to={`/game_details/${game.uuid}`}
+                onClick={() => recordRecentTitle({ uuid: game.uuid, name: game.name })}
+              >
                 Open details
               </Link>
             </div>

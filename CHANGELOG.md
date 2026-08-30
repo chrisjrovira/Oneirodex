@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- GitHub default is **`chrisjrovira/oneirodex`** (the old `chrisjrovira/gametheca` URL still redirects). `SUPPORT_GITHUB_REPO` and `GT_SOURCE_URL` / `ONEIRODEX_SOURCE_URL` follow.
+- GitHub default is **`chrisjrovira/oneirodex`** (the old `chrisjrovira/gametheca` URL still redirects). `SUPPORT_GITHUB_REPO` and `GT_SOURCE_URL` / `ONEIRODEX_SOURCE_URL` follow. Origin URL is `https://github.com/chrisjrovira/oneirodex.git`.
 - Identifier **phase 3a** ([ADR 0003](docs/adr/0003-product-name-oneirodex.md)): `ONEIRODEX_*` env wins over `GT_*`; CSS `--od-*` aliases `--gt-*`. Package path `gametheca/` and `.gt-*` classes stay.
+- Identifier **phase 3b** (partial): Compose defaults `oneirodex-app` / `oneirodex-db` / `oneirodex:1.0.0-beta`; npm `@oneirodex/api-client` (`createOneirodexClient` aliases `createGamethecaClient`); review containers `oneirodex-review-app` / `oneirodex-review-db`. Pytest database name remains `gamethecatest`. Pin live Unraid `APP_CONTAINER_NAME=gametheca-app` until the scan FIFO is idle. Package path / `.gt-*` / `RESET GAMETHECA` unchanged.
 - Icon packs: **library / discover / systems** ship distinct SVGs on Filled, Duotone, Pixel, Soft, and Mono. Outline stays the inline stroke set.
 
 ### Added

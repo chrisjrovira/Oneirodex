@@ -20,4 +20,8 @@ export function createGamethecaClient(config: GamethecaClientConfig) {
   }
 }
 
+/** P3b alias — same factory as createGamethecaClient. */
+export const createOneirodexClient = createGamethecaClient
+
 export type GamethecaClient = ReturnType<typeof createGamethecaClient>
+export type OneirodexClient = GamethecaClient

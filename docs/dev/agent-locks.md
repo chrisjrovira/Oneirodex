@@ -40,15 +40,16 @@ Prioritize against this — every backlog item should advance at least one row, 
 
 **Public name: Oneirodex** (oh-NY-roh-dex) · slug `oneirodex` · [ADR 0003](../adr/0003-product-name-oneirodex.md).
 
-Write **Oneirodex** in UI, Help, README, and operator docs. Package path stays `gametheca/`. Compose/Unraid keep `gametheca-*` container names so existing installs keep working. Preferred Hub image once published: `chrisjrovira/oneirodex` (`chrisjrovira/gametheca` still accepted). GitHub is `chrisjrovira/oneirodex` (old URL redirects). `ONEIRODEX_*` env wins over `GT_*`; CSS `--od-*` aliases `--gt-*`. `.gt-*` classes and the Python package wait for phase 3b. Do not mix OneiroDex into copy. Env keys may be `ONEIRODEX_*`; that is not UI copy.
+Write **Oneirodex** in UI, Help, README, and operator docs. Remaining live `gametheca` identifiers after **P3b** (this wave): Python package `gametheca/`, `.gt-*` classes, `RESET GAMETHECA` alias, Postgres database name `gametheca` / pytest DB `gamethecatest`, sidecar profile containers (`gametheca-livekit`, …). Do not start the package path or `.gt-*` class move until that exclusive last wave. Compose defaults are `oneirodex-app` / `oneirodex-db` / `oneirodex:1.0.0-beta`. Preferred Hub image once published: `chrisjrovira/oneirodex` (`chrisjrovira/gametheca` still accepted until Hub cutover). GitHub is `chrisjrovira/oneirodex` (old URL redirects). Origin URL is `https://github.com/chrisjrovira/oneirodex.git`. `ONEIRODEX_*` env wins over `GT_*`; CSS `--od-*` aliases `--gt-*`. Do not mix OneiroDex into copy. Env keys may be `ONEIRODEX_*`; that is not UI copy. Do not rewrite git history for the old name.
 
 | Default | Value |
 |---|---|
 | Spelling | Oneirodex — one word, capital O. Not OneiroDex, not ONEIRODEX in UI |
 | Phase 1 | Oneirodex everywhere user-facing — **landed** |
-| Phase 2 | Ops dual names — `APP_IMAGE` / `APP_CONTAINER_NAME`; Hub `chrisjrovira/oneirodex` preferred; GitHub `chrisjrovira/oneirodex`; existing `gametheca-*` names still work |
+| Phase 2 | Ops dual names — `APP_IMAGE` / `APP_CONTAINER_NAME`; Hub `chrisjrovira/oneirodex` preferred; GitHub `chrisjrovira/oneirodex`; existing `gametheca-*` names still work as pins |
 | Phase 3a | `ONEIRODEX_*` / `GT_*` dual env; CSS `--od-*` aliases. Package `gametheca/` and `.gt-*` classes stay |
-| Identifiers left | Package path + `.gt-*` classes (phase 3b) |
+| Identifiers left | Package `gametheca/`, `.gt-*` classes, `RESET GAMETHECA` alias, Postgres DB name `gametheca` / pytest `gamethecatest`, sidecar `gametheca-livekit` etc. Git history is not rewritten |
+| P3b landed | Origin `oneirodex.git`; Compose defaults `oneirodex-app` / `oneirodex-db` / `oneirodex:1.0.0-beta`; npm `@oneirodex/api-client`; review containers `oneirodex-review-app` / `oneirodex-review-db` |
 | Danger zone | `RESET ONEIRODEX` (legacy `RESET GAMETHECA` still accepted) |
 | Env / CSS | Dual `ONEIRODEX_*` then `GT_*`. No `OD_*` env aliases |
 
@@ -109,7 +110,7 @@ Policy: [scrub-shipped-bundles.md](../runbooks/scrub-shipped-bundles.md) (SCRUB-
 | Repo | `Z:\_projects\Oneirodex` — a NAS mapping, so filesystem work is slow |
 | Unraid Compose | Same tree: `/mnt/user/infernal-data-streams/_projects/Oneirodex`. `/mnt/user/isos/gametheca/` is retired |
 | Games scan root | `/mnt/user/infernal-data-streams/_software/_games` (not the repo) |
-| Test database | `gametheca-review-db` (postgres:17.6, published on 5432) |
+| Test database | `oneirodex-review-db` (postgres:17.6, published on 5432). Pytest DB name stays `gamethecatest` (must contain `test`) |
 | Local dev port | `GT_PORT=6120` or `ONEIRODEX_PORT` — Windows reserves 5041–5140, so 5099 will not bind |
 | GPU (art gen) | This Windows box has an RTX 2080. The NAS does not. Use `docker-compose.artwork-local.yml` here — not the full Oneirodex stack, not Unraid `--profile artwork` |
 

@@ -1,4 +1,4 @@
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 from uuid import uuid4
 
 from flask import Blueprint
@@ -26,6 +26,7 @@ from gametheca.utils.discover_providers import (
     resolve_identifier,
 )
 from gametheca.utils.lifecycle import web_lifecycle_fields
+from gametheca.utils.game_details_payload import browse_trailer_fields
 from gametheca.utils.play_url import browse_play_fields, library_platform_key
 
 discover_bp = Blueprint('discover', __name__)
@@ -83,6 +84,7 @@ def serialize_discover_game(
         'library_platform_label': platform_label,
         'badge_title_collision': bool(platform_key),
         **browse_play_fields(game),
+        **browse_trailer_fields(game),
         **game_card_flags(game),
         **web_lifecycle_fields(
             game,
@@ -97,7 +99,7 @@ def serialize_discover_game(
 
 # Storefront seed shelves are derived, so an empty one is hidden rather than
 # rendered as a sad empty row (W25-STORE-1).
-STOREFRONT_SHELF_IDS = frozenset({'curated_for_you', 'upcoming'})
+STOREFRONT_SHELF_IDS = frozenset({'curated_for_you', 'upcoming', 'extras_missing'})
 
 # How far a row endpoint will page. Guards against a caller asking for an
 # arbitrary offset and making the server walk the whole library to answer.
@@ -113,12 +115,14 @@ FEED_MANIFEST_TTL_SECONDS = 1800
 def _more_href(row) -> str:
     """Where this row's "see all" tile goes.
 
-    One href shape leaves the server: every row points at its own page. That
-    page redirects to the Library when the row is expressible as a library
-    filter, so the routing rule lives in one place instead of being re-derived
-    by each caller.
+    Genre filter zones open the genre hub — the same tile in honest shelves —
+    rather than dumping straight into the catalog. Other library filters still
+    deep-link to Game Catalog. Everything else keeps its own row page.
     """
     if row.library_filter:
+        genre = row.library_filter.get('genre')
+        if genre:
+            return f'/discover/hub/genre/{quote(str(genre), safe="")}'
         return f'/library?{urlencode(row.library_filter)}'
     return f'/discover/{row.identifier}'
 
@@ -370,4 +374,16 @@ def inject_settings():
 @login_required
 def discover():
     # Shelves load client-side via GET /api/discover/sections (keeps HTML shell light).
+    return render_member_spa()
+
+
+@discover_bp.route('/discover/hub/genre/<path:genre>')
+@login_required
+def discover_genre_hub(genre):
+    return render_member_spa(title='Discover')
+
+
+@discover_bp.route('/discover/<identifier>')
+@login_required
+def discover_row_page(identifier):
     return render_member_spa()

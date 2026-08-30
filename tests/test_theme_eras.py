@@ -103,14 +103,21 @@ def test_admin_chrome_stacks_above_era_atmosphere():
     selectors = match.group(1)
     for needed in ('.gt-admin-main', '#admin-legacy-content'):
         assert needed in selectors, f'{needed} must stack above the atmosphere'
-    chrome = re.search(
-        r'(html\[data-era\][^{]+)\{[^}]*z-index:\s*2',
+    rail = re.search(
+        r'(html\[data-era\][^{]*\.gt-rail[^{]*)\{[^}]*z-index:\s*2',
         era,
         re.S,
     )
-    assert chrome, 'rail/topbar stacking rule with z-index: 2 is missing'
-    for needed in ('.gt-rail', '.gt-topbar'):
-        assert needed in chrome.group(1), f'{needed} must stack above the atmosphere'
+    assert rail, 'rail stacking rule with z-index: 2 is missing'
+    topbar = re.search(
+        r'(html\[data-era\][^{]*\.gt-topbar[^{]*)\{[^}]*z-index:\s*30',
+        era,
+        re.S,
+    )
+    assert topbar, 'topbar overlay stacking rule with z-index: 30 is missing'
+    assert 'html[data-era] .gt-shell:has(.game-card:hover) .gt-topbar' in era
+    assert 'html[data-era] .gt-shell:has(.game-card:has(:focus-visible))' not in era
+    assert 'z-index: 40' in era
     for flattened in ('#admin-app-root', '.gt-admin-shell'):
         assert flattened not in selectors, (
             f'{flattened} is display:contents; z-index there cannot lift chrome'

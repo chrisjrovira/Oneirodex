@@ -32,6 +32,46 @@ describe('SegmentedViews', () => {
     await user.click(screen.getByRole('button', { name: 'Soft titles' }))
     expect(onSelect).toHaveBeenCalledWith('soft')
   })
+
+  it('keeps layout options behind View until the trigger opens', async () => {
+    const onSelect = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <SegmentedViews
+        views={VIEWS}
+        active="all"
+        onSelect={() => {}}
+        unfurl={{
+          views: [
+            { id: 'tile', label: 'Tile' },
+            { id: 'rows', label: 'Rows' },
+            { id: 'grid', label: 'Grid' },
+          ],
+          active: 'tile',
+          onSelect,
+          triggerLabel: 'View',
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'View' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
+    expect(screen.queryByRole('button', { name: 'Rows' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'View' }))
+    expect(screen.getByRole('button', { name: 'View' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+    const unfurl = screen.getByRole('group', { name: 'View' })
+    expect(unfurl.className).toBe('gt-contextbar__views-unfurl')
+    expect(unfurl.className).not.toMatch(/\bgt-seg\b/)
+    await user.click(screen.getByRole('button', { name: 'Rows' }))
+    expect(onSelect).toHaveBeenCalledWith('rows')
+    expect(screen.queryByRole('button', { name: 'Rows' })).not.toBeInTheDocument()
+  })
 })
 
 describe('Popover', () => {

@@ -599,12 +599,14 @@ class TestPlatformIds:
         assert "PS5" in PLATFORM_IDS
         assert "XBOX" in PLATFORM_IDS
         assert "SNES" in PLATFORM_IDS
-        
+        assert "GBC" in PLATFORM_IDS
+
     def test_platform_ids_values(self):
         """Test specific PLATFORM_IDS values."""
         assert PLATFORM_IDS["PCWIN"] == 6
         assert PLATFORM_IDS["PS5"] == 167
         assert PLATFORM_IDS["XSX"] == 169
+        assert PLATFORM_IDS["GBC"] == 22
         assert PLATFORM_IDS["OTHER"] is None
 
 

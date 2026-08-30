@@ -3,11 +3,12 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { errorFromBody } from '../api/envelopeError'
 import { createRequest } from '../api/wishlist'
 import { ContextBar } from '../chrome/ContextBar'
+import { REGION_PREF_ORDER } from '../chrome/regions'
 import { PageStatus } from '../components/PageStatus'
 import './SystemsPage.css'
 import './SetCompletionPage.css'
 
-const REGIONS = ['USA', 'EUR', 'JPN', 'WORLD', 'OTHER']
+const REGIONS = REGION_PREF_ORDER
 
 async function fetchSetCompletion({ libraryPlatform, region, signal }) {
   const params = new URLSearchParams({
@@ -120,6 +121,12 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
         to={`/library?library_platform=${encodeURIComponent(libraryPlatform)}`}
       >
         Browse library
+      </Link>
+      <Link
+        className={useNewChrome ? 'gt-cbtn' : 'gt-btn'}
+        to={`/systems/catalog?library_platform=${encodeURIComponent(libraryPlatform)}`}
+      >
+        Licensed catalog
       </Link>
     </>
   ) : (

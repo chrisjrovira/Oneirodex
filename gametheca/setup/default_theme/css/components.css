@@ -90,15 +90,19 @@
     transform: scale(var(--gt-tile-hover-scale, 1.25));
     transform-origin: center center;
     z-index: 40;
+    /* Outline only while hovered / keyboard-focused — never a resting ring on
+       every tile, and never a sticky selection outline after the pointer leaves. */
+    outline: 2px solid color-mix(in srgb, var(--gt-accent) 80%, transparent);
+    outline-offset: 2px;
     box-shadow: 0 14px 28px var(--shadow-dark-strong);
-    transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
+    transition: transform 0.16s ease-out, box-shadow 0.16s ease-out, outline-color 0.16s ease-out;
 }
 
 /* Lift the wrapper too: a later sibling container would otherwise paint over
    the grown tile even when the card itself is at 40. Overlay-open stays above. */
 .game-card-container:has(.game-card:hover),
 .game-card-container:has(.game-card:focus-visible),
-.game-card-container:has(.game-card:has(:focus-visible)) {
+.game-card-container:has(.game-card :focus-visible) {
     z-index: 25;
 }
 
@@ -106,11 +110,10 @@
     z-index: 30;
 }
 
-/* Resting ring — themed, and rounded to match the tile it outlines.
-   On hover the scale is the marker; keep a quiet border rather than a glow. */
+/* Quiet cover edge at rest — accent outline is hover-only (rule above). */
 .game-card .game-cover,
 .game-card .gt-cover-fallback {
-    border-color: color-mix(in srgb, var(--gt-accent) 34%, var(--gt-border));
+    border-color: var(--gt-border, var(--game-border-gray));
     transition: border-color 0.16s ease-out;
 }
 
@@ -118,7 +121,7 @@
 .game-card:has(:focus-visible) .game-cover,
 .game-card:hover .gt-cover-fallback,
 .game-card:has(:focus-visible) .gt-cover-fallback {
-    border-color: color-mix(in srgb, var(--gt-accent) 55%, var(--gt-border));
+    border-color: transparent;
 }
 
 /* Menu open beats hover: the pointer has to leave the tile to reach the menu,

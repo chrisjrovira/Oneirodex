@@ -87,6 +87,7 @@ DEFAULT_ROOM = 'wood_den_80s'
 LCD_PLATFORMS: frozenset[str] = frozenset({
     'GB', 'GBC', 'GBA', 'NDS', 'N3DS', 'PSP', 'PSVITA',
     'LYNX', 'NGP', 'NGPC', 'WS', 'SUPERVISION', 'ADVISION', 'SEGA_GG',
+    'POKE_MINI',
 })
 
 PLATFORM_ROOMS: dict[str, str] = {
@@ -124,6 +125,7 @@ PLATFORM_ROOMS: dict[str, str] = {
     'SUPERVISION': 'teen_bedroom_90s',
     'ADVISION': 'teen_bedroom_90s',
     'VB': 'teen_bedroom_90s',
+    'SEGA_PICO': 'teen_bedroom_90s',
 
     # Late-90s carpet den / rec room
     'N64': 'carpet_den_late_90s',
@@ -134,6 +136,9 @@ PLATFORM_ROOMS: dict[str, str] = {
     'THREEDO': 'carpet_den_late_90s',
     'PCFX': 'carpet_den_late_90s',
     'PCE_CD': 'carpet_den_late_90s',
+    'JAGUAR_CD': 'carpet_den_late_90s',
+    'CD_I': 'carpet_den_late_90s',
+    'AMIGA_CD32': 'carpet_den_late_90s',
 
     # 2000s media centre (disc boxes + later handhelds)
     'PS2': 'media_center_00s',
@@ -142,6 +147,7 @@ PLATFORM_ROOMS: dict[str, str] = {
     'WII': 'media_center_00s',
     'SEGA_DC': 'media_center_00s',
     'SWITCH': 'media_center_00s',
+    'WII_U': 'media_center_00s',
     'XBOX': 'media_center_00s',
     'X360': 'media_center_00s',
     'XONE': 'media_center_00s',
@@ -151,6 +157,7 @@ PLATFORM_ROOMS: dict[str, str] = {
     'N3DS': 'media_center_00s',
     'PSP': 'media_center_00s',
     'PSVITA': 'media_center_00s',
+    'POKE_MINI': 'media_center_00s',
 
     # Coin-op and cabinet-derived hardware
     'ARCADE': 'arcade_cabinet',
@@ -169,6 +176,14 @@ PLATFORM_ROOMS: dict[str, str] = {
     'VICE_XVIC': 'desk',
     'VICE_XPLUS4': 'desk',
     'VICE_XPET': 'desk',
+    'MSX': 'desk',
+    'ZX_SPECTRUM': 'desk',
+    'CPC': 'desk',
+    'ATARI_ST': 'desk',
+    'APPLE_II': 'desk',
+    'ATARI_8BIT': 'desk',
+    'X68000': 'desk',
+    'PC_98': 'desk',
 }
 
 

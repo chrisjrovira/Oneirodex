@@ -16,6 +16,12 @@ _ROM_SUFFIXES = frozenset({
     '.ws', '.wsc', '.a26', '.a52', '.a78', '.lnx', '.col', '.int',
     '.iso', '.gcm', '.rvz', '.wbfs', '.wad', '.cue', '.chd', '.bin', '.img',
     '.pbp', '.cso', '.gdi', '.cdi', '.rom', '.nsp', '.xci', '.nsz', '.xcz',
+    '.min', '.wud', '.wux', '.wua', '.tzx', '.z80', '.mx1', '.mx2', '.cas', '.sna',
+    '.dsk', '.st', '.stx', '.tap',
+    '.atr', '.xfd', '.atx', '.xex', '.dim', '.xdf', '.hdm',
+    '.fdi', '.hdi', '.nhd', '.d88',
+    '.sg', '.sgx', '.sv', '.cpr', '.int', '.chf', '.adf', '.ipf',
+    '.d64', '.prg', '.crt',
     '.zip', '.7z', '.rar',
 })
 

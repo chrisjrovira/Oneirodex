@@ -3,6 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { LibraryApp } from './LibraryApp'
 
+afterEach(() => {
+  window.localStorage.removeItem('gt.library.layout')
+})
+
 function jsonResponse(body) {
   return Promise.resolve({
     ok: true,
@@ -420,6 +424,29 @@ test('sort defaults do not inflate the filter badge', async () => {
   const trigger = screen.getByRole('button', { name: /Filters/ })
   expect(trigger).not.toHaveClass('is-on')
   expect(trigger.textContent).not.toMatch(/\d/)
+})
+
+test('new chrome unfurls Tile Rows Grid under View on the kind bar', async () => {
+  const user = userEvent.setup()
+  window.localStorage.removeItem('gt.library.layout')
+  const { container } = renderNewChrome()
+  await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
+
+  expect(screen.getByRole('button', { name: 'View' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Tile' })).not.toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: 'View' }))
+  expect(screen.getByRole('button', { name: 'Tile' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Rows' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Grid' })).toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: 'Rows' }))
+  expect(container.querySelector('[data-library-grid]')).toHaveAttribute(
+    'data-layout',
+    'rows',
+  )
+  expect(window.localStorage.getItem('gt.library.layout')).toBe('rows')
+  expect(screen.queryByRole('button', { name: 'Rows' })).not.toBeInTheDocument()
 })
 
 test('failed first browse uses PageStatus with Retry', async () => {

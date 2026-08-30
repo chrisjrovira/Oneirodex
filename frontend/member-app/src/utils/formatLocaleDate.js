@@ -1,7 +1,7 @@
 /**
  * Format an ISO date string (or Date-like input) for the user's locale.
  * @param {string|number|Date|null|undefined} value
- * @param {{ fallback?: string, includeTime?: boolean }} [options]
+ * @param {{ fallback?: string, includeTime?: boolean, compact?: boolean }} [options]
  * @returns {string}
  */
 export function formatLocaleDate(value, options = {}) {
@@ -40,6 +40,13 @@ export function formatLocaleDate(value, options = {}) {
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
+    })
+  }
+
+  if (options.compact) {
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
     })
   }
 

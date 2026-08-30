@@ -115,6 +115,7 @@ what everyone else likes — and an admin can reorder or hide them like any othe
 | `continue_playing` | Titles the member played most recently | Exempt from cross-row dedupe: what you are actually playing belongs here whether or not it also appears elsewhere |
 | `friends_playing` | Titles accepted friends played recently | Privacy-gated, see below. Two friends on one title is one tile, dated by whoever played it last |
 | `game_updates` | Titles whose **update files** landed recently | Distinct from `last_updated`, which reads the `Game.last_updated` metadata timestamp |
+| `extras_missing` | Engaged titles whose catalogued extras are **not on the vault** | Played or favourited only — never stats the whole library. Hidden when empty. No sale chrome. Seeded on next init (`display_order` `-15`) |
 | `news` | Announcements and live free-game offers | Carries articles, not games — see [Row kinds](#row-kinds) |
 
 Every one of these states **why it is there** under the row title. That line is
@@ -167,8 +168,11 @@ Where that tile goes depends on the shelf:
 
 | Shelf | Destination |
 |---|---|
-| Filter zone on `genre` or `platform` | `/library?genre=…` — the Library page already parses these, so the member lands on a real filtered view |
+| Filter zone on `genre` | `/discover/hub/genre/…` — unplayed / newly added / loved shelves for that genre; **Browse the catalog** is still the full list |
+| Filter zone on `platform` | `/library?library_platform=…` — the catalog already parses this |
 | Everything else | `/discover/<identifier>` — a paginated page for that shelf alone |
+
+A **genre hub** is not an admin `DiscoverySection`. `GET /api/discover/hubs/genre/<name>` builds the rows on the fly (404 if the genre name is unknown). Empty hub shelves are omitted. Hub rows cannot be pinned or hidden.
 
 A library-filtered zone deliberately does **not** deep-link: the Library page has
 no library-scoped URL filter, so the link would silently show everything.

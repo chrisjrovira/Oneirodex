@@ -53,7 +53,10 @@ def test_fetch_epic_parses_promotions(monkeypatch):
                             'id': 'epic-1',
                             'productSlug': 'free-epic-title',
                             'description': 'A free game',
-                            'keyImages': [{'type': 'OfferImageWide', 'url': 'https://img.example/e.jpg'}],
+                            'keyImages': [
+                                {'type': 'OfferImageWide', 'url': 'https://img.example/e-wide.jpg'},
+                                {'type': 'OfferImageTall', 'url': 'https://img.example/e-tall.jpg'},
+                            ],
                             'promotions': {
                                 'promotionalOffers': [
                                     {
@@ -87,6 +90,8 @@ def test_fetch_epic_parses_promotions(monkeypatch):
     assert rows[0]['store'] == 'epic'
     assert rows[0]['title'] == 'Free Epic Title'
     assert 'free-epic-title' in rows[0]['claim_url']
+    # Discover tiles are 2×3 — tall key art wins over the wide banner.
+    assert rows[0]['image_url'] == 'https://img.example/e-tall.jpg'
 
 
 def test_fetch_gamerpower_filters_games(monkeypatch):
@@ -99,7 +104,8 @@ def test_fetch_gamerpower_filters_games(monkeypatch):
             'open_giveaway_url': 'https://example.com/claim/gog',
             'description': 'Grab it',
             'worth': '$19.99',
-            'thumbnail': 'https://img.example/g.png',
+            'thumbnail': 'https://img.example/g-thumb.png',
+            'image': 'https://img.example/g-full.png',
             'end_date': '2026-08-01 00:00:00',
         },
         {
@@ -118,6 +124,7 @@ def test_fetch_gamerpower_filters_games(monkeypatch):
     assert rows[0]['store'] == 'gog'
     assert rows[0]['external_id'] == 'gp-10'
     assert rows[0]['source'] == 'gamerpower'
+    assert rows[0]['image_url'] == 'https://img.example/g-full.png'
 
 
 def test_fetch_steam_100_percent_discount(monkeypatch):

@@ -69,6 +69,24 @@
       <p class="text-muted small mt-1" id="rehash-status"></p>
     </div>
 
+    <div class="mb-4">
+      <label class="form-label">Refresh licensed catalog (IGDB release dates)</label>
+      <p class="text-muted small">
+        One platform per click. Counts main games IGDB lists with a regional
+        release date — not Wikipedia and not a DAT. Empty cache means not
+        fetched yet. Windows / Steam libraries are not in this report.
+      </p>
+      <div class="d-flex gap-2 flex-wrap">
+        <select class="form-select w-auto" id="catalog-refresh-platform">
+          {% for p in catalog_platforms %}
+          <option value="{{ p.id }}">{{ p.label }} ({{ p.id }})</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline-secondary" type="button" id="catalog-refresh-btn">Refresh catalog</button>
+      </div>
+      <p class="text-muted small mt-1" id="catalog-refresh-status"></p>
+    </div>
+
     <h2>Installed sets ({{ sets|length }})</h2>
     {% if not sets %}
     <p>No reference sets yet.</p>

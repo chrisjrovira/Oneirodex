@@ -54,10 +54,10 @@ docs/
 | Surface | Value |
 |---|---|
 | Product (shipped today) | Oneirodex (public string) |
-| Ops / code identifiers | Phase 3a dual env (`ONEIRODEX_*` / `GT_*`) + CSS `--od-*`; package / `.gt-*` still `gametheca` — [ADR 0003](adr/0003-product-name-oneirodex.md) |
+| Ops / code identifiers | P3b: Compose defaults `oneirodex-*`; npm `@oneirodex/api-client`. Package / `.gt-*` still `gametheca` — [ADR 0003](adr/0003-product-name-oneirodex.md) |
 | Version | 1.0.0-beta |
 | GitHub | chrisjrovira/oneirodex |
-| App / DB containers | gametheca-app · gametheca-db |
+| App / DB containers | oneirodex-app · oneirodex-db |
 | Optional voice | gametheca-livekit (`--profile livekit`) |
 | Python package | gametheca |
 | Default accent | `#2fd67b` (Style B+C glass) |

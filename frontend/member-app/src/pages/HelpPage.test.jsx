@@ -131,4 +131,5 @@ test('names Oneirodex and documents every play mode, not only NES', async () => 
   expect(screen.getByText(/PS5 and Xbox Series stay catalog-only/)).toBeInTheDocument()
   expect(screen.getByText(/one tile per title/i)).toBeInTheDocument()
   expect(screen.getByText(/Set completeness/)).toBeInTheDocument()
+  expect(screen.getByText(/Licensed catalog/)).toBeInTheDocument()
 })

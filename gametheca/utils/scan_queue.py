@@ -616,6 +616,21 @@ def drain_scan_queue(app=None) -> ScanJob | None:
         return None
 
 
+def maybe_drain_scan_queue(app=None) -> ScanJob | None:
+    """Safety drain for status / Ops polls — skip while a scan is busy.
+
+    Admin Libraries & scans polls ``GET /api/scan_jobs_status`` every few
+    seconds, and Ops hits this on its ~15s summary. Running reclaim+promote on
+    every tick SELECT/UPDATEs ``scan_jobs`` against the live worker and is what
+    made the admin UI freeze for tens of minutes on Unraid. The scheduler still
+    drains ~60s. Idle+Queued still drains here so a missed promote recovers
+    without waiting a minute.
+    """
+    if is_scan_busy():
+        return None
+    return drain_scan_queue(app)
+
+
 def enqueue_library_refresh_jobs(libraries_with_folders: list[dict]) -> dict:
     """Create Queued ScanJobs for refresh-all when a scan is already busy.
 

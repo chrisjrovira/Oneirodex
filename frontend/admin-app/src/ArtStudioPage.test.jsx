@@ -47,6 +47,11 @@ test('Art studio tabs switch Studio and Pick & queue', async () => {
   global.fetch = mockFetch({
     '/admin/api/image_queue_list': { images: [], pagination: {} },
     '/admin/api/art-studio/stock': { items: [] },
+    '/admin/api/art-studio/system-marks/lab': {
+      prompt: 'product icon of grey Nintendo NES',
+      url: '/static/library/system-marks/default/nes.webp',
+      exists: false,
+    },
     '/admin/api/art-studio/system-marks': { items: [], count: 0 },
     '/api/get_libraries': [],
     '/api/library_platforms': [],

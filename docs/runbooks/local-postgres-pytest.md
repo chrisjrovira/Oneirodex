@@ -8,12 +8,12 @@ stays local/release — see release-checklist.md.
 
 ## Start the database
 
-The container that serves the test database is **`gametheca-review-db`**
+The container that serves the test database is **`oneirodex-review-db`**
 (`docker-compose.review.yml`, postgres:17.6). It publishes 5432 precisely so
 local pytest keeps working while that stack is up.
 
 ```bash
-docker start gametheca-review-db
+docker start oneirodex-review-db
 ```
 
 First time, or after the container has been removed:
@@ -23,7 +23,7 @@ docker compose -f docker-compose.review.yml up -d db
 ```
 
 ```bash
-docker exec gametheca-review-db psql -U postgres -c "CREATE DATABASE gamethecatest;"
+docker exec oneirodex-review-db psql -U postgres -c "CREATE DATABASE gamethecatest;"
 ```
 
 Required in `.env`:

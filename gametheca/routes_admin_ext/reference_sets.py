@@ -5,10 +5,11 @@ from __future__ import annotations
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
-from gametheca.platform import LibraryPlatform
+from gametheca.platform import LibraryPlatform, NATIVE_PC_PLATFORMS
 from gametheca.utils.auth import admin_required
+from gametheca.utils.functions import igdb_platform_id_for
 from gametheca.utils.set_completion import (
-    VALID_REGIONS,
+    REGION_PREF_ORDER,
     VALID_SOURCES,
     delete_reference_set,
     list_reference_sets,
@@ -71,10 +72,16 @@ def reference_sets_admin():
         [{'id': p.name, 'label': p.value} for p in LibraryPlatform],
         key=lambda row: row['label'].lower(),
     )
+    catalog_platforms = [
+        p
+        for p in platforms
+        if p['id'] not in NATIVE_PC_PLATFORMS and igdb_platform_id_for(p['id']) is not None
+    ]
     return render_template(
         'admin/admin_reference_sets.html',
         sets=list_reference_sets(),
         platforms=platforms,
-        regions=sorted(VALID_REGIONS),
+        catalog_platforms=catalog_platforms,
+        regions=list(REGION_PREF_ORDER),
         sources=sorted(VALID_SOURCES),
     )

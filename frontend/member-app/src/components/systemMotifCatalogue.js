@@ -77,9 +77,23 @@ export const SYSTEM_MOTIFS = [
   { id: 'actionmax', name: "WoW Action Max", family: 'Other systems', archetype: 'cart', variant: 4 },
   { id: 'daphne', name: "Daphne (laserdisc)", family: 'Other systems', archetype: 'cart', variant: 0 },
   { id: 'pinball', name: "Pinball (Future Pinball / VP)", family: 'Other systems', archetype: 'cart', variant: 0 },
+  { id: 'wii_u', name: "Nintendo Wii U", family: 'Nintendo', archetype: 'pad', variant: 1 },
+  { id: 'poke_mini', name: "Pok\u00e9mon Mini", family: 'Nintendo handheld', archetype: 'handheld', variant: 1 },
+  { id: 'cd_i', name: "Philips CD-i", family: 'Disc era', archetype: 'disc', variant: 3 },
+  { id: 'sega_pico', name: "Sega Pico", family: 'Sega', archetype: 'console', variant: 2 },
+  { id: 'jaguar_cd', name: "Atari Jaguar CD", family: 'Disc era', archetype: 'disc', variant: 4 },
+  { id: 'amiga_cd32', name: "Commodore Amiga CD32", family: 'Disc era', archetype: 'disc', variant: 0 },
+  { id: 'msx', name: "MSX", family: 'Home computer', archetype: 'computer', variant: 2 },
+  { id: 'zx_spectrum', name: "ZX Spectrum", family: 'Home computer', archetype: 'computer', variant: 2 },
+  { id: 'cpc', name: "Amstrad CPC", family: 'Home computer', archetype: 'computer', variant: 4 },
+  { id: 'atari_st', name: "Atari ST", family: 'Home computer', archetype: 'computer', variant: 3 },
+  { id: 'apple_ii', name: "Apple II", family: 'Home computer', archetype: 'computer', variant: 1 },
+  { id: 'atari_8bit', name: "Atari 8-bit", family: 'Home computer', archetype: 'computer', variant: 3 },
+  { id: 'x68000', name: "Sharp X68000", family: 'Home computer', archetype: 'computer', variant: 2 },
+  { id: 'pc_98', name: "NEC PC-98", family: 'Home computer', archetype: 'computer', variant: 5 },
 ]
 
-/** Grouped by family - a flat 72-row list is not a usable picker. */
+/** Grouped by family - a flat 86-row list is not a usable picker. */
 export const SYSTEM_MOTIF_FAMILIES = SYSTEM_MOTIFS.reduce((acc, motif) => {
   ;(acc[motif.family] ||= []).push(motif)
   return acc

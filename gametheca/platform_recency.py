@@ -60,6 +60,7 @@ PLATFORM_LAUNCH_YEAR: dict[str, int] = {
     'NDS': 2004,
     'WII': 2006,
     'N3DS': 2011,
+    'WII_U': 2012,
     'SWITCH': 2017,
 
     # Sega
@@ -71,6 +72,7 @@ PLATFORM_LAUNCH_YEAR: dict[str, int] = {
     'SEGA_32X': 1994,
     'SEGA_SATURN': 1994,
     'SEGA_DC': 1998,
+    'SEGA_PICO': 1993,
 
     # Sony
     'PSX': 1994,
@@ -93,6 +95,7 @@ PLATFORM_LAUNCH_YEAR: dict[str, int] = {
     'ATARI_7800': 1986,
     'LYNX': 1989,
     'JAGUAR': 1993,
+    'JAGUAR_CD': 1995,
 
     # NEC / Hudson
     'PCE': 1987,
@@ -115,6 +118,15 @@ PLATFORM_LAUNCH_YEAR: dict[str, int] = {
     'VICE_X64SC': 1982,
     'VICE_XPLUS4': 1984,
     'AMIGA': 1985,
+    'AMIGA_CD32': 1993,
+    'APPLE_II': 1977,
+    'ATARI_8BIT': 1979,
+    'ZX_SPECTRUM': 1982,
+    'MSX': 1983,
+    'CPC': 1984,
+    'ATARI_ST': 1985,
+    'PC_98': 1982,
+    'X68000': 1987,
     'VICE_X128': 1985,
     'GX4000': 1990,
 
@@ -131,6 +143,8 @@ PLATFORM_LAUNCH_YEAR: dict[str, int] = {
     'ADVISION': 1982,
     'SUPERVISION': 1992,
     'THREEDO': 1993,
+    'CD_I': 1991,
+    'POKE_MINI': 2001,
     'ACTIONMAX': 1987,
 
     # Originals rather than ports — see the docstring.

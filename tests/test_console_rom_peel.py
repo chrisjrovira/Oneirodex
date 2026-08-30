@@ -782,6 +782,7 @@ def test_be_det8_tgdb_aes_never_matches_cd():
     assert tgdb_platform_matches(['NeoGeo CD'], 'NEOGEO_CD')
     assert not tgdb_platform_matches(['Neo Geo AES'], 'NEOGEO_CD')
     assert not tgdb_platform_matches(['Neo Geo'], 'NEOGEO_CD')
+    assert not tgdb_platform_matches(['Neo Geo Pocket'], 'NEOGEO')
 
     hits = [
         {'name': 'Metal Slug', 'platforms': ['Neo Geo AES']},

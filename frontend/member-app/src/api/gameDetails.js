@@ -12,6 +12,17 @@ export async function fetchGameDetails(gameUuid, { signal } = {}) {
   return response.json().catch(() => ({}))
 }
 
+export async function fetchGameMoreFrom(gameUuid, { signal } = {}) {
+  const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/more_from`, {
+    signal,
+    credentials: 'same-origin',
+  })
+  if (!response.ok) {
+    throw await errorFromResponse(response, 'more from')
+  }
+  return response.json().catch(() => ({ sections: [] }))
+}
+
 export async function fetchGameVersions(gameUuid, { signal } = {}) {
   const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/versions`, {
     signal,

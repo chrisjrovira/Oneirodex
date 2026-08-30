@@ -6,7 +6,7 @@
  * WebRetro cannot load arbitrary PC mods — companion-only apply path.
  */
 
-import { formatBearerAuthorization } from '@gametheca/api-client'
+import { formatBearerAuthorization } from '@oneirodex/api-client'
 import { invoke } from '@tauri-apps/api/core'
 
 import type { AuthStore } from './auth.js'

@@ -21,7 +21,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.55rem 0.85rem;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.35rem;
   padding: 0.45rem 0.7rem;
   border-radius: var(--gt-radius-lg);
   border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
@@ -29,6 +29,11 @@
   backdrop-filter: blur(10px);
   box-shadow: 0 6px 18px color-mix(in srgb, var(--gt-bg) 55%, transparent);
 }
+
+/* Shell top-pad while this bar is up lives in gt-shell.css
+   (`#main-content.gt-shell__main:has(.gt-library-selection)`). A SPA
+   override lost to the theme's `.gt-shell > #content` ID + physical
+   `padding` shorthand. */
 
 .gt-library-selection__count {
   font-size: var(--gt-font-sm);
@@ -184,13 +189,15 @@
   background-position: center;
 }
 
+/* Selection is the checkbox, not a sticky outline. Outline belongs to hover /
+   keyboard focus only (theme `.game-card:hover`). A selected-but-idle tile
+   must look like every other resting tile. */
 .game-card-container.is-selected .game-card {
-  outline: 2px solid color-mix(in srgb, var(--gt-accent) 80%, transparent);
-  outline-offset: 2px;
+  outline: none;
 }
 
 .game-card-container.is-selected .game-cover {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gt-accent) 40%, transparent);
+  box-shadow: 0 4px 12px var(--shadow-dark-strong, rgba(0, 0, 0, 0.55));
 }
 
 @media (max-width: 900px) {

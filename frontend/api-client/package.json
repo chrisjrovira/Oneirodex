@@ -1,8 +1,8 @@
 {
-  "name": "@gametheca/api-client",
+  "name": "@oneirodex/api-client",
   "version": "0.1.0",
   "private": true,
-  "description": "Minimal typed fetch client for GameTheca OpenAPI endpoints",
+  "description": "Minimal typed fetch client for Oneirodex OpenAPI endpoints",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"

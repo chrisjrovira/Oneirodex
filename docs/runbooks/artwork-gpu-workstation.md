@@ -1,6 +1,17 @@
 # SD.Next on a Windows GPU box — not the NAS, not the full stack
 
-The Unraid/NAS Compose file **never** requests a GPU. Art generation wants one. This household’s accelerator is an **RTX 2080 on the Windows workstation** (the machine that also runs Cursor). Do **not** `compose up` the Oneirodex app/db stack on that PC just to draw covers.
+The Unraid/NAS Compose file **never** requests a GPU. Art generation wants one. This household’s accelerator is an **RTX 2080 (8 GB) on the Windows workstation** (the machine that also runs Cursor). Do **not** `compose up` the Oneirodex app/db stack on that PC just to draw covers. Do **not** batch FLUX.1 on this card — 8 GB is too tight; keep FLUX for a 4080-class box.
+
+## Stability Matrix + SwarmUI (this GPU PC)
+
+Installed under `C:\Users\cephyrix_zyth\Apps` (not the NAS checkout):
+
+| Tool | Path | Notes |
+|---|---|---|
+| **Stability Matrix** | `C:\Users\cephyrix_zyth\Apps\StabilityMatrix\StabilityMatrix.exe` | Portable zip from [LykosAI/StabilityMatrix](https://github.com/LykosAI/StabilityMatrix/releases/latest). Use **Package Manager → SwarmUI** for the supported install. |
+| **SwarmUI** (source) | `C:\Users\cephyrix_zyth\Apps\SwarmUI` | `git clone` + `launch-windows.bat` (http://127.0.0.1:7801). First run downloads Comfy + a starter checkpoint — do not pull FLUX fp8 here. |
+
+Oneirodex Art Studio still talks **A1111-compatible** `/sdapi/v1/txt2img`. Keep the SD.Next sidecar on **:7860** as `AI_ARTWORK_URL` until SwarmUI is wired as an engine (not this wave).
 
 Use the sidecar file at the repo root:
 
@@ -96,7 +107,7 @@ The backend only POSTs `/sdapi/v1/txt2img`. Nothing leaves the network.
 
 ```powershell
 python scripts/fetch-free-roms.py --out $env:TEMP\oneirodex-free-roms
-# docker cp each platform folder into gametheca-review-app:/storage/<platform>
+# docker cp each platform folder into oneirodex-review-app:/storage/<platform>
 # Admin → create libraries → POST /api/admin/libraries/scan {scan_mode: files, folder}
 # Homebrew/test ROMs land in Unmatched — mark as game, then:
 # POST /admin/api/artwork/generate { game_uuid, image_type: cover }
@@ -109,7 +120,7 @@ python scripts/fetch-free-roms.py --out $env:TEMP\oneirodex-free-roms
 | Rail / Preferences **glyphs** | SVG under `gametheca/setup/icon_themes/{pack}/icons/` — `currentColor`, not photos |
 | Pack **preview** rasters | `preview.png` in each pack (art-direction samples; chips still use SVG) |
 | Game **covers** | Art Studio → this SD.Next URL |
-| **Systems hub marks** | Art Studio → **System marks** tab (`#marks`), or `python scripts/generate_system_marks.py --all` / `POST /admin/api/art-studio/system-marks/generate` → `static/library/system-marks/<theme>/<platform>.webp`. Full-color, one per platform × preset theme. Prompts name distinctive hardware (console/handheld shape); generates at 512 then saves 256 WebP. Idempotent; use `--force` (or the tab’s force redo) to overwrite weak/abstract runs. Prefer `--limit` until quality is accepted. |
+| **Systems hub marks** | Art Studio → **System marks** tab (`#marks`) **Lab** (one platform, editable prompt, preview + attempt log), or `python scripts/generate_system_marks.py --theme default --platform nes`. Batch: `POST /admin/api/art-studio/system-marks/generate`. Files: `static/library/system-marks/<theme>/<platform>.webp`. Prefer the lab until quality is accepted; do not `--all --force`. |
 
 Smoke one mark:
 

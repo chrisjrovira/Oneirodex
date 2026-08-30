@@ -39,9 +39,15 @@ def test_no_rank_for_a_platform_that_no_longer_exists():
 def test_newer_hardware_outranks_older_within_a_family():
     assert platform_rank('SNES') > platform_rank('NES')
     assert platform_rank('GBA') > platform_rank('SNES')
-    assert platform_rank('SWITCH') > platform_rank('WII')
+    assert platform_rank('SWITCH') > platform_rank('WII_U') > platform_rank('WII')
     assert platform_rank('PS5') > platform_rank('PS4') > platform_rank('PSX')
     assert platform_rank('XSX') > platform_rank('X360') > platform_rank('XBOX')
+    assert platform_rank('APPLE_II') < platform_rank('ZX_SPECTRUM')
+    assert platform_rank('ZX_SPECTRUM') < platform_rank('MSX') < platform_rank('CPC')
+    assert platform_rank('GX4000') > platform_rank('CPC')
+    assert platform_rank('ATARI_ST') < platform_rank('JAGUAR')
+    assert platform_rank('ATARI_2600') < platform_rank('ATARI_8BIT') < platform_rank('ATARI_ST')
+    assert platform_rank('PC_98') < platform_rank('X68000')
 
 
 def test_the_example_that_was_asked_for():

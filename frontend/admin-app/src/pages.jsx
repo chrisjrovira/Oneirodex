@@ -18,6 +18,7 @@ import {
 } from './scanQueuePolicy'
 import { useLibraryRefreshAll } from './useLibraryRefreshAll'
 import { useLibraryScan } from './useLibraryScan'
+import { useVisibilityPoll } from './useVisibilityPoll'
 import { showToast } from './utils/toast'
 import {
   MeterBar,
@@ -39,8 +40,8 @@ import {
   scansActiveTone,
 } from './opsWidgets'
 
-async function getJson(url) {
-  const response = await fetch(url, { credentials: 'same-origin' })
+async function getJson(url, { signal } = {}) {
+  const response = await fetch(url, { credentials: 'same-origin', signal })
   if (response.status === 401) {
     window.location.href = '/login'
     throw new Error('unauthorized')
@@ -108,7 +109,7 @@ export function DashboardPage() {
     const id = requestRef.current.id + 1
     requestRef.current = { id, controller }
     if (isManual) setManualRefreshing(true)
-    getJson('/admin/api/ops/summary')
+    getJson('/admin/api/ops/summary', { signal: controller.signal })
       .then((data) => {
         if (requestRef.current.id !== id || controller.signal.aborted) return
         setSummary(data)
@@ -129,9 +130,18 @@ export function DashboardPage() {
 
   useEffect(() => {
     refresh('boot')
-    const timer = window.setInterval(() => refresh('poll'), 15000)
+    const tick = () => {
+      if (document.hidden) return
+      refresh('poll')
+    }
+    const timer = window.setInterval(tick, 15000)
+    const onVis = () => {
+      if (!document.hidden) refresh('poll')
+    }
+    document.addEventListener('visibilitychange', onVis)
     return () => {
       window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVis)
       requestRef.current.controller?.abort()
     }
   }, [refresh])
@@ -899,27 +909,20 @@ export function ScansPage() {
     onConflictClose: onScanConflictClose,
   } = useLibraryScan()
 
-  useEffect(() => {
-    let cancelled = false
-    const load = () => {
-      getJson('/api/scan_jobs_status')
-        .then((data) => {
-          if (cancelled) return
-          setStatus(data)
-          setError(null)
-          setUpdatedAt(new Date())
-        })
-        .catch((err) => {
-          if (!cancelled) setError(err)
-        })
+  const hasSnapshotRef = useRef(false)
+
+  useVisibilityPoll(async ({ signal }) => {
+    try {
+      const data = await getJson('/api/scan_jobs_status', { signal })
+      setStatus(data)
+      setError(null)
+      setUpdatedAt(new Date())
+      hasSnapshotRef.current = true
+    } catch (err) {
+      if (err?.name === 'AbortError') return
+      if (!hasSnapshotRef.current) setError(err)
     }
-    load()
-    const timer = window.setInterval(load, 4000)
-    return () => {
-      cancelled = true
-      window.clearInterval(timer)
-    }
-  }, [])
+  }, 4000)
 
   const jobs = normalizeScanJobsList(status)
   // A bare `running` flag with no jobs behind it is a phantom scan (GT-B13).

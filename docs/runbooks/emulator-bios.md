@@ -92,7 +92,9 @@ is usually enough.
 ### Optional — improves accuracy, not required to boot
 
 These have a slot in the panel so you can see it exists, but the system plays
-without them, so a missing file here is not reported as blocking.
+without them, so a missing file here is not reported as blocking. Browse and
+details use the same rule (`firmware_play_state`) — an empty firmware volume
+must not grey NES / SNES / N64 / Genesis carts.
 
 | System | Files | Needed for |
 |---|---|---|

@@ -23,6 +23,7 @@ ROM_EXT_RE = re.compile(
     r'iso|gcm|rvz|wbfs|wad|cue|bin|chd|img|pbp|cso|gdi|cdi|'
     r'nsp|xci|nsz|xcz|a26|a52|a78|lnx|jag|j64|'
     r'pce|sgx|ngp|ngc|ws|wsc|adf|d64|tap|'
+    r'min|wud|wux|wua|tzx|z80|mx1|mx2|cas|sna|dsk|st|stx|atr|xfd|atx|xex|dim|xdf|hdm|fdi|hdi|nhd|d88|'
     r'rom|zip|7z|rar)$',
     re.IGNORECASE,
 )

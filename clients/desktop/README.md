@@ -15,7 +15,7 @@ Thin is not “coming later”: TC-2 shell is buildable today. See [thin-client.
 |---|---|
 | Shell | [Tauri 2](https://tauri.app/) |
 | UI | Vite + vanilla TypeScript |
-| API | `@gametheca/api-client` (`frontend/api-client`) |
+| API | `@oneirodex/api-client` (`frontend/api-client`) |
 
 ## Prerequisites
 

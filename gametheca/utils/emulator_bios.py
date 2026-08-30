@@ -119,6 +119,12 @@ PLATFORM_BIOS_OVERRIDES: dict[str, tuple[str, ...]] = {
     'SUPERGRAFX': (),
     # dolphin carries the GameCube IPL. The Wii does not use it.
     'WII': (),
+    # Optional accuracy files must not make the cartridge console look unready.
+    'NES': (),
+    'SNES': (),
+    'N64': (),
+    # Same core as MD carts; only the CD add-on is a hard BIOS gate for Play.
+    'SEGA_CD': ('bios_CD_U.bin', 'bios_CD_E.bin', 'bios_CD_J.bin'),
 }
 
 
@@ -179,6 +185,54 @@ def bios_status_for_platforms() -> list[dict[str, Any]]:
         })
     rows.sort(key=lambda r: (not r['blocking'], r['label']))
     return rows
+
+
+def firmware_play_state(platform_key: str | None, core: str | None) -> dict[str, Any]:
+    """Member Play honesty — block only when the system cannot boot.
+
+    Admin already scopes firmware with ``PLATFORM_BIOS_OVERRIDES`` and
+    ``BIOS_HARD_REQUIRED_CORES``. Browse used to treat every
+    ``BIOS_REQUIREMENTS`` row as a hard gate, so an empty firmware volume
+    greyed NES (optional ``disksys.rom``), SNES (DSP/CX4), N64 (64DD IPL),
+    and Genesis carts (Sega CD BIOS on the shared core).
+    """
+    empty = {
+        'bios_required': False,
+        'firmware_missing': False,
+        'required': [],
+        'present': [],
+        'missing': [],
+        'ready': True,
+    }
+    if not core:
+        return empty
+
+    if platform_key and platform_key in PLATFORM_BIOS_OVERRIDES:
+        needed = list(PLATFORM_BIOS_OVERRIDES[platform_key])
+        hard = bool(needed)
+    else:
+        needed = list(BIOS_REQUIREMENTS.get(core) or [])
+        hard = core in BIOS_HARD_REQUIRED_CORES
+
+    if not needed or not hard:
+        return empty
+
+    present_names = {
+        row['name'].lower()
+        for row in list_bios_files()
+        if row.get('loadable', True)
+    }
+    found = [name for name in needed if name.lower() in present_names]
+    missing = [name for name in needed if name.lower() not in present_names]
+    firmware_missing = len(found) == 0
+    return {
+        'bios_required': True,
+        'firmware_missing': firmware_missing,
+        'required': needed,
+        'present': found,
+        'missing': missing,
+        'ready': not firmware_missing,
+    }
 
 
 def bios_root() -> str:

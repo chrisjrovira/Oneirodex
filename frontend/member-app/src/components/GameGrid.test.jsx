@@ -80,7 +80,7 @@ test('library grid uses auto-fill so a lone tile stays tile-sized', () => {
   )
   expect(start).toBeGreaterThanOrEqual(0)
   const block = css.slice(start, css.indexOf('}', start))
-  expect(block).toMatch(/repeat\(auto-fill/)
+  expect(block).toMatch(/repeat\(\s*auto-fill/)
   expect(block).not.toMatch(/auto-fit/)
 })
 
@@ -159,4 +159,21 @@ test('hovered tiles grow from the centre, not an edge', () => {
   // throw getTotalSize off; bleed lives on the shell instead.
   const virtual = css.slice(css.indexOf('.game-library-container[data-library-virtual] {'))
   expect(virtual.slice(0, virtual.indexOf('}'))).not.toMatch(/padding-block-start/)
+})
+
+test('rows layout puts one title on each virtual row', () => {
+  render(<GameGrid games={makeGames(8)} layout="rows" showPlayStatus={false} isAdmin={false} />)
+  const root = document.querySelector('[data-library-grid]')
+  expect(root).toHaveAttribute('data-layout', 'rows')
+  document.querySelectorAll('.game-library-row').forEach((row) => {
+    expect(row.querySelectorAll('.game-card').length).toBe(1)
+  })
+  expect(screen.getByText('Game 1', { selector: '.game-card__row-title' })).toBeInTheDocument()
+})
+
+test('grid layout writes a denser column min than the slider', () => {
+  render(<GameGrid games={makeGames(4)} layout="grid" showPlayStatus={false} isAdmin={false} />)
+  const root = document.querySelector('[data-library-grid]')
+  expect(root).toHaveAttribute('data-layout', 'grid')
+  expect(root.style.getPropertyValue('--gt-catalog-col-min')).toMatch(/px$/)
 })

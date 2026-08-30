@@ -381,7 +381,7 @@
   gap: 0.75rem;
 }
 
-.gt-news__card {
+.gt-news .gt-news__card {
   min-width: 0;
   /* One height for every card, whatever the copy says.
    *
@@ -389,9 +389,18 @@
    * summary made one row deep and left the next one shallow — a wall of cards
    * that stepped up and down for no reason the reader could see. The clamps on
    * the title and summary below cap what the text can ask for, and this floor
-   * stops a headline with no summary and no artwork from asking for less. */
+   * stops a headline with no summary and no artwork from asking for less.
+   *
+   * Chrome reset beats MorePage.css `.gt-news__card`, which still styles leftover
+   * list cards from when News lived on More. The link owns the surface. */
   min-height: 23rem;
   display: flex;
+  padding: 0;
+  gap: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: inherit;
 }
 
 .gt-news__card-link {
@@ -415,15 +424,25 @@
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
 }
 
+/* Art fills the tile; source sits bottom-left and the date bottom-right on
+   the image. The title (and optional standfirst) caption under it, matching
+   Discover's NewsCard. */
+.gt-news__card-art-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 12rem;
+  width: 100%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
+}
+
 .gt-news__card-art {
   display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
-  /* 4:3, not 16:9 — the taller crop is most of where the extra card height
-     comes from, and it suits the portrait-ish thumbnails these feeds ship. */
-  aspect-ratio: 4 / 3;
-  flex: 0 0 auto;
+  height: 100%;
   object-fit: cover;
-  background: color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
 }
 
 /* A dead image URL keeps the frame and paints the empty treatment into it.
@@ -441,8 +460,6 @@
 }
 
 .gt-news__card-art--empty {
-  /* A <span>, so it has no intrinsic size — aspect-ratio needs a width to work
-     from and the block above gives it one. */
   background:
     linear-gradient(135deg,
       color-mix(in srgb, var(--gt-accent) 14%, transparent),
@@ -450,12 +467,43 @@
     color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
 }
 
+.gt-news__card-art-wrap .gt-news__card-badge,
+.gt-news__card-art-wrap .gt-news__card-when {
+  position: absolute;
+  bottom: 0.4rem;
+  z-index: 1;
+  font-size: var(--gt-font-xs);
+  font-weight: 650;
+  line-height: 1.2;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--gt-radius-sm);
+  color: var(--gt-text);
+  background: color-mix(in srgb, var(--gt-bg) 72%, transparent);
+  backdrop-filter: blur(4px);
+  max-width: calc(50% - 0.5rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gt-news__card-art-wrap .gt-news__card-badge {
+  left: 0.4rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gt-news__card-art-wrap .gt-news__card-when {
+  right: 0.4rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--gt-text) 92%, transparent);
+}
+
 .gt-news__card-body {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   padding: 0.7rem 0.8rem 0.75rem;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 
 /* Both clamps use the -webkit- prefixed box properties on purpose: the
@@ -481,15 +529,6 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
   overflow: hidden;
-}
-
-.gt-news__card .gt-news__meta {
-  margin-top: auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
 }
 
 .gt-news__source {

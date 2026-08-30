@@ -3,9 +3,12 @@ import {
   detailsDiscChips,
   extrasPanelModel,
   formatVersionSize,
+  isDirectVideoUrl,
   isVersionDownloadable,
   isVersionPathMissing,
+  mutedHoverTrailerSrc,
   parseVideoUrls,
+  prefersReducedMotion,
   showsRetroarchCheats,
   trailerEmbedUrls,
   youtubeDemoLink,
@@ -48,6 +51,22 @@ test('youtubeEmbed handles watch, short, and embed URLs', () => {
     'https://www.youtube.com/embed/abc123DEF',
   )
   expect(youtubeEmbed('https://example.com')).toBeNull()
+})
+
+test('mutedHoverTrailerSrc forces mute autoplay on YouTube embeds', () => {
+  const src = mutedHoverTrailerSrc('https://www.youtube.com/watch?v=abc123DEF')
+  expect(src).toContain('https://www.youtube.com/embed/abc123DEF')
+  expect(src).toContain('mute=1')
+  expect(src).toContain('autoplay=1')
+  expect(src).not.toContain('mute=0')
+})
+
+test('mutedHoverTrailerSrc passes through direct video files', () => {
+  expect(isDirectVideoUrl('https://cdn.example.com/t.mp4')).toBe(true)
+  expect(mutedHoverTrailerSrc('https://cdn.example.com/t.mp4')).toBe(
+    'https://cdn.example.com/t.mp4',
+  )
+  expect(prefersReducedMotion()).toBe(false)
 })
 
 test('trailerEmbedUrls prefers trailers[].embed_url over video_urls', () => {

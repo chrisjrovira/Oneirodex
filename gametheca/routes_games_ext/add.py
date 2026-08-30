@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from gametheca.forms import AddGameForm
 from gametheca.models import Game, Library, UnmatchedFolder, Category, Developer, Publisher
 from gametheca.utils.global_settings import global_settings_row
-from gametheca.utils.functions import read_first_nfo_content, PLATFORM_IDS, load_scanning_filter_patterns
+from gametheca.utils.functions import read_first_nfo_content, igdb_platform_id_for, load_scanning_filter_patterns
 from gametheca.utils.auth import admin_required
 from gametheca.utils.scanning import refresh_images_in_background
 from gametheca.utils.event_logging import log_system_event
@@ -77,7 +77,7 @@ def add_game_manual():
     if library:
         library_name = library.name
         platform_name = library.platform.name
-        platform_id = PLATFORM_IDS.get(library.platform.name)
+        platform_id = igdb_platform_id_for(library.platform)
     else:
         library_name = platform_name = ''
         platform_id = None

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { GamethecaApiError } from '@gametheca/api-client'
-import type { GamethecaClient } from '@gametheca/api-client'
+import { GamethecaApiError } from '@oneirodex/api-client'
+import type { GamethecaClient } from '@oneirodex/api-client'
 
 import {
   fetchLibraryPreview,

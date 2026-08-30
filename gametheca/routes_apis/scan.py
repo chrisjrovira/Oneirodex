@@ -13,12 +13,13 @@ from gametheca.utils.auth import admin_required, librarian_required
 from gametheca.utils.cover_url import resolve_game_cover_url
 from gametheca.utils.duplicate_check import explain_duplicate_match, folder_basename, should_mark_as_duplicate
 from gametheca.utils.event_logging import log_system_event
-from gametheca.utils.functions import PLATFORM_IDS
+from gametheca.utils.functions import igdb_platform_id_for
 from gametheca.utils.scan_job_timing import (
     compute_scan_job_timing,
     parse_scan_job_status_filter,
 )
 from gametheca.utils.scan_match_settings import resolve_scan_match_policy
+from gametheca.utils.scan_queue import maybe_drain_scan_queue, queue_position
 from . import apis_bp
 
 VALID_UNMATCHED_EXPORT_STATUSES = {'all', 'Unmatched', 'Duplicate', 'Ignore', 'Pending'}
@@ -248,7 +249,7 @@ def _unmatched_list_row(
         'library_uuid': getattr(folder, 'library_uuid', None),
         'library_name': library_name,
         'platform_name': platform.name if platform else '',
-        'platform_id': PLATFORM_IDS.get(platform.name) if platform else None,
+        'platform_id': igdb_platform_id_for(platform),
         'matched_game_uuid': matched_uuid,
         'match_reason': getattr(folder, 'match_reason', None),
         'match_score': getattr(folder, 'match_score', None),
@@ -600,11 +601,10 @@ def _scan_job_status_row(job, *, queue_position_fn=None) -> dict:
 @login_required
 @admin_required
 def scan_jobs_status():
-    from gametheca.utils.scan_queue import drain_scan_queue, queue_position
-
-    # Safety drain on status poll (admin UI ~2s) when idle+Queued stuck.
+    # Safety drain only when idle+Queued. A Running scan must not share this
+    # lock with a 3s admin poll — see maybe_drain_scan_queue.
     try:
-        drain_scan_queue(current_app._get_current_object())
+        maybe_drain_scan_queue(current_app._get_current_object())
     except Exception:
         pass
 

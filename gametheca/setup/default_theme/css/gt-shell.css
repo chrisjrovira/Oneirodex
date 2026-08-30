@@ -43,10 +43,12 @@
    * the longest one — and the token becomes a ceiling rather than a fixed size,
    * so a long translation still cannot run away with the layout. */
   grid-template-columns: fit-content(var(--gt-rail-w)) minmax(0, 1fr);
-  grid-template-rows: var(--gt-topbar-h) minmax(0, 1fr);
-  grid-template-areas:
-    'rail topbar'
-    'rail main';
+  /* One content row: the thin top bar overlays `.gt-shell__main` in the same
+     grid cell so a hovered tile can paint *over* the bar (z-index flip below).
+     Two stacked rows clipped the enlarge at the main/topbar boundary no matter
+     how high the card's z-index went. */
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: 'rail main';
   /* Viewport-locked, not page-height. As `min-height` the whole grid grew with
      the content, so the rail scrolled off the top and ran out into empty space
      below the last nav item. An app shell pins its chrome and scrolls only the
@@ -84,6 +86,7 @@
 .gt-shell > #content {
   grid-area: main;
   min-width: 0;
+  z-index: 1;
   /* The only scroll container in the shell. Chrome stays put; content moves. */
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -92,7 +95,16 @@
      one screen, and the top bar can reserve the same width and land on the same
      midpoint — see .gt-topbar. */
   scrollbar-gutter: stable;
-  padding: var(--gt-stack) var(--gt-gutter) var(--gt-section-gap);
+  /* Top bar overlays this pane — reserve its height so resting content starts
+     clear of Search / View / account. */
+  padding: calc(var(--gt-topbar-h) + var(--gt-stack)) var(--gt-gutter) var(--gt-section-gap);
+}
+
+/* Chat / surfaces that omit the top bar: drop the reserved strip. */
+.gt-shell:not(:has(> .gt-topbar)) .gt-shell__main,
+.gt-shell:not(:has(> .gt-topbar)) > #content {
+  padding-block-start: var(--gt-stack);
+  padding-top: var(--gt-stack);
 }
 
 /* Library (and any page with the cover grid): centred hover scale needs paint
@@ -108,8 +120,28 @@
   --gt-tile-hover-bleed-x: calc(
     var(--gt-tile-min, 180px) * (var(--gt-tile-hover-scale, 1.25) - 1) / 2
   );
-  padding-block-start: max(var(--gt-stack), var(--gt-tile-hover-bleed-y));
+  /* Top bar height + the larger of stack or hover bleed so the first row can
+     grow upward into the overlay and still clear Search when not hovered. */
+  padding-block-start: calc(
+    var(--gt-topbar-h) + max(var(--gt-stack), var(--gt-tile-hover-bleed-y))
+  );
+  padding-top: calc(
+    var(--gt-topbar-h) + max(var(--gt-stack), var(--gt-tile-hover-bleed-y))
+  );
   padding-inline: max(var(--gt-gutter), var(--gt-tile-hover-bleed-x));
+}
+
+/* Selection toolbar: keep the top-bar reserve, tuck the strip close under it,
+   and put the hover bleed on the grid so first-row enlarge still clears. */
+#main-content.gt-shell__main:has(.gt-library-selection),
+.gt-shell > #content:has(.gt-library-selection) {
+  padding-block-start: calc(var(--gt-topbar-h) + 0.15rem) !important;
+  padding-top: calc(var(--gt-topbar-h) + 0.15rem) !important;
+}
+
+#main-content.gt-shell__main:has(.gt-library-selection) .game-library-container,
+.gt-shell > #content:has(.gt-library-selection) .game-library-container {
+  padding-block-start: var(--gt-tile-hover-bleed-y, 0px);
 }
 
 /* News owns the remaining pane: lists scroll inside panels, the shell does not. */
@@ -153,10 +185,8 @@ body.gt-shell-host {
    * the longest one — and the token becomes a ceiling rather than a fixed size,
    * so a long translation still cannot run away with the layout. */
   grid-template-columns: fit-content(var(--gt-rail-w)) minmax(0, 1fr);
-  grid-template-rows: var(--gt-topbar-h) minmax(0, 1fr);
-  grid-template-areas:
-    'rail topbar'
-    'rail main';
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: 'rail main';
   /* Same viewport lock as .gt-shell — admin's grid host is the body, so it
      needs the rule too or the rail scrolls away on long tables. */
   height: 100dvh;
@@ -177,9 +207,10 @@ body.gt-shell-host > #admin-legacy-content,
 body.gt-shell-host .gt-admin-main {
   grid-area: main;
   min-width: 0;
+  z-index: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--gt-stack) var(--gt-gutter) var(--gt-section-gap);
+  padding: calc(var(--gt-topbar-h) + var(--gt-stack)) var(--gt-gutter) var(--gt-section-gap);
 }
 
 /* An empty legacy container still claims the grid area under `spa` render mode
@@ -192,9 +223,7 @@ body.gt-shell-host > #admin-legacy-content:empty {
   body.gt-shell-host,
   body.gt-shell-host[data-rail='collapsed'] {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'topbar'
-      'main';
+    grid-template-areas: 'main';
   }
 }
 
@@ -821,11 +850,19 @@ body.gt-shell-host > #admin-legacy-content:empty {
    buttons that do the same kind of job reading as two separate regions. The
    centre slot's flex-grow supplies the real separation between regions. */
 .gt-topbar {
-  grid-area: topbar;
+  /* Same cell as `.gt-shell__main` — overlays the scroll pane instead of
+     owning a separate grid row that would clip hovered tiles. */
+  grid-area: main;
+  align-self: start;
+  justify-self: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 30;
   display: flex;
   align-items: center;
   gap: var(--gt-space-2);
   min-width: 0;
+  min-height: var(--gt-topbar-h);
   padding-inline: var(--gt-gutter);
   /* The content pane below is the shell's only scroll container and it carries
      a 9px scrollbar; this bar does not. Two boxes of different widths have two
@@ -838,6 +875,42 @@ body.gt-shell-host > #admin-legacy-content:empty {
   padding-inline-end: calc(var(--gt-gutter) + var(--gt-scrollbar-w, 9px));
   background: color-mix(in srgb, var(--gt-surface) 88%, var(--gt-bg));
   border-bottom: 1px solid var(--gt-border);
+}
+
+/* Enlarged tiles must paint over the thin top bar. Lower the bar and raise the
+   scroll pane only while a card is hovered / keyboard-focused. */
+/* No nested :has() — Chromium drops the whole selector list if one entry is
+   invalid. Descendant `:focus-visible` covers keyboard focus inside a card. */
+.gt-shell:has(.game-card:hover) .gt-topbar,
+.gt-shell:has(.game-card:focus-visible) .gt-topbar,
+.gt-shell:has(.game-card :focus-visible) .gt-topbar,
+.gt-shell:has(.gt-news-card:hover) .gt-topbar,
+.gt-shell:has(.gt-news-card:focus-visible) .gt-topbar,
+body.gt-shell-host:has(.game-card:hover) .gt-topbar,
+body.gt-shell-host:has(.game-card:focus-visible) .gt-topbar,
+body.gt-shell-host:has(.game-card :focus-visible) .gt-topbar,
+body.gt-shell-host:has(.gt-news-card:hover) .gt-topbar,
+body.gt-shell-host:has(.gt-news-card:focus-visible) .gt-topbar {
+  z-index: 5;
+}
+
+.gt-shell:has(.game-card:hover) .gt-shell__main,
+.gt-shell:has(.game-card:focus-visible) .gt-shell__main,
+.gt-shell:has(.game-card :focus-visible) .gt-shell__main,
+.gt-shell:has(.gt-news-card:hover) .gt-shell__main,
+.gt-shell:has(.gt-news-card:focus-visible) .gt-shell__main,
+.gt-shell:has(.game-card:hover) > #content,
+.gt-shell:has(.game-card:focus-visible) > #content,
+.gt-shell:has(.game-card :focus-visible) > #content,
+.gt-shell:has(.gt-news-card:hover) > #content,
+.gt-shell:has(.gt-news-card:focus-visible) > #content,
+body.gt-shell-host:has(.game-card:hover) .gt-admin-main,
+body.gt-shell-host:has(.game-card:focus-visible) .gt-admin-main,
+body.gt-shell-host:has(.game-card :focus-visible) .gt-admin-main,
+body.gt-shell-host:has(.game-card:hover) > #admin-legacy-content,
+body.gt-shell-host:has(.game-card:focus-visible) > #admin-legacy-content,
+body.gt-shell-host:has(.game-card :focus-visible) > #admin-legacy-content {
+  z-index: 40;
 }
 
 /* Rail toggle + Filters as adjacent chromeless controls. The cluster must not
@@ -1097,9 +1170,7 @@ body.gt-shell-host > #admin-legacy-content:empty {
   .gt-shell,
   .gt-shell[data-rail='collapsed'] {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'topbar'
-      'main';
+    grid-template-areas: 'main';
   }
 
   .gt-rail {

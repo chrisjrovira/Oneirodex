@@ -34,6 +34,7 @@ import { PageStatus } from './components/PageStatus'
 import { PaginationBar } from './components/PaginationBar'
 import { createTranslator } from './i18n'
 import { batchItemUuids, summarizeBatchOutcome } from './utils/batchOutcome'
+import { CATALOG_LAYOUTS, useCatalogLayout } from './utils/catalogLayout'
 import { readLibraryFilters, writeLibraryFilters } from './utils/cookies'
 import { showToast } from './utils/toast'
 
@@ -64,6 +65,10 @@ function filtersFromSearchParams(searchParams) {
   if (libraryPlatform) {
     next.library_platform = libraryPlatform
   }
+  const playMode = searchParams.get('play_mode')
+  if (playMode) {
+    next.play_mode = playMode
+  }
   const genre = searchParams.get('genre')
   if (genre) {
     next.genre = genre
@@ -71,6 +76,14 @@ function filtersFromSearchParams(searchParams) {
   const theme = searchParams.get('theme')
   if (theme) {
     next.theme = theme
+  }
+  const gameMode = searchParams.get('game_mode')
+  if (gameMode) {
+    next.game_mode = gameMode
+  }
+  const perspective = searchParams.get('player_perspective')
+  if (perspective) {
+    next.player_perspective = perspective
   }
   const name = (searchParams.get('name') || searchParams.get('q') || '').trim()
   if (name) {
@@ -82,8 +95,11 @@ function filtersFromSearchParams(searchParams) {
 function searchParamsHaveLibraryFilters(searchParams) {
   if (
     searchParams.has('library_platform') ||
+    searchParams.has('play_mode') ||
     searchParams.has('genre') ||
     searchParams.has('theme') ||
+    searchParams.has('game_mode') ||
+    searchParams.has('player_perspective') ||
     searchParams.has('item_kind') ||
     searchParams.has('content_kind') ||
     searchParams.has('name') ||
@@ -113,6 +129,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(initialConfig.perPage)
+  const [layout, setLayout] = useCatalogLayout()
   const defaultFilters = {
     sort_by: initialConfig.defaultSort,
     sort_order: initialConfig.defaultSortOrder,
@@ -144,8 +161,11 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     setFilters((current) => {
       const same =
         current.library_platform === fromUrl.library_platform &&
+        current.play_mode === fromUrl.play_mode &&
         current.genre === fromUrl.genre &&
         current.theme === fromUrl.theme &&
+        current.game_mode === fromUrl.game_mode &&
+        current.player_perspective === fromUrl.player_perspective &&
         current.item_kind === fromUrl.item_kind &&
         current.name === fromUrl.name &&
         BADGE_FILTER_PARAMS.every((param) => current[param] === fromUrl[param])
@@ -526,6 +546,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     // Filtered to a system, a grouped tile names *that* system rather than the
     // newest one the title exists on — you are looking at that copy.
     activePlatform: filters.library_platform || '',
+    layout,
   }
 
   let content
@@ -541,7 +562,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   } else if (showSkeleton) {
     content = (
       <>
-        <GameGridSkeleton count={perPage} />
+          <GameGridSkeleton count={perPage} layout={layout} />
         <PaginationBar
           page={page}
           pages={1}
@@ -693,6 +714,15 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
               : null
           }
           t={t}
+          viewUnfurl={{
+            views: CATALOG_LAYOUTS.map((view) => ({
+              ...view,
+              label: t(view.label),
+            })),
+            active: layout,
+            onSelect: setLayout,
+            triggerLabel: t('View'),
+          }}
         />
         {/* No aside, no collapse rail, no page header — the grid gets the
             whole width, which is the visible payoff of the refresh. */}

@@ -6,7 +6,7 @@ Related: [library-and-systems.md](../user/library-and-systems.md)
 
 ## What it measures
 
-For a given `LibraryPlatform` (e.g. `NES`) and region (`USA`, `EUR`, `JPN`, `WORLD`, `OTHER`):
+For a given `LibraryPlatform` (e.g. `NES`) and region (`USA`, `EUR`, `JPN`, `BRA`, `KOR`, `AUS`, `GBR`, `FRA`, `DEU`, `ESP`, `CHN`, `WORLD`, `OTHER`):
 
 ```
 owned / total · percent
@@ -27,7 +27,7 @@ Admin → Integrations → **ROM reference sets (DAT)** (`/admin/reference_sets`
 | Field | Notes |
 |---|---|
 | Library platform | Same enum as Systems (`NES`, `SNES`, …) |
-| Region | `USA` / `EUR` / `JPN` / `WORLD` / `OTHER` |
+| Region | `USA` `EUR` `JPN` `BRA` `KOR` `AUS` `GBR` `FRA` `DEU` `ESP` `CHN` `WORLD` `OTHER`. `PAL` still stores as `EUR`. France/Germany/Spain/UK are for a regional DAT you upload — they are not IGDB `release_dates.region` values. |
 | Source | `nointro` / `redump` / `other` |
 | File | XML `datafile` or ClrMamePro text `.dat` |
 
@@ -48,10 +48,14 @@ curl -X POST -b cookies.txt \
 
 - **Systems** tiles show `owned / total · percent (REGION)` when a set exists.
 - **Missing** opens `/systems/completion?library_platform=NES&region=USA` with a wishlist button per missing title.
+- **Catalog** opens `/systems/catalog?library_platform=NES` — IGDB regional title counts from a cache an admin refreshes (one platform per click) on this same page. Empty cache is not “zero games ever made.” Native PC libraries are refused. Identify also fills cache rows when IGDB returns `release_dates`.
 
 ```bash
 curl -sS -b cookies.txt \
   "$BASE/api/set-completion?library_platform=NES&region=USA" | jq '.owned, .total, .missing_count'
+
+curl -sS -b cookies.txt \
+  "$BASE/api/licensed-catalog?library_platform=NES" | jq '.unique_titles, .empty, .by_region[:3]'
 ```
 
 ## Honesty limits
@@ -62,6 +66,7 @@ curl -sS -b cookies.txt \
 - Hashes prefer the on-disk file (or the single ROM-like file inside a folder). For **zip/7z/rar**, when the outer archive digest misses DAT, Oneirodex may open the archive and hash **inner** primary dump candidate(s) (`DAT_HASH_INNER_ARCHIVE`, default ON; set `0` to disable). Exactly one unique DAT title identifies; zero or multiple distinct titles → skip (no invent). Multi-disc / cue+bin / overcrowded set archives stay skip-safe.
 - Home-brew / unlicensed / proto entries may appear in some DATs — filter upstream if you want “retail only.”
 - PC Windows / store libraries are a poor fit; this feature targets ROM console libraries.
+- **Licensed catalog** is a separate IGDB cache (main games, `category = 0`). It does not paste Wikipedia totals into the product. Refresh is offered for every `LibraryPlatform` with a confirmed IGDB `platforms.id` except native PC. CreatiVision, Adventure Vision, Studio II, Action Max, Daphne, and Pinball have no confirmed id — they stay off that dropdown. Identify filters the same map (Game Boy Color is IGDB 22). Pico is IGDB **339**.
 
 ## Follow-ups
 

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { PageStatus } from './PageStatus'
-import { postJson } from './adminApi'
+import { getJson, postJson } from './adminApi'
 import { showToast } from './utils/toast'
 
 const CATALOG_URL = '/admin/api/art-studio/system-marks'
 const GENERATE_URL = '/admin/api/art-studio/system-marks/generate'
+const LAB_URL = '/admin/api/art-studio/system-marks/lab'
+const DEFAULT_LAB_PLATFORM = 'nes'
 
 /**
  * Normalize GET /admin/api/art-studio/system-marks → theme progress rows.
@@ -32,6 +34,20 @@ export function normalizeSystemMarksCatalog(data) {
     .filter(Boolean)
 }
 
+export function normalizePlatformChoices(data) {
+  const raw = Array.isArray(data) ? data : data?.all_platforms || []
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((row) => {
+      if (typeof row === 'string') return { id: row, label: row }
+      if (!row || typeof row !== 'object') return null
+      const id = String(row.id || row.platform || '').trim()
+      if (!id) return null
+      return { id, label: String(row.label || id) }
+    })
+    .filter(Boolean)
+}
+
 async function fetchCatalog() {
   const response = await fetch(CATALOG_URL, { credentials: 'same-origin' })
   if (response.status === 401) {
@@ -39,13 +55,17 @@ async function fetchCatalog() {
     throw new Error('unauthorized')
   }
   if (response.status === 404) {
-    return { unavailable: true, items: [] }
+    return { unavailable: true, items: [], allPlatforms: [] }
   }
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
     throw new Error(data.error || data.message || `system-marks catalog ${response.status}`)
   }
-  return { unavailable: false, items: normalizeSystemMarksCatalog(data) }
+  return {
+    unavailable: false,
+    items: normalizeSystemMarksCatalog(data),
+    allPlatforms: normalizePlatformChoices(data),
+  }
 }
 
 /**
@@ -54,12 +74,20 @@ async function fetchCatalog() {
  */
 export function SystemMarksPanel() {
   const [items, setItems] = useState([])
+  const [allPlatforms, setAllPlatforms] = useState([])
   const [unavailable, setUnavailable] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState('')
   const [status, setStatus] = useState('')
   const [selectedTheme, setSelectedTheme] = useState('')
+  const [labPlatform, setLabPlatform] = useState(DEFAULT_LAB_PLATFORM)
+  const [labPrompt, setLabPrompt] = useState('')
+  const [labDefaultPrompt, setLabDefaultPrompt] = useState('')
+  const [labExists, setLabExists] = useState(false)
+  const [labUrl, setLabUrl] = useState('')
+  const [labBust, setLabBust] = useState(0)
+  const [labLog, setLabLog] = useState([])
 
   const loadCatalog = useCallback(async () => {
     setLoading(true)
@@ -68,6 +96,7 @@ export function SystemMarksPanel() {
       const result = await fetchCatalog()
       setUnavailable(Boolean(result.unavailable))
       setItems(result.items)
+      setAllPlatforms(result.allPlatforms)
       if (result.unavailable) {
         setStatus('System marks API not available yet.')
       } else if (!result.items.length) {
@@ -93,6 +122,31 @@ export function SystemMarksPanel() {
   useEffect(() => {
     loadCatalog()
   }, [loadCatalog])
+
+  useEffect(() => {
+    if (!selectedTheme || !labPlatform) return undefined
+    let cancelled = false
+    getJson(`${LAB_URL}?theme=${encodeURIComponent(selectedTheme)}&platform=${encodeURIComponent(labPlatform)}`)
+      .then((spec) => {
+        if (cancelled) return
+        const prompt = String(spec.prompt || '')
+        setLabDefaultPrompt(prompt)
+        setLabPrompt(prompt)
+        setLabExists(Boolean(spec.exists))
+        setLabUrl(String(spec.url || ''))
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setLabDefaultPrompt('')
+        setLabPrompt('')
+        setLabExists(false)
+        setLabUrl('')
+        setError(err.message || 'Could not load lab spec')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedTheme, labPlatform])
 
   const runGenerate = useCallback(
     async ({ themes, force = false, limit = null } = {}) => {
@@ -124,7 +178,70 @@ export function SystemMarksPanel() {
     [loadCatalog],
   )
 
+  const runLabGenerate = useCallback(async () => {
+    if (!selectedTheme || !labPlatform) return
+    setBusy('lab')
+    setError('')
+    try {
+      const result = await postJson(GENERATE_URL, {
+        themes: [selectedTheme],
+        platforms: [labPlatform],
+        force: true,
+        prompt: labPrompt.trim() || undefined,
+      })
+      const generated = Number(result?.generated) || 0
+      const skipped = Number(result?.skipped) || 0
+      const errCount = Array.isArray(result?.errors) ? result.errors.length : 0
+      const firstErr = result?.errors?.[0]?.error
+      const label = firstErr
+        ? `Lab ${selectedTheme}/${labPlatform}: ${firstErr}`
+        : `Lab ${selectedTheme}/${labPlatform}: generated ${generated}, skipped ${skipped}`
+      setStatus(label)
+      showToast(label, errCount && !generated ? 'error' : 'success')
+      setLabLog((rows) =>
+        [
+          {
+            id: `${Date.now()}`,
+            theme: selectedTheme,
+            platform: labPlatform,
+            generated,
+            skipped,
+            error: firstErr || '',
+            prompt: labPrompt.trim(),
+          },
+          ...rows,
+        ].slice(0, 12),
+      )
+      setLabBust(Date.now())
+      setLabExists(generated > 0 || skipped > 0)
+      await loadCatalog()
+    } catch (err) {
+      const text = err.message || 'Lab generate failed'
+      setError(text)
+      showToast(text, 'error')
+      setLabLog((rows) =>
+        [
+          {
+            id: `${Date.now()}`,
+            theme: selectedTheme,
+            platform: labPlatform,
+            generated: 0,
+            skipped: 0,
+            error: text,
+            prompt: labPrompt.trim(),
+          },
+          ...rows,
+        ].slice(0, 12),
+      )
+    } finally {
+      setBusy('')
+    }
+  }, [selectedTheme, labPlatform, labPrompt, loadCatalog])
+
   const selected = items.find((row) => row.theme === selectedTheme) || null
+  const previewSrc = labUrl && (labExists || labBust)
+    ? `${labUrl}${labUrl.includes('?') ? '&' : '?'}v=${labBust || '1'}`
+    : ''
 
   return (
     <section className="gt-system-marks" aria-label="Systems hub marks" data-testid="system-marks-panel">
@@ -132,9 +249,11 @@ export function SystemMarksPanel() {
         <div>
           <h2 className="gt-admin-panel-title">Systems hub marks</h2>
           <p className="gt-admin-lede">
-            Full-color AI art per library platform × theme (256 WebP). Idempotent — existing files
-            are skipped unless you force. Needs <code>ENABLE_AI_ARTWORK</code> and{' '}
-            <code>AI_ARTWORK_URL</code>. CLI: <code>python scripts/generate_system_marks.py --all</code>.
+            Full-color AI art per library platform × theme (256 WebP). The lab
+            below generates <strong>one</strong> pair so you can judge quality
+            before a batch. Idempotent fills skip existing files unless you
+            force. Needs <code>ENABLE_AI_ARTWORK</code> and{' '}
+            <code>AI_ARTWORK_URL</code>.
           </p>
         </div>
         <button
@@ -198,6 +317,86 @@ export function SystemMarksPanel() {
               )
             })}
           </div>
+
+          <section className="gt-system-marks-lab" data-testid="system-marks-lab" aria-label="System mark lab">
+            <h3 className="gt-admin-panel-title">Lab — one mark</h3>
+            <p className="gt-admin-lede">
+              Pick a theme (list above) and a platform, edit the prompt if you
+              want, then generate. The attempt log stays on this page so a
+              watching session can see what you tried.
+            </p>
+            <div className="gt-system-marks-lab__grid">
+              <label className="gt-system-marks-lab__field">
+                <span>Platform</span>
+                <select
+                  value={labPlatform}
+                  onChange={(event) => setLabPlatform(event.target.value)}
+                  disabled={Boolean(busy)}
+                  aria-label="Lab platform"
+                >
+                  {(allPlatforms.length
+                    ? allPlatforms
+                    : [{ id: DEFAULT_LAB_PLATFORM, label: 'NES' }]
+                  ).map((choice) => (
+                    <option key={choice.id} value={choice.id}>
+                      {choice.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="gt-system-marks-lab__preview">
+                {previewSrc ? (
+                  <img src={previewSrc} alt={`${selectedTheme} ${labPlatform} mark`} />
+                ) : (
+                  <p className="gt-admin-lede">No mark file yet for this pair.</p>
+                )}
+              </div>
+              <label className="gt-system-marks-lab__prompt">
+                <span>Prompt</span>
+                <textarea
+                  value={labPrompt}
+                  onChange={(event) => setLabPrompt(event.target.value)}
+                  rows={6}
+                  disabled={Boolean(busy)}
+                  aria-label="Lab prompt"
+                />
+                <button
+                  type="button"
+                  className="gt-btn"
+                  disabled={Boolean(busy) || labPrompt === labDefaultPrompt}
+                  onClick={() => setLabPrompt(labDefaultPrompt)}
+                >
+                  Reset prompt
+                </button>
+              </label>
+            </div>
+            <div className="gt-system-marks__actions">
+              <button
+                type="button"
+                className="gt-btn gt-btn--accent"
+                disabled={Boolean(busy) || !selectedTheme || !labPlatform}
+                onClick={() => void runLabGenerate()}
+              >
+                {busy === 'lab'
+                  ? `Generating ${selectedTheme}/${labPlatform}…`
+                  : `Generate ${selectedTheme || 'theme'}/${labPlatform}`}
+              </button>
+            </div>
+            {labLog.length ? (
+              <ol className="gt-system-marks-lab__log" data-testid="system-marks-lab-log">
+                {labLog.map((row) => (
+                  <li key={row.id}>
+                    <strong>
+                      {row.theme}/{row.platform}
+                    </strong>
+                    {row.error
+                      ? ` · error: ${row.error}`
+                      : ` · generated ${row.generated}, skipped ${row.skipped}`}
+                  </li>
+                ))}
+              </ol>
+            ) : null}
+          </section>
 
           <div className="gt-system-marks__actions">
             <button

@@ -51,7 +51,7 @@ Built by `gametheca.utils.ops_summary._scan_snapshot`. Poll-friendly (~15s) glan
 | `jobs[].id` / `id_short` | Full UUID · first 8 chars |
 | `jobs[].status` | Enum casing: `Running` / `Stopping` / `Queued` / `Cancelled` / `Completed` / `Failed` |
 | `jobs[].queue_position` | 1-based FIFO position when `status=Queued` |
-| Drain note | Ops poll best-effort promotes next Queued when idle (safety net alongside scan scheduler) |
+| Drain note | Ops poll best-effort promotes next Queued **only when idle** (same `maybe_drain_scan_queue` gate as `GET /api/scan_jobs_status`). Skip while Running/Stopping so a 15s poll does not contend with the live worker. Scheduler still drains ~60s. |
 | `jobs[].folders_success` / `folders_failed` / `folders_processed` / `total_folders` | Live folder counters (`processed` = success + failed) |
 | `jobs[].current_processing` | Latest label from the scan coordinator (nullable) |
 | `jobs[].last_progress_update` | ISO timestamp of last counter bump (nullable) |

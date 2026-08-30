@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { GameCard } from './GameCard'
+import { HOVER_TRAILER_MS } from './TileHoverTrailer'
 
 /** The blocked-Play panel links out (Help, Report), so those cases need a
  *  router. The rest of the file renders bare on purpose — a badge does not. */
@@ -24,6 +25,17 @@ const baseGame = {
   is_vr: true,
   genres: ['Sports'],
 }
+
+const originalMatchMedia = window.matchMedia
+
+afterEach(() => {
+  vi.useRealTimers()
+  if (typeof originalMatchMedia === 'function') {
+    window.matchMedia = originalMatchMedia
+  } else {
+    Reflect.deleteProperty(window, 'matchMedia')
+  }
+})
 
 test('renders L and VR badges via BadgeStack when flags set', () => {
   render(<GameCard game={baseGame} showPlayStatus={false} isAdmin={false} />)
@@ -225,4 +237,97 @@ test('the stored placeholder path counts as no art, not as art', () => {
 
   expect(document.querySelector('[data-cover-fallback]')).not.toBeNull()
   expect(document.querySelector('img.game-cover')).toBeNull()
+})
+
+test('rows layout captions the title beside the cover', () => {
+  render(
+    <GameCard
+      game={{
+        ...baseGame,
+        first_release_date: '1998-11-21',
+        library_platform_label: 'Nintendo 64',
+      }}
+      layout="rows"
+      showPlayStatus={false}
+      isAdmin={false}
+    />,
+  )
+  const meta = document.querySelector('.game-card__row-meta')
+  expect(meta).toHaveTextContent('Archery Kings VR')
+  expect(meta).toHaveTextContent('Nintendo 64')
+  expect(meta).toHaveTextContent('1998')
+})
+
+const TRAILER_EMBED = 'https://www.youtube.com/embed/abc123DEF'
+
+function stubMatchMedia(reduced) {
+  window.matchMedia = vi.fn().mockImplementation((query) => ({
+    matches: reduced && String(query).includes('prefers-reduced-motion: reduce'),
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  }))
+}
+
+test('a missing trailer URL keeps the cover only', () => {
+  vi.useFakeTimers()
+  stubMatchMedia(false)
+  const { container } = render(
+    <GameCard game={baseGame} showPlayStatus={false} isAdmin={false} />,
+  )
+  fireEvent.pointerEnter(container.querySelector('.game-card-container'))
+  act(() => {
+    vi.advanceTimersByTime(HOVER_TRAILER_MS + 20)
+  })
+  expect(container.querySelector('.gt-tile-hover-trailer')).toBeNull()
+  expect(container.querySelector('img.game-cover')).not.toBeNull()
+  vi.useRealTimers()
+})
+
+test('hover with a trailer URL mounts a muted iframe over the cover', () => {
+  vi.useFakeTimers()
+  stubMatchMedia(false)
+  const { container } = render(
+    <GameCard
+      game={{ ...baseGame, trailer_embed_url: TRAILER_EMBED }}
+      showPlayStatus={false}
+      isAdmin={false}
+    />,
+  )
+  fireEvent.pointerEnter(container.querySelector('.game-card-container'))
+  expect(container.querySelector('.gt-tile-hover-trailer')).toBeNull()
+  act(() => {
+    vi.advanceTimersByTime(HOVER_TRAILER_MS)
+  })
+  const iframe = container.querySelector('iframe.gt-tile-hover-trailer')
+  expect(iframe).not.toBeNull()
+  expect(iframe.getAttribute('src')).toContain('mute=1')
+  expect(iframe.getAttribute('src')).toContain('autoplay=1')
+  expect(iframe).toHaveAttribute('aria-hidden', 'true')
+  expect(container.querySelector('img.game-cover')).not.toBeNull()
+  fireEvent.pointerLeave(container.querySelector('.game-card-container'))
+  expect(container.querySelector('.gt-tile-hover-trailer')).toBeNull()
+  vi.useRealTimers()
+})
+
+test('reduced-motion does not autoplay a hover trailer', () => {
+  vi.useFakeTimers()
+  stubMatchMedia(true)
+  const { container } = render(
+    <GameCard
+      game={{ ...baseGame, trailer_embed_url: TRAILER_EMBED }}
+      showPlayStatus={false}
+      isAdmin={false}
+    />,
+  )
+  fireEvent.pointerEnter(container.querySelector('.game-card-container'))
+  act(() => {
+    vi.advanceTimersByTime(HOVER_TRAILER_MS + 20)
+  })
+  expect(container.querySelector('.gt-tile-hover-trailer')).toBeNull()
+  expect(container.querySelector('img.game-cover')).not.toBeNull()
+  vi.useRealTimers()
 })

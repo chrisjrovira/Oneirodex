@@ -7,13 +7,13 @@
 
   var NINTENDO = {
     NES: 1, SNES: 1, NGC: 1, N64: 1, GB: 1, GBA: 1, GBC: 1, NDS: 1, VB: 1,
-    WII: 1, N3DS: 1, SWITCH: 1,
+    WII: 1, N3DS: 1, SWITCH: 1, WII_U: 1, POKE_MINI: 1,
   };
   var SONY = { PSX: 1, PS2: 1, PS3: 1, PS4: 1, PS5: 1, PSP: 1, PSVITA: 1 };
   var XBOX = { XBOX: 1, X360: 1, XONE: 1, XSX: 1 };
   var SEGA = {
     SEGA_MD: 1, SEGA_MS: 1, SEGA_CD: 1, SEGA_32X: 1, SEGA_GG: 1, SEGA_SATURN: 1,
-    SEGA_DC: 1, SEGA_SG1000: 1,
+    SEGA_DC: 1, SEGA_SG1000: 1, SEGA_PICO: 1,
   };
   var ARCADE = {
     ARCADE: 1, MAME: 1, FBNEO: 1, NEOGEO: 1, DAPHNE: 1, PINBALL: 1, ACTIONMAX: 1,
@@ -23,10 +23,12 @@
     PCE: 1, PCFX: 1, NGP: 1, NGPC: 1, WS: 1, COLECO: 1, THREEDO: 1, VECTREX: 1,
     NEOGEO_CD: 1, INTV: 1, CHAF: 1, O2EM: 1, SUPERGRAFX: 1, PCE_CD: 1,
     SUPERVISION: 1, GX4000: 1, ASTROCADE: 1, ARCADIA: 1, CREATIVISION: 1,
-    ADVISION: 1, STUDIO2: 1,
+    ADVISION: 1, STUDIO2: 1, CD_I: 1, JAGUAR_CD: 1,
   };
   var PC = {
-    PCWIN: 1, PCDOS: 1, PC: 1, MAC: 1, OTHER: 1, AMIGA: 1,
+    PCWIN: 1, PCDOS: 1, PC: 1, MAC: 1, OTHER: 1, AMIGA: 1, AMIGA_CD32: 1,
+    MSX: 1, ZX_SPECTRUM: 1, CPC: 1, ATARI_ST: 1, APPLE_II: 1,
+    ATARI_8BIT: 1, X68000: 1, PC_98: 1,
     VICE_X64SC: 1, VICE_X128: 1, VICE_XVIC: 1, VICE_XPLUS4: 1, VICE_XPET: 1,
   };
 
@@ -53,6 +55,8 @@
     WII: 'Wii',
     N3DS: 'Nintendo 3DS',
     SWITCH: 'Nintendo Switch',
+    WII_U: 'Wii U',
+    POKE_MINI: 'Pokémon Mini',
     PSX: 'PlayStation',
     PS2: 'PlayStation 2',
     PS3: 'PlayStation 3',
@@ -68,6 +72,7 @@
     SEGA_SATURN: 'Sega Saturn',
     SEGA_DC: 'Dreamcast',
     SEGA_SG1000: 'SG-1000',
+    SEGA_PICO: 'Sega Pico',
     ARCADE: 'Arcade',
     MAME: 'Arcade',
     FBNEO: 'Arcade',
@@ -76,7 +81,9 @@
     ATARI_7800: 'Atari 7800',
     LYNX: 'Atari Lynx',
     JAGUAR: 'Atari Jaguar',
+    JAGUAR_CD: 'Jaguar CD',
     THREEDO: '3DO',
+    CD_I: 'CD-i',
     NEOGEO: 'Neo Geo AES',
     NEOGEO_CD: 'Neo Geo CD',
     NGP: 'Neo Geo Pocket',
@@ -97,6 +104,15 @@
     MAC: 'Mac',
     OTHER: 'Other',
     AMIGA: 'Amiga',
+    AMIGA_CD32: 'Amiga CD32',
+    MSX: 'MSX',
+    ZX_SPECTRUM: 'ZX Spectrum',
+    CPC: 'Amstrad CPC',
+    ATARI_ST: 'Atari ST',
+    APPLE_II: 'Apple II',
+    ATARI_8BIT: 'Atari 8-bit',
+    X68000: 'X68000',
+    PC_98: 'PC-98',
     VICE_X64SC: 'Commodore 64',
     VICE_X128: 'Commodore 128',
     VICE_XVIC: 'VIC-20',
@@ -125,26 +141,28 @@
    * from play-skins.css; this locks the screen itself to the real shape.
    */
   var ASPECT_RATIOS = {
-    NES: [4, 3], SNES: [4, 3], N64: [4, 3], NGC: [4, 3], WII: [4, 3], N3DS: [5, 3],
+    NES: [4, 3], SNES: [4, 3], N64: [4, 3], NGC: [4, 3], WII: [4, 3], WII_U: [16, 9], N3DS: [5, 3],
     SWITCH: [16, 9],
     // NDS cores render both screens stacked into one portrait framebuffer.
-    GB: [10, 9], GBC: [10, 9], GBA: [3, 2], NDS: [2, 3], VB: [4, 3],
+    GB: [10, 9], GBC: [10, 9], GBA: [3, 2], NDS: [2, 3], VB: [4, 3], POKE_MINI: [10, 9],
     PSX: [4, 3], PS2: [4, 3], PS3: [16, 9], PS4: [16, 9], PS5: [16, 9],
     PSP: [16, 9], PSVITA: [16, 9],
     SEGA_MD: [4, 3], SEGA_MS: [4, 3], SEGA_CD: [4, 3], SEGA_32X: [4, 3],
-    SEGA_GG: [10, 9], SEGA_SATURN: [4, 3], SEGA_DC: [4, 3], SEGA_SG1000: [4, 3],
+    SEGA_GG: [10, 9], SEGA_SATURN: [4, 3], SEGA_DC: [4, 3], SEGA_SG1000: [4, 3], SEGA_PICO: [4, 3],
     ARCADE: [4, 3], MAME: [4, 3], FBNEO: [4, 3], DAPHNE: [4, 3], PINBALL: [4, 3],
     ACTIONMAX: [4, 3],
     ATARI_2600: [4, 3], ATARI_5200: [4, 3], ATARI_7800: [4, 3],
-    LYNX: [8, 5], JAGUAR: [4, 3], PCE: [4, 3], PCFX: [4, 3], SUPERGRAFX: [4, 3],
+    LYNX: [8, 5], JAGUAR: [4, 3], JAGUAR_CD: [4, 3], PCE: [4, 3], PCFX: [4, 3], SUPERGRAFX: [4, 3],
     PCE_CD: [4, 3],
-    NGP: [10, 9], NGPC: [10, 9], WS: [10, 9], COLECO: [4, 3], THREEDO: [4, 3],
+    NGP: [10, 9], NGPC: [10, 9], WS: [10, 9], COLECO: [4, 3], THREEDO: [4, 3], CD_I: [4, 3],
     VECTREX: [4, 3], NEOGEO: [4, 3], NEOGEO_CD: [4, 3], INTV: [4, 3], O2EM: [4, 3],
     CHAF: [4, 3], SUPERVISION: [10, 9], GX4000: [4, 3], ASTROCADE: [4, 3],
     ARCADIA: [4, 3], CREATIVISION: [4, 3], ADVISION: [4, 3], STUDIO2: [4, 3],
     XBOX: [4, 3], X360: [16, 9], XONE: [16, 9], XSX: [16, 9],
     PCWIN: [4, 3], PCDOS: [4, 3], PC: [4, 3], MAC: [4, 3], OTHER: [4, 3],
-    AMIGA: [4, 3], VICE_X64SC: [4, 3], VICE_X128: [4, 3], VICE_XVIC: [4, 3],
+    AMIGA: [4, 3], AMIGA_CD32: [4, 3], MSX: [4, 3], ZX_SPECTRUM: [4, 3], CPC: [4, 3],
+    ATARI_ST: [4, 3], APPLE_II: [4, 3], ATARI_8BIT: [4, 3], X68000: [4, 3], PC_98: [4, 3],
+    VICE_X64SC: [4, 3], VICE_X128: [4, 3], VICE_XVIC: [4, 3],
     VICE_XPLUS4: [4, 3], VICE_XPET: [4, 3],
   };
   var DEFAULT_ASPECT = [4, 3];
@@ -196,6 +214,12 @@
     mednafen_pce: 'PCE',
     mednafen_supergrafx: 'SUPERGRAFX',
     puae: 'AMIGA',
+    fuse: 'ZX_SPECTRUM',
+    bluemsx: 'MSX',
+    fmsx: 'MSX',
+    hatari: 'ATARI_ST',
+    px68k: 'X68000',
+    np2kai: 'PC_98',
     potator: 'SUPERVISION',
     cap32: 'GX4000',
     dolphin: 'NGC',
@@ -235,11 +259,11 @@
   // Regenerate from the Python map rather than hand-editing.
   var ROOM_PLATFORMS = {
     wood_den_80s: 'ARCADIA ASTROCADE ATARI_2600 ATARI_5200 ATARI_7800 CHAF COLECO CREATIVISION GX4000 INTV NES O2EM PCE SEGA_MS SEGA_SG1000 STUDIO2 SUPERGRAFX VECTREX',
-    teen_bedroom_90s: 'ADVISION GB GBC LYNX NGP NGPC SEGA_32X SEGA_GG SEGA_MD SNES SUPERVISION VB WS',
-    carpet_den_late_90s: 'JAGUAR N64 PCE_CD PCFX PSX SEGA_CD SEGA_SATURN THREEDO',
-    media_center_00s: 'GBA N3DS NDS NGC PS2 PS3 PSP PSVITA SEGA_DC SWITCH WII X360 XBOX XONE XSX',
+    teen_bedroom_90s: 'ADVISION GB GBC LYNX NGP NGPC SEGA_32X SEGA_GG SEGA_MD SEGA_PICO SNES SUPERVISION VB WS',
+    carpet_den_late_90s: 'AMIGA_CD32 CD_I JAGUAR JAGUAR_CD N64 PCE_CD PCFX PSX SEGA_CD SEGA_SATURN THREEDO',
+    media_center_00s: 'GBA N3DS NDS NGC POKE_MINI PS2 PS3 PSP PSVITA SEGA_DC SWITCH WII WII_U X360 XBOX XONE XSX',
     arcade_cabinet: 'ARCADE DAPHNE NEOGEO NEOGEO_CD PINBALL ACTIONMAX',
-    desk: 'AMIGA MAC OTHER PCDOS PCWIN VICE_X128 VICE_X64SC VICE_XPET VICE_XPLUS4 VICE_XVIC'
+    desk: 'AMIGA AMIGA_CD32 APPLE_II ATARI_8BIT ATARI_ST CPC MAC MSX OTHER PCDOS PCWIN PC_98 VICE_X128 VICE_X64SC VICE_XPET VICE_XPLUS4 VICE_XVIC X68000 ZX_SPECTRUM'
   };
 
   // LCD / handheld panels never had CRT scanlines — even when the room is a
@@ -247,7 +271,7 @@
   // like a gimmick.
   var LCD_PLATFORMS = {
     GB: 1, GBC: 1, GBA: 1, NDS: 1, N3DS: 1, PSP: 1, PSVITA: 1,
-    LYNX: 1, NGP: 1, NGPC: 1, WS: 1, SUPERVISION: 1, ADVISION: 1, SEGA_GG: 1
+    LYNX: 1, NGP: 1, NGPC: 1, WS: 1, SUPERVISION: 1, ADVISION: 1, SEGA_GG: 1, POKE_MINI: 1
   };
 
   // Scanlines follow the *display*, with a room fallback for CRT sets:

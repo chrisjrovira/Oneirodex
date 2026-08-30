@@ -107,6 +107,7 @@ def test_build_game_details_payload_omits_disk_paths():
     assert 'server_path' not in payload
     assert payload['cover_url']
     assert payload['rating'] == 80
+    assert payload['store_specs'] is None
 
 
 def test_build_game_details_payload_admin_full_disk_path():
@@ -116,6 +117,19 @@ def test_build_game_details_payload_admin_full_disk_path():
     assert payload['full_disk_path'] == '/vault/pc/Demo'
     assert payload['server_path'] == '/vault/pc/Demo'
     assert payload['is_admin'] is True
+
+
+def test_build_game_details_payload_sanitizes_store_specs():
+    game = _demo_game(
+        store_specs={
+            'system_requirements': {'windows': {'minimum': 'Win 10', 'price': '9.99'}},
+            'languages': [{'name': 'English', 'interface': True, 'audio': True, 'subtitles': True}],
+            'sale': True,
+        }
+    )
+    payload = _build(game, SimpleNamespace(id=7, role='user'))
+    assert payload['store_specs']['system_requirements']['windows'] == {'minimum': 'Win 10'}
+    assert 'sale' not in payload['store_specs']
 
 
 def test_build_game_details_payload_librarian_full_disk_path():

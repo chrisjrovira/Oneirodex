@@ -31,6 +31,7 @@ def sample_pc_library(db_session):
     return lib
 
 
+def test_tgdb_gb_matches_game_boy_not_playstation():
     assert tgdb_platform_matches(['Nintendo Game Boy'], 'GB')
     assert tgdb_platform_matches(['Nintendo GameBoy'], 'GB')
     assert not tgdb_platform_matches(['Sony Playstation'], 'GB')

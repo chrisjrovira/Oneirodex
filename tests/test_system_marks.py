@@ -15,8 +15,10 @@ from gametheca.utils.system_marks import (
     generate_system_marks,
     list_system_marks_catalog,
     mark_path,
+    platform_choices,
     platform_ids,
     static_mark_url,
+    system_mark_lab_spec,
     theme_slugs,
 )
 
@@ -76,6 +78,8 @@ def test_generate_skips_without_ai_when_file_exists(tmp_path: Path, monkeypatch)
     assert result['skipped'] == 1
     assert result['generated'] == 0
     assert result['errors'] == []
+    assert 'path' not in result['results'][0]
+    assert result['results'][0]['url'] == '/static/library/system-marks/default/nes.webp'
 
 
 def test_cli_help_exits_zero():
@@ -117,7 +121,7 @@ def test_art_studio_system_marks_api_catalog_and_generate(client, db_session, ad
         sess['_fresh'] = True
 
     with patch(
-        'gametheca.utils.system_marks.list_system_marks_catalog',
+        'gametheca.routes_admin_ext.art_studio.list_system_marks_catalog',
         return_value=[{
             'theme': 'default',
             'era': 'wood_den_80s',
@@ -134,9 +138,18 @@ def test_art_studio_system_marks_api_catalog_and_generate(client, db_session, ad
     assert body.get('ok') is True
     assert body['count'] == 1
     assert body['items'][0]['theme'] == 'default'
+    assert any(row['id'] == 'nes' for row in body.get('all_platforms') or [])
+
+    lab = client.get('/admin/api/art-studio/system-marks/lab?theme=default&platform=nes')
+    assert lab.status_code == 200
+    lab_body = lab.get_json()
+    assert lab_body.get('ok') is True
+    assert 'NES' in lab_body['prompt'] or 'Nintendo' in lab_body['prompt']
+    assert lab_body['url'] == '/static/library/system-marks/default/nes.webp'
+    assert 'path' not in lab_body
 
     with patch(
-        'gametheca.utils.system_marks.generate_system_marks',
+        'gametheca.routes_admin_ext.art_studio.generate_system_marks',
         return_value={'generated': 1, 'skipped': 0, 'errors': [], 'results': []},
     ) as gen:
         response = client.post(
@@ -150,3 +163,53 @@ def test_art_studio_system_marks_api_catalog_and_generate(client, db_session, ad
     gen.assert_called_once()
     assert gen.call_args.kwargs['themes'] == ['default']
     assert gen.call_args.kwargs['platforms'] == ['nes']
+    assert gen.call_args.kwargs.get('prompt') is None
+
+
+def test_art_studio_lab_prompt_requires_one_pair(client, db_session, admin_user):
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(admin_user.id)
+        sess['_fresh'] = True
+
+    rejected = client.post(
+        '/admin/api/art-studio/system-marks/generate',
+        json={'themes': ['default'], 'prompt': 'custom NES mark'},
+    )
+    assert rejected.status_code == 400
+    assert rejected.get_json().get('error_code') == 'bad_request'
+
+    with patch(
+        'gametheca.routes_admin_ext.art_studio.generate_system_marks',
+        return_value={'generated': 1, 'skipped': 0, 'errors': [], 'results': []},
+    ) as gen:
+        ok = client.post(
+            '/admin/api/art-studio/system-marks/generate',
+            json={
+                'themes': ['default'],
+                'platforms': ['nes'],
+                'force': True,
+                'prompt': 'custom NES mark',
+            },
+        )
+    assert ok.status_code == 201
+    assert gen.call_args.kwargs['prompt'] == 'custom NES mark'
+    assert gen.call_args.kwargs['force'] is True
+
+
+def test_lab_spec_is_catalogue_only(tmp_path: Path):
+    spec = system_mark_lab_spec(theme='aurora', platform='nes', package_root=tmp_path)
+    assert spec['theme'] == 'aurora'
+    assert spec['platform'] == 'nes'
+    assert spec['exists'] is False
+    assert 'Nintendo' in spec['prompt']
+    for banned in ('/mnt/', 'C:\\', 'username', 'password'):
+        assert banned not in spec['prompt']
+    assert spec['url'] == '/static/library/system-marks/aurora/nes.webp'
+    assert 'path' not in spec
+
+
+def test_platform_choices_cover_enum():
+    choices = platform_choices()
+    ids = {row['id'] for row in choices}
+    assert 'nes' in ids
+    assert any(row['label'] for row in choices if row['id'] == 'nes')

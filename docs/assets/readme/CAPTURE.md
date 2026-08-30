@@ -6,8 +6,8 @@ Live pixels from local Playwright capture (`scripts/capture_docs_media.py`). Pre
 
 | Shot | README slot | `docs/media/` source | Status |
 |---|---|---|---|
-| **Hero strip** | `hero-banner.png` | `/library` (same session) | **Recaptured 2026-08-28** — review stack; LHN logo `5.5rem` / icons `1.125rem` (icons enlarged after first capture) |
-| **Library + free ROMs** | `screenshot-library.png` | `library-free-roms.png` | **Recaptured 2026-08-28** — rail sizing |
+| **Hero strip** | `hero-banner.png` | `/library` (same session) | **Refresh needed 2026-08-29** — View unfurl + selection strip tuck (last stills 2026-08-28) |
+| **Library + free ROMs** | `screenshot-library.png` | `library-free-roms.png` | **Refresh needed 2026-08-29** — same chrome drift |
 | **Systems** | `screenshot-systems.png` | `systems-platforms.png` | **Recaptured 2026-08-28** |
 | **Chat / Activity / Friends** | `screenshot-chat.png` | `/chat` (`chat-channels.png` in media) | **Recaptured 2026-08-28** — slide-over with seeded #general messages |
 
@@ -21,7 +21,7 @@ Retired: `hero-banner.jpg`, `screenshot-*.jpg` — illustrative mock previews; d
 | **Ops Services tile** | `admin-ops-services.png` | Captured — LiveKit · malware · companions · queues |
 | **Features** | `admin-features.png` | Captured |
 | **Integrations** | `admin-integrations.png` | Captured |
-| **Discover** | `discover.png` | Captured |
+| **Discover** | `discover.png` | **Refresh needed 2026-08-29** — shelf slider / wheel / title mark (UID-020) |
 | **Admin libraries** | `admin-libraries.png` | Captured — **refresh needed** after W22-1 (unified Libraries & scans tabs · multi-select · force-delete) when `:5006` healthy |
 | **`/readyz` JSON** | `readyz.json` | Captured |
 | **`/healthz` JSON** | `healthz.json` | Captured |

@@ -7,6 +7,7 @@ from flask_login import current_user, login_required
 
 from gametheca.routes_discover import build_discover_feed, build_discover_row
 from gametheca.utils.api_response import api_error, api_ok
+from gametheca.utils.discover_hubs import build_genre_hub
 from gametheca.utils.discover_feed import MAX_MEMBER_PINS
 from gametheca.utils.discover_pins import (
     PinnedByAdmin,
@@ -57,6 +58,19 @@ def discover_row(identifier: str):
             'That Discover row is not available.',
             code='not_found',
             detail=identifier,
+        )
+    return api_ok(payload)
+
+
+@apis_bp.route('/discover/hubs/genre/<path:genre>', methods=['GET'])
+@login_required
+def discover_genre_hub(genre: str):
+    """Virtual Discover shelves for one genre — not an admin-authored row."""
+    payload = build_genre_hub(current_user, genre)
+    if payload is None:
+        return api_error(
+            'That genre is not in this library.',
+            code='not_found',
         )
     return api_ok(payload)
 

@@ -31,8 +31,8 @@ import './ops.css'
 // that has nothing to do with the move.
 export { formatScanJobCounters }
 
-async function getJson(url) {
-  const response = await fetch(url, { credentials: 'same-origin' })
+async function getJson(url, { signal } = {}) {
+  const response = await fetch(url, { credentials: 'same-origin', signal })
   if (response.status === 401) {
     window.location.href = '/login'
     throw new Error('unauthorized')
@@ -235,7 +235,7 @@ export function OpsPage() {
     const id = requestRef.current.id + 1
     requestRef.current = { id, controller }
     if (isManual) setManualRefreshing(true)
-    getJson('/admin/api/ops/summary')
+    getJson('/admin/api/ops/summary', { signal: controller.signal })
       .then((data) => {
         if (requestRef.current.id !== id || controller.signal.aborted) return
         setSnapshot(data)
@@ -283,9 +283,18 @@ export function OpsPage() {
 
   useEffect(() => {
     refresh('boot')
-    const timer = window.setInterval(() => refresh('poll'), 15000)
+    const tick = () => {
+      if (document.hidden) return
+      refresh('poll')
+    }
+    const timer = window.setInterval(tick, 15000)
+    const onVis = () => {
+      if (!document.hidden) refresh('poll')
+    }
+    document.addEventListener('visibilitychange', onVis)
     return () => {
       window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVis)
       requestRef.current.controller?.abort()
     }
   }, [refresh])

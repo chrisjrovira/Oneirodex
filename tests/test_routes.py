@@ -294,6 +294,55 @@ class TestMainBlueprint:
         assert 'Test Game' not in names
 
     @patch('flask_login.current_user')
+    def test_browse_games_play_mode_filter(self, mock_current_user, client, app, db_session, test_user, test_game, test_library):
+        """play_mode is honest Browser / Companion / Catalog, not store verification."""
+        mock_current_user.is_authenticated = True
+        mock_current_user.name = test_user.name
+        mock_current_user.id = test_user.id
+
+        catalog_lib = Library(
+            name=f'Switch Lib {uuid4().hex[:8]}',
+            platform=LibraryPlatform.SWITCH,
+            display_order=3,
+        )
+        db_session.add(catalog_lib)
+        db_session.flush()
+        catalog_name = f'Catalog Path {uuid4().hex[:6]}'
+        companion_name = f'Companion Path {uuid4().hex[:6]}'
+        catalog_game = Game(
+            uuid=str(uuid4()),
+            name=catalog_name,
+            library_uuid=catalog_lib.uuid,
+            full_disk_path=f'/test/switch/{uuid4().hex}',
+        )
+        companion_game = Game(
+            uuid=str(uuid4()),
+            name=companion_name,
+            library_uuid=test_library.uuid,
+            full_disk_path=f'/test/pc/{uuid4().hex}',
+        )
+        db_session.add_all([catalog_game, companion_game])
+        db_session.commit()
+
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(test_user.id)
+
+        catalog = client.get(f'/browse_games?play_mode=catalog&name={catalog_name}')
+        assert catalog.status_code == 200
+        catalog_names = [g['name'] for g in catalog.get_json()['games']]
+        assert catalog_name in catalog_names
+        assert companion_name not in catalog_names
+
+        companion = client.get(f'/browse_games?play_mode=companion&name={companion_name}')
+        assert companion.status_code == 200
+        companion_names = [g['name'] for g in companion.get_json()['games']]
+        assert companion_name in companion_names
+        assert catalog_name not in companion_names
+
+        crossed = client.get(f'/browse_games?play_mode=catalog&name={companion_name}')
+        assert crossed.get_json()['games'] == []
+
+    @patch('flask_login.current_user')
     def test_browse_games_igdb_platform_filter(self, mock_current_user, client, app, db_session, test_user, test_game, test_library):
         """Test browse_games filters by igdb_platform (Game.platforms association)."""
         mock_current_user.is_authenticated = True

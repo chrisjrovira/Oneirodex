@@ -5,6 +5,7 @@ import { GameGrid } from './components/GameGrid'
 import { ITEM_KIND_FILTER_CHIPS } from './components/ItemKindFilterChips'
 import { PaginationBar } from './components/PaginationBar'
 import { PageStatus } from './components/PageStatus'
+import { CATALOG_LAYOUTS, useCatalogLayout } from './utils/catalogLayout'
 
 export function FavoritesApp({ initialConfig, shellConfig } = {}) {
   const defaultPerPage = Number(shellConfig?.perPage) || Number(initialConfig?.perPage) || 50
@@ -26,6 +27,7 @@ export function FavoritesApp({ initialConfig, shellConfig } = {}) {
      tile-size slider problem again — a filter that moves and changes nothing. */
   const [name, setName] = useState('')
   const [itemKind, setItemKind] = useState('')
+  const [layout, setLayout] = useCatalogLayout()
 
   useEffect(() => {
     const controller = new AbortController()
@@ -119,6 +121,12 @@ export function FavoritesApp({ initialConfig, shellConfig } = {}) {
         </form>
       )}
       summary={total ? `${total.toLocaleString()} favorites` : null}
+      viewUnfurl={{
+        views: CATALOG_LAYOUTS,
+        active: layout,
+        onSelect: setLayout,
+        triggerLabel: 'View',
+      }}
     />
   )
 
@@ -162,6 +170,7 @@ export function FavoritesApp({ initialConfig, shellConfig } = {}) {
         games={games}
         showPlayStatus={initialConfig.showPlayStatus}
         isAdmin={initialConfig.isAdmin}
+        layout={layout}
         onToggleFavorite={(gameUuid, isFavorite) => {
           if (!isFavorite) {
             setGames((currentGames) =>

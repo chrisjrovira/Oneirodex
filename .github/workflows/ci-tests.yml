@@ -88,6 +88,11 @@ jobs:
           tests/test_vendor_licensing.py
           tests/test_webretro_player_chrome.py
           tests/test_emulator_play_matrix.py
+          tests/test_console_platform_enums.py
+          tests/test_computer_platform_enums.py
+          tests/test_licensed_catalog.py
+          tests/test_tgdb_platform_siblings.py
+          tests/test_routes_member.py
           tests/test_product_name.py
           tests/test_gt_toast.py
           tests/test_browse_path_status.py

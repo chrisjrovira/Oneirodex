@@ -135,11 +135,10 @@ class TestSeeAllTarget:
             row = resolve_identifier('latest_games')
             assert _more_href(row) == '/discover/latest_games'
 
-    def test_genre_zone_deep_links_into_the_library(self, app, db_session):
-        """A row the Library page can express as a filter should go there.
+    def test_genre_zone_deep_links_into_the_hub(self, app, db_session):
+        """A genre zone opens the hub, not a second catalog grid.
 
-        The Library already parses `genre`, so sending the member to a real
-        filtered view beats a second grid that shows the same thing.
+        The catalog is still the full list from the hub's Browse catalog link.
         """
         from gametheca.routes_discover import _more_href
         from gametheca.utils.discover_providers import resolve_section
@@ -153,7 +152,7 @@ class TestSeeAllTarget:
         )
         with app.app_context():
             row = resolve_section(section)
-            assert _more_href(row) == '/library?genre=Roguelike'
+            assert _more_href(row) == '/discover/hub/genre/Roguelike'
 
     def test_library_zone_falls_back_to_the_row_page(self, app, db_session):
         """The Library page has no library-scoped URL filter.

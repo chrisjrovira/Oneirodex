@@ -17,6 +17,11 @@ import {
   findScrollParent,
   readCssPx,
 } from './gameGridLayout'
+import {
+  CATALOG_ROW_HEIGHT,
+  denseCatalogTileMin,
+  normalizeCatalogLayout,
+} from '../utils/catalogLayout'
 
 const TILE_REMEASURE_DEBOUNCE_MS = 160
 
@@ -71,7 +76,9 @@ export function GameGrid({
   selectedIds = null,
   onSelectionToggle,
   activePlatform = '',
+  layout = 'tile',
 }) {
+  const catalogLayout = normalizeCatalogLayout(layout)
   const listRef = useRef(null)
   // `undefined` = not resolved yet, `null` = resolved to "the window scrolls".
   const [scrollEl, setScrollEl] = useState(undefined)
@@ -164,8 +171,16 @@ export function GameGrid({
   }, [])
 
   const width = metrics.width > 0 ? metrics.width : 960
-  const columnCount = computeGridColumns(width, metrics.tileMin, metrics.gap)
-  const rowHeight = estimateGridRowHeight(width, columnCount, metrics.gap)
+  const tileMin =
+    catalogLayout === 'grid'
+      ? denseCatalogTileMin(metrics.tileMin)
+      : metrics.tileMin
+  const columnCount =
+    catalogLayout === 'rows' ? 1 : computeGridColumns(width, tileMin, metrics.gap)
+  const rowHeight =
+    catalogLayout === 'rows'
+      ? CATALOG_ROW_HEIGHT
+      : estimateGridRowHeight(width, columnCount, metrics.gap)
   const rows = useMemo(
     () => chunkGamesIntoRows(games, columnCount),
     [games, columnCount],
@@ -228,6 +243,7 @@ export function GameGrid({
     selectionEnabled,
     onSelectionToggle,
     activePlatform,
+    layout: catalogLayout,
   }
 
   const selecting = selectionEnabled && selectedIds && selectedIds.size > 0
@@ -240,6 +256,7 @@ export function GameGrid({
         className={`game-library-container${selecting ? ' is-selecting' : ''}`}
         data-library-grid
         data-library-virtual
+        data-layout={catalogLayout}
       />
     )
   }
@@ -252,10 +269,14 @@ export function GameGrid({
       className={`game-library-container${selecting ? ' is-selecting' : ''}`}
       data-library-grid
       data-library-virtual
+      data-layout={catalogLayout}
       style={{
         height: `${virtualizer.getTotalSize()}px`,
         position: 'relative',
         width: '100%',
+        ...(catalogLayout === 'grid'
+          ? { '--gt-catalog-col-min': `${tileMin}px` }
+          : null),
       }}
     >
       {virtualRows.map((virtualRow) => {

@@ -36,10 +36,15 @@ class TestRoomMapping:
             for key in ('PSX', 'SEGA_SATURN', 'THREEDO'):
                 assert room_id_for_platform(key) == 'carpet_den_late_90s'
             assert room_id_for_platform('NGC') == 'media_center_00s'
+            assert room_id_for_platform('WII_U') == 'media_center_00s'
+            assert room_id_for_platform('CD_I') == 'carpet_den_late_90s'
 
     def test_computers_land_on_the_desk(self, app):
         with app.app_context():
-            for key in ('PCDOS', 'AMIGA', 'VICE_X64SC'):
+            for key in (
+                'PCDOS', 'AMIGA', 'VICE_X64SC', 'MSX', 'ZX_SPECTRUM', 'CPC',
+                'ATARI_ST', 'APPLE_II', 'ATARI_8BIT', 'X68000', 'PC_98',
+            ):
                 assert room_id_for_platform(key) == 'desk'
 
     def test_unmapped_platform_gets_a_plausible_default(self, app):

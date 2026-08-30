@@ -29,6 +29,8 @@ Settings hub shows On/Off (and Storage “Apply off”) for optional modules so 
 
 Product modules default **on**. Disable during **setup → Features**, under **Admin → Features**, or via `.env` / Compose.
 
+**Member chrome (Server Settings):** `showHelpButton` and `showTrailers` default **on**. They are baked into every member SPA shell on load (`data-show-help` / `data-show-trailers`), including Systems / Chat / Collections — not only Discover and Favorites. A missing JSON key must not hide those More destinations.
+
 **Stays off by default:** `OIDC_ENABLED` (SSO/auth).  
 **Safety locks (also off):** `ENABLE_AI_AUTO_APPLY`, `ALLOW_HARDLINK_APPLY`.  
 **Patch catalog:** operator YAML/JSON at `PATCH_CATALOG_PATH` — Oneirodex does not scrape romhacking.net or similar sites.
@@ -133,7 +135,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 
 ## Art studio (cover placeholders)
 
-- **Admin → Settings → Art studio** or `/admin/art_studio` (React; admin/ops only). Tabs: **Studio** · **Backup & stock** (`#stock`) · **Pick & queue** (`#images`).
+- **Admin → Settings → Art studio** or `/admin/art_studio` (React; admin/ops only). Tabs: **Studio** · **Backup & stock** (`#stock`) · **System marks** (`#marks`) · **Pick & queue** (`#images`).
 - Local Pillow renderer — aurora tokens (`--gt-*`), no paid cloud AI. Preview/generate use **artistic** compositions by default (`artistic: true` on `POST /admin/api/art-studio/preview`; optional `artistic: false` for legacy flat A/B). Idle **title scale is 1.3×** (floor 0.85×); the slider always posts `title_scale`.
 - **Title-first studio:** large live preview stage; typing a title debounces preview. System / platform selector + preview size toggles (200×300 · 400×600 · 960×540 wide). Soft-fails preview lag with toast.
 - **Actions:** Preview · Generate pack · Download ZIP · Set as fallback · Apply to game UUID.
@@ -143,8 +145,8 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - **Auto-pick (ImagesPage):** `POST /admin/api/covers/batch/apply` with `policy=sgdb_then_igdb_then_generate` (library / platform / service filters). Mass search: `POST /admin/api/covers/batch/search`.
 - **Single-title picker:** `POST /admin/api/covers/search` + `POST /admin/api/covers/apply`. Identify chips from `GET /api/search_metadata/sources` (Meta Quest / Epic / itch / Giant Bomb / MobyGames / TheGamesDB) search via `GET /api/search_metadata?source=`. Optional `MOBYGAMES_API_KEY` / `THEGAMESDB_API_KEY` — empty results when unset.
 - Queue rows show `failure_reason` (and `last_error` fallback); list responses surface `image_save_path.error` when the images volume is not writable.
-- API: `POST /admin/api/art-studio/preview|generate|apply|apply-batch`, `GET /admin/api/art-studio/download/<pack_id>`, `POST /admin/api/art-studio/batch-generate`, `GET /admin/api/art-studio/stock`, `POST /admin/api/art-studio/stock/generate`, `GET /admin/api/art-studio/system-marks`, `POST /admin/api/art-studio/system-marks/generate`; covers mass tools under `/admin/api/covers/*`.
-- **Systems hub marks** (AI): Art Studio tab **System marks** (`#marks`) lists per-theme progress and can generate missing / force-redo via `GET/POST /admin/api/art-studio/system-marks`. Square WebPs land under `static/library/system-marks/<theme>/<platform>.webp` for every `LibraryPlatform` × preset theme. Requires `ENABLE_AI_ARTWORK` + `AI_ARTWORK_URL`. CLI: `python scripts/generate_system_marks.py --all`. Member Systems tiles use the active `data-theme` mark and fall back to the SVG motif when missing. Full batch regen is ops-gated (quality hold) — prefer CLI with `--limit` / `--force` on weak themes.
+- API: `POST /admin/api/art-studio/preview|generate|apply|apply-batch`, `GET /admin/api/art-studio/download/<pack_id>`, `POST /admin/api/art-studio/batch-generate`, `GET /admin/api/art-studio/stock`, `POST /admin/api/art-studio/stock/generate`, `GET /admin/api/art-studio/system-marks`, `GET /admin/api/art-studio/system-marks/lab`, `POST /admin/api/art-studio/system-marks/generate`; covers mass tools under `/admin/api/covers/*`.
+- **Systems hub marks** (AI): Art Studio tab **System marks** (`#marks`) lists per-theme progress and can generate missing / force-redo via `GET/POST /admin/api/art-studio/system-marks`. The **Lab** on that tab generates **one** theme×platform pair (editable prompt, preview, attempt log) via `GET …/system-marks/lab` and `POST …/generate` with `platforms` + optional `prompt`. Square WebPs land under `static/library/system-marks/<theme>/<platform>.webp`. Requires `ENABLE_AI_ARTWORK` + `AI_ARTWORK_URL`. CLI: `python scripts/generate_system_marks.py --all`. Full batch regen is ops-gated (quality hold).
 - **System templates:** generated covers use per-system palette + glyph (NES/SNES/PS1/Switch/PC/…) so 200×300 tiles stay readable — not a generic subtitle-only placeholder.
 - **Meta Quest Store:** identify `GET /api/search_metadata?source=meta_quest|meta|quest` · ownership CSV `POST /api/ownership/meta_quest/csv` · `META_QUEST_API_MODE` / `META_QUEST_UNOFFICIAL_GRAPHQL` (off by default) (local strategy notes).
 - **Ownership register:** members link Steam / GOG / Epic / Amazon under **More → Ownership**. Steam Web API, unofficial GOG Galaxy refresh token, unofficial Epic device auth, unofficial Amazon Nile/Heroic token — IDs and names only, never a download. Household env: `STEAM_WEB_API_KEY`, `GOG_REFRESH_TOKEN`, `EPIC_DEVICE_AUTH`, `AMAZON_REFRESH_TOKEN` / `AMAZON_DEVICE_SERIAL` / `AMAZON_NILE_JSON`.
@@ -251,4 +253,4 @@ Related: [libraries-and-scans.md](libraries-and-scans.md) · [docker-compose-dep
 - **API:** `GET/POST /api/tokens`, `DELETE /api/tokens/{id}` — any logged-in member.
 - **Presets:** `POST` body `"preset": "companion"` (`read:library` + `write:download`) or `"preset": "thin"` (`read:library` + `read:social` + `write:presence`; **no** download). List response includes `scope_presets`.
 - **Thin protocol:** heartbeat accepts `device_kind` (`companion` | `thin` | `browser`); `GET /api/client/capabilities` advertises allows/denies. Install/update command queue delivers only to `companion` + download/lifecycle scopes.
-- **UI:** member SPA **Account → API tokens** (`/tokens`) — create with companion/thin presets, copy one-time secret, revoke. API / `@gametheca/api-client` / OpenAPI still work. See [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](../user/thin-client.md).
+- **UI:** member SPA **Account → API tokens** (`/tokens`) — create with companion/thin presets, copy one-time secret, revoke. API / `@oneirodex/api-client` / OpenAPI still work. See [desktop-companion.md](../user/desktop-companion.md) · [thin-client.md](../user/thin-client.md).

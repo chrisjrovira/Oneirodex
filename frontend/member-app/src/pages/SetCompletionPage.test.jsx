@@ -66,6 +66,10 @@ test('lists missing titles and can wishlist one', async () => {
     'href',
     '/library?library_platform=NES',
   )
+  expect(screen.getByRole('link', { name: 'Licensed catalog' })).toHaveAttribute(
+    'href',
+    '/systems/catalog?library_platform=NES',
+  )
 
   await user.click(screen.getByRole('button', { name: 'Wishlist' }))
   await waitFor(() => {

@@ -5,15 +5,46 @@ from pathlib import Path
 from flask import Blueprint, current_app, redirect, send_from_directory, url_for
 from flask_login import login_required
 
+from gametheca import cache
 from gametheca.utils.member_spa import render_member_spa
+from gametheca.utils.processors import get_global_settings
 
 member_bp = Blueprint('member', __name__)
+
+
+@member_bp.context_processor
+@cache.cached(timeout=500, key_prefix='global_settings')
+def inject_settings():
+    """Inject global settings into member-blueprint templates.
+
+    Matches every other member-facing blueprint. ``render_member_spa`` also
+    merges these flags, so a forgotten processor cannot hide Help / Trailers.
+    """
+    return get_global_settings()
 
 
 @member_bp.route('/systems')
 @login_required
 def systems_page():
     return render_member_spa(title='Systems')
+
+
+@member_bp.route('/systems/completion')
+@login_required
+def set_completion_page():
+    return render_member_spa(title='Set completion')
+
+
+@member_bp.route('/systems/catalog')
+@login_required
+def licensed_catalog_page():
+    return render_member_spa(title='Licensed catalog')
+
+
+@member_bp.route('/ways-to-play')
+@login_required
+def ways_to_play_page():
+    return render_member_spa(title='Ways to Play')
 
 
 @member_bp.route('/collections')

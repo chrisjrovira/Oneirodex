@@ -15,9 +15,41 @@ from gametheca.models import Game, Library, ReferenceSet, ReferenceSetEntry
 from gametheca.platform import LibraryPlatform, NATIVE_PC_PLATFORMS
 from gametheca.utils.library_acl import apply_game_access_filters
 
-VALID_REGIONS = frozenset({'USA', 'EUR', 'JPN', 'WORLD', 'OTHER'})
+# Pref order is the member/admin dropdown. FRA/DEU/ESP/GBR are DAT SKUs
+# (a France-specific DAT), not IGDB release_date regions — PAL filenames
+# still peel to EUR in rom_language.py.
+REGION_PREF_ORDER = (
+    'USA',
+    'EUR',
+    'JPN',
+    'BRA',
+    'KOR',
+    'AUS',
+    'GBR',
+    'FRA',
+    'DEU',
+    'ESP',
+    'CHN',
+    'WORLD',
+    'OTHER',
+)
+VALID_REGIONS = frozenset(REGION_PREF_ORDER)
 VALID_SOURCES = frozenset({'nointro', 'redump', 'other'})
-REGION_PREF_ORDER = ('USA', 'EUR', 'JPN', 'WORLD', 'OTHER')
+REGION_LABELS = {
+    'USA': 'United States',
+    'EUR': 'Europe',
+    'JPN': 'Japan',
+    'BRA': 'Brazil',
+    'KOR': 'Korea',
+    'AUS': 'Australia',
+    'GBR': 'United Kingdom',
+    'FRA': 'France',
+    'DEU': 'Germany',
+    'ESP': 'Spain',
+    'CHN': 'China',
+    'WORLD': 'World',
+    'OTHER': 'Other',
+}
 
 from gametheca.utils.rom_name_peel import normalize_set_title_from_peel
 _CLRMAME_GAME = re.compile(
@@ -49,6 +81,28 @@ def normalize_region(raw: str | None) -> str:
         'J': 'JPN',
         'NTSC-J': 'JPN',
         'W': 'WORLD',
+        'WORLDWIDE': 'WORLD',
+        'BRAZIL': 'BRA',
+        'BR': 'BRA',
+        'KOREA': 'KOR',
+        'KR': 'KOR',
+        'SOUTH KOREA': 'KOR',
+        'AUSTRALIA': 'AUS',
+        'AU': 'AUS',
+        'UK': 'GBR',
+        'GB': 'GBR',
+        'UNITED KINGDOM': 'GBR',
+        'GREAT BRITAIN': 'GBR',
+        'FRANCE': 'FRA',
+        'FR': 'FRA',
+        'GERMANY': 'DEU',
+        'DE': 'DEU',
+        'GER': 'DEU',
+        'SPAIN': 'ESP',
+        'ES': 'ESP',
+        'CHINA': 'CHN',
+        'CN': 'CHN',
+        'PRC': 'CHN',
     }
     text = aliases.get(text, text)
     if text in VALID_REGIONS:

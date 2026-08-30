@@ -3,7 +3,7 @@
  * Policy: offline / single-player only — packs are declarative toggles, not injectors.
  */
 
-import { formatBearerAuthorization } from '@gametheca/api-client'
+import { formatBearerAuthorization } from '@oneirodex/api-client'
 
 import type { AuthStore } from './auth.js'
 import { escapeHtml } from './html.js'

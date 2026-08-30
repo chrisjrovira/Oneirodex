@@ -52,6 +52,10 @@ const STRINGS = {
     Next: 'Next',
     Last: 'Last',
     'Page {page} of {pages}': 'Page {page} of {pages}',
+    Layout: 'Layout',
+    Tile: 'Tile',
+    Rows: 'Rows',
+    Grid: 'Grid',
   },
   es: {
     'No libraries found. Add a library to get started.':
@@ -106,6 +110,10 @@ const STRINGS = {
     Next: 'Siguiente',
     Last: 'Última',
     'Page {page} of {pages}': 'Página {page} de {pages}',
+    Layout: 'Diseño',
+    Tile: 'Portadas',
+    Rows: 'Filas',
+    Grid: 'Cuadrícula',
   },
 }
 

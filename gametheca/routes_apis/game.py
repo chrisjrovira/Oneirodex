@@ -22,6 +22,7 @@ from gametheca.utils.background import run_in_background
 from gametheca.utils.event_logging import log_system_event
 from gametheca.utils.game_core import get_game_by_uuid
 from gametheca.utils.game_details_payload import build_game_details_payload
+from gametheca.utils.game_more_from import build_more_from
 from gametheca.utils.image_kinds import (
     IMAGE_KIND_ORDER,
     image_kinds_error_message,
@@ -694,6 +695,17 @@ def game_details_api(game_uuid):
     if refusal is not None:
         return refusal
     return jsonify(build_game_details_payload(game, current_user))
+
+
+@apis_bp.route('/games/<game_uuid>/more_from', methods=['GET'])
+@login_required
+def game_more_from_api(game_uuid):
+    """Other vault titles from the same developer or publisher."""
+    game = get_game_by_uuid(game_uuid)
+    refusal = _refuse_inaccessible_game(game)
+    if refusal is not None:
+        return refusal
+    return api_ok(build_more_from(game, current_user))
 
 
 @apis_bp.route('/games/<game_uuid>/editions', methods=['GET'])

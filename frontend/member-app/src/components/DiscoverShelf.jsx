@@ -63,16 +63,19 @@ export function DiscoverShelf({
   const [hbar, setHbar] = useState({ max: 0, left: 0, thumbPct: 100 })
   const abortRef = useRef(null)
   const hbarDragRef = useRef(null)
-  // Arrows (hover + click) and wheel — no mid-row edge auto-scroll.
+  // Arrows + bottom slider. Wheel on tiles/title scrolls the page; wheel on
+  // the slider pans the track. bindKey includes hbar presence so the slider
+  // wheel listener rebinds when the bar first appears.
   const {
     ref: trackRef,
     viewportRef,
+    hbarRef,
     overflow,
     measure,
     scrollByPage,
     startEdgeScroll,
     stopEdgeScroll,
-  } = useRowScroll()
+  } = useRowScroll({ bindKey: `${games.length}:${hbar.max > 1 ? 1 : 0}` })
 
   const syncHbar = useCallback(() => {
     const track = trackRef.current
@@ -129,7 +132,13 @@ export function DiscoverShelf({
     )
 
     const items = track.querySelectorAll('.gt-shelf__item')
-    items.forEach((node) => observer.observe(node))
+    // Assume fully visible until the observer reports otherwise so News tiles
+    // (which only cancel enlarge when the attribute is absent) can hover-scale
+    // on the first paint the way game tiles do via theme CSS.
+    items.forEach((node) => {
+      node.toggleAttribute('data-fully-visible', true)
+      observer.observe(node)
+    })
     return () => observer.disconnect()
   }, [games.length, loading, complete, trackRef])
 
@@ -225,15 +234,16 @@ export function DiscoverShelf({
       className={`gt-shelf gt-shelf--${layout}`}
     >
       <div className="gt-shelf__head">
-        {/* The rule is drawn by the heading itself (see .gt-shelf__title in the
-            stylesheet) rather than by a border under the whole head row, so it
-            stops at the words instead of running the width of the page. */}
-        <h2 className="gt-shelf__title">
-          <span className="gt-shelf__title-text">{section.title}</span>
-        </h2>
-        {section.reason ? (
-          <span className="gt-shelf__reason">{section.reason}</span>
-        ) : null}
+        {/* Title mark + reason share a baseline row; the h2 keeps only the
+            section name so screen readers still hear "News", not the lede. */}
+        <div className="gt-shelf__heading">
+          <h2 className="gt-shelf__title">
+            <span className="gt-shelf__title-text">{section.title}</span>
+          </h2>
+          {section.reason ? (
+            <span className="gt-shelf__reason">{section.reason}</span>
+          ) : null}
+        </div>
         {section.is_event ? (
           <span className="gt-shelf__event" title="Limited-time shelf">
             Event{formatEventEnds(section.ends_at)}
@@ -312,6 +322,7 @@ export function DiscoverShelf({
                 ) : (
                   <GameCard
                     game={item}
+                    discoverReason={section.reason}
                     isAdmin={isAdmin}
                     showPlayStatus={showPlayStatus}
                     enableDeleteOnDisk={enableDeleteOnDisk}
@@ -355,6 +366,7 @@ export function DiscoverShelf({
 
         {hbar.max > 1 ? (
           <div
+            ref={hbarRef}
             className="gt-shelf__hbar"
             role="scrollbar"
             aria-label={`Scroll ${section.title}`}

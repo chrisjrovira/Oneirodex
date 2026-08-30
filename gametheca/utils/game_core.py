@@ -12,11 +12,12 @@ from gametheca.models import (
     PlayerPerspective, GameURL, ScanJob, Category, Status,
     game_developer_association
 )
+from gametheca.utils.licensed_catalog import upsert_releases_from_igdb_payload
 from gametheca.utils.global_settings import global_settings_row
 from gametheca.utils.functions import (
     read_first_nfo_content, delete_associations_for_game,
     website_category_to_string,
-    PLATFORM_IDS, format_size, download_image, download_stored_image,
+    igdb_platform_id_for, format_size, download_image, download_stored_image,
     cover_title_for_uuid, get_folder_size_in_bytes_updates
 )
 from gametheca.utils.igdb_api import make_igdb_api_request
@@ -635,6 +636,11 @@ def create_game_instance(
             )
         except Exception as disc_err:  # noqa: BLE001
             print(f"create_game_instance disc index parse skipped: {disc_err}")
+        try:
+            platform_key = getattr(library.platform, 'name', None)
+            upsert_releases_from_igdb_payload(platform_key or '', game_data)
+        except Exception as catalog_err:  # noqa: BLE001 — cache must not fail the scan
+            print(f"create_game_instance licensed catalog cache skipped: {catalog_err}")
         fetch_and_store_game_urls(new_game.uuid, game_data['id'])
         print(f"create_game_instance Finished processing game '{new_game.name}'. URLs (if any) have been fetched and stored.")
         
@@ -1095,7 +1101,7 @@ def search_igdb_for_game(search_name, platform_id, limit=10):
     Search IGDB for games matching name (and optional platform).
     Returns a list of game dicts, or None if the API errors / returns empty.
     """
-    query_fields = """fields id, name, cover.url, cover.image_id, summary, url, release_dates.date, platforms.name, genres.name, themes.name, game_modes.name,
+    query_fields = """fields id, name, cover.url, cover.image_id, summary, url, release_dates.date, release_dates.region, release_dates.platform, platforms.name, genres.name, themes.name, game_modes.name,
                       screenshots.url, screenshots.image_id, videos.video_id, first_release_date, aggregated_rating, involved_companies, player_perspectives.name,
                       aggregated_rating_count, rating, rating_count, slug, status, category, total_rating,
                       total_rating_count;"""
@@ -1125,12 +1131,13 @@ def fetch_game_by_igdb_id(igdb_id):
 
     try:
         query = f"""
-            fields name, summary, storyline, url, slug, first_release_date,
+            fields id, name, summary, storyline, url, slug, first_release_date,
                    aggregated_rating, aggregated_rating_count, rating, rating_count,
                    total_rating, total_rating_count, status, category,
                    cover.url, screenshots.url, videos.video_id,
                    genres.name, themes.name, game_modes.name, platforms.name,
-                   player_perspectives.name, involved_companies;
+                   player_perspectives.name, involved_companies,
+                   release_dates.date, release_dates.region, release_dates.platform;
             where id = {igdb_id};
             limit 1;
         """
@@ -1327,7 +1334,7 @@ def retrieve_and_save_game(
         else:
             print("📝 [LOCAL METADATA] No existing metadata file found, will attempt IGDB search")
 
-    platform_id = PLATFORM_IDS.get(library.platform.name)
+    platform_id = igdb_platform_id_for(library.platform)
 
     # PRIORITY 2: Search IGDB API by folder/file name (existing code)
     # Prefer Steam App ID title hint when folder name contains (digits)

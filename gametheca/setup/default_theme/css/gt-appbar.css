@@ -108,33 +108,86 @@
 /* The portal target's own wrapper. Holds the view strip, the page actions and
    the overflow popover side by side.
  *
- * Deliberately *not* `.gt-contextbar__views`, which is what it used to be: that
- * class sets `overflow-x: auto` for a long segment strip, and a scroll
- * container clips vertically as well as horizontally — so every Popover opened
- * in `actions` was drawn inside a box one bar tall and never seen. Scrolling
- * belongs to the strip, not to the row that contains it. */
+ * Must stay `overflow: visible` so a View unfurl (and any Popover in actions)
+ * can paint below the bar. A scroll container here clips both axes. */
 .gt-contextbar__slot {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   min-width: 0;
-  /* Explicit: this row must never clip a panel that opens out of it. */
   overflow: visible;
 }
 
-/* The view strip is a row in its own right now that it portals into the top
-   bar's centre slot on its own, rather than as one child of a full-width bar. */
+/* The view strip portals into the top bar's centre slot. Overflow stays
+   visible so the View stack can paint below the bar. */
 .gt-contextbar__views {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
+  position: relative;
+  overflow: visible;
 }
 
-.gt-contextbar__views::-webkit-scrollbar {
-  display: none;
+/* View trigger + dropdown share one column the width of the View segment so
+   Tile/Rows/Grid flow down attached at the same size — not a second bar under
+   All. */
+.gt-seg__unfurl-anchor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 0 0 auto;
+  border-left: 1px solid var(--gt-border);
+}
+
+.gt-seg > .gt-seg__unfurl-anchor:first-child {
+  border-left: 0;
+}
+
+.gt-seg__unfurl-anchor > .gt-seg__item {
+  width: 100%;
+  text-align: center;
+}
+
+/* Let the stack escape the pill's overflow clip while open. Square the
+   trailing corner so the View trigger reads as one piece with the drop. */
+.gt-seg.is-unfurled {
+  overflow: visible;
+  border-bottom-right-radius: 0;
+}
+
+.gt-seg.is-unfurled .gt-seg__unfurl-anchor > .gt-seg__item {
+  border-bottom-right-radius: 0;
+}
+
+/* Vertical stack attached under View — continuation of the parent seg chrome,
+   not a second nested `.gt-seg` pill floating over the page. */
+.gt-contextbar__views-unfurl {
+  position: absolute;
+  top: 100%;
+  /* Overlap the parent seg border so the drop shares one outline. */
+  left: -1px;
+  right: -1px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--gt-surface-2);
+  border: 1px solid var(--gt-border);
+  border-top: 0;
+  border-radius: 0 0 var(--gt-radius-sm) var(--gt-radius-sm);
+  box-shadow: var(--gt-shadow-md, 0 8px 20px color-mix(in srgb, var(--gt-bg) 55%, transparent));
+  overflow: hidden;
+}
+
+.gt-contextbar__views-unfurl .gt-seg__item {
+  width: 100%;
+  text-align: center;
+  border-radius: 0;
+}
+
+.gt-contextbar__views-unfurl .gt-seg__item + .gt-seg__item {
+  border-left: 0;
+  border-top: 1px solid var(--gt-border);
 }
 
 .gt-contextbar__actions {

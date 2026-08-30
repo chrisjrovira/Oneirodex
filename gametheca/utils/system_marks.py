@@ -34,6 +34,7 @@ MARK_SIZE = 256
 # Generate larger then downscale — SD reads hardware shape better at 512.
 GEN_SIZE = 512
 MARK_TIMEOUT = 180.0
+PROMPT_MAX = 1500
 _SAFE_SLUG = re.compile(r'^[a-z0-9][a-z0-9_-]{0,63}$')
 
 _NEGATIVE = (
@@ -133,6 +134,11 @@ _PLATFORM_LOOK: dict[str, str] = {
 
 def platform_ids() -> list[str]:
     return [member.name.lower() for member in LibraryPlatform]
+
+
+def platform_choices() -> list[dict[str, str]]:
+    """Id + display label for the Art Studio lab picker."""
+    return [{'id': member.name.lower(), 'label': member.value} for member in LibraryPlatform]
 
 
 def theme_slugs() -> list[str]:
@@ -235,6 +241,39 @@ def build_system_mark_prompt(*, platform: str, theme: str) -> str:
     )
 
 
+def _resolve_mark_prompt(*, platform: str, theme: str, prompt: str | None = None) -> str:
+    custom = (prompt or '').strip()
+    if custom:
+        if len(custom) > PROMPT_MAX:
+            raise ValueError(f'prompt must be {PROMPT_MAX} characters or fewer')
+        return custom
+    return build_system_mark_prompt(platform=platform, theme=theme)
+
+
+def system_mark_lab_spec(
+    *,
+    theme: str,
+    platform: str,
+    package_root: str | Path | None = None,
+) -> dict[str, Any]:
+    """Prompt + current file for the Art Studio one-at-a-time lab."""
+    plat = _validate_slug(platform, kind='platform')
+    if plat not in set(platform_ids()):
+        raise ValueError(f'Unknown platform id: {plat}')
+    theme_slug = _validate_slug(theme, kind='theme')
+    if theme_slug != 'default' and theme_slug not in PRESET_BY_SLUG:
+        raise ValueError(f'Unknown theme slug: {theme_slug}')
+    return {
+        'theme': theme_slug,
+        'platform': plat,
+        'label': _platform_label(plat),
+        'prompt': build_system_mark_prompt(platform=plat, theme=theme_slug),
+        'negative': _NEGATIVE,
+        'url': static_mark_url(theme_slug, plat),
+        'exists': mark_exists(theme_slug, plat, package_root),
+    }
+
+
 def _png_to_webp(png_bytes: bytes, *, size: int = MARK_SIZE) -> bytes:
     from PIL import Image
 
@@ -307,22 +346,24 @@ def generate_system_mark(
     package_root: str | Path | None = None,
     force: bool = False,
     timeout: float = MARK_TIMEOUT,
+    prompt: str | None = None,
 ) -> dict[str, Any]:
     """Generate one mark. Skips when the file exists unless *force*."""
+    used_prompt = _resolve_mark_prompt(platform=platform, theme=theme, prompt=prompt)
     path = mark_path(theme, platform, package_root)
     if path.is_file() and not force:
         return {
             'theme': theme,
             'platform': platform,
-            'path': str(path),
             'url': static_mark_url(theme, platform),
             'skipped': True,
+            'prompt': used_prompt,
         }
 
     if not ai_artwork_enabled():
         raise ArtworkGenerationError('AI artwork is disabled (ENABLE_AI_ARTWORK)')
 
-    prompt = build_system_mark_prompt(platform=platform, theme=theme)
+    prompt = used_prompt
     png = get_generator().generate(
         prompt,
         width=GEN_SIZE,
@@ -344,7 +385,6 @@ def generate_system_mark(
     return {
         'theme': theme,
         'platform': platform,
-        'path': str(path),
         'url': static_mark_url(theme, platform),
         'skipped': False,
         'prompt': prompt,
@@ -358,6 +398,7 @@ def generate_system_marks(
     package_root: str | Path | None = None,
     force: bool = False,
     limit: int | None = None,
+    prompt: str | None = None,
 ) -> dict[str, Any]:
     """Batch generate marks. Idempotent; returns counts and per-item results."""
     theme_list = [_validate_slug(t, kind='theme') for t in (themes or theme_slugs())]
@@ -390,12 +431,14 @@ def generate_system_marks(
                     platform=plat,
                     package_root=package_root,
                     force=force,
+                    prompt=prompt,
                 )
                 results.append({
                     'theme': row['theme'],
                     'platform': row['platform'],
                     'url': row['url'],
                     'skipped': row['skipped'],
+                    'prompt': row.get('prompt') or '',
                 })
                 if row['skipped']:
                     skipped += 1
