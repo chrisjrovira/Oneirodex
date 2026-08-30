@@ -1063,6 +1063,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Simple table references - no DataTables initialization needed
     const scanJobsTableBody = document.getElementById('jobsTableBody');
     const unmatchedTableBody = document.getElementById('unmatchedFoldersTableBody');
+    let scanJobsPollInFlight = false;
+    let unmatchedPollInFlight = false;
 
     const urlParams = new URLSearchParams(window.location.search);
     const urlActiveTab = urlParams.get('active_tab');
@@ -1270,6 +1272,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const updateScanJobs = () => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+            return;
+        }
+        if (scanJobsPollInFlight) {
+            return;
+        }
+        scanJobsPollInFlight = true;
         fetch(buildScanJobsStatusUrl(scanJobFilters), { cache: 'no-store' })
             .then(response => {
                 if (!response.ok) {
@@ -1443,7 +1452,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 });
             })
-            .catch(error => console.error('Error fetching scan jobs status:', error));
+            .catch(error => console.error('Error fetching scan jobs status:', error))
+            .finally(() => { scanJobsPollInFlight = false; });
     };
 
     bindScanJobFilters();
@@ -1565,7 +1575,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const updateUnmatchedFolders = () => {
-        showSpinner();
+        if (unmatchedPollInFlight) {
+            return Promise.resolve();
+        }
+        unmatchedPollInFlight = true;
+        const quiet = unmatchedTableBody && unmatchedTableBody.children.length > 0;
+        if (!quiet) {
+            showSpinner();
+        }
         const priorSelected = new Set(unmatchedSelectedIds);
         // Reasons are fetched once and then cached, so the picker is populated
         // before the first row is built rather than appearing on a later redraw.
@@ -1777,6 +1794,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error fetching unmatched folders:', error);
             })
             .finally(() => {
+                unmatchedPollInFlight = false;
                 hideSpinner();
             });
     };
@@ -2831,14 +2849,22 @@ document.addEventListener('DOMContentLoaded', function() {
     updateScanJobs();
     updateUnmatchedFolders();
 
-    // Set up periodic updates
-    setInterval(updateScanJobs, 3000);  // Update every 3 seconds
+    // Periodic updates: skip hidden tabs and overlapping fetches so a live scan
+    // is not fighting a 3s status poll (and a 30s unmatched overlay) for the DB.
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            updateScanJobs();
+        }
+    });
+    setInterval(updateScanJobs, 3000);
     setInterval(() => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+            return;
+        }
         updateUnmatchedFolders().then(() => {
-            // Reapply current filters after periodic refresh
             filterUnmatchedRows();
         });
-    }, 30000);  // Update every 30 seconds
+    }, 30000);
 
     // Global functions for table interactions
     window.toggleIgnoreStatus = function(folderId, button) {

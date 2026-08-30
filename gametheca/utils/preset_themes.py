@@ -59,7 +59,10 @@ from gametheca.product import LEGACY_NAME, PRODUCT_NAME
 # play shell) so chrome is wallpaper/window/floor, not a solid colour slab.
 # The tree gained css/gt-era.css. Reset Themes so every pack copies it and
 # regenerated gt-tokens.css picks up --gt-era.
-GENERATOR_VERSION = 17
+# 18: Libraries & scans — skip drain-on-busy poll contention; flatten nested
+# scan-jobs / unmatched cards so the page is one list per pane, not a card in
+# a card. Reset Themes so volume copies pick up admin_manage_scanjobs CSS/JS.
+GENERATOR_VERSION = 18
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'

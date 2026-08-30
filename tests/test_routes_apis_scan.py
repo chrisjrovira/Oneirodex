@@ -359,6 +359,56 @@ class TestScanJobsStatus:
         assert 'Completed' in statuses
         assert 'Failed' in statuses
 
+    def test_scan_jobs_status_skips_drain_while_running(
+        self, client, admin_user, db_session, sample_library
+    ):
+        job = ScanJob(
+            library_uuid=sample_library.uuid,
+            folders={'test': 'folder'},
+            content_type='Games',
+            status='Running',
+            is_enabled=True,
+            last_run=datetime.now(timezone.utc),
+            scan_folder='/test/running',
+            total_folders=10,
+            folders_success=1,
+            folders_failed=0,
+        )
+        db_session.add(job)
+        db_session.commit()
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+        with patch('gametheca.utils.scan_queue.drain_scan_queue') as drain:
+            response = client.get('/api/scan_jobs_status')
+        assert response.status_code == 200
+        drain.assert_not_called()
+
+    def test_scan_jobs_status_drains_when_idle_with_queued(
+        self, client, admin_user, db_session, sample_library
+    ):
+        job = ScanJob(
+            library_uuid=sample_library.uuid,
+            folders={'test': 'folder'},
+            content_type='Games',
+            status='Queued',
+            is_enabled=True,
+            scan_folder='/test/queued',
+            total_folders=0,
+            folders_success=0,
+            folders_failed=0,
+        )
+        db_session.add(job)
+        db_session.commit()
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+        with patch('gametheca.utils.scan_queue.drain_scan_queue') as drain:
+            drain.return_value = None
+            response = client.get('/api/scan_jobs_status')
+        assert response.status_code == 200
+        drain.assert_called_once()
+
 
 class TestUnmatchedFolders:
     """Tests for unmatched_folders endpoint."""

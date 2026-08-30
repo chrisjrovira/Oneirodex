@@ -207,3 +207,27 @@ def test_jinja_views_are_links_not_buttons():
     seg = macro[macro.index('gt-seg__item'):]
     assert '<a class="gt-seg__item' in macro or 'a class="gt-seg__item' in seg
     assert 'href=' in seg
+
+
+LIBRARIES = ROOT / 'gametheca' / 'templates' / 'admin' / 'admin_manage_libraries.html'
+SCANJOBS_CSS = ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / 'admin' / 'admin_manage_scanjobs.css'
+
+
+def test_libraries_panel_is_not_a_card_inside_the_page_card():
+    """Libraries & scans already has a page shell. A Bootstrap .card around the
+    libraries table was a second frame — the nested-tables complaint."""
+    markup = _read(LIBRARIES)
+    assert "{% include 'admin/partials/admin_libraries_panel.html' %}" in markup
+    assert '<div class="card">' not in markup
+
+
+def test_scan_jobs_and_unmatched_are_not_nested_glass_cards():
+    """One primary list per pane: jobs / unmatched sit on the page shell, not
+    inside another blurred card."""
+    css = _read(SCANJOBS_CSS)
+    jobs = css.split('.scan-jobs-card {', 1)[1].split('}', 1)[0]
+    assert 'background: transparent' in jobs
+    unmatched = css.split('.admin_manage_scanjobs-unmatched-panel {', 1)[1].split('}', 1)[0]
+    assert 'background: transparent' in unmatched
+    panel = css.split('.admin_manage_scanjobs-nav-panel {', 1)[1].split('}', 1)[0]
+    assert 'background: transparent' in panel

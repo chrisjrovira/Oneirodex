@@ -397,14 +397,14 @@
     }
 }
 
-/* Jobs table container styling */
+/* Jobs table: toolbar + one table, not a card inside the page card. */
 .scan-jobs-card {
-    background: var(--bg-light-overlay);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border-light-strong);
-    border-radius: var(--border-radius-lg);
-    padding: 20px;
-    margin-bottom: 20px;
+    background: transparent;
+    backdrop-filter: none;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: var(--gt-stack, 1.25rem);
 }
 
 .scan-jobs-card .card-header {
@@ -1013,13 +1013,16 @@
     color: color-mix(in srgb, var(--gt-danger) 35%, var(--gt-text));
 }
 
-/* Tab styling */
+/* Tab styling.
+   Nested glass (this panel + .container-settings + .scan-jobs-card) read as
+   tables inside tables. The page shell is .container-settings; this wrapper
+   stays a layout slot only. */
 .admin_manage_scanjobs-nav-panel {
-    background: var(--bg-white-05);
-    backdrop-filter: blur(10px);
-    border-radius: var(--border-radius-lg);
+    background: transparent;
+    backdrop-filter: none;
+    border-radius: 0;
     padding: 0;
-    margin-bottom: 30px;
+    margin-bottom: var(--gt-stack, 1.5rem);
 }
 
 .container-settings {
@@ -1112,11 +1115,11 @@
 }
 
 .admin_manage_scanjobs-unmatched-panel {
-    background: var(--bg-light-overlay);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border-light-strong);
-    border-radius: var(--border-radius-lg);
-    padding: 30px;
+    background: transparent;
+    backdrop-filter: none;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
     width: 100%;
     max-width: none;
 }

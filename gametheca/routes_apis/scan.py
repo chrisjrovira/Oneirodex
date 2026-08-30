@@ -19,6 +19,7 @@ from gametheca.utils.scan_job_timing import (
     parse_scan_job_status_filter,
 )
 from gametheca.utils.scan_match_settings import resolve_scan_match_policy
+from gametheca.utils.scan_queue import maybe_drain_scan_queue, queue_position
 from . import apis_bp
 
 VALID_UNMATCHED_EXPORT_STATUSES = {'all', 'Unmatched', 'Duplicate', 'Ignore', 'Pending'}
@@ -600,11 +601,10 @@ def _scan_job_status_row(job, *, queue_position_fn=None) -> dict:
 @login_required
 @admin_required
 def scan_jobs_status():
-    from gametheca.utils.scan_queue import drain_scan_queue, queue_position
-
-    # Safety drain on status poll (admin UI ~2s) when idle+Queued stuck.
+    # Safety drain only when idle+Queued. A Running scan must not share this
+    # lock with a 3s admin poll — see maybe_drain_scan_queue.
     try:
-        drain_scan_queue(current_app._get_current_object())
+        maybe_drain_scan_queue(current_app._get_current_object())
     except Exception:
         pass
 

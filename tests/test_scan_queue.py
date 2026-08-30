@@ -14,6 +14,7 @@ from gametheca.utils.scan_queue import (
     create_scan_job_row,
     drain_scan_queue,
     find_queued_for_library,
+    maybe_drain_scan_queue,
     parse_force_parallel,
     parse_queue_policy,
     promote_next_queued_scan,
@@ -205,6 +206,38 @@ class TestStartOrQueueScan:
             with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
                 mock_thread.return_value.start = lambda: None
                 promoted = drain_scan_queue(app)
+            assert promoted is not None
+            assert promoted.id == queued.id
+            assert db_session.get(ScanJob, queued.id).status == 'Running'
+
+    def test_maybe_drain_skips_while_a_job_is_running(
+        self, app, db_session, sample_library, running_job
+    ):
+        with app.app_context():
+            queued = create_scan_job_row(
+                folder_path='/games/waiting',
+                library_uuid=sample_library.uuid,
+                status='Queued',
+            )
+            with patch('gametheca.utils.scan_queue.drain_scan_queue') as drain:
+                result = maybe_drain_scan_queue(app)
+            drain.assert_not_called()
+            assert result is None
+            assert db_session.get(ScanJob, queued.id).status == 'Queued'
+            assert db_session.get(ScanJob, running_job.id).status == 'Running'
+
+    def test_maybe_drain_promotes_when_idle(
+        self, app, db_session, sample_library
+    ):
+        with app.app_context():
+            queued = create_scan_job_row(
+                folder_path='/games/idle-drain',
+                library_uuid=sample_library.uuid,
+                status='Queued',
+            )
+            with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
+                mock_thread.return_value.start = lambda: None
+                promoted = maybe_drain_scan_queue(app)
             assert promoted is not None
             assert promoted.id == queued.id
             assert db_session.get(ScanJob, queued.id).status == 'Running'

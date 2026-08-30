@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from time import perf_counter
 from urllib.parse import urlparse
 
+from flask import current_app
 from sqlalchemy import func, or_, select, text
 
 from gametheca import db
@@ -22,6 +23,7 @@ from gametheca.utils.malware_scan import malware_scan_enabled, module_status
 from gametheca.utils.ops_issues import derive_issues
 from gametheca.utils.ops_network import get_network_stats
 from gametheca.utils.scan_job_timing import compute_scan_job_timing
+from gametheca.utils.scan_queue import maybe_drain_scan_queue
 from gametheca.utils.status import get_config_values, get_system_info
 from gametheca.utils.system_stats import (
     get_cpu_usage,
@@ -155,11 +157,10 @@ def _scan_job_payload(job):
 
 def _scan_snapshot():
     """Return active + queued + recent scan jobs (with live counters) and failure count."""
-    # Safety drain: if idle with Queued jobs (missed promote), start next on Ops poll.
+    # Safety drain only when idle+Queued. Skip while Running so a 15s Ops poll
+    # does not contend with the live worker (same gate as scan_jobs_status).
     try:
-        from gametheca.utils.scan_queue import drain_scan_queue
-        from flask import current_app
-        drain_scan_queue(current_app._get_current_object())
+        maybe_drain_scan_queue(current_app._get_current_object())
     except Exception:
         pass
 
