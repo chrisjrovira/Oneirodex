@@ -33,6 +33,11 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   })
 }
 
+function ownedTitlesCounts() {
+  const el = document.querySelector('.gt-ownership__card-counts')
+  return (el?.textContent || '').replace(/\s+/g, ' ').trim()
+}
+
 beforeEach(() => {
   document.head.innerHTML = '<meta name="csrf-token" content="token-abc">'
   global.fetch = vi.fn()
@@ -50,7 +55,9 @@ test('renders ownership summary after loading', async () => {
 
   expect(screen.getByText('Loading ownership status…')).toBeInTheDocument()
 
-  expect(await screen.findByText(/12 synced · 5 matched/)).toBeInTheDocument()
+  await waitFor(() => {
+    expect(ownedTitlesCounts()).toMatch(/12 synced · 5 matched/)
+  })
   const storeRows = screen.getAllByRole('listitem')
   const steamRow = storeRows.find((row) => /Steam/.test(row.textContent || ''))
   const gogRow = storeRows.find((row) => /^GOG/.test((row.textContent || '').trim()) || /\bGOG\b/.test(row.textContent || ''))
@@ -105,7 +112,9 @@ test('shows retry when the summary request fails', async () => {
 
   await user.click(screen.getByRole('button', { name: /Try again/i }))
 
-  expect(await screen.findByText(/12 synced · 5 matched to library/)).toBeInTheDocument()
+  await waitFor(() => {
+    expect(ownedTitlesCounts()).toMatch(/12 synced · 5 matched/)
+  })
 })
 
 test('sync posts to the steam sync endpoint with the CSRF header', async () => {

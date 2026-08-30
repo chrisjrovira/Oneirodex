@@ -14,6 +14,11 @@ function renderLibrary(ui) {
   return render(<MemoryRouter initialEntries={['/library']}>{ui}</MemoryRouter>)
 }
 
+async function openFilters(user) {
+  await user.click(await screen.findByRole('button', { name: 'Filters' }))
+  return screen.findByRole('dialog', { name: /Filters/ })
+}
+
 const initialConfig = {
   perPage: 20,
   defaultSort: 'name',
@@ -84,6 +89,7 @@ test('apply omits rating when zero', async () => {
   vi.stubGlobal('fetch', fetchMock)
 
   renderLibrary(<LibraryApp initialConfig={initialConfig} />)
+  await openFilters(user)
   await user.click(await screen.findByRole('button', { name: 'Apply' }))
 
   await waitFor(() => {
@@ -122,6 +128,7 @@ test('apply persists selected filters and refreshes browse results', async () =>
 
   renderLibrary(<LibraryApp initialConfig={initialConfig} />)
 
+  await openFilters(user)
   await user.selectOptions(
     await screen.findByLabelText('Genre'),
     'Action',
@@ -139,7 +146,7 @@ test('apply persists selected filters and refreshes browse results', async () =>
   })
 })
 
-test('kind chips set item_kind on browse and cookie', async () => {
+test('kind views set a single item_kind on browse and cookie', async () => {
   const user = userEvent.setup()
   const fetchMock = vi.fn((url) => {
     if (url.startsWith('/browse_games?')) {
@@ -157,13 +164,18 @@ test('kind chips set item_kind on browse and cookie', async () => {
   renderLibrary(<LibraryApp initialConfig={initialConfig} />)
 
   await user.click(await screen.findByRole('button', { name: 'Games' }))
+  await waitFor(() => {
+    expect(decodeURIComponent(document.cookie)).toContain('"item_kind":"game"')
+  })
+
   await user.click(screen.getByRole('button', { name: 'Emulators' }))
 
   await waitFor(() => {
-    expect(decodeURIComponent(document.cookie)).toContain('"item_kind":"game,emulator"')
+    expect(decodeURIComponent(document.cookie)).toContain('"item_kind":"emulator"')
+    expect(decodeURIComponent(document.cookie)).not.toContain('game,emulator')
     const browseUrls = fetchMock.mock.calls
       .map(([url]) => url)
       .filter((url) => url.startsWith('/browse_games?'))
-    expect(browseUrls.at(-1)).toContain('item_kind=game%2Cemulator')
+    expect(browseUrls.at(-1)).toContain('item_kind=emulator')
   })
 })

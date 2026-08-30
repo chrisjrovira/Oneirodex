@@ -4,11 +4,12 @@
   "families": {
     "Arcade": 1,
     "Atari": 4,
+    "Commodore": 6,
     "Computer": 3,
     "Disc era": 4,
     "Early console": 6,
     "Handheld": 5,
-    "Home computer": 15,
+    "Home computer": 9,
     "NEC": 4,
     "Nintendo": 7,
     "Nintendo handheld": 7,
@@ -263,35 +264,35 @@
     {
       "id": "vice_x64sc",
       "name": "Commodore 64",
-      "family": "Home computer",
+      "family": "Commodore",
       "archetype": "computer",
       "variant": 4
     },
     {
       "id": "vice_x128",
       "name": "Commodore 128",
-      "family": "Home computer",
+      "family": "Commodore",
       "archetype": "computer",
       "variant": 1
     },
     {
       "id": "vice_xvic",
       "name": "Commodore VIC-20",
-      "family": "Home computer",
+      "family": "Commodore",
       "archetype": "computer",
       "variant": 0
     },
     {
       "id": "vice_xplus4",
       "name": "Commodore Plus/4",
-      "family": "Home computer",
+      "family": "Commodore",
       "archetype": "computer",
       "variant": 2
     },
     {
       "id": "vice_xpet",
       "name": "Commodore PET",
-      "family": "Home computer",
+      "family": "Commodore",
       "archetype": "computer",
       "variant": 1
     },
@@ -424,7 +425,7 @@
     {
       "id": "amiga",
       "name": "Commodore Amiga",
-      "family": "Home computer",
+      "family": "Commodore",
       "archetype": "computer",
       "variant": 1
     },

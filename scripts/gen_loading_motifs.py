@@ -43,7 +43,10 @@ FAMILY_RULES: list[tuple[str, str, str]] = [
     # (regex over the enum name, family, archetype)
     (r'^(AMIGA_CD32|JAGUAR_CD|CD_I)$', 'Disc era', 'disc'),
     (r'^(PCWIN|PCDOS|MAC|LINUX)$', 'Computer', 'computer'),
-    (r'^(AMIGA|VICE_|ATARI_ST|ATARI_8BIT|MSX|ZX|C16|CPC|GX4000|APPLE_II|X68000|PC_98)', 'Home computer', 'computer'),
+    # Commodore is its own picker group — VICE + Amiga outgrew a single
+    # "Home computer" bucket once 8-bit micros were added (CI ratchet: 12).
+    (r'^(AMIGA|VICE_|C16)', 'Commodore', 'computer'),
+    (r'^(ATARI_ST|ATARI_8BIT|MSX|ZX|CPC|GX4000|APPLE_II|X68000|PC_98)', 'Home computer', 'computer'),
     (r'^(NES|SNES|N64|NGC|WII|WII_U|SWITCH|FDS|SUFAMI)', 'Nintendo', 'pad'),
     (r'^(GB|GBA|GBC|NDS|N3DS|VB|POKE_MINI)', 'Nintendo handheld', 'handheld'),
     (r'^(PSX|PS2|PS3|PS4|PS5)$', 'PlayStation', 'pad'),
@@ -63,6 +66,8 @@ FAMILY_RULES: list[tuple[str, str, str]] = [
 
 DEFAULT_FAMILY = 'Other systems'
 DEFAULT_ARCHETYPE = 'cart'
+# Same ceiling as systemMotifs.test.jsx — a family past this needs splitting.
+MAX_FAMILY_SIZE = 12
 
 # Variant index within an archetype gives related systems distinguishable
 # geometry (button counts, screen aspect) without inventing 117 drawings.
@@ -114,6 +119,17 @@ def build() -> dict:
     families: dict[str, int] = {}
     for row in rows:
         families[row['family']] = families.get(row['family'], 0) + 1
+
+    oversized = sorted(
+        f'{name}:{count}'
+        for name, count in families.items()
+        if count > MAX_FAMILY_SIZE
+    )
+    if oversized:
+        raise SystemExit(
+            'motif family exceeds picker size — split FAMILY_RULES: '
+            + ', '.join(oversized)
+        )
 
     return {
         'generated_from': 'gametheca/platform.py',
