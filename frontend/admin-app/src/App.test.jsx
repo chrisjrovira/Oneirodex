@@ -161,9 +161,7 @@ test('renders admin brand and primary nav', () => {
       <App />
     </MemoryRouter>,
   )
-  expect(screen.getByText('Oneirodex')).toBeInTheDocument()
-  expect(screen.getByText('Admin')).toBeInTheDocument()
-  expect(screen.getByRole('navigation', { name: 'Admin' })).toBeInTheDocument()
+  expect(screen.getByText('Oneirodex Admin')).toBeInTheDocument()
   const nav = screen.getByRole('navigation', { name: 'Admin' })
   expect(nav.querySelector('a[href="/admin/dashboard"]')).toHaveTextContent('Dashboard')
   expect(nav.querySelector('a[href="/admin/settings"]')).toHaveTextContent('Settings')

@@ -9,6 +9,7 @@ See docs/admin/themes-reset.md.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,5 +33,7 @@ def test_game_edit_images_does_not_interpolate_urls_into_innerhtml():
 
 def test_library_game_grid_stays_auto_fill():
     src = (MEMBER_SRC / 'components' / 'GameGrid.css').read_text(encoding='utf-8')
-    assert 'repeat(auto-fill' in src
+    assert re.search(r'repeat\(\s*auto-fill', src), (
+        'library grid must keep CSS auto-fill (multiline repeat() still counts)'
+    )
     assert 'do NOT change this to auto-fit' in src

@@ -48,11 +48,11 @@ Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params 
 **When do “N games added” toasts show?**  
 When a library scan **finishes** (or is cancelled after titles landed), not while it is still running. Watch/import still group into a short digest. Toasts are dismissible (×) on member and admin, including classic admin pages.
 
-**Can I hide the Game Catalog Filters column?**  
-On desktop, the chevron collapses Filters to a slim rail so covers reclaim the width (saved in the browser). On phones/narrow tablets (≤900px), Filters still open as a drawer — collapse rail does not apply.
+**Where did the Game Catalog Filters column go?**  
+Two-bar chrome opens Filters from a **Filters** button on the catalog bar (popover with Apply · Clear · Done). There is no sticky left-hand Filters column to collapse.
 
-**What are Kind chips?**
-Inside Library Filters: Games · Soft titles · Emulators · Utilities — multi-select sets `item_kind` on browse (comma list; API tokens stay `experience` / `tool`). None selected = all kinds. Persist with other library filters. Tile badges stay short (**EXP** / **TOOL**) with tooltips **Soft title** / **Utility**.
+**What are Kind views?**
+On the Game Catalog bar: All · Games · Soft titles · Emulators · Utilities — one view at a time. All omits `item_kind`. Persist with other library filters. Tile badges stay short (**EXP** / **TOOL**) with tooltips **Soft title** / **Utility**.
 
 **Can I favorite, set play status, wishlist, or re-check freshness on many Game Catalog titles at once?**  
 Yes via Game Catalog multi-select (checkbox / long-press / Shift+click · **Select page** for visible tiles): sticky Favorite / Unfavorite / **Add to wishlist** / **Play status** / Refresh freshness / **Refresh covers** (More; librarian+ · max 20) / Clear. Batch APIs: favorite set/clear (`POST /api/games/batch/favorite`, ≤100) · play status (`POST /api/games/batch/status`, ≤100; empty status clears) · wishlist queue (`POST /api/games/batch/wishlist`, ≤50; accounts that can request) · freshness re-probe (`POST /api/games/batch/freshness/check`, ≤50) · cover refresh (`POST /api/games/batch/refresh_images`, ≤20; 202 queued). Sticky **Refresh freshness** always re-probes the selection. Only titles you can see; partial-success toasts report updated/queued/skipped/failed. Admins still use library-wide `POST /api/admin/freshness/refresh`. No DRM download queues.
