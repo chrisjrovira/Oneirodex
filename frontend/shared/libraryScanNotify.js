@@ -1,3 +1,5 @@
+import { MAX_INDIVIDUAL_TOASTS, stackSummaryMessage } from './toastStack'
+
 /**
  * Soft-detect “N games added to Library X” notifications from watch/scan.
  * Backend may send `kind` / `type` or only title/body — tolerate either.
@@ -99,6 +101,35 @@ export function groupedToastMessage(group) {
   }
   const games = `${group.total} game${group.total === 1 ? '' : 's'}`
   return group.library ? `${games} added to ${group.library}` : `${games} added`
+}
+
+/**
+ * Five libraries stay named. Six or more become one “N notifications” toast
+ * so a FIFO drain cannot cover Discover (or any other page).
+ *
+ * @param {Array<{ rows: object[] }>} groups
+ * @returns {Array<{ message: string, count: number, rows: object[] }>}
+ */
+export function burstToastMessages(groups) {
+  const list = Array.isArray(groups) ? groups : []
+  if (list.length === 0) {
+    return []
+  }
+  const allRows = list.flatMap((group) => group.rows || [])
+  if (list.length > MAX_INDIVIDUAL_TOASTS) {
+    return [
+      {
+        message: stackSummaryMessage(list.length),
+        count: list.length,
+        rows: allRows,
+      },
+    ]
+  }
+  return list.map((group) => ({
+    message: groupedToastMessage(group),
+    count: 1,
+    rows: group.rows || [],
+  }))
 }
 
 /**

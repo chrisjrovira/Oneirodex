@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchDiscoverRow } from '../api/discover'
 import { GameCard } from './GameCard'
+import { hbarLayout } from './hbarLayout'
 import { NewsCard } from './NewsCard'
 import { isShelfItemFullyVisible } from './shelfItemVisibility'
 import { useRowScroll } from './useRowScroll'
@@ -60,12 +61,12 @@ export function DiscoverShelf({
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState(false)
   /** Custom bar metrics — native scrollbar is hidden so hover bleed can stay. */
-  const [hbar, setHbar] = useState({ max: 0, left: 0, thumbPct: 100 })
+  const [hbar, setHbar] = useState({ max: 0, thumbPx: 0, leftPx: 0, scrollLeft: 0 })
   const abortRef = useRef(null)
   const hbarDragRef = useRef(null)
   // Arrows + bottom slider. Wheel on tiles/title scrolls the page; wheel on
-  // the slider pans the track. bindKey includes hbar presence so the slider
-  // wheel listener rebinds when the bar first appears.
+  // the slider pans the track. The lane always mounts so spacing matches
+  // every row, even when the track does not overflow.
   const {
     ref: trackRef,
     viewportRef,
@@ -75,18 +76,22 @@ export function DiscoverShelf({
     scrollByPage,
     startEdgeScroll,
     stopEdgeScroll,
-  } = useRowScroll({ bindKey: `${games.length}:${hbar.max > 1 ? 1 : 0}` })
+  } = useRowScroll({ bindKey: games.length })
 
   const syncHbar = useCallback(() => {
     const track = trackRef.current
+    const rail = hbarRef.current
     if (!track) return
-    const max = Math.max(0, track.scrollWidth - track.clientWidth)
-    const thumbPct =
-      track.scrollWidth > 0
-        ? Math.min(100, Math.max(8, (track.clientWidth / track.scrollWidth) * 100))
-        : 100
-    setHbar({ max, left: track.scrollLeft, thumbPct })
-  }, [trackRef])
+    setHbar({
+      ...hbarLayout({
+        scrollLeft: track.scrollLeft,
+        scrollWidth: track.scrollWidth,
+        clientWidth: track.clientWidth,
+        railWidth: rail?.clientWidth || 0,
+      }),
+      scrollLeft: track.scrollLeft,
+    })
+  }, [hbarRef, trackRef])
 
   // A fresh feed replaces the row wholesale rather than appending to whatever
   // the previous one had scrolled to.
@@ -97,18 +102,17 @@ export function DiscoverShelf({
 
   useEffect(() => () => abortRef.current?.abort(), [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const track = trackRef.current
-    if (!track) {
-      syncHbar()
-      return undefined
-    }
+    const rail = hbarRef.current
     syncHbar()
-    if (typeof ResizeObserver === 'undefined') return undefined
+    if (!track || typeof ResizeObserver === 'undefined') return undefined
     const observer = new ResizeObserver(syncHbar)
     observer.observe(track)
+    if (rail) observer.observe(rail)
+    for (const child of track.children) observer.observe(child)
     return () => observer.disconnect()
-  }, [games.length, syncHbar, trackRef])
+  }, [games.length, loading, hbarRef, syncHbar, trackRef])
 
   const complete = games.length >= totalCount
 
@@ -191,17 +195,34 @@ export function DiscoverShelf({
     (event) => {
       const track = trackRef.current
       const rail = event.currentTarget
-      if (!track || hbar.max <= 1) return
+      if (!track) return
+
+      const liveLayout = () =>
+        hbarLayout({
+          scrollLeft: track.scrollLeft,
+          scrollWidth: track.scrollWidth,
+          clientWidth: track.clientWidth,
+          railWidth: rail.getBoundingClientRect().width,
+        })
+
+      const start = liveLayout()
+      if (start.max <= 1) return
       event.preventDefault()
+      event.stopPropagation()
+
       const railBox = rail.getBoundingClientRect()
-      const thumbRatio = hbar.thumbPct / 100
-      const usable = railBox.width * (1 - thumbRatio)
+      let grab = event.clientX - railBox.left - start.leftPx
+      if (grab < 0 || grab > start.thumbPx) {
+        grab = start.thumbPx / 2
+      }
 
       const scrollFromClientX = (clientX) => {
-        if (usable <= 0) return
-        const x = clientX - railBox.left - (railBox.width * thumbRatio) / 2
-        const t = Math.min(1, Math.max(0, x / usable))
-        track.scrollLeft = t * hbar.max
+        const layout = liveLayout()
+        if (layout.max <= 1 || layout.usable <= 0) return
+        const box = rail.getBoundingClientRect()
+        const x = clientX - box.left - grab
+        const t = Math.min(1, Math.max(0, x / layout.usable))
+        track.scrollLeft = t * layout.max
         measure()
         syncHbar()
       }
@@ -217,7 +238,7 @@ export function DiscoverShelf({
       window.addEventListener('pointermove', onMove)
       window.addEventListener('pointerup', onUp)
     },
-    [hbar.max, hbar.thumbPct, measure, syncHbar, trackRef],
+    [measure, syncHbar, trackRef],
   )
 
   if (!games.length) {
@@ -225,7 +246,10 @@ export function DiscoverShelf({
   }
 
   const layout = section.layout || 'shelf'
-  const showSeeAll = Boolean(section.has_more && section.more_href)
+  const moreHref =
+    itemKind === 'articles' ? section.more_href || '/news' : section.more_href
+  const showSeeAll =
+    Boolean(moreHref) && (itemKind === 'articles' || Boolean(section.has_more))
 
   return (
     <section
@@ -283,7 +307,7 @@ export function DiscoverShelf({
           </button>
         ) : null}
         {showSeeAll ? (
-          <Link className="gt-shelf__seeall" to={section.more_href}>
+          <Link className="gt-shelf__seeall" to={moreHref}>
             See all
           </Link>
         ) : null}
@@ -338,7 +362,7 @@ export function DiscoverShelf({
             {showSeeAll && complete ? (
               <Link
                 className="gt-shelf__item gt-shelf__more"
-                to={section.more_href}
+                to={moreHref}
                 aria-label={`See all in ${section.title}`}
               >
                 <span className="gt-shelf__more-mark" aria-hidden="true">
@@ -364,30 +388,27 @@ export function DiscoverShelf({
           </button>
         </div>
 
-        {hbar.max > 1 ? (
+        <div
+          ref={hbarRef}
+          className="gt-shelf__hbar"
+          data-idle={hbar.max <= 1 ? 'true' : undefined}
+          role="scrollbar"
+          aria-label={`Scroll ${section.title}`}
+          aria-orientation="horizontal"
+          aria-disabled={hbar.max <= 1}
+          aria-valuemin={0}
+          aria-valuemax={Math.round(Math.max(hbar.max, 0))}
+          aria-valuenow={Math.round(hbar.scrollLeft || 0)}
+          onPointerDown={onHbarPointerDown}
+        >
           <div
-            ref={hbarRef}
-            className="gt-shelf__hbar"
-            role="scrollbar"
-            aria-label={`Scroll ${section.title}`}
-            aria-orientation="horizontal"
-            aria-valuemin={0}
-            aria-valuemax={Math.round(hbar.max)}
-            aria-valuenow={Math.round(hbar.left)}
-            onPointerDown={onHbarPointerDown}
-          >
-            <div
-              className="gt-shelf__hbar-thumb"
-              style={{
-                width: `${hbar.thumbPct}%`,
-                left:
-                  hbar.max > 0
-                    ? `${(hbar.left / hbar.max) * (100 - hbar.thumbPct)}%`
-                    : '0%',
-              }}
-            />
-          </div>
-        ) : null}
+            className="gt-shelf__hbar-thumb"
+            style={{
+              width: hbar.thumbPx > 0 ? `${hbar.thumbPx}px` : '100%',
+              left: `${hbar.leftPx}px`,
+            }}
+          />
+        </div>
       </div>
     </section>
   )

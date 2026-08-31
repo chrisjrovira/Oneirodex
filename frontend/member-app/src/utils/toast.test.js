@@ -43,6 +43,44 @@ test('dismissing one toast leaves the others alone', () => {
   expect(remaining[0].textContent).toContain('Second')
 })
 
+test('five info toasts stay individual', () => {
+  for (const label of ['One', 'Two', 'Three', 'Four', 'Five']) {
+    showToast(label, 'info')
+  }
+  const toasts = document.querySelectorAll('.gt-toast')
+  expect(toasts).toHaveLength(5)
+  expect(toasts[0].textContent).toContain('One')
+  expect(toasts[4].textContent).toContain('Five')
+})
+
+test('a sixth info toast collapses the stack to a count', () => {
+  for (const label of ['One', 'Two', 'Three', 'Four', 'Five', 'Six']) {
+    showToast(label, 'info')
+  }
+  const toasts = document.querySelectorAll('.gt-toast')
+  expect(toasts).toHaveLength(1)
+  expect(toasts[0].textContent).toContain('6 notifications')
+})
+
+test('further info toasts increment the collapsed count', () => {
+  for (let i = 0; i < 7; i += 1) {
+    showToast(`n${i}`, 'success')
+  }
+  expect(document.querySelectorAll('.gt-toast')).toHaveLength(1)
+  expect(document.querySelector('.gt-toast__text').textContent).toBe('7 notifications')
+})
+
+test('error toasts never join the info stack', () => {
+  for (const label of ['One', 'Two', 'Three', 'Four', 'Five', 'Six']) {
+    showToast(label, 'info')
+  }
+  showToast('Scan failed', 'error')
+  const toasts = [...document.querySelectorAll('.gt-toast')]
+  expect(toasts).toHaveLength(2)
+  expect(toasts.some((el) => el.textContent.includes('6 notifications'))).toBe(true)
+  expect(toasts.some((el) => el.textContent.includes('Scan failed'))).toBe(true)
+})
+
 test('the returned dismiss handle closes it too', () => {
   const dismiss = showToast('Working', 'info')
   dismiss()

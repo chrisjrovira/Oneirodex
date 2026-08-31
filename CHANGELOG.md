@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Admin Settings hub is one sheet with On/Off pills beside each title (UID-033 — human QA still open).
+- Discover shelves use a pixel hbar, matching News scrollbar spacing, overlay-open tiles, and a Ways to Play rail glyph (UID-020 — human QA still open). `GENERATOR_VERSION` **19**.
+- Compose passes remaining OIDC and product-flag env into the app container (no `env_file` dump). Unraid Authentik LAN HTTP: [oidc-authentik-unraid.md](docs/runbooks/oidc-authentik-unraid.md) Appendix A.
 - GitHub default is **`chrisjrovira/oneirodex`** (the old `chrisjrovira/gametheca` URL still redirects). `SUPPORT_GITHUB_REPO` and `GT_SOURCE_URL` / `ONEIRODEX_SOURCE_URL` follow. Origin URL is `https://github.com/chrisjrovira/oneirodex.git`.
 - Identifier **phase 3a** ([ADR 0003](docs/adr/0003-product-name-oneirodex.md)): `ONEIRODEX_*` env wins over `GT_*`; CSS `--od-*` aliases `--gt-*`. Package path `gametheca/` and `.gt-*` classes stay.
 - Identifier **phase 3b** (partial): Compose defaults `oneirodex-app` / `oneirodex-db` / `oneirodex:1.0.0-beta`; npm `@oneirodex/api-client` (`createOneirodexClient` aliases `createGamethecaClient`); review containers `oneirodex-review-app` / `oneirodex-review-db`. Pytest database name remains `gamethecatest`. Pin live Unraid `APP_CONTAINER_NAME=gametheca-app` until the scan FIFO is idle. Package path / `.gt-*` / `RESET GAMETHECA` unchanged.

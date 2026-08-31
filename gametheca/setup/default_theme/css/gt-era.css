@@ -191,16 +191,18 @@ html[data-era] .gt-rail {
 html[data-era] .gt-topbar {
   position: relative;
   z-index: 30;
+  transition: opacity 0.22s ease;
 }
 
-/* Era also pins #content at z-index 1; mirror the shell hover stack with
-   matching specificity so enlarged tiles can paint over the thin top bar. */
+/* Era also pins #content at z-index 1; fade the bar (same as gt-shell.css)
+   so enlarged tiles show through without a z-index pop. */
 html[data-era] .gt-shell:has(.game-card:hover) .gt-topbar,
 html[data-era] .gt-shell:has(.game-card:focus-visible) .gt-topbar,
 html[data-era] .gt-shell:has(.game-card :focus-visible) .gt-topbar,
 html[data-era] .gt-shell:has(.gt-news-card:hover) .gt-topbar,
 html[data-era] .gt-shell:has(.gt-news-card:focus-visible) .gt-topbar {
-  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
 }
 
 html[data-era] .gt-shell:has(.game-card:hover) .gt-shell__main,

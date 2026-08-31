@@ -487,7 +487,7 @@ function ModuleBadge({ status }) {
   const on = Boolean(status.on)
   return (
     <span
-      className={`settings-shell-badge settings-shell-badge--${on ? 'on' : 'off'}`}
+      className={`gt-settings-badge settings-shell-badge settings-shell-badge--${on ? 'on' : 'off'}`}
       data-testid="settings-module-badge"
     >
       {status.label || (on ? 'On' : 'Off')}
@@ -500,9 +500,14 @@ export function SettingsPage() {
   // Grouped rows, not a card grid (UX-C9): cards forced every module to the
   // same visual weight and spread a short list over a lot of empty space.
   //
+  // One sheet, not four stacked `.gt-admin-panel`s — nested glass on this hub
+  // was the same "tables in tables" look UID-031 flattened on Libraries.
+  //
   // The on/off badges are the Jinja hub's, restored: the template rendered them
   // from a `module_status` variable, and when the body moved to React the
-  // variable kept being computed with nothing left to read it.
+  // variable kept being computed with nothing left to read it. They sit beside
+  // the title, not inside the title column — that 13rem slot was clipping
+  // "Scan / match policy" plus the pill.
   const [moduleStatus, setModuleStatus] = useState(null)
 
   useEffect(() => {
@@ -514,24 +519,26 @@ export function SettingsPage() {
 
   return (
     <Page title="Settings" lede="Server modules, matching policy, presentation, and extensions.">
-      {SETTINGS_GROUPS.map((group) => (
-        <section key={group.id} className="gt-admin-panel gt-settings-group">
-          <h2 className="gt-admin-panel-title">{group.title}</h2>
-          <ul className="gt-settings-list">
-            {group.items.map((item) => (
-              <li key={item.to}>
-                <a className="gt-settings-row" href={item.to}>
-                  <span className="gt-settings-row__title">
-                    {item.title}
-                    {item.statusKey ? <ModuleBadge status={moduleStatus?.[item.statusKey]} /> : null}
-                  </span>
-                  <span className="gt-settings-row__blurb">{item.blurb}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      <div className="gt-admin-panel gt-settings">
+        {SETTINGS_GROUPS.map((group) => (
+          <section key={group.id} className="gt-settings-group">
+            <h2 className="gt-settings-group__title">{group.title}</h2>
+            <ul className="gt-settings-list">
+              {group.items.map((item) => (
+                <li key={item.to}>
+                  <a className="gt-settings-row" href={item.to}>
+                    <span className="gt-settings-row__title">{item.title}</span>
+                    {item.statusKey ? (
+                      <ModuleBadge status={moduleStatus?.[item.statusKey]} />
+                    ) : null}
+                    <span className="gt-settings-row__blurb">{item.blurb}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
     </Page>
   )
 }
@@ -782,7 +789,7 @@ export function ThemesPage() {
   }
 
   return (
-    <Page title="Themes" lede="Apply presets from the volume; reset when tokens change after deploy.">
+    <Page title="Themes" lede="Reset default CSS after a deploy. Pick a look in Preferences.">
       <div className="gt-admin-actions-row">
         <button type="button" className="gt-btn" disabled={busy} onClick={resetThemes}>
           Reset Default Themes
@@ -811,7 +818,7 @@ export function HelpPage() {
           <code>/admin/api/ops/summary</code> — status strip, meters, issues list, services/scans tables.
         </li>
         <li>Libraries list comes from <code>/api/get_libraries</code>.</li>
-        <li>Settings cards open module pages (Arr, AI, Themes, Storage, …).</li>
+        <li>Settings rows open module pages (Arr, AI, Themes, Storage, …).</li>
         <li>
           Wave 7–11 flags: <code>ENABLE_ARR_MODULE</code>, <code>ENABLE_DEBRID</code>,{' '}
           <code>ENABLE_GAME_ASSISTS</code>, <code>ENABLE_MOD_TRACKING</code>,{' '}

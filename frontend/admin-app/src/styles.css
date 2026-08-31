@@ -20,6 +20,7 @@
   --gt-accent: #2fd67b;
   --gt-accent-contrast: #0b0d10;
   --gt-danger: #ff6b6b;
+  --gt-success: #4ade80;
   --gt-family-nintendo: #e60012;
   --gt-family-sony: #0070d1;
   --gt-family-xbox: #2fd67b;
@@ -218,6 +219,34 @@ body.admin-shell.modal-open > .modal-backdrop {
   color: var(--gt-text);
   border: 1px solid var(--gt-border);
   border-radius: var(--gt-radius-xl);
+}
+
+/* Server Settings (and other Jinja settings shells) sat in a second glass
+   panel inside `.container-settings`, then filled each Bootstrap column with
+   `.settings-section`. Theme CSS also pinned `.container-settings` at
+   min-width: 800px, which overflowed the admin column beside the rail. */
+.gt-admin-legacy .container-settings {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
+.gt-admin-legacy .gt-adminpage--spaced {
+  margin-block: 0;
+}
+
+.gt-admin-legacy .container-settings.gt-adminpage .gt-adminpage-panel {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+
+.gt-admin-legacy .gt-adminpage .settings-section {
+  background: transparent;
+  box-shadow: none;
+  height: auto;
 }
 
 .gt-admin-legacy .table,
@@ -2029,15 +2058,27 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 /* --- Settings as grouped rows (UX-C9) ------------------------------------- */
 /* Cards gave every module the same visual weight and spread a short list over
-   a lot of empty space. Rows read like the scans page instead. */
+   a lot of empty space. Rows read like the scans page instead. One outer
+   panel; group titles are eyebrows, not a second glass stack. */
 
 .gt-settings-group + .gt-settings-group {
-  margin-top: 0.75rem;
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--gt-border);
+}
+
+.gt-settings-group__title {
+  margin: 0;
+  font-size: var(--gt-font-sm);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gt-text-muted);
 }
 
 .gt-settings-list {
   list-style: none;
-  margin: 0.4rem 0 0;
+  margin: 0.35rem 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -2050,9 +2091,9 @@ body.admin-shell.modal-open > .modal-backdrop {
 .gt-settings-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.2rem 0.75rem;
-  padding: 0.5rem 0.4rem;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  padding: 0.55rem 0.35rem;
   border-radius: var(--gt-radius-sm);
   color: inherit;
   text-decoration: none;
@@ -2064,12 +2105,40 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .gt-settings-row__title {
-  flex: 0 0 13rem;
+  flex: 0 1 16rem;
+  min-width: 8rem;
   font-weight: 650;
 }
 
+/* Badge styles used to live only in unused admin_settings_shell.css, so the
+   SPA hub rendered On/Off as raw text jammed into the title column. */
+.gt-settings-badge,
+.settings-shell-badge {
+  flex: 0 0 auto;
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--gt-radius-sm);
+  font-size: var(--gt-font-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  border: 1px solid transparent;
+}
+
+.settings-shell-badge--on {
+  color: var(--gt-success);
+  background: color-mix(in srgb, var(--gt-success) 16%, transparent);
+  border-color: color-mix(in srgb, var(--gt-success) 40%, transparent);
+}
+
+.settings-shell-badge--off {
+  color: var(--gt-text-muted);
+  background: color-mix(in srgb, var(--gt-text-muted) 12%, transparent);
+  border-color: color-mix(in srgb, var(--gt-text-muted) 28%, transparent);
+}
+
 .gt-settings-row__blurb {
-  flex: 1 1 16rem;
+  flex: 1 1 14rem;
   min-width: 0;
   font-size: var(--gt-font-sm);
   color: var(--gt-text-muted);

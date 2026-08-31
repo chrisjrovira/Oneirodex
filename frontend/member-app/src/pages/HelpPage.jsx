@@ -34,7 +34,7 @@ const FAQ_SECTIONS = [
     items: [
       'Top nav: Discover, Game Catalog, Systems, Downloads, Favorites.',
       'Ctrl+K / ⌘K (or Search) opens the command palette. Type two letters to search titles from any page. An empty box shows titles you played or opened, plus household favourites — not store trends.',
-      'Discover shelves can be pinned or hidden per account (Rows in the top bar). A shelf with nothing honest to show is hidden rather than padded. Genre See all opens a hub (unplayed / newly added / loved) — not a store genre page.',
+      'Discover shelves can be pinned or hidden per account (Rows in the top bar) — Pin and Hide take effect immediately. News See all opens the News page. Genre See all opens a hub (unplayed / newly added / loved) — not a store genre page.',
       'On long scrollable pages, Jump to top / Jump to bottom controls appear bottom-left (hide when the page does not scroll).',
       'More hubs Collections, Wishlist, Ownership, Big Picture, Ways to Play, and related tools.',
       'Ownership registers Steam / GOG / Epic / Amazon titles you already own. Live sync when a token is saved (GOG refresh token, Epic device-auth JSON, Amazon Nile/Heroic blob). Never a store download.',
@@ -64,7 +64,7 @@ const FAQ_SECTIONS = [
       'Game Catalog layout: open View on the kind bar for Tile (covers) · Rows (list lines) · Grid (denser covers). The choice is remembered in this browser. Favorites and News use the same View control.',
       'Trailers empty state is normal without metadata. Details use embeds; YouTube demo when no trailers.',
       'Extras & DLC lists on-server sidecars only - missing folders stay off-server. Discover may show Extras not on the vault for titles you play or favourite.',
-      'When watch/scan adds titles, a short toast may appear (Notifications inbox keeps the row).',
+      'When watch/scan adds titles, a short toast may appear (Notifications inbox keeps the row). More than five at once collapse to “N notifications”.',
     ],
   },
   {

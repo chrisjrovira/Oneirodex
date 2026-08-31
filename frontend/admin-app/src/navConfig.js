@@ -52,7 +52,7 @@ export const SETTINGS_GROUPS = [
     id: 'presentation',
     title: 'Presentation',
     items: [
-      { to: '/admin/themes', title: 'Themes', blurb: 'Apply presets; Reset Default Themes.' },
+      { to: '/admin/themes', title: 'Themes', blurb: 'Reset default CSS after deploy. Pick a look in Preferences.' },
       { to: '/admin/art_studio', title: 'Art studio', blurb: 'Placeholders + artwork picker / image queue.' },
       { to: '/admin/detail_layout', title: 'Detail layout', blurb: 'Game details field layout.' },
       { to: '/admin/attract_mode_settings', title: 'Attract mode', blurb: 'Idle trailer slideshow and filters.' },

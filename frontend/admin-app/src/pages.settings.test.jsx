@@ -43,6 +43,14 @@ describe('SettingsPage module badges', () => {
     expect(badges.filter((b) => b.className.includes('settings-shell-badge--off'))).toHaveLength(1)
     // `detail` is how the hub says "helpers on, apply still off".
     expect(screen.getByText(/Apply off/)).toBeInTheDocument()
+
+    // Badge beside the title, not inside it — the title column used to clip
+    // both the label and the pill.
+    const storageBadge = badges.find((b) => b.textContent.includes('Apply off'))
+    expect(storageBadge.closest('.gt-settings-row__title')).toBeNull()
+    expect(storageBadge.closest('.gt-settings-row')).not.toBeNull()
+    expect(document.querySelectorAll('.gt-settings-group.gt-admin-panel')).toHaveLength(0)
+    expect(document.querySelectorAll('.gt-admin-panel.gt-settings')).toHaveLength(1)
   })
 
   test('a failed status fetch leaves the hub links intact', async () => {

@@ -62,7 +62,10 @@ from gametheca.product import LEGACY_NAME, PRODUCT_NAME
 # 18: Libraries & scans — skip drain-on-busy poll contention; flatten nested
 # scan-jobs / unmatched cards so the page is one list per pane, not a card in
 # a card. Reset Themes so volume copies pick up admin_manage_scanjobs CSS/JS.
-GENERATOR_VERSION = 18
+# 19: Discover top bar fades (opacity) when a tile enlarges instead of popping
+# z-index; era hover stack matches. Reset Themes so volume copies pick up
+# gt-shell.css / gt-era.css.
+GENERATOR_VERSION = 19
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'

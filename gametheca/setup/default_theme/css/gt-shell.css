@@ -875,10 +875,15 @@ body.gt-shell-host > #admin-legacy-content:empty {
   padding-inline-end: calc(var(--gt-gutter) + var(--gt-scrollbar-w, 9px));
   background: color-mix(in srgb, var(--gt-surface) 88%, var(--gt-bg));
   border-bottom: 1px solid var(--gt-border);
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.22s ease;
 }
 
-/* Enlarged tiles must paint over the thin top bar. Lower the bar and raise the
-   scroll pane only while a card is hovered / keyboard-focused. */
+/* Enlarged tiles must paint over the thin top bar. Fade the bar instead of
+   dropping z-index — stacking order cannot interpolate, which is what made
+   the hide pop. Opacity 0 + pointer-events none lets the tile show through
+   and stay clickable. */
 /* No nested :has() — Chromium drops the whole selector list if one entry is
    invalid. Descendant `:focus-visible` covers keyboard focus inside a card. */
 .gt-shell:has(.game-card:hover) .gt-topbar,
@@ -891,7 +896,8 @@ body.gt-shell-host:has(.game-card:focus-visible) .gt-topbar,
 body.gt-shell-host:has(.game-card :focus-visible) .gt-topbar,
 body.gt-shell-host:has(.gt-news-card:hover) .gt-topbar,
 body.gt-shell-host:has(.gt-news-card:focus-visible) .gt-topbar {
-  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .gt-shell:has(.game-card:hover) .gt-shell__main,
@@ -1222,6 +1228,10 @@ body.gt-shell-host:has(.game-card :focus-visible) > #admin-legacy-content {
 
 @media (prefers-reduced-motion: reduce) {
   .gt-rail {
+    transition: none;
+  }
+
+  .gt-topbar {
     transition: none;
   }
 }

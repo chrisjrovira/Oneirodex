@@ -184,6 +184,10 @@ Full stack in one shot:
 docker compose --profile livekit --profile clamav --profile challenge up -d --build
 ```
 
+This household’s Unraid `.env` pins `COMPOSE_FILE=docker-compose.yml` so Compose Manager does not merge `docker-compose.override.yml` (NVIDIA `deploy` on `sdnext` fails the whole stack when the driver is not loaded). Product flags that are on in that file still leave **`ENABLE_AI_AUTO_APPLY=false`** and **`ALLOW_HARDLINK_APPLY=false`**. Artwork stays on the Windows 2080 box (`AI_ARTWORK_URL`), not `--profile artwork`. `GT_LIBRARY_WATCH` stays off on `/mnt/user` FUSE.
+
+SSO is **Authentik** already installed via Dockerman (`authentik` / `authentik-worker` on `authentik-net`, UI `http://192.168.50.116:9000`). Oneirodex OAuth slug **`oneirodex`**, redirect `http://192.168.50.116:5006/login/oidc/callback`. Env `OIDC_ENABLED=true` is not enough — also set `global_settings.oidc_enabled` (Admin → Integrations → OIDC, or SQL after rebuild). LAN HTTP cookies: `SESSION_COOKIE_SECURE=false`, `TRUSTED_PROXIES=0`. Walkthrough: [oidc-authentik-unraid.md](oidc-authentik-unraid.md) Appendix A.
+
 **Observability / Grafana:** not bundled. Prefer Admin → Ops + probes. Commented Compose stub only — [observability-profile.md](observability-profile.md).
 
 ## First boot checklist
@@ -307,7 +311,7 @@ Full matrix: [themes-reset.md](../admin/themes-reset.md).
 7. Preferences swatch grid responds; page reloads after save; tile size changes grid density
 8. Covers show for games with downloaded images (fallback only when truly missing)
 9. Admin: React top bar — no member left sidebar; Dashboard / Libraries / Settings work
-10. `/admin/settings` card grid; Themes → Reset Default Themes after rebuild
+10. `/admin/settings` grouped rows (one sheet); Themes → Reset Default Themes after rebuild
 11. Collections: create, search-add, reorder, edit, delete
 12. **Game details SPA** (`/game_details/<uuid>`): TopNav present; summary/versions/screenshots load; Check stores works
 13. **Updates** (`/updates`): freshness inbox; store search binds to library games; Want pack; Download / Apply

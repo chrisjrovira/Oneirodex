@@ -46,7 +46,7 @@ Preferences → items per page: **20 / 50 / 100 / 200 / 250 / 300 / 400 / 500 / 
 Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params as the badges; they persist with other filters. VR is a tile badge / More → VR, not a Signals chip. MISSING means files were removed from disk. Tile badges sit in four corners only (occupied corners; rounded-square chrome). No OUT / ~ / RELEASE on tiles or Signals chips (UPDATE alone covers freshness-behind).
 
 **When do “N games added” toasts show?**  
-When a library scan **finishes** (or is cancelled after titles landed), not while it is still running. Watch/import still group into a short digest. Toasts are dismissible (×) on member and admin, including classic admin pages.
+When a library scan **finishes** (or is cancelled after titles landed), not while it is still running. Watch/import still group into a short digest. More than five toasts at once collapse to **N notifications** (inbox still has every row). Toasts are dismissible (×) on member and admin, including classic admin pages.
 
 **Where did the Game Catalog Filters column go?**  
 Two-bar chrome opens Filters from a **Filters** button on the catalog bar (popover with Apply · Clear · Done). There is no sticky left-hand Filters column to collapse.
@@ -76,7 +76,7 @@ Those blocks are fill-only from Steam `appdetails` when a title was identified t
 Game details → **Extras & DLC**. Rows show honest **on-server** when the vault has the folder; PC libraries pick up common `DLC`/`extras` sidecars on scan — console DLC ingest is deferred. Discover may show **Extras not on the vault** for titles you already play or favourite when a catalogued extra is missing on disk. That row is an acquire hint, not a sale.
 
 **What is a genre hub?**  
-A Discover **See all** on a genre zone opens `/discover/hub/genre/…` — unplayed, newly added, and loved-here shelves for that genre. **Browse the catalog** is the full filtered list. It is not a store genre storefront.
+A Discover **See all** on a genre zone opens `/discover/hub/genre/…` — unplayed, newly added, and loved-here shelves for that genre. **Browse the catalog** is the full filtered list. It is not a store genre storefront. The **News** shelf’s See all opens the News page (`/news`).
 
 **What is on a game details page besides Play and Download?**  
 A breadcrumb (Catalog or Systems › genre › title), a media stage when a trailer or screenshot exists, capability chips that filter the catalog, **About** when a storyline was stored, and — only if Steam filled them — system requirements and a store-language matrix. ROM region chips stay filename truth. **More from** this developer or publisher lists other vault titles you can already see (hidden when there are fewer than two). No cart, price, or Deck Verified.

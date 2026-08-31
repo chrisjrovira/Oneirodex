@@ -169,6 +169,9 @@ def test_tile_hover_has_no_accent_glow_and_grows_from_center():
     assert 'grid-area: main' in _rule(shell, '.gt-topbar')
     assert 'z-index: 30' in _rule(shell, '.gt-topbar')
     assert '.gt-shell:has(.game-card:hover) .gt-topbar' in shell
+    hover_bar = shell.split('.gt-shell:has(.game-card:hover) .gt-topbar', 1)[1]
+    assert 'opacity: 0' in hover_bar.split('}', 1)[0] or 'opacity: 0' in shell
+    assert 'transition: opacity 0.22s ease' in _rule(shell, '.gt-topbar')
     # Nested :has() invalidates the whole selector list in Chromium — use a
     # descendant focus check instead.
     assert '.gt-shell:has(.game-card:has(:focus-visible))' not in shell

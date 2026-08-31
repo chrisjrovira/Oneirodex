@@ -6,6 +6,32 @@ import { DiscoverShelf, formatEventEnds, rowItems } from './components/DiscoverS
 import { DiscoverRowSettings } from './components/DiscoverRowSettings'
 import { PageStatus } from './components/PageStatus'
 
+/**
+ * Apply pin order and hidden rows on the client so Pin / Hide take effect
+ * immediately. The feed only honours arrangement on the next load, which made
+ * the heading buttons look dead.
+ */
+export function arrangeDiscoverSections(sections, { pins = [], hidden = [] } = {}) {
+  const hiddenSet = new Set(hidden.map(String))
+  const shown = sections.filter((section) => {
+    if (hiddenSet.has(String(section.identifier || ''))) return false
+    return rowItems(section).length > 0
+  })
+  if (!pins.length) return shown
+  const pinIndex = new Map(pins.map((id, i) => [String(id), i]))
+  const pinned = []
+  const rest = []
+  for (const section of shown) {
+    if (pinIndex.has(String(section.identifier || ''))) pinned.push(section)
+    else rest.push(section)
+  }
+  pinned.sort(
+    (a, b) =>
+      pinIndex.get(String(a.identifier)) - pinIndex.get(String(b.identifier)),
+  )
+  return pinned.concat(rest)
+}
+
 export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
@@ -65,20 +91,27 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
   /**
    * Push an arrangement change and roll back if the server refuses it.
    *
-   * Optimistic on purpose: pins and exclusions only take visible effect on the
-   * next feed load anyway, so waiting for a round trip before updating the
-   * control would make every one of these feel broken. The rollback matters for
-   * the one case the server genuinely says no to — hiding a shelf an admin
-   * forced — where the control must not keep a state the feed will not honour.
+   * Optimistic: pin order and hides apply on this feed immediately. A refetch
+   * after a successful save keeps the payload in agreement with the buttons.
    */
+  const reloadFeed = useCallback(() => {
+    return fetchDiscoverSections()
+      .then(setSections)
+      .catch(() => {
+        /* Arrangement already applied locally; a failed refetch is not a rollback. */
+      })
+  }, [])
+
   const commit = useCallback(
     (next, previous) => {
-      saveDiscoverPins(next).catch(() => {
-        if (previous.pins) setPins(previous.pins)
-        if (previous.hidden) setHidden(previous.hidden)
-      })
+      saveDiscoverPins(next)
+        .then(() => reloadFeed())
+        .catch(() => {
+          if (previous.pins) setPins(previous.pins)
+          if (previous.hidden) setHidden(previous.hidden)
+        })
     },
-    [],
+    [reloadFeed],
   )
 
   const togglePin = useCallback(
@@ -136,8 +169,8 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
   // Rows of games carry `games`, rows of anything else carry `items`. Reading
   // only the former would have hidden the news row entirely.
   const visible = useMemo(
-    () => sections.filter((section) => rowItems(section).length > 0),
-    [sections],
+    () => arrangeDiscoverSections(sections, { pins, hidden }),
+    [hidden, pins, sections],
   )
 
   /**
@@ -151,7 +184,7 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
    */
   const settingsRows = useMemo(() => {
     const titles = new Map(
-      visible.map((section) => [
+      sections.map((section) => [
         String(section.identifier || ''),
         section.title || String(section.identifier || ''),
       ]),
@@ -160,7 +193,7 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
       identifier,
       title: titles.get(identifier) || prettifyIdentifier(identifier),
     }))
-  }, [known, visible])
+  }, [known, sections])
 
   if (loading || error) {
     return (
@@ -219,7 +252,7 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
             pinned={pins.includes(identifier)}
             canPin={pins.length < maxPins}
             onTogglePin={maxPins ? togglePin : undefined}
-            onHide={known.length ? toggleHidden : undefined}
+            onHide={toggleHidden}
           />
         )
       })}

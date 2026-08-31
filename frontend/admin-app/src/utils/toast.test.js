@@ -41,3 +41,12 @@ test('message text is never parsed as markup', () => {
   expect(text.querySelector('img')).toBeNull()
   expect(text.textContent).toContain('<img')
 })
+
+test('a sixth success toast collapses the stack to a count', () => {
+  for (const label of ['One', 'Two', 'Three', 'Four', 'Five', 'Six']) {
+    showToast(label, 'success')
+  }
+  const toasts = document.querySelectorAll('.gt-toast')
+  expect(toasts).toHaveLength(1)
+  expect(toasts[0].textContent).toContain('6 notifications')
+})

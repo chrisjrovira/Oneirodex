@@ -18,6 +18,8 @@ def test_gt_toast_is_dismissible_and_bridges_notify():
     assert 'textContent' in src
     assert 'jq.notify =' in src
     assert 'innerHTML' not in src
+    assert 'MAX_INDIVIDUAL_TOASTS = 5' in src
+    assert 'notification' in src
 
 
 def test_all_three_shells_load_gt_toast_after_notify():

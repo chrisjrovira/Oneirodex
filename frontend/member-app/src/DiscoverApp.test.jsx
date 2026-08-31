@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { DiscoverApp } from './DiscoverApp'
+import { arrangeDiscoverSections, DiscoverApp } from './DiscoverApp'
 
 /** Shelves link out, so the tree needs a router even when nothing links yet. */
 function renderDiscover(props = {}) {
@@ -279,4 +280,88 @@ test('the pin control is disabled once the member has used every pin', async () 
 
   const pin = await screen.findByRole('button', { name: 'Pin' })
   expect(pin).toBeDisabled()
+})
+
+test('hiding a row takes it off the feed immediately', async () => {
+  const user = userEvent.setup()
+  mockDiscoverFetch([
+    {
+      identifier: 'latest_games',
+      title: 'Latest Games',
+      total_count: 1,
+      games: [{ uuid: 'a-1', name: 'Alpha', cover_url: '/c.jpg', genres: [] }],
+    },
+    {
+      identifier: 'highest_rated',
+      title: 'Highest Rated',
+      total_count: 1,
+      games: [{ uuid: 'b-1', name: 'Beta', cover_url: '/c.jpg', genres: [] }],
+    },
+  ])
+
+  renderDiscover()
+  expect(await screen.findByRole('heading', { name: 'Latest Games' })).toBeInTheDocument()
+
+  await user.click(screen.getAllByRole('button', { name: 'Hide' })[0])
+
+  await waitFor(() => {
+    expect(screen.queryByRole('heading', { name: 'Latest Games' })).not.toBeInTheDocument()
+  })
+  expect(screen.getByRole('heading', { name: 'Highest Rated' })).toBeInTheDocument()
+})
+
+test('pinning a row moves it to the top of the feed immediately', async () => {
+  const user = userEvent.setup()
+  mockDiscoverFetch([
+    {
+      identifier: 'latest_games',
+      title: 'Latest Games',
+      total_count: 1,
+      games: [{ uuid: 'a-1', name: 'Alpha', cover_url: '/c.jpg', genres: [] }],
+    },
+    {
+      identifier: 'highest_rated',
+      title: 'Highest Rated',
+      total_count: 1,
+      games: [{ uuid: 'b-1', name: 'Beta', cover_url: '/c.jpg', genres: [] }],
+    },
+  ])
+
+  renderDiscover()
+  await screen.findByRole('heading', { name: 'Latest Games' })
+
+  await user.click(screen.getAllByRole('button', { name: 'Pin' })[1])
+
+  await waitFor(() => {
+    const headings = screen.getAllByRole('heading', { level: 2 }).map((node) => node.textContent)
+    expect(headings[0]).toContain('Highest Rated')
+  })
+})
+
+test('a news row always offers See all to the News page', async () => {
+  mockDiscoverFetch([
+    {
+      identifier: 'news',
+      title: 'News',
+      item_kind: 'articles',
+      total_count: 1,
+      has_more: false,
+      items: [{ kind: 'announcement', id: 'a-1', title: 'Still here', href: '/news' }],
+    },
+  ])
+
+  renderDiscover()
+
+  expect(await screen.findByRole('link', { name: /^See all$/ })).toHaveAttribute('href', '/news')
+  expect(screen.getByRole('link', { name: 'See all in News' })).toHaveAttribute('href', '/news')
+})
+
+test('arrangeDiscoverSections hides and pins without waiting for a refetch', () => {
+  const sections = [
+    { identifier: 'a', title: 'A', games: [{ uuid: '1' }] },
+    { identifier: 'b', title: 'B', games: [{ uuid: '2' }] },
+    { identifier: 'c', title: 'C', games: [{ uuid: '3' }] },
+  ]
+  const arranged = arrangeDiscoverSections(sections, { pins: ['c', 'a'], hidden: ['b'] })
+  expect(arranged.map((row) => row.identifier)).toEqual(['c', 'a'])
 })

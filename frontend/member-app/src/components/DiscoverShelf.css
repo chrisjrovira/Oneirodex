@@ -26,10 +26,10 @@
      this inside its padding box (so overflow does not clip the scale) and
      takes it back with negative margin so the row rhythm stays tight. */
   --gt-shelf-bleed: calc(
-    var(--gt-tile-h) * (var(--gt-tile-hover-scale, 1.25) - 1) / 2
+    var(--gt-tile-h) * (var(--gt-tile-hover-scale, 1.25) - 1) / 2 + 6px
   );
   --gt-shelf-bleed-x: calc(
-    var(--gt-tile-w) * (var(--gt-tile-hover-scale, 1.25) - 1) / 2
+    var(--gt-tile-w) * (var(--gt-tile-hover-scale, 1.25) - 1) / 2 + 6px
   );
 
   /* Custom bar sits in the track's bottom hover bleed, with a clear air gap
@@ -244,14 +244,14 @@
   gap: var(--gt-tile-gap, 0.75rem);
   overflow-x: auto;
   overflow-y: hidden;
-  scroll-snap-type: x proximity;
-  /* Snap to the padded inset, not the border box — without this, proximity
-     snap pulls the first tile into the gutter and the title mark (which
-     shares the gutter inset) no longer lines up with the covers. */
+  /* Snap fought custom-bar drags and bumper pans (uneven, often only-forward).
+     Wheel-on-tiles already pans the page; arrows and the slider set scrollLeft. */
+  scroll-snap-type: none;
   scroll-padding-inline: max(var(--gt-gutter, 1rem), var(--gt-shelf-bleed-x, 0px));
   /* Edge columns need the same per-side growth room as the library shell, or
      badges on the first/last visible tile clip against the gutter. */
   padding-inline: max(var(--gt-gutter, 1rem), var(--gt-shelf-bleed-x, 0px));
+  overflow-clip-margin: calc(var(--gt-shelf-bleed, 0px) + 8px);
   /* Native bar stays hidden: with bottom bleed restored for hover, a native
      bar would sit under that pad again. .gt-shelf__hbar is the visible control. */
   scrollbar-width: none;
@@ -267,14 +267,6 @@
      tile. Collapsing it at rest and restoring it on hover shoved the next
      shelf down every time a card grew. */
   margin-block-end: 0;
-}
-
-/* Mouse / trackpad: kill native overflow pan so wheel cannot move the row.
-   Touch keeps auto so a finger can still drag. Slider + arrows set scrollLeft. */
-@media (hover: hover) and (pointer: fine) {
-  .gt-shelf__track {
-    overflow-x: hidden;
-  }
 }
 
 .gt-shelf__track::-webkit-scrollbar {
@@ -305,6 +297,10 @@
   pointer-events: auto;
 }
 
+.gt-shelf__hbar[data-idle='true'] {
+  cursor: default;
+}
+
 /* Invisible hit pad — the visible lane is thin; wheel/drag need a taller target. */
 .gt-shelf__hbar::before {
   content: '';
@@ -319,7 +315,6 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  min-width: 2rem;
   border-radius: var(--gt-radius-pill);
   background: color-mix(in srgb, var(--gt-accent) 55%, transparent);
   pointer-events: none;
@@ -333,7 +328,6 @@
   flex: 0 0 auto;
   width: var(--gt-tile-w, 200px);
   height: var(--gt-tile-h, 280px);
-  scroll-snap-align: start;
 }
 
 /* News tiles share the library hover scale on shelves (theme CSS only styles
@@ -388,6 +382,35 @@
 .gt-shelf__item[data-fully-visible]:has(.gt-news-card:hover),
 .gt-shelf__item[data-fully-visible]:has(.gt-news-card:focus-visible) {
   z-index: 25;
+}
+
+/* Open tile menu must beat neighbouring covers. Hover lift drops the moment
+   the pointer leaves the card for the menu; overlay-open is the state that
+   stays. Same stack as the library grid's overlay-open row. */
+.gt-shelf:has(.game-card[data-overlay-open='true']) {
+  position: relative;
+  z-index: 40;
+}
+
+.gt-shelf__item:has(.game-card[data-overlay-open='true']) {
+  z-index: 40;
+}
+
+/* First and last tiles grow inward so enlarge is not sliced by the scrollport. */
+.gt-shelf__item:first-child .game-card:hover,
+.gt-shelf__item:first-child .game-card:focus-visible,
+.gt-shelf__item:first-child .game-card:has(:focus-visible),
+.gt-shelf__item:first-child .gt-news-card:hover,
+.gt-shelf__item:first-child .gt-news-card:focus-visible {
+  transform-origin: left center;
+}
+
+.gt-shelf__item:last-child .game-card:hover,
+.gt-shelf__item:last-child .game-card:focus-visible,
+.gt-shelf__item:last-child .game-card:has(:focus-visible),
+.gt-shelf__item:last-child .gt-news-card:hover,
+.gt-shelf__item:last-child .gt-news-card:focus-visible {
+  transform-origin: right center;
 }
 
 /* ---------- scroll controls ----------
@@ -456,8 +479,10 @@
    gaps and lost to the shelf-hover arrow rule in practice. */
 .gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible]:hover) .gt-shelf__arrow,
 .gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible]:focus-within) .gt-shelf__arrow,
+.gt-shelf__viewport:has(.game-card[data-overlay-open='true']) .gt-shelf__arrow,
 .gt-shelf__scroller:has(.gt-shelf__item[data-fully-visible]:hover) .gt-shelf__hbar,
-.gt-shelf__scroller:has(.gt-shelf__item[data-fully-visible]:focus-within) .gt-shelf__hbar {
+.gt-shelf__scroller:has(.gt-shelf__item[data-fully-visible]:focus-within) .gt-shelf__hbar,
+.gt-shelf__scroller:has(.game-card[data-overlay-open='true']) .gt-shelf__hbar {
   z-index: 0;
   opacity: 0;
   pointer-events: none;

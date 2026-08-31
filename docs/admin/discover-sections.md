@@ -161,8 +161,9 @@ member scrolls it, up to a ceiling of `ROW_MAX` (40). Both live in
 Forty is a ceiling, not a quota. A shelf shows what it honestly has — no
 padding from looser criteria to reach a number — so a small library gets short
 shelves, which is the truth. The **See all** tile appears at the end of a shelf
-only when the shelf holds more than it will ever display; a "see all" that leads
-to the same tiles would be a lie.
+when the shelf holds more than it will ever display, **or** when the row has a
+real destination of its own (the News row always links to `/news`). A "see all"
+that leads to the same tiles would be a lie.
 
 Where that tile goes depends on the shelf:
 
@@ -170,6 +171,7 @@ Where that tile goes depends on the shelf:
 |---|---|
 | Filter zone on `genre` | `/discover/hub/genre/…` — unplayed / newly added / loved shelves for that genre; **Browse the catalog** is still the full list |
 | Filter zone on `platform` | `/library?library_platform=…` — the catalog already parses this |
+| News / articles | `/news` — the full News page, not a second Discover shelf of the same articles |
 | Everything else | `/discover/<identifier>` — a paginated page for that shelf alone |
 
 A **genre hub** is not an admin `DiscoverySection`. `GET /api/discover/hubs/genre/<name>` builds the rows on the fly (404 if the genre name is unknown). Empty hub shelves are omitted. Hub rows cannot be pinned or hidden.

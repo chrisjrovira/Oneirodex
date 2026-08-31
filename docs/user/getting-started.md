@@ -67,7 +67,7 @@ If you are an admin and the new member has no email at all — a child's console
 
 Game Catalog **page size** options go up through **200–1000** (full allowlist 20/50/100/200/250/300/400/500/1000) — [preferences-themes.md](preferences-themes.md). Game Catalog Filters include **Signals** chips (UPDATE · MISSING · NEW · LANG). Filters open from a **Filters** button on the catalog bar.
 
-**Discover shelves** can be pinned or hidden per account (**Rows** in the top bar). A shelf with nothing honest to show is hidden rather than padded. **Game Catalog** shows one tile per title, not per copy — Preview → Available on lists the other systems. A grey Play button still opens and explains why.
+**Discover shelves** can be pinned or hidden per account (**Rows** in the top bar) — the buttons take effect immediately. News **See all** opens the News page. A shelf with nothing honest to show is hidden rather than padded. **Game Catalog** shows one tile per title, not per copy — Preview → Available on lists the other systems. A grey Play button still opens and explains why.
 
 If Discover/Game Catalog look unstyled, the deploy is missing **`member-app.css`** — ask an admin to rebuild the image.
 

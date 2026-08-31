@@ -188,4 +188,14 @@ describe('useRowScroll arrow hover', () => {
     result.current.scrollByPage(1)
     expect(queued).toBeNull()
   })
+
+  test('a click while hover-scrolling does not page-jump', () => {
+    const { result } = renderHook(() => useRowScroll({ edgeSpeed: 10, step: 0.85 }))
+    result.current.ref.current = track
+    result.current.startEdgeScroll(1)
+    queued?.(0)
+    expect(track.scrollLeft).toBe(10)
+    result.current.scrollByPage(1)
+    expect(track.scrollLeft).toBe(10)
+  })
 })

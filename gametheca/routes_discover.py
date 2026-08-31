@@ -115,16 +115,35 @@ FEED_MANIFEST_TTL_SECONDS = 1800
 def _more_href(row) -> str:
     """Where this row's "see all" tile goes.
 
-    Genre filter zones open the genre hub — the same tile in honest shelves —
-    rather than dumping straight into the catalog. Other library filters still
-    deep-link to Game Catalog. Everything else keeps its own row page.
+    The news row opens the News page — the full list, not a second Discover
+    shelf of the same articles. Genre filter zones open the genre hub — the
+    same tile in honest shelves — rather than dumping straight into the catalog.
+    Other library filters still deep-link to Game Catalog. Everything else
+    keeps its own row page.
     """
+    spec = getattr(row, 'spec', None)
+    item_kind = getattr(spec, 'item_kind', 'games') if spec is not None else 'games'
+    if item_kind == 'articles' or getattr(row, 'identifier', None) == 'news':
+        return '/news'
     if row.library_filter:
         genre = row.library_filter.get('genre')
         if genre:
             return f'/discover/hub/genre/{quote(str(genre), safe="")}'
         return f'/library?{urlencode(row.library_filter)}'
     return f'/discover/{row.identifier}'
+
+
+def _section_has_more(row, raw_len: int) -> bool:
+    """Whether a See all control is honest for this feed row.
+
+    News always has a real destination (the News page) when it has any items.
+    Game rows only offer See all when the source is deeper than the row ceiling.
+    """
+    spec = getattr(row, 'spec', None)
+    item_kind = getattr(spec, 'item_kind', 'games') if spec is not None else 'games'
+    if item_kind == 'articles' or getattr(row, 'identifier', None) == 'news':
+        return raw_len > 0
+    return raw_len > ROW_MAX
 
 
 def _row_payload(games, hydration):
@@ -287,7 +306,7 @@ def _assemble_sections(user):
             # condition under which a "see all" tile is honest. Read from the
             # source rather than from what dedupe left, or a row thinned by its
             # neighbours would hide a way out that genuinely exists.
-            'has_more': len(raw) > ROW_MAX,
+            'has_more': _section_has_more(row, len(raw)),
             'more_href': _more_href(row),
         })
 

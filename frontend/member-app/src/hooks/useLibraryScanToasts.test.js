@@ -57,3 +57,26 @@ test('useLibraryScanToasts stays quiet when endpoint is not ready', async () => 
   })
   expect(showToast).not.toHaveBeenCalled()
 })
+
+test('useLibraryScanToasts collapses more than five libraries to a count', async () => {
+  const notifications = ['A', 'B', 'C', 'D', 'E', 'F'].map((library, i) => ({
+    id: i + 1,
+    kind: 'library_games_added',
+    library,
+    title: `1 games added to library ${library}`,
+  }))
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ notifications }),
+    }),
+  )
+
+  renderHook(() => useLibraryScanToasts({ intervalMs: 60_000 }))
+
+  await waitFor(() => {
+    expect(showToast).toHaveBeenCalledWith('6 notifications', 'success', { count: 6 })
+  })
+  expect(showToast).toHaveBeenCalledTimes(1)
+})

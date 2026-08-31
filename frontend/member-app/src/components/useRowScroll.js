@@ -8,14 +8,15 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
  *
  * @param {object} [options]
  * @param {number} [options.step] Fraction of the visible width one arrow press
- *   moves. Just under a full page, so a tile stays on screen as an anchor.
+ *   moves when the hover loop is not already running. Half a page keeps a tile
+ *   on screen as an anchor without leaping past a whole row.
  * @param {number} [options.edgeSpeed] Pixels per animation frame while hovering
- *   an arrow. ~240px/s at 60fps — slow enough to read, fast enough to traverse.
+ *   an arrow. ~150px/s at 60fps — slow enough to read covers as they pass.
  * @param {unknown} [options.bindKey] Change this when the track node mounts or
  *   is replaced so the non-passive wheel listener rebinds (refs alone do not
  *   re-run an effect).
  */
-export function useRowScroll({ step = 0.85, edgeSpeed = 4, bindKey = 0 } = {}) {
+export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 } = {}) {
   const ref = useRef(null)
   /** Outer hover zone (viewport / scroller). Wheel binds here so the lane under
    *  the custom scrollbar and the arrow fades do not become accidental row scroll. */
@@ -98,10 +99,14 @@ export function useRowScroll({ step = 0.85, edgeSpeed = 4, bindKey = 0 } = {}) {
     [edgeSpeed, measure],
   )
 
-  /** Arrow press: one near-page, animated unless the member asked for less. */
+  /** Arrow press: one near-page, animated unless the member asked for less.
+   *  A click while the hover loop is already running must not also page-jump —
+   *  that was the bumper that skipped instead of easing. */
   const scrollByPage = useCallback(
     (direction) => {
+      const wasHovering = directionRef.current !== 0
       stopEdgeScroll()
+      if (wasHovering) return
       const node = ref.current
       if (!node) return
       const reduced =

@@ -24,9 +24,10 @@ function whenLabel(value) {
 /**
  * A tile on the Discover news row.
  *
- * Art fills the same 2×3 frame as a game cover. Badge + date + title overlay
- * the image (game-tile rhythm). Wide store banners letterbox on a blurred
- * copy of themselves so nothing stretches and empty bands are not bare.
+ * Art is a 3:4 cover in the same tile box as a game card. Badge + date +
+ * title overlay the image so the scrollbar lane matches every other row.
+ * Wide store banners letterbox on a blurred copy of themselves so nothing
+ * stretches and empty bands are not bare.
  */
 export function NewsCard({ item }) {
   const isOffer = item.kind === 'free_game'

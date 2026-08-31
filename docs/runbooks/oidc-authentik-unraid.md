@@ -40,14 +40,14 @@ Replace hostnames below with yours. Paths must match **exactly**.
 
 1. **Applications → Applications → Create**.
 2. **Name:** `Oneirodex`
-3. **Slug:** `gametheca` (this becomes part of the issuer URL)
+3. **Slug:** `oneirodex` (this becomes part of the issuer URL; older labs used `gametheca`)
 4. **Provider:** the provider you just created
 5. **Launch URL (optional):** `https://games.example.com`
 
 Issuer URL will look like:
 
 ```text
-https://auth.example.com/application/o/gametheca/
+https://auth.example.com/application/o/oneirodex/
 ```
 
 (Note the trailing slash — copy it from Authentik’s provider/application overview if shown.)
@@ -86,7 +86,7 @@ Edit the Oneirodex Docker template / `.env` (however you inject env vars on Unra
 
 ```env
 OIDC_ENABLED=true
-OIDC_ISSUER_URL=https://auth.example.com/application/o/gametheca/
+OIDC_ISSUER_URL=https://auth.example.com/application/o/oneirodex/
 OIDC_CLIENT_ID=<paste Client ID>
 OIDC_CLIENT_SECRET=<paste Client Secret>
 OIDC_REDIRECT_URI=https://games.example.com/login/oidc/callback
@@ -170,18 +170,21 @@ Both must be on:
 
 Use this when Authentik is reachable only on the LAN, e.g. `http://192.168.50.116:9000`.
 
+HellfireNAS (this checkout): Dockerman `authentik` + `authentik-worker` (`ghcr.io/goauthentik/server`, network `authentik-net`, ports **9000** / **9443**). Application slug **`oneirodex`**, confidential client id **`oneirodex`**. Groups `gametheca-admin` / `gametheca-librarian` / `gametheca-child` map to product roles via the default `OIDC_ROLE_MAP`. Redirect must be exactly `http://192.168.50.116:5006/login/oidc/callback`.
+
 ```env
 OIDC_ENABLED=true
-OIDC_ISSUER_URL=http://192.168.50.116:9000/application/o/gametheca/
-OIDC_CLIENT_ID=<from Authentik>
-OIDC_CLIENT_SECRET=<from Authentik>
-OIDC_REDIRECT_URI=http://<gametheca-lan-host>:5006/login/oidc/callback
+OIDC_ISSUER_URL=http://192.168.50.116:9000/application/o/oneirodex/
+OIDC_CLIENT_ID=oneirodex
+OIDC_CLIENT_SECRET=<from Authentik — never commit>
+OIDC_REDIRECT_URI=http://192.168.50.116:5006/login/oidc/callback
+OIDC_SCOPES=openid email profile groups
 TRUSTED_PROXIES=0
 SESSION_COOKIE_SECURE=false
 REMEMBER_COOKIE_SECURE=false
 ```
 
-In Authentik, register the **same** redirect URI (HTTP is fine for lab only). Create a local Oneirodex admin first — SSO stays optional until both env + Admin Integrations toggles are on.
+In Authentik, register the **same** redirect URI (HTTP is fine for lab only). Create a local Oneirodex admin first — SSO stays optional until **both** `OIDC_ENABLED=true` **and** `global_settings.oidc_enabled` (Admin → Integrations → OIDC / SSO) are on. Put `akadmin` (or household users) in `gametheca-admin` if the first SSO login should be an admin.
 
 When you later put HTTPS in front, flip cookies to `true`, set `TRUSTED_PROXIES=1`, and update issuer/redirect to HTTPS URLs.
 

@@ -1,13 +1,14 @@
+import {
+  isStackableTone,
+  planToastStack,
+  stackSummaryMessage,
+} from '../../../shared/toastStack'
+
 /**
  * Lightweight aurora toast — no jQuery / Bootstrap notify dependency.
- * @param {string} message
- * @param {'info'|'success'|'error'|'warn'} [tone]
  */
-export function showToast(message, tone = 'info') {
-  if (typeof document === 'undefined' || !message) {
-    return
-  }
 
+function toastHost() {
   let host = document.getElementById('gt-toast-host')
   if (!host) {
     host = document.createElement('div')
@@ -16,18 +17,23 @@ export function showToast(message, tone = 'info') {
     host.setAttribute('aria-live', 'polite')
     document.body.appendChild(host)
   }
+  return host
+}
 
-  const el = document.createElement('div')
-  const safeTone = ['info', 'success', 'error', 'warn'].includes(tone) ? tone : 'info'
-  el.className = `gt-toast gt-toast--${safeTone}`
+function visibleStackable(host) {
+  return [...host.children].filter(
+    (el) =>
+      !el.classList.contains('gt-toast--out') &&
+      (el.classList.contains('gt-toast--info') || el.classList.contains('gt-toast--success')),
+  )
+}
 
-  // textContent, not innerHTML — toast bodies carry server strings and game
-  // titles, which must never be parsed as markup.
-  const text = document.createElement('span')
-  text.className = 'gt-toast__text'
-  text.textContent = String(message)
-  el.appendChild(text)
+function stackCountOf(el) {
+  const n = Number(el.dataset.toastCount)
+  return Number.isFinite(n) && n > 0 ? n : 1
+}
 
+function bindToastLifecycle(el, host) {
   let removeTimer = 0
   let outTimer = 0
 
@@ -43,17 +49,95 @@ export function showToast(message, tone = 'info') {
     }, 220)
   }
 
-  // Dismissible: errors in particular should not force a wait to read and clear.
+  const abort = () => {
+    window.clearTimeout(removeTimer)
+    window.clearTimeout(outTimer)
+  }
+
+  const restart = () => {
+    abort()
+    el.classList.remove('gt-toast--out')
+    removeTimer = window.setTimeout(remove, 3200)
+  }
+
+  el._gtAbort = abort
+  el._gtRestart = restart
+  el._gtDismiss = remove
+  removeTimer = window.setTimeout(remove, 3200)
+  return remove
+}
+
+function paintToast(host, message, safeTone, { count, stacked } = {}) {
+  const el = document.createElement('div')
+  el.className = `gt-toast gt-toast--${safeTone}`
+  if (stacked) {
+    el.dataset.toastStack = '1'
+    el.dataset.toastCount = String(count)
+  }
+
+  const text = document.createElement('span')
+  text.className = 'gt-toast__text'
+  text.textContent = String(message)
+  el.appendChild(text)
+
   const close = document.createElement('button')
   close.type = 'button'
   close.className = 'gt-toast__close'
   close.setAttribute('aria-label', 'Dismiss notification')
   close.textContent = '×'
-  close.addEventListener('click', remove)
   el.appendChild(close)
 
   host.appendChild(el)
+  const dismiss = bindToastLifecycle(el, host)
+  close.addEventListener('click', dismiss)
+  return dismiss
+}
 
-  removeTimer = window.setTimeout(remove, 3200)
-  return remove
+export function showToast(message, tone = 'info', options = {}) {
+  if (typeof document === 'undefined' || !message) {
+    return
+  }
+
+  const host = toastHost()
+  const safeTone = ['info', 'success', 'error', 'warn'].includes(tone) ? tone : 'info'
+  const incomingCount = Number(options.count) > 0 ? Number(options.count) : 1
+
+  if (isStackableTone(safeTone)) {
+    const stacked = visibleStackable(host)
+    const summary = stacked.find((el) => el.dataset.toastStack === '1')
+    const stackedCount = stacked.reduce((sum, el) => sum + stackCountOf(el), 0)
+    const plan = planToastStack({
+      stackedCount,
+      hasSummary: Boolean(summary),
+      incomingCount,
+    })
+    if (plan.action === 'increment-summary' && summary) {
+      const next = stackCountOf(summary) + incomingCount
+      summary.dataset.toastCount = String(next)
+      const text = summary.querySelector('.gt-toast__text')
+      if (text) {
+        text.textContent = stackSummaryMessage(next)
+      }
+      summary._gtRestart?.()
+      return summary._gtDismiss
+    }
+    if (plan.action === 'collapse') {
+      for (const el of stacked) {
+        el._gtAbort?.()
+        el.remove()
+      }
+      return paintToast(host, stackSummaryMessage(plan.nextCount), safeTone, {
+        count: plan.nextCount,
+        stacked: true,
+      })
+    }
+  }
+
+  const asStack = incomingCount > 1
+  return paintToast(
+    host,
+    asStack ? stackSummaryMessage(incomingCount) : message,
+    safeTone,
+    asStack ? { count: incomingCount, stacked: true } : {},
+  )
 }

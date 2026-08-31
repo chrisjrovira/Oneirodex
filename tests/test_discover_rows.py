@@ -127,6 +127,20 @@ class TestRowRegistry:
 
 
 class TestSeeAllTarget:
+    def test_news_row_points_at_the_news_page(self):
+        from types import SimpleNamespace
+
+        from gametheca.routes_discover import _more_href, _section_has_more
+
+        row = SimpleNamespace(
+            identifier='news',
+            spec=SimpleNamespace(item_kind='articles'),
+            library_filter=None,
+        )
+        assert _more_href(row) == '/news'
+        assert _section_has_more(row, 3) is True
+        assert _section_has_more(row, 0) is False
+
     def test_chart_row_points_at_its_own_page(self, app, latest_shelf):
         from gametheca.routes_discover import _more_href
         from gametheca.utils.discover_providers import resolve_identifier

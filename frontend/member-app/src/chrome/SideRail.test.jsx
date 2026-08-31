@@ -4,7 +4,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, test, vi } from 'vitest'
 
 import { SideRail } from './SideRail'
-import { getMoreGroups, getPrimaryLinks } from './navConfig'
+import { railIconPaths } from './railIcons'
+import { getMoreGroups, getMoreLinks, getPrimaryLinks } from './navConfig'
 
 /**
  * The rail's whole justification is that nothing is hidden (GT-B2).
@@ -52,6 +53,17 @@ test('every former More-menu destination is present, ungated by an overflow', ()
 test('no overflow control survives in the rail', () => {
   renderRail()
   expect(screen.queryByRole('button', { name: /^more$/i })).toBeNull()
+})
+
+test('every rail destination has a glyph', () => {
+  const ids = getPrimaryLinks().map((link) => link.id)
+  for (const link of getMoreLinks({ showTrailers: true, showHelp: true, enableVr: true })) {
+    ids.push(link.id)
+  }
+  ids.push('admin')
+  for (const id of ids) {
+    expect(railIconPaths).toHaveProperty(id)
+  }
 })
 
 test('panel destinations call back instead of routing', () => {

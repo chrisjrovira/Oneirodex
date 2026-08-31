@@ -1,6 +1,6 @@
 # Settings & modules
 
-Admin settings use a **card grid** at `/admin/settings` (whole card → destination; `?section=` redirects). Chrome is the React admin top bar (`frontend/admin-app`); many forms remain Jinja until migrated. Live React bodies include Dashboard, Libraries/Scans hubs, Themes, Plugins, Announcements, **Support inbox**, and the **Integrations hub** (grouped cards for IGDB · Artwork & secondary metadata · SMTP · OIDC · LiveKit · Community · Acquire/Arr · Ownership · Remote play · Export packs · Support, with deep links into classic forms).
+Admin settings use **grouped rows** at `/admin/settings` (one sheet, section headings, whole row → destination; `?section=` redirects). Chrome is the React admin top bar (`frontend/admin-app`); many forms remain Jinja until migrated. Live React bodies include Dashboard, Libraries/Scans hubs, Themes, Plugins, Announcements, **Support inbox**, and the **Integrations hub** (grouped cards for IGDB · Artwork & secondary metadata · SMTP · OIDC · LiveKit · Community · Acquire/Arr · Ownership · Remote play · Export packs · Support, with deep links into classic forms).
 
 **Integrations inventory API:** `GET /api/admin/integrations/inventory` (admin) returns `{integrations[{id,name,category,status,configured,enabled,admin_href,settings_href,notes}], count, hub_href}` covering IGDB, SteamGridDB, Giant Bomb, HLTB, Meta/Quest, SMTP, OIDC, Support, community chat, LiveKit, Arr connectors, and ownership register links — so the hub is not IGDB-only. The React Integrations page renders a **Provider inventory** grouped by category (with status + notes) under the hub cards. Classic `/admin/integrations` artwork tab anchors (`#steamgriddb`, `#giantbomb`, `#hltb`, `#meta_quest`, `#ownership`, `#livekit`, `#support`, `#indexers`, `#community`, `#email`, `#igdb`) deep-link the same surfaces.
 
@@ -23,7 +23,7 @@ Admin settings use a **card grid** at `/admin/settings` (whole card → destinat
 
 ## Hub badges
 
-Settings hub shows On/Off (and Storage “Apply off”) for optional modules so you can see state without opening each page.
+Settings hub shows On/Off (and Storage “Apply off”) as pills beside the module title so you can see state without opening each page. Badge CSS ships in `admin-app.css` — Reset Themes is not required for the hub look; an **admin SPA rebuild** is.
 
 ## Feature defaults
 
