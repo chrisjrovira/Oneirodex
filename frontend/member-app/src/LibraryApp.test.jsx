@@ -266,6 +266,7 @@ test('selection bar Select page, Favorite bulk toast, Esc clears', async () => {
     expect(screen.getByText(/Favorites: 1 updated · 1 skipped · 0 failed/i)).toBeInTheDocument(),
   )
 
+  await user.click(screen.getByRole('button', { name: /^More$/i }))
   expect(screen.getByRole('button', { name: /Refresh freshness/i })).toBeEnabled()
 
   await user.keyboard('{Escape}')

@@ -28,7 +28,7 @@ test('renders selection count and batch actions', () => {
   expect(screen.getByRole('button', { name: /^Favorite$/i })).toBeEnabled()
   expect(screen.queryByRole('button', { name: /^Unfavorite$/i })).toBeNull()
   expect(screen.getByRole('button', { name: /Add to wishlist/i })).toBeEnabled()
-  expect(screen.getByRole('combobox', { name: /Play status/i })).toBeEnabled()
+  expect(screen.getByRole('button', { name: /Play status/i })).toBeEnabled()
   expect(screen.queryByRole('button', { name: /Clear selection/i })).toBeNull()
 })
 
@@ -60,7 +60,7 @@ test('freshness stays enabled now that bulk route is live', async () => {
   const user = userEvent.setup()
   renderBar({ count: 2 })
 
-  await user.click(screen.getByRole('combobox', { name: /More/i }))
+  await user.click(screen.getByRole('button', { name: /^More$/i }))
   const freshness = screen.getByRole('button', { name: /Refresh freshness/i })
   expect(freshness).toBeEnabled()
   expect(freshness).toHaveAttribute(
@@ -82,11 +82,11 @@ test('disables wishlist play status and refresh covers when routes unavailable',
   expect(wishlist).toBeDisabled()
   expect(wishlist).toHaveAttribute('title', expect.stringMatching(/not available/i))
 
-  const status = screen.getByRole('combobox', { name: /Play status/i })
+  const status = screen.getByRole('button', { name: /Play status/i })
   expect(status).toBeDisabled()
   expect(status).toHaveAttribute('title', expect.stringMatching(/not available/i))
 
-  await user.click(screen.getByRole('combobox', { name: /More/i }))
+  await user.click(screen.getByRole('button', { name: /^More$/i }))
   const covers = screen.getByRole('button', { name: /Refresh covers/i })
   expect(covers).toBeDisabled()
   expect(covers).toHaveAttribute('title', expect.stringMatching(/not available/i))

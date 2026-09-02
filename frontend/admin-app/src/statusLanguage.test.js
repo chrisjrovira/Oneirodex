@@ -53,12 +53,11 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const STATUS_BASELINE = {
   'ArtStudioPage.jsx': 1,
   'ArtworkPicker.jsx': 1,
+  'CreateUserForm.jsx': 1,
   'DupeGlance.jsx': 1,
   'EmulatorFirmwarePanel.jsx': 2,
   'ImportLeafLibraries.jsx': 2,
-  'InvitesPage.jsx': 1,
   'OpenPathModal.jsx': 1,
-  'OpsPage.jsx': 1,
   'ProposeLeafLibraries.jsx': 2,
   'RemotePlayPage.jsx': 1,
   'ScanMatchSettingsPage.jsx': 3,
@@ -66,7 +65,7 @@ const STATUS_BASELINE = {
   'SystemMarksPanel.jsx': 1,
   'StoragePage.jsx': 5,
   'SystemResetPanel.jsx': 2,
-  'pages.jsx': 2,
+  'pages.jsx': 1,
 }
 
 /** PageStatus is the shared implementation — it is meant to carry these roles. */

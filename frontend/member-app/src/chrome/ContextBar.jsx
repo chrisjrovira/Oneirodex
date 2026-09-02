@@ -187,6 +187,8 @@ export function Popover({
   chromeless = false,
   /** Extra classes on the trigger — e.g. count readout that opens a panel. */
   triggerClassName = '',
+  disabled = false,
+  title = undefined,
 }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef(null)
@@ -214,6 +216,8 @@ export function Popover({
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-controls={open ? panelId : undefined}
+        disabled={disabled}
+        title={title}
         onClick={() => setOpen((value) => !value)}
       >
         {icon}

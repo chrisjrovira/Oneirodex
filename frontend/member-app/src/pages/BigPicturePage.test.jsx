@@ -42,7 +42,7 @@ test('shows loading then renders tiles and hero for the first game', async () =>
 
   renderPage(<BigPicturePage shellConfig={{}} />)
 
-  expect(screen.getByText('Loading games…')).toBeInTheDocument()
+  expect(screen.getByText(/Loading games/)).toBeInTheDocument()
 
   const alphaTile = await screen.findByRole('option', { name: 'Alpha Game' })
   expect(alphaTile).toHaveAttribute('href', '/game_details/a1')

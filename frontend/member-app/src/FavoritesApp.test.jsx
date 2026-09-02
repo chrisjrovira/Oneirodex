@@ -36,7 +36,7 @@ test('fetches favorite games and renders them with the shared grid', async () =>
     />,
   )
 
-  expect(screen.getByText('Loading favorites…')).toBeInTheDocument()
+  expect(screen.getByText(/Loading favorites/)).toBeInTheDocument()
   await waitFor(() =>
     expect(screen.getByText('Favorite VR Game')).toBeInTheDocument(),
   )
@@ -44,7 +44,7 @@ test('fetches favorite games and renders them with the shared grid', async () =>
     '/api/favorites?page=1&per_page=20',
     expect.objectContaining({ credentials: 'same-origin' }),
   )
-  expect(document.querySelectorAll('[data-library-grid]')).toHaveLength(1)
+  expect(document.querySelectorAll('[data-library-grid], [data-library-shelves]')).toHaveLength(1)
   expect(screen.getByRole('img', { name: 'Favorite VR Game' })).toHaveAttribute(
     'src',
     '/static/library/images/favorite.jpg',

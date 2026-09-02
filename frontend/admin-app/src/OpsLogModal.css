@@ -19,7 +19,7 @@
 
 .od-ops-log-modal__error {
   font-size: var(--od-font-md);
-  color: var(--od-danger, #f07178);
+  color: var(--od-danger);
 }
 
 .od-ops-log-modal__table {

@@ -115,7 +115,11 @@ function cssFiles(dir, out = []) {
 function definedClasses(css) {
   const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '')
   const names = new Set()
-  for (const m of withoutComments.matchAll(/^(\.[a-zA-Z][a-zA-Z0-9_-]*)(?=[\s,{:])/gm)) {
+  // A class is defined when it is a complete simple selector, not a descendant
+  // prefix (`.od-pop__panel--bare .menu`) or a :has() override.
+  for (const m of withoutComments.matchAll(
+    /^(\.[a-zA-Z][a-zA-Z0-9_-]*)\s*(?=,|\{)/gm,
+  )) {
     names.add(m[1])
   }
   return names

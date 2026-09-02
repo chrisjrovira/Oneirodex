@@ -35,7 +35,7 @@ test('shows loading then renders the random trailer', async () => {
 
   render(<TrailersPage />)
 
-  expect(screen.getByText('Loading random trailer…')).toBeInTheDocument()
+  expect(screen.getByText(/Loading random trailer/)).toBeInTheDocument()
 
   expect(await screen.findByRole('heading', { name: 'Doom' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Doom' })).toHaveAttribute(
@@ -45,7 +45,7 @@ test('shows loading then renders the random trailer', async () => {
 
   const frame = screen.getByTitle('Game trailer')
   expect(frame.getAttribute('src')).toContain('https://www.youtube.com/embed/dQw4w9WgXcQ')
-  expect(screen.queryByText('Loading random trailer…')).not.toBeInTheDocument()
+  expect(screen.queryByText(/Loading random trailer/)).not.toBeInTheDocument()
 })
 
 test('shows the no-results state when nothing matches', async () => {
@@ -126,7 +126,7 @@ test('applies selected filters when asking for another trailer', async () => {
 
   await user.click(screen.getByRole('button', { name: 'Filters' }))
   await user.selectOptions(await screen.findByLabelText('Library'), 'lib-1')
-  await user.selectOptions(screen.getByLabelText('Genres'), '3')
+  await user.selectOptions(screen.getByLabelText(/Genres/), '3')
   await user.click(screen.getByRole('button', { name: 'Another one' }))
 
   await waitFor(() => {
@@ -165,7 +165,7 @@ test('another trailer keeps the player up while the next one loads', async () =>
   await user.click(screen.getByRole('button', { name: 'Another one' }))
 
   expect(screen.getByRole('heading', { name: 'Doom' })).toBeInTheDocument()
-  expect(screen.queryByText('Loading random trailer…')).not.toBeInTheDocument()
+  expect(screen.queryByText(/Loading random trailer/)).not.toBeInTheDocument()
 
   releaseSecond({
     has_videos: true,

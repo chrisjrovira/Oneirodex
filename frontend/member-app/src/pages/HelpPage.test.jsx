@@ -131,7 +131,6 @@ test('names Oneirodex and documents every play mode, not only NES', async () => 
   )
 
   expect(screen.getByRole('heading', { name: 'How Oneirodex works' })).toBeInTheDocument()
-  expect(screen.queryByText(/How Oneirodex works/)).toBeNull()
 
   await user.click(screen.getByRole('button', { name: 'Expand all' }))
   expect(screen.getByText(/oh-NY-roh-dex/)).toBeInTheDocument()

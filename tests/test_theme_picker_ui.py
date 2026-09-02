@@ -49,10 +49,13 @@ def default_accent() -> str:
     return match.group(1).strip().lower()
 
 
-def test_od_token_aliases_core_tokens():
+def test_od_core_tokens_are_canonical_values():
+    """P3b: --od-* is the source of truth (hex), not a circular var() alias."""
     css = read(GT_TOKENS_CSS)
-    assert '--od-accent: var(--od-accent)' in css
-    assert '--od-bg: var(--od-bg)' in css
+    accent = re.search(r'--od-accent:\s*([^;]+);', css)
+    bg = re.search(r'--od-bg:\s*([^;]+);', css)
+    assert accent and accent.group(1).strip().startswith('#'), css[:400]
+    assert bg and bg.group(1).strip().startswith('#'), css[:400]
 
 
 @pytest.mark.parametrize('preset', PRESET_THEMES, ids=[p['slug'] for p in PRESET_THEMES])

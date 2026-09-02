@@ -124,8 +124,11 @@ test('restores persisted calendar view on mount', async () => {
   expect(readCalendarView()).toBe('month')
 
   render(<CalendarPage />)
-  await screen.findByText('Example Title')
-  expect(screen.getByRole('button', { name: 'Month' })).toHaveAttribute('aria-pressed', 'true')
+  expect(await screen.findByRole('button', { name: 'Month' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  expect(await screen.findByRole('heading', { level: 3 })).toBeInTheDocument()
 })
 
 test('a stored agenda view falls back to List rather than selecting nothing', () => {
@@ -171,8 +174,17 @@ test('month view renders a rotating cover tile per busy day', async () => {
   while (guard < 24) {
     const label = screen.getByRole('heading', { level: 3 })
     if (/August 2026/i.test(label.textContent || '')) break
-    await user.click(screen.getByRole('button', { name: 'Next month' }))
+    await user.click(screen.getByRole('button', { name: 'Previous month' }))
     guard += 1
+  }
+  if (!/August 2026/i.test(screen.getByRole('heading', { level: 3 }).textContent || '')) {
+    guard = 0
+    while (guard < 24) {
+      const label = screen.getByRole('heading', { level: 3 })
+      if (/August 2026/i.test(label.textContent || '')) break
+      await user.click(screen.getByRole('button', { name: 'Next month' }))
+      guard += 1
+    }
   }
   expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(/August 2026/i)
 

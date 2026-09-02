@@ -114,18 +114,18 @@ class TestStyleguideCoverage:
         assert missing == [], f'styleguide does not render .od-btn--{{{",".join(missing)}}}'
 
     def test_advertised_token_scales_exist(self, client, admin_user):
-        """Every --gt-* token the page references must be defined.
+        """Every --od-* token the page references must be defined.
 
         The page builds its scales from Jinja loops, so a step removed from
         od-tokens.css shows up here as an empty swatch rather than an error.
         """
         tokens = (THEME_CSS / 'od-tokens.css').read_text(encoding='utf-8')
-        defined = set(re.findall(r'^\s*(--gt-[a-zA-Z0-9-]+)\s*:', tokens, re.MULTILINE))
+        defined = set(re.findall(r'^\s*(--od-[a-zA-Z0-9-]+)\s*:', tokens, re.MULTILINE))
 
         _login(client, admin_user)
         html = client.get('/dev/styleguide').get_data(as_text=True)
 
-        referenced = set(re.findall(r'var\((--gt-(?:font|radius|space)-[a-z0-9]+)\)', html))
+        referenced = set(re.findall(r'var\((--od-(?:font|radius|space)-[a-z0-9]+)\)', html))
         assert referenced, 'expected the styleguide to reference the token scales'
 
         missing = sorted(referenced - defined)

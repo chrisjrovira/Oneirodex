@@ -151,7 +151,7 @@ test('batchAddToWishlist posts uuids', async () => {
     BATCH_WISHLIST_URL,
     expect.objectContaining({
       method: 'POST',
-      body: JSON.stringify({ uuids: ['a'] }),
+      body: JSON.stringify({ uuids: ['a'], action: 'add' }),
     }),
   )
   expect(result.mode).toBe('bulk')

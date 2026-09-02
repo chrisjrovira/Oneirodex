@@ -59,6 +59,14 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+async function acknowledgeReset(user) {
+  await user.click(
+    screen.getByRole('checkbox', {
+      name: /I understand this cannot be undone/i,
+    }),
+  )
+}
+
 test('each scope shows its real blast radius before anything is ticked', async () => {
   // The point of the counts: "Member accounts" sounds like it clears members,
   // and actually clears 44 tables because everything recording *who did it*
@@ -101,15 +109,14 @@ test('ticking libraries also ticks the catalog it implies', async () => {
   const user = userEvent.setup()
   render(<SystemResetPanel />)
 
-  const boxes = screen.getAllByRole('checkbox')
-  // Order matches SCOPES: catalog, libraries, users, settings.
-  await user.click(boxes[1])
+  await acknowledgeReset(user)
+  await user.click(screen.getByRole('checkbox', { name: /Library definitions/i }))
 
-  expect(boxes[1]).toBeChecked()
+  expect(screen.getByRole('checkbox', { name: /Library definitions/i })).toBeChecked()
   // Clearing library rows while their games still point at them is not a
   // choice the operator gets to make — the server implies it, and the UI has
   // to show it at tick time rather than reveal it in the plan.
-  expect(boxes[0]).toBeChecked()
+  expect(screen.getByRole('checkbox', { name: /Library catalog/i })).toBeChecked()
 })
 
 test('the reset button stays unavailable until the phrase matches exactly', async () => {
@@ -117,7 +124,8 @@ test('the reset button stays unavailable until the phrase matches exactly', asyn
   const user = userEvent.setup()
   render(<SystemResetPanel />)
 
-  await user.click(screen.getAllByRole('checkbox')[0])
+  await acknowledgeReset(user)
+  await user.click(screen.getByRole('checkbox', { name: /Library catalog/i }))
   await user.click(screen.getByRole('button', { name: /show me what this clears/i }))
 
   const confirmField = await screen.findByRole('textbox')
@@ -138,7 +146,8 @@ test('the legacy RESET GAMETHECA phrase still unlocks the button', async () => {
   const user = userEvent.setup()
   render(<SystemResetPanel />)
 
-  await user.click(screen.getAllByRole('checkbox')[0])
+  await acknowledgeReset(user)
+  await user.click(screen.getByRole('checkbox', { name: /Library catalog/i }))
   await user.click(screen.getByRole('button', { name: /show me what this clears/i }))
 
   const confirmField = await screen.findByRole('textbox')
@@ -153,13 +162,14 @@ test('changing the selection invalidates a plan already shown', async () => {
   const user = userEvent.setup()
   render(<SystemResetPanel />)
 
-  await user.click(screen.getAllByRole('checkbox')[0])
+  await acknowledgeReset(user)
+  await user.click(screen.getByRole('checkbox', { name: /Library catalog/i }))
   await user.click(screen.getByRole('button', { name: /show me what this clears/i }))
   expect(await screen.findByRole('textbox')).toBeInTheDocument()
 
   // Confirming against a stale plan would confirm a different reset than the
   // one on screen, so the plan and the typed phrase both have to go.
-  await user.click(screen.getAllByRole('checkbox')[2])
+  await user.click(screen.getByRole('checkbox', { name: /Member accounts/i }))
 
   expect(screen.queryByRole('textbox')).toBeNull()
   expect(screen.queryByRole('button', { name: /reset now/i })).toBeNull()

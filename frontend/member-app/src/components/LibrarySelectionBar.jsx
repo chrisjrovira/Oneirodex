@@ -69,6 +69,7 @@ export function LibrarySelectionBar({
           type="button"
           className="od-cbtn is-on od-library-selection__count"
           aria-live="polite"
+          aria-label={count === 1 ? t('1 selected') : t(`${count} selected`)}
           title={t('Clear selection')}
           disabled={busy}
           onClick={onClear}
@@ -109,7 +110,13 @@ export function LibrarySelectionBar({
           </button>
         ) : null}
         {typeof onPlayStatus === 'function' ? (
-          <Popover label={t('Play status')} align="end" chromeless>
+          <Popover
+            label={t('Play status')}
+            align="end"
+            chromeless
+            disabled={playStatusDisabled}
+            title={playStatusTitle}
+          >
             {({ close }) => (
               <div
                 className="od-library-selection__menu od-pop__menu"

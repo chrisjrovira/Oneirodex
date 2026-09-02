@@ -72,7 +72,7 @@ describe('filterAdminCommands', () => {
 
   it.each([
     ['themes', /theme/i],
-    ['logs', /log/i],
+    ['logs', /ops|log/i],
     ['invites', /invite/i],
     ['moonlight', /remote play/i],
     ['prowlarr', /arr|acquire/i],

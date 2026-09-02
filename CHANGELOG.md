@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Admin shell shows the AGPL source offer again when `source_url` is configured.
+
 ### Changed
 - Catalog edge-column tiles keep covers/badges on hover enlarge (bleed ×1.5 for 1fr stretch + `overflow-clip-margin-inline`). `GENERATOR_VERSION` **28**.
 - Catalog **Grid** is genre shelves at full tile size without clipping headings (no shell hover-pad pullback). **Rows** height follows the tile-size slider (56–144px). `GENERATOR_VERSION` **27**.

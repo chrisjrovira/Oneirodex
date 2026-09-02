@@ -225,7 +225,7 @@ class TestConvertedTemplates:
         """GT-B2 leftover: submenu / filter-visibility lookups matched nothing."""
         src = (
             Path(__file__).resolve().parents[1]
-            / 'oneirodex' / 'static' / 'js' / 'gt_shell_rail.js'
+            / 'oneirodex' / 'static' / 'js' / 'od_shell_rail.js'
         ).read_text(encoding='utf-8')
         assert 'od-rail-toggle' in src
         assert 'closeAllSubmenus' not in src

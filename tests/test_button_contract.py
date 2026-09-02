@@ -42,10 +42,14 @@ def _without_comments(css: str) -> str:
 
 
 def _rule_block(css: str, selector: str) -> str:
-    """The declarations of the first rule whose selector list contains `selector`."""
+    """Declarations of the first rule that lists `selector` as a whole selector.
+
+    Substring match was matching `a.od-cbtn:focus-visible { text-decoration }`
+    when the test wanted `.od-cbtn:focus-visible { outline: … }`.
+    """
     body = _without_comments(css)
     for match in re.finditer(r'([^{}]+)\{([^{}]*)\}', body):
-        selectors = match.group(1)
+        selectors = [part.strip() for part in match.group(1).split(',')]
         if selector in selectors:
             return match.group(2)
     raise AssertionError(f'no rule found for {selector}')
@@ -66,10 +70,11 @@ def test_the_chrome_button_does_not_react_to_hover_when_disabled():
     """A control that lights up under the mouse and then refuses to act is
     worse than one that never invited the click."""
     css = _without_comments(_read(APPBAR))
-    hover = re.search(r'\.od-cbtn:hover[^{]*\{', css)
-    assert hover, 'the hover rule vanished'
-    assert ':not(:disabled)' in hover.group(0)
-    assert ":not([aria-disabled='true'])" in hover.group(0)
+    hover = re.search(
+        r"\.od-cbtn:hover:not\(:disabled\):not\(\[aria-disabled='true'\]\)\s*\{",
+        css,
+    )
+    assert hover, 'the disabled-guarded hover rule vanished'
 
 
 def test_both_button_families_share_one_focus_treatment():
